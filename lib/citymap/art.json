@@ -3,58 +3,28 @@
     "districts": {
       "docks": {
         "src": "/stage/maps/kordavos/docks.webp",
-        "box": [
-          95,
-          468,
-          350,
-          350
-        ]
+        "box": [95, 468, 350, 350]
       },
       "lower-districts": {
         "src": "/stage/maps/kordavos/lower-districts.webp",
-        "box": [
-          -6,
-          93,
-          552,
-          552
-        ]
+        "box": [-6, 93, 552, 552]
       },
       "old-quarter": {
         "src": "/stage/maps/kordavos/old-quarter.webp",
-        "box": [
-          232,
-          88,
-          557,
-          557
-        ]
+        "box": [232, 88, 557, 557]
       },
       "gate-ward": {
         "src": "/stage/maps/kordavos/gate-ward.webp",
-        "box": [
-          355,
-          403,
-          590,
-          590
-        ]
+        "box": [355, 403, 590, 590]
       },
       "asterian-quarter": {
         "src": "/stage/maps/kordavos/asterian-quarter.webp",
-        "box": [
-          495,
-          75,
-          570,
-          570
-        ]
+        "box": [495, 75, 570, 570]
       }
     },
     "outer": {
       "src": "/stage/maps/kordavos/kordavos.webp",
-      "box": [
-        -150,
-        -200,
-        1450,
-        1450
-      ]
+      "box": [-150, -200, 1450, 1450]
     }
   }
 }

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
+import { type CityMap, withCityContext } from "@d20/gm-core/citymap"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import { withArrivals } from "@d20/gm-core/story/authored"
 import { namesMetBefore } from "@d20/gm-core/story/names"
@@ -16,7 +17,13 @@ import { partyFor, writeArrivals } from "./heroes"
 import type { LocalStore, Save } from "./store"
 import { carryGear, premiseWithStory, storyInto, withStory } from "./story"
 
-export type Pack = { artifacts: RuntimeArtifacts; contentRef: Awaited<ReturnType<Content["loadWikiRuntime"]>>["contentRef"]; definition: { promptSlug: string } }
+// A pack carries the city map its encounters stand on, when there is one, for the GM's sense of place.
+export type Pack = {
+  artifacts: RuntimeArtifacts
+  contentRef: Awaited<ReturnType<Content["loadWikiRuntime"]>>["contentRef"]
+  definition: { promptSlug: string }
+  cityMap?: CityMap
+}
 // Bundled adventures keyed by plan id.
 export type Packs = Record<string, Pack>
 // The bundled adventures share no encounter ids, so one list of legal transitions serves every save.
@@ -128,7 +135,8 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     loadWikiRuntime: async (_setting, plan) => told(plan),
     loadPlan: async (_setting, plan) => buildAdventurePlanViewFromArtifacts(told(plan).artifacts),
     loadLegacyPlan: async () => null,
-    spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, store.state?.positions ?? {}, store.state?.figures),
+    spatialContext: async (_setting, plan, encounter, characters) =>
+      withCityContext(spatialContext(encounter, characters, store.state?.positions ?? {}, store.state?.figures), packFor(plan).cityMap, packFor(plan).artifacts.encounters, encounter),
     places: async (encounter) => scenePlaces(encounter),
     // Of the story so far, only the chapters this hero lived.
     heroPremise: async (_setting, plan, hero) => premiseWithStory(packFor(plan).artifacts.manifest.premise, store.state?.adventure.planId === plan ? store.state.story : undefined, hero),

@@ -1,5 +1,6 @@
 import { type AdventureRecord, type Content, createGmCore, type Llm, type Store } from "@d20/gm-core"
 import { type Arrival, writeArrival } from "@d20/gm-core/character/hero-draft"
+import { withCityContext } from "@d20/gm-core/citymap"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import { characterScript } from "@d20/gm-core/story/turn"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
@@ -64,7 +65,7 @@ function hostContent(packs: Packs): Content {
     loadPlan: async (_setting, plan) => buildAdventurePlanViewFromArtifacts(packFor(plan).artifacts),
     loadLegacyPlan: async () => null,
     // Hosted games keep no stage positions yet, so places are read from the staging alone.
-    spatialContext: async (_setting, _plan, encounter, characters) => spatialContext(encounter, characters, {}),
+    spatialContext: async (_setting, plan, encounter, characters) => withCityContext(spatialContext(encounter, characters, {}), packFor(plan).cityMap, packFor(plan).artifacts.encounters, encounter),
     places: async (encounter) => scenePlaces(encounter),
   }
 }

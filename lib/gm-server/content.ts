@@ -1,4 +1,6 @@
 import type { Content } from "@d20/gm-core"
+import { withCityContext } from "@d20/gm-core/citymap"
+import { cityMapFor } from "@/lib/citymap"
 import { loadEncounterMap2D } from "@/lib/mapview/load"
 import { buildMapSpatialContext } from "@/lib/mapview/spatial-summary"
 import { readJsonFromS3 } from "@/lib/s3-utils"
@@ -13,12 +15,14 @@ export const serverContent: Content = {
   loadLegacyPlan: (settingId, planId) => readJsonFromS3(`settings/${settingId}/${planId}.json`) as Promise<AdventurePlan | null>,
   async spatialContext(settingId, planId, encounterId, characters) {
     const map = await loadEncounterMap2D(settingId, planId, encounterId)
-    if (!map) return undefined
-    return (
-      buildMapSpatialContext(map, {
-        party: characters.filter((character) => character.type === "pc").map((character) => ({ name: character.name })),
-        npcs: Object.fromEntries(characters.filter((character) => character.type === "npc").map((character) => [character.id, { name: character.name }])),
-      }) ?? undefined
-    )
+    const staging = map
+      ? (buildMapSpatialContext(map, {
+          party: characters.filter((character) => character.type === "pc").map((character) => ({ name: character.name })),
+          npcs: Object.fromEntries(characters.filter((character) => character.type === "npc").map((character) => [character.id, { name: character.name }])),
+        }) ?? undefined)
+      : undefined
+    const cityMap = cityMapFor(planId)
+    if (!cityMap || !isLocalWikiAdventure(settingId, planId)) return staging
+    return withCityContext(staging, cityMap, (await loadWikiAdventureRuntime(settingId, planId)).artifacts.encounters, encounterId)
   },
 }

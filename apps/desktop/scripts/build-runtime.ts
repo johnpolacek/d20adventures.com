@@ -17,7 +17,9 @@ const ALL = CATALOG.map((e) => e.id)
 const FREE = CATALOG.filter((e) => e.free).map((e) => e.id)
 const ADVENTURES = process.env.D20_BUNDLE === "free" ? FREE : ALL
 const runtimes = Object.fromEntries(ALL.map((id) => [id, loadLocalWikiAdventureRuntime("realm-of-myr", id)]))
-const packs = Object.fromEntries(ADVENTURES.map((id) => [id, runtimes[id]]))
+const { cityMapFor } = require("../../../lib/citymap/index.ts") as typeof import("../../../lib/citymap")
+// Each pack carries the city map its encounters stand on, so the GM keeps to it.
+const packs = Object.fromEntries(ADVENTURES.map((id) => [id, { ...runtimes[id], cityMap: cityMapFor(id) }]))
 // Every adventure for sale, bundled or not, so the new game screen can show the ones still locked.
 const catalog = adventureList(runtimes).map(({ id, title, teaser, players }) => {
   const entry = CATALOG.find((e) => e.id === id)
