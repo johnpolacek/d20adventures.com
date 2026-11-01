@@ -213,6 +213,11 @@ export function NewGame(props: {
                           ))}
                         </fieldset>
                       )}
+                      {!choice && (
+                        <Option className="mx-2 mb-2 px-1 py-1 text-xs disabled:opacity-100" disabled={full} onClick={() => toggle(p.id)}>
+                          Add to Adventure
+                        </Option>
+                      )}
                       {p.hero && (
                         <div className="absolute top-3 right-3 flex gap-1">
                           <button type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit(p.hero!)} aria-label={`Edit ${p.name}`}>
@@ -263,29 +268,16 @@ export function NewGame(props: {
                       </button>
                     </li>
                   ))}
-                {info.options && (
-                  <li>
-                    <button
-                      type="button"
-                      onClick={props.onCreate}
-                      disabled={props.busy || !props.providers.length}
-                      className="grid h-full min-h-[10rem] w-full place-items-center rounded-lg border border-dashed border-white/30 bg-black p-2 font-display text-sm text-white/60 transition-colors hover:border-sky-300/60 hover:text-sky-200 disabled:cursor-default disabled:opacity-40"
-                    >
-                      New Hero
-                    </button>
-                  </li>
-                )}
+                {info.options && <AddCard mark="+" title="New Hero" action="Create New Character" disabled={props.busy || !props.providers.length} onClick={props.onCreate} />}
                 {info.options && canInvite && (
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => setParty((p) => (p.length < max ? [...p, { id: `open-${Date.now()}`, who: "invite", open: true }] : p))}
-                      disabled={props.busy || party.length >= max}
-                      className="grid h-full min-h-[10rem] w-full place-items-center rounded-lg border border-dashed border-white/30 bg-black p-2 font-display text-sm text-white/60 transition-colors hover:border-sky-300/60 hover:text-white disabled:cursor-default disabled:opacity-40"
-                    >
-                      Any Hero
-                    </button>
-                  </li>
+                  <AddCard
+                    mark="?"
+                    title="Any Hero"
+                    sub="A guest's own hero"
+                    action="Add to Adventure"
+                    disabled={props.busy || party.length >= max}
+                    onClick={() => setParty((p) => (p.length < max ? [...p, { id: `open-${Date.now()}`, who: "invite", open: true }] : p))}
+                  />
                 )}
               </ul>
               {guestPlays && (
@@ -490,5 +482,24 @@ function Face({ pick, size }: { pick: Pick; size: string }) {
     <span aria-hidden="true" className={cn(size, "grid shrink-0 place-items-center rounded-md border border-white/30 font-display text-amber-400")}>
       {pick.name[0]}
     </span>
+  )
+}
+
+// A card at the end of the hero grid that adds something new: a hero made here, or a seat for a guest's own hero.
+function AddCard(props: { mark: string; title: string; sub?: string; action: string; disabled: boolean; onClick: () => void }) {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={props.onClick}
+        disabled={props.disabled}
+        className="flex h-full w-full flex-col items-stretch gap-2 rounded-lg border border-dashed border-white/30 bg-black p-2 text-left transition-colors hover:border-white/50 disabled:cursor-default disabled:opacity-40"
+      >
+        <span className="grid h-24 w-full place-items-center rounded-md border border-white/10 bg-white/5 font-display text-3xl text-white/40">{props.mark}</span>
+        <span className="truncate font-display text-sm">{props.title}</span>
+        {props.sub && <span className="-mt-2 truncate text-xs text-white/70">{props.sub}</span>}
+        <span className={cn(siteOutline, "mt-auto px-1 py-1 text-center text-xs")}>{props.action}</span>
+      </button>
+    </li>
   )
 }
