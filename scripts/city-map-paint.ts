@@ -7,6 +7,7 @@
 //   node --env-file=.env.local --import tsx scripts/city-map-paint.ts paint kordavos outer       # the outer painting
 //   node --env-file=.env.local --import tsx scripts/city-map-paint.ts paint kordavos docks,gate-ward
 //   node --env-file=.env.local --import tsx scripts/city-map-paint.ts paint kordavos all
+//   node --env-file=.env.local --import tsx scripts/city-map-paint.ts paint kordavos underground   # the tunnels below
 //   node --env-file=.env.local --import tsx scripts/city-map-paint.ts publish kordavos all       # webp and art.json
 //
 // Raw paintings, sketches and drift checks go to CITY_MAP_RAW (default: the OS temp dir). Review each before
@@ -29,7 +30,10 @@ const DISTRICT_SIZE = 3072
 
 const [command, mapId, which = "all"] = process.argv.slice(2)
 const force = process.argv.includes("--force")
-const map = JSON.parse(readFileSync(`content/settings/realm-of-myr/maps/${mapId}.json`, "utf8")) as CityMap & { walls: Array<{ path: Point[] }> }
+const map = JSON.parse(readFileSync(`content/settings/realm-of-myr/maps/${mapId}.json`, "utf8")) as CityMap & {
+  walls: Array<{ path: Point[] }>
+  underground?: { name: string; box: Box }
+}
 const outerBox: Box = [map.frame.x, map.frame.y, Math.max(map.frame.width, map.frame.height), Math.max(map.frame.width, map.frame.height)]
 const L = Object.fromEntries(map.landmarks.map((l) => [l.id, l]))
 const raw = (name: string) => join(RAW, `${mapId}-${name}`)
@@ -40,13 +44,14 @@ async function main() {
   else if (command === "paint") {
     if (which === "outer" || which === "all") await paintOuter()
     for (const district of districtsFor(which)) await paintDistrict(district)
+    if (which === "underground" || which === "all") await paintUnderground()
   } else if (command === "publish") await publish()
   else throw new Error("Usage: city-map-paint.ts sketch|paint|publish <map> [outer|all|district,...] [--force]")
 }
 
 function districtsFor(list: string) {
-  if (list === "outer") return []
-  const ids = list === "all" ? map.districts.map((d) => d.id) : list.split(",").filter((id) => id !== "outer")
+  if (list === "outer" || list === "underground") return []
+  const ids = list === "all" ? map.districts.map((d) => d.id) : list.split(",").filter((id) => id !== "outer" && id !== "underground")
   return ids.map((id) => {
     const district = map.districts.find((d) => d.id === id)
     if (!district) throw new Error(`No district ${id}`)
@@ -104,11 +109,29 @@ async function paintDistrict(district: MapDistrict) {
   console.log(`${district.id}: ${out}, check ${raw(`${district.id}-drift.png`)}`)
 }
 
+// The tunnels below the city, from a plan of them drawn from the map file's underground places.
+async function paintUnderground() {
+  if (!map.underground) throw new Error(`${mapId} has no underground`)
+  const out = raw("underground.jpg")
+  if (existsSync(out) && !force) return console.log(`underground: kept ${out}`)
+  await sharp(Buffer.from(undergroundSvg(false)))
+    .png()
+    .toFile(raw("underground-sketch.png"))
+  await sharp(Buffer.from(undergroundSvg(true)))
+    .png()
+    .toFile(raw("underground-sketch-labelled.png"))
+  const image = await paint("underground", UNDERGROUND_PROMPT, [raw("underground-sketch.png"), raw("underground-sketch-labelled.png")])
+  await writeFile(out, image)
+  console.log(`underground: ${out}, sketch ${raw("underground-sketch.png")}`)
+}
+
 async function publish() {
   const dir = `public/stage/maps/${mapId}`
   await mkdir(dir, { recursive: true })
   const index = existsSync(ART_INDEX) ? JSON.parse(await readFile(ART_INDEX, "utf8")) : {}
-  const art: { outer?: { src: string; box: Box }; districts: Record<string, { src: string; box: Box }> } = index[mapId] ?? { districts: {} }
+  const art: { outer?: { src: string; box: Box }; underground?: { src: string; box: Box }; districts: Record<string, { src: string; box: Box }> } = index[mapId] ?? {
+    districts: {},
+  }
   const done: string[] = []
   if ((which === "outer" || which === "all") && existsSync(raw("outer.jpg"))) {
     await sharp(raw("outer.jpg")).resize(OUTER_SIZE).webp({ quality: 80 }).toFile(`${dir}/${mapId}.webp`)
@@ -123,6 +146,11 @@ async function publish() {
       .toFile(`${dir}/${district.id}.webp`)
     art.districts[district.id] = { src: `/stage/maps/${mapId}/${district.id}.webp`, box: districtBox(district) }
     done.push(district.id)
+  }
+  if ((which === "underground" || which === "all") && map.underground && existsSync(raw("underground.jpg"))) {
+    await sharp(raw("underground.jpg")).resize(DISTRICT_SIZE).webp({ quality: 80 }).toFile(`${dir}/underground.webp`)
+    art.underground = { src: `/stage/maps/${mapId}/underground.webp`, box: map.underground.box }
+    done.push("underground")
   }
   index[mapId] = art
   await writeFile(ART_INDEX, `${JSON.stringify(index, null, 2)}\n`)
@@ -402,6 +430,102 @@ function sketchSvg(labelled: boolean) {
   }
   const px = 2048
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="${outerBox.join(" ")}">${svg}</svg>`
+}
+
+const UNDERGROUND_PROMPT = `Image 1 is an exact plan of tunnels and chambers deep beneath a city, seen from directly above. Image 2 is the same plan with labels explaining each part; the labels are only for you and must never appear in the result.
+
+Repaint image 1 as a finished, top-down illustrated dungeon map, the quality of a premium published tabletop roleplaying adventure module: hand-inked linework with watercolour washes. Solid rock all round in dark grey-brown with fine hand-drawn crosshatching. Tunnels of laid stone with worn flagstones. Every chamber drawn with its own detail: a pillared chamber with gunpowder kegs and a fuse; a forking labyrinth of rough-hewn passages with glowing blue crystals in the walls; a dead end with a black iron door set into a blank stone wall, glowing pale blue runes round it and frost on the floor; a vast empty cavern floored in grey dust with a narrow arch at its far end; an ancient ruined temple of broken columns, an altar and an alcove behind it. A stair and a drain grate where the tunnel starts at the top right. Cool, dim palette with warm torchlight in the pillared chamber.
+
+This is a trace, not a suggestion: every tunnel, chamber and dead end stays where it is in image 1, with the same shape and size.
+
+Directly overhead, orthographic, no perspective, no grid. No text, letters, labels, compass, scale bar, border, frame or legend. Fill the whole image.`
+
+// Tunnels and chambers in the underground box, laid along the map file's tunnel. Seeded, so it redraws the same.
+function undergroundSvg(labelled: boolean) {
+  const box = map.underground!.box
+  let seed = 11
+  const rnd = () => {
+    seed = (seed * 16807) % 2147483647
+    return seed / 2147483647
+  }
+  const at = (id: string) => L[id]
+  const path = map.tunnels[0].path.map((id) => [at(id).x, at(id).y] as Point)
+  const pts = (p: Point[]) => p.map((q) => q.join(",")).join(" ")
+  let svg = `<rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" fill="#2b2723"/>`
+  for (let i = 0; i < 500; i++) svg += `<circle cx="${box[0] + rnd() * box[2]}" cy="${box[1] + rnd() * box[3]}" r="${2 + rnd() * 7}" fill="#36302b"/>`
+  svg += `<polyline points="${pts(path)}" fill="none" stroke="#4a423a" stroke-width="20" stroke-linejoin="round" stroke-linecap="round"/>`
+  svg += `<polyline points="${pts(path)}" fill="none" stroke="#7a6e60" stroke-width="13" stroke-linejoin="round" stroke-linecap="round"/>`
+  // The grate and the stair down.
+  const g = at("drain-grate")
+  svg += `<rect x="${g.x - 9}" y="${g.y - 9}" width="18" height="18" fill="#3d3631" stroke="#9a9a9a" stroke-width="1.5"/>`
+  for (let i = -6; i <= 6; i += 4) svg += `<line x1="${g.x + i}" y1="${g.y - 8}" x2="${g.x + i}" y2="${g.y + 8}" stroke="#9a9a9a" stroke-width="1"/>`
+  // The pillared chamber, its kegs and the fuse.
+  const p = at("powder-chamber")
+  svg += `<rect x="${p.x - 38}" y="${p.y - 28}" width="76" height="56" fill="#857868" stroke="#4a423a" stroke-width="3"/>`
+  for (const [dx, dy] of [
+    [-24, -16],
+    [0, -16],
+    [24, -16],
+    [-24, 16],
+    [0, 16],
+    [24, 16],
+  ])
+    svg += `<circle cx="${p.x + dx}" cy="${p.y + dy}" r="4.5" fill="#5e544a"/>`
+  for (let i = 0; i < 6; i++) svg += `<circle cx="${p.x - 14 + (i % 3) * 9}" cy="${p.y - 3 + Math.floor(i / 3) * 8}" r="3.5" fill="#6b4a2e"/>`
+  svg += `<polyline points="${p.x + 10},${p.y} ${p.x + 30},${p.y + 6} ${p.x + 34},${p.y + 24}" fill="none" stroke="#2a1a10" stroke-width="1.2" stroke-dasharray="2 2"/>`
+  // The labyrinth: a cave where the way forks, east and west spurs that dead-end, crystals in the walls.
+  const l = at("labyrinth")
+  svg += `<ellipse cx="${l.x}" cy="${l.y}" rx="34" ry="28" fill="#7a6e60" stroke="#4a423a" stroke-width="3"/>`
+  const spurs: Point[][] = [
+    [
+      [l.x + 30, l.y - 6],
+      [l.x + 62, l.y - 20],
+      [l.x + 70, l.y + 8],
+    ],
+    [
+      [l.x - 30, l.y - 10],
+      [l.x - 58, l.y - 34],
+      [l.x - 82, l.y - 30],
+    ],
+    [
+      [l.x - 10, l.y - 26],
+      [l.x - 6, l.y - 70],
+      [l.x + 18, l.y - 84],
+    ],
+    [
+      [l.x + 20, l.y + 24],
+      [l.x + 34, l.y + 58],
+    ],
+  ]
+  for (const spur of spurs) svg += `<polyline points="${pts(spur)}" fill="none" stroke="#7a6e60" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`
+  for (let i = 0; i < 10; i++) {
+    const a = rnd() * Math.PI * 2
+    svg += `<circle cx="${l.x + Math.cos(a) * 31}" cy="${l.y + Math.sin(a) * 25}" r="2.2" fill="#7fd3e0"/>`
+  }
+  // The sealed door: a blank wall across the passage with a black iron door and its runes.
+  const d = at("sealed-door")
+  svg += `<rect x="${d.x - 16}" y="${d.y - 16}" width="32" height="32" fill="#7a6e60"/><rect x="${d.x - 9}" y="${d.y - 3}" width="18" height="6" fill="#141414" stroke="#9fd8ff" stroke-width="1.5"/>`
+  svg += `<circle cx="${d.x}" cy="${d.y}" r="13" fill="none" stroke="#9fd8ff" stroke-width="1" stroke-dasharray="2 2"/>`
+  // The Big Empty: a vast dust-floored cavern, a narrow arch at the far end.
+  const e = at("big-empty")
+  svg += `<ellipse cx="${e.x}" cy="${e.y}" rx="42" ry="52" transform="rotate(35 ${e.x} ${e.y})" fill="#9a948a" stroke="#4a423a" stroke-width="3"/>`
+  // The forgotten temple: a ruined hall of broken columns, an altar and the alcove behind it.
+  const t = at("forgotten-temple")
+  svg += `<rect x="${t.x - 40}" y="${t.y - 34}" width="80" height="68" fill="#8e8576" stroke="#4a423a" stroke-width="3" transform="rotate(35 ${t.x} ${t.y})"/>`
+  for (let i = 0; i < 4; i++) for (const side of [-1, 1]) svg += `<circle cx="${t.x - 24 + i * 14}" cy="${t.y + side * 20}" r="4" fill="#6e665a" transform="rotate(35 ${t.x} ${t.y})"/>`
+  svg += `<rect x="${t.x - 30}" y="${t.y - 7}" width="12" height="14" fill="#c9c1b0" transform="rotate(35 ${t.x} ${t.y})"/><rect x="${t.x - 46}" y="${t.y - 8}" width="8" height="16" fill="#5e564c" transform="rotate(35 ${t.x} ${t.y})"/>`
+  if (labelled) {
+    const text = (x: number, y: number, words: string, size = 11) =>
+      (svg += `<text x="${x}" y="${y}" font-size="${size}" font-family="Arial" font-weight="bold" fill="#000" stroke="#fff" stroke-width="3.5" paint-order="stroke" text-anchor="middle">${words}</text>`)
+    text(g.x - 10, g.y - 16, "DRAIN GRATE + STAIR DOWN")
+    text(p.x, p.y - 36, "PILLARED CHAMBER: POWDER KEGS, FUSE")
+    text(l.x + 10, l.y - 92, "LABYRINTH: FORKS, DEAD ENDS, CRYSTALS")
+    text(d.x + 70, d.y + 4, "SEALED IRON DOOR, RUNES")
+    text(e.x + 90, e.y + 10, "VAST EMPTY CAVERN, DUST")
+    text(t.x + 70, t.y + 64, "RUINED TEMPLE: COLUMNS, ALTAR, ALCOVE")
+    text(box[0] + 60, box[1] + 30, "SOLID ROCK", 14)
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2048" viewBox="${box.join(" ")}">${svg}</svg>`
 }
 
 void main()

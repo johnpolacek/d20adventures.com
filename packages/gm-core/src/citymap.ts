@@ -53,7 +53,9 @@ export interface CityMap {
   districts: MapDistrict[]
   landmarks: MapLandmark[]
   tunnels: Array<{ id: string; path: string[] }>
-  art?: { outer?: MapArt; districts: Record<string, MapArt> }
+  // The tunnels under the city, drawn on their own: their name and the box their painting covers.
+  underground?: { name: string; box: Box }
+  art?: { outer?: MapArt; underground?: MapArt; districts: Record<string, MapArt> }
 }
 
 // A place's spot: a landmark, a district's middle, or the middle of a road.

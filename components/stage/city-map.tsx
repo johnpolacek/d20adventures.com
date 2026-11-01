@@ -31,6 +31,7 @@ export function CityMapView({
   onDistrict,
   className,
   names = true,
+  below = false,
 }: {
   map: CityMap
   trail: string[]
@@ -39,6 +40,8 @@ export function CityMapView({
   onDistrict?: (id: string) => void
   className?: string
   names?: boolean
+  // The tunnels under the city, on their own, in place of the streets.
+  below?: boolean
 }) {
   const ref = useRef<SVGSVGElement>(null)
   const shown = useTween(box)
@@ -58,7 +61,7 @@ export function CityMapView({
   const u = fill ? Math.min(across, down) : Math.max(across, down)
   const here = trail[trail.length - 1]
   const visited = new Set(trail)
-  const landmarks = map.landmarks.filter((l) => visited.has(l.id))
+  const landmarks = map.landmarks.filter((l) => visited.has(l.id) && (!below || l.below))
   const byId = Object.fromEntries(map.landmarks.map((l) => [l.id, l]))
   const tunnels = map.tunnels.flatMap((t) =>
     t.path
@@ -66,7 +69,10 @@ export function CityMapView({
       .map((id, i) => [t.path[i], id])
       .filter(([a, b]) => visited.has(a) && visited.has(b))
   )
-  const steps = trail.map((id) => placeAt(map, id)).filter((p): p is Point => p !== null)
+  const steps = trail
+    .filter((id) => !below || byId[id]?.below)
+    .map((id) => placeAt(map, id))
+    .filter((p): p is Point => p !== null)
   const herePoint = placeAt(map, here)
   const clip = useId()
   const art = map.art
@@ -88,9 +94,18 @@ export function CityMapView({
         </pattern>
       </defs>
       <rect x={map.frame.x - 2000} y={map.frame.y - 2000} width={map.frame.width + 4000} height={map.frame.height + 4000} fill="#e3dcc2" />
-      {art?.outer && <image href={art.outer.src} x={art.outer.box[0]} y={art.outer.box[1]} width={art.outer.box[2]} height={art.outer.box[3]} preserveAspectRatio="none" />}
+      {below && (
+        <>
+          <rect x={map.frame.x - 2000} y={map.frame.y - 2000} width={map.frame.width + 4000} height={map.frame.height + 4000} fill="#24201c" />
+          {art?.underground && (
+            <image href={art.underground.src} x={art.underground.box[0]} y={art.underground.box[1]} width={art.underground.box[2]} height={art.underground.box[3]} preserveAspectRatio="none" />
+          )}
+        </>
+      )}
+      {!below && art?.outer && <image href={art.outer.src} x={art.outer.box[0]} y={art.outer.box[1]} width={art.outer.box[2]} height={art.outer.box[3]} preserveAspectRatio="none" />}
       {/* Up close, each district's own painting, cut to its outline. */}
-      {art &&
+      {!below &&
+        art &&
         u < CLOSE &&
         map.districts.map((d) => {
           const a = art.districts[d.id]
@@ -105,7 +120,7 @@ export function CityMapView({
             )
           )
         })}
-      {!painted && (
+      {!below && !painted && (
         <>
           {map.forests.map((f) => (
             <g key={f.id}>
@@ -137,7 +152,8 @@ export function CityMapView({
         </>
       )}
       {/* Over the painting, districts are only there to be picked. */}
-      {painted &&
+      {!below &&
+        painted &&
         onDistrict &&
         map.districts.map((d) => (
           <polygon
@@ -154,56 +170,58 @@ export function CityMapView({
         <line key={`${a}-${b}`} x1={byId[a].x} y1={byId[a].y} x2={byId[b].x} y2={byId[b].y} stroke={BELOW} strokeWidth={2.5 * u} strokeDasharray={`${4 * u} ${4 * u}`} />
       ))}
       {steps.length > 1 && <polyline points={points(steps)} fill="none" stroke={TRAIL} strokeWidth={2 * u} strokeDasharray={`${2 * u} ${5 * u}`} strokeLinecap="round" opacity={0.55} />}
-      {map.districts.map((d) => {
-        const [x, y] = d.labelAt ?? centroid(d.polygon)
-        // A name cut off at the edge reads as a misspelling, so one that would not fit is left out. Georgia averages
-        // about 0.55 of its size per letter.
-        const half = (d.name.length * 0.55 * (u < CLOSE ? 16 : 12) * u) / 2
-        if (x - half < shown[0] || x + half > shown[0] + shown[2]) return null
-        return (
-          <text
-            key={d.id}
-            x={x}
-            y={y}
-            textAnchor="middle"
-            fill={INK}
-            fontSize={(u < CLOSE ? 16 : 12) * u}
-            fontWeight={700}
-            fontFamily="Georgia, serif"
-            letterSpacing={0.5 * u}
-            paintOrder="stroke"
-            stroke={HALO}
-            strokeWidth={4 * u}
-            strokeLinejoin="round"
-            pointerEvents="none"
-          >
-            {d.name}
-          </text>
-        )
-      })}
-      {map.forests.map((f) => {
-        const [x, y] = f.labelAt ?? centroid(f.polygon ?? [])
-        return (
-          <text
-            key={f.id}
-            x={x}
-            y={y}
-            textAnchor="middle"
-            fill="#2f4a22"
-            fontSize={16 * u}
-            fontStyle="italic"
-            fontWeight={700}
-            fontFamily="Georgia, serif"
-            paintOrder="stroke"
-            stroke="#eef2dd"
-            strokeWidth={4 * u}
-            strokeLinejoin="round"
-            pointerEvents="none"
-          >
-            {f.name}
-          </text>
-        )
-      })}
+      {!below &&
+        map.districts.map((d) => {
+          const [x, y] = d.labelAt ?? centroid(d.polygon)
+          // A name cut off at the edge reads as a misspelling, so one that would not fit is left out. Georgia averages
+          // about 0.55 of its size per letter.
+          const half = (d.name.length * 0.55 * (u < CLOSE ? 16 : 12) * u) / 2
+          if (x - half < shown[0] || x + half > shown[0] + shown[2]) return null
+          return (
+            <text
+              key={d.id}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              fill={INK}
+              fontSize={(u < CLOSE ? 16 : 12) * u}
+              fontWeight={700}
+              fontFamily="Georgia, serif"
+              letterSpacing={0.5 * u}
+              paintOrder="stroke"
+              stroke={HALO}
+              strokeWidth={4 * u}
+              strokeLinejoin="round"
+              pointerEvents="none"
+            >
+              {d.name}
+            </text>
+          )
+        })}
+      {!below &&
+        map.forests.map((f) => {
+          const [x, y] = f.labelAt ?? centroid(f.polygon ?? [])
+          return (
+            <text
+              key={f.id}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              fill="#2f4a22"
+              fontSize={16 * u}
+              fontStyle="italic"
+              fontWeight={700}
+              fontFamily="Georgia, serif"
+              paintOrder="stroke"
+              stroke="#eef2dd"
+              strokeWidth={4 * u}
+              strokeLinejoin="round"
+              pointerEvents="none"
+            >
+              {f.name}
+            </text>
+          )
+        })}
       {landmarks.map((l) => {
         const color = l.below ? BELOW : l.id === here ? HERE : "#7a3d22"
         const [dx, dy, anchor] = { left: [-9, 5, "end"], above: [0, -11, "middle"], below: [0, 19, "middle"], right: [9, 5, "start"] }[l.label ?? "right"] as [
@@ -248,7 +266,17 @@ export function CityMapView({
 // The small view over the stage: the streets round where the party is. Opens the full map.
 export function CityMapInset({ map, trail, onOpen, className }: { map: CityMap; trail: string[]; onOpen: () => void; className?: string }) {
   const here = placeAt(map, trail[trail.length - 1])
-  const box = useMemo(() => (here ? boxAround(map, here, 640, 1.4) : frameBox(map)), [map, here?.[0], here?.[1]])
+  // Below ground, the tunnels round the party, kept inside the underground's own box.
+  const below = Boolean(map.underground && map.landmarks.find((l) => l.id === trail[trail.length - 1])?.below)
+  const box = useMemo(() => {
+    if (!here) return frameBox(map)
+    if (!below || !map.underground) return boxAround(map, here, 640, 1.4)
+    const [x, y, w, h] = map.underground.box
+    const width = Math.min(w, 300)
+    const height = width / 1.4
+    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+    return [clamp(here[0] - width / 2, x, x + w - width), clamp(here[1] - height / 2, y, y + h - height), width, height] as Box
+  }, [map, here?.[0], here?.[1], below])
   return (
     <button
       type="button"
@@ -256,26 +284,30 @@ export function CityMapInset({ map, trail, onOpen, className }: { map: CityMap; 
       aria-label="Open the map"
       className={cn(panel, "block h-[180px] w-[252px] overflow-hidden p-0 transition-[border-color] hover:border-stage-gold", className)}
     >
-      <CityMapView map={map} trail={trail} box={box} fill names={false} />
+      <CityMapView map={map} trail={trail} box={box} fill names={false} below={below} />
     </button>
   )
 }
 
-// The full map: the city and the land round it, or one district up close.
+// The full map: the city and the land round it, one district up close, or the tunnels below once the party has been
+// down them. It opens on the tunnels when the party is there.
 export function CityMapPanel({ map, trail, compact, onClose }: { map: CityMap; trail: string[]; compact?: boolean; onClose: () => void }) {
-  const [view, setView] = useState<string>("all")
   const here = trail[trail.length - 1]
+  const isBelow = (id: string) => Boolean(map.landmarks.find((l) => l.id === id)?.below)
+  const underground = map.underground && trail.some(isBelow) ? map.underground : undefined
+  const [view, setView] = useState<string>(underground && isBelow(here) ? "below" : "all")
   const hereDistrict = map.landmarks.find((l) => l.id === here)?.district ?? map.districts.find((d) => d.id === here)?.id
   const district = map.districts.find((d) => d.id === view)
+  const below = view === "below" && underground !== undefined
   // A painted map is square: the view is a painting's own box, in a square frame.
-  const art = district ? map.art?.districts[district.id] : map.art?.outer
-  const box = art?.box ?? (district ? districtBox(district) : frameBox(map))
+  const art = below ? map.art?.underground : district ? map.art?.districts[district.id] : map.art?.outer
+  const box = art?.box ?? (below ? underground.box : district ? districtBox(district) : frameBox(map))
   return (
     <section className={cn(panel, "absolute z-40 flex flex-col", compact ? "inset-3" : "inset-x-10 top-24 bottom-6")} aria-label="Map">
       <header className="flex flex-wrap items-center gap-2 border-b border-stage-line/20 px-5 py-3">
         <div className="mr-3">
           <div className={eyebrow}>Map</div>
-          <h2 className="font-serif text-xl">{district?.name ?? map.name}</h2>
+          <h2 className="font-serif text-xl">{below ? underground.name : (district?.name ?? map.name)}</h2>
           <p className="text-xs text-stage-muted">You are at {placeName(map, here)}</p>
         </div>
         <Pill active={view === "all"} onClick={() => setView("all")}>
@@ -287,13 +319,19 @@ export function CityMapPanel({ map, trail, compact, onClose }: { map: CityMap; t
             {d.id === hereDistrict ? " ·" : ""}
           </Pill>
         ))}
+        {underground && (
+          <Pill active={below} onClick={() => setView("below")}>
+            {underground.name}
+            {isBelow(here) ? " ·" : ""}
+          </Pill>
+        )}
         <Pill className="ml-auto" onClick={onClose}>
           Close
         </Pill>
       </header>
       <div className="grid min-h-0 flex-1 place-items-center overflow-hidden p-3">
         <div className={cn("relative h-full max-w-full overflow-hidden rounded-sm", art ? "aspect-square" : "w-full")}>
-          <CityMapView map={map} trail={trail} box={box} onDistrict={view === "all" ? setView : undefined} />
+          <CityMapView map={map} trail={trail} box={box} below={below} onDistrict={view === "all" ? setView : undefined} />
         </div>
       </div>
     </section>

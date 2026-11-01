@@ -7,7 +7,7 @@ import { loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runti
 // checks lib/citymap/encounter-places.json, the index the game reads, and `--write` rewrites it.
 
 type Point = [number, number]
-type Place = { id: string; name?: string; x?: number; y?: number; district?: string; polygon?: Point[]; path?: Point[]; sources?: string[] }
+type Place = { id: string; name?: string; x?: number; y?: number; below?: boolean; district?: string; polygon?: Point[]; path?: Point[]; sources?: string[] }
 type Constraint = { a: string; rel: "near" | "north-of"; b: string; source: string }
 type CityMap = {
   id: string
@@ -22,6 +22,7 @@ type CityMap = {
   districts: Place[]
   landmarks: Place[]
   tunnels: Array<{ id: string; path: string[] }>
+  underground?: { name: string; box: [number, number, number, number] }
   constraints: Constraint[]
   beyond: Place[]
 }
@@ -50,9 +51,10 @@ function main() {
   }
   expect(maps > 0, "No city maps found")
   // Painted art the game shows, from scripts/city-map-paint.ts.
-  const art = JSON.parse(readFileSync("lib/citymap/art.json", "utf8")) as Record<string, { outer?: { src: string }; districts?: Record<string, { src: string }> }>
+  const art = JSON.parse(readFileSync("lib/citymap/art.json", "utf8")) as Record<string, { outer?: { src: string }; underground?: { src: string }; districts?: Record<string, { src: string }> }>
   for (const [mapId, entry] of Object.entries(art))
-    for (const { src } of [...(entry.outer ? [entry.outer] : []), ...Object.values(entry.districts ?? {})]) expect(existsSync(`public${src}`), `${mapId}: art ${src} is missing`)
+    for (const { src } of [...(entry.outer ? [entry.outer] : []), ...(entry.underground ? [entry.underground] : []), ...Object.values(entry.districts ?? {})])
+      expect(existsSync(`public${src}`), `${mapId}: art ${src} is missing`)
   const written = `${JSON.stringify(index, null, 2)}\n`
   if (process.argv.includes("--write")) writeFileSync(INDEX, written)
   else expect(existsSync(INDEX) && readFileSync(INDEX, "utf8") === written, `${INDEX} is out of date. Run pnpm map:check --write`)
@@ -84,6 +86,12 @@ function checkMap(map: CityMap, settingId: string) {
     expect(inside([place.x!, place.y!], district!.polygon!), `${name}: ${place.id} is not inside ${place.district}`)
   }
   for (const tunnel of map.tunnels) for (const id of tunnel.path) expect(byId.has(id), `${name}: tunnel ${tunnel.id} names unknown ${id}`)
+  // The underground view shows every place below ground.
+  if (map.underground)
+    for (const place of map.landmarks.filter((l) => l.below)) {
+      const [x, y, w, h] = map.underground.box
+      expect(place.x! >= x && place.x! <= x + w && place.y! >= y && place.y! <= y + h, `${name}: ${place.id} is outside the underground box`)
+    }
 
   for (const place of [...map.landmarks, ...map.roads, ...map.forests, ...map.beyond]) for (const source of place.sources ?? []) checkSource(name, place.id, settingId, source)
   for (const constraint of map.constraints) {

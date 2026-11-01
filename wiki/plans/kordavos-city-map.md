@@ -42,6 +42,18 @@ Done 2026-10-31. `scripts/city-map-paint.ts` writes it, `lib/citymap/art.json` l
 - The full map is a square frame round the square painting.
 - Left: roofs get chunky at full zoom.
 
+## The GM
+
+Done 2026-10-31. `@d20/gm-core/citymap` holds the map logic, so the desktop runtime can use it, and `cityContext` writes the map in words for the GM: the city in brief, where the scene stands, up to six places near it with direction and distance, and which way each way on leads. Below ground it names the tunnel stops before and after instead.
+
+- The desktop and hosted runtimes and the website server add it to the staging block the GM already reads. Each bundled pack carries its city map, written by `build-runtime`. A downloaded story pack without one gets no city text.
+- A landmark marked `hidden` is a secret of the story, such as Silverhand's Hideout: it is named only when the party is there or it is the way on.
+- `apps/desktop/runtime/city-map.test.ts` checks the text for every March of Davos scene.
+
+## The catacombs
+
+Done 2026-10-31. The tunnel stops from the drain grate to the forgotten temple have their own painted view, `underground` in the map file and art index, painted from a plan drawn along the map file's tunnel by `paint kordavos underground`. The small map shows it while the party is below ground, and the full map opens on it there and offers it as The Catacombs once the party has been down.
+
 ## Settled by the text
 
 - Kordavos is a port on the Jade Sea. The Mordava runs down to it.

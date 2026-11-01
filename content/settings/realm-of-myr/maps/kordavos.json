@@ -69,12 +69,13 @@
     {"id": "drain-grate", "name": "The Drain Grate", "kind": "grate", "district": "asterian-quarter", "x": 815, "y": 270, "sources": ["encounters/the-chase.md:22", "encounters/the-hunt-for-the-assassin.md:26"], "hidden": true},
     {"id": "council-chambers", "name": "The City Council Chambers", "kind": "hall", "district": "asterian-quarter", "x": 690, "y": 460, "sources": ["encounters/through-the-labyrinth.md:33"], "label": "right"},
     {"id": "castle", "name": "The Castle", "kind": "castle", "district": "asterian-quarter", "x": 850, "y": 180, "stageOnly": true, "sources": ["scripts/stage-backdrops.ts:67", "scripts/stage-sets/covert-cargo.ts:809"]},
-    {"id": "powder-chamber", "name": "The Powder Chamber", "kind": "tunnel", "below": true, "x": 760, "y": 410, "sources": ["encounters/into-the-catacombs.md:27", "encounters/into-the-catacombs.md:29"], "label": "left"},
-    {"id": "labyrinth", "name": "The Labyrinth", "kind": "tunnel", "below": true, "x": 640, "y": 470, "sources": ["encounters/through-the-labyrinth.md:29", "encounters/through-the-labyrinth.md:33"]},
-    {"id": "sealed-door", "name": "The Sealed Door", "kind": "door", "below": true, "x": 590, "y": 500, "sources": ["encounters/the-sealed-door.md:31"]},
-    {"id": "big-empty", "name": "The Big Empty", "kind": "cavern", "below": true, "x": 550, "y": 530, "sources": ["encounters/big-empty.md:37"]},
-    {"id": "forgotten-temple", "name": "The Forgotten Temple", "kind": "temple", "below": true, "x": 510, "y": 550, "sources": ["encounters/forgotten-temple.md:25", "encounters/forgotten-temple.md:27"]}
+    {"id": "powder-chamber", "name": "The Powder Chamber", "kind": "tunnel", "below": true, "x": 760, "y": 370, "sources": ["encounters/into-the-catacombs.md:27", "encounters/into-the-catacombs.md:29"], "label": "left"},
+    {"id": "labyrinth", "name": "The Labyrinth", "kind": "tunnel", "below": true, "x": 680, "y": 450, "sources": ["encounters/through-the-labyrinth.md:29", "encounters/through-the-labyrinth.md:33"]},
+    {"id": "sealed-door", "name": "The Sealed Door", "kind": "door", "below": true, "x": 610, "y": 500, "sources": ["encounters/the-sealed-door.md:31"]},
+    {"id": "big-empty", "name": "The Big Empty", "kind": "cavern", "below": true, "x": 545, "y": 555, "sources": ["encounters/big-empty.md:37"]},
+    {"id": "forgotten-temple", "name": "The Forgotten Temple", "kind": "temple", "below": true, "x": 470, "y": 600, "sources": ["encounters/forgotten-temple.md:25", "encounters/forgotten-temple.md:27"]}
   ],
+  "underground": {"name": "The Catacombs", "box": [425, 220, 440, 440]},
   "tunnels": [
     {"id": "covenant-tunnel", "path": ["drain-grate", "powder-chamber", "labyrinth", "sealed-door", "big-empty", "forgotten-temple"]}
   ],
