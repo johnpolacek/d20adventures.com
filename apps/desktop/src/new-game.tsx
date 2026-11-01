@@ -88,8 +88,8 @@ export function NewGame(props: {
   const [askFirst, setAskFirst] = useState(false)
   // Where guests choose first, how many heroes each guest may take.
   const [each, setEach] = useState(1)
-  // How many open seats one guest may fill with heroes of their own. Unset, all of them.
-  const [bring, setBring] = useState<number | null>(null)
+  // How many open seats one guest may fill with heroes of their own.
+  const [bring, setBring] = useState(1)
   // An open invite: each open seat takes an invited hero or a guest's own, so invited heroes take no seat themselves.
   const [flex, setFlex] = useState(false)
   // The hero the player last held, so leaving a guest's choice of hero gives it back.
@@ -256,13 +256,13 @@ export function NewGame(props: {
               )}
               {open > 1 && (
                 <div className="mb-3 flex flex-wrap items-center gap-3">
-                  <span className={siteLabel}>Each guest brings</span>
+                  <span className={siteLabel}>Each player can have up to</span>
                   <fieldset className="flex" aria-label="How many of their own heroes each guest brings">
                     {Array.from({ length: open }, (_, i) => i + 1).map((n, i) => (
                       <Option
                         key={n}
-                        active={Math.min(bring ?? open, open) === n}
-                        aria-pressed={Math.min(bring ?? open, open) === n}
+                        active={Math.min(bring, open) === n}
+                        aria-pressed={Math.min(bring, open) === n}
                         className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < open - 1 && "rounded-r-none")}
                         onClick={() => setBring(n)}
                       >
@@ -270,6 +270,7 @@ export function NewGame(props: {
                       </Option>
                     ))}
                   </fieldset>
+                  <span className={siteLabel}>{Math.min(bring, open) === 1 ? "character" : "characters"}</span>
                 </div>
               )}
               {watching && <p className="mb-3 text-sm text-white/70">You watch your guest play.</p>}
@@ -416,7 +417,7 @@ export function NewGame(props: {
                     askFirst,
                     watching,
                     guestsChoose ? Math.min(each, held.length - 1) : undefined,
-                    open > 1 ? Math.min(bring ?? open, open) : undefined,
+                    open > 1 ? Math.min(bring, open) : undefined,
                     flex
                   )
                 : props.onLink?.()

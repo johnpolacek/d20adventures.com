@@ -47,7 +47,7 @@ Chosen 2026-10-31:
 - `heroDraftPrompt` in gm-core: setting, teaser, and rules against modern or invented world facts. The app's creator and the website's use it.
 - Website creator: `/player/<name>/characters/new` and `/settings/<setting>/<plan>/character-create` show the app's `HeroCreator` without the figure picker. The old 12-step form and its seven per-field actions are gone.
 - From a lobby, the creator offers that adventure's races, classes and hooks. The hook shapes the drafted background. A hosted lobby's hero takes an open seat with its hook, and the guest returns to the lobby link with its `?as=`.
-- `host.bring`: party setup shows Each guest brings with two or more Any hero seats. Default is all of them. Old games count as one.
+- `host.bring`: party setup shows Each player can have up to N characters with two or more Any hero seats. Default is one.
 - A guest's requests, the host's answer, and Sheet go by hero. Past the limit, a new request replaces the guest's latest waiting one.
 - `arrival` jobs have no turn. Seating a created hero queues one, as does hosting with roster heroes that lack an arrival. The app sends the arrivals its roster already has.
 - The website refuses a guest hero whose race or class the adventure does not allow.
