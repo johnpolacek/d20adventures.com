@@ -36,6 +36,6 @@ test("library marks free and owned adventures and ignores unknown ids", () => {
 })
 
 test("catalogEntry finds known ids only", () => {
-  assert.equal(catalogEntry("march-of-davos")?.listPriceCents, 500)
+  assert.equal(catalogEntry("welcome-to-kordavos")?.listPriceCents, 500)
   assert.equal(catalogEntry("nope"), undefined)
 })

@@ -1,9 +1,9 @@
 {
   "ambush-follow": {
-    "adventure": "march-of-davos",
+    "adventure": "welcome-to-kordavos",
     "encounter": "the-ambush",
     "story": {
-      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "save": "playtests/welcome-to-kordavos-2026-10-21.json.gz",
       "turns": [25, 29],
       "lead": true
     },
@@ -15,10 +15,10 @@
     ]
   },
   "study-draft": {
-    "adventure": "march-of-davos",
+    "adventure": "welcome-to-kordavos",
     "encounter": "the-rangers-quarters",
     "story": {
-      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "save": "playtests/welcome-to-kordavos-2026-10-21.json.gz",
       "turns": [41, 45],
       "lead": false
     },
@@ -30,10 +30,10 @@
     ]
   },
   "silverhand-traitor": {
-    "adventure": "march-of-davos",
+    "adventure": "welcome-to-kordavos",
     "encounter": "face-to-face-with-silverhand",
     "story": {
-      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "save": "playtests/welcome-to-kordavos-2026-10-21.json.gz",
       "turns": [23, 27],
       "lead": true
     },
@@ -45,10 +45,10 @@
     ]
   },
   "shadowing-tail": {
-    "adventure": "march-of-davos",
+    "adventure": "welcome-to-kordavos",
     "encounter": "shadowing-silverhand",
     "story": {
-      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "save": "playtests/welcome-to-kordavos-2026-10-21.json.gz",
       "turns": [20, 24],
       "lead": true
     },
@@ -60,10 +60,10 @@
     ]
   },
   "cellar-caught": {
-    "adventure": "march-of-davos",
+    "adventure": "welcome-to-kordavos",
     "encounter": "the-wine-cellar",
     "story": {
-      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "save": "playtests/welcome-to-kordavos-2026-10-21.json.gz",
       "turns": [42, 46],
       "lead": true
     },
@@ -76,10 +76,10 @@
     ]
   },
   "clan-clue": {
-    "adventure": "march-of-davos",
+    "adventure": "welcome-to-kordavos",
     "encounter": "clan-conflict",
     "story": {
-      "save": "playtests/march-of-davos-2026-10-21.json.gz",
+      "save": "playtests/welcome-to-kordavos-2026-10-21.json.gz",
       "turns": [1, 5],
       "lead": true
     },

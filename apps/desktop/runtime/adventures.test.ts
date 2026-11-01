@@ -19,7 +19,7 @@ test("all four Myr adventures are bundled, share no encounter ids, and start wit
   assert.deepEqual(
     adventureList(packs).map((a) => [a.id, a.title, a.start, a.players]),
     [
-      ["march-of-davos", "March of Davos", "the-gates-of-kordavos", [3, 5]],
+      ["welcome-to-kordavos", "Welcome to Kordavos", "the-gates-of-kordavos", [3, 5]],
       ["the-midnight-summons", "The Midnight Summons", "broken-silence", [1, 1]],
       ["covert-cargo", "Covert Cargo", "the-shipment", [3, 3]],
       ["the-road-to-kordavos", "The Road to Kordavos", "well-met", [1, 3]],
@@ -44,10 +44,10 @@ test("all four Myr adventures are bundled, share no encounter ids, and start wit
       ["thalbern"]
     )
     await run({ kind: "start", provider: "claude", replace: true })
-    assert.equal(store.state!.adventure.planId, "march-of-davos")
+    assert.equal(store.state!.adventure.planId, "welcome-to-kordavos")
     assert.equal(store.current().characters.filter((c) => c.type === "pc").length, 4)
     await assert.rejects(() => run({ kind: "start", provider: "claude", adventure: "not-installed", replace: true }), /not installed/)
-    assert.equal(store.state!.adventure.planId, "march-of-davos")
+    assert.equal(store.state!.adventure.planId, "welcome-to-kordavos")
   } finally {
     store.close()
     rmSync(dir, { recursive: true, force: true })

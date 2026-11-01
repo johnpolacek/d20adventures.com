@@ -1,4 +1,4 @@
-// The street kit (wiki/plans/march-of-davos-sets.md): a Kordavos street that any encounter can redress. A dressing
+// The street kit (wiki/plans/welcome-to-kordavos-sets.md): a Kordavos street that any encounter can redress. A dressing
 // picks a layout (lanes, a waterfront lane, a square), a time (night, dawn, day), the house fronts, and its own props,
 // lights, crowd, marks and shots, and gets back a whole set. The houses, cobbles, lanterns, signs and washing are the
 // kit's; what makes the place one encounter's is the dressing's.

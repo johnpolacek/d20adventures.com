@@ -54,7 +54,7 @@ function RemoveButton(props: { confirming: boolean; label: string; confirmLabel:
 }
 
 // The featured adventure gets its own panel below the intro adventures.
-const FEATURED = "march-of-davos"
+const FEATURED = "welcome-to-kordavos"
 
 // What the adventure's heroes are: its premades, the player's own, or either.
 const heroesLabel = (a: AdventureInfo) =>

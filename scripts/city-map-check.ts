@@ -124,12 +124,12 @@ function checkMap(map: CityMap, settingId: string) {
   }
 }
 
-// A source is "file:line". Encounter files are relative to the adventure folder, "adventure.md" to March of Davos,
+// A source is "file:line". Encounter files are relative to the adventure folder, "adventure.md" to Welcome to Kordavos,
 // "{adventure}/encounters/..." to the adventures folder, and "scripts/..." to the repo.
 function checkSource(name: string, owner: string, settingId: string, source: string) {
   const [file, line] = source.split(":")
   const adventures = join(SETTINGS, settingId, "adventures")
-  const path = file.startsWith("scripts/") ? file : file.startsWith("encounters/") || file === "adventure.md" ? join(adventures, "march-of-davos", file) : join(adventures, file)
+  const path = file.startsWith("scripts/") ? file : file.startsWith("encounters/") || file === "adventure.md" ? join(adventures, "welcome-to-kordavos", file) : join(adventures, file)
   if (!expect(existsSync(path), `${name}: ${owner} cites missing file ${source}`)) return
   const text = readFileSync(path, "utf8").split("\n")[Number(line) - 1]
   expect(text?.trim(), `${name}: ${owner} cites a blank or missing line ${source}`)

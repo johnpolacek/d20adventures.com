@@ -23,7 +23,7 @@ const DPR = 2
 
 const arg = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`))?.split("=")[1]
 const tiers = (arg("tiers") ?? "ultra").split(",")
-const staging = arg("staging") ?? "march-of-davos/the-gates-of-kordavos"
+const staging = arg("staging") ?? "welcome-to-kordavos/the-gates-of-kordavos"
 const onlyShots = arg("shots")?.split(",")
 const motion = process.argv.includes("--motion")
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))

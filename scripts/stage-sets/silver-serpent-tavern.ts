@@ -1,4 +1,4 @@
-// Writes March of Davos's Silver Serpent Tavern (wiki/plans/march-of-davos-sets.md): a dockside drinking hall of tarred
+// Writes Welcome to Kordavos's Silver Serpent Tavern (wiki/plans/welcome-to-kordavos-sets.md): a dockside drinking hall of tarred
 // timber, its far end a great arch open on the foggy quay, and the staging of the tavern's encounter.
 //
 //   pnpm exec tsx scripts/stage-sets/silver-serpent-tavern.ts && pnpm stage:check
@@ -11,8 +11,8 @@ type V2 = [number, number]
 type V3 = [number, number, number]
 type Obj = Record<string, unknown>
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const inn = JSON.parse(readFileSync(`${SETS}/dragonbone-inn.json`, "utf8"))
 const riverfront = JSON.parse(readFileSync(`${SETS}/kordavos-riverfront.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
@@ -417,7 +417,7 @@ const DOCK: V2 = [LEFT_X, -2.2]
 write(`${STAGINGS}/the-silver-serpent-tavern.json`, {
   format: "d20.stage.staging",
   version: 1,
-  id: "march-of-davos/the-silver-serpent-tavern",
+  id: "welcome-to-kordavos/the-silver-serpent-tavern",
   set: "realm-of-myr/silver-serpent-tavern",
   cast: [
     ...party(PARTY, [-0.5, -4.0]),

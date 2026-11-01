@@ -1,4 +1,4 @@
-// Writes March of Davos's Dragonbone Inn (wiki/plans/dragonbone-inn-stage.md): the inn's common room and backroom in the
+// Writes Welcome to Kordavos's Dragonbone Inn (wiki/plans/dragonbone-inn-stage.md): the inn's common room and backroom in the
 // evening and at dawn the next day, and the stagings of the three encounters there.
 //
 //   pnpm exec tsx scripts/stage-sets/dragonbone-inn.ts && pnpm stage:check
@@ -11,8 +11,8 @@ type V2 = [number, number]
 type V3 = [number, number, number]
 type Obj = Record<string, unknown>
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const square = JSON.parse(readFileSync(`${SETS}/kordavos-harvest-square.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 const pick = (names: string[]) => Object.fromEntries(names.map((n) => [n, square.materials[n]]))
@@ -221,7 +221,7 @@ function furnishings(morning: boolean): Obj[] {
             ],
       segments: 14,
       material: i % 2 ? "pottery" : "pewter",
-    })),
+    }))
   )
   return objects
 }
@@ -471,7 +471,7 @@ const PATRONS = [
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string) => ({ subject, distance, angle, height, lookHeight, fov: 44, label })
 const partyShot = { subjects: PARTY.map(([id]) => id), offset: [-2.2, 1.75, -2.4], target: [0.1, 1.05, 0.1], relative: "world", fov: 54, label: "Party" }
 function staging(id: string, set: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
 }
 
 // The Dragonbone Inn: Bram has brought the party to the corner table and sets down their drinks. Beric and Eamon watch

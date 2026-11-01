@@ -1,4 +1,4 @@
-// Writes March of Davos's Clan Conflict scene (wiki/plans/clan-conflict-stage.md): the harvest square cut with a ring
+// Writes Welcome to Kordavos's Clan Conflict scene (wiki/plans/clan-conflict-stage.md): the harvest square cut with a ring
 // of onlookers at its south end, where the street from the gate opens into it, and the staging of the standoff there.
 //
 //   pnpm exec tsx scripts/stage-sets/clan-conflict.ts && pnpm stage:check
@@ -10,8 +10,8 @@ import { readFileSync, writeFileSync } from "node:fs"
 type V2 = [number, number]
 type Obj = Record<string, unknown>
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const square = JSON.parse(readFileSync(`${SETS}/kordavos-harvest-square.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 function write(path: string, data: unknown) {
@@ -67,7 +67,7 @@ const vendors = festival.cast.filter((c: Obj) => !PARTY.some(([id]) => id === c.
 const staging = {
   format: "d20.stage.staging",
   version: 1,
-  id: "march-of-davos/clan-conflict",
+  id: "welcome-to-kordavos/clan-conflict",
   set: "realm-of-myr/kordavos-harvest-square-conflict",
   cast: [
     ...party,

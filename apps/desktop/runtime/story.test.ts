@@ -179,7 +179,7 @@ test("chapters add up along the chain, whoever the heroes are, and only through 
   await playing(async (store, step) => {
     await midnight(store, step)
     // Nor does the story go to an adventure the finished one does not lead to.
-    await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "march-of-davos", replace: true, continues: true })
+    await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "welcome-to-kordavos", replace: true, continues: true })
     assert.equal(store.state!.story, undefined)
   })
   await playing(async (store, step) => {
@@ -221,7 +221,7 @@ test("chapters add up along the chain, whoever the heroes are, and only through 
   })
 })
 
-// A roster hero the Road and March of Davos both accept.
+// A roster hero the Road and Welcome to Kordavos both accept.
 async function hero(store: LocalStore) {
   const { heroCommand } = await import("./heroes")
   await heroCommand(

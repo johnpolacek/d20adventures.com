@@ -1,4 +1,4 @@
-// Writes the forgotten temple for March of Davos (wiki/plans/march-of-davos-sets.md), the adventure's last bespoke set:
+// Writes the forgotten temple for Welcome to Kordavos (wiki/plans/welcome-to-kordavos-sets.md), the adventure's last bespoke set:
 // a hidden cathedral of Old Valkara beyond the catacombs' archway. Walls of white marble glowing with a faint inner
 // starlight, pillars carved as ancient oaks branching into the vault, the vault painted with the constellations of a lost
 // sky, and at the centre an empty altar, the air above it rippling. And the stagings of Forgotten Temple and the Final
@@ -12,8 +12,8 @@ import { readFileSync, writeFileSync } from "node:fs"
 import type { Obj, V2, V3 } from "./kits/street"
 
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 const lower = JSON.parse(readFileSync(`${SETS}/kordavos-lower-districts.json`, "utf8"))
 function write(path: string, data: unknown) {
@@ -33,7 +33,7 @@ const party = (spots: [string, V2][], facing: Facing) => spots.map(([id, at]) =>
 const partyShot = (spots: [string, V2][], offset: V3, label = "Party", fov = 54) => ({ subjects: spots.map(([id]) => id), offset, target: [0, 1.2, 0], relative: "world", fov, label })
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string, fov = 44) => ({ subject, distance, angle, height, lookHeight, fov, label })
 function staging(id: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: "realm-of-myr/forgotten-temple", cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: "realm-of-myr/forgotten-temple", cast, shots, shot, ...extra })
 }
 
 const W = 18

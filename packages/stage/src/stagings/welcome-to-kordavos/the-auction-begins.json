@@ -1,0 +1,468 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "welcome-to-kordavos/the-auction-begins",
+  "set": "realm-of-myr/black-market-auction",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/branka-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/branka-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/branka-portrait.jpg"
+      },
+      "at": [
+        -2.2,
+        7
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/cassia-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/cassia-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/cassia-portrait.jpg"
+      },
+      "at": [
+        -1.3,
+        7.45
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/yeva-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/yeva-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/yeva-portrait.jpg"
+      },
+      "at": [
+        1.3,
+        7.45
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/milos-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/milos-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/milos-portrait.jpg"
+      },
+      "at": [
+        2.2,
+        7
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "auctioneer",
+      "name": "The Auctioneer",
+      "role": "Auctioneer",
+      "height": 1.88,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/auctioneer-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/auctioneer-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/auctioneer-portrait.jpg"
+      },
+      "at": [
+        0,
+        -2.65
+      ],
+      "facing": [
+        0,
+        6
+      ]
+    },
+    {
+      "id": "auction-assistant",
+      "name": "The assistant",
+      "role": "Auction assistant",
+      "height": 1.68,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/auction-assistant-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/auction-assistant-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/auction-assistant-portrait.jpg"
+      },
+      "at": [
+        -1.55,
+        -2.75
+      ],
+      "facing": [
+        -0.3,
+        -1.9
+      ]
+    },
+    {
+      "id": "bidder-noblewoman",
+      "name": "A masked noblewoman",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-noblewoman-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-noblewoman-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-noblewoman-portrait.jpg"
+      },
+      "at": [
+        -1.38,
+        0.71
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-merchant",
+      "name": "A masked merchant",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-merchant-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-merchant-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-merchant-portrait.jpg"
+      },
+      "at": [
+        1.54,
+        1.83
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-collector",
+      "name": "A masked collector",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-collector-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-collector-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-collector-portrait.jpg"
+      },
+      "at": [
+        1.7,
+        0.54
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-veiled",
+      "name": "A veiled lady",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-veiled-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-veiled-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-veiled-portrait.jpg"
+      },
+      "at": [
+        -2.97,
+        2.35
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-young-noble",
+      "name": "A masked young noble",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-young-noble-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-young-noble-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-young-noble-portrait.jpg"
+      },
+      "at": [
+        -3.34,
+        0.61
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-blue",
+      "name": "A lady in a blue mask",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-blue-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-blue-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-blue-portrait.jpg"
+      },
+      "at": [
+        0.82,
+        0.9
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-hooded",
+      "name": "A hooded buyer",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-hooded-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-hooded-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-hooded-portrait.jpg"
+      },
+      "at": [
+        0.78,
+        3.15
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-beak",
+      "name": "A buyer in a beaked mask",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-beak-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-beak-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-beak-portrait.jpg"
+      },
+      "at": [
+        -0.94,
+        2
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-silver",
+      "name": "An elf in a silver mask",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-silver-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-silver-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-silver-portrait.jpg"
+      },
+      "at": [
+        3.6,
+        1.89
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-hooded-b",
+      "name": "Another hooded buyer",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-hooded-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-hooded-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-hooded-portrait.jpg"
+      },
+      "at": [
+        -2.07,
+        3.97
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-blue-b",
+      "name": "A masked lady",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-blue-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-blue-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-blue-portrait.jpg"
+      },
+      "at": [
+        2.94,
+        3.62
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "bidder-merchant-b",
+      "name": "A stout masked buyer",
+      "role": "Bidder",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/bidder-merchant-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/bidder-merchant-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/bidder-merchant-portrait.jpg"
+      },
+      "at": [
+        -4.29,
+        1.2
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "silverhand",
+      "name": "A hooded man with a silver gauntlet",
+      "role": "Smuggler lord",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/silverhand-seated-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/silverhand-seated-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/silverhand-seated-portrait.jpg"
+      },
+      "at": [
+        4.8,
+        3.75
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "silverhand-representative",
+      "name": "A man in a black coat",
+      "role": "Representative",
+      "height": 1.86,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/silverhand-representative-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/silverhand-representative-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/silverhand-representative-portrait.jpg"
+      },
+      "at": [
+        6.44,
+        3.6
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "raskov-guard-a",
+      "name": "A silent guard",
+      "role": "Raskov guard",
+      "height": 1.85,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/raskov-guard-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/raskov-guard-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/raskov-guard-portrait.jpg"
+      },
+      "at": [
+        4.77,
+        4.94
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    },
+    {
+      "id": "raskov-guard-b",
+      "name": "A silent guard",
+      "role": "Raskov guard",
+      "height": 1.85,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/raskov-guard-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/raskov-guard-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/raskov-guard-portrait.jpg"
+      },
+      "at": [
+        5.92,
+        4.18
+      ],
+      "facing": [
+        0,
+        -3
+      ]
+    }
+  ],
+  "shots": {
+    "auctioneer": {
+      "subject": "auctioneer",
+      "distance": 2.4,
+      "angle": 0,
+      "height": 1.75,
+      "lookHeight": 1.7,
+      "fov": 44,
+      "label": "The Auctioneer"
+    },
+    "silverhand": {
+      "subject": "silverhand",
+      "distance": 2.2,
+      "angle": -20,
+      "height": 1.4,
+      "lookHeight": 1.15,
+      "fov": 44,
+      "label": "The hooded man"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        0.4,
+        1.75,
+        -3.6
+      ],
+      "target": [
+        0,
+        1.15,
+        0
+      ],
+      "relative": "world",
+      "fov": 56,
+      "label": "Party"
+    }
+  },
+  "shot": "auction"
+}

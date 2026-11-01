@@ -40,7 +40,7 @@ const EXPECTATIONS: Expectation[] = [
   { planId: "covert-cargo", party: [3, 3], start: "the-shipment", premadeIds: ["1749159962941", "1749307435667", "thalbern"], hasOptions: false },
   { planId: "the-road-to-kordavos", party: [1, 3], start: "well-met", premadeIds: [], hasOptions: true },
   {
-    planId: "march-of-davos",
+    planId: "welcome-to-kordavos",
     party: [3, 5],
     start: "the-gates-of-kordavos",
     // Both premades AND custom-character options: premades serve as AI companions.
@@ -99,7 +99,7 @@ function assertGridSourceAndOrder() {
   assert.ok(nextConfig.includes("./content/settings/realm-of-myr/**/*"), "Realm of Myr wiki source is missing from the server trace configuration")
 
   const order = getLocalWikiAdventuresForSetting(SETTING_ID).map((definition) => definition.planId)
-  assert.deepEqual(order, ["covert-cargo", "march-of-davos", "the-midnight-summons", "the-road-to-kordavos"], "grid order changed")
+  assert.deepEqual(order, ["covert-cargo", "welcome-to-kordavos", "the-midnight-summons", "the-road-to-kordavos"], "grid order changed")
 }
 
 function main() {

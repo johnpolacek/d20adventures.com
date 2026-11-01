@@ -1,6 +1,6 @@
 # The Road to Kordavos in 3D
 
-[Plans](index.md) · [Stage authoring](../stage-authoring.md) · [March of Davos in 3D](march-of-davos-sets.md)
+[Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Welcome to Kordavos in 3D](welcome-to-kordavos-sets.md)
 
 Status: every encounter has a set, 2026-10-23. Reviewed on the web viewer at ultra, DPR 2. Not yet checked in the running desktop app.
 

@@ -23,7 +23,7 @@ Code links to these.
 | Page | Scope |
 |---|---|
 | [Stageview](stageview.md) | Stage play screen decisions and open questions. |
-| [March of Davos in 3D](march-of-davos-sets.md) | Sets and kits for every March of Davos encounter. |
+| [Welcome to Kordavos in 3D](welcome-to-kordavos-sets.md) | Sets and kits for every Welcome to Kordavos encounter. |
 | [The Road to Kordavos in 3D](road-to-kordavos-sets.md) | The road kit and its two sets. |
 | [The Dragonbone Inn in 3D](dragonbone-inn-stage.md) | The inn's sets. |
 | [Clan Conflict in 3D](clan-conflict-stage.md) | The standoff set. |

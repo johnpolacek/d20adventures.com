@@ -111,7 +111,7 @@ Owner: an "any hero" seat, "if allowed on the adventure, host has right to appro
 
 ### Design
 
-- Allowed where the adventure takes custom heroes, which is `availableCharacterOptions` in its manifest. March of Davos and The Road to Kordavos do. Covert Cargo and The Midnight Summons do not.
+- Allowed where the adventure takes custom heroes, which is `availableCharacterOptions` in its manifest. Welcome to Kordavos and The Road to Kordavos do. Covert Cargo and The Midnight Summons do not.
 - Party setup: an Any hero tile beside New hero adds a seat for a guest's own hero. It counts toward the party size and is always an invited seat.
 - The website keeps the count as `host.open`, and guests' requests as `host.requests`: who asks, their hero's key, name, race and class, the status, and the host's note.
 - A guest with the link signs in and asks to join with one of their own heroes, or makes one first. One request per guest. Asking again replaces it.
@@ -128,12 +128,12 @@ Owner: an "any hero" seat, "if allowed on the adventure, host has right to appro
 - A note goes with a rejection only. Approval has none.
 - The host sees the hero's name, race, class, and the guest's username. Not the sheet.
 - The website does not check a guest's hero against the adventure's allowed races and classes. The host decides.
-- Checked in the running app against the local website and dev Convex, with March of Davos: Branka on You, Cassia on Invite, and one Any hero seat. The lobby showed a link for Cassia and one for any hero.
+- Checked in the running app against the local website and dev Convex, with Welcome to Kordavos: Branka on You, Cassia on Invite, and one Any hero seat. The lobby showed a link for Cassia and one for any hero.
 - As the test user with the any hero link: the guest's own heroes showed with Ask to join. A hero already at the table was refused with a message. A request showed in the app as Thora Battlehammer, Dwarf Cleric, d20playtest.
 - Reject in the app showed the guest "The host declined Thora Battlehammer." A rejection with a note, sent straight to Convex, showed the note. Approve seated Thalbern, the app listed both heroes, and the any hero link went away.
 - Not checked: typing a note in the app's field, two open seats, a guest making a new hero from the lobby, and Choose another hero while waiting.
 - No tests were added. Owner prefers throwaway checks.
-- That March of Davos test game was removed from dev Convex later the same day.
+- That Welcome to Kordavos test game was removed from dev Convex later the same day.
 
 ## Auto-approve and hero sheets, 2026-10-10
 
@@ -160,13 +160,13 @@ Owner chose Remove for a seated guest, since automatic seating needs a way to un
 
 ### Checked, 2026-10-10
 
-- In the running app against the local website and dev Convex, with March of Davos and two any hero seats.
+- In the running app against the local website and dev Convex, with Welcome to Kordavos and two any hero seats.
 - Default: the seats showed Auto-approve chosen. The guest's buttons read Join. Join seated Thora at once, and the guest's page loaded again as a player.
 - The app's lobby read "auto-approve", listed Thora at the table with Sheet, and Sheet showed her attributes, appearance, background, personality, motivation, skills, abilities, spells, and equipment.
 - Ask me: the guest's buttons read Ask to join. The request showed in the app with Sheet, Reject, and Approve. Sheet showed Thalbern's sheet under the request.
 - Approve seated Thalbern, and the guest's page loaded again as a player without being touched.
 - Not checked: Start after an approval, and a guest whose sheet cannot be read.
-- The two March of Davos test games were removed from dev Convex later the same day.
+- The two Welcome to Kordavos test games were removed from dev Convex later the same day.
 
 ## Guests choose first, 2026-10-10
 
@@ -361,7 +361,7 @@ Owner: one grid for heroes and party, with shortcuts for an open invite, where g
 
 ## Full hosted playthrough, 2026-10-31
 
-Owner: a full playthrough of March of Davos, two players with two heroes each and one AI hero.
+Owner: a full playthrough of Welcome to Kordavos, two players with two heroes each and one AI hero.
 
 - Local website and dev Convex. `POST /api/desktop/host` with Branka and Milos for the host, Yeva and Cassia invited, and Thalbern as AI.
 - The bundled `host.cjs` worker ran the GM through Claude, standing in for the app. Both players played from `/play/<id>` in headed browsers, the host as `d20playtest` and the guest as `d20guest`.

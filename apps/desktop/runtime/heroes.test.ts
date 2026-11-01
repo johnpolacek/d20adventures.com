@@ -112,7 +112,7 @@ test("one model call drafts a hero from race, class, name and idea, and the rost
   }
 })
 
-test("a hero made for March of Davos says why they came, and arrives at the gate with it", async () => {
+test("a hero made for Welcome to Kordavos says why they came, and arrives at the gate with it", async () => {
   const { store, cleanup } = setup()
   try {
     const prompts: string[] = []
@@ -129,21 +129,21 @@ test("a hero made for March of Davos says why they came, and arrives at the gate
       },
     }
     const hook = "Carrying a sealed letter for someone in the city, and told not to read it."
-    const idea = { kind: "heroDraft", provider: "claude", race: "Half-Orc", archetype: "Ranger", name: "Dusha", adventure: "march-of-davos" } as const
+    const idea = { kind: "heroDraft", provider: "claude", race: "Half-Orc", archetype: "Ranger", name: "Dusha", adventure: "welcome-to-kordavos" } as const
     const { draft } = await heroCommand({ ...idea, hook }, store, packs, llm)
     assert.equal(prompts.length, 1)
     assert.match(prompts[0], /The player's reason for them: Carrying a sealed letter/)
     // The opening scene, with its labels taken off, shows how the premades arrive.
     assert.match(prompts[0], /A broad dwarf with copper braids/)
     assert.doesNotMatch(prompts[0], /\{hero:/)
-    assert.deepEqual(draft!.arrivals, { "march-of-davos": arrival })
+    assert.deepEqual(draft!.arrivals, { "welcome-to-kordavos": arrival })
     // Without a reason, the GM picks one of the adventure's hooks.
     await heroCommand(idea, store, packs, llm)
     assert.match(prompts[1], /Pick the reason that suits them best: Bringing an offering/)
 
     await heroCommand({ kind: "saveHero", hero: { ...draft!, figure: "half-orc-b" } }, store, packs, offline)
     const [hero] = store.heroes()
-    assert.deepEqual(hero.arrivals, { "march-of-davos": arrival })
+    assert.deepEqual(hero.arrivals, { "welcome-to-kordavos": arrival })
     await game(
       store,
       packs,
@@ -151,7 +151,7 @@ test("a hero made for March of Davos says why they came, and arrives at the gate
     )({
       kind: "start",
       provider: "claude",
-      adventure: "march-of-davos",
+      adventure: "welcome-to-kordavos",
       party: [
         { id: hero.id, ai: false },
         { id: "branka-stoneveil", ai: true },
@@ -192,7 +192,7 @@ test("a hero made for March of Davos says why they came, and arrives at the gate
   }
 })
 
-test("a roster hero with no arrival for March of Davos gets one at the start, kept for the next game", async () => {
+test("a roster hero with no arrival for Welcome to Kordavos gets one at the start, kept for the next game", async () => {
   const { store, cleanup } = setup()
   try {
     const hero = await addHero(store, "Dusha", "Half-Orc", "Ranger", "half-orc-b")
@@ -212,7 +212,7 @@ test("a roster hero with no arrival for March of Davos gets one at the start, ke
     const start = {
       kind: "start" as const,
       provider: "claude" as const,
-      adventure: "march-of-davos",
+      adventure: "welcome-to-kordavos",
       replace: true,
       party: [
         { id: hero.id, ai: false },
@@ -223,7 +223,7 @@ test("a roster hero with no arrival for March of Davos gets one at the start, ke
     await game(store, packs, llm)(start)
     assert.equal(prompts.length, 1)
     assert.match(prompts[0], /Dusha, a Female Half-Orc Ranger[\s\S]*Pick the reason that suits them best: Bringing an offering/)
-    assert.deepEqual(store.heroes()[0].arrivals, { "march-of-davos": arrival })
+    assert.deepEqual(store.heroes()[0].arrivals, { "welcome-to-kordavos": arrival })
     assert.match(storyText(store.current().story), /A half-orc shoulders a bundle of wolf pelts/)
     assert.equal(store.current().characters.find((c) => c.id === hero.id)!.appearance, `Dusha wears a travel-stained cloak. ${arrival.tell}`)
 
@@ -247,7 +247,7 @@ test("a failed arrival call still starts the game, with the hero left out of the
     )({
       kind: "start",
       provider: "claude",
-      adventure: "march-of-davos",
+      adventure: "welcome-to-kordavos",
       party: [
         { id: hero.id, ai: false },
         { id: "branka-stoneveil", ai: true },
@@ -282,7 +282,7 @@ test("a new game checks the party against the adventure's player range, premades
     await assert.rejects(() => start("covert-cargo", [{ id: "1749159962941", ai: false }]), /needs 3 heroes/)
     await assert.rejects(
       () =>
-        start("march-of-davos", [
+        start("welcome-to-kordavos", [
           { id: "branka-stoneveil", ai: true },
           { id: "milos-radan", ai: true },
           { id: "yeva-softstep", ai: true },
@@ -291,7 +291,7 @@ test("a new game checks the party against the adventure's player range, premades
     )
     await assert.rejects(
       () =>
-        start("march-of-davos", [
+        start("welcome-to-kordavos", [
           { id: "branka-stoneveil", ai: false },
           { id: "branka-stoneveil", ai: true },
           { id: "yeva-softstep", ai: true },
@@ -300,7 +300,7 @@ test("a new game checks the party against the adventure's player range, premades
     )
     await assert.rejects(
       () =>
-        start("march-of-davos", [
+        start("welcome-to-kordavos", [
           { id: "hero-unknown", ai: false },
           { id: "milos-radan", ai: true },
           { id: "yeva-softstep", ai: true },
@@ -457,14 +457,14 @@ const premade = (pack: string, id: string) => {
 
 test("the party fills a scene's slots: premades keep theirs, created heroes take the rest and spare spots", () => {
   const gate = SCENES["the-front-of-the-line"]
-  const authored = ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"].map((id) => premade("march-of-davos", id))
+  const authored = ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"].map((id) => premade("welcome-to-kordavos", id))
   assert.deepEqual(partyScene(gate, authored).staging, gate.staging)
 
   // A created hero who shares Milos's first name does not take his slot or his art.
   const milos = who("hero-aaaa1111", "Milos Hardcastle", "Dwarf", "Fighter")
   const vex = who("hero-bbbb2222", "Vex", "Half-Orc", "Barbarian", "Female")
   const last = who("hero-cccc3333", "Ann Tew", "Gnome", "Wizard", "Female")
-  const party = [premade("march-of-davos", "branka-stoneveil"), milos, vex, premade("march-of-davos", "wrenna-faelendar"), last]
+  const party = [premade("welcome-to-kordavos", "branka-stoneveil"), milos, vex, premade("welcome-to-kordavos", "wrenna-faelendar"), last]
   const chosen = { [milos.id]: "dwarf-a", [vex.id]: "half-orc-b", [last.id]: "gnome-b" }
   const { staging } = partyScene(gate, party, chosen)
   const cast = (id: string) => staging.cast.find((m) => m.id === id)!
@@ -476,7 +476,7 @@ test("the party fills a scene's slots: premades keep theirs, created heroes take
   assert.deepEqual(cast(milos.id).art, STOCK_FIGURES["dwarf-a"].art)
   assert.equal(cast(milos.id).height, STOCK_FIGURES["dwarf-a"].height)
   assert.equal(cast(milos.id).role, "Dwarf fighter")
-  assert.equal(cast("wrenna-faelendar").art.front, "/stage/fixtures/march-of-davos/wrenna-front.webp")
+  assert.equal(cast("wrenna-faelendar").art.front, "/stage/fixtures/welcome-to-kordavos/wrenna-front.webp")
   assert.deepEqual(cast(last.id).at, [0.82, 14.5])
   assert.deepEqual(staging.loops!["gate-line"].party!.members, ["branka", milos.id, vex.id, "wrenna-faelendar", last.id])
   assert.deepEqual(staging.shots!.party.subjects, ["branka", milos.id, vex.id, "wrenna-faelendar", last.id])
@@ -486,7 +486,7 @@ test("the party fills a scene's slots: premades keep theirs, created heroes take
   assert.equal(portraitFor(undefined, milos, chosen), STOCK_FIGURES["dwarf-a"].art.portrait)
 
   // Three heroes at the festival: the unused slot leaves the scene and its shots.
-  const festival = partyScene(SCENES["the-harvest-festival"], [milos, vex, premade("march-of-davos", "yeva-softstep")], chosen).staging
+  const festival = partyScene(SCENES["the-harvest-festival"], [milos, vex, premade("welcome-to-kordavos", "yeva-softstep")], chosen).staging
   assert.ok(!festival.cast.some((m) => ["branka-stoneveil", "cassia-verane", "milos-radan"].includes(m.id)))
   assert.equal(festival.cast.filter((m) => [milos.id, vex.id, "yeva-softstep"].includes(m.id)).length, 3)
   assert.deepEqual(festival.shots!.party.subjects!.length, 3)
@@ -495,7 +495,7 @@ test("the party fills a scene's slots: premades keep theirs, created heroes take
   assert.match(context, /Milos Hardcastle \(-1\.6, 17\.6\); Vex \(-0\.3, 18\.1\)/)
 
   // In the line, the party waits two groups back from the table, and a spare hero stands at its end.
-  const line = spatialContext("the-gates-of-kordavos", [premade("march-of-davos", "branka-stoneveil"), milos, vex], {}, chosen)!
+  const line = spatialContext("the-gates-of-kordavos", [premade("welcome-to-kordavos", "branka-stoneveil"), milos, vex], {}, chosen)!
   assert.match(line, /two groups back/)
   assert.match(line, /Branka Stoneveil \(-0\.5, 16\.1\); Milos Hardcastle \(-0\.5, 14\.9\); Vex \(-1\.4, 15\.5\)/)
 })
@@ -503,10 +503,10 @@ test("the party fills a scene's slots: premades keep theirs, created heroes take
 test("heroes from other adventures with numeric website ids stand in the gate's staging", () => {
   const gate = SCENES["the-gates-of-kordavos"]
   const party = [
-    premade("march-of-davos", "branka-stoneveil"),
+    premade("welcome-to-kordavos", "branka-stoneveil"),
     who("thalbern", "Thalbern", "Half-Elf", "Ranger"),
     who("1749159962941", "Lyra Silvanus", "Human", "Rogue", "Female"),
-    premade("march-of-davos", "milos-radan"),
+    premade("welcome-to-kordavos", "milos-radan"),
     who("1749307435667", "Poppen Quickfoot", "Halfling", "Bard"),
   ]
   const { staging } = partyScene(gate, party)
@@ -551,7 +551,7 @@ test("created heroes show their figure and premades without stage art get theirs
   const hero = { id: "hero-dddd4444", name: "Thalbern Nobody", race: "Elf", gender: "Male", type: "pc" } as const
   assert.equal(portraitFor(undefined, hero, { [hero.id]: "elf-a" }), STOCK_FIGURES["elf-a"].art.portrait)
   assert.equal(portraitFor(undefined, premade("covert-cargo", "1749159962941")), "/stage/fixtures/covert-cargo/lyra-portrait.jpg")
-  assert.equal(portraitFor(undefined, premade("march-of-davos", "ilya-veles")), "/stage/fixtures/march-of-davos/ilya-portrait.jpg")
+  assert.equal(portraitFor(undefined, premade("welcome-to-kordavos", "ilya-veles")), "/stage/fixtures/welcome-to-kordavos/ilya-portrait.jpg")
   assert.equal(portraitFor(undefined, { id: "x", name: "Nobody", race: "Gnome", gender: "Female", type: "pc" }), STOCK_FIGURES["gnome-b"].art.portrait)
   const hero2: Hero["figure"] = "half-elf-a"
   assert.ok(STOCK_FIGURES[hero2])

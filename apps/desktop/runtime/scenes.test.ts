@@ -9,7 +9,7 @@ import { game, type Packs } from "./game"
 import { LocalStore } from "./store"
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
-const pack = packs["march-of-davos"]
+const pack = packs["welcome-to-kordavos"]
 console.log = console.warn = console.error = () => {}
 const unused = async (): Promise<never> => {
   throw new Error("Unexpected model request")
@@ -74,7 +74,7 @@ test("every authored scene is a real encounter, and every festival character has
       turn.characters.map((c) => c.id)
     )
     assert.equal(castIdFor(scene.staging.cast, { id: "liora", name: "Cowled Assassin" }), undefined)
-    for (const c of turn.characters) assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
+    for (const c of turn.characters) assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/welcome-to-kordavos\/.+-portrait\.jpg$/)
   } finally {
     run.close()
   }
@@ -109,9 +109,9 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
     assert.deepEqual(leaders.map((c) => c.id).sort(), ["barok-redbeard", "larya-halloway"])
     for (const c of leaders) {
       assert.equal(castIdFor(scene.staging.cast, c), c.id)
-      assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
+      assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/welcome-to-kordavos\/.+-portrait\.jpg$/)
     }
-    // The authored March of Davos scenes after the square, each NPC with a figure and a portrait of their own.
+    // The authored Welcome to Kordavos scenes after the square, each NPC with a figure and a portrait of their own.
     for (const [encounter, npcs, where] of [
       ["the-dragonbone-inn", ["bram"], /Dragonbone Inn[\s\S]*the corner table/],
       ["an-unsolicited-opportunity", ["beric", "eamon"], /Dragonbone Inn[\s\S]*the corner table/],
@@ -137,7 +137,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       assert.deepEqual(people.map((c) => c.id).sort(), npcs)
       for (const c of people) {
         assert.equal(castIdFor(scene.staging.cast, c), c.id)
-        assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
+        assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/welcome-to-kordavos\/.+-portrait\.jpg$/)
       }
       assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
@@ -160,7 +160,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       assert.ok(scene, encounter)
       const staged = people.filter((c) => castIdFor(scene.staging.cast, c) === c.id)
       assert.equal(staged.length, figures, encounter)
-      for (const c of staged) assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/march-of-davos\/.+-portrait\.jpg$/)
+      for (const c of staged) assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/welcome-to-kordavos\/.+-portrait\.jpg$/)
       assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
     }
     // An encounter with no scene falls back to story view, which keeps the party's faces from the authored scenes.

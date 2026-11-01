@@ -1,18 +1,18 @@
 # Kordavos city map
 
-[Plans](index.md) · [Spatial claims](../sources/kordavos-spatial-claims.md) · [Mapview](mapview.md) · [March of Davos in 3D](march-of-davos-sets.md)
+[Plans](index.md) · [Spatial claims](../sources/kordavos-spatial-claims.md) · [Mapview](mapview.md) · [Welcome to Kordavos in 3D](welcome-to-kordavos-sets.md)
 
 Status: steps 1 to 5 built 2026-10-31. Seen in the desktop app's browser preview on a finished playtest save: the small map over the stage, the full map and a district zoom. Not yet seen in the Tauri window.
 
 ## Owner request, 2026-10-31
 
-An overhead map of Kordavos for March of Davos, with a small view and a full screen view, accurate to the story.
+An overhead map of Kordavos for Welcome to Kordavos, with a small view and a full screen view, accurate to the story.
 
 ## Approach
 
 1. Extract every spatial claim from the text. Done: [Spatial claims](../sources/kordavos-spatial-claims.md), 134 places and 463 claims over four parts.
 2. Rule on the conflicts, then write one gazetteer. Done: `content/settings/realm-of-myr/maps/kordavos.json`, shared with Covert Cargo and The Road to Kordavos. Every landmark cites its source lines. It sits outside the adventure folders, which the compiler reads as source.
-3. Tag each encounter with a landmark. Done: every encounter of March of Davos, Covert Cargo and The Road to Kordavos has `landmark: "kordavos/{place}"`, compiled to `landmarkId`. A place is a landmark, district, road or `beyond` entry. `pnpm map:check` fails when:
+3. Tag each encounter with a landmark. Done: every encounter of Welcome to Kordavos, Covert Cargo and The Road to Kordavos has `landmark: "kordavos/{place}"`, compiled to `landmarkId`. A place is a landmark, district, road or `beyond` entry. `pnpm map:check` fails when:
    - an encounter has no landmark or names an unknown place;
    - a cited source line is missing or blank;
    - a landmark falls outside its district;
@@ -48,7 +48,7 @@ Done 2026-10-31. `@d20/gm-core/citymap` holds the map logic, so the desktop runt
 
 - The desktop and hosted runtimes and the website server add it to the staging block the GM already reads. Each bundled pack carries its city map, written by `build-runtime`. A downloaded story pack without one gets no city text.
 - A landmark marked `hidden` is a secret of the story, such as Silverhand's Hideout: it is named only when the party is there or it is the way on.
-- `apps/desktop/runtime/city-map.test.ts` checks the text for every March of Davos scene.
+- `apps/desktop/runtime/city-map.test.ts` checks the text for every Welcome to Kordavos scene.
 
 ## The catacombs
 

@@ -210,7 +210,7 @@ This changes the website's stage pages as well, which keeps both in step.
 
 ### One adventure picker
 
-- Before: Begin went straight to party setup for March of Davos, and party setup had its own row of adventure tabs. That row was the first picker, from 2026-10-04. The Adventures page came on 2026-10-08 and the tabs stayed.
+- Before: Begin went straight to party setup for Welcome to Kordavos, and party setup had its own row of adventure tabs. That row was the first picker, from 2026-10-04. The Adventures page came on 2026-10-08 and the tabs stayed.
 - Now: Begin opens the Adventures page. Party setup has no tabs. Cancel and Escape return to Adventures.
 - Locked adventures are reached from their cards on the Adventures page, as before.
 - Checked in WebKit: Begin shows the intro row and the featured panel, a card opens party setup with no tabs, and Cancel returns.

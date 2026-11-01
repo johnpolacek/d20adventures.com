@@ -1,0 +1,184 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "welcome-to-kordavos/the-ambush",
+  "set": "realm-of-myr/kordavos-ambush-lanes",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/branka-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/branka-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/branka-portrait.jpg"
+      },
+      "at": [
+        -0.9,
+        -6.4
+      ],
+      "facing": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/cassia-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/cassia-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/cassia-portrait.jpg"
+      },
+      "at": [
+        0.3,
+        -5.8
+      ],
+      "facing": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/yeva-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/yeva-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/yeva-portrait.jpg"
+      },
+      "at": [
+        -1.7,
+        -4.4
+      ],
+      "facing": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/milos-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/milos-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/milos-portrait.jpg"
+      },
+      "at": [
+        1.2,
+        -4.9
+      ],
+      "facing": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "silas",
+      "name": "A hooded archer",
+      "role": "Cowl rogue",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/silas-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/silas-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/silas-portrait.jpg"
+      },
+      "at": [
+        3.5,
+        -12.2
+      ],
+      "facing": [
+        0,
+        -5.5
+      ],
+      "y": 12
+    },
+    {
+      "id": "liora",
+      "name": "A hooded archer",
+      "role": "Cowl assassin",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/cowl-archer-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/cowl-archer-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/cowl-archer-portrait.jpg"
+      },
+      "at": [
+        -3.5,
+        -1.4
+      ],
+      "facing": [
+        0,
+        -5.5
+      ],
+      "y": 12
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        2,
+        1.8,
+        4.6
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    },
+    "silas": {
+      "subject": "silas",
+      "distance": 4.2,
+      "angle": 10,
+      "height": 1.2,
+      "lookHeight": 1.4,
+      "fov": 48,
+      "label": "The archer on the east roof"
+    },
+    "liora": {
+      "subject": "liora",
+      "distance": 4.2,
+      "angle": -10,
+      "height": 1.2,
+      "lookHeight": 1.4,
+      "fov": 48,
+      "label": "The archer on the west roof"
+    }
+  },
+  "shot": "lanes",
+  "exits": [
+    {
+      "cast": "silas",
+      "when": "melt away",
+      "to": [
+        6.8,
+        -12.2
+      ]
+    },
+    {
+      "cast": "liora",
+      "when": "melt away",
+      "to": [
+        -6.8,
+        -1.4
+      ]
+    }
+  ]
+}

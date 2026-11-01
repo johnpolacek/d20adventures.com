@@ -1,4 +1,4 @@
-// Writes March of Davos's Lower Districts (wiki/plans/march-of-davos-sets.md): a narrow street of leaning tenements under
+// Writes Welcome to Kordavos's Lower Districts (wiki/plans/welcome-to-kordavos-sets.md): a narrow street of leaning tenements under
 // a house built across it, and the side alley where the Black Market's day signs are carved, at the day's grey end. The
 // stagings of its three encounters: the walk in, the urchins, and the search for the signs.
 //
@@ -11,8 +11,8 @@ import { readFileSync, writeFileSync } from "node:fs"
 type V2 = [number, number]
 type Obj = Record<string, unknown>
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const docks = JSON.parse(readFileSync(`${SETS}/kordavos-docks.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 const r2 = (n: number) => Math.round(n * 100) / 100
@@ -430,7 +430,7 @@ const member = (id: string, name: string, role: string, height: number, file: st
 const party = (spots: [string, V2][], facing: V2) => spots.map(([id, at]) => ({ ...festival.cast.find((c: Obj) => c.id === id), at, facing }))
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string) => ({ subject, distance, angle, height, lookHeight, fov: 44, label })
 function staging(id: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: "realm-of-myr/kordavos-lower-districts", cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: "realm-of-myr/kordavos-lower-districts", cast, shots, shot, ...extra })
 }
 const fiddler = (at: V2, facing: V2) => member("fiddler", "A street fiddler", "Street musician", 1.75, "fiddler", at, facing)
 const local = (at: V2, facing: V2) => member("hooded-local", "A hooded woman", "Local", 1.64, "hooded-local", at, facing)

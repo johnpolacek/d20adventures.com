@@ -1,4 +1,4 @@
-// Writes March of Davos's auction house (wiki/plans/march-of-davos-sets.md): the candlelit chamber behind the Black
+// Writes Welcome to Kordavos's auction house (wiki/plans/welcome-to-kordavos-sets.md): the candlelit chamber behind the Black
 // Market's curtained door, a horseshoe hall of old stone with a gallery round it, rows of velvet chairs facing a stone
 // lectern and a half-round stage, and the stagings of the three auction encounters. One set per lot on the lectern: the
 // jewelled dagger, the relic map, and nothing once the map is sold.
@@ -12,8 +12,8 @@ import { readFileSync, writeFileSync } from "node:fs"
 type V2 = [number, number]
 type Obj = Record<string, unknown>
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const market = JSON.parse(readFileSync(`${SETS}/kordavos-black-market.json`, "utf8"))
 const library = JSON.parse(readFileSync(`${SETS}/old-grand-library.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
@@ -454,7 +454,7 @@ const guards = (spots: [V2, V2], facing: V2 | string) => [
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string) => ({ subject, distance, angle, height, lookHeight, fov: 44, label })
 const partyShot = { subjects: PARTY.map(([id]) => id), offset: [0.4, 1.75, -3.6], target: [0, 1.15, 0], relative: "world", fov: 56, label: "Party" }
 function staging(id: string, set: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
 }
 
 // The Auction Begins: the jewelled dagger on the lectern, the auctioneer behind it, the bidders in their seats. Silverhand

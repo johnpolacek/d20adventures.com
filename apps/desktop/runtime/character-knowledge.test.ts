@@ -138,7 +138,7 @@ test("a round's private beats are one fact for those in them, and facts merge by
 
 test("at the gate table, Garlan's whisper is remembered the next round by Thalbern and Garlan only, until Thalbern tells Milos", async () => {
   await playing(
-    "march-of-davos",
+    "welcome-to-kordavos",
     [
       { id: BRANKA, ai: false },
       { id: THALBERN, ai: true },
@@ -187,7 +187,7 @@ test("at the gate table, Garlan's whisper is remembered the next round by Thalbe
 
 test("an NPC's turn reads the round as the NPC knows it: no whisper between heroes, and no player's own words", async () => {
   await playing(
-    "march-of-davos",
+    "welcome-to-kordavos",
     [
       { id: THALBERN, ai: false },
       { id: MILOS, ai: true },

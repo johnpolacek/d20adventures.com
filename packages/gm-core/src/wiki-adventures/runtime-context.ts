@@ -209,7 +209,7 @@ export function assembleGameplayContextPacket(args: {
   }
 }
 
-// Rounds a scene should take when its frontmatter sets no `roundBudget`. The second March of Davos run spent eight
+// Rounds a scene should take when its frontmatter sets no `roundBudget`. The second Welcome to Kordavos run spent eight
 // rounds in the wine cellar with nothing to say how long it had gone on.
 export const DEFAULT_ROUND_BUDGET = 4
 

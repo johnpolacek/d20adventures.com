@@ -16,7 +16,7 @@ The gates of Kordavos come into view.
 
 Stone archways hung with Asterian and Valkaran banners rise over the road, and music and laughter carry from the Harvest Festival beyond. At the checkpoint, a long line of travelers, merchants and villagers waits while the city guard takes three marks a head and asks each their business in the city.
 
-The story continues in March of Davos.
+The story continues in Welcome to Kordavos.
 
 ## Migration Context
 

@@ -1,4 +1,4 @@
-// Dev-only mock of the stage-first turn page (Stageview phase 4): March of Davos, "The Gates of Kordavos", with scripted
+// Dev-only mock of the stage-first turn page (Stageview phase 4): Welcome to Kordavos, "The Gates of Kordavos", with scripted
 // GM turns and beats, no Convex and no model. Gated to development: notFound() elsewhere.
 
 import { notFound } from "next/navigation"

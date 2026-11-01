@@ -20,7 +20,7 @@ const RAW = process.env.STANDEE_RAW ?? join(tmpdir(), "d20-standees")
 const STAGE = "public/stage"
 const STYLE = "design/stage/styleref.jpg"
 // A finished standee, for finish and detail only.
-const FINISH = "public/stage/fixtures/march-of-davos/yeva-front.webp"
+const FINISH = "public/stage/fixtures/welcome-to-kordavos/yeva-front.webp"
 const PORTRAIT_BG = "#3b4256"
 
 // `backNote` adds to the back prompt when a back keeps coming out wrong (an open cloak drawn behind a front-facing body).
@@ -98,14 +98,14 @@ const FIGURES: Record<string, Figure> = {
   ),
   // Premades whose web portraits predate Stageview, painted from those portraits.
   wrenna: {
-    out: "fixtures/march-of-davos/wrenna",
+    out: "fixtures/welcome-to-kordavos/wrenna",
     who: "Wrenna of Faelendar, Elf female ranger",
     look: "A tall, watchful elf woman with moss-green eyes and ash-blonde hair in braids. Grey-green scout leathers of the Valkarr Forest with a dark green cloak and leather bracers, a quiver of arrows on her back and a pale yew longbow held in her left hand.",
     ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/wrenna-faelendar.png",
     head: 0.13,
   },
   ilya: {
-    out: "fixtures/march-of-davos/ilya",
+    out: "fixtures/welcome-to-kordavos/ilya",
     who: "Ilya Veles, Half-Elf male bard",
     look: "A graceful half-elf man with laughing grey eyes, dark hair worn loose past his collar, and a warm smile. A long festival coat of green and black Valkaran embroidery in gold over an Asterian cut, an orange sash, dark trousers and boots. A seven-stringed gusle slung across his back.",
     ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/ilya-veles.png",
@@ -142,9 +142,9 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "His deep hood is up and covers the whole back of his head, so no hair or scalp shows. The cloak hangs straight down his back from the shoulders to the calves and hides his back completely: we see the outside of the cloak, not his chest, belt, pouches or buckles. His hands and weapons show only at his sides.",
   },
-  // March of Davos, the ambush: Silas as the rooftop archer, from his portrait.
+  // Welcome to Kordavos, the ambush: Silas as the rooftop archer, from his portrait.
   "silas-rooftop": {
-    out: "fixtures/march-of-davos/silas",
+    out: "fixtures/welcome-to-kordavos/silas",
     who: "Silas, Human male archer of the Covenant of the Cowl",
     look: "A lean, wiry man in his forties, about 1.80 m tall: a narrow hard face fully visible, grey stubble, watchful grey eyes, short grey-streaked hair, a charcoal hood pushed back off his head, no mask. A worn dark-brown leather jerkin over a grey wool shirt, a quiver of grey-fletched arrows on his back, dark trousers and soft boots. A shortbow held low in his left hand.",
     ref: "public/stage/portraits/silas.webp",
@@ -175,62 +175,62 @@ const FIGURES: Record<string, Figure> = {
     ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/ce082298-d090-47b2-a3b9-5af7c851dec7.png",
     head: 0.13,
   },
-  // March of Davos, Clan Conflict: the two leaders from their portraits and the encounter art, and two followers each.
+  // Welcome to Kordavos, Clan Conflict: the two leaders from their portraits and the encounter art, and two followers each.
   barok: {
-    out: "fixtures/march-of-davos/barok",
+    out: "fixtures/welcome-to-kordavos/barok",
     who: "Barok Redbeard, Human male warrior",
     look: "A burly, barrel-chested man in his forties, about 1.9 m tall, with tall human proportions and long legs, not a dwarf. Curly brown hair, a long bushy beard dyed rust-red reaching his chest, two fresh red scratches across one cheek, a fierce scowl. Mismatched battle-worn armour: big scuffed blue-steel pauldrons with dented silver edges and a round star medallion, a dark steel breastplate over a deep-blue padded sleeves, a worn leather war belt and tassets, steel vambraces, heavy boots. A longsword in its scabbard at his left hip, his right hand resting on the hilt.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725127621254",
     head: 0.13,
   },
   larya: {
-    out: "fixtures/march-of-davos/larya",
+    out: "fixtures/welcome-to-kordavos/larya",
     who: "Larya Halloway, Human female rogue",
     look: "A tall, strong woman in her thirties, about 1.8 m. Long dark-brown hair worn half up, the rest falling past her shoulders, a diagonal red scar across her left cheek, a dark teardrop earring, a hard, proud glare. A finely tailored sleeveless tunic of ochre-gold cloth with a patterned silver-grey collar, a tooled leather shoulder strap, dark leather bracers to the elbow, a slim belt with a fine silver buckle, dark fitted trousers and tall boots. A long dagger sheathed at her hip.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725127643282",
     head: 0.13,
   },
   "barok-bruiser": {
-    out: "fixtures/march-of-davos/barok-bruiser",
+    out: "fixtures/welcome-to-kordavos/barok-bruiser",
     who: "Barok's man, Human male brawler",
     look: "A big rough man in his forties with shaggy brown hair, a braided brown beard and a scarred brow. A heavy brown fur mantle over a dented mail shirt and a mismatched leather jerkin, one iron vambrace, a wide belt with a pouch, rough trousers and worn boots. A hand axe held low in his right hand.",
     head: 0.13,
   },
   "barok-sellsword": {
-    out: "fixtures/march-of-davos/barok-sellsword",
+    out: "fixtures/welcome-to-kordavos/barok-sellsword",
     who: "Barok's woman, Human female sellsword",
     look: "A hard-faced woman in her thirties with cropped black hair and a once-broken nose. Patched brown leather armour with a single dented steel pauldron on her left shoulder, a short mail skirt, a rope belt, scuffed boots. A heavy wooden cudgel held in her right hand.",
     head: 0.13,
   },
   "larya-retainer": {
-    out: "fixtures/march-of-davos/larya-retainer",
+    out: "fixtures/welcome-to-kordavos/larya-retainer",
     who: "Larya's retainer, Human male swordsman",
     look: "A lean, upright man in his thirties with neat dark hair and a trimmed beard. A tailored deep-green Valkaran long coat with gold embroidery at the cuffs and collar, fine silver chains across the chest, a cream shirt, dark trousers and polished boots. A rapier at his left hip, his hand on its hilt.",
     head: 0.13,
   },
   "larya-kinswoman": {
-    out: "fixtures/march-of-davos/larya-kinswoman",
+    out: "fixtures/welcome-to-kordavos/larya-kinswoman",
     who: "Larya's kinswoman, Human female noble",
     look: "A proud woman in her twenties with auburn hair in an intricate braided crown, gold drop earrings and a jewelled gold collar. A fine russet coat with ochre trim over a cream blouse, a green sash, a slim dagger at her belt, soft leather boots. Arms folded.",
     head: 0.13,
   },
-  // March of Davos, the Dragonbone Inn: the innkeeper and the inn's visitors from their portraits, a bard, and patrons.
+  // Welcome to Kordavos, the Dragonbone Inn: the innkeeper and the inn's visitors from their portraits, a bard, and patrons.
   bram: {
-    out: "fixtures/march-of-davos/bram",
+    out: "fixtures/welcome-to-kordavos/bram",
     who: "Bram, Human male innkeeper",
     look: "A burly, barrel-chested innkeeper in his fifties, about 1.85 m tall, with tall human proportions and long legs, not a dwarf. Curly grey-brown hair to the collar, a big curled grey moustache and a short grey beard, ruddy cheeks, jovial creased eyes and a warm grin. A brown leather waistcoat with brass buttons and tooled trim over a loose white linen shirt with the sleeves rolled to the elbow, a long stained canvas apron tied at the waist, a cloth over one shoulder, dark trousers and boots.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726055418469",
     head: 0.13,
   },
   beric: {
-    out: "fixtures/march-of-davos/beric",
+    out: "fixtures/welcome-to-kordavos/beric",
     who: "Beric Sonacus, Human male dockworker",
     look: "A burly, broad-shouldered dockworker in his forties, about 1.86 m tall, with tall human proportions and long legs, not a dwarf. Short dark tousled hair, heavy dark stubble, a weathered sun-darkened face with a deep old scar running diagonally across it, hard hazel eyes. A worn dark-brown leather coat with a high collar and stitched trim, a dark wool shirt, a wide belt with an iron cargo hook, rough trousers tucked into heavy boots. Big working hands at his sides.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093177133",
     head: 0.13,
   },
   eamon: {
-    out: "fixtures/march-of-davos/eamon",
+    out: "fixtures/welcome-to-kordavos/eamon",
     who: "Eamon Vellis, Half-Elf male scholar",
     look: "A slender, slightly frail half-elf man who looks about sixty, about 1.78 m tall. Pointed ears, short swept grey hair, a neat white beard, sharp features, keen pale eyes behind round wire spectacles. A long worn ochre-gold scholar's robe trimmed with dark fur over a dark coat, a cream shirt with a loose cravat, a leather satchel of papers at his hip, a book held against his side, soft boots.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093191207",
@@ -239,27 +239,27 @@ const FIGURES: Record<string, Figure> = {
       "In image 1 the satchel hangs at the left of the picture and the book is held at the right of the picture. Seen from behind they swap: the satchel hangs at the RIGHT of the picture and the book shows at the LEFT of the picture, partly hidden by his body.",
   },
   elara: {
-    out: "fixtures/march-of-davos/elara",
+    out: "fixtures/welcome-to-kordavos/elara",
     who: "Elara Antonov, Human female courier",
     look: "A slight young woman of about twenty, about 1.65 m tall. Long dark-brown hair, tousled, loose strands falling over her face, pale skin, tired grey-green eyes red-rimmed from crying, tear-streaked cheeks, a worried frown. A loose white linen blouse with full sleeves under a dark brown laced bodice, a long dark skirt, a small round gold pendant on a cord, a thin bracelet, worn shoes. A small leather scroll case held in one hand.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726111995012",
     head: 0.13,
   },
   bard: {
-    out: "fixtures/march-of-davos/bard",
+    out: "fixtures/welcome-to-kordavos/bard",
     who: "The Dragonbone's bard, Human male minstrel",
     look: "A lanky man in his late twenties, about 1.8 m tall, with a cheerful face, a short dark beard and wavy chestnut hair under a soft green cap with a pheasant feather. A patched crimson doublet with slashed sleeves over a cream shirt, a short green cloak thrown back over one shoulder, brown hose and soft boots. Playing a pear-shaped wooden lute held across his body, one hand on its neck and the other on the strings.",
     head: 0.13,
   },
   "patron-merchant": {
-    out: "fixtures/march-of-davos/patron-merchant",
+    out: "fixtures/welcome-to-kordavos/patron-merchant",
     who: "A merchant at the inn, Human male",
     look: "A stout, prosperous merchant in his fifties with a bald crown, grey side hair and a forked grey beard, a ruddy face mid-laugh. A wine-red wool coat with fur trim over a mustard doublet, a heavy belt purse, rings on his fingers. A pewter tankard in his right hand resting on his knee.",
     head: 0.17,
     seated: true,
   },
   "patron-traveller": {
-    out: "fixtures/march-of-davos/patron-traveller",
+    out: "fixtures/welcome-to-kordavos/patron-traveller",
     who: "A traveller at the inn, Human female",
     look: "A weathered woman traveller in her forties with grey-streaked auburn hair tied back, a tired kind face. A hooded brown travelling cloak thrown back over a moss-green wool dress, a leather satchel, dusty boots. A wooden bowl of stew in her lap and a spoon in her right hand.",
     head: 0.17,
@@ -268,21 +268,21 @@ const FIGURES: Record<string, Figure> = {
       "Seen squarely from directly behind, not turned: her back faces the camera straight on, the back of her head centred above it, no cheek or profile showing. In image 1 her knees angle toward the left of the picture, so from behind they angle toward the RIGHT of the picture. The bowl and spoon are hidden in front of her.",
   },
   "patron-farmer": {
-    out: "fixtures/march-of-davos/patron-farmer",
+    out: "fixtures/welcome-to-kordavos/patron-farmer",
     who: "A farmer at the inn, Human male",
     look: "An old farmer in his sixties, lean and weathered, white stubble, a flat grey wool cap, deep laugh lines. A patched brown smock over a cream shirt, a rope belt, mud-stained trousers and old boots. A long clay pipe in his right hand.",
     head: 0.17,
     seated: true,
   },
   "patron-sailor": {
-    out: "fixtures/march-of-davos/patron-sailor",
+    out: "fixtures/welcome-to-kordavos/patron-sailor",
     who: "A river sailor at the inn, Human male",
     look: "A young river sailor in his twenties with sun-browned skin, a short dark beard and a gold ring in one ear. A blue knitted cap, a faded red-and-cream striped shirt under an open oilskin vest, a sash, canvas trousers rolled at the calf, bare forearms with a faded tattoo. A pewter tankard held up in his right hand.",
     head: 0.17,
     seated: true,
   },
   "patron-hooded": {
-    out: "fixtures/march-of-davos/patron-hooded",
+    out: "fixtures/welcome-to-kordavos/patron-hooded",
     who: "A hooded stranger at the inn, Human male",
     look: "A lean, watchful man whose deep charcoal hood shadows his face down to a stubbled jaw, a thin mouth and the glint of narrow eyes. A dark wool cloak wrapped close, worn black leather gloves, the hilt of a long dagger at his belt, dark boots. Hunched forward with his elbows on his knees, a small clay cup held in both hands.",
     head: 0.17,
@@ -291,7 +291,7 @@ const FIGURES: Record<string, Figure> = {
       "Seen from directly behind: his hood is up and covers the whole back of his head, and the cloak hangs straight down his back to the stool and hides his back. His hands, the cup, the dagger and his knees are in front of him and NOT visible. Below the cloak only the stool's legs, the backs of his calves and the heels of his boots show.",
   },
   "patron-hooded-b": {
-    out: "fixtures/march-of-davos/patron-hooded-b",
+    out: "fixtures/welcome-to-kordavos/patron-hooded-b",
     who: "A cloaked stranger at the inn, Human female",
     look: "A slim woman in a dusty dark-green cloak with the hood up, a narrow pale face, sharp dark eyes glancing to one side, a thin scar on her chin. Arms folded under the cloak, dark leather trousers and soft boots.",
     head: 0.17,
@@ -299,37 +299,37 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "Seen from directly behind: her hood is up and covers the whole back of her head, and the cloak hangs straight down her back to the stool and hides her back and arms. Her knees and thighs are in front of her and NOT visible. Below the cloak only the stool's legs, the backs of her calves and the heels of her boots show.",
   },
-  // March of Davos, the Old Grand Library: Sister Danica from her portrait, the archivist, and two readers.
+  // Welcome to Kordavos, the Old Grand Library: Sister Danica from her portrait, the archivist, and two readers.
   "sister-danica": {
-    out: "fixtures/march-of-davos/sister-danica",
+    out: "fixtures/welcome-to-kordavos/sister-danica",
     who: "Sister Danica, Human female cleric of Thyra",
     look: "A serene woman in her thirties, about 1.7 m tall, with long dark-brown hair in an intricate braid over one shoulder, calm dark eyes, a gentle, knowing smile. Long flowing robes of deep blue-grey wool with a cream inner robe, a silver-embroidered stole, wide sleeves, a corded belt. A silver pendant on a chain: a tree intertwined with a crescent moon, the symbol of Thyra. Hands folded before her.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726275370282",
     head: 0.13,
   },
   "eldrin-varokich": {
-    out: "fixtures/march-of-davos/eldrin-varokich",
+    out: "fixtures/welcome-to-kordavos/eldrin-varokich",
     who: "Eldrin Varokich, Human male archivist",
     look: "An elderly, slightly stooped man of about seventy, about 1.72 m tall, with a pale, lined face, thin wispy grey hair combed back from a high forehead, keen watchful grey eyes and a faint wary smile. Simple long robes of faded charcoal-brown wool with a cream stole embroidered with the old Valkaran sun-and-oak symbol, a rope belt with a ring of iron keys, a pair of wire spectacles hanging on a cord around his neck. Hands clasped behind his back.",
     head: 0.13,
   },
   "reader-scholar": {
-    out: "fixtures/march-of-davos/reader-scholar",
+    out: "fixtures/welcome-to-kordavos/reader-scholar",
     who: "An old scholar in the library, Human male",
     look: "A white-bearded old scholar in his seventies with a bald head, half-moon spectacles on his nose, absorbed in reading. A long plum-coloured scholar's gown with black velvet trim over a grey robe, soft slippers. A large open leather-bound book held in his lap with both hands.",
     head: 0.17,
     seated: true,
   },
   "reader-acolyte": {
-    out: "fixtures/march-of-davos/reader-acolyte",
+    out: "fixtures/welcome-to-kordavos/reader-acolyte",
     who: "A young acolyte of Thyra in the library, Human female",
     look: "A young woman acolyte of about seventeen with short dark-blonde hair under a plain grey coif, ink-stained fingers, a studious frown. A simple undyed cream novice's robe with a grey tabard, a small wooden tree pendant. Writing with a quill on a wax-sealed scroll held on a board across her knees.",
     head: 0.17,
     seated: true,
   },
-  // March of Davos, the Silver Serpent: Harron the bartender, the dockworkers, and a smuggler.
+  // Welcome to Kordavos, the Silver Serpent: Harron the bartender, the dockworkers, and a smuggler.
   harron: {
-    out: "fixtures/march-of-davos/harron",
+    out: "fixtures/welcome-to-kordavos/harron",
     who: "Harron, Human male bartender",
     look: "A grizzled man in his fifties, about 1.8 m tall, with tall human proportions and long legs, not a dwarf. Deep-set hard grey eyes under heavy brows, a long pale scar running down his left cheek, cropped iron-grey hair, grey stubble, an unreadable weathered face. A faded dark-blue sailor's shirt with the sleeves rolled up over tattooed forearms, a stained leather apron, a wide belt, dark trousers and sea boots. Wiping a pewter tankard with a rag.",
     head: 0.13,
@@ -337,36 +337,36 @@ const FIGURES: Record<string, Figure> = {
       "The apron is tied on at the front: from behind only its neck strap and the waist ties show over the back of the blue shirt, and his dark trousers show below. The tankard and rag are in front of him and NOT visible.",
   },
   "dockworker-boss": {
-    out: "fixtures/march-of-davos/dockworker-boss",
+    out: "fixtures/welcome-to-kordavos/dockworker-boss",
     who: "A burly dockworker at the tavern, Human male",
     look: "A big, burly dockworker in his forties with arms thick with muscle, a patchy brown beard, a broken nose, small suspicious eyes and a weather-beaten red face. A sweat-stained sleeveless grey linen shirt under an open leather vest, a cargo hook on his belt, rough canvas trousers, heavy boots. Leaning back, a pewter tankard of ale held in his right hand resting on his thigh.",
     head: 0.17,
     seated: true,
   },
   "dockworker-a": {
-    out: "fixtures/march-of-davos/dockworker-a",
+    out: "fixtures/welcome-to-kordavos/dockworker-a",
     who: "A dockworker at the tavern, Human male",
     look: "A lean, wiry dockworker in his thirties with a gaunt weather-beaten face, a shaved head, a short black beard and wary narrow eyes. A patched brown wool jerkin over a dirty cream shirt, a knitted grey scarf, rough trousers, worn boots. Hunched forward, both calloused hands round a clay mug of ale.",
     head: 0.17,
     seated: true,
   },
   "dockworker-b": {
-    out: "fixtures/march-of-davos/dockworker-b",
+    out: "fixtures/welcome-to-kordavos/dockworker-b",
     who: "A dockworker at the tavern, Human female",
     look: "A strong, broad-shouldered woman dockworker in her thirties with a sunburnt freckled face, red hair tied back under a stained kerchief, a hard, guarded stare. A rolled-sleeve olive canvas shirt, a heavy leather apron, a rope coiled over one shoulder, rough trousers, boots. A pewter tankard held in both hands on her knee.",
     head: 0.17,
     seated: true,
   },
   smuggler: {
-    out: "fixtures/march-of-davos/smuggler",
+    out: "fixtures/welcome-to-kordavos/smuggler",
     who: "A smuggler at the tavern, Human male",
     look: "A rakish smuggler captain in his forties, about 1.84 m tall, with tall human proportions and long legs, not a dwarf. A black tricorn hat, long dark hair tied back, a sharp trimmed beard, a sly half smile, a gold earring. A long weathered brown greatcoat with wide cuffs over a dark red waistcoat and a loose white shirt, a baldric with a cutlass, a sash, high boots. Holding a pewter tankard raised in one hand.",
     head: 0.13,
   },
-  // March of Davos, the docks: Loric and his crew from their portraits, Alaric and his hired blades, Lady Astrid from her
+  // Welcome to Kordavos, the docks: Loric and his crew from their portraits, Alaric and his hired blades, Lady Astrid from her
   // painting, and the forest drake from the text (wings, mossy green and bark-brown, yellow eyes).
   "loric-windrider": {
-    out: "fixtures/march-of-davos/loric-windrider",
+    out: "fixtures/welcome-to-kordavos/loric-windrider",
     who: "Loric Windrider, Human male dock foreman",
     look: "A grizzled dock veteran in his late fifties, about 1.8 m tall, with tall human proportions and long legs, not a dwarf. A deeply sun-worn, weathered face, close-cropped grey hair, a short grey beard, squinting wary eyes. A heavy scuffed leather apron over a sweat-stained rough linen shirt with rolled sleeves, thick forearms, a wide belt with a cargo hook, canvas trousers and heavy boots. A pair of leather work gloves tucked in his belt.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726344098147",
@@ -375,14 +375,14 @@ const FIGURES: Record<string, Figure> = {
       "An apron is worn on the FRONT only. From behind it shows only its thin neck strap and the waist ties knotted at the small of the back, over the shirt: NO apron bib, panel or pocket on the back. The back of the shirt and the seat of the trousers show.",
   },
   "tor-marros": {
-    out: "fixtures/march-of-davos/tor-marros",
+    out: "fixtures/welcome-to-kordavos/tor-marros",
     who: "Tor Marros, Human male dockworker called The Bull",
     look: "A towering, heavily muscled man in his early forties, about 2.0 m tall, with tall human proportions and long legs. Bald head, a thick neck, a heavy brow and a short dark beard. A sleeveless faded brown tunic showing massive arms covered in crude dark tattoos of animals and mythical beasts, a broad leather belt, rough trousers and boots. A coil of heavy rope over one shoulder.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726344982001",
     head: 0.12,
   },
   "petra-velan": {
-    out: "fixtures/march-of-davos/petra-velan",
+    out: "fixtures/welcome-to-kordavos/petra-velan",
     who: "Petra Velan, Human female dock hand",
     look: "A strong woman in her mid-forties, about 1.68 m tall, with short steel-grey hair tied back in a small ponytail, tanned weathered skin, sharp wary eyes. A patched cream shirt with rolled sleeves under a worn leather apron, heavy work boots, a metal brace strapped on her right leg over her trousers. A short clay pipe in her hand.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726344936638",
@@ -391,39 +391,39 @@ const FIGURES: Record<string, Figure> = {
       "An apron is worn on the FRONT only. From behind it shows only its thin neck strap and the waist ties knotted at the small of the back, over the shirt: NO apron bib, panel or pocket on the back. The back of the shirt and the seat of the trousers show.",
   },
   "scarface-alaric": {
-    out: "fixtures/march-of-davos/scarface-alaric",
+    out: "fixtures/welcome-to-kordavos/scarface-alaric",
     who: "Alaric Fleyven, Human male rogue",
     look: "A tall, lean man in his thirties, about 1.85 m tall, with jet-black hair tied back in a ponytail, piercing blue eyes and a deep jagged scar running down his cheek, a sneer. A plain worn dockworker's tunic of grey-brown wool over dark leather, a dark sash, a belt with knives, dark trousers and soft boots. A short sword drawn and held low in his right hand.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726346336662",
     head: 0.13,
   },
   "warehouse-thug": {
-    out: "fixtures/march-of-davos/warehouse-thug",
+    out: "fixtures/welcome-to-kordavos/warehouse-thug",
     who: "A warehouse thug, Human male mercenary",
     look: "A thickset hired blade in his thirties with a shaved head, a broken nose and heavy stubble. A sweat-stained work tunic worn over a hidden leather jerkin, rolled sleeves, a dark neckerchief, canvas trousers and boots. A short sword drawn in his right hand.",
     head: 0.13,
   },
   "thug-b": {
-    out: "fixtures/march-of-davos/thug-b",
+    out: "fixtures/welcome-to-kordavos/thug-b",
     who: "A warehouse thug, Human male mercenary",
     look: "A wiry young hired blade with greasy shoulder-length brown hair, a thin moustache and a cruel smirk. A loose dockworker's smock over a studded leather vest, a red cloth tied round one arm, patched trousers, boots. A short sword drawn in his left hand and a dagger in his right.",
     head: 0.13,
   },
   "thug-c": {
-    out: "fixtures/march-of-davos/thug-c",
+    out: "fixtures/welcome-to-kordavos/thug-c",
     who: "A warehouse thug, Human female mercenary",
     look: "A broad-shouldered woman mercenary in her thirties with cropped red hair and a scarred lip. A grey dockworker's tunic open over a leather jerkin, bracers, a broad belt, trousers and boots. A short sword drawn and held ready in her right hand.",
     head: 0.13,
   },
   "astrid-blackthorn": {
-    out: "fixtures/march-of-davos/astrid-blackthorn",
+    out: "fixtures/welcome-to-kordavos/astrid-blackthorn",
     who: "Lady Astrid Blackthorn, Human female noble ranger",
     look: "A tall young noblewoman in her mid-twenties, about 1.78 m tall, with a sharp, striking, commanding face, intense forest-green eyes, and long wild windblown black hair. Rugged fitted black leather armour with a high collar, gilt-edged pauldrons and a gilt trim, leather bracers, a quiver strap across her chest, a longbow slung on her back, dark trousers and tall boots. A curved sabre drawn and held lowered in her right hand.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726361535587",
     head: 0.13,
   },
   "astrid-letter": {
-    out: "fixtures/march-of-davos/astrid-letter",
+    out: "fixtures/welcome-to-kordavos/astrid-letter",
     who: "Lady Astrid Blackthorn, Human female noble ranger",
     look: "A tall young noblewoman in her mid-twenties, about 1.78 m tall, with a sharp, striking, commanding face, intense forest-green eyes, and long wild windblown black hair. Rugged fitted black leather armour with a high collar, gilt-edged pauldrons and a gilt trim, leather bracers, a quiver strap across her chest, a longbow slung on her back, a curved sabre sheathed at her hip, dark trousers and tall boots. Holding out a small cream envelope sealed with black wax in her right hand.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726361535587",
@@ -432,7 +432,7 @@ const FIGURES: Record<string, Figure> = {
       "There is only ONE envelope, held in her right hand, which from behind shows at the RIGHT of the picture. Her other hand is empty. The sheathed sabre hangs at her left hip, which from behind is at the LEFT of the picture.",
   },
   "forest-drake": {
-    out: "fixtures/march-of-davos/forest-drake",
+    out: "fixtures/welcome-to-kordavos/forest-drake",
     who: "A forest drake, a wild wingèd dragon-kin beast from the elven forests",
     look: "A massive four-legged drake the size of a horse, heavy and low like a great lizard, with a long thick tail, a crocodilian head with a gaping jaw of jagged teeth, burning yellow eyes and a crest of bony spines. Mossy green and bark-brown scales, lichen and moss growing in the hollows, a paler belly. A pair of leathery bat-like wings, mottled brown and green, half-raised and spread above its back. Iron shackle fragments on one foreleg.",
     head: 0.3,
@@ -443,58 +443,58 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "The creature is seen squarely from directly behind, its rump and tail nearest the camera: its back, the row of spines along it, both wings from behind and the thick tail curling at the bottom. The head points AWAY from the camera, so only the back of the skull and the crest show above the shoulders: NO eyes, NO jaws, NO face, NO profile. Same size and stance.",
   },
-  // March of Davos, the Lower Districts: the halfling urchins from their portraits, two more of their gang, a street
+  // Welcome to Kordavos, the Lower Districts: the halfling urchins from their portraits, two more of their gang, a street
   // fiddler, a wary hooded local and a fence lurking in a doorway.
   "finn-swiftfoot": {
-    out: "fixtures/march-of-davos/finn-swiftfoot",
+    out: "fixtures/welcome-to-kordavos/finn-swiftfoot",
     who: "Finn Swiftfoot, Halfling boy pickpocket",
     look: "A halfling urchin only about 1.0 m tall, a child-sized body with a wide-eyed, mischievous boyish face of about twelve, small pointed ears, very messy shaggy dark-brown hair, rosy grubby cheeks and a gap-toothed grin. A too-big patched cream shirt with rolled sleeves under a frayed dark-brown waistcoat, a rope belt with a little pouch, ragged brown knee breeches, bare dirty feet. Leaning forward mid-step as if about to dart away, one hand tucked behind his back.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439716482",
     head: 0.2,
   },
   "mara-redleaf": {
-    out: "fixtures/march-of-davos/mara-redleaf",
+    out: "fixtures/welcome-to-kordavos/mara-redleaf",
     who: "Mara Redleaf, Halfling girl urchin and musician",
     look: "A halfling girl only about 1.0 m tall, a child-sized body with the face of a sly girl of about fourteen, small pointed ears, long tangled copper-red hair with a few thin braids, a freckled face with dirt-smudged cheeks and a knowing smile. A faded mustard-ochre blouse, a ragged grey hooded cloak thrown back, a small brass pendant on a cord, a patched brown skirt over leggings, scuffed little boots. A small wooden penny-whistle in one hand, skipping on her toes.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439437517",
     head: 0.2,
   },
   "urchin-a": {
-    out: "fixtures/march-of-davos/urchin-a",
+    out: "fixtures/welcome-to-kordavos/urchin-a",
     who: "A halfling street urchin, boy",
     look: "A halfling boy only about 0.95 m tall, a child-sized body and a cheeky round face of about ten, small pointed ears, a cropped mop of sandy hair under a floppy too-big grey wool cap, a smudged nose. A ragged moss-green tunic tied with string, patched grey trousers rolled to the knee, bare feet. Clutching a stolen apple to his chest and laughing.",
     head: 0.2,
   },
   "urchin-b": {
-    out: "fixtures/march-of-davos/urchin-b",
+    out: "fixtures/welcome-to-kordavos/urchin-b",
     who: "A halfling street urchin, girl",
     look: "A halfling girl only about 0.95 m tall, a child-sized body and a sharp little face of about eleven, small pointed ears, black hair in two scruffy short plaits, big dark eyes. An oversized faded rust-red coat with the sleeves hanging past her hands, a dirty cream smock beneath, bare feet. Peeking over her shoulder, one finger to her lips.",
     head: 0.2,
   },
   fiddler: {
-    out: "fixtures/march-of-davos/fiddler",
+    out: "fixtures/welcome-to-kordavos/fiddler",
     who: "A street fiddler in the Lower Districts, Human male",
     look: "A gaunt old street musician of about sixty, about 1.75 m tall, long lank grey hair under a battered wide-brimmed felt hat, a hollow-cheeked weathered face with a grey stubble, eyes half closed as he plays. A long threadbare dark-green coat patched at the elbows, a faded red scarf, worn grey breeches and cracked boots. Playing a battered old fiddle tucked under his chin with a bow.",
     head: 0.13,
   },
   "hooded-local": {
-    out: "fixtures/march-of-davos/hooded-local",
+    out: "fixtures/welcome-to-kordavos/hooded-local",
     who: "A wary local of the Lower Districts, Human female",
     look: "A wary middle-aged woman, about 1.65 m tall, a pinched pale face peering out from a deep dark-brown wool hood, grey hair escaping it, suspicious narrowed eyes. A heavy patched brown cloak clutched closed with one hand, a covered wicker basket on her other arm, muddy hem, worn clogs.",
     head: 0.13,
     backNote: "Her deep hood is up and covers the whole back of her head. The cloak hangs straight down her back to the calves and hides it. The basket shows only at her side.",
   },
   fence: {
-    out: "fixtures/march-of-davos/fence",
+    out: "fixtures/welcome-to-kordavos/fence",
     who: "A suspicious street merchant of the Lower Districts, Human male",
     look: "A lean shifty man of about forty, about 1.78 m tall, tall human proportions, a narrow sallow face with a thin moustache and a gold tooth, slicked-back black hair under a wide-brimmed black hat. A long dark-plum coat over a stained mustard waistcoat, rings on his fingers, a tray of cheap trinkets and charms hung from a strap round his neck, worn boots. A sly half-smile, one hand beckoning.",
     head: 0.13,
     backNote:
       "The tray of trinkets hangs on his CHEST in front of him and is NOT visible from behind: only its strap shows, crossing the back of his neck. His back shows the long plain plum coat from collar to hem with nothing hung on it, no bag, no pouches, no charms. His hands are at his sides.",
   },
-  // March of Davos, the Black Market: the doorkeeper and the dealers from their portraits, and the fence of the elven goods.
+  // Welcome to Kordavos, the Black Market: the doorkeeper and the dealers from their portraits, and the fence of the elven goods.
   garrick: {
-    out: "fixtures/march-of-davos/garrick",
+    out: "fixtures/welcome-to-kordavos/garrick",
     who: "Garrick, Half-Orc male doorkeeper of the Black Market",
     look: "A huge, broad-shouldered half-orc about 1.95 m tall, with tall proportions and long legs, not a dwarf. Grey-green skin, a heavy jaw with short lower tusks, a flat broken nose, narrow hard eyes and a scowling mouth, his face clearly visible under a ragged grey-green wool hood. A long tattered charcoal cloak over worn dark leather armour with straps and iron buckles, a wide belt with a long dagger tucked in plain view, dark leather bracers, heavy boots. Arms crossed over his chest.",
     ref: "public/stage/portraits/garrick.webp",
@@ -503,28 +503,28 @@ const FIGURES: Record<string, Figure> = {
       "Seen from directly behind: his hood is up and covers the whole back of his head. The tattered cloak is CLOSED behind him: one unbroken sheet of grey-green cloth from the shoulders straight down to the calves covering his whole back, so NO leather armour, straps, belt or pouches show. His crossed arms and the dagger are in front of him and NOT visible. Only the backs of his boots show below the cloak's ragged hem.",
   },
   "grendel-one-eye": {
-    out: "fixtures/march-of-davos/grendel-one-eye",
+    out: "fixtures/welcome-to-kordavos/grendel-one-eye",
     who: "Grendar One-Eye, Human male trinket dealer",
     look: "A grizzled man in his fifties, about 1.8 m tall, with wild greying dark hair, a short grey-streaked beard, a scarred face with a cut across one brow and a cloudy, scarred eye, a wide crooked grin full of teeth and wild eyes. A black coat over a red-and-gold brocade tunic with a gilt-trimmed collar, big brass amulets and chains round his neck, rings on his fingers, a worn belt with pouches. Leaning a little forward with one hand held out, palm up, offering a trinket.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726436104061",
     head: 0.13,
   },
   "vera-azimov": {
-    out: "fixtures/march-of-davos/vera-azimov",
+    out: "fixtures/welcome-to-kordavos/vera-azimov",
     who: "Vera Azimov, Dwarf female weapon dealer",
     look: "Very short and very broad, about 1.35 m tall, with stout dwarf proportions, not a short human. A heavy-set dwarf woman with thick curly brown hair tied back messily, small pointed ears, a round weathered face, heavy brows and a stern, proud look. A tattered mustard-yellow cloak over a quilted brown leather jerkin, heavy belts with a row of sheathed knives, leather bracers, sturdy boots. Holding up an intricately carved dagger in her right hand to show it off.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726438484598",
     head: 0.17,
   },
   "rae-the-scarred": {
-    out: "fixtures/march-of-davos/rae-the-scarred",
+    out: "fixtures/welcome-to-kordavos/rae-the-scarred",
     who: "Rae the Scarred, Human female rogue",
     look: "A slim young woman of about twenty, about 1.68 m tall, with short messy black hair falling over her forehead, sharp grey eyes, a small thin scar across her chin and a confident smirk. Rugged dark-green and black adventurer's leathers, a hooded short cloak thrown back, a few thin cords and a small pendant at her throat, fingerless gloves, a long knife at her hip, dark trousers and soft boots. Walking with a relaxed swagger, thumbs hooked in her belt.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439232056",
     head: 0.13,
   },
   "mizrith-the-cackler": {
-    out: "fixtures/march-of-davos/mizrith-the-cackler",
+    out: "fixtures/welcome-to-kordavos/mizrith-the-cackler",
     who: "Mizrith the Cackler, a hunched old goblin-kin peddler",
     look: "A small hunched old figure only about 1.3 m tall, with long pointed ears, a big hooked nose, bushy white eyebrows, a wild white beard and straggly hair, purple marks on his forehead, and an enormous gleeful grin. A mix of colourful rags: a mustard-yellow patched coat, a purple and red sash, a blue shawl, strings of beads, bones and amulets round his neck, heavy rings on bony fingers. Hunched forward, beckoning with one bony hand.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726438466481",
@@ -533,7 +533,7 @@ const FIGURES: Record<string, Figure> = {
       "Both his hands are in front of him and NOT visible from behind: no hand, fingers or rings show at his back or sides. We see the back of the patched yellow coat, the sash's knot, the shawl's ends hanging down his back, and his wild white hair and pointed ears.",
   },
   "oily-vendor": {
-    out: "fixtures/march-of-davos/oily-vendor",
+    out: "fixtures/welcome-to-kordavos/oily-vendor",
     who: "An oily fence at the Black Market, Human male",
     look: "A thin, sallow man in his forties with slicked-back black hair, a pencil moustache, small beady eyes and a nervous ingratiating smile. A shiny dark-green velvet coat gone shabby at the cuffs over a stained cream shirt, a gold earring, too many rings. His fingers steepled and twitching in front of his chest.",
     head: 0.17,
@@ -541,23 +541,23 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "Seen squarely from directly behind, sitting on the stool facing AWAY from us. The back of his green velvet coat covers his whole back from the collar down over the stool; its tails hang down behind. His shirt, chest, hands, thighs and knees are in front of him and NOT visible. Below the coat only the stool's legs, the backs of his calves and the heels of his boots show.",
   },
-  // March of Davos, the auction: the masked auctioneer and his assistant, Silverhand seated and standing, his
+  // Welcome to Kordavos, the auction: the masked auctioneer and his assistant, Silverhand seated and standing, his
   // representative and a guard, and masked bidders in velvet chairs.
   auctioneer: {
-    out: "fixtures/march-of-davos/auctioneer",
+    out: "fixtures/welcome-to-kordavos/auctioneer",
     who: "The masked auctioneer of the Black Market, Human male",
     look: "A tall, slim man in his fifties, about 1.88 m tall, with swept-back iron-grey hair, a lean clean-shaven face, a sly knowing smile, and a black leather half-mask over his eyes tied behind his head. A long flowing black robe with a deep cowl lying on his shoulders, a high collar, black leather gloves, a silver chain of office across his chest. One gloved hand raised a little in a showman's gesture.",
     ref: "public/stage/portraits/auctioneer.webp",
     head: 0.13,
   },
   "auction-assistant": {
-    out: "fixtures/march-of-davos/auction-assistant",
+    out: "fixtures/welcome-to-kordavos/auction-assistant",
     who: "The auctioneer's assistant, Human female",
     look: "A slender young woman, about 1.68 m tall, with black hair pulled into a tight bun and a plain black velvet mask over her eyes. A fitted black high-necked dress with a long black apron, white gloves. She holds a folded dark-red velvet cloth over one arm, ready to unveil a lot.",
     head: 0.13,
   },
   "silverhand-seated": {
-    out: "fixtures/march-of-davos/silverhand-seated",
+    out: "fixtures/welcome-to-kordavos/silverhand-seated",
     who: "Silverhand, Kazimir Raskov, Human male smuggler lord, seated",
     look: "A tall, slender man in his forties with a hard handsome face, a thin-lipped smirk and cold amber eyes in the shadow of a deep hood, dark stubble. A dark richly embroidered coat of umber leather with silver-grey scrollwork, hood up, a dark shirt, dark breeches and boots. ONE silver gauntlet only: his LEFT hand (at the right of the picture) wears an intricate gauntlet of polished silver plates and rests on the arm of the chair. His RIGHT hand is bare, with no gauntlet and no armour, resting on his knee. Legs crossed at the knee, at ease and watchful.",
     ref: "public/stage/portraits/silverhand.webp",
@@ -568,7 +568,7 @@ const FIGURES: Record<string, Figure> = {
       "Seen squarely from directly behind: the chair's tall velvet back hides most of his back; above it his hood covers the whole back of his head. The silver gauntlet shows only at the side on the chair's arm.",
   },
   silverhand: {
-    out: "fixtures/march-of-davos/silverhand",
+    out: "fixtures/welcome-to-kordavos/silverhand",
     who: "Silverhand, Kazimir Raskov, Human male smuggler lord",
     look: "A tall, slender man in his forties, about 1.88 m tall, with a hard handsome face, a thin-lipped smirk and cold amber eyes in the shadow of a deep hood, dark stubble. A long dark richly embroidered coat of umber leather with silver-grey scrollwork, hood up, a dark shirt, dark breeches and tall boots. ONE silver gauntlet only: his LEFT hand (at the right of the picture) wears an intricate gauntlet of polished silver plates up to the forearm. His RIGHT hand is bare, with no gauntlet and no armour. A slim sword at his hip. Predatory stillness.",
     ref: "public/stage/portraits/silverhand.webp",
@@ -576,7 +576,7 @@ const FIGURES: Record<string, Figure> = {
     backNote: "His hood is up and covers the whole back of his head. The long coat hangs down his back to the calves.",
   },
   "silverhand-representative": {
-    out: "fixtures/march-of-davos/silverhand-representative",
+    out: "fixtures/welcome-to-kordavos/silverhand-representative",
     who: "Silverhand's representative, Human male",
     look: "A tall man in his thirties, about 1.86 m tall, with short dark hair combed back, a narrow cold clean-shaven face and a calm unreadable expression. Late-medieval court dress: a fitted black silk doublet with a standing collar edged in gold, slashed sleeves showing dark crimson silk, a short black half-cape over his left shoulder, black hose and tall soft black boots, black leather gloves. One gloved hand raised calmly to bid. Nothing modern: no suit, no cravat, no frock coat.",
     ref: "public/stage/portraits/silverhand-representative.webp",
@@ -584,13 +584,13 @@ const FIGURES: Record<string, Figure> = {
     head: 0.13,
   },
   "raskov-guard": {
-    out: "fixtures/march-of-davos/raskov-guard",
+    out: "fixtures/welcome-to-kordavos/raskov-guard",
     who: "A silent Raskov guard, Human male",
     look: "A broad, hard-faced man, about 1.85 m tall, with a shaved head, a short black beard and a scar through one eyebrow, a black cloth mask over the lower face pulled down at his neck. A dark grey quilted coat over a black leather jerkin, a broad belt with a heavy cudgel and a long knife, dark trousers and boots. Arms folded.",
     head: 0.13,
   },
   "bidder-noblewoman": {
-    out: "fixtures/march-of-davos/bidder-noblewoman",
+    out: "fixtures/welcome-to-kordavos/bidder-noblewoman",
     who: "A masked noblewoman at the auction, Human female",
     look: "An elegant woman in her forties with auburn hair piled high with pearl pins, a gilded filigree mask over her eyes, a pale powdered face and dark red lips. A deep emerald silk gown with gold embroidery and a fur stole, long gloves, a closed fan in one hand.",
     head: 0.17,
@@ -598,7 +598,7 @@ const FIGURES: Record<string, Figure> = {
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
   "bidder-merchant": {
-    out: "fixtures/march-of-davos/bidder-merchant",
+    out: "fixtures/welcome-to-kordavos/bidder-merchant",
     who: "A masked merchant at the auction, Human male",
     look: "A stout, wealthy merchant in his fifties with a bald head and a heavy grey beard, a plain black velvet mask over his eyes. A plum velvet doublet straining at the buttons, a heavy gold chain, rings on every finger. Both hands resting on a silver-topped cane between his knees.",
     head: 0.17,
@@ -606,7 +606,7 @@ const FIGURES: Record<string, Figure> = {
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
   "bidder-collector": {
-    out: "fixtures/march-of-davos/bidder-collector",
+    out: "fixtures/welcome-to-kordavos/bidder-collector",
     who: "A masked collector at the auction, Human male",
     look: "A thin old man in his seventies with long white hair and a long-nosed white porcelain mask over the upper face, bony hands. A rich black robe trimmed with silver fox fur, a tall black hat. Leaning forward eagerly with a small brass opera glass raised in one hand.",
     head: 0.17,
@@ -614,7 +614,7 @@ const FIGURES: Record<string, Figure> = {
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
   "bidder-veiled": {
-    out: "fixtures/march-of-davos/bidder-veiled",
+    out: "fixtures/welcome-to-kordavos/bidder-veiled",
     who: "A veiled lady at the auction, Human female",
     look: "A slim young woman whose face is hidden by a black lace veil falling from a small black hat, only her chin and dark lips showing. A black velvet gown with a high lace collar, black gloves, a jet necklace. Hands folded on a small beaded purse in her lap.",
     head: 0.17,
@@ -622,7 +622,7 @@ const FIGURES: Record<string, Figure> = {
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
   "bidder-young-noble": {
-    out: "fixtures/march-of-davos/bidder-young-noble",
+    out: "fixtures/welcome-to-kordavos/bidder-young-noble",
     who: "A masked young noble at the auction, Human male",
     look: "A haughty young nobleman in his twenties with wavy blond hair, a gold-and-crimson half-mask with a feather at one side, a smug smile. A slashed crimson-and-gold doublet, a short black cape over one shoulder, a jewelled rapier hilt at his side. Lounging, one arm draped over the chair's back.",
     head: 0.17,
@@ -630,7 +630,7 @@ const FIGURES: Record<string, Figure> = {
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
   "bidder-blue": {
-    out: "fixtures/march-of-davos/bidder-blue",
+    out: "fixtures/welcome-to-kordavos/bidder-blue",
     who: "A masked lady at the auction, Human female",
     look: "A poised woman in her thirties with black hair in sleek coils, a midnight-blue lace mask over her eyes, pearl earrings. A dark sapphire velvet gown with a high collar and silver embroidery, a dark shawl over her shoulders, gloved hands holding a small numbered bidding paddle in her lap.",
     head: 0.17,
@@ -638,7 +638,7 @@ const FIGURES: Record<string, Figure> = {
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
   "bidder-hooded": {
-    out: "fixtures/march-of-davos/bidder-hooded",
+    out: "fixtures/welcome-to-kordavos/bidder-hooded",
     who: "A hooded masked buyer at the auction, Human male",
     look: "A lean man in a deep charcoal hooded cloak with the hood up, the face below it hidden by a plain black leather full mask with narrow eye slits, gloved hands steepled before him. Dark boots.",
     head: 0.17,
@@ -646,7 +646,7 @@ const FIGURES: Record<string, Figure> = {
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
   "bidder-beak": {
-    out: "fixtures/march-of-davos/bidder-beak",
+    out: "fixtures/welcome-to-kordavos/bidder-beak",
     who: "A masked dealer at the auction, Human male",
     look: "A heavyset man in his forties with a long-beaked dark leather mask covering his face to the mouth, a short dark beard below it, a wide-brimmed black hat. A dark brown coat with brass buttons, a satchel on his lap with one hand on it.",
     head: 0.17,
@@ -654,24 +654,24 @@ const FIGURES: Record<string, Figure> = {
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
   "bidder-silver": {
-    out: "fixtures/march-of-davos/bidder-silver",
+    out: "fixtures/welcome-to-kordavos/bidder-silver",
     who: "A masked elf at the auction, Elf female",
     look: "A slender elf woman with pointed ears and long silver-white hair, a silver leaf-shaped mask over her eyes, pale skin. A dove-grey silk robe with a dark green mantle, slim hands folded, a thin silver circlet.",
     head: 0.17,
     seated: true,
     chair: "a high-backed chair upholstered in deep crimson velvet with a dark carved wooden frame, which is drawn",
   },
-  // March of Davos, the street kit: Silverhand's bodyguard and scout on his trail and at his hideout, the Cowl's archer
+  // Welcome to Kordavos, the street kit: Silverhand's bodyguard and scout on his trail and at his hideout, the Cowl's archer
   // on the roofs, and Joran and Seraphina for the new dawn.
   aldith: {
-    out: "fixtures/march-of-davos/aldith",
+    out: "fixtures/welcome-to-kordavos/aldith",
     who: "Varchk, Half-Orc male bodyguard",
     look: "A huge, heavily muscled half-orc, about 1.98 m tall, with tall proportions and long legs, not a dwarf. Olive-green skin, a heavy brow, a broken nose with a ring through it, a lower tusk jutting from his jaw, a long scar from his forehead down to his cheek, small hard eyes, long black hair in a braid bound with silver rings, a thick black beard. A dark leather brigandine studded with iron over a charcoal tunic, a short dark cloak, heavy bracers, a broad belt, dark trousers and boots. A heavy curved sword sheathed at his hip, his hands empty and loose at his sides. Stoic and watchful.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726459305887",
     head: 0.12,
   },
   kaelen: {
-    out: "fixtures/march-of-davos/kaelen",
+    out: "fixtures/welcome-to-kordavos/kaelen",
     who: "Kaeleth, Human female scout and mage",
     look: "A lean young woman in her twenties, about 1.70 m tall, with pale skin, sharp features, piercing pale-blue eyes and long dark hair escaping a deep charcoal hood. A charcoal hooded cloak, wet at the hem, over close-fitting dark grey leathers with a laced bodice, a belt of pouches and a slim wand, dark gloves, tall soft boots. One hand holds the cloak closed at her chest, the other hangs free. Calm and observant.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726461750367",
@@ -680,7 +680,7 @@ const FIGURES: Record<string, Figure> = {
       "Her deep hood is up and covers the whole back of her head; only a few dark strands of hair show at its edge. The cloak hangs straight down her back to the calves and hides her back completely. Her arms are at her front, out of sight: NO hands, gloves, belt or pouches show from behind, only the outside of the cloak and her boots below it.",
   },
   "cowl-archer": {
-    out: "fixtures/march-of-davos/cowl-archer",
+    out: "fixtures/welcome-to-kordavos/cowl-archer",
     who: "Liora, Half-Elf female assassin of the Covenant of the Cowl",
     look: "A slender, graceful half-elf woman in her late twenties, about 1.72 m tall: high cheekbones, narrow gleaming pale grey eyes, a long pointed ear showing through straight ash-blonde hair that falls from a black hood. A black cloth mask pulled down around her neck, her face uncovered. A long black wool cloak over close-fitting dark green-black leathers with dark straps, a quiver of black-fletched arrows on her back, black gloves, soft black boots. A dark longbow held in her left hand, pointed down. Silent and still.",
     ref: "public/stage/portraits/liora.webp",
@@ -689,13 +689,13 @@ const FIGURES: Record<string, Figure> = {
       "Seen squarely from directly behind, facing AWAY from us. Her hood is up and covers the back of her head, ash-blonde hair falling from it. The black cloak is CLOSED behind her: one unbroken sheet of black wool from the shoulders to the calves covering her whole back, so NO chest, belt, leathers or face show. The quiver hangs on the cloak over her right shoulder blade, its black fletchings rising above. Only the bow's lower limb and the backs of her boots show below and beside the cloak.",
   },
   joran: {
-    out: "fixtures/march-of-davos/joran",
+    out: "fixtures/welcome-to-kordavos/joran",
     who: "Joran Antonov, Human male Valkaran scholar turned revolutionary",
     look: "A lean young man of about thirty, about 1.82 m tall, with a gaunt, intense, determined face, dark deep-set eyes, short unkempt dark hair and a short dark beard. Long dark Covenant robes of charcoal wool with the hood thrown back, a deep grey mantle with a worn border of old Valkaran knotwork, a rope belt, dark boots. His right hand is raised high holding an ancient key of dark bronze as long as a forearm, its bow set with a pale blue stone, glowing faintly. His left hand open at his side.",
     head: 0.13,
   },
   seraphina: {
-    out: "fixtures/march-of-davos/seraphina",
+    out: "fixtures/welcome-to-kordavos/seraphina",
     who: "Seraphina Valtor, Human female clan matriarch",
     look: "A tall, upright noblewoman in her late sixties, about 1.70 m tall, with voluminous white hair swept up and back, a lined, proud face, keen dark eyes and a knowing half-smile, gold drop earrings set with amethyst. A heavy gown of ivory brocade worked with gold thread, a high embroidered collar, a dark green velvet mantle on her shoulders fastened with an old Valkaran gold brooch, rings on her fingers. Her hands folded before her.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609419379",
@@ -703,75 +703,75 @@ const FIGURES: Record<string, Figure> = {
     backNote:
       "Seen squarely from directly behind, her whole body facing AWAY from us: the back of her white hair, the green velvet mantle hanging from her shoulders down her back to the hem, and the gown's brocade skirt below it. Her hands, face, jewels and the front of the gown are NOT visible.",
   },
-  // March of Davos, the cellar kit: the Blackthorn sommelier and the servant who follows him down to the wine cellar.
+  // Welcome to Kordavos, the cellar kit: the Blackthorn sommelier and the servant who follows him down to the wine cellar.
   "clive-stonebrook": {
-    out: "fixtures/march-of-davos/clive-stonebrook",
+    out: "fixtures/welcome-to-kordavos/clive-stonebrook",
     who: "Clive Stonebrook, Human male sommelier of House Blackthorn",
     look: "A tall, wiry man in his fifties, about 1.86 m tall, with tall human proportions and long legs. Greying hair slicked straight back, a long sharp nose tilted up, thin pursed lips, a disdainful expression. Late-medieval household livery: a knee-length black wool doublet with silver piping and a standing collar, a dove-grey silk undershirt at the throat, a silver thorned-rose brooch, a silver tasting cup on a chain round his neck, black hose and soft black shoes. One hand raised a little as he speaks, the other holding a dusty wine bottle. Nothing modern: no tailcoat, no cravat, no stockings and buckled shoes.",
     ref: "public/stage/portraits/clive-stonebrook.webp",
     head: 0.13,
   },
   "mira-hearthstone": {
-    out: "fixtures/march-of-davos/mira-hearthstone",
+    out: "fixtures/welcome-to-kordavos/mira-hearthstone",
     who: "Mira Hearthstone, Human female household servant",
     look: "A short, sturdy young woman of about twenty, about 1.58 m tall, with a round flushed face, a sheen of sweat on her brow, anxious brown eyes and brown hair tucked under a white linen cap. Practical Blackthorn household dress: a dark grey wool gown with the sleeves pushed up, a long white apron, a black bodice laced at the front. A small notepad in one hand and a pencil in the other.",
     head: 0.13,
     backNote: "An apron shows only its ties from behind; the gown's skirt hangs down her back. The notepad and pencil show only at her sides.",
   },
-  // March of Davos, the tunnel kit: the Covenant's saboteurs in the catacombs, and the undead of Old Valkara.
+  // Welcome to Kordavos, the tunnel kit: the Covenant's saboteurs in the catacombs, and the undead of Old Valkara.
   "covenant-rogue": {
-    out: "fixtures/march-of-davos/covenant-rogue",
+    out: "fixtures/welcome-to-kordavos/covenant-rogue",
     who: "A Covenant of the Cowl rogue, Human male agent",
     look: "A lean, quick young man of about twenty-two, about 1.78 m tall, clean-shaven, close-cropped dark hair, a sharp youthful face with dark watchful eyes, fully visible. His charcoal hood is DOWN on his shoulders and he wears NO mask, unlike the reference figure. A bold oxblood-red wool scarf wound at his neck with its ends hanging down his chest. Close-fitting charcoal-grey leathers, near black and NOT brown, with many dark straps, a short charcoal cloak, charcoal gloves, soft charcoal boots. A short blade in his right hand and a small hand crossbow in his left, both held low. Crouched a little, ready to move.",
-    ref: "public/stage/fixtures/march-of-davos/covenant-rogue-front.webp",
+    ref: "public/stage/fixtures/welcome-to-kordavos/covenant-rogue-front.webp",
     head: 0.13,
     backNote:
       "His charcoal hood lies down on his shoulders and the back of his close-cropped dark hair shows. The short charcoal cloak hangs from his shoulders down his back to the backs of his knees, covering his back. The oxblood scarf shows at the back of his neck. From behind, the hand crossbow is on the LEFT of the picture and the blade on the RIGHT.",
   },
   "covenant-cultist": {
-    out: "fixtures/march-of-davos/covenant-cultist",
+    out: "fixtures/welcome-to-kordavos/covenant-cultist",
     who: "A Covenant of the Cowl cultist, Human female zealot",
     look: "A gaunt woman of about forty, about 1.68 m tall, in a rough, patched robe of undyed brown wool with a deep hood pulled up, her thin pale face fervent, hollow-cheeked, smudged with soot. A rope belt hung with a pouch of alchemical powder and a coil of waxed fuse cord, a flint striker in one hand, the other hand cupped round a small lit taper. Bare dirty feet in sandals.",
     head: 0.13,
     backNote: "Her deep hood is up and covers the whole back of her head. The rough robe hangs to her ankles; the rope belt is tied at the back.",
   },
   "ancient-undead": {
-    out: "fixtures/march-of-davos/ancient-undead",
+    out: "fixtures/welcome-to-kordavos/ancient-undead",
     who: "An ancient undead warrior of Old Valkara",
     look: "A tall skeletal warrior, about 1.85 m tall, grey-brown bones with scraps of dried sinew, a fanged skull with faint cold blue light glowing in its hollow eye sockets. Rusted ancient armour: a corroded bronze-and-iron scale shirt hanging in tatters, a dented conical helm with a broken nasal, a rotten fur mantle on one shoulder, rags of a dark tabard with a faded knotwork border. A notched, rusted longsword in its right hand, a split round shield on its left arm. Dust and grave dirt falling from it.",
     head: 0.13,
   },
-  // March of Davos, the Blackthorn mansion: the house and its guards, the masked guests of the ball, the Covenant's
+  // Welcome to Kordavos, the Blackthorn mansion: the house and its guards, the masked guests of the ball, the Covenant's
   // assassin, and Bishop Nicolai masked for the ball and bare-faced at the talks after.
   "door-guard": {
-    out: "fixtures/march-of-davos/door-guard",
+    out: "fixtures/welcome-to-kordavos/door-guard",
     who: "The Blackthorn door guard, Human male",
     look: "A big, broad-shouldered house guard in his forties, about 1.90 m tall, with tall human proportions and long legs, not a dwarf. A square weathered face, close-cropped black hair, a short black beard, hard grey eyes. Black lacquered plate armour over mail, pauldrons edged in dull gold, a black tabard with the Blackthorn crest of a black tree twisted into a circle. Gauntleted hands, one resting on the pommel of a sheathed longsword. Silent and watchful. No red hair, no red beard.",
     ref: "public/stage/portraits/door-guard.webp",
     head: 0.12,
   },
   "blackthorn-guard": {
-    out: "fixtures/march-of-davos/blackthorn-guard",
+    out: "fixtures/welcome-to-kordavos/blackthorn-guard",
     who: "A Blackthorn house guard, Human male",
     look: "A tall, hard-faced house guard of about thirty, about 1.85 m tall, with short dark hair and a clean-shaven jaw. Polished black lacquered armour over dark leather, iron-plated shoulders and bracers, a black tabard stitched with the Blackthorn crest of a black thorned tree on gold. A longsword sheathed at his hip, a halberd held upright in his right hand. Standing at attention.",
     head: 0.12,
   },
   "thaddeus-blackthorn": {
-    out: "fixtures/march-of-davos/thaddeus-blackthorn",
+    out: "fixtures/welcome-to-kordavos/thaddeus-blackthorn",
     who: "Lord Thaddeus Blackthorn, Human male noble, at his masquerade ball",
     look: "A tall, broad-shouldered nobleman in his late forties, about 1.88 m tall, with slicked-back dark hair, sharp angular features, a strong jaw and a confident smile, piercing blue eyes behind an ornate gilded half-mask over his brow and cheekbones. Asterian court dress in his house colours: a black velvet doublet with a standing collar embroidered in silver and gold, the black tree crest worked in silver on the chest, a short black velvet cloak lined with gold silk on one shoulder, black hose and polished boots. One hand raised in a gesture to the crowd. No tall flared collar, no blue.",
     ref: "public/stage/portraits/thaddeus-blackthorn.webp",
     head: 0.13,
   },
   "astrid-ball": {
-    out: "fixtures/march-of-davos/astrid-ball",
+    out: "fixtures/welcome-to-kordavos/astrid-ball",
     who: "Lady Astrid Blackthorn, Human female noble, at the masquerade ball",
     look: "A tall young noblewoman in her mid-twenties, about 1.78 m tall, with a sharp, striking face, intense forest-green eyes behind an ornate gold filigree half-mask, dark red lips, and long black hair swept up with a few loose strands. A black velvet gown with a high choker collar and a cameo, black feathered trim at the shoulders, and a voluminous wrap of rich golden-yellow brocade silk draped round her arms. Proud and watchful.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726361535587",
     head: 0.13,
   },
   "seraphina-masked": {
-    out: "fixtures/march-of-davos/seraphina-masked",
+    out: "fixtures/welcome-to-kordavos/seraphina-masked",
     who: "Seraphina Valtor, Human female clan matriarch, at the masquerade ball",
     look: "A tall, upright noblewoman in her late sixties, about 1.70 m tall, with voluminous white hair swept up and back, a lined, proud face and a knowing half-smile, keen dark eyes behind an ornate bronze-gold filigree half-mask set with a small amethyst, gold drop earrings. A heavy gown of ivory brocade worked with gold thread, a high embroidered collar, a dark green velvet mantle on her shoulders, rings on her fingers. Her hands folded before her.",
     ref: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609419379",
@@ -780,7 +780,7 @@ const FIGURES: Record<string, Figure> = {
       "Seen squarely from directly behind, her whole body facing AWAY from us: the back of her white hair with the mask's ribbon tied in it, the green velvet mantle hanging from her shoulders down her back, and the gown's brocade skirt below it. Her hands, face and the front of the gown are NOT visible.",
   },
   "bishop-nicolai-masked": {
-    out: "fixtures/march-of-davos/bishop-nicolai-masked",
+    out: "fixtures/welcome-to-kordavos/bishop-nicolai-masked",
     who: "Bishop Nicolai Petrov of the Church of Valkara, Human male, at the masquerade ball",
     look: "A tall, spare churchman of the old native church in his fifties, about 1.82 m tall, at a masked ball: a smooth full-face mask of polished silver with dark eye slits, his full long grey beard flowing out below it. A tall black cylindrical brimless hat with a black veil falling behind to his shoulders. A long black velvet outer robe trimmed with gold embroidery over a deep green under-robe, a large silver medallion of a tree entwined with a crescent moon on a heavy chain, one hand fingering the chain. No mitre, no cross.",
     ref: "public/stage/portraits/bishop-nicolai.webp",
@@ -789,7 +789,7 @@ const FIGURES: Record<string, Figure> = {
     head: 0.13,
   },
   "bishop-nicolai": {
-    out: "fixtures/march-of-davos/bishop-nicolai",
+    out: "fixtures/welcome-to-kordavos/bishop-nicolai",
     who: "Bishop Nicolai Petrov of the Church of Valkara, Human male",
     look: "A tall, spare churchman of the old native church in his fifties, about 1.82 m tall, with a narrow lined face, heavy-lidded measuring eyes and a full long grey beard. A tall black cylindrical brimless hat with a black veil falling behind to his shoulders. Dark layered vestments: a long black outer robe over a deep green under-robe, a broad stole of dark green and gold brocade worked with oak-leaf knotwork hanging to his knees, a large silver medallion of a tree entwined with a crescent moon on a heavy chain. No cross, no white collar. Hands clasped before him.",
     ref: "public/stage/portraits/bishop-nicolai.webp",
@@ -798,38 +798,38 @@ const FIGURES: Record<string, Figure> = {
     head: 0.13,
   },
   aelindor: {
-    out: "fixtures/march-of-davos/aelindor",
+    out: "fixtures/welcome-to-kordavos/aelindor",
     who: "Aelindor, Elf male bard",
     look: "A tall, ethereal elf of indeterminate age, about 1.85 m tall, with long shimmering silver hair to his waist, pointed ears, a fine pale face and grey eyes. Long flowing robes of deep green and silver, layered and embroidered with leaves, a silver circlet, and a half-mask of silver leaves pushed up on his brow for the ball. He plays an ornately carved lyre of dark heartwood held against his chest, fingers on the strings.",
     head: 0.13,
   },
   "covenant-assassin": {
-    out: "fixtures/march-of-davos/covenant-assassin",
+    out: "fixtures/welcome-to-kordavos/covenant-assassin",
     who: "The Covenant of the Cowl assassin, Human male",
     look: "A lean, wiry man of about thirty, about 1.80 m tall, his face hidden in the shadow of a deep black hood and a black cloth mask over his nose and mouth, only cold pale eyes showing. A long black hooded cloak of fine wool split for running, close-fitting black leathers with many straps, a coil of black rope with a grappling hook at his hip, black gloves, soft black boots. A curved poisoned dagger in his right hand, its blade faintly green.",
     head: 0.13,
     backNote: "His deep hood is up and covers the whole back of his head. The black cloak hangs down his back to the calves; the coil of rope shows at his hip.",
   },
   "guest-crimson": {
-    out: "fixtures/march-of-davos/guest-crimson",
+    out: "fixtures/welcome-to-kordavos/guest-crimson",
     who: "A masked guest in crimson, Human female noble, at the Blackthorn masquerade ball",
     look: "A slim noblewoman of about thirty, about 1.68 m tall, with auburn hair pinned up with pearls, a full-face porcelain mask painted with gold leaf. A floor-length gown of crimson velvet with a deep red hooded cloak trimmed in gold thread, long gloves, a closed fan in one hand.",
     head: 0.13,
   },
   "guest-ivory": {
-    out: "fixtures/march-of-davos/guest-ivory",
+    out: "fixtures/welcome-to-kordavos/guest-ivory",
     who: "A masked guest in ivory, Human female noble, at the Blackthorn masquerade ball",
     look: "A tall young noblewoman of about twenty-five, about 1.72 m tall, with long pale blonde hair under a sheer ivory veil, a silver lace mask over her eyes. A gown of ivory silk embroidered in gold and crimson, a long trailing sleeve, a string of pearls.",
     head: 0.13,
   },
   "guest-raven": {
-    out: "fixtures/march-of-davos/guest-raven",
+    out: "fixtures/welcome-to-kordavos/guest-raven",
     who: "A masked guest in black, Human male noble, at the Blackthorn masquerade ball",
     look: "A tall nobleman of about forty, about 1.85 m tall, in a long black velvet coat with a high collar, a black beaked raven half-mask, a black tricorne hat, silver buttons and a silver-topped cane. A dark beard.",
     head: 0.13,
   },
   "guest-gold": {
-    out: "fixtures/march-of-davos/guest-gold",
+    out: "fixtures/welcome-to-kordavos/guest-gold",
     who: "A masked guest in gold, Human male noble, at the Blackthorn masquerade ball",
     look: "A stout, wealthy nobleman of about fifty, about 1.76 m tall, a gilded sun mask with rays round his face, a doublet of gold brocade, a short crimson cape, a heavy gold chain, a goblet of wine in one hand.",
     head: 0.13,

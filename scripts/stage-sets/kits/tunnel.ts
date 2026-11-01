@@ -1,4 +1,4 @@
-// The tunnel kit (wiki/plans/march-of-davos-sets.md): bores and caves below the city that any encounter can redress.
+// The tunnel kit (wiki/plans/welcome-to-kordavos-sets.md): bores and caves below the city that any encounter can redress.
 // A dressing lays out its bores (paths swept with laid stone or rough rock), its cave chambers with mouths where the
 // bores come in, its tone of light, and its own props, lamps, marks and shots, and gets back a whole set.
 //

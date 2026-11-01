@@ -32,7 +32,7 @@ Start the checkout through `pnpm wt:dev`. For a deliberate direct port, `pnpm de
 | TypeScript/app behavior | `pnpm exec tsc --noEmit`, `pnpm lint`, focused checks below, then `pnpm build` when rendering/build behavior matters. |
 | Shared GM runtime | `pnpm --filter @d20/gm-core check`, `pnpm test:gm-core`, then app checks and an authenticated full playthrough. See [GM core](../gm-core.md). |
 | Compiler/source contracts | Relevant `pnpm test:wiki-adventures:batch-a` through `batch-f`. |
-| Adventure content/runtime | Relevant bridge check: `midnight-bridge`, `covert-cargo-bridge`, `road-to-kordavos-bridge`, or `march-of-davos-bridge`, with the `test:wiki-adventures:` prefix. A March of Davos edit also changes the content hash in `pnpm test:gm-core`'s recorded round: refresh with `GM_FIXTURE_UPDATE=1 pnpm test:gm-core`, then `npx biome format --write scripts/gm-core-fixtures/turn.json`, and the diff should be the hash alone. |
+| Adventure content/runtime | Relevant bridge check: `midnight-bridge`, `covert-cargo-bridge`, `road-to-kordavos-bridge`, or `welcome-to-kordavos-bridge`, with the `test:wiki-adventures:` prefix. A Welcome to Kordavos edit also changes the content hash in `pnpm test:gm-core`'s recorded round: refresh with `GM_FIXTURE_UPDATE=1 pnpm test:gm-core`, then `npx biome format --write scripts/gm-core-fixtures/turn.json`, and the diff should be the hash alone. |
 | Admin authoring | `pnpm test:wiki-adventures:admin-authoring`, affected bridge checks, editor browser checks. |
 | Discovery and runtime loader | `pnpm test:wiki-adventures:public-flow`, affected bridge checks, authenticated selection/start. |
 | Published artifact repository | `pnpm test:wiki-adventures:rollback`. This tests in-memory published versions, not frozen content in live registered adventures. |
@@ -66,7 +66,7 @@ For automated authenticated playthroughs, use the repository's [gameplay playthr
 
 To check that the GM keeps to the authored scene, see scene rails check. `pnpm --dir apps/desktop scene:judge <save>` judges a save's rounds against their encounters. `pnpm --dir apps/desktop scene:probe <probe>` plays a scene from `apps/desktop/scripts/scene-probes.json` fresh and judges it. Both run Claude through its CLI.
 
-For a headless playtest across encounters, add `--through` (play on past the probe's encounter, up to `--rounds` in all), `--pick random` (vary the offered replies), `--probes <file>` (probes from a scratch file) and `--jobs 2` (fewer judges at once). A probe with no `story` starts the heroes as strangers. On an 8 GB machine run at most three or four probes at once, each `--runs 1 --jobs 2`, and watch `memory_pressure`. The 2026-10-25 March of Davos loop ran four acts this way, about 20 to 60 seconds per actor turn.
+For a headless playtest across encounters, add `--through` (play on past the probe's encounter, up to `--rounds` in all), `--pick random` (vary the offered replies), `--probes <file>` (probes from a scratch file) and `--jobs 2` (fewer judges at once). A probe with no `story` starts the heroes as strangers. On an 8 GB machine run at most three or four probes at once, each `--runs 1 --jobs 2`, and watch `memory_pressure`. The 2026-10-25 Welcome to Kordavos loop ran four acts this way, about 20 to 60 seconds per actor turn.
 
 | Scenario | Route and checks |
 |---|---|

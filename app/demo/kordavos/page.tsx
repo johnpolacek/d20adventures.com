@@ -1,4 +1,4 @@
-// Public demo of the stage-first turn page: "The Gates of Kordavos" from March of Davos, scripted (no account, no
+// Public demo of the stage-first turn page: "The Gates of Kordavos" from Welcome to Kordavos, scripted (no account, no
 // Convex, no model calls), for sharing and feedback. The same mock as /dev/turn, which stays dev-only.
 
 import type { Metadata } from "next"

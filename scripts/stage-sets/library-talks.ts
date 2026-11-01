@@ -1,4 +1,4 @@
-// Writes The Dust Settles for March of Davos (wiki/plans/march-of-davos-sets.md): the truce talks at the reading table of
+// Writes The Dust Settles for Welcome to Kordavos (wiki/plans/welcome-to-kordavos-sets.md): the truce talks at the reading table of
 // the Old Grand Library, on the library's own set. Bishop Nicolai presides; Seraphina Valtor and Lady Astrid sit across
 // from each other; Sister Danica stands by. The party watches from under the dome.
 //
@@ -7,8 +7,8 @@
 import { readFileSync, writeFileSync } from "node:fs"
 import type { Obj, V2 } from "./kits/street"
 
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 const art = (name: string) => ({ front: `${ART}/${name}-front.webp`, back: `${ART}/${name}-back.webp`, portrait: `${ART}/${name}-portrait.jpg` })
 const member = (id: string, name: string, role: string, height: number, file: string, at: V2, facing: V2) => ({ id, name, role, height, art: art(file), at, facing })
@@ -22,7 +22,7 @@ const WATCH: [string, V2][] = [
 const staging = {
   format: "d20.stage.staging",
   version: 1,
-  id: "march-of-davos/the-dust-settles",
+  id: "welcome-to-kordavos/the-dust-settles",
   set: "realm-of-myr/old-grand-library",
   cast: [
     ...WATCH.map(([id, at]) => ({ ...festival.cast.find((c: Obj) => c.id === id), at, facing: TABLE })),

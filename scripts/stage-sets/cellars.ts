@@ -1,4 +1,4 @@
-// Writes March of Davos's rooms below ground from the cellar kit (wiki/plans/march-of-davos-sets.md): the low back room
+// Writes Welcome to Kordavos's rooms below ground from the cellar kit (wiki/plans/welcome-to-kordavos-sets.md): the low back room
 // of Silverhand's hideout and the Blackthorn mansion's wine cellar, and their stagings.
 //
 //   pnpm exec tsx scripts/stage-sets/cellars.ts && pnpm stage:check
@@ -10,8 +10,8 @@ import { cellarSet, type Obj } from "./kits/cellar"
 
 type V2 = [number, number]
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 function write(path: string, data: unknown) {
   writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`)
@@ -37,7 +37,7 @@ const partyShot = (spots: [string, V2][], offset: [number, number, number], labe
 })
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string, fov = 44) => ({ subject, distance, angle, height, lookHeight, fov, label })
 function staging(id: string, set: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
 }
 
 // ── Silverhand's back room: Face-to-Face with Silverhand ──

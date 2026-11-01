@@ -3,7 +3,7 @@
   "name": "Kordavos",
   "summary": "A walled port on the Jade Sea. The land gate faces south onto the Marquis Road, and the Mordava runs west along the south wall into the harbour in the south-west. The Docks line the harbour, the Lower Districts climb behind them in the west, the Old Quarter holds the north and centre, the Gate Ward the south, and the Asterian Quarter the high ground in the north-east. The Valkarr Forest lies north and east, across the river too.",
   "settingId": "realm-of-myr",
-  "adventures": ["march-of-davos", "the-road-to-kordavos"],
+  "adventures": ["welcome-to-kordavos", "the-road-to-kordavos"],
   "frame": {"x": -150, "y": -200, "width": 1450, "height": 1350, "north": "up", "note": "x runs east, y runs south. The walled city spans about 0 to 1000. Positions are relative, not surveyed."},
   "rulings": [
     "The land gate faces south. The Marquis Road comes along the Mordava's north bank and turns up to it.",

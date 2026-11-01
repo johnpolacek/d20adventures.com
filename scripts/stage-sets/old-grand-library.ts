@@ -1,4 +1,4 @@
-// Writes March of Davos's Old Grand Library (wiki/plans/old-grand-library-stage.md): the great reading hall under its
+// Writes Welcome to Kordavos's Old Grand Library (wiki/plans/old-grand-library-stage.md): the great reading hall under its
 // painted vault and dome, with the private archives behind the red door, and the staging of the library's encounter.
 //
 //   pnpm exec tsx scripts/stage-sets/old-grand-library.ts && pnpm stage:check
@@ -11,8 +11,8 @@ type V2 = [number, number]
 type V3 = [number, number, number]
 type Obj = Record<string, unknown>
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const square = JSON.parse(readFileSync(`${SETS}/kordavos-harvest-square.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 const pick = (names: string[]) => Object.fromEntries(names.map((n) => [n, square.materials[n]]))
@@ -509,7 +509,7 @@ const party = (spots: [string, V2][], facing: V2) => spots.map(([id, at]) => ({ 
 const seated = (id: string, name: string, at: V2, facing: V2) => member(`reader-${id}`, name, "Reader", 1.32, `reader-${id}`, at, facing)
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string) => ({ subject, distance, angle, height, lookHeight, fov: 44, label })
 function staging(id: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: "realm-of-myr/old-grand-library", cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: "realm-of-myr/old-grand-library", cast, shots, shot, ...extra })
 }
 
 staging(

@@ -16,7 +16,7 @@ async function main() {
   assert.ok(state.files.some((file) => file.path.endsWith("/adventure.md")))
   assert.ok(state.artifacts.graph.startEncounterId)
 
-  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "march-of-davos")
+  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "welcome-to-kordavos")
   assert.ok(definition)
   const marchFiles = readLocalWikiAdventureSourceFiles(definition)
   assert.ok(

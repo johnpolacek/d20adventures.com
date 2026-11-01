@@ -36,12 +36,12 @@ export function defaultFigure(race: string, gender?: string) {
 }
 
 export const PREMADE_FIGURES: Record<string, Figure> = {
-  "wrenna-faelendar": { id: "wrenna-faelendar", race: "Elf", height: 1.76, art: art("fixtures/march-of-davos", "wrenna") },
-  "ilya-veles": { id: "ilya-veles", race: "Half-Elf", height: 1.8, art: art("fixtures/march-of-davos", "ilya") },
+  "wrenna-faelendar": { id: "wrenna-faelendar", race: "Elf", height: 1.76, art: art("fixtures/welcome-to-kordavos", "wrenna") },
+  "ilya-veles": { id: "ilya-veles", race: "Half-Elf", height: 1.8, art: art("fixtures/welcome-to-kordavos", "ilya") },
   // Covert Cargo's premades: Lyra Silvanus and Poppen Quickfoot.
   "1749159962941": { id: "1749159962941", race: "Asterian", height: 1.7, art: art("fixtures/covert-cargo", "lyra") },
   "1749307435667": { id: "1749307435667", race: "Halfling", height: 1.06, art: art("fixtures/covert-cargo", "poppen") },
-  // Thalbern, where a scene does not carry him: he goes on from his own adventures into March of Davos.
+  // Thalbern, where a scene does not carry him: he goes on from his own adventures into Welcome to Kordavos.
   thalbern: { id: "thalbern", race: "Human", height: 1.82, art: art("fixtures/the-midnight-summons", "thalbern") },
 }
 

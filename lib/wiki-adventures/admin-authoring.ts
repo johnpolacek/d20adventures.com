@@ -96,7 +96,7 @@ export function assertAdminSourcePublishable(files: SourceFile[], definition: Lo
 }
 
 export async function listAdminWikiAdventures(): Promise<AdminWikiAdventureSummary[]> {
-  const states = await Promise.all(["the-midnight-summons", "covert-cargo", "the-road-to-kordavos", "march-of-davos"].map((planId) => loadAdminWikiAdventureState("realm-of-myr", planId)))
+  const states = await Promise.all(["the-midnight-summons", "covert-cargo", "the-road-to-kordavos", "welcome-to-kordavos"].map((planId) => loadAdminWikiAdventureState("realm-of-myr", planId)))
   return states.map((state) => ({
     settingId: state.definition.settingId,
     planId: state.definition.planId,

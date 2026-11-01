@@ -42,10 +42,10 @@ type Texture = {
   // A `whole` painting is cropped this share in from each edge before it is published.
   inset?: number
 }
-const LIBRARY = "public/stage/art/march-of-davos/the-old-grand-library.webp"
-const MARKET_DOOR = "public/stage/art/march-of-davos/the-entrance-to-the-black-market.webp"
-const FINDING = "public/stage/art/march-of-davos/finding-the-black-market.webp"
-const SERPENT = "public/stage/art/march-of-davos/the-silver-serpent-tavern.webp"
+const LIBRARY = "public/stage/art/welcome-to-kordavos/the-old-grand-library.webp"
+const MARKET_DOOR = "public/stage/art/welcome-to-kordavos/the-entrance-to-the-black-market.webp"
+const FINDING = "public/stage/art/welcome-to-kordavos/finding-the-black-market.webp"
+const SERPENT = "public/stage/art/welcome-to-kordavos/the-silver-serpent-tavern.webp"
 const TEXTURES: Record<string, Texture> = {
   "boards-weathered": {
     subject:
@@ -282,7 +282,7 @@ const TEXTURES: Record<string, Texture> = {
   "relic-map": {
     subject:
       "an ancient weathered parchment map seen from straight above, filling the whole frame edge to edge: cracked, stained and foxed pale grey-ochre vellum, faint intricate ink markings of a great forest of tiny trees, winding rivers, standing stones and a dotted route ending at a small circled rune, a faded compass rose of interlaced Valkaran knotwork, a border of runic knots, burnt and torn edges, no readable text",
-    ref: "public/stage/art/march-of-davos/a-relic-of-old-valkara.webp",
+    ref: "public/stage/art/welcome-to-kordavos/a-relic-of-old-valkara.webp",
     crop: [0.4, 0.55, 0.3, 0.35],
     whole: true,
     aspect: "4:3",
@@ -510,7 +510,9 @@ async function make(id: string) {
     const ih = meta.height ?? h
     const dx = Math.round(iw * (t.inset ?? 0))
     const dy = Math.round(ih * (t.inset ?? 0))
-    let img = sharp(path).extract({ left: dx, top: dy, width: iw - 2 * dx, height: ih - 2 * dy }).resize(w, h, { fit: "fill" })
+    let img = sharp(path)
+      .extract({ left: dx, top: dy, width: iw - 2 * dx, height: ih - 2 * dy })
+      .resize(w, h, { fit: "fill" })
     // A dome's band: blend the outer tenth of each side into the other so the seam closes.
     if (t.tileX) img = await seamX(img, w, h)
     await img.jpeg({ quality: 88 }).toFile(join(OUT, `${id}.jpg`))

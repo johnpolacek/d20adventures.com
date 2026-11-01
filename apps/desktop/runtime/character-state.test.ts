@@ -14,7 +14,7 @@ import { schemaLlm } from "./llm"
 import { LocalStore } from "./store"
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
-const pack = packs["march-of-davos"]
+const pack = packs["welcome-to-kordavos"]
 console.log = console.warn = console.error = () => {}
 const unused = async (): Promise<never> => {
   throw new Error("Unexpected model request")

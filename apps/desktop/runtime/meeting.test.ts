@@ -19,7 +19,7 @@ const unused = async (): Promise<never> => {
 }
 const offline: Llm = { generateText: unused, generateObject: unused }
 const [THALBERN, MILOS, BRANKA, GARLAN] = ["thalbern", "milos-radan", "branka-stoneveil", "garlan-ironfist"]
-const gate = packs["march-of-davos"].artifacts.encounters["the-gates-of-kordavos"]
+const gate = packs["welcome-to-kordavos"].artifacts.encounters["the-gates-of-kordavos"]
 
 const cast = [
   { id: THALBERN, name: "Thalbern", type: "pc" },
@@ -63,7 +63,7 @@ async function atTheGate(run: (store: LocalStore) => Promise<void>) {
     )({
       kind: "start",
       provider: "claude",
-      adventure: "march-of-davos",
+      adventure: "welcome-to-kordavos",
       party: [
         { id: BRANKA, ai: false },
         { id: THALBERN, ai: true },
@@ -272,7 +272,7 @@ test("heroes who come on together from The Road to Kordavos already know each ot
     )({
       kind: "start",
       provider: "claude",
-      adventure: "march-of-davos",
+      adventure: "welcome-to-kordavos",
       replace: true,
       continues: true,
       party: [

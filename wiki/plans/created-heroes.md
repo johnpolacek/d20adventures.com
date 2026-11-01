@@ -1,4 +1,4 @@
-# Created heroes in March of Davos
+# Created heroes in Welcome to Kordavos
 
 [Plans](index.md) · [Wiki Home](../index.md) · [Gameplay flows](../gameplay-flows.md) · [Wiki adventures](../wiki-adventures.md)
 
@@ -8,7 +8,7 @@ Status: steps 1 to 6 done 2026-10-24 for desktop games. Hosted games and owner r
 
 Recorded 2026-10-23:
 
-- March of Davos is the use case for created heroes. Premades are for the quick-start intro adventures.
+- Welcome to Kordavos is the use case for created heroes. Premades are for the quick-start intro adventures.
 - A created hero arrives with a reason to be in Kordavos, picked by the player from a list the adventure authors. The game then writes the hero's arrival.
 - The hero's sheet stays their own. The reason and arrival belong to one adventure, so a hero can go on to other adventures.
 
@@ -17,7 +17,7 @@ Recorded 2026-10-23:
 How it works now is in [Hero Hooks](../wiki-adventures.md#hero-hooks).
 
 - 2026-10-23: a hero made on the party screen is the player's to play. The hero they had goes to the AI. See `seatCreated` in `apps/desktop/src/carry.ts`.
-- 2026-10-24, steps 1 to 3: March of Davos has 7 hooks. The creator offers them, and the draft call writes the arrival through `extend` on `generateCharacterAction`. The review shows Arrival, Why they came, and What others notice.
+- 2026-10-24, steps 1 to 3: Welcome to Kordavos has 7 hooks. The creator offers them, and the draft call writes the arrival through `extend` on `generateCharacterAction`. The review shows Arrival, Why they came, and What others notice.
 - A hero made from the Characters page is no longer drafted for an adventure.
 - 2026-10-24, steps 5 and 6: `withArrivals` in `packages/gm-core/src/story/authored.ts` adds arrival paragraphs to the start encounter's intro, for the first turn and the GM. The gate and front-of-the-line notes cover heroes they do not name.
 - Checked in the browser preview: a Half-Orc Ranger drafted on Claude in about 25 seconds and was seated as the player's.
@@ -34,7 +34,7 @@ How it works now is in [Hero Hooks](../wiki-adventures.md#hero-hooks).
 
 ## Guests create heroes, 2026-10-31
 
-Owner: a guest joining a hosted March of Davos makes their own hero, and may make several, up to the open seats. The heroes must fit the adventure and setting.
+Owner: a guest joining a hosted Welcome to Kordavos makes their own hero, and may make several, up to the open seats. The heroes must fit the adventure and setting.
 
 Chosen 2026-10-31:
 

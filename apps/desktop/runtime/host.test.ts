@@ -35,7 +35,7 @@ const failLlm: Llm = {
 // A hosted game stands in for the website: a local save as the store, and a job queue the loop drains.
 async function hosted() {
   const dir = mkdtempSync(join(tmpdir(), "d20-host-test-"))
-  const store = new LocalStore(join(dir, "save.sqlite"), packs["march-of-davos"].artifacts.graph.encounterTransitions)
+  const store = new LocalStore(join(dir, "save.sqlite"), packs["welcome-to-kordavos"].artifacts.graph.encounterTransitions)
   await game(store, packs, failLlm)({ kind: "start", provider: "claude" })
   const turn = store.current()
   const pc = turn.characters.find((c) => c.type === "pc")!
@@ -183,7 +183,10 @@ test("a finished job's report the website missed is sent again, never as a failu
       return { ok: true }
     }
     await hostLoop({ adventureId, post, store, packs, llm: failLlm, emit: (e) => events.push(e), stopped: () => stop, wait: async () => {} })
-    assert.deepEqual(reports, [1, 2, 3].map(() => ({ jobId: "job-1", error: undefined })))
+    assert.deepEqual(
+      reports,
+      [1, 2, 3].map(() => ({ jobId: "job-1", error: undefined }))
+    )
     assert.ok(events.some((e) => e.type === "done"))
     assert.ok(!events.some((e) => e.type === "failed"))
   } finally {

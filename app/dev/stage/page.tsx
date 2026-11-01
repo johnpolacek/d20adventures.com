@@ -2,7 +2,7 @@
 //
 //   /dev/stage                                              -> the first set, with its first staging
 //   /dev/stage?set=realm-of-myr/kordavos-south-gate         -> a named set
-//   /dev/stage?staging=march-of-davos/the-gates-of-kordavos -> a staging (and its set)
+//   /dev/stage?staging=welcome-to-kordavos/the-gates-of-kordavos -> a staging (and its set)
 //   &staging=none  &shot=party  &tier=mobile|balanced|high|ultra
 //   &crowd=procedural|cards|hybrid  &aa=off|fxaa|msaa  &ao=on|off  &paint=uniform|depth  &bloom=on|off  &dpr=2  &motion=0
 //

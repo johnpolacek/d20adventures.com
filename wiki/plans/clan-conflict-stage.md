@@ -6,11 +6,11 @@ Status: implemented on main 2026-10-19. Owner review and a check in the running 
 
 ## Owner request, 2026-10-19
 
-The owner reached Clan Conflict in a March of Davos game on desktop and saw a blank story view. Offered a scene on the festival set, shipping encounter art for story view, or nothing, the owner chose the scene.
+The owner reached Clan Conflict in a Welcome to Kordavos game on desktop and saw a blank story view. Offered a scene on the festival set, shipping encounter art for story view, or nothing, the owner chose the scene.
 
 ## Source
 
-- `content/settings/realm-of-myr/adventures/march-of-davos/encounters/clan-conflict.md`: on the festival's outskirts two groups stare each other down. Barok Redbeard steps forward with his followers, rough men and women in mismatched armour. Larya Halloway's people, more finely dressed, some in intricate jewelry, hold their ground. Onlookers leave a circle around the two sides, vendors glance about, parents pull children close.
+- `content/settings/realm-of-myr/adventures/welcome-to-kordavos/encounters/clan-conflict.md`: on the festival's outskirts two groups stare each other down. Barok Redbeard steps forward with his followers, rough men and women in mismatched armour. Larya Halloway's people, more finely dressed, some in intricate jewelry, hold their ground. Onlookers leave a circle around the two sides, vendors glance about, parents pull children close.
 - GM notes: Larya leads the Valtor clan, traditional Valkarans. Barok's people have sided with the Blackthorns and the Asterians.
 - Encounter art: a sunlit market street hung with ochre banners and bunting. Barok on the left in scuffed blue-steel plate with a long red-dyed beard, scarred cheek, snarling. Larya on the right in a sleeveless ochre-gold tunic, a long brown half-up braid, a red scar across her cheek, a dark drop earring. A fur-clad follower behind Barok, a crowd down the street.
 - NPC portraits: `barok-redbeard` and `larya-halloway` frontmatter images.

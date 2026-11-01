@@ -238,7 +238,7 @@ The spike's strict patch contract and optional combined pre-roll request remain 
 
 ### Phase 2, desktop shell and stage-first play
 
-Implemented locally for March of Davos in `feature/desktop-stage-play`. The shared renderer is `packages/stage`. The native client uses the real GM core and SQLite saves. Only the gate has a 3D set. See the integration plan for validation and limits.
+Implemented locally for Welcome to Kordavos in `feature/desktop-stage-play`. The shared renderer is `packages/stage`. The native client uses the real GM core and SQLite saves. Only the gate has a 3D set. See the integration plan for validation and limits.
 
 - `apps/desktop` uses Tauri, Vite, and React. The renderer is shared through `packages/stage`.
 - Build the [Stageview](stageview.md) phase 4 turn page in the desktop app. Do not build it in the web app.
@@ -284,7 +284,7 @@ Revised 2026-10-07. See [Adventure store](feature-adventure-store.md).
 - Default CLI and the minimum GM quality bar.
 - Pack signing. The story pack format and versioning are in [Adventure store](feature-adventure-store.md).
 - Timing for Windows and Linux builds.
-- Beta prices. In alpha every adventure is free, with March of Davos shown at $5 crossed out (owner, 2026-10-08).
+- Beta prices. In alpha every adventure is free, with Welcome to Kordavos shown at $5 crossed out (owner, 2026-10-08).
 - Whether a server GM stays for groups where nobody has a CLI.
 - Host mode under provider terms. Nobody pays for the host's usage, but a party driving one account stretches "ordinary, individual usage". Ask Anthropic before shipping.
 - The creator revenue cut, when the marketplace opens.

@@ -1,6 +1,6 @@
 # D20 Adventures desktop
 
-The real local GM flow in the Stageview interface. Choose March of Davos, played with Branka, Cassia, Yeva, and Milos, or The Midnight Summons, played with Thalbern. The player controls every hero. NPC turns run through the shared GM core and the selected local CLI.
+The real local GM flow in the Stageview interface. Choose Welcome to Kordavos, played with Branka, Cassia, Yeva, and Milos, or The Midnight Summons, played with Thalbern. The player controls every hero. NPC turns run through the shared GM core and the selected local CLI.
 
 From the repository root:
 

@@ -23,8 +23,8 @@ const STYLE = ["bram", "garlan-ironfist"]
 
 // A figure to paint the portrait from, when the cutout came first and the portrait must match it.
 const FIGURE: Record<string, string> = {
-  "covenant-cultist": "public/stage/fixtures/march-of-davos/covenant-cultist-front.webp",
-  "covenant-rogue": "public/stage/fixtures/march-of-davos/covenant-rogue-front.webp",
+  "covenant-cultist": "public/stage/fixtures/welcome-to-kordavos/covenant-cultist-front.webp",
+  "covenant-rogue": "public/stage/fixtures/welcome-to-kordavos/covenant-rogue-front.webp",
 }
 
 // What the sheets leave out, from the encounters they appear in.

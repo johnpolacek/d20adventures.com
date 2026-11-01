@@ -1,4 +1,4 @@
-// Writes March of Davos's Black Market (wiki/plans/march-of-davos-sets.md): the curtained doorway in a court between two
+// Writes Welcome to Kordavos's Black Market (wiki/plans/welcome-to-kordavos-sets.md): the curtained doorway in a court between two
 // crumbling buildings, and behind it a maze of stalls and tents in a lane roofed with canvas and strung with lanterns,
 // at nightfall. At the lane's far end, the auction house's door, the way on to the auction (encounters 20 to 22). The
 // stagings of the entrance and the stalls.
@@ -12,8 +12,8 @@ import { readFileSync, writeFileSync } from "node:fs"
 type V2 = [number, number]
 type Obj = Record<string, unknown>
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const lower = JSON.parse(readFileSync(`${SETS}/kordavos-lower-districts.json`, "utf8"))
 const docks = JSON.parse(readFileSync(`${SETS}/kordavos-docks.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
@@ -665,7 +665,7 @@ const member = (id: string, name: string, role: string, height: number, file: st
 const party = (spots: [string, V2][], facing: V2) => spots.map(([id, at]) => ({ ...festival.cast.find((c: Obj) => c.id === id), at, facing }))
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string) => ({ subject, distance, angle, height, lookHeight, fov: 44, label })
 function staging(id: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: "realm-of-myr/kordavos-black-market", cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: "realm-of-myr/kordavos-black-market", cast, shots, shot, ...extra })
 }
 
 // The Entrance: the party has come into the court from the alleys. Garrick stands before the half-drawn curtain, arms

@@ -40,7 +40,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   const [specs, setSpecs] = useState<{ set: unknown; staging: unknown } | null>(null)
   useEffect(() => {
     import("@d20/stage/sets").then(async ({ SETS, STAGINGS }) => {
-      const staging = await STAGINGS["march-of-davos/the-gates-of-kordavos"]()
+      const staging = await STAGINGS["welcome-to-kordavos/the-gates-of-kordavos"]()
       const set = await SETS["realm-of-myr/kordavos-south-gate"]()
       setSpecs({ set, staging })
     })
@@ -441,7 +441,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   return (
     <StageHud
       containerRef={containerRef}
-      title={{ eyebrow: "The March of Davos  ·  Arrival", text: "The Gates of Kordavos" }}
+      title={{ eyebrow: "Welcome to Kordavos  ·  Arrival", text: "The Gates of Kordavos" }}
       location={{
         eyebrow: "Arrival at Kordavos",
         title: actor ? `${actor.name.split(" ")[0]}'s turn` : TURNS[turnIndex].intro ? "Intro" : `Round ${TURNS[turnIndex].round}`,
@@ -607,7 +607,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
             <path d="M15 50V25h9v25m12 0V25h9v25M24 50V34l6-8 6 8v16M11 25h17m4 0h17M20 20v-6m20 6v-6M30 9v9M25 13h10M11 55h38" />
           </svg>
           <div className="font-display text-[clamp(28px,3.6vw,46px)] [text-shadow:0_2px_25px_#000]">Arrival at Kordavos</div>
-          <div className="text-[9px] tracking-[0.3em] text-stage-sage">THE MARCH OF DAVOS</div>
+          <div className="text-[9px] tracking-[0.3em] text-stage-sage">WELCOME TO KORDAVOS</div>
           {stage ? (
             <button type="button" onClick={start} className="stage-brass mt-3 rounded-full border px-11 py-3 font-display text-[15px] font-bold tracking-[0.3em] transition-[filter]">
               Play

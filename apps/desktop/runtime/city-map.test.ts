@@ -5,11 +5,11 @@ import { cityContext, withCityContext } from "@d20/gm-core/citymap"
 import type { Packs } from "./game"
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
-const pack = packs["march-of-davos"]
+const pack = packs["welcome-to-kordavos"]
 
-test("the GM is told where each March of Davos scene stands in Kordavos, which way its ways on lead, and no secrets", () => {
+test("the GM is told where each Welcome to Kordavos scene stands in Kordavos, which way its ways on lead, and no secrets", () => {
   const map = pack.cityMap
-  assert.ok(map, "March of Davos carries the Kordavos map")
+  assert.ok(map, "Welcome to Kordavos carries the Kordavos map")
   const { encounters } = pack.artifacts
   for (const id of Object.keys(encounters)) assert.match(cityContext(map, encounters, id) ?? "", /- Here: /, id)
 

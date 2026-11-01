@@ -1,0 +1,108 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "welcome-to-kordavos/through-the-halls",
+  "set": "realm-of-myr/blackthorn-stair-hall",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/branka-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/branka-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/branka-portrait.jpg"
+      },
+      "at": [
+        -2.6,
+        -5.2
+      ],
+      "facing": [
+        0,
+        -18
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/cassia-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/cassia-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/cassia-portrait.jpg"
+      },
+      "at": [
+        -1.7,
+        -5.6
+      ],
+      "facing": [
+        0,
+        -18
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/yeva-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/yeva-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/yeva-portrait.jpg"
+      },
+      "at": [
+        1.8,
+        -5.2
+      ],
+      "facing": [
+        0,
+        -18
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/milos-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/milos-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/milos-portrait.jpg"
+      },
+      "at": [
+        2.7,
+        -5.6
+      ],
+      "facing": [
+        0,
+        -18
+      ]
+    }
+  ],
+  "shots": {
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        1.8,
+        1.8,
+        4.4
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "hall"
+}

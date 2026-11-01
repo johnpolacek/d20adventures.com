@@ -1,0 +1,248 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "welcome-to-kordavos/labyrinthine-stalls",
+  "set": "realm-of-myr/kordavos-black-market",
+  "cast": [
+    {
+      "id": "branka-stoneveil",
+      "name": "Branka Stoneveil",
+      "role": "Dwarf fighter",
+      "height": 1.38,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/branka-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/branka-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/branka-portrait.jpg"
+      },
+      "at": [
+        -1.4,
+        4.9
+      ],
+      "facing": [
+        0,
+        -6
+      ]
+    },
+    {
+      "id": "cassia-verane",
+      "name": "Cassia Verane",
+      "role": "Human wizard",
+      "height": 1.72,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/cassia-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/cassia-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/cassia-portrait.jpg"
+      },
+      "at": [
+        -0.6,
+        5.5
+      ],
+      "facing": [
+        0,
+        -6
+      ]
+    },
+    {
+      "id": "yeva-softstep",
+      "name": "Yeva Softstep",
+      "role": "Halfling rogue",
+      "height": 1.08,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/yeva-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/yeva-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/yeva-portrait.jpg"
+      },
+      "at": [
+        -0.6,
+        4.4
+      ],
+      "facing": [
+        0,
+        -6
+      ]
+    },
+    {
+      "id": "milos-radan",
+      "name": "Milos Radan",
+      "role": "Human cleric",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/milos-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/milos-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/milos-portrait.jpg"
+      },
+      "at": [
+        0.25,
+        5.4
+      ],
+      "facing": [
+        0,
+        -6
+      ]
+    },
+    {
+      "id": "grendel-one-eye",
+      "name": "Grendar",
+      "role": "Trinket dealer",
+      "height": 1.8,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/grendel-one-eye-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/grendel-one-eye-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/grendel-one-eye-portrait.jpg"
+      },
+      "at": [
+        2.45,
+        1.2
+      ],
+      "facing": [
+        0.4,
+        4.2
+      ]
+    },
+    {
+      "id": "vera-azimov",
+      "name": "Vera Azimov",
+      "role": "Weapon dealer",
+      "height": 1.36,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/vera-azimov-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/vera-azimov-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/vera-azimov-portrait.jpg"
+      },
+      "at": [
+        -1.35,
+        -2
+      ],
+      "facing": [
+        0,
+        3.8
+      ]
+    },
+    {
+      "id": "rae-the-scarred",
+      "name": "A scarred young woman",
+      "role": "Rogue",
+      "height": 1.68,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/rae-the-scarred-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/rae-the-scarred-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/rae-the-scarred-portrait.jpg"
+      },
+      "at": [
+        0.7,
+        -0.6
+      ],
+      "facing": [
+        -0.4,
+        4.6
+      ]
+    },
+    {
+      "id": "mizrith-the-cackler",
+      "name": "A cackling peddler",
+      "role": "Peddler",
+      "height": 1.3,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/mizrith-the-cackler-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/mizrith-the-cackler-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/mizrith-the-cackler-portrait.jpg"
+      },
+      "at": [
+        5.6,
+        -12.65
+      ],
+      "facing": [
+        3,
+        -8
+      ]
+    },
+    {
+      "id": "vesk-the-fence",
+      "name": "An oily vendor",
+      "role": "Fence",
+      "height": 1.32,
+      "art": {
+        "front": "/stage/fixtures/welcome-to-kordavos/oily-vendor-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/oily-vendor-back.webp",
+        "portrait": "/stage/fixtures/welcome-to-kordavos/oily-vendor-portrait.jpg"
+      },
+      "at": [
+        -9.2,
+        -23.08
+      ],
+      "facing": [
+        -9.2,
+        -20
+      ]
+    }
+  ],
+  "shots": {
+    "grendarShot": {
+      "subject": "grendel-one-eye",
+      "distance": 1.6,
+      "angle": -35,
+      "height": 1.5,
+      "lookHeight": 1.45,
+      "fov": 46,
+      "label": "Grendar"
+    },
+    "vera": {
+      "subject": "vera-azimov",
+      "distance": 1.8,
+      "angle": -40,
+      "height": 1.25,
+      "lookHeight": 1.05,
+      "fov": 44,
+      "label": "Vera"
+    },
+    "rae": {
+      "subject": "rae-the-scarred",
+      "distance": 2,
+      "angle": -20,
+      "height": 1.6,
+      "lookHeight": 1.55,
+      "fov": 44,
+      "label": "Rae"
+    },
+    "mizrith": {
+      "subject": "mizrith-the-cackler",
+      "distance": 2,
+      "angle": 20,
+      "height": 1.3,
+      "lookHeight": 1.05,
+      "fov": 44,
+      "label": "Mizrith"
+    },
+    "vendor": {
+      "subject": "vesk-the-fence",
+      "distance": 2,
+      "angle": 0,
+      "height": 1.35,
+      "lookHeight": 1,
+      "fov": 44,
+      "label": "The oily vendor"
+    },
+    "party": {
+      "subjects": [
+        "branka-stoneveil",
+        "cassia-verane",
+        "yeva-softstep",
+        "milos-radan"
+      ],
+      "offset": [
+        0.6,
+        1.7,
+        -3.8
+      ],
+      "target": [
+        0,
+        1.2,
+        0
+      ],
+      "relative": "world",
+      "fov": 54,
+      "label": "Party"
+    }
+  },
+  "shot": "grendar"
+}

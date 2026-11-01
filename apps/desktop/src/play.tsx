@@ -48,7 +48,7 @@ export function DesktopGame() {
     }
   }, [providers])
   const [adventures, setAdventures] = useState<AdventureInfo[]>([])
-  const [adventure, setAdventure] = useState("march-of-davos")
+  const [adventure, setAdventure] = useState("welcome-to-kordavos")
   // Set once the player picks an adventure, so loading never moves their choice.
   const pickedAdventure = useRef(false)
   // Every adventure for sale, for the locked ones on the new game screen.

@@ -41,7 +41,7 @@ test("saved adventures list newest first and resume swaps the archived one in", 
     assert.equal(listed[0].archiveId, undefined)
     assert.equal(listed[2].status, "completed")
     assert.equal(listed[0].round, 1)
-    assert.equal(listed[0].planId, "march-of-davos")
+    assert.equal(listed[0].planId, "welcome-to-kordavos")
     assert.ok(listed[0].party.length > 0)
 
     await run({ kind: "resume", archiveId: listed[2].archiveId! })
@@ -143,7 +143,7 @@ test("suggested replies come from what the players have read, for the hero whose
   }
 })
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
-const pack = packs["march-of-davos"]
+const pack = packs["welcome-to-kordavos"]
 const quiet = () => {}
 console.log = console.warn = console.error = quiet
 function setup() {

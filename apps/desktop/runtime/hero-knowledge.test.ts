@@ -157,7 +157,7 @@ test("Covert Cargo opens with each hero's hide and errand known only to that her
 
 test("at the gate table in Kordavos, what Garlan whispers to Thalbern does not reach Milos", async () => {
   await playing(
-    "march-of-davos",
+    "welcome-to-kordavos",
     [
       { id: THALBERN, ai: false },
       { id: MILOS, ai: true },

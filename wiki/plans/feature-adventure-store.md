@@ -6,7 +6,7 @@ Status: Merged into main 2026-10-08 from `feature/adventure-store`. Alpha: every
 
 A player buys an adventure on the website, then plays it in the desktop app. First-party adventures only.
 
-Owner, 2026-10-08: this is alpha. Web checkout waits until at least beta. Every adventure is free in alpha, so no grant tool is needed. March of Davos shows its $5 price crossed out beside FREE, on its New game tab and on its cover. Because the store build bundles every free adventure, an alpha build plays all four without linking or downloads. Linking, story packs and locked adventures stay in place for beta.
+Owner, 2026-10-08: this is alpha. Web checkout waits until at least beta. Every adventure is free in alpha, so no grant tool is needed. Welcome to Kordavos shows its $5 price crossed out beside FREE, on its New game tab and on its cover. Because the store build bundles every free adventure, an alpha build plays all four without linking or downloads. Linking, story packs and locked adventures stay in place for beta.
 
 Owner, 2026-10-08: playing needs a linked account, alpha included. Until the computer is linked, the title screen shows only Link your account. A stored Keychain token lets play start while the website check runs, so a linked player can play offline. A revoked token returns the title screen to the link step. Development builds skip the requirement unless `D20_REQUIRE_ACCOUNT` is set, so local playtests and checks still run without the website. Rust's `account_info` answers both questions without a network call. The creator marketplace and host mode are later plans. Owner decision and reasoning: [Desktop local play](desktop-local-play.md#owner-decisions).
 
@@ -24,7 +24,7 @@ Owner, 2026-10-08: playing needs a linked account, alpha included. Until the com
 
 One typed catalog lists each adventure: id, title, price in cents, whether it is free, and the current pack version and hash. The web app, the API routes, and the desktop app read the same list. Prices live in code and go to Stripe as inline `price_data`, so no Stripe dashboard products are needed.
 
-Alpha, owner 2026-10-08: all four free. March of Davos carries a $5 list price, shown crossed out. A free entry's optional `listPriceCents` is display only.
+Alpha, owner 2026-10-08: all four free. Welcome to Kordavos carries a $5 list price, shown crossed out. A free entry's optional `listPriceCents` is display only.
 
 ### Entitlements
 
@@ -118,11 +118,11 @@ What downloads is the story: the compiled runtime the local GM plays. Art, set f
 - A linked status check syncs packs. The start screen reloads the adventure list when anything changed.
 - `D20_BUNDLE=free pnpm build` in `apps/desktop` bundles only the free starter, as a store build will. The default still bundles all four, so development play is unchanged.
 
-Validation: 38 desktop runtime tests, including 5 pack tests, and 9 store tests passed, with both TypeScript projects, gm-core's boundary check, and Biome. End to end with a free-only runtime against the worktree's dev server serving a local pack folder: before linking only The Midnight Summons was playable. Linking downloaded March of Davos, which the account owned, and skipped the bundled starter. Covert Cargo returned 403 until granted, then downloaded on the next status. A repeat status downloaded nothing. A hand-edited pack was ignored and replaced on the next sync. The test device was unlinked afterwards.
+Validation: 38 desktop runtime tests, including 5 pack tests, and 9 store tests passed, with both TypeScript projects, gm-core's boundary check, and Biome. End to end with a free-only runtime against the worktree's dev server serving a local pack folder: before linking only The Midnight Summons was playable. Linking downloaded Welcome to Kordavos, which the account owned, and skipped the bundled starter. Covert Cargo returned 403 until granted, then downloaded on the next status. A repeat status downloaded nothing. A hand-edited pack was ignored and replaced on the next sync. The test device was unlinked afterwards.
 
 Not done: uploading packs to S3, which writes to the shared data bucket and needs owner approval. Downloads already on disk stay playable after unlinking or losing ownership.
 
-In-app check, 2026-10-08, debug build with only the free starter bundled: with a linked token in the development Keychain item, the app read it at launch, called the website once for the account and library, and downloaded March of Davos and Covert Cargo. Two fixes came from this run. The account check re-ran on every screen update, because the parent passed a new callback each render. And isolating test data by overriding `HOME` also hid the login Keychain, so debug builds now accept `D20_DATA_DIR` for a separate data folder. The owner then clicked Unlink and Link account in the running app. Unlink revoked the device and deleted the Keychain item. Link account opened the website, polled, and after approval saved a new item and loaded the library. The owner found the `/desktop/link` page ugly, so it was redrawn in the desktop's stage look: a painted cover behind a leather panel, gold labels, the code as parchment tiles, and linked computers listed under a rule. Checked at desktop and phone widths, signed out, with a pending code, with a bad code, and with the entry form.
+In-app check, 2026-10-08, debug build with only the free starter bundled: with a linked token in the development Keychain item, the app read it at launch, called the website once for the account and library, and downloaded Welcome to Kordavos and Covert Cargo. Two fixes came from this run. The account check re-ran on every screen update, because the parent passed a new callback each render. And isolating test data by overriding `HOME` also hid the login Keychain, so debug builds now accept `D20_DATA_DIR` for a separate data folder. The owner then clicked Unlink and Link account in the running app. Unlink revoked the device and deleted the Keychain item. Link account opened the website, polled, and after approval saved a new item and loaded the library. The owner found the `/desktop/link` page ugly, so it was redrawn in the desktop's stage look: a painted cover behind a leather panel, gold labels, the code as parchment tiles, and linked computers listed under a rule. Checked at desktop and phone widths, signed out, with a pending code, with a bad code, and with the entry form.
 
 ## Phase 5 record, 2026-10-08
 
@@ -148,7 +148,7 @@ The desktop runtime tests read `src-tauri/resources/packs.json`. After a free-on
 Run `pnpm desktop:review` in the repo root. It starts the website on port 3058 and the app with the account requirement on, and quitting either stops both.
 
 1. The title screen shows Link your account. Link account opens `/desktop/link` in the browser. Sign in, then Link.
-2. The app shows the account top right and the New game screen, with March of Davos at $5 crossed out.
+2. The app shows the account top right and the New game screen, with Welcome to Kordavos at $5 crossed out.
 3. Unlink returns to the link step.
 
 Without `D20_REQUIRE_ACCOUNT` a development build plays without linking. Without `D20_SITE_URL` it points at the production site, which does not have the desktop API yet.
@@ -170,7 +170,7 @@ Without `D20_REQUIRE_ACCOUNT` a development build plays without linking. Without
 
 - Unsigned development builds may prompt for Keychain access after each rebuild.
 
-- Beta prices. March of Davos is listed at $5. The other three have no stated price.
+- Beta prices. Welcome to Kordavos is listed at $5. The other three have no stated price.
 - Whether a refund removes the adventure.
 - Stripe Tax at checkout, or price including tax.
 

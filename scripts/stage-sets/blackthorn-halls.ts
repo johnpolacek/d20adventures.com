@@ -1,4 +1,4 @@
-// Writes the Blackthorn mansion's halls for March of Davos (wiki/plans/march-of-davos-sets.md): the stair hall where the
+// Writes the Blackthorn mansion's halls for Welcome to Kordavos (wiki/plans/welcome-to-kordavos-sets.md): the stair hall where the
 // way divides, up to the family's floors or down to the cellars; the long upper corridor of portraits that ends at Astrid's
 // carved door and passes Thaddeus's guarded one; and Thaddeus's cold study. Each is the cellar kit's room redressed as a
 // finished interior. And the stagings of the four encounters played there.
@@ -12,8 +12,8 @@ import { cellarSet } from "./kits/cellar"
 import type { Obj, V2, V3 } from "./kits/street"
 
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const read = (name: string) => JSON.parse(readFileSync(`${SETS}/${name}.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 function write(path: string, data: unknown) {
@@ -33,7 +33,7 @@ const party = (spots: [string, V2][], facing: Facing) => spots.map(([id, at]) =>
 const partyShot = (spots: [string, V2][], offset: V3, label = "Party", fov = 54) => ({ subjects: spots.map(([id]) => id), offset, target: [0, 1.2, 0], relative: "world", fov, label })
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string, fov = 44) => ({ subject, distance, angle, height, lookHeight, fov, label })
 function staging(id: string, set: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
 }
 
 // The finished rooms' materials: dark oak panelling, damask walls, a parquet floor, plaster above, gilt everywhere.

@@ -1,6 +1,6 @@
 # The Dragonbone Inn in 3D
 
-[Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · March of Davos playtest
+[Plans](index.md) · [Stage authoring](../stage-authoring.md) · [Stage engine](../stage-engine.md) · Welcome to Kordavos playtest
 
 Status: implemented on main 2026-10-22. Owner review on `/dev/stage` and a check in the running app are next.
 

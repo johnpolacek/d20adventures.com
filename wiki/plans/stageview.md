@@ -35,7 +35,7 @@ Owner decisions from the turn-page mock, 2026-09-29 to 2026-10-01 (details in St
 | Old r3f encounter, scene-kit, mini generation, and dormant 3D map removed | Merge `b06a42b`, 2026-09-29. Mapview extracted into `components/mapview/map-panel.tsx`. |
 | Plain three.js engine, rendering, crowd cards, standees, lifecycle, quality tiers | Merge `384a622`, 2026-09-29. See [Stage engine](../stage-engine.md). |
 | Declarative set and minimal staging specs | `lib/stage/spec/`, bounded schemas and trusted builders. |
-| Kordavos south gate and development cast | `lib/stage/sets/realm-of-myr/kordavos-south-gate.json` and `lib/stage/stagings/march-of-davos/the-gates-of-kordavos.json`. |
+| Kordavos south gate and development cast | `lib/stage/sets/realm-of-myr/kordavos-south-gate.json` and `lib/stage/stagings/welcome-to-kordavos/the-gates-of-kordavos.json`. |
 | Myr crowd library | 16 front/back variants under `public/stage/crowd/realm-of-myr/`. |
 | Development preview and verification | `/dev/stage`, `pnpm stage:check`, `pnpm stage:verify`. |
 | Stage-first turn page, scripted demo of the gate scene | Merged 2026-10-01. `/dev/turn`, public `/demo/kordavos` (no model calls, noindex), `/dev/dice`. Queue loop, beats with step-through, contest rolls, narrative-to-movement eval (`pnpm stage:eval-movement`). See Stage-first turn mock. |
@@ -70,7 +70,7 @@ Coverage is required for the stage-first release, even if custom sets for every 
 
 - Build generic sets for forest road, clearing, tavern interior, docks, and crypt.
 - Generate default staging from encounter kind, NPC refs, and `startNear`. Missing authored staging must not block play.
-- Cover The Midnight Summons, Covert Cargo, The Road to Kordavos, and the 45 March of Davos encounters.
+- Cover The Midnight Summons, Covert Cargo, The Road to Kordavos, and the 45 Welcome to Kordavos encounters.
 - Add an authoring loop from brief to set spec, schema/build checks, rendered screenshots, human review, and publication.
 
 ## Architecture to extend

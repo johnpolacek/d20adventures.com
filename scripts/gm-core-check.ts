@@ -27,7 +27,7 @@ const characterFixture = JSON.parse(readFileSync("scripts/gm-core-fixtures/chara
 // after a prompt or content change made on purpose. Read the fixtures' diff before committing it.
 const UPDATE = process.env.GM_FIXTURE_UPDATE === "1"
 const save = (path: string, value: unknown) => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
-const runtime = loadLocalWikiAdventureRuntime("realm-of-myr", "march-of-davos")
+const runtime = loadLocalWikiAdventureRuntime("realm-of-myr", "welcome-to-kordavos")
 const clone = <T>(value: T): T => structuredClone(value)
 const unavailable = () => {
   throw new Error("Unexpected host call")
@@ -143,7 +143,7 @@ async function replayTurn() {
   assert.ok(reply.rollRequired)
   await core.resolvePlayerRollResult({ turnId: "turn-1", characterId: player.id, result: 20 })
   assert.ok(game.records.get("turn-1").characters.every((actor: any) => actor.isComplete))
-  await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" })
+  await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "welcome-to-kordavos" })
   assert.equal(index, 7)
   if (UPDATE) fixture.writes = game.writes
   assert.deepEqual(game.writes, fixture.writes)
@@ -160,7 +160,7 @@ async function replayTurn() {
   }
   if (UPDATE) save("scripts/gm-core-fixtures/turn.json", fixture)
   assert.ok(game.records.get("turn-2").adventurePatch)
-  assert.equal((await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" })).status, "already_advanced")
+  assert.equal((await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "welcome-to-kordavos" })).status, "already_advanced")
   assert.equal(index, 7, "duplicate advance must not call the model")
   await assert.rejects(
     game.ports.store.commitWikiTurnAdvance({
@@ -274,7 +274,7 @@ async function accessAndInstanceIsolation() {
     return { adventureId: "new-adventure", turnId: "new-turn" }
   }
   await createGmCore(c.ports).createAdventureWithFirstTurn({
-    planId: "march-of-davos",
+    planId: "welcome-to-kordavos",
     settingId: "realm-of-myr",
     ownerId: "forged-owner",
     playerIds: ["fixture-player"],
@@ -286,7 +286,7 @@ async function accessAndInstanceIsolation() {
 
   const d = memoryGame()
   d.ports.llm.generateObject = async () => ({ object: { nextEncounterId: "invented-encounter", beats: [{ kind: "narration", text: "No." }] } as any })
-  await assert.rejects(createGmCore(d.ports).advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "march-of-davos" }), /transition rejected/i)
+  await assert.rejects(createGmCore(d.ports).advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "welcome-to-kordavos" }), /transition rejected/i)
   assert.deepEqual(d.writes, [])
 
   const drift = memoryGame()
@@ -425,7 +425,7 @@ function roundBudget() {
   assert.match(paceNote(5, 4), /round 5, 1 past the 4 budgeted.*nearest listed way out/)
   assert.match(paceNote(6, 4), /round 6, 2 past the 4 budgeted.*best fits.*stays theirs/)
 
-  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "march-of-davos")
+  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "welcome-to-kordavos")
   assert.ok(definition)
   // Authored budgets come and go, so the two scenes checked set theirs here: the wine cellar 2, the halls none.
   const files = readLocalWikiAdventureSourceFiles(definition).map((file) => {

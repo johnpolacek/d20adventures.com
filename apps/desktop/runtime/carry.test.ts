@@ -22,10 +22,10 @@ const [THALBERN, LYRA, POPPEN] = ["thalbern", "1749159962941", "1749307435667"]
 const you = (id: string) => ({ id, ai: false })
 const ai = (id: string) => ({ id, ai: true })
 
-test("the three intro adventures lead into March of Davos, in order", () => {
+test("the three intro adventures lead into Welcome to Kordavos, in order", () => {
   const chain = ["the-midnight-summons"]
   for (let next = info(chain[0]).next; next; next = info(next).next) chain.push(next)
-  assert.deepEqual(chain, ["the-midnight-summons", "covert-cargo", "the-road-to-kordavos", "march-of-davos"])
+  assert.deepEqual(chain, ["the-midnight-summons", "covert-cargo", "the-road-to-kordavos", "welcome-to-kordavos"])
   // Every adventure named as next is one the app bundles.
   for (const a of list) assert.ok(!a.next || packs[a.next], `${a.id} leads to ${a.next}`)
 })
@@ -41,26 +41,26 @@ test("continuing the story keeps the heroes who can go on, on the seats they had
   // Covert Cargo into The Road: the Road is played with heroes the player makes, so nobody goes on.
   assert.deepEqual(openingParty(info("the-road-to-kordavos"), [], [you(LYRA), you(POPPEN), ai(THALBERN)]), [])
 
-  // The Road into March of Davos: the player's own heroes go on, and the authored companions fill the party.
+  // The Road into Welcome to Kordavos: the player's own heroes go on, and the authored companions fill the party.
   const roster = [
     { id: "hero-a", race: "Elf", archetype: "Wizard" },
     { id: "hero-b", race: "Dwarf", archetype: "Cleric" },
     { id: "hero-c", race: "Dragonborn", archetype: "Fighter" },
   ]
-  assert.deepEqual(openingParty(info("march-of-davos"), roster, [you("hero-a")]), [you("hero-a"), ai("branka-stoneveil"), ai("cassia-verane"), ai("yeva-softstep")])
-  assert.deepEqual(openingParty(info("march-of-davos"), roster, [ai("hero-b"), you("hero-a")]), [ai("hero-b"), you("hero-a"), ai("branka-stoneveil"), ai("cassia-verane")])
+  assert.deepEqual(openingParty(info("welcome-to-kordavos"), roster, [you("hero-a")]), [you("hero-a"), ai("branka-stoneveil"), ai("cassia-verane"), ai("yeva-softstep")])
+  assert.deepEqual(openingParty(info("welcome-to-kordavos"), roster, [ai("hero-b"), you("hero-a")]), [ai("hero-b"), you("hero-a"), ai("branka-stoneveil"), ai("cassia-verane")])
   // A hero the adventure does not accept, or one no longer in the roster, stays behind.
-  assert.deepEqual(openingParty(info("march-of-davos"), roster, [you("hero-c"), ai("hero-gone")]), openingParty(info("march-of-davos"), roster))
+  assert.deepEqual(openingParty(info("welcome-to-kordavos"), roster, [you("hero-c"), ai("hero-gone")]), openingParty(info("welcome-to-kordavos"), roster))
   // The three from the pier can go straight on too, and a party the AI ran gives its first hero to the player.
-  assert.deepEqual(openingParty(info("march-of-davos"), [], [ai(THALBERN), ai(LYRA), ai(POPPEN)]), [you(THALBERN), ai(LYRA), ai(POPPEN), ai("branka-stoneveil")])
+  assert.deepEqual(openingParty(info("welcome-to-kordavos"), [], [ai(THALBERN), ai(LYRA), ai(POPPEN)]), [you(THALBERN), ai(LYRA), ai(POPPEN), ai("branka-stoneveil")])
   // Never more than the adventure seats.
-  assert.equal(openingParty(info("march-of-davos"), [], [...info("march-of-davos").premades.map((p) => you(p.id))]).length, info("march-of-davos").players[1])
+  assert.equal(openingParty(info("welcome-to-kordavos"), [], [...info("welcome-to-kordavos").premades.map((p) => you(p.id))]).length, info("welcome-to-kordavos").players[1])
   assert.deepEqual(openingParty(undefined, roster, [you("hero-a")]), [])
 })
 
 test("a hero made on the party screen is the player's, and the hero they had goes to the AI", () => {
   const seat = (id: string, who: Seat["who"], open?: boolean): Seat => (open ? { id, who, open } : { id, who })
-  const davos = openingParty(info("march-of-davos"), []).map((c) => seat(c.id, c.ai ? "ai" : "you"))
+  const davos = openingParty(info("welcome-to-kordavos"), []).map((c) => seat(c.id, c.ai ? "ai" : "you"))
   assert.deepEqual(
     davos.map((c) => c.who),
     ["you", "ai", "ai", "ai"]
@@ -80,11 +80,11 @@ test("a hero made on the party screen is the player's, and the hero they had goe
   assert.deepEqual(seatCreated([seat("hero-a", "ai")], "hero-a", 5), [seat("hero-a", "ai")])
 })
 
-test("Lyra, Poppen and Thalbern can be played in March of Davos, and stand at the gate as themselves", async () => {
+test("Lyra, Poppen and Thalbern can be played in Welcome to Kordavos, and stand at the gate as themselves", async () => {
   const dir = mkdtempSync(join(tmpdir(), "d20-carry-"))
   const store = new LocalStore(join(dir, "save.sqlite"), transitionsOf(packs))
   try {
-    await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "march-of-davos", party: [you(THALBERN), ai(LYRA), ai(POPPEN)] })
+    await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "welcome-to-kordavos", party: [you(THALBERN), ai(LYRA), ai(POPPEN)] })
     // A round lists its characters in turn order, which the dice set.
     const pcs = store.current().characters.filter((c) => c.type === "pc")
     const pc = (id: string) => pcs.find((c) => c.id === id)!

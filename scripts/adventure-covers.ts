@@ -49,10 +49,10 @@ const COVERS: Record<string, Cover> = {
       "public/stage/fixtures/covert-cargo/reinhard-front.webp",
     ],
   },
-  "march-of-davos": {
+  "welcome-to-kordavos": {
     scene:
       "The great gate of Kordavos during its harvest festival, hung with crimson banners: a chained beast, a huge horned creature, has broken loose and charges through the panicking festival crowd and market stalls, while a party of adventurers (a human knight, a dwarf with an axe, an elven mage casting a spell, a nimble rogue) stand their ground in the foreground.",
-    refs: [`${CF}/march-of-davos/80383e3f-940a-41a7-89d5-90b605b6c646.png`, "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726354341751"],
+    refs: [`${CF}/welcome-to-kordavos/80383e3f-940a-41a7-89d5-90b605b6c646.png`, "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726354341751"],
   },
 }
 

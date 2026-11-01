@@ -1,4 +1,4 @@
-// Writes March of Davos's docks (wiki/plans/march-of-davos-sets.md): the Kordavos harbour quay in golden late light, with
+// Writes Welcome to Kordavos's docks (wiki/plans/welcome-to-kordavos-sets.md): the Kordavos harbour quay in golden late light, with
 // the elven ship Star of Faelendar at her berth, Warehouse 14 in its shadowed corner, and the same quay wrecked after the
 // forest drake broke loose. Stagings for the five dock encounters.
 //
@@ -12,8 +12,8 @@ type V2 = [number, number]
 type V3 = [number, number, number]
 type Obj = Record<string, unknown>
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const square = JSON.parse(readFileSync(`${SETS}/kordavos-harvest-square.json`, "utf8"))
 const riverfront = JSON.parse(readFileSync(`${SETS}/kordavos-riverfront.json`, "utf8"))
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
@@ -614,7 +614,7 @@ const party = (spots: [string, V2][], facing: V2) => spots.map(([id, at]) => ({ 
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string, fov = 44) => ({ subject, distance, angle, height, lookHeight, fov, label })
 const partyShot = (ids: string[], offset: V3, label = "Party") => ({ subjects: ids, offset, target: [0, 1.1, 0], relative: "world", fov: 54, label })
 function staging(id: string, set: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
 }
 const IDS = ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"]
 const at = (spots: V2[]): [string, V2][] => IDS.map((id, i) => [id, spots[i]])

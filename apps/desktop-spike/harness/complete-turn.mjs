@@ -176,7 +176,7 @@ export async function completeTurn(session, onProgress = () => {}, options = {})
   submitReply = dbExports.submitReply
 
   const runtime = load("@/lib/wiki-adventures/local-runtime")
-  const { artifacts, contentRef } = runtime.loadLocalWikiAdventureRuntime("realm-of-myr", "march-of-davos")
+  const { artifacts, contentRef } = runtime.loadLocalWikiAdventureRuntime("realm-of-myr", "welcome-to-kordavos")
   const encounter = artifacts.encounters["the-gates-of-kordavos"]
   const player = {
     id: "mira",
@@ -207,7 +207,7 @@ export async function completeTurn(session, onProgress = () => {}, options = {})
     _id: "fixture-adventure",
     ownerId: "fixture-player",
     settingId: "realm-of-myr",
-    planId: "march-of-davos",
+    planId: "welcome-to-kordavos",
     status: "active",
     playerIds: ["fixture-player"],
     players: [{ userId: "fixture-player", characterId: player.id }],

@@ -30,7 +30,7 @@ GM core sources updated on 2026-10-02. Other sources reviewed 2026-10-01. Curren
 
 The files under `wiki/sources/adventure plans/` are legacy inputs, not current authored content. The four `scripts/migrate-*.ts` scripts still read their adventure JSON files. Preserve them unless the migration tooling is deliberately retired.
 
-The current authoring source is under `content/settings/realm-of-myr/` or the corresponding complete S3 source. March of Davos was reconciled from richer production source into the repo in June 2026, so rerunning its original migration can overwrite later authoring.
+The current authoring source is under `content/settings/realm-of-myr/` or the corresponding complete S3 source. Welcome to Kordavos was reconciled from richer production source into the repo in June 2026, so rerunning its original migration can overwrite later authoring.
 
 ## Kordavos geography
 

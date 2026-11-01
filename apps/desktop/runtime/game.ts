@@ -28,8 +28,8 @@ export type Pack = {
 export type Packs = Record<string, Pack>
 // The bundled adventures share no encounter ids, so one list of legal transitions serves every save.
 export const transitionsOf = (packs: Packs) => Object.values(packs).flatMap((p) => p.artifacts.graph.encounterTransitions)
-// The heroes a new game suggests. March of Davos uses the four premades in its authored scenes.
-const PARTY: Record<string, string[]> = { "march-of-davos": ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"] }
+// The heroes a new game suggests. Welcome to Kordavos uses the four premades in its authored scenes.
+const PARTY: Record<string, string[]> = { "welcome-to-kordavos": ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"] }
 // What the new game screen offers for each adventure: its player range, premades, and the heroes it accepts.
 export const adventureList = (packs: Packs) =>
   Object.entries(packs).map(([id, p]) => {
@@ -210,7 +210,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     }
     if (command.kind === "start") {
       if (store.state && !command.replace) throw new Error("An adventure is already saved. Continue it.")
-      const plan = command.adventure ?? "march-of-davos"
+      const plan = command.adventure ?? "welcome-to-kordavos"
       const { artifacts } = packFor(plan)
       const encounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       const id = randomUUID(),

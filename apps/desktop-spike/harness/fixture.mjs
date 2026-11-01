@@ -66,7 +66,7 @@ async function rollProbe(intro, notes) {
 }
 
 export async function fixture() {
-  const path = "content/settings/realm-of-myr/adventures/march-of-davos/encounters/the-gates-of-kordavos.md"
+  const path = "content/settings/realm-of-myr/adventures/welcome-to-kordavos/encounters/the-gates-of-kordavos.md"
   const encounter = source(path)
   const section = (title) => encounter.split(`## ${title}\n\n`)[1]?.split("\n## ")[0]?.trim() ?? ""
   const intro = section("Intro"),
@@ -74,7 +74,7 @@ export async function fixture() {
   const action = "Mira places three marks in Garlan Ironfist's hand and says, 'I have come for the Harvest Festival.' Garlan counts the coins."
   const schema = schemaDeclaration("app/_actions/advance-turn.ts", "encounterProgressionSchema")
   const prompt = buildEncounterProgressionPrompt({
-    adventureOverview: "Adventure Overview: March of Davos, arrival in Kordavos during the Harvest Festival.",
+    adventureOverview: "Adventure Overview: Welcome to Kordavos, arrival in Kordavos during the Harvest Festival.",
     sectionContext: "Section Title: Arrival At Kordavos",
     sceneContext: "Scene Title: Arrival at Kordavos",
     currentEncounterTitle: "The Gates of Kordavos",

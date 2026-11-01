@@ -1,4 +1,4 @@
-// Writes March of Davos's catacombs from the tunnel kit (wiki/plans/march-of-davos-sets.md): the powder chamber where
+// Writes Welcome to Kordavos's catacombs from the tunnel kit (wiki/plans/welcome-to-kordavos-sets.md): the powder chamber where
 // the Covenant lays its fuse, the forking labyrinth that ends at a blank wall, the same wall with its black iron door
 // revealed, and the vast empty hall beyond it. And their stagings.
 //
@@ -11,8 +11,8 @@ import type { Obj, V2, V3 } from "./kits/street"
 import { crystals, mouth, portal, tunnelSet } from "./kits/tunnel"
 
 const SETS = "packages/stage/src/sets/realm-of-myr"
-const STAGINGS = "packages/stage/src/stagings/march-of-davos"
-const ART = "/stage/fixtures/march-of-davos"
+const STAGINGS = "packages/stage/src/stagings/welcome-to-kordavos"
+const ART = "/stage/fixtures/welcome-to-kordavos"
 const festival = JSON.parse(readFileSync(`${STAGINGS}/the-harvest-festival.json`, "utf8"))
 function write(path: string, data: unknown) {
   writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`)
@@ -26,7 +26,7 @@ const party = (spots: [string, V2][], facing: Facing) => spots.map(([id, at]) =>
 const partyShot = (spots: [string, V2][], offset: V3, label = "Party", fov = 54) => ({ subjects: spots.map(([id]) => id), offset, target: [0, 1.2, 0], relative: "world", fov, label })
 const shotOn = (subject: string, distance: number, angle: number, height: number, lookHeight: number, label: string, fov = 44) => ({ subject, distance, angle, height, lookHeight, fov, label })
 function staging(id: string, set: string, cast: Obj[], shots: Obj, shot: string, extra: Obj = {}) {
-  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `march-of-davos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
+  write(`${STAGINGS}/${id}.json`, { format: "d20.stage.staging", version: 1, id: `welcome-to-kordavos/${id}`, set: `realm-of-myr/${set}`, cast, shots, shot, ...extra })
 }
 const astrid = (at: V2, facing: Facing) => member("astrid-blackthorn", "Lady Astrid Blackthorn", "Blackthorn ranger", 1.78, "astrid-blackthorn", at, facing)
 const eamon = (at: V2, facing: Facing) => member("eamon", "Eamon", "Scholar and mage", 1.78, "eamon", at, facing)

@@ -1,6 +1,6 @@
 ---
 name: gameplay-playthrough-testing
-description: Run an authenticated end-to-end gameplay playthrough of a D20 Adventures adventure in a real browser to test the actual player flow — character select, turns, dice rolls, encounter transitions, NPC roleplay, and completion. Use when verifying a gameplay change, reproducing or confirming a fix in the running app (not just unit/bridge tests), assessing AI Game Master / roleplay quality, or driving an adventure (Midnight Summons, Covert Cargo, Road to Kordavos, March of Davos) to completion. Bridge tests cover compiled data flow; this covers the live runtime that only a real authenticated session exercises.
+description: Run an authenticated end-to-end gameplay playthrough of a D20 Adventures adventure in a real browser to test the actual player flow — character select, turns, dice rolls, encounter transitions, NPC roleplay, and completion. Use when verifying a gameplay change, reproducing or confirming a fix in the running app (not just unit/bridge tests), assessing AI Game Master / roleplay quality, or driving an adventure (Midnight Summons, Covert Cargo, Road to Kordavos, Welcome to Kordavos) to completion. Bridge tests cover compiled data flow; this covers the live runtime that only a real authenticated session exercises.
 ---
 
 # Gameplay playthrough testing

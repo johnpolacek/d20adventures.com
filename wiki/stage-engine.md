@@ -16,7 +16,7 @@ The engine ports the v5 prototype (`~/Projects/d20-graphics-test-2/src/v5/`, thr
 | Materials: masonry, wood, cloth, burlap, metal, plain, heraldry. height fog scoped to Stage materials | Beats, hold binding, Storyview sync (phase 4) |
 | Sky, sun, hemisphere, PMREM environment, AgX | Character art generator and S3 storage (phase 4) |
 | Post: 4× MSAA with resolved depth, FXAA, bloom, quarter-res GTAO, Kuwahara paint at fixed internal height with depth-scaled radius, character mask | Generated turn beats and narration synchronization |
-| Crowd: procedural pawns, instanced front/back cards, hybrid LOD, walkers | March of Davos after Clan Conflict (story view on desktop) |
+| Crowd: procedural pawns, instanced front/back cards, hybrid LOD, walkers | Welcome to Kordavos after Clan Conflict (story view on desktop) |
 | Named characters as front/back standees with alpha-derived normals | Procedural hero rigs and the MakeHuman head (superseded by standees) |
 | Quality tiers, pause when hidden, `dispose()` | Mobile measurement |
 | Set spec + interpreter + parametric builders. the Kordavos gate as the first spec | |
@@ -113,7 +113,7 @@ Measured on the M3 in Chrome 154, 1440×900 CSS, dev build, `motion=0` unless no
 - **three r183.** `PCFSoftShadowMap` is deprecated, so shadows use `PCFShadowMap`. There is no `Clock`: frame time comes from rAF timestamps.
 - **Pixels for review come from the canvas.** In the recorded verification environment, CDP `Page.captureScreenshot` hung on full-viewport captures, and messages over about 10 MB stalled the socket. `stage.capture()` renders a frame and reads the canvas in the same task. the verify script moves PNGs in 2 MB slices and cuts crops in the page.
 - **Ramparts shot moved** to `[-54, 70, 22]`, so it no longer clips the drum tower's hoarding.
-- **Assets are in the repo for now:** the Realm of Myr crowd library (2.0 MB) and the March of Davos standees and portraits (2.2 MB) under `public/stage/`. Phase 4 moves per-character art to S3.
+- **Assets are in the repo for now:** the Realm of Myr crowd library (2.0 MB) and the Welcome to Kordavos standees and portraits (2.2 MB) under `public/stage/`. Phase 4 moves per-character art to S3.
 
 ## Current limits
 
@@ -297,9 +297,9 @@ Part of [painted backdrop](plans/stage-backdrop.md), from spike (a) of the [stag
 - The key now keeps only paint joined to the bottom edge, drops paint floating in the sky, and fills magenta that the land encloses as mist.
 - 2026-10-18: backdrops added to the Kordavos riverfront (a row of houses at the paving's edge), the old forest path (giant trunks in haze, both ways) and Thalbern's forest home (a sunlit forest edge). The forest trail, the Kordavos gate and square, and the Mordava piers show no bare horizon in their shots and have none.
 
-## March of Davos playtest pass, 2026-10-19
+## Welcome to Kordavos playtest pass, 2026-10-19
 
-From an automated play of March of Davos with the live GM and a pass over every view. See the playtest plan.
+From an automated play of Welcome to Kordavos with the live GM and a pass over every view. See the playtest plan.
 
 - Subject shots (close-ups, speakers, the acting hero) score every view clear of walls by who stands in the sight line or within 1.8 m beside the lens, cast at 3 and crowd at 1, plus a cost for swinging far round (up to 2.5 behind the subject) or drawing in. The lowest wins. Rooms keep their inside-first pass.
 - Crowd cards within 1.1 m of the camera, measured to the chest, are not drawn, so a passer-by never fills the frame.
@@ -327,9 +327,9 @@ See [the plan](plans/dragonbone-inn-stage.md).
 - Measured at ultra, DPR 2, on this Mac: 121 to 167 draw calls, 0.16M to 0.20M triangles, 25 to 36 fps.
 
 
-## March of Davos sets, from 2026-10-23
+## Welcome to Kordavos sets, from 2026-10-23
 
-See [the plan](plans/march-of-davos-sets.md).
+See [the plan](plans/welcome-to-kordavos-sets.md).
 
 - `image` material: a painting laid by the builder's uv, tinted, with `glow` (lit from within by its own colours, no shadow) and `double`.
 - Library builders: `panel`, `archHead`, `bookcase`, `vault`, `cupola`, `gallery`, `column`, `desk`, `armchair`, `globe`, `candleStand`. `beam` takes `open`, and `chandelier` drops up to 12 m.

@@ -10,7 +10,7 @@ Updated 2026-10-23. Alpha, no players, work on `main`.
 - Stageview 3D play screen. Every encounter of the four Myr adventures has a set.
 - Structured turns: labelled beats, one roll card, NPC turn card, suggested replies, skip turn, pre-written next turns.
 - GM quality: concise narration, premise, character knowledge ledger, round budget, scene rails judge and probes.
-- Campaign: the three lead-in adventures carry heroes, gear and story into March of Davos.
+- Campaign: the three lead-in adventures carry heroes, gear and story into Welcome to Kordavos.
 - Hosted games: one player's app hosts, friends join from a browser. Merged, not shipped.
 - Adventure store: catalog, entitlements, account linking, pack downloads. Merged, not deployed.
 - Website: text turn page, Storyview narration, Mapview, admin editor, `/demo/kordavos`.
@@ -18,7 +18,7 @@ Updated 2026-10-23. Alpha, no players, work on `main`.
 
 ## Next
 
-1. Owner play-through of March of Davos in the running app, with the new sets.
+1. Owner play-through of Welcome to Kordavos in the running app, with the new sets.
 2. Alpha release: deploy website and Convex, set the store secret, package the desktop app.
 3. Hosted games end to end, Convex lockdown, provider terms.
 4. Finish the desktop site style: HUD review and cleanup.
