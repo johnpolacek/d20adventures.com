@@ -14,12 +14,15 @@ export const thrownMessage = (error: unknown, fallback: string) => /Uncaught Err
 /** A character's sheet id, from its id or from its key in an account. */
 export const sheetId = (characterId: string) => characterId.split("/").pop()?.replace(".json", "") ?? ""
 
-/** How many seats still take a guest's own hero. Every guest whose hero the host did not hold sits in one. */
+/**
+ * How many seats still take a guest's own hero. Every guest whose hero the host did not hold sits in one. Where open
+ * seats also take held heroes, every guest sits in one.
+ */
 export function openLeft(adventure: Seated) {
   const host = adventure.host
   if (!host?.open) return 0
   const held = new Set((host.seats ?? []).map((s) => s.id))
-  return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && !held.has(sheetId(p.characterId))).length
+  return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && (host.flex || !held.has(sheetId(p.characterId)))).length
 }
 
 // Whether the host plays a hero. AI heroes are filed under the host's account but are not theirs to play.
@@ -52,6 +55,8 @@ export function guestSeat(adventure: Seated, userId: string | null | undefined) 
   const bring = userId ? Math.max(0, (host?.bring ?? 1) - brought) : 0
   return {
     open: openLeft(adventure),
+    // Whether the open seats also take the held heroes, so those count no seat of their own.
+    flex: Boolean(host?.flex),
     approve: Boolean(host?.approve) || removed,
     removed,
     keep,
@@ -63,8 +68,9 @@ export function guestSeat(adventure: Seated, userId: string | null | undefined) 
 }
 export type GuestSeat = ReturnType<typeof guestSeat>
 
-/** The held seats nobody has taken yet. */
-export const openSeats = (adventure: Seated): Seat[] => (adventure.host?.seats ?? []).filter((s) => !adventure.players?.some((p) => sheetId(p.characterId) === s.id))
+/** The held seats nobody has taken yet. Where open seats also take held heroes, none once those seats are full. */
+export const openSeats = (adventure: Seated): Seat[] =>
+  adventure.host?.flex && openLeft(adventure) < 1 ? [] : (adventure.host?.seats ?? []).filter((s) => !adventure.players?.some((p) => sheetId(p.characterId) === s.id))
 
 /** The held seats a guest may take. While the host waits for a hero, the last one is theirs. */
 export function guestSeats(adventure: Seated): Seat[] {

@@ -25,7 +25,7 @@ import { StartAdventureButton } from "./start-adventure-button"
 // their guests leave, how many more of their own heroes this guest may bring, their heroes waiting on the host, and
 // their latest request with the host's answer.
 type SeatRequest = { name: string; status: "pending" | "rejected" | "removed"; note?: string }
-type OpenSeats = { open: number; approve: boolean; removed: boolean; keep?: number; more?: number; bring?: number; pending?: string[]; request?: SeatRequest }
+type OpenSeats = { open: number; flex?: boolean; approve: boolean; removed: boolean; keep?: number; more?: number; bring?: number; pending?: string[]; request?: SeatRequest }
 export type LobbyInvite = OpenSeats & { seats: PCTemplate[]; as?: string }
 
 interface AdventureLobbyProps {
@@ -53,6 +53,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   // The open seats and this guest's request, kept current by the poll below.
   const [seat, setSeat] = useState<OpenSeats>({
     open: invite?.open ?? 0,
+    flex: invite?.flex,
     approve: invite?.approve ?? false,
     removed: invite?.removed ?? false,
     keep: invite?.keep,
@@ -289,7 +290,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           userId={user?.id}
           onCharacterClick={handlePartySlotClick}
           availableCharacters={availableCharacters}
-          seats={invite ? (party?.length ?? 0) + unseated.length + seat.open : undefined}
+          seats={invite ? (party?.length ?? 0) + (seat.flex ? 0 : unseated.length) + seat.open : undefined}
           hostSeat={hostSeat}
           onJoinClick={isSignedIn ? handleJoinAdventure : undefined}
           onRemoveAiCompanion={isOwner ? handleRemoveAiCompanion : undefined}

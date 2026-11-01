@@ -21,13 +21,14 @@ export const setHost = mutation({
     deviceId: v.id("devices"),
     seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
     open: v.optional(v.number()),
+    flex: v.optional(v.boolean()),
     approve: v.optional(v.boolean()),
     pick: v.optional(v.boolean()),
     each: v.optional(v.number()),
     bring: v.optional(v.number()),
     arrivals: v.optional(v.record(v.string(), arrivalValidator)),
   },
-  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open, approve, pick, each, bring, arrivals }) => {
+  handler: async (ctx, { secret, adventureId, userId, deviceId, seats, open, flex, approve, pick, each, bring, arrivals }) => {
     requireServer(secret)
     const adventure = await ctx.db.get(adventureId)
     if (!adventure) throw new Error("Adventure not found")
@@ -39,6 +40,7 @@ export const setHost = mutation({
         seenAt: Date.now(),
         ...(seats?.length ? { seats } : {}),
         ...(open ? { open } : {}),
+        ...(open && flex ? { flex } : {}),
         ...(open && approve ? { approve } : {}),
         ...(pick && seats?.length ? { pick } : {}),
         ...(pick && seats?.length && each ? { each } : {}),
@@ -51,12 +53,13 @@ export const setHost = mutation({
 })
 
 const sheetId = (characterId: string) => characterId.split("/").pop()?.replace(".json", "")
-// Open seats not yet filled: every guest whose hero is not one the host held sits in an open seat.
+// Open seats not yet filled: every guest whose hero is not one the host held sits in an open seat. Where open seats
+// also take held heroes, every guest sits in one.
 const openLeft = (adventure: Doc<"adventures">) => {
   const host = adventure.host
   if (!host?.open) return 0
   const held = new Set((host.seats ?? []).map((s) => s.id))
-  return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && !held.has(sheetId(p.characterId) ?? "")).length
+  return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && (host.flex || !held.has(sheetId(p.characterId) ?? ""))).length
 }
 // The heroes a guest brought to open seats, seated or waiting for the host.
 const brought = (adventure: Doc<"adventures">, userId: string) => {

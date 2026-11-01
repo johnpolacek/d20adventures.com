@@ -28,6 +28,7 @@ export async function POST(request: Request) {
       invites?: unknown
       ais?: unknown
       open?: unknown
+      flex?: unknown
       approve?: unknown
       watch?: unknown
       each?: unknown
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
       invites,
       ais: Array.isArray(body.ais) ? (body.ais.slice(0, 8) as HostCharacter[]) : [],
       open: typeof body.open === "number" ? body.open : 0,
+      flex: body.flex === true,
       approve: body.approve === true,
       watch: body.watch === true,
       each: typeof body.each === "number" && Number.isInteger(body.each) && body.each > 0 ? body.each : undefined,

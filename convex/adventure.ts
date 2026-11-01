@@ -112,6 +112,9 @@ export const joinAdventure = mutation({
       const hero = sheetId(args.characterId)
       if (!seats.some((s) => s.id === hero)) throw new Error("This game's seats are held for other heroes")
       if (adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("Character is already taken")
+      // Where open seats also take held heroes, a held hero needs one of those seats free.
+      const guests = adventure.players?.filter((p) => p.userId !== adventure.host?.userId).length ?? 0
+      if (adventure.host?.flex && guests >= (adventure.host.open ?? 0)) throw new Error("Every seat at this table is taken")
       // Where guests choose first, the last held hero is the host's.
       const host = adventure.host
       if (host?.pick && !adventure.players?.some((p) => p.userId === host.userId && p.controlledBy !== "ai")) {

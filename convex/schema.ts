@@ -104,6 +104,9 @@ export default defineSchema({
         seenAt: v.optional(v.number()),
         seats: v.optional(v.array(v.object({ id: v.string(), name: v.string(), key: v.optional(v.string()) }))),
         open: v.optional(v.number()),
+        // True when every open seat also takes a held hero: open counts every guest's seat, and held heroes nobody
+        // takes stay out of the party.
+        flex: v.optional(v.boolean()),
         // True when the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
         approve: v.optional(v.boolean()),
         // True when guests choose among every held hero and the host plays one they leave, seated as the game starts.

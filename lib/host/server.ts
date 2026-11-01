@@ -52,6 +52,8 @@ export async function createHostedAdventure(args: {
   invites?: HostCharacter[]
   ais?: HostCharacter[]
   open?: number
+  // Whether the open seats also take the held heroes. Then open counts every guest's seat, and held heroes are offered.
+  flex?: boolean
   // Whether the host approves each guest's own hero. Otherwise an open seat takes the guest at once.
   approve?: boolean
   watch?: boolean
@@ -79,6 +81,8 @@ export async function createHostedAdventure(args: {
   const held = (args.invites ?? []).map(resolve)
   const ais = (args.ais ?? []).map(resolve)
   const watch = Boolean(args.watch) && !mine.length
+  const flex = Boolean(args.flex) && Boolean(args.open)
+  if (flex && !mine.length && !watch) throw new HostError(400, "Choose a hero for yourself, or watch.")
   if (!mine.length && !watch && held.length < 2) throw new HostError(400, "Choose a hero for yourself, or invite at least two.")
   const ids = [...mine.map((h) => h.id), ...held.map((h) => h.id), ...ais.map((h) => h.id)]
   if (new Set(ids).size !== ids.length) throw new HostError(400, "A hero can join the party only once.")
@@ -86,7 +90,7 @@ export async function createHostedAdventure(args: {
   if (!Number.isInteger(open) || open < 0) throw new HostError(400, "The open seats are not valid.")
   if (watch && held.length + open < 1) throw new HostError(400, "Invite a hero to watch them play.")
   if (open && !manifest.availableCharacterOptions) throw new HostError(400, `${manifest.title} takes its own heroes only.`)
-  if (manifest.maxPlayers && ids.length + open > manifest.maxPlayers) throw new HostError(400, `${manifest.title} seats ${manifest.maxPlayers} at most.`)
+  if (manifest.maxPlayers && ids.length - (flex ? held.length : 0) + open > manifest.maxPlayers) throw new HostError(400, `${manifest.title} seats ${manifest.maxPlayers} at most.`)
   const keyOf = (id: string) => `characters/${args.userId}/${id}.json`
   // A held roster hero's sheet waits in the host's account for the guest who takes the seat.
   await Promise.all([...mine, ...ais, ...held.filter((h) => !h.premade)].map((h) => updateJsonOnS3(keyOf(h.id), h.pc)))
@@ -115,8 +119,9 @@ export async function createHostedAdventure(args: {
     deviceId: args.deviceId,
     seats,
     open,
+    flex,
     approve: args.approve,
-    pick: !mine.length && !watch,
+    pick: !mine.length && !watch && !flex,
     arrivals,
     ...(args.each ? { each: args.each } : {}),
     ...(args.bring ? { bring: args.bring } : {}),
@@ -233,7 +238,7 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     invite: inviteUrl(origin, adventure),
     // How many seats the host set aside for guests, held heroes and open ones together, then the held seats nobody
     // has taken, each with the link that joins as that hero.
-    held: (adventure.host?.seats?.length ?? 0) + (adventure.host?.open ?? 0),
+    held: (adventure.host?.flex ? 0 : (adventure.host?.seats?.length ?? 0)) + (adventure.host?.open ?? 0),
     // Seats still open to a guest's own hero, their link, and the guests waiting on the host's answer.
     open: openLeft(adventure),
     approval: Boolean(adventure.host?.approve),

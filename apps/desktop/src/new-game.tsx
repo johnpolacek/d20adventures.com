@@ -76,8 +76,9 @@ export function NewGame(props: {
   // Hosting the adventure on the website for friends instead: the player's heroes, and the heroes held for guests.
   // Needs a linked account, so Invite links first. Without a hero for the player, guests choose first, or with
   // watch the player has no hero at all. open is how many more seats take a guest's own hero, and approve whether
-  // the host answers each of those. bring is how many of those seats one guest may fill.
-  onHost?: (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number, bring?: number) => void
+  // the host answers each of those. bring is how many of those seats one guest may fill. With flex, an open seat also
+  // takes an invited hero, so guests choose one or bring their own, and invited heroes nobody takes stay home.
+  onHost?: (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number, bring?: number, flex?: boolean) => void
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
@@ -89,6 +90,8 @@ export function NewGame(props: {
   const [each, setEach] = useState(1)
   // How many open seats one guest may fill with heroes of their own. Unset, all of them.
   const [bring, setBring] = useState<number | null>(null)
+  // An open invite: each open seat takes an invited hero or a guest's own, so invited heroes take no seat themselves.
+  const [flex, setFlex] = useState(false)
   // The hero the player last held, so leaving a guest's choice of hero gives it back.
   const [lastYou, setLastYou] = useState<string | null>(null)
   const fits = (h: Hero) => Boolean(info?.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
@@ -106,18 +109,20 @@ export function NewGame(props: {
   }, [joining, max])
   if (lockedInfo) return <LockedAdventure info={lockedInfo} linked={props.linked} onLink={props.onLink} onCancel={props.onCancel} busy={props.busy} />
   if (!info) return null
-  const sized = party.length >= min && party.length <= max
   const yours = party.filter((c) => c.who === "you")
   const invites = party.filter((c) => c.who === "invite" && !c.open).map((c) => c.id)
   const open = party.filter((c) => c.open).length
+  // The party's size: in an open invite, the invited heroes are offered in the open seats instead of seated.
+  const size = flex ? party.length - invites.length : party.length
+  const sized = size >= min && size <= max
   // Any invited seat makes it a hosted game, with the player's heroes and AI heroes beside the guests.
   // With every hero invited, guests choose first and the player gets a hero they leave. A party of one invited seat
   // and AI heroes leaves none, and the player watches.
   const hosting = invites.length + open > 0
-  const guestsChoose = yours.length === 0 && invites.length > 1
+  const guestsChoose = !flex && yours.length === 0 && invites.length > 1
   const ais = party.filter((c) => c.who === "ai").map((c) => c.id)
-  const watching = hosting && party.length - ais.length === 1
-  const hostable = yours.length > 0 || guestsChoose || watching
+  const watching = flex ? yours.length === 0 : hosting && party.length - ais.length === 1
+  const hostable = flex ? open > 0 : yours.length > 0 || guestsChoose || watching
   const ready = sized && (hosting ? hostable : yours.length > 0)
   const canInvite = Boolean(props.onHost)
   const seat = (id: string, who: Seat["who"]) => {
@@ -128,7 +133,7 @@ export function NewGame(props: {
   const held = party.filter((c) => !c.open)
   const back = held.find((c) => c.id === lastYou) ?? held[0]
   const theirs = guestsChoose ? held.filter((c) => c.id !== back?.id) : held.filter((c) => c.who === "invite")
-  const guestPlays = canInvite && invites.length > 0 && yours.length < 2 && held.length > 1 && !party.some((c) => c.who === "ai")
+  const guestPlays = !flex && canInvite && invites.length > 0 && yours.length < 2 && held.length > 1 && !party.some((c) => c.who === "ai")
   const chooseAny = (on: boolean) => {
     if (on) setLastYou(yours[0]?.id ?? null)
     setParty((cur) => cur.map((c) => (c.open ? c : on ? { ...c, who: "invite" } : c.id === back?.id ? { ...c, who: "you" } : c)))
@@ -140,8 +145,39 @@ export function NewGame(props: {
         const first = rest.findIndex((c) => !c.open)
         return first >= 0 && !rest.some((c) => c.who === "you") ? rest.map((c, i) => (i === first ? { ...c, who: "you" } : c)) : rest
       }
-      return p.length < max ? [...p, { id, who: joinAs(p) }] : p
+      // In an open invite, a hero added past the player's own is offered to guests and takes no seat.
+      const who = flex && (p.some((c) => c.who === "you") || size >= max) ? "invite" : joinAs(p)
+      return (flex && who === "invite") || size < max ? [...p, { id, who }] : p
     })
+  const seatsFor = (n: number) => Array.from({ length: Math.max(0, n) }, (_, i): Seat => ({ id: `open-${Date.now()}-${i}`, who: "invite", open: true }))
+  // The shortcuts over the party. Each sets the cards, which stay editable after.
+  const others = (info.premades ?? []).map((p) => p.id).filter((id) => !held.some((c) => c.id === id))
+  const me = yours[0]?.id ?? held[0]?.id ?? picks[0]?.id
+  const modes = {
+    // The player and AI heroes.
+    solo: () => setParty(held.length ? held.map((c) => ({ id: c.id, who: c.who === "you" || (!yours.length && c.id === me) ? "you" : "ai" })) : me ? [{ id: me, who: "you" }] : []),
+    // Guests choose among the premades and the heroes chosen here, and the player plays one they leave.
+    premades: () => {
+      setLastYou(yours[0]?.id ?? null)
+      setParty([...held.map((c) => c.id), ...others].slice(0, max).map((id) => ({ id, who: "invite" })))
+    },
+    // Every seat past the player's takes a guest's own hero.
+    own: () => setParty([...(me ? [{ id: me, who: "you" as const }] : []), ...seatsFor(max - (me ? 1 : 0))]),
+    // Every seat past the player's takes a premade or a guest's own hero.
+    open: () =>
+      setParty([
+        ...(me ? [{ id: me, who: "you" as const }] : []),
+        ...[...held.map((c) => c.id), ...others].filter((id) => id !== me).map((id): Seat => ({ id, who: "invite" })),
+        ...seatsFor(max - (me ? 1 : 0)),
+      ]),
+  }
+  const mode = flex ? "open" : !hosting ? "solo" : guestsChoose && !open ? "premades" : open && !invites.length && !ais.length ? "own" : null
+  const MODES = [
+    ["solo", "Solo", false],
+    ["premades", "Premades", held.length + others.length < 2],
+    ["own", "Bring Their Own", !info.options],
+    ["open", "Open Invite", !info.options],
+  ] as const
   const range = min === max ? `${min}` : `${min}–${max}`
   return (
     <section className={cn(siteCard, "flex max-h-[94%] w-[min(72rem,96vw)] flex-col text-left backdrop-blur-xl")}>
@@ -165,13 +201,83 @@ export function NewGame(props: {
             )}
             <div>
               <div className={cn(siteLabel, "mb-2")}>
-                Party · {party.length} of {range}
+                Party · {size} of {range}
               </div>
+              {canInvite && (
+                <fieldset className="mb-3 flex flex-wrap" aria-label="Who plays">
+                  {MODES.map(([key, label, off], i) => (
+                    <Option
+                      key={key}
+                      active={mode === key}
+                      aria-pressed={mode === key}
+                      disabled={off}
+                      className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < MODES.length - 1 && "rounded-r-none")}
+                      onClick={() => {
+                        setFlex(key === "open")
+                        modes[key]()
+                      }}
+                    >
+                      {label}
+                    </Option>
+                  ))}
+                </fieldset>
+              )}
+              {guestPlays && (
+                <div className="mb-3 flex flex-wrap items-center gap-3">
+                  <span className={siteLabel}>{theirs.length > 1 ? "Guests play" : "Guest plays"}</span>
+                  <fieldset className="flex" aria-label="Which hero a guest plays">
+                    <Option active={!guestsChoose} aria-pressed={!guestsChoose} className="rounded-r-none" onClick={() => guestsChoose && chooseAny(false)}>
+                      {theirs.length > 1 ? "Invited heroes" : (picks.find((p) => p.id === theirs[0]?.id)?.name ?? "Invited hero")}
+                    </Option>
+                    <Option active={guestsChoose} aria-pressed={guestsChoose} className="-ml-0.5 rounded-l-none" onClick={() => guestsChoose || chooseAny(true)}>
+                      {held.length > 2 ? "Their choice" : "Either hero"}
+                    </Option>
+                  </fieldset>
+                  {guestsChoose && <span className="text-sm text-white/70">{held.length > 2 ? "You choose who plays the rest at Start." : "You play the other."}</span>}
+                </div>
+              )}
+              {guestsChoose && held.length > 2 && (
+                <div className="mb-3 flex flex-wrap items-center gap-3">
+                  <span className={siteLabel}>Each guest picks</span>
+                  <fieldset className="flex" aria-label="How many heroes each guest picks">
+                    {Array.from({ length: held.length - 1 }, (_, i) => i + 1).map((n, i) => (
+                      <Option
+                        key={n}
+                        active={each === n}
+                        aria-pressed={each === n}
+                        className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < held.length - 2 && "rounded-r-none")}
+                        onClick={() => setEach(n)}
+                      >
+                        {n}
+                      </Option>
+                    ))}
+                  </fieldset>
+                </div>
+              )}
+              {open > 1 && (
+                <div className="mb-3 flex flex-wrap items-center gap-3">
+                  <span className={siteLabel}>Each guest brings</span>
+                  <fieldset className="flex" aria-label="How many of their own heroes each guest brings">
+                    {Array.from({ length: open }, (_, i) => i + 1).map((n, i) => (
+                      <Option
+                        key={n}
+                        active={Math.min(bring ?? open, open) === n}
+                        aria-pressed={Math.min(bring ?? open, open) === n}
+                        className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < open - 1 && "rounded-r-none")}
+                        onClick={() => setBring(n)}
+                      >
+                        {n}
+                      </Option>
+                    ))}
+                  </fieldset>
+                </div>
+              )}
+              {watching && <p className="mb-3 text-sm text-white/70">You watch your guest play.</p>}
               {/* One grid: a hero's card adds it to the party, and a party hero's card says who plays it. */}
               <ul className="grid grid-cols-[repeat(auto-fill,minmax(185px,1fr))] gap-2">
                 {picks.map((p) => {
                   const choice = party.find((c) => c.id === p.id)
-                  const full = !choice && party.length >= max
+                  const full = !choice && !flex && size >= max
                   return (
                     <li
                       key={p.id}
@@ -205,7 +311,10 @@ export function NewGame(props: {
                               className={cn("flex-1 px-1 py-1 text-xs", i > 0 && "-ml-0.5 rounded-l-none", i < all.length - 1 && "rounded-r-none")}
                               // The party keeps a hero for the player, unless another hero is invited or this is the
                               // only one: then this one can be invited too.
-                              disabled={who !== "you" && choice.who === "you" && yours.length === 1 && !(who === "invite" && (invites.length > 0 || party.length === 1))}
+                              disabled={
+                                (who !== "you" && choice.who === "you" && yours.length === 1 && !(flex || (who === "invite" && (invites.length > 0 || party.length === 1)))) ||
+                                (flex && choice.who === "invite" && who !== "invite" && size >= max)
+                              }
                               onClick={() => seat(p.id, who)}
                             >
                               {label}
@@ -254,8 +363,8 @@ export function NewGame(props: {
                   .map((c) => (
                     <li key={c.id} className="relative flex flex-col gap-2 rounded-lg border border-dashed border-primary-400 bg-black p-2 ring-2 ring-primary-500">
                       <span className="grid h-24 w-full place-items-center rounded-md border border-white/10 bg-white/5 font-display text-3xl text-white/40">?</span>
-                      <span className="truncate font-display text-sm">Any Hero</span>
-                      <span className="-mt-2 truncate text-xs text-white/70">A guest's own hero</span>
+                      <span className="truncate font-display text-sm">{flex ? "Guest Seat" : "Any Hero"}</span>
+                      <span className="-mt-2 truncate text-xs text-white/70">{flex ? "An invited hero or their own" : "A guest's own hero"}</span>
                       <fieldset className="flex" aria-label="Approving a guest's hero">
                         <Option active={!askFirst} aria-pressed={!askFirst} className="flex-1 rounded-r-none px-1 py-1 text-xs" onClick={() => setAskFirst(false)}>
                           Auto
@@ -271,65 +380,14 @@ export function NewGame(props: {
                 {info.options && canInvite && (
                   <AddCard
                     mark="?"
-                    title="Any Hero"
-                    sub="A guest's own hero"
+                    title={flex ? "Guest Seat" : "Any Hero"}
+                    sub={flex ? "An invited hero or their own" : "A guest's own hero"}
                     action="Add to Adventure"
-                    disabled={props.busy || party.length >= max}
-                    onClick={() => setParty((p) => (p.length < max ? [...p, { id: `open-${Date.now()}`, who: "invite", open: true }] : p))}
+                    disabled={props.busy || size >= max}
+                    onClick={() => setParty((p) => (size < max ? [...p, ...seatsFor(1)] : p))}
                   />
                 )}
               </ul>
-              {guestPlays && (
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <span className={siteLabel}>{theirs.length > 1 ? "Guests play" : "Guest plays"}</span>
-                  <fieldset className="flex" aria-label="Which hero a guest plays">
-                    <Option active={!guestsChoose} aria-pressed={!guestsChoose} className="rounded-r-none" onClick={() => guestsChoose && chooseAny(false)}>
-                      {theirs.length > 1 ? "Invited heroes" : (picks.find((p) => p.id === theirs[0]?.id)?.name ?? "Invited hero")}
-                    </Option>
-                    <Option active={guestsChoose} aria-pressed={guestsChoose} className="-ml-0.5 rounded-l-none" onClick={() => guestsChoose || chooseAny(true)}>
-                      {held.length > 2 ? "Their choice" : "Either hero"}
-                    </Option>
-                  </fieldset>
-                  {guestsChoose && <span className="text-sm text-white/70">{held.length > 2 ? "You choose who plays the rest at Start." : "You play the other."}</span>}
-                </div>
-              )}
-              {guestsChoose && held.length > 2 && (
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <span className={siteLabel}>Each guest picks</span>
-                  <fieldset className="flex" aria-label="How many heroes each guest picks">
-                    {Array.from({ length: held.length - 1 }, (_, i) => i + 1).map((n, i) => (
-                      <Option
-                        key={n}
-                        active={each === n}
-                        aria-pressed={each === n}
-                        className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < held.length - 2 && "rounded-r-none")}
-                        onClick={() => setEach(n)}
-                      >
-                        {n}
-                      </Option>
-                    ))}
-                  </fieldset>
-                </div>
-              )}
-              {open > 1 && (
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <span className={siteLabel}>Each guest brings</span>
-                  <fieldset className="flex" aria-label="How many of their own heroes each guest brings">
-                    {Array.from({ length: open }, (_, i) => i + 1).map((n, i) => (
-                      <Option
-                        key={n}
-                        active={Math.min(bring ?? open, open) === n}
-                        aria-pressed={Math.min(bring ?? open, open) === n}
-                        className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < open - 1 && "rounded-r-none")}
-                        onClick={() => setBring(n)}
-                      >
-                        {n}
-                      </Option>
-                    ))}
-                  </fieldset>
-                </div>
-              )}
-              {watching && <p className="mt-3 text-sm text-white/70">You watch your guest play.</p>}
             </div>
           </div>
         </div>
@@ -337,7 +395,7 @@ export function NewGame(props: {
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
         <GameMaster providers={props.providers} models={props.models} provider={props.provider} onProvider={props.onProvider} />
         <div className="flex-1" />
-        {hosting && sized && !hostable && <p className="text-sm text-amber-300">Play a hero, or invite at least two.</p>}
+        {hosting && sized && !hostable && <p className="text-sm text-amber-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>}
         {props.onCancel && (
           <button type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
             Cancel
@@ -358,7 +416,8 @@ export function NewGame(props: {
                     askFirst,
                     watching,
                     guestsChoose ? Math.min(each, held.length - 1) : undefined,
-                    open > 1 ? Math.min(bring ?? open, open) : undefined
+                    open > 1 ? Math.min(bring ?? open, open) : undefined,
+                    flex
                   )
                 : props.onLink?.()
             }

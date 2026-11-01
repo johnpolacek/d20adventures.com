@@ -333,6 +333,18 @@ Owner, after local play stopped asking for "Continue NPC turn": the host's app s
 - Not checked: a hosted game end to end with the website and a real GM, the reader's place holding on a live page, and the opening turn after Start.
 - The Continue button remains on every screen for a turn the GM could not finish, or while the host's app is offline.
 
+## Party modes and open invite, 2026-11-01
+
+Owner: one grid for heroes and party, with shortcuts for an open invite, where guests choose a hero or bring their own, and for premades only.
+
+- Party setup has one hero grid. A party hero's card carries You, AI and Invite, and an x that removes it.
+- A Who plays row over the grid sets the cards: Solo, Premades, Bring Their Own and Open Invite. The cards stay editable after. Guest options sit under that row.
+- Solo: the player and AI heroes. Premades: guests choose first among the premades and chosen heroes. Bring Their Own: the player's hero and Any Hero seats to the maximum.
+- Open Invite: the player's hero, every other premade offered on Invite, and Guest Seats to the maximum. Each Guest Seat takes an offered hero or a guest's own.
+- The website keeps this as `host.flex`. `host.open` then counts every guest's seat, and a held hero takes one of them. Held heroes nobody takes stay out of the party. No host pick in this mode: the host plays their hero or watches.
+- Fixed the same day: Each Guest Brings never reached the website, so every guest could bring one hero.
+- Checked: types, and the seat counts against a throwaway call of `openLeft`, `openSeats` and `guestSeat`. Not checked in the running app or with guests.
+
 ## Known gaps
 
 - Hosted games keep no stage positions, so movement is not read or walked.

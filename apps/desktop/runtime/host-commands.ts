@@ -21,6 +21,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
     invites: z.array(id).max(8).default([]),
     ais: z.array(id).max(8).default([]),
     open: z.number().int().min(0).max(8).default(0),
+    // Whether the open seats also take the invited heroes, so guests choose one or bring their own.
+    flex: z.boolean().default(false),
     approve: z.boolean().default(false),
     watch: z.boolean().default(false),
     // Where guests choose first, how many heroes each guest may take.
@@ -124,6 +126,7 @@ export async function hostCommand(command: HostCommand, site: string, heroes: ()
           invites: command.invites.map(character),
           ais: command.ais.map(character),
           open: command.open,
+          flex: command.flex,
           approve: command.approve,
           watch: command.watch,
           each: command.each,
