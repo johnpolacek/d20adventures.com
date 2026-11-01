@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       bring?: unknown
       arrivals?: unknown
     }
-    const invites = Array.isArray(body.invites) ? (body.invites.slice(0, 8) as HostCharacter[]) : []
+    const invites = Array.isArray(body.invites) ? (body.invites.slice(0, 24) as HostCharacter[]) : []
     // An older app sends the host's one character.
     const characters = Array.isArray(body.characters) ? (body.characters.slice(0, 8) as HostCharacter[]) : body.character ? [body.character] : []
     if (typeof body.planId !== "string" || (!characters.length && invites.length < 2 && body.watch !== true))

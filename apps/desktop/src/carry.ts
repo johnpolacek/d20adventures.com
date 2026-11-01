@@ -28,8 +28,8 @@ export function openingParty(
 // Who plays a seated hero on the party screen: the player, the AI, or a friend invited through the website. An open
 // seat has no hero yet: a guest brings their own, and the host approves it.
 export type Seat = { id: string; who: "you" | "ai" | "invite"; open?: boolean }
-// A hero added to the party: the player's if they have none, then a guest's in an invited game, else the AI's.
-export const joinAs = (party: readonly Seat[]): Seat["who"] => (!party.some((c) => c.who === "you") ? "you" : party.some((c) => c.who === "invite") ? "invite" : "ai")
+// A hero added to the party: a guest's in an invited game, else the player's if they have none, else the AI's.
+export const joinAs = (party: readonly Seat[]): Seat["who"] => (party.some((c) => c.who === "invite") ? "invite" : !party.some((c) => c.who === "you") ? "you" : "ai")
 
 // A hero the player just made on the party screen is theirs to play. The hero they had goes to the AI, or leaves when
 // the party is full or friends are invited, since an invited game has no AI heroes yet. A player with no hero, as

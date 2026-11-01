@@ -18,7 +18,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
     kind: z.literal("hostCreate"),
     planId: id,
     characterIds: z.array(id).max(8).default([]),
-    invites: z.array(id).max(8).default([]),
+    // In an open invite, every premade may be offered.
+    invites: z.array(id).max(24).default([]),
     ais: z.array(id).max(8).default([]),
     open: z.number().int().min(0).max(8).default(0),
     // Whether the open seats also take the invited heroes, so guests choose one or bring their own.

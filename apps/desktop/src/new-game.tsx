@@ -121,14 +121,23 @@ export function NewGame(props: {
   const hosting = invites.length + open > 0
   const guestsChoose = !flex && yours.length === 0 && invites.length > 1
   const ais = party.filter((c) => c.who === "ai").map((c) => c.id)
-  const watching = flex ? yours.length === 0 : hosting && party.length - ais.length === 1
+  // A hosted game where the player chose no hero: they watch, unless guests choose first and leave them one.
+  const watching = hosting && yours.length === 0 && !guestsChoose
   const hostable = flex ? open > 0 : yours.length > 0 || guestsChoose || watching
   const ready = sized && (hosting ? hostable : yours.length > 0)
   const canInvite = Boolean(props.onHost)
   const seat = (id: string, who: Seat["who"]) => {
     if (who !== "you" && yours[0]?.id === id) setLastYou(id)
-    setParty((cur) => cur.map((c) => (c.id === id ? { ...c, who } : c)))
+    // In an open invite, an offered hero the player or the AI takes fills a guest seat, so a full party gives one up.
+    const seats = (cur: Seat[]) => (flex && who !== "invite" && cur.some((c) => c.id === id && c.who === "invite") && size >= max ? dropSeat(cur) : cur)
+    setParty((cur) => seats(cur).map((c) => (c.id === id ? { ...c, who } : c)))
   }
+  // A full party with a guest seat gives up its last one to make room.
+  const dropSeat = (cur: Seat[]) => {
+    const last = cur.findLastIndex((c) => c.open)
+    return last < 0 ? cur : cur.filter((_, i) => i !== last)
+  }
+  const room = size < max || open > 0
   // Which hero a guest plays: the one invited, or their choice among them all, with the player on the hero left.
   const held = party.filter((c) => !c.open)
   const back = held.find((c) => c.id === lastYou) ?? held[0]
@@ -143,11 +152,13 @@ export function NewGame(props: {
       if (p.some((c) => c.id === id)) {
         const rest = p.filter((c) => c.id !== id)
         const first = rest.findIndex((c) => !c.open)
-        return first >= 0 && !rest.some((c) => c.who === "you") ? rest.map((c, i) => (i === first ? { ...c, who: "you" } : c)) : rest
+        // Without guests, someone has to play: the player takes the first hero left. A hosted game assigns nobody.
+        return first >= 0 && !rest.some((c) => c.who === "you" || c.who === "invite") ? rest.map((c, i) => (i === first ? { ...c, who: "you" } : c)) : rest
       }
       // In an open invite, a hero added past the player's own is offered to guests and takes no seat.
-      const who = flex && (p.some((c) => c.who === "you") || size >= max) ? "invite" : joinAs(p)
-      return (flex && who === "invite") || size < max ? [...p, { id, who }] : p
+      const who = flex ? "invite" : joinAs(p)
+      if (flex && who === "invite") return [...p, { id, who }]
+      return size < max ? [...p, { id, who }] : open > 0 ? [...dropSeat(p), { id, who }] : p
     })
   const seatsFor = (n: number) => Array.from({ length: Math.max(0, n) }, (_, i): Seat => ({ id: `open-${Date.now()}-${i}`, who: "invite", open: true }))
   // The shortcuts over the party. Each sets the cards, which stay editable after.
@@ -161,15 +172,10 @@ export function NewGame(props: {
       setLastYou(yours[0]?.id ?? null)
       setParty([...held.map((c) => c.id), ...others].slice(0, max).map((id) => ({ id, who: "invite" })))
     },
-    // Every seat past the player's takes a guest's own hero.
-    own: () => setParty([...(me ? [{ id: me, who: "you" as const }] : []), ...seatsFor(max - (me ? 1 : 0))]),
-    // Every seat past the player's takes a premade or a guest's own hero.
-    open: () =>
-      setParty([
-        ...(me ? [{ id: me, who: "you" as const }] : []),
-        ...[...held.map((c) => c.id), ...others].filter((id) => id !== me).map((id): Seat => ({ id, who: "invite" })),
-        ...seatsFor(max - (me ? 1 : 0)),
-      ]),
+    // Every seat takes a guest's own hero. The player picks a hero of their own on its card, or watches.
+    own: () => setParty(seatsFor(max)),
+    // Every seat takes a premade or a guest's own hero. The player picks a hero of their own on its card, or watches.
+    open: () => setParty([...[...held.map((c) => c.id), ...others].map((id): Seat => ({ id, who: "invite" })), ...seatsFor(max)]),
   }
   const mode = flex ? "open" : !hosting ? "solo" : guestsChoose && !open ? "premades" : open && !invites.length && !ais.length ? "own" : null
   const MODES = [
@@ -273,12 +279,12 @@ export function NewGame(props: {
                   <span className={siteLabel}>{Math.min(bring, open) === 1 ? "character" : "characters"}</span>
                 </div>
               )}
-              {watching && <p className="mb-3 text-sm text-white/70">You watch your guest play.</p>}
+              {watching && <p className="mb-3 text-sm text-white/70">{size - ais.length > 1 ? "You watch your guests play." : "You watch your guest play."}</p>}
               {/* One grid: a hero's card adds it to the party, and a party hero's card says who plays it. */}
               <ul className="grid grid-cols-[repeat(auto-fill,minmax(185px,1fr))] gap-2">
                 {picks.map((p) => {
                   const choice = party.find((c) => c.id === p.id)
-                  const full = !choice && !flex && size >= max
+                  const full = !choice && !flex && !room
                   return (
                     <li
                       key={p.id}
@@ -313,8 +319,8 @@ export function NewGame(props: {
                               // The party keeps a hero for the player, unless another hero is invited or this is the
                               // only one: then this one can be invited too.
                               disabled={
-                                (who !== "you" && choice.who === "you" && yours.length === 1 && !(flex || (who === "invite" && (invites.length > 0 || party.length === 1)))) ||
-                                (flex && choice.who === "invite" && who !== "invite" && size >= max)
+                                (who !== "you" && choice.who === "you" && yours.length === 1 && !(flex || (who === "invite" && (invites.length > 0 || open > 0 || party.length === 1)))) ||
+                                (flex && choice.who === "invite" && who !== "invite" && !room)
                               }
                               onClick={() => seat(p.id, who)}
                             >
