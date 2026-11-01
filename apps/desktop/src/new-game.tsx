@@ -218,8 +218,9 @@ export function NewGame(props: {
                           Add to Adventure
                         </Option>
                       )}
+                      {choice && <Unseat label={`Remove ${p.name} from the party`} onClick={() => toggle(p.id)} />}
                       {p.hero && (
-                        <div className="absolute top-3 right-3 flex gap-1">
+                        <div className="absolute top-3 left-3 flex gap-1">
                           <button type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit(p.hero!)} aria-label={`Edit ${p.name}`}>
                             Edit
                           </button>
@@ -263,9 +264,7 @@ export function NewGame(props: {
                           Ask Me
                         </Option>
                       </fieldset>
-                      <button type="button" aria-label="Remove the open seat" onClick={() => toggle(c.id)} className={cn(mini, "absolute top-3 right-3")}>
-                        Remove
-                      </button>
+                      <Unseat label="Remove the open seat" onClick={() => toggle(c.id)} />
                     </li>
                   ))}
                 {info.options && <AddCard mark="+" title="New Hero" action="Create New Character" disabled={props.busy || !props.providers.length} onClick={props.onCreate} />}
@@ -501,5 +500,19 @@ function AddCard(props: { mark: string; title: string; sub?: string; action: str
         <span className={cn(siteOutline, "mt-auto px-1 py-1 text-center text-xs")}>{props.action}</span>
       </button>
     </li>
+  )
+}
+
+// The x over a party card's corner that takes it out of the party.
+function Unseat(props: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={props.label}
+      onClick={props.onClick}
+      className="absolute top-3 right-3 grid h-6 w-6 place-items-center rounded-full border border-white/30 bg-black/80 text-base leading-none text-white/70 transition-colors hover:border-white/60 hover:text-white"
+    >
+      ×
+    </button>
   )
 }
