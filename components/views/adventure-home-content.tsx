@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react"
 import wait from "waait"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import AdventureLobby, { type LobbyInvite } from "@/components/adventure/adventure-lobby"
-import { InviteSignIn } from "@/components/adventure/invite-sign-in"
+import { InviteSignIn, LobbyIntro } from "@/components/adventure/invite-sign-in"
 import Turn from "@/components/adventure/turn"
 import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import AccountRequired from "@/components/nav/account-required"
@@ -114,7 +114,15 @@ function AdventureHomeContent({
   const currentEncounter = React.useMemo(() => findEncounterById(adventurePlan?.sections || [], turn?.encounterId), [adventurePlan?.sections, turn?.encounterId])
 
   const redirectUrl = invite?.as ? `${pathname}?as=${encodeURIComponent(invite.as)}` : pathname
-  if (isLoaded && !isSignedIn && !turn && adventurePlan) return <InviteSignIn plan={adventurePlan} redirectUrl={redirectUrl} />
+  // The lobby, before the game starts: the cover and first sentence over sign in, or over the party and heroes.
+  if (isLoaded && (!turn || hosted) && adventurePlan)
+    return isSignedIn ? (
+      <LobbyIntro plan={adventurePlan}>
+        <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} hosted={hosted} />
+      </LobbyIntro>
+    ) : (
+      <InviteSignIn plan={adventurePlan} redirectUrl={redirectUrl} />
+    )
 
   return (
     <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
