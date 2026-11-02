@@ -87,6 +87,10 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
   for (const h of hidden) h.visible = false
   const r = stage.renderer
   const prev = r.getRenderTarget()
+  // Plates are captured with motion off, which holds the wind at time 0: the projectors see the cloth in that pose too.
+  const clock = (stage as unknown as { shared: { time: { value: number } } }).shared.time
+  const now = clock.value
+  clock.value = 0
   const uniforms: Record<string, { value: unknown }> = {
     uLabGain: { value: o.gain ?? 1.3 },
     uLabSat: { value: o.sat ?? 0.9 },
@@ -120,6 +124,7 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
     uniforms[`uLabLens${i}`] = { value: new THREE.Vector3(cam.near, cam.far, 1 / Math.tan(THREE.MathUtils.degToRad(p.cam.fov / 2))) }
   }
   r.setRenderTarget(prev)
+  clock.value = now
   hidden.forEach((h, i) => {
     h.visible = was[i]
   })
@@ -171,10 +176,22 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
     m.onBeforeCompile = (s, renderer) => {
       before.call(m, s, renderer)
       Object.assign(s.uniforms, uniforms)
+      // Cloth blows in the wind. Paint is looked up from where each point of it hung in the plate, at time 0, so a
+      // banner carries its paint as it moves instead of sliding under it.
+      const blown = /#include <begin_vertex>\n(float ph = [\s\S]*?\(1\.0 \+ sin\(uTime \* \.9 \+ ph\)\);)/.exec(s.vertexShader)
+      const held = blown
+        ? `vec3 labAt = vec3(position);\n${blown[1]
+            .replace(/\bph\b/g, "labPh")
+            .replace(/\bwv\b/g, "labWv")
+            .replace(/\bwdir\b/g, "labDir")
+            .replace(/\btransformed\b/g, "labAt")
+            .replace(/\buTime\b/g, "0.0")}`
+        : "vec3 labAt = transformed;"
       s.vertexShader = s.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vLabWorld;").replace(
         "#include <project_vertex>",
         `#include <project_vertex>
-{ vec4 w = vec4(transformed, 1.0);
+${held}
+{ vec4 w = vec4(labAt, 1.0);
 #ifdef USE_BATCHING
  w = batchingMatrix * w;
 #endif
@@ -209,7 +226,7 @@ ${each}
 #include <premultiplied_alpha_fragment>`
         )
     }
-    m.customProgramCacheKey = () => `${key()}|lab-project-fill-${list.length}`
+    m.customProgramCacheKey = () => `${key()}|lab-project-held-${list.length}`
     m.needsUpdate = true
   }
   visit(stage.world)
@@ -421,6 +438,7 @@ void main(){ float d = texture2D(tDepth, vUv).x; if (d >= 0.99999) { gl_FragColo
     faces.push({ inv: new THREE.Matrix4().extractRotation(cam.matrixWorldInverse), px })
   }
   r.setRenderTarget(prev)
+  clock.value = now
   hidden.forEach((h, i) => {
     h.visible = was[i]
   })

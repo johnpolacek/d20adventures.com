@@ -123,6 +123,15 @@ Sway tested at the checkpoint, with the camera moved sideways and still aimed at
 - A painting should be a little wider than the view it serves, so a sway does not see past its edge: 50 degrees painted for 46 shown held at 15 cm.
 - Measured at DPR 1 on the balanced tier. The machine's free memory fell to 18% during an ultra capture at DPR 2, under the 20% floor.
 
+### Ambient movement
+
+The set under the paint is still the engine's, so what moved before still moves: cloth in the wind, flames and smoke, the walking crowd, birds, foliage and water.
+
+Cloth tested at the gate, 2026-11-10: tower pennants, wall banners, bunting and awnings blow as they did, and each carries its paint. The lab looks paint up from where a point of cloth hung in the plate (wind at time 0, as plates are captured with motion off), not from where the wind has moved it. Without that the paint slides under the cloth.
+
+- Open: a flag that swings off its painted spot leaves a copy of itself on the sky or wall behind, since the painting has it there too. The fix is a second painting of each point with the loose cloth taken out, for everything behind it. Not built.
+- Not tried: foliage and water, which move the same way, and drifting cloud in the painted sky.
+
 ## Decision: photoreal cards
 
 Owner decision, 2026-11-10: the cast stay standees, repainted photoreal, and not 3D figures.
