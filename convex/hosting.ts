@@ -64,7 +64,8 @@ const openLeft = (adventure: Doc<"adventures">) => {
 // The heroes a guest brought to open seats, seated or waiting for the host.
 const brought = (adventure: Doc<"adventures">, userId: string) => {
   const held = new Set((adventure.host?.seats ?? []).map((s) => s.id))
-  const seated = (adventure.players ?? []).filter((p) => p.userId === userId && !held.has(sheetId(p.characterId) ?? ""))
+  // In an open invite, the held heroes they took count too.
+  const seated = (adventure.players ?? []).filter((p) => p.userId === userId && (adventure.host?.flex || !held.has(sheetId(p.characterId) ?? "")))
   const pending = (adventure.host?.requests ?? []).filter((r) => r.userId === userId && r.status === "pending")
   return { seated, pending }
 }

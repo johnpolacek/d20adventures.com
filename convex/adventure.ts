@@ -115,6 +115,14 @@ export const joinAdventure = mutation({
       // Where open seats also take held heroes, a held hero needs one of those seats free.
       const guests = adventure.players?.filter((p) => p.userId !== adventure.host?.userId).length ?? 0
       if (adventure.host?.flex && guests >= (adventure.host.open ?? 0)) throw new Error("Every seat at this table is taken")
+      // There, every hero a guest plays or waits on counts against how many the host lets each guest have.
+      if (adventure.host?.flex) {
+        const limit = adventure.host.bring ?? 1
+        const theirs =
+          (adventure.players?.filter((p) => p.userId === args.userId).length ?? 0) +
+          (adventure.host.requests?.filter((r) => r.userId === args.userId && r.status === "pending").length ?? 0)
+        if (theirs >= limit) throw new Error(limit === 1 ? "You are already in this game" : `You have ${limit} heroes, as many as this table allows`)
+      }
       // Where guests choose first, the last held hero is the host's.
       const host = adventure.host
       if (host?.pick && !adventure.players?.some((p) => p.userId === host.userId && p.controlledBy !== "ai")) {

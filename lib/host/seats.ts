@@ -49,10 +49,11 @@ export function guestSeat(adventure: Seated, userId: string | null | undefined) 
   // Where guests choose first, how many more held heroes this guest may take.
   const held = new Set((host?.seats ?? []).map((s) => s.id))
   const taken = (adventure.players ?? []).filter((p) => p.userId === userId && held.has(sheetId(p.characterId))).length
-  const more = keep && host?.each && userId ? Math.max(0, host.each - taken) : 0
-  // Their own heroes in open seats, seated or waiting, count against the host's limit.
-  const brought = (adventure.players ?? []).filter((p) => p.userId === userId && !held.has(sheetId(p.characterId))).length + pending.length
+  // Their own heroes in open seats, seated or waiting, count against the host's limit. In an open invite, so do the
+  // held heroes they took, and the heroes left to them may be held or their own.
+  const brought = (adventure.players ?? []).filter((p) => p.userId === userId && (host?.flex || !held.has(sheetId(p.characterId)))).length + pending.length
   const bring = userId ? Math.max(0, (host?.bring ?? 1) - brought) : 0
+  const more = host?.flex ? bring : keep && host?.each && userId ? Math.max(0, host.each - taken) : 0
   return {
     open: openLeft(adventure),
     // Whether the open seats also take the held heroes, so those count no seat of their own.
