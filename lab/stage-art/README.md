@@ -86,6 +86,7 @@ open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=gate-pla
 ```
 
 - `--cli` runs the Codex CLI's image tool under the owner's sign-in, with the desktop app's locked-down command. It returns 1536x1024 in about 90 seconds.
+- `--sharpen` is for a closer plate from the same point as an earlier painting (`capture.ts --view --camera` with that painting projected): it comes back sharp, and the lab prefers it wherever it is the denser of the two.
 - `--place=` and `--detail=` describe a set other than the gate. `repaint.ts drift <plate> <painting>` scores how well a painting kept the plate's edges.
 - `&shadows=` lets only figures cast sun shadows and darkens the paint under them. A value over 5 draws the shadow mask itself.
 - `&dummy=x,z` stands a person-sized solid there. `capture.ts --glide=from,to` catches a camera move part way. `--eval=` prints a value from the page.

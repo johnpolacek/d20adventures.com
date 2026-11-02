@@ -114,6 +114,7 @@ async function main() {
     await ev("window.__stage.shot(window.__lab.view, { instant: true })")
     await delay(1500)
     await writeFile(`${OUT}/${name}-view.png`, await pull("window.__stage.capture()"))
+    if (process.argv.includes("--camera")) await writeFile(`${OUT}/${name}-view.json`, JSON.stringify(await ev("window.__lab.camera()")))
     console.log(`${name}-view`)
   }
   for (const shot of shots) {

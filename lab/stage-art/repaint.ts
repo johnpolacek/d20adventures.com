@@ -50,6 +50,9 @@ const GATE = {
 const worded = (prompt: string, flags: string[]) =>
   prompt.replace("PLACE", flags.find((f) => f.startsWith("--place="))?.slice(8) ?? GATE.place).replace("DETAIL", flags.find((f) => f.startsWith("--detail="))?.slice(9) ?? GATE.detail)
 
+// For a closer plate from the same point as an earlier painting: the plate shows that painting enlarged, so it is soft.
+const SHARPEN = `This image is an enlargement of a finished photograph of this place, so it is soft. Redraw it at full sharpness, as the same photograph taken with a longer lens: fine real detail in the stone, mortar, wood grain, cloth weave, metal and straw. Every object, edge, colour, shadow and the lighting stay exactly where they are.`
+
 const PANO = `This picture is a full 360 degree equirectangular panorama, twice as wide as it is tall. Keep that projection exactly: the horizon stays a level line at mid height, straight lines stay curved the way they are, and the left edge must join the right edge without a seam. The rope-and-post barriers on the road stay where they are.`
 
 async function pano(name: string, style: keyof typeof STYLES) {
@@ -76,13 +79,14 @@ async function main() {
   }
   if (argv[0] === "pano" && argv[1] && (argv[2] ?? "painterly") in STYLES) return pano(argv[1], (argv[2] ?? "painterly") as keyof typeof STYLES)
   // --cli paints through the Codex CLI on the owner's ChatGPT subscription, not the metered API. --as=<name> names the
-  // result. --fill tells the painter that parts of the plate are already finished and must stay as they are.
+  // result. --fill tells the painter that parts of the plate are already finished and must stay as they are. --sharpen
+  // tells it the plate is a soft enlargement of a finished painting.
   const flags = argv.filter((a) => a.startsWith("--"))
   const [plate, style = "painterly", size = "2880x1920"] = argv.filter((a) => !a.startsWith("--"))
-  if (!plate || !(style in STYLES)) return console.log("usage: repaint.ts <plate> painterly|photoreal [size] [--cli] [--fill] [--as=name]")
+  if (!plate || !(style in STYLES)) return console.log("usage: repaint.ts <plate> painterly|photoreal [size] [--cli] [--fill] [--sharpen] [--as=name]")
   const s = STYLES[style as keyof typeof STYLES]
   const cli = flags.includes("--cli")
-  const prompt = flags.includes("--fill") ? `${worded(s.prompt, flags)}\n\n${FILL}` : worded(s.prompt, flags)
+  const prompt = `${worded(s.prompt, flags)}${flags.includes("--fill") ? `\n\n${FILL}` : ""}${flags.includes("--sharpen") ? `\n\n${SHARPEN}` : ""}`
   await dirs()
   const src = `${RAW}/captures/${plate}.png`
   const { width = 0, height = 0 } = await sharp(src).metadata()

@@ -75,7 +75,9 @@ Owner: paint through the local CLI on the ChatGPT subscription, not the metered 
 Two ways to use paintings, for the owner to choose between:
 
 - Free cameras. Character shots stay as they are, and each play area gets enough paintings to cover them: 5 to 8 by this round's evidence, with patchy edges left over. About 410 paintings for 41 sets.
-- Tripod cameras. The camera stands only where a painting was made, and frames characters by turning and zooming. Every frame is exact, and the 204 fixed shots already are those points. Close zooms need more than the CLI's 1536 px.
+- Tripod cameras. The camera stands only where a painting was made, and frames characters by turning and zooming. Every frame is exact, and the 204 fixed shots already are those points.
+
+Close zooms from a tripod, tested 2026-11-10: zooming 2× into the CLI's 1536 px checkpoint painting goes soft on the ground and the barrier. A second painting from the same point with a 24 degree lens, made by `repaint.ts --sharpen` from a plate of the first one enlarged, fixes it: sharper at native pixels than the API's 2880 px painting, 82% of edges within 2 px, 55 seconds, and no join shows in the wide view. So a tripod point wants its wide painting plus a sharpen pass for each close framing, or about four to tile the whole frame.
 
 ## Character spike
 
