@@ -8,10 +8,13 @@
 //   &animate=<castId>                (c) /stage-lab/<castId>-idle.mp4 on that cast member's card
 //   &clip=<name>                     (c) another clip, /stage-lab/<name>.mp4 (thalbern-h3-idle)
 //   &cast=off                        hide cast and crowd (for plates)
+//   &paint=0                         no brush filter over the frame
+//   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
+//   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
-import { addBackdrop, animateStandee, cameraOf, projectPainting } from "./lab"
+import { addBackdrop, addSplat, animateStandee, cameraOf, pano, projectPainting } from "./lab"
 
 type Params = Record<string, string | undefined>
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
@@ -45,7 +48,10 @@ export function LabViewer({ params }: { params: Params }) {
       const tier = TIERS.includes(params.tier as TierName) ? (params.tier as TierName) : "balanced"
       st = await createStage({ container, set, staging, tier, motion: params.motion !== "0", onProgress: setStatus })
       if (cancelled) return st.dispose()
-      const lab: Record<string, unknown> = { camera: () => cameraOf(st as Stage) }
+      const lab: Record<string, unknown> = {
+        camera: () => cameraOf(st as Stage),
+        pano: (pos: [number, number, number], kind: "color" | "depth", width?: number) => pano(st as Stage, pos, kind, width),
+      }
       if (params.backdrop)
         lab.backdrop = await addBackdrop(st, {
           url: `/stage-lab/${params.backdrop}`,
@@ -61,11 +67,14 @@ export function LabViewer({ params }: { params: Params }) {
         const cam = await (await fetch(`/stage-lab/${params.project}.json`)).json()
         lab.project = await projectPainting(st, { url: `/stage-lab/${params.project}.png`, cam, fade: num(params.fade), gain: num(params.pgain), sat: num(params.psat) })
       }
+      if (params.splat) lab.splat = await addSplat(st, `/stage-lab/${params.splat}`, { gain: num(params.sgain), yaw: num(params.syaw), scale: num(params.sscale) })
       if (params.animate) {
         const a = await animateStandee(st, params.animate, `/stage-lab/${params.clip ?? `${params.animate}-idle`}`)
         stops.push(a.stop)
         lab.video = a.video
       }
+      // &paint=0: no brush filter over the frame, for photoreal art.
+      if (params.paint === "0") Object.defineProperty((st as unknown as { pipeline: { paint: object } }).pipeline.paint, "strength", { get: () => 0, set: () => {} })
       if (params.cast === "off") {
         st.standees.group.visible = false
         st.crowd.group.visible = false
@@ -73,6 +82,12 @@ export function LabViewer({ params }: { params: Params }) {
       const w = window as unknown as { __stage?: Stage; __lab?: unknown }
       w.__stage = st
       w.__lab = lab
+      // &view=x,y,z,tx,ty,tz[,fov]: a free viewpoint, shown on load and kept as __lab.view for capture.ts --view.
+      const view = params.view?.split(",").map(Number)
+      if (view && view.length >= 6) {
+        lab.view = { position: view.slice(0, 3), target: view.slice(3, 6), fov: view[6] ?? 60, label: "View" }
+        st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
+      }
       if (params.shot) st.shot(params.shot, { instant: true })
       setShots(Object.entries(st.shots).map(([k, s]) => [k, s.label]))
       setActive(st.activeShot)

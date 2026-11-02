@@ -179,6 +179,30 @@ ${GRADE}`
     m.needsUpdate = true
   }
   visit(stage.world)
+
+  // The painted sky, on a dome just inside the engine's own: the same projection, cut at the frame's edges, so a
+  // camera that turns away finds the engine's sky again. A wide fade there shows as a frame from the painting's own shot.
+  const skyRadius = (((stage as unknown as { sky: THREE.Mesh }).sky.geometry as THREE.SphereGeometry).parameters.radius ?? 1000) * 0.9
+  const dome = new THREE.Mesh(
+    new THREE.SphereGeometry(skyRadius, 48, 24),
+    new THREE.ShaderMaterial({
+      uniforms,
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false,
+      vertexShader: "varying vec3 vLabWorld; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vLabWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
+      fragmentShader: `varying vec3 vLabWorld; uniform sampler2D uLabMap; uniform mat4 uLabVP; uniform float uLabGain, uLabSat, uLabOn;
+${GRADE}
+void main(){ vec4 pc = uLabVP * vec4(vLabWorld, 1.0); vec2 puv = pc.xy / max(pc.w, 1e-4) * .5 + .5;
+ float edge = min(min(puv.x, 1.0 - puv.x), min(puv.y, 1.0 - puv.y));
+ gl_FragColor = vec4(labGrade(texture2D(uLabMap, puv).rgb, uLabGain, uLabSat), step(0.0, pc.w) * smoothstep(0.0, 0.004, edge) * uLabOn); }`,
+    })
+  )
+  dome.name = "lab:sky"
+  dome.position.copy(cam.position)
+  dome.renderOrder = -0.5
+  dome.frustumCulled = false
+  stage.scene.add(dome)
   return { uniforms, patched: patched.size, skipped }
 }
 
@@ -277,4 +301,148 @@ function pillowNormals(img: HTMLImageElement) {
   const t = new THREE.CanvasTexture(c)
   t.colorSpace = THREE.NoColorSpace
   return t
+}
+
+// Environment spike, splat track: the set as a 360 degree panorama from `pos`, in colour or as depth. Six 90 degree
+// faces are rendered without cast, crowd or effects and resampled to an equirectangular image on the CPU. The image
+// centre looks down -z.
+//   colour: the scene's linear light, tone mapped simply. A layout guide for an image model, not a finished frame.
+//   depth:  World Labs' web-chisel-depth-png encoding: log distance between zMin and zMax, near white, far and sky black.
+export async function pano(stage: Stage, pos: [number, number, number], kind: "color" | "depth", width = 2048) {
+  const face = Math.round(width / 4 / 64) * 64 + 64
+  const near = 0.2
+  const far = 420
+  const r = stage.renderer
+  const sceneRt = new THREE.WebGLRenderTarget(face, face, { type: THREE.FloatType, depthTexture: new THREE.DepthTexture(face, face, THREE.FloatType) })
+  const outRt = new THREE.WebGLRenderTarget(face, face, { type: THREE.FloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter })
+  const quad = new FullScreenQuad(
+    new THREE.ShaderMaterial({
+      uniforms: { tDepth: { value: sceneRt.depthTexture }, uNear: { value: near }, uFar: { value: far } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+      fragmentShader: `varying vec2 vUv; uniform sampler2D tDepth; uniform float uNear, uFar;
+void main(){ float d = texture2D(tDepth, vUv).x; if (d >= 0.99999) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
+ float z = d * 2.0 - 1.0; float viewZ = 2.0 * uNear * uFar / (uFar + uNear - z * (uFar - uNear));
+ gl_FragColor = vec4(viewZ * length(vec3(vUv * 2.0 - 1.0, 1.0)), 0.0, 0.0, 1.0); }`,
+    })
+  )
+  const sky = stage.scene.children.filter((c) => c instanceof THREE.Mesh && (c.renderOrder < 0 || c.name.startsWith("lab:")))
+  const hidden = [stage.standees.group, stage.crowd.group, stage.effects.group, ...(kind === "depth" ? sky : [])]
+  const was = hidden.map((h) => h.visible)
+  for (const h of hidden) h.visible = false
+  const prev = r.getRenderTarget()
+  const dirs: [number, number, number, number, number, number][] = [
+    [1, 0, 0, 0, 1, 0],
+    [-1, 0, 0, 0, 1, 0],
+    [0, 1, 0, 0, 0, 1],
+    [0, -1, 0, 0, 0, -1],
+    [0, 0, 1, 0, 1, 0],
+    [0, 0, -1, 0, 1, 0],
+  ]
+  const faces: { inv: THREE.Matrix4; px: Float32Array }[] = []
+  for (const [dx, dy, dz, ux, uy, uz] of dirs) {
+    const cam = new THREE.PerspectiveCamera(90, 1, near, kind === "depth" ? far : 2000)
+    cam.position.fromArray(pos)
+    cam.up.set(ux, uy, uz)
+    cam.lookAt(pos[0] + dx, pos[1] + dy, pos[2] + dz)
+    cam.updateMatrixWorld(true)
+    r.setRenderTarget(sceneRt)
+    r.clear()
+    r.render(stage.scene, cam)
+    if (kind === "depth") {
+      r.setRenderTarget(outRt)
+      quad.render(r)
+    }
+    const px = new Float32Array(face * face * 4)
+    r.readRenderTargetPixels(kind === "depth" ? outRt : sceneRt, 0, 0, face, face, px)
+    faces.push({ inv: new THREE.Matrix4().extractRotation(cam.matrixWorldInverse), px })
+  }
+  r.setRenderTarget(prev)
+  hidden.forEach((h, i) => {
+    h.visible = was[i]
+  })
+  sceneRt.dispose()
+  outRt.dispose()
+  quad.dispose()
+
+  const height = width / 2
+  const canvas = document.createElement("canvas")
+  canvas.width = width
+  canvas.height = height
+  const cx = canvas.getContext("2d")!
+  const img = cx.createImageData(width, height)
+  const dist = new Float32Array(kind === "depth" ? width * height : 0)
+  const v = new THREE.Vector3()
+  // A plain filmic curve and display gamma: close enough to the engine's AgX for a layout guide.
+  const tone = (c: number) => 255 * (1 - Math.exp(-Math.max(c, 0) * 1.1)) ** (1 / 2.2)
+  let zMin = Infinity
+  let zMax = 0
+  for (let y = 0; y < height; y++) {
+    const phi = ((y + 0.5) / height) * Math.PI
+    for (let x = 0; x < width; x++) {
+      const theta = ((x + 0.5) / width) * 2 * Math.PI - Math.PI
+      const d = [Math.sin(phi) * Math.sin(theta), Math.cos(phi), -Math.cos(theta) * Math.sin(phi)]
+      let at = 0
+      let px = faces[0].px
+      let bestZ = 0
+      for (const f of faces) {
+        v.set(d[0], d[1], d[2]).applyMatrix4(f.inv)
+        if (-v.z <= bestZ) continue
+        bestZ = -v.z
+        const fx = Math.min(face - 1, Math.max(0, Math.floor(((v.x / -v.z) * 0.5 + 0.5) * face)))
+        const fy = Math.min(face - 1, Math.max(0, Math.floor(((v.y / -v.z) * 0.5 + 0.5) * face)))
+        at = (fy * face + fx) * 4
+        px = f.px
+      }
+      const o = (y * width + x) * 4
+      img.data[o + 3] = 255
+      if (kind === "color") {
+        img.data[o] = tone(px[at])
+        img.data[o + 1] = tone(px[at + 1])
+        img.data[o + 2] = tone(px[at + 2])
+        continue
+      }
+      const z = px[at]
+      dist[y * width + x] = z
+      if (z > 0) {
+        zMin = Math.min(zMin, z)
+        zMax = Math.max(zMax, z)
+      }
+    }
+  }
+  if (kind === "depth") {
+    const l0 = Math.log(zMin)
+    const span = Math.max(Math.log(zMax) - l0, 1e-5)
+    for (let i = 0; i < dist.length; i++) {
+      const e = dist[i] > 0 ? Math.round(255 * (1 - Math.min(1, Math.max(0, (Math.log(dist[i]) - l0) / span)))) : 0
+      img.data.set([e, e, e], i * 4)
+    }
+  }
+  cx.putImageData(img, 0, 0)
+  const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b as Blob), "image/png"))
+  return kind === "depth" ? { blob, zMin, zMax } : { blob }
+}
+
+// Environment spike, splat track: a Marble splat world drawn by Spark in place of the built set. Cast, crowd and effects
+// stay. The world is placed by its panorama point and sized so that point sits at the height it was captured from.
+// Splats arrive as display colour, so `gain` lifts them through the tone map, by eye.
+export async function addSplat(stage: Stage, base: string, o: { gain?: number; yaw?: number; scale?: number } = {}) {
+  const { SparkRenderer, SplatMesh } = await import("@sparkjsdev/spark")
+  const meta = (await (await fetch(`${base}.json`)).json()) as { position: [number, number, number]; eye: number }
+  const keep = new Set<THREE.Object3D>([stage.standees.group, stage.crowd.group, stage.effects.group])
+  for (const c of stage.world.children) if (!keep.has(c)) c.visible = false
+  for (const c of stage.scene.children) if (c instanceof THREE.Mesh && c.renderOrder < 0) c.visible = false
+  const spark = new SparkRenderer({ renderer: stage.renderer })
+  stage.scene.add(spark)
+  const mesh = new SplatMesh({ url: `${base}.spz` })
+  await mesh.initialized
+  // `eye` is how far the world's ground lies under its panorama point, in its own units (marble.ts measures it).
+  const scale = o.scale ?? meta.position[1] / meta.eye
+  mesh.scale.setScalar(scale)
+  // Marble's raw frame is OpenCV's (y down, z forward): half a turn about x makes it three's.
+  mesh.quaternion.setFromEuler(new THREE.Euler(Math.PI, THREE.MathUtils.degToRad(o.yaw ?? 0), 0, "YXZ"))
+  mesh.position.fromArray(meta.position)
+  mesh.recolor.setScalar(o.gain ?? 1.3)
+  mesh.name = "lab:splat"
+  stage.scene.add(mesh)
+  return { mesh, spark, scale }
 }

@@ -2,10 +2,13 @@
 // never printed. Raw outputs go to lab/stage-art/raw (ignored by git); what the lab viewer loads goes to public/stage-lab.
 
 import { appendFile, mkdir, readFile } from "node:fs/promises"
+import { homedir } from "node:os"
 import sharp from "sharp"
 
 export const RAW = "lab/stage-art/raw"
 export const PUB = "public/stage-lab"
+// Generated pictures are also copied here, for the owner to look at.
+export const DESKTOP = `${homedir()}/Desktop/kordavos-gate-spike`
 export const ART = {
   stones: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png",
 }

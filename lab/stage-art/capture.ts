@@ -83,11 +83,37 @@ async function main() {
   }
   if (!ready) throw new Error(`never ready: ${url}`)
   await delay(2000)
-  const shots = (await ev<string[]>("Object.keys(window.__stage.shots)")).filter((s) => !only || only.includes(s))
+  // --pano=x,y,z: the set as 360 panoramas from that point, in colour and as depth, for the splat track (pano in lab.ts).
+  const pano = arg("pano")?.split(",").map(Number)
+  if (pano) {
+    const stats = await ev<{ zMin: number; zMax: number }>(
+      `(async () => { const p = await window.__lab.pano(${JSON.stringify(pano)}, "depth", 2048); window.__pano = p.blob; return { zMin: p.zMin, zMax: p.zMax } })()`
+    )
+    await writeFile(`${OUT}/${name}-depth.png`, await pull("window.__pano"))
+    await writeFile(`${OUT}/${name}-depth.json`, JSON.stringify({ position: pano, ...stats }))
+    await ev(`(async () => { window.__pano = (await window.__lab.pano(${JSON.stringify(pano)}, "color", 3840)).blob })()`)
+    await writeFile(`${OUT}/${name}-rgb.png`, await pull("window.__pano"))
+    console.log(`${name}-depth ${JSON.stringify(stats)}, ${name}-rgb`)
+  }
+  const shots = (pano || process.argv.includes("--view")) && !only ? [] : (await ev<string[]>("Object.keys(window.__stage.shots)")).filter((s) => !only || only.includes(s))
+  // --view: the page's free viewpoint (&view=...), as <name>-view.png.
+  if (process.argv.includes("--view")) {
+    await ev("window.__stage.shot(window.__lab.view, { instant: true })")
+    await delay(1500)
+    await writeFile(`${OUT}/${name}-view.png`, await pull("window.__stage.capture()"))
+    console.log(`${name}-view`)
+  }
   for (const shot of shots) {
     await ev(`window.__stage.shot(${JSON.stringify(shot)}, { instant: true })`)
     await delay(1500)
     await writeFile(`${OUT}/${name}-${shot}.png`, await pull("window.__stage.capture()"))
+    // --fps: frames drawn over two seconds of this shot.
+    if (process.argv.includes("--fps")) {
+      const f0 = await ev<number>("window.__stage.stats().frame")
+      await delay(2000)
+      const st = await ev<{ frame: number; calls: number; triangles: number }>("window.__stage.stats()")
+      console.log(`${name}-${shot}: ${((st.frame - f0) / 2).toFixed(0)} fps, ${st.calls} calls, ${(st.triangles / 1e6).toFixed(2)}M triangles`)
+    }
     if (process.argv.includes("--camera")) await writeFile(`${OUT}/${name}-${shot}.json`, JSON.stringify(await ev("window.__lab.camera()")))
     // --record=<seconds>: the canvas as it plays, in real time, as WebM.
     const seconds = Number(arg("record") ?? 0)

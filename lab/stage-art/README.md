@@ -53,6 +53,36 @@ All tests use The Midnight Summons, Meeting at the Stones, at the high tier (DPR
 - Cost per animated front: a 6 MB file at CRF 18, about 14 MB of GPU memory, one video decode.
 - Not checked: the desktop app, frame rate, the back view, walking.
 
+## Environment spike, 2026-11-10
+
+The Gates of Kordavos, at the ultra tier, 1350x900 CSS at DPR 2. Plan and results: [wiki/plans/stage-fidelity-spikes.md](../../wiki/plans/stage-fidelity-spikes.md).
+
+Painted track:
+
+```sh
+S="staging=welcome-to-kordavos/the-gates-of-kordavos"
+node --import tsx lab/stage-art/capture.ts --name=gate-plate --tier=ultra --camera "--q=$S&cast=off" --shots=gate,checkpoint
+node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/repaint.ts gate-plate-gate photoreal
+open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&project=gate-plate-gate-photoreal&paint=0"
+```
+
+Splat track:
+
+```sh
+node --import tsx lab/stage-art/capture.ts --name=gate-cp --tier=ultra --pano=0.8,1.7,14.8 "--q=$S&cast=off"
+node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/repaint.ts pano gate-cp photoreal
+node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/marble.ts world gate-cp photoreal marble-1.1
+open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&splat=gate-cp-photoreal-m11&paint=0&shot=checkpoint"
+```
+
+- `WORLDLABS_API_KEY` goes in `.env.local`. World Labs bills use past the balance later, so `marble.ts world` checks the balance first.
+- Pick the panorama point where the cameras are, and clear of props: `capture.ts --pano` prints the nearest surface as `zMin`.
+- A world generated from a point 14 m from the checkpoint smeared there. One made at the checkpoint held.
+- World Labs returns a panorama's URL under `assets.imagery.pano_url`, not at `pano_url` as its docs say.
+- `&paint=0` turns the brush filter off. Painted and splat scenery both look worse under it.
+- `capture.ts --fps` prints frames a second per shot. `--view` captures the page's `&view=x,y,z,tx,ty,tz` viewpoint.
+- Pictures are also copied to `~/Desktop/kordavos-gate-spike`.
+
 ## Running it
 
 ```sh
@@ -69,6 +99,8 @@ Toggles in the panel switch each spike. `?clip=thalbern-h3-idle` plays the H3 lo
 | `paintover.ts` | Paints over a plate, and scores edge drift. |
 | `animate.ts` | Puts a standee on green, animates it with H3 or Veo, keys and packs it. |
 | `capture.ts` | Captures and records lab views over CDP. |
+| `repaint.ts` | Repaints a shot's plate or a 360 panorama with GPT Image 2, painterly or photoreal. |
+| `marble.ts` | World Labs: credits, depth to panorama, panorama to splat world. |
 | `lab.ts`, `viewer.tsx` | The three changes, applied to a running Stage, and the lab page at `app/dev/stage-lab`. |
 
 Generated assets in `public/stage-lab/` and raw outputs in `raw/` are not committed. The scripts regenerate them, with new model output each time.

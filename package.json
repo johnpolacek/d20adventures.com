@@ -159,6 +159,7 @@
     "@biomejs/biome": "^2.4.6",
     "@clerk/testing": "^2.0.1",
     "@playwright/test": "^1.58.2",
+    "@sparkjsdev/spark": "2.4.0",
     "@tailwindcss/postcss": "^4.2.1",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^25.3.5",
