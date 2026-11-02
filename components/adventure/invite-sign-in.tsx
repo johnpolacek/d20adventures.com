@@ -53,11 +53,11 @@ export function InviteSignIn(props: { plan: AdventurePlan; redirectUrl: string }
 
   return (
     <div ref={root} className="flex min-h-screen flex-col items-center gap-5 px-4 pt-20 pb-10">
-      <ModuleCover id={props.plan.id} title={props.plan.title} players={props.plan.party} className="max-w-64" />
-      <p data-intro="teaser" className="w-full max-w-64 pl-2 text-left text-white/80">
+      <ModuleCover id={props.plan.id} title={props.plan.title} players={props.plan.party} className="max-w-sm" />
+      <p data-intro="teaser" className="w-full max-w-sm pl-2 text-left text-white/80">
         {teaser}
       </p>
-      <div data-intro="sign-in">
+      <div data-intro="sign-in" className="w-full max-w-sm">
         <AccountRequired redirectUrl={props.redirectUrl} />
       </div>
     </div>
