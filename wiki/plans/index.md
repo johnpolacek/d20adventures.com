@@ -13,7 +13,7 @@ Updated 2026-11-10. Plans are optional and deleted when done. Git keeps the old 
 | [Adventure store](feature-adventure-store.md) | Alpha release: website, Convex, store secret. Checkout at beta. |
 | [Desktop local play](desktop-local-play.md) | Save management, provider coverage, distribution. |
 | [Created heroes](created-heroes.md) | Guest creation in the running app, owner review of the hooks, a live gate round. |
-| [Stage fidelity spikes](stage-fidelity-spikes.md) | Owner review of the environment spike, then the character spike. |
+| [Stage fidelity spikes](stage-fidelity-spikes.md) | Painted, photoreal chosen. Coverage for cameras that follow characters, then the character spike. |
 | [Kordavos city map](kordavos-city-map.md) | Owner review. Roofs get chunky at full zoom. |
 | [Maintenance](maintenance.md) | Test harness, authoring edge cases, audits, cleanup. |
 

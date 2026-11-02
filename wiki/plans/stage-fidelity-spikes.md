@@ -2,7 +2,7 @@
 
 [Home](../index.md) · [Plans](index.md) · [Stage engine](../stage-engine.md) · [Stage art spikes](stage-art-spikes.md)
 
-Status: environment spike run 2026-11-10, awaiting owner review. Character spike not started. A test directory only: nothing here changes `packages/stage` or the desktop app.
+Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. Open: how paintings cover cameras that follow characters. Character spike not started. A test directory only: nothing here changes `packages/stage` or the desktop app.
 
 ## Why
 
@@ -39,9 +39,18 @@ Prices, 2026-11-10: a Marble 1.1 world is 1,500 credits ($1.20), a draft 150 ($0
 - Painted close-ups. A close-up follows its character and has no fixed camera to paint for.
 - The 500k splat world on lower tiers.
 
-## Recommendation
+## Decision
 
-Use both: a painted shot for each fixed wide view, and a splat world for each place the party plays in. Decide after the character spike, since 3D characters need ground to shadow and light to match.
+Owner, 2026-11-10: painted, photoreal is the way to go for the environment.
+
+What that leaves open, counted from the specs on 2026-11-10:
+
+- 41 sets (32 places and 9 variants) hold 204 fixed shots, 5 a set. Each is one painting.
+- 68 stagings hold 218 more shots. 8 are fixed. 80 frame a group and 130 follow one character, so they have no fixed camera to paint for.
+- A painting replaces the engine's light where it lands, so a figure's live shadow cannot show on it.
+- The camera eases between shots. Mid-move it looks from places no painting was made for.
+- Only an outdoor day set was tried. No interior, no night.
+- GPT Image 2's price for a 2880×1920 painting was not metered. `gptEdit` drops the token usage the API returns.
 
 ## Character spike
 
