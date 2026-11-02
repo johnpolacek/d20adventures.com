@@ -56,6 +56,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.4)
+      '@gsap/react':
+        specifier: 2.1.2
+        version: 2.1.2(gsap@3.15.0)(react@19.2.4)
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.2.4)
@@ -149,6 +152,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      gsap:
+        specifier: 3.15.0
+        version: 3.15.0
       ignore:
         specifier: ^7.0.5
         version: 7.0.5
@@ -1073,6 +1079,12 @@ packages:
 
   '@fontsource/syne-mono@5.3.0':
     resolution: {integrity: sha512-2kxuhmZ4+93IFSeS8jqTQ3QYG6z0gDWKAlJ4pU1/gm/ZzYCLyHwviYYu45+1fqsILDDrfvHEKERyWItkY89tag==}
+
+  '@gsap/react@2.1.2':
+    resolution: {integrity: sha512-JqliybO1837UcgH2hVOM4VO+38APk3ECNrsuSM4MuXp+rbf+/2IG2K1YJiqfTcXQHH7XlA0m3ykniFYstfq0Iw==}
+    peerDependencies:
+      gsap: ^3.12.5
+      react: '>=17'
 
   '@hapi/address@5.1.1':
     resolution: {integrity: sha512-A+po2d/dVoY7cYajycYI43ZbYMXukuopIsqCjh5QzsBCipDtdofHntljDlpccMjIfTy6UOkg+5KPriwYch2bXA==}
@@ -2189,6 +2201,7 @@ packages:
   '@smithy/smithy-client@4.12.3':
     resolution: {integrity: sha512-7k4UxjSpHmPN2AxVhvIazRSzFQjWnud3sOsXcFStzagww17j1cFQYqTSiQ8xuYK3vKLR1Ni8FzuT3VlKr3xCNw==}
     engines: {node: '>=18.0.0'}
+    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/types@4.13.0':
     resolution: {integrity: sha512-COuLsZILbbQsdrwKQpkkpyep7lCsByxwj7m0Mg5v66/ZTyenlfBc40/QFQ5chO0YN/PNEH1Bi3fGtfXPnYNeDw==}
@@ -2895,6 +2908,9 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  gsap@3.15.0:
+    resolution: {integrity: sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A==}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -4557,6 +4573,11 @@ snapshots:
   '@fontsource/rethink-sans@5.3.0': {}
 
   '@fontsource/syne-mono@5.3.0': {}
+
+  '@gsap/react@2.1.2(gsap@3.15.0)(react@19.2.4)':
+    dependencies:
+      gsap: 3.15.0
+      react: 19.2.4
 
   '@hapi/address@5.1.1':
     dependencies:
@@ -6348,6 +6369,8 @@ snapshots:
   gopd@1.2.0: {}
 
   graceful-fs@4.2.11: {}
+
+  gsap@3.15.0: {}
 
   has-flag@4.0.0: {}
 
