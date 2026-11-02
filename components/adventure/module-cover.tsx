@@ -21,7 +21,7 @@ export function ModuleCover(props: { id: string; title: string; players: [number
       </div>
       <figcaption className="absolute right-[5%] bottom-[4%] font-sans text-[max(9px,3.8cqw)] font-medium uppercase tracking-[0.22em] text-stage-cream/90">
         {/* The tracking trails the last letter, so the pill's right side pads that much less. */}
-        <span data-intro="players" className="block rounded-full bg-black/50 py-[0.5em] pr-[0.78em] pl-[1em]">
+        <span data-intro="players" className="block rounded-full bg-black/70 py-[0.5em] pr-[0.78em] pl-[1em]">
           {playersLine(props.players)}
         </span>
       </figcaption>
