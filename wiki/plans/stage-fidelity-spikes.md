@@ -151,7 +151,7 @@ Owner decision, 2026-11-10: the cast stay standees, repainted photoreal, and not
 
 The crowd, the same day: `cards.ts paint crowd` cuts each of the 16 people out of the setting's atlas, repaints front and back the same way, and `cards.ts pack` lays them out again as the engine reads them. 32 pictures, about 13 minutes, none refused. `&crowd=1` shows them. The guard at Garlan's shoulder now matches him, and the gate's crowd of about 1,600 reads as people in the place. A crowd figure is 1,020 px tall in its atlas cell, so it is softer than a cast card in a 4× close-up.
 
-Owner, on first look: the photoreal crowd seemed blurrier than the painted one. The crowd shots had been captured at half size (the balanced tier draws at DPR 1, to stay inside this machine's memory) beside full-size ones. Captured at the same size, the two crowds are equally sharp. The owner's choice between them is open.
+Owner, on first look: the photoreal crowd seemed blurrier than the painted one. The crowd shots had been captured at half size (the balanced tier draws at DPR 1, to stay inside this machine's memory) beside full-size ones. Captured at the same size, the two crowds are equally sharp. Both were then captured at full size (ultra tier, 2700×1800, same settings: `cards=1&fade=0&fill=1`, with `crowd=1` for the photoreal one) at the gate, the checkpoint and the tripod close-up. Edge detail over four crowd crops is 3% to 14% higher with the photoreal crowd, never lower. Free memory fell to 21% with other apps closed. The owner's choice between them is open.
 
 Counts: 134 named cards in `public/stage`, each a front and a back, so 268 pictures, about 1.5 hours at three at a time. The crowd is 16 people, front and back.
 
