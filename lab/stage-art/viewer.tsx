@@ -13,12 +13,15 @@
 //   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
 //   &figure=<castId>:<file>[:yaw]    /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee
 //   &cards=1                        /stage-lab/cards/<castId>-front.webp and -back.webp in place of each standee's art
+//   &fill=1                         (b) paint runs on over surfaces no painting saw, in place of the bare set
+//   &bare=1                         (b) those surfaces in flat magenta
+//   &drift=0.15[,8]                 the camera sways that many metres about its point, over that many seconds
 //   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
-import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, pano, projectPaintings } from "./lab"
+import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, drift, pano, projectPaintings } from "./lab"
 
 type Params = Record<string, string | undefined>
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
@@ -83,7 +86,14 @@ export function LabViewer({ params }: { params: Params }) {
       if (params.project) {
         // One name, or several joined by commas: each is a painting and the camera it was painted for.
         const list = await Promise.all(params.project.split(",").map(async (name) => ({ url: `/stage-lab/${name}.png`, cam: await (await fetch(`/stage-lab/${name}.json`)).json() })))
-        lab.project = await projectPaintings(st, list, { fade: num(params.fade), gain: num(params.pgain), sat: num(params.psat), shadows: num(params.shadows) })
+        lab.project = await projectPaintings(st, list, {
+          fade: num(params.fade),
+          gain: num(params.pgain),
+          sat: num(params.psat),
+          shadows: num(params.shadows),
+          fill: num(params.fill),
+          bare: num(params.bare),
+        })
       }
       if (params.splat) lab.splat = await addSplat(st, `/stage-lab/${params.splat}`, { gain: num(params.sgain), yaw: num(params.syaw), scale: num(params.sscale) })
       if (params.animate) {
@@ -125,6 +135,9 @@ export function LabViewer({ params }: { params: Params }) {
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }
       if (params.shot) st.shot(params.shot, { instant: true })
+      // &drift=<metres>[,<seconds>]: the camera sways that far about where it stands. Needs motion on.
+      const sway = params.drift?.split(",").map(Number)
+      if (sway?.[0]) stops.push(drift(st, sway[0], sway[1] || 8).stop)
       setShots(Object.entries(st.shots).map(([k, s]) => [k, s.label]))
       setActive(st.activeShot)
       await st.firstFrame

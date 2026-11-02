@@ -2,7 +2,7 @@
 
 [Home](../index.md) · [Plans](index.md) · [Stage engine](../stage-engine.md) · [Stage art spikes](stage-art-spikes.md)
 
-Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Character spike run the same day: one 3D Garlan stands at the gate. The owner then chose tripod cameras, and cards repainted photoreal over 3D characters. The gate's six cast cards were repainted the same day. Next: build both into the engine.
+Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Character spike run the same day: one 3D Garlan stands at the gate. The owner then chose tripod cameras, and cards repainted photoreal over 3D characters. The gate's six cast cards were repainted the same day. The owner then chose a tripod that sways, with look, zoom and hops between points, over free roaming. Next: build all three into the engine.
 
 ## Why
 
@@ -101,6 +101,27 @@ Garlan Ironfist, from his standee to a rigged 3D figure at the gate. Commands: [
 Not done: a second generator for comparison, the back view as input, Blender (not installed), a calmer idle, a talk or attack clip, a monster, a second character to check the crowd of cards against.
 
 Prices, 2026-11-10: Meshy 7.1 on fal is $1.20 for a textured model, $0.20 for a rig and $0.12 an animation call. About 120 named characters would be about $180.
+
+### Sway, and what roaming becomes
+
+Owner decision, 2026-11-10: free roaming goes. A scene is a handful of painted points. At each the player looks around and zooms, the camera sways gently, and it hops between points. The set stays real geometry under the paint, so figures still walk through it, pass behind props and cast shadows.
+
+Sway tested at the checkpoint, with the camera moved sideways and still aimed at its target, in a 46 degree view inside the 50 degree painting:
+
+| Camera off its point | Frame no painting saw |
+|---|---|
+| 0 cm | 0.01% |
+| 10 cm | 0.9% |
+| 25 cm | 2.5% |
+| 50 cm | 4.9% |
+
+- The gaps are slivers beside near things: table legs, posts, the barrier, the awning's edge.
+- `&fill=1` runs the nearest painting's paint on over them. At 25 cm nothing is bare, and table legs thicken a little.
+- A 15 cm sway over 8 seconds, recorded: near things slide against far ones and the paint holds. This is the setting to build.
+- A 40 cm sway breaks: a bare post, a hard seam on the awning and an unpainted corner at the ends of the swing.
+- A tripod camera wants `&fade=0`. The fade drops paint on surfaces seen edge-on, which is right for a painting seen from elsewhere and wrong from its own point: it was leaving far ground to the built set.
+- A painting should be a little wider than the view it serves, so a sway does not see past its edge: 50 degrees painted for 46 shown held at 15 cm.
+- Measured at DPR 1 on the balanced tier. The machine's free memory fell to 18% during an ultra capture at DPR 2, under the 20% floor.
 
 ## Decision: photoreal cards
 

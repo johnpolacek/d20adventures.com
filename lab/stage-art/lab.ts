@@ -81,7 +81,7 @@ type Patched = THREE.Material & { onBeforeCompile: (s: THREE.WebGLProgramParamet
 // join, and each fades out toward the edge of its own frame. Surfaces a projector saw edge-on fade out of it when `fade` is 1, and show its stretched paint when it is 0.
 // With `shadows`, only cast and crowd throw sun shadows, and those darken the paint: a painting carries the set's own
 // shadows already, and replaces the engine's light where it lands. A value over 5 draws the shadow mask itself, to check it.
-export async function projectPaintings(stage: Stage, list: { url: string; cam: Projector }[], o: { gain?: number; sat?: number; fade?: number; shadows?: number } = {}) {
+export async function projectPaintings(stage: Stage, list: { url: string; cam: Projector }[], o: { gain?: number; sat?: number; fade?: number; shadows?: number; fill?: number; bare?: number } = {}) {
   const hidden = [stage.standees.group, stage.crowd.group, stage.effects.group, ...stage.scene.children.filter((c) => c instanceof THREE.Mesh && (c.renderOrder < 0 || c.name.startsWith("lab:")))]
   const was = hidden.map((h) => h.visible)
   for (const h of hidden) h.visible = false
@@ -92,6 +92,10 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
     uLabSat: { value: o.sat ?? 0.9 },
     uLabFade: { value: o.fade ?? 1 },
     uLabShadow: { value: o.shadows ?? 0 },
+    // Fill: where the camera has drifted to see a surface no painting saw, the nearest painting's paint runs on over it.
+    // Bare: those surfaces in flat magenta, to count them.
+    uLabFill: { value: o.fill ?? 0 },
+    uLabBare: { value: o.bare ?? 0 },
     uLabOn: { value: 1 },
   }
   const cams: THREE.PerspectiveCamera[] = []
@@ -137,7 +141,11 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
  vis *= mix(1.0, smoothstep(.06, .28, facing), uLabFade);
  float edge = smoothstep(0.0, 0.06, min(min(puv.x, 1.0 - puv.x), min(puv.y, 1.0 - puv.y)));
  float w = pow(vis * edge * facing * uLabLens${i}.z / max(length(to), 0.5), 4.0) + 1e-9 * vis * edge;
- labSum += w * texture2D(uLabMap${i}, puv).rgb; labW += w; labVis = max(labVis, vis * edge); }`
+ vec3 tx = texture2D(uLabMap${i}, puv).rgb;
+ float rim = inside * smoothstep(0.0, 0.004, min(min(puv.x, 1.0 - puv.x), min(puv.y, 1.0 - puv.y)));
+ float fw = pow(rim * uLabLens${i}.z / max(length(to), 0.5), 4.0) + 1e-9 * rim;
+ labSum += w * tx; labW += w; labVis = max(labVis, vis * edge);
+ labFillSum += fw * tx; labFillW += fw; labIn = max(labIn, rim); }`
     )
     .join("\n")
   const visit = (o3: THREE.Object3D) => {
@@ -181,7 +189,7 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
         .replace(
           "#include <common>",
           `#include <common>
-varying vec3 vLabWorld; uniform float uLabGain, uLabSat, uLabFade, uLabShadow, uLabOn;
+varying vec3 vLabWorld; uniform float uLabGain, uLabSat, uLabFade, uLabShadow, uLabOn, uLabFill, uLabBare;
 ${decl}
 float labLin(float d, float near, float far){ float z = d * 2.0 - 1.0; return 2.0 * near * far / (far + near - z * (far - near)); }
 ${GRADE}`
@@ -190,14 +198,18 @@ ${GRADE}`
           "#include <premultiplied_alpha_fragment>",
           `{ vec3 labN = normalize(cross(dFdx(vLabWorld), dFdy(vLabWorld)));
  vec3 labSum = vec3(0.0); float labW = 0.0; float labVis = 0.0;
+ vec3 labFillSum = vec3(0.0); float labFillW = 0.0; float labIn = 0.0;
 ${each}
  vec3 paint = labGrade(labSum / max(labW, 1e-12), uLabGain, uLabSat);
+ paint = mix(paint, mix(labGrade(labFillSum / max(labFillW, 1e-20), uLabGain, uLabSat), paint, labVis), uLabFill);
  ${lit ? "paint *= mix(1.0, getShadowMask(), uLabShadow); if (uLabShadow > 5.0) { paint = vec3(getShadowMask()); labVis = 1.0; }" : ""}
- gl_FragColor.rgb = mix(gl_FragColor.rgb, paint, labVis * uLabOn); }
+ float labCover = max(labVis, uLabFill * labIn);
+ if (uLabBare > .5 && labVis < .5) { paint = vec3(1.0, 0.0, 1.0); labCover = 1.0; }
+ gl_FragColor.rgb = mix(gl_FragColor.rgb, paint, labCover * uLabOn); }
 #include <premultiplied_alpha_fragment>`
         )
     }
-    m.customProgramCacheKey = () => `${key()}|lab-project-${list.length}`
+    m.customProgramCacheKey = () => `${key()}|lab-project-fill-${list.length}`
     m.needsUpdate = true
   }
   visit(stage.world)
@@ -226,6 +238,36 @@ void main(){ vec4 pc = uLabVP * vec4(vLabWorld, 1.0); vec2 puv = pc.xy / max(pc.
   dome.frustumCulled = false
   stage.scene.add(dome)
   return { uniforms, patched: patched.size, skipped }
+}
+
+// A tripod that sways: the camera wanders up to `amp` metres from where it stands, sideways most, a little up and down
+// and in and out, and keeps looking at its target. Paint sits on real shapes, so near things slide against far ones.
+export function drift(stage: Stage, amp: number, period = 8) {
+  const base = stage.camera.position.clone()
+  const target = stage.controls ? stage.controls.target.clone() : stage.camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(10).add(base)
+  const fwd = target.clone().sub(base).normalize()
+  const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize()
+  const t0 = performance.now()
+  let raf = 0
+  const at = (t: number) =>
+    base
+      .clone()
+      .addScaledVector(right, amp * Math.sin((2 * Math.PI * t) / period))
+      .addScaledVector(new THREE.Vector3(0, 1, 0), amp * 0.35 * Math.sin((2 * Math.PI * t) / (period * 0.62)))
+      .addScaledVector(fwd, amp * 0.5 * Math.sin((2 * Math.PI * t) / (period * 1.37)))
+  const tick = () => {
+    stage.camera.position.copy(at((performance.now() - t0) / 1000))
+    stage.camera.lookAt(target)
+    raf = requestAnimationFrame(tick)
+  }
+  tick()
+  return {
+    stop: () => {
+      cancelAnimationFrame(raf)
+      stage.camera.position.copy(base)
+      stage.camera.lookAt(target)
+    },
+  }
 }
 
 // (c) The video holds colour on its left half and alpha on its right. Each new video frame is unpacked into a half-float

@@ -67,7 +67,8 @@ async function main() {
   await send("Runtime.enable")
   await send("Page.enable")
   await send("Page.bringToFront")
-  await send("Emulation.setDeviceMetricsOverride", { width: 1350, height: 900, deviceScaleFactor: 2, mobile: false })
+  // --dpr=1: a lighter page, for measuring rather than judging.
+  await send("Emulation.setDeviceMetricsOverride", { width: 1350, height: 900, deviceScaleFactor: Number(arg("dpr") ?? 2), mobile: false })
   await send("Emulation.setFocusEmulationEnabled", { enabled: true })
   await mkdir(OUT, { recursive: true })
   const url = `${BASE}/dev/stage-lab?motion=${process.argv.includes("--motion") || arg("glide") ? 1 : 0}&tier=${arg("tier") ?? "high"}${q ? `&${q}` : ""}`
@@ -109,12 +110,22 @@ async function main() {
     await writeFile(`${OUT}/${name}-glide.png`, await pull("window.__stage.capture()"))
     console.log(`${name}-glide`)
   }
+  // --record=<seconds>: the canvas as it plays, in real time, as WebM.
+  const record = async (file: string) => {
+    const seconds = Number(arg("record") ?? 0)
+    if (seconds <= 0) return
+    await ev(`(() => { const rec = new MediaRecorder(window.__stage.canvas.captureStream(30), { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 16e6 }); const parts = [];
+      rec.ondataavailable = e => parts.push(e.data); window.__rec = new Promise(r => { rec.onstop = () => r(new Blob(parts, { type: 'video/webm' })) }); rec.start(); setTimeout(() => rec.stop(), ${seconds * 1000}) })()`)
+    await delay(seconds * 1000 + 1500)
+    await writeFile(`${OUT}/${file}.webm`, await pull("window.__rec"))
+  }
   // --view: the page's free viewpoint (&view=...), as <name>-view.png.
   if (process.argv.includes("--view")) {
     await ev("window.__stage.shot(window.__lab.view, { instant: true })")
     await delay(1500)
     await writeFile(`${OUT}/${name}-view.png`, await pull("window.__stage.capture()"))
     if (process.argv.includes("--camera")) await writeFile(`${OUT}/${name}-view.json`, JSON.stringify(await ev("window.__lab.camera()")))
+    await record(`${name}-view`)
     console.log(`${name}-view`)
   }
   for (const shot of shots) {
@@ -129,14 +140,7 @@ async function main() {
       console.log(`${name}-${shot}: ${((st.frame - f0) / 2).toFixed(0)} fps, ${st.calls} calls, ${(st.triangles / 1e6).toFixed(2)}M triangles`)
     }
     if (process.argv.includes("--camera")) await writeFile(`${OUT}/${name}-${shot}.json`, JSON.stringify(await ev("window.__lab.camera()")))
-    // --record=<seconds>: the canvas as it plays, in real time, as WebM.
-    const seconds = Number(arg("record") ?? 0)
-    if (seconds > 0) {
-      await ev(`(() => { const rec = new MediaRecorder(window.__stage.canvas.captureStream(30), { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 16e6 }); const parts = [];
-        rec.ondataavailable = e => parts.push(e.data); window.__rec = new Promise(r => { rec.onstop = () => r(new Blob(parts, { type: 'video/webm' })) }); rec.start(); setTimeout(() => rec.stop(), ${seconds * 1000}) })()`)
-      await delay(seconds * 1000 + 1500)
-      await writeFile(`${OUT}/${name}-${shot}.webm`, await pull("window.__rec"))
-    }
+    await record(`${name}-${shot}`)
     console.log(`${name}-${shot}`)
   }
   if (exceptions.length) console.log(`page exceptions: ${exceptions.slice(0, 3).join(" | ")}`)

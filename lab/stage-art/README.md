@@ -109,6 +109,8 @@ node --import tsx lab/stage-art/repaint.ts closeplate-view photoreal --cli --sha
 open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=cp-cli,cp-zoom,cp-close&shadows=0.55&cards=1&$V"
 ```
 
+- `&drift=0.15,8` sways the camera 15 cm about its point over 8 seconds (`capture.ts --motion --record=12 --view`). `&fill=1` runs paint on over what no painting saw, `&bare=1` marks it magenta, and `&fade=0` suits a camera that stays at its painting's point.
+- `capture.ts --dpr=1 --tier=balanced` is a lighter page, for measuring. An ultra capture at DPR 2 took this machine under 20% free memory.
 - `cards.ts` is free, on the ChatGPT subscription, about 60 seconds a card. The tool usually answers a green-screen request with a transparent background, and the cutout takes whichever came.
 - `&cards=1` loads `/stage-lab/cards/<castId>-front.webp` and `-back.webp` as page blobs, since a staging takes only `/stage/` paths.
 - `sheet` is free, on the ChatGPT subscription. `model` keeps its response in `raw/`, so a rerun downloads again and does not pay again.
