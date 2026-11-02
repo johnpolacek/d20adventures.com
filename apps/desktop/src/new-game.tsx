@@ -8,7 +8,7 @@ import type { Hero, PartyChoice } from "../runtime/heroes"
 import type { GmModel } from "./bridge"
 import { joinAs, openingParty, type Seat, seatCreated } from "./carry"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
-import { ModuleCover } from "./module-cover"
+import { ModuleCover } from "@/components/adventure/module-cover"
 import { portraitFor } from "./scenes"
 
 type Pick = { id: string; name: string; race: string; archetype: string; portrait?: string; hero?: Hero }

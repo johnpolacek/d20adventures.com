@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react"
 import wait from "waait"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import AdventureLobby, { type LobbyInvite } from "@/components/adventure/adventure-lobby"
+import { ModuleCover } from "@/components/adventure/module-cover"
 import Turn from "@/components/adventure/turn"
 import type { MapTokens } from "@/components/mapview/encounter-map-2d"
 import AccountRequired from "@/components/nav/account-required"
@@ -112,6 +113,17 @@ function AdventureHomeContent({
   const imageUrl = getImageUrl(image)
   const currentEncounter = React.useMemo(() => findEncounterById(adventurePlan?.sections || [], turn?.encounterId), [adventurePlan?.sections, turn?.encounterId])
 
+  const signIn = <AccountRequired redirectUrl={invite?.as ? `${pathname}?as=${encodeURIComponent(invite.as)}` : pathname} />
+  // Signed out in the lobby: the adventure's cover, its first sentence and sign in, with nothing to scroll past.
+  if (isLoaded && !isSignedIn && !turn && adventurePlan)
+    return (
+      <div className="flex min-h-screen flex-col items-center gap-6 px-4 py-10">
+        <ModuleCover id={adventurePlan.id} title={adventurePlan.title} players={adventurePlan.party} className="max-w-xs" />
+        <p className="max-w-sm text-center text-white/80">{/^.*?[.!?](?=\s|$)/.exec(adventurePlan.teaser)?.[0] ?? adventurePlan.teaser}</p>
+        {signIn}
+      </div>
+    )
+
   return (
     <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
       <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
@@ -120,11 +132,7 @@ function AdventureHomeContent({
       ) : (
         <>
           <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} hosted={hosted} />
-          {!isSignedIn && isLoaded && (
-            <div className="-mt-12 pb-24">
-              <AccountRequired redirectUrl={invite?.as ? `${pathname}?as=${encodeURIComponent(invite.as)}` : pathname} />
-            </div>
-          )}
+          {!isSignedIn && isLoaded && <div className="-mt-12 pb-24">{signIn}</div>}
         </>
       )}
     </div>

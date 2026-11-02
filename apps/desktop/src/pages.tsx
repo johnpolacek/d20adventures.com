@@ -10,7 +10,7 @@ import type { AdventureInfo } from "../runtime/game"
 import type { Hero } from "../runtime/heroes"
 import type { SaveSummary } from "../runtime/store"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
-import { ModuleCover } from "./module-cover"
+import { ModuleCover } from "@/components/adventure/module-cover"
 import { type Locked, LockIcon, price } from "./new-game"
 import type { Realm } from "./realm"
 
