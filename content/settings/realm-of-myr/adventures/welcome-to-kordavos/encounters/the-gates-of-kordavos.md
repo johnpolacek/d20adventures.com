@@ -24,15 +24,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044729016"
 
 {hero: branka-stoneveil} A broad dwarf with copper braids and a twice-broken nose stares up at the old gate-ward sigil carved over the arch. The same sigil is stamped on her battered breastplate, and two of the guards have noticed.
 
-{hero: cassia-verane} A precise Asterian woman in a grey coat lined with map pockets has a brass surveyor's glass trained on the gatehouse footings. She sketches in a thick folio, frowning as if the stones are older than they should be.
-
-{hero: yeva-softstep} A small halfling in a festival cap has chatted her way three places up the line. She is cheerful with everyone, and her quick hazel eyes never stop counting the guards.
-
 {hero: milos-radan} A grey-bearded priest in undyed robes, the bronze compass-star of the Church of Valkara at his chest, shares water from his gourd with a weary pilgrim family in the line ahead.
-
-{hero: wrenna-faelendar} A tall elf in grey-green leathers carries a bundle of furs like a trader, yet her pale yew longbow is strung, and she watches the guards the way a scout watches a treeline.
-
-{hero: ilya-veles} A half-elf in an embroidered festival coat plucks a few bars on the gusle across his back, and half the line hums along. His grey eyes move from face to face, as if each stranger were a verse.
 
 {hero: thalbern} A lean, weathered man in a cloak of forest hues stands a little apart, longbow across his back. River mud still cakes his boots, and he keeps glancing back down the road toward the Mordava.
 
@@ -52,7 +44,7 @@ This scene is where the heroes meet, before anyone at the gate asks them anythin
 
 **The table is out of reach.** The sergeant at the table is Garlan Ironfist. He is too far up the line to hear the heroes or be heard, and calls no one up in this scene. Guards keep the line in order. Anyone who leaves their place to walk up to the table, or tries to slip past the arch, is marched back to the end of the line, as the peddler in the intro was. A hero who tries it is turned back the same way, in a sentence, and loses nothing else. Other heroes do not follow them up. They keep their places, so the one turned back rejoins them. A hero's business with the gate waits for the table.
 
-**Between the heroes.** Each hero shows something the others can notice and ask about: Branka's sigil, Cassia's charts, Yeva's counting eyes, Milos's compass-star, Wrenna's strung bow, Ilya's song, Thalbern's river mud, Lyra's soaked books, Poppen's questions. Any other hero shows the detail their own paragraph in the intro gives. When one hero asks another about it, leave the answer to that hero. Never answer for them. A hero with no paragraph in the intro is shown the first time the story turns to them, with one detail of how they look.
+**Between the heroes.** Each hero shows something the others can notice and ask about: Branka's sigil, Milos's compass-star, Thalbern's river mud, Lyra's soaked books, Poppen's questions. Any other hero shows the detail their own paragraph in the intro gives. When one hero asks another about it, leave the answer to that hero. Never answer for them. A hero with no paragraph in the intro is shown the first time the story turns to them, with one detail of how they look.
 
 **Things in the line to talk about.**
 - The family turned back three marks short. A hero may pay for them, and the family thanks them as it passes.

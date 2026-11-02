@@ -379,8 +379,9 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                   </section>
                 )}
                 {(!invite || bringOwn) && (
-                  <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname + window.location.search)}`} className="w-full">
-                    <Button variant="epic" size="lg" className="w-full">
+                  <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname + window.location.search)}`} className="mt-6 w-full">
+                    {/* At rest an epic button is scaled up. Here it keeps the list's width. */}
+                    <Button variant="epic" size="lg" className="w-full scale-100 hover:scale-[1.02]">
                       Create New Character
                     </Button>
                   </Link>
