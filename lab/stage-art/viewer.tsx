@@ -19,6 +19,7 @@
 //   &cloth=off                      (b) flags, banners and awnings taken down, for that painting's plate
 //   &drift=0.15[,8]                 the camera sways that many metres about its point, over that many seconds
 //   &crowd=1                        the crowd's repainted cards, from /stage-lab/crowd
+//   &plain=1                        a painted set as built, without its paintings, for a new painting's plate
 //   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
 
@@ -62,7 +63,9 @@ export function LabViewer({ params }: { params: Params }) {
           })
         )
       }
-      const set = structuredClone(await SETS[staging.set]()) as { objects: { type: string }[]; backdrops?: unknown[] }
+      const set = structuredClone(await SETS[staging.set]()) as { objects: { type: string }[]; backdrops?: unknown[]; painted?: unknown }
+      // A set the engine paints itself is shown as built for the lab's own projection, a splat, or a plate (&plain=1).
+      if (params.project || params.splat || params.plain) delete set.painted
       // The engine now draws the set's own backdrop: the spike's replaces it.
       if (params.backdrop) {
         set.objects = set.objects.filter((o) => o.type !== "mountain")

@@ -2,7 +2,7 @@
 
 [Home](../index.md) · [Plans](index.md) · [Stage engine](../stage-engine.md) · [Stage art spikes](stage-art-spikes.md)
 
-Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Character spike run the same day: one 3D Garlan stands at the gate. The owner then chose tripod cameras, and cards repainted photoreal over 3D characters. The gate's six cast cards were repainted the same day. The owner then chose a tripod that sways, with look, zoom and hops between points, over free roaming. Next: build all three into the engine.
+Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Character spike run the same day: one 3D Garlan stands at the gate. The owner then chose tripod cameras, and cards repainted photoreal over 3D characters. The gate's six cast cards were repainted the same day. The owner then chose a tripod that sways, with look, zoom and hops between points, over free roaming. The owner chose the photoreal crowd. The engine build began the same day, gate first: see "Engine build" below.
 
 ## Why
 
@@ -158,3 +158,25 @@ Owner decision, 2026-11-10: the photoreal crowd. A painted figure beside a photo
 Counts: 134 named cards in `public/stage`, each a front and a back, so 268 pictures, about 1.5 hours at three at a time. The crowd is 16 people, front and back.
 
 Not done: portraits cut from the new fronts, a sharper head-and-shoulders card for close-ups, seated figures and creatures, the daily picture limit of the ChatGPT plan.
+
+## Engine build, from 2026-11-10
+
+Owner: build it into the real engine, gate first. Reference: [stage engine, "Painted sets"](../stage-engine.md).
+
+Done:
+
+- `painted` on a set: points, each with up to three paintings. The gate set has four points from the spike's paintings: `gate` (with its cloth-free twin), `checkpoint` (wide, zoom and close), `party` and `table`.
+- The engine projects a point's paintings, draws their sky, turns the brush filter off and keeps only figures' shadows.
+- Tripod camera: every shot is taken from the point that suits it. Drag to look, wheel to zoom, a short fade between points, sway and wind with motion on.
+- The gate's six cast cards and the Realm of Myr crowd as photographs: `fixtures/welcome-to-kordavos/photoreal/` and the `realm-of-myr-photoreal` crowd library.
+- `the-gates-ahead` (The Road to Kordavos) shares the set and keeps the built look with `painted: false`. Its party stands 6 m from the gate camera, below the gate painting's frame.
+- Checked on the lab page at the balanced tier: all seven views, a turn and zoom to the paint's edge, a cut between points, sway and wind. 60 fps, no failing programs.
+
+Views still off the paint (`pnpm stage:check`), each needing a painting:
+
+- `queue` and `ramparts`. Both now show a long lens on the gate from the gate point.
+- The in-line scene of the desktop app (the party two groups back): its party view and hero views look back up the line from near the `party` point, which is painted the other way.
+- Milos and Oskar's hero views at the front of the line.
+- `the-gates-ahead`: its party view and hero views.
+
+Also to do: the play screen in the desktop app, created heroes (their stock and AI-painted cards are still paintings), portraits cut from the new cards, the other 39 sets, and the awning at the checkpoint, where the zoom painting's edge shows as a lighter patch.

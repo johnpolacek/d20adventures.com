@@ -5,13 +5,17 @@
 //
 //   pnpm stage:sync            # upload what changed
 //   pnpm stage:sync --dry      # list what would upload
+//   pnpm stage:sync public/stage/paintings public/stage/crowd   # only these folders, each inside one of the three
 
 import { createHash } from "node:crypto"
 import { readdir, readFile } from "node:fs/promises"
 import { extname, join, relative } from "node:path"
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 
-const DIRS = ["public/stage", "public/stage-lab", "public/images/app/backgrounds"]
+const ALL = ["public/stage", "public/stage-lab", "public/images/app/backgrounds"]
+const only = process.argv.slice(2).filter((a) => !a.startsWith("--"))
+for (const d of only) if (!ALL.some((root) => d === root || d.startsWith(`${root}/`))) throw new Error(`${d} is not inside ${ALL.join(", ")}`)
+const DIRS = only.length ? only : ALL
 const TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",

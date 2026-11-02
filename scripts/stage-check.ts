@@ -1,6 +1,7 @@
 // Validates Stageview set and staging specs without a GPU or a DOM: schema, every builder's params, material references,
 // nesting and the geometry budget (a dry build into stub materials), plus the crowd population. Stagings also check
-// that their art exists, that no one starts inside something solid, and which straight walks are blocked.
+// that their art exists, that no one starts inside something solid, and which straight walks are blocked. On a painted
+// set they also say which painted point each view is seen from, and which views its paintings do not reach.
 //
 //   pnpm exec tsx scripts/stage-check.ts                 # every repo-local set and staging
 //   pnpm exec tsx scripts/stage-check.ts path/to/set.json
@@ -10,9 +11,11 @@ import type { Footprint } from "@d20/stage/builders/types"
 import { createStubLibrary } from "@d20/stage/materials/library"
 import { SETS, STAGINGS } from "@d20/stage/sets"
 import { buildSetGeometry, parseSet, populateCrowd } from "@d20/stage/spec/build"
-import { resolveCast, resolveShots } from "@d20/stage/spec/resolve"
+import { frameShot, resolveCast, resolveShots } from "@d20/stage/spec/resolve"
 import { type StagingSpec, stagingSpecSchema } from "@d20/stage/spec/staging"
 import { doorways, onFootprint, reachOver, routeOver } from "@d20/stage/spec/walk"
+import { tripodPoints, tripodView } from "@d20/stage/tripod"
+import * as THREE from "three"
 
 async function checkSet(label: string, raw: unknown) {
   const t0 = performance.now()
@@ -27,6 +30,11 @@ async function checkSet(label: string, raw: unknown) {
     byMaterial.push([m.name, v])
   }
   const people = populateCrowd(set, built.footprints, built.anchors)
+  const pictures = Object.values(set.painted?.points ?? {}).flatMap((p) => p.paintings.flatMap((f) => (f.clear ? [f.map, f.clear] : [f.map])))
+  const lost = pictures.filter((u) => !existsSync(`public${u}`))
+  if (lost.length) throw new Error(`set ${label}: missing paintings ${lost.join(", ")}`)
+  for (const library of set.crowd ? [set.crowd.library, ...(set.painted?.crowd ? [set.painted.crowd] : [])] : [])
+    if (!existsSync(`public/stage/crowd/${library}/atlas.json`)) throw new Error(`set ${label}: missing crowd library ${library}`)
   const kinds: Record<string, number> = {}
   for (const p of people) kinds[p.kind] = (kinds[p.kind] ?? 0) + 1
   const ms = Math.round(performance.now() - t0)
@@ -111,6 +119,30 @@ function checkExits(
   }
 }
 
+// The view the play screen takes of whoever acts.
+const HERO_SHOT = (subject: string) => ({ subject, distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 })
+
+// On a painted set every view is taken from a painted point. A view whose subject the paintings do not reach has to turn
+// away from it or narrow: it needs a painting of its own.
+function checkPainted(painted: NonNullable<Awaited<ReturnType<typeof checkSet>>["set"]["painted"]>, shots: Record<string, { position: number[]; target: number[]; fov: number }>) {
+  const points = tripodPoints(painted)
+  const off: string[] = []
+  const from: Record<string, string[]> = {}
+  for (const [name, s] of Object.entries(shots)) {
+    const v = tripodView(points, s, 1.6)
+    const want = new THREE.Vector3(...(s.target as [number, number, number])).sub(v.point.position)
+    const turned = THREE.MathUtils.radToDeg(want.angleTo(v.target.clone().sub(v.point.position)))
+    ;(from[v.point.name] ??= []).push(name)
+    if (turned > v.fov * 0.3 || v.fov < v.asked * 0.6) off.push(`${name} (from ${v.point.name}, turned ${turned.toFixed(0)} of a ${v.fov.toFixed(0)} degree lens, asked ${v.asked.toFixed(0)})`)
+  }
+  console.log(
+    `  painted: ${Object.entries(from)
+      .map(([p, names]) => `${p}: ${names.join(", ")}`)
+      .join(". ")}`
+  )
+  for (const o of off) console.log(`  off the paint: ${o}`)
+}
+
 async function main() {
   const files = process.argv.slice(2)
   if (files.length) {
@@ -133,6 +165,7 @@ async function main() {
     const missing = staging.cast.flatMap((c) => Object.values(c.art)).filter((u) => u.startsWith("/stage/") && !existsSync(`public${u}`))
     if (missing.length) throw new Error(`staging ${key}: missing art ${missing.join(", ")}`)
     console.log(`PASS staging ${key}: ${cast.length} cast (${cast.map((c) => c.id).join(", ")}), ${Object.keys(shots).length} shots (${Object.keys(shots).join(", ")})`)
+    if (set.painted && staging.painted) checkPainted(set.painted, { ...shots, ...Object.fromEntries(cast.map((c) => [`on ${c.id}`, frameShot(HERO_SHOT(c.id), cast)])) })
     checkWalks(set, footprints, doors, cast)
   }
 }

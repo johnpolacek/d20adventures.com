@@ -10,8 +10,8 @@
       "role": "Sergeant of the gate watch",
       "height": 1.94,
       "art": {
-        "front": "/stage/fixtures/welcome-to-kordavos/garlan-front.webp",
-        "back": "/stage/fixtures/welcome-to-kordavos/garlan-back.webp",
+        "front": "/stage/fixtures/welcome-to-kordavos/photoreal/garlan-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/photoreal/garlan-back.webp",
         "portrait": "/stage/fixtures/welcome-to-kordavos/garlan-portrait.jpg"
       },
       "at": "sergeant",
@@ -23,8 +23,8 @@
       "role": "Dwarf fighter",
       "height": 1.38,
       "art": {
-        "front": "/stage/fixtures/welcome-to-kordavos/branka-front.webp",
-        "back": "/stage/fixtures/welcome-to-kordavos/branka-back.webp",
+        "front": "/stage/fixtures/welcome-to-kordavos/photoreal/branka-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/photoreal/branka-back.webp",
         "portrait": "/stage/fixtures/welcome-to-kordavos/branka-portrait.jpg"
       },
       "at": "front1",
@@ -36,8 +36,8 @@
       "role": "Human wizard",
       "height": 1.72,
       "art": {
-        "front": "/stage/fixtures/welcome-to-kordavos/cassia-front.webp",
-        "back": "/stage/fixtures/welcome-to-kordavos/cassia-back.webp",
+        "front": "/stage/fixtures/welcome-to-kordavos/photoreal/cassia-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/photoreal/cassia-back.webp",
         "portrait": "/stage/fixtures/welcome-to-kordavos/cassia-portrait.jpg"
       },
       "at": "front2",
@@ -49,8 +49,8 @@
       "role": "Halfling rogue",
       "height": 1.08,
       "art": {
-        "front": "/stage/fixtures/welcome-to-kordavos/yeva-front.webp",
-        "back": "/stage/fixtures/welcome-to-kordavos/yeva-back.webp",
+        "front": "/stage/fixtures/welcome-to-kordavos/photoreal/yeva-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/photoreal/yeva-back.webp",
         "portrait": "/stage/fixtures/welcome-to-kordavos/yeva-portrait.jpg"
       },
       "at": "front3",
@@ -62,8 +62,8 @@
       "role": "Human cleric",
       "height": 1.8,
       "art": {
-        "front": "/stage/fixtures/welcome-to-kordavos/milos-front.webp",
-        "back": "/stage/fixtures/welcome-to-kordavos/milos-back.webp",
+        "front": "/stage/fixtures/welcome-to-kordavos/photoreal/milos-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/photoreal/milos-back.webp",
         "portrait": "/stage/fixtures/welcome-to-kordavos/milos-portrait.jpg"
       },
       "at": "front4",
@@ -75,8 +75,8 @@
       "role": "Spice-trader of the Saffron Road",
       "height": 1.7,
       "art": {
-        "front": "/stage/fixtures/welcome-to-kordavos/oskar-front.webp",
-        "back": "/stage/fixtures/welcome-to-kordavos/oskar-back.webp",
+        "front": "/stage/fixtures/welcome-to-kordavos/photoreal/oskar-front.webp",
+        "back": "/stage/fixtures/welcome-to-kordavos/photoreal/oskar-back.webp",
         "portrait": "/stage/fixtures/welcome-to-kordavos/oskar-portrait.jpg"
       },
       "at": "lineBack",

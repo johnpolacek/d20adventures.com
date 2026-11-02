@@ -1401,7 +1401,7 @@
     {
       "type": "sheaf",
       "at": [-5.6, 8.9],
-      "size": 1.0,
+      "size": 1,
       "pair": true
     },
     {
@@ -1745,7 +1745,7 @@
       "label": "the brazier"
     },
     "cart": {
-      "at": [5.0, 13.3],
+      "at": [5, 13.3],
       "label": "the handcart being searched"
     },
     "banner": {
@@ -1825,6 +1825,70 @@
       "target": [-4, 4, 40],
       "fov": 62,
       "label": "Ramparts"
+    }
+  },
+  "painted": {
+    "crowd": "realm-of-myr-photoreal",
+    "points": {
+      "gate": {
+        "position": [4, 2.6, 86],
+        "label": "The gate",
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/gate.webp",
+            "clear": "/stage/paintings/kordavos-south-gate/gate-clear.webp",
+            "quaternion": [0.222184, 0.022656, -0.005164, 0.974728],
+            "fov": 72,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "checkpoint": {
+        "position": [-3.4, 2.85, 14.6],
+        "label": "The checkpoint",
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/checkpoint.webp",
+            "quaternion": [-0.078504, -0.482812, -0.043511, 0.871112],
+            "fov": 50,
+            "aspect": 1.5
+          },
+          {
+            "map": "/stage/paintings/kordavos-south-gate/checkpoint-2.webp",
+            "quaternion": [-0.086759, -0.485811, -0.048536, 0.868392],
+            "fov": 24,
+            "aspect": 1.5
+          },
+          {
+            "map": "/stage/paintings/kordavos-south-gate/checkpoint-3.webp",
+            "quaternion": [-0.079246, -0.486213, -0.044333, 0.86911],
+            "fov": 12,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "party": {
+        "position": [-1.685, 1.65, 11.625],
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/party.webp",
+            "quaternion": [0.049158, 0.885871, 0.096536, -0.451107],
+            "fov": 46,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "table": {
+        "position": [0.203, 1.55, 9.903],
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/table.webp",
+            "quaternion": [0.018583, 0.952335, 0.059253, -0.298667],
+            "fov": 46,
+            "aspect": 1.5
+          }
+        ]
+      }
     }
   },
   "life": {

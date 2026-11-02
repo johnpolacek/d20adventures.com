@@ -23,6 +23,17 @@ The web viewer and the desktop app run the same `packages/stage` renderer and th
 11. **Publish art.** Run `pnpm stage:sync` before pushing new or changed files in `public/stage`, `public/stage-lab` or `public/images/app/backgrounds`. Deploys leave them out and the site serves them from the public bucket. See [Vercel deployment storage](plans/vercel-deploy-storage.md).
 12. **Record.** Add measured counts to [the stage engine reference](stage-engine.md) and results to the plan.
 
+## Painting a set
+
+For a set the owner has chosen to paint. See [the engine reference](stage-engine.md) for what `painted` means.
+
+1. **Views.** A painted set is seen only from painted points. Start from the set's shots and each staging's shots. One point per place the camera should stand.
+2. **Plate.** Capture the set from that camera with nobody in it and motion off: `lab/stage-art/capture.ts --camera "--q=staging=<key>&cast=off&plain=1" --shots=<shot>`, or `--view` for a free camera.
+3. **Paint.** `lab/stage-art/repaint.ts <plate> photoreal --cli` paints it on the owner's ChatGPT subscription, about 90 seconds. `--fill` for a second view of a place already painted, `--sharpen` for a closer view from the same point, `--clear` for the cloth-free twin. Details in `lab/stage-art/README.md`.
+4. **Publish.** `lab/stage-art/publish.ts <setting>/<set> <point>=<painting>[,<closer painting>]` writes the WebP files and the set's points.
+5. **Check.** `pnpm stage:check` lists the views still `off the paint`. Paint those, or widen a point's first painting.
+6. **Figures.** `lab/stage-art/cards.ts paint <ids>` repaints cast cards as photographs. Copy them beside the staging's art and point its `art` at them.
+
 ## Lessons
 
 - Night reads from contrast, not brightness. The first forest renders already matched the reference art's average brightness but looked like day: an even blue light and a bright sky. What worked: a dark sky with `clouds` thinned and faint `stars`, a cool moon `glow` (warm by default, which turned the sky orange), mist with its own `fog.color` that matches the sky's horizon so gaps between trees blend, low hemisphere light, and a soft neutral `fill` light that travels with the camera so characters stay readable. Games commonly do the same. Set `grade: "neutral"` for moonlight: the default warm grade, in the paint pass and in the standee shader, tints night scenes and their characters orange-brown.

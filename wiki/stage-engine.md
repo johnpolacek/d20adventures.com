@@ -73,6 +73,30 @@ JSON only: no expressions, no code. Metres. `y` up. ground at `y = 0`. the set f
 
 `set` id, `cast[]` (`id`, `name`, `role`, `height`, `art.front|back|portrait`, `at` = mark name or `[x, z]`, `facing` = degrees, a cast id or a point), `shots` (merged over the set's. adds `subjects` + `offset` two-shots and `subject` + `distance`/`angle` close-ups), `shot` (the opening shot). Scripts, ambient loops and beats come in phases 3–4.
 
+## Painted sets, from 2026-11-10
+
+Owner decisions are in [stage fidelity spikes](plans/stage-fidelity-spikes.md): painted, photoreal sets, tripod cameras that sway, cloth in the wind, photoreal cards and crowd. The Kordavos gate is the first.
+
+- A set's `painted` section lists **points**. Each has a `position` and up to three **paintings** made from it: `map`, the camera it was painted for (`quaternion`, `fov`, `aspect`) and an optional `clear` twin painted with the cloth taken down. The first painting is the widest. Later ones are closer views, used wherever they are sharper.
+- `painted` also takes `gain` and `sat` (the paint's grade through the tone map), `shadows` (how much a figure's sun shadow darkens the paint), `sway` (metres) and `crowd` (a crowd library to match, in place of `crowd.library`).
+- Pictures live in `public/stage/paintings/<set>/`. The set stays real geometry: figures stand in it, cast shadows on it and are hidden by it.
+- `render/painted.ts` projects the current point's paintings onto the built set. A depth map from each painting's camera says what it saw. A surface no painting saw takes the paint beside it. The paintings' sky goes on a dome inside the engine's own. The brush filter is off, and only figures cast sun shadows.
+- The camera stands only at points (`tripod.ts`). `stage.shot()` takes any shot as before and finds the point that suits it: near where the shot's camera stood, with the subject on its paintings, at the size the shot showed it. A view always lies inside one painting, so it narrows or turns back at the paint's edge.
+- Same point: the camera turns and zooms. Another point: it cuts through a 190 ms fade.
+- The player drags to look and uses the wheel or a pinch to zoom (`look.ts`), within the paint. Zoom stops at half the lens of the closest painting made of what is looked at.
+- With motion on the camera sways about its point, 15 cm by default and less on a long lens. Cloth blows and carries its paint: paint is looked up from where the cloth hung at time 0, when the plate was made. Where it has moved aside, the `clear` twin shows.
+- A staging's `painted: false` shows a painted set as built, for a staging whose views the paintings do not reach yet.
+- Paintings that fail to load leave the set as built, with the orbit camera.
+- `pnpm stage:check` fails on a missing painting or crowd library. For each staging on a painted set it lists which point every view is seen from, and the views that are `off the paint`: their subject is outside every painting, so they need one of their own.
+- Measured at the gate, balanced tier, this Mac: 60 fps, 115 draw calls, 56 programs, none failing.
+
+Limits:
+
+- A view cannot straddle two paintings.
+- A window wider than a painting crops it top and bottom: the gate's 72 degree view shows 62 degrees at 16:9.
+- The hero view of the play screen is checked at one shape, 16:10.
+- Not yet checked in the packaged desktop app.
+
 ## Verification
 
 - `pnpm exec tsc --noEmit`, `pnpm lint`, `pnpm build`.

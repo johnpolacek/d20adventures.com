@@ -541,15 +541,21 @@ export function cloth(ctx: MaterialContext, bank: TextureBank, name: string, col
   return stageMaterial(m, ctx.shared, `cloth${amp}-${freq}`, (s) => {
     s.uniforms.uTime = ctx.shared.time
     s.uniforms.uWind = ctx.shared.wind
-    s.vertexShader = s.vertexShader.replace("#include <common>", "#include <common>\nattribute float sway; uniform float uTime, uWind;").replace(
-      "#include <begin_vertex>",
-      `#include <begin_vertex>
-float ph = position.x * .21 + position.z * .17;
-float wv = sin(uTime * 1.6 * ${freq} + position.y * .45 + ph) * .6 + sin(uTime * 2.7 * ${freq} + position.x * .9 - position.y * .7) * .3 + sin(uTime * .7 + ph * 2.0) * .4;
-vec3 wdir = normalize(objectNormal + vec3(.35, 0.0, .2));
-transformed += wdir * wv * sway * uWind * ${amp};
-transformed.x += sway * sway * uWind * ${amp} * .6 * (1.0 + sin(uTime * .9 + ph));`
-    )
+    // `clothWind` is how far the wind has carried a point at time `t`. A painted set asks it where the cloth hung at
+    // time 0, when its paintings were made (render/painted.ts).
+    s.vertexShader = s.vertexShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+attribute float sway; uniform float uTime, uWind;
+vec3 clothWind(vec3 p, vec3 n, float t){
+ float ph = p.x * .21 + p.z * .17;
+ float wv = sin(t * 1.6 * ${freq} + p.y * .45 + ph) * .6 + sin(t * 2.7 * ${freq} + p.x * .9 - p.y * .7) * .3 + sin(t * .7 + ph * 2.0) * .4;
+ vec3 o = normalize(n + vec3(.35, 0.0, .2)) * wv * sway * uWind * ${amp};
+ o.x += sway * sway * uWind * ${amp} * .6 * (1.0 + sin(t * .9 + ph));
+ return o; }`
+      )
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\ntransformed += clothWind(position, objectNormal, uTime);")
     // Thin cloth lets the light through: the side turned from the sun glows with it, dimmer, as canvas does, so an
     // awning seen from below shows its colour instead of a black sheet.
     s.uniforms.uClothSun = ctx.shared.sun

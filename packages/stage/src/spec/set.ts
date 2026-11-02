@@ -282,6 +282,32 @@ const shot = z
   })
   .strict()
 
+// A painted set (wiki/stage-engine.md, "Painted sets"). The camera stands only at `points`, tripods it turns and zooms
+// on. Each point carries up to three paintings made from it: `map` is the picture, `quaternion`, `fov` (vertical,
+// degrees) and `aspect` the camera it was painted for. The first is the widest. Later ones are closer views of part of
+// it, which the engine prefers wherever they are sharper. `clear` is the same view painted with the flags, banners and
+// awnings taken down, shown where the wind moves that cloth aside. Pictures live in /stage/paintings.
+const picture = z.string().regex(/^\/stage\/paintings\/[a-z0-9][a-z0-9/-]{0,119}\.(jpg|webp|png)$/, "paintings live in /stage/paintings")
+export const PAINTINGS_PER_POINT = 3
+const painting = z
+  .object({ map: picture, clear: picture.optional(), quaternion: z.tuple([num(-1, 1), num(-1, 1), num(-1, 1), num(-1, 1)]), fov: num(4, 120), aspect: num(0.3, 4).default(1.5) })
+  .strict()
+const paintedSet = z
+  .object({
+    // A painting is display colour and the frame is tone mapped after, so `gain` and `sat` bring it back out near where
+    // it went in. By eye.
+    gain: num(0, 4).default(1.3),
+    sat: num(0, 2).default(0.9),
+    // How much a figure's sun shadow darkens the paint under it. The set's own shadows are in the paintings.
+    shadows: unit.default(0.55),
+    // How far the camera wanders about its point, in metres, with motion on.
+    sway: num(0, 0.4).default(0.15),
+    // The crowd's art to match the paintings, in place of `crowd.library`.
+    crowd: slug.optional(),
+    points: z.record(name, z.object({ position: vec3, label: z.string().max(80).optional(), paintings: z.array(painting).min(1).max(PAINTINGS_PER_POINT) }).strict()),
+  })
+  .strict()
+
 export const setSpecSchema = z
   .object({
     format: z.literal("d20.stage.set"),
@@ -412,6 +438,7 @@ export const setSpecSchema = z
     loops: z.array(queueLoopSpec).max(8).default([]),
     paths: z.record(name, z.array(vec2).min(2).max(256)).default({}),
     shots: z.record(name, shot),
+    painted: paintedSet.optional(),
     life: z
       .object({
         birds: z
@@ -430,6 +457,10 @@ export const setSpecSchema = z
   .superRefine((s, ctx) => {
     if (Object.keys(s.materials).length > LIMITS.materials) ctx.addIssue({ code: "custom", message: `at most ${LIMITS.materials} materials`, path: ["materials"] })
     if (!Object.keys(s.shots).length) ctx.addIssue({ code: "custom", message: "a set needs at least one shot", path: ["shots"] })
+    if (s.painted) {
+      const n = Object.keys(s.painted.points).length
+      if (n < 1 || n > 16) ctx.addIssue({ code: "custom", message: "a painted set has 1 to 16 points", path: ["painted", "points"] })
+    }
     const people = (s.crowd?.groups ?? []).reduce((n, g) => n + ("count" in g ? g.count : g.type === "points" ? g.people.length : 0), 0)
     if (people > LIMITS.people) ctx.addIssue({ code: "custom", message: `at most ${LIMITS.people} people`, path: ["crowd"] })
   })

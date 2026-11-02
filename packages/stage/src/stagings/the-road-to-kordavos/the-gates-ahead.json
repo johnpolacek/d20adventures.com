@@ -14,14 +14,8 @@
         "back": "/stage/heroes/human-a-back.webp",
         "portrait": "/stage/heroes/human-a-portrait.jpg"
       },
-      "at": [
-        1.6,
-        80.6
-      ],
-      "facing": [
-        0,
-        0
-      ]
+      "at": [1.6, 80.6],
+      "facing": [0, 0]
     },
     {
       "id": "hero-2",
@@ -33,14 +27,8 @@
         "back": "/stage/heroes/elf-b-back.webp",
         "portrait": "/stage/heroes/elf-b-portrait.jpg"
       },
-      "at": [
-        3,
-        81.2
-      ],
-      "facing": [
-        0,
-        0
-      ]
+      "at": [3, 81.2],
+      "facing": [0, 0]
     },
     {
       "id": "hero-3",
@@ -52,37 +40,20 @@
         "back": "/stage/heroes/dwarf-a-back.webp",
         "portrait": "/stage/heroes/dwarf-a-portrait.jpg"
       },
-      "at": [
-        2.3,
-        79.6
-      ],
-      "facing": [
-        0,
-        0
-      ]
+      "at": [2.3, 79.6],
+      "facing": [0, 0]
     }
   ],
   "shots": {
     "party": {
-      "subjects": [
-        "hero-1",
-        "hero-2",
-        "hero-3"
-      ],
-      "offset": [
-        1.8,
-        1.9,
-        4.6
-      ],
-      "target": [
-        0,
-        1.2,
-        0
-      ],
+      "subjects": ["hero-1", "hero-2", "hero-3"],
+      "offset": [1.8, 1.9, 4.6],
+      "target": [0, 1.2, 0],
       "relative": "world",
       "fov": 58,
       "label": "Party"
     }
   },
-  "shot": "gate"
+  "shot": "gate",
+  "painted": false
 }

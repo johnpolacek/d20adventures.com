@@ -9,11 +9,13 @@ import { type CastMember, Standees } from "./figures/standees"
 import { V } from "./kit/geometry"
 import { createRand, hashSeed } from "./kit/rng"
 import { birds, type Disposable, dust, type LifeUpdate, land } from "./life"
+import { LookControls } from "./look"
 import { QueueLoop } from "./loops/queue"
 import { createShared, type SharedUniforms } from "./materials/atmosphere"
 import { createMaterialLibrary, type MaterialLibrary } from "./materials/library"
 import { autoTier, DEFAULT_FLAGS, type Flags, TIERS, type TierName } from "./quality"
 import { PlanarMirror } from "./render/mirror"
+import { Painted } from "./render/painted"
 import { Pipeline } from "./render/pipeline"
 import { skyMaterial } from "./sky"
 import { buildSetGeometry, populateCrowd } from "./spec/build"
@@ -21,6 +23,7 @@ import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
 import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
+import { fitView, minFov, sway, type TripodPoint, tripodView, type View, type ViewRect } from "./tripod"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -51,6 +54,8 @@ export interface StageStats {
   ao: boolean
   bloom: boolean
   shot: string | null
+  // The painted point the camera stands at, in a painted set.
+  point: string | null
   camera: number[]
   programs: number
   frame: number
@@ -75,9 +80,10 @@ export async function defaultCrowdLibrary(id: string): Promise<CrowdLibrary | nu
 }
 
 export async function createStage(o: StageOptions): Promise<Stage> {
-  const set = setSpecSchema.parse(o.set)
+  const parsed = setSpecSchema.parse(o.set)
   const staging = o.staging ? stagingSpecSchema.parse(o.staging) : null
-  const library = set.crowd ? await (o.crowdLibrary ?? defaultCrowdLibrary)(set.crowd.library).catch(() => null) : null
+  const set = staging && !staging.painted ? { ...parsed, painted: undefined } : parsed
+  const library = set.crowd ? await (o.crowdLibrary ?? defaultCrowdLibrary)(set.painted?.crowd ?? set.crowd.library).catch(() => null) : null
   const stage = new Stage(o, set, staging, library)
   await stage.load()
   return stage
@@ -99,8 +105,16 @@ export class Stage {
   readonly standees: Standees
   readonly effects: Effects
   readonly cast: CastMember[]
-  readonly controls: OrbitControls | null
+  controls: OrbitControls | null = null
   readonly sun: THREE.DirectionalLight
+  // A painted set's paintings, and the tripod the camera stands on: the point, what it looks at, and a cut to another
+  // point in progress. `tripod` is null until the paintings are up, and for good if they fail.
+  readonly painted: Painted | null = null
+  private tripod: { point: TripodPoint; aim: THREE.Vector3; want: number } | null = null
+  private look: LookControls | null = null
+  private cut: { arrive: () => void; timer: ReturnType<typeof setTimeout> } | null = null
+  // What the paintings were made of: the built set alone.
+  private plate: THREE.Object3D[] = []
   tier: TierName
   flags: Flags
   // A planar reflection when the set has mirrored water, and the share of the drawing buffer it renders at.
@@ -239,6 +253,7 @@ export class Stage {
     this.sky.renderOrder = -1
     this.sky.frustumCulled = false
     this.scene.add(this.sky)
+    if (set.painted) this.painted = new Painted(renderer, set.painted, this.shared, (this.sky.geometry as THREE.SphereGeometry).parameters.radius)
     const pmrem = new THREE.PMREMGenerator(renderer)
     const envScene = new THREE.Scene()
     const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
@@ -276,6 +291,7 @@ export class Stage {
     for (const e of built.extras) this.world.add(e)
     this.extras = built.extras
     if (set.land) this.disposables.push(land(this.world, this.shared, rand.fork("land"), set.land))
+    this.plate = [...this.world.children]
     const backdrops = set.backdrops.map((b, i) => backdrop(this.world, (this.scene.fog as THREE.FogExp2).color, renderer.capabilities.getMaxAnisotropy(), b, i))
     this.disposables.push(...backdrops)
     this.backdropReady = Promise.all(backdrops.map((b) => b.ready)).then(() => undefined)
@@ -340,24 +356,9 @@ export class Stage {
       ...this.standees.maskSources(),
     ])
 
-    if (o.controls !== false) {
-      const c = new OrbitControls(this.camera, this.canvas)
-      c.enableDamping = true
-      c.dampingFactor = 0.07
-      c.screenSpacePanning = true
-      c.maxDistance = set.camera.maxDistance
-      c.maxPolarAngle = Math.PI * 0.8
-      c.rotateSpeed = 0.5
-      c.zoomSpeed = 0.8
-      c.addEventListener("start", () => {
-        this.transition = null
-        this.driving = true
-        // The player looks down at most about 40 degrees. From higher, the crowd's painted cards read as flat pegs. An
-        // authored shot that is steeper keeps its angle when the drag starts, so nothing jumps.
-        c.minPolarAngle = Math.min(STEEPEST_ORBIT, c.getPolarAngle())
-      })
-      this.controls = c
-    } else this.controls = null
+    // A painted set's camera is a tripod, with its own controls once the paintings are up (see load).
+    this.painted?.patch(this.plate)
+    if (!this.painted) this.orbit()
 
     this.resizeObserver = new ResizeObserver(() => this.resize())
     this.resizeObserver.observe(o.container)
@@ -372,10 +373,61 @@ export class Stage {
     this.applyTier()
   }
 
+  private orbit() {
+    if (this.o.controls === false) return
+    const c = new OrbitControls(this.camera, this.canvas)
+    c.enableDamping = true
+    c.dampingFactor = 0.07
+    c.screenSpacePanning = true
+    c.maxDistance = this.set.camera.maxDistance
+    c.maxPolarAngle = Math.PI * 0.8
+    c.rotateSpeed = 0.5
+    c.zoomSpeed = 0.8
+    c.addEventListener("start", () => {
+      this.transition = null
+      this.driving = true
+      // The player looks down at most about 40 degrees. From higher, the crowd's painted cards read as flat pegs. An
+      // authored shot that is steeper keeps its angle when the drag starts, so nothing jumps.
+      c.minPolarAngle = Math.min(STEEPEST_ORBIT, c.getPolarAngle())
+    })
+    this.controls = c
+  }
+
   // Waits for the character art and the crowd atlas (when cards are on), then starts the loop.
   async load() {
     this.o.onProgress?.("Loading characters")
-    await Promise.all([this.standees.load(), this.materials.ready, this.backdropReady, this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve()])
+    const paintings = this.painted
+      ? this.painted.load(this.renderer.capabilities.getMaxAnisotropy()).then(
+          () => true,
+          (error) => {
+            console.warn("[stage] paintings failed, showing the set as built", error)
+            return false
+          }
+        )
+      : Promise.resolve(false)
+    const [, , , , painted] = await Promise.all([
+      this.standees.load(),
+      this.materials.ready,
+      this.backdropReady,
+      this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve(),
+      paintings,
+    ])
+    if (this.painted && painted) {
+      const plate = new Set(this.plate)
+      this.painted.bake(this.scene, [...this.world.children.filter((c) => !plate.has(c)), this.sky])
+      // The brush filter is for the engine's own shading. A painting is finished art.
+      this.applyTier()
+      if (this.o.controls !== false)
+        this.look = new LookControls(this.canvas, {
+          start: () => {
+            if (this.cut) this.finishShot()
+            this.transition = null
+            this.settle()
+          },
+          turn: (dx, dy) => this.turnTripod(dx, dy),
+          zoom: (factor) => this.zoomTripod(factor),
+        })
+    } else if (this.painted) this.orbit()
     const first = this.staging?.shot ?? Object.keys(this.shots)[0]
     if (first) this.shot(first, { instant: true })
     this.sync()
@@ -449,8 +501,11 @@ export class Stage {
   shot(which: string | StagingShot, { instant = false, duration = 2200 } = {}) {
     let s: ResolvedShot | undefined
     const authored = typeof which === "string" ? this.staging?.shots[which] : which
+    const painted = this.painted?.on ? this.painted : null
     try {
-      s = authored && "subject" in authored ? this.clearFrame(authored, true) : typeof which === "string" ? this.shots[which] : frameShot(which, this.cast)
+      // A painted set frames the subject from a painted point, so there is no camera to swing clear of the walls.
+      if (painted && authored) s = frameShot(authored, this.cast)
+      else s = authored && "subject" in authored ? this.clearFrame(authored, true) : typeof which === "string" ? this.shots[which] : frameShot(which, this.cast)
     } catch {
       s = undefined
     }
@@ -459,6 +514,11 @@ export class Stage {
     if (this.controls) this.controls.minPolarAngle = 0
     this.activeShot = typeof which === "string" ? which : null
     this.activeFov = s.fov
+    if (painted) {
+      const subject = authored && "subject" in authored ? this.cast.find((m) => m.id === authored.subject) : undefined
+      this.standOn(tripodView(painted.points, { ...s, fov: this.lens(s.fov) }, this.camera.aspect, this.viewRect(), subject ? (p) => this.blocked(p, s.target) : undefined), instant, duration)
+      return true
+    }
     const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
     // The orbit keeps the camera within `maxDistance` of its target, so a long shot down a street would be dragged
     // toward what it looks at. Draw the target in along the same line instead: the framing is unchanged.
@@ -563,7 +623,7 @@ export class Stage {
   }
   // Resolves when the current camera move has finished.
   shotSettled() {
-    return this.transition ? new Promise<void>((r) => this.settleWaiters.push(r)) : Promise.resolve()
+    return this.transition || this.cut ? new Promise<void>((r) => this.settleWaiters.push(r)) : Promise.resolve()
   }
   private settle() {
     const w = this.settleWaiters
@@ -572,15 +632,104 @@ export class Stage {
   }
   // Jump an in-progress camera move to its end.
   finishShot() {
+    if (this.cut) {
+      clearTimeout(this.cut.timer)
+      this.cut.arrive()
+    }
     const tr = this.transition
     if (!tr) return
     this.camera.position.copy(tr.to.pos)
     this.controls?.target.copy(tr.to.target)
+    this.tripod?.aim.copy(tr.to.target)
     if (!this.controls) this.camera.lookAt(tr.to.target)
     this.camera.fov = tr.to.fov
     this.camera.updateProjectionMatrix()
     this.transition = null
     this.settle()
+  }
+
+  // ── Tripod (painted sets) ──
+  // What the canvas shows in the lens's own units: wider or taller than the lens under a docked panel (see setInsets).
+  private viewRect(): ViewRect {
+    const w = Math.max(1, this.o.container.clientWidth)
+    const h = Math.max(1, this.o.container.clientHeight)
+    const vw = Math.max(1, w - this.insets.right)
+    const vh = Math.max(1, h - this.insets.bottom)
+    return [-1, 1 - (2 * h) / vh, (2 * w) / vw - 1, 1]
+  }
+  // Whether something solid stands between a point and what a shot looks at: 20 if so, as metres of the wrong place.
+  private blocked(point: TripodPoint, target: readonly number[]) {
+    const { x, y, z } = point.position
+    const len = Math.hypot(target[0] - x, target[2] - z)
+    const n = Math.max(2, Math.ceil(len / 0.1))
+    for (let i = 0; i <= n; i++) {
+      const t = i / n
+      if (t * len > len - 0.4) break
+      if (onFootprint(this.footprints, x + (target[0] - x) * t, z + (target[2] - z) * t, y + (target[1] - y) * t)) return 20
+    }
+    return 0
+  }
+  // Take a view from a painted point. On the same point the camera turns and zooms to it. To another point it cuts,
+  // through a short fade: the way between two points was never painted.
+  private standOn(view: View, instant: boolean, duration: number) {
+    if (this.cut) {
+      clearTimeout(this.cut.timer)
+      this.cut = null
+    }
+    const arrive = () => {
+      this.cut = null
+      this.tripod = { point: view.point, aim: view.target.clone(), want: view.asked }
+      this.painted?.setPoint(view.point)
+      this.camera.position.copy(view.point.position)
+      this.camera.lookAt(view.target)
+      this.camera.fov = view.fov
+      this.camera.updateProjectionMatrix()
+      this.transition = null
+      this.standees.reset()
+      this.canvas.style.opacity = "1"
+      this.settle()
+    }
+    if (this.tripod?.point === view.point && !instant && this.motion) {
+      this.tripod.want = view.asked
+      this.transition = {
+        from: { pos: view.point.position.clone(), target: this.tripod.aim.clone(), fov: this.camera.fov },
+        to: { pos: view.point.position.clone(), target: view.target, fov: view.fov },
+        start: performance.now(),
+        duration,
+      }
+      return
+    }
+    if (instant || !this.motion || !this.tripod || this.tripod.point === view.point) return arrive()
+    this.transition = null
+    this.canvas.style.transition = "opacity 170ms ease"
+    this.canvas.style.opacity = "0"
+    this.cut = { arrive, timer: setTimeout(arrive, 190) }
+  }
+  // The player turns the camera: a drag of the canvas's height turns it by one lens. It stops at the paint's edge.
+  private turnTripod(dx: number, dy: number) {
+    const t = this.tripod
+    if (!t) return
+    const aim = t.aim.clone().sub(t.point.position)
+    const far = aim.length()
+    const k = THREE.MathUtils.degToRad(this.camera.fov) / Math.max(1, this.canvas.clientHeight)
+    const s = new THREE.Spherical().setFromVector3(aim)
+    s.theta += dx * k
+    s.phi = THREE.MathUtils.clamp(s.phi - dy * k, 0.05, Math.PI - 0.05)
+    this.lookFrom(t, aim.setFromSpherical(s), far, this.camera.fov)
+  }
+  // The wheel or a pinch: the lens the player ends with is the one a resized window keeps.
+  private zoomTripod(factor: number) {
+    const t = this.tripod
+    if (!t) return
+    const aim = t.aim.clone().sub(t.point.position)
+    this.lookFrom(t, aim, aim.length(), THREE.MathUtils.clamp(this.camera.fov * factor, minFov(t.point, aim), 110))
+    t.want = this.camera.fov
+  }
+  private lookFrom(t: { point: TripodPoint; aim: THREE.Vector3 }, aim: THREE.Vector3, far: number, fov: number) {
+    const fit = fitView(t.point, aim, fov, this.camera.aspect, this.viewRect())
+    t.aim.copy(t.point.position).addScaledVector(fit.dir, far)
+    this.camera.fov = fit.fov
+    this.camera.updateProjectionMatrix()
   }
 
   // ── Cast ──
@@ -783,7 +932,7 @@ export class Stage {
     const p = this.pipeline
     p.paint.setHeight(t.paint)
     p.paint.depthPaint = f.paint === "depth"
-    p.paint.strength = Math.min(1, f.brush)
+    p.paint.strength = this.painted?.on ? 0 : Math.min(1, f.brush)
     p.paint.brush = Math.max(0.35, f.brush)
     p.bloom.enabled = f.bloom ?? t.bloom
     const aa = f.aa ?? t.aa
@@ -814,7 +963,10 @@ export class Stage {
     this.camera.aspect = vw / vh
     if (vw !== w || vh !== h) this.camera.setViewOffset(vw, vh, 0, 0, w, h)
     else this.camera.clearViewOffset()
-    if (!this.transition && this.activeFov) this.camera.fov = this.lens(this.activeFov)
+    if (this.tripod) {
+      // The window changed shape: the same aim, as wide as the paintings now allow.
+      if (!this.transition) this.lookFrom(this.tripod, V().subVectors(this.tripod.aim, this.tripod.point.position), this.tripod.aim.distanceTo(this.tripod.point.position), this.tripod.want)
+    } else if (!this.transition && this.activeFov) this.camera.fov = this.lens(this.activeFov)
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(w, h, false)
     this.pipeline.setSize(w, h, this.renderer.getPixelRatio())
@@ -872,6 +1024,7 @@ export class Stage {
       const target = V().lerpVectors(tr.from.target, tr.to.target, e)
       if (this.controls) this.controls.target.copy(target)
       else this.camera.lookAt(target)
+      this.tripod?.aim.copy(target)
       this.camera.fov = THREE.MathUtils.lerp(tr.from.fov, tr.to.fov, e)
       this.camera.updateProjectionMatrix()
       if (t === 1) {
@@ -879,15 +1032,23 @@ export class Stage {
         this.settle()
       }
     }
-    this.controls?.update()
-    this.constrain()
-    this.collide()
+    if (this.tripod) {
+      // The camera sways about its point and keeps looking at what it was aimed at.
+      const { point, aim } = this.tripod
+      const off = this.motion ? sway(V().subVectors(aim, point.position), this.camera.fov, this.set.painted?.sway ?? 0, this.shared.time.value) : V()
+      this.camera.position.copy(point.position).add(off)
+      this.camera.lookAt(aim)
+    } else {
+      this.controls?.update()
+      this.constrain()
+      this.collide()
+    }
     this.lightRoom(dt)
     if (this.motion) this.effects.update(dt)
     this.standees.update(dt, this.camera)
     this.crowd.updateLOD(this.camera)
     // A fade takes a third of a second, or none with motion off.
-    this.crowd.occlude(this.camera, this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
+    this.crowd.occlude(this.camera, this.tripod?.aim ?? this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
     this.crowd.flush()
     this.render()
     if (++this.frame === 3) {
@@ -950,6 +1111,7 @@ export class Stage {
       ao: this.pipeline.gtao.enabled,
       bloom: this.pipeline.bloom.enabled,
       shot: this.activeShot,
+      point: this.tripod?.point.name ?? null,
       camera: this.camera.position.toArray().map((v) => +v.toFixed(2)),
       programs: this.renderer.info.programs?.length ?? 0,
       frame: this.frame,
@@ -1089,6 +1251,9 @@ export class Stage {
     this.resizeObserver.disconnect()
     this.intersection?.disconnect()
     this.controls?.dispose()
+    this.look?.dispose()
+    if (this.cut) clearTimeout(this.cut.timer)
+    this.painted?.dispose()
     for (const m of this.statics) m.geometry.dispose()
     for (const e of this.extras)
       e.traverse((o) => {

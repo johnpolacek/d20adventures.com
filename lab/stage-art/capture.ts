@@ -131,6 +131,11 @@ async function main() {
   for (const shot of shots) {
     await ev(`window.__stage.shot(${JSON.stringify(shot)}, { instant: true })`)
     await delay(1500)
+    // --do=<expression>: run in the page once the shot is up, before it is captured. For a hand on the camera.
+    if (arg("do")) {
+      await ev(arg("do") as string)
+      await delay(700)
+    }
     await writeFile(`${OUT}/${name}-${shot}.png`, await pull("window.__stage.capture()"))
     // --fps: frames drawn over two seconds of this shot.
     if (process.argv.includes("--fps")) {

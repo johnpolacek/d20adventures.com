@@ -117,6 +117,9 @@ open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=cp-cli,c
 - With motion on, cloth blows and carries its paint: the lab looks paint up from the cloth's pose in the plate. A flag that leaves its painted spot shows a copy behind it.
 - `capture.ts --dpr=1 --tier=balanced` is a lighter page, for measuring. An ultra capture at DPR 2 took this machine under 20% free memory.
 - `cards.ts` is free, on the ChatGPT subscription, about 60 seconds a card. The tool usually answers a green-screen request with a transparent background, and the cutout takes whichever came.
+- `publish.ts <setting>/<set> <point>=<painting>[,<closer painting>]` moves lab paintings into the game: WebP files under `public/stage/paintings/<set>/` and the set's `painted.points`. `@2048` after a name sets its width, 1536 otherwise.
+- The engine now paints the gate itself. `&plain=1` shows a painted set as built, for a new plate. `&project=` and `&splat=` do the same.
+- `capture.ts --do=<expression>` runs in the page once a shot is up, before its capture: `window.__stage.zoomTripod(0.5)`, `turnTripod(dx, dy)`.
 - `&crowd=1` loads the repainted crowd atlas from `/stage-lab/crowd`. `&clear=1` uses each painting's cloth-free twin, `<name>-clear.png`, behind loose cloth.
 - The balanced tier draws at DPR 1 whatever the page's DPR, so its captures are 1350x900.
 - `&cards=1` loads `/stage-lab/cards/<castId>-front.webp` and `-back.webp` as page blobs, since a staging takes only `/stage/` paths.

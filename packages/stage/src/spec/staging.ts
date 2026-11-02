@@ -102,6 +102,9 @@ export const stagingSpecSchema = z
       )
       .default({}),
     shot: idName.optional(),
+    // On a painted set, false shows the set as built, with its own crowd art: for a staging whose views the set's
+    // paintings do not reach yet (`pnpm stage:check` lists them).
+    painted: z.boolean().default(true),
     // Entrances the narration cues: while a turn's narration contains `when`, the cast member is offstage until the
     // paragraph that says it, then walks on from `from` (a mark or point) to their place, seen from `shot` (a set or
     // staging shot) when given. Narration without the phrase, such as a later round's, finds them already in place.
