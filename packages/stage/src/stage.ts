@@ -110,7 +110,7 @@ export class Stage {
   // A painted set's paintings, and the tripod the camera stands on: the point, what it looks at, and a cut to another
   // point in progress. `tripod` is null until the paintings are up, and for good if they fail.
   readonly painted: Painted | null = null
-  private tripod: { point: TripodPoint; aim: THREE.Vector3; want: number } | null = null
+  private tripod: { point: TripodPoint; aim: THREE.Vector3; want: { target: THREE.Vector3; fov: number } } | null = null
   private look: LookControls | null = null
   private cut: { arrive: () => void; timer: ReturnType<typeof setTimeout> } | null = null
   // What the paintings were made of: the built set alone.
@@ -678,19 +678,21 @@ export class Stage {
     }
     const arrive = () => {
       this.cut = null
-      this.tripod = { point: view.point, aim: view.target.clone(), want: view.asked }
+      this.tripod = { point: view.point, aim: view.target.clone(), want: { target: view.wanted.clone(), fov: view.asked } }
       this.painted?.setPoint(view.point)
       this.camera.position.copy(view.point.position)
       this.camera.lookAt(view.target)
       this.camera.fov = view.fov
       this.camera.updateProjectionMatrix()
       this.transition = null
+      // The window may have changed shape since the view was worked out.
+      this.refit()
       this.standees.reset()
       this.canvas.style.opacity = "1"
       this.settle()
     }
     if (this.tripod?.point === view.point && !instant && this.motion) {
-      this.tripod.want = view.asked
+      this.tripod.want = { target: view.wanted.clone(), fov: view.asked }
       this.transition = {
         from: { pos: view.point.position.clone(), target: this.tripod.aim.clone(), fov: this.camera.fov },
         to: { pos: view.point.position.clone(), target: view.target, fov: view.fov },
@@ -716,6 +718,7 @@ export class Stage {
     s.theta += dx * k
     s.phi = THREE.MathUtils.clamp(s.phi - dy * k, 0.05, Math.PI - 0.05)
     this.lookFrom(t, aim.setFromSpherical(s), far, this.camera.fov)
+    t.want.target.copy(t.aim)
   }
   // The wheel or a pinch: the lens the player ends with is the one a resized window keeps.
   private zoomTripod(factor: number) {
@@ -723,7 +726,20 @@ export class Stage {
     if (!t) return
     const aim = t.aim.clone().sub(t.point.position)
     this.lookFrom(t, aim, aim.length(), THREE.MathUtils.clamp(this.camera.fov * factor, minFov(t.point, aim), 110))
-    t.want = this.camera.fov
+    t.want = { target: t.aim.clone(), fov: this.camera.fov }
+  }
+  // The view the camera was asked for, fitted to the paintings again: the window or a docked panel changed its shape.
+  // A move in progress ends at the new fit.
+  private refit() {
+    const t = this.tripod
+    if (!t) return
+    const p = t.point.position
+    const aim = V().subVectors(t.want.target, p)
+    const tr = this.transition
+    if (!tr) return this.lookFrom(t, aim, aim.length(), t.want.fov)
+    const fit = fitView(t.point, aim, t.want.fov, this.camera.aspect, this.viewRect())
+    tr.to.target.copy(p).addScaledVector(fit.dir, aim.length())
+    tr.to.fov = fit.fov
   }
   private lookFrom(t: { point: TripodPoint; aim: THREE.Vector3 }, aim: THREE.Vector3, far: number, fov: number) {
     const fit = fitView(t.point, aim, fov, this.camera.aspect, this.viewRect())
@@ -963,10 +979,8 @@ export class Stage {
     this.camera.aspect = vw / vh
     if (vw !== w || vh !== h) this.camera.setViewOffset(vw, vh, 0, 0, w, h)
     else this.camera.clearViewOffset()
-    if (this.tripod) {
-      // The window changed shape: the same aim, as wide as the paintings now allow.
-      if (!this.transition) this.lookFrom(this.tripod, V().subVectors(this.tripod.aim, this.tripod.point.position), this.tripod.aim.distanceTo(this.tripod.point.position), this.tripod.want)
-    } else if (!this.transition && this.activeFov) this.camera.fov = this.lens(this.activeFov)
+    if (this.tripod) this.refit()
+    else if (!this.transition && this.activeFov) this.camera.fov = this.lens(this.activeFov)
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(w, h, false)
     this.pipeline.setSize(w, h, this.renderer.getPixelRatio())

@@ -95,6 +95,7 @@ Limits:
 - A view cannot straddle two paintings.
 - A window wider than a painting crops it top and bottom: the gate's 72 degree view shows 62 degrees at 16:9.
 - The hero view of the play screen is checked at one shape, 16:10.
+- A docked panel counts as canvas: the whole canvas stays on the paint, so a tall panel narrows the lens over what is left.
 - Not yet checked in the packaged desktop app.
 
 ## Verification

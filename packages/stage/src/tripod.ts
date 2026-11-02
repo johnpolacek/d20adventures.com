@@ -29,8 +29,10 @@ export interface View {
   point: TripodPoint
   target: THREE.Vector3
   fov: number
-  // The lens the shot wanted from this point, before the paintings narrowed it.
+  // The lens the shot wanted from this point and what it wanted to look at, before the paintings narrowed and turned
+  // it. A window that changes shape fits them again.
   asked: number
+  wanted: THREE.Vector3
 }
 
 const UP = new THREE.Vector3(0, 1, 0)
@@ -172,7 +174,7 @@ export function tripodView(
     // Metres from where the camera was meant to stand, plus what the paintings could not give: a subject pushed toward
     // the edge of the frame or out of it, and a lens narrower than asked.
     const score = point.position.distanceTo(from) + fit.turned * 30 + fit.narrowed * 12 + (fit.cost >= 10 ? 60 : 0) + (penalty?.(point) ?? 0)
-    if (!best || score < best.score) best = { view: { point, target: point.position.clone().addScaledVector(fit.dir, far), fov: fit.fov, asked: fov }, score }
+    if (!best || score < best.score) best = { view: { point, target: point.position.clone().addScaledVector(fit.dir, far), fov: fit.fov, asked: fov, wanted: target }, score }
   }
   return best!.view
 }

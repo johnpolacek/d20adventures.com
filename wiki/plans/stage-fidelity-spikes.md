@@ -177,6 +177,12 @@ Views still off the paint (`pnpm stage:check`), each needing a painting:
 - `the-gates-ahead`: its party view and hero views. One painting looking at the road from near the gate camera, and one looking back down the road.
 - Milos's hero view at the front of the line sits a third of the way off centre.
 
+- The gate arch and the street beyond it. Nothing is painted past the barrier, and the demo's line walks the party through.
+
 Every view of the gate staging and of the desktop app's in-line scene is now on the paint.
+
+Play screen, checked on `/dev/turn` (the public demo's page) in a browser, 1440 by 900: title, intro, Oskar's line, Garlan's close view and a hero's turn. 60 fps, no failing programs. A docked panel changes the canvas the camera must keep on the paint, so the view is fitted again whenever the window or a panel changes shape. With the reply card up, 554 of 900 px are under it and the lens over the rest narrows to 16 degrees, a close view of whoever acts.
+
+Not from this work: 29 of 90 desktop runtime tests fail with "That hero is not in your roster", in `apps/desktop/runtime/heroes.ts`, which reads no stage file.
 
 Also to do: the play screen in the desktop app, created heroes (their stock and AI-painted cards are still paintings), portraits cut from the new cards, the other 39 sets, and the awning at the checkpoint, where the zoom painting's edge shows as a lighter patch.
