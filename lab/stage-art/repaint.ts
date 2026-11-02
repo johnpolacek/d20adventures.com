@@ -97,8 +97,14 @@ async function main() {
   const png = cli ? await codexPaint(`repaint ${plate} ${style}`, prompt, images) : await gptEdit(`repaint ${plate} ${style}`, "gpt-image-2", prompt, images, size)
   const name = flags.find((f) => f.startsWith("--as="))?.slice(5) ?? `${plate}-${style}${cli ? "-cli" : ""}`
   const out = `${PUB}/${name}`
-  // Exactly the plate's size: the projector maps the painting's corners to the camera's frustum.
-  await sharp(png).resize(width, height, { fit: "fill" }).png().toFile(`${out}.png`)
+  // Exactly the plate's shape: the projector maps the painting's corners to the camera's frustum. A plate smaller than
+  // the painting, such as a balanced-tier capture, does not shrink it.
+  const m0 = await sharp(png).metadata()
+  const w = Math.max(width, m0.width ?? 0)
+  await sharp(png)
+    .resize(w, Math.round((w * height) / width), { fit: "fill" })
+    .png()
+    .toFile(`${out}.png`)
   await copyFile(`${RAW}/captures/${plate}.json`, `${out}.json`)
   await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${name}.jpg`)
   const m = await sharp(png).metadata()

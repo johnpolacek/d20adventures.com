@@ -165,7 +165,7 @@ Owner: build it into the real engine, gate first. Reference: [stage engine, "Pai
 
 Done:
 
-- `painted` on a set: points, each with up to three paintings. The gate set has four points from the spike's paintings: `gate` (with its cloth-free twin), `checkpoint` (wide, zoom and close), `party` and `table`.
+- `painted` on a set: points, each with up to three paintings. The gate set has six points: `gate` (with its cloth-free twin), `checkpoint` (wide, zoom and close), `party` (toward the table, and back up the line), `table`, `queue` and `ramparts`. The last three paintings were made for the build, free, in one parallel run of about two minutes.
 - The engine projects a point's paintings, draws their sky, turns the brush filter off and keeps only figures' shadows.
 - Tripod camera: every shot is taken from the point that suits it. Drag to look, wheel to zoom, a short fade between points, sway and wind with motion on.
 - The gate's six cast cards and the Realm of Myr crowd as photographs: `fixtures/welcome-to-kordavos/photoreal/` and the `realm-of-myr-photoreal` crowd library.
@@ -174,9 +174,9 @@ Done:
 
 Views still off the paint (`pnpm stage:check`), each needing a painting:
 
-- `queue` and `ramparts`. Both now show a long lens on the gate from the gate point.
-- The in-line scene of the desktop app (the party two groups back): its party view and hero views look back up the line from near the `party` point, which is painted the other way.
-- Milos and Oskar's hero views at the front of the line.
-- `the-gates-ahead`: its party view and hero views.
+- `the-gates-ahead`: its party view and hero views. One painting looking at the road from near the gate camera, and one looking back down the road.
+- Milos's hero view at the front of the line sits a third of the way off centre.
+
+Every view of the gate staging and of the desktop app's in-line scene is now on the paint.
 
 Also to do: the play screen in the desktop app, created heroes (their stock and AI-painted cards are still paintings), portraits cut from the new cards, the other 39 sets, and the awning at the checkpoint, where the zoom painting's edge shows as a lighter patch.

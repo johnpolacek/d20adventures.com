@@ -1872,6 +1872,12 @@
         "paintings": [
           {
             "map": "/stage/paintings/kordavos-south-gate/party.webp",
+            "quaternion": [0.011877, 0.986055, 0.080752, -0.145028],
+            "fov": 64,
+            "aspect": 1.5
+          },
+          {
+            "map": "/stage/paintings/kordavos-south-gate/party-2.webp",
             "quaternion": [0.049158, 0.885871, 0.096536, -0.451107],
             "fov": 46,
             "aspect": 1.5
@@ -1885,6 +1891,30 @@
             "map": "/stage/paintings/kordavos-south-gate/table.webp",
             "quaternion": [0.018583, 0.952335, 0.059253, -0.298667],
             "fov": 46,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "queue": {
+        "position": [-4, 14, 50],
+        "label": "The line",
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/queue.webp",
+            "quaternion": [-0.22027, -0.069139, -0.015654, 0.97286],
+            "fov": 58,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "ramparts": {
+        "position": [-54, 70, 22],
+        "label": "Ramparts",
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/ramparts.webp",
+            "quaternion": [-0.248274, -0.737952, -0.353251, 0.518652],
+            "fov": 62,
             "aspect": 1.5
           }
         ]
