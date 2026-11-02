@@ -13,7 +13,7 @@ Updated 2026-11-10. Plans are optional and deleted when done. Git keeps the old 
 | [Adventure store](feature-adventure-store.md) | Alpha release: website, Convex, store secret. Checkout at beta. |
 | [Desktop local play](desktop-local-play.md) | Save management, provider coverage, distribution. |
 | [Created heroes](created-heroes.md) | Guest creation in the running app, owner review of the hooks, a live gate round. |
-| [Stage fidelity spikes](stage-fidelity-spikes.md) | Painted, photoreal chosen. One 3D character made. Owner decisions on cameras and on 3D characters. |
+| [Stage fidelity spikes](stage-fidelity-spikes.md) | Painted, photoreal sets, tripod cameras and photoreal cards chosen. The gate's cast repainted. Next: build both into the engine. |
 | [Kordavos city map](kordavos-city-map.md) | Owner review. Roofs get chunky at full zoom. |
 | [Maintenance](maintenance.md) | Test harness, authoring edge cases, audits, cleanup. |
 

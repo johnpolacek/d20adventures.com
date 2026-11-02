@@ -12,6 +12,7 @@
 //   &paint=0                         no brush filter over the frame
 //   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
 //   &figure=<castId>:<file>[:yaw]    /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee
+//   &cards=1                        /stage-lab/cards/<castId>-front.webp and -back.webp in place of each standee's art
 //   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
 
@@ -41,7 +42,20 @@ export function LabViewer({ params }: { params: Params }) {
     ;(async () => {
       const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
       const stagingKey = params.staging ?? "the-midnight-summons/meeting-at-the-stones"
-      const staging = (await STAGINGS[stagingKey]()) as { set: string }
+      const staging = structuredClone(await STAGINGS[stagingKey]()) as { set: string; cast?: { id: string; art?: { front: string; back?: string } }[] }
+      // &cards=1: each cast member's repainted card, where one has been made. The spec takes page blobs, not /stage-lab paths.
+      if (params.cards) {
+        const blob = async (url: string) => {
+          const res = await fetch(url)
+          return res.ok ? URL.createObjectURL(await res.blob()) : null
+        }
+        await Promise.all(
+          (staging.cast ?? []).map(async (c) => {
+            const [front, back] = await Promise.all([blob(`/stage-lab/cards/${c.id}-front.webp`), blob(`/stage-lab/cards/${c.id}-back.webp`)])
+            if (c.art && front) c.art = { ...c.art, front, back: back ?? undefined }
+          })
+        )
+      }
       const set = structuredClone(await SETS[staging.set]()) as { objects: { type: string }[]; backdrops?: unknown[] }
       // The engine now draws the set's own backdrop: the spike's replaces it.
       if (params.backdrop) {

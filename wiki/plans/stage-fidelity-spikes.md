@@ -2,7 +2,7 @@
 
 [Home](../index.md) · [Plans](index.md) · [Stage engine](../stage-engine.md) · [Stage art spikes](stage-art-spikes.md)
 
-Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Character spike run the same day: one 3D Garlan stands at the gate. Open: an owner decision on how the camera behaves over paintings, and on going ahead with 3D characters.
+Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Character spike run the same day: one 3D Garlan stands at the gate. The owner then chose tripod cameras, and cards repainted photoreal over 3D characters. The gate's six cast cards were repainted the same day. Next: build both into the engine.
 
 ## Why
 
@@ -70,14 +70,16 @@ Owner: paint through the local CLI on the ChatGPT subscription, not the metered 
 - A plate leaves out flames and smoke, so they stay live over the painting.
 - Not measured: how many pictures the ChatGPT plan allows in a day.
 
-## Open decision: the camera
+## Decision: tripod cameras
 
-Two ways to use paintings, for the owner to choose between:
+Owner decision, 2026-11-10: tripod cameras. The two ways to use paintings were:
 
 - Free cameras. Character shots stay as they are, and each play area gets enough paintings to cover them: 5 to 8 by this round's evidence, with patchy edges left over. About 410 paintings for 41 sets.
 - Tripod cameras. The camera stands only where a painting was made, and frames characters by turning and zooming. Every frame is exact, and the 204 fixed shots already are those points.
 
 Close zooms from a tripod, tested 2026-11-10: zooming 2× into the CLI's 1536 px checkpoint painting goes soft on the ground and the barrier. A second painting from the same point with a 24 degree lens, made by `repaint.ts --sharpen` from a plate of the first one enlarged, fixes it: sharper at native pixels than the API's 2880 px painting, 82% of edges within 2 px, 55 seconds, and no join shows in the wide view. So a tripod point wants its wide painting plus a sharpen pass for each close framing, or about four to tile the whole frame.
+
+A close-up from a tripod, tested after the decision: the checkpoint camera turned onto Garlan with a 12 degree lens, a 4× zoom, with a third painting sharpened from the 24 degree one. 81% of edges within 2 px, and the stone, timber and iron behind him are crisp at native pixels. The staging's own close shot, a free camera, shows mostly bare set over the same paintings.
 
 ## Character spike, 2026-11-10
 
@@ -99,3 +101,22 @@ Garlan Ironfist, from his standee to a rigged 3D figure at the gate. Commands: [
 Not done: a second generator for comparison, the back view as input, Blender (not installed), a calmer idle, a talk or attack clip, a monster, a second character to check the crowd of cards against.
 
 Prices, 2026-11-10: Meshy 7.1 on fal is $1.20 for a textured model, $0.20 for a rig and $0.12 an animation call. About 120 named characters would be about $180.
+
+## Decision: photoreal cards
+
+Owner decision, 2026-11-10: the cast stay standees, repainted photoreal, and not 3D figures.
+
+`cards.ts paint`: the Codex CLI, on the owner's ChatGPT subscription, redraws a card as a photograph of the same person in the same pose. The front comes from the painted front. The back comes from the painted back, with the new front as its likeness. About 60 seconds a card, three at a time, no charge. `&cards=1` shows them in the lab.
+
+| Question | Result |
+|---|---|
+| Likeness? | Held on all six of the gate's cast: face, hair, build, pose, outfit, emblems and what each hand holds. Much closer than the 3D Garlan. |
+| Front and back agree? | Yes, on all six. |
+| Cutout? | The tool was asked for a green screen and returned a real transparent background on 10 of 12, and green on two. `cards.ts` takes whichever came, and asks again if neither did. Edges are clean. |
+| Size? | 1024×1536, so a figure about 1,500 px tall against 2,048 for the painted cards. |
+| Beside the painted set? | They sit in it as the painted cards did not, from the gate's wide shot to the tripod close-up. Garlan's face and armour hold at a 4× zoom. |
+| What still shows? | The crowd is still painted, and reads flatter beside them: the guard at Garlan's shoulder most of all. One card's shadow falls as a flat shape across another's face. |
+
+Counts: 134 named cards in `public/stage`, each a front and a back, so 268 pictures, about 1.5 hours at three at a time. The crowd is 16 people, front and back.
+
+Not done: the crowd, portraits cut from the new fronts, a sharper head-and-shoulders card for close-ups, seated figures and creatures, the daily picture limit of the ChatGPT plan.

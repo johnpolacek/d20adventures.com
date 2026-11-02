@@ -140,7 +140,7 @@ export const smooth = (a: number, b: number, x: number) => {
 // A picture from the owner's ChatGPT subscription, through the Codex CLI's own image tool, instead of a metered API key.
 // The command is the desktop app's locked-down one (every other tool off), with `images` attached for it to work from.
 // The tool picks its own size, about 1536 px on the long side.
-export async function codexPaint(label: string, text: string, images: Buffer[]) {
+export async function codexPaint(label: string, text: string, images: Buffer[], shape = "landscape 3:2") {
   const { imageCommand, imageOutput } = (await import("../../apps/desktop-spike/harness/image-cli.mjs")) as {
     imageCommand: (provider: string, cwd: string, instructions: string) => { executable: string; args: string[]; env: Record<string, string>; input: string }
     imageOutput: (provider: string, events: unknown[]) => string
@@ -155,7 +155,7 @@ export async function codexPaint(label: string, text: string, images: Buffer[]) 
       return join(cwd, `image-${i + 1}.jpg`)
     })
   )
-  const prompt = `Use only your built-in image generation tool exactly once to generate one landscape 3:2 image at the largest size it offers, working from the attached image${files.length > 1 ? "s" : ""}. Do not use any other tools or write files yourself. Then stop.\n\n${text}`
+  const prompt = `Use only your built-in image generation tool exactly once to generate one ${shape} image at the largest size it offers, working from the attached image${files.length > 1 ? "s" : ""}. Do not use any other tools or write files yourself. Then stop.\n\n${text}`
   const command = imageCommand("codex", cwd, prompt)
   // Attachments go straight after `exec`, ahead of its other flags, so the list of files ends there.
   const at = command.args.indexOf("exec") + 1
