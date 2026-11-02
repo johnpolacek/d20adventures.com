@@ -13,7 +13,7 @@
 
 import { copyFile, mkdir } from "node:fs/promises"
 import sharp from "sharp"
-import { DESKTOP, dirs, gptEdit, jpeg, PUB, RAW } from "./gen"
+import { codexPaint, DESKTOP, dirs, edgeDrift, gptEdit, jpeg, PUB, RAW } from "./gen"
 
 const ART = "public/stage/art/welcome-to-kordavos/the-gates-of-kordavos.webp"
 
@@ -30,13 +30,25 @@ Take from the second image its palette of deep teal shadow and molten gold light
   },
   photoreal: {
     art: false,
-    prompt: `The image is a rough render from a 3D game: the great south gate of a medieval city on a festival morning, seen from the market road. Turn it into a photorealistic film still, as if shot on location for a big-budget fantasy film.
+    prompt: `The image is a rough render from a 3D game: PLACE. Turn it into a photorealistic film still, as if shot on location for a big-budget fantasy film.
 
 ${KEEP}
 
-Real materials at full detail: weathered sandstone and brick with mortar lines, chips, stains and moss, carved stone trim, heavy woven wool banners with embroidered gold, sun-bleached canvas awnings with stitching and sag, rough timber poles, iron fittings, a worn cobbled road with dust and straw. Natural low morning sunlight from the left, soft bounced light in the shadows, light haze in the air, real sky with clouds. Shot on a 24 mm lens, deep focus, fine film grain. A photograph, not a painting, not a 3D render.`,
+DETAIL Shot on a 24 mm lens, deep focus, fine film grain. A photograph, not a painting, not a 3D render.`,
   },
 } as const
+
+// For a second view of a place: the plate already shows an earlier painting projected onto what that painting covered.
+const FILL = `Parts of this image are already finished at full detail, from an earlier pass. Leave those parts exactly as they are: same stone, same colours, same light. Finish every part that still looks like a flat, rough 3D render so it matches the finished parts in material, colour, wear and lighting, as one continuous place. Where a finished surface is smeared or stretched, redraw it cleanly in the same material.`
+
+// What the photoreal prompt says of the place and of its materials and light, unless --place= and --detail= say otherwise.
+const GATE = {
+  place: "the great south gate of a medieval city on a festival morning, seen from the market road",
+  detail:
+    "Real materials at full detail: weathered sandstone and brick with mortar lines, chips, stains and moss, carved stone trim, heavy woven wool banners with embroidered gold, sun-bleached canvas awnings with stitching and sag, rough timber poles, iron fittings, a worn cobbled road with dust and straw. Natural low morning sunlight from the left, soft bounced light in the shadows, light haze in the air, real sky with clouds.",
+}
+const worded = (prompt: string, flags: string[]) =>
+  prompt.replace("PLACE", flags.find((f) => f.startsWith("--place="))?.slice(8) ?? GATE.place).replace("DETAIL", flags.find((f) => f.startsWith("--detail="))?.slice(9) ?? GATE.detail)
 
 const PANO = `This picture is a full 360 degree equirectangular panorama, twice as wide as it is tall. Keep that projection exactly: the horizon stays a level line at mid height, straight lines stay curved the way they are, and the left edge must join the right edge without a seam. The rope-and-post barriers on the road stay where they are.`
 
@@ -44,7 +56,7 @@ async function pano(name: string, style: keyof typeof STYLES) {
   const s = STYLES[style]
   const src = `${RAW}/captures/${name}-rgb.png`
   const images = [await jpeg(src, 3840), ...(s.art ? [await jpeg(ART, 1600)] : [])]
-  const png = await gptEdit(`repaint pano ${name} ${style}`, "gpt-image-2", `${s.prompt}\n\n${PANO}`, images, "3840x1920")
+  const png = await gptEdit(`repaint pano ${name} ${style}`, "gpt-image-2", `${worded(s.prompt, [])}\n\n${PANO}`, images, "3840x1920")
   await sharp(png).jpeg({ quality: 94 }).toFile(`${RAW}/${name}-${style}-pano-in.jpg`)
   await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${name}-${style}-pano-gpt.jpg`)
   const m = await sharp(png).metadata()
@@ -54,20 +66,34 @@ async function pano(name: string, style: keyof typeof STYLES) {
 async function main() {
   const argv = process.argv.slice(2)
   await mkdir(DESKTOP, { recursive: true })
+  // drift <plate> <painting in public/stage-lab, no extension>...: how well each painting kept the plate's edges.
+  if (argv[0] === "drift" && argv[1]) {
+    for (const name of argv.slice(2)) {
+      const d = await edgeDrift(`${RAW}/captures/${argv[1]}.png`, `${PUB}/${name}.png`, `${RAW}/${name}-edges.jpg`)
+      console.log(`${name}: within 2 px ${d.within2}%, within 8 px ${d.within8}%`)
+    }
+    return
+  }
   if (argv[0] === "pano" && argv[1] && (argv[2] ?? "painterly") in STYLES) return pano(argv[1], (argv[2] ?? "painterly") as keyof typeof STYLES)
-  const [plate, style = "painterly", size = "2880x1920"] = argv
-  if (!plate || !(style in STYLES)) return console.log("usage: repaint.ts <plate> painterly|photoreal [size]")
+  // --cli paints through the Codex CLI on the owner's ChatGPT subscription, not the metered API. --as=<name> names the
+  // result. --fill tells the painter that parts of the plate are already finished and must stay as they are.
+  const flags = argv.filter((a) => a.startsWith("--"))
+  const [plate, style = "painterly", size = "2880x1920"] = argv.filter((a) => !a.startsWith("--"))
+  if (!plate || !(style in STYLES)) return console.log("usage: repaint.ts <plate> painterly|photoreal [size] [--cli] [--fill] [--as=name]")
   const s = STYLES[style as keyof typeof STYLES]
+  const cli = flags.includes("--cli")
+  const prompt = flags.includes("--fill") ? `${worded(s.prompt, flags)}\n\n${FILL}` : worded(s.prompt, flags)
   await dirs()
   const src = `${RAW}/captures/${plate}.png`
   const { width = 0, height = 0 } = await sharp(src).metadata()
-  const images = [await jpeg(src, 2880), ...(s.art ? [await jpeg(ART, 1600)] : [])]
-  const png = await gptEdit(`repaint ${plate} ${style}`, "gpt-image-2", s.prompt, images, size)
-  const out = `${PUB}/${plate}-${style}`
+  const images = [await jpeg(src, cli ? 2048 : 2880), ...(s.art ? [await jpeg(ART, 1600)] : [])]
+  const png = cli ? await codexPaint(`repaint ${plate} ${style}`, prompt, images) : await gptEdit(`repaint ${plate} ${style}`, "gpt-image-2", prompt, images, size)
+  const name = flags.find((f) => f.startsWith("--as="))?.slice(5) ?? `${plate}-${style}${cli ? "-cli" : ""}`
+  const out = `${PUB}/${name}`
   // Exactly the plate's size: the projector maps the painting's corners to the camera's frustum.
   await sharp(png).resize(width, height, { fit: "fill" }).png().toFile(`${out}.png`)
   await copyFile(`${RAW}/captures/${plate}.json`, `${out}.json`)
-  await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${plate}-${style}.jpg`)
+  await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${name}.jpg`)
   const m = await sharp(png).metadata()
   console.log(`${out}.png from ${m.width}x${m.height}`)
 }

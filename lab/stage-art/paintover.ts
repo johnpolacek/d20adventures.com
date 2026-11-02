@@ -9,7 +9,7 @@
 
 import { copyFile } from "node:fs/promises"
 import sharp from "sharp"
-import { ART, dirs, gemini, gptEdit, jpeg, PUB, RAW } from "./gen"
+import { ART, dirs, edgeDrift, gemini, gptEdit, jpeg, PUB, RAW } from "./gen"
 
 const PROMPT = `The first image is a render from a 3D game. Repaint it as a finished painting in the style of the second image.
 
@@ -34,50 +34,12 @@ async function paint(which: keyof typeof MODELS, plate: string) {
   console.log(`${out}.png from ${m.width}x${m.height} (${MODELS[which]})`)
 }
 
-// Sobel edges, the strongest tenth of a picture's gradients, as a mask.
-async function edges(src: string, width: number, height: number) {
-  const g = await sharp(src).resize(width, height, { fit: "fill" }).greyscale().blur(1).raw().toBuffer()
-  const mag = new Float32Array(width * height)
-  for (let y = 1; y < height - 1; y++)
-    for (let x = 1; x < width - 1; x++) {
-      const at = (dx: number, dy: number) => g[(y + dy) * width + x + dx]
-      const gx = at(1, -1) + 2 * at(1, 0) + at(1, 1) - at(-1, -1) - 2 * at(-1, 0) - at(-1, 1)
-      const gy = at(-1, 1) + 2 * at(0, 1) + at(1, 1) - at(-1, -1) - 2 * at(0, -1) - at(1, -1)
-      mag[y * width + x] = Math.hypot(gx, gy)
-    }
-  const cut = [...mag].sort((a, b) => a - b)[Math.floor(mag.length * 0.9)]
-  return mag.map((m) => (m > cut ? 1 : 0))
-}
-
 // The render's edges in red over the painting, and how many of them have a painted edge within a few pixels.
 async function overlay(which: keyof typeof MODELS, plate: string) {
   const src = `${RAW}/captures/${plate}.png`
-  const { width = 0, height = 0 } = await sharp(src).metadata()
   const painted = `${PUB}/stones-paint-${which}.png`
-  const [re, pe] = await Promise.all([edges(src, width, height), edges(painted, width, height)])
-  const near = (r: number) => {
-    let hit = 0
-    let total = 0
-    for (let y = r; y < height - r; y++)
-      for (let x = r; x < width - r; x++) {
-        if (!re[y * width + x]) continue
-        total++
-        search: for (let dy = -r; dy <= r; dy++)
-          for (let dx = -r; dx <= r; dx++)
-            if (pe[(y + dy) * width + x + dx]) {
-              hit++
-              break search
-            }
-      }
-    return Math.round((100 * hit) / total)
-  }
-  const rgba = Buffer.alloc(width * height * 4)
-  for (let p = 0; p < width * height; p++) if (re[p]) rgba.set([255, 40, 40, 255], p * 4)
-  await sharp(await sharp(painted).modulate({ brightness: 0.75 }).toBuffer())
-    .composite([{ input: rgba, raw: { width, height, channels: 4 } }])
-    .jpeg({ quality: 85 })
-    .toFile(`${RAW}/stones-paint-${which}-edges.jpg`)
-  console.log(`${which}: render edges with a painted edge within 2 px ${near(2)}%, within 8 px ${near(8)}% (${RAW}/stones-paint-${which}-edges.jpg)`)
+  const d = await edgeDrift(src, painted, `${RAW}/stones-paint-${which}-edges.jpg`)
+  console.log(`${which}: render edges with a painted edge within 2 px ${d.within2}%, within 8 px ${d.within8}% (${RAW}/stones-paint-${which}-edges.jpg)`)
 }
 
 async function main() {

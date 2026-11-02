@@ -1,8 +1,9 @@
 // Calls shared by the stage art spikes: Gemini and GPT image models, and fal-hosted video. Keys come from the env and are
 // never printed. Raw outputs go to lab/stage-art/raw (ignored by git); what the lab viewer loads goes to public/stage-lab.
 
-import { appendFile, mkdir, readFile } from "node:fs/promises"
-import { homedir } from "node:os"
+import { appendFile, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
+import { homedir, tmpdir } from "node:os"
+import { join } from "node:path"
 import sharp from "sharp"
 
 export const RAW = "lab/stage-art/raw"
@@ -134,4 +135,91 @@ export const dataUri = (b: Buffer, mime = "image/png") => `data:${mime};base64,$
 export const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
   return t * t * (3 - 2 * t)
+}
+
+// A picture from the owner's ChatGPT subscription, through the Codex CLI's own image tool, instead of a metered API key.
+// The command is the desktop app's locked-down one (every other tool off), with `images` attached for it to work from.
+// The tool picks its own size, about 1536 px on the long side.
+export async function codexPaint(label: string, text: string, images: Buffer[]) {
+  const { imageCommand, imageOutput } = (await import("../../apps/desktop-spike/harness/image-cli.mjs")) as {
+    imageCommand: (provider: string, cwd: string, instructions: string) => { executable: string; args: string[]; env: Record<string, string>; input: string }
+    imageOutput: (provider: string, events: unknown[]) => string
+  }
+  const { runBounded } = (await import("../../apps/desktop-spike/harness/cli.mjs")) as {
+    runBounded: (binary: string, args: string[], options: Record<string, unknown>) => Promise<{ code: number | null; stdout: string; timedOut: boolean; oversized: boolean }>
+  }
+  const cwd = await mkdtemp(join(tmpdir(), "stage-art-"))
+  const files = await Promise.all(
+    images.map(async (b, i) => {
+      await writeFile(join(cwd, `image-${i + 1}.jpg`), b)
+      return join(cwd, `image-${i + 1}.jpg`)
+    })
+  )
+  const prompt = `Use only your built-in image generation tool exactly once to generate one landscape 3:2 image at the largest size it offers, working from the attached image${files.length > 1 ? "s" : ""}. Do not use any other tools or write files yourself. Then stop.\n\n${text}`
+  const command = imageCommand("codex", cwd, prompt)
+  // Attachments go straight after `exec`, ahead of its other flags, so the list of files ends there.
+  const at = command.args.indexOf("exec") + 1
+  const args = [...command.args.slice(0, at), ...files.flatMap((f) => ["--image", f]), ...command.args.slice(at)]
+  const started = Date.now()
+  const result = await runBounded(command.executable, args, { cwd, env: command.env, input: command.input, timeout: 600_000, limit: 16_777_216 })
+  if (result.code !== 0 || result.timedOut || result.oversized) throw new Error(`${label}: codex exited ${result.code}${result.timedOut ? ", timed out" : ""}: ${result.stdout.slice(-600)}`)
+  const events = result.stdout.split("\n").flatMap((line) => {
+    try {
+      return [JSON.parse(line) as unknown]
+    } catch {
+      return []
+    }
+  })
+  const png = await readFile(imageOutput("codex", events))
+  await log(`${label} codex image tool ${((Date.now() - started) / 1000).toFixed(0)} s`)
+  return png
+}
+
+// Sobel edges, the strongest tenth of a picture's gradients, as a mask.
+async function edges(src: string, width: number, height: number) {
+  const g = await sharp(src).resize(width, height, { fit: "fill" }).greyscale().blur(1).raw().toBuffer()
+  const mag = new Float32Array(width * height)
+  for (let y = 1; y < height - 1; y++)
+    for (let x = 1; x < width - 1; x++) {
+      const at = (dx: number, dy: number) => g[(y + dy) * width + x + dx]
+      const gx = at(1, -1) + 2 * at(1, 0) + at(1, 1) - at(-1, -1) - 2 * at(-1, 0) - at(-1, 1)
+      const gy = at(-1, 1) + 2 * at(0, 1) + at(1, 1) - at(-1, -1) - 2 * at(0, -1) - at(1, -1)
+      mag[y * width + x] = Math.hypot(gx, gy)
+    }
+  const cut = [...mag].sort((a, b) => a - b)[Math.floor(mag.length * 0.9)]
+  return mag.map((m) => (m > cut ? 1 : 0))
+}
+
+// How far a painting drifted from the render it repainted: the share of the render's edges with a painted edge within
+// 2 and 8 px, measured at 1350 px wide so scores compare across sizes. Chance is about 42% and 75%. With `overlay`, also
+// writes the render's edges in red over the painting.
+export async function edgeDrift(src: string, painted: string, overlay?: string) {
+  const width = 1350
+  const height = Math.round((width * ((await sharp(src).metadata()).height ?? 0)) / ((await sharp(src).metadata()).width ?? 1))
+  const [re, pe] = await Promise.all([edges(src, width, height), edges(painted, width, height)])
+  const near = (r: number) => {
+    let hit = 0
+    let total = 0
+    for (let y = r; y < height - r; y++)
+      for (let x = r; x < width - r; x++) {
+        if (!re[y * width + x]) continue
+        total++
+        search: for (let dy = -r; dy <= r; dy++)
+          for (let dx = -r; dx <= r; dx++)
+            if (pe[(y + dy) * width + x + dx]) {
+              hit++
+              break search
+            }
+      }
+    return Math.round((100 * hit) / total)
+  }
+  if (overlay) {
+    const rgba = Buffer.alloc(width * height * 4)
+    for (let p = 0; p < width * height; p++) if (re[p]) rgba.set([255, 40, 40, 255], p * 4)
+    await sharp(await sharp(painted).resize(width, height, { fit: "fill" }).modulate({ brightness: 0.75 }).toBuffer())
+      .composite([{ input: rgba, raw: { width, height, channels: 4 } }])
+      .jpeg({ quality: 85 })
+      .toFile(overlay)
+  }
+  return { within2: near(2), within8: near(8) }
 }

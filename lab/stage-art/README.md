@@ -75,6 +75,20 @@ node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/marble.ts 
 open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&splat=gate-cp-photoreal-m11&paint=0&shot=checkpoint"
 ```
 
+Painting on the ChatGPT subscription, and covering a play area with several paintings:
+
+```sh
+node --import tsx lab/stage-art/repaint.ts gate-plate-gate photoreal --cli
+# A second view: its plate with the first painting already projected, then filled in around it.
+node --import tsx lab/stage-art/capture.ts --name=cov1 --tier=ultra --camera "--q=$S&cast=off&paint=0&project=gate-plate-checkpoint-photoreal" --shots=twoshot
+node --import tsx lab/stage-art/repaint.ts cov1-twoshot photoreal --cli --fill --as=cov-two
+open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=gate-plate-checkpoint-photoreal,cov-two&shadows=0.55"
+```
+
+- `--cli` runs the Codex CLI's image tool under the owner's sign-in, with the desktop app's locked-down command. It returns 1536x1024 in about 90 seconds.
+- `--place=` and `--detail=` describe a set other than the gate. `repaint.ts drift <plate> <painting>` scores how well a painting kept the plate's edges.
+- `&shadows=` lets only figures cast sun shadows and darkens the paint under them. A value over 5 draws the shadow mask itself.
+- `&dummy=x,z` stands a person-sized solid there. `capture.ts --glide=from,to` catches a camera move part way. `--eval=` prints a value from the page.
 - `WORLDLABS_API_KEY` goes in `.env.local`. World Labs bills use past the balance later, so `marble.ts world` checks the balance first.
 - Pick the panorama point where the cameras are, and clear of props: `capture.ts --pano` prints the nearest surface as `zMin`.
 - A world generated from a point 14 m from the checkpoint smeared there. One made at the checkpoint held.

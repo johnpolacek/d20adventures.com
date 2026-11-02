@@ -1,6 +1,6 @@
 // Browser half of the stage art spikes: changes applied to a running Stage from outside packages/stage.
 //   (a) addBackdrop: a painted, keyed panorama on a far cylinder, standing in for the set's mountain cones.
-//   (b) projectPainting: a painting projected from one camera onto every static surface it saw, the rest left as built.
+//   (b) projectPaintings: paintings projected from the cameras they were made for onto the static surfaces those saw.
 //   (c) animateStandee: a looping colour-and-alpha video on a cast member's front card.
 
 import type { Stage } from "@d20/stage"
@@ -76,51 +76,75 @@ void main(){ vec4 c = texture2D(uMap, vUv); vec3 rgb = mix(labGrade(c.rgb, uGain
 
 type Patched = THREE.Material & { onBeforeCompile: (s: THREE.WebGLProgramParametersWithUniforms, r: THREE.WebGLRenderer) => void }
 
-// (b) Projects `url` from `cam` onto the static set. A depth map from the projector decides what it saw; surfaces it saw
-// edge-on fade back to their own material when `fade` is 1, and show the stretched paint when it is 0.
-export async function projectPainting(stage: Stage, o: { url: string; cam: Projector; gain?: number; sat?: number; fade?: number }) {
-  const tex = await loadTexture(o.url, stage)
-  const cam = new THREE.PerspectiveCamera(o.cam.fov, o.cam.aspect, Math.max(o.cam.near, 0.2), Math.min(o.cam.far, 1500))
-  cam.position.fromArray(o.cam.position)
-  cam.quaternion.fromArray(o.cam.quaternion)
-  cam.updateMatrixWorld(true)
-  cam.updateProjectionMatrix()
-
-  // What the projector saw: depth of the set alone, without cast, crowd, effects or sky.
-  const W = 2048
-  const rt = new THREE.WebGLRenderTarget(W, Math.round(W / o.cam.aspect), { depthTexture: new THREE.DepthTexture(W, Math.round(W / o.cam.aspect), THREE.FloatType) })
-  // The sky is the scene's only mesh drawn first; the backdrop spike's cylinder is named.
+// (b) Projects paintings onto the static set, each from the camera it was painted for. A depth map from each projector
+// decides what it saw. Where several saw a surface, the one that saw it closest and most squarely wins, with a soft
+// join, and each fades out toward the edge of its own frame. Surfaces a projector saw edge-on fade out of it when `fade` is 1, and show its stretched paint when it is 0.
+// With `shadows`, only cast and crowd throw sun shadows, and those darken the paint: a painting carries the set's own
+// shadows already, and replaces the engine's light where it lands. A value over 5 draws the shadow mask itself, to check it.
+export async function projectPaintings(stage: Stage, list: { url: string; cam: Projector }[], o: { gain?: number; sat?: number; fade?: number; shadows?: number } = {}) {
   const hidden = [stage.standees.group, stage.crowd.group, stage.effects.group, ...stage.scene.children.filter((c) => c instanceof THREE.Mesh && (c.renderOrder < 0 || c.name.startsWith("lab:")))]
   const was = hidden.map((h) => h.visible)
   for (const h of hidden) h.visible = false
   const r = stage.renderer
   const prev = r.getRenderTarget()
-  r.setRenderTarget(rt)
-  r.clear()
-  r.render(stage.scene, cam)
+  const uniforms: Record<string, { value: unknown }> = {
+    uLabGain: { value: o.gain ?? 1.3 },
+    uLabSat: { value: o.sat ?? 0.9 },
+    uLabFade: { value: o.fade ?? 1 },
+    uLabShadow: { value: o.shadows ?? 0 },
+    uLabOn: { value: 1 },
+  }
+  const cams: THREE.PerspectiveCamera[] = []
+  for (const [i, p] of list.entries()) {
+    const cam = new THREE.PerspectiveCamera(p.cam.fov, p.cam.aspect, Math.max(p.cam.near, 0.2), Math.min(p.cam.far, 1500))
+    cam.position.fromArray(p.cam.position)
+    cam.quaternion.fromArray(p.cam.quaternion)
+    cam.updateMatrixWorld(true)
+    cam.updateProjectionMatrix()
+    cams.push(cam)
+    // What the projector saw: depth of the set alone, without cast, crowd, effects or sky.
+    const W = 2048
+    const rt = new THREE.WebGLRenderTarget(W, Math.round(W / p.cam.aspect), { depthTexture: new THREE.DepthTexture(W, Math.round(W / p.cam.aspect), THREE.FloatType) })
+    r.setRenderTarget(rt)
+    r.clear()
+    r.render(stage.scene, cam)
+    uniforms[`uLabMap${i}`] = { value: await loadTexture(p.url, stage) }
+    uniforms[`uLabDepth${i}`] = { value: rt.depthTexture }
+    uniforms[`uLabVP${i}`] = { value: new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse) }
+    uniforms[`uLabPos${i}`] = { value: cam.position.clone() }
+    // near, far, and how many texels a metre covers at one metre: a painting's sharpness on a surface.
+    uniforms[`uLabLens${i}`] = { value: new THREE.Vector3(cam.near, cam.far, 1 / Math.tan(THREE.MathUtils.degToRad(p.cam.fov / 2))) }
+  }
   r.setRenderTarget(prev)
   hidden.forEach((h, i) => {
     h.visible = was[i]
   })
 
-  const uniforms = {
-    uLabMap: { value: tex as THREE.Texture },
-    uLabDepth: { value: rt.depthTexture as THREE.Texture },
-    uLabVP: { value: new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse) },
-    uLabPos: { value: cam.position.clone() },
-    uLabNear: { value: cam.near },
-    uLabFar: { value: cam.far },
-    uLabGain: { value: o.gain ?? 1.3 },
-    uLabSat: { value: o.sat ?? 0.9 },
-    uLabFade: { value: o.fade ?? 1 },
-    uLabOn: { value: 1 },
-  }
   const skip = new Set<THREE.Object3D>([stage.standees.group, stage.crowd.group, stage.effects.group])
   const patched = new Set<THREE.Material>()
   let skipped = 0
+  const decl = list.map((_, i) => `uniform sampler2D uLabMap${i}, uLabDepth${i}; uniform mat4 uLabVP${i}; uniform vec3 uLabPos${i}, uLabLens${i};`).join("\n")
+  const each = list
+    .map(
+      (_, i) => `{ vec4 pc = uLabVP${i} * vec4(vLabWorld, 1.0);
+ vec3 ndc = pc.xyz / max(pc.w, 1e-4);
+ vec2 puv = ndc.xy * .5 + .5;
+ vec3 to = uLabPos${i} - vLabWorld;
+ float facing = abs(dot(labN, normalize(to)));
+ float here = labLin(ndc.z * .5 + .5, uLabLens${i}.x, uLabLens${i}.y);
+ float inside = step(0.0, pc.w) * step(0.0, puv.x) * step(puv.x, 1.0) * step(0.0, puv.y) * step(puv.y, 1.0);
+ float vis = inside * (1.0 - smoothstep(.006, .03, (here - labLin(texture2D(uLabDepth${i}, puv).x, uLabLens${i}.x, uLabLens${i}.y)) / here));
+ vis *= mix(1.0, smoothstep(.06, .28, facing), uLabFade);
+ float edge = smoothstep(0.0, 0.06, min(min(puv.x, 1.0 - puv.x), min(puv.y, 1.0 - puv.y)));
+ float w = pow(vis * edge * facing * uLabLens${i}.z / max(length(to), 0.5), 4.0) + 1e-9 * vis * edge;
+ labSum += w * texture2D(uLabMap${i}, puv).rgb; labW += w; labVis = max(labVis, vis * edge); }`
+    )
+    .join("\n")
   const visit = (o3: THREE.Object3D) => {
     if (skip.has(o3)) return
-    if (o3 instanceof THREE.Mesh)
+    if (o3 instanceof THREE.Mesh) {
+      // Only figures throw sun shadows from here on (see above).
+      if (o.shadows) o3.castShadow = false
       for (const m of Array.isArray(o3.material) ? o3.material : [o3.material]) {
         if (patched.has(m)) continue
         if (!(m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshBasicMaterial) || m.transparent) {
@@ -130,6 +154,7 @@ export async function projectPainting(stage: Stage, o: { url: string; cam: Proje
         patch(m as Patched)
         patched.add(m)
       }
+    }
     for (const c of o3.children) visit(c)
   }
   const patch = (m: Patched) => {
@@ -150,43 +175,40 @@ export async function projectPainting(stage: Stage, o: { url: string; cam: Proje
 #endif
  vLabWorld = (modelMatrix * w).xyz; }`
       )
+      const lit = s.fragmentShader.includes("#include <shadowmap_pars_fragment>")
       s.fragmentShader = s.fragmentShader
+        .replace("#include <shadowmap_pars_fragment>", "#include <shadowmap_pars_fragment>\n#include <shadowmask_pars_fragment>")
         .replace(
           "#include <common>",
           `#include <common>
-varying vec3 vLabWorld; uniform sampler2D uLabMap, uLabDepth; uniform mat4 uLabVP; uniform vec3 uLabPos; uniform float uLabNear, uLabFar, uLabGain, uLabSat, uLabFade, uLabOn;
-float labLin(float d){ float z = d * 2.0 - 1.0; return 2.0 * uLabNear * uLabFar / (uLabFar + uLabNear - z * (uLabFar - uLabNear)); }
+varying vec3 vLabWorld; uniform float uLabGain, uLabSat, uLabFade, uLabShadow, uLabOn;
+${decl}
+float labLin(float d, float near, float far){ float z = d * 2.0 - 1.0; return 2.0 * near * far / (far + near - z * (far - near)); }
 ${GRADE}`
         )
         .replace(
           "#include <premultiplied_alpha_fragment>",
-          `{ vec4 pc = uLabVP * vec4(vLabWorld, 1.0);
- vec3 ndc = pc.xyz / max(pc.w, 1e-4);
- vec2 puv = ndc.xy * .5 + .5;
- vec3 paint = labGrade(texture2D(uLabMap, puv).rgb, uLabGain, uLabSat);
- float seen = texture2D(uLabDepth, puv).x;
- vec3 n = normalize(cross(dFdx(vLabWorld), dFdy(vLabWorld)));
- float facing = abs(dot(n, normalize(uLabPos - vLabWorld)));
- float here = labLin(ndc.z * .5 + .5);
- float inside = step(0.0, pc.w) * step(0.0, puv.x) * step(puv.x, 1.0) * step(0.0, puv.y) * step(puv.y, 1.0);
- float vis = inside * (1.0 - smoothstep(.006, .03, (here - labLin(seen)) / here));
- vis *= mix(1.0, smoothstep(.06, .28, facing), uLabFade);
- gl_FragColor.rgb = mix(gl_FragColor.rgb, paint, vis * uLabOn); }
+          `{ vec3 labN = normalize(cross(dFdx(vLabWorld), dFdy(vLabWorld)));
+ vec3 labSum = vec3(0.0); float labW = 0.0; float labVis = 0.0;
+${each}
+ vec3 paint = labGrade(labSum / max(labW, 1e-12), uLabGain, uLabSat);
+ ${lit ? "paint *= mix(1.0, getShadowMask(), uLabShadow); if (uLabShadow > 5.0) { paint = vec3(getShadowMask()); labVis = 1.0; }" : ""}
+ gl_FragColor.rgb = mix(gl_FragColor.rgb, paint, labVis * uLabOn); }
 #include <premultiplied_alpha_fragment>`
         )
     }
-    m.customProgramCacheKey = () => `${key()}|lab-project`
+    m.customProgramCacheKey = () => `${key()}|lab-project-${list.length}`
     m.needsUpdate = true
   }
   visit(stage.world)
 
-  // The painted sky, on a dome just inside the engine's own: the same projection, cut at the frame's edges, so a
-  // camera that turns away finds the engine's sky again. A wide fade there shows as a frame from the painting's own shot.
+  // The first painting's sky, on a dome just inside the engine's own: the same projection, cut at the frame's edges, so
+  // a camera that turns away finds the engine's sky again. A wide fade there shows as a frame from the painting's own shot.
   const skyRadius = (((stage as unknown as { sky: THREE.Mesh }).sky.geometry as THREE.SphereGeometry).parameters.radius ?? 1000) * 0.9
   const dome = new THREE.Mesh(
     new THREE.SphereGeometry(skyRadius, 48, 24),
     new THREE.ShaderMaterial({
-      uniforms,
+      uniforms: { uLabMap: uniforms.uLabMap0, uLabVP: uniforms.uLabVP0, uLabGain: uniforms.uLabGain, uLabSat: uniforms.uLabSat, uLabOn: uniforms.uLabOn },
       side: THREE.BackSide,
       transparent: true,
       depthWrite: false,
@@ -199,7 +221,7 @@ void main(){ vec4 pc = uLabVP * vec4(vLabWorld, 1.0); vec2 puv = pc.xy / max(pc.
     })
   )
   dome.name = "lab:sky"
-  dome.position.copy(cam.position)
+  dome.position.copy(cams[0].position)
   dome.renderOrder = -0.5
   dome.frustumCulled = false
   stage.scene.add(dome)

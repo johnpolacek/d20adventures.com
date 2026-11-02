@@ -2,7 +2,7 @@
 
 [Home](../index.md) · [Plans](index.md) · [Stage engine](../stage-engine.md) · [Stage art spikes](stage-art-spikes.md)
 
-Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. Open: how paintings cover cameras that follow characters. Character spike not started. A test directory only: nothing here changes `packages/stage` or the desktop app.
+Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Open: an owner decision on how the camera behaves over paintings. Character spike not started.
 
 ## Why
 
@@ -50,7 +50,32 @@ What that leaves open, counted from the specs on 2026-11-10:
 - A painting replaces the engine's light where it lands, so a figure's live shadow cannot show on it.
 - The camera eases between shots. Mid-move it looks from places no painting was made for.
 - Only an outdoor day set was tried. No interior, no night.
-- GPT Image 2's price for a 2880×1920 painting was not metered. `gptEdit` drops the token usage the API returns.
+- GPT Image 2's API price for a 2880×1920 painting was not metered. The second round moved painting to the ChatGPT subscription instead.
+
+## Second round, 2026-11-10
+
+Owner: paint through the local CLI on the ChatGPT subscription, not the metered API. `repaint.ts --cli` runs the Codex CLI's own image tool with the desktop app's locked-down command and the plate attached.
+
+| Question | Result |
+|---|---|
+| Does the CLI paint as well as the API? | Yes for layout: 82% of the gate's edges within 2 px, against 91% for the API and 42% by chance. It returns 1536×1024, not 2880×1920, in 82 to 104 seconds, with no API charge. |
+| Can paintings cover cameras that follow characters? | Partly. A second painting, made with the first already projected, completed the reverse two-shot. A third completed the party shot. A camera away from all three still shows bare wall and hard joins. |
+| Do paintings of one place agree? | Mostly. The second painting kept the first one's grey paving as a separate slab beside its own red cobbles, so the join reads as a change of paving. |
+| What does a camera move look like? | Rough for the half second it lasts: bare patches and jagged joins mid-glide. A cut or a dissolve would hide it. |
+| What stays exact? | Turning and zooming from the point a painting was made. A zoom on Garlan from the checkpoint camera fit perfectly. |
+| Can figures shadow painted ground? | Yes. With the set's own shadow casting off, the sun's shadow map holds only figures, and it darkens the paint. Flat cards throw slivers. A solid stand-in threw a full shadow. At 55% it is faint on busy cobbles and wants tuning with a real 3D figure. |
+| Does an interior work? | Yes. The Dragonbone Inn's common room at night came out well, with live hearth and candle flames over it. Its edge match was lower: 72% within 2 px. |
+
+- Where several paintings see a surface, the lab takes the one that saw it closest and most squarely, and fades each toward the edge of its own frame.
+- A plate leaves out flames and smoke, so they stay live over the painting.
+- Not measured: how many pictures the ChatGPT plan allows in a day.
+
+## Open decision: the camera
+
+Two ways to use paintings, for the owner to choose between:
+
+- Free cameras. Character shots stay as they are, and each play area gets enough paintings to cover them: 5 to 8 by this round's evidence, with patchy edges left over. About 410 paintings for 41 sets.
+- Tripod cameras. The camera stands only where a painting was made, and frames characters by turning and zooming. Every frame is exact, and the 204 fixed shots already are those points. Close zooms need more than the CLI's 1536 px.
 
 ## Character spike
 

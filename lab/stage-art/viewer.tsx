@@ -3,18 +3,20 @@
 // The stage art lab: a staging with the spikes switched on by query.
 //   ?staging=the-midnight-summons/meeting-at-the-stones&tier=balanced&motion=0
 //   &backdrop=<file in /stage-lab>   (a) painted far backdrop, the set's mountains removed
-//   &project=<name>                  (b) /stage-lab/<name>.png projected from the camera in /stage-lab/<name>.json
+//   &project=<name>[,<name>]         (b) /stage-lab/<name>.png projected from the camera in /stage-lab/<name>.json
+//   &shadows=0.5                     (b) figures' sun shadows darken the paint by this much
 //   &fade=0                          (b) show stretched paint on surfaces the projector saw edge-on
 //   &animate=<castId>                (c) /stage-lab/<castId>-idle.mp4 on that cast member's card
 //   &clip=<name>                     (c) another clip, /stage-lab/<name>.mp4 (thalbern-h3-idle)
-//   &cast=off                        hide cast and crowd (for plates)
+//   &cast=off                        hide cast, crowd and effects (for plates)
 //   &paint=0                         no brush filter over the frame
 //   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
+//   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
-import { addBackdrop, addSplat, animateStandee, cameraOf, pano, projectPainting } from "./lab"
+import { addBackdrop, addSplat, animateStandee, cameraOf, pano, projectPaintings } from "./lab"
 
 type Params = Record<string, string | undefined>
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
@@ -64,8 +66,9 @@ export function LabViewer({ params }: { params: Params }) {
           haze: num(params.haze),
         })
       if (params.project) {
-        const cam = await (await fetch(`/stage-lab/${params.project}.json`)).json()
-        lab.project = await projectPainting(st, { url: `/stage-lab/${params.project}.png`, cam, fade: num(params.fade), gain: num(params.pgain), sat: num(params.psat) })
+        // One name, or several joined by commas: each is a painting and the camera it was painted for.
+        const list = await Promise.all(params.project.split(",").map(async (name) => ({ url: `/stage-lab/${name}.png`, cam: await (await fetch(`/stage-lab/${name}.json`)).json() })))
+        lab.project = await projectPaintings(st, list, { fade: num(params.fade), gain: num(params.pgain), sat: num(params.psat), shadows: num(params.shadows) })
       }
       if (params.splat) lab.splat = await addSplat(st, `/stage-lab/${params.splat}`, { gain: num(params.sgain), yaw: num(params.syaw), scale: num(params.sscale) })
       if (params.animate) {
@@ -78,10 +81,21 @@ export function LabViewer({ params }: { params: Params }) {
       if (params.cast === "off") {
         st.standees.group.visible = false
         st.crowd.group.visible = false
+        // Flames and smoke stay live over a painting, so a plate leaves them out.
+        st.effects.group.visible = false
       }
       const w = window as unknown as { __stage?: Stage; __lab?: unknown }
       w.__stage = st
       w.__lab = lab
+      // &dummy=x,z: a person-sized solid at that spot, standing in for a 3D character, to see its shadow on the paint.
+      const dummy = params.dummy?.split(",").map(Number)
+      if (dummy?.length === 2) {
+        const THREE = await import("three")
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 1.2, 6, 16), new THREE.MeshStandardMaterial({ color: "#8a8478", roughness: 0.8 }))
+        body.position.set(dummy[0], 0.88, dummy[1])
+        body.castShadow = body.receiveShadow = true
+        st.scene.add(body)
+      }
       // &view=x,y,z,tx,ty,tz[,fov]: a free viewpoint, shown on load and kept as __lab.view for capture.ts --view.
       const view = params.view?.split(",").map(Number)
       if (view && view.length >= 6) {

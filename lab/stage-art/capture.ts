@@ -70,7 +70,7 @@ async function main() {
   await send("Emulation.setDeviceMetricsOverride", { width: 1350, height: 900, deviceScaleFactor: 2, mobile: false })
   await send("Emulation.setFocusEmulationEnabled", { enabled: true })
   await mkdir(OUT, { recursive: true })
-  const url = `${BASE}/dev/stage-lab?motion=0&tier=${arg("tier") ?? "high"}${q ? `&${q}` : ""}`
+  const url = `${BASE}/dev/stage-lab?motion=${process.argv.includes("--motion") || arg("glide") ? 1 : 0}&tier=${arg("tier") ?? "high"}${q ? `&${q}` : ""}`
   await send("Page.navigate", { url })
   let ready = false
   for (let i = 0; i < 480 && !ready; i++) {
@@ -95,7 +95,20 @@ async function main() {
     await writeFile(`${OUT}/${name}-rgb.png`, await pull("window.__pano"))
     console.log(`${name}-depth ${JSON.stringify(stats)}, ${name}-rgb`)
   }
-  const shots = (pano || process.argv.includes("--view")) && !only ? [] : (await ev<string[]>("Object.keys(window.__stage.shots)")).filter((s) => !only || only.includes(s))
+  const shots =
+    (pano || arg("glide") || arg("eval") || process.argv.includes("--view")) && !only ? [] : (await ev<string[]>("Object.keys(window.__stage.shots)")).filter((s) => !only || only.includes(s))
+  // --eval=<expression>: its value, printed. For looking inside the page.
+  if (arg("eval")) console.log(JSON.stringify(await ev(arg("eval") as string)))
+  // --glide=from,to[,ms]: the eased move between two shots, caught part way, as <name>-glide.png. Turns motion on.
+  const glide = arg("glide")?.split(",")
+  if (glide) {
+    await ev(`window.__stage.shot(${JSON.stringify(glide[0])}, { instant: true })`)
+    await delay(1200)
+    await ev(`window.__stage.shot(${JSON.stringify(glide[1])})`)
+    await delay(Number(glide[2] ?? 1000))
+    await writeFile(`${OUT}/${name}-glide.png`, await pull("window.__stage.capture()"))
+    console.log(`${name}-glide`)
+  }
   // --view: the page's free viewpoint (&view=...), as <name>-view.png.
   if (process.argv.includes("--view")) {
     await ev("window.__stage.shot(window.__lab.view, { instant: true })")
