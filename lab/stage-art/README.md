@@ -103,6 +103,10 @@ The cast's cards repainted as photographs, and a close-up from a tripod point:
 ```sh
 node --import tsx lab/stage-art/cards.ts paint garlan,branka,cassia,yeva,milos,oskar
 node --import tsx lab/stage-art/cards.ts crop garlan   # painted beside photoreal, on the Desktop
+node --import tsx lab/stage-art/cards.ts paint crowd && node --import tsx lab/stage-art/cards.ts pack   # the crowd's 16 people, then their atlas
+# What stood behind the gate's flags and awnings, painted with the cloth taken down:
+node --import tsx lab/stage-art/capture.ts --name=gateclear --tier=balanced --camera "--q=$S&cast=off&paint=0&project=gate-plate-gate-photoreal&clear=1&cloth=off&fade=0" --shots=gate
+node --import tsx lab/stage-art/repaint.ts gateclear-gate photoreal --cli --fill --clear --as=gate-plate-gate-photoreal-clear "--detail=<the place's materials, with no cloth named>"
 V="view=-3.4,2.85,14.6,2.3,1.62,11.1,12"
 node --import tsx lab/stage-art/capture.ts --name=closeplate --tier=ultra --view --camera "--q=$S&cast=off&paint=0&project=cp-cli,cp-zoom&$V"
 node --import tsx lab/stage-art/repaint.ts closeplate-view photoreal --cli --sharpen --as=cp-close
@@ -113,6 +117,8 @@ open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=cp-cli,c
 - With motion on, cloth blows and carries its paint: the lab looks paint up from the cloth's pose in the plate. A flag that leaves its painted spot shows a copy behind it.
 - `capture.ts --dpr=1 --tier=balanced` is a lighter page, for measuring. An ultra capture at DPR 2 took this machine under 20% free memory.
 - `cards.ts` is free, on the ChatGPT subscription, about 60 seconds a card. The tool usually answers a green-screen request with a transparent background, and the cutout takes whichever came.
+- `&crowd=1` loads the repainted crowd atlas from `/stage-lab/crowd`. `&clear=1` uses each painting's cloth-free twin, `<name>-clear.png`, behind loose cloth.
+- The balanced tier draws at DPR 1 whatever the page's DPR, so its captures are 1350x900.
 - `&cards=1` loads `/stage-lab/cards/<castId>-front.webp` and `-back.webp` as page blobs, since a staging takes only `/stage/` paths.
 - `sheet` is free, on the ChatGPT subscription. `model` keeps its response in `raw/`, so a rerun downloads again and does not pay again.
 - Clips: `garlan-idle`, `garlan-walking`, `garlan-running`. The idle turns him a long way, so one frame can show his back.

@@ -81,7 +81,16 @@ type Patched = THREE.Material & { onBeforeCompile: (s: THREE.WebGLProgramParamet
 // join, and each fades out toward the edge of its own frame. Surfaces a projector saw edge-on fade out of it when `fade` is 1, and show its stretched paint when it is 0.
 // With `shadows`, only cast and crowd throw sun shadows, and those darken the paint: a painting carries the set's own
 // shadows already, and replaces the engine's light where it lands. A value over 5 draws the shadow mask itself, to check it.
-export async function projectPaintings(stage: Stage, list: { url: string; cam: Projector }[], o: { gain?: number; sat?: number; fade?: number; shadows?: number; fill?: number; bare?: number } = {}) {
+export async function projectPaintings(
+  stage: Stage,
+  list: { url: string; cam: Projector; clear?: string }[],
+  o: { gain?: number; sat?: number; fade?: number; shadows?: number; fill?: number; bare?: number; clearing?: boolean; cloth?: boolean } = {}
+) {
+  // Loose cloth: flags, banners, bunting and awnings, which the wind moves off the spot they were painted in.
+  const cloths: THREE.Object3D[] = []
+  stage.world.traverse((c) => {
+    if (c instanceof THREE.Mesh && (Array.isArray(c.material) ? c.material : [c.material]).some((m: THREE.Material) => m.userData.sway)) cloths.push(c)
+  })
   const hidden = [stage.standees.group, stage.crowd.group, stage.effects.group, ...stage.scene.children.filter((c) => c instanceof THREE.Mesh && (c.renderOrder < 0 || c.name.startsWith("lab:")))]
   const was = hidden.map((h) => h.visible)
   for (const h of hidden) h.visible = false
@@ -118,6 +127,19 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
     r.render(stage.scene, cam)
     uniforms[`uLabMap${i}`] = { value: await loadTexture(p.url, stage) }
     uniforms[`uLabDepth${i}`] = { value: rt.depthTexture }
+    if (o.clearing) {
+      // The same view with the loose cloth taken down: what stood behind it, and so where the plate had cloth in the
+      // way. Those surfaces take a second painting made without the cloth (`clear`), or none.
+      const rtB = new THREE.WebGLRenderTarget(W, Math.round(W / p.cam.aspect), { depthTexture: new THREE.DepthTexture(W, Math.round(W / p.cam.aspect), THREE.FloatType) })
+      for (const c of cloths) c.visible = false
+      r.setRenderTarget(rtB)
+      r.clear()
+      r.render(stage.scene, cam)
+      for (const c of cloths) c.visible = true
+      uniforms[`uLabDepthB${i}`] = { value: rtB.depthTexture }
+      uniforms[`uLabMapB${i}`] = { value: p.clear ? await loadTexture(p.clear, stage) : uniforms[`uLabMap${i}`].value }
+      uniforms[`uLabHasB${i}`] = { value: p.clear ? 1 : 0 }
+    }
     uniforms[`uLabVP${i}`] = { value: new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse) }
     uniforms[`uLabPos${i}`] = { value: cam.position.clone() }
     // near, far, and how many texels a metre covers at one metre: a painting's sharpness on a surface.
@@ -132,7 +154,17 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
   const skip = new Set<THREE.Object3D>([stage.standees.group, stage.crowd.group, stage.effects.group])
   const patched = new Set<THREE.Material>()
   let skipped = 0
-  const decl = list.map((_, i) => `uniform sampler2D uLabMap${i}, uLabDepth${i}; uniform mat4 uLabVP${i}; uniform vec3 uLabPos${i}, uLabLens${i};`).join("\n")
+  const decl = list
+    .map(
+      (_, i) =>
+        `uniform sampler2D uLabMap${i}, uLabDepth${i}; uniform mat4 uLabVP${i}; uniform vec3 uLabPos${i}, uLabLens${i};${o.clearing ? ` uniform sampler2D uLabMapB${i}, uLabDepthB${i}; uniform float uLabHasB${i};` : ""}`
+    )
+    .join("\n")
+  // 1 where the plate had loose cloth in front of this spot, or within a few texels of it, since a painter's flag is
+  // never quite where the plate's was.
+  const covered = (i: number) =>
+    `float cov = 0.0; for (int k = 0; k < 5; k++) { vec2 q = puv + (k == 0 ? vec2(0.0) : k == 1 ? vec2(.004, 0.0) : k == 2 ? vec2(-.004, 0.0) : k == 3 ? vec2(0.0, .004) : vec2(0.0, -.004));
+ cov = max(cov, step(labLin(texture2D(uLabDepth${i}, q).x, uLabLens${i}.x, uLabLens${i}.y), labLin(texture2D(uLabDepthB${i}, q).x, uLabLens${i}.x, uLabLens${i}.y) * .985 - .02)); }`
   const each = list
     .map(
       (_, i) => `{ vec4 pc = uLabVP${i} * vec4(vLabWorld, 1.0);
@@ -145,9 +177,20 @@ export async function projectPaintings(stage: Stage, list: { url: string; cam: P
  float vis = inside * (1.0 - smoothstep(.006, .03, (here - labLin(texture2D(uLabDepth${i}, puv).x, uLabLens${i}.x, uLabLens${i}.y)) / here));
  vis *= mix(1.0, smoothstep(.06, .28, facing), uLabFade);
  float edge = smoothstep(0.0, 0.06, min(min(puv.x, 1.0 - puv.x), min(puv.y, 1.0 - puv.y)));
- float w = pow(vis * edge * facing * uLabLens${i}.z / max(length(to), 0.5), 4.0) + 1e-9 * vis * edge;
  vec3 tx = texture2D(uLabMap${i}, puv).rgb;
  float rim = inside * smoothstep(0.0, 0.004, min(min(puv.x, 1.0 - puv.x), min(puv.y, 1.0 - puv.y)));
+${
+  o.clearing
+    ? `#ifndef LAB_CLOTH
+ { ${covered(i)}
+ float open = labLin(texture2D(uLabDepthB${i}, puv).x, uLabLens${i}.x, uLabLens${i}.y);
+ float visB = inside * (1.0 - smoothstep(.006, .03, (here - open) / here)) * mix(1.0, smoothstep(.06, .28, facing), uLabFade);
+ vis = mix(vis, visB * uLabHasB${i}, cov); rim *= mix(1.0, uLabHasB${i}, cov);
+ tx = mix(tx, texture2D(uLabMapB${i}, puv).rgb, cov); }
+#endif`
+    : ""
+}
+ float w = pow(vis * edge * facing * uLabLens${i}.z / max(length(to), 0.5), 4.0) + 1e-9 * vis * edge;
  float fw = pow(rim * uLabLens${i}.z / max(length(to), 0.5), 4.0) + 1e-9 * rim;
  labSum += w * tx; labW += w; labVis = max(labVis, vis * edge);
  labFillSum += fw * tx; labFillW += fw; labIn = max(labIn, rim); }`
@@ -206,6 +249,7 @@ ${held}
         .replace(
           "#include <common>",
           `#include <common>
+${blown ? "#define LAB_CLOTH" : ""}
 varying vec3 vLabWorld; uniform float uLabGain, uLabSat, uLabFade, uLabShadow, uLabOn, uLabFill, uLabBare;
 ${decl}
 float labLin(float d, float near, float far){ float z = d * 2.0 - 1.0; return 2.0 * near * far / (far + near - z * (far - near)); }
@@ -226,10 +270,12 @@ ${each}
 #include <premultiplied_alpha_fragment>`
         )
     }
-    m.customProgramCacheKey = () => `${key()}|lab-project-held-${list.length}`
+    m.customProgramCacheKey = () => `${key()}|lab-project-clear-${list.length}`
     m.needsUpdate = true
   }
   visit(stage.world)
+  // A plate for the cloth-free painting: the loose cloth taken down.
+  if (o.cloth === false) for (const c of cloths) c.visible = false
 
   // The first painting's sky, on a dome just inside the engine's own: the same projection, cut at the frame's edges, so
   // a camera that turns away finds the engine's sky again. A wide fade there shows as a frame from the painting's own shot.
@@ -237,16 +283,35 @@ ${each}
   const dome = new THREE.Mesh(
     new THREE.SphereGeometry(skyRadius, 48, 24),
     new THREE.ShaderMaterial({
-      uniforms: { uLabMap: uniforms.uLabMap0, uLabVP: uniforms.uLabVP0, uLabGain: uniforms.uLabGain, uLabSat: uniforms.uLabSat, uLabOn: uniforms.uLabOn },
+      uniforms: {
+        uLabMap: uniforms.uLabMap0,
+        uLabVP: uniforms.uLabVP0,
+        uLabGain: uniforms.uLabGain,
+        uLabSat: uniforms.uLabSat,
+        uLabOn: uniforms.uLabOn,
+        ...(o.clearing
+          ? {
+              uLabMap0: uniforms.uLabMap0,
+              uLabDepth0: uniforms.uLabDepth0,
+              uLabDepthB0: uniforms.uLabDepthB0,
+              uLabMapB0: uniforms.uLabMapB0,
+              uLabHasB0: uniforms.uLabHasB0,
+              uLabLens0: uniforms.uLabLens0,
+            }
+          : {}),
+      },
       side: THREE.BackSide,
       transparent: true,
       depthWrite: false,
       vertexShader: "varying vec3 vLabWorld; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vLabWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
       fragmentShader: `varying vec3 vLabWorld; uniform sampler2D uLabMap; uniform mat4 uLabVP; uniform float uLabGain, uLabSat, uLabOn;
+${o.clearing ? "uniform sampler2D uLabMap0, uLabDepth0, uLabDepthB0, uLabMapB0; uniform float uLabHasB0; uniform vec3 uLabLens0;\nfloat labLin(float d, float near, float far){ float z = d * 2.0 - 1.0; return 2.0 * near * far / (far + near - z * (far - near)); }" : ""}
 ${GRADE}
 void main(){ vec4 pc = uLabVP * vec4(vLabWorld, 1.0); vec2 puv = pc.xy / max(pc.w, 1e-4) * .5 + .5;
  float edge = min(min(puv.x, 1.0 - puv.x), min(puv.y, 1.0 - puv.y));
- gl_FragColor = vec4(labGrade(texture2D(uLabMap, puv).rgb, uLabGain, uLabSat), step(0.0, pc.w) * smoothstep(0.0, 0.004, edge) * uLabOn); }`,
+ vec3 tx = texture2D(uLabMap, puv).rgb; float a = 1.0;
+ ${o.clearing ? `${covered(0)} tx = mix(tx, texture2D(uLabMapB0, puv).rgb, cov); a = mix(1.0, uLabHasB0, cov);` : ""}
+ gl_FragColor = vec4(labGrade(tx, uLabGain, uLabSat), a * step(0.0, pc.w) * smoothstep(0.0, 0.004, edge) * uLabOn); }`,
     })
   )
   dome.name = "lab:sky"

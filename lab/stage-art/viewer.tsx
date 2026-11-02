@@ -15,7 +15,10 @@
 //   &cards=1                        /stage-lab/cards/<castId>-front.webp and -back.webp in place of each standee's art
 //   &fill=1                         (b) paint runs on over surfaces no painting saw, in place of the bare set
 //   &bare=1                         (b) those surfaces in flat magenta
+//   &clear=1                        (b) what stood behind loose cloth takes /stage-lab/<name>-clear.png, or no paint
+//   &cloth=off                      (b) flags, banners and awnings taken down, for that painting's plate
 //   &drift=0.15[,8]                 the camera sways that many metres about its point, over that many seconds
+//   &crowd=1                        the crowd's repainted cards, from /stage-lab/crowd
 //   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
 
@@ -66,7 +69,18 @@ export function LabViewer({ params }: { params: Params }) {
         set.backdrops = []
       }
       const tier = TIERS.includes(params.tier as TierName) ? (params.tier as TierName) : "balanced"
-      st = await createStage({ container, set, staging, tier, motion: params.motion !== "0", onProgress: setStatus })
+      // &crowd=1: the crowd's repainted atlas, /stage-lab/crowd, in place of the setting's own.
+      const crowdLibrary = params.crowd
+        ? async () => {
+            const base = "/stage-lab/crowd"
+            return {
+              meta: await (await fetch(`${base}/atlas.json`)).json(),
+              front: { rgb: `${base}/front-rgb.webp`, alpha: `${base}/front-a.webp` },
+              back: { rgb: `${base}/back-rgb.webp`, alpha: `${base}/back-a.webp` },
+            }
+          }
+        : undefined
+      st = await createStage({ container, set, staging, tier, motion: params.motion !== "0", onProgress: setStatus, crowdLibrary })
       if (cancelled) return st.dispose()
       const lab: Record<string, unknown> = {
         camera: () => cameraOf(st as Stage),
@@ -85,7 +99,14 @@ export function LabViewer({ params }: { params: Params }) {
         })
       if (params.project) {
         // One name, or several joined by commas: each is a painting and the camera it was painted for.
-        const list = await Promise.all(params.project.split(",").map(async (name) => ({ url: `/stage-lab/${name}.png`, cam: await (await fetch(`/stage-lab/${name}.json`)).json() })))
+        // &clear=1 adds each painting's cloth-free twin, /stage-lab/<name>-clear.png, where one has been made.
+        const list = await Promise.all(
+          params.project.split(",").map(async (name) => ({
+            url: `/stage-lab/${name}.png`,
+            cam: await (await fetch(`/stage-lab/${name}.json`)).json(),
+            clear: params.clear && (await fetch(`/stage-lab/${name}-clear.png`, { method: "HEAD" })).ok ? `/stage-lab/${name}-clear.png` : undefined,
+          }))
+        )
         lab.project = await projectPaintings(st, list, {
           fade: num(params.fade),
           gain: num(params.pgain),
@@ -93,6 +114,8 @@ export function LabViewer({ params }: { params: Params }) {
           shadows: num(params.shadows),
           fill: num(params.fill),
           bare: num(params.bare),
+          clearing: !!params.clear,
+          cloth: params.cloth !== "off",
         })
       }
       if (params.splat) lab.splat = await addSplat(st, `/stage-lab/${params.splat}`, { gain: num(params.sgain), yaw: num(params.syaw), scale: num(params.sscale) })

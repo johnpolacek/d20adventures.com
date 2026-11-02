@@ -7,11 +7,13 @@
 //   node --import tsx lab/stage-art/cards.ts paint garlan --back     # the back alone, from the front already made
 //   node --import tsx lab/stage-art/cards.ts key garlan              # cut the raws out again
 //   node --import tsx lab/stage-art/cards.ts crop garlan,branka      # painted beside photoreal, for review
+//   node --import tsx lab/stage-art/cards.ts paint crowd             # the crowd's 16 people, from its atlas
+//   node --import tsx lab/stage-art/cards.ts pack                    # their atlas again, in public/stage-lab/crowd
 //
 // Reads public/stage/fixtures/welcome-to-kordavos/<id>-front.webp and -back.webp. Writes raw/<id>-card-front.png and
 // -back.png, and public/stage-lab/cards/<id>-front.webp and -back.webp, which the lab shows with &cards=1.
 
-import { mkdir, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import sharp from "sharp"
 import { codexPaint, DESKTOP, dirs, jpeg, PUB, RAW, smooth } from "./gen"
 
@@ -89,6 +91,89 @@ async function cutout(png: Buffer) {
 
 const onGreen = async (path: string | Buffer) => jpeg(await sharp(path).flatten({ background: GREEN }).toBuffer(), 1536)
 
+// The crowd: 16 people, front and back, packed four by four into a colour atlas and an alpha atlas. An id of
+// `crowd-<variant>` paints one of them, and `pack` lays the results out again as the engine reads them: each figure fitted
+// into its cell with a 2 px margin, standing on the cell's bottom-left corner.
+const ATLAS = "public/stage/crowd/realm-of-myr"
+const CROWD = `${PUB}/crowd`
+type Variant = { id: string; uMax: number; vMax: number; aspect: number; srcW: number; srcH: number; back: Variant }
+type Atlas = { variants: Variant[]; layer: [number, number]; cols: number; rows: number }
+const atlas = async () => JSON.parse(await readFile(`${ATLAS}/atlas.json`, "utf8")) as Atlas
+
+async function crowdCard(variant: string, view: "front" | "back") {
+  const meta = await atlas()
+  const [LW, LH] = meta.layer
+  const k = meta.variants.findIndex((v) => v.id === variant)
+  if (k < 0) throw new Error(`No crowd variant ${variant}`)
+  const region = { left: (k % meta.cols) * LW, top: Math.floor(k / meta.cols) * LH, width: LW, height: LH }
+  const rgb = await sharp(`${ATLAS}/${view}-rgb.webp`).extract(region).removeAlpha().raw().toBuffer()
+  const a = await sharp(`${ATLAS}/${view}-a.webp`).extract(region).extractChannel(0).raw().toBuffer()
+  const out = Buffer.alloc(LW * LH * 4)
+  for (let i = 0; i < LW * LH; i++) {
+    out[i * 4] = rgb[i * 3]
+    out[i * 4 + 1] = rgb[i * 3 + 1]
+    out[i * 4 + 2] = rgb[i * 3 + 2]
+    out[i * 4 + 3] = a[i]
+  }
+  // Trimmed to the figure and set in the middle of a portrait frame, for the painter.
+  const cut = await sharp(out, { raw: { width: LW, height: LH, channels: 4 } })
+    .trim({ threshold: 1 })
+    .resize({ width: 900, height: 1400, fit: "inside" })
+    .png()
+    .toBuffer()
+  return sharp({ create: { width: 1024, height: 1536, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: cut, gravity: "centre" }])
+    .png()
+    .toBuffer()
+}
+
+const source = (id: string, view: "front" | "back") => (id.startsWith("crowd-") ? crowdCard(id.slice(6), view) : `${FIXTURES}/${id}-${view}.webp`)
+
+async function pack() {
+  const meta = await atlas()
+  const [LW, LH] = meta.layer
+  await mkdir(CROWD, { recursive: true })
+  for (const view of ["front", "back"] as const) {
+    const colour: sharp.OverlayOptions[] = []
+    const alpha: sharp.OverlayOptions[] = []
+    for (const [k, v] of meta.variants.entries()) {
+      const { data, info } = await sharp(`${OUT}/crowd-${v.id}-${view}.webp`)
+        .resize({ width: LW - 4, height: LH - 4, fit: "inside" })
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true })
+      const [w, h] = [info.width, info.height]
+      // Under the cutout the cell takes the figure's own average colour, so small copies of the atlas do not pick up a
+      // dark fringe from a background that was never meant to show.
+      let [r, g, b, n] = [0, 0, 0, 0]
+      for (let i = 0; i < w * h; i++)
+        if (data[i * 4 + 3] > 200) {
+          r += data[i * 4]
+          g += data[i * 4 + 1]
+          b += data[i * 4 + 2]
+          n++
+        }
+      const mean = { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) }
+      const at = { left: (k % meta.cols) * LW, top: Math.floor(k / meta.cols) * LH }
+      const figure = sharp(data, { raw: { width: w, height: h, channels: 4 } })
+      const cell = (background: { r: number; g: number; b: number }, input: Buffer) =>
+        sharp({ create: { width: LW, height: LH, channels: 3, background } })
+          .composite([{ input, left: 2, top: LH - 2 - h }])
+          .png()
+          .toBuffer()
+      colour.push({ input: await cell(mean, await figure.clone().png().toBuffer()), ...at })
+      alpha.push({ input: await cell({ r: 0, g: 0, b: 0 }, await figure.clone().extractChannel(3).toColourspace("b-w").png().toBuffer()), ...at })
+      const m = view === "front" ? v : v.back
+      Object.assign(m, { uMax: +((w + 4) / LW).toFixed(5), vMax: +((h + 4) / LH).toFixed(5), aspect: +(w / h).toFixed(5), srcW: w, srcH: h })
+    }
+    const sheet = () => sharp({ create: { width: LW * meta.cols, height: LH * meta.rows, channels: 3, background: { r: 0, g: 0, b: 0 } } })
+    await sheet().composite(colour).webp({ quality: 92, effort: 5 }).toFile(`${CROWD}/${view}-rgb.webp`)
+    await sheet().composite(alpha).webp({ quality: 95, effort: 5 }).toFile(`${CROWD}/${view}-a.webp`)
+  }
+  await writeFile(`${CROWD}/atlas.json`, JSON.stringify(meta, null, 1))
+  console.log(`${CROWD}/atlas.json, ${meta.variants.length} people`)
+}
+
 async function key(id: string, view: "front" | "back") {
   const cut = await cutout(await sharp(`${RAW}/${id}-card-${view}.png`).png().toBuffer())
   await sharp(cut).webp({ quality: 92, alphaQuality: 100, effort: 5 }).toFile(`${OUT}/${id}-${view}.webp`)
@@ -98,7 +183,7 @@ async function key(id: string, view: "front" | "back") {
 
 async function paint(id: string, views: ("front" | "back")[]) {
   for (const view of views) {
-    const images = view === "front" ? [await onGreen(`${FIXTURES}/${id}-front.webp`)] : [await onGreen(`${RAW}/${id}-card-front.png`), await onGreen(`${FIXTURES}/${id}-back.webp`)]
+    const images = view === "front" ? [await onGreen(await source(id, "front"))] : [await onGreen(`${RAW}/${id}-card-front.png`), await onGreen(await source(id, "back"))]
     // Ask again, twice at most, if the picture comes back with a backdrop that cannot be cut out.
     for (let attempt = 1; ; attempt++) {
       const png = await codexPaint(`card ${id} ${view}`, view === "front" ? FRONT : BACK, images, "portrait 2:3")
@@ -116,8 +201,12 @@ async function paint(id: string, views: ("front" | "back")[]) {
 async function crop(id: string) {
   const H = 1400
   const tiles = await Promise.all(
-    [`${FIXTURES}/${id}-front.webp`, `${OUT}/${id}-front.webp`, `${FIXTURES}/${id}-back.webp`, `${OUT}/${id}-back.webp`].map(async (f) => {
-      const data = await sharp(f).resize({ height: H }).flatten({ background: "#6f6a62" }).png().toBuffer()
+    [await source(id, "front"), `${OUT}/${id}-front.webp`, await source(id, "back"), `${OUT}/${id}-back.webp`].map(async (f) => {
+      const data = await sharp(await sharp(f).trim({ threshold: 1 }).toBuffer())
+        .resize({ height: H })
+        .flatten({ background: "#6f6a62" })
+        .png()
+        .toBuffer()
       return { data, width: (await sharp(data).metadata()).width ?? 0 }
     })
   )
@@ -136,8 +225,10 @@ async function crop(id: string) {
 
 async function main() {
   const [cmd, list, ...flags] = process.argv.slice(2)
-  const ids = (list ?? "").split(",").filter(Boolean)
-  if (!ids.length || !["paint", "key", "crop"].includes(cmd)) return console.log("usage: cards.ts paint|key|crop <id,...> [--back]")
+  if (cmd === "pack") return pack()
+  // `crowd` stands for all 16 of the crowd's people.
+  const ids = (list === "crowd" ? (await atlas()).variants.map((v) => `crowd-${v.id}`).join(",") : (list ?? "")).split(",").filter(Boolean)
+  if (!ids.length || !["paint", "key", "crop"].includes(cmd)) return console.log("usage: cards.ts paint|key|crop <id,...>|crowd [--back], cards.ts pack")
   await dirs()
   await mkdir(OUT, { recursive: true })
   await mkdir(DESKTOP, { recursive: true })

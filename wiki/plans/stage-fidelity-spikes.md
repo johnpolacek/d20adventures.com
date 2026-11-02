@@ -129,7 +129,9 @@ The set under the paint is still the engine's, so what moved before still moves:
 
 Cloth tested at the gate, 2026-11-10: tower pennants, wall banners, bunting and awnings blow as they did, and each carries its paint. The lab looks paint up from where a point of cloth hung in the plate (wind at time 0, as plates are captured with motion off), not from where the wind has moved it. Without that the paint slides under the cloth.
 
-- Open: a flag that swings off its painted spot leaves a copy of itself on the sky or wall behind, since the painting has it there too. The fix is a second painting of each point with the loose cloth taken out, for everything behind it. Not built.
+- A flag that swings off its painted spot left a copy of itself on the sky or wall behind, since the painting has it there too. Fixed the same day with a second painting of the point, made with the loose cloth taken down (`&cloth=off` for its plate, `repaint.ts --fill --clear`, one picture, 61 seconds).
+- The lab draws the projector's depth twice, with the cloth and without. Where the two differ the plate had cloth in the way, and what stands behind takes the cloth-free painting. The test reaches a few texels past the cloth's edge, since a painter's flag is never quite where the plate's was.
+- The cloth-free painting came back with its own clouds. Behind a flag that shows as nothing. A large sheet of cloth against the sky might show a seam.
 - Not tried: foliage and water, which move the same way, and drifting cloud in the painted sky.
 
 ## Decision: photoreal cards
@@ -145,8 +147,10 @@ Owner decision, 2026-11-10: the cast stay standees, repainted photoreal, and not
 | Cutout? | The tool was asked for a green screen and returned a real transparent background on 10 of 12, and green on two. `cards.ts` takes whichever came, and asks again if neither did. Edges are clean. |
 | Size? | 1024×1536, so a figure about 1,500 px tall against 2,048 for the painted cards. |
 | Beside the painted set? | They sit in it as the painted cards did not, from the gate's wide shot to the tripod close-up. Garlan's face and armour hold at a 4× zoom. |
-| What still shows? | The crowd is still painted, and reads flatter beside them: the guard at Garlan's shoulder most of all. One card's shadow falls as a flat shape across another's face. |
+| What still shows? | One card's shadow falls as a flat shape across another's face. The crowd read flatter beside them until it was repainted too, below. |
+
+The crowd, the same day: `cards.ts paint crowd` cuts each of the 16 people out of the setting's atlas, repaints front and back the same way, and `cards.ts pack` lays them out again as the engine reads them. 32 pictures, about 13 minutes, none refused. `&crowd=1` shows them. The guard at Garlan's shoulder now matches him, and the gate's crowd of about 1,600 reads as people in the place. A crowd figure is 1,020 px tall in its atlas cell, so it is softer than a cast card in a 4× close-up.
 
 Counts: 134 named cards in `public/stage`, each a front and a back, so 268 pictures, about 1.5 hours at three at a time. The crowd is 16 people, front and back.
 
-Not done: the crowd, portraits cut from the new fronts, a sharper head-and-shoulders card for close-ups, seated figures and creatures, the daily picture limit of the ChatGPT plan.
+Not done: portraits cut from the new fronts, a sharper head-and-shoulders card for close-ups, seated figures and creatures, the daily picture limit of the ChatGPT plan.
