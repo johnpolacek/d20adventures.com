@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { queueHostedAction, sendHostedChat } from "@/app/_actions/hosted"
-import { hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
+import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
 import { StagePlay } from "@/apps/desktop/src/stage-play"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import type { ChatLine } from "@/components/stage/journal"
@@ -79,7 +79,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
     <StagePlay
       save={save}
       busy={sending || Boolean(work?.busy)}
-      art={{}}
+      art={state ? hostedArt(state) : {}}
       controls={(c) => (c as { userId?: string }).userId === state?.userId && (c as { controlledBy?: string }).controlledBy !== "ai"}
       status={state ? (state.hostOnline ? "Hosted · GM online" : "Hosted · GM offline") : ""}
       overlay={!save}

@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
       { source: "/stage-lab/:path*", destination: `${cdn}/stage-lab/:path*` },
       // Any image the deploy does not carry: the backgrounds, and old images kept only in the bucket.
       { source: "/images/:path*", destination: `${cdn}/images/:path*` },
+      // Guests' heroes painted by a host's image CLI. Same origin, so the stage can read them as textures.
+      { source: "/hero-art/:path*", destination: `${cdn}/hero-art/:path*` },
     ]
   },
 }

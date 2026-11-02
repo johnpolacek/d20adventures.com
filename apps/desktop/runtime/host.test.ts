@@ -194,6 +194,64 @@ test("a finished job's report the website missed is sent again, never as a failu
   }
 })
 
+test("a paint job runs beside the GM's work, sends its pictures, and a failure stays out of the host's events", async () => {
+  const { store, adventureId, cleanup } = await hosted()
+  try {
+    const sheet = { id: "mira", name: "Mira", appearance: "Tall." } as HostJob["sheet"]
+    const paintJob = (id: string): HostJob => ({ _id: id, adventureId, kind: "paint", userId: "guest", characterId: "characters/guest/mira.json", sheet })
+    const queue = [paintJob("painted"), paintJob("unpainted")]
+    const posts: { op: string; jobId?: string; picture?: string; painted?: boolean; error?: string }[] = []
+    const events: HostEvent[] = []
+    let release = () => {}
+    const held = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const art = { front: Buffer.from("f"), back: Buffer.from("b"), portrait: Buffer.from("p") }
+    let paints = 0
+    let claims = 0
+    const post: HostPost = async (_path, body) => {
+      const b = body as (typeof posts)[number]
+      if (b.op === "claim") {
+        claims++
+        return { job: queue.shift() ?? null }
+      }
+      posts.push(b)
+      return { ok: true }
+    }
+    let stop = false
+    await hostLoop({
+      adventureId,
+      post,
+      store,
+      packs,
+      llm: failLlm,
+      emit: (e) => events.push(e),
+      stopped: () => stop,
+      paint: async () => {
+        if (++paints === 2) throw new Error("No image CLI is installed.")
+        await held
+        return art
+      },
+      wait: async () => {
+        // The first paint is still held while the loop claims again, so it blocks nothing.
+        assert.ok(claims >= 3)
+        release()
+        await new Promise((resolve) => setTimeout(resolve, 10))
+        stop = true
+      },
+    })
+    assert.deepEqual(
+      posts.filter((p) => p.op === "art").map((p) => p.picture),
+      ["front", "back", "portrait"]
+    )
+    assert.ok(posts.some((p) => p.op === "finish" && p.jobId === "painted" && p.painted))
+    assert.ok(posts.some((p) => p.op === "finish" && p.jobId === "unpainted" && p.error === "No image CLI is installed."))
+    assert.ok(!events.some((e) => e.type === "working" || e.type === "failed"))
+  } finally {
+    cleanup()
+  }
+})
+
 test("a suggest job finishes with replies for the guest's own hero and changes nothing", async () => {
   const { store, turn, pc, adventureId, cleanup } = await hosted()
   try {

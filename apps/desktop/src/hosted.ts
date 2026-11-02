@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react"
 import type { HostedJob } from "../runtime/host-commands"
 import type { Save } from "../runtime/store"
+import type { FigureArt } from "./figures"
 
 // Hosted games keep their state on the website. The play view reads them as a save with only the current turn,
 // no local dice or walks, and the GM busy while a job for this turn waits or runs.
@@ -10,6 +11,9 @@ type Hosted = {
   turn: (Save["turns"][number] & Record<string, unknown>) | null
   jobs: Pick<HostedJob, "_id" | "turnId" | "kind" | "status" | "error" | "suggestions">[]
 }
+
+/** Guests' heroes the host's image CLI has painted, by hero id, as paths on the site. */
+export const hostedArt = (state: Pick<Hosted, "adventure">) => (state.adventure.host as { art?: Record<string, FigureArt> } | undefined)?.art ?? {}
 
 export function hostedSave(state: Hosted): Save | null {
   const { adventure, turn } = state
@@ -32,6 +36,7 @@ export function hostedSave(state: Hosted): Save | null {
     rolls: {},
     movement: {},
     positions: {},
+    painted: Object.keys(hostedArt(state)),
   }
 }
 

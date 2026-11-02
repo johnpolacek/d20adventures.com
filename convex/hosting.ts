@@ -259,7 +259,47 @@ export const queueArrival = mutation({
   },
 })
 
-/** The next job for the host's app, or null while one is still running. Also marks the host as online. */
+const artValidator = v.object({ front: v.string(), back: v.string(), portrait: v.string() })
+
+/**
+ * Asks the host's image CLI to paint a guest's hero, unless it is painted or on its way. Art the hero already has from
+ * an earlier game is kept as it is, with no job.
+ */
+export const queuePaint = mutation({
+  args: { secret: v.string(), adventureId: v.id("adventures"), userId: v.string(), characterId: v.string(), heroId: v.string(), art: v.optional(artValidator) },
+  handler: async (ctx, { secret, adventureId, userId, characterId, heroId, art }) => {
+    requireServer(secret)
+    const adventure = await ctx.db.get(adventureId)
+    const host = adventure?.host
+    if (!host) throw new Error("This adventure is not hosted")
+    if (host.art?.[heroId]) return
+    if (art) {
+      await ctx.db.patch(adventureId, { host: { ...host, art: { ...host.art, [heroId]: art } } })
+      return
+    }
+    const jobs = await ctx.db
+      .query("gmJobs")
+      .withIndex("by_adventure", (q) => q.eq("adventureId", adventureId))
+      .order("desc")
+      .take(50)
+    if (jobs.some((j) => j.kind === "paint" && j.characterId === characterId && (j.status === "queued" || j.status === "running"))) return
+    await ctx.db.insert("gmJobs", { adventureId, kind: "paint", userId, characterId, status: "queued", createdAt: Date.now() })
+  },
+})
+
+/** A paint job, for the website to check the art the host's app sends for it. */
+export const getJob = query({
+  args: { secret: v.string(), jobId: v.id("gmJobs") },
+  handler: async (ctx, { secret, jobId }) => {
+    requireServer(secret)
+    return await ctx.db.get(jobId)
+  },
+})
+
+/**
+ * The next job for the host's app, or null while one is still running. Also marks the host as online. A paint takes
+ * minutes, so it runs beside other jobs, one paint at a time, and starts only when nothing else is waiting.
+ */
 export const claimJob = mutation({
   args: { secret: v.string(), adventureId: v.id("adventures"), userId: v.string() },
   handler: async (ctx, { secret, adventureId, userId }) => {
@@ -271,10 +311,12 @@ export const claimJob = mutation({
     const running = await ctx.db
       .query("gmJobs")
       .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "running"))
-      .first()
-    if (running) {
-      if (now - (running.startedAt ?? running.createdAt) < ABANDONED_MS) return null
-      await ctx.db.patch(running._id, { status: "failed", error: "The host's game stopped before finishing this action.", finishedAt: now })
+      .take(20)
+    let painting = false
+    for (const job of running) {
+      if (now - (job.startedAt ?? job.createdAt) >= ABANDONED_MS) await ctx.db.patch(job._id, { status: "failed", error: "The host's game stopped before finishing this action.", finishedAt: now })
+      else if (job.kind === "paint") painting = true
+      else return null
     }
     const queued = await ctx.db
       .query("gmJobs")
@@ -282,7 +324,7 @@ export const claimJob = mutation({
       .order("asc")
       .take(20)
     // Players' actions go first, so suggested replies never hold one up in the queue.
-    const next = queued.find((j) => j.kind !== "suggest") ?? queued[0]
+    const next = queued.find((j) => j.kind !== "suggest" && j.kind !== "paint") ?? queued.find((j) => j.kind === "suggest") ?? (painting ? undefined : queued[0])
     if (!next) return null
     await ctx.db.patch(next._id, { status: "running", startedAt: now })
     return { ...next, status: "running" as const, startedAt: now }
@@ -298,8 +340,10 @@ export const finishJob = mutation({
     suggestions: v.optional(v.array(v.object({ label: v.string(), text: v.string() }))),
     // A finished arrival job's arrival, kept for its hero until the game starts.
     arrival: v.optional(arrivalValidator),
+    // A finished paint job's art, for the hero it painted.
+    art: v.optional(v.object({ heroId: v.string(), paths: artValidator })),
   },
-  handler: async (ctx, { secret, jobId, userId, error, suggestions, arrival }) => {
+  handler: async (ctx, { secret, jobId, userId, error, suggestions, arrival, art }) => {
     requireServer(secret)
     const job = await ctx.db.get(jobId)
     if (!job) throw new Error("Job not found")
@@ -310,6 +354,7 @@ export const finishJob = mutation({
       const hero = sheetId(job.characterId ?? "") ?? ""
       await ctx.db.patch(adventure._id, { host: { ...adventure.host, arrivals: { ...adventure.host.arrivals, [hero]: arrival } } })
     }
+    if (job.kind === "paint" && !error && art && adventure.host) await ctx.db.patch(adventure._id, { host: { ...adventure.host, art: { ...adventure.host.art, [art.heroId]: art.paths } } })
     await ctx.db.patch(jobId, { status: error ? "failed" : "done", error, finishedAt: Date.now(), ...(job.kind === "suggest" && !error && suggestions ? { suggestions } : {}) })
   },
 })

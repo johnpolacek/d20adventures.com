@@ -10,6 +10,7 @@ import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventure
 import { scenePlaces, spatialContext } from "../src/scenes"
 import type { Packs } from "./game"
 import { heroAdventure } from "./heroes"
+import type { Art } from "./paint"
 
 // Host mode: the game lives on the website, and this app runs its GM. Guests' actions and the host's own wait on the
 // website as jobs. The worker claims one at a time, runs it through the host's CLI, and reports it done or failed.
@@ -20,13 +21,13 @@ export type HostJob = {
   adventureId: string
   // None for an arrival job, which is written before the first turn.
   turnId?: string
-  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival"
+  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival" | "paint"
   userId: string
   characterId?: string
   // A reply's text, or the hook a created hero's player chose for an arrival job.
   text?: string
   result?: number
-  // An arrival job's hero, as the website sends it.
+  // An arrival or paint job's hero, as the website sends it.
   sheet?: PCTemplate | null
 }
 // One request to the website's host routes, with the device token added by the caller.
@@ -183,12 +184,39 @@ export async function hostLoop(opts: {
   store: Store
   packs: Packs
   llm: Llm
+  // Paints a guest's hero through the host's image CLI. It throws where there is none.
+  paint?: (hero: PCTemplate) => Promise<Art>
   emit: (event: HostEvent) => void
   stopped: () => boolean
   wait: (ms: number) => Promise<void>
 }) {
   const jobs = `/api/desktop/host/${opts.adventureId}/jobs`
   let idle = false
+  // A report the website missed is sent again. Finishing a job twice changes nothing, and a job left running holds
+  // every later one for ten minutes.
+  const finish = async (jobId: string, report: { suggestions?: ActionSuggestion[]; arrival?: Arrival; painted?: boolean; error?: string }) => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await opts.post(jobs, { op: "finish", jobId, ...report })
+      } catch (error) {
+        if (attempt === 3) throw error
+        await opts.wait(2000)
+      }
+    }
+  }
+  // A paint runs beside the GM's work and takes minutes. A hero it fails for stays on their stock figure, and the game
+  // goes on, so nothing is shown to the table.
+  const paintHero = async (job: HostJob) => {
+    try {
+      if (!opts.paint) throw new Error("This app cannot paint.")
+      if (!job.sheet?.name || !job.sheet.appearance) throw new Error("The hero's sheet could not be read.")
+      const art = await opts.paint(job.sheet)
+      for (const picture of ["front", "back", "portrait"] as const) await opts.post(jobs, { op: "art", jobId: job._id, picture, data: art[picture].toString("base64") })
+      await finish(job._id, { painted: true })
+    } catch (error) {
+      await finish(job._id, { error: error instanceof Error ? error.message : "The hero could not be painted." }).catch(() => {})
+    }
+  }
   // Turns that need no player run on their own: the worker queues a Continue for them. Each is queued once, so one
   // that fails waits for a player's Continue instead of being retried for ever.
   let followed: string | null = null
@@ -224,25 +252,17 @@ export async function hostLoop(opts: {
       await opts.wait(1500)
       continue
     }
+    if (job.kind === "paint") {
+      void paintHero(job)
+      continue
+    }
     idle = false
     opts.emit({ type: "working", job: { _id: job._id, kind: job.kind, characterId: job.characterId } })
-    // A report the website missed is sent again. Finishing a job twice changes nothing, and a job left running holds
-    // every later one for ten minutes.
-    const finish = async (report: { suggestions?: ActionSuggestion[]; arrival?: Arrival; error?: string }) => {
-      for (let attempt = 0; ; attempt++) {
-        try {
-          return await opts.post(jobs, { op: "finish", jobId: job._id, ...report })
-        } catch (error) {
-          if (attempt === 3) throw error
-          await opts.wait(2000)
-        }
-      }
-    }
     let result: { suggestions?: ActionSuggestion[]; arrival?: Arrival } | { error: string }
     try {
       if (job.kind === "arrival") {
         result = { arrival: await runArrivalJob(job, opts.store, opts.packs, opts.llm) }
-        await finish(result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
+        await finish(job._id, result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
         opts.emit({ type: "done", jobId: job._id })
         continue
       }
@@ -254,7 +274,7 @@ export async function hostLoop(opts: {
       result = { error: error instanceof Error ? error.message : "The GM could not finish this action." }
     }
     // The game is already saved, so a missed report never turns a finished action into a failed one.
-    await finish(result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
+    await finish(job._id, result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
     opts.emit("error" in result ? { type: "failed", jobId: job._id, error: result.error } : { type: "done", jobId: job._id })
   }
 }

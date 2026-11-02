@@ -1,10 +1,12 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { join } from "node:path"
 import { createInterface } from "node:readline"
+import { locate } from "../../desktop-spike/harness/cli.mjs"
 import type { Packs } from "./game"
 import { type HostPost, hostLoop, remoteStore } from "./host"
 import { localLlm } from "./llm"
 import { loadPacks } from "./packs"
+import { PAINTERS, type Painter, paint, storeArt } from "./paint"
 
 // The host worker: a long-lived process while the host's app hosts a game. Rust starts it with one line of JSON
 // on stdin and stops it by closing stdin or with SIGTERM. Each stdout line is an event for the app.
@@ -21,6 +23,17 @@ process.on("SIGTERM", stop)
 process.on("SIGINT", stop)
 const parentWatch = setInterval(() => process.ppid === 1 && stop(), 2000)
 const emit = (event: unknown) => process.stdout.write(`${JSON.stringify(event)}\n`)
+// The host's GM CLI where it can paint, else the first image CLI installed.
+const painter = (provider: string) =>
+  [provider as Painter, ...PAINTERS].find((name) => {
+    if (!PAINTERS.includes(name)) return false
+    try {
+      locate(name)
+      return true
+    } catch {
+      return false
+    }
+  })
 
 async function main() {
   const lines = createInterface({ input: process.stdin })
@@ -53,6 +66,16 @@ async function main() {
       store: remoteStore(post),
       packs,
       llm: model.llm,
+      // Kept beside the host's own painted heroes too, since the app shows only local pictures.
+      paint: async (hero) => {
+        const name = painter(start.provider)
+        if (!name) throw new Error("No image CLI is installed.")
+        const cwd = join(scratch, "paint")
+        mkdirSync(cwd, { recursive: true })
+        const art = await paint(name, hero, cwd)
+        storeArt(start.data, hero.id, art)
+        return art
+      },
       emit,
       stopped: () => stopped,
       wait: (ms) =>

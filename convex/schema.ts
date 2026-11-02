@@ -117,6 +117,8 @@ export default defineSchema({
         bring: v.optional(v.number()),
         // Created heroes' arrivals in the opening scene, by hero sheet id, written by the host's GM before the game starts.
         arrivals: v.optional(v.record(v.string(), v.object({ reason: v.string(), intro: v.string(), tell: v.string() }))),
+        // Guests' heroes painted by the host's image CLI, by hero sheet id, as paths on the site.
+        art: v.optional(v.record(v.string(), v.object({ front: v.string(), back: v.string(), portrait: v.string() }))),
         // Guests the host removed from the table. They take no held seat, and their next request waits for the host.
         removed: v.optional(v.array(v.string())),
         requests: v.optional(
@@ -153,7 +155,8 @@ export default defineSchema({
     turnId: v.optional(v.id("turns")),
     // A suggest job changes nothing in the game. It finishes with replies the player could send for their hero.
     // An arrival job writes a created hero's arrival before the game starts, for their sheet's key, with their hook as text.
-    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip"), v.literal("arrival")),
+    // A paint job paints a guest's hero through the host's image CLI, for their sheet's key. It holds up no other job.
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip"), v.literal("arrival"), v.literal("paint")),
     // Who asked, and for which character. Continue jobs have no character.
     userId: v.string(),
     characterId: v.optional(v.string()),

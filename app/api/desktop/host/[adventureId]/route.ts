@@ -5,7 +5,7 @@ import { serverSecret } from "@/lib/convex/server-secret"
 import { deviceFromRequest } from "@/lib/desktop/server"
 import { postTableChat, tableChat } from "@/lib/host/chat"
 import { thrownMessage } from "@/lib/host/seats"
-import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, queueArrival, seatHost, siteOrigin, takesArrivals } from "@/lib/host/server"
+import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, queueArrival, queuePaint, seatHost, siteOrigin, takesArrivals } from "@/lib/host/server"
 import { startWikiAdventure } from "@/lib/wiki-adventures/start"
 
 // A hosted game's state for the host's app: the adventure, its current turn, recent GM work, and the table chat.
@@ -56,6 +56,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
           throw new HostError(409, thrownMessage(e, "The request could not be answered."))
         })
       if (seated && (await takesArrivals(adventure))) await queueArrival(adventure._id, seated.characterId, body.userId, seated.hook).catch((e) => console.warn("No arrival job:", e))
+      if (seated) await queuePaint(adventure._id, seated.characterId, body.userId).catch((e) => console.warn("No paint job:", e))
       return NextResponse.json({ answered: true })
     }
     if (action === "delete") {

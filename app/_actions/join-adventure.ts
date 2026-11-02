@@ -8,7 +8,7 @@ import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { heroMisfit } from "@/lib/heroes/creation"
 import { guestSeats, openLeft, seatHero, sheetId, thrownMessage } from "@/lib/host/seats"
-import { queueArrival, takesArrivals } from "@/lib/host/server"
+import { queueArrival, queuePaint, takesArrivals } from "@/lib/host/server"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -128,6 +128,7 @@ export async function requestSeat({ adventureId, characterId, hook }: { adventur
   try {
     const { seated } = await convex.mutation(api.hosting.requestSeat, { secret: serverSecret(), adventureId: adventure._id, ...request })
     if (seated && (await takesArrivals(adventure))) await queueArrival(adventure._id, key, user.id, why).catch((e) => console.warn("No arrival job:", e))
+    if (seated) await queuePaint(adventure._id, key, user.id).catch((e) => console.warn("No paint job:", e))
     return { seated }
   } catch (e) {
     return { error: thrownMessage(e, "That seat could not be taken.") }

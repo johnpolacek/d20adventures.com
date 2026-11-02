@@ -33,7 +33,7 @@ Style: a finished painted fantasy character illustration, stylized-realistic, wi
 Background: flat, perfectly solid bright green #00ff00 everywhere, edge to edge, with no gradient.`
 }
 
-export async function paint(provider: Painter, hero: Hero, cwd: string): Promise<Art> {
+export async function paint(provider: Painter, hero: Pick<Hero, "name" | "race" | "archetype" | "gender" | "appearance">, cwd: string): Promise<Art> {
   const command = imageCommand(provider, cwd, paintPrompt(provider, hero), "standee")
   const result = await run(command.executable, command.args, { cwd, env: command.env, input: command.input, timeout: 300_000, limit: 8_388_608 })
   if (result.code !== 0 || result.timedOut || result.oversized) throw new Error(`${provider} could not paint ${hero.name}. Check its sign-in or usage limit, then retry.`)

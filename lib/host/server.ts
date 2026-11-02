@@ -6,8 +6,8 @@ import { assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { serverStore } from "@/lib/gm-server/store"
-import { hostWaits, hostWatches, openLeft, openSeats } from "@/lib/host/seats"
-import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
+import { hostWaits, hostWatches, openLeft, openSeats, sheetId } from "@/lib/host/seats"
+import { readJsonFromS3, updateJsonOnS3, uploadFileToS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 
@@ -151,9 +151,53 @@ export async function takesArrivals(adventure: Pick<Doc<"adventures">, "settingI
   return isLocalWikiAdventure(adventure.settingId, adventure.planId) && Boolean((await loadWikiAdventureRuntime(adventure.settingId, adventure.planId)).artifacts.manifest.heroHooks?.length)
 }
 
-/** An arrival job as the host's app runs it: the hero's sheet goes with it, and the adventure is the host's. */
+// Where a guest's painted hero lives: paths on the site, by their sheet's key, kept for the next game they bring them to.
+const ART_KINDS = ["front", "back", "portrait"] as const
+type ArtKind = (typeof ART_KINDS)[number]
+const artPath = (characterId: string, kind: ArtKind) => `/hero-art/${characterId.split("/")[1]}/${sheetId(characterId)}/${kind}.png`
+const artPaths = (characterId: string) => Object.fromEntries(ART_KINDS.map((k) => [k, artPath(characterId, k)])) as Record<ArtKind, string>
+
+/**
+ * Asks the host's image CLI to paint a guest's hero as they take a seat. A hero stands as their stock figure until it
+ * is done. A hero with art of their own is left alone, and one painted in an earlier game keeps that art.
+ */
+export async function queuePaint(adventureId: Id<"adventures">, characterId: string, userId: string) {
+  const sheet = toPCTemplate(await readJsonFromS3(characterId).catch(() => null))
+  if (!sheet?.id) return
+  const painted = sheet.image === artPath(characterId, "portrait")
+  if (sheet.image && !painted && !sheet.image.startsWith("/stage/")) return
+  await convex.mutation(api.hosting.queuePaint, { secret: serverSecret(), adventureId, userId, characterId, heroId: sheet.id, ...(painted ? { art: artPaths(characterId) } : {}) })
+}
+
+async function runningPaint(adventureId: string, jobId: string) {
+  const job = await convex.query(api.hosting.getJob, { secret: serverSecret(), jobId: jobId as Id<"gmJobs"> }).catch(() => null)
+  if (!job || job.adventureId !== adventureId || job.kind !== "paint" || job.status !== "running" || !job.characterId?.startsWith("characters/"))
+    throw new HostError(404, "That paint job is not running.")
+  return { ...job, characterId: job.characterId }
+}
+
+/** Saves one picture the host's app painted for a running paint job. A request carries one, to stay under the body limit. */
+export async function savePaintedArt(adventureId: string, jobId: string, kind: unknown, data: unknown) {
+  const { characterId } = await runningPaint(adventureId, jobId)
+  if (!ART_KINDS.includes(kind as ArtKind)) throw new HostError(400, "That is not a kind of art.")
+  // Base64 of a PNG starts with this, and the website's body limit is about 4.5 MB.
+  if (typeof data !== "string" || !data.startsWith("iVBORw0KGgo") || data.length > 4_400_000) throw new HostError(400, "That picture is not a PNG of a usable size.")
+  await uploadFileToS3(new Blob([Buffer.from(data, "base64")], { type: "image/png" }), artPath(characterId, kind as ArtKind).slice(1), "image/png")
+}
+
+/** Puts a finished paint job's portrait on the hero's sheet, and answers with the art for the table. */
+export async function paintedArt(adventureId: string, jobId: string) {
+  const { characterId } = await runningPaint(adventureId, jobId)
+  const sheet = (await readJsonFromS3(characterId)) as { id?: string }
+  if (!sheet?.id) throw new HostError(404, "That hero's sheet could not be read.")
+  const paths = artPaths(characterId)
+  await updateJsonOnS3(characterId, { ...sheet, image: paths.portrait })
+  return { heroId: sheet.id, paths }
+}
+
+/** An arrival or paint job as the host's app runs it: the hero's sheet goes with it, and the adventure is the host's. */
 export async function arrivalJob<T extends { kind: string; characterId?: string }>(job: T) {
-  if (job.kind !== "arrival" || !job.characterId?.startsWith("characters/")) return job
+  if ((job.kind !== "arrival" && job.kind !== "paint") || !job.characterId?.startsWith("characters/")) return job
   return { ...job, sheet: toPCTemplate(await readJsonFromS3(job.characterId).catch(() => null)) }
 }
 

@@ -14,7 +14,7 @@ import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
 import { Home } from "./home"
-import { hostedSave, hostedWork, useHostedSuggest } from "./hosted"
+import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "./hosted"
 import { HostedLobby } from "./hosted-lobby"
 import { type Locked, NewGame } from "./new-game"
 import { AdventuresPage, CharactersPage, type Page, SettingsPage } from "./pages"
@@ -210,6 +210,15 @@ export function DesktopGame() {
   const [hosting, setHosting] = useState<string | null>(null)
   const [hosted, setHosted] = useState<HostedState | null>(null)
   const [hostedList, setHostedList] = useState<HostedSummary[]>([])
+  // Guests' heroes the worker painted are read from the data folder, as the app shows only local pictures.
+  const guestArt = hosted ? Object.keys(hostedArt(hosted)).join() : ""
+  useEffect(() => {
+    if (working || !guestArt) return
+    const ids = guestArt.split(",").filter((id) => !askedArt.current.has(id))
+    if (!ids.length) return
+    for (const id of ids) askedArt.current.add(id)
+    void invoke({ kind: "art", ids: ids.slice(0, 24) })
+  }, [working, guestArt, invoke])
   const [worker, setWorker] = useState<HostWorkerState | null>(null)
   const [sending, setSending] = useState(false)
   const shownFailure = useRef<string | null>(null)

@@ -71,8 +71,21 @@ The arrival prompt is AI output that ordinary tests cannot judge. Rubric, judged
 - The hook list needs owner review before it ships.
 - Whether a roster hero's hook can be picked on the party screen, or the GM always picks it there.
 
+## Guests' heroes painted by the host, 2026-11-01
+
+Owner: guests use the host's subscription for their character images. Chosen: automatic, as the hero takes a seat.
+
+- Seating a guest's own hero queues a `paint` job. `queuePaint` in `lib/host/server.ts` skips a hero with art of their own, and reuses art from an earlier game.
+- The host's worker paints through Grok or Codex: the GM's CLI if it can paint, else the first installed.
+- A paint runs beside other jobs, one at a time, and starts only when nothing else waits. See `claimJob`.
+- The hero stands as stock until it finishes. A failure leaves them on stock and shows nobody a message.
+- The worker posts front, back and portrait one request each to the jobs route. They land at `/hero-art/<user>/<hero>/`, served through a rewrite so the stage can use them as textures.
+- `host.art` holds the paths by hero id. The sheet's `image` becomes the portrait.
+- The host's app keeps its own copy, since it shows only local pictures.
+- Known: a quit mid-paint fails after ten minutes, with no retry. Art reused from an earlier game shows as stock in the host's app if that app did not paint it.
+
 ## Later, not in this plan
 
 - A stat budget matching the premades: 70 to 72 points, none above 16.
 - One-line descriptions for each race and class.
-- Painting new heroes automatically when a painting CLI is installed.
+- Painting a host's or solo player's new heroes automatically when a painting CLI is installed.

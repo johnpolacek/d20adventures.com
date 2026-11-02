@@ -74,7 +74,7 @@ export type HostedJob = {
   _id: string
   // None for an arrival job, which is written before the first turn.
   turnId?: string
-  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival"
+  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival" | "paint"
   characterId?: string
   status: "queued" | "running" | "done" | "failed"
   error?: string
