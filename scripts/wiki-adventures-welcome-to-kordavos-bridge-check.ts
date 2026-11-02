@@ -37,10 +37,6 @@ function main() {
   assert.deepEqual(artifacts.manifest.premadeCharacterIds, [
     "branka-stoneveil",
     "milos-radan",
-    "yeva-softstep",
-    "cassia-verane",
-    "wrenna-faelendar",
-    "ilya-veles",
     "thalbern",
     "1749159962941",
     "1749307435667",
