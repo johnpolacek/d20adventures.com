@@ -115,7 +115,9 @@ function AdventureHomeContent({
 
   const redirectUrl = invite?.as ? `${pathname}?as=${encodeURIComponent(invite.as)}` : pathname
   // The lobby, before the game starts: the cover and first sentence over sign in, or over the party and heroes.
-  if (isLoaded && (!turn || hosted) && adventurePlan)
+  // Until sign-in is known, nothing paints: the cover and all below it enter together once it is.
+  if ((!turn || hosted) && adventurePlan && !isLoaded) return <div className="min-h-screen" />
+  if ((!turn || hosted) && adventurePlan)
     return isSignedIn ? (
       <LobbyIntro plan={adventurePlan}>
         <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} hosted={hosted} />
