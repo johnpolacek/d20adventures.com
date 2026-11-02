@@ -11,12 +11,13 @@
 //   &cast=off                        hide cast, crowd and effects (for plates)
 //   &paint=0                         no brush filter over the frame
 //   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
+//   &figure=<castId>:<file>[:yaw]    /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee
 //   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
-import { addBackdrop, addSplat, animateStandee, cameraOf, pano, projectPaintings } from "./lab"
+import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, pano, projectPaintings } from "./lab"
 
 type Params = Record<string, string | undefined>
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
@@ -87,6 +88,13 @@ export function LabViewer({ params }: { params: Params }) {
       const w = window as unknown as { __stage?: Stage; __lab?: unknown }
       w.__stage = st
       w.__lab = lab
+      // &figure=<castId>:<file>[:yaw]: /stage-lab/<file>.glb, a rigged 3D figure, in place of that cast member's standee.
+      if (params.figure) {
+        const [castId, file, yaw] = params.figure.split(":")
+        const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw) })
+        stops.push(f.stop)
+        lab.figure = { triangles: f.triangles, clips: f.clips }
+      }
       // &dummy=x,z: a person-sized solid at that spot, standing in for a 3D character, to see its shadow on the paint.
       const dummy = params.dummy?.split(",").map(Number)
       if (dummy?.length === 2) {

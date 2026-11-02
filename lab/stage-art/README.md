@@ -90,6 +90,16 @@ open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=gate-pla
 - `--place=` and `--detail=` describe a set other than the gate. `repaint.ts drift <plate> <painting>` scores how well a painting kept the plate's edges.
 - `&shadows=` lets only figures cast sun shadows and darkens the paint under them. A value over 5 draws the shadow mask itself.
 - `&dummy=x,z` stands a person-sized solid there. `capture.ts --glide=from,to` catches a camera move part way. `--eval=` prints a value from the page.
+A 3D character in place of a standee:
+
+```sh
+node --import tsx lab/stage-art/character.ts sheet garlan "Garlan Ironfist, a broad, bearded human sergeant of the gate watch"
+node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts model garlan 1.94   # paid: $1.52 on fal
+open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=cp-cli,cp-zoom&shadows=0.55&figure=garlan:garlan-idle&shot=checkpoint"
+```
+
+- `sheet` is free, on the ChatGPT subscription. `model` keeps its response in `raw/`, so a rerun downloads again and does not pay again.
+- Clips: `garlan-idle`, `garlan-walking`, `garlan-running`. The idle turns him a long way, so one frame can show his back.
 - `WORLDLABS_API_KEY` goes in `.env.local`. World Labs bills use past the balance later, so `marble.ts world` checks the balance first.
 - Pick the panorama point where the cameras are, and clear of props: `capture.ts --pano` prints the nearest surface as `zMin`.
 - A world generated from a point 14 m from the checkpoint smeared there. One made at the checkpoint held.
@@ -116,6 +126,7 @@ Toggles in the panel switch each spike. `?clip=thalbern-h3-idle` plays the H3 lo
 | `capture.ts` | Captures and records lab views over CDP. |
 | `repaint.ts` | Repaints a shot's plate or a 360 panorama with GPT Image 2, painterly or photoreal. |
 | `marble.ts` | World Labs: credits, depth to panorama, panorama to splat world. |
+| `character.ts` | A standee redrawn as an A-pose sheet, then a rigged 3D model from Meshy on fal. |
 | `lab.ts`, `viewer.tsx` | The three changes, applied to a running Stage, and the lab page at `app/dev/stage-lab`. |
 
 Generated assets in `public/stage-lab/` and raw outputs in `raw/` are not committed. The scripts regenerate them, with new model output each time.

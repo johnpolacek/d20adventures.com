@@ -2,7 +2,7 @@
 
 [Home](../index.md) · [Plans](index.md) · [Stage engine](../stage-engine.md) · [Stage art spikes](stage-art-spikes.md)
 
-Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Open: an owner decision on how the camera behaves over paintings. Character spike not started.
+Status: environment spike run and reviewed 2026-11-10. The owner chose painted, photoreal for environments. A second round the same day tested coverage, camera moves, figure shadows and an interior, with paintings made on the owner's ChatGPT subscription. Character spike run the same day: one 3D Garlan stands at the gate. Open: an owner decision on how the camera behaves over paintings, and on going ahead with 3D characters.
 
 ## Why
 
@@ -79,6 +79,23 @@ Two ways to use paintings, for the owner to choose between:
 
 Close zooms from a tripod, tested 2026-11-10: zooming 2× into the CLI's 1536 px checkpoint painting goes soft on the ground and the barrier. A second painting from the same point with a 24 degree lens, made by `repaint.ts --sharpen` from a plate of the first one enlarged, fixes it: sharper at native pixels than the API's 2880 px painting, 82% of edges within 2 px, 55 seconds, and no join shows in the wide view. So a tripod point wants its wide painting plus a sharpen pass for each close framing, or about four to tile the whole frame.
 
-## Character spike
+## Character spike, 2026-11-10
 
-Next. Take Garlan from his front and back art through image-to-3D, rig him, give him an idle and a walk, and stand him at the gate beside his standee.
+Garlan Ironfist, from his standee to a rigged 3D figure at the gate. Commands: [lab/stage-art/README.md](../../lab/stage-art/README.md).
+
+1. `character.ts sheet`: the Codex CLI, on the owner's ChatGPT subscription, redrew his front and back standees as a photoreal A-pose sheet on grey. 112 seconds, no charge. Outfit, emblems and beard carried over.
+2. `character.ts model`: Meshy 7.1 on fal turned the sheet's front view into a textured mesh with a rig, an idle, a walk and a run. One call, $1.52, about 10 minutes.
+3. `&figure=garlan:garlan-idle` stands the model at his mark, at his height and facing, in place of the card.
+
+| Question | Result |
+|---|---|
+| Does he hold up beside the painted set? | Yes at the checkpoint's distance and in the zoom: real armour with depth, a readable face, and he sits in the photoreal set better than the painted cards around him. |
+| The face up close? | Clean and usable, but a different man: darker, shorter hair and a generic game face. The likeness drifted between the sheet and the mesh. |
+| Animation? | The rig and all three clips play. Meshy's idle preset 0 swings him well away from his facing, so a frame can catch his back. A calmer idle is needed. |
+| Cost to draw? | 61,909 triangles. 33 frames a second at the checkpoint with him in, the same as without. |
+| Size? | 18 MB per clip file, since each repeats the mesh and textures. The armature-only clips are 0.1 MB, so one mesh plus those is the way to pack it. |
+| His shadow on the paint? | Not confirmed. No clear cast shadow shows under him in the captures. |
+
+Not done: a second generator for comparison, the back view as input, Blender (not installed), a calmer idle, a talk or attack clip, a monster, a second character to check the crowd of cards against.
+
+Prices, 2026-11-10: Meshy 7.1 on fal is $1.20 for a textured model, $0.20 for a rig and $0.12 an animation call. About 120 named characters would be about $180.

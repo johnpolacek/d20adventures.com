@@ -468,3 +468,48 @@ export async function addSplat(stage: Stage, base: string, o: { gain?: number; y
   stage.scene.add(mesh)
   return { mesh, spark, scale }
 }
+
+// Character spike: a rigged, animated glTF figure in place of a cast member's standee, at their spot and facing, scaled
+// to their height. It casts and takes the sun's shadow and plays its first clip on its own clock.
+export async function addFigure(stage: Stage, url: string, castId: string, o: { yaw?: number; keep?: boolean } = {}) {
+  const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js")
+  const s = stage.standees.items.get(castId)
+  if (!s) throw new Error(`No cast member ${castId}`)
+  const gltf = await new GLTFLoader().loadAsync(url)
+  const root = gltf.scene
+  root.updateMatrixWorld(true)
+  const box = new THREE.Box3().setFromObject(root)
+  const scale = s.cast.height / Math.max(box.max.y - box.min.y, 1e-3)
+  root.scale.setScalar(scale)
+  const lift = -box.min.y * scale
+  // Where the cast member stands and faces, followed every frame. A glTF figure faces +z, as the engine's yaw 0 does.
+  const place = () => {
+    root.position.set(s.cast.x, lift + (s.cast.y ?? 0), s.cast.z)
+    root.rotation.y = THREE.MathUtils.degToRad(o.yaw ?? 0) + s.cast.ry
+  }
+  place()
+  let triangles = 0
+  root.traverse((m) => {
+    if (!(m instanceof THREE.Mesh)) return
+    m.castShadow = m.receiveShadow = true
+    m.frustumCulled = false
+    triangles += (m.geometry.index?.count ?? m.geometry.attributes.position.count) / 3
+  })
+  root.name = "lab:figure"
+  stage.scene.add(root)
+  // The standee's own update shows it again every frame, so its group is pinned hidden.
+  if (!o.keep) Object.defineProperty(s.grp, "visible", { get: () => false, set: () => {} })
+  const mixer = new THREE.AnimationMixer(root)
+  if (gltf.animations[0]) mixer.clipAction(gltf.animations[0]).play()
+  let last = performance.now()
+  let alive = true
+  const tick = (now: number) => {
+    if (!alive) return
+    mixer.update(Math.min(0.1, (now - last) / 1000))
+    place()
+    last = now
+    requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+  return { root, mixer, triangles, clips: gltf.animations.map((a) => `${a.name} ${a.duration.toFixed(1)}s`), stop: () => (alive = false) }
+}
