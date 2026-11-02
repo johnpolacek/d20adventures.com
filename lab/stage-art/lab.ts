@@ -438,7 +438,6 @@ void main(){ float d = texture2D(tDepth, vUv).x; if (d >= 0.99999) { gl_FragColo
     faces.push({ inv: new THREE.Matrix4().extractRotation(cam.matrixWorldInverse), px })
   }
   r.setRenderTarget(prev)
-  clock.value = now
   hidden.forEach((h, i) => {
     h.visible = was[i]
   })
