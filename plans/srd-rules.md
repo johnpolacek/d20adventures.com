@@ -59,6 +59,10 @@ Substages:
 10. The attribution line on the site and in the app.
 11. Review by a separate judge until it rates 9.5 or higher.
 
+Status, 2026-11-11: substages 1 to 10 are built, `pnpm test:srd` passes, and the judge review is under way. The package's README lists what it holds, how its checks work, and where the official text disagrees with itself.
+
+Found along the way: both upstream sources hold many errors, so origins, equipment and magic items are built from the official text alone, and the rest take wording and corrections from it.
+
 Not in this stage: the rules text itself (how play works, the rules glossary). The engine stages encode it.
 
 ### 2. The sheet
