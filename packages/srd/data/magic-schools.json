@@ -1,0 +1,50 @@
+[
+  {
+    "id": "abjuration",
+    "name": "Abjuration",
+    "page": 105,
+    "typicalEffects": "Prevents or reverses harmful effects"
+  },
+  {
+    "id": "conjuration",
+    "name": "Conjuration",
+    "page": 105,
+    "typicalEffects": "Transports creatures or objects"
+  },
+  {
+    "id": "divination",
+    "name": "Divination",
+    "page": 105,
+    "typicalEffects": "Reveals information"
+  },
+  {
+    "id": "enchantment",
+    "name": "Enchantment",
+    "page": 105,
+    "typicalEffects": "Influences minds"
+  },
+  {
+    "id": "evocation",
+    "name": "Evocation",
+    "page": 105,
+    "typicalEffects": "Channels energy to create effects that are often destructive"
+  },
+  {
+    "id": "illusion",
+    "name": "Illusion",
+    "page": 105,
+    "typicalEffects": "Deceives the mind or senses"
+  },
+  {
+    "id": "necromancy",
+    "name": "Necromancy",
+    "page": 105,
+    "typicalEffects": "Manipulates life and death"
+  },
+  {
+    "id": "transmutation",
+    "name": "Transmutation",
+    "page": 105,
+    "typicalEffects": "Transforms creatures or objects"
+  }
+]

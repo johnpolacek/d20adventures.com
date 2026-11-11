@@ -1,0 +1,80 @@
+[
+  {
+    "id": "acid",
+    "name": "Acid",
+    "page": 180,
+    "examples": "Corrosive liquids, digestive enzymes"
+  },
+  {
+    "id": "bludgeoning",
+    "name": "Bludgeoning",
+    "page": 180,
+    "examples": "Blunt objects, constriction, falling"
+  },
+  {
+    "id": "cold",
+    "name": "Cold",
+    "page": 180,
+    "examples": "Freezing water, icy blasts"
+  },
+  {
+    "id": "fire",
+    "name": "Fire",
+    "page": 180,
+    "examples": "Flames, unbearable heat"
+  },
+  {
+    "id": "force",
+    "name": "Force",
+    "page": 180,
+    "examples": "Pure magical energy"
+  },
+  {
+    "id": "lightning",
+    "name": "Lightning",
+    "page": 180,
+    "examples": "Electricity"
+  },
+  {
+    "id": "necrotic",
+    "name": "Necrotic",
+    "page": 180,
+    "examples": "Life-draining energy"
+  },
+  {
+    "id": "piercing",
+    "name": "Piercing",
+    "page": 180,
+    "examples": "Fangs, puncturing objects"
+  },
+  {
+    "id": "poison",
+    "name": "Poison",
+    "page": 180,
+    "examples": "Toxic gas, venom"
+  },
+  {
+    "id": "psychic",
+    "name": "Psychic",
+    "page": 180,
+    "examples": "Mind-rending energy"
+  },
+  {
+    "id": "radiant",
+    "name": "Radiant",
+    "page": 180,
+    "examples": "Holy energy, searing radiation"
+  },
+  {
+    "id": "slashing",
+    "name": "Slashing",
+    "page": 180,
+    "examples": "Claws, cutting objects"
+  },
+  {
+    "id": "thunder",
+    "name": "Thunder",
+    "page": 180,
+    "examples": "Concussive sound"
+  }
+]

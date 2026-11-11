@@ -1,0 +1,89 @@
+[
+  {
+    "id": "chaotic-evil",
+    "name": "Chaotic Evil",
+    "page": 22,
+    "abbreviation": "CE",
+    "order": "chaotic",
+    "morality": "evil",
+    "description": "Chaotic Evil creatures act with arbitrary violence, spurred by their hatred or bloodlust. A villain pursuing schemes of vengeance and havoc is probably Chaotic Evil."
+  },
+  {
+    "id": "chaotic-good",
+    "name": "Chaotic Good",
+    "page": 21,
+    "abbreviation": "CG",
+    "order": "chaotic",
+    "morality": "good",
+    "description": "Chaotic Good creatures act as their conscience directs with little regard for what others expect. A rebel who waylays a cruel baron’s tax collectors and uses the stolen money to help the poor is probably Chaotic Good."
+  },
+  {
+    "id": "chaotic-neutral",
+    "name": "Chaotic Neutral",
+    "page": 22,
+    "abbreviation": "CN",
+    "order": "chaotic",
+    "morality": "neutral",
+    "description": "Chaotic Neutral creatures follow their whims, valuing their personal freedom above all else. A scoundrel who wanders the land living by their wits is probably Chaotic Neutral."
+  },
+  {
+    "id": "lawful-evil",
+    "name": "Lawful Evil",
+    "page": 22,
+    "abbreviation": "LE",
+    "order": "lawful",
+    "morality": "evil",
+    "description": "Lawful Evil creatures methodically take what they want within the limits of a code of tradition, loyalty, or order. An aristocrat exploiting citizens while scheming for power is probably Lawful Evil."
+  },
+  {
+    "id": "lawful-good",
+    "name": "Lawful Good",
+    "page": 21,
+    "abbreviation": "LG",
+    "order": "lawful",
+    "morality": "good",
+    "description": "Lawful Good creatures endeavor to do the right thing as expected by society. Someone who fights injustice and protects the innocent without hesitation is probably Lawful Good."
+  },
+  {
+    "id": "lawful-neutral",
+    "name": "Lawful Neutral",
+    "page": 21,
+    "abbreviation": "LN",
+    "order": "lawful",
+    "morality": "neutral",
+    "description": "Lawful Neutral individuals act in accordance with law, tradition, or personal codes. Someone who follows a disciplined rule of life—and isn’t swayed either by the demands of those in need or by the temptations of evil—is probably Lawful Neutral."
+  },
+  {
+    "id": "neutral",
+    "name": "Neutral",
+    "page": 21,
+    "abbreviation": "N",
+    "order": "neutral",
+    "morality": "neutral",
+    "description": "Neutral is the alignment of those who prefer to avoid moral questions and don’t take sides, doing what seems best at the time. Someone who’s bored by moral debate is probably Neutral."
+  },
+  {
+    "id": "neutral-evil",
+    "name": "Neutral Evil",
+    "page": 22,
+    "abbreviation": "NE",
+    "order": "neutral",
+    "morality": "evil",
+    "description": "Neutral Evil is the alignment of those who are untroubled by the harm they cause as they pursue their desires. A criminal who robs and murders as they please is probably Neutral Evil."
+  },
+  {
+    "id": "neutral-good",
+    "name": "Neutral Good",
+    "page": 21,
+    "abbreviation": "NG",
+    "order": "neutral",
+    "morality": "good",
+    "description": "Neutral Good creatures do the best they can, working within rules but not feeling bound by them. A kindly person who helps others according to their needs is probably Neutral Good."
+  },
+  {
+    "id": "unaligned",
+    "name": "Unaligned",
+    "page": 22,
+    "description": "Most creatures that lack the capacity for rational thought don’t have alignments; they are unaligned. Sharks are savage predators, for example, but they aren’t evil; they are unaligned."
+  }
+]

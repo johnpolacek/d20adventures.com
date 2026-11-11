@@ -1,0 +1,159 @@
+[
+  {
+    "id": "abyssal",
+    "name": "Abyssal",
+    "page": 20,
+    "rarity": "rare"
+  },
+  {
+    "id": "celestial",
+    "name": "Celestial",
+    "page": 20,
+    "rarity": "rare"
+  },
+  {
+    "id": "common",
+    "name": "Common",
+    "page": 20,
+    "rarity": "standard"
+  },
+  {
+    "id": "common-sign-language",
+    "name": "Common Sign Language",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  {
+    "id": "deep-speech",
+    "name": "Deep Speech",
+    "page": 20,
+    "rarity": "rare"
+  },
+  {
+    "id": "draconic",
+    "name": "Draconic",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 2,
+      "max": 2
+    }
+  },
+  {
+    "id": "druidic",
+    "name": "Druidic",
+    "page": 20,
+    "rarity": "rare"
+  },
+  {
+    "id": "dwarvish",
+    "name": "Dwarvish",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  {
+    "id": "elvish",
+    "name": "Elvish",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 5,
+      "max": 6
+    }
+  },
+  {
+    "id": "giant",
+    "name": "Giant",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 7,
+      "max": 7
+    }
+  },
+  {
+    "id": "gnomish",
+    "name": "Gnomish",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 8,
+      "max": 8
+    }
+  },
+  {
+    "id": "goblin",
+    "name": "Goblin",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 9,
+      "max": 9
+    }
+  },
+  {
+    "id": "halfling",
+    "name": "Halfling",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 10,
+      "max": 11
+    }
+  },
+  {
+    "id": "infernal",
+    "name": "Infernal",
+    "page": 20,
+    "rarity": "rare"
+  },
+  {
+    "id": "orc",
+    "name": "Orc",
+    "page": 20,
+    "rarity": "standard",
+    "roll": {
+      "min": 12,
+      "max": 12
+    }
+  },
+  {
+    "id": "primordial",
+    "name": "Primordial",
+    "page": 20,
+    "rarity": "rare",
+    "note": "Primordial includes the Aquan, Auran, Ignan, and Terran dialects. Creatures that know one of these dialects can communicate with those that know a different one.",
+    "dialects": [
+      "Aquan",
+      "Auran",
+      "Ignan",
+      "Terran"
+    ]
+  },
+  {
+    "id": "sylvan",
+    "name": "Sylvan",
+    "page": 20,
+    "rarity": "rare"
+  },
+  {
+    "id": "thieves-cant",
+    "name": "Thieves’ Cant",
+    "page": 20,
+    "rarity": "rare"
+  },
+  {
+    "id": "undercommon",
+    "name": "Undercommon",
+    "page": 20,
+    "rarity": "rare"
+  }
+]

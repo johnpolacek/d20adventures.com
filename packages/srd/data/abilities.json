@@ -1,0 +1,78 @@
+[
+  {
+    "id": "cha",
+    "name": "Charisma",
+    "page": 5,
+    "measures": "Confidence, poise, and charm",
+    "checkExamples": "Influence, entertain, or deceive",
+    "saveExamples": "Assert your identity",
+    "skills": [
+      "deception",
+      "intimidation",
+      "performance",
+      "persuasion"
+    ]
+  },
+  {
+    "id": "con",
+    "name": "Constitution",
+    "page": 5,
+    "measures": "Health and stamina",
+    "checkExamples": "Push your body beyond normal limits",
+    "saveExamples": "Endure a toxic hazard"
+  },
+  {
+    "id": "dex",
+    "name": "Dexterity",
+    "page": 5,
+    "measures": "Agility, reflexes, and balance",
+    "checkExamples": "Move nimbly, quickly, or quietly",
+    "saveExamples": "Dodge out of harm’s way",
+    "skills": [
+      "acrobatics",
+      "sleight-of-hand",
+      "stealth"
+    ]
+  },
+  {
+    "id": "int",
+    "name": "Intelligence",
+    "page": 5,
+    "measures": "Reasoning and memory",
+    "checkExamples": "Reason or remember",
+    "saveExamples": "Recognize an illusion as fake",
+    "skills": [
+      "arcana",
+      "history",
+      "investigation",
+      "nature",
+      "religion"
+    ]
+  },
+  {
+    "id": "str",
+    "name": "Strength",
+    "page": 5,
+    "measures": "Physical might",
+    "checkExamples": "Lift, push, pull, or break something",
+    "saveExamples": "Physically resist direct force",
+    "skills": [
+      "athletics"
+    ]
+  },
+  {
+    "id": "wis",
+    "name": "Wisdom",
+    "page": 5,
+    "measures": "Perceptiveness and mental fortitude",
+    "checkExamples": "Notice things in the environment or in creatures’ behavior",
+    "saveExamples": "Resist a mental assault",
+    "skills": [
+      "animal-handling",
+      "insight",
+      "medicine",
+      "perception",
+      "survival"
+    ]
+  }
+]

@@ -1,0 +1,333 @@
+[
+  {
+    "id": "blinded",
+    "name": "Blinded",
+    "page": 177,
+    "description": "While you have the Blinded condition, you experience the following effects.\nCan’t See. You can’t see and automatically fail any ability check that requires sight.\nAttacks Affected. Attack rolls against you have Advantage, and your attack rolls have Disadvantage.",
+    "effects": [
+      {
+        "name": "Can’t See",
+        "text": "You can’t see and automatically fail any ability check that requires sight."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "Attack rolls against you have Advantage, and your attack rolls have Disadvantage."
+      }
+    ]
+  },
+  {
+    "id": "charmed",
+    "name": "Charmed",
+    "page": 178,
+    "description": "While you have the Charmed condition, you experience the following effects.\nCan’t Harm the Charmer. You can’t attack the charmer or target the charmer with damaging abilities or magical effects.\nSocial Advantage. The charmer has Advantage on any ability check to interact with you socially.",
+    "effects": [
+      {
+        "name": "Can’t Harm the Charmer",
+        "text": "You can’t attack the charmer or target the charmer with damaging abilities or magical effects."
+      },
+      {
+        "name": "Social Advantage",
+        "text": "The charmer has Advantage on any ability check to interact with you socially."
+      }
+    ]
+  },
+  {
+    "id": "deafened",
+    "name": "Deafened",
+    "page": 181,
+    "description": "While you have the Deafened condition, you experience the following effect.\nCan’t Hear. You can’t hear and automatically fail any ability check that requires hearing.",
+    "effects": [
+      {
+        "name": "Can’t Hear",
+        "text": "You can’t hear and automatically fail any ability check that requires hearing."
+      }
+    ]
+  },
+  {
+    "id": "exhaustion",
+    "name": "Exhaustion",
+    "page": 181,
+    "description": "While you have the Exhaustion condition, you experience the following effects.\nExhaustion Levels. This condition is cumulative. Each time you receive it, you gain 1 Exhaustion level. You die if your Exhaustion level is 6.\nD20 Tests Affected. When you make a D20 Test, the roll is reduced by 2 times your Exhaustion level.\nSpeed Reduced. Your Speed is reduced by a number of feet equal to 5 times your Exhaustion level.\nRemoving Exhaustion Levels. Finishing a Long Rest removes 1 of your Exhaustion levels. When your Exhaustion level reaches 0, the condition ends.",
+    "effects": [
+      {
+        "name": "Exhaustion Levels",
+        "text": "This condition is cumulative. Each time you receive it, you gain 1 Exhaustion level. You die if your Exhaustion level is 6."
+      },
+      {
+        "name": "D20 Tests Affected",
+        "text": "When you make a D20 Test, the roll is reduced by 2 times your Exhaustion level."
+      },
+      {
+        "name": "Speed Reduced",
+        "text": "Your Speed is reduced by a number of feet equal to 5 times your Exhaustion level."
+      },
+      {
+        "name": "Removing Exhaustion Levels",
+        "text": "Finishing a Long Rest removes 1 of your Exhaustion levels. When your Exhaustion level reaches 0, the condition ends."
+      }
+    ],
+    "exhaustion": {
+      "deathLevel": 6,
+      "d20TestPenaltyPerLevel": 2,
+      "speedReductionPerLevel": 5,
+      "levelsRemovedPerLongRest": 1
+    }
+  },
+  {
+    "id": "frightened",
+    "name": "Frightened",
+    "page": 182,
+    "description": "While you have the Frightened condition, you experience the following effects.\nAbility Checks and Attacks Affected. You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.\nCan’t Approach. You can’t willingly move closer to the source of fear.",
+    "effects": [
+      {
+        "name": "Ability Checks and Attacks Affected",
+        "text": "You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight."
+      },
+      {
+        "name": "Can’t Approach",
+        "text": "You can’t willingly move closer to the source of fear."
+      }
+    ]
+  },
+  {
+    "id": "grappled",
+    "name": "Grappled",
+    "page": 182,
+    "description": "While you have the Grappled condition, you experience the following effects.\nSpeed 0. Your Speed is 0 and can’t increase.\nAttacks Affected. You have Disadvantage on attack rolls against any target other than the grappler.\nMovable. The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it.",
+    "effects": [
+      {
+        "name": "Speed 0",
+        "text": "Your Speed is 0 and can’t increase."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "You have Disadvantage on attack rolls against any target other than the grappler."
+      },
+      {
+        "name": "Movable",
+        "text": "The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it."
+      }
+    ]
+  },
+  {
+    "id": "incapacitated",
+    "name": "Incapacitated",
+    "page": 184,
+    "description": "While you have the Incapacitated condition, you experience the following effects.\nInactive. You can’t take any action, Bonus Action, or Reaction.\nNo Concentration. Your Concentration is broken.\nSpeechless. You can’t speak.\nSurprised. If you’re Incapacitated when you roll Initiative, you have Disadvantage on the roll.",
+    "effects": [
+      {
+        "name": "Inactive",
+        "text": "You can’t take any action, Bonus Action, or Reaction."
+      },
+      {
+        "name": "No Concentration",
+        "text": "Your Concentration is broken."
+      },
+      {
+        "name": "Speechless",
+        "text": "You can’t speak."
+      },
+      {
+        "name": "Surprised",
+        "text": "If you’re Incapacitated when you roll Initiative, you have Disadvantage on the roll."
+      }
+    ]
+  },
+  {
+    "id": "invisible",
+    "name": "Invisible",
+    "page": 184,
+    "description": "While you have the Invisible condition, you experience the following effects.\nSurprise. If you’re Invisible when you roll Initiative, you have Advantage on the roll.\nConcealed. You aren’t affected by any effect that requires its target to be seen unless the effect’s creator can somehow see you. Any equipment you are wearing or carrying is also concealed.\nAttacks Affected. Attack rolls against you have Disadvantage, and your attack rolls have Advantage. If a creature can somehow see you, you don’t gain this benefit against that creature.",
+    "effects": [
+      {
+        "name": "Surprise",
+        "text": "If you’re Invisible when you roll Initiative, you have Advantage on the roll."
+      },
+      {
+        "name": "Concealed",
+        "text": "You aren’t affected by any effect that requires its target to be seen unless the effect’s creator can somehow see you. Any equipment you are wearing or carrying is also concealed."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "Attack rolls against you have Disadvantage, and your attack rolls have Advantage. If a creature can somehow see you, you don’t gain this benefit against that creature."
+      }
+    ]
+  },
+  {
+    "id": "paralyzed",
+    "name": "Paralyzed",
+    "page": 186,
+    "description": "While you have the Paralyzed condition, you experience the following effects.\nIncapacitated. You have the Incapacitated condition.\nSpeed 0. Your Speed is 0 and can’t increase.\nSaving Throws Affected. You automatically fail Strength and Dexterity saving throws.\nAttacks Affected. Attack rolls against you have Advantage.\nAutomatic Critical Hits. Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.",
+    "effects": [
+      {
+        "name": "Incapacitated",
+        "text": "You have the Incapacitated condition."
+      },
+      {
+        "name": "Speed 0",
+        "text": "Your Speed is 0 and can’t increase."
+      },
+      {
+        "name": "Saving Throws Affected",
+        "text": "You automatically fail Strength and Dexterity saving throws."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "Attack rolls against you have Advantage."
+      },
+      {
+        "name": "Automatic Critical Hits",
+        "text": "Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you."
+      }
+    ],
+    "includes": [
+      "incapacitated"
+    ]
+  },
+  {
+    "id": "petrified",
+    "name": "Petrified",
+    "page": 186,
+    "description": "While you have the Petrified condition, you experience the following effects.\nTurned to Inanimate Substance. You are transformed, along with any nonmagical objects you are wearing and carrying, into a solid inanimate substance (usually stone). Your weight increases by a factor of ten, and you cease aging.\nIncapacitated. You have the Incapacitated condition.\nSpeed 0. Your Speed is 0 and can’t increase.\nAttacks Affected. Attack rolls against you have Advantage.\nSaving Throws Affected. You automatically fail Strength and Dexterity saving throws.\nResist Damage. You have Resistance to all damage.\nPoison Immunity. You have Immunity to the Poisoned condition.",
+    "effects": [
+      {
+        "name": "Turned to Inanimate Substance",
+        "text": "You are transformed, along with any nonmagical objects you are wearing and carrying, into a solid inanimate substance (usually stone). Your weight increases by a factor of ten, and you cease aging."
+      },
+      {
+        "name": "Incapacitated",
+        "text": "You have the Incapacitated condition."
+      },
+      {
+        "name": "Speed 0",
+        "text": "Your Speed is 0 and can’t increase."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "Attack rolls against you have Advantage."
+      },
+      {
+        "name": "Saving Throws Affected",
+        "text": "You automatically fail Strength and Dexterity saving throws."
+      },
+      {
+        "name": "Resist Damage",
+        "text": "You have Resistance to all damage."
+      },
+      {
+        "name": "Poison Immunity",
+        "text": "You have Immunity to the Poisoned condition."
+      }
+    ],
+    "includes": [
+      "incapacitated"
+    ]
+  },
+  {
+    "id": "poisoned",
+    "name": "Poisoned",
+    "page": 186,
+    "description": "While you have the Poisoned condition, you experience the following effect.\nAbility Checks and Attacks Affected. You have Disadvantage on attack rolls and ability checks.",
+    "effects": [
+      {
+        "name": "Ability Checks and Attacks Affected",
+        "text": "You have Disadvantage on attack rolls and ability checks."
+      }
+    ]
+  },
+  {
+    "id": "prone",
+    "name": "Prone",
+    "page": 186,
+    "description": "While you have the Prone condition, you experience the following effects.\nRestricted Movement. Your only movement options are to crawl or to spend an amount of movement equal to half your Speed (round down) to right yourself and thereby end the condition. If your Speed is 0, you can’t right yourself.\nAttacks Affected. You have Disadvantage on attack rolls. An attack roll against you has Advantage if the attacker is within 5 feet of you. Otherwise, that attack roll has Disadvantage.",
+    "effects": [
+      {
+        "name": "Restricted Movement",
+        "text": "Your only movement options are to crawl or to spend an amount of movement equal to half your Speed (round down) to right yourself and thereby end the condition. If your Speed is 0, you can’t right yourself."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "You have Disadvantage on attack rolls. An attack roll against you has Advantage if the attacker is within 5 feet of you. Otherwise, that attack roll has Disadvantage."
+      }
+    ]
+  },
+  {
+    "id": "restrained",
+    "name": "Restrained",
+    "page": 187,
+    "description": "While you have the Restrained condition, you experience the following effects.\nSpeed 0. Your Speed is 0 and can’t increase.\nAttacks Affected. Attack rolls against you have Advantage, and your attack rolls have Disadvantage.\nSaving Throws Affected. You have Disadvantage on Dexterity saving throws.",
+    "effects": [
+      {
+        "name": "Speed 0",
+        "text": "Your Speed is 0 and can’t increase."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "Attack rolls against you have Advantage, and your attack rolls have Disadvantage."
+      },
+      {
+        "name": "Saving Throws Affected",
+        "text": "You have Disadvantage on Dexterity saving throws."
+      }
+    ]
+  },
+  {
+    "id": "stunned",
+    "name": "Stunned",
+    "page": 189,
+    "description": "While you have the Stunned condition, you experience the following effects.\nIncapacitated. You have the Incapacitated condition.\nSaving Throws Affected. You automatically fail Strength and Dexterity saving throws.\nAttacks Affected. Attack rolls against you have Advantage.",
+    "effects": [
+      {
+        "name": "Incapacitated",
+        "text": "You have the Incapacitated condition."
+      },
+      {
+        "name": "Saving Throws Affected",
+        "text": "You automatically fail Strength and Dexterity saving throws."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "Attack rolls against you have Advantage."
+      }
+    ],
+    "includes": [
+      "incapacitated"
+    ]
+  },
+  {
+    "id": "unconscious",
+    "name": "Unconscious",
+    "page": 191,
+    "description": "While you have the Unconscious condition, you experience the following effects.\nInert. You have the Incapacitated and Prone conditions, and you drop whatever you’re holding. When this condition ends, you remain Prone.\nSpeed 0. Your Speed is 0 and can’t increase.\nAttacks Affected. Attack rolls against you have Advantage.\nSaving Throws Affected. You automatically fail Strength and Dexterity saving throws.\nAutomatic Critical Hits. Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.\nUnaware. You’re unaware of your surroundings.",
+    "effects": [
+      {
+        "name": "Inert",
+        "text": "You have the Incapacitated and Prone conditions, and you drop whatever you’re holding. When this condition ends, you remain Prone."
+      },
+      {
+        "name": "Speed 0",
+        "text": "Your Speed is 0 and can’t increase."
+      },
+      {
+        "name": "Attacks Affected",
+        "text": "Attack rolls against you have Advantage."
+      },
+      {
+        "name": "Saving Throws Affected",
+        "text": "You automatically fail Strength and Dexterity saving throws."
+      },
+      {
+        "name": "Automatic Critical Hits",
+        "text": "Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you."
+      },
+      {
+        "name": "Unaware",
+        "text": "You’re unaware of your surroundings."
+      }
+    ],
+    "includes": [
+      "incapacitated",
+      "prone"
+    ]
+  }
+]

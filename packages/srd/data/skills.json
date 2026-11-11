@@ -1,0 +1,128 @@
+[
+  {
+    "id": "acrobatics",
+    "name": "Acrobatics",
+    "page": 9,
+    "ability": "dex",
+    "exampleUses": "Stay on your feet in a tricky situation, or perform an acrobatic stunt."
+  },
+  {
+    "id": "animal-handling",
+    "name": "Animal Handling",
+    "page": 9,
+    "ability": "wis",
+    "exampleUses": "Calm or train an animal, or get an animal to behave in a certain way."
+  },
+  {
+    "id": "arcana",
+    "name": "Arcana",
+    "page": 9,
+    "ability": "int",
+    "exampleUses": "Recall lore about spells, magic items, and the planes of existence."
+  },
+  {
+    "id": "athletics",
+    "name": "Athletics",
+    "page": 9,
+    "ability": "str",
+    "exampleUses": "Jump farther than normal, stay afloat in rough water, or break something."
+  },
+  {
+    "id": "deception",
+    "name": "Deception",
+    "page": 9,
+    "ability": "cha",
+    "exampleUses": "Tell a convincing lie, or wear a disguise convincingly."
+  },
+  {
+    "id": "history",
+    "name": "History",
+    "page": 9,
+    "ability": "int",
+    "exampleUses": "Recall lore about historical events, people, nations, and cultures."
+  },
+  {
+    "id": "insight",
+    "name": "Insight",
+    "page": 9,
+    "ability": "wis",
+    "exampleUses": "Discern a person’s mood and intentions."
+  },
+  {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "page": 9,
+    "ability": "cha",
+    "exampleUses": "Awe or threaten someone into doing what you want."
+  },
+  {
+    "id": "investigation",
+    "name": "Investigation",
+    "page": 9,
+    "ability": "int",
+    "exampleUses": "Find obscure information in books, or deduce how something works."
+  },
+  {
+    "id": "medicine",
+    "name": "Medicine",
+    "page": 9,
+    "ability": "wis",
+    "exampleUses": "Diagnose an illness, or determine what killed the recently slain."
+  },
+  {
+    "id": "nature",
+    "name": "Nature",
+    "page": 9,
+    "ability": "int",
+    "exampleUses": "Recall lore about terrain, plants, animals, and weather."
+  },
+  {
+    "id": "perception",
+    "name": "Perception",
+    "page": 9,
+    "ability": "wis",
+    "exampleUses": "Using a combination of senses, notice something that’s easy to miss."
+  },
+  {
+    "id": "performance",
+    "name": "Performance",
+    "page": 9,
+    "ability": "cha",
+    "exampleUses": "Act, tell a story, perform music, or dance."
+  },
+  {
+    "id": "persuasion",
+    "name": "Persuasion",
+    "page": 9,
+    "ability": "cha",
+    "exampleUses": "Honestly and graciously convince someone of something."
+  },
+  {
+    "id": "religion",
+    "name": "Religion",
+    "page": 9,
+    "ability": "int",
+    "exampleUses": "Recall lore about gods, religious rituals, and holy symbols."
+  },
+  {
+    "id": "sleight-of-hand",
+    "name": "Sleight of Hand",
+    "page": 9,
+    "ability": "dex",
+    "exampleUses": "Pick a pocket, conceal a handheld object, or perform legerdemain."
+  },
+  {
+    "id": "stealth",
+    "name": "Stealth",
+    "page": 9,
+    "ability": "dex",
+    "exampleUses": "Escape notice by moving quietly and hiding behind things."
+  },
+  {
+    "id": "survival",
+    "name": "Survival",
+    "page": 9,
+    "ability": "wis",
+    "exampleUses": "Follow tracks, forage, find a trail, or avoid natural hazards."
+  }
+]
