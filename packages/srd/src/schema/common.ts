@@ -115,6 +115,19 @@ export type SaveDc = z.infer<typeof saveDcSchema>
 export const forcedSaveShape = { ability: abilityIdSchema, dc: saveDcSchema.optional() } as const
 
 /**
+ * How many times a thing can be used between recharges, where the count needs no table: a number, the user's
+ * Proficiency Bonus, or an ability modifier with a minimum of 1. A category with other counts adds them to this.
+ */
+export const usesCountSchema = z.union([z.number().int().positive(), z.literal("proficiency-bonus"), z.strictObject({ ability: abilityIdSchema, minimum: z.literal(1) })])
+
+/**
+ * The core of every typed damage roll: `dice`, or a fixed `amount` where the text gives a number with no dice.
+ * Exactly one is set, which `isDiceOrAmount` tests. A category adds the damage type and its own fields beside them.
+ */
+export const damageRollShape = { dice: diceSchema.optional(), amount: z.number().int().positive().optional() } as const
+export const isDiceOrAmount = (roll: { dice?: string; amount?: number }) => (roll.dice === undefined) !== (roll.amount === undefined)
+
+/**
  * One line of a starting equipment option: an item, or a choice of one item from a group.
  * Exactly one of `item` and `chooseFrom` is set.
  */
@@ -155,6 +168,9 @@ export const entryShape = {
 } as const
 
 /** Body text in the SRD's own words. Paragraphs are separated by one "\n". Apostrophes and quotes are typographic (’ “ ”), as printed. */
+/** A target's Speed, not the user's, is reduced by `feet` until the start of the user's next turn ("reduce its Speed by 10 feet until the start of your next turn"). */
+export const targetSpeedReductionSchema = z.strictObject({ feet: feetSchema, until: z.literal("start-of-user-next-turn") })
+
 export const proseSchema = z
   .string()
   .min(1)

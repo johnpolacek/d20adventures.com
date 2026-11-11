@@ -10,7 +10,7 @@
     },
     "weight": 1,
     "hazard": {
-      "rangeFeet": 20,
+      "range": 20,
       "save": {
         "ability": "dex",
         "dc": {
@@ -52,7 +52,7 @@
     },
     "weight": 1,
     "hazard": {
-      "rangeFeet": 20,
+      "range": 20,
       "save": {
         "ability": "dex",
         "dc": {
@@ -432,7 +432,7 @@
     "category": "martial",
     "attackType": "ranged",
     "damage": {
-      "fixed": 1,
+      "amount": 1,
       "type": "piercing"
     },
     "properties": [
@@ -704,7 +704,7 @@
         "dc": 15
       },
       "damage": {
-        "fixed": 1,
+        "amount": 1,
         "type": "piercing"
       },
       "speedZeroUntilStartOfNextTurn": true,
@@ -836,7 +836,8 @@
       "holds": [
         {
           "item": "bolts",
-          "quantity": 20
+          "quantity": 20,
+          "unit": "single"
         }
       ]
     },
@@ -882,19 +883,28 @@
         "ability": "str",
         "skill": "athletics",
         "dc": 13,
-        "rangeFeet": 5
+        "range": 5,
+        "activation": [
+          "utilize-action"
+        ]
       },
       {
         "use": "escape",
         "ability": "dex",
         "skill": "acrobatics",
-        "dc": 18
+        "dc": 18,
+        "activation": [
+          "action"
+        ]
       },
       {
         "use": "burst",
         "ability": "str",
         "skill": "athletics",
-        "dc": 20
+        "dc": 20,
+        "activation": [
+          "action"
+        ]
       }
     ],
     "binding": {
@@ -1802,7 +1812,10 @@
         "ability": "dex",
         "skill": "acrobatics",
         "dc": 13,
-        "rangeFeet": 50
+        "range": 50,
+        "activation": [
+          "utilize-action"
+        ]
       }
     ],
     "activation": [
@@ -2094,7 +2107,7 @@
     },
     "weight": 1,
     "hazard": {
-      "rangeFeet": 20,
+      "range": 20,
       "save": {
         "ability": "dex",
         "dc": {
@@ -2182,7 +2195,7 @@
       "speedZeroUntilStartOfNextTurn": true,
       "chainFeet": 3,
       "failedFreeAttemptDamage": {
-        "fixed": 1,
+        "amount": 1,
         "type": "piercing"
       }
     },
@@ -2191,7 +2204,10 @@
         "use": "free",
         "ability": "str",
         "skill": "athletics",
-        "dc": 13
+        "dc": 13,
+        "activation": [
+          "action"
+        ]
       }
     ],
     "activation": [
@@ -2585,7 +2601,8 @@
         "use": "pick",
         "ability": "dex",
         "skill": "sleight-of-hand",
-        "dc": 15
+        "dc": 15,
+        "tool": "thieves-tools"
       }
     ],
     "description": "A Lock comes with a key. Without the key, a creature can use Thieves’ Tools to pick this Lock with a successful DC 15 Dexterity (Sleight of Hand) check."
@@ -2759,25 +2776,35 @@
         "ability": "dex",
         "skill": "sleight-of-hand",
         "dc": 13,
-        "rangeFeet": 5
+        "range": 5,
+        "activation": [
+          "utilize-action"
+        ]
       },
       {
         "use": "escape",
         "ability": "dex",
         "skill": "sleight-of-hand",
-        "dc": 20
+        "dc": 20,
+        "activation": [
+          "action"
+        ]
       },
       {
         "use": "burst",
         "ability": "str",
         "skill": "athletics",
-        "dc": 25
+        "dc": 25,
+        "activation": [
+          "action"
+        ]
       },
       {
         "use": "pick",
         "ability": "dex",
         "skill": "sleight-of-hand",
-        "dc": 15
+        "dc": 15,
+        "tool": "thieves-tools"
       }
     ],
     "binding": {
@@ -3116,7 +3143,7 @@
     },
     "weight": 3,
     "hazard": {
-      "rangeFeet": 15,
+      "range": 15,
       "save": {
         "ability": "dex",
         "dc": {
@@ -3132,7 +3159,10 @@
         "ability": "str",
         "skill": "athletics",
         "dc": 10,
-        "rangeFeet": 5
+        "range": 5,
+        "activation": [
+          "action"
+        ]
       }
     ],
     "object": {
@@ -3158,7 +3188,7 @@
     "weight": 1,
     "fuelHours": 6,
     "hazard": {
-      "rangeFeet": 20,
+      "range": 20,
       "save": {
         "ability": "dex",
         "dc": {
@@ -3166,7 +3196,7 @@
         }
       },
       "extraFireDamage": {
-        "fixed": 5,
+        "amount": 5,
         "type": "fire"
       },
       "dryAfterMinutes": 1
@@ -3175,7 +3205,7 @@
       "areaSideFeet": 5,
       "withinFeet": 5,
       "damage": {
-        "fixed": 5,
+        "amount": 5,
         "type": "fire"
       },
       "onlyWhenLit": true,
@@ -3533,7 +3563,7 @@
     ],
     "healing": {
       "dice": "2d4 + 2",
-      "rangeFeet": 5
+      "range": 5
     },
     "magicItem": "potions-of-healing",
     "description": "This potion is a magic item. As a Bonus Action, you can drink it or administer it to another creature within 5 feet of yourself. The creature that drinks the magical red fluid in this vial regains 2d4 + 2 Hit Points."
@@ -3657,7 +3687,8 @@
       "holds": [
         {
           "item": "arrows",
-          "quantity": 20
+          "quantity": 20,
+          "unit": "single"
         }
       ]
     },
@@ -3802,7 +3833,10 @@
         "use": "knot",
         "ability": "dex",
         "skill": "sleight-of-hand",
-        "dc": 10
+        "dc": 10,
+        "activation": [
+          "utilize-action"
+        ]
       },
       {
         "use": "burst",
@@ -3814,7 +3848,10 @@
         "use": "escape",
         "ability": "dex",
         "skill": "acrobatics",
-        "dc": 15
+        "dc": 15,
+        "activation": [
+          "action"
+        ]
       }
     ],
     "binding": {
@@ -4684,7 +4721,7 @@
       "durationHours": 1
     },
     "attackDamage": {
-      "fixed": 1,
+      "amount": 1,
       "type": "fire"
     },
     "description": "A Torch burns for 1 hour, casting Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. When you take the Attack action, you can attack with the Torch, using it as a Simple Melee weapon. On a hit, the target takes 1 Fire damage."

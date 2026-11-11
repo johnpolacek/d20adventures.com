@@ -1,10 +1,12 @@
+import { existsSync } from "node:fs"
+import type { ConditionId } from "../../src/schema/common"
 import { abilityIds, conditionIds, creatureTypes, damageTypeIds, sizes } from "../../src/schema/common"
 import type { Area, Attack, DamagePart, Monster, MonsterFeature, Save, Spellcasting } from "../../src/schema/monsters"
 import { monsterRuleSchema, monsterSchema } from "../../src/schema/monsters"
-import { applyOverrides, toId, writeData } from "../lib/data"
+import { applyOverrides, dataPath, readData, toId, writeData } from "../lib/data"
 import { pageOf, pages } from "../lib/official"
 import { readBase } from "../lib/sources"
-import { additions, featureFixes, overrides } from "../overrides/monsters"
+import { additions, featureFixes, overrides, saveGates, selfEffects } from "../overrides/monsters"
 
 // The Monsters chapter: "Monsters A–Z" opens on page 258 and "Animals" runs to the last page.
 const firstPage = 258
@@ -143,52 +145,152 @@ function parseAttack(text: string): Attack | undefined {
 }
 
 /** Outcome labels, longest first so "Failure or Success" is not read as "Failure". */
-const outcomeLabel = /(Hit or Miss|Failure or Success|First Failure|Second Failure|Subsequent Failures|Hit|Miss|Failure|Success): /g
-const outcomeOf = (label: string) => toId(label) as NonNullable<DamagePart["on"]>
+const outcomeLabel = /(Hit or Miss|Failure or Success|Failure by \d+ or More|First Failure|Second Failure|Subsequent Failures|Hit|Miss|Failure|Success): /g
+const outcomeOf = (label: string) => (label.startsWith("Failure by") ? "failure-by-margin" : (toId(label) as NonNullable<DamagePart["on"]>))
+const saveStart = new RegExp(`(${abilityNames.join("|")}) Saving Throw: DC (\\d+)`, "g")
 
-/** The sentence of `text` that holds `index`: from after the last ". " or line break before it to the next one. */
-function sentenceAt(text: string, index: number): string {
+/** The span of `text` that holds `index` and ends at a sentence end or a line break. */
+function sentenceSpan(text: string, index: number) {
   let start = 0
   for (const match of text.slice(0, index).matchAll(/\. (?=[A-Z])|\n/g)) start = (match.index as number) + match[0].length
-  const rest = text.slice(index)
-  const end = /\. (?=[A-Z])|\n|$/.exec(rest) as RegExpExecArray
-  return text.slice(start, index + end.index + (end[0].startsWith(".") ? 1 : 0)).trim()
+  const end = /\. (?=[A-Z])|\n|$/.exec(text.slice(index)) as RegExpExecArray
+  return { start, end: index + end.index }
 }
 
-function parseDamage(text: string): DamagePart[] {
+/**
+ * Openings that tie an effect to an earlier effect of the same feature that lasts: the grapple, the swallow, the
+ * curse. An effect under one of them carries the gate of that earlier effect, not a gate of its own.
+ */
+const lasting = [
+  "Until the grapple ends",
+  "Until the curse ends",
+  "While Grappled",
+  "While swallowed",
+  "A swallowed creature",
+  "An engulfed target",
+  "While attached",
+  "While the cloaker is attached",
+  "While cursed",
+  "While Poisoned",
+  "While it has the Poisoned condition",
+  "While Charmed",
+  "While wounded",
+  "While in the whirlwind",
+  "While the target has any Exhaustion levels",
+]
+
+/** Words that open a gate. */
+const gateWord = /\b(?:If|if|When|when|Whenever|whenever|While|Once|The first time)\b/g
+
+/** The last gate in `clause`: from its opening word to the next comma. */
+function lastGate(clause: string): string | undefined {
+  const found = [...clause.matchAll(gateWord)].at(-1)
+  if (!found) return undefined
+  const rest = clause.slice(found.index)
+  const comma = rest.indexOf(", ")
+  return comma < 0 ? undefined : rest.slice(0, comma)
+}
+
+/** Outcome label at the start of a sentence, as printed, to be left out of a gate. */
+const labelAtStart = /^(?:Hit or Miss|Failure or Success|Failure by \d+ or More|First Failure|Second Failure|Subsequent Failures|Hit|Miss|Failure|Success): /
+
+type Link = { on?: NonNullable<DamagePart["on"]>; save?: number; label?: string; appliesWhen?: string; unless?: string }
+
+/** A gate that runs on into another creature's save: "…, the behir must succeed on a DC 14 Constitution saving throw at the end of that turn or regurgitate the creature". */
+const regurgitation = /^, the [\w’ ]+? must succeed on a DC \d+ \w+ saving throw at the end of that turn or regurgitate (?:the creature|all swallowed creatures)/
+
+/**
+ * What an effect at `index` depends on. The outcome is the last label before it in the feature. The gate is the last
+ * "If …", "When …", "While …" clause before it in its sentence; under a lasting opening ("While swallowed") it is the
+ * gate of the last earlier sentence of the same outcome that had one; failing both, the gate of its save.
+ */
+function linkAt(text: string, index: number, saves: Save[]): Link & { first: boolean; gateOwn?: string } {
+  const before = text.slice(0, index)
+  const label = [...before.matchAll(outcomeLabel)].at(-1)
+  const link: Link & { first: boolean; gateOwn?: string } = { first: false }
+  const from = label ? (label.index as number) + label[0].length : 0
+  if (label) {
+    let on = outcomeOf(label[1])
+    // A plain "Failure:" before a "Second Failure:" or "Subsequent Failures:" of the same save is the first stage.
+    const nextSave = text.slice(from).search(saveStart)
+    if (on === "failure" && /Second Failure: |Subsequent Failures: /.test(text.slice(from, nextSave < 0 ? undefined : from + nextSave))) on = "first-failure"
+    link.on = on
+    if (!on.startsWith("hit") && on !== "miss") link.save = [...text.slice(0, label.index).matchAll(saveStart)].length - 1
+    link.first = !/\. (?=[A-Z])|\n/.test(before.slice(from))
+  }
+  // A named item of a list ("First Roar. …", "Running Water. …") labels what its paragraph holds.
+  const paragraph = before.lastIndexOf("\n") + 1
+  const item = paragraph > 0 ? /^([A-Z][\w’ ]{0,40})\. [A-Z]/.exec(text.slice(paragraph)) : null
+  if (item && !link.label) link.label = item[1]
+  const span = sentenceSpan(text, index)
+  const clause = text.slice(span.start, index).replace(labelAtStart, "")
+  const opening = lasting.find((words) => clause.startsWith(words))
+  let own = opening ? undefined : lastGate(clause)
+  if (own) {
+    // A regurgitation gate holds the swallower's own save too, so it is not read as always landing.
+    const on = regurgitation.exec(clause.slice(clause.lastIndexOf(own) + own.length))
+    if (on) own += on[0]
+    link.appliesWhen = own
+    link.gateOwn = own
+  } else if (/\b[Oo]therwise\b/.test(clause)) {
+    // "Otherwise, the target takes …": the value holds unless the gate of the sentence before does.
+    const previous = sentenceSpan(text, Math.max(from, span.start - 2))
+    const gate = lastGate(text.slice(previous.start, previous.end).replace(labelAtStart, ""))
+    if (gate) link.unless = gate
+  } else if (opening) {
+    // Back through the earlier sentences of the same outcome for the gate of the effect this one lasts with.
+    let at = span.start
+    while (at > from && !link.appliesWhen) {
+      const previous = sentenceSpan(text, Math.max(from, at - 2))
+      const gate = lastGate(text.slice(previous.start, previous.end).replace(labelAtStart, ""))
+      // What lasts only while a grapple the monster chose lasts carries the words that say so, not the gate on the choice.
+      if (gate && !lasting.some((words) => text.slice(previous.start).startsWith(words)))
+        link.appliesWhen = / can give it the Grappled condition/.test(text.slice(previous.start, previous.end)) ? opening : gate
+      at = previous.start
+    }
+  }
+  if (!link.appliesWhen && link.save !== undefined && saves[link.save]?.appliesWhen) link.appliesWhen = saves[link.save].appliesWhen
+  return link
+}
+
+function parseDamage(text: string, saves: Save[]): DamagePart[] {
   const pattern = new RegExp(`(\\d+)(?: \\((\\d+d\\d+(?: [+−–] \\d+)?)\\))? (?:(${damageTypeNames}) )?damage`, "g")
   // A bare number with neither dice nor type is a threshold ("takes 30 damage or more"), not damage dealt.
   const matches = [...text.matchAll(pattern)].filter((match) => match[2] || match[3])
-  return matches.map((match, k) => {
+  const parts: DamagePart[] = matches.map((match, k) => {
     const index = match.index as number
-    const end = index + match[0].length
-    const before = text.slice(0, index)
-    const labels = [...before.matchAll(outcomeLabel)]
-    const label = labels.at(-1)
-    const sinceLabel = label ? before.slice((label.index as number) + label[0].length) : ""
-    // The outcome must be in the same paragraph. The damage is plain only in the first sentence after the label.
-    const on = label && !sinceLabel.includes("\n") ? outcomeOf(label[1]) : undefined
-    const firstSentence = on !== undefined && !/\. (?=[A-Z])/.test(sinceLabel)
+    const { first, gateOwn, ...link } = linkAt(text, index, saves)
     const previous = matches[k - 1]
     const gap = previous ? text.slice((previous.index as number) + previous[0].length, index) : ""
-    const alternative = previous && firstSentence && /^(?:,? or |—or )$/.test(gap)
-    const after = text.slice(end, matches[k + 1]?.index ?? text.length)
-    const qualifier = /^ ((?:if|unless) [^.,—]+)/.exec(after)?.[1]
-    const condition = !firstSentence ? sentenceAt(text, index) : qualifier
+    const alternative = previous && first && /^(?:,? or |—or )$/.test(gap)
+    const after = text.slice(index + match[0].length, matches[k + 1]?.index ?? text.length)
+    // A gate or a time printed right after the roll: "if the swarm is Bloodied", "at the start of each of its turns".
+    const trailing = /^ ((?:if|for every) [^.,—]+)/.exec(after)?.[1]
+    if (trailing && !gateOwn) link.appliesWhen = trailing
+    // "… unless the azer has the Incapacitated condition": the words after "unless", in the roll's own sentence.
+    const unless = /^[^.—]*? unless ([^.,—]+)/.exec(after)?.[1]
+    if (unless) link.unless = unless
+    const sentence = sentenceSpan(text, index)
+    const opening = /^(At the (?:start|end) of [^,]+), /.exec(text.slice(sentence.start).replace(labelAtStart, ""))?.[1]
+    const timing = /^ (at the (?:start|end) of [^.,—]+?)(?= unless | if |[.,—]|$)/.exec(after)?.[1] ?? opening
     return {
-      average: Number(match[1]),
-      ...(match[2] ? { dice: ascii(match[2]) } : {}),
+      ...(match[2] ? { dice: ascii(match[2]), average: Number(match[1]) } : { amount: Number(match[1]) }),
       ...(match[3] ? { type: match[3].toLowerCase() as DamagePart["type"] } : {}),
-      ...(on ? { on } : {}),
-      ...(condition ? { condition } : {}),
+      ...link,
+      ...(timing ? { timing } : {}),
       ...(alternative ? { alternativeTo: k - 1 } : {}),
     }
   })
+  // One time for two rolls: "takes 10 (3d6) Acid damage plus 10 (3d6) Fire damage at the start of each of its turns".
+  for (let k = parts.length - 2; k >= 0; k--) {
+    const gap = text.slice((matches[k].index as number) + matches[k][0].length, matches[k + 1].index)
+    if (!parts[k].timing && parts[k + 1].timing && gap === " plus ") parts[k] = { ...parts[k], timing: parts[k + 1].timing }
+  }
+  return parts
 }
 
 function parseSaves(text: string): Save[] {
-  const pattern = new RegExp(`(${abilityNames.join("|")}) Saving Throw: DC (\\d+)`, "g")
-  const starts = [...text.matchAll(pattern)]
+  const starts = [...text.matchAll(saveStart)]
   return starts.map((match, index) => {
     const begin = match.index as number
     let end = text.length
@@ -200,9 +302,18 @@ function parseSaves(text: string): Save[] {
     }
     const body = text.slice(begin + match[0].length, end).trim()
     const save: Save = { ability: abilityOf(match[1]), dc: Number(match[2]) }
+    // "If the target is a Humanoid, it is subjected to the following effect." limits who makes the save.
+    const lead = text.slice(0, begin)
+    const previous = lead.slice(Math.max(lead.lastIndexOf(". ", lead.length - 3) + 2, lead.lastIndexOf("\n") + 1))
+    if (/(?:the following effect|the following saving throw)\. $/.test(previous)) {
+      const gate = lastGate(previous.replace(labelAtStart, ""))
+      if (gate) save.appliesWhen = gate
+    }
+    const item = /^([A-Z][\w’ ]{0,40})\. [A-Z]/.exec(text.slice(lead.lastIndexOf("\n") + 1))
+    if (lead.lastIndexOf("\n") >= 0 && item) save.label = item[1]
     const targets = /^(?:\([^)]*\))?,? ?([\s\S]*?)\.(?: |$)/.exec(body)
     if (targets?.[1] && !/^(?:Failure|Success)/.test(targets[1])) save.targets = targets[1]
-    const markers = [...body.matchAll(/(Failure or Success|First Failure|Second Failure|Subsequent Failures|Failure|Success): /g)]
+    const markers = [...body.matchAll(/(Failure or Success|Failure by (\d+) or More|First Failure|Second Failure|Subsequent Failures|Failure|Success): /g)]
     // A plain "Failure:" followed by "Second Failure:" is the first stage.
     const staged = markers.some((marker) => marker[1] === "Second Failure" || marker[1] === "Subsequent Failures")
     const field = {
@@ -215,7 +326,9 @@ function parseSaves(text: string): Save[] {
     } as const
     for (const [i, marker] of markers.entries()) {
       const from = (marker.index as number) + marker[0].length
-      save[field[marker[1] as keyof typeof field]] = body.slice(from, markers[i + 1]?.index ?? body.length).trim()
+      const clause = body.slice(from, markers[i + 1]?.index ?? body.length).trim()
+      if (marker[2]) save.failureBy = { margin: Number(marker[2]), text: clause }
+      else save[field[marker[1] as keyof typeof field]] = clause
     }
     if (save.success && /^Half damage/.test(save.success)) save.halfOnSuccess = true
     return save
@@ -237,26 +350,40 @@ function parseArea(text: string): Area | undefined {
 
 /**
  * Conditions the text gives: "has the Prone condition", "gives it the Grappled condition", "with the Prone condition",
- * "exiting Prone", "gains 1 Exhaustion level". A clause that is a precondition or a negation gives nothing: the words
- * from the clause start (a comma, period, colon, semicolon, dash, parenthesis or "but") to the phrase are checked.
+ * "exiting Prone", "gains 1 Exhaustion level", "has 1 Exhaustion level". A clause that is a precondition or a negation
+ * gives nothing: the words from the clause start (a comma, period, colon, semicolon, dash, parenthesis or "but") to
+ * the phrase are checked. Each is linked to the outcome before it in its paragraph. A sentence with its own "if",
+ * "unless", "while", "whenever" or "otherwise", or no outcome at all, sets `appliesWhen`.
  */
-function parseConditions(text: string): MonsterFeature["conditions"] {
-  const found = new Set<string>()
+function parseConditions(text: string, saves: Save[]): MonsterFeature["conditions"] {
+  const found: { index: number; names: string[] }[] = []
   const phrases = [
     new RegExp(`\\b(?:has|have|gains|gain|gives? (?:it|the target)|with) the ((?:${conditionNames})(?:(?:,? and |,? or |, )(?:${conditionNames}))*) conditions?`, "g"),
-    /\bgains? \d+ (Exhaustion) levels?/g,
-    /\bexiting (Prone)\b/g,
+    /\b(?:has|gains?) \d+ (Exhaustion) levels?/g,
+    /\bexit(?:ing)? (Prone)\b/g,
   ]
   for (const pattern of phrases) {
     for (const match of text.matchAll(pattern)) {
       const before = text.slice(0, match.index)
       const clause = before.slice(Math.max(...[",", ".", ":", ";", "—", "(", "\n", " but "].map((mark) => before.lastIndexOf(mark) + mark.length)))
       // "that" or "who" right before the verb makes a precondition ("one creature that has the Prone condition").
-      if (/(?:n’t|\bnot\b|\bno longer\b|\b(?:if|while|whenever|unless|until)\b)/.test(clause) || /\b(?:that|who) $/.test(clause)) continue
-      for (const name of match[1].split(/,? and |,? or |, /)) found.add(name.toLowerCase())
+      if (/(?:n’t|\bnot\b|\bno longer\b|\b(?:if|while|whenever|unless|until)\b)/i.test(clause) || /\b(?:that|who) $/.test(clause)) continue
+      found.push({ index: match.index as number, names: match[1].split(/,? and |,? or |, /) })
     }
   }
-  return found.size ? (conditionIds.filter((id) => found.has(id)) as MonsterFeature["conditions"]) : undefined
+  const out: NonNullable<MonsterFeature["conditions"]> = []
+  for (const { index, names } of found.sort((a, b) => a.index - b.index)) {
+    const { first: _first, gateOwn: _own, ...link } = linkAt(text, index, saves)
+    // A count or rate right after the condition limits it: "1 Exhaustion level for each missing limb".
+    const trailing = /^[^.,]*? ((?:for each|for every) [^.,]+)/.exec(text.slice(index))?.[1]
+    if (trailing && !link.appliesWhen) link.appliesWhen = trailing
+    const instead = /instead of dealing damage/.test(text.slice(index, sentenceSpan(text, index).end))
+    for (const name of names) {
+      const entry = { condition: name.toLowerCase() as ConditionId, ...link, ...(instead ? { insteadOfDamage: true as const } : {}) }
+      if (!out.some((other) => JSON.stringify(other) === JSON.stringify(entry))) out.push(entry)
+    }
+  }
+  return out.length ? out : undefined
 }
 
 function parseSpellcasting(text: string): Spellcasting | undefined {
@@ -284,6 +411,47 @@ function parseSpellcasting(text: string): Spellcasting | undefined {
   }
 }
 
+/** Spell ids, when the spells data is built, to prove each name a feature casts is a spell. */
+const spellIds = existsSync(dataPath("spells")) ? new Set(readData("spells").map((spell) => spell.id as string)) : undefined
+
+/**
+ * Features whose casting the shape cannot hold, left as prose. Pit Fiend: casts Fireball twice and may swap one for
+ * another spell. The hags' Coven Magic: only near two hag allies, and once per Long Rest for each spell.
+ */
+const castingInProse = new Set(["Hellfire Spellcasting", "Coven Magic"])
+
+/** One spell as printed, "Mind Spike (level 4 version)", as an id and a note. */
+function spellRef(name: string) {
+  const parts = /^(?:the )?(.*?)(?: spell)?(?: \((.*)\))?$/.exec(name.trim()) as RegExpExecArray
+  const id = toId(parts[1])
+  if (spellIds && !spellIds.has(id)) throw new Error(`not a spell: ${name}`)
+  return { id, ...(parts[2] ? { note: parts[2] } : {}) }
+}
+
+/**
+ * A feature that casts named spells outside a spell list: "The vampire casts Command, requiring no spell components and
+ * using Charisma as the spellcasting ability (spell save DC 17)", "using the same spellcasting ability as
+ * Spellcasting", or "uses Spellcasting to cast Fear".
+ */
+function parseCasts(name: string, text: string): Spellcasting | undefined {
+  if (castingInProse.has(name)) return undefined
+  const own =
+    /\bcasts ((?:the )?[A-Z][\s\S]*?)(?: on itself| on that creature| in response to the spell’s trigger)?, (?:requiring [^,]*?(?:,| and) )?using (?:(\w+) as the spellcasting ability|the same spellcasting ability as Spellcasting)/.exec(
+      text
+    )
+  const via = [...text.matchAll(/Spellcasting to cast ([A-Z][^.,]*?(?: \([^)]*\))?)(?= on itself|,|\.| or \(|$)/g)]
+  if (own) {
+    const dc = /\(spell save DC (\d+)\)/.exec(text)
+    return {
+      ...(own[2] ? { ability: abilityOf(own[2]) } : { sameAsSpellcasting: true as const }),
+      ...(dc ? { saveDc: Number(dc[1]) } : {}),
+      spells: own[1].split(/, or |, | or /).map(spellRef),
+    }
+  }
+  if (via.length) return { sameAsSpellcasting: true, spells: via.map((match) => spellRef(match[1])) }
+  return undefined
+}
+
 /** Split on commas outside parentheses. */
 function splitTop(text: string): string[] {
   const parts: string[] = []
@@ -301,7 +469,7 @@ function splitTop(text: string): string[] {
   return parts.filter(Boolean)
 }
 
-function feature(name: string, text: string): MonsterFeature {
+function feature(id: string, name: string, text: string): MonsterFeature {
   let rest = text.slice(name.length)
   let note: string | undefined
   if (rest.startsWith(" (")) {
@@ -313,19 +481,30 @@ function feature(name: string, text: string): MonsterFeature {
   const body = rest.slice(2)
   const result: Partial<MonsterFeature> = { name, text: body }
   parseUses(note, result)
+  if (/can’t take this action again until the start of its next turn/.test(body)) {
+    if (result.uses) throw new Error(`${name}: two kinds of uses`)
+    result.uses = { count: 1, recharge: "start-of-next-turn" }
+  }
   const attack = parseAttack(body)
   if (attack) result.attack = attack
   const saves = parseSaves(body)
+  for (const fix of saveGates.filter((gate) => gate.id === id && gate.feature === name)) {
+    if (saves[fix.save].appliesWhen === fix.appliesWhen) throw new Error(`${id} ${name}: save gate fix changes nothing. Remove it.`)
+    saves[fix.save].appliesWhen = fix.appliesWhen
+  }
   if (saves.length) result.saves = saves
-  const damage = parseDamage(body)
+  const damage = parseDamage(body, saves)
   if (damage.length) result.damage = damage
-  const conditions = parseConditions(body)
+  const conditions = parseConditions(body, saves)
   if (conditions) result.conditions = conditions
   const escapeDc = /escape DC (\d+)/.exec(body)
   if (escapeDc) result.escapeDc = Number(escapeDc[1])
   const area = parseArea(body)
   if (area) result.area = area
-  const spellcasting = parseSpellcasting(body)
+  if (selfEffects.some((effect) => effect.id === id && effect.feature === name)) {
+    for (const value of [...(result.damage ?? []), ...(result.conditions ?? [])]) if (!value.on) value.self = true
+  }
+  const spellcasting = parseSpellcasting(body) ?? parseCasts(name, body)
   if (spellcasting) result.spellcasting = spellcasting
   return result as MonsterFeature
 }
@@ -353,10 +532,10 @@ function fromBase(base: Base): Record<string, unknown> {
     }
   }
   // Anything that is not a plain damage type is a qualified defense. The overrides give its official wording.
-  const conditional: { kind: string; condition: string }[] = []
+  const conditional: { kind: string; appliesWhen: string }[] = []
   const damageList = (key: string, kind: string) => {
     const ids = (base[key] as string[]).filter((value) => (damageTypeIds as readonly string[]).includes(value))
-    for (const value of base[key] as string[]) if (!ids.includes(value)) conditional.push({ kind, condition: value })
+    for (const value of base[key] as string[]) if (!ids.includes(value)) conditional.push({ kind, appliesWhen: value })
     return ids.length ? ids : undefined
   }
   const vulnerabilities = damageList("damage_vulnerabilities", "vulnerability")
@@ -458,7 +637,37 @@ function rules() {
     die: Number(m[2]),
     averagePerDie: Number(m[3]) + (m[4] ? 0.5 : 0),
   }))
+  // Each typed value of the page 257 rules stands on a sentence the page prints.
+  const page = pages[256].replace(/(\p{L})-\n(\p{Ll})/gu, "$1$2").replace(/\s+/g, " ")
+  for (const sentence of [
+    "a monster must finish a Long Rest to regain expended uses",
+    "At the start of each of the monster’s turns, roll 1d6",
+    "which also recharges when the monster finishes a Short or Long Rest",
+    "the monster can use the stat block part once and must then finish a Short or Long Rest to use it again",
+    "Only one of these actions can be taken at a time and only after another creature’s turn ends",
+    "The monster expends one use whenever it takes a Legendary Action, and it regains all expended uses at the start of each of its turns",
+    "can’t take a Legendary Action if it has the Incapacitated condition",
+  ])
+    if (!page.includes(sentence)) throw new Error(`page 257 does not read: ${sentence}`)
   return [
+    {
+      id: "limited-usage",
+      name: "Limited Usage",
+      page: 257,
+      perDay: { recharge: "long-rest" },
+      rechargeRoll: { count: 1, die: 6, rolledAt: "start-of-each-turn", alsoRestoredBy: "short-or-long-rest" },
+      afterRest: { count: 1, recharge: "short-or-long-rest" },
+    },
+    {
+      id: "legendary-actions",
+      name: "Legendary Actions",
+      page: 257,
+      timing: "after-another-creatures-turn",
+      oneAtATime: true,
+      usesPerAction: 1,
+      recharge: "start-of-next-turn",
+      blockedBy: ["incapacitated"],
+    },
     { id: "experience-points-by-challenge-rating", name: "Experience Points by Challenge Rating", page: xp.page, xpByCr },
     { id: "proficiency-bonus-by-challenge-rating", name: "Proficiency Bonus by Challenge Rating", page: pb.page, pbByCr },
     { id: "hit-dice-by-size", name: "Hit Dice by Size", page: dice.page, hitDiceBySize },
@@ -498,7 +707,7 @@ function official(name: string, block: Line[], forms: Base[], pairs: Set<string>
   const found = new Set<string>()
   const close = () => {
     if (!current || !kind) return
-    const item = feature(current.name, prose(current.lines, pairs))
+    const item = feature(toId(name), current.name, prose(current.lines, pairs))
     if (kind === "legendaryActions") {
       result.legendaryActions ??= { actions: [] }
       result.legendaryActions.actions.push(item)
@@ -534,7 +743,10 @@ function official(name: string, block: Line[], forms: Base[], pairs: Set<string>
     const text = prose(intro, pairs)
     const uses = /^Legendary Action Uses: (\d+)(?: \((\d+) in Lair\))?\./.exec(text)
     if (!uses) throw new Error(`${name}: no legendary action uses`)
-    result.legendaryActions = { uses: Number(uses[1]), ...(uses[2] ? { usesInLair: Number(uses[2]) } : {}), text, actions: result.legendaryActions.actions }
+    // "The dragon regains all expended uses at the start of each of its turns."
+    if (!/regains all expended uses at the start of each of its turns\./.test(text)) throw new Error(`${name}: legendary uses are not regained at the start of its turns`)
+    const count = { count: Number(uses[1]), ...(uses[2] ? { countInLair: Number(uses[2]) } : {}), recharge: "start-of-next-turn" }
+    result.legendaryActions = { uses: count, text, actions: result.legendaryActions.actions }
   }
   return {
     id: toId(name),

@@ -7,22 +7,23 @@ import {
   conditionIdSchema,
   costSchema,
   creatureTypeSchema,
+  damageRollShape,
   damageTypeIdSchema,
   diceSchema,
   entryShape,
   feetSchema,
   forcedSaveShape,
   idSchema,
+  isDiceOrAmount,
   proseSchema,
   saveDcSchema,
   sizeSchema,
   skillIdSchema,
+  targetSpeedReductionSchema,
 } from "./common"
 
 /** Damage as a dice expression or a fixed amount ("1 Piercing" has no dice). */
-export const damageSchema = z
-  .strictObject({ dice: diceSchema.optional(), fixed: z.number().int().positive().optional(), type: damageTypeIdSchema })
-  .refine((damage) => (damage.dice === undefined) !== (damage.fixed === undefined), "give dice or fixed, not both")
+export const damageSchema = z.strictObject({ ...damageRollShape, type: damageTypeIdSchema }).refine(isDiceOrAmount, "give dice or amount, not both")
 export type Damage = z.infer<typeof damageSchema>
 
 /** A saving throw an item forces. `dc: { plusModifierOf: "dex" }` is "DC 8 plus your Dexterity modifier and Proficiency Bonus". */
@@ -149,12 +150,16 @@ const checkSchema = z.strictObject({
   ability: abilityIdSchema,
   skill: skillIdSchema,
   dc: z.number().int().positive(),
-  rangeFeet: feetSchema.optional(),
+  range: feetSchema.optional(),
+  /** The action the text says the check takes: the Utilize action, or an action. */
+  activation: activationSchema.optional(),
+  /** The check can be made only with this item, an equipment id (Lock and Manacles are picked with Thieves' Tools). */
+  tool: idSchema.optional(),
 })
 
 const hazardSchema = z.strictObject({
   /** Thrown at a target this far away. */
-  rangeFeet: feetSchema.optional(),
+  range: feetSchema.optional(),
   /** Side of the square area covered, and how near the user it is placed. */
   areaSideFeet: feetSchema.optional(),
   withinFeet: feetSchema.optional(),
@@ -200,7 +205,16 @@ const capacitySchema = z.strictObject({
   ounces: z.number().optional(),
   /** Barrel: `gallons` of liquid or `cubicFeet` of dry goods, alternatives. Backpack, Basket, Pouch and Sack: both limits at once. */
   /** What a container holds. Several entries are alternatives (a Map or Scroll Case holds paper or parchment). */
-  holds: z.array(z.strictObject({ item: idSchema, quantity: z.number().int().positive() })).optional(),
+  holds: z
+    .array(
+      z.strictObject({
+        item: idSchema,
+        quantity: z.number().int().positive(),
+        /** Ammunition is sold in bundles. "single" says `quantity` counts single pieces: a Quiver holds 20 single Arrows, not 20 bundles. */
+        unit: z.literal("single").optional(),
+      })
+    )
+    .optional(),
 })
 
 const lightSchema = z.strictObject({
@@ -255,7 +269,7 @@ export const gearMechanics = {
   activation: activationSchema.optional(),
   /** Damage when the item is used as a Simple Melee weapon (Torch). */
   attackDamage: damageSchema.optional(),
-  healing: z.strictObject({ dice: diceSchema, rangeFeet: feetSchema }).optional(),
+  healing: z.strictObject({ dice: diceSchema, range: feetSchema }).optional(),
   stabilize: z
     .strictObject({
       requiresCondition: conditionIdSchema,
@@ -414,8 +428,8 @@ export const weaponMasterySchema = z.strictObject({
   /** Push: feet the target moves, and the largest size it can be. */
   pushFeet: feetSchema.optional(),
   maxSize: sizeSchema.optional(),
-  /** Slow: feet the target's Speed drops. */
-  speedReductionFeet: feetSchema.optional(),
+  /** Slow: the target's Speed drops by `feet` until the start of the user's next turn. */
+  targetSpeedReduction: targetSpeedReductionSchema.optional(),
   /** Topple: the save, DC 8 plus the attack ability modifier and Proficiency Bonus. A failed save gives `failureCondition`. */
   save: z.strictObject({ ...forcedSaveShape, dc: saveDcSchema, failureCondition: conditionIdSchema }).optional(),
 })
@@ -424,13 +438,16 @@ export type WeaponMastery = z.infer<typeof weaponMasterySchema>
 export const poisonTypes = ["contact", "ingested", "inhaled", "injury"] as const
 const durationSchema = z.strictObject({ amount: z.union([z.number().int().positive(), diceSchema]), unit: z.enum(["minute", "hour"]) })
 
+/** A poison's damage roll as printed, "6 (1d12) Poison damage": the dice and their average. */
+const poisonDamageSchema = z.strictObject({ ...damageRollShape, average: z.number().int().positive(), type: z.literal("poison") }).refine(isDiceOrAmount, "give dice or amount, not both")
+
 export const poisonSchema = z.strictObject({
   ...entryShape,
   type: z.enum(poisonTypes),
   /** Price of one dose. */
   cost: costSchema,
   save: z.strictObject({ ...forcedSaveShape, ability: z.literal("con"), dc: z.number().int().positive(), halfDamageOnSuccess: z.literal(true).optional() }).optional(),
-  damage: z.strictObject({ average: z.number().int().positive(), dice: diceSchema, type: z.literal("poison") }).optional(),
+  damage: poisonDamageSchema.optional(),
   conditions: z
     .array(
       z.strictObject({
@@ -447,7 +464,7 @@ export const poisonSchema = z.strictObject({
   repeat: z
     .strictObject({
       when: z.enum(["start-of-turn", "end-of-turn", "every-24-hours"]),
-      damage: z.strictObject({ average: z.number().int().positive(), dice: diceSchema, type: z.literal("poison") }).optional(),
+      damage: poisonDamageSchema.optional(),
       endsAfterSuccesses: z.number().int().positive(),
     })
     .optional(),
@@ -488,9 +505,11 @@ export const coinSchema = z.strictObject({
 export type Coin = z.infer<typeof coinSchema>
 
 /**
- * Rules named for the official heading they come from ("Selling Equipment", "Barding", "Casting in Armor"). Two kinds of
- * name are ours: "Armor Training (...)" joins the heading with its sub-heading, and "Spell Scroll Costs (Level N)" labels a
- * table row. Those have descriptive names, not official headings.
+ * Rules named for the official heading they come from ("Selling Equipment", "Barding", "Casting in Armor"). Some
+ * names are ours, descriptive and not official headings: "Armor Training (...)" joins the heading with its sub-heading,
+ * "Spell Scroll Costs (Level N)" labels a table row, "Armor Strength" and "Armor Stealth" name the run-in paragraphs
+ * "Strength." and "Stealth.", and "Crafting Nonmagical Items (Tools)" and "Scribing Spell Scrolls (...)" join a heading
+ * with its sub-heading.
  */
 const ruleShape = { ...entryShape, ...described } as const
 export const equipmentRuleSchema = z.discriminatedUnion("kind", [
@@ -508,6 +527,32 @@ export const equipmentRuleSchema = z.discriminatedUnion("kind", [
   z.strictObject({ ...ruleShape, kind: z.literal("weapon-proficiency"), addsProficiencyBonusTo: z.literal("attack-rolls") }),
   z.strictObject({ ...ruleShape, kind: z.literal("tool-proficiency"), addsProficiencyBonusTo: z.literal("ability-checks-with-the-tool"), advantageWithProficientSkill: z.literal(true) }),
   z.strictObject({ ...ruleShape, kind: z.literal("casting-in-armor"), requiresArmorTraining: z.literal(true) }),
+  z.strictObject({
+    ...ruleShape,
+    kind: z.literal("armor-strength"),
+    /** Wearing armor whose Strength column shows a score reduces Speed by `feet`, unless the wearer's Strength is at least that score. */
+    speedReduction: z.strictObject({ feet: feetSchema, unlessStrengthAtLeast: z.literal("listed-score") }),
+  }),
+  z.strictObject({
+    ...ruleShape,
+    kind: z.literal("armor-stealth"),
+    /** Armor whose Stealth column shows "Disadvantage" gives the wearer Disadvantage on these checks. */
+    disadvantageOn: z.strictObject({ ability: abilityIdSchema, skill: skillIdSchema }),
+  }),
+  z.strictObject({ ...ruleShape, kind: z.literal("crafting-tools"), requiresProficiency: z.literal(true), helpersNeedProficiency: z.literal(true) }),
+  z.strictObject({ ...ruleShape, kind: z.literal("scribing-time-and-cost"), workHoursPerDay: z.number().int().positive(), daysNeedNotBeConsecutive: z.literal(true) }),
+  z.strictObject({
+    ...ruleShape,
+    kind: z.literal("scribing-prerequisites"),
+    /** The scribe needs proficiency in the skill or with the tool. */
+    proficiencyAnyOf: z.strictObject({ skill: skillIdSchema, tool: idSchema }),
+    spellPreparedEachDay: z.literal(true),
+    materialComponentsAtHand: z.literal(true),
+    /** Consumed Material components are consumed only when the scroll is completed. */
+    consumedComponentsUsedOnCompletion: z.literal(true),
+    usesScribeSaveDcAndAttackBonus: z.literal(true),
+  }),
+  z.strictObject({ ...ruleShape, kind: z.literal("scribing-cantrips"), worksAsIfCasterLevel: z.literal("scribe") }),
   z.strictObject({ ...ruleShape, kind: z.literal("one-at-a-time"), maxArmor: z.literal(1), maxShield: z.literal(1) }),
   z.strictObject({ ...ruleShape, kind: z.literal("selling"), resaleFraction: z.number().positive() }),
   z.strictObject({ ...ruleShape, kind: z.literal("coin-weight"), coinsPerPound: z.number().int().positive() }),

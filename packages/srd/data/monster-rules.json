@@ -249,6 +249,36 @@
     ]
   },
   {
+    "id": "legendary-actions",
+    "name": "Legendary Actions",
+    "page": 257,
+    "timing": "after-another-creatures-turn",
+    "oneAtATime": true,
+    "usesPerAction": 1,
+    "recharge": "start-of-next-turn",
+    "blockedBy": [
+      "incapacitated"
+    ]
+  },
+  {
+    "id": "limited-usage",
+    "name": "Limited Usage",
+    "page": 257,
+    "perDay": {
+      "recharge": "long-rest"
+    },
+    "rechargeRoll": {
+      "count": 1,
+      "die": 6,
+      "rolledAt": "start-of-each-turn",
+      "alsoRestoredBy": "short-or-long-rest"
+    },
+    "afterRest": {
+      "count": 1,
+      "recharge": "short-or-long-rest"
+    }
+  },
+  {
     "id": "proficiency-bonus-by-challenge-rating",
     "name": "Proficiency Bonus by Challenge Rating",
     "page": 256,

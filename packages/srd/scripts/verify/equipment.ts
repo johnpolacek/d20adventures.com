@@ -89,7 +89,7 @@ function toNumber(text: string): number {
 
 /** Statements of the gear descriptions that carry a typed number. Each pattern captures the number, and `paths` are the typed fields that hold those numbers. */
 const numberGroups: { pattern: RegExp; paths: string[]; stripModifiers?: boolean }[] = [
-  { pattern: /within (\d+) feet/g, paths: ["hazard.rangeFeet", "hazard.withinFeet", "spaceHazard.rangeFeet", "spaceHazard.withinFeet", "checks.rangeFeet", "healing.rangeFeet"], stripModifiers: true },
+  { pattern: /within (\d+) feet/g, paths: ["hazard.range", "hazard.withinFeet", "spaceHazard.range", "spaceHazard.withinFeet", "checks.range", "healing.range"], stripModifiers: true },
   { pattern: /(\d+)-foot-square/g, paths: ["hazard.areaSideFeet", "spaceHazard.areaSideFeet"] },
   { pattern: /Bright Light in a (\d+)-foot/g, paths: ["light.brightFeet"] },
   { pattern: /Dim Light for an additional (\d+) feet/g, paths: ["light.dimFeet"] },
@@ -209,7 +209,7 @@ export default function verify(report: Report) {
     const entry = byId.get(toId(row.name))
     if (!entry) continue
     const expect: Record<string, unknown> = { category: row.category, attackType: row.attackType, mastery: toId(row.mastery), weight: row.weight, cost: row.cost, page: 91 }
-    expect.damage = /d/.test(row.dice) ? { dice: row.dice, type: row.type } : { fixed: Number(row.dice), type: row.type }
+    expect.damage = /d/.test(row.dice) ? { dice: row.dice, type: row.type } : { amount: Number(row.dice), type: row.type }
     const named = row.props.filter((token) => token !== "—")
     expect.properties = named.map((token) => toId(token.replace(/ \(.*\)$/, "")))
     const range = /Range (\d+)\/(\d+)/.exec(row.props.join(","))
@@ -254,7 +254,7 @@ export default function verify(report: Report) {
   for (const row of officialArmor) {
     const entry = byId.get(toId(row.name))
     if (!entry) continue
-    const times = /^(\d+) Minutes? to Don or Doff$/.exec(row.times) ?? /^(\d+) Minutes? to Don and (\d+) Minutes? to Doff$/.exec(row.times)
+    const minutes = row.times.match(/\d+/g) ?? []
     const expect: Record<string, unknown> = {
       category: row.category,
       weight: row.weight,
@@ -271,8 +271,8 @@ export default function verify(report: Report) {
       expect.baseAc = Number(ac[1])
       expect.addsDexModifier = Boolean(ac[2])
       expect.dexModifierCap = ac[3] ? Number(ac[3]) : undefined
-      expect.donMinutes = Number((times as RegExpExecArray)[1])
-      expect.doffMinutes = Number((times as RegExpExecArray)[2] ?? (times as RegExpExecArray)[1])
+      expect.donMinutes = Number(minutes[0])
+      expect.doffMinutes = Number(minutes[1] ?? minutes[0])
     }
     for (const [field, value] of Object.entries(expect)) {
       armorCells++
@@ -294,11 +294,14 @@ export default function verify(report: Report) {
   const tools = of("tool")
   const toolVariantNames = (body: string) => {
     const list = flat(/Variants: ([\s\S]*)$/.exec(body)?.[1] ?? "").replace(/(\w)- (\w)/g, "$1$2")
-    return [...list.matchAll(/([A-Za-z -]+?) \((\d+) ([CSGEP])P(?:, (\d+) lb\.)?\)/g)].map((match) => ({
-      name: toId(match[1]),
-      cost: cost(`${match[2]} ${match[3]}P`),
-      weight: match[4] ? Number(match[4]) : undefined,
-    }))
+    return list
+      .split(/\),? ?/)
+      .filter(Boolean)
+      .map((segment) => {
+        const [name, detail] = segment.split(" (")
+        const [price, mass] = detail.split(", ")
+        return { name: toId(name), cost: cost(price.toUpperCase()), weight: mass ? weight(mass) : undefined }
+      })
   }
   const officialToolNames = toolBlocks.map((block) => block.name)
   const variantNames = toolBlocks.flatMap((block) => toolVariantNames(block.body).map((variant) => variant.name))
@@ -546,7 +549,7 @@ export default function verify(report: Report) {
     }
     for (const [path, value] of numericPaths) {
       mechTotal++
-      if (covered.has(path) || /(^|\.)(dc|saveDc|fixed)$/.test(path)) continue
+      if (covered.has(path) || /(^|\.)(dc|saveDc|amount)$/.test(path)) continue
       if (path === "spellScroll.spellLevel") {
         if (value !== (entry.id.endsWith("cantrip") ? 0 : 1)) mechFailures.push(`${entry.id}: spell level ${value} does not match the entry name`)
         continue
@@ -786,7 +789,9 @@ export default function verify(report: Report) {
   report.check("equipment", "ships: speed, crew, passengers, cargo, AC, HP, damage threshold, cost, page, Rowboat weight", shipRows.length * 10, shipFailures)
 
   // Lifestyles, food, services -----------------------------------------------------------------------------
-  const lifestyleHeads = [...P(101).matchAll(/^(Wretched|Squalid|Poor|Modest|Comfortable|Wealthy|Aristocratic) \((Free|[\d,]+ [CSGEP]P per Day)\)$/gm)]
+  const lifestyleHeads = [...P(101).matchAll(/^([A-Z][a-z]+) \((Free|\d+ [CSGEP]P per Day)\)$/gm)].filter((match) =>
+    ["Wretched", "Squalid", "Poor", "Modest", "Comfortable", "Wealthy", "Aristocratic"].includes(match[1])
+  )
   coverage(
     "equipment",
     "lifestyle expenses",
@@ -1049,6 +1054,12 @@ export default function verify(report: Report) {
       const sentence = sentences.find((item) => item.includes(`DC ${check.dc} ${abilityName[check.ability]} (`)) ?? ""
       const use = useWords.find(([, pattern]) => pattern.test(sentence))?.[0]
       expect(check.use === use, `${entry.id}: check use ${check.use}, its sentence says ${use}`)
+      // The action and the tool the sentence requires.
+      const action = /Utilize action/.test(sentence) ? ["utilize-action"] : /as an action|use its action|take an action/.test(sentence) ? ["action"] : undefined
+      expect(same(check.activation, action), `${entry.id}: check action ${JSON.stringify(check.activation)}, its sentence says ${JSON.stringify(action)}`)
+      const tool = /use Thieves’ Tools to/.test(sentence) ? "thieves-tools" : undefined
+      expect(check.tool === tool, `${entry.id}: check tool ${check.tool}, its sentence says ${tool}`)
+      if (check.tool) expect(squash((byId.get(check.tool) as Entry)?.name ?? "") === squash("Thieves’ Tools"), `${entry.id}: tool ${check.tool} is not Thieves’ Tools`)
     }
     // Binding: the conditions required, the condition applied, the sizes.
     if (entry.binding) {
@@ -1080,7 +1091,11 @@ export default function verify(report: Report) {
       if (entry.light?.fuel) expect(squash((byId.get(entry.light.fuel) as Entry)?.name ?? "") === "oil", `${entry.id}: fuel ${entry.light.fuel} is not Oil`)
     }
     // Containers hold what the text names.
-    const holds = [...text.matchAll(/(\d+) (?:sheets of (paper|parchment)|(Bolts|Arrows))/g)].map((match) => ({ item: (match[2] ?? match[3]).toLowerCase(), quantity: Number(match[1]) }))
+    const holds = [...text.matchAll(/(\d+) (?:sheets of (paper|parchment)|(Bolts|Arrows))/g)].map((match) => {
+      const item = (match[2] ?? match[3]).toLowerCase()
+      // Ammunition is counted in single pieces, whatever the bundle size.
+      return { item, quantity: Number(match[1]), ...(byId.get(item)?.kind === "ammunition" ? { unit: "single" } : {}) }
+    })
     expect(same(entry.capacity?.holds ?? [], holds), `${entry.id}: container contents ${JSON.stringify(entry.capacity?.holds)} differ from ${JSON.stringify(holds)}`)
     for (const hold of holds) expect(squash((byId.get(hold.item) as Entry)?.name ?? "").startsWith(squash(hold.item)), `${entry.id}: ${hold.item} is not the right entry`)
   }
@@ -1134,7 +1149,7 @@ export default function verify(report: Report) {
     ["reach", prop("reach")?.reachBonusFeet, 5, /adds 5 feet to your reach/],
     ["push", mastery("push")?.pushFeet, 10, /up to 10 feet straight away/],
     ["push", mastery("push")?.maxSize, "Large", /if it is Large or smaller/],
-    ["slow", mastery("slow")?.speedReductionFeet, 10, /reduce its Speed by 10 feet/],
+    ["slow", mastery("slow")?.targetSpeedReduction, { feet: 10, until: "start-of-user-next-turn" }, /reduce its Speed by 10 feet until the start of your next turn/],
     ["topple", mastery("topple")?.save?.ability, "con", /Constitution saving throw/],
     ["topple", mastery("topple")?.save?.dc, { plusModifierOf: "attack-ability" }, /DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus/],
     ["topple", mastery("topple")?.save?.failureCondition, "prone", /has the Prone condition/],
@@ -1145,8 +1160,17 @@ export default function verify(report: Report) {
   }
   for (const entry of [...properties, ...masteries])
     for (const field of Object.keys(entry))
-      if (["minimumScore", "reachBonusFeet", "pushFeet", "maxSize", "speedReductionFeet", "save"].includes(field) && !typedProps.some(([name]) => name === entry.id))
+      if (["minimumScore", "reachBonusFeet", "pushFeet", "maxSize", "targetSpeedReduction", "save"].includes(field) && !typedProps.some(([name]) => name === entry.id))
         propertyFailures.push(`${entry.id}: unexpected typed field ${field}`)
+  // Every mastery whose text reduces a target's Speed carries the reduction, with its feet and its end, and no other does.
+  for (const entry of masteries) {
+    const stated = /reduce its Speed by (\d+) feet until the start of your next turn/.exec(flat(entry.description))
+    propertyFailures.push(
+      ...(same(entry.targetSpeedReduction, stated ? { feet: Number(stated[1]), until: "start-of-user-next-turn" } : undefined)
+        ? []
+        : [`${entry.id}: target Speed reduction ${JSON.stringify(entry.targetSpeedReduction)} differs from the text`])
+    )
+  }
   report.check("equipment", "properties and masteries: typed numbers, sizes, saves and conditions against the wording", typedProps.length + properties.length + masteries.length, propertyFailures)
 
   // Poisons ------------------------------------------------------------------------------------------------------
@@ -1171,13 +1195,15 @@ export default function verify(report: Report) {
     if (entry.page !== (P(197).includes(match[0]) ? 197 : 198)) wrong("page differs")
     if (squash(entry.description) !== squash(body)) wrong("description is not the whole block")
     if (entry.save?.dc !== Number(/DC (\d+) Constitution saving throw/.exec(text)?.[1])) wrong("save DC differs")
-    const damage = [...text.matchAll(/(\d+) \((\d+d\d+)\) Poison damage/g)].map((item) => ({ average: Number(item[1]), dice: item[2], type: "poison" }))
+    const damage = [...text.matchAll(/(\d+) \((\d+d\d+)\) Poison damage/g)].map((item) => ({ dice: item[2], average: Number(item[1]), type: "poison" }))
     const first = entry.repeat ? damage.slice(0, damage.length - 1) : damage
     const typedFirst = entry.damage ? [entry.damage] : []
     // With a repeat, the repeating damage is the last one named. Burnt Othur Fumes and Pale Tincture state both.
     if (!same(typedFirst, first.slice(0, 1)) && !(entry.repeat && !entry.damage && first.length === 0))
       wrong(`damage ${JSON.stringify(typedFirst)} but the text says ${JSON.stringify(first.slice(0, 1))}`)
-    if (entry.repeat?.damage && !same(entry.repeat.damage, damage.at(-1))) wrong("repeat damage differs")
+    // A repeated effect that deals damage names a second roll: the damage of each later failed save. The data must hold it, and only then.
+    const wantRepeatDamage = entry.repeat || /repeat the save|repeats the save|successive failed save|every 24 hours/.test(text) ? damage[1] : undefined
+    if (!same(entry.repeat?.damage, wantRepeatDamage)) wrong(`repeat damage ${JSON.stringify(entry.repeat?.damage)} but the text says ${JSON.stringify(wantRepeatDamage)}`)
     if (Boolean(entry.save?.halfDamageOnSuccess) !== /half as much damage/.test(text)) wrong("half damage on a save differs")
     const imposed = text.replace("ends the Poisoned condition neutralizes", "")
     if (/neutralizes this poison/.test(text) !== Boolean(entry.neutralizedByEndingPoisoned)) wrong("neutralized by ending Poisoned differs")
@@ -1304,6 +1330,23 @@ export default function verify(report: Report) {
     ["tool-proficiency", "advantageWithProficientSkill", true, /proficiency in a skill that’s used with that check, you have Advantage/],
     ["casting-in-armor", "requiresArmorTraining", true, /must have training with any armor you are wearing to cast spells/],
     ["potion-brewing", "tool", "herbalism-kit", /proficiency with the Herbalism Kit can create a Potion of Healing/],
+    [
+      "armor-strength",
+      "speedReduction",
+      { feet: 10, unlessStrengthAtLeast: "listed-score" },
+      /reduces the wearer’s speed by 10 feet unless the wearer has a Strength score equal to or higher than the listed score/,
+    ],
+    ["armor-stealth", "disadvantageOn", { ability: "dex", skill: "stealth" }, /has Disadvantage on Dexterity \(Stealth\) checks/],
+    ["crafting-tools", "requiresProficiency", true, /must use the required tool to make an item and have proficiency with that tool/],
+    ["crafting-tools", "helpersNeedProficiency", true, /Anyone who helps you must also have proficiency with it/],
+    ["scribing-time-and-cost", "workHoursPerDay", 8, /For each day of inscription, you must work for 8 hours/],
+    ["scribing-time-and-cost", "daysNeedNotBeConsecutive", true, /those days needn’t be consecutive/],
+    ["scribing-prerequisites", "proficiencyAnyOf", { skill: "arcana", tool: "calligraphers-supplies" }, /proficiency in the Arcana skill or with Calligrapher’s Supplies/],
+    ["scribing-prerequisites", "spellPreparedEachDay", true, /have the spell prepared on each day of the inscription/],
+    ["scribing-prerequisites", "materialComponentsAtHand", true, /at hand any Material components required by the spell/],
+    ["scribing-prerequisites", "consumedComponentsUsedOnCompletion", true, /they are consumed only when you complete the scroll/],
+    ["scribing-prerequisites", "usesScribeSaveDcAndAttackBonus", true, /uses your spell save DC and spell attack bonus/],
+    ["scribing-cantrips", "worksAsIfCasterLevel", "scribe", /works as if the caster were your level/],
     ["poison-harvesting", "timeMinutes", "1d6", /The effort takes 1d6 minutes/],
     ["poison-harvesting", "tool", "poisoners-kit", /using a Poisoner’s Kit/],
     ["poison-harvesting", "check", { ability: "int", skill: "nature", dc: 20 }, /DC 20 Intelligence \(Nature\) check/],
@@ -1317,6 +1360,46 @@ export default function verify(report: Report) {
   }
   const one = rules.find((rule) => rule.kind === "one-at-a-time")
   if (!one || one.maxArmor !== 1 || !/only one suit of armor at a time and wield only one Shield/.test(flat(one.description))) ruleFailures.push("one at a time rule differs")
+  // Each rule's name is tied to its id by a hand-kept table, so a name swapped between rules fails.
+  const handRuleNames: Record<string, string> = {
+    "armor-stealth": "Armor Stealth",
+    "armor-strength": "Armor Strength",
+    "armor-training-light-medium-or-heavy-armor": "Armor Training (Light, Medium, or Heavy Armor)",
+    "armor-training-shield": "Armor Training (Shield)",
+    barding: "Barding",
+    "brewing-potions-of-healing": "Brewing Potions of Healing",
+    "casting-in-armor": "Casting in Armor",
+    coins: "Coins",
+    "crafting-nonmagical-items": "Crafting Nonmagical Items",
+    "crafting-nonmagical-items-tools": "Crafting Nonmagical Items (Tools)",
+    "harvesting-poison": "Harvesting Poison",
+    "mounts-and-cargo": "Mounts and Cargo",
+    "one-at-a-time": "One at a Time",
+    passengers: "Passengers",
+    "scribing-spell-scrolls-cantrips": "Scribing Spell Scrolls (Cantrips)",
+    "scribing-spell-scrolls-prerequisites": "Scribing Spell Scrolls (Prerequisites for the Scribe)",
+    "scribing-spell-scrolls-time-and-cost": "Scribing Spell Scrolls (Time and Cost)",
+    "selling-equipment": "Selling Equipment",
+    "ship-repair": "Ship Repair",
+    "spell-scroll-costs-cantrip": "Spell Scroll Costs (Cantrip)",
+    "spell-scroll-costs-level-1": "Spell Scroll Costs (Level 1)",
+    "spell-scroll-costs-level-2": "Spell Scroll Costs (Level 2)",
+    "spell-scroll-costs-level-3": "Spell Scroll Costs (Level 3)",
+    "spell-scroll-costs-level-4": "Spell Scroll Costs (Level 4)",
+    "spell-scroll-costs-level-5": "Spell Scroll Costs (Level 5)",
+    "spell-scroll-costs-level-6": "Spell Scroll Costs (Level 6)",
+    "spell-scroll-costs-level-7": "Spell Scroll Costs (Level 7)",
+    "spell-scroll-costs-level-8": "Spell Scroll Costs (Level 8)",
+    "spell-scroll-costs-level-9": "Spell Scroll Costs (Level 9)",
+    "tool-proficiency": "Tool Proficiency",
+    "weapon-proficiency": "Weapon Proficiency",
+  }
+  ruleCells++
+  if (!same(sorted(Object.keys(handRuleNames)), sorted(rules.map((rule) => rule.id)))) ruleFailures.push("the rule ids differ from the hand-kept list")
+  for (const rule of rules) {
+    ruleCells++
+    if (handRuleNames[rule.id] !== rule.name) ruleFailures.push(`${rule.id}: name "${rule.name}", the hand-kept list says "${handRuleNames[rule.id]}"`)
+  }
   report.check("equipment", "rules: coin weight, selling, armor training, barding, cargo, crafting, potion brewing, ship repair, passengers, scroll costs", ruleCells, ruleFailures)
 
   // Prose ---------------------------------------------------------------------------------------------------------
@@ -1389,6 +1472,97 @@ export default function verify(report: Report) {
   for (const id of ["spell-scroll-cantrip", "spell-scroll-level-1", "potion-of-healing"]) ref("potion and scroll", id)
   report.check("equipment", "references inside the equipment data resolve", refTotal, refFailures)
 
+  // Hand-kept tables, written by reading the pages. They are compared with the data, and with the page parsers above, so a shared
+  // misreading in the builder and a page parser cannot pass both. ---------------------------------------------------------------
+  const handFailures: string[] = []
+  let handTotal = 0
+  const same2 = (label: string, got: string | undefined, want: string) => {
+    handTotal++
+    if (got !== want) handFailures.push(`${label}: data reads "${got}", the hand-kept table says "${want}"`)
+  }
+  const weaponLine = (entry: Entry) => {
+    const props = (entry.properties as string[]).map((id) => {
+      if (id === "thrown") return `thrown ${entry.range.normal}/${entry.range.long}`
+      if (id === "ammunition") return `ammunition ${entry.range.normal}/${entry.range.long} ${entry.ammunition}`
+      if (id === "versatile") return `versatile ${entry.versatileDamage}`
+      if (id === "two-handed" && entry.twoHandedUnlessMounted) return "two-handed unless-mounted"
+      return id
+    })
+    return [
+      entry.name,
+      entry.category,
+      entry.attackType,
+      `${entry.damage.dice ?? entry.damage.amount} ${entry.damage.type}`,
+      props.join(", ") || "-",
+      entry.mastery,
+      entry.weight ?? "-",
+      costText(entry.cost),
+    ].join("|")
+  }
+  for (const row of handWeapons) {
+    const entry = byId.get(toId(row.split("|")[0]))
+    same2(row.split("|")[0], entry ? weaponLine(entry) : undefined, row)
+  }
+  same2("weapon count", String(weapons.length), String(handWeapons.length))
+  const armorLine = (entry: Entry) => {
+    const dex = entry.category === "shield" ? "-" : entry.addsDexModifier ? (entry.dexModifierCap ? `dex max ${entry.dexModifierCap}` : "dex") : "none"
+    const times = entry.donDoffAction ? "utilize" : `${entry.donMinutes}/${entry.doffMinutes}`
+    return [
+      entry.name,
+      entry.category,
+      entry.baseAc ?? `+${entry.acBonus}`,
+      dex,
+      entry.strengthRequired ?? "-",
+      entry.stealthDisadvantage ? "disadvantage" : "-",
+      entry.weight,
+      costText(entry.cost),
+      times,
+    ].join("|")
+  }
+  for (const row of handArmor) {
+    const entry = byId.get(toId(row.split("|")[0]))
+    same2(row.split("|")[0], entry ? armorLine(entry) : undefined, row)
+  }
+  same2("armor count", String(of("armor").length), String(handArmor.length))
+  handMounts.forEach((row) => {
+    const entry = byId.get(toId(row.split("|")[0]))
+    same2(row.split("|")[0], entry ? [entry.name, entry.carryingCapacityPounds, costText(entry.cost)].join("|") : undefined, row)
+  })
+  same2("mount count", String(of("mount").length), String(handMounts.length))
+  handShips.forEach((row) => {
+    const entry = byId.get(toId(row.split("|")[0]))
+    const line = entry
+      ? [entry.name, entry.speedMph, entry.crew, entry.passengers ?? "-", entry.cargoTons ?? "-", entry.ac, entry.hp, entry.damageThreshold ?? "-", costText(entry.cost)].join("|")
+      : undefined
+    same2(row.split("|")[0], line, row)
+  })
+  same2("ship count", String(of("ship").length), String(handShips.length))
+  handAmmunition.forEach((row) => {
+    const entry = byId.get(toId(row.split("|")[0]))
+    same2(row.split("|")[0], entry ? [entry.name, entry.bundleSize, entry.storage, entry.weight, costText(entry.cost)].join("|") : undefined, row)
+  })
+  same2("ammunition count", String(of("ammunition").length), String(handAmmunition.length))
+  const lifestyleHand = ["Wretched|free", "Squalid|1 sp", "Poor|2 sp", "Modest|1 gp", "Comfortable|2 gp", "Wealthy|4 gp", "Aristocratic|10 gp"]
+  lifestyleHand.forEach((row) => {
+    const entry = byId.get(toId(row.split("|")[0]))
+    same2(row.split("|")[0], entry ? `${entry.name}|${entry.costPerDay ? costText(entry.costPerDay) : "free"}` : undefined, row)
+  })
+  same2("lifestyle count", String(of("lifestyle").length), String(lifestyleHand.length))
+  // Gear mechanics: every typed fact of every gear entry, flattened to "path=value", against facts written from the descriptions.
+  const mechanicFacts = (entry: Entry) => {
+    const picked = Object.fromEntries([...mechanicKeys, "activation", "magicItem"].filter((key) => entry[key] !== undefined).map((key) => [key, entry[key]]))
+    return leaves(picked, "", true)
+      .filter(([path]) => !path.endsWith("when"))
+      .map(([path, value]) => `${path}=${value}`)
+      .sort()
+      .join("; ")
+  }
+  for (const entry of of("gear")) {
+    const want = handMechanics[entry.id] ?? ""
+    same2(`${entry.id} mechanics`, mechanicFacts(entry), want.split("; ").filter(Boolean).sort().join("; "))
+  }
+  report.check("equipment", "hand-kept tables of weapons, armor, mounts, ships, ammunition and every gear entry's typed mechanics agree with the data", handTotal, handFailures)
+
   // Cross-checks with the base source and Open5e. A disagreement is settled by the official text, which the checks above enforced. -----
   const crossName = "the base source and Open5e agree on costs, weights, damage, mastery, AC and properties, or the official text settles it"
   if (hasUpstream("5e-bits") && hasUpstream("open5e")) {
@@ -1410,8 +1584,8 @@ export default function verify(report: Report) {
       if ((entry.weight ?? 0) !== (item.weight ?? 0)) crossWaived.push(`${entry.id}: base source weighs ${item.weight}, official ${entry.weight}`)
       if (entry.kind === "weapon") {
         crossTotal += 3
-        if (item.damage?.damage_dice !== (entry.damage.dice ?? String(entry.damage.fixed)) || item.damage?.damage_type?.index !== entry.damage.type)
-          crossWaived.push(`${entry.id}: base source damage ${item.damage?.damage_dice} ${item.damage?.damage_type?.index}, official ${entry.damage.dice ?? entry.damage.fixed} ${entry.damage.type}`)
+        if (item.damage?.damage_dice !== (entry.damage.dice ?? String(entry.damage.amount)) || item.damage?.damage_type?.index !== entry.damage.type)
+          crossWaived.push(`${entry.id}: base source damage ${item.damage?.damage_dice} ${item.damage?.damage_type?.index}, official ${entry.damage.dice ?? entry.damage.amount} ${entry.damage.type}`)
         if (item.mastery?.index !== entry.mastery) crossWaived.push(`${entry.id}: base source mastery ${item.mastery?.index}, official ${entry.mastery}`)
         if ((item.ammunition?.index ?? undefined) !== entry.ammunition) crossWaived.push(`${entry.id}: base source ammunition ${item.ammunition?.index}, data ${entry.ammunition}`)
         const baseProps = (item.properties ?? []).map((property: Entry) => property.index).sort()
@@ -1431,8 +1605,8 @@ export default function verify(report: Report) {
         continue
       }
       crossTotal += 2
-      if (row.fields.damage_dice !== (entry.damage.dice ?? String(entry.damage.fixed)) || row.fields.damage_type !== entry.damage.type)
-        crossWaived.push(`${entry.id}: Open5e damage ${row.fields.damage_dice} ${row.fields.damage_type}, official ${entry.damage.dice ?? entry.damage.fixed} ${entry.damage.type}`)
+      if (row.fields.damage_dice !== (entry.damage.dice ?? String(entry.damage.amount)) || row.fields.damage_type !== entry.damage.type)
+        crossWaived.push(`${entry.id}: Open5e damage ${row.fields.damage_dice} ${row.fields.damage_type}, official ${entry.damage.dice ?? entry.damage.amount} ${entry.damage.type}`)
       if (row.fields.is_simple !== (entry.category === "simple")) crossWaived.push(`${entry.id}: Open5e simple ${row.fields.is_simple}, official ${entry.category}`)
     }
     for (const row of readOpen5e<Entry>("Armor")) {
@@ -1476,10 +1650,156 @@ function collectFixed(value: unknown): number[] {
     if (Array.isArray(item)) item.forEach(walk)
     else if (item && typeof item === "object") {
       const record = item as Record<string, unknown>
-      if (typeof record.fixed === "number" && "type" in record) out.push(record.fixed)
+      if (typeof record.amount === "number" && "type" in record) out.push(record.amount)
       for (const entry of Object.values(record)) walk(entry)
     }
   }
   walk(value)
   return out
+}
+
+// Written by reading pages 91 and 92 of the official text, one row per line: name|category|melee or ranged|damage|properties|mastery|weight|cost.
+const handWeapons = [
+  "Club|simple|melee|1d4 bludgeoning|light|slow|2|1 sp",
+  "Dagger|simple|melee|1d4 piercing|finesse, light, thrown 20/60|nick|1|2 gp",
+  "Greatclub|simple|melee|1d8 bludgeoning|two-handed|push|10|2 sp",
+  "Handaxe|simple|melee|1d6 slashing|light, thrown 20/60|vex|2|5 gp",
+  "Javelin|simple|melee|1d6 piercing|thrown 30/120|slow|2|5 sp",
+  "Light Hammer|simple|melee|1d4 bludgeoning|light, thrown 20/60|nick|2|2 gp",
+  "Mace|simple|melee|1d6 bludgeoning|-|sap|4|5 gp",
+  "Quarterstaff|simple|melee|1d6 bludgeoning|versatile 1d8|topple|4|2 sp",
+  "Sickle|simple|melee|1d4 slashing|light|nick|2|1 gp",
+  "Spear|simple|melee|1d6 piercing|thrown 20/60, versatile 1d8|sap|3|1 gp",
+  "Dart|simple|ranged|1d4 piercing|finesse, thrown 20/60|vex|0.25|5 cp",
+  "Light Crossbow|simple|ranged|1d8 piercing|ammunition 80/320 bolts, loading, two-handed|slow|5|25 gp",
+  "Shortbow|simple|ranged|1d6 piercing|ammunition 80/320 arrows, two-handed|vex|2|25 gp",
+  "Sling|simple|ranged|1d4 bludgeoning|ammunition 30/120 bullets-sling|slow|-|1 sp",
+  "Battleaxe|martial|melee|1d8 slashing|versatile 1d10|topple|4|10 gp",
+  "Flail|martial|melee|1d8 bludgeoning|-|sap|2|10 gp",
+  "Glaive|martial|melee|1d10 slashing|heavy, reach, two-handed|graze|6|20 gp",
+  "Greataxe|martial|melee|1d12 slashing|heavy, two-handed|cleave|7|30 gp",
+  "Greatsword|martial|melee|2d6 slashing|heavy, two-handed|graze|6|50 gp",
+  "Halberd|martial|melee|1d10 slashing|heavy, reach, two-handed|cleave|6|20 gp",
+  "Lance|martial|melee|1d10 piercing|heavy, reach, two-handed unless-mounted|topple|6|10 gp",
+  "Longsword|martial|melee|1d8 slashing|versatile 1d10|sap|3|15 gp",
+  "Maul|martial|melee|2d6 bludgeoning|heavy, two-handed|topple|10|10 gp",
+  "Morningstar|martial|melee|1d8 piercing|-|sap|4|15 gp",
+  "Pike|martial|melee|1d10 piercing|heavy, reach, two-handed|push|18|5 gp",
+  "Rapier|martial|melee|1d8 piercing|finesse|vex|2|25 gp",
+  "Scimitar|martial|melee|1d6 slashing|finesse, light|nick|3|25 gp",
+  "Shortsword|martial|melee|1d6 piercing|finesse, light|vex|2|10 gp",
+  "Trident|martial|melee|1d8 piercing|thrown 20/60, versatile 1d10|topple|4|5 gp",
+  "Warhammer|martial|melee|1d8 bludgeoning|versatile 1d10|push|5|15 gp",
+  "War Pick|martial|melee|1d8 piercing|versatile 1d10|sap|2|5 gp",
+  "Whip|martial|melee|1d4 slashing|finesse, reach|slow|3|2 gp",
+  "Blowgun|martial|ranged|1 piercing|ammunition 25/100 needles, loading|vex|1|10 gp",
+  "Hand Crossbow|martial|ranged|1d6 piercing|ammunition 30/120 bolts, light, loading|vex|3|75 gp",
+  "Heavy Crossbow|martial|ranged|1d10 piercing|ammunition 100/400 bolts, heavy, loading, two-handed|push|18|50 gp",
+  "Longbow|martial|ranged|1d8 piercing|ammunition 150/600 arrows, heavy, two-handed|slow|2|50 gp",
+  "Musket|martial|ranged|1d12 piercing|ammunition 40/120 bullets-firearm, loading, two-handed|slow|10|500 gp",
+  "Pistol|martial|ranged|1d10 piercing|ammunition 30/90 bullets-firearm, loading|vex|3|250 gp",
+]
+
+// name|category|base AC|Dex rule|Strength|Stealth|weight|cost|don/doff minutes.
+const handArmor = [
+  "Padded Armor|light|11|dex|-|disadvantage|8|5 gp|1/1",
+  "Leather Armor|light|11|dex|-|-|10|10 gp|1/1",
+  "Studded Leather Armor|light|12|dex|-|-|13|45 gp|1/1",
+  "Hide Armor|medium|12|dex max 2|-|-|12|10 gp|5/1",
+  "Chain Shirt|medium|13|dex max 2|-|-|20|50 gp|5/1",
+  "Scale Mail|medium|14|dex max 2|-|disadvantage|45|50 gp|5/1",
+  "Breastplate|medium|14|dex max 2|-|-|20|400 gp|5/1",
+  "Half Plate Armor|medium|15|dex max 2|-|disadvantage|40|750 gp|5/1",
+  "Ring Mail|heavy|14|none|-|disadvantage|40|30 gp|10/5",
+  "Chain Mail|heavy|16|none|13|disadvantage|55|75 gp|10/5",
+  "Splint Armor|heavy|17|none|15|disadvantage|60|200 gp|10/5",
+  "Plate Armor|heavy|18|none|15|disadvantage|65|1500 gp|10/5",
+  "Shield|shield|+2|-|-|-|6|10 gp|utilize",
+]
+
+// name|carrying capacity in pounds|cost, from page 100.
+const handMounts = ["Camel|450|50 gp", "Elephant|1320|200 gp", "Horse, Draft|540|50 gp", "Horse, Riding|480|75 gp", "Mastiff|195|25 gp", "Mule|420|8 gp", "Pony|225|30 gp", "Warhorse|540|400 gp"]
+
+// name|speed in mph|crew|passengers|cargo in tons|AC|HP|damage threshold|cost, from page 101.
+const handShips = [
+  "Airship|8|10|20|1|13|300|-|40000 gp",
+  "Galley|4|80|-|150|15|500|20|30000 gp",
+  "Keelboat|1|1|6|0.5|15|100|10|3000 gp",
+  "Longship|3|40|150|10|15|300|15|10000 gp",
+  "Rowboat|1.5|1|3|-|11|50|-|50 gp",
+  "Sailing Ship|2|20|20|100|15|300|15|10000 gp",
+  "Warship|2.5|60|60|200|15|500|20|25000 gp",
+]
+
+// name|bundle size|storage|weight|cost, from page 96.
+const handAmmunition = ["Arrows|20|quiver|1|1 gp", "Bolts|20|case-crossbow-bolt|1.5|1 gp", "Bullets, Firearm|10|pouch|2|3 gp", "Bullets, Sling|20|pouch|1.5|4 cp", "Needles|50|pouch|1|1 gp"]
+
+// id: the typed facts of each gear entry, as "path=value", read from its description. Gear not listed has none.
+const handMechanics: Record<string, string> = {
+  acid: "hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=2d6; hazard.damage.type=acid",
+  "alchemists-fire": "hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=1d4; hazard.damage.type=fire; hazard.burning=true",
+  antitoxin: "activation=bonus-action; modifiers.effect=advantage; modifiers.on=save; modifiers.againstCondition=poisoned; modifiers.durationHours=1",
+  backpack: "capacity.pounds=30; capacity.cubicFeet=1",
+  "ball-bearings": "activation=utilize-action; hazard.areaSideFeet=10; hazard.withinFeet=10; hazard.save.ability=dex; hazard.save.dc=10; hazard.condition=prone; hazard.recoverMinutes=10",
+  barrel: "capacity.gallons=40; capacity.cubicFeet=4",
+  basket: "capacity.pounds=40; capacity.cubicFeet=2",
+  bedroll: "sleeps=1; modifiers.effect=automatic-success; modifiers.on=save",
+  bell: "activation=utilize-action; audibleFeet=60",
+  blanket: "modifiers.effect=advantage; modifiers.on=save",
+  "block-and-tackle": "liftMultiplier=4",
+  book: "modifiers.effect=bonus; modifiers.on=check; modifiers.ability=int; modifiers.skills=arcana; modifiers.skills=history; modifiers.skills=nature; modifiers.skills=religion; modifiers.amount=5",
+  "bottle-glass": "capacity.pints=1.5",
+  bucket: "capacity.cubicFeet=0.5",
+  caltrops:
+    "activation=utilize-action; hazard.areaSideFeet=5; hazard.withinFeet=5; hazard.save.ability=dex; hazard.save.dc=15; hazard.damage.amount=1; hazard.damage.type=piercing; hazard.speedZeroUntilStartOfNextTurn=true; hazard.recoverMinutes=10",
+  candle: "light.shape=radius; light.brightFeet=5; light.dimFeet=5; light.durationHours=1",
+  "case-crossbow-bolt": "capacity.holds.item=bolts; capacity.holds.quantity=20; capacity.holds.unit=single",
+  "case-map-or-scroll": "capacity.holds.item=paper; capacity.holds.quantity=10; capacity.holds.item=parchment; capacity.holds.quantity=5",
+  chain:
+    "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesWhen=legs-bound; checks.use=bind; checks.ability=str; checks.skill=athletics; checks.dc=13; checks.range=5; checks.activation=utilize-action; checks.use=escape; checks.ability=dex; checks.skill=acrobatics; checks.dc=18; checks.activation=action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=20; checks.activation=action",
+  chest: "capacity.cubicFeet=12",
+  "climbers-kit": "activation=utilize-action; activation=bonus-action; anchorFeet=25",
+  costume: "modifiers.effect=advantage; modifiers.on=check",
+  crowbar: "modifiers.effect=advantage; modifiers.on=check; modifiers.ability=str",
+  flask: "capacity.pints=1",
+  "grappling-hook": "activation=utilize-action; checks.use=catch; checks.ability=dex; checks.skill=acrobatics; checks.dc=13; checks.range=50; checks.activation=utilize-action",
+  "healers-kit": "activation=utilize-action; uses=10; stabilize.requiresCondition=unconscious; stabilize.atHitPoints=0; stabilize.replacesCheck.ability=wis; stabilize.replacesCheck.skill=medicine",
+  "holy-water": "hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=2d8; hazard.damage.type=radiant; hazard.onlyAgainst=fiend; hazard.onlyAgainst=undead",
+  "hunting-trap":
+    "activation=utilize-action; hazard.save.ability=dex; hazard.save.dc=13; hazard.damage.dice=1d4; hazard.damage.type=piercing; hazard.speedZeroUntilStartOfNextTurn=true; hazard.chainFeet=3; hazard.failedFreeAttemptDamage.amount=1; hazard.failedFreeAttemptDamage.type=piercing; checks.use=free; checks.ability=str; checks.skill=athletics; checks.dc=13; checks.activation=action",
+  jug: "capacity.gallons=1",
+  ladder: "heightFeet=10",
+  lamp: "light.shape=radius; light.brightFeet=15; light.dimFeet=30; light.fuel=oil",
+  "lantern-bullseye": "light.shape=cone; light.brightFeet=60; light.dimFeet=60; light.fuel=oil",
+  "lantern-hooded": "activation=bonus-action; light.shape=radius; light.brightFeet=30; light.dimFeet=30; light.fuel=oil; light.loweredHoodDimRadiusFeet=5",
+  lock: "checks.use=pick; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=15; checks.tool=thieves-tools",
+  "magnifying-glass": "modifiers.effect=advantage; modifiers.on=check",
+  manacles:
+    "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesWhen=attached-to-fixed-anchor; binding.sizes=Small; binding.sizes=Medium; checks.use=bind; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=13; checks.range=5; checks.activation=utilize-action; checks.use=escape; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=20; checks.activation=action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=25; checks.activation=action; checks.use=pick; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=15; checks.tool=thieves-tools",
+  map: "modifiers.effect=bonus; modifiers.on=check; modifiers.ability=wis; modifiers.skills=survival; modifiers.amount=5",
+  net: "hazard.range=15; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.condition=restrained; hazard.succeedsAutomaticallyIfSizeAtLeast=Huge; checks.use=escape; checks.ability=str; checks.skill=athletics; checks.dc=10; checks.range=5; checks.activation=action; object.ac=10; object.hp=5; object.immunities=bludgeoning; object.immunities=poison; object.immunities=psychic",
+  oil: "activation=utilize-action; fuelHours=6; hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.dryAfterMinutes=1; hazard.extraFireDamage.amount=5; hazard.extraFireDamage.type=fire; spaceHazard.areaSideFeet=5; spaceHazard.withinFeet=5; spaceHazard.burnsUntilRoundsAfterLit=2; spaceHazard.damage.amount=5; spaceHazard.damage.type=fire; spaceHazard.onlyWhenLit=true",
+  perfume: "modifiers.effect=advantage; modifiers.on=check; modifiers.ability=cha; modifiers.skills=persuasion; modifiers.durationHours=1",
+  "poison-basic":
+    "activation=bonus-action; coating.ammunitionPieces=3; coating.triggerDamageTypes=piercing; coating.triggerDamageTypes=slashing; coating.extraDamage.dice=1d4; coating.extraDamage.type=poison; coating.potencyMinutes=1",
+  pole: "lengthFeet=10; modifiers.effect=advantage; modifiers.on=check; modifiers.ability=str; modifiers.skills=athletics",
+  "pot-iron": "capacity.gallons=1",
+  "potion-of-healing": "activation=bonus-action; magicItem=potions-of-healing; healing.dice=2d4 + 2; healing.range=5",
+  pouch: "capacity.pounds=6; capacity.cubicFeet=0.2",
+  quiver: "capacity.holds.item=arrows; capacity.holds.quantity=20; capacity.holds.unit=single",
+  "ram-portable": "modifiers.effect=bonus; modifiers.on=check; modifiers.ability=str; modifiers.amount=4; modifiers.effect=advantage; modifiers.on=check",
+  rope: "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesWhen=legs-bound; checks.use=knot; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=10; checks.activation=utilize-action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=20; checks.use=escape; checks.ability=dex; checks.skill=acrobatics; checks.dc=15; checks.activation=action",
+  sack: "capacity.pounds=30; capacity.cubicFeet=1",
+  shovel: "dig.sideFeet=5; dig.hours=1; dig.inSoilOrSimilar=true",
+  "signal-whistle": "activation=utilize-action; audibleFeet=600",
+  "spell-scroll-cantrip": "magicItem=spell-scroll; spellScroll.spellLevel=0; spellScroll.saveDc=13; spellScroll.attackBonus=5",
+  "spell-scroll-level-1": "magicItem=spell-scroll; spellScroll.spellLevel=1; spellScroll.saveDc=13; spellScroll.attackBonus=5",
+  "spikes-iron": "activation=utilize-action",
+  spyglass: "magnification=2",
+  string: "activation=utilize-action; lengthFeet=10",
+  tent: "sleeps=2",
+  tinderbox: "activation=bonus-action; ignite.exposedFuel=bonus-action; ignite.otherFireMinutes=1",
+  torch: "light.shape=radius; light.brightFeet=20; light.dimFeet=20; light.durationHours=1; attackDamage.amount=1; attackDamage.type=fire",
+  vial: "capacity.ounces=4",
+  waterskin: "capacity.pints=4",
 }

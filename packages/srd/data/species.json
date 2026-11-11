@@ -165,9 +165,11 @@
       {
         "name": "Dwarven Resilience",
         "text": "You have Resistance to Poison damage. You also have Advantage on saving throws you make to avoid or end the Poisoned condition.",
-        "resistance": [
-          "poison"
-        ],
+        "resistances": {
+          "damageTypes": [
+            "poison"
+          ]
+        },
         "savingThrowAdvantage": {
           "conditions": [
             "poisoned"
@@ -484,7 +486,10 @@
               "text": "When you hit a target with an attack roll and deal damage to it, you can also deal 1d6 Cold damage to that target and reduce its Speed by 10 feet until the start of your next turn.",
               "giant": "Frost Giant",
               "trigger": "hit-with-attack-roll",
-              "speedReduction": 10,
+              "targetSpeedReduction": {
+                "feet": 10,
+                "until": "start-of-user-next-turn"
+              },
               "damage": {
                 "dice": "1d6",
                 "type": "cold"
@@ -497,7 +502,7 @@
               "giant": "Hill Giant",
               "trigger": "hit-with-attack-roll",
               "targetMaxSize": "Large",
-              "condition": "prone"
+              "targetCondition": "prone"
             },
             {
               "id": "stones-endurance",
@@ -526,7 +531,7 @@
                 "dice": "1d8",
                 "type": "thunder"
               },
-              "rangeFeet": 60
+              "range": 60
             }
           ]
         }
@@ -543,7 +548,9 @@
           "count": 1,
           "recharge": "long-rest"
         },
-        "speedBonus": 10,
+        "speedBonus": {
+          "feet": 10
+        },
         "sizeChange": "Large"
       },
       {
@@ -715,9 +722,11 @@
               "id": "abyssal",
               "name": "Abyssal",
               "text": "You have Resistance to Poison damage. You also know the Poison Spray cantrip.",
-              "resistance": [
-                "poison"
-              ],
+              "resistances": {
+                "damageTypes": [
+                  "poison"
+                ]
+              },
               "spells": [
                 {
                   "spell": "poison-spray",
@@ -746,9 +755,11 @@
               "id": "chthonic",
               "name": "Chthonic",
               "text": "You have Resistance to Necrotic damage. You also know the Chill Touch cantrip.",
-              "resistance": [
-                "necrotic"
-              ],
+              "resistances": {
+                "damageTypes": [
+                  "necrotic"
+                ]
+              },
               "spells": [
                 {
                   "spell": "chill-touch",
@@ -777,9 +788,11 @@
               "id": "infernal",
               "name": "Infernal",
               "text": "You have Resistance to Fire damage. You also know the Fire Bolt cantrip.",
-              "resistance": [
-                "fire"
-              ],
+              "resistances": {
+                "damageTypes": [
+                  "fire"
+                ]
+              },
               "spells": [
                 {
                   "spell": "fire-bolt",

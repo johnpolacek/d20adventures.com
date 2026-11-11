@@ -211,7 +211,21 @@
       "upTo": true,
       "concentration": true
     },
-    "description": "You alter your physical form. Choose one of the following options. Its effects last for the duration, during which you can take a Magic action to replace the option you chose with a different one.\nAquatic Adaptation. You sprout gills and grow webs between your fingers. You can breathe underwater and gain a Swim Speed equal to your Speed.\nChange Appearance. You alter your appearance. You decide what you look like, including your height, weight, facial features, sound of your voice, hair length, coloration, and other distinguishing characteristics. You can make yourself appear as a member of another species, though none of your statistics change. You can’t appear as a creature of a different size, and your basic shape stays the same; if you’re bipedal, you can’t use this spell to become quadrupedal, for instance. For the duration, you can take a Magic action to change your appearance in this way again.\nNatural Weapons. You grow claws (Slashing), fangs (Piercing), horns (Piercing), or hooves (Bludgeoning). When you use your Unarmed Strike to deal damage with that new growth, it deals 1d6 damage of the type in parentheses instead of dealing the normal damage for your Unarmed Strike, and you use your spellcasting ability modifier for the attack and damage rolls rather than using Strength."
+    "description": "You alter your physical form. Choose one of the following options. Its effects last for the duration, during which you can take a Magic action to replace the option you chose with a different one.\nAquatic Adaptation. You sprout gills and grow webs between your fingers. You can breathe underwater and gain a Swim Speed equal to your Speed.\nChange Appearance. You alter your appearance. You decide what you look like, including your height, weight, facial features, sound of your voice, hair length, coloration, and other distinguishing characteristics. You can make yourself appear as a member of another species, though none of your statistics change. You can’t appear as a creature of a different size, and your basic shape stays the same; if you’re bipedal, you can’t use this spell to become quadrupedal, for instance. For the duration, you can take a Magic action to change your appearance in this way again.\nNatural Weapons. You grow claws (Slashing), fangs (Piercing), horns (Piercing), or hooves (Bludgeoning). When you use your Unarmed Strike to deal damage with that new growth, it deals 1d6 damage of the type in parentheses instead of dealing the normal damage for your Unarmed Strike, and you use your spellcasting ability modifier for the attack and damage rolls rather than using Strength.",
+    "damage": [
+      {
+        "dice": "1d6",
+        "types": [
+          "slashing",
+          "piercing",
+          "bludgeoning"
+        ],
+        "modifier": true,
+        "trigger": "hit",
+        "label": "Natural Weapons",
+        "appliesWhen": "When you use your Unarmed Strike to deal damage with that new growth"
+      }
+    ]
   },
   {
     "id": "animal-friendship",
@@ -370,7 +384,8 @@
       "concentration": false
     },
     "description": "Choose a pile of bones or a corpse of a Medium or Small Humanoid within range. The target becomes an Undead creature: a Skeleton if you chose bones or a Zombie if you chose a corpse (see “Monsters” for the stat blocks).\nOn each of your turns, you can take a Bonus Action to mentally command any creature you made with this spell if the creature is within 60 feet of you (if you control multiple creatures, you can command any of them at the same time, issuing the same command to each one). You decide what action the creature will take and where it will move on its next turn, or you can issue a general command, such as to guard a chamber or corridor. If you issue no commands, the creature takes the Dodge action and moves only to avoid harm. Once given an order, the creature continues to follow it until its task is complete.\nThe creature is under your control for 24 hours, after which it stops obeying any command you’ve given it. To maintain control of the creature for another 24 hours, you must cast this spell on the creature again before the current 24-hour period ends. This use of the spell reasserts your control over up to four creatures you have animated with this spell rather than animating a new creature.",
-    "higherLevel": "You animate or reassert control over two additional Undead creatures for each spell slot level above 3. Each of the creatures must come from a different corpse or pile of bones."
+    "higherLevel": "You animate or reassert control over two additional Undead creatures for each spell slot level above 3. Each of the creatures must come from a different corpse or pile of bones.",
+    "extraTargetsPerSlot": 2
   },
   {
     "id": "animate-objects",
@@ -572,22 +587,28 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "label": "Sympathy",
         "when": "on-damage",
         "onSuccess": "ends"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "label": "Ending the Effect",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
     ],
     "conditions": [
       {
-        "condition": "frightened"
+        "condition": "frightened",
+        "label": "Antipathy",
+        "appliesWhen": "Your choice of antipathy or sympathy determines what happens to a creature when it fails that save"
       },
       {
-        "condition": "charmed"
+        "condition": "charmed",
+        "label": "Sympathy",
+        "appliesWhen": "Your choice of antipathy or sympathy determines what happens to a creature when it fails that save"
       }
     ]
   },
@@ -665,12 +686,14 @@
       {
         "ability": "str",
         "dc": "spell-save-dc",
+        "label": "Forceful Hand",
         "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "label": "Grasping Hand",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -682,7 +705,8 @@
           "force"
         ],
         "perSlot": "2d8",
-        "trigger": "hit"
+        "trigger": "hit",
+        "label": "Clenched Fist"
       },
       {
         "dice": "4d6",
@@ -690,14 +714,19 @@
           "bludgeoning"
         ],
         "modifier": true,
-        "perSlot": "2d6"
+        "perSlot": "2d6",
+        "trigger": "failed-save",
+        "save": 1,
+        "label": "Grasping Hand",
+        "appliesWhen": "While the hand grapples the target, you can take a Bonus Action to cause the hand to crush it"
       }
     ],
     "conditions": [
       {
         "condition": "grappled",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "label": "Grasping Hand"
       }
     ]
   },
@@ -880,6 +909,9 @@
       {
         "condition": "unconscious"
       }
+    ],
+    "casterConditions": [
+      "unconscious"
     ]
   },
   {
@@ -1136,7 +1168,9 @@
     ],
     "conditions": [
       {
-        "condition": "incapacitated"
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "extraTargetsPerSlot": 1
@@ -1315,7 +1349,8 @@
         "dice": "1d8",
         "types": [
           "necrotic"
-        ]
+        ],
+        "appliesWhen": "If you deal damage to the target with an attack roll or a spell"
       }
     ]
   },
@@ -1578,13 +1613,11 @@
     "conditions": [
       {
         "condition": "blinded",
-        "trigger": "failed-save",
-        "save": 0
+        "appliesWhen": "your choice"
       },
       {
         "condition": "deafened",
-        "trigger": "failed-save",
-        "save": 0
+        "appliesWhen": "your choice"
       }
     ],
     "extraTargetsPerSlot": 1
@@ -2351,7 +2384,9 @@
     ],
     "conditions": [
       {
-        "condition": "prone"
+        "condition": "prone",
+        "label": "Grovel",
+        "appliesWhen": "Choose the command from these options"
       }
     ],
     "extraTargetsPerSlot": 1
@@ -2731,6 +2766,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "label": "Searing Light",
         "when": "initial",
         "onSuccess": "half"
       }
@@ -2743,7 +2779,8 @@
         ],
         "perSlot": "1d12",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "label": "Searing Light"
       }
     ],
     "healing": {
@@ -2923,7 +2960,9 @@
           "fire",
           "lightning"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "hit",
+        "appliesWhen": "when you hit a creature in the Emanation"
       }
     ]
   },
@@ -2945,7 +2984,8 @@
       "kind": "self",
       "area": {
         "shape": "emanation",
-        "size": 10
+        "size": 10,
+        "selective": true
       }
     },
     "components": {
@@ -3015,7 +3055,7 @@
         "ability": "int",
         "dc": 15,
         "when": "initial",
-        "onSuccess": "other",
+        "onSuccess": "none",
         "target": "caster"
       }
     ],
@@ -3068,6 +3108,18 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "other"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -3210,6 +3262,7 @@
       {
         "ability": "str",
         "dc": "spell-save-dc",
+        "label": "Whirlpool",
         "when": "initial",
         "onSuccess": "half"
       }
@@ -3221,7 +3274,8 @@
           "bludgeoning"
         ],
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "label": "Whirlpool"
       }
     ]
   },
@@ -3436,11 +3490,7 @@
     "ritual": false,
     "range": {
       "kind": "feet",
-      "distance": 30,
-      "area": {
-        "shape": "cube",
-        "size": 30
-      }
+      "distance": 30
     },
     "components": {
       "verbal": true,
@@ -3655,11 +3705,7 @@
     "ritual": false,
     "range": {
       "kind": "feet",
-      "distance": 60,
-      "area": {
-        "shape": "sphere",
-        "size": 15
-      }
+      "distance": 60
     },
     "components": {
       "verbal": true,
@@ -3732,11 +3778,7 @@
     "ritual": false,
     "range": {
       "kind": "feet",
-      "distance": 60,
-      "area": {
-        "shape": "sphere",
-        "size": 60
-      }
+      "distance": 60
     },
     "components": {
       "verbal": true,
@@ -3838,7 +3880,9 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -3874,7 +3918,8 @@
     "description": "You create a shadowy Medium door on a flat solid surface that you can see within range. This door can be opened and closed, and it leads to a demiplane that is an empty room 30 feet in each dimension, made of wood or stone (your choice).\nWhen the spell ends, the door vanishes, and any objects inside the demiplane remain there. Any creatures inside also remain unless they opt to be shunted through the door as it vanishes, landing with the Prone condition in the unoccupied spaces closest to the door’s former space.\nEach time you cast this spell, you can create a new demiplane or connect the shadowy door to a demiplane you created with a previous casting of this spell. Additionally, if you know the nature and contents of a demiplane created by a casting of this spell by another creature, you can connect the shadowy door to that demiplane instead.",
     "conditions": [
       {
-        "condition": "prone"
+        "condition": "prone",
+        "appliesWhen": "unless they opt to be shunted through the door as it vanishes"
       }
     ]
   },
@@ -4003,6 +4048,15 @@
       "somatic": true,
       "material": {
         "text": "1 Copper Piece",
+        "costs": [
+          {
+            "cost": {
+              "amount": 1,
+              "unit": "cp"
+            },
+            "consumed": false
+          }
+        ],
         "consumed": "none"
       }
     },
@@ -4018,8 +4072,9 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "label": "Read Thoughts",
         "when": "initial",
-        "onSuccess": "ends"
+        "onSuccess": "none"
       }
     ]
   },
@@ -4058,7 +4113,8 @@
         "types": [
           "force"
         ],
-        "target": "caster-and-companions"
+        "target": "caster-and-companions",
+        "appliesWhen": "If you, the other creature, or both would arrive in a space occupied by a creature or completely filled by one or more objects"
       }
     ]
   },
@@ -4181,6 +4237,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "label": "Dismissal",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -4342,7 +4399,8 @@
         "types": [
           "radiant"
         ],
-        "trigger": "hit"
+        "trigger": "hit",
+        "appliesWhen": "your attacks with weapons"
       }
     ]
   },
@@ -4379,7 +4437,16 @@
         "types": [
           "radiant"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "hit"
+      },
+      {
+        "dice": "1d8",
+        "types": [
+          "radiant"
+        ],
+        "trigger": "hit",
+        "appliesWhen": "if the target is a Fiend or an Undead"
       }
     ]
   },
@@ -4440,19 +4507,68 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "label": "0–20",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "label": "21–30",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "label": "31–40",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "label": "41–50",
         "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
       {
-        "condition": "blinded"
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 1,
+        "appliesWhen": "21–30"
       },
       {
-        "condition": "deafened"
+        "condition": "deafened",
+        "trigger": "failed-save",
+        "save": 1,
+        "appliesWhen": "21–30"
       },
       {
-        "condition": "stunned"
+        "condition": "stunned",
+        "trigger": "failed-save",
+        "save": 1,
+        "appliesWhen": "21–30"
+      },
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 2,
+        "appliesWhen": "31–40"
+      },
+      {
+        "condition": "deafened",
+        "trigger": "failed-save",
+        "save": 2,
+        "appliesWhen": "31–40"
+      },
+      {
+        "condition": "deafened",
+        "trigger": "failed-save",
+        "save": 3,
+        "appliesWhen": "41–50"
       }
     ]
   },
@@ -4730,12 +4846,8 @@
           "psychic"
         ],
         "trigger": "failed-save",
-        "save": 0
-      }
-    ],
-    "conditions": [
-      {
-        "condition": "incapacitated"
+        "save": 0,
+        "appliesWhen": "when it wakes up"
       }
     ]
   },
@@ -4811,6 +4923,20 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "label": "Fissures",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "label": "Structures",
         "when": "initial",
         "onSuccess": "half"
       }
@@ -4822,7 +4948,8 @@
           "bludgeoning"
         ],
         "trigger": "failed-save",
-        "save": 1
+        "save": 3,
+        "label": "Structures"
       }
     ],
     "conditions": [
@@ -4835,6 +4962,12 @@
         "condition": "prone",
         "trigger": "failed-save",
         "save": 1
+      },
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 3,
+        "label": "Structures"
       }
     ]
   },
@@ -4901,11 +5034,7 @@
     "ritual": false,
     "range": {
       "kind": "feet",
-      "distance": 30,
-      "area": {
-        "shape": "cube",
-        "size": 5
-      }
+      "distance": 30
     },
     "components": {
       "verbal": true,
@@ -5037,7 +5166,7 @@
         "ability": "str",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "ends"
+        "onSuccess": "none"
       }
     ],
     "damage": [
@@ -5046,7 +5175,10 @@
         "types": [
           "piercing"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0,
+        "appliesWhen": "While Restrained, the target takes 1d6 Piercing damage at the start of each of its turns"
       }
     ],
     "conditions": [
@@ -5248,13 +5380,19 @@
     ],
     "conditions": [
       {
-        "condition": "unconscious"
+        "condition": "unconscious",
+        "label": "Asleep",
+        "appliesWhen": "one of the following effects of your choice"
       },
       {
-        "condition": "frightened"
+        "condition": "frightened",
+        "label": "Panicked",
+        "appliesWhen": "one of the following effects of your choice"
       },
       {
-        "condition": "poisoned"
+        "condition": "poisoned",
+        "label": "Sickened",
+        "appliesWhen": "one of the following effects of your choice"
       }
     ]
   },
@@ -5365,7 +5503,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
-        "when": "initial",
+        "when": "later",
         "onSuccess": "none"
       }
     ],
@@ -5857,7 +5995,8 @@
         "types": [
           "fire",
           "cold"
-        ]
+        ],
+        "appliesWhen": "whenever a creature within 5 feet of you hits you with a melee attack roll"
       }
     ]
   },
@@ -6189,11 +6328,7 @@
       },
       {
         "condition": "petrified",
-        "trigger": "failed-save",
-        "save": 1
-      },
-      {
-        "condition": "petrified"
+        "appliesWhen": "If it fails its saves three times"
       }
     ]
   },
@@ -6352,7 +6487,8 @@
         "types": [
           "radiant",
           "necrotic"
-        ]
+        ],
+        "appliesWhen": "When a creature of a chosen type enters the spell’s area for the first time on a turn or ends its turn there"
       }
     ]
   },
@@ -6404,7 +6540,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
-        "when": "initial",
+        "when": "later",
         "onSuccess": "other"
       }
     ]
@@ -6539,7 +6675,8 @@
     ],
     "conditions": [
       {
-        "condition": "restrained"
+        "condition": "restrained",
+        "appliesWhen": "Creatures that were swimming on the surface of frozen water"
       }
     ]
   },
@@ -6673,7 +6810,10 @@
         "dice": "5d10",
         "types": [
           "psychic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "appliesWhen": "While Charmed, the creature takes 5d10 Psychic damage if it acts in a manner directly counter to your command"
       }
     ],
     "conditions": [
@@ -6913,11 +7053,7 @@
     },
     "ritual": false,
     "range": {
-      "kind": "touch",
-      "area": {
-        "shape": "sphere",
-        "size": 20
-      }
+      "kind": "touch"
     },
     "components": {
       "verbal": true,
@@ -6946,6 +7082,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "label": "Explosive Rune",
         "when": "initial",
         "onSuccess": "half"
       }
@@ -6962,7 +7099,8 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "label": "Explosive Rune"
       }
     ]
   },
@@ -7387,7 +7525,9 @@
     "description": "You touch a point and infuse an area around it with holy or unholy power. The area can have a radius up to 60 feet, and the spell fails if the radius includes an area already under the effect of Hallow. The affected area has the following effects.\nHallowed Ward. Choose any of these creature types: Aberration, Celestial, Elemental, Fey, Fiend, or Undead. Creatures of the chosen types can’t willingly enter the area, and any creature that is possessed by or that has the Charmed or Frightened condition from such creatures isn’t possessed, Charmed, or Frightened by them while in the area.\nExtra Effect. You bind an extra effect to the area from the list below:\nCourage. Creatures of any types you choose can’t gain the Frightened condition while in the area.\nDarkness. Darkness fills the area. Normal light, as well as magical light created by spells of a level lower than this spell, can’t illuminate the area.\nDaylight. Bright light fills the area. Magical Darkness created by spells of a level lower than this spell can’t extinguish the light.\nPeaceful Rest. Dead bodies interred in the area can’t be turned into Undead.\nExtradimensional Interference. Creatures of any types you choose can’t enter or exit the area using teleportation or interplanar travel.\nFear. Creatures of any types you choose have the Frightened condition while in the area.\nResistance. Creatures of any types you choose have Resistance to one damage type of your choice while in the area.\nSilence. No sound can emanate from within the area, and no sound can reach into it.\nTongues. Creatures of any types you choose can communicate with any other creature in the area even if they don’t share a common language.\nVulnerability. Creatures of any types you choose have Vulnerability to one damage type of your choice while in the area.",
     "conditions": [
       {
-        "condition": "frightened"
+        "condition": "frightened",
+        "label": "Fear",
+        "appliesWhen": "Creatures of any types you choose … while in the area"
       }
     ]
   },
@@ -7513,7 +7653,8 @@
     "description": "Choose a willing creature that you can see within range. Until the spell ends, the target’s Speed is doubled, it gains a +2 bonus to Armor Class, it has Advantage on Dexterity saving throws, and it gains an additional action on each of its turns. That action can be used to take only the Attack (one attack only), Dash, Disengage, Hide, or Utilize action.\nWhen the spell ends, the target is Incapacitated and has a Speed of 0 until the end of its next turn, as a wave of lethargy washes over it.",
     "conditions": [
       {
-        "condition": "incapacitated"
+        "condition": "incapacitated",
+        "appliesWhen": "When the spell ends"
       }
     ],
     "ac": {
@@ -7627,8 +7768,8 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
-        "when": "initial",
-        "onSuccess": "none"
+        "when": "on-damage",
+        "onSuccess": "other"
       }
     ],
     "damage": [
@@ -7809,7 +7950,8 @@
         "dice": "1d6",
         "types": [
           "necrotic"
-        ]
+        ],
+        "trigger": "hit"
       }
     ]
   },
@@ -8022,7 +8164,8 @@
       "kind": "self",
       "area": {
         "shape": "emanation",
-        "size": 30
+        "size": 30,
+        "selective": true
       }
     },
     "components": {
@@ -8101,7 +8244,8 @@
         "dice": "1d6",
         "types": [
           "force"
-        ]
+        ],
+        "trigger": "hit"
       }
     ]
   },
@@ -8160,7 +8304,9 @@
         "save": 0
       },
       {
-        "condition": "incapacitated"
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -8427,10 +8573,12 @@
     ],
     "conditions": [
       {
-        "condition": "restrained"
+        "condition": "restrained",
+        "label": "Chaining"
       },
       {
-        "condition": "unconscious"
+        "condition": "unconscious",
+        "label": "Slumber"
       }
     ]
   },
@@ -9276,8 +9424,8 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
-        "when": "initial",
-        "onSuccess": "none"
+        "when": "later",
+        "onSuccess": "other"
       }
     ]
   },
@@ -9330,14 +9478,16 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
-        "when": "initial",
+        "when": "later",
         "onSuccess": "other",
         "target": "caster"
       }
     ],
     "conditions": [
       {
-        "condition": "incapacitated"
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -9454,7 +9604,14 @@
       "concentration": false
     },
     "description": "You touch a nonmagical weapon. Until the spell ends, that weapon becomes a magic weapon with a +1 bonus to attack rolls and damage rolls. The spell ends early if you cast it again.",
-    "higherLevel": "The bonus increases to +2 with a level 3–5 spell slot. The bonus increases to +3 with a level 6+ spell slot."
+    "higherLevel": "The bonus increases to +2 with a level 3–5 spell slot. The bonus increases to +3 with a level 6+ spell slot.",
+    "rollModifier": {
+      "amount": 1,
+      "rolls": [
+        "attack-roll",
+        "damage-roll"
+      ]
+    }
   },
   {
     "id": "magnificent-mansion",
@@ -9558,7 +9715,8 @@
       "distance": 60,
       "area": {
         "shape": "sphere",
-        "size": 30
+        "size": 30,
+        "selective": true
       }
     },
     "components": {
@@ -9754,14 +9912,16 @@
         "types": [
           "force"
         ],
-        "target": "caster"
+        "target": "caster",
+        "appliesWhen": "its partial destruction or a change in its shape (to the extent that you no longer fit within it)"
       },
       {
         "amount": 50,
         "types": [
           "force"
         ],
-        "target": "caster"
+        "target": "caster",
+        "appliesWhen": "The stone’s complete destruction (or transmutation into a different substance)"
       }
     ],
     "casterConditions": [
@@ -10184,7 +10344,9 @@
         "save": 0
       },
       {
-        "condition": "incapacitated"
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -10344,7 +10506,8 @@
       "kind": "self",
       "area": {
         "shape": "emanation",
-        "size": 30
+        "size": 30,
+        "selective": true
       }
     },
     "components": {
@@ -10362,7 +10525,13 @@
       "upTo": true,
       "concentration": true
     },
-    "description": "You radiate a concealing aura in a 30-foot Emanation for the duration. While in the aura, you and each creature you choose have a +10 bonus to Dexterity (Stealth) checks and leave no tracks."
+    "description": "You radiate a concealing aura in a 30-foot Emanation for the duration. While in the aura, you and each creature you choose have a +10 bonus to Dexterity (Stealth) checks and leave no tracks.",
+    "rollModifier": {
+      "amount": 10,
+      "rolls": [
+        "ability-check"
+      ]
+    }
   },
   {
     "id": "passwall",
@@ -10445,7 +10614,10 @@
         "dice": "2d8",
         "types": [
           "psychic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "appliesWhen": "if the phantasm represents a dangerous creature or hazard … if it is in the phantasm’s area or within 5 feet of the phantasm"
       }
     ]
   },
@@ -10686,11 +10858,7 @@
     "ritual": false,
     "range": {
       "kind": "feet",
-      "distance": 150,
-      "area": {
-        "shape": "sphere",
-        "size": 100
-      }
+      "distance": 150
     },
     "components": {
       "verbal": true,
@@ -10855,7 +11023,8 @@
         "dice": "12d12",
         "types": [
           "psychic"
-        ]
+        ],
+        "appliesWhen": "if the target has more than 100 Hit Points"
       }
     ]
   },
@@ -10898,7 +11067,8 @@
     ],
     "conditions": [
       {
-        "condition": "stunned"
+        "condition": "stunned",
+        "appliesWhen": "If the target has 150 Hit Points or fewer"
       }
     ]
   },
@@ -11054,19 +11224,36 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "label": "Red, Orange, Yellow, Green, Blue",
         "when": "initial",
-        "onSuccess": "other"
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "label": "Indigo",
+        "when": "initial",
+        "onSuccess": "none"
       },
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "label": "Indigo",
         "when": "end-of-turn",
         "onSuccess": "other"
       },
       {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "label": "Violet",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
         "ability": "wis",
         "dc": "spell-save-dc",
-        "when": "start-of-turn",
+        "label": "Violet",
+        "when": "later",
         "onSuccess": "ends"
       }
     ],
@@ -11080,22 +11267,29 @@
           "poison",
           "cold"
         ],
-        "table": "Prismatic Rays"
+        "table": "Prismatic Rays",
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Red, Orange, Yellow, Green, Blue"
       }
     ],
     "conditions": [
       {
         "condition": "restrained",
         "trigger": "failed-save",
-        "save": 0
+        "save": 1,
+        "label": "Indigo"
       },
       {
-        "condition": "petrified"
+        "condition": "petrified",
+        "label": "Indigo",
+        "appliesWhen": "If it fails three times"
       },
       {
         "condition": "blinded",
         "trigger": "failed-save",
-        "save": 0
+        "save": 3,
+        "label": "Violet"
       }
     ]
   },
@@ -11184,19 +11378,36 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "label": "Red, Orange, Yellow, Green, Blue",
         "when": "initial",
-        "onSuccess": "other"
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "label": "Indigo",
+        "when": "initial",
+        "onSuccess": "none"
       },
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "label": "Indigo",
         "when": "end-of-turn",
         "onSuccess": "other"
       },
       {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "label": "Violet",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
         "ability": "wis",
         "dc": "spell-save-dc",
-        "when": "start-of-turn",
+        "label": "Violet",
+        "when": "later",
         "onSuccess": "ends"
       }
     ],
@@ -11210,7 +11421,10 @@
           "poison",
           "cold"
         ],
-        "table": "Prismatic Layers"
+        "table": "Prismatic Layers",
+        "trigger": "failed-save",
+        "save": 1,
+        "label": "Red, Orange, Yellow, Green, Blue"
       }
     ],
     "conditions": [
@@ -11222,15 +11436,19 @@
       {
         "condition": "restrained",
         "trigger": "failed-save",
-        "save": 1
+        "save": 2,
+        "label": "Indigo"
       },
       {
-        "condition": "petrified"
+        "condition": "petrified",
+        "label": "Indigo",
+        "appliesWhen": "If it fails three times"
       },
       {
         "condition": "blinded",
         "trigger": "failed-save",
-        "save": 1
+        "save": 4,
+        "label": "Violet"
       }
     ]
   },
@@ -11626,14 +11844,7 @@
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
-    ],
-    "rollModifier": {
-      "dice": "1d8",
-      "subtract": true,
-      "rolls": [
-        "damage-roll"
-      ]
-    }
+    ]
   },
   {
     "id": "ray-of-frost",
@@ -12394,6 +12605,14 @@
         "types": [
           "fire"
         ],
+        "perSlot": "1d6",
+        "trigger": "hit"
+      },
+      {
+        "dice": "1d6",
+        "types": [
+          "fire"
+        ],
         "perSlot": "1d6"
       }
     ]
@@ -12592,7 +12811,8 @@
         "condition": "invisible"
       },
       {
-        "condition": "unconscious"
+        "condition": "unconscious",
+        "appliesWhen": "If the target is a creature"
       }
     ]
   },
@@ -12836,7 +13056,8 @@
         "types": [
           "radiant"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "hit"
       }
     ]
   },
@@ -12920,7 +13141,8 @@
     "description": "For the duration, no sound can be created within or pass through a 20-foot-radius Sphere centered on a point you choose within range. Any creature or object entirely inside the Sphere has Immunity to Thunder damage, and creatures have the Deafened condition while entirely inside it. Casting a spell that includes a Verbal component is impossible there.",
     "conditions": [
       {
-        "condition": "deafened"
+        "condition": "deafened",
+        "appliesWhen": "while entirely inside it"
       }
     ]
   },
@@ -13020,7 +13242,8 @@
       "distance": 60,
       "area": {
         "shape": "sphere",
-        "size": 5
+        "size": 5,
+        "selective": true
       }
     },
     "components": {
@@ -13049,8 +13272,8 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
-        "when": "end-of-turn",
-        "onSuccess": "none"
+        "when": "later",
+        "onSuccess": "other"
       }
     ],
     "conditions": [
@@ -13142,7 +13365,8 @@
       "distance": 120,
       "area": {
         "shape": "cube",
-        "size": 40
+        "size": 40,
+        "selective": true
       }
     },
     "components": {
@@ -13434,7 +13658,8 @@
         "dice": "2d4",
         "types": [
           "piercing"
-        ]
+        ],
+        "appliesWhen": "When a creature moves into or within the area"
       }
     ]
   },
@@ -13455,7 +13680,8 @@
       "kind": "self",
       "area": {
         "shape": "emanation",
-        "size": 15
+        "size": 15,
+        "selective": true
       }
     },
     "components": {
@@ -13754,6 +13980,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "label": "Turn 3",
         "when": "initial",
         "onSuccess": "half"
       }
@@ -13771,7 +13998,8 @@
         "dice": "4d6",
         "types": [
           "acid"
-        ]
+        ],
+        "label": "Turn 2"
       },
       {
         "dice": "10d6",
@@ -13779,19 +14007,22 @@
           "lightning"
         ],
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "label": "Turn 3"
       },
       {
         "dice": "2d6",
         "types": [
           "bludgeoning"
-        ]
+        ],
+        "label": "Turn 4"
       },
       {
         "dice": "1d6",
         "types": [
           "cold"
-        ]
+        ],
+        "label": "Turns 5–10"
       }
     ],
     "conditions": [
@@ -14149,18 +14380,42 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "label": "Death",
         "when": "initial",
         "onSuccess": "half"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "label": "Discord",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "label": "Fear",
         "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "label": "Pain",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "label": "Sleep",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "label": "Stunning",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -14172,29 +14427,34 @@
           "necrotic"
         ],
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "label": "Death"
       }
     ],
     "conditions": [
       {
         "condition": "frightened",
         "trigger": "failed-save",
-        "save": 1
+        "save": 2,
+        "label": "Fear"
       },
       {
         "condition": "incapacitated",
         "trigger": "failed-save",
-        "save": 2
+        "save": 3,
+        "label": "Pain"
       },
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 1
+        "save": 4,
+        "label": "Sleep"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
-        "save": 1
+        "save": 5,
+        "label": "Stunning"
       }
     ]
   },
@@ -14232,13 +14492,24 @@
       {
         "ability": "str",
         "dc": "spell-save-dc",
+        "label": "Creature",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "label": "Object",
         "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
       {
-        "condition": "restrained"
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Creature"
       }
     ]
   },
@@ -14365,7 +14636,9 @@
         "dice": "3d10",
         "types": [
           "force"
-        ]
+        ],
+        "target": "caster-and-companions",
+        "appliesWhen": "Mishap"
       }
     ]
   },
@@ -14871,7 +15144,7 @@
       {
         "ability": "str",
         "dc": "spell-save-dc",
-        "when": "initial",
+        "when": "later",
         "onSuccess": "none"
       }
     ],
@@ -15146,7 +15419,8 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "appliesWhen": "each creature that ends its turn within 10 feet of that side or inside the wall"
       }
     ]
   },
@@ -15337,6 +15611,12 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
       }
     ],
     "damage": [
@@ -15356,7 +15636,7 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 0
+        "save": 1
       }
     ]
   },
@@ -15534,7 +15814,8 @@
         "dice": "2d4",
         "types": [
           "fire"
-        ]
+        ],
+        "appliesWhen": "any creature that starts its turn in the fire"
       }
     ],
     "conditions": [
@@ -15564,7 +15845,8 @@
       "distance": 120,
       "area": {
         "shape": "sphere",
-        "size": 30
+        "size": 30,
+        "selective": true
       }
     },
     "components": {
@@ -15654,8 +15936,12 @@
     "description": "You and up to ten willing creatures of your choice within range assume gaseous forms for the duration, appearing as wisps of cloud. While in this cloud form, a target has a Fly Speed of 300 feet and can hover; it has Immunity to the Prone condition; and it has Resistance to Bludgeoning, Piercing, and Slashing damage. The only actions a target can take in this form are the Dash action or a Magic action to begin reverting to its normal form. Reverting takes 1 minute, during which the target has the Stunned condition. Until the spell ends, the target can revert to cloud form, which also requires a Magic action followed by a 1-minute transformation.\nIf a target is in cloud form and flying when the effect ends, the target descends 60 feet per round for 1 minute until it lands, which it does safely. If it can’t land after 1 minute, it falls the remaining distance.",
     "conditions": [
       {
-        "condition": "stunned"
+        "condition": "stunned",
+        "appliesWhen": "Reverting takes 1 minute, during which"
       }
+    ],
+    "casterConditions": [
+      "stunned"
     ]
   },
   {

@@ -169,6 +169,78 @@
     }
   },
   {
+    "id": "magic-item-categories",
+    "name": "Magic Item Categories",
+    "page": 204,
+    "kind": "rule",
+    "text": "Every magic item belongs to a category. The Magic Item Categories table lists the nine categories and provides examples. Rules for the categories appear after the table.",
+    "tables": [
+      {
+        "caption": "Magic Item Categories",
+        "columns": [
+          "Category",
+          "Examples"
+        ],
+        "rows": [
+          {
+            "cells": [
+              "Armor",
+              "+1 Leather Armor, +1 Shield"
+            ]
+          },
+          {
+            "cells": [
+              "Potions",
+              "Potion of Healing"
+            ]
+          },
+          {
+            "cells": [
+              "Rings",
+              "Ring of Invisibility"
+            ]
+          },
+          {
+            "cells": [
+              "Rods",
+              "Immovable Rod"
+            ]
+          },
+          {
+            "cells": [
+              "Scrolls",
+              "Spell Scroll"
+            ]
+          },
+          {
+            "cells": [
+              "Staffs",
+              "Staff of Striking"
+            ]
+          },
+          {
+            "cells": [
+              "Wands",
+              "Wand of Fireballs"
+            ]
+          },
+          {
+            "cells": [
+              "Weapons",
+              "+1 Ammunition, +1 Longsword"
+            ]
+          },
+          {
+            "cells": [
+              "Wondrous Items",
+              "Bag of Holding, Boots of Elvenkind"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "magic-item-rarity",
     "name": "Magic Item Rarity",
     "page": 205,
@@ -188,6 +260,13 @@
     "page": 205,
     "kind": "rule",
     "text": "Common magic items can often be bought in a town or city. Uncommon and Rare magic items are usually found only in cities, and rarer magic items might be sold only in wondrous locations, such as a city on another plane of existence. If you allow characters to buy and sell magic items in your campaign, rarity can help you set prices for those items. Gold Piece values are provided in the Magic Item Rarities and Values table, though a seller might ask for a service rather than coin as payment.\nIf a magic item incorporates an item that has a purchase cost in “Equipment” (such as a weapon or a suit of armor), add that item’s cost to the magic item’s value. For example, +1 Armor (Plate Armor) has a value of 5,500 GP, which is the sum of a Rare magic item’s value (4,000 GP) and the cost of Plate Armor (1,500 GP).\n*Halve the value for a consumable item other than a Spell Scroll. The value of a Spell Scroll is double what it costs to scribe the scroll (as specified in the “Scribing Spell Scrolls” section of “Equipment”)."
+  },
+  {
+    "id": "magic-items",
+    "name": "Magic Items",
+    "page": 204,
+    "kind": "rule",
+    "text": "Magic items are gleaned from the hoards of felled monsters or discovered in long-lost vaults. Such items grant capabilities a character could rarely have otherwise, or they complement their owner’s capabilities in wondrous ways."
   },
   {
     "id": "multiple-items-of-the-same-kind",
@@ -524,16 +603,17 @@
       },
       {
         "name": "Keep Me Close",
-        "text": "The item insists on being carried or worn at all times. If its bearer refuses to comply with the item’s demands, the item can do any of the following:"
+        "text": "The item insists on being carried or worn at all times."
       }
     ],
+    "refusalLead": "If its bearer refuses to comply with the item’s demands, the item can do any of the following:",
     "refusals": [
       "Make it impossible for its bearer to attune to it.",
       "Suppress one or more of its activated properties.",
-      "Attempt to take control of its bearer, whereupon the bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the bearer has the Charmed condition for 1d12 hours. While Charmed in this way, the bearer must try to follow the item’s commands."
+      "Attempt to take control of its bearer, whereupon the bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the bearer has the Charmed condition for 1d12 hours. While Charmed in this way, the bearer must try to follow the item’s commands. If the bearer takes damage, it repeats the save, ending the effect on a success. Whether or not the attempt to control its bearer succeeds, the item can’t use this power again until the next dawn."
     ],
     "charmedHours": "1d12",
-    "text": "When the bearer of a sentient item acts in a manner opposed to the item’s alignment or purpose, conflict can arise. When such a conflict occurs, the item’s bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the item makes one or more of the following demands:\nChase My Dreams. The item demands that its bearer pursue the item’s goals to the exclusion of all other goals.\nGet Rid of It. The item demands that its bearer dispose of anything the item finds repugnant.\nIt’s Time for a Change. The item demands to be given to someone else.\nKeep Me Close. The item insists on being carried or worn at all times. If its bearer refuses to comply with the item’s demands, the item can do any of the following:\n• Make it impossible for its bearer to attune to it.\n• Suppress one or more of its activated properties.\n• Attempt to take control of its bearer, whereupon the bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the bearer has the Charmed condition for 1d12 hours. While Charmed in this way, the bearer must try to follow the item’s commands.\nIf the bearer takes damage, it repeats the save, ending the effect on a success. Whether or not the attempt to control its bearer succeeds, the item can’t use this power again until the next dawn."
+    "text": "When the bearer of a sentient item acts in a manner opposed to the item’s alignment or purpose, conflict can arise. When such a conflict occurs, the item’s bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the item makes one or more of the following demands:\nChase My Dreams. The item demands that its bearer pursue the item’s goals to the exclusion of all other goals.\nGet Rid of It. The item demands that its bearer dispose of anything the item finds repugnant.\nIt’s Time for a Change. The item demands to be given to someone else.\nKeep Me Close. The item insists on being carried or worn at all times.\nIf its bearer refuses to comply with the item’s demands, the item can do any of the following:\n• Make it impossible for its bearer to attune to it.\n• Suppress one or more of its activated properties.\n• Attempt to take control of its bearer, whereupon the bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the bearer has the Charmed condition for 1d12 hours. While Charmed in this way, the bearer must try to follow the item’s commands. If the bearer takes damage, it repeats the save, ending the effect on a success. Whether or not the attempt to control its bearer succeeds, the item can’t use this power again until the next dawn."
   },
   {
     "id": "sentient-magic-item-traits",

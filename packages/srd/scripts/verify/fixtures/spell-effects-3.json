@@ -1,0 +1,1529 @@
+{
+  "phantasmal-killer": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "4d10",
+        "types": ["psychic"],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "A success on the first save also ends the spell.",
+      "On a failed first save the target has Disadvantage on ability checks and attack rolls for the duration.",
+      "On a failed repeated save the target takes the Psychic damage again. That is the same roll, not a new one."
+    ]
+  },
+  "phantom-steed": {
+    "notes": ["The steed uses the Riding Horse stat block with a Speed of 100 feet."]
+  },
+  "planar-ally": {},
+  "planar-binding": {
+    "saves": [
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "notes": ["On a failed save the creature is bound to serve the caster for the duration."]
+  },
+  "plane-shift": {},
+  "plant-growth": {
+    "notes": [
+      "Overgrowth affects a 100-foot-radius Sphere and Enrichment a half-mile radius, so the spell has no single area.",
+      "In the Overgrowth area a creature spends 4 feet of movement for every 1 foot it moves."
+    ]
+  },
+  "poison-spray": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "1d12",
+        "types": ["poison"],
+        "cantrip": {
+          "5": "2d12",
+          "11": "3d12",
+          "17": "4d12"
+        },
+        "trigger": "hit"
+      }
+    ]
+  },
+  "polymorph": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "notes": ["The target gains Temporary Hit Points equal to the Hit Points of the Beast form."]
+  },
+  "power-word-heal": {
+    "notes": ["The target regains all its Hit Points.", "A Prone target can use its Reaction to stand up."]
+  },
+  "power-word-kill": {
+    "damage": [
+      {
+        "dice": "12d12",
+        "types": ["psychic"],
+        "appliesWhen": "if the target has more than 100 Hit Points"
+      }
+    ],
+    "notes": ["A target with 100 Hit Points or fewer dies. The 12d12 Psychic damage applies only to a target with more than 100 Hit Points."]
+  },
+  "power-word-stun": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "stunned",
+        "appliesWhen": "If the target has 150 Hit Points or fewer"
+      }
+    ],
+    "notes": [
+      "Stunned applies only if the target has 150 Hit Points or fewer. Otherwise its Speed is 0 until the start of the caster's next turn.",
+      "There is no initial save. The save is made only by a Stunned target, at the end of each of its turns."
+    ]
+  },
+  "prayer-of-healing": {
+    "healing": {
+      "dice": "2d8",
+      "perSlot": "1d8"
+    },
+    "notes": ["Up to five creatures also gain the benefits of a Short Rest."]
+  },
+  "prestidigitation": {},
+  "prismatic-spray": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half",
+        "label": "Red, Orange, Yellow, Green, Blue"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Indigo"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "other",
+        "label": "Indigo"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Violet"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "ends",
+        "label": "Violet"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "12d6",
+        "types": ["fire", "acid", "lightning", "poison", "cold"],
+        "table": "Prismatic Rays",
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Red, Orange, Yellow, Green, Blue"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 1,
+        "label": "Indigo"
+      },
+      {
+        "condition": "petrified",
+        "label": "Indigo",
+        "appliesWhen": "If it fails three times"
+      },
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 3,
+        "label": "Violet"
+      }
+    ],
+    "area": {
+      "shape": "cone",
+      "size": 60
+    },
+    "notes": [
+      "The text has one Dexterity save per creature. Its outcome depends on the ray rolled: half damage on a success for Red, Orange, Yellow, Green and Blue (save 0), no effect on a success for Indigo and Violet.",
+      "Indigo: three successes on the repeated Constitution save end Restrained. Three failures give Petrified until freed by an effect like Greater Restoration.",
+      "Violet: the Wisdom save is at the start of the caster's next turn. On a failure Blinded ends and the creature teleports to another plane.",
+      "A roll of 8 means the target is struck by two rays, rerolling any 8."
+    ]
+  },
+  "prismatic-wall": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half",
+        "label": "Red, Orange, Yellow, Green, Blue"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Indigo"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "other",
+        "label": "Indigo"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Violet"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "ends",
+        "label": "Violet"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "12d6",
+        "types": ["fire", "acid", "lightning", "poison", "cold"],
+        "table": "Prismatic Layers",
+        "trigger": "failed-save",
+        "save": 1,
+        "label": "Red, Orange, Yellow, Green, Blue"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 2,
+        "label": "Indigo"
+      },
+      {
+        "condition": "petrified",
+        "label": "Indigo",
+        "appliesWhen": "If it fails three times"
+      },
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 4,
+        "label": "Violet"
+      }
+    ],
+    "notes": [
+      "The Constitution save (save 0) is for a creature that can see the wall and moves within 20 feet of it or starts its turn there. Blinded lasts 1 minute.",
+      "Each layer a creature passes through forces its own Dexterity save. Save 1 covers the Red to Blue layers, each dealing 12d6 of its layer's type.",
+      "Indigo: three successes on the repeated Constitution save end Restrained. Three failures give Petrified until freed by an effect like Greater Restoration.",
+      "Violet: the Wisdom save is at the start of the caster's next turn. On a failure Blinded ends and the creature teleports to another plane.",
+      "The wall is up to 90 feet long and 30 feet high, or a globe up to 30 feet in diameter, so it has no area of one shape and size.",
+      "The wall has AC 10 and each layer is destroyed by the means its row gives."
+    ]
+  },
+  "private-sanctum": {
+    "notes": ["The warded area is a Cube from 5 to 100 feet on each side, increased by 100 feet per slot level above 4, so it has no single size."]
+  },
+  "produce-flame": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "1d8",
+        "types": ["fire"],
+        "cantrip": {
+          "5": "2d8",
+          "11": "3d8",
+          "17": "4d8"
+        },
+        "trigger": "hit"
+      }
+    ]
+  },
+  "programmed-illusion": {},
+  "project-image": {},
+  "protection-from-energy": {
+    "notes": ["The target has Resistance to one damage type of the caster's choice: Acid, Cold, Fire, Lightning or Thunder."]
+  },
+  "protection-from-evil-and-good": {
+    "notes": [
+      "Aberrations, Celestials, Elementals, Fey, Fiends and Undead have Disadvantage on attack rolls against the target.",
+      "The target can't be possessed by or gain the Charmed or Frightened conditions from those creatures."
+    ]
+  },
+  "protection-from-poison": {
+    "notes": ["Ends the Poisoned condition on the target.", "The target has Advantage on saves to avoid or end Poisoned and Resistance to Poison damage."]
+  },
+  "purify-food-and-drink": {
+    "area": {
+      "shape": "sphere",
+      "size": 5
+    }
+  },
+  "raise-dead": {
+    "notes": ["The creature returns to life with 1 Hit Point.", "The target takes a -4 penalty to D20 Tests, reduced by 1 each time it finishes a Long Rest."]
+  },
+  "ray-of-enfeeblement": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "other"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "notes": [
+      "On a successful first save the target has Disadvantage on the next attack roll it makes until the start of the caster's next turn.",
+      "On a failed save the target has Disadvantage on Strength-based D20 Tests and subtracts 1d8 from all its damage rolls. The subtraction holds only after a failed save, so it is not typed as a roll modifier."
+    ]
+  },
+  "ray-of-frost": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "1d8",
+        "types": ["cold"],
+        "cantrip": {
+          "5": "2d8",
+          "11": "3d8",
+          "17": "4d8"
+        },
+        "trigger": "hit"
+      }
+    ],
+    "notes": ["On a hit the target's Speed is reduced by 10 feet until the start of the caster's next turn."]
+  },
+  "ray-of-sickness": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "2d8",
+        "types": ["poison"],
+        "perSlot": "1d8",
+        "trigger": "hit"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "poisoned",
+        "trigger": "hit"
+      }
+    ]
+  },
+  "regenerate": {
+    "healing": {
+      "dice": "4d8 + 15"
+    },
+    "notes": ["For the duration the target regains 1 Hit Point at the start of each of its turns, and severed body parts regrow after 2 minutes."]
+  },
+  "reincarnate": {
+    "notes": ["The new body's species is rolled on the spell's 1d10 table."]
+  },
+  "remove-curse": {},
+  "resilient-sphere": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "notes": ["Only an unwilling creature makes the save."]
+  },
+  "resistance": {
+    "damageReduction": "1d4",
+    "notes": ["Applies to one damage type chosen from the listed types, and only once per turn."]
+  },
+  "resurrection": {
+    "notes": [
+      "The creature returns to life with all its Hit Points.",
+      "The target takes a -4 penalty to D20 Tests, reduced by 1 each time it finishes a Long Rest.",
+      "Reviving a creature dead 365 days or longer leaves the caster unable to cast spells and with Disadvantage on D20 Tests until a Long Rest."
+    ]
+  },
+  "reverse-gravity": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "area": {
+      "shape": "cylinder",
+      "size": 50,
+      "height": 100
+    },
+    "notes": ["The save is optional: a creature can make it to grab a fixed object it can reach and avoid the fall upward."]
+  },
+  "revivify": {
+    "notes": ["The creature revives with 1 Hit Point."]
+  },
+  "rope-trick": {},
+  "sacred-flame": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "1d8",
+        "types": ["radiant"],
+        "cantrip": {
+          "5": "2d8",
+          "11": "3d8",
+          "17": "4d8"
+        },
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": ["The target gains no benefit from Half Cover or Three-Quarters Cover for this save."]
+  },
+  "sanctuary": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "notes": ["The save is made by any creature that targets the warded creature with an attack roll or a damaging spell. On a failure it must choose a new target or lose the attack or spell."]
+  },
+  "scorching-ray": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "2d6",
+        "types": ["fire"],
+        "trigger": "hit"
+      }
+    ],
+    "projectiles": {
+      "count": 3,
+      "perSlot": 1
+    }
+  },
+  "scrying": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "notes": [
+      "The save is modified by the caster's knowledge of and connection to the target, per the spell's two tables (+5 to -10).",
+      "On a success the caster can't use the spell on that target again for 24 hours."
+    ]
+  },
+  "searing-smite": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "start-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "1d6",
+        "types": ["fire"],
+        "perSlot": "1d6",
+        "trigger": "hit"
+      },
+      {
+        "dice": "1d6",
+        "types": ["fire"],
+        "perSlot": "1d6"
+      }
+    ],
+    "notes": ["The second roll is dealt at the start of each of the target's turns, before it makes the save."]
+  },
+  "secret-chest": {},
+  "see-invisibility": {},
+  "seeming": {
+    "saves": [
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "notes": ["Only an unwilling target makes the save."]
+  },
+  "sending": {},
+  "sequester": {
+    "conditions": [
+      {
+        "condition": "invisible"
+      },
+      {
+        "condition": "unconscious",
+        "appliesWhen": "If the target is a creature"
+      }
+    ],
+    "notes": ["Unconscious applies only if the target is a creature."]
+  },
+  "shapechange": {
+    "notes": ["The caster gains Temporary Hit Points equal to the Hit Points of the first form."]
+  },
+  "shatter": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "3d8",
+        "types": ["thunder"],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 10
+    },
+    "notes": ["A Construct has Disadvantage on the save.", "A nonmagical object not worn or carried in the area also takes the damage."]
+  },
+  "shield": {
+    "ac": {
+      "bonus": 5
+    },
+    "notes": ["The caster takes no damage from Magic Missile until the start of their next turn."]
+  },
+  "shield-of-faith": {
+    "ac": {
+      "bonus": 2
+    }
+  },
+  "shillelagh": {
+    "notes": [
+      "Melee attacks with the weapon use the spellcasting ability, and its damage die becomes a d8 (d10, d12 and 2d6 at levels 5, 11 and 17).",
+      "Damage can be Force or the weapon's normal type."
+    ]
+  },
+  "shining-smite": {
+    "damage": [
+      {
+        "dice": "2d6",
+        "types": ["radiant"],
+        "perSlot": "1d6",
+        "trigger": "hit"
+      }
+    ],
+    "notes": ["Until the spell ends attack rolls against the target have Advantage and it can't benefit from the Invisible condition."]
+  },
+  "shocking-grasp": {
+    "attack": "melee",
+    "damage": [
+      {
+        "dice": "1d8",
+        "types": ["lightning"],
+        "cantrip": {
+          "5": "2d8",
+          "11": "3d8",
+          "17": "4d8"
+        },
+        "trigger": "hit"
+      }
+    ],
+    "notes": ["On a hit the target can't make Opportunity Attacks until the start of its next turn."]
+  },
+  "silence": {
+    "conditions": [
+      {
+        "condition": "deafened",
+        "appliesWhen": "while entirely inside it"
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "notes": ["Creatures have Deafened while entirely inside the Sphere.", "Creatures and objects entirely inside have Immunity to Thunder damage."]
+  },
+  "silent-image": {},
+  "simulacrum": {},
+  "sleep": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "other"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "unconscious",
+        "trigger": "failed-save",
+        "save": 1
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 5,
+      "selective": true
+    },
+    "notes": [
+      "The second save is made once, at the end of the target's next turn. The text does not state the outcome of a success.",
+      "Creatures that don't sleep or have Immunity to Exhaustion automatically succeed."
+    ]
+  },
+  "sleet-storm": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "cylinder",
+      "size": 20,
+      "height": 40
+    },
+    "notes": ["On a failed save the creature also loses Concentration."]
+  },
+  "slow": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "area": {
+      "shape": "cube",
+      "size": 40,
+      "selective": true
+    },
+    "notes": ["An affected target's Speed is halved, it takes a -2 penalty to AC and Dexterity saves, can't take Reactions, and has a 25 percent chance to fail a spell with a Somatic component."]
+  },
+  "sorcerous-burst": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "1d8",
+        "types": ["acid", "cold", "fire", "lightning", "poison", "psychic", "thunder"],
+        "cantrip": {
+          "5": "2d8",
+          "11": "3d8",
+          "17": "4d8"
+        },
+        "trigger": "hit"
+      }
+    ],
+    "notes": ["Each 8 rolled on a d8 lets the caster roll another d8 and add it, up to a number of extra d8s equal to the spellcasting ability modifier."]
+  },
+  "spare-the-dying": {},
+  "speak-with-animals": {},
+  "speak-with-dead": {},
+  "speak-with-plants": {
+    "area": {
+      "shape": "emanation",
+      "size": 30
+    }
+  },
+  "spider-climb": {
+    "extraTargetsPerSlot": 1
+  },
+  "spike-growth": {
+    "damage": [
+      {
+        "dice": "2d4",
+        "types": ["piercing"],
+        "appliesWhen": "When a creature moves into or within the area"
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "notes": ["The damage is dealt for every 5 feet a creature travels into or within the area."]
+  },
+  "spirit-guardians": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "3d8",
+        "types": ["radiant", "necrotic"],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "emanation",
+      "size": 15,
+      "selective": true
+    },
+    "notes": [
+      "The damage is Radiant if the caster is good or neutral and Necrotic if evil.",
+      "Non-designated creatures have their Speed halved in the Emanation. A creature makes the save only once per turn."
+    ]
+  },
+  "spiritual-weapon": {
+    "attack": "melee",
+    "damage": [
+      {
+        "dice": "1d8",
+        "types": ["force"],
+        "modifier": true,
+        "perSlot": "1d8",
+        "trigger": "hit"
+      }
+    ]
+  },
+  "starry-wisp": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "1d8",
+        "types": ["radiant"],
+        "cantrip": {
+          "5": "2d8",
+          "11": "3d8",
+          "17": "4d8"
+        },
+        "trigger": "hit"
+      }
+    ],
+    "notes": ["On a hit the target can't benefit from the Invisible condition until the end of the caster's next turn."]
+  },
+  "stinking-cloud": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "poisoned",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "notes": ["Poisoned lasts until the end of the current turn, and while Poisoned this way the creature can't take an action or a Bonus Action."]
+  },
+  "stone-shape": {},
+  "stoneskin": {
+    "notes": ["The target has Resistance to Bludgeoning, Piercing and Slashing damage."]
+  },
+  "storm-of-vengeance": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half",
+        "label": "Turn 3"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d6",
+        "types": ["thunder"],
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "4d6",
+        "types": ["acid"],
+        "label": "Turn 2"
+      },
+      {
+        "dice": "10d6",
+        "types": ["lightning"],
+        "trigger": "failed-save",
+        "save": 1,
+        "label": "Turn 3"
+      },
+      {
+        "dice": "2d6",
+        "types": ["bludgeoning"],
+        "label": "Turn 4"
+      },
+      {
+        "dice": "1d6",
+        "types": ["cold"],
+        "label": "Turns 5–10"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "deafened",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "The cloud spreads to a radius of 300 feet with no shape named, so no area is typed.",
+      "The rolls fall at the start of the caster's later turns: 4d6 Acid on turn 2, 10d6 Lightning on six targets on turn 3, 2d6 Bludgeoning on turn 4, 1d6 Cold on each of turns 5 to 10."
+    ]
+  },
+  "suggestion": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ]
+  },
+  "summon-dragon": {
+    "notes": ["The Draconic Spirit stat block's attacks, saves and damage belong to the creature, not the spell, and are left out."]
+  },
+  "sunbeam": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "6d8",
+        "types": ["radiant"],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "line",
+      "size": 60,
+      "width": 5
+    },
+    "notes": ["The caster can take a Magic action to create a new Line until the spell ends."]
+  },
+  "sunburst": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "12d6",
+        "types": ["radiant"],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 60
+    }
+  },
+  "symbol": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half",
+        "label": "Death"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Discord"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Fear"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Pain"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Sleep"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Stunning"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "10d10",
+        "types": ["necrotic"],
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Death"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "frightened",
+        "trigger": "failed-save",
+        "save": 2,
+        "label": "Fear"
+      },
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 3,
+        "label": "Pain"
+      },
+      {
+        "condition": "unconscious",
+        "trigger": "failed-save",
+        "save": 4,
+        "label": "Sleep"
+      },
+      {
+        "condition": "stunned",
+        "trigger": "failed-save",
+        "save": 5,
+        "label": "Stunning"
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 60
+    },
+    "notes": [
+      "The glyph bears one effect chosen when it is inscribed.",
+      "Discord: on a failed save the target argues for 1 minute and has Disadvantage on attack rolls and ability checks.",
+      "Unconscious from Sleep ends if the creature takes damage or is shaken awake."
+    ]
+  },
+  "telekinesis": {
+    "saves": [
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Creature"
+      },
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Object"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Creature"
+      }
+    ],
+    "notes": [
+      "The Object save is made only by a creature wearing or carrying the object.",
+      "The official text breaks off mid-sentence at \"such as manipulating a simple tool,\" before Telepathic Bond."
+    ]
+  },
+  "telepathic-bond": {},
+  "teleport": {
+    "damage": [
+      {
+        "dice": "3d10",
+        "types": ["force"],
+        "target": "caster-and-companions",
+        "appliesWhen": "Mishap"
+      }
+    ],
+    "notes": ["The 3d10 Force damage is dealt only on a Mishap result on the Teleportation Outcome table, to each teleporting creature or the target object, and again on each further Mishap."]
+  },
+  "teleportation-circle": {},
+  "thaumaturgy": {},
+  "thunderwave": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d8",
+        "types": ["thunder"],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "cube",
+      "size": 15
+    },
+    "notes": ["On a failed save the creature is pushed 10 feet away from the caster."]
+  },
+  "time-stop": {
+    "notes": ["The caster takes 1d4 + 1 turns in a row."]
+  },
+  "tiny-hut": {
+    "area": {
+      "shape": "emanation",
+      "size": 10
+    }
+  },
+  "tongues": {},
+  "transport-via-plants": {},
+  "tree-stride": {},
+  "true-polymorph": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "notes": ["Only an unwilling creature makes the save.", "A creature turned into another creature gains Temporary Hit Points equal to the Hit Points of the new form."]
+  },
+  "true-resurrection": {
+    "notes": ["The creature is revived with all its Hit Points."]
+  },
+  "true-seeing": {},
+  "true-strike": {
+    "notes": [
+      "The attack uses the spellcasting ability for attack and damage rolls, and its damage can be Radiant or the weapon's normal type.",
+      "The attack deals extra Radiant damage of 1d6, 2d6 and 3d6 at levels 5, 11 and 17. With no base roll the damage shape can't hold this."
+    ]
+  },
+  "tsunami": {
+    "saves": [
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "none"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "6d10",
+        "types": ["bludgeoning"],
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "5d10",
+        "types": ["bludgeoning"],
+        "trigger": "failed-save",
+        "save": 1
+      }
+    ],
+    "notes": [
+      "Save 1 is made at the start of each of the caster's turns by a Huge or smaller creature inside the wall or whose space the wall enters as it moves. A creature takes this damage only once per round.",
+      "The 5d10 is reduced by 1d10 on each later round as the wall loses 50 feet of height.",
+      "The wall is up to 300 feet long, 300 feet high and 50 feet thick, with no area shape."
+    ]
+  },
+  "unseen-servant": {},
+  "vampiric-touch": {
+    "attack": "melee",
+    "damage": [
+      {
+        "dice": "3d6",
+        "types": ["necrotic"],
+        "perSlot": "1d6",
+        "trigger": "hit"
+      }
+    ],
+    "notes": ["On a hit the caster regains Hit Points equal to half the Necrotic damage dealt."]
+  },
+  "vicious-mockery": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "1d6",
+        "types": ["psychic"],
+        "cantrip": {
+          "5": "2d6",
+          "11": "3d6",
+          "17": "4d6"
+        },
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": ["On a failed save the target has Disadvantage on the next attack roll it makes before the end of its next turn."]
+  },
+  "vitriolic-sphere": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "10d4",
+        "types": ["acid"],
+        "perSlot": "2d4",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "5d4",
+        "types": ["acid"],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "notes": ["A success halves only the initial 10d4. The 5d4 falls at the end of the creature's next turn, only on a failed save.", "Only the initial damage increases with a higher slot."]
+  },
+  "wall-of-fire": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "5d8",
+        "types": ["fire"],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "5d8",
+        "types": ["fire"],
+        "perSlot": "1d8",
+        "appliesWhen": "each creature that ends its turn within 10 feet of that side or inside the wall"
+      }
+    ],
+    "notes": [
+      "The second roll, with no save, falls on a creature that ends its turn within 10 feet of the chosen side or inside the wall. A creature takes the same damage when it enters the wall for the first time on a turn.",
+      "The wall is up to 60 feet long or a ring up to 20 feet in diameter, so no area is typed."
+    ]
+  },
+  "wall-of-force": {},
+  "wall-of-ice": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "10d6",
+        "types": ["cold"],
+        "perSlot": "2d6",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "5d6",
+        "types": ["cold"],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 1
+      }
+    ],
+    "notes": [
+      "The Dexterity save is made by a creature whose space the wall cuts through when it appears. The Constitution save is made by a creature moving through the sheet of frigid air for the first time on a turn.",
+      "Each 10-foot section has AC 12 and 30 Hit Points, Immunity to Cold, Poison and Psychic damage, and Vulnerability to Fire damage."
+    ]
+  },
+  "wall-of-stone": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "other"
+      }
+    ],
+    "notes": [
+      "Only a creature that would be surrounded by the wall makes the save. On a success it can use its Reaction to move up to its Speed out of the enclosure.",
+      "Each panel has AC 15 and 30 Hit Points per inch of thickness."
+    ]
+  },
+  "wall-of-thorns": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "7d8",
+        "types": ["piercing"],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "7d8",
+        "types": ["slashing"],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 1
+      }
+    ],
+    "notes": [
+      "Save 0 is made when the wall appears. Save 1 is made the first time a creature enters a space in the wall on a turn or ends its turn there, once per turn.",
+      "Moving through the wall costs 4 feet of movement per foot."
+    ]
+  },
+  "warding-bond": {
+    "ac": {
+      "bonus": 1
+    },
+    "rollModifier": {
+      "amount": 1,
+      "rolls": ["saving-throw"]
+    },
+    "notes": ["The bonuses and Resistance to all damage apply while the target is within 60 feet of the caster.", "Each time the target takes damage, the caster takes the same amount."]
+  },
+  "water-breathing": {},
+  "water-walk": {},
+  "web": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d4",
+        "types": ["fire"],
+        "appliesWhen": "any creature that starts its turn in the fire"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "cube",
+      "size": 20
+    },
+    "notes": [
+      "The 2d4 Fire damage falls only when webs exposed to fire burn, on a creature that starts its turn in the fire.",
+      "A Restrained creature can take an action to make a Strength (Athletics) check against the spell save DC to end it."
+    ]
+  },
+  "weird": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "10d10",
+        "types": ["psychic"],
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "5d10",
+        "types": ["psychic"],
+        "trigger": "failed-save",
+        "save": 1
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "frightened",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 30,
+      "selective": true
+    }
+  },
+  "wind-walk": {
+    "conditions": [
+      {
+        "condition": "stunned",
+        "appliesWhen": "Reverting takes 1 minute, during which"
+      }
+    ],
+    "casterConditions": ["stunned"],
+    "notes": [
+      "A target, the caster included, has the Stunned condition only during the 1 minute it takes to revert to its normal form.",
+      "In cloud form a target has a Fly Speed of 300 feet, Immunity to the Prone condition, and Resistance to Bludgeoning, Piercing and Slashing damage."
+    ]
+  },
+  "wind-wall": {
+    "saves": [
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "4d8",
+        "types": ["bludgeoning"],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ]
+  },
+  "wish": {
+    "notes": [
+      "After a use other than duplicating a spell, the caster takes 1d10 Necrotic damage per level of each spell cast until a Long Rest. The damage shape can't hold dice per level of another spell.",
+      "The stress also sets the caster's Strength to 3 for 2d4 days and has a 33 percent chance of losing Wish forever.",
+      "Instant Health lets the caster and up to twenty creatures regain all Hit Points."
+    ]
+  },
+  "word-of-recall": {},
+  "zone-of-truth": {
+    "saves": [
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 15
+    }
+  }
+}

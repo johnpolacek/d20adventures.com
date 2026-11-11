@@ -1,0 +1,1540 @@
+{
+  "faithful-hound": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "none"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "4d8",
+        "types": [
+          "force"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "The hound bites one enemy within 5 feet of it at the start of each of your turns, and each bite calls for this save.",
+      "The hound has Truesight with a range of 30 feet and barks when a Small or larger creature comes within 30 feet without speaking the password."
+    ]
+  },
+  "false-life": {
+    "healing": {
+      "dice": "2d4 + 4",
+      "temporary": true,
+      "perSlotAmount": 5
+    }
+  },
+  "fear": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "frightened",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "cone",
+      "size": 30
+    },
+    "notes": [
+      "A creature that fails the first save also drops whatever it is holding.",
+      "The repeated save is made only when the creature ends its turn in a space where it doesn't have line of sight to you.",
+      "A Frightened creature takes the Dash action and moves away from you by the safest route on each of its turns unless there is nowhere to move."
+    ]
+  },
+  "feather-fall": {
+    "notes": [
+      "Up to five falling creatures descend at 60 feet per round and take no damage from the fall if they land before the spell ends."
+    ]
+  },
+  "find-familiar": {
+    "notes": [
+      "The familiar uses the statistics of the chosen Beast form, a stat block outside this spell."
+    ]
+  },
+  "find-steed": {
+    "notes": [
+      "The spell prints the Otherworldly Steed stat block. Its attacks, saves, conditions and healing are the steed's, not the spell's, and are left out.",
+      "With a higher-level slot, the slot's level is used for the spell's level in the stat block."
+    ]
+  },
+  "find-the-path": {},
+  "find-traps": {},
+  "finger-of-death": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "7d8 + 30",
+        "types": [
+          "necrotic"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "A Humanoid killed by this spell rises at the start of your next turn as a Zombie that follows your verbal orders."
+    ]
+  },
+  "fire-bolt": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "1d10",
+        "types": [
+          "fire"
+        ],
+        "cantrip": {
+          "5": "2d10",
+          "11": "3d10",
+          "17": "4d10"
+        },
+        "trigger": "hit"
+      }
+    ],
+    "notes": [
+      "A flammable object hit by this spell starts burning if it isn't being worn or carried."
+    ]
+  },
+  "fire-shield": {
+    "damage": [
+      {
+        "dice": "2d8",
+        "types": [
+          "fire",
+          "cold"
+        ],
+        "appliesWhen": "whenever a creature within 5 feet of you hits you with a melee attack roll"
+      }
+    ],
+    "notes": [
+      "The damage falls on a creature within 5 feet of you that hits you with a melee attack roll. It is Fire from a warm shield or Cold from a chill shield. It is left unlinked because the hit is the attacker's, against you.",
+      "The warm shield grants you Resistance to Cold damage and the chill shield grants you Resistance to Fire damage."
+    ]
+  },
+  "fire-storm": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "7d10",
+        "types": [
+          "fire"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "The area is up to ten contiguous 10-foot Cubes arranged as you like, which the area shape cannot hold."
+    ]
+  },
+  "fireball": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "8d6",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    }
+  },
+  "flame-blade": {
+    "attack": "melee",
+    "damage": [
+      {
+        "dice": "3d6",
+        "types": [
+          "fire"
+        ],
+        "modifier": true,
+        "perSlot": "1d6",
+        "trigger": "hit"
+      }
+    ],
+    "notes": [
+      "You make the melee spell attack with the blade as a Magic action, on any turn while the spell lasts."
+    ]
+  },
+  "flame-strike": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "5d6",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "5d6",
+        "types": [
+          "radiant"
+        ],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "cylinder",
+      "size": 10,
+      "height": 40
+    }
+  },
+  "flaming-sphere": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d6",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "The save is made by a creature that ends its turn within 5 feet of the sphere, and by a creature whose space you move the sphere into.",
+      "The sphere is 5 feet in diameter. No area of effect is typed, since the save applies within 5 feet of it."
+    ]
+  },
+  "flesh-to-stone": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "other"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "other"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "petrified",
+        "appliesWhen": "If it fails its saves three times"
+      }
+    ],
+    "notes": [
+      "On a successful first save, the target's Speed is 0 until the start of your next turn.",
+      "Constructs automatically succeed on the save.",
+      "The repeated save is made by a Restrained target. Three successes end the spell. Three failures turn the target to stone with the Petrified condition. They needn't be consecutive.",
+      "If you maintain Concentration for the entire duration, the target is Petrified until the condition is ended by Greater Restoration or similar magic."
+    ]
+  },
+  "floating-disk": {},
+  "fly": {
+    "extraTargetsPerSlot": 1,
+    "notes": [
+      "The target gains a Fly Speed of 60 feet and can hover."
+    ]
+  },
+  "fog-cloud": {
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "notes": [
+      "The Sphere is Heavily Obscured.",
+      "The fog's radius increases by 20 feet for each spell slot level above 1."
+    ]
+  },
+  "forbiddance": {
+    "damage": [
+      {
+        "dice": "5d10",
+        "types": [
+          "radiant",
+          "necrotic"
+        ],
+        "appliesWhen": "When a creature of a chosen type enters the spell’s area for the first time on a turn or ends its turn there"
+      }
+    ],
+    "notes": [
+      "The damage falls on a creature of a type you chose (Aberrations, Celestials, Elementals, Fey, Fiends, Undead) when it enters the area for the first time on a turn or ends its turn there. Radiant or Necrotic is your choice when you cast the spell.",
+      "A creature that speaks the password as it enters takes no damage.",
+      "The ward covers up to 40,000 square feet of floor to a height of 30 feet, which the area shape cannot hold."
+    ]
+  },
+  "forcecage": {
+    "saves": [
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "other"
+      }
+    ],
+    "notes": [
+      "The save is made by a creature inside the cage that tries to use teleportation or interplanar travel to leave. On a success it exits. On a failure it doesn't exit and wastes the spell or effect.",
+      "The prison is a cage up to 20 feet on a side or a box up to 10 feet on a side, so no single area is typed."
+    ]
+  },
+  "foresight": {
+    "notes": [
+      "The target has Advantage on D20 Tests, and other creatures have Disadvantage on attack rolls against it."
+    ]
+  },
+  "freedom-of-movement": {
+    "extraTargetsPerSlot": 1,
+    "notes": [
+      "Spells and other magical effects can't reduce the target's Speed or give it the Paralyzed or Restrained conditions. It has a Swim Speed equal to its Speed."
+    ]
+  },
+  "freezing-sphere": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "10d6",
+        "types": [
+          "cold"
+        ],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "restrained",
+        "appliesWhen": "Creatures that were swimming on the surface of frozen water"
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 60
+    },
+    "notes": [
+      "Restrained applies to creatures that were swimming on the surface of water the globe freezes. A trapped creature can take an action to make a Strength (Athletics) check against your spell save DC to break free.",
+      "You can keep the globe unfired and throw or sling it later, with the same effect."
+    ]
+  },
+  "gaseous-form": {
+    "extraTargetsPerSlot": 1,
+    "notes": [
+      "The target has Resistance to Bludgeoning, Piercing, and Slashing damage, Immunity to the Prone condition, and Advantage on Strength, Dexterity, and Constitution saving throws."
+    ]
+  },
+  "gate": {},
+  "geas": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "5d10",
+        "types": [
+          "psychic"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "appliesWhen": "While Charmed, the creature takes 5d10 Psychic damage if it acts in a manner directly counter to your command"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "The damage falls on the Charmed creature when it acts in a manner directly counter to your command, no more than once each day.",
+      "The target automatically succeeds if it can't understand your command."
+    ]
+  },
+  "gentle-repose": {},
+  "giant-insect": {
+    "notes": [
+      "The spell prints the Giant Insect stat block. Its attacks, saves, conditions and damage are the creature's, not the spell's, and are left out.",
+      "With a higher-level slot, the slot's level is used for the spell's level in the stat block."
+    ]
+  },
+  "glibness": {
+    "notes": [
+      "When you make a Charisma check, you can replace the number you roll with a 15."
+    ]
+  },
+  "globe-of-invulnerability": {
+    "area": {
+      "shape": "emanation",
+      "size": 10
+    },
+    "notes": [
+      "Spells of level 5 or lower cast from outside can't affect anything within. The barrier blocks spells 1 level higher for each spell slot level above 6."
+    ]
+  },
+  "glyph-of-warding": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half",
+        "label": "Explosive Rune"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "5d8",
+        "types": [
+          "acid",
+          "cold",
+          "fire",
+          "lightning",
+          "thunder"
+        ],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Explosive Rune"
+      }
+    ],
+    "notes": [
+      "The save and damage belong to the Explosive Rune option only. Its area is a 20-foot-radius Sphere centered on the glyph, not typed because the Spell Glyph option uses the stored spell's area instead.",
+      "The damage type is your choice when you create the glyph.",
+      "Noticing the glyph requires a successful Wisdom (Perception) check against your spell save DC."
+    ]
+  },
+  "goodberry": {
+    "healing": {
+      "amount": 1
+    },
+    "notes": [
+      "Ten berries appear. Each berry eaten with a Bonus Action restores 1 Hit Point."
+    ]
+  },
+  "grease": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "The save is made by each creature standing in the area when the grease appears, and by a creature that enters the area or ends its turn there.",
+      "The area is a 10-foot square of ground, which the area shape cannot hold. It is Difficult Terrain."
+    ]
+  },
+  "greater-invisibility": {
+    "conditions": [
+      {
+        "condition": "invisible"
+      }
+    ]
+  },
+  "greater-restoration": {},
+  "guardian-of-faith": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "amount": 20,
+        "types": [
+          "radiant"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "The save is made by an enemy that moves to a space within 10 feet of the guardian for the first time on a turn or starts its turn there.",
+      "The guardian vanishes when it has dealt a total of 60 damage."
+    ]
+  },
+  "guards-and-wards": {
+    "notes": [
+      "The ward reproduces the effects of other spells (Arcane Lock, Web, Dancing Lights, Magic Mouth, Stinking Cloud, Gust of Wind, Suggestion), whose effects are not typed here."
+    ]
+  },
+  "guidance": {
+    "rollModifier": {
+      "dice": "1d4",
+      "rolls": [
+        "ability-check"
+      ]
+    },
+    "notes": [
+      "The 1d4 applies only to ability checks using the skill you choose."
+    ]
+  },
+  "guiding-bolt": {
+    "attack": "ranged",
+    "damage": [
+      {
+        "dice": "4d6",
+        "types": [
+          "radiant"
+        ],
+        "perSlot": "1d6",
+        "trigger": "hit"
+      }
+    ],
+    "notes": [
+      "On a hit, the next attack roll made against the target before the end of your next turn has Advantage."
+    ]
+  },
+  "gust-of-wind": {
+    "saves": [
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "area": {
+      "shape": "line",
+      "size": 60,
+      "width": 10
+    },
+    "notes": [
+      "On a failed save, a creature is pushed 15 feet away from you along the Line. A creature that ends its turn in the Line makes the same save.",
+      "A creature in the Line spends 2 feet of movement for every 1 foot it moves closer to you."
+    ]
+  },
+  "hallow": {
+    "conditions": [
+      {
+        "condition": "frightened",
+        "label": "Fear",
+        "appliesWhen": "Creatures of any types you choose … while in the area"
+      }
+    ],
+    "notes": [
+      "Frightened applies only with the Fear extra effect, to creatures of the types you choose while in the area.",
+      "The area has a radius up to 60 feet with no shape named, so no area is typed.",
+      "Other extra effects give Resistance or Vulnerability to one damage type of your choice to chosen creature types while in the area."
+    ]
+  },
+  "hallucinatory-terrain": {
+    "area": {
+      "shape": "cube",
+      "size": 150
+    },
+    "notes": [
+      "A creature can take the Study action to make an Intelligence (Investigation) check against your spell save DC to disbelieve the illusion."
+    ]
+  },
+  "harm": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "14d6",
+        "types": [
+          "necrotic"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "On a failed save, the target's Hit Point maximum is reduced by the Necrotic damage it took, but not below 1."
+    ]
+  },
+  "haste": {
+    "ac": {
+      "bonus": 2
+    },
+    "conditions": [
+      {
+        "condition": "incapacitated",
+        "appliesWhen": "When the spell ends"
+      }
+    ],
+    "notes": [
+      "The target's Speed is doubled, it has Advantage on Dexterity saving throws, and it gains an additional limited action on each of its turns.",
+      "Incapacitated applies when the spell ends, with a Speed of 0, until the end of the target's next turn."
+    ]
+  },
+  "heal": {
+    "healing": {
+      "amount": 70,
+      "perSlotAmount": 10
+    },
+    "notes": [
+      "The spell also ends the Blinded, Deafened, and Poisoned conditions on the target."
+    ]
+  },
+  "healing-word": {
+    "healing": {
+      "dice": "2d4",
+      "modifier": true,
+      "perSlot": "2d4"
+    }
+  },
+  "heat-metal": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "on-damage",
+        "onSuccess": "other"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d8",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d8"
+      }
+    ],
+    "notes": [
+      "The damage falls on any creature in physical contact with the object when you cast the spell. You can take a Bonus Action on later turns to deal it again if the object is within range.",
+      "A creature holding or wearing the object that takes the damage makes the save. On a failure it drops the object if it can. If it doesn't drop the object, it has Disadvantage on attack rolls and ability checks until the start of your next turn."
+    ]
+  },
+  "hellish-rebuke": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d10",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ]
+  },
+  "heroes-feast": {
+    "hitPointMaximum": {
+      "dice": "2d10"
+    },
+    "notes": [
+      "Up to twelve creatures can partake. The benefits last 24 hours and set in after the hour-long feast.",
+      "A creature that partakes has Resistance to Poison damage and Immunity to the Frightened and Poisoned conditions."
+    ]
+  },
+  "heroism": {
+    "healing": {
+      "modifier": true,
+      "temporary": true
+    },
+    "extraTargetsPerSlot": 1,
+    "notes": [
+      "The Temporary Hit Points equal your spellcasting ability modifier and are gained at the start of each of the target's turns.",
+      "The target is immune to the Frightened condition."
+    ]
+  },
+  "hex": {
+    "damage": [
+      {
+        "dice": "1d6",
+        "types": [
+          "necrotic"
+        ],
+        "trigger": "hit"
+      }
+    ],
+    "notes": [
+      "The target has Disadvantage on ability checks made with the ability you choose.",
+      "With a higher-level slot, Concentration can last longer: up to 4 hours (level 2), 8 hours (levels 3–4), or 24 hours (level 5+)."
+    ]
+  },
+  "hideous-laughter": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "on-damage",
+        "onSuccess": "ends"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "extraTargetsPerSlot": 1,
+    "notes": [
+      "The target can't end the Prone condition on itself. It has Advantage on the save triggered by damage."
+    ]
+  },
+  "hold-monster": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "paralyzed",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "extraTargetsPerSlot": 1
+  },
+  "hold-person": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "paralyzed",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "extraTargetsPerSlot": 1,
+    "notes": [
+      "The target and each additional target must be a Humanoid."
+    ]
+  },
+  "holy-aura": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "emanation",
+      "size": 30,
+      "selective": true
+    },
+    "notes": [
+      "Creatures of your choice in the aura have Advantage on all saving throws, and other creatures have Disadvantage on attack rolls against them.",
+      "The save is made by a Fiend or an Undead that hits an affected creature with a melee attack roll. Blinded lasts until the end of its next turn."
+    ]
+  },
+  "hunters-mark": {
+    "damage": [
+      {
+        "dice": "1d6",
+        "types": [
+          "force"
+        ],
+        "trigger": "hit"
+      }
+    ],
+    "notes": [
+      "You have Advantage on Wisdom (Perception or Survival) checks to find the target.",
+      "With a higher-level slot, Concentration can last up to 8 hours (levels 3–4) or 24 hours (level 5+)."
+    ]
+  },
+  "hypnotic-pattern": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "cube",
+      "size": 30
+    },
+    "notes": [
+      "Incapacitated and a Speed of 0 apply while the creature is Charmed.",
+      "The spell ends for a creature if it takes any damage or someone else uses an action to shake it out of its stupor."
+    ]
+  },
+  "ice-knife": {
+    "attack": "ranged",
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "1d10",
+        "types": [
+          "piercing"
+        ],
+        "trigger": "hit"
+      },
+      {
+        "dice": "2d6",
+        "types": [
+          "cold"
+        ],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "Hit or miss, the shard explodes. The target and each creature within 5 feet of it make the save."
+    ]
+  },
+  "ice-storm": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d10",
+        "types": [
+          "bludgeoning"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "4d6",
+        "types": [
+          "cold"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "cylinder",
+      "size": 20,
+      "height": 40
+    },
+    "notes": [
+      "Ground in the Cylinder is Difficult Terrain until the end of your next turn."
+    ]
+  },
+  "identify": {},
+  "illusory-script": {},
+  "imprisonment": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "restrained",
+        "label": "Chaining"
+      },
+      {
+        "condition": "unconscious",
+        "label": "Slumber"
+      }
+    ],
+    "notes": [
+      "On a successful save, the target is also immune to this spell for the next 24 hours.",
+      "On a failed save the target is imprisoned and affected by one effect of your choice. Restrained applies with the Chaining effect and Unconscious with the Slumber effect."
+    ]
+  },
+  "incendiary-cloud": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "10d8",
+        "types": [
+          "fire"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "notes": [
+      "The save is made when the cloud appears, when the Sphere moves into a creature's space, and when a creature enters it or ends its turn there, only once per turn.",
+      "The area is Heavily Obscured, and the cloud moves 10 feet away from you at the start of each of your turns."
+    ]
+  },
+  "inflict-wounds": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d10",
+        "types": [
+          "necrotic"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ]
+  },
+  "insect-plague": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "4d10",
+        "types": [
+          "piercing"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "notes": [
+      "The save is made when the swarm appears, and when a creature enters the area for the first time on a turn or ends its turn there, only once per turn.",
+      "The area is Lightly Obscured and Difficult Terrain."
+    ]
+  },
+  "instant-summons": {},
+  "invisibility": {
+    "conditions": [
+      {
+        "condition": "invisible"
+      }
+    ],
+    "extraTargetsPerSlot": 1,
+    "notes": [
+      "The spell ends early immediately after the target makes an attack roll, deals damage, or casts a spell."
+    ]
+  },
+  "irresistible-dance": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "other"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "action",
+        "onSuccess": "ends"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "On a successful first save, the target dances until the end of its next turn and must spend all its movement to dance in place.",
+      "While Charmed, the target must use all its movement to dance, has Disadvantage on Dexterity saving throws and attack rolls, and other creatures have Advantage on attack rolls against it."
+    ]
+  },
+  "jump": {
+    "extraTargetsPerSlot": 1
+  },
+  "knock": {},
+  "legend-lore": {},
+  "lesser-restoration": {},
+  "levitate": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "notes": [
+      "Only an unwilling creature makes the save."
+    ]
+  },
+  "light": {},
+  "lightning-bolt": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "8d6",
+        "types": [
+          "lightning"
+        ],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "line",
+      "size": 100,
+      "width": 5
+    }
+  },
+  "locate-animals-or-plants": {},
+  "locate-creature": {},
+  "locate-object": {},
+  "longstrider": {
+    "extraTargetsPerSlot": 1,
+    "notes": [
+      "The target's Speed increases by 10 feet."
+    ]
+  },
+  "mage-armor": {
+    "ac": {
+      "base": 13
+    }
+  },
+  "mage-hand": {},
+  "magic-circle": {
+    "saves": [
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "other"
+      }
+    ],
+    "area": {
+      "shape": "cylinder",
+      "size": 10,
+      "height": 20
+    },
+    "notes": [
+      "The save is made by a creature of a chosen type that tries to use teleportation or interplanar travel to enter the Cylinder. It must succeed to do so.",
+      "A creature of a chosen type has Disadvantage on attack rolls against targets within the Cylinder. The spell can be reversed to keep such a creature inside.",
+      "The duration increases by 1 hour for each spell slot level above 3."
+    ]
+  },
+  "magic-jar": {
+    "saves": [
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "other",
+        "target": "caster"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "On a successful possession save, you can't attempt to possess that target again for 24 hours.",
+      "Incapacitated applies to the possessed creature's soul trapped in the container.",
+      "You make the second save if the host body dies while you're in it. On a success you return to the container if it is within 100 feet. Otherwise you die."
+    ]
+  },
+  "magic-missile": {
+    "damage": [
+      {
+        "dice": "1d4 + 1",
+        "types": [
+          "force"
+        ]
+      }
+    ],
+    "projectiles": {
+      "count": 3,
+      "perSlot": 1
+    }
+  },
+  "magic-mouth": {},
+  "magic-weapon": {
+    "rollModifier": {
+      "amount": 1,
+      "rolls": [
+        "attack-roll",
+        "damage-roll"
+      ]
+    },
+    "notes": [
+      "The bonus applies to attack rolls and damage rolls made with the touched weapon.",
+      "The bonus increases to +2 with a level 3–5 spell slot and to +3 with a level 6+ spell slot."
+    ]
+  },
+  "magnificent-mansion": {},
+  "major-image": {
+    "notes": [
+      "A creature can take a Study action to make an Intelligence (Investigation) check against your spell save DC to discern the illusion."
+    ]
+  },
+  "mass-cure-wounds": {
+    "healing": {
+      "dice": "5d8",
+      "modifier": true,
+      "perSlot": "1d8"
+    },
+    "area": {
+      "shape": "sphere",
+      "size": 30,
+      "selective": true
+    },
+    "notes": [
+      "You choose up to six creatures in the Sphere."
+    ]
+  },
+  "mass-heal": {
+    "notes": [
+      "You restore up to 700 Hit Points, divided as you choose among any number of creatures you can see within range. The pool is shared out, so no per-target healing is typed.",
+      "Creatures healed also have the Blinded, Deafened, and Poisoned conditions removed."
+    ]
+  },
+  "mass-healing-word": {
+    "healing": {
+      "dice": "2d4",
+      "modifier": true,
+      "perSlot": "1d4"
+    }
+  },
+  "mass-suggestion": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "Charmed lasts for the duration or until you or your allies deal damage to the target.",
+      "The duration is longer with a level 7 (10 days), 8 (30 days), or 9 (366 days) spell slot."
+    ]
+  },
+  "maze": {
+    "notes": [
+      "The target can take a Study action to make a DC 20 Intelligence (Investigation) check. On a success it escapes and the spell ends."
+    ]
+  },
+  "meld-into-stone": {
+    "damage": [
+      {
+        "dice": "6d6",
+        "types": [
+          "force"
+        ],
+        "target": "caster",
+        "appliesWhen": "its partial destruction or a change in its shape (to the extent that you no longer fit within it)"
+      },
+      {
+        "amount": 50,
+        "types": [
+          "force"
+        ],
+        "target": "caster",
+        "appliesWhen": "The stone’s complete destruction (or transmutation into a different substance)"
+      }
+    ],
+    "casterConditions": [
+      "prone"
+    ],
+    "notes": [
+      "The 6d6 falls on you if the stone is partly destroyed or changes shape so you no longer fit. The 50 falls on you if the stone is completely destroyed or transmuted.",
+      "Prone applies only if you are expelled.",
+      "Wisdom (Perception) checks to hear sounds outside the stone are made with Disadvantage."
+    ]
+  },
+  "mending": {},
+  "message": {},
+  "meteor-swarm": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "20d6",
+        "types": [
+          "fire"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "dice": "20d6",
+        "types": [
+          "bludgeoning"
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "sphere",
+      "size": 40
+    },
+    "notes": [
+      "There are four Spheres, one centered on each chosen point. A creature in more than one is affected only once.",
+      "A nonmagical object that isn't being worn or carried also takes the damage, and starts burning if it's flammable."
+    ]
+  },
+  "mind-blank": {
+    "notes": [
+      "The target has Immunity to Psychic damage and the Charmed condition."
+    ]
+  },
+  "mind-spike": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "3d8",
+        "types": [
+          "psychic"
+        ],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "On a failed save, you know the target's location while on the same plane. It can't become hidden from you and gains no benefit from the Invisible condition against you."
+    ]
+  },
+  "minor-illusion": {
+    "notes": [
+      "A creature can take a Study action to make an Intelligence (Investigation) check against your spell save DC to discern the illusion."
+    ]
+  },
+  "mirage-arcane": {},
+  "mirror-image": {
+    "notes": [
+      "Each time a creature hits you with an attack roll, roll a d6 for each remaining duplicate. If any rolls 3 or higher, a duplicate is hit and destroyed instead of you."
+    ]
+  },
+  "mislead": {
+    "casterConditions": [
+      "invisible"
+    ],
+    "notes": [
+      "The invisibility ends immediately after you make an attack roll, deal damage, or cast a spell."
+    ]
+  },
+  "misty-step": {},
+  "modify-memory": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "notes": [
+      "The target has Advantage on the save if you are fighting it.",
+      "Incapacitated applies while the target is Charmed in this way.",
+      "The spell ends if the target takes any damage or is targeted by another spell."
+    ]
+  },
+  "moonbeam": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "half"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d10",
+        "types": [
+          "radiant"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "area": {
+      "shape": "cylinder",
+      "size": 5,
+      "height": 40
+    },
+    "notes": [
+      "The save is made when the Cylinder appears, when it moves into a creature's space, and when a creature enters it or ends its turn there, only once per turn.",
+      "On a failed save, a shape-shifted creature reverts to its true form and can't shape-shift until it leaves the Cylinder."
+    ]
+  },
+  "move-earth": {},
+  "nondetection": {},
+  "pass-without-trace": {
+    "rollModifier": {
+      "amount": 10,
+      "rolls": [
+        "ability-check"
+      ]
+    },
+    "area": {
+      "shape": "emanation",
+      "size": 30,
+      "selective": true
+    },
+    "notes": [
+      "The +10 applies only to Dexterity (Stealth) checks, for you and each creature you choose while in the aura."
+    ]
+  },
+  "passwall": {},
+  "phantasmal-force": {
+    "saves": [
+      {
+        "ability": "int",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d8",
+        "types": [
+          "psychic"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "appliesWhen": "if the phantasm represents a dangerous creature or hazard … if it is in the phantasm’s area or within 5 feet of the phantasm"
+      }
+    ],
+    "notes": [
+      "The damage can fall on an affected target once on each of your turns if the phantasm represents a dangerous creature or hazard and the target is in its area or within 5 feet of it. The target perceives the damage as a type appropriate to the illusion.",
+      "The target can take a Study action to make an Intelligence (Investigation) check against your spell save DC. On a success the spell ends."
+    ]
+  }
+}

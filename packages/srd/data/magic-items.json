@@ -96,7 +96,8 @@
       {
         "dice": "6d10",
         "type": "force",
-        "role": "extra",
+        "role": "effect",
+        "appliesWhen": "If a creature of that type takes damage from the ammunition",
         "text": "If a creature of that type takes damage from the ammunition, the creature makes a DC 17 Constitution saving throw, taking an extra 6d10 Force damage on a failed save or half as much extra damage on a successful one."
       }
     ],
@@ -382,12 +383,6 @@
         "type": "bludgeoning",
         "role": "to-item",
         "text": "Below that, the vehicle takes 2d6 Bludgeoning damage each minute from pressure."
-      },
-      {
-        "dice": "2d6",
-        "type": "bludgeoning",
-        "role": "effect",
-        "text": "Hit: 7 (2d6) Bludgeoning damage."
       }
     ],
     "tables": [
@@ -538,8 +533,10 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "description": "You have Resistance to Bludgeoning, Piercing, and Slashing damage while you wear this armor.\nMetal Shell. You can take a Magic action to give yourself Immunity to Bludgeoning, Piercing, and Slashing damage for 10 minutes or until you are no longer wearing the armor. Once this property is used, it can’t be used again until the next dawn."
   },
@@ -701,7 +698,7 @@
       {
         "to": "armor-class",
         "value": 2,
-        "condition": "against ranged attack rolls while you wield this Shield",
+        "appliesWhen": "against ranged attack rolls",
         "text": "You gain a +2 bonus to Armor Class against ranged attack rolls while you wield this Shield."
       }
     ],
@@ -717,14 +714,6 @@
       {
         "ability": "dex",
         "dc": 15
-      },
-      {
-        "ability": "con",
-        "dc": 15
-      },
-      {
-        "ability": "con",
-        "dc": 20
       }
     ],
     "damage": [
@@ -733,18 +722,6 @@
         "type": "force",
         "role": "effect",
         "text": "All the dumped beans are destroyed in the explosion, and each creature in the Sphere, including you, makes a DC 15 Dexterity saving throw, taking 5d4 Force damage on a failed save or half as much damage on a successful one."
-      },
-      {
-        "dice": "5d6",
-        "type": "poison",
-        "role": "effect",
-        "text": "On an odd roll, the eater must succeed on a DC 15 Constitution saving throw or take 5d6 Poison damage and have the Poisoned condition for 1 hour."
-      },
-      {
-        "dice": "10d6",
-        "type": "force",
-        "role": "effect",
-        "text": "On a failed save, the creature takes 10d6 Force damage from an internal explosion."
       }
     ],
     "tables": [
@@ -908,8 +885,11 @@
       "magic-action",
       "bonus-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "count": 3,
+        "recharge": "dawn"
+      }
     ],
     "tables": [
       {
@@ -1362,8 +1342,10 @@
     "activation": [
       "bonus-action"
     ],
-    "reusableAfter": [
-      "long-rest"
+    "uses": [
+      {
+        "recharge": "long-rest"
+      }
     ],
     "description": "While you wear these boots, you can take a Bonus Action to click the boots’ heels together. If you do, the boots double your Speed, and any creature that makes an Opportunity Attack against you has Disadvantage on the attack roll. If you click your heels together again, you end the effect.\nWhen you’ve used the boots’ property for a total of 10 minutes, the magic ceases to function for you until you finish a Long Rest."
   },
@@ -1396,11 +1378,12 @@
     "category": "wondrous-item",
     "rarity": "rare",
     "activation": [
-      "magic-action",
-      "bonus-action"
+      "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "description": "While this bowl is filled with water and you are within 5 feet of it, you can take a Magic action to summon a Water Elemental. The elemental appears in an unoccupied space as close to the bowl as possible, understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The bowl can’t be used this way again until the next dawn.\nThe bowl is about 1 foot in diameter and half as deep. It holds about 3 gallons."
   },
@@ -1417,7 +1400,7 @@
       {
         "to": "damage-rolls",
         "value": 2,
-        "condition": "made with such weapons",
+        "appliesWhen": "made with such weapons",
         "text": "While wearing these bracers, you have proficiency with the Longbow and Shortbow, and you gain a +2 bonus to damage rolls made with such weapons."
       }
     ],
@@ -1436,7 +1419,7 @@
       {
         "to": "armor-class",
         "value": 2,
-        "condition": "if you are wearing no armor and using no Shield",
+        "appliesWhen": "if you are wearing no armor and using no Shield",
         "text": "While wearing these bracers, you gain a +2 bonus to Armor Class if you are wearing no armor and using no Shield."
       }
     ],
@@ -1449,11 +1432,12 @@
     "category": "wondrous-item",
     "rarity": "rare",
     "activation": [
-      "magic-action",
-      "bonus-action"
+      "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "description": "While you are within 5 feet of this brazier, you can take a Magic action to summon a Fire Elemental. The elemental appears in an unoccupied space as close to the brazier as possible, understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The brazier can’t be used this way again until the next dawn."
   },
@@ -1664,8 +1648,10 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "spells": [
       {
@@ -1748,11 +1734,12 @@
     "category": "wondrous-item",
     "rarity": "rare",
     "activation": [
-      "magic-action",
-      "bonus-action"
+      "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "description": "While gently swinging this censer, you can take a Magic action to summon an Air Elemental. The elemental appears in an unoccupied space as close to the censer as possible, understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The censer can’t be used this way again until the next dawn."
   },
@@ -1778,8 +1765,10 @@
     "page": 215,
     "category": "wondrous-item",
     "rarity": "uncommon",
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "spells": [
       {
@@ -1797,8 +1786,10 @@
     "attunement": {
       "required": true
     },
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "spells": [
       {
@@ -1883,8 +1874,10 @@
     "attunement": {
       "required": true
     },
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "spells": [
       {
@@ -1951,8 +1944,10 @@
     "attunement": {
       "required": true
     },
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "spells": [
       {
@@ -2098,10 +2093,12 @@
     },
     "spells": [
       {
-        "id": "gate"
+        "id": "gate",
+        "charges": 1
       },
       {
-        "id": "plane-shift"
+        "id": "plane-shift",
+        "charges": 1
       }
     ],
     "description": "This cube is 3 inches across and radiates palpable magical energy. The six sides of the cube are each keyed to a different plane of existence, one of which is the Material Plane. The other sides are linked to planes determined by the GM.\nThe cube has 3 charges and regains 1d3 expended charges daily at dawn. As a Magic action, you can expend 1 of the cube’s charges to cast one of the following spells using the cube.\nGate. Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side.\nPlane Shift. Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side."
@@ -2120,8 +2117,10 @@
     "activation": [
       "bonus-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "bonuses": [
       {
@@ -2581,13 +2580,13 @@
       {
         "to": "attack-rolls",
         "value": 1,
-        "condition": "the attack and damage rolls of your Unarmed Strikes",
+        "appliesWhen": "of your Unarmed Strikes",
         "text": "In addition, the armor’s clawed gauntlets allow your Unarmed Strikes to deal 1d8 Slashing damage instead of the usual Bludgeoning damage, and you gain a +1 bonus to the attack and damage rolls of your Unarmed Strikes."
       },
       {
         "to": "damage-rolls",
         "value": 1,
-        "condition": "the attack and damage rolls of your Unarmed Strikes",
+        "appliesWhen": "of your Unarmed Strikes",
         "text": "In addition, the armor’s clawed gauntlets allow your Unarmed Strikes to deal 1d8 Slashing damage instead of the usual Bludgeoning damage, and you gain a +1 bonus to the attack and damage rolls of your Unarmed Strikes."
       }
     ],
@@ -2596,6 +2595,7 @@
         "dice": "1d8",
         "type": "slashing",
         "role": "base",
+        "appliesWhen": "your Unarmed Strikes",
         "text": "In addition, the armor’s clawed gauntlets allow your Unarmed Strikes to deal 1d8 Slashing damage instead of the usual Bludgeoning damage, and you gain a +1 bonus to the attack and damage rolls of your Unarmed Strikes."
       }
     ],
@@ -2668,6 +2668,12 @@
         "saveDc": 18
       }
     ],
+    "spellEffects": [
+      {
+        "id": "suggestion",
+        "saveDc": 18
+      }
+    ],
     "tables": [
       {
         "columns": [
@@ -2727,8 +2733,10 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "bonuses": [
       {
@@ -2867,6 +2875,7 @@
         "dice": "10d6",
         "type": "necrotic",
         "role": "effect",
+        "appliesWhen": "an Elemental within 5 feet of yourself that is composed mostly of water",
         "text": "Such a creature exposed to a pinch of the dust makes a DC 13 Constitution saving throw, taking 10d6 Necrotic damage on a failed save or half as much damage on a successful one."
       }
     ],
@@ -2946,12 +2955,14 @@
         "dice": "1d8",
         "type": "force",
         "role": "extra",
+        "appliesWhen": "When you hit with a ranged attack using this weapon",
         "text": "When you hit with a ranged attack using this weapon, it deals an extra 1d8 Force damage, or an extra 2d8 Force damage if the target is a Giant."
       },
       {
         "dice": "2d8",
         "type": "force",
         "role": "extra",
+        "appliesWhen": "if the target is a Giant",
         "text": "When you hit with a ranged attack using this weapon, it deals an extra 1d8 Force damage, or an extra 2d8 Force damage if the target is a Giant."
       }
     ],
@@ -3004,9 +3015,6 @@
               "min": 10,
               "max": 10
             },
-            "spells": [
-              "wish"
-            ],
             "cells": [
               "The efreeti understands your languages and can cast Wish once for you. It disappears when it grants the wish or after 1 hour, and the bottle loses its magic."
             ]
@@ -3024,7 +3032,6 @@
     "rarity": "uncommon",
     "consumable": true,
     "activation": [
-      "bonus-action",
       "utilize-action"
     ],
     "tables": [
@@ -3222,6 +3229,7 @@
       {
         "name": "Whip",
         "rarity": "rare",
+        "attackBonus": 9,
         "damage": [
           {
             "dice": "1d6 + 5",
@@ -3332,16 +3340,28 @@
       },
       {
         "name": "Ivory Goats",
+        "rarity": "rare"
+      },
+      {
+        "name": "Goat of Terror",
         "rarity": "rare",
-        "charges": {
-          "max": 24
-        },
         "saves": [
           {
             "ability": "wis",
             "dc": 15
           }
         ]
+      },
+      {
+        "name": "Goat of Traveling",
+        "rarity": "rare",
+        "charges": {
+          "max": 24
+        }
+      },
+      {
+        "name": "Goat of Travail",
+        "rarity": "rare"
       },
       {
         "name": "Marble Elephant",
@@ -3440,6 +3460,7 @@
         "dice": "2d6",
         "type": "fire",
         "role": "extra",
+        "appliesWhen": "While the weapon is ablaze",
         "text": "While the weapon is ablaze, it deals an extra 2d6 Fire damage on a hit."
       }
     ],
@@ -3618,9 +3639,9 @@
     },
     "conditionalBonuses": [
       {
-        "to": "strength-athletics-checks",
+        "to": "athletics-checks",
         "value": 5,
-        "condition": "made to climb or swim",
+        "appliesWhen": "made to climb or swim",
         "text": "While wearing these gloves, you have a Climb Speed and a Swim Speed equal to your Speed, and you gain a +5 bonus to Strength (Athletics) checks made to climb or swim."
       }
     ],
@@ -3634,7 +3655,7 @@
     "rarity": "uncommon",
     "bonuses": [
       {
-        "to": "dexterity-sleight-of-hand-checks",
+        "to": "sleight-of-hand-checks",
         "value": 5,
         "text": "While wearing them, you gain a +5 bonus to Dexterity (Sleight of Hand) checks."
       }
@@ -3686,7 +3707,13 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 17
+        "dc": 17,
+        "label": "thunderclap"
+      },
+      {
+        "ability": "con",
+        "dc": 17,
+        "label": "Giants’ Bane"
       }
     ],
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon.\nThe weapon has 5 charges. You can expend 1 charge and make a ranged attack with the weapon, hurling it as if it had the Thrown property with a normal range of 20 feet and a long range of 60 feet. If the attack hits, the weapon unleashes a thunderclap audible out to 300 feet. The target and every creature within 30 feet of it other than you must succeed on a DC 17 Constitution saving throw or have the Stunned condition until the end of your next turn. Immediately after hitting or missing, the weapon flies back to your hand. The weapon regains 1d4 + 1 expended charges daily at dawn.\nGiant’s Bane. While you are attuned to the weapon and wearing either a Belt of Giant Strength or Gauntlets of Ogre Power to which you are also attuned, you gain the following benefits:\nGiants’ Bane. When you roll a 20 on the d20 for an attack roll made with this weapon against a Giant, the creature must succeed on a DC 17 Constitution saving throw or die.\nMight of Giants. The Strength score bestowed by your Belt of Giant Strength or Gauntlets of Ogre Power increases by 4, to a maximum of 30."
@@ -3732,8 +3759,10 @@
         "wizard"
       ]
     },
-    "reusableAfter": [
-      "short-or-long-rest"
+    "uses": [
+      {
+        "recharge": "short-or-long-rest"
+      }
     ],
     "tables": [
       {
@@ -3892,12 +3921,14 @@
         "dice": "1d6",
         "type": "radiant",
         "role": "effect",
+        "appliesWhen": "Any Undead that starts its turn in that area",
         "text": "Any Undead that starts its turn in that area takes 1d6 Radiant damage."
       },
       {
         "dice": "1d6",
         "type": "fire",
         "role": "extra",
+        "appliesWhen": "When you hit with an attack using the blazing weapon",
         "text": "When you hit with an attack using the blazing weapon, the target takes an extra 1d6 Fire damage."
       }
     ],
@@ -3943,13 +3974,14 @@
     "attunement": {
       "required": true
     },
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "spells": [
       {
-        "id": "detect-thoughts",
-        "saveDc": 13
+        "id": "detect-thoughts"
       },
       {
         "id": "suggestion",
@@ -4018,6 +4050,7 @@
         "dice": "2d10",
         "type": "radiant",
         "role": "extra",
+        "appliesWhen": "When you hit a Fiend or an Undead with it",
         "text": "When you hit a Fiend or an Undead with it, that creature takes an extra 2d10 Radiant damage."
       }
     ],
@@ -4049,12 +4082,14 @@
         "dice": "10d8",
         "type": "thunder",
         "role": "effect",
+        "appliesWhen": "Glass or crystal objects in the Cone that aren’t being worn or carried",
         "text": "Glass or crystal objects in the Cone that aren’t being worn or carried take 10d8 Thunder damage."
       },
       {
         "dice": "10d6",
         "type": "force",
         "role": "to-user",
+        "appliesWhen": "Each use of the horn’s magic has a 20 percent chance of causing the horn to explode",
         "text": "The explosion deals 10d6 Force damage to the user and destroys the horn."
       }
     ],
@@ -4241,7 +4276,13 @@
       },
       {
         "name": "Mastery",
-        "rarity": "legendary"
+        "rarity": "legendary",
+        "bonuses": [
+          {
+            "to": "proficiency-bonus",
+            "value": 1
+          }
+        ]
       },
       {
         "name": "Protection",
@@ -4290,8 +4331,10 @@
       "magic-action",
       "bonus-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "checks": [
       {
@@ -4330,8 +4373,10 @@
       ]
     },
     "rarity": "uncommon",
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "saves": [
       {
@@ -4380,8 +4425,10 @@
     "attunement": {
       "required": true
     },
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "bonuses": [
       {
@@ -4436,6 +4483,7 @@
         "dice": "2d6",
         "type": "radiant",
         "role": "extra",
+        "appliesWhen": "When you hit a Fiend or an Undead with this magic weapon",
         "text": "When you hit a Fiend or an Undead with this magic weapon, that creature takes an extra 2d6 Radiant damage."
       }
     ],
@@ -4462,6 +4510,36 @@
         "to": "damage-rolls",
         "value": 1,
         "text": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon."
+      }
+    ],
+    "conditionalBonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 3,
+        "appliesWhen": "when you use the weapon to attack a Construct",
+        "text": "The bonus increases to +3 when you use the weapon to attack a Construct."
+      },
+      {
+        "to": "damage-rolls",
+        "value": 3,
+        "appliesWhen": "when you use the weapon to attack a Construct",
+        "text": "The bonus increases to +3 when you use the weapon to attack a Construct."
+      }
+    ],
+    "damage": [
+      {
+        "amount": 7,
+        "type": "bludgeoning",
+        "role": "extra",
+        "appliesWhen": "When you roll a 20 on an attack roll made with this weapon",
+        "text": "When you roll a 20 on an attack roll made with this weapon, the target takes an extra 7 Bludgeoning damage, or 14 Bludgeoning damage if it’s a Construct."
+      },
+      {
+        "amount": 14,
+        "type": "bludgeoning",
+        "role": "extra",
+        "appliesWhen": "if it’s a Construct",
+        "text": "When you roll a 20 on an attack roll made with this weapon, the target takes an extra 7 Bludgeoning damage, or 14 Bludgeoning damage if it’s a Construct."
       }
     ],
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon. The bonus increases to +3 when you use the weapon to attack a Construct.\nWhen you roll a 20 on an attack roll made with this weapon, the target takes an extra 7 Bludgeoning damage, or 14 Bludgeoning damage if it’s a Construct. If a Construct has 25 Hit Points or fewer after taking this damage, it is destroyed."
@@ -4536,6 +4614,7 @@
         "dice": "6d6",
         "type": "psychic",
         "role": "to-user",
+        "appliesWhen": "A creature that can’t use a Manual of Golems and attempts to read it",
         "text": "A creature that can’t use a Manual of Golems and attempts to read it takes 6d6 Psychic damage."
       }
     ],
@@ -4680,7 +4759,8 @@
     "rarity": "legendary",
     "spells": [
       {
-        "id": "wish"
+        "id": "wish",
+        "group": "Moon"
       }
     ],
     "tables": [
@@ -4932,7 +5012,7 @@
     "activation": [
       "magic-action"
     ],
-    "spells": [
+    "spellEffects": [
       {
         "id": "fireball",
         "level": 3,
@@ -4959,28 +5039,9 @@
     "activation": [
       "bonus-action"
     ],
-    "reusableAfter": [
-      "dawn"
-    ],
-    "spells": [
+    "uses": [
       {
-        "id": "bless"
-      },
-      {
-        "id": "cure-wounds",
-        "level": 2
-      },
-      {
-        "id": "greater-restoration"
-      },
-      {
-        "id": "shining-smite"
-      },
-      {
-        "id": "guardian-of-faith"
-      },
-      {
-        "id": "wind-walk"
+        "recharge": "dawn"
       }
     ],
     "tables": [
@@ -4996,6 +5057,9 @@
               "min": 1,
               "max": 6
             },
+            "spells": [
+              "bless"
+            ],
             "cells": [
               "Bead of Blessing",
               "Bless"
@@ -5006,6 +5070,9 @@
               "min": 7,
               "max": 12
             },
+            "spells": [
+              "cure-wounds"
+            ],
             "cells": [
               "Bead of Curing",
               "Cure Wounds (level 2 version)"
@@ -5016,6 +5083,9 @@
               "min": 13,
               "max": 16
             },
+            "spells": [
+              "greater-restoration"
+            ],
             "cells": [
               "Bead of Favor",
               "Greater Restoration"
@@ -5026,6 +5096,9 @@
               "min": 17,
               "max": 18
             },
+            "spells": [
+              "shining-smite"
+            ],
             "cells": [
               "Bead of Smiting",
               "Shining Smite"
@@ -5036,6 +5109,9 @@
               "min": 19,
               "max": 19
             },
+            "spells": [
+              "guardian-of-faith"
+            ],
             "cells": [
               "Bead of Summons",
               "Guardian of Faith"
@@ -5046,6 +5122,9 @@
               "min": 20,
               "max": 20
             },
+            "spells": [
+              "wind-walk"
+            ],
             "cells": [
               "Bead of Wind Walking",
               "Wind Walk"
@@ -5114,6 +5193,7 @@
         "dice": "3d6",
         "type": "piercing",
         "role": "extra",
+        "appliesWhen": "When you make a ranged attack roll with this weapon against your sworn enemy",
         "text": "If the attack hits, your sworn enemy takes an extra 3d6 Piercing damage."
       }
     ],
@@ -5126,7 +5206,7 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
-    "spells": [
+    "spellEffects": [
       {
         "id": "etherealness"
       }
@@ -5152,7 +5232,7 @@
     "activation": [
       "magic-action"
     ],
-    "spells": [
+    "spellEffects": [
       {
         "id": "freedom-of-movement"
       },
@@ -5176,8 +5256,10 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "description": "While this pearl is on your person, you can take a Magic action to regain one expended spell slot of level 3 or lower. Once you use the pearl, it can’t be used again until the next dawn."
   },
@@ -5193,8 +5275,10 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "description": "While wearing this pendant, you can take a Magic action to regain 2d4 + 2 Hit Points. Once used, this property can’t be used again until the next dawn.\nIn addition, you have Advantage on saving throws to avoid or end the Poisoned condition while you wear this pendant."
   },
@@ -5299,10 +5383,12 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
-    "spells": [
+    "spellEffects": [
       {
         "id": "etherealness"
       }
@@ -5350,7 +5436,7 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
-    "spells": [
+    "spellEffects": [
       {
         "id": "clairvoyance"
       }
@@ -5373,7 +5459,7 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
-    "spells": [
+    "spellEffects": [
       {
         "id": "enlarge-reduce"
       }
@@ -5396,10 +5482,7 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
-    "activation": [
-      "bonus-action"
-    ],
-    "spells": [
+    "spellEffects": [
       {
         "id": "gaseous-form"
       }
@@ -5495,7 +5578,7 @@
     "category": "potion",
     "rarity": "uncommon",
     "consumable": true,
-    "spells": [
+    "spellEffects": [
       {
         "id": "enlarge-reduce"
       }
@@ -5509,7 +5592,7 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
-    "spells": [
+    "spellEffects": [
       {
         "id": "bless"
       }
@@ -5550,7 +5633,7 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
-    "spells": [
+    "spellEffects": [
       {
         "id": "detect-thoughts",
         "saveDc": 13
@@ -5697,7 +5780,7 @@
     "category": "potion",
     "rarity": "very-rare",
     "consumable": true,
-    "spells": [
+    "spellEffects": [
       {
         "id": "haste"
       }
@@ -5810,8 +5893,10 @@
       "bonus-action",
       "reaction"
     ],
-    "reusableAfter": [
-      "short-or-long-rest"
+    "uses": [
+      {
+        "recharge": "short-or-long-rest"
+      }
     ],
     "bonuses": [
       {
@@ -5829,7 +5914,7 @@
       {
         "to": "armor-class",
         "value": 5,
-        "condition": "When you are hit by an attack while holding the weapon; against the triggering attack",
+        "appliesWhen": "When you are hit by an attack while holding the weapon",
         "text": "When you are hit by an attack while holding the weapon, you can take a Reaction to twirl the weapon around you, gaining a +5 bonus to your Armor Class against the triggering attack, potentially causing the attack to miss you."
       }
     ],
@@ -6310,7 +6395,13 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 15
+        "dc": 15,
+        "label": "Lightning Spheres"
+      },
+      {
+        "ability": "dex",
+        "dc": 15,
+        "label": "Shooting Stars"
       }
     ],
     "damage": [
@@ -6319,30 +6410,6 @@
         "type": "radiant",
         "role": "effect",
         "text": "Each creature in a 15-foot Cube originating from that point is showered in sparks and makes a DC 15 Dexterity saving throw, taking 5d4 Radiant damage on a failed save or half as much damage on a successful one."
-      },
-      {
-        "dice": "4d12",
-        "type": "lightning",
-        "role": "effect",
-        "text": "On a failed save, the creature takes Lightning damage based on the number of spheres you created, as shown in the following table."
-      },
-      {
-        "dice": "5d4",
-        "type": "lightning",
-        "role": "effect",
-        "text": "On a failed save, the creature takes Lightning damage based on the number of spheres you created, as shown in the following table."
-      },
-      {
-        "dice": "2d6",
-        "type": "lightning",
-        "role": "effect",
-        "text": "On a failed save, the creature takes Lightning damage based on the number of spheres you created, as shown in the following table."
-      },
-      {
-        "dice": "2d4",
-        "type": "lightning",
-        "role": "effect",
-        "text": "On a failed save, the creature takes Lightning damage based on the number of spheres you created, as shown in the following table."
       }
     ],
     "spells": [
@@ -6365,24 +6432,52 @@
         ],
         "rows": [
           {
+            "damage": [
+              {
+                "dice": "4d12",
+                "type": "lightning",
+                "role": "effect"
+              }
+            ],
             "cells": [
               "1",
               "4d12"
             ]
           },
           {
+            "damage": [
+              {
+                "dice": "5d4",
+                "type": "lightning",
+                "role": "effect"
+              }
+            ],
             "cells": [
               "2",
               "5d4"
             ]
           },
           {
+            "damage": [
+              {
+                "dice": "2d6",
+                "type": "lightning",
+                "role": "effect"
+              }
+            ],
             "cells": [
               "3",
               "2d6"
             ]
           },
           {
+            "damage": [
+              {
+                "dice": "2d4",
+                "type": "lightning",
+                "role": "effect"
+              }
+            ],
             "cells": [
               "4",
               "2d4"
@@ -6544,11 +6639,13 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 11
+        "dc": 11,
+        "label": "Light"
       },
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "label": "Daylight"
       }
     ],
     "description": "This robe is adorned with eyelike patterns. While you wear the robe, you gain the following benefits:\nAll-Around Vision. The robe gives you Advantage on Wisdom (Perception) checks that rely on sight.\nSpecial Senses. You have Darkvision and Truesight, both with a range of 120 feet.\nDrawbacks. A Light spell cast on the robe or a Daylight spell cast within 5 feet of the robe gives you the Blinded condition for 1 minute. At the end of each of your turns, you make a Constitution saving throw (DC 11 for Light or DC 15 for Daylight), ending the condition on yourself on a success."
@@ -6622,6 +6719,18 @@
         "wizard"
       ]
     },
+    "bonuses": [
+      {
+        "to": "spell-save-dc",
+        "value": 2,
+        "text": "Your spell save DC and spell attack bonus each increase by 2."
+      },
+      {
+        "to": "spell-attack-rolls",
+        "value": 2,
+        "text": "Your spell save DC and spell attack bonus each increase by 2."
+      }
+    ],
     "description": "This elegant garment is made from exquisite cloth and adorned with runes.\nYou gain these benefits while wearing the robe.\nArmor. If you aren’t wearing armor, your base Armor Class is 15 plus your Dexterity modifier.\nMagic Resistance. You have Advantage on saving throws against spells and other magical effects.\nWar Mage. Your spell save DC and spell attack bonus each increase by 2."
   },
   {
@@ -6788,20 +6897,22 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "conditionalBonuses": [
       {
         "to": "armor-class",
         "value": 1,
-        "condition": "While in that Bright Light",
+        "appliesWhen": "While in that Bright Light",
         "text": "While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws and can sense the location of any Invisible creature that is also in the Bright Light."
       },
       {
         "to": "saving-throws",
         "value": 1,
-        "condition": "While in that Bright Light",
+        "appliesWhen": "While in that Bright Light",
         "text": "While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws and can sense the location of any Invisible creature that is also in the Bright Light."
       }
     ],
@@ -6834,37 +6945,70 @@
       "magic-action",
       "bonus-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
-    "bonuses": [
+    "conditionalBonuses": [
       {
         "to": "attack-rolls",
         "value": 3,
+        "appliesWhen": "it functions as a magic Mace",
         "text": "This rod has a flanged head, and it functions as a magic Mace that grants a +3 bonus to attack rolls and damage rolls made with it."
       },
       {
         "to": "damage-rolls",
         "value": 3,
+        "appliesWhen": "it functions as a magic Mace",
         "text": "This rod has a flanged head, and it functions as a magic Mace that grants a +3 bonus to attack rolls and damage rolls made with it."
-      }
-    ],
-    "conditionalBonuses": [
+      },
       {
-        "to": "strength-athletics-checks",
+        "to": "attack-rolls",
+        "value": 3,
+        "appliesWhen": "transforming the rod into a magic Battleaxe",
+        "text": "Button 2. The rod’s flanged head folds down and two crescent-shaped blades spring out, transforming the rod into a magic Battleaxe that grants a +3 bonus to attack rolls and damage rolls made with it."
+      },
+      {
+        "to": "damage-rolls",
+        "value": 3,
+        "appliesWhen": "transforming the rod into a magic Battleaxe",
+        "text": "Button 2. The rod’s flanged head folds down and two crescent-shaped blades spring out, transforming the rod into a magic Battleaxe that grants a +3 bonus to attack rolls and damage rolls made with it."
+      },
+      {
+        "to": "attack-rolls",
+        "value": 3,
+        "appliesWhen": "transforming the rod into a magic Spear",
+        "text": "Button 3. The rod’s flanged head folds down, a spear point springs from the rod’s tip, and the rod’s handle lengthens into a 6-foot haft, transforming the rod into a magic Spear that grants a +3 bonus to attack rolls and damage rolls made with it."
+      },
+      {
+        "to": "damage-rolls",
+        "value": 3,
+        "appliesWhen": "transforming the rod into a magic Spear",
+        "text": "Button 3. The rod’s flanged head folds down, a spear point springs from the rod’s tip, and the rod’s handle lengthens into a 6-foot haft, transforming the rod into a magic Spear that grants a +3 bonus to attack rolls and damage rolls made with it."
+      },
+      {
+        "to": "athletics-checks",
         "value": 10,
-        "condition": "made to break through doors, barricades, and other barriers",
-        "text": "The rod transforms into a handheld battering ram and grants its user a +10 bonus to Strength (Athletics) checks made to break through doors, barricades, and other barriers."
+        "appliesWhen": "made to break through doors, barricades, and other barriers",
+        "text": "Button 5. The rod transforms into a handheld battering ram and grants its user a +10 bonus to Strength (Athletics) checks made to break through doors, barricades, and other barriers."
       }
     ],
     "saves": [
       {
         "ability": "con",
-        "dc": 17
+        "dc": 17,
+        "label": "Drain Life"
+      },
+      {
+        "ability": "con",
+        "dc": 17,
+        "label": "Paralyze"
       },
       {
         "ability": "wis",
-        "dc": 17
+        "dc": 17,
+        "label": "Terrify"
       }
     ],
     "damage": [
@@ -6872,12 +7016,13 @@
         "dice": "2d6",
         "type": "fire",
         "role": "extra",
+        "appliesWhen": "the blade functions as a magic Longsword or Shortsword (your choice)",
         "text": "The flames shed Bright Light in a 40-foot radius and Dim Light for an additional 40 feet, and the blade functions as a magic Longsword or Shortsword (your choice) that deals an extra 2d6 Fire damage on a hit."
       },
       {
         "dice": "4d6",
         "type": "necrotic",
-        "role": "extra",
+        "role": "effect",
         "text": "On a failed save, the target takes an extra 4d6 Necrotic damage, and you regain a number of Hit Points equal to half that Necrotic damage."
       }
     ],
@@ -6932,8 +7077,10 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "saves": [
       {
@@ -7045,8 +7192,10 @@
     "page": 243,
     "category": "wondrous-item",
     "rarity": "uncommon",
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "spells": [
       {
@@ -7147,14 +7296,24 @@
     "activation": [
       "reaction"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "bonuses": [
       {
         "to": "armor-class",
         "value": 2,
         "text": "While holding this Shield, you have a +2 bonus to Armor Class."
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d6 + 2",
+        "type": "force",
+        "role": "base",
+        "text": "On a hit, the Shield deals Force damage to the target equal to 2d6 + 2 plus your Strength modifier, and if the target is a creature, you can push it up to 10 feet directly away from yourself."
       }
     ],
     "description": "While holding this Shield, you have a +2 bonus to Armor Class. This bonus is in addition to the Shield’s normal bonus to AC.\nThe Shield has the following additional properties that you can use while holding it.\nForceful Bash. When you take the Attack action, you can make one of the attack rolls using the Shield against a target within 5 feet of yourself. Apply your Proficiency Bonus and Strength modifier to the attack roll. On a hit, the Shield deals Force damage to the target equal to 2d6 + 2 plus your Strength modifier, and if the target is a creature, you can push it up to 10 feet directly away from yourself. If the creature is your size or smaller, you can also knock it down, giving it the Prone condition.\nProtective Field. As a Reaction, when you or an ally you can see within 5 feet of you is targeted by an attack or makes a saving throw against an area of effect, you can use the Shield to create an immobile 5-foot Emanation originating from you. When the Emanation appears, any creatures or objects not fully contained within it are pushed into the nearest unoccupied spaces outside it. The attack or area of effect that triggered the Reaction has no effect on creatures and objects inside the Emanation, which lasts as long as you maintain Concentration, up to 1 minute. Nothing can pass into or out of the Emanation. A creature or object inside the Emanation can’t be damaged by attacks or effects originating from outside, nor can a creature inside the Emanation damage anything outside it. Once this property is used, it can’t be used again until the next dawn."
@@ -7461,8 +7620,10 @@
     "activation": [
       "reaction"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "charges": {
       "max": 10,
@@ -7692,7 +7853,6 @@
     "spells": [
       {
         "id": "cure-wounds",
-        "charges": 1,
         "maxCharges": 4,
         "chargesPerSpellLevel": true
       },
@@ -8304,8 +8464,7 @@
       "required": true
     },
     "activation": [
-      "magic-action",
-      "bonus-action"
+      "magic-action"
     ],
     "description": "As a Magic action, you can throw this staff so that it lands in an unoccupied space within 10 feet of you, causing the staff to become a Giant Constrictor Snake in that space. The snake is under your control and shares your Initiative count, taking its turn immediately after yours.\nOn your turn, you can mentally command the snake (no action required) if it is within 60 feet of you and you don’t have the Incapacitated condition. You decide what action the snake takes and where it moves during its turn, or you can issue it a general command, such as to attack your enemies or guard a location. Absent commands from you, the snake defends itself.\nAs a Bonus Action, you can command the snake to revert to staff form in its current space, and you can’t use the staff’s property again for 1 hour. If the snake is reduced to 0 Hit Points, it dies and reverts to its staff form; the staff then shatters and is destroyed. If the snake reverts to staff form before losing all its Hit Points, it regains all of them."
   },
@@ -8465,8 +8624,10 @@
       "magic-action",
       "bonus-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "bonuses": [
       {
@@ -8483,11 +8644,18 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 17
+        "dc": 17,
+        "label": "Thunder"
       },
       {
         "ability": "dex",
-        "dc": 17
+        "dc": 17,
+        "label": "Lightning Strike"
+      },
+      {
+        "ability": "con",
+        "dc": 17,
+        "label": "Thunderclap"
       }
     ],
     "damage": [
@@ -8551,11 +8719,12 @@
     "category": "wondrous-item",
     "rarity": "rare",
     "activation": [
-      "magic-action",
-      "bonus-action"
+      "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "description": "While touching this 5-pound stone to the ground, you can take a Magic action to summon an Earth Elemental. The elemental appears in an unoccupied space you choose within 30 feet of yourself, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The stone can’t be used this way again until the next dawn."
   },
@@ -8617,6 +8786,7 @@
         "dice": "1d8",
         "type": "radiant",
         "role": "extra",
+        "appliesWhen": "When you hit an Undead with it",
         "text": "When you hit an Undead with it, that target takes an extra 1d8 Radiant damage."
       }
     ],
@@ -8641,6 +8811,15 @@
     "attunement": {
       "required": true
     },
+    "damage": [
+      {
+        "amount": 15,
+        "type": "necrotic",
+        "role": "extra",
+        "appliesWhen": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll",
+        "text": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 15 Necrotic damage if it isn’t a Construct or an Undead, and you gain Temporary Hit Points equal to the amount of Necrotic damage taken."
+      }
+    ],
     "description": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 15 Necrotic damage if it isn’t a Construct or an Undead, and you gain Temporary Hit Points equal to the amount of Necrotic damage taken."
   },
   {
@@ -8660,6 +8839,15 @@
     "attunement": {
       "required": true
     },
+    "damage": [
+      {
+        "amount": 14,
+        "type": "slashing",
+        "role": "extra",
+        "appliesWhen": "When you attack a creature with this weapon and roll a 20 on the d20 for the attack roll",
+        "text": "When you attack a creature with this weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 14 Slashing damage and gains 1 Exhaustion level."
+      }
+    ],
     "description": "When you attack an object with this magic weapon and hit, maximize your weapon damage dice against the target.\nWhen you attack a creature with this weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 14 Slashing damage and gains 1 Exhaustion level."
   },
   {
@@ -8735,12 +8923,14 @@
         "dice": "8d6",
         "type": "radiant",
         "role": "effect",
+        "appliesWhen": "A Fiend or an Undead that touches the talisman",
         "text": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
       },
       {
         "dice": "4d6",
         "type": "psychic",
         "role": "effect",
+        "appliesWhen": "On a successful save",
         "text": "On a successful save, the target isn’t cast into the fissure but takes 4d6 Psychic damage from the ordeal."
       }
     ],
@@ -8793,12 +8983,14 @@
         "dice": "8d6",
         "type": "necrotic",
         "role": "effect",
+        "appliesWhen": "A creature that isn’t a Fiend or an Undead that touches the talisman",
         "text": "A creature that isn’t a Fiend or an Undead that touches the talisman takes 8d6 Necrotic damage and takes the damage again each time it ends its turn holding or carrying the talisman."
       },
       {
         "dice": "4d6",
         "type": "psychic",
         "role": "effect",
+        "appliesWhen": "On a successful save",
         "text": "On a successful save, the target isn’t cast into the fissure but takes 4d6 Psychic damage from the ordeal."
       }
     ],
@@ -8821,21 +9013,31 @@
     "activation": [
       "magic-action"
     ],
-    "reusableAfter": [
-      "dawn"
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
     ],
     "saves": [
       {
         "ability": "str",
-        "dc": 15
+        "dc": 15,
+        "label": "Clap of Thunder"
       },
       {
         "ability": "dex",
-        "dc": 20
+        "dc": 20,
+        "label": "each creature on the ground"
       },
       {
         "ability": "con",
-        "dc": 20
+        "dc": 20,
+        "label": "also concentrating"
+      },
+      {
+        "ability": "dex",
+        "dc": 20,
+        "label": "where the fissure opens"
       }
     ],
     "damage": [
@@ -8843,19 +9045,29 @@
         "dice": "1d8",
         "type": "thunder",
         "role": "extra",
+        "appliesWhen": "to any creature it hits",
         "text": "The weapon deals an extra 1d8 Thunder damage to any creature it hits and an extra 3d8 Thunder damage to objects it hits that aren’t being worn or carried."
       },
       {
         "dice": "3d8",
         "type": "thunder",
         "role": "extra",
+        "appliesWhen": "to objects it hits that aren’t being worn or carried",
         "text": "The weapon deals an extra 1d8 Thunder damage to any creature it hits and an extra 3d8 Thunder damage to objects it hits that aren’t being worn or carried."
       },
       {
         "dice": "3d8",
         "type": "thunder",
         "role": "effect",
+        "appliesWhen": "Nonmagical objects in the Cone that aren’t being worn or carried",
         "text": "Nonmagical objects in the Cone that aren’t being worn or carried take 3d8 Thunder damage."
+      },
+      {
+        "amount": 50,
+        "type": "bludgeoning",
+        "role": "effect",
+        "appliesWhen": "Structures in contact with the ground in that area",
+        "text": "Structures in contact with the ground in that area take 50 Bludgeoning damage, and each creature on the ground in that area must succeed on a DC 20 Dexterity saving throw or have the Prone condition."
       }
     ],
     "description": "While you are attuned to this magic weapon, your Strength is 20 unless your Strength is already equal to or greater than that score. The weapon deals an extra 1d8 Thunder damage to any creature it hits and an extra 3d8 Thunder damage to objects it hits that aren’t being worn or carried.\nThe weapon has the following additional properties.\nClap of Thunder. As a Magic action, you can strike the weapon against a hard surface to create a loud clap of thunder audible out to 300 feet. You also create a 30-foot Cone of thunderous energy. Each creature in the Cone must succeed on a DC 15 Strength saving throw or have the Prone condition. Nonmagical objects in the Cone that aren’t being worn or carried take 3d8 Thunder damage.\nEarthquake. As a Magic action, you can strike the weapon against the ground to create an intense seismic disturbance in a 50-foot-radius circle centered on the point of impact. Structures in contact with the ground in that area take 50 Bludgeoning damage, and each creature on the ground in that area must succeed on a DC 20 Dexterity saving throw or have the Prone condition. If that creature is also concentrating, it must succeed on a DC 20 Constitution saving throw, or its Concentration is broken. In addition, you can cause a 30-foot-deep, 10-foot-wide fissure to open up on the ground anywhere in the area. Any creature on a spot where the fissure opens must make a DC 20 Dexterity saving throw, falling into the fissure on a failed save or moving with the fissure’s edge on a successful one. Any structure on a spot where the fissure opens collapses into the fissure. Once you use this property, it can’t be used again until the next dawn."
@@ -8966,6 +9178,15 @@
         "to": "damage-rolls",
         "value": 3,
         "text": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon."
+      }
+    ],
+    "damage": [
+      {
+        "amount": 30,
+        "type": "slashing",
+        "role": "extra",
+        "appliesWhen": "A creature is immune to this effect if it has Immunity to Slashing damage, if it doesn’t have or need a head, or if the GM decides that the creature is too big for its head to be cut off with this weapon",
+        "text": "Such a creature instead takes an extra 30 Slashing damage from the hit."
       }
     ],
     "description": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. In addition, the weapon ignores Resistance to Slashing damage.\nWhen you use this weapon to attack a creature that has at least one head and roll a 20 on the d20 for the attack roll, you cut off one of the creature’s heads. The creature dies if it can’t survive without the lost head. A creature is immune to this effect if it has Immunity to Slashing damage, if it doesn’t have or need a head, or if the GM decides that the creature is too big for its head to be cut off with this weapon. Such a creature instead takes an extra 30 Slashing damage from the hit. If the creature has Legendary Resistance, it can expend one daily use of that trait to avoid losing its head, taking the extra damage instead."
@@ -9455,20 +9676,6 @@
         ]
       }
     },
-    "saves": [
-      {
-        "ability": "con",
-        "dc": 15
-      }
-    ],
-    "damage": [
-      {
-        "dice": "1d6",
-        "type": "psychic",
-        "role": "to-user",
-        "text": "Instead, you take 1d6 Psychic damage."
-      }
-    ],
     "tables": [
       {
         "caption": "Wand of Wonder Effects",
@@ -9558,8 +9765,10 @@
               "min": 51,
               "max": 55
             },
-            "spells": [
-              "enlarge-reduce"
+            "spellEffects": [
+              {
+                "id": "enlarge-reduce"
+              }
             ],
             "cells": [
               "The creature closest to the chosen point of origin is enlarged as if you had cast Enlarge/Reduce on it. If the target isn’t you and can’t be affected by that spell, you become the target instead."
@@ -9597,8 +9806,10 @@
               "min": 69,
               "max": 72
             },
-            "spells": [
-              "enlarge-reduce"
+            "spellEffects": [
+              {
+                "id": "enlarge-reduce"
+              }
             ],
             "cells": [
               "Nothing happens at the chosen point of origin. Instead, you shrink as if you had cast Enlarge/Reduce on yourself and remain in that state for 1 minute."

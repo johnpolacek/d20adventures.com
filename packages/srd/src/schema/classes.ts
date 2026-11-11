@@ -17,6 +17,7 @@ import {
   rechargeSchema,
   saveDcSchema,
   skillIdSchema,
+  usesCountSchema,
 } from "./common"
 
 const levelSchema = z.number().int().min(1).max(20)
@@ -63,7 +64,10 @@ const spellcastingSchema = z.strictObject({
   /** The feature that grants it: "Spellcasting", or "Pact Magic" for the Warlock. */
   feature: idSchema,
   ability: abilityIdSchema,
-  /** Equipment ids usable as a Spellcasting Focus. */
+  /**
+   * Equipment ids usable as a Spellcasting Focus. One exception: the Wizard's "spellbook" has no equipment entry,
+   * because the SRD prints no Spellbook in its equipment lists. The reference check waives it on purpose.
+   */
   focus: z.array(idSchema).min(1),
   /** Expended slots return on a Long Rest, or on a Short or Long Rest (Pact Magic). */
   slotsRestore: rechargeSchema,
@@ -147,6 +151,10 @@ export const classSchema = z.strictObject({
   weapons: z.array(weaponProficiencySchema).min(1),
   armor: armorTrainingSchema.optional(),
   tools: z.array(toolProficiencySchema).min(1).optional(),
+  /**
+   * Starting equipment, by equipment id. One exception: the Wizard's "spellbook" has no equipment entry, because the
+   * SRD prints no Spellbook in its equipment lists. The reference check waives it on purpose.
+   */
   startingEquipment: z.array(equipmentOptionSchema).min(2),
   multiclass: multiclassSchema,
   spellcasting: spellcastingSchema.optional(),
@@ -165,11 +173,10 @@ export type Class = z.infer<typeof classSchema>
 /** How many times a feature can be used, and what restores it. */
 const usesSchema = z.strictObject({
   count: z.union([
-    positiveSchema,
+    /** A number, the Proficiency Bonus, or an ability modifier of at least 1. */
+    usesCountSchema,
     /** A column of the class table. */
     z.strictObject({ column: z.enum(columnKeys) }),
-    /** An ability modifier, at least 1. */
-    z.strictObject({ ability: abilityIdSchema, minimum: z.literal(1) }),
     /** A count that steps up at the listed class levels. */
     z.strictObject({ byLevel: z.array(z.strictObject({ level: levelSchema, count: positiveSchema })).min(2) }),
   ]),
@@ -178,6 +185,18 @@ const usesSchema = z.strictObject({
   recharge: rechargeSchema,
   /** Uses regained on a Short Rest when `recharge` is "long-rest". */
   shortRestRegain: z.literal(1).optional(),
+  /**
+   * A second way to restore the use: spending this resource, as Intimidating Presence’s "unless you expend a use of
+   * your Rage (no action required) to restore your use of it". A spell slot names its level in `slotLevel`.
+   */
+  restoredBy: z
+    .strictObject({
+      resource: z.enum(["rage", "sorcery-points", "spell-slot", "pact-magic-slot"]),
+      amount: positiveSchema,
+      /** The spell slot level the text names: exactly that level, not a minimum ("a level 5 spell slot"). */
+      slotLevel: z.number().int().min(1).max(9).optional(),
+    })
+    .optional(),
   /** A later feature changes the recharge from this class level on, as Font of Inspiration does at level 5. */
   rechargeByLevel: z
     .array(z.strictObject({ level: levelSchema, recharge: rechargeSchema }))
@@ -193,6 +212,9 @@ const resourceCostSchema = z.strictObject({
   keptOnFailure: z.literal(true).optional(),
 })
 
+/** The official words of a condition a typed value holds under: one unbroken span of the text. */
+const appliesWhenSchema = z.string().min(1)
+
 /**
  * A condition a passive benefit holds under, as the text states it. "raging": while your Rage is active.
  * "no-heavy-armor": while you aren’t wearing Heavy armor. "in-aura-of-protection": while in your Aura of Protection.
@@ -202,13 +224,30 @@ const whileSchema = z.enum(["raging", "no-heavy-armor", "in-aura-of-protection"]
 /**
  * Mechanics stated plainly in a feature's or option's text. Each field is checked against the official wording.
  * What is not here stays in the prose.
+ *
+ * Standing and triggered values. `attacks`, `pactWeaponAttacks`, `criticalHit`, `freeCast`, `speedBonus` and
+ * `armorClass` are standing: they hold whenever the character has the feature, so any limit the text puts on them
+ * (one weapon, on yourself, only in Dim Light) is typed. `dice`, `damageTypes` and `save` are triggered: they
+ * describe what happens when the feature takes effect, and the feature's own text says when that is (which hit,
+ * which weapon, which action), so the trigger is not repeated on them. A further condition on the target, or a
+ * choice within the feature, is still a condition and is carried (`appliesWhen`, `onlyCreatureTypes`, `selective`),
+ * or the value is not typed. What a familiar or summoned creature does is not typed on the feature.
  */
 const mechanicsShape = {
-  /** Every kind of action the text names for using the feature, including "(no action required)". */
+  /**
+   * The kinds of action it takes to use the feature, including "no-action" where using it takes none. An action, or
+   * "no action required", that only ends or moves an effect already in place, or restores a use of this same feature,
+   * is not listed: Quivering Palm's ending of the vibrations, Nature's Sanctuary's Bonus Action to move the Cube,
+   * Intimidating Presence's "(no action required)" to restore its use, which `uses.restoredBy` holds.
+   */
   activation: activationSchema.optional(),
   uses: usesSchema.optional(),
   spend: resourceCostSchema.optional(),
-  /** The main roll, such as the extra damage or the healing. */
+  /**
+   * The main roll, such as the extra damage or the healing, rolled each time the feature takes effect as its own
+   * text sets out (on the hit it names, once per turn where it says so). A roll that needs a further condition on
+   * the target ("if it’s missing any of its Hit Points") is not typed.
+   */
   dice: diceSchema.optional(),
   /** The main roll is the die of a class table column, such as the Martial Arts die or Sneak Attack. */
   diceFromColumn: z.enum(["martialArts", "sneakAttack"]).optional(),
@@ -228,25 +267,57 @@ const mechanicsShape = {
   damageTypes: z.array(damageTypeIdSchema).min(1).optional(),
   /** Creature types the damage is not dealt to, as Hurl Through Hell’s "if it isn’t a Fiend". */
   damageNotTo: z.array(creatureTypeSchema).min(1).optional(),
-  /** A saving throw the feature forces. Without `dc`, the DC is the one `saveDc` of another feature of the class sets. */
-  save: z.strictObject({ ...forcedSaveShape }).optional(),
+  /** The only creature types the damage is dealt to, as Sear Undead’s "Each Undead that fails its saving throw". */
+  damageOnlyTo: z.array(creatureTypeSchema).min(1).optional(),
+  /**
+   * A saving throw the feature forces. Without `dc`, the DC is the one `saveDc` of another feature of the class sets.
+   * `onlyCreatureTypes`: only creatures of these types make it. `selective`: you choose which creatures make it, where
+   * the feature has no `area` to carry the choice (an `area` with `selective` covers the save made in it).
+   * `appliesWhen`: the official words of the condition under which it is forced.
+   */
+  save: z
+    .strictObject({
+      ...forcedSaveShape,
+      onlyCreatureTypes: z.array(creatureTypeSchema).min(1).optional(),
+      selective: z.literal(true).optional(),
+      appliesWhen: appliesWhenSchema.optional(),
+    })
+    .optional(),
   /** A saving throw you make yourself, with a DC that rises with each use until a rest resets it (Relentless Rage). */
   selfSave: z.strictObject({ ability: abilityIdSchema, dc: positiveSchema, increasePerUse: positiveSchema.optional(), resetOn: rechargeSchema.optional() }).optional(),
-  /** Damage the feature deals to you: `dicePerSlotLevel` for each slot level, `increasePerUse` more for each use after the first (Overchannel). */
-  selfDamage: z.strictObject({ dicePerSlotLevel: diceSchema, damageType: damageTypeIdSchema, increasePerUse: diceSchema, from: z.literal("second-use") }).optional(),
+  /**
+   * Damage the feature deals to you between Long Rests (Overchannel). The first use deals none. The second deals
+   * `dicePerSlotLevel` for each level of the spell slot. Each use after the second adds `increaseAfterSecondUse` more
+   * per slot level: 2d12 on the second use, 3d12 on the third, 4d12 on the fourth.
+   */
+  selfDamage: z.strictObject({ from: z.literal("second-use"), dicePerSlotLevel: diceSchema, damageType: damageTypeIdSchema, increaseAfterSecondUse: diceSchema }).optional(),
+  /** Added to your Hit Point maximum when you gain the feature, and more each time you gain another level in the class (Draconic Resilience). */
+  hitPointMaximum: z.strictObject({ increase: positiveSchema, perLaterClassLevel: positiveSchema }).optional(),
   /** The DC this feature sets for the saves its options and related features force. */
   saveDc: saveDcSchema.optional(),
   /** A pool of points: `perLevel` times the class level, restored by `recharge`. */
   pool: z.strictObject({ perLevel: positiveSchema, recharge: rechargeSchema }).optional(),
   /** The one distance from you the text names ("within 60 feet of yourself"). Left out where the text names none, or several. */
   range: feetSchema.optional(),
-  area: z.strictObject({ shape: z.enum(["emanation", "sphere", "cube"]), size: feetSchema }).optional(),
-  /** Attacks per Attack action. */
+  /**
+   * The area the feature affects. `selective`: you choose which creatures in it are affected ("each creature of your
+   * choice in"). `allies`: its benefit is for you and your allies only ("You and your allies in the aura").
+   */
+  area: z.strictObject({ shape: z.enum(["emanation", "sphere", "cube"]), size: feetSchema, selective: z.literal(true).optional(), allies: z.literal(true).optional() }).optional(),
+  /** Attacks per Attack action, with any weapon. */
   attacks: z.number().int().min(2).max(4).optional(),
+  /** Attacks per Attack action with your pact weapon only (Thirsting Blade, Devouring Blade). */
+  pactWeaponAttacks: z.number().int().min(2).max(3).optional(),
   /** Spells always prepared, by spell id. */
   alwaysPrepared: z.array(idSchema).min(1).optional(),
-  /** Spells castable without a spell slot, by spell id. `uses` limits them where the text does. */
-  freeCast: z.array(idSchema).min(1).optional(),
+  /**
+   * Spells castable without a spell slot. `selfOnly`: only on yourself. `appliesWhen`: the official words of the
+   * condition the slotless casting holds under. `uses` limits them where the text does.
+   */
+  freeCast: z
+    .array(z.strictObject({ spell: idSchema, selfOnly: z.literal(true).optional(), appliesWhen: appliesWhenSchema.optional() }))
+    .min(1)
+    .optional(),
   /** A feat granted: one by id, or one of a category. `orAnother` allows another feat you qualify for. */
   feat: z
     .strictObject({
@@ -259,8 +330,8 @@ const mechanicsShape = {
   savingThrowProficiencies: z.array(abilityIdSchema).min(1).optional(),
   /** Skill proficiencies gained. Without `from`, any skill. */
   skillProficiencies: z.strictObject({ count: positiveSchema, from: z.array(skillIdSchema).min(2).optional() }).optional(),
-  /** Skills in which you gain Expertise each time the feature is gained. */
-  expertise: positiveSchema.optional(),
+  /** Expertise gained each time the feature is gained: how many skills, and the skills to choose from where the text limits them. */
+  expertise: z.strictObject({ count: positiveSchema, from: z.array(skillIdSchema).min(2).optional() }).optional(),
   /** Kinds of weapons whose mastery properties you can use, where no table column counts them. */
   weaponMasteries: positiveSchema.optional(),
   /** Feet added to Speed, and the condition it holds under. */
@@ -268,8 +339,8 @@ const mechanicsShape = {
   abilityIncrease: z.strictObject({ abilities: z.array(abilityIdSchema).min(1), amount: positiveSchema, maximum: positiveSchema }).optional(),
   /** Base Armor Class without armor: 10 plus the listed modifiers. */
   armorClass: z.strictObject({ base: z.literal(10), abilities: z.array(abilityIdSchema).length(2), shield: z.boolean().optional() }).optional(),
-  /** The lowest d20 roll that scores a Critical Hit. */
-  criticalRange: z.number().int().min(18).max(19).optional(),
+  /** The lowest d20 roll that scores a Critical Hit, on the attacks named: attack rolls with weapons and Unarmed Strikes (Champion). */
+  criticalHit: z.strictObject({ minRoll: z.number().int().min(18).max(19), attacks: z.literal("weapons-and-unarmed-strikes") }).optional(),
   sense: z.strictObject({ type: z.enum(["blindsight", "truesight"]), range: feetSchema }).optional(),
   /** Resistances, and the condition they hold under. */
   resistances: z.strictObject({ damageTypes: z.array(damageTypeIdSchema).min(1), while: whileSchema.optional() }).optional(),

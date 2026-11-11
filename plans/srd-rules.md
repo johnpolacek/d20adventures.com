@@ -61,6 +61,8 @@ Substages:
 
 Status, 2026-11-11: substages 1 to 10 are built, `pnpm test:srd` passes, and the judge review is under way. The package's README lists what it holds, how its checks work, and where the official text disagrees with itself.
 
+Judge rounds so far: 8.4, then 8.8. Round 2 found that a check which copies its builder's reading proves nothing. So round 3 added a second reading that owes nothing to the builders: independent readers wrote the typed effects of every spell and magic item (`scripts/verify/fixtures`), auditors read every class, origin, equipment and monster entry beside the official text, and `READING.md` holds the rules all of them work to. A typed value that holds only under a condition now carries it as `appliesWhen`, in every category.
+
 Found along the way: both upstream sources hold many errors, so origins, equipment and magic items are built from the official text alone, and the rest take wording and corrections from it.
 
 Not in this stage: the rules text itself (how play works, the rules glossary). The engine stages encode it.

@@ -129,6 +129,7 @@
       {
         "name": "Blink Steps",
         "text": "Immediately after you take the Attack action or the Magic action, you can teleport up to 30 feet to an unoccupied space you can see.",
+        "trigger": "after-attack-or-magic-action",
         "teleportFeet": 30
       }
     ]
@@ -165,7 +166,7 @@
           "count": 1,
           "recharge": "initiative-or-short-or-long-rest"
         },
-        "rangeFeet": 60,
+        "range": 60,
         "dice": "2d4"
       }
     ]
@@ -283,7 +284,7 @@
           "bonus-action"
         ],
         "requires": "dim-light-or-darkness",
-        "condition": "invisible"
+        "selfCondition": "invisible"
       },
       {
         "name": "Shadowy Form",

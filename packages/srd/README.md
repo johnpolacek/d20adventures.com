@@ -36,16 +36,16 @@ Import data by category, so a host bundles only what it uses. `@d20/srd` itself 
 | `subclasses` | 12 | The SRD subclass of each class |
 | `spells` | 339 | Header fields, typed mechanics, tables and stat blocks |
 | `monsters` | 330 | Every stat block, with typed actions |
-| `monster-rules` | 3 | XP by CR, Proficiency Bonus by CR, Hit Dice by size |
+| `monster-rules` | 5 | XP by CR, Proficiency Bonus by CR, Hit Dice by size, limited usage, legendary actions |
 | `equipment` | 249 | Weapons, armor, tools, gear, mounts, vehicles, services |
 | `weapon-properties` | 10 |  |
 | `weapon-masteries` | 8 |  |
 | `poisons` | 14 |  |
 | `poison-types` | 4 | Contact, ingested, inhaled, injury |
 | `coins` | 5 |  |
-| `equipment-rules` | 25 | Selling, armor training, proficiency, crafting |
+| `equipment-rules` | 31 | Selling, armor training, proficiency, crafting, scroll costs, mounts and vehicles |
 | `magic-items` | 258 | One entry per official heading, with variants |
-| `magic-item-rules` | 50 | Rarity values, categories, attunement, crafting, sentient items |
+| `magic-item-rules` | 52 | Rarity values, categories, attunement, crafting, sentient items |
 
 Not in this package:
 
@@ -62,6 +62,8 @@ Not in this package:
 - `scripts/builders/<category>.ts`: reads the pinned sources and writes the data.
 - `scripts/overrides/<category>.ts`: recorded corrections, each citing the official page.
 - `scripts/verify/<category>.ts`: checks the data against the official text.
+- `scripts/verify/fixtures/*.json`: independent readings of spell and magic item effects. Never edited to make a check pass.
+- `READING.md`: how a sentence becomes a typed value.
 - `scripts/verify/package.ts` and `references.ts`: checks across the whole package.
 - `scripts/lib/registry.ts`: the list of every data file and its schema.
 - `sources/sources.lock.json`: every source, pinned by commit and hash.
@@ -94,7 +96,7 @@ Run from the repo root.
 
 ## How the checks work
 
-A check reads `data/*.json` and the official text. It parses the official text with its own code, not the builder's, so a builder mistake cannot hide in a check that repeats it. Cross-checks also read the cached upstream sources, as a second opinion only.
+A check reads `data/*.json` and the official text. Cross-checks also read the cached upstream sources, as a second opinion only.
 
 Each category checks:
 
@@ -102,6 +104,17 @@ Each category checks:
 - every mechanical field, entry by entry, against that entry's own block of official text
 - every sentence of prose against the official wording
 - each entry's page
+
+### Printed values and read values
+
+A printed value is one the text states in a fixed place: a price in a table, a stat block's Armor Class, a spell's range. A check can find it by position, and the builder has no say in what it finds.
+
+A read value is one somebody had to read a sentence to get: which save a condition depends on, whether a damage roll needs a hit, when a bonus applies. A check that derives these with the builder's own patterns agrees with the builder even when both are wrong. So read values are checked by a second reading that owes nothing to the builder:
+
+- **Spells and magic items.** Readers who never saw the builders, the checks or the data read all 339 spells and all 258 magic items in the official text and wrote down the typed effects they found. Their files are `scripts/verify/fixtures/*.json`. The checks compare the data with them field by field. A builder never edits a fixture. A difference is settled against the official text by `READING.md`, and where the rules did not settle it, the rule was written first and both sides reread.
+- **Classes, origins, equipment and monsters.** The irregular entries have hand-kept tables of expected values in the checks, each row read against the text. The monsters table was drafted from the data and then read row by row, so it is weaker than a reading made blind. To cover that, auditors who had not seen the builders or checks read every entry's typed fields beside its official text, and read the conditions again after the builders' fixes.
+
+`READING.md` holds the rules for turning a sentence into a typed value. The builders, the readers and the auditors all work to it.
 
 The package checks:
 
@@ -112,11 +125,15 @@ The package checks:
 
 ### Testing the checks
 
-A check that passes proves little unless it can fail. `mutate` takes the first value at every distinct typed field of every data file, changes it, runs the checks, then deletes it and runs them again. It works on copies in a temp folder. A mutation that no check catches is printed as `MISSED` and fails the run.
+A check that passes proves little unless it can fail. `mutate` takes the first value at every distinct typed field of every data file, changes it, runs the checks, then deletes it and runs them again. It also adds an item to every list and deletes every group of fields. It works on copies in a temp folder. A mutation that no check catches is printed as `MISSED` and fails the run.
 
 It reports three counts: mutations caught by a content check, mutations caught only because the schema requires the field, and misses. Run it after changing a schema, a builder or a check. A new typed field with no check shows up as a miss.
 
-It takes one sample per field, so it shows that a field is guarded, not that every entry is right. The category checks do that by comparing every entry.
+What it does not show:
+
+- It takes one sample per field, so it shows that a field is guarded, not that every entry is right.
+- It cannot see a wrong reading that a builder and its check share. Both agree, and moving the data away from the shared reading still fails the check. The second readings above exist for that.
+- It skips long text, which the sentence and spelling checks cover.
 
 A check line reads `(passed/total, N waived, M upstream errors)`.
 
@@ -148,17 +165,21 @@ Every entry keeps the official wording in full, with the official paragraph brea
 Three rules keep the typed fields honest:
 
 - A typed value means one thing. If it holds only under a condition the text states, the condition sits beside it, in a typed field or in the official words. A Rakshasa's vulnerability to Piercing damage is in `conditionalDefenses` with its condition, not in `vulnerabilities`.
-- A typed value is checked both ways: the data's value is stated in the entry's own text, and every statement of that form in the text is in the data. The aim is that no value can be changed, dropped or invented without a check failing, and the checks are tested by changing the data by hand.
+- A typed value is checked both ways: the data's value is stated in the entry's own text, and every statement of that form in the text is in the data. The aim is that no value can be changed, dropped or invented without a check failing, and `mutate` tests that.
 - What a field cannot hold honestly stays in the prose.
 
-One concept has one shape across categories, from `src/schema/common.ts`: what restores a use (`rechargeSchema`), how a thing is used (`activationSchema`), a save and its DC (`forcedSaveShape`, `saveDcSchema`), money (`costSchema`), and starting equipment (`equipmentOptionSchema`).
+A stated condition has one name in every category: `appliesWhen`, one unbroken span of the official words. A value that carries it is never read as always applying. Its mirror is `unless`: the official words of a condition under which the value does not hold. The printed name of an option or a table row is a `label`.
+
+An effect falls on the target unless it is marked. The mark differs by category, because the shapes differ: `target: "caster"` and `casterConditions` on a spell, `self: true` on a monster's roll or condition, `selfCondition` beside `targetCondition` on a species trait or feat, `selfOnly` on a class feature's free casting.
+
+One concept has one shape across categories, from `src/schema/common.ts`: what restores a use (`rechargeSchema`), how a thing is used (`activationSchema`), a save and its DC (`forcedSaveShape`, `saveDcSchema`), money (`costSchema`), starting equipment (`equipmentOptionSchema`), a count of uses (`usesCountSchema`), a damage roll (`damageRollShape`), and slowing a target (`targetSpeedReductionSchema`).
 
 Left as prose for the engine stages to encode, among others: what each condition does, monster Multiattack and reaction triggers, features that cast a named spell outside a spell list, durations, and effects that depend on a trigger with no fixed number.
 
 A few fields are readings of a sentence rather than a printed value:
 
-- Conditions an action or spell applies, and the trigger of a damage part, are read from the sentence that states them. Where the sentence gives no tie to a hit or a save, the part carries none, and the engine must read the prose.
-- A damage part's `condition` in the monsters data is the official words, not a typed test.
+- Conditions an action or spell applies, and the trigger of a damage roll, are linked by meaning: an effect that depends on a failed save or a hit carries that link even when the save or hit was stated a sentence earlier. Where the text gives no tie to a hit or a save, the roll carries none.
+- `appliesWhen` is the official words, not a typed test. An engine must treat a value that has it as conditional and read the words.
 - Magic items: `consumable` is set from the item's category and from wording that says it is used up.
 - Equipment: the food, drink and lodging table has no group heading on its second half, so those rows are matched to their tier by order.
 

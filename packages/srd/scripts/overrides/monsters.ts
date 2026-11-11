@@ -82,6 +82,53 @@ const formSpeed = (id: string, form: string, page: number, climb?: number): Over
   page,
 })
 
+/**
+ * Who makes a save, where the gate is not an "If …" clause in a sentence ending "the following effect." The builder
+ * sets the save's `appliesWhen` before linking, so every effect of the save carries the same gate.
+ */
+export const saveGates: { id: string; feature: string; save: number; appliesWhen: string; reason: string; page: number }[] = [
+  { id: "aboleth", feature: "Mucus Cloud", save: 0, appliesWhen: "While underwater", reason: "the aboleth is surrounded by mucus, which forces the save, only “While underwater”", page: 258 },
+  {
+    id: "gibbering-mouther",
+    feature: "Gibbering",
+    save: 0,
+    appliesWhen: "while it doesn’t have the Incapacitated condition",
+    reason: "the mouther babbles, which forces the save, only “while it doesn’t have the Incapacitated condition”",
+    page: 288,
+  },
+  {
+    id: "pit-fiend",
+    feature: "Fear Aura",
+    save: 0,
+    appliesWhen: "while it doesn’t have the Incapacitated condition",
+    reason: "the aura, which forces the save, is there only “while it doesn’t have the Incapacitated condition”",
+    page: 314,
+  },
+  {
+    id: "stone-giant",
+    feature: "Deflect Missile",
+    save: 0,
+    appliesWhen: "if that damage is reduced to 0",
+    reason: "the giant redirects the force, which forces the save, only “if that damage is reduced to 0”",
+    page: 330,
+  },
+]
+
+/** Features whose damage and conditions fall on the monster itself, read from each feature's text. */
+export const selfEffects: { id: string; feature: string; page: number }[] = [
+  { id: "fire-elemental", feature: "Water Susceptibility", page: 284 },
+  { id: "ghost", feature: "Incorporeal Movement", page: 287 },
+  { id: "invisible-stalker", feature: "Invisibility", page: 301 },
+  { id: "specter", feature: "Incorporeal Movement", page: 327 },
+  { id: "troll", feature: "Loathsome Limbs", page: 333 },
+  { id: "vampire", feature: "Misty Escape", page: 335 },
+  { id: "vampire", feature: "Vampire Weakness", page: 335 },
+  { id: "vampire-spawn", feature: "Vampire Weakness", page: 335 },
+  { id: "will-o-wisp", feature: "Incorporeal Movement", page: 341 },
+  { id: "will-o-wisp", feature: "Vanish", page: 341 },
+  { id: "wraith", feature: "Incorporeal Movement", page: 342 },
+]
+
 export const overrides: Override[] = [
   darkness("barbed-devil", 262),
   darkness("bearded-devil", 262),
@@ -93,7 +140,7 @@ export const overrides: Override[] = [
   {
     id: "half-dragon",
     path: "conditionalDefenses",
-    value: [{ kind: "resistance", condition: "Damage type chosen for the Draconic Origin trait below" }],
+    value: [{ kind: "resistance", appliesWhen: "Damage type chosen for the Draconic Origin trait below" }],
     reason: "the Resistances entry reads “Damage type chosen for the Draconic Origin trait below”",
     page: 297,
   },
@@ -107,14 +154,14 @@ export const overrides: Override[] = [
   {
     id: "archmage",
     path: "conditionalDefenses",
-    value: [{ kind: "condition-immunity", value: "charmed", condition: "with Mind Blank" }],
+    value: [{ kind: "condition-immunity", value: "charmed", appliesWhen: "with Mind Blank" }],
     reason: "the Immunities entry reads “Psychic; Charmed (with Mind Blank)”",
     page: 305,
   },
   {
     id: "rakshasa",
     path: "conditionalDefenses",
-    value: [{ kind: "vulnerability", value: "piercing", condition: "from weapons wielded by creatures under the effect of a Bless spell" }],
+    value: [{ kind: "vulnerability", value: "piercing", appliesWhen: "from weapons wielded by creatures under the effect of a Bless spell" }],
     reason: "the Vulnerabilities entry reads “Piercing damage from weapons wielded by creatures under the effect of a Bless spell”",
     page: 317,
   },
@@ -128,7 +175,7 @@ export const overrides: Override[] = [
   {
     id: "vampire-familiar",
     path: "conditionalDefenses",
-    value: [{ kind: "condition-immunity", value: "charmed", condition: "except from its vampire master" }],
+    value: [{ kind: "condition-immunity", value: "charmed", appliesWhen: "except from its vampire master" }],
     reason: "the Immunities entry reads “Charmed (except from its vampire master)”",
     page: 334,
   },
@@ -152,5 +199,42 @@ export const overrides: Override[] = [
     ],
     reason: "the Speed entry reads “20 ft., Climb or Fly 20 ft. (GM’s choice)”",
     page: 361,
+  },
+  // Gates the reading rules cannot find, because the gate is not an "If …" clause before a "following effect"
+  // sentence. Each value is an unbroken span of the official sentence that gates the effect.
+  {
+    id: "black-pudding",
+    path: "traits.1.damage.0.appliesWhen",
+    value: "A creature that hits the pudding with a melee attack roll",
+    reason: "only “A creature that hits the pudding with a melee attack roll takes 4 (1d8) Acid damage”",
+    page: 265,
+  },
+  {
+    id: "gelatinous-cube",
+    path: "traits.0.damage.0.appliesWhen",
+    value: "by succeeding on a DC 12 Strength (Athletics) check",
+    reason: "the puller takes the Acid damage when it pulls a creature out “by succeeding on a DC 12 Strength (Athletics) check”",
+    page: 286,
+  },
+  {
+    id: "mimic",
+    path: "traits.0.conditions.0.appliesWhen",
+    value: "A Huge or smaller creature adhered to the mimic",
+    reason: "only “A Huge or smaller creature adhered to the mimic has the Grappled condition”",
+    page: 308,
+  },
+  {
+    id: "barbed-devil",
+    path: "traits.0.damage.0.appliesWhen",
+    value: "to any creature it is grappling or any creature grappling it",
+    reason: "the devil deals the Piercing damage only “to any creature it is grappling or any creature grappling it”",
+    page: 262,
+  },
+  {
+    id: "lich",
+    path: "legendaryActions.actions.0.damage.0.appliesWhen",
+    value: "each creature within 10 feet of the space it left",
+    reason: "only “each creature within 10 feet of the space it left takes 11 (2d10) Necrotic damage”",
+    page: 304,
   },
 ]

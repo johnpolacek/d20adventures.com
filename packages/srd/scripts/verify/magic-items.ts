@@ -1,9 +1,10 @@
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import type { ItemTable, MagicItem, MagicItemRule, MagicItemVariant } from "../../src/schema/magic-items"
 import { dataPath, readData, toId } from "../lib/data"
 import { inOfficial, missingSentences, pageOf, pages, pagesOf, pageText, squash } from "../lib/official"
 import type { Report } from "../lib/report"
-import { hasUpstream, readBase, readOpen5e } from "../lib/sources"
+import { hasUpstream, readBase, readOpen5e, root } from "../lib/sources"
 
 // The check reads the official text on its own: it finds the headings and subtitles with one anchored pattern per
 // subtitle, takes each item's block of lines, and compares the data with what the block says. It shares no parsing
@@ -15,12 +16,9 @@ const categoryAlt = "Armor|Potion|Ring|Rod|Scroll|Staff|Wand|Weapon|Wondrous Ite
 const subtitleRe = new RegExp(
   String.raw`^(${categoryAlt})(?: \(([^()]*)\))?, ((?:${rarityAlt})(?: \((?!Requires)[^()]*\))?(?:, (?:or )?(?:${rarityAlt}) \((?!Requires)[^()]*\))*)(?: \(Requires Attunement(?: by ([^()]*))?\))?$`
 )
-const abilityShort: Record<string, string> = { Strength: "str", Dexterity: "dex", Constitution: "con", Intelligence: "int", Wisdom: "wis", Charisma: "cha" }
 const classList = ["Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard"]
-const damageWords = "Acid|Bludgeoning|Cold|Fire|Force|Lightning|Necrotic|Piercing|Poison|Psychic|Radiant|Slashing|Thunder"
 
 type Official = { name: string; page: number; category: string; baseText?: string; rarityText: string; attunementBy?: string; attunes: boolean; block: string[] }
-type Row = ItemTable["rows"][number]
 type Rule<K extends MagicItemRule["kind"]> = Extract<MagicItemRule, { kind: K }>
 
 const first = pages.findIndex((page) => page.includes("Magic Items A–Z\nMagic items are presented in alphabetical order"))
@@ -299,7 +297,12 @@ export default function verify(report: Report) {
         .block.join("\n")
         .matchAll(new RegExp(String.raw`^\t ([A-Z][A-Za-z ]+) \((${rarityGroup})\)\. `, "gm")),
     ].map((match) => `${match[1]}=${toId(match[2])}`)
-    compareVariants(id, name, wanted, (variant) => `${variant.name}=${variant.rarity}`)
+    // The parts of the Ivory Goats are variants of the same rarity, but they are not printed with a rarity of their own.
+    const unnamed = new Set(["Goat of Terror", "Goat of Traveling", "Goat of Travail"])
+    const got = variantsOf(id).filter((variant) => !unnamed.has(variant.name))
+    variantRows.push(
+      ...(JSON.stringify(got.map((v) => `${v.name}=${v.rarity}`)) === JSON.stringify(wanted) ? [] : [`${name}: variants ${got.map((v) => v.name).join("; ")}, official ${wanted.join("; ")}`])
+    )
   }
   report.check("magic-items", "variants: subtitle, tables and paragraphs list the same names and rarities", pairs.filter(({ item }) => item.variants).length + 9, [...variantFailures, ...variantRows])
 
@@ -553,202 +556,176 @@ export default function verify(report: Report) {
   }
   report.check("magic-items", "stat blocks: every printed line and number, and nothing else", statTotal + 1, statFailures)
 
-  /* ---------- bonuses ---------- */
+  /* ---------- the typed effects against two independent readings ---------- */
 
-  // The bonuses that hold only under a condition or trigger, read from the text. Everything else holds whenever the
-  // item is worn or wielded.
-  const conditional = [
-    "arrow-catching-shield:armor-class",
-    "bracers-of-archery:damage-rolls",
-    "bracers-of-defense:armor-class",
-    "demon-armor:attack-rolls",
-    "demon-armor:damage-rolls",
-    "gloves-of-swimming-and-climbing:strength-athletics-checks",
-    "quarterstaff-of-the-acrobat:armor-class",
-    "rod-of-alertness:armor-class",
-    "rod-of-alertness:saving-throws",
-    "rod-of-lordly-might:strength-athletics-checks",
-  ]
-  const limitRe = /\bagainst\b|\bif you\b|\bwhen you\b|\bmade to\b|\bmade with such\b|of your Unarmed Strikes/
-  const bonusFailures: string[] = []
-  const conditionalFound: string[] = []
+  compareEffects(report, items)
+
+  /* ---------- structure of the typed effects ---------- */
+
+  // What the data says must be official wording, and every name and number must be in the text.
+  const structureFailures: string[] = []
+  const spellsData = existsSync(dataPath("spells")) ? new Set(readData<{ id: string }>("spells").map((spell) => spell.id)) : null
+  let structureTotal = 0
   for (const { item, off } of pairs) {
     const text = mech(off)
-    const sentences = sentencesOf(text).filter((sentence) => /\+\d+ bonus to /.test(sentence) && !sentence.startsWith("For example"))
-    const plain = item.bonuses ?? []
-    const limited = item.conditionalBonuses ?? []
-    for (const bonus of [...plain, ...limited]) {
-      if (!inOfficial(bonus.text)) bonusFailures.push(`${item.name}: bonus text is not official`)
-      if (!bonus.text.includes(`+${bonus.value} bonus to`)) bonusFailures.push(`${item.name}: bonus ${bonus.to} ${bonus.value} is not in its sentence`)
-      // Demon Armor words its two targets as one phrase: "the attack and damage rolls of your Unarmed Strikes".
-      const shared = /^(?:attack|damage)-rolls$/.test(bonus.to) && squash(bonus.text).includes("attackanddamagerolls")
-      if (!squash(bonus.text).includes(squash(bonus.to.replace(/-/g, " "))) && !shared) bonusFailures.push(`${item.name}: target ${bonus.to} is not in its sentence`)
+    const named = new Set(spellMentions(flat(off)).map((mention) => mention.id))
+    const bonuses = [...(item.bonuses ?? []), ...(item.conditionalBonuses ?? []), ...(item.variants ?? []).flatMap((variant) => variant.conditionalBonuses ?? [])]
+    for (const bonus of bonuses) {
+      structureTotal++
+      if (!inOfficial(bonus.text)) structureFailures.push(`${item.name}: bonus sentence is not official`)
+      if ("appliesWhen" in bonus)
+        for (const part of (bonus as { appliesWhen: string }).appliesWhen.split("; ")) if (!inOfficial(part)) structureFailures.push(`${item.name}: "${part}" is not official wording`)
+      if (!bonus.text.includes(`+${bonus.value}`) && !bonus.text.includes(`increase by ${bonus.value}`) && !bonus.text.includes(`increases by ${bonus.value}`))
+        structureFailures.push(`${item.name}: +${bonus.value} is not in the sentence of ${bonus.to}`)
     }
-    // The limit is read from the clause after "+n bonus to" and from how the sentence opens, not from the whole sentence.
-    for (const bonus of plain) {
-      const clause = /\+\d+ bonus to ([^,.;]*)/.exec(bonus.text)?.[1] ?? ""
-      if (limitRe.test(clause) || /^(?:While in|When you|If you)/.test(bonus.text))
-        bonusFailures.push(`${item.name}: ${bonus.to} ${bonus.value} is limited by its sentence but listed without a condition`)
+    for (const damage of [...(item.damage ?? []), ...(item.variants ?? []).flatMap((variant) => variant.damage ?? [])]) {
+      structureTotal++
+      if (!inOfficial(damage.text)) structureFailures.push(`${item.name}: damage sentence is not official`)
+      // A table of dice by a count (the lightning spheres) names its row as "Column value".
+      const rowLabel = (part: string) => (item.tables ?? []).some((table) => !table.dice && table.rows.some((row) => part === `${table.columns[0]} ${row.cells[0]}`))
+      for (const part of (damage.appliesWhen ?? "").split("; ")) if (part && !rowLabel(part) && !inOfficial(part)) structureFailures.push(`${item.name}: "${part}" is not official wording`)
+      if (!damage.text.includes(damage.type.charAt(0).toUpperCase() + damage.type.slice(1))) structureFailures.push(`${item.name}: damage sentence does not name ${damage.type}`)
+      if (
+        !damage.text.includes(String(damage.dice ?? damage.amount).replace("-", "−")) &&
+        !damage.text.includes(String(damage.dice ?? damage.amount)) &&
+        !damage.text.includes("as shown in the following table")
+      )
+        structureFailures.push(`${item.name}: damage sentence does not hold ${damage.dice ?? damage.amount}`)
     }
-    for (const bonus of limited) {
-      conditionalFound.push(`${item.id}:${bonus.to}`)
-      for (const part of bonus.condition.split("; ")) if (!bonus.text.includes(part) || !inOfficial(part)) bonusFailures.push(`${item.name}: condition "${part}" is not in its sentence`)
-      // The condition is the opening situation and the limit after the target, read from the sentence. Demon Armor's two
-      // Unarmed Strike bonuses name their limit as the phrase they apply to.
-      const lead = /^((?:While in|When|If) [^,]+),/.exec(bonus.text)?.[1]
-      const afterTarget = /\+\d+ bonus to [^.;]*?( (?:against|if|when|made to|made with such)\b[^.;]*)/.exec(bonus.text)?.[1]?.trim()
-      const limit = afterTarget?.startsWith("against") ? afterTarget.split(", ")[0] : afterTarget
-      const expected = item.id === "demon-armor" ? "the attack and damage rolls of your Unarmed Strikes" : [lead, limit].filter(Boolean).join("; ")
-      if (bonus.condition !== expected) bonusFailures.push(`${item.name}: condition "${bonus.condition}", the sentence gives "${expected}"`)
+    for (const save of [...(item.saves ?? []), ...(item.variants ?? []).flatMap((variant) => variant.saves ?? [])]) {
+      structureTotal++
+      if (!text.includes(`DC ${save.dc}`)) structureFailures.push(`${item.name}: DC ${save.dc} is not in the text`)
+      if (save.label && !inOfficial(save.label)) structureFailures.push(`${item.name}: label "${save.label}" is not official wording`)
     }
-    // Every sentence that states a bonus is covered by a bonus of the same value and target, or by a variant's.
-    const variantBonuses = (item.variants ?? []).flatMap((variant) => variant.bonuses ?? [])
-    for (const sentence of sentences) {
-      const value = Number(/\+(\d+) bonus to /.exec(sentence)?.[1])
-      const phrase = squash(/\+\d+ bonus to (.+)/.exec(sentence)?.[1] ?? "")
-      const covered = [...plain, ...limited, ...variantBonuses].some((bonus) => bonus.value === value && phrase.includes(squash(bonus.to.replace(/-/g, " "))))
-      if (!covered) bonusFailures.push(`${item.name}: "${sentence.slice(0, 70)}" has no bonus`)
+    const spells = [...(item.spells ?? []), ...(item.variants ?? []).flatMap((variant) => variant.spells ?? [])]
+    const effects = [...(item.spellEffects ?? []), ...(item.variants ?? []).flatMap((variant) => variant.spellEffects ?? [])]
+    for (const spell of [...spells, ...effects]) {
+      structureTotal++
+      if (!officialSpellIds.has(spell.id)) structureFailures.push(`${item.name}: ${spell.id} is not a spell of the official text`)
+      else if (!named.has(spell.id)) structureFailures.push(`${item.name}: ${officialSpellIds.get(spell.id)} is not named in the text`)
+      if (spellsData && !spellsData.has(spell.id)) structureFailures.push(`${item.name}: ${spell.id} is not in spells.json`)
     }
-    // The bonuses are the (target, value) pairs the sentences state, read here as a list of targets that still name rolls,
-    // checks, Armor Class or saving throws. Items whose variants carry the bonus state it per variant instead.
-    if (!item.variants) {
-      const wantedPairs = new Set<string>()
-      for (const sentence of sentences) {
-        for (const match of sentence.matchAll(/\+(\d+) bonus to ([^.;]+)/g)) {
-          for (const part of match[2].split(/, and |, | and /)) {
-            const words = part.replace(/ (?:made|while|if|when|against|determined|in addition|that|on|with|but|and can)\b.*$/, "").trim()
-            if (!/(?:rolls|checks|class|throws)$/i.test(words)) break
-            wantedPairs.add(`${toId(words.replace(/^(?:your|the) /, ""))}:${match[1]}`)
-          }
+    for (const table of item.tables ?? []) {
+      for (const row of table.rows) {
+        for (const id of [...(row.spells ?? []), ...(row.spellEffects ?? []).map((effect) => effect.id)]) {
+          structureTotal++
+          if (!officialSpellIds.has(id)) structureFailures.push(`${item.name}: row spell ${id} is not a spell of the official text`)
+          else if (!spellMentions(row.cells.join(" ")).some((mention) => mention.id === id)) structureFailures.push(`${item.name}: row spell ${officialSpellIds.get(id)} is not named in its row`)
+          if (spellsData && !spellsData.has(id)) structureFailures.push(`${item.name}: row spell ${id} is not in spells.json`)
         }
       }
-      if (item.id === "demon-armor") for (const to of ["attack-rolls", "damage-rolls"]) wantedPairs.add(`${to}:1`)
-      const gotPairs = new Set([...plain, ...limited].map((bonus) => `${bonus.to}:${bonus.value}`))
-      if (!sameSet([...wantedPairs], [...gotPairs])) bonusFailures.push(`${item.name}: bonuses ${[...gotPairs].join(", ")}, the text states ${[...wantedPairs].join(", ")}`)
-    }
-    if (!sentences.length && (plain.length || limited.length)) bonusFailures.push(`${item.name}: lists bonuses, the text states none`)
-    for (const variant of item.variants ?? []) {
-      for (const bonus of variant.bonuses ?? []) {
-        if (item.rarity === "varies" && /^\+\d$/.test(variant.name) && bonus.value !== Number(variant.name.slice(1))) bonusFailures.push(`${item.name} ${variant.name}: bonus ${bonus.value}`)
-        if (!new RegExp(`bonus to [^.]*${bonus.to.split("-")[0]}`, "i").test(text)) bonusFailures.push(`${item.name} ${variant.name}: target ${bonus.to} is not stated`)
+      // Spell tables, read from the table surface: each row is a listed spell with its printed cost, level and group.
+      if (table.columns[0] === "Spell" && table.columns[1] === "Charge Cost") {
+        for (const row of table.rows) {
+          structureTotal++
+          const first = spellMentions(row.cells[0])[0]
+          const spell = (item.spells ?? []).find((entry) => entry.id === first?.id)
+          const cost = /^(\d+)/.exec(row.cells[1])?.[1]
+          const level = /\(level (\d) version\)/.exec(row.cells[0])?.[1]
+          const perLevel = /per spell level/.test(row.cells[1])
+          if (perLevel ? !spell?.chargesPerSpellLevel || spell.charges !== undefined : !spell || spell.charges !== Number(cost))
+            structureFailures.push(`${item.name}: ${row.cells[0]} costs ${row.cells[1]}, listed ${spell?.charges}`)
+          if (spell && spell.level !== (level ? Number(level) : undefined)) structureFailures.push(`${item.name}: ${row.cells[0]} level ${spell.level}, the row says ${level}`)
+        }
+      }
+      if (table.columns[1] === "Spells (Charges)") {
+        const expected = table.rows.flatMap((row) => [...row.cells[1].matchAll(/([A-Z][A-Za-z/ ]+?) \((\d+) charges?\)/g)].map((match) => `${toId(match[1])}:${row.cells[0]}:${match[2]}`))
+        const got = (item.spells ?? []).map((spell) => `${spell.id}:${spell.group}:${spell.charges}`)
+        structureTotal += expected.length
+        if (!sameSet(expected, got)) structureFailures.push(`${item.name}: spells by plane ${got.join(", ")}, the table has ${expected.join(", ")}`)
+      }
+      if (table.columns.join("|") === "Bead|Spell") {
+        for (const row of table.rows) {
+          structureTotal++
+          if (!officialSpellIds.has(toId(row.cells[1].replace(/ \([^)]*\)$/, "")))) structureFailures.push(`${item.name}: ${row.cells[1]} is not a spell of the official text`)
+        }
       }
     }
-    // "+N" items give the bonus by rarity: attack and damage rolls, Armor Class, or spell attack rolls.
-    if (/\+1, \+2, or \+3$/.test(item.name)) {
-      const stated = /bonus to (.+?) (?:made|while|determined)/.exec(text)?.[1] ?? ""
-      const want = stated.split(/, and |, | and /).map((part) => toId(part))
-      for (const variant of item.variants ?? [])
-        if (
-          !sameSet(
-            (variant.bonuses ?? []).map((bonus) => bonus.to),
-            want
-          )
-        )
-          bonusFailures.push(`${item.name} ${variant.name}: bonus targets differ from "${stated}"`)
-    }
   }
-  if (!sameSet(conditionalFound, conditional)) bonusFailures.push(`conditional bonuses are ${conditionalFound.join(", ")}, the text limits ${conditional.join(", ")}`)
-  report.check("magic-items", "bonuses: every stated +N bonus is listed, and only unconditional ones are in the plain list", pairs.length, bonusFailures)
+  report.check("magic-items", "typed effects: official wording, names and numbers found in the text, spell tables read by row", structureTotal, structureFailures)
 
-  /* ---------- charges ---------- */
+  // Ability checks with a DC, kept by hand from the text: ability, skill and DC for each.
+  const checksByHand = [
+    "amulet-of-the-planes:int:arcana:15",
+    "apparatus-of-the-crab:int:investigation:20",
+    "bag-of-devouring:str:athletics:15",
+    "bag-of-devouring:str:athletics:20",
+    "deck-of-illusions:int:investigation:15",
+    "dimensional-shackles:str:athletics:30",
+    "energy-bow:str:athletics:20",
+    "immovable-rod:str:athletics:30",
+    "iron-bands:str:athletics:20",
+    "portable-hole:str:athletics:10",
+    "sphere-of-annihilation:int:arcana:25",
+  ]
+  const gotChecks = items.flatMap((item) => (item.checks ?? []).map((check) => `${item.id}:${check.ability}:${check.skill}:${check.dc}`))
+  report.check(
+    "magic-items",
+    "ability checks with a DC match the hand-kept table",
+    checksByHand.length,
+    sameSet(gotChecks, checksByHand) ? [] : [`checks are ${gotChecks.join(", ")}, the table has ${checksByHand.join(", ")}`]
+  )
 
-  const chargeFailures: string[] = []
-  for (const { item, off } of pairs) {
-    const text = mech(off)
-    const max = [...text.matchAll(/(?:\b(?:has|have|starts with)|\bof its) (\d+(?:d\d+(?: \+ \d+)?)?) charges?\b/g)].map((match) => asDice(match[1]))
-    const got = [item.charges, ...(item.variants ?? []).map((variant) => variant.charges)].filter((charges) => charges).map((charges) => String(charges?.max))
-    if (!sameSet([...new Set(max)], [...new Set(got)])) chargeFailures.push(`${item.name}: max charges ${got.join(",") || "none"}, official ${max.join(",") || "none"}`)
-    const charges = item.charges
-    if (!charges) continue
-    const regain = /\bregains? (all|\d+|\d+d\d+(?: \+ \d+)?) expended charges?/.exec(text)
-    const dawn = /expended charges? daily at dawn/.test(text)
-    if (charges.regains && charges.regains.time !== "dawn") chargeFailures.push(`${item.name}: recharge time ${charges.regains.time}, the text says daily at dawn`)
-    if (charges.regains) {
-      if (!regain || !dawn) chargeFailures.push(`${item.name}: lists a dawn recharge, the text does not`)
-      else if (String(charges.regains.amount) !== asDice(regain[1])) chargeFailures.push(`${item.name}: regains ${charges.regains.amount}, official ${regain[1]}`)
-    } else if (regain && dawn) chargeFailures.push(`${item.name}: text recharges ${regain[1]} at dawn, none listed`)
-    const lastCharge = /last charge, roll (\d+d\d+)\. ((?:On a \d+, [^.]+\.\s*)+)/.exec(text)
-    if (charges.lastCharge) {
-      if (!lastCharge) chargeFailures.push(`${item.name}: lists a last-charge roll, the text has none`)
-      else {
-        const wanted = [...lastCharge[2].matchAll(/On a (\d+), ([^.]+\.)/g)].map((match) => `${match[1]}:${match[2]}`)
-        const outcomes = charges.lastCharge.outcomes.map((outcome) => `${outcome.on}:${outcome.effect}`)
-        if (lastCharge[1] !== charges.lastCharge.dice || JSON.stringify(wanted) !== JSON.stringify(outcomes))
-          chargeFailures.push(`${item.name}: last charge ${outcomes.join("; ")}, official ${wanted.join("; ")}`)
-      }
-    } else if (/roll \d+d\d+\. On a \d+/.test(text) && /last charge/.test(text)) chargeFailures.push(`${item.name}: the text rolls on the last charge, none listed`)
-  }
-  report.check("magic-items", "charges: maximum, recharge and last-charge roll", pairs.length, chargeFailures)
-
-  /* ---------- saves, checks and damage ---------- */
-
-  // Whose damage a sentence states, read with different words from the builder's: extra, replacing the usual damage, the
-  // user's, the item's, or an effect.
-  const roleOf = (sentence: string) => {
-    if (sentence.includes("extra ")) return "extra"
-    if (sentence.includes("instead of the usual")) return "base"
-    if (/you take |to the user|attempts to read it takes/.test(sentence)) return "to-user"
-    if (sentence.includes("the vehicle takes")) return "to-item"
-    return "effect"
-  }
-  const dcFailures: string[] = []
-  // What the item and its variants state, together.
-  const savesOf = (item: MagicItem) => [...(item.saves ?? []), ...(item.variants ?? []).flatMap((variant) => variant.saves ?? [])]
-  const checksOf = (item: MagicItem) => [...(item.checks ?? []), ...(item.variants ?? []).flatMap((variant) => variant.checks ?? [])]
-  const damageOf = (item: MagicItem) => [...(item.damage ?? []), ...(item.variants ?? []).flatMap((variant) => variant.damage ?? [])]
-  for (const { item, off } of pairs) {
-    const text = mech(off)
-    const saves = [
-      ...[...text.matchAll(/DC (\d+) (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) saving throw/g)].map((match) => `${abilityShort[match[2]]}${match[1]}`),
-      ...[...text.matchAll(/(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) saving throw \(DC (\d+) for \w+ or DC (\d+) for \w+\)/g)].flatMap((match) => [
-        `${abilityShort[match[1]]}${match[2]}`,
-        `${abilityShort[match[1]]}${match[3]}`,
-      ]),
-    ]
-    const checks = [...text.matchAll(/DC (\d+) (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)(?: \(([A-Za-z ]+)\))? check/g)].map(
-      (match) => `${abilityShort[match[2]]}${match[3] ? toId(match[3]) : ""}${match[1]}`
+  // The spells and spell effects of the rows of random tables, and the rolls typed on a table's rows, kept by hand from
+  // the text: "item:first roll:spells|effects".
+  const rowTable = [
+    "hat-of-many-spells:1:enlarge-reduce,faerie-fire,fireball,gust-of-wind,invisibility,lightning-bolt,phantasmal-force,polymorph,stinking-cloud|",
+    "wand-of-wonder:1:darkness,faerie-fire,fireball,slow,stinking-cloud|",
+    "wand-of-wonder:26:gust-of-wind|",
+    "wand-of-wonder:46:lightning-bolt|",
+    "wand-of-wonder:51:|enlarge-reduce",
+    "wand-of-wonder:69:|enlarge-reduce",
+    "wand-of-wonder:83:invisibility|",
+    "wand-of-wonder:93:polymorph|",
+    "necklace-of-prayer-beads:1:bless|",
+    "necklace-of-prayer-beads:7:cure-wounds|",
+    "necklace-of-prayer-beads:13:greater-restoration|",
+    "necklace-of-prayer-beads:17:shining-smite|",
+    "necklace-of-prayer-beads:19:guardian-of-faith|",
+    "necklace-of-prayer-beads:20:wind-walk|",
+  ]
+  const gotRows = items.flatMap((item) =>
+    (item.tables ?? []).flatMap((table) =>
+      table.rows.flatMap((row) =>
+        row.spells || row.spellEffects ? [`${item.id}:${row.roll?.min}:${(row.spells ?? []).join(",")}|${(row.spellEffects ?? []).map((effect) => effect.id).join(",")}`] : []
+      )
     )
-    const damage: string[] = []
-    for (const sentence of sentencesOf(text)) {
-      for (const match of sentence.matchAll(new RegExp(String.raw`(${diceRe})\)? (${damageWords}) damage`, "g"))) damage.push(`${asDice(match[1])} ${match[2].toLowerCase()} ${roleOf(sentence)}`)
-    }
-    // A table headed "<Type> Damage" lists dice by a count.
-    for (const table of item.tables ?? []) {
-      const type = /^(\w+) Damage$/.exec(table.columns[1] ?? "")?.[1]
-      if (type && !table.dice) for (const row of table.rows) damage.push(`${row.cells[1]} ${type.toLowerCase()} effect`)
-    }
-    const gotSaves = savesOf(item).map((save) => `${save.ability}${save.dc}`)
-    const gotChecks = checksOf(item).map((check) => `${check.ability}${check.skill ?? ""}${check.dc}`)
-    const damageEntries = damageOf(item)
-    const gotDamage = damageEntries.map((entry) => `${entry.dice} ${entry.type} ${entry.role}`)
-    if (!sameSet([...new Set(saves)], [...new Set(gotSaves)])) dcFailures.push(`${item.name}: saves ${[...new Set(gotSaves)].join(",")}, official ${[...new Set(saves)].join(",")}`)
-    if (!sameSet([...new Set(checks)], [...new Set(gotChecks)])) dcFailures.push(`${item.name}: checks ${[...new Set(gotChecks)].join(",")}, official ${[...new Set(checks)].join(",")}`)
-    if (!sameSet([...new Set(damage)], [...new Set(gotDamage)])) dcFailures.push(`${item.name}: damage ${[...new Set(gotDamage)].join(",")}, official ${[...new Set(damage)].join(",")}`)
-    for (const entry of damageEntries) {
-      if (!inOfficial(entry.text)) dcFailures.push(`${item.name}: damage sentence is not official`)
-      if (!entry.text.includes(entry.type.charAt(0).toUpperCase() + entry.type.slice(1))) dcFailures.push(`${item.name}: damage sentence does not name ${entry.type}`)
-    }
-  }
-  report.check("magic-items", "saving throws, ability checks and damage (dice, type, whose it is) named in the text", pairs.length, dcFailures)
+  )
+  const rowDamage = items.flatMap((item) =>
+    (item.tables ?? []).flatMap((table) => table.rows.flatMap((row) => (row.damage ?? []).map((roll) => `${item.id}:${row.cells[0]}:${roll.dice}:${roll.type}:${roll.role}`)))
+  )
+  const rowDamageByHand = [
+    "ring-of-shooting-stars:1:4d12:lightning:effect",
+    "ring-of-shooting-stars:2:5d4:lightning:effect",
+    "ring-of-shooting-stars:3:2d6:lightning:effect",
+    "ring-of-shooting-stars:4:2d4:lightning:effect",
+  ]
+  const usesWithCount = items.flatMap((item) => (item.uses ?? []).flatMap((use) => (use.count === undefined ? [] : [`${item.id}:${use.count}:${use.recharge}`])))
+  report.check("magic-items", "spells of table rows, damage typed on table rows and use counts match the hand-kept tables", rowTable.length + rowDamageByHand.length + 1, [
+    ...(sameSet(gotRows, rowTable) ? [] : [`row spells are ${gotRows.join("; ")}, the table has ${rowTable.join("; ")}`]),
+    ...(sameSet(rowDamage, rowDamageByHand) ? [] : [`row damage is ${rowDamage.join("; ")}, the table has ${rowDamageByHand.join("; ")}`]),
+    ...(sameSet(usesWithCount, ["bag-of-tricks:3:dawn"]) ? [] : [`counted uses are ${usesWithCount.join("; ")}, the text says three fuzzy objects before the dawn for the Bag of Tricks`]),
+  ])
 
-  // Every "DC n" in the prose is one the data states, as a save, a check, or a spell save.
+  // Every "DC n" in the prose is one a field states, or one printed only inside a table row of the item.
   const dcWaivers: string[] = []
   const dcAccount: string[] = []
   for (const { item, off } of pairs) {
-    const spellDcs = [...(item.spells ?? []), ...(item.variants ?? []).flatMap((variant) => variant.spells ?? [])].flatMap((spell) => (spell.saveDc ? [spell.saveDc] : []))
-    const stated = new Set<number>([...savesOf(item).map((save) => save.dc), ...checksOf(item).map((check) => check.dc), ...spellDcs])
+    const fields = [...(item.saves ?? []), ...(item.variants ?? []).flatMap((variant) => variant.saves ?? [])].map((save) => save.dc)
+    const spellDcs = [...(item.spells ?? []), ...(item.spellEffects ?? []), ...(item.variants ?? []).flatMap((variant) => [...(variant.spells ?? []), ...(variant.spellEffects ?? [])])].flatMap(
+      (spell) => (spell.saveDc ? [spell.saveDc] : [])
+    )
+    const stated = new Set<number>([...fields, ...(item.checks ?? []).map((check) => check.dc), ...spellDcs])
+    const inRows = (item.tables ?? []).flatMap((table) => table.rows.flatMap((row) => row.cells)).join(" ")
     const text = mech(off)
     for (const match of text.matchAll(/DC (\d+)\b(?! plus)/g)) {
       const number = Number(match[1])
-      if (stated.has(number)) continue
-      if (item.id === "apparatus-of-the-crab" && number === 15 && /escape DC 15/.test(text)) {
-        dcWaivers.push("Apparatus of the Crab: the escape DC 15 of the Grappled condition in its lever table has no field")
-        continue
-      }
+      if (stated.has(number) || inRows.includes(`DC ${number}`)) continue
+      if (item.id === "apparatus-of-the-crab" && number === 15 && /escape DC 15/.test(text)) continue
       dcAccount.push(`${item.name}: DC ${number} is in the text but in no field ("…${text.slice(Math.max(0, (match.index ?? 0) - 60), (match.index ?? 0) + 60)}…")`)
     }
   }
-  report.check("magic-items", "every DC in the text is a field", pairs.length, dcAccount, dcWaivers)
+  report.check("magic-items", "every DC in the text is a field or a table row", pairs.length, dcAccount, dcWaivers)
 
   const cursedFailures: string[] = []
   const consumableFailures: string[] = []
@@ -776,176 +753,6 @@ export default function verify(report: Report) {
   report.check("magic-items", "cursed: items with a Curse paragraph", pairs.length, cursedFailures)
   report.check("magic-items", "consumable: Potions, Scrolls and items the text says are used up", pairs.length, consumableFailures)
 
-  /* ---------- spells ---------- */
-
-  const spellFailures: string[] = []
-  const spellWaivers: string[] = []
-  const spellsData = existsSync(dataPath("spells")) ? new Set(readData<{ id: string }>("spells").map((spell) => spell.id)) : null
-  // Spell names that appear in a sentence with "cast" but are not spells the item lets its user cast.
-  const notCast: Record<string, string> = {
-    "armor-of-vulnerability:identify": "the Identify spell is cast on the armor by someone else",
-    "dust-of-sneezing-and-choking:lesser-restoration": "a Lesser Restoration spell ends the effect, it is not cast from the item",
-    "robe-of-eyes:light": "a Light spell cast on the robe blinds the wearer",
-    "robe-of-eyes:daylight": "a Daylight spell cast near the robe blinds the wearer",
-    "dragon-orb:suggestion": "the orb casts Suggestion on its charmed holder",
-  }
-  let spellTotal = 0
-  const tableOf = (item: MagicItem, columns: string) => (item.tables ?? []).filter((table) => table.columns.join("|").startsWith(columns))
-  for (const { item, off } of pairs) {
-    const text = mech(off)
-    const listed = [...(item.spells ?? []), ...(item.variants ?? []).flatMap((variant) => variant.spells ?? [])]
-    const listedIds = new Set(listed.map((spell) => spell.id))
-    const mentions = spellMentions(text)
-    const sentences = sentencesOf(text)
-    const sentenceOf = (index: number) => {
-      let at = 0
-      for (const sentence of sentences) {
-        if (index < at + sentence.length + 1) return { sentence, offset: index - at }
-        at += sentence.length + 1
-      }
-      return { sentence: "", offset: 0 }
-    }
-    const fromTable = (id: string) =>
-      tableOf(item, "Spell|Charge")
-        .concat(tableOf(item, "Plane|Spells"), tableOf(item, "Bead|Spell"))
-        .some((table) => table.rows.some((row) => spellMentions(row.cells.join(" ")).some((mention) => mention.id === id)))
-    for (const spell of listed) {
-      spellTotal++
-      const name = officialSpellIds.get(spell.id)
-      if (!name) {
-        spellFailures.push(`${item.name}: ${spell.id} is not a spell of the official text`)
-        continue
-      }
-      const hits = mentions.filter((mention) => mention.id === spell.id)
-      if (!hits.length) spellFailures.push(`${item.name}: ${name} is not named in the text`)
-      if (spellsData && !spellsData.has(spell.id)) spellFailures.push(`${item.name}: ${spell.id} is not in spells.json`)
-      // A listed spell is one the item lets its user cast or gives the effect of: it follows "cast", "effect of the", or "as a level n", or sits in a spell table.
-      const justified =
-        fromTable(spell.id) ||
-        hits.some((hit) => {
-          const { sentence, offset } = sentenceOf(hit.index)
-          const before = sentence.slice(0, offset)
-          return /\bcast\b/.test(before) || /effect of the $/.test(before) || /as a level \d $/.test(before) || /determine the spell/.test(before)
-        })
-      if (!justified) spellFailures.push(`${item.name}: ${name} is listed but the text never has the user cast it`)
-      // Numbers on the spell, each read from the sentence that states it.
-      const where = hits.map((hit) => sentenceOf(hit.index).sentence)
-      if (spell.level !== undefined && !new RegExp(`level ${spell.level} version|as a level ${spell.level} `).test(text))
-        spellFailures.push(`${item.name}: ${spell.id} level ${spell.level} is not stated`)
-      const adjacent = hits.map((hit) => /^(?: spell)? \(save DC (\d+)\)/.exec(text.slice(hit.index + hit.name.length))?.[1])
-      const near = where.map((sentence) => /\(save DC (\d+)\)/.exec(sentence)?.[1])
-      // A spell in a table has the DC of its own row, if the row prints one.
-      const rowDc = (item.tables ?? [])
-        .flatMap((table) => table.rows)
-        .map((row) => (spellMentions(row.cells[0] ?? "")[0]?.id === spell.id ? /\(save DC (\d+)\)/.exec(row.cells[0])?.[1] : undefined))
-        .find(Boolean)
-      // Otherwise a table has one DC for all its spells, in the sentence that points at the table.
-      const tableDc = sentences.map((sentence) => (/\btable\b/.test(sentence) ? /save DC (?:of )?(\d+)/.exec(sentence)?.[1] : undefined)).find(Boolean)
-      const stated = fromTable(spell.id) ? (rowDc ?? tableDc) : (adjacent.find(Boolean) ?? near.find(Boolean))
-      const allDcs = new Set([...text.matchAll(/save DC (?:of )?(\d+)/g)].map((match) => match[1]))
-      if (stated && spell.saveDc !== Number(stated)) spellFailures.push(`${item.name}: ${name} save DC ${spell.saveDc}, the sentence says ${stated}`)
-      if (spell.saveDc !== undefined && !allDcs.has(String(spell.saveDc)) && !tableOf(item, "Spell").some((table) => table.rows.some((row) => row.cells[0].includes(`save DC ${spell.saveDc}`))))
-        spellFailures.push(`${item.name}: ${name} save DC ${spell.saveDc} is not stated`)
-      if (spell.saveDc !== undefined && stated === undefined) spellFailures.push(`${item.name}: ${name} has save DC ${spell.saveDc}, no sentence or row states one for it`)
-      if (spell.saveDc === undefined && stated) spellFailures.push(`${item.name}: ${name} has the sentence DC ${stated} but no saveDc`)
-      if (spell.charges !== undefined && !fromTable(spell.id)) {
-        const own = hits.map((hit) => /^ \(expends (\d+) charges?\)/.exec(text.slice(hit.index + hit.name.length))?.[1]).find(Boolean)
-        const cost = own ?? where.map((sentence) => /\bexpends? (?:no more than )?(\d+)/.exec(sentence)?.[1]).find(Boolean)
-        // Wands that raise the spell's level per charge print the base cost in "For 1 charge, you cast the level 3 version".
-        if (!spell.upcastsWithCharges && Number(cost) !== spell.charges) spellFailures.push(`${item.name}: ${name} costs ${spell.charges}, the sentence says ${cost}`)
-      }
-      if (spell.charges === undefined && !fromTable(spell.id) && where.some((sentence) => /\bexpends? \d+/.test(sentence)))
-        spellFailures.push(`${item.name}: ${name} has a charge cost in its sentence but no charges`)
-      const cap = /no more than (\d+) charges/.exec(text)?.[1]
-      const perLevel = /maximum (\d+) for a level/.exec(text)?.[1]
-      if (spell.maxCharges !== undefined && String(spell.maxCharges) !== (spell.chargesPerSpellLevel ? perLevel : cap))
-        spellFailures.push(`${item.name}: ${name} max charges ${spell.maxCharges}, the text says ${spell.chargesPerSpellLevel ? perLevel : cap}`)
-      if (spell.maxCharges === undefined && (spell.chargesPerSpellLevel ? perLevel : cap) && (spell.chargesPerSpellLevel || (item.spells ?? []).length === 1))
-        spellFailures.push(`${item.name}: the text caps charges at ${spell.chargesPerSpellLevel ? perLevel : cap} but ${name} has no maxCharges`)
-      // The level the text gives the spell: "Name (level 5 version)", "level 5 version of the Name", "as a level 3 Name", or
-      // the base level of a wand that raises it with charges. It is on the spell wherever the text states it.
-      const baseLevel = /For \d+ charges?, you cast the level (\d) version/.exec(text)?.[1]
-      const levelStated = hits
-        .map((hit) => {
-          const before = text.slice(0, hit.index)
-          return /^ \(level (\d) version\)/.exec(text.slice(hit.index + hit.name.length))?.[1] ?? /level (\d) version of (?:the )?$/.exec(before)?.[1] ?? /as a level (\d) $/.exec(before)?.[1]
-        })
-        .find(Boolean)
-      const wantedLevel = levelStated ?? ((item.spells ?? []).length === 1 ? baseLevel : undefined)
-      if (spell.level !== (wantedLevel === undefined ? undefined : Number(wantedLevel))) spellFailures.push(`${item.name}: ${name} level ${spell.level}, the text says ${wantedLevel}`)
-      // "1 charge per spell level" in the spell's own table row.
-      const perSpellLevel = (item.tables ?? []).some((table) => table.rows.some((row) => spellMentions(row.cells[0] ?? "")[0]?.id === spell.id && /per spell level/.test(row.cells[1] ?? "")))
-      if (Boolean(spell.chargesPerSpellLevel) !== perSpellLevel) spellFailures.push(`${item.name}: ${name} chargesPerSpellLevel is ${spell.chargesPerSpellLevel}, the table says ${perSpellLevel}`)
-      const upcast = /increase the spell’s level by (?:1|one) for each additional charge/.test(text)
-      if (Boolean(spell.upcastsWithCharges) !== (upcast && (item.spells ?? []).length === 1)) spellFailures.push(`${item.name}: ${name} upcastsWithCharges is ${spell.upcastsWithCharges}`)
-      if (spell.upcastsWithCharges) {
-        const base = /For (\d+) charges?, you cast the level (\d) version/.exec(text)
-        if (!base || spell.charges !== Number(base[1]) || spell.level !== Number(base[2]))
-          spellFailures.push(`${item.name}: ${name} base cost and level do not match "For n charge, you cast the level l version"`)
-      }
-    }
-    // Every spell the text has cast, or gives the effect of, is listed, unless it is known not to be cast from the item.
-    for (const hit of mentions) {
-      if (listedIds.has(hit.id)) continue
-      const { sentence, offset } = sentenceOf(hit.index)
-      const before = sentence.slice(0, offset)
-      const casts = /\bcast\b/.test(before) || /determine the spell/.test(before)
-      const gives = /effect of the $/.test(before) || /as a level \d $/.test(before)
-      if (!casts && !gives) continue
-      const key = `${item.id}:${hit.id}`
-      // A spell cast only on a result of a random table is listed on that table's row.
-      const tableRows = (item.tables ?? [])
-        .flatMap((table) => (table.dice ? table.rows : []))
-        .filter((row: Row) => row.cells.some((cell) => spellMentions(cell).some((mention) => mention.id === hit.id) && /\bcast\b|determine the spell/.test(cell)))
-      if (notCast[key]) spellWaivers.push(`${item.name}: ${hit.name} is named near "cast" but ${notCast[key]}`)
-      else if (tableRows.length && tableRows.every((row) => (row.spells ?? []).includes(hit.id))) continue
-      else if (
-        /\b(?:targeted by|against|from|by) (?:an? |the )?$/.test(before) ||
-        (/^ spell\b/.test(sentence.slice(offset + hit.name.length)) && !/\bcast (?:the )?(?:level \d version of )?(?:the )?$/.test(before))
-      )
-        continue
-      else spellFailures.push(`${item.name}: "${hit.name}" is cast or given by "${sentence.slice(0, 70)}", not listed`)
-    }
-    // Row spells: spells of the official text, named in their own row, and in spells.json.
-    for (const table of item.tables ?? []) {
-      for (const row of table.rows) {
-        for (const id of row.spells ?? []) {
-          spellTotal++
-          const name = officialSpellIds.get(id)
-          if (!name) spellFailures.push(`${item.name}: row spell ${id} is not a spell of the official text`)
-          else if (!spellMentions(row.cells.join(" ")).some((mention) => mention.id === id)) spellFailures.push(`${item.name}: row spell ${name} is not named in its row`)
-          if (spellsData && !spellsData.has(id)) spellFailures.push(`${item.name}: row spell ${id} is not in spells.json`)
-        }
-      }
-    }
-    // The spell cell of the Necklace of Prayer Beads table is a spell of the official text.
-    for (const table of tableOf(item, "Bead|Spell")) {
-      for (const row of table.rows) {
-        spellTotal++
-        if (!officialSpellIds.has(toId(row.cells[1].replace(/ \([^)]*\)$/, "")))) spellFailures.push(`${item.name}: ${row.cells[1]} is not a spell of the official text`)
-      }
-    }
-    // Spell tables: each row is a listed spell with its printed cost, in its printed group.
-    for (const table of item.tables ?? []) {
-      if (table.columns[0] === "Spell" && table.columns[1] === "Charge Cost") {
-        for (const row of table.rows) {
-          const candidates = (item.spells ?? []).filter((entry) => officialSpellIds.get(entry.id) && squash(row.cells[0]).startsWith(squash(officialSpellIds.get(entry.id) as string)))
-          const spell = candidates.sort((a, b) => b.id.length - a.id.length)[0]
-          const cost = /^(\d+)/.exec(row.cells[1])?.[1]
-          if (!spell || spell.charges !== Number(cost)) spellFailures.push(`${item.name}: ${row.cells[0]} costs ${row.cells[1]}, listed ${spell?.charges}`)
-          spellTotal++
-        }
-      }
-      if (table.columns[1] === "Spells (Charges)") {
-        const expected = table.rows.flatMap((row) => [...row.cells[1].matchAll(/([A-Z][A-Za-z/ ]+?) \((\d+) charges?\)/g)].map((match) => `${toId(match[1])}:${row.cells[0]}:${match[2]}`))
-        const got = (item.spells ?? []).map((spell) => `${spell.id}:${spell.group}:${spell.charges}`)
-        spellTotal += expected.length
-        if (!sameSet(expected, got)) spellFailures.push(`${item.name}: spells by plane ${got.join(", ")}, the table has ${expected.join(", ")}`)
-      } else if ((item.spells ?? []).some((spell) => spell.group)) spellFailures.push(`${item.name}: spells carry a group but the item has no table of groups`)
-    }
-  }
-  report.check("magic-items", "spells: names, levels, charge costs, save DCs, groups, and every spell cast from the item", spellTotal || 0, spellFailures, spellWaivers)
-
   /* ---------- activation and reuse ---------- */
 
   const actionFailures: string[] = []
@@ -956,9 +763,19 @@ export default function verify(report: Report) {
     ["utilize-action", /\bUtilize action\b/],
     ["reaction", /\bReaction\b/],
   ]
+  // Items whose only Bonus Action dismisses or ends an effect: "when you dismiss it as a Bonus Action". That is not how they are used.
+  const dismissOnly: Record<string, string[]> = {
+    "bowl-of-commanding-water-elementals": ["bonus-action"],
+    "brazier-of-commanding-fire-elementals": ["bonus-action"],
+    "censer-of-controlling-air-elementals": ["bonus-action"],
+    "stone-of-controlling-earth-elementals": ["bonus-action"],
+    "elemental-gem": ["bonus-action"],
+    "potion-of-gaseous-form": ["bonus-action"],
+    "staff-of-the-python": ["bonus-action"],
+  }
   for (const { item, off } of pairs) {
     const text = flat(off)
-    const wanted = kinds.filter(([, pattern]) => pattern.test(text)).map(([kind]) => kind)
+    const wanted = kinds.filter(([kind, pattern]) => pattern.test(text) && !(dismissOnly[item.id] ?? []).includes(kind)).map(([kind]) => kind)
     if (!sameSet(wanted, item.activation ?? [])) actionFailures.push(`${item.name}: activation ${JSON.stringify(item.activation)}, the text names ${wanted.join(", ") || "none"}`)
     const reuse = new Set<string>()
     for (const sentence of sentencesOf(text)) {
@@ -968,10 +785,16 @@ export default function verify(report: Report) {
       else if (/until you finish a Long Rest/.test(sentence)) reuse.add("long-rest")
       else if (/until you finish a Short Rest/.test(sentence)) reuse.add("short-rest")
     }
-    if (!sameSet([...reuse], item.reusableAfter ?? [])) reuseFailures.push(`${item.name}: reusableAfter ${JSON.stringify(item.reusableAfter)}, the text says ${[...reuse].join(", ") || "none"}`)
+    if (
+      !sameSet(
+        [...reuse],
+        (item.uses ?? []).map((use) => use.recharge)
+      )
+    )
+      reuseFailures.push(`${item.name}: uses ${JSON.stringify(item.uses)}, the text says ${[...reuse].join(", ") || "none"}`)
   }
   report.check("magic-items", "activation: the action kinds the text names", pairs.length, actionFailures)
-  report.check("magic-items", 'reusableAfter: dawn and rest moments after "can’t be used again until"', pairs.length, reuseFailures)
+  report.check("magic-items", 'uses: dawn and rest moments after "can’t be used again until"', pairs.length, reuseFailures)
 
   /* ---------- references ---------- */
 
@@ -1006,7 +829,7 @@ export default function verify(report: Report) {
         refFailures.push(`spell-scroll variant ${index} does not match equipment ${id}`)
     }
   }
-  report.check("magic-items", "references: base items, classes and spells resolve, and Potion of Healing and Spell Scroll match equipment", refTotal + spellTotal, refFailures)
+  report.check("magic-items", "references: base items, classes and spells resolve, and Potion of Healing and Spell Scroll match equipment", refTotal, refFailures)
 
   /* ---------- the other two sources ---------- */
 
@@ -1044,6 +867,72 @@ export default function verify(report: Report) {
   } else report.skip("magic-items", upstreamName)
 
   verifyRules(report, equipment, checkTable)
+}
+
+/* ---------- the typed effects, against two readers who never saw the builder ---------- */
+
+type Reading = Record<string, unknown>
+
+// Layout does not count in quoted words, so they are squashed. Prose that explains (`text`, `notes`) is not compared.
+const canon = (value: unknown, key = ""): unknown => {
+  if (Array.isArray(value)) return value.map((entry) => canon(entry, key))
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {}
+    for (const [name, entry] of Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1))) if (name !== "text" && name !== "notes" && entry !== undefined) out[name] = canon(entry, name)
+    return out
+  }
+  return typeof value === "string" && ["appliesWhen", "label", "effect"].includes(key) ? squash(value) : value
+}
+const empty = (value: unknown) => value === undefined || (Array.isArray(value) && !value.length) || (value && typeof value === "object" && !Array.isArray(value) && !Object.keys(value).length)
+
+const effectFields = ["spells", "spellEffects", "charges", "bonuses", "conditionalBonuses", "saves", "damage"] as const
+const variantFields = ["strength", "healing", "spellLevel", "saveDc", "attackBonus", ...effectFields] as const
+
+function compareEffects(report: Report, items: MagicItem[]) {
+  const dir = resolve(root, "scripts/verify/fixtures")
+  const read = (file: string) => JSON.parse(readFileSync(resolve(dir, file), "utf8")) as Record<string, Reading>
+  const first = read("magic-item-effects-1.json")
+  const second = read("magic-item-effects-2.json")
+  const readings = new Map(Object.entries({ ...first, ...second }))
+  const failures: string[] = []
+  for (const id of Object.keys(first)) if (id in second) failures.push(`${id}: both readers have it`)
+  const ids = new Set(items.map((item) => item.id))
+  for (const id of readings.keys()) if (!ids.has(id)) failures.push(`${id}: a reading of no item`)
+  const show = (value: unknown) => (value === undefined ? "none" : JSON.stringify(value).slice(0, 400))
+  let total = 0
+  const differ = (label: string, ours: unknown, theirs: unknown) => {
+    total++
+    const a = empty(ours) ? undefined : canon(ours)
+    const b = empty(theirs) ? undefined : canon(theirs)
+    if (JSON.stringify(a) === JSON.stringify(b)) return
+    const sorted = (value: unknown) => JSON.stringify(Array.isArray(value) ? [...value].map((entry) => JSON.stringify(entry)).sort() : value)
+    failures.push(`${label}: data ${show(a)}, reader ${show(b)}${sorted(a) === sorted(b) ? " (order only)" : ""}`)
+  }
+  for (const item of items) {
+    const reading = readings.get(item.id)
+    if (!reading) {
+      failures.push(`${item.id}: no reader has this item`)
+      continue
+    }
+    const bonuses = (list: { to: string; value: number }[] | undefined) => list?.map(({ to, value }) => ({ to, value }))
+    const ours: Record<string, unknown> = { ...item, bonuses: bonuses(item.bonuses) }
+    for (const field of effectFields) differ(`${item.id}.${field}`, ours[field], reading[field])
+    const theirVariants = (reading.variants ?? {}) as Record<string, Reading>
+    const ourVariants = new Map((item.variants ?? []).map((variant) => [variant.name, variant]))
+    for (const name of new Set([...ourVariants.keys(), ...Object.keys(theirVariants)])) {
+      const variant = ourVariants.get(name) as Record<string, unknown> | undefined
+      const theirs = theirVariants[name] ?? {}
+      if (!variant && Object.keys(theirs).some((field) => field !== "notes")) {
+        failures.push(`${item.id}: the reader has a variant "${name}" that the data lacks`)
+        continue
+      }
+      for (const field of variantFields) {
+        const value = variant?.[field]
+        differ(`${item.id} variant ${name}.${field}`, field === "bonuses" ? bonuses(value as { to: string; value: number }[]) : value, theirs[field])
+      }
+    }
+  }
+  report.check("magic-items", "typed effects equal the two independent readings, field for field, for every item", total || 1, failures)
 }
 
 /* ---------- the rules ---------- */
@@ -1213,6 +1102,7 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
     "sentient-communication": "Sentient Item’s Communication",
     "sentient-senses": "Sentient Item’s Senses",
     "sentient-special-purpose": "Sentient Item’s Special Purpose",
+    "magic-item-categories": "Magic Item Categories",
   }
   const wantedDice: Record<string, string> = { potion: "1d100", "sentient-alignment": "1d100", "sentient-communication": "1d10", "sentient-senses": "1d4", "sentient-special-purpose": "1d10" }
   for (const [id, caption] of Object.entries(wantedTables)) {
@@ -1220,8 +1110,18 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
     const table = rule && "tables" in rule ? rule.tables?.[0] : undefined
     if (!table || table.caption !== caption) tableFailures.push(`${id}: table "${caption}" is missing`)
     else if (table.dice !== wantedDice[id]) tableFailures.push(`${id}: the table is ${table.dice}, the text prints ${wantedDice[id]}`)
+    if (id === "magic-item-categories" && table) {
+      const names = ["Armor", "Potions", "Rings", "Rods", "Scrolls", "Staffs", "Wands", "Weapons", "Wondrous Items"]
+      if (table.columns.join("|") !== "Category|Examples" || table.rows.map((row) => row.cells[0]).join("|") !== names.join("|"))
+        tableFailures.push(`${id}: the table is not the nine categories with their examples`)
+    }
     if (id === "sentient-alignment" && table && table.rows.length !== 9) tableFailures.push(`${id}: ${table.rows.length} alignments, the text prints 9`)
     if (id === "sentient-special-purpose" && table && table.rows.length !== 10) tableFailures.push(`${id}: ${table.rows.length} purposes, the text prints 10`)
+  }
+  // Only these rules hold a table, and each holds exactly one.
+  for (const rule of rules) {
+    const held = "tables" in rule ? (rule.tables?.length ?? 0) : 0
+    if (held !== (rule.id in wantedTables ? 1 : 0)) tableFailures.push(`${rule.id}: holds ${held} tables, the text prints ${rule.id in wantedTables ? 1 : 0}`)
   }
   report.check(
     "magic-item-rules",

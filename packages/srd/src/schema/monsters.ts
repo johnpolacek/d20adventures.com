@@ -3,17 +3,20 @@ import {
   abilityIdSchema,
   conditionIdSchema,
   creatureTypeSchema,
+  damageRollShape,
   damageTypeIdSchema,
   diceSchema,
   entryShape,
   feetSchema,
   forcedSaveShape,
   idSchema,
+  isDiceOrAmount,
   proseSchema,
   rechargeSchema,
   saveDcSchema,
   sizeSchema,
   skillIdSchema,
+  usesCountSchema,
 } from "./common"
 
 const count = z.number().int().positive()
@@ -34,31 +37,61 @@ export type Speed = z.infer<typeof speedSchema>
 /** One ability column of the stat block: the score, its modifier and the saving throw bonus, as printed. */
 export const abilityLineSchema = z.strictObject({ score: z.number().int().min(1).max(30), mod: bonus, save: bonus })
 
-/** The outcome labels the SRD prints: "Hit:", "Failure:", "Second Failure:" and the rest. */
-export const outcomes = ["hit", "miss", "hit-or-miss", "failure", "first-failure", "second-failure", "subsequent-failures", "success", "failure-or-success"] as const
+/** The outcome labels the SRD prints: "Hit:", "Failure:", "Second Failure:", "Failure by 5 or More:" and the rest. */
+export const outcomes = ["hit", "miss", "hit-or-miss", "failure", "first-failure", "second-failure", "subsequent-failures", "failure-by-margin", "success", "failure-or-success"] as const
 
 /**
- * One instance of damage the entry prints, such as "12 (2d6 + 5) Bludgeoning damage". A part with no `condition`
- * is dealt by its outcome, at once and without a further condition. Every other part carries the printed words
- * that limit it.
+ * What an effect depends on. `on` is the outcome label it follows from and `save` the index in `saves` of the save
+ * that outcome belongs to, even when the effect is stated sentences or a paragraph later. `label` is the printed name
+ * of the option that holds it: "First Roar", "Running Water". A staged outcome has no label: `on` holds the stage.
+ * `appliesWhen` is the one unbroken span of official words that gates it, when one does: "If the target is a Large
+ * or smaller creature", "if the swarm is Bloodied", "If the target is a Humanoid". An effect that only lasts while an
+ * earlier effect of the same feature lasts ("Until the grapple ends", "While swallowed") carries the gate of that
+ * earlier effect, if it had one. With no `appliesWhen`, the effect follows from its outcome without a further gate.
  */
-export const damagePartSchema = z.strictObject({
-  /** The fixed number printed before the dice. */
-  average: z.number().int().nonnegative(),
-  /** Absent when the text prints only a number, as in "1 Slashing damage". */
-  dice: diceSchema.optional(),
-  /** Absent only when the text names no type, as in "damage of the type chosen for the Draconic Origin trait". */
-  type: damageTypeIdSchema.optional(),
-  /** The outcome whose paragraph holds the damage ("Hit:", "Failure:"). Absent when no outcome label precedes it in its paragraph. */
+const linkShape = {
   on: z.enum(outcomes).optional(),
+  save: z.number().int().nonnegative().optional(),
+  label: z.string().min(1).optional(),
+  appliesWhen: z.string().min(1).optional(),
   /**
-   * The printed words that limit this part: the "if …" or "unless …" clause right after it ("if the swarm is
-   * Bloodied"), or, for damage outside the first sentence of its outcome or outside any outcome, the whole sentence
-   * that states it ("At the start of each of its turns, the Restrained target takes 21 (6d6) Thunder damage.").
+   * The official words of a condition under which the value does not hold: the gate of the case it is the other of
+   * ("If the target has 20 Hit Points or fewer" before "Otherwise, the target takes …"), or the words after "unless".
    */
-  condition: z.string().min(1).optional(),
-  /** The index in `damage` of the part this one replaces when its condition holds: "5 (2d4) …, or 2 (1d4) … if the swarm is Bloodied". */
-  alternativeTo: z.number().int().nonnegative().optional(),
+  unless: z.string().min(1).optional(),
+  /** The monster takes it or has it itself: "The vampire takes 20 Acid damage if it ends its turn in running water." */
+  self: z.literal(true).optional(),
+} as const
+
+/**
+ * One instance of damage the entry prints. "12 (2d6 + 5) Bludgeoning damage" is { dice: "2d6 + 5", average: 12 }.
+ * "1 Slashing damage" is { amount: 1 }.
+ */
+export const damagePartSchema = z
+  .strictObject({
+    ...damageRollShape,
+    /** The number printed before the dice. Only with `dice`. */
+    average: z.number().int().nonnegative().optional(),
+    /** Absent only when the text names no type, as in "damage of the type chosen for the Draconic Origin trait". */
+    type: damageTypeIdSchema.optional(),
+    ...linkShape,
+    /** When a roll that is not dealt at once is dealt, as printed: "at the start of each of the behir’s turns", "At the end of the frog’s next turn". */
+    timing: z.string().min(1).optional(),
+    /** The index in `damage` of the part this one replaces when its `appliesWhen` holds: "5 (2d4) …, or 2 (1d4) … if the swarm is Bloodied". */
+    alternativeTo: z.number().int().nonnegative().optional(),
+  })
+  .refine(isDiceOrAmount, "give dice or an amount")
+  .refine((part) => (part.dice === undefined) === (part.average === undefined), "an average goes with dice")
+
+/** A condition the feature gives, linked like a damage part. */
+export const conditionLinkSchema = z.strictObject({
+  condition: conditionIdSchema,
+  ...linkShape,
+  /**
+   * Given "instead of dealing damage": when the monster gives this condition, the hit's immediate rolls (those with no
+   * `timing`) do not apply. Rolls with `timing` that last with the condition still do.
+   */
+  insteadOfDamage: z.literal(true).optional(),
 })
 export type DamagePart = z.infer<typeof damagePartSchema>
 
@@ -76,9 +109,15 @@ export const saveSchema = z.strictObject({
   ...forcedSaveShape,
   /** Every monster save prints its DC. */
   dc: saveDcSchema,
+  /** The printed name of the option the save belongs to: "First Roar". */
+  label: z.string().min(1).optional(),
+  /** The official words that limit who makes the save: "If the target is a Humanoid", "While underwater". */
+  appliesWhen: z.string().min(1).optional(),
   /** Who makes the save, as printed after the DC: "each creature in a 30-foot Cone". */
   targets: proseSchema.optional(),
   failure: proseSchema.optional(),
+  /** "Failure by 5 or More:": the margin and its text. A failure by less than the margin has only `failure`. */
+  failureBy: z.strictObject({ margin: count, text: proseSchema }).optional(),
   /**
    * A staged save prints "First Failure:" (or "Failure:") and "Second Failure:" or "Subsequent Failures:". Each stage
    * is its own field, and `failure` is then absent, so the first failed save never reads as the last stage.
@@ -118,12 +157,23 @@ export const spellListSchema = z.strictObject({
     .min(1),
 })
 
-export const spellcastingSchema = z.strictObject({
-  ability: abilityIdSchema,
-  saveDc: z.number().int().positive().optional(),
-  attackBonus: bonus.optional(),
-  lists: z.array(spellListSchema).min(1),
-})
+/**
+ * Spells the feature casts. A Spellcasting action has `lists`. A feature that casts named spells itself ("casts
+ * Command, … using Charisma as the spellcasting ability (spell save DC 17)") has `spells`, one of which it casts per
+ * use. `sameAsSpellcasting` says the ability and DC are those of the monster’s Spellcasting action: "using the same
+ * spellcasting ability as Spellcasting", "uses Spellcasting to cast Fear".
+ */
+export const spellcastingSchema = z
+  .strictObject({
+    ability: abilityIdSchema.optional(),
+    sameAsSpellcasting: z.literal(true).optional(),
+    saveDc: z.number().int().positive().optional(),
+    attackBonus: bonus.optional(),
+    lists: z.array(spellListSchema).min(1).optional(),
+    spells: spellListSchema.shape.spells.optional(),
+  })
+  .refine((casting) => (casting.ability === undefined) !== (casting.sameAsSpellcasting === undefined), "give the ability or sameAsSpellcasting")
+  .refine((casting) => (casting.lists === undefined) !== (casting.spells === undefined), "give lists or spells")
 export type Spellcasting = z.infer<typeof spellcastingSchema>
 
 /** A trait, action, bonus action, reaction or legendary action: the official text, with the numbers an engine needs. */
@@ -134,8 +184,9 @@ export const monsterFeatureSchema = z.strictObject({
   /**
    * Limited uses. "2/Day" is { count: 2, recharge: "long-rest" }, as the chapter's X/Day rule says. "3/Day, or
    * 4/Day in Lair" adds countInLair. "Recharge after a Short or Long Rest" is { count: 1, recharge: "short-or-long-rest" }.
+   * "can’t take this action again until the start of its next turn" is { count: 1, recharge: "start-of-next-turn" }.
    */
-  uses: z.strictObject({ count, countInLair: count.optional(), recharge: rechargeSchema }).optional(),
+  uses: z.strictObject({ count: usesCountSchema, countInLair: count.optional(), recharge: rechargeSchema }).optional(),
   /** "Recharge 5–6" is { min: 5, max: 6 }: the d6 roll at the start of each turn that restores the one use. */
   rechargeRoll: z.strictObject({ min: z.number().int().min(1).max(6), max: z.number().int().min(1).max(6) }).optional(),
   /** Any other part of the name's parenthetical, such as "Vampire Form Only" or "Requires Soul Bag". */
@@ -145,11 +196,11 @@ export const monsterFeatureSchema = z.strictObject({
   /** Every damage instance the text prints, in order. */
   damage: z.array(damagePartSchema).min(1).optional(),
   /**
-   * Conditions the text gives a creature: "it has the Prone condition", "gives it the Grappled condition", "exiting
-   * with the Prone condition", "exiting Prone", "gains 1 Exhaustion level". A condition named in a clause that is a
-   * precondition or a negation ("if the target has …", "that has …", "doesn’t have …", "no longer has …") is left out.
+   * Conditions the text gives a creature, in text order, once for each distinct link: "it has the Prone condition",
+   * "gives it the Grappled condition", "exiting with the Prone condition", "exiting Prone", "gains 1 Exhaustion level",
+   * "has 1 Exhaustion level for each missing limb". A condition the text only requires, negates or ends is left out.
    */
-  conditions: z.array(conditionIdSchema).min(1).optional(),
+  conditions: z.array(conditionLinkSchema).min(1).optional(),
   escapeDc: z.number().int().positive().optional(),
   area: areaSchema.optional(),
   spellcasting: spellcastingSchema.optional(),
@@ -195,14 +246,14 @@ export const monsterSchema = z.strictObject({
   /**
    * Defenses the stat block qualifies, kept out of the plain lists above: "Piercing damage from weapons wielded by
    * creatures under the effect of a Bless spell", "Charmed (with Mind Blank)". `value` is absent when the text names
-   * no type ("Damage type chosen for the Draconic Origin trait below"). `condition` is the qualifying words as printed.
+   * no type ("Damage type chosen for the Draconic Origin trait below"). `appliesWhen` is the qualifying words as printed.
    */
   conditionalDefenses: z
     .array(
       z.strictObject({
         kind: z.enum(["vulnerability", "resistance", "immunity", "condition-immunity"]),
         value: z.union([damageTypeIdSchema, conditionIdSchema]).optional(),
-        condition: z.string().min(1),
+        appliesWhen: z.string().min(1),
       })
     )
     .min(1)
@@ -236,8 +287,8 @@ export const monsterSchema = z.strictObject({
   reactions: z.array(monsterFeatureSchema).min(1).optional(),
   legendaryActions: z
     .strictObject({
-      uses: count,
-      usesInLair: count.optional(),
+      /** "Legendary Action Uses: 3 (4 in Lair)": all are regained at the start of each of its turns. */
+      uses: z.strictObject({ count, countInLair: count.optional(), recharge: z.literal("start-of-next-turn") }),
       /** The paragraph that opens the section: "Legendary Action Uses: 3 (4 in Lair). Immediately after …". */
       text: proseSchema,
       actions: z.array(monsterFeatureSchema).min(1),
@@ -258,5 +309,30 @@ export const monsterRuleSchema = z.union([
   z.strictObject({ ...entryShape, id: z.literal("experience-points-by-challenge-rating"), xpByCr: z.array(xpRow).min(1) }),
   z.strictObject({ ...entryShape, id: z.literal("proficiency-bonus-by-challenge-rating"), pbByCr: z.array(pbRow).min(1) }),
   z.strictObject({ ...entryShape, id: z.literal("hit-dice-by-size"), hitDiceBySize: z.array(hitDieRow).min(1) }),
+  /** "Limited Usage", page 257: what restores each kind of limited use a stat block prints. */
+  z.strictObject({
+    ...entryShape,
+    id: z.literal("limited-usage"),
+    /** "X/Day": the uses return when the monster finishes a Long Rest. */
+    perDay: z.strictObject({ recharge: z.literal("long-rest") }),
+    /** "Recharge X–Y": one use. A d6 is rolled at the start of each of the monster’s turns and a roll in the range restores it. A Short or Long Rest also restores it. */
+    rechargeRoll: z.strictObject({ count: z.literal(1), die: z.literal(6), rolledAt: z.literal("start-of-each-turn"), alsoRestoredBy: z.literal("short-or-long-rest") }),
+    /** "Recharge after a Short or Long Rest": one use, restored by a Short or Long Rest. */
+    afterRest: z.strictObject({ count: z.literal(1), recharge: z.literal("short-or-long-rest") }),
+  }),
+  /** "Legendary Actions", page 257: how legendary action uses are spent and regained. */
+  z.strictObject({
+    ...entryShape,
+    id: z.literal("legendary-actions"),
+    /** Taken only immediately after another creature’s turn ends, one at a time. */
+    timing: z.literal("after-another-creatures-turn"),
+    oneAtATime: z.literal(true),
+    /** Each legendary action expends one use. */
+    usesPerAction: z.literal(1),
+    /** All expended uses return at the start of each of the monster’s turns. */
+    recharge: z.literal("start-of-next-turn"),
+    /** Not while the monster has the Incapacitated condition or is otherwise unable to take actions. */
+    blockedBy: z.array(conditionIdSchema).min(1),
+  }),
 ])
 export type MonsterRule = z.infer<typeof monsterRuleSchema>

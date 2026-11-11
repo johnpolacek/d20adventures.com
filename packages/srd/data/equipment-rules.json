@@ -1,5 +1,27 @@
 [
   {
+    "id": "armor-stealth",
+    "name": "Armor Stealth",
+    "page": 92,
+    "description": "Stealth. If the table shows “Disadvantage” in the Stealth column for an armor type, the wearer has Disadvantage on Dexterity (Stealth) checks.",
+    "kind": "armor-stealth",
+    "disadvantageOn": {
+      "ability": "dex",
+      "skill": "stealth"
+    }
+  },
+  {
+    "id": "armor-strength",
+    "name": "Armor Strength",
+    "page": 92,
+    "description": "Strength. If the table shows a Strength score in the Strength column for an armor type, that armor reduces the wearer’s speed by 10 feet unless the wearer has a Strength score equal to or higher than the listed score.",
+    "kind": "armor-strength",
+    "speedReduction": {
+      "feet": 10,
+      "unlessStrengthAtLeast": "listed-score"
+    }
+  },
+  {
     "id": "armor-training-light-medium-or-heavy-armor",
     "name": "Armor Training (Light, Medium, or Heavy Armor)",
     "page": 92,
@@ -81,6 +103,15 @@
     "maxAssistants": 1
   },
   {
+    "id": "crafting-nonmagical-items-tools",
+    "name": "Crafting Nonmagical Items (Tools)",
+    "page": 103,
+    "description": "The “Tools” section of “Equipment” lists which tools are required to make certain items. The GM assigns required tools for items not listed there.\nYou must use the required tool to make an item and have proficiency with that tool. Anyone who helps you must also have proficiency with it.",
+    "kind": "crafting-tools",
+    "requiresProficiency": true,
+    "helpersNeedProficiency": true
+  },
+  {
     "id": "harvesting-poison",
     "name": "Harvesting Poison",
     "page": 197,
@@ -127,6 +158,38 @@
       "amount": 2,
       "unit": "gp"
     }
+  },
+  {
+    "id": "scribing-spell-scrolls-cantrips",
+    "name": "Scribing Spell Scrolls (Cantrips)",
+    "page": 103,
+    "description": "If the scribed spell is a cantrip, the version on the scroll works as if the caster were your level.",
+    "kind": "scribing-cantrips",
+    "worksAsIfCasterLevel": "scribe"
+  },
+  {
+    "id": "scribing-spell-scrolls-prerequisites",
+    "name": "Scribing Spell Scrolls (Prerequisites for the Scribe)",
+    "page": 103,
+    "description": "To scribe a scroll, you must have proficiency in the Arcana skill or with Calligrapher’s Supplies and have the spell prepared on each day of the inscription. You must also have at hand any Material components required by the spell; if the spell consumes its Material components, they are consumed only when you complete the scroll. The scroll’s spell uses your spell save DC and spell attack bonus.",
+    "kind": "scribing-prerequisites",
+    "proficiencyAnyOf": {
+      "skill": "arcana",
+      "tool": "calligraphers-supplies"
+    },
+    "spellPreparedEachDay": true,
+    "materialComponentsAtHand": true,
+    "consumedComponentsUsedOnCompletion": true,
+    "usesScribeSaveDcAndAttackBonus": true
+  },
+  {
+    "id": "scribing-spell-scrolls-time-and-cost",
+    "name": "Scribing Spell Scrolls (Time and Cost)",
+    "page": 103,
+    "description": "Scribing a scroll takes an amount of time and money based on the level of the spell, as shown in the Spell Scroll Costs table. For each day of inscription, you must work for 8 hours. If a scroll requires multiple days, those days needn’t be consecutive.",
+    "kind": "scribing-time-and-cost",
+    "workHoursPerDay": 8,
+    "daysNeedNotBeConsecutive": true
   },
   {
     "id": "selling-equipment",

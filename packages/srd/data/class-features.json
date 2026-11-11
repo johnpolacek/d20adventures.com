@@ -418,7 +418,9 @@
       9
     ],
     "description": "You gain Expertise (see “Rules Glossary”) in two of your skill proficiencies of your choice. Performance and Persuasion are recommended if you have proficiency in them.\nAt Bard level 9, you gain Expertise in two more of your skill proficiencies of your choice.",
-    "expertise": 2
+    "expertise": {
+      "count": 2
+    }
   },
   {
     "id": "bard-font-of-inspiration",
@@ -531,7 +533,10 @@
       3
     ],
     "description": "Your attack rolls with weapons and Unarmed Strikes can score a Critical Hit on a roll of 19 or 20 on the d20.",
-    "criticalRange": 19
+    "criticalHit": {
+      "minRoll": 19,
+      "attacks": "weapons-and-unarmed-strikes"
+    }
   },
   {
     "id": "champion-remarkable-athlete",
@@ -556,7 +561,10 @@
       15
     ],
     "description": "Your attack rolls with weapons and Unarmed Strikes can now score a Critical Hit on a roll of 18–20 on the d20.",
-    "criticalRange": 18
+    "criticalHit": {
+      "minRoll": 18,
+      "attacks": "weapons-and-unarmed-strikes"
+    }
   },
   {
     "id": "champion-survivor",
@@ -621,7 +629,8 @@
     "range": 60,
     "area": {
       "shape": "sphere",
-      "size": 10
+      "size": 10,
+      "selective": true
     }
   },
   {
@@ -648,8 +657,7 @@
     ],
     "description": "As a Magic action, you can expend a use of your Wild Shape and cause spectral trees and vines to appear in a 15-foot Cube on the ground within 120 feet of yourself. They last there for 1 minute or until you have the Incapacitated condition or die. You and your allies have Half Cover while in that area, and your allies gain the current Resistance of your Nature’s Ward while there.\nAs a Bonus Action, you can move the Cube up to 60 feet to ground within 120 feet of yourself.",
     "activation": [
-      "magic-action",
-      "bonus-action"
+      "magic-action"
     ],
     "spend": {
       "resource": "wild-shape",
@@ -658,7 +666,8 @@
     "range": 120,
     "area": {
       "shape": "cube",
-      "size": 15
+      "size": 15,
+      "allies": true
     }
   },
   {
@@ -763,6 +772,10 @@
         "activation": [
           "magic-action"
         ],
+        "spend": {
+          "resource": "channel-divinity",
+          "amount": 1
+        },
         "dice": "1d8",
         "diceByLevel": [
           {
@@ -781,13 +794,6 @@
         "rollAdds": [
           "wis"
         ],
-        "damageTypes": [
-          "necrotic",
-          "radiant"
-        ],
-        "save": {
-          "ability": "con"
-        },
         "range": 30
       },
       {
@@ -798,8 +804,16 @@
         "activation": [
           "magic-action"
         ],
+        "spend": {
+          "resource": "channel-divinity",
+          "amount": 1
+        },
         "save": {
-          "ability": "wis"
+          "ability": "wis",
+          "onlyCreatureTypes": [
+            "undead"
+          ],
+          "selective": true
         },
         "range": 30
       }
@@ -933,6 +947,9 @@
     "description": "Whenever you use Turn Undead, you can roll a number of d8s equal to your Wisdom modifier (minimum of 1d8) and add the rolls together. Each Undead that fails its saving throw against that use of Turn Undead takes Radiant damage equal to the roll’s total. This damage doesn’t end the turn effect.",
     "damageTypes": [
       "radiant"
+    ],
+    "damageOnlyTo": [
+      "undead"
     ]
   },
   {
@@ -1021,6 +1038,10 @@
       3
     ],
     "description": "The magic in your body manifests physical traits of your draconic gift. Your Hit Point maximum increases by 3, and it increases by 1 whenever you gain another Sorcerer level.\nParts of you are also covered by dragon-like scales. While you aren’t wearing armor, your base Armor Class equals 10 plus your Dexterity and Charisma modifiers.",
+    "hitPointMaximum": {
+      "increase": 3,
+      "perLaterClassLevel": 1
+    },
     "armorClass": {
       "base": 10,
       "abilities": [
@@ -1057,7 +1078,9 @@
       "recharge": "long-rest"
     },
     "freeCast": [
-      "summon-dragon"
+      {
+        "spell": "summon-dragon"
+      }
     ]
   },
   {
@@ -1072,12 +1095,15 @@
     ],
     "description": "As a Bonus Action, you can cause draconic wings to appear on your back. The wings last for 1 hour or until you dismiss them (no action required). For the duration, you have a Fly Speed of 60 feet.\nOnce you use this feature, you can’t use it again until you finish a Long Rest unless you spend 3 Sorcery Points (no action required) to restore your use of it.",
     "activation": [
-      "bonus-action",
-      "no-action"
+      "bonus-action"
     ],
     "uses": {
       "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "restoredBy": {
+        "resource": "sorcery-points",
+        "amount": 3
+      }
     }
   },
   {
@@ -1382,10 +1408,10 @@
     ],
     "description": "You can increase the power of your spells. When you cast a Wizard spell with a spell slot of levels 1–5 that deals damage, you can deal maximum damage with that spell on the turn you cast it.\nThe first time you do so, you suffer no adverse effect. If you use this feature again before you finish a Long Rest, you take 2d12 Necrotic damage for each level of the spell slot immediately after you cast it. This damage ignores Resistance and Immunity.\nEach time you use this feature again before finishing a Long Rest, the Necrotic damage per spell level increases by 1d12.",
     "selfDamage": {
+      "from": "second-use",
       "dicePerSlotLevel": "2d12",
       "damageType": "necrotic",
-      "increasePerUse": "1d12",
-      "from": "second-use"
+      "increaseAfterSecondUse": "1d12"
     }
   },
   {
@@ -1422,8 +1448,7 @@
     "levels": [
       3
     ],
-    "description": "When you reduce an enemy to 0 Hit Points, you gain Temporary Hit Points equal to your Charisma modifier plus your Warlock level (minimum of 1 Temporary Hit Point). You also gain this benefit if someone else reduces an enemy within 10 feet of you to 0 Hit Points.",
-    "range": 10
+    "description": "When you reduce an enemy to 0 Hit Points, you gain Temporary Hit Points equal to your Charisma modifier plus your Warlock level (minimum of 1 Temporary Hit Point). You also gain this benefit if someone else reduces an enemy within 10 feet of you to 0 Hit Points."
   },
   {
     "id": "fiend-patron-dark-ones-own-luck",
@@ -1480,12 +1505,13 @@
       14
     ],
     "description": "Once per turn when you hit a creature with an attack roll, you can try to instantly transport the target through the Lower Planes. The target must succeed on a Charisma saving throw against your spell save DC, or the target disappears and hurtles through a nightmare landscape. The target takes 8d10 Psychic damage if it isn’t a Fiend, and it has the Incapacitated condition until the end of your next turn, when it returns to the space it previously occupied or the nearest unoccupied space.\nOnce you use this feature, you can’t use it again until you finish a Long Rest unless you expend a Pact Magic spell slot (no action required) to restore your use of it.",
-    "activation": [
-      "no-action"
-    ],
     "uses": {
       "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "restoredBy": {
+        "resource": "pact-magic-slot",
+        "amount": 1
+      }
     },
     "dice": "8d10",
     "damageTypes": [
@@ -1796,8 +1822,7 @@
         "id": "colossus-slayer",
         "name": "Colossus Slayer",
         "page": 61,
-        "description": "Your tenacity can wear down even the most resilient foes. When you hit a creature with a weapon, the weapon deals an extra 1d8 damage to the target if it’s missing any of its Hit Points. You can deal this extra damage only once per turn.",
-        "dice": "1d8"
+        "description": "Your tenacity can wear down even the most resilient foes. When you hit a creature with a weapon, the weapon deals an extra 1d8 damage to the target if it’s missing any of its Hit Points. You can deal this extra damage only once per turn."
       },
       {
         "id": "horde-breaker",
@@ -1969,7 +1994,8 @@
       "class-level"
     ],
     "save": {
-      "ability": "dex"
+      "ability": "dex",
+      "appliesWhen": "If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force"
     }
   },
   {
@@ -2064,8 +2090,7 @@
     "levels": [
       10
     ],
-    "description": "Your Flurry of Blows, Patient Defense, and Step of the Wind gain the following benefits.\nFlurry of Blows. You can expend 1 Focus Point to use Flurry of Blows and make three Unarmed Strikes with it instead of two.\nPatient Defense. When you expend a Focus Point to use Patient Defense, you gain a number of Temporary Hit Points equal to two rolls of your Martial Arts die.\nStep of the Wind. When you expend a Focus Point to use Step of the Wind, you can choose a willing creature within 5 feet of yourself that is Large or smaller. You move the creature with you until the end of your turn. The creature’s movement doesn’t provoke Opportunity Attacks.",
-    "range": 5
+    "description": "Your Flurry of Blows, Patient Defense, and Step of the Wind gain the following benefits.\nFlurry of Blows. You can expend 1 Focus Point to use Flurry of Blows and make three Unarmed Strikes with it instead of two.\nPatient Defense. When you expend a Focus Point to use Patient Defense, you gain a number of Temporary Hit Points equal to two rolls of your Martial Arts die.\nStep of the Wind. When you expend a Focus Point to use Step of the Wind, you can choose a willing creature within 5 feet of yourself that is Large or smaller. You move the creature with you until the end of your turn. The creature’s movement doesn’t provoke Opportunity Attacks."
   },
   {
     "id": "monk-martial-arts",
@@ -2076,11 +2101,7 @@
     "levels": [
       1
     ],
-    "description": "Your practice of martial arts gives you mastery of combat styles that use your Unarmed Strike and Monk weapons, which are the following:\n• Simple Melee weapons\n• Martial Melee weapons that have the Light property\nYou gain the following benefits while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield.\nBonus Unarmed Strike. You can make an Unarmed Strike as a Bonus Action.\nMartial Arts Die. You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table.\nDexterous Attacks. You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC.",
-    "activation": [
-      "bonus-action"
-    ],
-    "diceFromColumn": "martialArts"
+    "description": "Your practice of martial arts gives you mastery of combat styles that use your Unarmed Strike and Monk weapons, which are the following:\n• Simple Melee weapons\n• Martial Melee weapons that have the Light property\nYou gain the following benefits while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield.\nBonus Unarmed Strike. You can make an Unarmed Strike as a Bonus Action.\nMartial Arts Die. You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table.\nDexterous Attacks. You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
   },
   {
     "id": "monk-monk-subclass",
@@ -2291,12 +2312,16 @@
     ],
     "description": "As a Bonus Action, you can imbue your Aura of Protection with holy power, granting the benefits below for 10 minutes or until you end them (no action required). Once you use this feature, you can’t use it again until you finish a Long Rest. You can also restore your use of it by expending a level 5 spell slot (no action required).\nHoly Ward. You have Advantage on any saving throw you are forced to make by a Fiend or an Undead.\nRadiant Damage. Whenever an enemy starts its turn in the aura, that creature takes Radiant damage equal to your Charisma modifier plus your Proficiency Bonus.\nSunlight. The aura is filled with Bright Light that is sunlight.",
     "activation": [
-      "bonus-action",
-      "no-action"
+      "bonus-action"
     ],
     "uses": {
       "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "restoredBy": {
+        "resource": "spell-slot",
+        "amount": 1,
+        "slotLevel": 5
+      }
     },
     "damageTypes": [
       "radiant"
@@ -2325,9 +2350,6 @@
       3
     ],
     "description": "When you take the Attack action, you can expend one use of your Channel Divinity to imbue one Melee weapon that you are holding with positive energy. For 10 minutes or until you use this feature again, you add your Charisma modifier to attack rolls you make with that weapon (minimum bonus of +1), and each time you hit with it, you cause it to deal its normal damage type or Radiant damage.\nThe weapon also emits Bright Light in a 20-foot radius and Dim Light 20 feet beyond that.\nYou can end this effect early (no action required). This effect also ends if you aren’t carrying the weapon.",
-    "activation": [
-      "no-action"
-    ],
     "spend": {
       "resource": "channel-divinity",
       "amount": 1
@@ -2384,7 +2406,8 @@
       "amount": 1
     },
     "save": {
-      "ability": "wis"
+      "ability": "wis",
+      "selective": true
     },
     "range": 60
   },
@@ -2400,7 +2423,8 @@
     "description": "Your Aura of Protection is now a 30-foot Emanation.",
     "area": {
       "shape": "emanation",
-      "size": 30
+      "size": 30,
+      "allies": true
     }
   },
   {
@@ -2433,7 +2457,8 @@
     "description": "You radiate a protective, unseeable aura in a 10-foot Emanation that originates from you. The aura is inactive while you have the Incapacitated condition.\nYou and your allies in the aura gain a bonus to saving throws equal to your Charisma modifier (minimum bonus of +1).\nIf another Paladin is present, a creature can benefit from only one Aura of Protection at a time; the creature chooses which aura while in them.",
     "area": {
       "shape": "emanation",
-      "size": 10
+      "size": 10,
+      "allies": true
     }
   },
   {
@@ -2455,6 +2480,10 @@
         "activation": [
           "bonus-action"
         ],
+        "spend": {
+          "resource": "channel-divinity",
+          "amount": 1
+        },
         "range": 60
       }
     ],
@@ -2513,7 +2542,9 @@
       "find-steed"
     ],
     "freeCast": [
-      "find-steed"
+      {
+        "spell": "find-steed"
+      }
     ]
   },
   {
@@ -2585,7 +2616,9 @@
       "divine-smite"
     ],
     "freeCast": [
-      "divine-smite"
+      {
+        "spell": "divine-smite"
+      }
     ]
   },
   {
@@ -2661,12 +2694,15 @@
     ],
     "description": "As a Bonus Action, you can strike terror into others with your menacing presence and primal power. When you do so, each creature of your choice in a 30-foot Emanation originating from you must make a Wisdom saving throw (DC 8 plus your Strength modifier and Proficiency Bonus). On a failed save, a creature has the Frightened condition for 1 minute. At the end of each of the Frightened creature’s turns, the creature repeats the save, ending the effect on itself on a success.\nOnce you use this feature, you can’t use it again until you finish a Long Rest unless you expend a use of your Rage (no action required) to restore your use of it.",
     "activation": [
-      "bonus-action",
-      "no-action"
+      "bonus-action"
     ],
     "uses": {
       "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "restoredBy": {
+        "resource": "rage",
+        "amount": 1
+      }
     },
     "save": {
       "ability": "wis",
@@ -2676,7 +2712,8 @@
     },
     "area": {
       "shape": "emanation",
-      "size": 30
+      "size": 30,
+      "selective": true
     }
   },
   {
@@ -2742,7 +2779,9 @@
       2
     ],
     "description": "Thanks to your travels, you gain the following benefits.\nExpertise. Choose one of your skill proficiencies with which you lack Expertise. You gain Expertise in that skill.\nLanguages. You know two languages of your choice from the language tables in “Character Creation.”",
-    "expertise": 1
+    "expertise": {
+      "count": 1
+    }
   },
   {
     "id": "ranger-epic-boon",
@@ -2770,7 +2809,9 @@
       9
     ],
     "description": "Choose two of your skill proficiencies with which you lack Expertise. You gain Expertise in those skills.",
-    "expertise": 2
+    "expertise": {
+      "count": 2
+    }
   },
   {
     "id": "ranger-extra-attack",
@@ -2804,7 +2845,9 @@
       "hunters-mark"
     ],
     "freeCast": [
-      "hunters-mark"
+      {
+        "spell": "hunters-mark"
+      }
     ]
   },
   {
@@ -3039,7 +3082,8 @@
           "amount": 1
         },
         "save": {
-          "ability": "dex"
+          "ability": "dex",
+          "appliesWhen": "If the target is Large or smaller"
         }
       },
       {
@@ -3158,7 +3202,9 @@
       6
     ],
     "description": "You gain Expertise in two of your skill proficiencies of your choice. Sleight of Hand and Stealth are recommended if you have proficiency in them.\nAt Rogue level 6, you gain Expertise in two more of your skill proficiencies of your choice.",
-    "expertise": 2
+    "expertise": {
+      "count": 2
+    }
   },
   {
     "id": "rogue-improved-cunning-strike",
@@ -3361,6 +3407,12 @@
         ]
       }
     ],
+    "uses": {
+      "count": {
+        "column": "sorceryPoints"
+      },
+      "recharge": "long-rest"
+    },
     "slotCreation": [
       {
         "slotLevel": 1,
@@ -3657,8 +3709,7 @@
     "levels": [
       13
     ],
-    "description": "You’ve learned how to maximize use of magic items, granting you the following benefits.\nAttunement. You can attune to up to four magic items at once.\nCharges. Whenever you use a magic item property that expends charges, roll 1d6. On a roll of 6, you use the property without expending the charges.\nScrolls. You can use any Spell Scroll, using Intelligence as your spellcasting ability for the spell. If the spell is a cantrip or a level 1 spell, you can cast it reliably. If the scroll contains a higher-level spell, you must first succeed on an Intelligence (Arcana) check (DC 10 plus the spell’s level). On a successful check, you cast the spell from the scroll. On a failed check, the scroll disintegrates.",
-    "dice": "1d6"
+    "description": "You’ve learned how to maximize use of magic items, granting you the following benefits.\nAttunement. You can attune to up to four magic items at once.\nCharges. Whenever you use a magic item property that expends charges, roll 1d6. On a roll of 6, you use the property without expending the charges.\nScrolls. You can use any Spell Scroll, using Intelligence as your spellcasting ability for the spell. If the spell is a cantrip or a level 1 spell, you can cast it reliably. If the scroll contains a higher-level spell, you must first succeed on an Intelligence (Arcana) check (DC 10 plus the spell’s level). On a successful check, you cast the spell from the scroll. On a failed check, the scroll disintegrates."
   },
   {
     "id": "warlock-ability-score-improvement",
@@ -3696,7 +3747,10 @@
       "contact-other-plane"
     ],
     "freeCast": [
-      "contact-other-plane"
+      {
+        "spell": "contact-other-plane",
+        "appliesWhen": "to contact your patron"
+      }
     ]
   },
   {
@@ -3727,7 +3781,10 @@
         "page": 72,
         "description": "You can cast Mage Armor on yourself without expending a spell slot.",
         "freeCast": [
-          "mage-armor"
+          {
+            "spell": "mage-armor",
+            "selfOnly": true
+          }
         ]
       },
       {
@@ -3740,7 +3797,10 @@
           "level": 5
         },
         "freeCast": [
-          "levitate"
+          {
+            "spell": "levitate",
+            "selfOnly": true
+          }
         ]
       },
       {
@@ -3764,7 +3824,7 @@
           "level": 12,
           "invocation": "thirsting-blade"
         },
-        "attacks": 3
+        "pactWeaponAttacks": 3
       },
       {
         "id": "eldritch-mind",
@@ -3809,7 +3869,10 @@
           "level": 2
         },
         "freeCast": [
-          "false-life"
+          {
+            "spell": "false-life",
+            "selfOnly": true
+          }
         ]
       },
       {
@@ -3839,7 +3902,9 @@
           "recharge": "long-rest"
         },
         "freeCast": [
-          "water-breathing"
+          {
+            "spell": "water-breathing"
+          }
         ]
       },
       {
@@ -3851,10 +3916,7 @@
           "text": "Level 9+ Warlock, Pact of the Tome Invocation",
           "level": 9,
           "invocation": "pact-of-the-tome"
-        },
-        "activation": [
-          "magic-action"
-        ]
+        }
       },
       {
         "id": "investment-of-the-chain-master",
@@ -3869,10 +3931,6 @@
         "activation": [
           "bonus-action",
           "reaction"
-        ],
-        "damageTypes": [
-          "necrotic",
-          "radiant"
         ]
       },
       {
@@ -3916,7 +3974,9 @@
           "level": 2
         },
         "freeCast": [
-          "disguise-self"
+          {
+            "spell": "disguise-self"
+          }
         ]
       },
       {
@@ -3929,7 +3989,9 @@
           "level": 5
         },
         "freeCast": [
-          "alter-self"
+          {
+            "spell": "alter-self"
+          }
         ]
       },
       {
@@ -3942,7 +4004,9 @@
           "level": 2
         },
         "freeCast": [
-          "silent-image"
+          {
+            "spell": "silent-image"
+          }
         ]
       },
       {
@@ -3955,7 +4019,11 @@
           "level": 5
         },
         "freeCast": [
-          "invisibility"
+          {
+            "spell": "invisibility",
+            "selfOnly": true,
+            "appliesWhen": "While you’re in an area of Dim Light or Darkness"
+          }
         ]
       },
       {
@@ -3968,7 +4036,10 @@
           "level": 2
         },
         "freeCast": [
-          "jump"
+          {
+            "spell": "jump",
+            "selfOnly": true
+          }
         ]
       },
       {
@@ -3994,7 +4065,9 @@
           "magic-action"
         ],
         "freeCast": [
-          "find-familiar"
+          {
+            "spell": "find-familiar"
+          }
         ]
       },
       {
@@ -4024,7 +4097,7 @@
           "level": 5,
           "invocation": "pact-of-the-blade"
         },
-        "attacks": 2
+        "pactWeaponAttacks": 2
       },
       {
         "id": "visions-of-distant-realms",
@@ -4036,7 +4109,9 @@
           "level": 9
         },
         "freeCast": [
-          "arcane-eye"
+          {
+            "spell": "arcane-eye"
+          }
         ]
       },
       {
@@ -4049,7 +4124,9 @@
           "level": 7
         },
         "freeCast": [
-          "speak-with-dead"
+          {
+            "spell": "speak-with-dead"
+          }
         ]
       },
       {
@@ -4230,9 +4307,6 @@
       17
     ],
     "description": "You gain the ability to set up lethal vibrations in someone’s body. When you hit a creature with an Unarmed Strike, you can expend 4 Focus Points to start these imperceptible vibrations, which last for a number of days equal to your Monk level. The vibrations are harmless unless you take an action to end them. Alternatively, when you take the Attack action on your turn, you can forgo one of the attacks to end the vibrations. To end them, you and the target must be on the same plane of existence. When you end them, the target must make a Constitution saving throw, taking 10d12 Force damage on a failed save or half as much damage on a successful one.\nYou can have only one creature under the effect of this feature at a time. You can end the vibrations harmlessly (no action required).",
-    "activation": [
-      "no-action"
-    ],
     "spend": {
       "resource": "focus-points",
       "amount": 4
@@ -4348,7 +4422,17 @@
       2
     ],
     "description": "While studying magic, you also specialized in another field of study. Choose one of the following skills in which you have proficiency: Arcana, History, Investigation, Medicine, Nature, or Religion. You have Expertise in the chosen skill.",
-    "expertise": 1
+    "expertise": {
+      "count": 1,
+      "from": [
+        "arcana",
+        "history",
+        "investigation",
+        "medicine",
+        "nature",
+        "religion"
+      ]
+    }
   },
   {
     "id": "wizard-signature-spells",

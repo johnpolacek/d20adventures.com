@@ -11,7 +11,6 @@ import { hasUpstream, readOpen5e } from "../lib/sources"
 const chapter = { first: 258, last: 364 }
 const sizeWords = ["Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan"]
 const abilityWords: Record<string, string> = { Str: "str", Dex: "dex", Con: "con", Int: "int", Wis: "wis", Cha: "cha" }
-const saveWords: Record<string, string> = { Strength: "str", Dexterity: "dex", Constitution: "con", Intelligence: "int", Wisdom: "wis", Charisma: "cha" }
 const damageWords = ["Acid", "Bludgeoning", "Cold", "Fire", "Force", "Lightning", "Necrotic", "Piercing", "Poison", "Psychic", "Radiant", "Slashing", "Thunder"]
 const conditionWords = [
   "Blinded",
@@ -308,7 +307,7 @@ function expectedHeader(official: Official) {
   for (let k = 0; k < tokens.length; k += 4) abilities[abilityWords[tokens[k]]] = { score: Number(tokens[k + 1]), mod: num(tokens[k + 2]), save: num(tokens[k + 3]) }
   const skills = f.has("Skills") ? Object.fromEntries(items(f.get("Skills") as string).map((item) => [toId(item.replace(/ [+−]\d+$/, "")), num(item.split(" ").at(-1) as string)])) : undefined
   // A defense printed with a qualifier goes to conditionalDefenses with its qualifying words, never to a plain list.
-  const conditional: { kind: string; value?: string; condition: string }[] = []
+  const conditional: { kind: string; value?: string; appliesWhen: string }[] = []
   const damageList = (key: string, kind: string) => {
     if (!f.has(key)) return undefined
     const list: string[] = []
@@ -316,8 +315,8 @@ function expectedHeader(official: Official) {
       if (damageWords.includes(item)) list.push(item.toLowerCase())
       else {
         const lead = /^(\w+) damage (.+)$/.exec(item)
-        if (lead && damageWords.includes(lead[1])) conditional.push({ kind, value: lead[1].toLowerCase(), condition: lead[2] })
-        else conditional.push({ kind, condition: item })
+        if (lead && damageWords.includes(lead[1])) conditional.push({ kind, value: lead[1].toLowerCase(), appliesWhen: lead[2] })
+        else conditional.push({ kind, appliesWhen: item })
       }
     }
     return list.length ? list : undefined
@@ -335,7 +334,7 @@ function expectedHeader(official: Official) {
         for (const item of list) {
           const m = /^(\w+)(?: \((.+)\))?$/.exec(item)
           if (!m || !conditionWords.includes(m[1])) throw new Error(`${official.name}: immunity ${item}`)
-          if (m[2]) conditional.push({ kind: "condition-immunity", value: m[1].toLowerCase(), condition: m[2] })
+          if (m[2]) conditional.push({ kind: "condition-immunity", value: m[1].toLowerCase(), appliesWhen: m[2] })
           else plain.push(m[1].toLowerCase())
         }
         if (plain.length) conditionImmunities = plain
@@ -393,140 +392,144 @@ function expectedHeader(official: Official) {
   }
 }
 
-const saveWord = "(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) Saving Throw: DC (\\d+)"
-const outcomeAtStart = /^(Hit or Miss|Failure or Success|First Failure|Second Failure|Subsequent Failures|Hit|Miss|Failure|Success): /
-const outcomeAnywhere = /(Failure or Success|First Failure|Second Failure|Subsequent Failures|Failure|Success): /g
-const damageAt = /(\d+)(?: \((\d+)d(\d+)(?: ([+−–]) (\d+))?\))? (\w+ )?damage/g
+// The check below does not parse feature mechanics the way the builder does. It renders each typed value back into
+// the words the SRD prints and finds them in the official text, in order. It counts printed labels, saves, damage
+// rolls and condition names by plain string counts. Where the reading depends on meaning (what a damage roll or a
+// condition is linked to, and which named conditions are not given), it uses tables kept by hand at the end of this
+// file, written by reading each feature.
 
-/**
- * Damage parts, read sentence by sentence. A sentence that opens with an outcome label sets the outcome for the rest
- * of its paragraph. Damage in that first sentence is plain unless an "if" or "unless" clause follows it or it
- * replaces the part before it ("…, or 2 (1d4) … if the swarm is Bloodied"). Damage anywhere else is limited by its
- * whole sentence.
- */
-function expectedDamage(paragraphs: string[]) {
-  const out: { average: number; dice?: string; type?: string; on?: string; condition?: string; alternativeTo?: number }[] = []
-  for (const paragraph of paragraphs) {
-    let outcome: string | undefined
-    const sentences = paragraph.split(/\. (?=[A-Z])/)
-    for (const [n, raw] of sentences.entries()) {
-      const sentence = n < sentences.length - 1 ? `${raw}.` : raw
-      const label = outcomeAtStart.exec(sentence)
-      if (label) outcome = toId(label[1])
-      const parts = [...sentence.matchAll(damageAt)].filter((m) => m[2] || (m[6] && damageWords.includes(m[6].trim())))
-      for (const [k, m] of parts.entries()) {
-        const part: (typeof out)[number] = {
-          average: Number(m[1]),
-          dice: m[2] ? `${m[2]}d${m[3]}${m[4] ? ` ${m[4] === "+" ? "+" : "-"} ${m[5]}` : ""}` : undefined,
-          type: m[6] && damageWords.includes(m[6].trim()) ? m[6].trim().toLowerCase() : undefined,
-          on: outcome,
-        }
-        if (label) {
-          const end = (m.index as number) + m[0].length
-          const qualifier = /^ ((?:if|unless) [^.,—]+)/.exec(sentence.slice(end, parts[k + 1]?.index ?? sentence.length))
-          if (qualifier) part.condition = qualifier[1]
-          const previous = parts[k - 1]
-          if (previous && /^(?:,? or |—or )$/.test(sentence.slice((previous.index as number) + previous[0].length, m.index))) part.alternativeTo = out.length - 1
-        } else part.condition = sentence.trim()
-        out.push(part)
-      }
-    }
+const abilityName: Record<string, string> = { str: "Strength", dex: "Dexterity", con: "Constitution", int: "Intelligence", wis: "Wisdom", cha: "Charisma" }
+const capitalize = (word: string) => word[0].toUpperCase() + word.slice(1)
+const quote = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const occurrences = (text: string, needle: string) => text.split(needle).length - 1
+
+/** Find each pattern in order; the index after the last, or -1 with the first that is missing. */
+function inOrder(text: string, patterns: RegExp[]): { missing?: number } {
+  let from = 0
+  for (const [k, pattern] of patterns.entries()) {
+    const sticky = new RegExp(pattern.source, "g")
+    sticky.lastIndex = from
+    const found = sticky.exec(text)
+    if (!found) return { missing: k }
+    from = found.index + found[0].length
   }
+  return {}
+}
+
+/** A damage part as the SRD prints it: "12 (2d6 + 5) Bludgeoning damage", "1 Slashing damage", "28 (8d6) damage". */
+function printedDamage(part: { dice?: string; average?: number; amount?: number; type?: string }) {
+  const roll = part.dice ? `${part.average} \\(${quote(part.dice).replace(" - ", " [−–-] ")}\\)` : `${part.amount}`
+  return new RegExp(`${roll} ${part.type ? `${capitalize(part.type)} ` : ""}damage`)
+}
+
+/** How many damage rolls the text prints: each "damage" right after a roll in parentheses, or after a number and a type. */
+function damageCount(body: string) {
+  let n = 0
+  for (const chunk of body.split(" damage").slice(0, -1)) {
+    const words = chunk.split(" ")
+    const last = words[words.length - 1]
+    const before = words[words.length - 2] ?? ""
+    if (last.endsWith(")") || (damageWords.includes(last) && (before.endsWith(")") || /^\d+$/.test(before)))) n++
+  }
+  return n
+}
+
+/** The outcome labels of a text by kind, counted as plain strings. A staged plain "Failure:" counts as a failure. */
+function labelCounts(text: string): Record<string, number> {
+  const first = occurrences(text, "First Failure: ")
+  const second = occurrences(text, "Second Failure: ")
+  return {
+    hit: occurrences(text, "Hit: "),
+    "hit-or-miss": occurrences(text, "Hit or Miss: "),
+    failure: occurrences(text, "Failure: ") - first - second,
+    "first-failure": first,
+    "second-failure": second,
+    "subsequent-failures": occurrences(text, "Subsequent Failures: "),
+    "failure-by-margin": occurrences(text, " or More: "),
+    success: occurrences(text, "Success: ") - occurrences(text, "Failure or Success: "),
+    "failure-or-success": occurrences(text, "Failure or Success: "),
+  }
+}
+
+/** Every index of `needle` in `text`. */
+function indexes(text: string, needle: string): number[] {
+  const out: number[] = []
+  for (let at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + 1)) out.push(at)
   return out
 }
 
-/** Each save: its ability and DC, who makes it, and the text of each outcome, staged outcomes kept apart. */
-function expectedSaves(body: string) {
-  const starts = [...body.matchAll(new RegExp(saveWord, "g"))]
-  return starts.map((m, k) => {
-    let end = starts[k + 1]?.index ?? body.length
-    const breakAt = body.lastIndexOf("\n", end)
-    if (k + 1 < starts.length && breakAt > (m.index as number)) end = breakAt
-    const segment = body.slice((m.index as number) + m[0].length, end)
-    const targets = segment.startsWith(".") ? undefined : /^(?: \([^)]*\))?, ([\s\S]*?)\.(?: |$)/.exec(segment)?.[1]
-    const labels = [...segment.matchAll(outcomeAnywhere)]
-    const staged = labels.some((label) => label[1] === "Second Failure" || label[1] === "Subsequent Failures")
-    const clauses: Record<string, string> = {}
-    for (const [i, label] of labels.entries()) {
-      const key =
-        label[1] === "Failure" ? (staged ? "firstFailure" : "failure") : label[1] === "Failure or Success" ? "failureOrSuccess" : toId(label[1]).replace(/-(\w)/g, (_, c: string) => c.toUpperCase())
-      clauses[key] = squash(segment.slice((label.index as number) + label[0].length, labels[i + 1]?.index ?? segment.length))
+/**
+ * Each condition the text names, with where: "the Blinded and Restrained conditions" (read backward from the word
+ * "condition" through the names to "the"), "1 Exhaustion level", "exiting Prone". In text order.
+ */
+function conditionMentions(body: string): { name: string; at: number }[] {
+  const found: { name: string; at: number }[] = []
+  for (const at of indexes(body, " condition")) {
+    const words = body
+      .slice(Math.max(0, at - 120), at)
+      .replace(/,/g, " , ")
+      .split(/\s+/)
+      .filter(Boolean)
+    const names: string[] = []
+    let j = words.length - 1
+    while (j >= 0 && (conditionWords.includes(words[j]) || ["and", "or", ","].includes(words[j]))) {
+      if (conditionWords.includes(words[j])) names.unshift(words[j].toLowerCase())
+      j--
     }
-    return { ability: saveWords[m[1]], dc: Number(m[2]), targets: targets && squash(targets), ...clauses, half: /^halfdamage/.test(clauses.success ?? "") }
-  })
+    if (names.length && words[j] === "the") for (const name of names) found.push({ name, at })
+  }
+  for (const at of indexes(body, " Exhaustion level")) if (/\d$/.test(body.slice(0, at))) found.push({ name: "exhaustion", at })
+  for (const at of indexes(body, "exiting Prone")) found.push({ name: "prone", at })
+  for (const at of indexes(body, "to exit Prone")) found.push({ name: "prone", at })
+  return found.sort((a, b) => a.at - b.at)
+}
+
+/** A spell as printed in the text: from its id, with its note. */
+function printedSpell(spell: { id: string; note?: string }) {
+  return squash(`${spell.id.replace(/-/g, " ")}${spell.note ? ` (${spell.note})` : ""}`)
 }
 
 /**
- * Conditions the text gives, read phrase by phrase: "the X condition" after a verb that gives it, "gains N
- * Exhaustion level", "exiting Prone". The words from the start of the phrase's clause must hold no precondition or
- * negation.
+ * A link written as the hand tables write it: the outcome and save ("failure@2", "-" for none), then each printed
+ * span: "L:" the label, "W:" the gate, "U:" the exception, "T:" the time; then "altN" for a roll that replaces roll N,
+ * "instead" for a condition given instead of the hit's damage, and "self" for a value on the monster itself.
  */
-function expectedConditions(body: string): string[] {
-  const given = new Set<string>()
-  const list = `(?:${conditionWords.join("|")})(?:(?:,? and |,? or |, )(?:${conditionWords.join("|")}))*`
-  const forms = [new RegExp(`(?:\\bhas|\\bhave|\\bgains?|\\bgives? it|\\bgives? the target|\\bwith) the (${list}) conditions?\\b`, "g"), /\bgains? \d+ (Exhaustion) levels?\b/g, /\bexiting (Prone)\b/g]
-  for (const form of forms) {
-    for (const m of body.matchAll(form)) {
-      let start = m.index as number
-      while (start > 0 && !",.:;—(\n".includes(body[start - 1]) && !body.slice(0, start).endsWith(" but ")) start--
-      const clause = body.slice(start, m.index)
-      const words = clause.toLowerCase().split(/\s+/).filter(Boolean)
-      if (words.some((word) => ["if", "while", "whenever", "unless", "until", "not"].includes(word) || word.endsWith("n’t")) || clause.includes("no longer")) continue
-      if (["that", "who"].includes(words[words.length - 1])) continue
-      for (const name of m[1].split(/,? and |,? or |, /)) given.add(name.toLowerCase())
-    }
-  }
-  return [...given].sort()
+function linkString(link: { on?: string; save?: number; label?: string; appliesWhen?: string; unless?: string; timing?: string; alternativeTo?: number; insteadOfDamage?: true; self?: true }) {
+  let text = link.on ?? "-"
+  if (link.save !== undefined) text += `@${link.save}`
+  if (link.label) text += `|L:${link.label}`
+  if (link.appliesWhen) text += `|W:${link.appliesWhen}`
+  if (link.unless) text += `|U:${link.unless}`
+  if (link.timing) text += `|T:${link.timing}`
+  if (link.alternativeTo !== undefined) text += `|alt${link.alternativeTo}`
+  if (link.insteadOfDamage) text += "|instead"
+  if (link.self) text += "|self"
+  return text
 }
 
-/** The mechanics of one official feature, read from its own text. */
-function expectedFeature(feature: OfficialFeature) {
-  const { paren, paragraphs, body } = featureParts(feature)
-  const uses: Record<string, unknown> = {}
-  const rest: string[] = []
-  for (const part of paren ? paren.split("; ") : []) {
-    const day = /^(\d+)\/Day(?:, or (\d+)\/Day in Lair)?$/.exec(part)
-    const roll = /^Recharge (\d)(?:–(\d))?$/.exec(part)
-    if (day) uses.uses = { count: Number(day[1]), countInLair: day[2] ? Number(day[2]) : undefined, recharge: "long-rest" }
-    else if (roll) uses.rechargeRoll = { min: Number(roll[1]), max: Number(roll[2] ?? roll[1]) }
-    else if (part === "Recharge after a Short or Long Rest") uses.uses = { count: 1, recharge: "short-or-long-rest" }
-    else rest.push(part)
-  }
-  if (rest.length) uses.note = rest.join("; ")
-  const attackMatch = /(Melee or Ranged|Melee|Ranged) Attack Roll: ([+−]\d+)([^:]*?)(?:Hit|Miss|Hit or Miss):/.exec(body)
-  const attack = attackMatch
-    ? {
-        kind: attackMatch[1] === "Melee or Ranged" ? "melee-or-ranged" : attackMatch[1].toLowerCase(),
-        bonus: num(attackMatch[2]),
-        reach: Number(/reach (\d+)/.exec(attackMatch[3])?.[1]) || undefined,
-        range: /range (\d+)(?:\/(\d+))?/.exec(attackMatch[3]),
-        bonusNote: /^ \(([^)]*)\)/.exec(attackMatch[3])?.[1],
-      }
-    : undefined
-  const escapeDc = /escape DC (\d+)/.exec(body)
-  // The soft join drops a hyphen at a line end before a lowercase letter, so "5-foot-\nwide" reads "5-footwide" here.
-  const areaMatch = /(?:in an?|fills a) (\d+)-?foot(-long, (\d+)-foot-?wide Line|-radius, (\d+)-foot-?high Cylinder|-?radius Sphere| Cone| Cube| Emanation| Sphere)/.exec(body)
-  const area = areaMatch
-    ? {
-        shape: areaMatch[2].split(" ").at(-1)?.toLowerCase(),
-        size: Number(areaMatch[1]),
-        width: areaMatch[3] ? Number(areaMatch[3]) : undefined,
-        height: areaMatch[4] ? Number(areaMatch[4]) : undefined,
-      }
-    : undefined
-  const spellLines = paragraphs.filter((paragraph) => /^(At Will|\d\/Day( Each)?): /.test(paragraph))
-  return {
-    uses,
-    paragraphs,
-    body,
-    attack,
-    damage: expectedDamage(paragraphs),
-    saves: expectedSaves(body),
-    conditions: expectedConditions(body),
-    escape: escapeDc ? Number(escapeDc[1]) : undefined,
-    area,
-    spellLines,
-  }
+/** A save's own spans, written as the hand tables write them: "L:First Roar", "W:If the target is a Humanoid", "-". */
+const saveString = (save: { label?: string; appliesWhen?: string }) => [save.label && `L:${save.label}`, save.appliesWhen && `W:${save.appliesWhen}`].filter(Boolean).join("|") || "-"
+
+/**
+ * The plain link of a feature, or undefined when the feature needs a row in `links`. A feature is plain when it is
+ * one paragraph with one "Hit:" or one save's "Failure:", no other outcome but that save's "Success:" or "Failure or
+ * Success:", no "if", "unless", "otherwise" or either-or roll after the label, and every damage roll and condition it
+ * gives stated after the label and before the next sentence.
+ */
+function plainLink(body: string, paragraphs: number, saves: number, mentions: number[]): { on: string; save?: number } | undefined {
+  const counts = labelCounts(body)
+  const kinds = Object.entries(counts).filter(([, n]) => n > 0)
+  const primary = kinds.filter(([kind]) => kind === "hit" || kind === "failure")
+  if (paragraphs !== 1 || saves > 1 || primary.length !== 1 || primary[0][1] !== 1) return undefined
+  if (kinds.some(([kind]) => !["hit", "failure", "success", "failure-or-success"].includes(kind))) return undefined
+  const kind = primary[0][0]
+  const label = body.indexOf(kind === "hit" ? "Hit: " : "Failure: ")
+  const end = ["Success: ", "Failure or Success: "].map((next) => body.indexOf(next, label)).filter((at) => at > 0)
+  const clause = body.slice(label, end.length ? Math.min(...end) : body.length)
+  if (/ if | unless |otherwise|, or |—or |If |Unless /.test(clause)) return undefined
+  const last = Math.max(...mentions)
+  if (mentions.some((at) => at < label) || /\. [A-Z]/.test(body.slice(label, last))) return undefined
+  return kind === "hit" ? { on: "hit" } : { on: "failure", save: 0 }
 }
 
 export default function verify(report: Report) {
@@ -630,7 +633,12 @@ export default function verify(report: Report) {
   {
     const failures: string[] = []
     let total = 0
-    let stagedInData = 0
+    let nextTurnInData = 0
+    const labelsInText: Record<string, number> = {}
+    const labelsInData: Record<string, number> = {}
+    const usedNotGiven = new Set<string>()
+    const usedLinks = new Set<string>()
+    const usedProse = new Set<string>()
     let prose = 0
     const proseFailures: string[] = []
     for (const block of blocks) {
@@ -655,7 +663,7 @@ export default function verify(report: Report) {
         for (const [k, feature] of official.entries()) {
           const item = (data as MonsterFeature[])[k]
           const own = `${monster.id} ${section} ${item.name}`
-          const want = expectedFeature(feature)
+          const want = featureParts(feature)
           total += 2
           // The whole text, ignoring layout, then paragraph by paragraph, then each sentence against the official text.
           if (squash(item.text) !== squash(want.body)) failures.push(`${own}: text differs from the official feature`)
@@ -664,67 +672,198 @@ export default function verify(report: Report) {
           prose++
           const missing = missingSentences(item.text)
           if (missing.length) proseFailures.push(`${own}: ${missing.join(" | ")}`)
-          for (const key of ["uses", "rechargeRoll", "note"] as const) {
-            total++
-            if (!same(item[key], want.uses[key])) failures.push(`${own}: ${key} ${JSON.stringify(item[key])}, official ${JSON.stringify(want.uses[key])}`)
+          const { paren, body } = want
+
+          // Uses: the parenthetical rendered back from the data, and the "next turn" sentence both ways.
+          total += 2
+          const usesPrint = [
+            item.uses?.recharge === "long-rest" ? `${item.uses.count}/Day${item.uses.countInLair ? `, or ${item.uses.countInLair}/Day in Lair` : ""}` : undefined,
+            item.uses?.recharge === "short-or-long-rest" && item.uses.count === 1 ? "Recharge after a Short or Long Rest" : undefined,
+            item.rechargeRoll ? `Recharge ${item.rechargeRoll.min}${item.rechargeRoll.max === item.rechargeRoll.min ? "" : `–${item.rechargeRoll.max}`}` : undefined,
+            item.note,
+          ].filter(Boolean)
+          if ((usesPrint.length ? usesPrint.join("; ") : undefined) !== paren) failures.push(`${own}: uses print as (${usesPrint.join("; ")}), official (${paren})`)
+          const nextTurn = body.includes("can’t take this action again until the start of its next turn")
+          if (nextTurn !== (item.uses?.recharge === "start-of-next-turn" && item.uses.count === 1)) failures.push(`${own}: uses ${JSON.stringify(item.uses)} disagree with the "next turn" sentence`)
+          if (item.uses?.recharge === "start-of-next-turn") nextTurnInData++
+
+          // Attack: rendered back and found, and present exactly when the text prints an attack roll.
+          total++
+          const a = item.attack
+          if (a) {
+            const where = [a.reach !== undefined ? `reach ${a.reach} (?:ft\\.?|feet)` : "", a.range ? `range ${a.range.normal}${a.range.long ? `/${a.range.long}` : ""} (?:ft\\.?|feet)` : ""]
+              .filter(Boolean)
+              .join(" or ")
+            const printed = `${a.kind === "melee-or-ranged" ? "Melee or Ranged" : capitalize(a.kind)} Attack Roll: ${a.bonus < 0 ? "−" : "\\+"}${Math.abs(a.bonus)}(?: to hit)?${a.bonusNote ? ` \\(${quote(a.bonusNote)}\\)` : ""}, ${where}\\.? (?:Hit|Miss|Hit or Miss):`
+            if (!new RegExp(printed).test(body)) failures.push(`${own}: attack ${JSON.stringify(a)} is not printed`)
           }
-          total++
-          const attack = item.attack
-          const wantAttack = want.attack && {
-            kind: want.attack.kind,
-            bonus: want.attack.bonus,
-            reach: want.attack.reach,
-            range: want.attack.range ? { normal: Number(want.attack.range[1]), long: want.attack.range[2] ? Number(want.attack.range[2]) : undefined } : undefined,
-            bonusNote: want.attack.bonusNote,
-          }
-          if (!same(attack, wantAttack)) failures.push(`${own}: attack ${JSON.stringify(attack)}, official ${JSON.stringify(wantAttack)}`)
-          // Every damage part with its outcome, condition and alternative. Conditions are compared ignoring layout.
-          total++
-          const damage = (item.damage ?? []).map((part) => ({ ...part, condition: part.condition && squash(part.condition) }))
-          const wantDamage = want.damage.map((part) => ({ ...part, condition: part.condition && squash(part.condition) }))
-          if (!same(damage, wantDamage)) failures.push(`${own}: damage ${JSON.stringify(item.damage)}, official ${JSON.stringify(want.damage)}`)
-          // Every save with its ability, DC, targets and each outcome's text, staged outcomes counted one by one.
-          total++
-          const saves = (item.saves ?? []).map((save) => ({
-            ability: save.ability,
-            dc: save.dc,
-            targets: save.targets && squash(save.targets),
-            failure: save.failure && squash(save.failure),
-            firstFailure: save.firstFailure && squash(save.firstFailure),
-            secondFailure: save.secondFailure && squash(save.secondFailure),
-            subsequentFailures: save.subsequentFailures && squash(save.subsequentFailures),
-            success: save.success && squash(save.success),
-            failureOrSuccess: save.failureOrSuccess && squash(save.failureOrSuccess),
-            half: !!save.halfOnSuccess,
-          }))
-          if (!same(saves, want.saves)) failures.push(`${own}: saves ${JSON.stringify(item.saves)}, official ${JSON.stringify(want.saves)}`)
-          for (const save of item.saves ?? []) stagedInData += (save.firstFailure ? 1 : 0) + (save.secondFailure ? 1 : 0) + (save.subsequentFailures ? 1 : 0)
+          if (occurrences(body, "Attack Roll: ") !== (a ? 1 : 0)) failures.push(`${own}: ${occurrences(body, "Attack Roll: ")} attack rolls printed, ${a ? 1 : 0} typed`)
+
+          // Damage: every part rendered back and found in order, and as many parts as the text prints rolls.
+          total += 2
+          const damage = item.damage ?? []
+          const order = inOrder(body, damage.map(printedDamage))
+          if (order.missing !== undefined) failures.push(`${own}: damage part ${order.missing} ${JSON.stringify(damage[order.missing])} is not printed in that order`)
+          if (damageCount(body) !== damage.length) failures.push(`${own}: ${damage.length} damage parts, the text prints ${damageCount(body)}`)
+
+          // Saves: each rendered back in order, as many as printed, targets right after the DC, outcomes by label.
           total += 3
-          if (item.escapeDc !== want.escape) failures.push(`${own}: escape DC ${item.escapeDc}, official ${want.escape}`)
-          if (!same(item.area, want.area)) failures.push(`${own}: area ${JSON.stringify(item.area)}, official ${JSON.stringify(want.area)}`)
-          if (!same([...(item.conditions ?? [])].sort(), want.conditions)) failures.push(`${own}: conditions ${JSON.stringify(item.conditions)}, official ${JSON.stringify(want.conditions)}`)
-          total++
-          const lists = want.spellLines.map((line) => {
-            const m = /^(At Will|(\d)\/Day( Each)?): (.*)$/.exec(line.trim()) as RegExpExecArray
-            return {
-              frequency: m[2] ? Number(m[2]) : "at-will",
-              each: m[3] ? true : undefined,
-              spells: items(m[4]).map((spell) => {
-                const s = /^(.+?)(?: \((.+)\))?$/.exec(spell) as RegExpExecArray
-                return { id: toId(s[1]), note: s[2] }
-              }),
+          const saves = item.saves ?? []
+          const saveOrder = inOrder(
+            body,
+            saves.map((save) => new RegExp(`${abilityName[save.ability]} Saving Throw: DC ${save.dc}\\b`))
+          )
+          if (saveOrder.missing !== undefined || occurrences(body, "Saving Throw: DC") !== saves.length)
+            failures.push(`${own}: saves ${JSON.stringify(saves.map((save) => [save.ability, save.dc]))} are not the printed saves`)
+          const dataLabels: Record<string, number> = {}
+          const bump = (kind: string) => {
+            dataLabels[kind] = (dataLabels[kind] ?? 0) + 1
+          }
+          for (const save of saves) {
+            const dcAt = body.indexOf(`${abilityName[save.ability]} Saving Throw: DC ${save.dc}`)
+            let after = body.slice(dcAt).replace(/^[^,.(]*/, "")
+            if (after.startsWith("(")) after = after.slice(after.indexOf(")") + 1)
+            const printedTargets = after.startsWith(",") ? after.slice(1) : undefined
+            if (!!printedTargets !== !!save.targets || (save.targets && !squash(printedTargets as string).startsWith(squash(save.targets))))
+              failures.push(`${own}: save targets "${save.targets}" are not what follows the DC`)
+            const staged = !!(save.secondFailure || save.subsequentFailures)
+            const clauses: [string, string | undefined, string[]][] = [
+              ["failure", save.failure, ["Failure"]],
+              [staged && !body.includes("First Failure: ") ? "failure" : "first-failure", save.firstFailure, ["First Failure", "Failure"]],
+              ["second-failure", save.secondFailure, ["Second Failure"]],
+              ["subsequent-failures", save.subsequentFailures, ["Subsequent Failures"]],
+              ["failure-by-margin", save.failureBy?.text, [`Failure by ${save.failureBy?.margin} or More`]],
+              ["success", save.success, ["Success"]],
+              ["failure-or-success", save.failureOrSuccess, ["Failure or Success"]],
+            ]
+            for (const [kind, clause, labels] of clauses) {
+              if (!clause) continue
+              bump(kind)
+              // The clause is the whole run after its label: it ends the text, a paragraph, or meets the next label.
+              const whole = labels.some((label) => {
+                const at = item.text.indexOf(`${label}: ${clause}`)
+                const next = at < 0 ? "" : item.text.slice(at + label.length + 2 + clause.length)
+                return at >= 0 && (next === "" || /^(?:\n| (?:Failure|Success|First Failure|Second Failure|Subsequent Failures)\b)/.test(next))
+              })
+              if (!whole) failures.push(`${own}: "${clause.slice(0, 40)}" is not the whole text after its label`)
             }
+            if (!!save.halfOnSuccess !== squash(save.success ?? "").startsWith("halfdamage")) failures.push(`${own}: halfOnSuccess disagrees with the Success text`)
+          }
+          if (a) bump("hit")
+          const textLabels = labelCounts(body)
+          for (const kind of Object.keys(textLabels)) {
+            if (kind === "hit-or-miss") continue
+            labelsInText[kind] = (labelsInText[kind] ?? 0) + textLabels[kind]
+            labelsInData[kind] = (labelsInData[kind] ?? 0) + (dataLabels[kind] ?? 0)
+            if (textLabels[kind] !== (dataLabels[kind] ?? 0)) failures.push(`${own}: ${dataLabels[kind] ?? 0} typed ${kind} outcomes, the text prints ${textLabels[kind]}`)
+          }
+
+          // Conditions: every named condition is given, unless the hand table says the text only names it.
+          total++
+          const key = `${monster.id}/${item.name}`
+          const mentions = conditionMentions(body)
+          const notGiven = [...(namedNotGiven[key] ?? [])]
+          if (namedNotGiven[key]) usedNotGiven.add(key)
+          const given = mentions.filter((mention) => {
+            const k = notGiven.indexOf(mention.name)
+            if (k < 0) return true
+            notGiven.splice(k, 1)
+            return false
           })
-          const gotLists = item.spellcasting?.lists.map((list) => ({ frequency: list.frequency, each: list.each, spells: list.spells.map((spell) => ({ id: spell.id, note: spell.note })) }))
-          if (!same(gotLists, lists.length ? lists : undefined)) failures.push(`${own}: spell lists ${JSON.stringify(gotLists)}, official ${JSON.stringify(lists)}`)
-          if (item.spellcasting) {
-            total++
-            const ability = /using (\w+) as (?:the )?spellcasting ability/.exec(want.body)
-            const dc = /spell save DC (\d+)/.exec(want.body)
-            const bonus = /([+−]\d+) to hit with spell attacks/.exec(want.body)
-            const wantCasting = { ability: ability && saveWords[ability[1]], saveDc: dc ? Number(dc[1]) : undefined, attackBonus: bonus ? num(bonus[1]) : undefined }
-            const gotCasting = { ability: item.spellcasting.ability, saveDc: item.spellcasting.saveDc, attackBonus: item.spellcasting.attackBonus }
-            if (!same(gotCasting, wantCasting)) failures.push(`${own}: spellcasting ${JSON.stringify(gotCasting)}, official ${JSON.stringify(wantCasting)}`)
+          if (notGiven.length) failures.push(`${own}: the table says ${notGiven} are named but not given, and the text has no such mention`)
+          const dataConditions = [...new Set((item.conditions ?? []).map((entry) => entry.condition))].sort()
+          const wantConditions = [...new Set(given.map((mention) => mention.name))].sort()
+          if (!same(dataConditions, wantConditions)) failures.push(`${own}: conditions ${JSON.stringify(dataConditions)}, the text gives ${JSON.stringify(wantConditions)}`)
+
+          // Links: plain features are linked to their one label. Every other feature has a row in the hand table.
+          total++
+          const positions = [...damage.map((part) => body.search(printedDamage(part))), ...given.map((mention) => mention.at)]
+          const plain = positions.length ? plainLink(body, want.paragraphs.length, saves.length, positions) : undefined
+          const gotLinks = {
+            s: saves.some((save) => save.label || save.appliesWhen) ? saves.map(saveString) : [],
+            d: damage.map(linkString),
+            c: (item.conditions ?? []).map((entry) => `${entry.condition}=${linkString(entry)}`),
+          }
+          // Every printed span is one unbroken run of the feature's own words.
+          const flat = item.text.replace(/\n/g, " ")
+          for (const span of [...saves, ...damage, ...(item.conditions ?? [])].flatMap((link) => [
+            link.label,
+            link.appliesWhen,
+            "unless" in link ? link.unless : undefined,
+            "timing" in link ? link.timing : undefined,
+          ]))
+            if (span && !flat.includes(span)) failures.push(`${own}: "${span}" is not a span of the feature's text`)
+          // An exception stands only on words that make one.
+          if ([...damage, ...(item.conditions ?? [])].some((link) => link.unless) && !/therwise|unless|instead/.test(flat))
+            failures.push(`${own}: an unless with no "otherwise", "unless" or "instead" in the text`)
+          const row = links[key]
+          if (row) usedLinks.add(key)
+          const needsRow = (positions.length && !plain) || gotLinks.s.length > 0
+          if (needsRow && !row) failures.push(`${own}: needs a links row: "${key}": ${JSON.stringify(gotLinks)},`)
+          else if (row && !needsRow) failures.push(`${own}: is plain, so it needs no links row`)
+          else if (row && !same({ s: row.s ?? [], d: row.d ?? [], c: row.c ?? [] }, gotLinks)) failures.push(`${own}: links ${JSON.stringify(gotLinks)}, the table reads ${JSON.stringify(row)}`)
+          else if (plain && !row) {
+            const want = linkString(plain)
+            if (gotLinks.d.some((link) => link !== want) || gotLinks.c.some((link) => link.split("=")[1] !== want))
+              failures.push(`${own}: links ${JSON.stringify(gotLinks)}, the plain link is ${want}`)
+          }
+
+          // Escape DC and area: rendered back and found, and present exactly when printed.
+          total += 2
+          if ((item.escapeDc !== undefined) !== body.includes("escape DC") || (item.escapeDc !== undefined && !body.includes(`escape DC ${item.escapeDc}`)))
+            failures.push(`${own}: escape DC ${item.escapeDc} is not the printed one`)
+          const ar = item.area
+          const shapeWord = ar && capitalize(ar.shape)
+          const areaPrint = ar
+            ? ar.shape === "line"
+              ? `${ar.size}-?foot-long, ${ar.width}-foot-?wide Line`
+              : ar.shape === "cylinder"
+                ? `${ar.size}-?foot-?radius, ${ar.height}-foot-?high Cylinder`
+                : `${ar.size}-?foot${ar.shape === "sphere" ? "-?radius" : ""} ${shapeWord}`
+            : ""
+          const anyArea = /(?:in an?|fills a) \d+-?foot[-\w]*,?(?: \d+-?foot[-\w]*)? (?:Cone|Cube|Cylinder|Emanation|Line|Sphere)\b/.exec(body)
+          if (!!ar !== !!anyArea || (ar && !new RegExp(`^(?:in an?|fills a) ${areaPrint}`).test(body.slice(anyArea?.index))))
+            failures.push(`${own}: area ${JSON.stringify(ar)} is not the first printed area of effect`)
+
+          // Spells: lists rendered back against their paragraphs, casts rendered back against the sentence.
+          total++
+          const casting = item.spellcasting
+          const listParagraphs = want.paragraphs.filter((paragraph) => /^(At Will|\d\/Day)/.test(paragraph))
+          const renderedLists = (casting?.lists ?? []).map(
+            (list) => squash(`${list.frequency === "at-will" ? "At Will" : `${list.frequency}/Day${list.each ? " Each" : ""}`}: `) + list.spells.map(printedSpell).join("")
+          )
+          if (!same(renderedLists, listParagraphs.map(squash))) failures.push(`${own}: spell lists ${JSON.stringify(casting?.lists)} do not print as the official lists`)
+          const castsText = body.includes("spellcasting ability") || body.includes("Spellcasting to cast")
+          if (castsText && !casting && !castingProse[key]) failures.push(`${own}: casts spells but has no spellcasting and no prose reason`)
+          if (casting && castingProse[key]) failures.push(`${own}: is listed as prose, but has spellcasting`)
+          if (castingProse[key]) usedProse.add(key)
+          if (casting) {
+            const sq = squash(body)
+            const parts = [
+              casting.ability
+                ? squash(`using ${abilityName[casting.ability]} as`) +
+                  (sq.includes(squash(`using ${abilityName[casting.ability]} as the spellcasting ability`)) ? "thespellcastingability" : "spellcastingability")
+                : "",
+              casting.saveDc !== undefined ? squash(`spell save DC ${casting.saveDc}`) : "",
+              casting.attackBonus !== undefined ? squash(`${casting.attackBonus} to hit with spell attacks`) : "",
+            ]
+            if (parts.some((part) => part && !sq.includes(part))) failures.push(`${own}: spellcasting ${JSON.stringify(casting)} is not printed`)
+            if ((casting.saveDc !== undefined) !== body.includes("spell save DC") || (casting.attackBonus !== undefined) !== body.includes("to hit with spell attacks"))
+              failures.push(`${own}: spellcasting DC or bonus present in only one of text and data`)
+            if (casting.sameAsSpellcasting && !(body.includes("same spellcasting ability as Spellcasting") || body.includes("Spellcasting to cast")))
+              failures.push(`${own}: sameAsSpellcasting with no such words`)
+            if (casting.spells) {
+              const names = casting.spells.map(printedSpell)
+              const printed = names.length === 1 ? names[0] : names.length === 2 ? `${names[0]}or${names[1]}` : `${names.slice(0, -1).join("")}or${names[names.length - 1]}`
+              if (!sq.includes(`casts${printed}`) && !sq.includes(`caststhe${printed}`) && !sq.includes(`spellcastingtocast${printed}`))
+                failures.push(`${own}: casts ${JSON.stringify(casting.spells)} are not the printed spells`)
+              // Each spell as printed, with its note or with no parenthetical after it.
+              for (const spell of casting.spells) {
+                const name = spell.id.replace(/-/g, "[ -]")
+                const pattern = spell.note ? `${name} \\(${quote(spell.note)}\\)` : `${name}(?! \\()`
+                if (!new RegExp(pattern, "i").test(body)) failures.push(`${own}: ${JSON.stringify(spell)} is not printed so`)
+              }
+            }
           }
         }
       }
@@ -732,24 +871,34 @@ export default function verify(report: Report) {
       const legendary = monster.legendaryActions
       if (!!legendary !== !!block.legendaryIntro) failures.push(`${monster.id}: legendary actions ${legendary ? "present" : "absent"} in the data only`)
       else if (legendary && block.legendaryIntro) {
-        const uses = /^Legendary Action Uses: (\d+)(?: \((\d+) in Lair\))?\./.exec(block.legendaryIntro)
-        if (!uses || legendary.uses !== Number(uses[1]) || legendary.usesInLair !== (uses[2] ? Number(uses[2]) : undefined))
-          failures.push(`${monster.id}: legendary uses ${legendary.uses}/${legendary.usesInLair}, official "${block.legendaryIntro.slice(0, 40)}"`)
+        const printed = `Legendary Action Uses: ${legendary.uses.count}${legendary.uses.countInLair ? ` (${legendary.uses.countInLair} in Lair)` : ""}. `
+        if (!block.legendaryIntro.startsWith(printed) || !block.legendaryIntro.includes("regains all expended uses at the start of each of its turns"))
+          failures.push(`${monster.id}: legendary uses ${JSON.stringify(legendary.uses)}, official "${block.legendaryIntro.slice(0, 40)}"`)
         if (squash(legendary.text) !== squash(block.legendaryIntro)) failures.push(`${monster.id}: legendary text differs from the official paragraph`)
         prose++
         const missing = missingSentences(legendary.text)
         if (missing.length) proseFailures.push(`${monster.id} legendary text: ${missing.join(" | ")}`)
       }
     }
-    // Every staged outcome label in the chapter is a typed stage in the data.
-    total++
+    // Chapter totals: every outcome label by kind, and every "next turn" sentence, is typed.
     const chapterText = soft(lines.map((line) => line.text))
-    const stagedInText = (chapterText.match(/(?:First Failure|Second Failure|Subsequent Failures): /g) ?? []).length + (chapterText.match(/\.\s+Failure: [^:]*?Second Failure: /g) ?? []).length
-    if (stagedInData !== stagedInText) failures.push(`the data holds ${stagedInData} staged failure clauses, the official text prints ${stagedInText}`)
+    for (const kind of Object.keys(labelsInText)) {
+      total++
+      if (labelsInText[kind] !== labelsInData[kind]) failures.push(`the chapter prints ${labelsInText[kind]} "${kind}" outcomes, the data types ${labelsInData[kind]}`)
+    }
+    total++
+    const nextTurnInText = occurrences(chapterText, "can’t take this action again until the start of its next turn")
+    if (nextTurnInText !== nextTurnInData) failures.push(`the chapter prints the "next turn" sentence ${nextTurnInText} times, the data types ${nextTurnInData}`)
+    // A hand table row that no feature uses is stale.
+    for (const key of Object.keys(links)) if (!usedLinks.has(key)) failures.push(`links row ${key} matches no feature`)
+    for (const key of Object.keys(namedNotGiven)) if (!usedNotGiven.has(key)) failures.push(`namedNotGiven row ${key} matches no feature`)
+    for (const key of Object.keys(castingProse)) if (!usedProse.has(key)) failures.push(`castingProse row ${key} matches no feature`)
     for (const failure of failures) unsettled.add(failure.split(" ")[0].replace(/:$/, ""))
     report.check(
       "monsters",
-      "feature names, text and paragraphs, uses, attacks, damage parts, saves and their stages, conditions, escape DCs, areas and spells equal the official text",
+      `feature names, text, paragraphs, uses, attacks, damage, saves, outcomes by label (${Object.entries(labelsInText)
+        .map(([kind, n]) => `${n} ${kind}`)
+        .join(", ")}), conditions, links, escape DCs, areas and spells, rendered back and found in the official text`,
       total,
       failures
     )
@@ -883,7 +1032,7 @@ export default function verify(report: Report) {
     const rules = readData<MonsterRule>("monster-rules")
     const failures: string[] = []
     let total = 0
-    const byRule = new Map(rules.map((rule) => [rule.id, rule]))
+    const byRule = new Map<string, MonsterRule>(rules.map((rule) => [rule.id, rule]))
     const xp = byRule.get("experience-points-by-challenge-rating")
     const pb = byRule.get("proficiency-bonus-by-challenge-rating")
     const dice = byRule.get("hit-dice-by-size")
@@ -899,10 +1048,46 @@ export default function verify(report: Report) {
     compare("experience-points-by-challenge-rating", xp && "xpByCr" in xp ? xp.xpByCr : undefined, wantXp, 256, xp)
     compare("proficiency-bonus-by-challenge-rating", pb && "pbByCr" in pb ? pb.pbByCr : undefined, wantPb, 256, pb)
     compare("hit-dice-by-size", dice && "hitDiceBySize" in dice ? dice.hitDiceBySize : undefined, wantDice, 255, dice)
+    // The page 257 rules: each typed value, written here by hand, with the sentence of page 257 that states it.
+    const page257 = squash(pages[256])
+    const stated: [string, string, unknown, string][] = [
+      ["limited-usage", "perDay", { recharge: "long-rest" }, "a monster must finish a Long Rest to regain expended uses"],
+      [
+        "limited-usage",
+        "rechargeRoll",
+        { count: 1, die: 6, rolledAt: "start-of-each-turn", alsoRestoredBy: "short-or-long-rest" },
+        "This notation means a monster can use the stat block part once. At the start of each of the monster’s turns, roll 1d6",
+      ],
+      [
+        "limited-usage",
+        "rechargeRoll",
+        { count: 1, die: 6, rolledAt: "start-of-each-turn", alsoRestoredBy: "short-or-long-rest" },
+        "which also recharges when the monster finishes a Short or Long Rest",
+      ],
+      ["limited-usage", "afterRest", { count: 1, recharge: "short-or-long-rest" }, "the monster can use the stat block part once and must then finish a Short or Long Rest to use it again"],
+      ["legendary-actions", "timing", "after-another-creatures-turn", "only after another creature’s turn ends"],
+      ["legendary-actions", "oneAtATime", true, "Only one of these actions can be taken at a time"],
+      ["legendary-actions", "usesPerAction", 1, "The monster expends one use whenever it takes a Legendary Action"],
+      ["legendary-actions", "recharge", "start-of-next-turn", "it regains all expended uses at the start of each of its turns"],
+      ["legendary-actions", "blockedBy", ["incapacitated"], "can’t take a Legendary Action if it has the Incapacitated condition"],
+    ]
+    for (const [id, field, value, sentence] of stated) {
+      total += 2
+      const rule = byRule.get(id) as Record<string, unknown> | undefined
+      if (!same(rule?.[field], value)) failures.push(`${id}: ${field} is ${JSON.stringify(rule?.[field])}, page 257 states ${JSON.stringify(value)}`)
+      if (!page257.includes(squash(sentence))) failures.push(`${id}: page 257 does not read "${sentence}"`)
+    }
+    for (const id of ["limited-usage", "legendary-actions"]) {
+      total++
+      const rule = byRule.get(id) as Record<string, unknown> | undefined
+      const typed = Object.keys(rule ?? {}).filter((key) => !["id", "name", "page"].includes(key))
+      if (rule?.page !== 257 || !same(typed.sort(), [...new Set(stated.filter((row) => row[0] === id).map((row) => row[1]))].sort()))
+        failures.push(`${id}: page or typed fields differ from the page 257 table`)
+    }
     total++
-    if (rules.length !== 3) failures.push(`monster-rules has ${rules.length} entries, the chapter prints 3 tables`)
+    if (rules.length !== 5) failures.push(`monster-rules has ${rules.length} entries, the chapter prints 3 tables and 2 usage rules`)
     if (wantXp.length !== 34 || wantPb.length !== 8 || wantDice.length !== 6) failures.push(`the official tables read ${wantXp.length}, ${wantPb.length} and ${wantDice.length} rows, not 34, 8 and 6`)
-    report.check("monster rules", "XP by CR (34 rows), PB by CR (8) and Hit Dice by Size (6) equal the official tables", total, failures)
+    report.check("monster rules", "XP by CR (34 rows), PB by CR (8) and Hit Dice by Size (6) equal the official tables, and Limited Usage and Legendary Actions equal page 257", total, failures)
   }
 
   // ---- References ----
@@ -933,4 +1118,356 @@ export default function verify(report: Report) {
     }
     report.check("monsters", `spell and gear ids resolve (${spells ? "spells" : "no spells data yet"}, ${equipment ? "equipment" : "no equipment data yet"})`, total, failures)
   }
+}
+
+/**
+ * Conditions a feature names but does not give, read by hand: a precondition ("one creature within 5 feet that has
+ * the Prone condition"), a negation ("doesn’t have the Incapacitated condition"), an ending or a replacement.
+ */
+const namedNotGiven: Record<string, string[]> = {
+  "assassin/Evasion": ["incapacitated"],
+  "azer-sentinel/Fire Aura": ["incapacitated"],
+  "gibbering-mouther/Gibbering": ["incapacitated"],
+  "gorgon/Trample": ["prone"],
+  "hell-hound/Pack Tactics": ["incapacitated"],
+  "hobgoblin-warrior/Pack Tactics": ["incapacitated"],
+  "hobgoblin-captain/Aura of Authority": ["incapacitated"],
+  "kobold-warrior/Pack Tactics": ["incapacitated"],
+  "steam-mephit/Blurred Form": ["incapacitated"],
+  "pit-fiend/Fear Aura": ["incapacitated"],
+  "purple-worm/Swallow": ["grappled"],
+  "remorhaz/Swallow": ["grappled"],
+  "tarrasque/Swallow": ["grappled"],
+  "tough/Pack Tactics": ["incapacitated"],
+  "tough-boss/Pack Tactics": ["incapacitated"],
+  "vampire-spawn/Vampire Weakness": ["incapacitated"],
+  "vampire-spawn/Bite": ["grappled", "incapacitated", "restrained"],
+  "vampire/Vampire Weakness": ["incapacitated"],
+  "vampire/Bite": ["grappled", "incapacitated", "restrained"],
+  "warrior-infantry/Pack Tactics": ["incapacitated"],
+  "werewolf/Pack Tactics": ["incapacitated"],
+  "winter-wolf/Pack Tactics": ["incapacitated"],
+  "baboon/Pack Tactics": ["incapacitated"],
+  "blood-hawk/Pack Tactics": ["incapacitated"],
+  "dire-wolf/Pack Tactics": ["incapacitated"],
+  "elephant/Trample": ["prone"],
+  "giant-rat/Pack Tactics": ["incapacitated"],
+  "giant-vulture/Pack Tactics": ["incapacitated"],
+  "hyena/Pack Tactics": ["incapacitated"],
+  "lion/Pack Tactics": ["incapacitated"],
+  "mammoth/Trample": ["prone"],
+  "reef-shark/Pack Tactics": ["incapacitated"],
+  "vulture/Pack Tactics": ["incapacitated"],
+  "wolf/Pack Tactics": ["incapacitated"],
+}
+
+/**
+ * The link of every save, damage roll and condition in features that are not plain, read by hand from the official
+ * text, written as `linkString` and `saveString` write them.
+ */
+const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
+  "aboleth/Tentacle": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
+  "aboleth/Dominate Mind": { c: ["charmed=failure@0"] },
+  "ankheg/Bite": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
+  "balor/Fire Aura": { d: ["-|T:At the end of each of the balor’s turns"] },
+  "balor/Flame Whip": { d: ["hit", "hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
+  "barbed-devil/Claws": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
+  "barbed-devil/Hurl Flame": { d: ["hit"] },
+  "basilisk/Petrifying Gaze": { c: ["restrained=first-failure@0", "petrified=second-failure@0"] },
+  "bearded-devil/Infernal Glaive": { s: ["W:If the target is a creature and doesn’t already have an infernal wound"], d: ["hit"] },
+  "behir/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0"] },
+  "black-pudding/Corrosive Form": { d: ["-|W:A creature that hits the pudding with a melee attack roll"] },
+  "black-pudding/Dissolving Pseudopod": { d: ["hit"] },
+  "brass-dragon-wyrmling/Sleep Breath": { c: ["incapacitated=first-failure@0", "unconscious=second-failure@0"] },
+  "young-brass-dragon/Sleep Breath": { c: ["incapacitated=first-failure@0", "unconscious=second-failure@0"] },
+  "adult-brass-dragon/Sleep Breath": { c: ["incapacitated=first-failure@0", "unconscious=second-failure@0"] },
+  "ancient-brass-dragon/Sleep Breath": { c: ["incapacitated=first-failure@0", "unconscious=second-failure@0"] },
+  "bugbear-warrior/Grab": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "chain-devil/Chain": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "chain-devil/Conjure Infernal Chain": { d: ["failure@0"], c: ["restrained=failure@0"] },
+  "chimera/Bite": { d: ["hit", "hit|W:if the chimera had Advantage on the attack roll|alt0"] },
+  "chimera/Ram": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
+  "chuul/Pincer": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
+  "chuul/Paralyzing Tentacles": { c: ["poisoned=failure@0", "paralyzed=failure@0"] },
+  "cloaker/Attach": { d: ["hit"], c: ["blinded=hit|W:If the target is a Large or smaller creature"] },
+  "cockatrice/Petrifying Bite": {
+    s: ["W:If the target is a creature"],
+    d: ["hit"],
+    c: ["restrained=first-failure@0|W:If the target is a creature", "petrified=second-failure@0|W:If the target is a creature"],
+  },
+  "couatl/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0"] },
+  "swarm-of-crawling-claws/Swarm of Grasping Hands": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
+  "darkmantle/Crush": { d: ["hit"], c: ["blinded=hit|W:If the target is a Medium or smaller creature and the darkmantle had Advantage on the attack roll"] },
+  "death-dog/Bite": { s: ["W:If the target is a creature"], d: ["hit"], c: ["poisoned=first-failure@0|W:If the target is a creature"] },
+  "djinni/Storm Bolt": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "djinni/Create Whirlwind": {
+    s: ["W:Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind"],
+    d: ["failure@0|W:Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind|T:At the start of each of its turns"],
+    c: ["restrained=failure@0|W:Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind"],
+  },
+  "dragon-turtle/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
+  "earth-elemental/Rock Launch": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "erinyes/Entangling Rope": { d: ["failure@0"], c: ["restrained=failure@0"] },
+  "ettin/Battleaxe": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "fire-elemental/Fire Aura": { d: ["-|T:At the end of each of the elemental’s turns"] },
+  "fire-elemental/Fire Form": { d: ["-|W:The first time it enters a creature’s space on a turn"] },
+  "fire-elemental/Burn": { d: ["hit"] },
+  "gelatinous-cube/Ooze Cube": { d: ["-|W:by succeeding on a DC 12 Strength (Athletics) check"] },
+  "gelatinous-cube/Engulf": { d: ["failure@0", "failure@0|T:at the start of each of the cube’s turns"], c: ["restrained=failure@0"] },
+  "ghast/Claw": { s: ["W:If the target is a non-Undead creature"], d: ["hit"], c: ["paralyzed=failure@0|W:If the target is a non-Undead creature"] },
+  "ghost/Possession": { c: ["incapacitated=failure@0"] },
+  "ghoul/Claw": { s: ["W:If the target is a creature that isn’t an Undead or elf"], d: ["hit"], c: ["paralyzed=failure@0|W:If the target is a creature that isn’t an Undead or elf"] },
+  "gibbering-mouther/Gibbering": { s: ["W:while it doesn’t have the Incapacitated condition"] },
+  "gibbering-mouther/Bite": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
+  "glabrezu/Pincer": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "gladiator/Shield Bash": { d: ["failure@0"], c: ["prone=failure@0|W:If the target is a Medium or smaller creature"] },
+  "goblin-warrior/Scimitar": { d: ["hit", "hit|W:if the attack roll had Advantage"] },
+  "goblin-warrior/Shortbow": { d: ["hit", "hit|W:if the attack roll had Advantage"] },
+  "goblin-boss/Scimitar": { d: ["hit", "hit|W:if the attack roll had Advantage"] },
+  "goblin-boss/Shortbow": { d: ["hit", "hit|W:if the attack roll had Advantage"] },
+  "gorgon/Gore": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature and the gorgon moved 20+ feet straight toward it immediately before the hit"] },
+  "gorgon/Petrifying Breath": { c: ["restrained=first-failure@0", "petrified=second-failure@0"] },
+  "gray-ooze/Pseudopod": { d: ["hit"] },
+  "grick/Tentacles": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "griffon/Rend": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "harpy/Luring Song": { c: ["charmed=failure@0", "incapacitated=failure@0"] },
+  "hill-giant/Tree Club": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "horned-devil/Hurl Flame": { d: ["hit"] },
+  "horned-devil/Infernal Tail": { d: ["failure@0"] },
+  "ice-devil/Ice Spear": { d: ["hit", "hit"] },
+  "invisible-stalker/Vortex": { d: ["failure@0", "failure@0|T:at the start of each of the stalker’s turns"], c: ["grappled=failure@0"] },
+  "kraken/Tentacle": { d: ["hit"], c: ["grappled=hit", "restrained=hit"] },
+  "lamia/Corrupting Touch": { d: ["failure@0"], c: ["charmed=failure@0", "poisoned=failure@0"] },
+  "magmin/Touch": { d: ["hit"] },
+  "marilith/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0"] },
+  "medusa/Petrifying Gaze": { c: ["restrained=first-failure@0", "petrified=second-failure@0"] },
+  "merfolk-skirmisher/Ocean Spear": { d: ["hit", "hit"] },
+  "merrow/Harpoon": { d: ["hit"] },
+  "mimic/Adhesive": { c: ["grappled=-|W:A Huge or smaller creature adhered to the mimic"] },
+  "mimic/Bite": { d: ["hit", "hit|W:if the target is Grappled by the mimic|alt0", "hit"] },
+  "mimic/Pseudopod": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
+  "minotaur-of-baphomet/Gore": {
+    d: ["hit", "hit|W:If the target is a Large or smaller creature and the minotaur moved 10+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Large or smaller creature and the minotaur moved 10+ feet straight toward it immediately before the hit"],
+  },
+  "mummy/Rotting Fist": { d: ["hit", "hit"] },
+  "mummy-lord/Rotting Fist": { d: ["hit", "hit"] },
+  "mummy-lord/Whirlwind of Sand": { c: ["blinded=-"] },
+  "nalfeshnee/Horror Nimbus": { d: ["failure@0"], c: ["frightened=failure@0"] },
+  "otyugh/Bite": { s: ["W:Whenever the Poisoned target finishes a Long Rest"], d: ["hit"], c: ["poisoned=hit"] },
+  "otyugh/Tentacle": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "phase-spider/Bite": { d: ["hit", "hit"], c: ["poisoned=hit|W:If this damage reduces the target to 0 Hit Points", "paralyzed=hit|W:If this damage reduces the target to 0 Hit Points"] },
+  "pit-fiend/Fear Aura": { s: ["W:while it doesn’t have the Incapacitated condition"], c: ["frightened=failure@0|W:while it doesn’t have the Incapacitated condition"] },
+  "pit-fiend/Bite": {
+    s: ["W:If the target is a creature"],
+    d: ["hit", "failure@0|W:If the target is a creature|T:at the start of each of its turns"],
+    c: ["poisoned=failure@0|W:If the target is a creature"],
+  },
+  "purple-worm/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "rakshasa/Cursed Touch": { d: ["hit", "hit"] },
+  "remorhaz/Heat Aura": { d: ["-|T:At the end of each of the remorhaz’s turns"] },
+  "remorhaz/Bite": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "roc/Talons": { d: ["hit"], c: ["grappled=hit|W:If the target is a Huge or smaller creature", "restrained=hit|W:If the target is a Huge or smaller creature"] },
+  "roper/Tentacle": { c: ["grappled=hit", "poisoned=hit"] },
+  "salamander/Fire Aura": { d: ["-|T:At the end of each of the salamander’s turns"] },
+  "salamander/Flame Spear": { d: ["hit", "hit"] },
+  "salamander/Constrict": { d: ["failure@0", "failure@0"], c: ["grappled=failure@0", "restrained=failure@0"] },
+  "satyr/Hooves": { d: ["hit"] },
+  "shadow/Draining Swipe": { d: ["hit"] },
+  "shambling-mound/Charged Tendril": { d: ["hit", "hit"] },
+  "shambling-mound/Engulf": { d: ["failure@0|T:at the start of each of its turns"], c: ["grappled=failure@0", "blinded=failure@0", "restrained=failure@0"] },
+  "silver-dragon-wyrmling/Paralyzing Breath": { c: ["incapacitated=first-failure@0", "paralyzed=second-failure@0"] },
+  "young-silver-dragon/Paralyzing Breath": { c: ["incapacitated=first-failure@0", "paralyzed=second-failure@0"] },
+  "adult-silver-dragon/Paralyzing Breath": { c: ["incapacitated=first-failure@0", "paralyzed=second-failure@0"] },
+  "ancient-silver-dragon/Paralyzing Breath": { c: ["incapacitated=first-failure@0", "paralyzed=second-failure@0"] },
+  "warhorse-skeleton/Hooves": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature and the skeleton moved 20+ feet straight toward it immediately before the hit"] },
+  "minotaur-skeleton/Gore": {
+    d: ["hit", "hit|W:If the target is a Large or smaller creature and the skeleton moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Large or smaller creature and the skeleton moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "solar/Flying Sword": { d: ["hit", "hit"] },
+  "specter/Life Drain": { d: ["hit"] },
+  "sphinx-of-valor/Roar": {
+    s: ["L:First Roar", "L:Second Roar", "L:Third Roar"],
+    d: ["failure@2|L:Third Roar"],
+    c: ["frightened=failure@0|L:First Roar", "paralyzed=failure@1|L:Second Roar", "prone=failure@2|L:Third Roar"],
+  },
+  "stirge/Proboscis": { d: ["hit", "hit|T:at the start of each of the stirge’s turns"] },
+  "stone-giant/Boulder": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "stone-giant/Deflect Missile": { s: ["W:if that damage is reduced to 0"], d: ["failure@0|W:if that damage is reduced to 0"] },
+  "tarrasque/Bite": { d: ["hit"], c: ["grappled=hit", "restrained=hit"] },
+  "tarrasque/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
+  "tarrasque/World-Shaking Movement": { c: ["prone=-|W:if Medium or smaller"] },
+  "tough-boss/Warhammer": { d: ["hit"] },
+  "vampire-familiar/Umbral Dagger": {
+    d: ["hit", "hit"],
+    c: ["poisoned=hit|W:If the target is reduced to 0 Hit Points by this attack", "paralyzed=hit|W:If the target is reduced to 0 Hit Points by this attack"],
+  },
+  "vampire-spawn/Claw": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "vampire/Grave Strike": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
+  "vrock/Spores": { d: ["failure@0|T:at the start of each of its turns"], c: ["poisoned=failure@0"] },
+  "water-elemental/Slam": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
+  "water-elemental/Whelm": {
+    d: ["failure@0", "failure@0|W:If the target is a Large or smaller creature|T:at the start of each of the elemental’s turns"],
+    c: ["grappled=failure@0|W:If the target is a Large or smaller creature", "restrained=failure@0|W:If the target is a Large or smaller creature"],
+  },
+  "werebear/Bite": { s: ["W:If the target is a Humanoid"], d: ["hit"] },
+  "wereboar/Gore": { s: ["W:If the target is a Humanoid"], d: ["hit"] },
+  "wereboar/Tusk": {
+    d: ["hit", "hit|W:If the target is a Medium or smaller creature and the wereboar moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Medium or smaller creature and the wereboar moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "wererat/Bite": { s: ["W:If the target is a Humanoid"], d: ["hit"] },
+  "weretiger/Bite": { s: ["W:If the target is a Humanoid"], d: ["hit"] },
+  "werewolf/Bite": { s: ["W:If the target is a Humanoid"], d: ["hit"] },
+  "wight/Life Drain": { d: ["failure@0"] },
+  "winter-wolf/Bite": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "wraith/Life Drain": { d: ["hit"] },
+  "allosaurus/Claws": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature and the allosaurus moved 30+ feet straight toward it immediately before the hit"] },
+  "ankylosaurus/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
+  "blood-hawk/Beak": { d: ["hit", "hit|W:if the target is Bloodied|alt0"] },
+  "boar/Gore": {
+    d: ["hit", "hit|W:If the target is a Medium or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Medium or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "brown-bear/Claw": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "crocodile/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature", "restrained=hit|W:If the target is a Medium or smaller creature"] },
+  "dire-wolf/Bite": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "elephant/Gore": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature and the elephant moved 20+ feet straight toward it immediately before the hit"] },
+  "elk/Ram": {
+    d: ["hit", "hit|W:If the target is a Large or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Large or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "giant-ape/Boulder Toss": { d: ["failure@0"], c: ["prone=failure@0|W:If the target is a Large or smaller creature"] },
+  "giant-boar/Gore": {
+    d: ["hit", "hit|W:If the target is a Large or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Large or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "giant-crab/Claw": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "giant-crocodile/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "giant-crocodile/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "giant-elk/Ram": {
+    d: ["hit", "hit", "hit|W:If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "giant-frog/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "giant-frog/Swallow": { d: ["-|T:At the end of the frog’s next turn"], c: ["blinded=-", "restrained=-", "prone=-|W:if the frog dies", "prone=-|W:If that damage doesn’t kill it"] },
+  "giant-goat/Ram": {
+    d: ["hit", "hit|W:If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "giant-octopus/Tentacles": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature", "restrained=hit|W:If the target is a Medium or smaller creature"] },
+  "giant-scorpion/Claw": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
+  "giant-seahorse/Ram": { d: ["hit", "hit|W:if the seahorse moved 20+ feet straight toward the target immediately before the hit|alt0"] },
+  "giant-toad/Bite": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
+  "giant-toad/Swallow": { d: ["-|T:at the end of each of the toad’s turns"], c: ["blinded=-", "restrained=-", "prone=-|W:If the toad dies"] },
+  "goat/Ram": { d: ["hit", "hit|W:if the goat moved 20+ feet straight toward the target immediately before the hit|alt0"] },
+  "mammoth/Gore": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature and the mammoth moved 20+ feet straight toward it immediately before the hit"] },
+  "mastiff/Bite": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
+  "rhinoceros/Gore": {
+    d: ["hit", "hit|W:If target is a Large or smaller creature and the rhinoceros moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If target is a Large or smaller creature and the rhinoceros moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "swarm-of-bats/Bites": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0"] },
+  "swarm-of-insects/Bites": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0"] },
+  "swarm-of-piranhas/Bites": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0"] },
+  "swarm-of-rats/Bites": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0"] },
+  "swarm-of-ravens/Beaks": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0"] },
+  "swarm-of-venomous-snakes/Bites": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0", "hit"] },
+  "tiger/Rend": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
+  "triceratops/Gore": {
+    d: ["hit", "hit|W:If the target is Huge or smaller and the triceratops moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is Huge or smaller and the triceratops moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "tyrannosaurus-rex/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "tyrannosaurus-rex/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
+  "warhorse/Hooves": {
+    d: ["hit", "hit|W:If the target is a Large or smaller creature and the horse moved 20+ feet straight toward it immediately before the hit"],
+    c: ["prone=hit|W:If the target is a Large or smaller creature and the horse moved 20+ feet straight toward it immediately before the hit"],
+  },
+  "wolf/Bite": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
+  // The rows below were written from the official text for the gate audit rulings, not drafted from the data.
+  "aboleth/Mucus Cloud": {
+    s: ["W:While underwater"],
+    d: ["failure@0|W:While the cursed creature is outside a body of water|U:moisture is applied to its skin before those minutes have passed|T:at the end of every 10 minutes"],
+  },
+  "animated-rug-of-smothering/Smother": {
+    d: ["hit", "hit|W:Until the grapple ends|T:at the start of each of its turns"],
+    c: ["grappled=hit|W:If the target is a Medium or smaller creature|instead", "blinded=hit|W:Until the grapple ends", "restrained=hit|W:Until the grapple ends"],
+  },
+  "azer-sentinel/Fire Aura": { d: ["-|U:the azer has the Incapacitated condition|T:At the end of each of the azer’s turns"] },
+  "barbed-devil/Barbed Hide": { d: ["-|W:to any creature it is grappling or any creature grappling it|T:At the start of each of its turns"] },
+  "behir/Swallow": {
+    d: ["failure@0|T:at the start of each of the behir’s turns"],
+    c: [
+      "blinded=failure@0",
+      "restrained=failure@0",
+      "prone=failure@0|W:If the behir takes 30 damage or more on a single turn from the swallowed creature, the behir must succeed on a DC 14 Constitution saving throw at the end of that turn or regurgitate the creature",
+      "prone=failure@0|W:If the behir dies",
+    ],
+  },
+  "fire-elemental/Water Susceptibility": { d: ["-|W:for every 5 feet the elemental moves in water or for every gallon of water splashed on it|self"] },
+  "ghost/Incorporeal Movement": { d: ["-|W:if it ends its turn inside an object|self"] },
+  "specter/Incorporeal Movement": { d: ["-|W:if it ends its turn inside an object|self"] },
+  "will-o-wisp/Incorporeal Movement": { d: ["-|W:if it ends its turn inside an object|self"] },
+  "wraith/Incorporeal Movement": { d: ["-|W:if it ends its turn inside an object|self"] },
+  "homunculus/Bite": { d: ["hit"], c: ["poisoned=failure@0", "poisoned=failure-by-margin@0", "unconscious=failure-by-margin@0"] },
+  "incubus/Nightmare": { d: ["failure@0|U:If the target has 20 Hit Points or fewer"], c: ["unconscious=failure@0|W:If the target has 20 Hit Points or fewer"] },
+  "invisible-stalker/Invisibility": { c: ["invisible=-|self"] },
+  "kraken/Swallow": {
+    d: ["failure@0", "failure@0|W:If the target is Large or smaller|T:at the start of each of its turns"],
+    c: [
+      "restrained=failure@0|W:If the target is Large or smaller",
+      "prone=failure@0|W:If the kraken takes 50 damage or more on a single turn from a creature inside it, the kraken must succeed on a DC 25 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures",
+      "prone=failure@0|W:If the kraken dies",
+    ],
+  },
+  "lich/Deathly Teleport": { d: ["-|W:each creature within 10 feet of the space it left"] },
+  "pseudodragon/Sting": { d: ["failure@0"], c: ["poisoned=failure@0", "unconscious=failure-by-margin@0"] },
+  "purple-worm/Swallow": {
+    d: ["failure@0|T:at the start of each of the worm’s turns"],
+    c: [
+      "blinded=failure@0",
+      "restrained=failure@0",
+      "prone=failure@0|W:If the worm takes 30 damage or more on a single turn from a creature inside it, the worm must succeed on a DC 21 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures",
+      "prone=failure@0|W:If the worm dies",
+    ],
+  },
+  "remorhaz/Swallow": {
+    d: ["failure@0|T:at the start of each of the remorhaz’s turns", "failure@0|T:at the start of each of the remorhaz’s turns"],
+    c: [
+      "blinded=failure@0",
+      "restrained=failure@0",
+      "prone=failure@0|W:If the remorhaz takes 30 damage or more on a single turn from a creature inside it, the remorhaz must succeed on a DC 15 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures",
+      "prone=failure@0|W:If the remorhaz dies",
+    ],
+  },
+  "sea-hag/Death Glare": { d: ["failure@0|U:If the target has 20 Hit Points or fewer"] },
+  "solar/Slaying Bow": { d: ["failure@0|U:If the creature has 100 Hit Points or fewer", "failure@0|U:If the creature has 100 Hit Points or fewer"] },
+  "tarrasque/Swallow": {
+    d: ["failure@0|T:at the start of each of the tarrasque’s turns"],
+    c: [
+      "blinded=failure@0",
+      "restrained=failure@0",
+      "prone=failure@0|W:If the tarrasque takes 60 damage or more on a single turn from a creature inside it, the tarrasque must succeed on a DC 20 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures",
+      "prone=failure@0|W:If the tarrasque dies",
+    ],
+  },
+  "troll/Loathsome Limbs": { c: ["exhaustion=-|W:for each missing limb|self"] },
+  "vampire/Misty Escape": { c: ["paralyzed=-|W:Once in its resting place|self"] },
+  "vampire/Vampire Weakness": {
+    d: ["-|L:Running Water|W:if it ends its turn in running water|self", "-|L:Sunlight|W:if it starts its turn in sunlight|self"],
+    c: ["paralyzed=-|L:Stake to the Heart|W:If a weapon that deals Piercing damage is driven into the vampire’s heart while the vampire has the Incapacitated condition in its resting place|self"],
+  },
+  "vampire-spawn/Vampire Weakness": { d: ["-|L:Running Water|W:if it ends its turn in running water|self", "-|L:Sunlight|W:if it starts its turn in sunlight|self"] },
+  "will-o-wisp/Vanish": { c: ["invisible=-|self"] },
+}
+
+/** Features that cast spells in a way the shape does not hold, and why. */
+const castingProse: Record<string, string> = {
+  "pit-fiend/Hellfire Spellcasting": "casts Fireball twice and may replace one with another spell",
+  "green-hag/Coven Magic": "only near two hag allies, and each spell once per Long Rest",
+  "night-hag/Coven Magic": "only near two hag allies, and each spell once per Long Rest",
+  "sea-hag/Coven Magic": "only near two hag allies, and each spell once per Long Rest",
+  "shield-guardian/Spell Storing": "casts a spell stored by another caster, with that caster’s ability",
 }

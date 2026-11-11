@@ -6,14 +6,18 @@ import { registry } from "./lib/registry"
 import { root } from "./lib/sources"
 
 // Tests the checks themselves. For every distinct typed field in every data file, change one value and then
-// delete one, run the checks, and expect a failure. A mutation that passes is a value the checks do not guard.
+// delete one. For every list, add an item. For every group of fields, delete the whole group. Run the checks
+// after each and expect a failure. A mutation that passes is something the checks do not guard.
+//
+// What this cannot show: that a value is right. If a builder and its check share a wrong reading of the text,
+// both agree and nothing here changes that. It shows only that the checks notice when the data moves.
 //
 // It works on copies of the package in a temp folder, so the real data is never touched. It takes some minutes.
 // Run: pnpm --filter @d20/srd mutate [file…]
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
 type Path = (string | number)[]
-type Task = { file: string; id: string; index: number; path: Path; kind: "change" | "delete"; replacement?: Json }
+type Task = { file: string; id: string; index: number; path: Path; kind: "change" | "delete" | "add" | "delete group"; replacement?: Json }
 type Outcome = Task & { result: "content" | "schema" | "missed" }
 
 // Long text is prose, which the sentence, paragraph and spelling checks cover.
@@ -26,8 +30,17 @@ function* leaves(value: Json, path: Path = []): Generator<[Path, Json]> {
   else yield [path, value]
 }
 
-/** Another value for a field that its schema is likely to accept: a number one higher, bigger dice, or a value seen elsewhere at the same path. */
+/** Every list and every group of fields in a value, with its path. */
+function* branches(value: Json, path: Path = []): Generator<[Path, Json]> {
+  if (!value || typeof value !== "object") return
+  if (path.length) yield [path, value]
+  if (Array.isArray(value)) for (const [index, item] of value.entries()) yield* branches(item, [...path, index])
+  else for (const [key, item] of Object.entries(value)) yield* branches(item, [...path, key])
+}
+
+/** Another value for a field that its schema is likely to accept: the other boolean, a number one higher, bigger dice, or a value seen elsewhere at the same path. */
 function another(value: Json, seen: Json[]): Json | undefined {
+  if (typeof value === "boolean") return !value
   if (typeof value === "number") return value + 1
   if (typeof value !== "string") return undefined
   const dice = /^(\d+)d(\d+.*)$/.exec(value)
@@ -56,6 +69,26 @@ function tasksFor(file: string): Task[] {
     if (replacement !== undefined) tasks.push({ ...base, kind: "change", replacement })
     tasks.push({ ...base, kind: "delete" })
   }
+  // The first list and the first group at each distinct path. A list gains an item taken from the same list in
+  // another entry, or a copy of its own first item, so the added item is one its schema accepts.
+  const firstBranch = new Map<string, { index: number; path: Path; value: Json }>()
+  const items = new Map<string, Json[]>()
+  for (const [index, entry] of data.entries()) {
+    for (const [path, value] of branches(entry as Json)) {
+      const key = fold(path)
+      if (!firstBranch.has(key)) firstBranch.set(key, { index, path, value })
+      if (Array.isArray(value)) items.set(key, [...(items.get(key) ?? []), ...value])
+    }
+  }
+  for (const [key, { index, path, value }] of firstBranch) {
+    const base = { file, id: data[index].id, index, path }
+    if (Array.isArray(value) && value.length) {
+      const own = new Set(value.map((item) => JSON.stringify(item)))
+      const foreign = (items.get(key) ?? []).find((item) => !own.has(JSON.stringify(item)))
+      tasks.push({ ...base, kind: "add", replacement: foreign ?? value[0] })
+    }
+    tasks.push({ ...base, kind: "delete group" })
+  }
   return tasks
 }
 
@@ -65,6 +98,7 @@ function mutate(text: string, task: Task): string {
   for (const key of task.path.slice(0, -1)) parent = parent[key]
   const last = task.path[task.path.length - 1]
   if (task.kind === "change") parent[last] = task.replacement
+  else if (task.kind === "add") parent[last].push(task.replacement)
   else if (Array.isArray(parent)) parent.splice(last as number, 1)
   else delete parent[last]
   return `${JSON.stringify(data, null, 2)}\n`
@@ -117,6 +151,14 @@ try {
 
 const count = (result: Outcome["result"]) => outcomes.filter((outcome) => outcome.result === result).length
 const missed = outcomes.filter((outcome) => outcome.result === "missed")
-for (const miss of missed) console.log(`MISSED ${miss.file} ${miss.id} ${fold(miss.path)} ${miss.kind === "change" ? `changed to ${JSON.stringify(miss.replacement)}` : "deleted"}`)
+const what = (task: Task) =>
+  task.kind === "change"
+    ? `changed to ${JSON.stringify(task.replacement)}`
+    : task.kind === "add"
+      ? `gained ${JSON.stringify(task.replacement)}`
+      : task.kind === "delete"
+        ? "deleted"
+        : "deleted with all it holds"
+for (const miss of missed) console.log(`MISSED ${miss.file} ${miss.id} ${fold(miss.path)} ${what(miss)}`)
 console.log(`\n${outcomes.length} mutations: ${count("content")} caught by a content check, ${count("schema")} by the schema alone, ${missed.length} missed.`)
 if (missed.length) process.exit(1)

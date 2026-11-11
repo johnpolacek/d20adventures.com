@@ -5049,7 +5049,7 @@
       "focus": [
         "arcane-focus"
       ],
-      "slotsRestore": "short-rest",
+      "slotsRestore": "short-or-long-rest",
       "changePrepared": {
         "when": "level-up",
         "count": 1

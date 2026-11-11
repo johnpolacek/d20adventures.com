@@ -1,5 +1,5 @@
 import { backgroundSchema, featSchema, originRuleSchema, speciesSchema } from "../../src/schema/origins"
-import { toId, writeData } from "../lib/data"
+import { readData, toId, writeData } from "../lib/data"
 import { pageOf, pages } from "../lib/official"
 
 // The base source (5e-bits) restructures the species traits, drops the Human Small size and the Dragonborn
@@ -81,7 +81,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
     name: "Dwarf",
     traits: [
       { name: "Darkvision", mech: { darkvision: 120 } },
-      { name: "Dwarven Resilience", mech: { resistance: ["poison"], savingThrowAdvantage: { conditions: ["poisoned"] } } },
+      { name: "Dwarven Resilience", mech: { resistances: { damageTypes: ["poison"] }, savingThrowAdvantage: { conditions: ["poisoned"] } } },
       { name: "Dwarven Toughness", mech: { hitPointBonus: { initial: 1, perLevel: 1 } } },
       { name: "Stonecunning", mech: { activation: ["bonus-action"], requires: "stone-surface", tremorsense: 60, durationMinutes: 10, uses: proficiencyBonusLong } },
     ],
@@ -138,13 +138,13 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
         options: {
           "Cloud’s Jaunt": { activation: ["bonus-action"], teleportFeet: 30 },
           "Fire’s Burn": { trigger: "hit-with-attack-roll", damage: { dice: "1d10", type: "fire" } },
-          "Frost’s Chill": { trigger: "hit-with-attack-roll", damage: { dice: "1d6", type: "cold" }, speedReduction: 10 },
-          "Hill’s Tumble": { trigger: "hit-with-attack-roll", targetMaxSize: "Large", condition: "prone" },
+          "Frost’s Chill": { trigger: "hit-with-attack-roll", damage: { dice: "1d6", type: "cold" }, targetSpeedReduction: { feet: 10, until: "start-of-user-next-turn" } },
+          "Hill’s Tumble": { trigger: "hit-with-attack-roll", targetMaxSize: "Large", targetCondition: "prone" },
           "Stone’s Endurance": { activation: ["reaction"], trigger: "take-damage", damageReduction: { dice: "1d12", ability: "con" } },
-          "Storm’s Thunder": { activation: ["reaction"], trigger: "take-damage", damage: { dice: "1d8", type: "thunder" }, rangeFeet: 60 },
+          "Storm’s Thunder": { activation: ["reaction"], trigger: "take-damage", damage: { dice: "1d8", type: "thunder" }, range: 60 },
         },
       },
-      { name: "Large Form", mech: { level: 5, activation: ["bonus-action"], sizeChange: "Large", durationMinutes: 10, speedBonus: 10, uses: onceLong } },
+      { name: "Large Form", mech: { level: 5, activation: ["bonus-action"], sizeChange: "Large", durationMinutes: 10, speedBonus: { feet: 10 }, uses: onceLong } },
       { name: "Powerful Build", mech: { grappledEscapeAdvantage: true, carryingCapacitySizeBonus: 1 } },
     ],
   },
@@ -181,7 +181,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
         name: "Fiendish Legacy",
         choice: "table",
         mech: { spellcastingAbility: abilityChoice },
-        options: { Abyssal: { resistance: ["poison"] }, Chthonic: { resistance: ["necrotic"] }, Infernal: { resistance: ["fire"] } },
+        options: { Abyssal: { resistances: { damageTypes: ["poison"] } }, Chthonic: { resistances: { damageTypes: ["necrotic"] } }, Infernal: { resistances: { damageTypes: ["fire"] } } },
       },
       { name: "Otherworldly Presence", mech: { spells: [{ spell: "thaumaturgy", level: 1, cantrip: true }] } },
     ],
@@ -296,6 +296,12 @@ function buildSpecies() {
 const singular: Record<string, string> = { Daggers: "Dagger", Pouches: "Pouch", "Traveler’s Clothes": "Clothes, Traveler’s" }
 const abilityByName: Record<string, string> = { Strength: "str", Dexterity: "dex", Constitution: "con", Intelligence: "int", Wisdom: "wis", Charisma: "cha" }
 
+const groups = new Set(
+  readData("equipment")
+    .filter((entry) => entry.kind === "group")
+    .map((entry) => entry.id)
+)
+
 function equipmentOption(option: string, text: string) {
   const parts = text.split(", ")
   const gp = Number(parts.pop()?.match(/^(\d+) GP$/)?.[1])
@@ -305,8 +311,10 @@ function equipmentOption(option: string, text: string) {
     const [, count, rawName, paren] = match
     const item: Record<string, unknown> = { quantity: Number(count ?? 1) }
     // "Gaming Set (same as above)" is one item of the kind the player chose for the tool proficiency.
-    if (paren === "same as above") item.chooseFrom = [toId(rawName)]
-    else item.item = toId(singular[rawName] ?? rawName)
+    // A name that is a group in the equipment data ("Holy Symbol") is a choice from that group.
+    const id = toId(singular[rawName] ?? rawName)
+    if (paren === "same as above" || groups.has(id)) item.chooseFrom = [id]
+    else item.item = id
     const sheets = paren?.match(/^(\d+) (sheets)$/)
     if (sheets) {
       item.quantity = Number(sheets[1])
@@ -392,11 +400,11 @@ const featSpecs: Record<string, FeatSpec> = {
   "Great Weapon Fighting": { prerequisite: fightingStyle, mech: { damageDieMinimum: { minimum: 3, weapon: "melee", heldWith: "two-hands", properties: ["two-handed", "versatile"] } } },
   "Two-Weapon Fighting": { prerequisite: fightingStyle, mech: { addAbilityModifierToExtraAttack: { weaponProperty: "light" } } },
   "Boon of Combat Prowess": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { "Peerless Aim": { uses: { count: 1, recharge: "start-of-next-turn" } } } },
-  "Boon of Dimensional Travel": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { "Blink Steps": { teleportFeet: 30 } } },
+  "Boon of Dimensional Travel": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { "Blink Steps": { trigger: "after-attack-or-magic-action", teleportFeet: 30 } } },
   "Boon of Fate": {
     prerequisite: { level: 19 },
     abilityScoreIncrease: boonScore,
-    benefits: { "Improve Fate": { dice: "2d4", rangeFeet: 60, uses: { count: 1, recharge: "initiative-or-short-or-long-rest" } } },
+    benefits: { "Improve Fate": { dice: "2d4", range: 60, uses: { count: 1, recharge: "initiative-or-short-or-long-rest" } } },
   },
   "Boon of Irresistible Offense": { prerequisite: { level: 19 }, abilityScoreIncrease: { from: ["str", "dex"], choices: [{ count: 1, amount: 1 }], maximum: 30 } },
   "Boon of Spell Recall": {
@@ -408,7 +416,7 @@ const featSpecs: Record<string, FeatSpec> = {
     prerequisite: { level: 19 },
     abilityScoreIncrease: boonScore,
     benefits: {
-      "Merge with Shadows": { activation: ["bonus-action"], requires: "dim-light-or-darkness", condition: "invisible" },
+      "Merge with Shadows": { activation: ["bonus-action"], requires: "dim-light-or-darkness", selfCondition: "invisible" },
       "Shadowy Form": { requires: "dim-light-or-darkness", resistanceExcept: ["psychic", "radiant"] },
     },
   },

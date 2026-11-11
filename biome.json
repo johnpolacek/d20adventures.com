@@ -68,6 +68,7 @@
       "!wiki",
       "!packages/srd/data",
       "!packages/srd/sources",
+      "!packages/srd/scripts/verify/fixtures",
       "!packages/srd/.cache",
       "!.agent-browser"
     ]

@@ -1,0 +1,1800 @@
+{
+  "adamantine-armor": {
+    "notes": [
+      "While you wear it, any Critical Hit against you becomes a normal hit."
+    ]
+  },
+  "ammunition-1-2-or-3": {
+    "variants": {
+      "+1": {
+        "bonuses": [
+          {
+            "to": "attack-rolls",
+            "value": 1
+          },
+          {
+            "to": "damage-rolls",
+            "value": 1
+          }
+        ]
+      },
+      "+2": {
+        "bonuses": [
+          {
+            "to": "attack-rolls",
+            "value": 2
+          },
+          {
+            "to": "damage-rolls",
+            "value": 2
+          }
+        ]
+      },
+      "+3": {
+        "bonuses": [
+          {
+            "to": "attack-rolls",
+            "value": 3
+          },
+          {
+            "to": "damage-rolls",
+            "value": 3
+          }
+        ]
+      }
+    },
+    "notes": [
+      "The bonus is to attack and damage rolls made with this piece of ammunition.",
+      "Once it hits a target, the ammunition is no longer magical."
+    ]
+  },
+  "ammunition-of-slaying": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": 17
+      }
+    ],
+    "damage": [
+      {
+        "dice": "6d10",
+        "type": "force",
+        "role": "effect",
+        "appliesWhen": "If a creature of that type takes damage from the ammunition"
+      }
+    ],
+    "notes": [
+      "The creature type is chosen by the GM or rolled on a 1d100 table.",
+      "The extra damage is dealt on a failed save, half as much on a successful one.",
+      "After dealing its extra damage to a creature, the ammunition becomes nonmagical."
+    ]
+  },
+  "amulet-of-health": {
+    "notes": [
+      "Your Constitution is 19 while you wear it. It has no effect if your Constitution is 19 or higher without it."
+    ]
+  },
+  "amulet-of-proof-against-detection-and-location": {
+    "notes": [
+      "While wearing it, you can’t be targeted by Divination spells or perceived through magical scrying sensors unless you allow it."
+    ]
+  },
+  "amulet-of-the-planes": {
+    "spells": [
+      {
+        "id": "plane-shift"
+      }
+    ],
+    "notes": [
+      "You cast Plane Shift only on a successful DC 15 Intelligence (Arcana) check made as part of the Magic action.",
+      "On a failed check, you and each creature and object within 15 feet travel to a random destination rolled on a 1d100 table."
+    ]
+  },
+  "animated-shield": {
+    "notes": [
+      "As a Bonus Action the Shield animates for 1 minute and protects you as if you were wielding it, leaving your hands free."
+    ]
+  },
+  "apparatus-of-the-crab": {
+    "damage": [
+      {
+        "dice": "2d6",
+        "type": "bludgeoning",
+        "role": "to-item"
+      }
+    ],
+    "notes": [
+      "The apparatus is a Large object: AC 20; HP 200; Speed 30 ft., Swim 30 ft. (0 ft. if the legs aren’t extended); Immunity to Poison and Psychic damage.",
+      "The hidden catch is found with a DC 20 Intelligence (Investigation) check.",
+      "The claw attacks are stated only in the Levers table (lever 5 up: +8 to hit, 2d6 Bludgeoning; down: Grappled, escape DC 15). They belong to that row and are not typed on the item.",
+      "The compartment holds air for 10 hours of breathing, divided by the number of breathing creatures inside.",
+      "The 2d6 pressure damage applies below a depth of 900 feet. No unbroken span of the text states that condition, so it is left as a note."
+    ]
+  },
+  "armor-1-2-or-3": {
+    "variants": {
+      "+1": {
+        "bonuses": [
+          {
+            "to": "armor-class",
+            "value": 1
+          }
+        ]
+      },
+      "+2": {
+        "bonuses": [
+          {
+            "to": "armor-class",
+            "value": 2
+          }
+        ]
+      },
+      "+3": {
+        "bonuses": [
+          {
+            "to": "armor-class",
+            "value": 3
+          }
+        ]
+      }
+    }
+  },
+  "armor-of-invulnerability": {
+    "notes": [
+      "You have Resistance to Bludgeoning, Piercing, and Slashing damage while you wear it.",
+      "Metal Shell: as a Magic action you gain Immunity to Bludgeoning, Piercing, and Slashing damage for 10 minutes or until you are no longer wearing the armor. Once used, not again until the next dawn."
+    ]
+  },
+  "armor-of-resistance": {
+    "notes": [
+      "You have Resistance to one damage type while you wear it, chosen by the GM or rolled on a 1d10 table."
+    ]
+  },
+  "armor-of-vulnerability": {
+    "notes": [
+      "You have Resistance to one of Bludgeoning, Piercing, or Slashing damage while wearing it.",
+      "Curse: attuning curses you until you are targeted by Remove Curse or similar magic. While cursed, you have Vulnerability to the other two of those damage types."
+    ]
+  },
+  "arrow-catching-shield": {
+    "conditionalBonuses": [
+      {
+        "to": "armor-class",
+        "value": 2,
+        "appliesWhen": "against ranged attack rolls"
+      }
+    ],
+    "notes": [
+      "The bonus is in addition to the Shield’s normal bonus to AC.",
+      "When an attacker makes a ranged attack roll against a target within 5 feet of you, you can take a Reaction to become the target instead."
+    ]
+  },
+  "bag-of-beans": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": 15
+      }
+    ],
+    "damage": [
+      {
+        "dice": "5d4",
+        "type": "force",
+        "role": "effect"
+      }
+    ],
+    "notes": [
+      "The bag contains 3d4 beans when found and becomes nonmagical when empty.",
+      "Dumped beans explode in a 10-foot-radius Sphere; each creature in it, including you, takes the 5d4 on a failed save or half as much on a success.",
+      "A planted bean produces an effect chosen by the GM or rolled on a 1d100 table. The saves and damage in that table's rows (01: DC 15 Constitution, 5d6 Poison; 81–90: DC 20 Constitution, 10d6 Force) belong to the rows and are not typed on the item."
+    ]
+  },
+  "bag-of-devouring": {
+    "notes": [
+      "When part of a living creature is placed in the bag, there is a 50 percent chance it is pulled inside.",
+      "A creature inside can escape with a DC 15 Strength (Athletics) check. Another creature can pull it out with a DC 20 Strength (Athletics) check.",
+      "Any creature that starts its turn inside the bag is devoured."
+    ]
+  },
+  "bag-of-holding": {
+    "notes": [
+      "The bag holds up to 500 pounds, not exceeding 64 cubic feet, and weighs 5 pounds. Placing it in another extradimensional space destroys both and opens a gate to the Astral Plane."
+    ]
+  },
+  "bag-of-tricks": {
+    "notes": [
+      "As a Magic action you pull out a fuzzy object that becomes a creature rolled on the 1d8 table for the bag’s color (gray, rust, or tan).",
+      "Once three fuzzy objects have been pulled from the bag, it can’t be used again until the next dawn."
+    ]
+  },
+  "bead-of-force": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": 15
+      }
+    ],
+    "damage": [
+      {
+        "dice": "5d4",
+        "type": "force",
+        "role": "effect"
+      }
+    ],
+    "notes": [
+      "The bead explodes in a 10-foot-radius Sphere. The 5d4 is dealt on a failed save. A success deals no damage.",
+      "A creature that failed the save and is completely within the area is trapped in a sphere of force for 1 minute."
+    ]
+  },
+  "bead-of-nourishment": {
+    "notes": [
+      "Provides as much nourishment as 1 day of Rations."
+    ]
+  },
+  "belt-of-dwarvenkind": {
+    "notes": [
+      "Your Constitution increases by 2, to a maximum of 20.",
+      "You know Dwarvish and have Advantage on Charisma (Persuasion) checks made to interact with dwarves and duergar.",
+      "If you aren’t a dwarf or duergar, you also have Darkvision 60 feet, Resistance to Poison damage, and Advantage on saving throws to avoid or end the Poisoned condition."
+    ]
+  },
+  "belt-of-giant-strength": {
+    "variants": {
+      "Belt of Giant Strength (hill)": {
+        "strength": 21
+      },
+      "Belt of Giant Strength (frost or stone)": {
+        "strength": 23
+      },
+      "Belt of Giant Strength (fire)": {
+        "strength": 25
+      },
+      "Belt of Giant Strength (cloud)": {
+        "strength": 27
+      },
+      "Belt of Giant Strength (storm)": {
+        "strength": 29
+      }
+    },
+    "notes": [
+      "Your Strength changes to the belt’s score. It has no effect if your Strength without the belt is equal to or greater than that score."
+    ]
+  },
+  "berserker-axe": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1
+      }
+    ],
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "While attuned, your Hit Point maximum increases by 1 for each level you have attained.",
+      "Curse: you have Disadvantage on attack rolls with weapons other than this one.",
+      "Whenever another creature damages you while the weapon is in your possession, you must succeed on the save or go berserk."
+    ]
+  },
+  "boots-of-elvenkind": {
+    "notes": [
+      "Your steps make no sound, and you have Advantage on Dexterity (Stealth) checks."
+    ]
+  },
+  "boots-of-levitation": {
+    "spells": [
+      {
+        "id": "levitate"
+      }
+    ],
+    "notes": [
+      "You cast Levitate on yourself only."
+    ]
+  },
+  "boots-of-speed": {
+    "notes": [
+      "As a Bonus Action the boots double your Speed, and Opportunity Attacks against you have Disadvantage.",
+      "After a total of 10 minutes of use, the magic ceases to function for you until you finish a Long Rest."
+    ]
+  },
+  "boots-of-striding-and-springing": {
+    "notes": [
+      "Your Speed becomes 30 feet unless higher, and isn’t reduced by weight or Heavy Armor. Once on each of your turns, you can jump up to 30 feet by spending only 10 feet of movement."
+    ]
+  },
+  "boots-of-the-winterlands": {
+    "notes": [
+      "You have Resistance to Cold damage, tolerate temperatures of 0 degrees Fahrenheit or lower, and ignore Difficult Terrain created by ice or snow."
+    ]
+  },
+  "bowl-of-commanding-water-elementals": {
+    "notes": [
+      "As a Magic action you summon a Water Elemental that obeys you for up to 1 hour. Not usable again until the next dawn."
+    ]
+  },
+  "bracers-of-archery": {
+    "conditionalBonuses": [
+      {
+        "to": "damage-rolls",
+        "value": 2,
+        "appliesWhen": "made with such weapons"
+      }
+    ],
+    "notes": [
+      "“Such weapons” are the Longbow and Shortbow, with which the bracers also give you proficiency."
+    ]
+  },
+  "bracers-of-defense": {
+    "conditionalBonuses": [
+      {
+        "to": "armor-class",
+        "value": 2,
+        "appliesWhen": "if you are wearing no armor and using no Shield"
+      }
+    ]
+  },
+  "brazier-of-commanding-fire-elementals": {
+    "notes": [
+      "As a Magic action you summon a Fire Elemental that obeys you for up to 1 hour. Not usable again until the next dawn."
+    ]
+  },
+  "brooch-of-shielding": {
+    "notes": [
+      "You have Resistance to Force damage and Immunity to damage from the Magic Missile spell."
+    ]
+  },
+  "broom-of-flying": {
+    "notes": [
+      "The broom has a Fly Speed of 50 feet, 30 feet while carrying over 200 pounds, and carries up to 400 pounds."
+    ]
+  },
+  "candle-of-invocation": {
+    "spells": [
+      {
+        "id": "gate"
+      }
+    ],
+    "notes": [
+      "You can cast Gate only when you light the candle for the first time, and doing so destroys the candle. The portal links to an Outer Plane chosen by the GM or rolled on a 1d100 table.",
+      "While lit, the candle sheds Dim Light in a 30-foot radius. Within it you have Advantage on D20 Tests, and a Cleric or Druid can cast prepared level 1 spells without expending spell slots.",
+      "The candle burns for 4 hours in total."
+    ]
+  },
+  "cape-of-the-mountebank": {
+    "spells": [
+      {
+        "id": "dimension-door"
+      }
+    ],
+    "notes": [
+      "This property can’t be used again until the next dawn. Teleporting leaves a cloud of smoke that Lightly Obscures the space you left until the end of your next turn."
+    ]
+  },
+  "carpet-of-flying": {
+    "notes": [
+      "Four sizes exist, chosen or rolled on a 1d100 table, each with its own capacity and Fly Speed (80, 60, 40, or 30 feet). Fly Speed is halved above normal capacity."
+    ]
+  },
+  "censer-of-controlling-air-elementals": {
+    "notes": [
+      "As a Magic action you summon an Air Elemental that obeys you for up to 1 hour. Not usable again until the next dawn."
+    ]
+  },
+  "chime-of-opening": {
+    "spells": [
+      {
+        "id": "knock"
+      }
+    ],
+    "notes": [
+      "The chime can be used 10 times. After the tenth time it cracks and becomes useless. The text does not call these charges."
+    ]
+  },
+  "circlet-of-blasting": {
+    "spells": [
+      {
+        "id": "scorching-ray"
+      }
+    ],
+    "notes": [
+      "The spell is cast with +5 to hit.",
+      "The circlet can’t cast this spell again until the next dawn."
+    ]
+  },
+  "cloak-of-arachnida": {
+    "spells": [
+      {
+        "id": "web",
+        "saveDc": 13
+      }
+    ],
+    "notes": [
+      "The web fills twice its normal area. Once used, the Web property can’t be used again until the next dawn.",
+      "You have Resistance to Poison damage and a Climb Speed equal to your Speed, and can’t be caught in webs."
+    ]
+  },
+  "cloak-of-displacement": {
+    "notes": [
+      "Creatures have Disadvantage on attack rolls against you. The property stops until the start of your next turn when you take damage, and is suppressed while your Speed is 0."
+    ]
+  },
+  "cloak-of-elvenkind": {
+    "notes": [
+      "Wisdom (Perception) checks made to perceive you have Disadvantage, and you have Advantage on Dexterity (Stealth) checks."
+    ]
+  },
+  "cloak-of-invisibility": {
+    "charges": {
+      "max": 3,
+      "regains": {
+        "amount": "1d3",
+        "time": "dawn"
+      }
+    },
+    "notes": [
+      "As a Magic action you expend 1 charge to give yourself the Invisible condition for 1 hour."
+    ]
+  },
+  "cloak-of-protection": {
+    "bonuses": [
+      {
+        "to": "armor-class",
+        "value": 1
+      },
+      {
+        "to": "saving-throws",
+        "value": 1
+      }
+    ]
+  },
+  "cloak-of-the-bat": {
+    "spells": [
+      {
+        "id": "polymorph"
+      }
+    ],
+    "notes": [
+      "You can cast Polymorph only on yourself, into a Bat, while in Dim Light or Darkness, and you keep your Intelligence, Wisdom, and Charisma. Not again until the next dawn.",
+      "You have Advantage on Dexterity (Stealth) checks, and in Dim Light or Darkness you can gain a Fly Speed of 40 feet."
+    ]
+  },
+  "cloak-of-the-manta-ray": {
+    "notes": [
+      "You can breathe underwater and have a Swim Speed of 60 feet."
+    ]
+  },
+  "crystal-ball": {
+    "spells": [
+      {
+        "id": "scrying",
+        "saveDc": 17
+      }
+    ]
+  },
+  "crystal-ball-of-mind-reading": {
+    "spells": [
+      {
+        "id": "scrying",
+        "saveDc": 17
+      },
+      {
+        "id": "detect-thoughts",
+        "saveDc": 17
+      }
+    ],
+    "notes": [
+      "Detect Thoughts targets creatures within 30 feet of the Scrying sensor, needs no Concentration, and ends if Scrying ends."
+    ]
+  },
+  "crystal-ball-of-telepathy": {
+    "spells": [
+      {
+        "id": "scrying",
+        "saveDc": 17
+      },
+      {
+        "id": "suggestion",
+        "saveDc": 17
+      }
+    ],
+    "notes": [
+      "You can communicate telepathically with creatures you can see within 30 feet of the sensor.",
+      "Suggestion is cast through the sensor, needs no Concentration, ends if Scrying ends, and can’t be cast this way again until the next dawn."
+    ]
+  },
+  "crystal-ball-of-true-seeing": {
+    "spells": [
+      {
+        "id": "scrying",
+        "saveDc": 17
+      }
+    ],
+    "notes": [
+      "You have Truesight with a range of 120 feet centered on the spell’s sensor."
+    ]
+  },
+  "cube-of-force": {
+    "spells": [
+      {
+        "id": "mage-armor",
+        "charges": 1,
+        "saveDc": 17
+      },
+      {
+        "id": "shield",
+        "charges": 1,
+        "saveDc": 17
+      },
+      {
+        "id": "tiny-hut",
+        "charges": 3,
+        "saveDc": 17
+      },
+      {
+        "id": "private-sanctum",
+        "charges": 4,
+        "saveDc": 17
+      },
+      {
+        "id": "resilient-sphere",
+        "charges": 4,
+        "saveDc": 17
+      },
+      {
+        "id": "wall-of-force",
+        "charges": 5,
+        "saveDc": 17
+      }
+    ],
+    "charges": {
+      "max": 10,
+      "regains": {
+        "amount": "1d6",
+        "time": "dawn"
+      }
+    }
+  },
+  "cubic-gate": {
+    "spells": [
+      {
+        "id": "gate",
+        "charges": 1
+      },
+      {
+        "id": "plane-shift",
+        "charges": 1
+      }
+    ],
+    "charges": {
+      "max": 3,
+      "regains": {
+        "amount": "1d3",
+        "time": "dawn"
+      }
+    },
+    "notes": [
+      "Each spell takes the targets to the plane keyed to the side of the cube pressed."
+    ]
+  },
+  "dagger-of-venom": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1
+      }
+    ],
+    "saves": [
+      {
+        "ability": "con",
+        "dc": 15
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d10",
+        "type": "poison",
+        "role": "effect"
+      }
+    ],
+    "notes": [
+      "The poison is applied as a Bonus Action and can’t be applied again until the next dawn.",
+      "The poison remains for 1 minute or until an attack using this weapon hits a creature. That creature takes the 2d10 and has the Poisoned condition for 1 minute on a failed save. A success avoids both."
+    ]
+  },
+  "dancing-sword": {
+    "notes": [
+      "As a Bonus Action the weapon hovers, flies up to 30 feet, and attacks using your attack roll. After its fourth attack it returns to you."
+    ]
+  },
+  "decanter-of-endless-water": {
+    "saves": [
+      {
+        "ability": "str",
+        "dc": 13
+      }
+    ],
+    "damage": [
+      {
+        "dice": "1d4",
+        "type": "bludgeoning",
+        "role": "effect"
+      }
+    ],
+    "notes": [
+      "Geyser: one creature of your choice in a Line 30 feet long and 1 foot wide takes the 1d4 and has the Prone condition on a failed save.",
+      "Splash produces 1 gallon of water, Fountain 5 gallons, Geyser 30 gallons."
+    ]
+  },
+  "deck-of-illusions": {
+    "notes": [
+      "A drawn card makes an illusion of a creature rolled on a 1d100 table.",
+      "A creature that takes a Study action identifies the illusion with a DC 15 Intelligence (Investigation) check."
+    ]
+  },
+  "defender": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 3
+      },
+      {
+        "to": "damage-rolls",
+        "value": 3
+      }
+    ],
+    "notes": [
+      "The first time you attack with it on each of your turns, you can transfer some or all of the bonus to your Armor Class until the start of your next turn, while you hold the weapon."
+    ]
+  },
+  "demon-armor": {
+    "bonuses": [
+      {
+        "to": "armor-class",
+        "value": 1
+      }
+    ],
+    "conditionalBonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1,
+        "appliesWhen": "of your Unarmed Strikes"
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1,
+        "appliesWhen": "of your Unarmed Strikes"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "1d8",
+        "type": "slashing",
+        "role": "base",
+        "appliesWhen": "your Unarmed Strikes"
+      }
+    ],
+    "notes": [
+      "You know Abyssal.",
+      "Curse: you can’t doff the armor unless targeted by Remove Curse or similar magic, and you have Disadvantage on attack rolls against demons and on saving throws against their spells and special abilities."
+    ]
+  },
+  "dimensional-shackles": {
+    "notes": [
+      "The shackles prevent extradimensional movement. Once every 30 days, the bound creature can break free with a DC 30 Strength (Athletics) check."
+    ]
+  },
+  "dragon-orb": {
+    "spells": [
+      {
+        "id": "cure-wounds",
+        "charges": 4,
+        "level": 9
+      },
+      {
+        "id": "daylight",
+        "charges": 1
+      },
+      {
+        "id": "death-ward",
+        "charges": 2
+      },
+      {
+        "id": "detect-magic",
+        "charges": 0
+      },
+      {
+        "id": "scrying",
+        "charges": 3,
+        "saveDc": 18
+      }
+    ],
+    "spellEffects": [
+      {
+        "id": "suggestion",
+        "saveDc": 18
+      }
+    ],
+    "charges": {
+      "max": 7,
+      "regains": {
+        "amount": "1d4 + 3",
+        "time": "dawn"
+      }
+    },
+    "saves": [
+      {
+        "ability": "cha",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "On a failed Charisma save after peering into the orb, it imposes the Charmed condition on you while you remain attuned. On a success, you control the orb.",
+      "While you are Charmed by the orb, it casts Suggestion on you at will.",
+      "You can cast the spells only if you control the orb.",
+      "Call Dragons: a telepathic call reaching 40 miles draws chromatic dragons. Not usable again for 1 hour.",
+      "The orb has AC 20 and is destroyed only by damage from a +3 Weapon or a Disintegrate spell."
+    ]
+  },
+  "dragon-scale-mail": {
+    "bonuses": [
+      {
+        "to": "armor-class",
+        "value": 1
+      }
+    ],
+    "notes": [
+      "You have Advantage on saving throws against the breath weapons of Dragons.",
+      "You have Resistance to one damage type set by the kind of dragon, from a table.",
+      "As a Magic action you learn the distance and direction to the closest dragon of the same type within 30 miles. Not again until the next dawn."
+    ]
+  },
+  "dragon-slayer": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1
+      }
+    ],
+    "notes": [
+      "The weapon deals an extra 3d6 damage of the weapon’s type if the target is a Dragon. The type is not fixed, so the roll is not typed."
+    ]
+  },
+  "dust-of-disappearance": {
+    "notes": [
+      "You and each creature and object within a 10-foot Emanation have the Invisible condition for 2d4 minutes. It ends for a creature after it attacks, deals damage, or casts a spell."
+    ]
+  },
+  "dust-of-dryness": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": 13
+      }
+    ],
+    "damage": [
+      {
+        "dice": "10d6",
+        "type": "necrotic",
+        "role": "effect",
+        "appliesWhen": "an Elemental within 5 feet of yourself that is composed mostly of water"
+      }
+    ],
+    "notes": [
+      "The packet holds 1d6 + 4 pinches. A pinch turns up to a 15-foot Cube of water into a pellet.",
+      "The 10d6 is dealt on a failed save, half as much on a successful one."
+    ]
+  },
+  "dust-of-sneezing-and-choking": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "You and every creature in a 30-foot Emanation make the save. Constructs, Elementals, Oozes, Plants, and Undead succeed automatically.",
+      "On a failed save a creature has the Incapacitated condition and is suffocating. It repeats the save at the end of each of its turns, ending the effect on a success."
+    ]
+  },
+  "dwarven-plate": {
+    "bonuses": [
+      {
+        "to": "armor-class",
+        "value": 2
+      }
+    ],
+    "notes": [
+      "If an effect moves you against your will along the ground, you can take a Reaction to reduce the distance by up to 10 feet."
+    ]
+  },
+  "dwarven-thrower": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 3
+      },
+      {
+        "to": "damage-rolls",
+        "value": 3
+      }
+    ],
+    "damage": [
+      {
+        "dice": "1d8",
+        "type": "force",
+        "role": "extra",
+        "appliesWhen": "When you hit with a ranged attack using this weapon"
+      },
+      {
+        "dice": "2d8",
+        "type": "force",
+        "role": "extra",
+        "appliesWhen": "if the target is a Giant"
+      }
+    ],
+    "notes": [
+      "The 2d8 replaces the 1d8 when the target is a Giant. They are alternatives, not both.",
+      "The weapon has the Thrown property (range 20/60) and returns to your hand after hitting or missing."
+    ]
+  },
+  "efficient-quiver": {
+    "notes": [
+      "Three compartments hold up to 60 arrows or bolts, 18 javelins, and 6 long objects. The quiver never weighs more than 2 pounds."
+    ]
+  },
+  "efreeti-bottle": {
+    "notes": [
+      "Opening the bottle releases an Efreeti. The first time, a 1d10 table decides whether it attacks, serves for 1 hour, or casts Wish once for you.",
+      "Wish is cast by the efreeti, not by the user."
+    ]
+  },
+  "elemental-gem": {
+    "notes": [
+      "Breaking the gem summons an elemental set by the gem’s type (Air, Water, Fire, or Earth) that obeys you for up to 1 hour. The gem then ceases to be magical."
+    ]
+  },
+  "elixir-of-health": {
+    "notes": [
+      "Drinking it cures all magical contagions and ends the Blinded, Deafened, Paralyzed, and Poisoned conditions on you."
+    ]
+  },
+  "elven-chain": {
+    "bonuses": [
+      {
+        "to": "armor-class",
+        "value": 1
+      }
+    ],
+    "notes": [
+      "You are considered trained with this armor even if you lack training with Medium or Heavy armor."
+    ]
+  },
+  "energy-bow": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1
+      }
+    ],
+    "saves": [
+      {
+        "ability": "str",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "Its arrows deal Force damage instead of Piercing damage.",
+      "Arrow of Restraint: instead of dealing damage, a hit forces the save; on a failure the target has the Restrained condition for 1 minute. It can break free as an action with a DC 20 Strength (Athletics) check.",
+      "Arrow of Transport and Energy Ladder are Magic actions with no typed values."
+    ]
+  },
+  "eversmoking-bottle": {
+    "notes": [
+      "Opening it makes a Heavily Obscured cloud in a 60-foot Emanation that grows 10 feet each minute to 120 feet."
+    ]
+  },
+  "eyes-of-charming": {
+    "spells": [
+      {
+        "id": "charm-person",
+        "charges": 1,
+        "level": 1,
+        "saveDc": 13,
+        "upcastsWithCharges": true
+      }
+    ],
+    "charges": {
+      "max": 3,
+      "regains": {
+        "amount": "all",
+        "time": "dawn"
+      }
+    },
+    "notes": [
+      "For 1 charge you cast the level 1 version. The spell’s level increases by one for each additional charge expended."
+    ]
+  },
+  "eyes-of-minute-seeing": {
+    "notes": [
+      "Within 1 foot you have Darkvision and Advantage on Intelligence (Investigation) checks made to examine something."
+    ]
+  },
+  "eyes-of-the-eagle": {
+    "notes": [
+      "You have Advantage on Wisdom (Perception) checks that rely on sight."
+    ]
+  },
+  "feather-token": {
+    "variants": {
+      "Anchor": {
+        "notes": [
+          "A touched boat or ship can’t be moved by any means for 24 hours."
+        ]
+      },
+      "Bird": {
+        "notes": [
+          "A bird with the statistics of a Roc that can’t attack carries up to 500 pounds."
+        ]
+      },
+      "Fan": {
+        "notes": [
+          "A fan fills one ship’s sails, increasing its speed by 5 miles per hour for 8 hours."
+        ]
+      },
+      "Swan Boat": {
+        "notes": [
+          "A 50-foot-long boat that moves at 6 miles per hour for 24 hours."
+        ]
+      },
+      "Tree": {
+        "notes": [
+          "A nonmagical oak tree 60 feet tall."
+        ]
+      },
+      "Whip": {
+        "attackBonus": 9,
+        "damage": [
+          {
+            "dice": "1d6 + 5",
+            "type": "force",
+            "role": "effect"
+          }
+        ],
+        "notes": [
+          "You make the melee spell attack as a Bonus Action against a creature within 10 feet of the whip. The 1d6 + 5 is dealt on a hit. The whip lasts up to 1 hour."
+        ]
+      }
+    },
+    "notes": [
+      "Each token is single use. The kind is chosen by the GM or rolled on a 1d100 table."
+    ]
+  },
+  "figurine-of-wondrous-power": {
+    "variants": {
+      "Bronze Griffon": {
+        "notes": [
+          "Becomes a Griffon for up to 6 hours. Not usable again for 5 days."
+        ]
+      },
+      "Ebony Fly": {
+        "notes": [
+          "Becomes a Giant Fly (stat block given) for up to 12 hours. Not usable again for 2 days."
+        ]
+      },
+      "Golden Lions": {
+        "notes": [
+          "A pair. Each becomes a Lion for up to 1 hour. Not usable again for 7 days."
+        ]
+      },
+      "Goat of Terror": {
+        "saves": [
+          {
+            "ability": "wis",
+            "dc": 15
+          }
+        ],
+        "notes": [
+          "One of the Ivory Goats. Becomes a Giant Goat for up to 3 hours. Its horns become a +1 Lance and a +2 Longsword.",
+          "While you ride it, a Hostile creature that starts its turn within a 30-foot Emanation of the goat must succeed on the save or have the Frightened condition for 1 minute. It repeats the save at the end of each of its turns, and a success gives immunity for 24 hours.",
+          "Not usable again for 15 days."
+        ]
+      },
+      "Goat of Traveling": {
+        "charges": {
+          "max": 24
+        },
+        "notes": [
+          "One of the Ivory Goats. Becomes a Large goat with Riding Horse statistics. Each hour or portion in goat form costs 1 charge. With no charges it can’t be used for 7 days, when it regains all charges."
+        ]
+      },
+      "Goat of Travail": {
+        "notes": [
+          "One of the Ivory Goats. Becomes a Giant Goat for up to 3 hours. Not usable again for 30 days."
+        ]
+      },
+      "Marble Elephant": {
+        "notes": [
+          "Becomes an Elephant for up to 24 hours. Not usable again for 7 days."
+        ]
+      },
+      "Obsidian Steed": {
+        "notes": [
+          "Becomes a Nightmare for up to 24 hours, with a 10 percent chance each use to ignore your orders. Not usable again for 5 days."
+        ]
+      },
+      "Onyx Dog": {
+        "notes": [
+          "Becomes a Mastiff for up to 6 hours, with Intelligence 8, Common, and Blindsight 60 feet. Not usable again for 7 days."
+        ]
+      },
+      "Serpentine Owl": {
+        "notes": [
+          "Becomes a Giant Owl for up to 8 hours that communicates telepathically with you. Not usable again for 2 days."
+        ]
+      },
+      "Silver Raven": {
+        "spells": [
+          {
+            "id": "animal-messenger"
+          }
+        ],
+        "notes": [
+          "Becomes a Raven for up to 12 hours. While in raven form, you can cast Animal Messenger on it. Not usable again for 2 days."
+        ]
+      }
+    },
+    "notes": [
+      "The three Ivory Goats are listed as separate variants because each has its own properties."
+    ]
+  },
+  "flame-tongue": {
+    "damage": [
+      {
+        "dice": "2d6",
+        "type": "fire",
+        "role": "extra",
+        "appliesWhen": "While the weapon is ablaze"
+      }
+    ],
+    "notes": [
+      "A Bonus Action and command word set the weapon ablaze, shedding Bright Light in a 40-foot radius."
+    ]
+  },
+  "folding-boat": {
+    "notes": [
+      "Command words unfold the box into a Rowboat or Keelboat or fold it back. If either vessel drops to 0 Hit Points, the item is destroyed."
+    ]
+  },
+  "frost-brand": {
+    "damage": [
+      {
+        "dice": "1d6",
+        "type": "cold",
+        "role": "extra"
+      }
+    ],
+    "notes": [
+      "The extra Cold damage is dealt when you hit with an attack roll using the weapon.",
+      "While you hold the weapon, you have Resistance to Fire damage.",
+      "When you draw it, you can extinguish all nonmagical flames within 30 feet. Not again for 1 hour."
+    ]
+  },
+  "gauntlets-of-ogre-power": {
+    "notes": [
+      "Your Strength is 19 while you wear them. They have no effect if your Strength is 19 or higher without them."
+    ]
+  },
+  "gem-of-brightness": {
+    "charges": {
+      "max": 50
+    },
+    "saves": [
+      {
+        "ability": "con",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "The first command word sheds light and costs no charge.",
+      "The second costs 1 charge: a beam at one creature within 60 feet, which on a failed save has the Blinded condition for 1 minute and repeats the save at the end of each of its turns.",
+      "The third costs 5 charges: each creature in a 30-foot Cone makes the same save.",
+      "When all charges are expended, the gem becomes a nonmagical jewel worth 50 GP."
+    ]
+  },
+  "gem-of-seeing": {
+    "charges": {
+      "max": 3,
+      "regains": {
+        "amount": "1d3",
+        "time": "dawn"
+      }
+    },
+    "notes": [
+      "As a Magic action you expend 1 charge to have Truesight out to 120 feet for 10 minutes when you peer through the gem."
+    ]
+  },
+  "giant-slayer": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1
+      }
+    ],
+    "saves": [
+      {
+        "ability": "str",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "When you hit a Giant, it takes an extra 2d6 damage of the weapon’s type. The type is not fixed, so the roll is not typed.",
+      "The Giant must also succeed on the save or have the Prone condition."
+    ]
+  },
+  "glamoured-studded-leather": {
+    "bonuses": [
+      {
+        "to": "armor-class",
+        "value": 1
+      }
+    ],
+    "notes": [
+      "As a Bonus Action the armor can take the appearance of clothing or other armor."
+    ]
+  },
+  "gloves-of-missile-snaring": {
+    "notes": [
+      "When hit by an attack roll made with a Ranged or Thrown weapon, you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier if you have a free hand. At 0 you can catch the missile."
+    ]
+  },
+  "gloves-of-swimming-and-climbing": {
+    "conditionalBonuses": [
+      {
+        "to": "athletics-checks",
+        "value": 5,
+        "appliesWhen": "made to climb or swim"
+      }
+    ],
+    "notes": [
+      "You have a Climb Speed and a Swim Speed equal to your Speed."
+    ]
+  },
+  "gloves-of-thievery": {
+    "bonuses": [
+      {
+        "to": "sleight-of-hand-checks",
+        "value": 5
+      }
+    ],
+    "notes": [
+      "The gloves are imperceptible while worn."
+    ]
+  },
+  "goggles-of-night": {
+    "notes": [
+      "You have Darkvision out to 60 feet, or your existing Darkvision increases by 60 feet."
+    ]
+  },
+  "hammer-of-thunderbolts": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1
+      }
+    ],
+    "charges": {
+      "max": 5,
+      "regains": {
+        "amount": "1d4 + 1",
+        "time": "dawn"
+      }
+    },
+    "saves": [
+      {
+        "ability": "con",
+        "dc": 17,
+        "label": "thunderclap"
+      },
+      {
+        "ability": "con",
+        "dc": 17,
+        "label": "Giants’ Bane"
+      }
+    ],
+    "notes": [
+      "You expend 1 charge to hurl the weapon (Thrown, range 20/60). On a hit, the target and every creature within 30 feet of it other than you must succeed on the first save or have the Stunned condition until the end of your next turn.",
+      "Giants’ Bane needs attunement to a Belt of Giant Strength or Gauntlets of Ogre Power as well: when you roll a 20 on an attack roll with it against a Giant, the Giant must succeed on the second save or die.",
+      "Might of Giants: the Strength score bestowed by that belt or those gauntlets increases by 4, to a maximum of 30."
+    ]
+  },
+  "handy-haversack": {
+    "notes": [
+      "Two side pouches hold 200 pounds each and the central pouch 500 pounds. Retrieving an item takes a Utilize action or a Bonus Action. Placing it in another extradimensional space destroys both and opens a gate to the Astral Plane."
+    ]
+  },
+  "hat-of-disguise": {
+    "spells": [
+      {
+        "id": "disguise-self"
+      }
+    ],
+    "notes": [
+      "The spell ends if the hat is removed."
+    ]
+  },
+  "hat-of-many-spells": {
+    "notes": [
+      "The hat is a Spellcasting Focus for your Wizard spells.",
+      "Unknown Spell: you can try to cast a level 1+ Wizard spell you don’t know by expending a slot and succeeding on an Intelligence (Arcana) check (DC 10 plus the spell’s level). On a success, not again until you finish a Short or Long Rest.",
+      "On a failed check, a 1d100 table gives a random effect. Its spells (Enlarge/Reduce, Faerie Fire, Fireball, Gust of Wind, Invisibility, Lightning Bolt, Phantasmal Force, Polymorph, Stinking Cloud) belong to that table’s rows and are left out of spells.",
+      "Spells cast from the hat use your spell save DC and spell attack bonus."
+    ]
+  },
+  "headband-of-intellect": {
+    "notes": [
+      "Your Intelligence is 19 while you wear it. It has no effect if your Intelligence is 19 or higher without it."
+    ]
+  },
+  "helm-of-brilliance": {
+    "spells": [
+      {
+        "id": "daylight",
+        "saveDc": 18
+      },
+      {
+        "id": "fireball",
+        "saveDc": 18
+      },
+      {
+        "id": "prismatic-spray",
+        "saveDc": 18
+      },
+      {
+        "id": "wall-of-fire",
+        "saveDc": 18
+      }
+    ],
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": 17
+      }
+    ],
+    "damage": [
+      {
+        "dice": "1d6",
+        "type": "radiant",
+        "role": "effect",
+        "appliesWhen": "Any Undead that starts its turn in that area"
+      },
+      {
+        "dice": "1d6",
+        "type": "fire",
+        "role": "extra",
+        "appliesWhen": "When you hit with an attack using the blazing weapon"
+      }
+    ],
+    "notes": [
+      "The helm has 1d10 diamonds, 2d10 rubies, 3d10 fire opals, and 4d10 opals. Each spell uses and destroys one gem: Daylight an opal, Fireball a fire opal, Prismatic Spray a diamond, Wall of Fire a ruby.",
+      "Diamond Light needs at least one diamond. Fire Opal Flames needs at least one fire opal. Ruby Resistance gives Resistance to Fire damage while the helm has a ruby.",
+      "If you take Fire damage from failing a save against a spell, roll 1d20. On a 1, the helm is destroyed and each creature in a 60-foot Emanation must succeed on the Dexterity save or take Radiant damage equal to the number of gems in the helm. That damage has no fixed value."
+    ]
+  },
+  "helm-of-comprehending-languages": {
+    "spells": [
+      {
+        "id": "comprehend-languages"
+      }
+    ]
+  },
+  "helm-of-telepathy": {
+    "spells": [
+      {
+        "id": "detect-thoughts"
+      },
+      {
+        "id": "suggestion",
+        "saveDc": 13
+      }
+    ],
+    "notes": [
+      "The text prints “(save DC 13)” after Suggestion only. It is unclear whether it also covers Detect Thoughts.",
+      "Once either spell is cast from the helm, that spell can’t be cast from it again until the next dawn.",
+      "You have telepathy with a range of 30 feet."
+    ]
+  },
+  "helm-of-teleportation": {
+    "spells": [
+      {
+        "id": "teleport",
+        "charges": 1
+      }
+    ],
+    "charges": {
+      "max": 3,
+      "regains": {
+        "amount": "1d3",
+        "time": "dawn"
+      }
+    }
+  },
+  "holy-avenger": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 3
+      },
+      {
+        "to": "damage-rolls",
+        "value": 3
+      }
+    ],
+    "damage": [
+      {
+        "dice": "2d10",
+        "type": "radiant",
+        "role": "extra",
+        "appliesWhen": "When you hit a Fiend or an Undead with it"
+      }
+    ],
+    "notes": [
+      "While you hold the drawn weapon, you and Friendly creatures in a 10-foot Emanation (30 feet at Paladin level 17) have Advantage on saving throws against spells and other magical effects."
+    ]
+  },
+  "horn-of-blasting": {
+    "saves": [
+      {
+        "ability": "con",
+        "dc": 15
+      }
+    ],
+    "damage": [
+      {
+        "dice": "5d8",
+        "type": "thunder",
+        "role": "effect"
+      },
+      {
+        "dice": "10d8",
+        "type": "thunder",
+        "role": "effect",
+        "appliesWhen": "Glass or crystal objects in the Cone that aren’t being worn or carried"
+      },
+      {
+        "dice": "10d6",
+        "type": "force",
+        "role": "to-user",
+        "appliesWhen": "Each use of the horn’s magic has a 20 percent chance of causing the horn to explode"
+      }
+    ],
+    "notes": [
+      "Each creature in a 30-foot Cone makes the save. On a failure it takes the 5d8 and has the Deafened condition for 1 minute. On a success it takes half damage only.",
+      "The save does not apply to the 10d8 to objects or the 10d6 explosion, which also destroys the horn."
+    ]
+  },
+  "horn-of-valhalla": {
+    "variants": {
+      "Silver": {
+        "notes": [
+          "Summons 2 spirits. Requirement: none."
+        ]
+      },
+      "Brass": {
+        "notes": [
+          "Summons 3 spirits. Requirement: proficiency with all Simple weapons."
+        ]
+      },
+      "Bronze": {
+        "notes": [
+          "Summons 4 spirits. Requirement: training with all Medium armor."
+        ]
+      },
+      "Iron": {
+        "notes": [
+          "Summons 5 spirits. Requirement: proficiency with all Martial weapons."
+        ]
+      }
+    },
+    "notes": [
+      "Blowing the horn summons warrior spirits using the Berserker stat block for 1 hour. If you don’t meet the requirement, they attack you.",
+      "Once used, the horn can’t be used again until 7 days have passed."
+    ]
+  },
+  "horseshoes-of-a-zephyr": {
+    "notes": [
+      "With all four affixed, the creature floats 4 inches above surfaces, leaves no tracks, ignores Difficult Terrain, and travels 12 hours a day without Exhaustion."
+    ]
+  },
+  "horseshoes-of-speed": {
+    "notes": [
+      "With all four attached to the same creature, its Speed increases by 30 feet."
+    ]
+  },
+  "immovable-rod": {
+    "notes": [
+      "The fixed rod holds up to 8,000 pounds. A creature can move it up to 10 feet with a DC 30 Strength (Athletics) check."
+    ]
+  },
+  "instant-fortress": {
+    "notes": [
+      "The tower is 20 feet on a side and 30 feet high. Its roof, door, and walls each have AC 20, HP 100, Immunity to Bludgeoning, Piercing, and Slashing damage except from siege equipment, and Resistance to all other damage. Only Wish can repair it."
+    ]
+  },
+  "ioun-stone": {
+    "variants": {
+      "Absorption": {
+        "notes": [
+          "As a Reaction, cancel a spell of level 4 or lower cast by a creature you can see. Burns out after canceling 20 levels of spells."
+        ]
+      },
+      "Agility": {
+        "notes": [
+          "Your Dexterity increases by 2, to a maximum of 20."
+        ]
+      },
+      "Awareness": {
+        "notes": [
+          "You have Advantage on Initiative rolls and Wisdom (Perception) checks."
+        ]
+      },
+      "Fortitude": {
+        "notes": [
+          "Your Constitution increases by 2, to a maximum of 20."
+        ]
+      },
+      "Greater Absorption": {
+        "notes": [
+          "As a Reaction, cancel a spell of level 8 or lower cast by a creature you can see. Burns out after canceling 20 levels of spells."
+        ]
+      },
+      "Insight": {
+        "notes": [
+          "Your Wisdom increases by 2, to a maximum of 20."
+        ]
+      },
+      "Intellect": {
+        "notes": [
+          "Your Intelligence increases by 2, to a maximum of 20."
+        ]
+      },
+      "Leadership": {
+        "notes": [
+          "Your Charisma increases by 2, to a maximum of 20."
+        ]
+      },
+      "Mastery": {
+        "bonuses": [
+          {
+            "to": "proficiency-bonus",
+            "value": 1
+          }
+        ]
+      },
+      "Protection": {
+        "bonuses": [
+          {
+            "to": "armor-class",
+            "value": 1
+          }
+        ]
+      },
+      "Regeneration": {
+        "notes": [
+          "You regain 15 Hit Points at the end of each hour it orbits your head if you have at least 1 Hit Point."
+        ]
+      },
+      "Reserve": {
+        "notes": [
+          "Stores up to 4 levels of spells cast into it (1d4 levels when found). You can cast a stored spell, using the original caster’s slot level, spell save DC, spell attack bonus, and spellcasting ability."
+        ]
+      },
+      "Strength": {
+        "notes": [
+          "Your Strength increases by 2, to a maximum of 20."
+        ]
+      },
+      "Sustenance": {
+        "notes": [
+          "You don’t need to eat or drink."
+        ]
+      }
+    },
+    "notes": [
+      "Each benefit applies while the stone orbits your head. Ability increases are left untyped because of their maximum of 20."
+    ]
+  },
+  "iron-bands": {
+    "notes": [
+      "You make a ranged attack roll with a bonus equal to your Dexterity modifier plus your Proficiency Bonus. On a hit, the target has the Restrained condition until you release it.",
+      "A creature can break the bands with a DC 20 Strength (Athletics) check.",
+      "Once used, the bands can’t be used again until the next dawn."
+    ]
+  },
+  "iron-flask": {
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": 17
+      }
+    ],
+    "notes": [
+      "The save is forced only if the flask is empty and the target is native to another plane. On a failure the target is trapped in the flask. A target trapped before has Advantage.",
+      "A released creature obeys your commands for 1 hour."
+    ]
+  },
+  "javelin-of-lightning": {
+    "saves": [
+      {
+        "ability": "dex",
+        "dc": 13
+      }
+    ],
+    "damage": [
+      {
+        "dice": "4d6",
+        "type": "lightning",
+        "role": "effect"
+      }
+    ],
+    "notes": [
+      "When you hit with an attack roll, you can have it deal Lightning damage instead of Piercing damage.",
+      "Lightning Bolt: the target and each other creature in a 5-foot-wide Line take the 4d6 on a failed save or half as much on a success. Not usable again until the next dawn."
+    ]
+  },
+  "lantern-of-revealing": {
+    "notes": [
+      "Invisible creatures and objects are visible in the lantern’s Bright Light (30-foot radius)."
+    ]
+  },
+  "luck-blade": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1
+      },
+      {
+        "to": "saving-throws",
+        "value": 1
+      }
+    ],
+    "spells": [
+      {
+        "id": "wish",
+        "charges": 1
+      }
+    ],
+    "charges": {
+      "max": "1d3"
+    },
+    "notes": [
+      "The saving throw bonus applies while the weapon is on your person.",
+      "Luck: you can reroll one failed D20 Test and must use the second roll. Not again until the next dawn.",
+      "Wish: once used, not again until the next dawn. The weapon loses this property when it has no charges. The text states no regaining of charges."
+    ]
+  },
+  "mace-of-disruption": {
+    "damage": [
+      {
+        "dice": "2d6",
+        "type": "radiant",
+        "role": "extra",
+        "appliesWhen": "When you hit a Fiend or an Undead with this magic weapon"
+      }
+    ],
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "The save is forced only if the target has 25 Hit Points or fewer after taking the damage. On a failure it is destroyed. On a success it has the Frightened condition until the end of your next turn.",
+      "While you hold it, the weapon sheds Bright Light in a 20-foot radius."
+    ]
+  },
+  "mace-of-smiting": {
+    "bonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 1
+      },
+      {
+        "to": "damage-rolls",
+        "value": 1
+      }
+    ],
+    "conditionalBonuses": [
+      {
+        "to": "attack-rolls",
+        "value": 3,
+        "appliesWhen": "when you use the weapon to attack a Construct"
+      },
+      {
+        "to": "damage-rolls",
+        "value": 3,
+        "appliesWhen": "when you use the weapon to attack a Construct"
+      }
+    ],
+    "damage": [
+      {
+        "amount": 7,
+        "type": "bludgeoning",
+        "role": "extra",
+        "appliesWhen": "When you roll a 20 on an attack roll made with this weapon"
+      },
+      {
+        "amount": 14,
+        "type": "bludgeoning",
+        "role": "extra",
+        "appliesWhen": "if it’s a Construct"
+      }
+    ],
+    "notes": [
+      "The +3 replaces the +1 against a Construct.",
+      "The 14 replaces the 7 when the target is a Construct. They are alternatives, not both.",
+      "A Construct with 25 Hit Points or fewer after taking this damage is destroyed."
+    ]
+  },
+  "mace-of-terror": {
+    "charges": {
+      "max": 3,
+      "regains": {
+        "amount": "1d3",
+        "time": "dawn"
+      }
+    },
+    "saves": [
+      {
+        "ability": "wis",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "As a Magic action you expend 1 charge. Each creature of your choice within 30 feet must succeed on the save or have the Frightened condition for 1 minute, fleeing from you.",
+      "A Frightened creature repeats the save at the end of each of its turns, ending the effect on a success."
+    ]
+  },
+  "mantle-of-spell-resistance": {
+    "notes": [
+      "You have Advantage on saving throws against spells while you wear it."
+    ]
+  },
+  "manual-of-bodily-health": {
+    "notes": [
+      "After 48 hours of study over 6 days or fewer, your Constitution increases by 2, to a maximum of 30. The manual then loses its magic for a century."
+    ]
+  },
+  "manual-of-gainful-exercise": {
+    "notes": [
+      "After 48 hours of study over 6 days or fewer, your Strength increases by 2, to a maximum of 30. The manual then loses its magic for a century."
+    ]
+  },
+  "manual-of-golems": {
+    "damage": [
+      {
+        "dice": "6d6",
+        "type": "psychic",
+        "role": "to-user",
+        "appliesWhen": "A creature that can’t use a Manual of Golems and attempts to read it"
+      }
+    ],
+    "notes": [
+      "To use it you must be a spellcaster with at least two level 5 spell slots.",
+      "The golem type is chosen by the GM or rolled on a 1d20 table that sets the time and cost."
+    ]
+  },
+  "manual-of-quickness-of-action": {
+    "notes": [
+      "After 48 hours of study over 6 days or fewer, your Dexterity increases by 2, to a maximum of 30. The manual then loses its magic for a century."
+    ]
+  },
+  "marvelous-pigments": {
+    "notes": [
+      "The box holds 1d4 pots. One pot paints real objects and terrain within a 20-foot Cube over 10 minutes with Concentration. No object can be worth more than 25 GP, and a pot’s total can’t exceed 500 GP."
+    ]
+  },
+  "medallion-of-thoughts": {
+    "spells": [
+      {
+        "id": "detect-thoughts",
+        "charges": 1,
+        "saveDc": 13
+      }
+    ],
+    "charges": {
+      "max": 5,
+      "regains": {
+        "amount": "1d4",
+        "time": "dawn"
+      }
+    }
+  },
+  "mirror-of-life-trapping": {
+    "saves": [
+      {
+        "ability": "cha",
+        "dc": 15
+      }
+    ],
+    "notes": [
+      "Any creature other than you that sees its reflection in the activated mirror within 30 feet must succeed on the save or be trapped in one of twelve extradimensional cells. A creature that knows the mirror’s nature has Advantage, and Constructs succeed automatically.",
+      "The mirror has AC 11, HP 10, Immunity to Poison and Psychic damage, and Vulnerability to Bludgeoning damage."
+    ]
+  },
+  "mithral-armor": {
+    "notes": [
+      "If the armor normally imposes Disadvantage on Dexterity (Stealth) checks or has a Strength requirement, the mithral version doesn’t."
+    ]
+  },
+  "mysterious-deck": {
+    "spells": [
+      {
+        "id": "wish",
+        "group": "Moon"
+      }
+    ],
+    "notes": [
+      "Cards are drawn at random from a 1d100 table (13-card or 22-card deck), each with its own effect.",
+      "Moon: “You gain the ability to cast Wish 1d3 times.” The card is stated in a paragraph, not a table row, so Wish is typed with group Moon. The 1d3 uses are not typed.",
+      "Euryale gives a −2 penalty to saving throws while cursed. Fool gives Disadvantage and Jester Advantage on D20 Tests for 72 hours.",
+      "Skull summons an Avatar of Death, whose stat block is printed. Its damage is the creature’s, not the item’s.",
+      "Sun gives 10 Temporary Hit Points daily at dawn until you die."
+    ]
+  },
+  "necklace-of-adaptation": {
+    "notes": [
+      "You can breathe normally in any environment and have Advantage on saving throws made to avoid or end the Poisoned condition."
+    ]
+  },
+  "necklace-of-fireballs": {
+    "spellEffects": [
+      {
+        "id": "fireball",
+        "level": 3,
+        "saveDc": 15
+      }
+    ],
+    "notes": [
+      "The necklace has 1d6 + 3 beads, each thrown as a Magic action up to 60 feet.",
+      "Throwing several beads at once increases the Fireball’s damage by 1d6 for each bead after the first (maximum 12d6)."
+    ]
+  },
+  "necklace-of-prayer-beads": {
+    "notes": [
+      "The necklace has 1d4 + 2 magic beads. Each bead’s type is chosen by the GM or rolled on a 1d20 table. The spells (Bless, Cure Wounds level 2, Greater Restoration, Shining Smite, Guardian of Faith, Wind Walk) are stated only in that table’s rows, so they belong to the rows and are not typed on the item.",
+      "Each bead’s spell is cast as a Bonus Action, using your spell save DC. Once a bead’s spell is cast, that bead can’t be used again until the next dawn.",
+      "You must be wearing the necklace to use a bead."
+    ]
+  }
+}

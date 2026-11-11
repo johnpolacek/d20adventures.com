@@ -14,8 +14,8 @@
       "halfDamageOnSuccess": true
     },
     "damage": {
-      "average": 6,
       "dice": "1d12",
+      "average": 6,
       "type": "poison"
     },
     "conditions": [
@@ -43,15 +43,15 @@
       "dc": 13
     },
     "damage": {
-      "average": 10,
       "dice": "3d6",
+      "average": 10,
       "type": "poison"
     },
     "repeat": {
       "when": "start-of-turn",
       "damage": {
-        "average": 3,
         "dice": "1d6",
+        "average": 3,
         "type": "poison"
       },
       "endsAfterSuccesses": 3
@@ -161,8 +161,8 @@
       "halfDamageOnSuccess": true
     },
     "damage": {
-      "average": 31,
       "dice": "9d6",
+      "average": 31,
       "type": "poison"
     },
     "delayedUntilMidnight": true,
@@ -211,8 +211,8 @@
       "dc": 16
     },
     "damage": {
-      "average": 3,
       "dice": "1d6",
+      "average": 3,
       "type": "poison"
     },
     "conditions": [
@@ -223,8 +223,8 @@
     "repeat": {
       "when": "every-24-hours",
       "damage": {
-        "average": 3,
         "dice": "1d6",
+        "average": 3,
         "type": "poison"
       },
       "endsAfterSuccesses": 7
@@ -247,8 +247,8 @@
       "halfDamageOnSuccess": true
     },
     "damage": {
-      "average": 35,
       "dice": "10d6",
+      "average": 35,
       "type": "poison"
     },
     "description": "A creature subjected to Purple Worm Poison makes a DC 21 Constitution saving throw, taking 35 (10d6) Poison damage on a failed save or half as much damage on a successful one."
@@ -268,8 +268,8 @@
       "halfDamageOnSuccess": true
     },
     "damage": {
-      "average": 10,
       "dice": "3d6",
+      "average": 10,
       "type": "poison"
     },
     "description": "A creature subjected to Serpent Venom must succeed on a DC 11 Constitution saving throw, taking 10 (3d6) Poison damage on a failed save or half as much damage on a successful one."
@@ -368,8 +368,8 @@
       "halfDamageOnSuccess": true
     },
     "damage": {
-      "average": 24,
       "dice": "7d6",
+      "average": 24,
       "type": "poison"
     },
     "description": "A creature subjected to Wyvern Poison makes a DC 14 Constitution saving throw, taking 24 (7d6) Poison damage on a failed save or half as much damage on a successful one."

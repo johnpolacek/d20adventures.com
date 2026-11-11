@@ -18,10 +18,12 @@ import {
   saveDcSchema,
   sizeSchema,
   skillIdSchema,
+  targetSpeedReductionSchema,
+  usesCountSchema,
 } from "./common"
 
 /** Uses between recharges. `count` is a number, or "proficiency-bonus" for "a number of times equal to your Proficiency Bonus". */
-export const usesSchema = z.strictObject({ count: z.union([z.number().int().positive(), z.literal("proficiency-bonus")]), recharge: rechargeSchema })
+export const usesSchema = z.strictObject({ count: usesCountSchema, recharge: rechargeSchema })
 export type Uses = z.infer<typeof usesSchema>
 
 /** A spell the origin gives. `level` is the character level at which it is gained. A spell without `cantrip` is always prepared. */
@@ -46,53 +48,75 @@ const breathWeaponSchema = z.strictObject({
  * official text states it. The prose stays in `text`.
  */
 export const mechanicsShape = {
+  /** The character has Darkvision with this range in feet. */
   darkvision: feetSchema.optional(),
+  /** The character has Tremorsense with this range in feet, for `durationMinutes` after using the trait, while `requires` holds. */
   tremorsense: feetSchema.optional(),
+  /** The character has Truesight with this range in feet. */
   truesight: feetSchema.optional(),
-  /** Resistance to these damage types. */
-  resistance: z.array(damageTypeIdSchema).min(1).optional(),
-  /** Resistance to all damage except these types. */
+  /** The character has Resistance to these damage types. */
+  resistances: z.strictObject({ damageTypes: z.array(damageTypeIdSchema).min(1) }).optional(),
+  /** The character has Resistance to all damage except these types, while `requires` holds. */
   resistanceExcept: z.array(damageTypeIdSchema).min(1).optional(),
-  /** The damage type is the one on the option the player chose in the choice trait with this id (Draconic Ancestry). */
+  /** The damage type of the Breath Weapon, or the type the Damage Resistance covers, is the one on the option the player chose in the choice trait with this id (Draconic Ancestry). */
   damageTypeFromChoice: idSchema.optional(),
+  /** The character has Advantage on saving throws against these conditions, or on saving throws with these abilities. */
   savingThrowAdvantage: z.strictObject({ conditions: z.array(conditionIdSchema).min(1).optional(), abilities: z.array(abilityIdSchema).min(1).optional() }).optional(),
+  /** The character's Hit Point maximum rises by `initial` and by `perLevel` at each level gained. */
   hitPointBonus: z.strictObject({ initial: z.number().int(), perLevel: z.number().int() }).optional(),
+  /** The kinds of action the trait takes to use. */
   activation: activationSchema.optional(),
   /** What must be true to use the trait: standing on or touching stone, or being within Dim Light or Darkness. */
   requires: z.enum(["stone-surface", "dim-light-or-darkness"]).optional(),
   /** The moment that lets the trait act. */
-  trigger: z.enum(["hit-with-attack-roll", "hit-with-weapon", "take-damage"]).optional(),
+  trigger: z.enum(["hit-with-attack-roll", "hit-with-weapon", "take-damage", "after-attack-or-magic-action"]).optional(),
   /** The condition or damage applies only to targets of this size or smaller. */
   targetMaxSize: sizeSchema.optional(),
   /** The character level at which the trait starts. */
   level: z.number().int().min(1).max(20).optional(),
+  /** How long the trait's effect lasts after the character uses it. */
   durationMinutes: z.number().int().positive().optional(),
+  /** How often the trait can be used before it recharges. */
   uses: usesSchema.optional(),
+  /** Spells the character gains, by character level. */
   spells: z.array(grantedSpellSchema).min(1).optional(),
   /** The player picks one of these as the spellcasting ability. */
   spellcastingAbility: z.array(abilityIdSchema).min(1).optional(),
+  /** The character gains proficiency in `count` skills chosen from this list, or from any skill. */
   skillChoice: z.strictObject({ count: z.number().int().positive(), from: z.union([z.array(skillIdSchema).min(1), z.literal("any")]) }).optional(),
-  /** A new Speed in feet. */
+  /** The character's own Speed becomes this many feet. */
   speed: feetSchema.optional(),
-  speedBonus: feetSchema.optional(),
-  speedReduction: feetSchema.optional(),
+  /** The character's own Speed rises by this many feet for `durationMinutes` after using the trait. */
+  speedBonus: z.strictObject({ feet: feetSchema }).optional(),
+  /** The target's Speed, not the character's, is reduced by `feet` until the start of the character's next turn. */
+  targetSpeedReduction: targetSpeedReductionSchema.optional(),
   /** A Fly Speed equal to the character's Speed. */
   flySpeed: z.literal("speed").optional(),
   /** The character becomes this size while the trait lasts. */
   sizeChange: sizeSchema.optional(),
+  /** The character can finish a Long Rest in this many hours. */
   longRestHours: z.number().int().positive().optional(),
+  /** The character gains Temporary Hit Points equal to its Proficiency Bonus when it uses the trait. */
   temporaryHitPoints: z.literal("proficiency-bonus").optional(),
+  /** The character gains Heroic Inspiration whenever it finishes this kind of rest. */
   heroicInspiration: z.literal("long-rest").optional(),
+  /** The character's Breath Weapon: the areas it fills, the save it forces, and its damage by character level. */
   breathWeapon: breathWeaponSchema.optional(),
-  /** Extra damage dealt. */
+  /** Extra damage the character deals to the target or triggering creature, when `trigger` happens. */
   damage: z.strictObject({ dice: diceSchema, type: damageTypeIdSchema }).optional(),
-  /** Reduce damage taken by the roll plus the ability modifier. */
+  /** The character reduces damage it takes by the roll plus its ability modifier, when `trigger` happens. */
   damageReduction: z.strictObject({ dice: diceSchema, ability: abilityIdSchema }).optional(),
+  /** The character teleports up to this many feet to an unoccupied space it can see. */
   teleportFeet: feetSchema.optional(),
-  rangeFeet: feetSchema.optional(),
-  /** A condition the trait can impose. */
-  condition: conditionIdSchema.optional(),
+  /** The distance in feet within which the creature that triggers or is affected by the trait must be. */
+  range: feetSchema.optional(),
+  /** A condition the trait can give its target, when `trigger` happens. */
+  targetCondition: conditionIdSchema.optional(),
+  /** A condition the trait gives the character itself. Its duration is in the text. */
+  selfCondition: conditionIdSchema.optional(),
+  /** The character gains one feat of the player's choice from this category, with this one recommended. */
   featChoice: z.strictObject({ category: z.literal("origin"), recommended: idSchema }).optional(),
+  /** The Rock Gnome device: its AC and HP, how many can exist, the casting time and how long each lasts. */
   clockworkDevice: z.strictObject({ armorClass: z.number().int(), hitPoints: z.number().int(), maximum: z.number().int(), castMinutes: z.number().int(), durationHours: z.number().int() }).optional(),
   /** Magic Initiate: cantrips learned, the level of the one spell, and the lists to choose from. */
   cantrips: z.number().int().positive().optional(),
@@ -100,9 +124,11 @@ export const mechanicsShape = {
   spellLists: z.array(classIdSchema).min(1).optional(),
   /** Skilled: proficiencies in any mix of skills and tools. */
   proficiencyChoice: z.strictObject({ count: z.number().int().positive(), kinds: z.array(z.enum(["skill", "tool"])).min(1) }).optional(),
+  /** The character gets this bonus to attack rolls with this kind of weapon. */
   attackBonus: z.strictObject({ bonus: z.number().int(), weapon: z.enum(["melee", "ranged"]) }).optional(),
+  /** The character gets this bonus to Armor Class while wearing armor of these categories. */
   armorClassBonus: z.strictObject({ bonus: z.number().int(), armor: z.array(z.enum(["light", "medium", "heavy"])).min(1) }).optional(),
-  /** Great Weapon Fighting: a 1 or 2 on a damage die counts as `minimum`. The weapon needs one of these properties. */
+  /** Great Weapon Fighting: when rolling damage with a Melee weapon held in two hands, a 1 or 2 on a damage die counts as `minimum`. The weapon needs one of these properties. */
   damageDieMinimum: z.strictObject({ minimum: z.number().int(), weapon: z.literal("melee"), heldWith: z.literal("two-hands"), properties: z.array(idSchema).min(1) }).optional(),
   /** Boon of Spell Recall: casting with a slot of these levels rolls `dice`, and the slot is kept if the roll equals its level. */
   freeCasting: z.strictObject({ minSlotLevel: z.number().int(), maxSlotLevel: z.number().int() }).optional(),

@@ -47,8 +47,6 @@ function tabParagraphs(lines: string[]): string[] {
   return groups.map((group) => flat(group.join("\n")))
 }
 
-const named = (paragraph: string) => paragraph.match(/^([A-Z][A-Za-z0-9’ ]+?)\. /)
-
 /** The uses a trait states about itself, apart from the sentence that gives a spell uses. */
 const castSentence = /cast it (?:once )?without a spell slot/
 function castUses(text: string) {
@@ -96,7 +94,7 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   set("tremorsense", num(/Tremorsense with a range of (\d+) feet/))
   set("truesight", num(/Truesight with a range of (\d+) feet/))
   const resistance = [...t.matchAll(/Resistance to (\w+) damage/g)].map((match) => match[1].toLowerCase()).filter((type) => damageTypeIds.includes(type as never))
-  if (resistance.length) set("resistance", resistance)
+  if (resistance.length) set("resistances", { damageTypes: resistance })
   const except = t.match(/Resistance to all damage except (\w+) and (\w+)/)
   if (except) set("resistanceExcept", [except[1].toLowerCase(), except[2].toLowerCase()])
   if (/the (?:damage )?type determined by your Draconic Ancestry trait/.test(t)) set("damageTypeFromChoice", "draconic-ancestry")
@@ -117,8 +115,14 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   if (skills) set("skillChoice", { count: 1, from: [1, 2, 3].map((i) => toId(skills[i])) })
   else if (/proficiency in one skill of your choice/.test(t)) set("skillChoice", { count: 1, from: "any" })
   set("speed", num(/Your Speed increases to (\d+) feet/))
-  set("speedBonus", num(/your Speed increases by (\d+) feet/))
-  set("speedReduction", num(/reduce its Speed by (\d+) feet/))
+  {
+    const bonus = num(/your Speed increases by (\d+) feet/)
+    if (bonus !== undefined) set("speedBonus", { feet: bonus })
+  }
+  {
+    const reduction = t.match(/reduce its Speed by (\d+) feet until the start of your next turn/)
+    if (reduction) set("targetSpeedReduction", { feet: Number(reduction[1]), until: "start-of-user-next-turn" })
+  }
   if (/Fly Speed equal to your Speed/.test(t)) set("flySpeed", "speed")
   set("sizeChange", t.match(/change your size to (\w+)/)?.[1])
   set("longRestHours", num(/Long Rest in (\d+) hours/))
@@ -129,9 +133,11 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   const reduction = t.match(/roll (\d+d\d+)\. Add your (\w+) modifier to the number rolled and reduce the damage/)
   if (reduction) set("damageReduction", { dice: reduction[1], ability: abilityByName[reduction[2]] })
   set("teleportFeet", num(/teleport up to (\d+) feet/))
-  set("rangeFeet", num(/within (\d+) feet of you/))
-  const condition = t.match(/give (?:that target|yourself) the (\w+) condition/)
-  if (condition) set("condition", condition[1].toLowerCase())
+  set("range", num(/within (\d+) feet of you/))
+  const onTarget = t.match(/give that target the (\w+) condition/)
+  if (onTarget) set("targetCondition", onTarget[1].toLowerCase())
+  const onSelf = t.match(/give yourself the (\w+) condition/)
+  if (onSelf) set("selfCondition", onSelf[1].toLowerCase())
   const feat = t.match(/Origin feat of your choice \(see “Feats”\)\. (\w+) is recommended/)
   if (feat) set("featChoice", { category: "origin", recommended: toId(feat[1]) })
   const device = t.match(/\(AC (\d+), (\d+) HP\).*?(\w+) such devices in existence at a time, and each falls apart (\d+) hours after/)
@@ -176,6 +182,7 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   else if (/^While within Dim Light or Darkness/.test(t)) set("requires", "dim-light-or-darkness")
   if (/(?:^|\. )When you hit (?:a target|a Large or smaller creature) with an attack roll and deal damage/.test(t)) set("trigger", "hit-with-attack-roll")
   else if (/Once per turn when you hit a target with a weapon/.test(t)) set("trigger", "hit-with-weapon")
+  else if (/^Immediately after you take the Attack action or the Magic action, you can teleport/.test(t)) set("trigger", "after-attack-or-magic-action")
   else if (/(?:^|\. )When you take damage/.test(t)) set("trigger", "take-damage")
   set("targetMaxSize", t.match(/with an attack roll and deal damage to it, you can give that target the Prone condition/) ? t.match(/hit a (\w+) or smaller creature/)?.[1] : undefined)
   set("dice", t.match(/you can roll (\d+d\d+) and apply the total rolled/)?.[1] ?? out.dice)
@@ -186,7 +193,7 @@ const derivedKeys = [
   "darkvision",
   "tremorsense",
   "truesight",
-  "resistance",
+  "resistances",
   "resistanceExcept",
   "damageTypeFromChoice",
   "savingThrowAdvantage",
@@ -199,7 +206,7 @@ const derivedKeys = [
   "skillChoice",
   "speed",
   "speedBonus",
-  "speedReduction",
+  "targetSpeedReduction",
   "flySpeed",
   "sizeChange",
   "longRestHours",
@@ -208,8 +215,9 @@ const derivedKeys = [
   "damage",
   "damageReduction",
   "teleportFeet",
-  "rangeFeet",
-  "condition",
+  "range",
+  "targetCondition",
+  "selfCondition",
   "featChoice",
   "clockworkDevice",
   "cantrips",
@@ -259,11 +267,260 @@ const diceOfText = (text: string) => new Set(flat(text).match(/\d+d\d+/g) ?? [])
 
 const spellCell = /^[A-Z][A-Za-z ]+$/
 
+/** Sizes with heights and Speed as printed on pages 84 to 86, written by reading the pages. */
+const headerTable: Record<string, { sizes: { size: string; height: string }[]; speed: number }> = {
+  Dragonborn: { sizes: [{ size: "Medium", height: "about 5–7 feet tall" }], speed: 30 },
+  Dwarf: { sizes: [{ size: "Medium", height: "about 4–5 feet tall" }], speed: 30 },
+  Elf: { sizes: [{ size: "Medium", height: "about 5–6 feet tall" }], speed: 30 },
+  Gnome: { sizes: [{ size: "Small", height: "about 3–4 feet tall" }], speed: 30 },
+  Goliath: { sizes: [{ size: "Medium", height: "about 7–8 feet tall" }], speed: 35 },
+  Halfling: { sizes: [{ size: "Small", height: "about 2–3 feet tall" }], speed: 30 },
+  Human: {
+    sizes: [
+      { size: "Medium", height: "about 4–7 feet tall" },
+      { size: "Small", height: "about 2–4 feet tall" },
+    ],
+    speed: 30,
+  },
+  Orc: { sizes: [{ size: "Medium", height: "about 6–7 feet tall" }], speed: 30 },
+  Tiefling: {
+    sizes: [
+      { size: "Medium", height: "about 4–7 feet tall" },
+      { size: "Small", height: "about 3–4 feet tall" },
+    ],
+    speed: 30,
+  },
+}
+
+/** Granted spells by option as printed in the lineage tables and the gnome and tiefling text: [spell name, character level, is a cantrip]. */
+const spellTable: Record<string, [string, number, boolean][]> = {
+  Drow: [
+    ["Dancing Lights", 1, true],
+    ["Faerie Fire", 3, false],
+    ["Darkness", 5, false],
+  ],
+  "High Elf": [
+    ["Prestidigitation", 1, true],
+    ["Detect Magic", 3, false],
+    ["Misty Step", 5, false],
+  ],
+  "Wood Elf": [
+    ["Druidcraft", 1, true],
+    ["Longstrider", 3, false],
+    ["Pass without Trace", 5, false],
+  ],
+  Abyssal: [
+    ["Poison Spray", 1, true],
+    ["Ray of Sickness", 3, false],
+    ["Hold Person", 5, false],
+  ],
+  Chthonic: [
+    ["Chill Touch", 1, true],
+    ["False Life", 3, false],
+    ["Ray of Enfeeblement", 5, false],
+  ],
+  Infernal: [
+    ["Fire Bolt", 1, true],
+    ["Hellish Rebuke", 3, false],
+    ["Darkness", 5, false],
+  ],
+  "Forest Gnome": [
+    ["Minor Illusion", 1, true],
+    ["Speak with Animals", 1, false],
+  ],
+  "Rock Gnome": [
+    ["Mending", 1, true],
+    ["Prestidigitation", 1, true],
+  ],
+  "Otherworldly Presence": [["Thaumaturgy", 1, true]],
+}
+
+type Line = { item?: string; chooseFrom?: string[]; quantity: number; unit?: "single"; note?: string }
+type Printed = [scores: string, feat: string, skills: string, tool: string, equipA: string, gpB: string]
+type HandBackground = {
+  printed: Printed
+  abilityScores: string[]
+  feat: { id: string; spellList?: string }
+  skills: string[]
+  toolProficiency: Record<string, string>
+  equipment: { option: string; items?: Line[]; money: { amount: number; unit: string } }[]
+}
+const money = (amount: number) => ({ amount, unit: "gp" })
+
+/** The four backgrounds on page 83: the printed lines, then the typed values read from them. */
+const backgroundTable: Record<string, HandBackground> = {
+  Acolyte: {
+    printed: [
+      "Intelligence, Wisdom, Charisma",
+      "Magic Initiate (Cleric) (see “Feats”)",
+      "Insight and Religion",
+      "Calligrapher’s Supplies",
+      "Calligrapher’s Supplies, Book (prayers), Holy Symbol, Parchment (10 sheets), Robe, 8 GP",
+      "50",
+    ],
+    abilityScores: ["int", "wis", "cha"],
+    feat: { id: "magic-initiate", spellList: "cleric" },
+    skills: ["insight", "religion"],
+    toolProficiency: { tool: "calligraphers-supplies" },
+    equipment: [
+      {
+        option: "A",
+        items: [
+          { item: "calligraphers-supplies", quantity: 1 },
+          { item: "book", quantity: 1, note: "prayers" },
+          { chooseFrom: ["holy-symbol"], quantity: 1 },
+          { item: "parchment", quantity: 10, note: "sheets" },
+          { item: "robe", quantity: 1 },
+        ],
+        money: money(8),
+      },
+      { option: "B", money: money(50) },
+    ],
+  },
+  Criminal: {
+    printed: [
+      "Dexterity, Constitution, Intelligence",
+      "Alert (see “Feats”)",
+      "Sleight of Hand and Stealth",
+      "Thieves’ Tools",
+      "2 Daggers, Thieves’ Tools, Crowbar, 2 Pouches, Traveler’s Clothes, 16 GP",
+      "50",
+    ],
+    abilityScores: ["dex", "con", "int"],
+    feat: { id: "alert" },
+    skills: ["sleight-of-hand", "stealth"],
+    toolProficiency: { tool: "thieves-tools" },
+    equipment: [
+      {
+        option: "A",
+        items: [
+          { item: "dagger", quantity: 2 },
+          { item: "thieves-tools", quantity: 1 },
+          { item: "crowbar", quantity: 1 },
+          { item: "pouch", quantity: 2 },
+          { item: "clothes-travelers", quantity: 1 },
+        ],
+        money: money(16),
+      },
+      { option: "B", money: money(50) },
+    ],
+  },
+  Sage: {
+    printed: [
+      "Constitution, Intelligence, Wisdom",
+      "Magic Initiate (Wizard) (see “Feats”)",
+      "Arcana and History",
+      "Calligrapher’s Supplies",
+      "Quarterstaff, Calligrapher’s Supplies, Book (history), Parchment (8 sheets), Robe, 8 GP",
+      "50",
+    ],
+    abilityScores: ["con", "int", "wis"],
+    feat: { id: "magic-initiate", spellList: "wizard" },
+    skills: ["arcana", "history"],
+    toolProficiency: { tool: "calligraphers-supplies" },
+    equipment: [
+      {
+        option: "A",
+        items: [
+          { item: "quarterstaff", quantity: 1 },
+          { item: "calligraphers-supplies", quantity: 1 },
+          { item: "book", quantity: 1, note: "history" },
+          { item: "parchment", quantity: 8, note: "sheets" },
+          { item: "robe", quantity: 1 },
+        ],
+        money: money(8),
+      },
+      { option: "B", money: money(50) },
+    ],
+  },
+  Soldier: {
+    printed: [
+      "Strength, Dexterity, Constitution",
+      "Savage Attacker (see “Feats”)",
+      "Athletics and Intimidation",
+      "Choose one kind of Gaming Set (see “Equipment”)",
+      "Spear, Shortbow, 20 Arrows, Gaming Set (same as above), Healer’s Kit, Quiver, Traveler’s Clothes, 14 GP",
+      "50",
+    ],
+    abilityScores: ["str", "dex", "con"],
+    feat: { id: "savage-attacker" },
+    skills: ["athletics", "intimidation"],
+    toolProficiency: { oneOfKind: "gaming-set" },
+    equipment: [
+      {
+        option: "A",
+        items: [
+          { item: "spear", quantity: 1 },
+          { item: "shortbow", quantity: 1 },
+          { item: "arrows", quantity: 20, unit: "single" },
+          { chooseFrom: ["gaming-set"], quantity: 1, note: "same as above" },
+          { item: "healers-kit", quantity: 1 },
+          { item: "quiver", quantity: 1 },
+          { item: "clothes-travelers", quantity: 1 },
+        ],
+        money: money(14),
+      },
+      { option: "B", money: money(50) },
+    ],
+  },
+}
+
+type HandFeat = { header: string; category: string; prerequisite?: Record<string, unknown>; repeatable?: { differentSpellList?: true }; benefits: string[] }
+const levelOnly = (level: number) => ({ text: `Level ${level}+`, level })
+const styleFeature = { text: "Fighting Style Feature", features: ["fighting-style"] }
+const boon = (benefits: string[], prerequisite: Record<string, unknown> = levelOnly(19)): HandFeat => ({
+  header: `Epic Boon Feat (Prerequisite: ${prerequisite.text})`,
+  category: "epic-boon",
+  prerequisite,
+  benefits: ["Ability Score Increase", ...benefits],
+})
+
+/** The 17 feats on pages 87 and 88: the printed header, then category, prerequisite, repeatable and benefit names read from it. */
+const featTable: Record<string, HandFeat> = {
+  Alert: { header: "Origin Feat", category: "origin", benefits: ["Initiative Proficiency", "Initiative Swap"] },
+  "Magic Initiate": { header: "Origin Feat", category: "origin", repeatable: { differentSpellList: true }, benefits: ["Two Cantrips", "Level 1 Spell", "Spell Change"] },
+  "Savage Attacker": { header: "Origin Feat", category: "origin", benefits: [] },
+  Skilled: { header: "Origin Feat", category: "origin", repeatable: {}, benefits: [] },
+  "Ability Score Improvement": { header: "General Feat (Prerequisite: Level 4+)", category: "general", prerequisite: levelOnly(4), repeatable: {}, benefits: [] },
+  Grappler: {
+    header: "General Feat (Prerequisite: Level 4+, Strength or Dexterity 13+)",
+    category: "general",
+    prerequisite: { text: "Level 4+, Strength or Dexterity 13+", level: 4, abilityMinimum: { abilities: ["str", "dex"], minimum: 13 } },
+    benefits: ["Ability Score Increase", "Punch and Grab", "Attack Advantage", "Fast Wrestler"],
+  },
+  Archery: { header: "Fighting Style Feat (Prerequisite: Fighting Style Feature)", category: "fighting-style", prerequisite: styleFeature, benefits: [] },
+  Defense: { header: "Fighting Style Feat (Prerequisite: Fighting Style Feature)", category: "fighting-style", prerequisite: styleFeature, benefits: [] },
+  "Great Weapon Fighting": { header: "Fighting Style Feat (Prerequisite: Fighting Style Feature)", category: "fighting-style", prerequisite: styleFeature, benefits: [] },
+  "Two-Weapon Fighting": { header: "Fighting Style Feat (Prerequisite: Fighting Style Feature)", category: "fighting-style", prerequisite: styleFeature, benefits: [] },
+  "Boon of Combat Prowess": boon(["Peerless Aim"]),
+  "Boon of Dimensional Travel": boon(["Blink Steps"]),
+  "Boon of Fate": boon(["Improve Fate"]),
+  "Boon of Irresistible Offense": boon(["Overcome Defenses", "Overwhelming Strike"]),
+  "Boon of Spell Recall": boon(["Free Casting"], { text: "Level 19+, Spellcasting Feature", level: 19, features: ["spellcasting"] }),
+  "Boon of the Night Spirit": boon(["Merge with Shadows", "Shadowy Form"]),
+  "Boon of Truesight": boon(["Truesight"]),
+}
+
+/** The Draconic Ancestors table, page 84: dragon and damage type, written by reading it. */
+const dragonTable: [string, string][] = [
+  ["Black", "acid"],
+  ["Blue", "lightning"],
+  ["Brass", "fire"],
+  ["Bronze", "lightning"],
+  ["Copper", "acid"],
+  ["Gold", "fire"],
+  ["Green", "poison"],
+  ["Red", "fire"],
+  ["Silver", "cold"],
+  ["White", "cold"],
+]
+
 export default function verify(report: Report) {
   verifySpecies(report)
   verifyBackgrounds(report)
   verifyFeats(report)
   verifyRules(report)
+  verifyTriggers(report)
 }
 
 // Rules ---------------------------------------------------------------------------------------------------
@@ -396,16 +653,18 @@ function verifySpecies(report: Report) {
     const block = `\n${raw}`.slice(from, to)
     const blockSquash = squash(block)
 
-    // Header: creature type, sizes, speed.
-    const header = flat(block.slice(0, block.search(/As an? \w+, you have/)))
-    const type = header.match(/Creature Type: (\w+)/)?.[1]
-    const sizeText = header.match(/Size: (.+?) Speed:/)?.[1] ?? ""
-    const sizes = [...sizeText.matchAll(/(Tiny|Small|Medium|Large|Huge|Gargantuan) \((about [^)]+)\)/g)].map((match) => ({ size: match[1], height: match[2] }))
-    const speed = Number(header.match(/Speed: (\d+) feet/)?.[1])
+    // Header: kept by hand from the printed lines, then looked up in this species' own block, not parsed.
+    const expectedHeader = headerTable[entry.name]
     headerTotal += 3
-    if (type?.toLowerCase() !== entry.creatureType) headerFailures.push(`${entry.name}: creature type ${entry.creatureType}, official ${type}`)
-    if (!same(sizes, entry.sizes) || sizes.length === 0) headerFailures.push(`${entry.name}: sizes ${show(entry.sizes)}, official ${show(sizes)}`)
-    if (speed !== entry.speed) headerFailures.push(`${entry.name}: speed ${entry.speed}, official ${speed}`)
+    if (!expectedHeader) headerFailures.push(`${entry.name}: no hand-kept header`)
+    else {
+      const sizeLine = expectedHeader.sizes.map((size) => `${size.size} (${size.height})`).join(" or ")
+      if (entry.creatureType !== "humanoid" || !blockSquash.includes(squash("Creature Type: Humanoid")))
+        headerFailures.push(`${entry.name}: creature type ${entry.creatureType}, the block prints Humanoid`)
+      if (!same(entry.sizes, expectedHeader.sizes) || !blockSquash.includes(squash(`Size: ${sizeLine}`))) headerFailures.push(`${entry.name}: sizes ${show(entry.sizes)}, the block prints ${sizeLine}`)
+      if (entry.speed !== expectedHeader.speed || !blockSquash.includes(squash(`Speed: ${expectedHeader.speed} feet`)))
+        headerFailures.push(`${entry.name}: speed ${entry.speed}, the block prints ${expectedHeader.speed} feet`)
+    }
 
     // The trait names, in order, from the tab paragraphs that open with "Name. ".
     const lines = textLines(head.page, last)
@@ -502,16 +761,19 @@ function verifySpecies(report: Report) {
     if (entry.name === "Dragonborn") {
       const table = pages[head.page - 1].split("\n")
       const titleAt = table.findIndex((line) => line.trim() === "Draconic Ancestors")
-      const cells = table
+      const tableText = table
         .slice(
-          titleAt + 1,
-          table.findIndex((line, i) => i > titleAt && line.startsWith("\t"))
+          titleAt,
+          table.findIndex((line, k) => k > titleAt && line.startsWith("\t"))
         )
         .map((line) => line.trim())
         .filter(Boolean)
-      const body = cells.slice(cells.lastIndexOf("Damage Type") + 1)
-      const pairs = []
-      for (let i = 0; i < body.length; i += 2) pairs.push([body[i], body[i + 1].toLowerCase()])
+      // Each dragon sits next to its damage type in the cell order. The hand table holds the ten pairs, and the cells are counted.
+      const pairs = dragonTable
+      if (tableText.length !== 5 + 20) dragonFailures.push(`the Draconic Ancestors table has ${tableText.length} cells, expected 25 with its title`)
+      for (const [dragon, type] of pairs)
+        if (!squash(tableText.join(" ")).includes(squash(`${dragon} ${type[0].toUpperCase()}${type.slice(1)}`))) dragonFailures.push(`${dragon} ${type} is not a printed pair`)
+
       const options = entry.traits[0].choice.options
       const base = hasUpstream("5e-bits") ? readBase("Subspecies") : []
       optionTotal += pairs.length
@@ -554,11 +816,12 @@ function verifySpecies(report: Report) {
         }
         const level1 = flat(row.slice(1, -2).join("\n"))
         if (squash(option.text) !== squash(level1)) optionFailures.push(`${entry.name} ${row[0]}: level 1 text differs from the table`)
-        const expectedSpells = [
-          ...[...level1.matchAll(/know the ([A-Z][A-Za-z ]+?) cantrip/g)].map((match) => ({ spell: toId(match[1]), level: 1, cantrip: true })),
-          { spell: toId(row.at(-2) as string), level: 3, uses: parentUses },
-          { spell: toId(row.at(-1) as string), level: 5, uses: parentUses },
-        ]
+        // The hand-kept table gives the spells, and the table cells and the level 1 sentence must print the same names.
+        const hand = spellTable[row[0]] ?? []
+        const expectedSpells = hand.map(([name, level, cantrip]) => ({ spell: toId(name), level, ...(cantrip ? { cantrip: true } : { uses: parentUses }) }))
+        if (hand[1]?.[0] !== row.at(-2) || hand[2]?.[0] !== row.at(-1))
+          spellFailures.push(`${entry.name} ${row[0]}: the level 3 and 5 cells are ${show(row.slice(-2))}, the hand table has ${show(hand.slice(1).map((h) => h[0]))}`)
+        if (!squash(level1).includes(squash(`know the ${hand[0]?.[0]} cantrip`))) spellFailures.push(`${entry.name} ${row[0]}: the level 1 text does not give the cantrip ${hand[0]?.[0]}`)
         spellTotal += expectedSpells.length
         if (!same(option.spells, expectedSpells)) spellFailures.push(`${entry.name} ${row[0]}: spells ${show(option.spells)}, official ${show(expectedSpells)}`)
         if (!spellCell.test(row.at(-2) as string) || !spellCell.test(row.at(-1) as string)) spellFailures.push(`${entry.name} ${row[0]}: level 3 and 5 cells are not spell names`)
@@ -586,13 +849,8 @@ function verifySpecies(report: Report) {
         if (option && option.giant !== giant) optionFailures.push(`${entry.name} ${name}: giant ${show(option.giant)}, official ${show(giant)}`)
         if (option?.spells) {
           const t = flat(option.text)
-          const cantripNames = [...t.matchAll(/know the ([A-Z][A-Za-z ]+?) cantrip\b/g)].map((m) => m[1])
-          const pair = t.match(/know the ([A-Z][a-z]+) and ([A-Z][a-z]+) cantrips/)
-          const prepared = t.match(/always have the ([A-Z][A-Za-z ]+?) spell prepared/)
-          const expected = [
-            ...(pair ? [pair[1], pair[2]] : cantripNames).map((spell) => ({ spell: toId(spell), level: 1, cantrip: true })),
-            ...(prepared ? [{ spell: toId(prepared[1]), level: 1, uses: castUses(t) }] : []),
-          ]
+          const expected = (spellTable[name] ?? []).map(([spell, level, cantrip]) => ({ spell: toId(spell), level, ...(cantrip ? { cantrip: true } : { uses: castUses(t) }) }))
+          for (const [spell] of spellTable[name] ?? []) if (!squash(t).includes(squash(spell))) spellFailures.push(`${entry.name} ${name}: the text does not name ${spell}`)
           spellTotal += expected.length
           if (!same(option.spells, expected)) spellFailures.push(`${entry.name} ${name}: spells ${show(option.spells)}, text ${show(expected)}`)
         }
@@ -603,7 +861,9 @@ function verifySpecies(report: Report) {
     for (const trait of entry.traits) {
       if (!trait.spells) continue
       const t = flat(trait.text)
-      const expected = [...t.matchAll(/know the ([A-Z][A-Za-z ]+?) cantrip/g)].map((match) => ({ spell: toId(match[1]), level: 1, cantrip: true }))
+      const expected = (spellTable[trait.name] ?? []).map(([spell, level]) => ({ spell: toId(spell), level, cantrip: true }))
+      for (const [spell] of spellTable[trait.name] ?? [])
+        if (!squash(t).includes(squash(`know the ${spell} cantrip`))) spellFailures.push(`${entry.name} ${trait.name}: the text does not give the cantrip ${spell}`)
       spellTotal += expected.length
       if (!same(trait.spells, expected)) spellFailures.push(`${entry.name} ${trait.name}: spells ${show(trait.spells)}, text ${show(expected)}`)
     }
@@ -739,6 +999,7 @@ function collectSpellIds(species: any[]): string[] {
 // Backgrounds ---------------------------------------------------------------------------------------------
 
 function verifyBackgrounds(report: Report) {
+  const equipmentKinds = new Map<string, string>(existsSync(dataPath("equipment")) ? readData("equipment").map((entry) => [entry.id, entry.kind]) : [])
   const backgrounds = readData("backgrounds")
   const page = flat(pages[82])
   const region = page.slice(page.indexOf("Background Descriptions") + "Background Descriptions".length, page.indexOf("Character Species")).trim()
@@ -765,49 +1026,28 @@ function verifyBackgrounds(report: Report) {
   for (const official of officials) {
     const entry = backgrounds.find((b) => b.name === official[1])
     if (!entry) continue
-    const [, , scores, feat, skills, tool, equipA, gpB] = official
-    const abilities = scores.split(", ").map((name) => abilityByName[name])
-    const featMatch = feat.replace(/ \(see “Feats”\)$/, "").match(/^(.+?)(?: \((Cleric|Druid|Wizard)\))?$/) as RegExpMatchArray
-    const toolText = tool.replace(/ \(see “Equipment”\)$/, "")
-    const kind = toolText.match(/^Choose one kind of (.+)$/)
-    const expected: Record<string, unknown> = {
-      abilityScores: abilities,
-      feat: { id: toId(featMatch[1]), ...(featMatch[2] ? { spellList: featMatch[2].toLowerCase() } : {}) },
-      skills: skills.split(" and ").map((skill) => toId(skill)),
-      toolProficiency: kind ? { oneOfKind: toId(kind[1]) } : { tool: toId(toolText) },
+    // The hand-kept table holds both the printed lines and the typed values read from them. The printed lines are
+    // compared with the page, and the data with the typed values, so no sentence is parsed here.
+    const hand = backgroundTable[entry.name]
+    fields += 7
+    if (!hand) {
+      fieldFailures.push(`${entry.name}: no hand-kept entry`)
+      continue
     }
-    for (const [key, value] of Object.entries(expected)) {
-      fields++
-      if (!same((entry as any)[key], value)) fieldFailures.push(`${entry.name}: ${key} is ${show((entry as any)[key])}, official ${show(value)}`)
+    const printed = official.slice(2, 8).map((text) => squash(text))
+    const handPrinted = hand.printed.map((text) => squash(text))
+    if (!same(printed, handPrinted)) fieldFailures.push(`${entry.name}: the hand-kept printed lines differ from the page`)
+    for (const key of ["abilityScores", "feat", "skills", "toolProficiency"] as const)
+      if (!same((entry as any)[key], hand[key])) fieldFailures.push(`${entry.name}: ${key} is ${show((entry as any)[key])}, the table has ${show(hand[key])}`)
+    if (!same(entry.equipment, hand.equipment)) equipFailures.push(`${entry.name}: equipment is ${show(entry.equipment)}, the table has ${show(hand.equipment)}`)
+    items += hand.equipment[0].items?.length ?? 0
+    // Kinds in the equipment data: a group is a choice, a plain item is not, and "same as above" repeats the tool kind.
+    for (const line of hand.equipment[0].items ?? []) {
+      const id = (line.item ?? line.chooseFrom?.[0]) as string
+      const isChoice = line.note === "same as above" || equipmentKinds.get(id) === "group"
+      if (isChoice !== (line.chooseFrom !== undefined)) equipFailures.push(`${entry.name}: ${id} should${isChoice ? "" : " not"} be a chooseFrom line`)
+      if (line.note === "same as above" && !same(line.chooseFrom, [(entry.toolProficiency as any).oneOfKind])) equipFailures.push(`${entry.name}: "same as above" must choose from the tool kind`)
     }
-    // Equipment: options A and B in order, option A item by item, and the gold of both.
-    const parts = equipA.split(", ")
-    const gpA = Number(parts.pop()?.match(/^(\d+) GP$/)?.[1])
-    const [optionA, optionB] = entry.equipment
-    fields += 2
-    if (entry.equipment.length !== 2 || optionA.option !== "A" || optionB.option !== "B") equipFailures.push(`${entry.name}: options are not A then B`)
-    if (!same(optionA.money, { amount: gpA, unit: "gp" })) equipFailures.push(`${entry.name}: option A money ${show(optionA.money)}, official ${gpA} GP`)
-    if (!same(optionB, { option: "B", money: { amount: Number(gpB), unit: "gp" } })) equipFailures.push(`${entry.name}: option B is ${show(optionB)}, official ${gpB} GP`)
-    if (optionA.items.length !== parts.length) equipFailures.push(`${entry.name}: ${optionA.items.length} items, official ${parts.length}`)
-    parts.forEach((part, i) => {
-      items++
-      const item = optionA.items[i]
-      const count = part.match(/^(\d+) /)?.[1]
-      const sheets = part.match(/\((\d+) sheets\)/)?.[1]
-      const paren = part.match(/\(([^)]*)\)/)?.[1]
-      const words = toId(part.replace(/^\d+ /, "").replace(/\s*\(.*\)$/, ""))
-      if (!item) return
-      const id = paren === "same as above" ? item.chooseFrom?.[0] : item.item
-      if (paren === "same as above" ? item.item !== undefined : item.chooseFrom !== undefined) equipFailures.push(`${entry.name}: item ${i + 1} sets the wrong one of item and chooseFrom`)
-      // The equipment table sorts "Clothes, Traveler’s" under its first word (page 95).
-      const reversed = words === "travelers-clothes" ? "clothes-travelers" : words
-      if (!id || !reversed.startsWith(id)) equipFailures.push(`${entry.name}: item ${i + 1} is ${id}, official "${part}"`)
-      if (item.quantity !== Number(sheets ?? count ?? 1)) equipFailures.push(`${entry.name}: ${id} quantity ${item.quantity}, official "${part}"`)
-      const noteExpected = sheets ? "sheets" : paren
-      if (item.note !== noteExpected) equipFailures.push(`${entry.name}: ${id} note ${show(item.note)}, official ${show(noteExpected)}`)
-      if (paren === "same as above" && JSON.stringify(item.chooseFrom) !== JSON.stringify([entry.toolProficiency.oneOfKind]))
-        equipFailures.push(`${entry.name}: "same as above" must choose from the tool kind ${show(entry.toolProficiency.oneOfKind)}`)
-    })
   }
   report.check("backgrounds", "ability scores, feat, skills, tool proficiency", fields, fieldFailures)
   report.check("backgrounds", "equipment items, quantities, notes and gold of both options", items + backgrounds.length * 2, equipFailures)
@@ -928,11 +1168,9 @@ function verifyBackgrounds(report: Report) {
 
 // Feats ---------------------------------------------------------------------------------------------------
 
-const categoryIds: Record<string, string> = { Origin: "origin", General: "general", "Fighting Style": "fighting-style", "Epic Boon": "epic-boon" }
-
 function verifyFeats(report: Report) {
   const feats = readData("feats")
-  type Official = { name: string; page: number; category: string; prerequisite?: string; body: string[]; paragraphs: string[] }
+  type Official = { name: string; page: number; header: string; body: string[]; paragraphs: string[] }
   const officials: Official[] = []
   const sections = new Set(["Origin Feats", "General Feats", "Fighting Style Feats", "Epic Boon Feats"])
   for (const page of [87, 88]) {
@@ -943,9 +1181,7 @@ function verifyFeats(report: Report) {
       let j = i + 1
       let header = lines[j]
       while (header.includes("(") && !header.includes(")")) header += ` ${lines[++j]}`
-      const match = flat(header).match(/^(Origin|General|Fighting Style|Epic Boon) Feat(?: \(Prerequisite: (.+)\))?$/)
-      if (!match) return
-      officials.push({ name: line.trim(), page, category: categoryIds[match[1]], prerequisite: match[2], body: [], paragraphs: [] })
+      officials.push({ name: line.trim(), page, header: flat(header), body: [], paragraphs: [] })
       const entry = officials.at(-1) as Official
       const nextHead = lines.findIndex((l, k) => k > j && /^(Origin|General|Fighting Style|Epic Boon) Feat\b/.test(lines[k + 1] ?? "") && !/^(Origin|General|Fighting Style|Epic Boon) Feat\b/.test(l))
       entry.body = lines.slice(j + 1, nextHead < 0 ? lines.length : nextHead)
@@ -990,54 +1226,32 @@ function verifyFeats(report: Report) {
     if (entry.page !== official.page) pageFailures.push(`${entry.name}: page ${entry.page}, the heading is on ${official.page}`)
     if (entry.id !== toId(entry.name)) fieldFailures.push(`${entry.name}: id ${entry.id}`)
 
-    // Category, prerequisite and repeatable.
-    fields += 3
-    if (entry.category !== official.category) fieldFailures.push(`${entry.name}: category ${entry.category}, official ${official.category}`)
-    const prereq = official.prerequisite
-    const expectedPrereq = prereq
-      ? {
-          text: prereq,
-          ...(prereq.match(/Level (\d+)\+/) ? { level: Number(prereq.match(/Level (\d+)\+/)?.[1]) } : {}),
-          ...(prereq.match(/(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)(?: or (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma))? (\d+)\+/)
-            ? (() => {
-                const m = prereq.match(
-                  /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)(?: or (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma))? (\d+)\+/
-                ) as RegExpMatchArray
-                return { abilityMinimum: { abilities: [abilityByName[m[1]], ...(m[2] ? [abilityByName[m[2]]] : [])], minimum: Number(m[3]) } }
-              })()
-            : {}),
-          ...(/Fighting Style Feature|Spellcasting Feature/.test(prereq)
-            ? { features: [...(prereq.includes("Fighting Style Feature") ? ["fighting-style"] : []), ...(prereq.includes("Spellcasting Feature") ? ["spellcasting"] : [])] }
-            : {}),
-        }
-      : undefined
-    if (!same(entry.prerequisite, expectedPrereq)) fieldFailures.push(`${entry.name}: prerequisite ${show(entry.prerequisite)}, official ${show(expectedPrereq)}`)
+    // Category, prerequisite, repeatable and benefit names come from the hand-kept table. The printed header is
+    // compared with the page, and the data with the table, so no header or paragraph is parsed here.
+    const hand = featTable[entry.name]
+    fields += 5
+    if (!hand) {
+      fieldFailures.push(`${entry.name}: no hand-kept entry`)
+      continue
+    }
+    if (squash(official.header) !== squash(hand.header)) fieldFailures.push(`${entry.name}: the hand-kept header "${hand.header}" differs from the page "${official.header}"`)
+    if (entry.category !== hand.category) fieldFailures.push(`${entry.name}: category ${entry.category}, the table has ${hand.category}`)
+    if (!same(entry.prerequisite, hand.prerequisite)) fieldFailures.push(`${entry.name}: prerequisite ${show(entry.prerequisite)}, the table has ${show(hand.prerequisite)}`)
     const repeatParagraph = official.paragraphs.find((p) => p.startsWith("Repeatable. "))
-    const expectedRepeat = repeatParagraph ? { text: repeatParagraph.slice("Repeatable. ".length), ...(/different spell list/.test(repeatParagraph) ? { differentSpellList: true } : {}) } : undefined
-    if (!same(entry.repeatable, expectedRepeat)) fieldFailures.push(`${entry.name}: repeatable ${show(entry.repeatable)}, official ${show(expectedRepeat)}`)
-
-    // Benefits: the named tab paragraphs, in order, and the text before them.
-    const rest = official.paragraphs.filter((p) => !p.startsWith("Repeatable. "))
-    const intro = rest[0]
-    const benefitParagraphs = rest.slice(1).filter((p) => named(p))
-    fields += 2
-    const expectedText = intro === "You gain the following benefits." ? intro : rest.join("\n")
+    if (Boolean(repeatParagraph) !== (hand.repeatable !== undefined)) fieldFailures.push(`${entry.name}: the page ${repeatParagraph ? "has" : "has no"} Repeatable paragraph, the table says otherwise`)
+    if (!same(entry.repeatable && { differentSpellList: entry.repeatable.differentSpellList }, hand.repeatable))
+      fieldFailures.push(`${entry.name}: repeatable ${show(entry.repeatable)}, the table has ${show(hand.repeatable)}`)
+    if (!same(entry.repeatable?.text, repeatParagraph?.slice("Repeatable. ".length))) fieldFailures.push(`${entry.name}: repeatable text differs from the page`)
+    const dataNames = (entry.benefits ?? []).map((b: any) => b.name)
+    if (!same(dataNames, hand.benefits)) fieldFailures.push(`${entry.name}: benefits ${show(dataNames)}, the table has ${show(hand.benefits)}`)
+    for (const benefit of entry.benefits ?? []) {
+      const paragraph = official.paragraphs.find((p) => p.startsWith(`${benefit.name}. `))
+      if (!paragraph || squash(benefit.text) !== squash(paragraph.slice(benefit.name.length + 2))) fieldFailures.push(`${entry.name} ${benefit.name}: text is not the official paragraph`)
+    }
+    const intro = official.paragraphs[0]
+    const expectedText = hand.benefits.length ? "You gain the following benefits." : official.paragraphs.filter((p) => !p.startsWith("Repeatable. ")).join("\n")
+    if (hand.benefits.length && intro !== expectedText) fieldFailures.push(`${entry.name}: the page does not open with "You gain the following benefits."`)
     if (entry.text !== expectedText) fieldFailures.push(`${entry.name}: text differs from the official opening`)
-    if (intro === "You gain the following benefits.") {
-      const names = benefitParagraphs.map((p) => (named(p) as RegExpMatchArray)[1])
-      if (
-        !same(
-          names,
-          (entry.benefits ?? []).map((b: any) => b.name)
-        )
-      )
-        fieldFailures.push(`${entry.name}: benefits ${show((entry.benefits ?? []).map((b: any) => b.name))}, official ${show(names)}`)
-      for (const paragraph of benefitParagraphs) {
-        const benefitName = (named(paragraph) as RegExpMatchArray)[1]
-        const benefit = (entry.benefits ?? []).find((b: any) => b.name === benefitName)
-        if (benefit && squash(benefit.text) !== squash(paragraph.slice(benefitName.length + 2))) fieldFailures.push(`${entry.name} ${benefitName}: text is not the official paragraph`)
-      }
-    } else if (entry.benefits) fieldFailures.push(`${entry.name}: has named benefits but the official text has none`)
 
     // Paragraph breaks: the official paragraph starts, in order, against the data.
     const dataParagraphs = [
@@ -1166,4 +1380,36 @@ function verifyFeats(report: Report) {
     }
     report.crossCheck("feats", "base source agrees on category and minimum level", feats.length, baseFailures, [])
   } else report.skip("feats", "base source agrees on category and minimum level")
+}
+
+// Triggers -------------------------------------------------------------------------------------------------
+
+/** Every `trigger` the data should hold, by "species/option" or "feat/benefit", written by reading the sentence that opens each text. */
+const handTriggers: Record<string, string> = {
+  "goliath/Fire’s Burn": "hit-with-attack-roll",
+  "goliath/Frost’s Chill": "hit-with-attack-roll",
+  "goliath/Hill’s Tumble": "hit-with-attack-roll",
+  "goliath/Stone’s Endurance": "take-damage",
+  "goliath/Storm’s Thunder": "take-damage",
+  "savage-attacker/": "hit-with-weapon",
+  "boon-of-dimensional-travel/Blink Steps": "after-attack-or-magic-action",
+}
+
+function verifyTriggers(report: Report) {
+  const actual: Record<string, unknown> = {}
+  for (const entry of readData("species"))
+    for (const trait of entry.traits) {
+      if (trait.trigger) actual[`${entry.id}/${trait.name}`] = trait.trigger
+      for (const option of trait.choice?.options ?? []) if (option.trigger) actual[`${entry.id}/${option.name}`] = option.trigger
+    }
+  let total = 0
+  for (const feat of readData("feats")) {
+    total += 1 + (feat.benefits?.length ?? 0)
+    if (feat.trigger) actual[`${feat.id}/`] = feat.trigger
+    for (const benefit of feat.benefits ?? []) if (benefit.trigger) actual[`${feat.id}/${benefit.name}`] = benefit.trigger
+  }
+  const failures: string[] = []
+  for (const key of new Set([...Object.keys(actual), ...Object.keys(handTriggers)]))
+    if (actual[key] !== handTriggers[key]) failures.push(`${key}: trigger ${show(actual[key])}, the hand table has ${show(handTriggers[key])}`)
+  report.check("origins", "triggers match the hand-kept table, both ways", total + Object.keys(handTriggers).length, failures)
 }

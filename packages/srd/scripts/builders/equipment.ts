@@ -59,8 +59,8 @@ const abilityOf: Record<string, string> = { Strength: "str", Dexterity: "dex", C
 
 const dexSave = { ability: "dex", dc: { plusModifierOf: "dex" } } as const
 const fixedDexSave = (dc: number) => ({ ability: "dex", dc })
-const piercing1 = { fixed: 1, type: "piercing" } as const
-const fire5 = { fixed: 5, type: "fire" } as const
+const piercing1 = { amount: 1, type: "piercing" } as const
+const fire5 = { amount: 5, type: "fire" } as const
 const unboundable = ["grappled", "incapacitated", "restrained"] as const
 
 // Weapons and armor --------------------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ function weapons(): Row[] {
       kind: "weapon",
       category,
       attackType,
-      damage: { ...(damage[1].includes("d") ? { dice: damage[1] } : { fixed: Number(damage[1]) }), type: damage[2].toLowerCase() },
+      damage: { ...(damage[1].includes("d") ? { dice: damage[1] } : { amount: Number(damage[1]) }), type: damage[2].toLowerCase() },
       properties: [] as string[],
       mastery: toId(mastery),
       cost,
@@ -204,8 +204,8 @@ class Names {
 }
 
 const gearMechanics: Record<string, Row> = {
-  acid: { hazard: { rangeFeet: 20, save: dexSave, damage: { dice: "2d6", type: "acid" } } },
-  "alchemists-fire": { hazard: { rangeFeet: 20, save: dexSave, damage: { dice: "1d4", type: "fire" }, burning: true } },
+  acid: { hazard: { range: 20, save: dexSave, damage: { dice: "2d6", type: "acid" } } },
+  "alchemists-fire": { hazard: { range: 20, save: dexSave, damage: { dice: "1d4", type: "fire" }, burning: true } },
   antitoxin: {
     modifiers: [
       {
@@ -241,7 +241,7 @@ const gearMechanics: Record<string, Row> = {
   bucket: { capacity: { cubicFeet: 0.5 } },
   caltrops: { hazard: { areaSideFeet: 5, withinFeet: 5, save: fixedDexSave(15), damage: piercing1, speedZeroUntilStartOfNextTurn: true, recoverMinutes: 10 } },
   candle: { light: { shape: "radius", brightFeet: 5, dimFeet: 5, durationHours: 1 } },
-  "case-crossbow-bolt": { capacity: { holds: [{ item: "bolts", quantity: 20 }] } },
+  "case-crossbow-bolt": { capacity: { holds: [{ item: "bolts", quantity: 20, unit: "single" }] } },
   "case-map-or-scroll": {
     capacity: {
       holds: [
@@ -253,9 +253,9 @@ const gearMechanics: Record<string, Row> = {
   chain: {
     binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "legs-bound" },
     checks: [
-      { use: "bind", ability: "str", skill: "athletics", dc: 13, rangeFeet: 5 },
-      { use: "escape", ability: "dex", skill: "acrobatics", dc: 18 },
-      { use: "burst", ability: "str", skill: "athletics", dc: 20 },
+      { use: "bind", ability: "str", skill: "athletics", dc: 13, range: 5, activation: ["utilize-action"] },
+      { use: "escape", ability: "dex", skill: "acrobatics", dc: 18, activation: ["action"] },
+      { use: "burst", ability: "str", skill: "athletics", dc: 20, activation: ["action"] },
     ],
   },
   chest: { capacity: { cubicFeet: 12 } },
@@ -265,27 +265,27 @@ const gearMechanics: Record<string, Row> = {
   },
   crowbar: { modifiers: [{ effect: "advantage", on: "check", ability: "str", when: "Using a Crowbar gives you Advantage on Strength checks where the Crowbar’s leverage can be applied" }] },
   flask: { capacity: { pints: 1 } },
-  "grappling-hook": { checks: [{ use: "catch", ability: "dex", skill: "acrobatics", dc: 13, rangeFeet: 50 }] },
+  "grappling-hook": { checks: [{ use: "catch", ability: "dex", skill: "acrobatics", dc: 13, range: 50, activation: ["utilize-action"] }] },
   "healers-kit": { uses: 10, stabilize: { requiresCondition: "unconscious", atHitPoints: 0, replacesCheck: { ability: "wis", skill: "medicine" } } },
-  "holy-water": { hazard: { rangeFeet: 20, save: dexSave, damage: { dice: "2d8", type: "radiant" }, onlyAgainst: ["fiend", "undead"] } },
+  "holy-water": { hazard: { range: 20, save: dexSave, damage: { dice: "2d8", type: "radiant" }, onlyAgainst: ["fiend", "undead"] } },
   "hunting-trap": {
     hazard: { save: fixedDexSave(13), damage: { dice: "1d4", type: "piercing" }, speedZeroUntilStartOfNextTurn: true, chainFeet: 3, failedFreeAttemptDamage: piercing1 },
-    checks: [{ use: "free", ability: "str", skill: "athletics", dc: 13 }],
+    checks: [{ use: "free", ability: "str", skill: "athletics", dc: 13, activation: ["action"] }],
   },
   jug: { capacity: { gallons: 1 } },
   ladder: { heightFeet: 10 },
   lamp: { light: { shape: "radius", brightFeet: 15, dimFeet: 30, fuel: "oil" } },
   "lantern-bullseye": { light: { shape: "cone", brightFeet: 60, dimFeet: 60, fuel: "oil" } },
   "lantern-hooded": { light: { shape: "radius", brightFeet: 30, dimFeet: 30, fuel: "oil", loweredHoodDimRadiusFeet: 5 } },
-  lock: { checks: [{ use: "pick", ability: "dex", skill: "sleight-of-hand", dc: 15 }] },
+  lock: { checks: [{ use: "pick", ability: "dex", skill: "sleight-of-hand", dc: 15, tool: "thieves-tools" }] },
   "magnifying-glass": { modifiers: [{ effect: "advantage", on: "check", when: "A Magnifying Glass grants Advantage on any ability check made to appraise or inspect a highly detailed item" }] },
   manacles: {
     binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "attached-to-fixed-anchor", sizes: ["Small", "Medium"] },
     checks: [
-      { use: "bind", ability: "dex", skill: "sleight-of-hand", dc: 13, rangeFeet: 5 },
-      { use: "escape", ability: "dex", skill: "sleight-of-hand", dc: 20 },
-      { use: "burst", ability: "str", skill: "athletics", dc: 25 },
-      { use: "pick", ability: "dex", skill: "sleight-of-hand", dc: 15 },
+      { use: "bind", ability: "dex", skill: "sleight-of-hand", dc: 13, range: 5, activation: ["utilize-action"] },
+      { use: "escape", ability: "dex", skill: "sleight-of-hand", dc: 20, activation: ["action"] },
+      { use: "burst", ability: "str", skill: "athletics", dc: 25, activation: ["action"] },
+      { use: "pick", ability: "dex", skill: "sleight-of-hand", dc: 15, tool: "thieves-tools" },
     ],
   },
   map: {
@@ -301,13 +301,13 @@ const gearMechanics: Record<string, Row> = {
     ],
   },
   net: {
-    hazard: { rangeFeet: 15, save: dexSave, condition: "restrained", succeedsAutomaticallyIfSizeAtLeast: "Huge" },
-    checks: [{ use: "escape", ability: "str", skill: "athletics", dc: 10, rangeFeet: 5 }],
+    hazard: { range: 15, save: dexSave, condition: "restrained", succeedsAutomaticallyIfSizeAtLeast: "Huge" },
+    checks: [{ use: "escape", ability: "str", skill: "athletics", dc: 10, range: 5, activation: ["action"] }],
     object: { ac: 10, hp: 5, immunities: ["bludgeoning", "poison", "psychic"] },
   },
   oil: {
     fuelHours: 6,
-    hazard: { rangeFeet: 20, save: dexSave, dryAfterMinutes: 1, extraFireDamage: fire5 },
+    hazard: { range: 20, save: dexSave, dryAfterMinutes: 1, extraFireDamage: fire5 },
     spaceHazard: { areaSideFeet: 5, withinFeet: 5, burnsUntilRoundsAfterLit: 2, damage: fire5, onlyWhenLit: true },
   },
   perfume: {
@@ -338,9 +338,9 @@ const gearMechanics: Record<string, Row> = {
     ],
   },
   "pot-iron": { capacity: { gallons: 1 } },
-  "potion-of-healing": { magicItem: "potions-of-healing", healing: { dice: "2d4 + 2", rangeFeet: 5 } },
+  "potion-of-healing": { magicItem: "potions-of-healing", healing: { dice: "2d4 + 2", range: 5 } },
   pouch: { capacity: { pounds: 6, cubicFeet: 0.2 } },
-  quiver: { capacity: { holds: [{ item: "arrows", quantity: 20 }] } },
+  quiver: { capacity: { holds: [{ item: "arrows", quantity: 20, unit: "single" }] } },
   "ram-portable": {
     modifiers: [
       { effect: "bonus", on: "check", ability: "str", amount: 4, when: "You can use a Portable Ram to break down doors. When doing so, you gain a +4 bonus to the Strength check" },
@@ -350,9 +350,9 @@ const gearMechanics: Record<string, Row> = {
   rope: {
     binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "legs-bound" },
     checks: [
-      { use: "knot", ability: "dex", skill: "sleight-of-hand", dc: 10 },
+      { use: "knot", ability: "dex", skill: "sleight-of-hand", dc: 10, activation: ["utilize-action"] },
       { use: "burst", ability: "str", skill: "athletics", dc: 20 },
-      { use: "escape", ability: "dex", skill: "acrobatics", dc: 15 },
+      { use: "escape", ability: "dex", skill: "acrobatics", dc: 15, activation: ["action"] },
     ],
   },
   sack: { capacity: { pounds: 30, cubicFeet: 1 } },
@@ -364,7 +364,7 @@ const gearMechanics: Record<string, Row> = {
   string: { lengthFeet: 10 },
   tent: { sleeps: 2 },
   tinderbox: { ignite: { exposedFuel: ["bonus-action"], otherFireMinutes: 1 } },
-  torch: { light: { shape: "radius", brightFeet: 20, dimFeet: 20, durationHours: 1 }, attackDamage: { fixed: 1, type: "fire" } },
+  torch: { light: { shape: "radius", brightFeet: 20, dimFeet: 20, durationHours: 1 }, attackDamage: { amount: 1, type: "fire" } },
   vial: { capacity: { ounces: 4 } },
   waterskin: { capacity: { pints: 4 } },
 }
@@ -824,7 +824,7 @@ function masteries(): Row[] {
     page: entry.page,
     description: entry.description,
     ...(entry.name === "Push" ? { pushFeet: 10, maxSize: "Large" } : {}),
-    ...(entry.name === "Slow" ? { speedReductionFeet: 10 } : {}),
+    ...(entry.name === "Slow" ? { targetSpeedReduction: { feet: 10, until: "start-of-user-next-turn" } } : {}),
     ...(entry.name === "Topple" ? { save: { ability: "con", dc: { plusModifierOf: "attack-ability" }, failureCondition: "prone" } } : {}),
   }))
 }
@@ -949,6 +949,15 @@ function section(from: number, heading: string, stop: string, to = from + 1): st
   return prose(lines.slice(start + 1, end))
 }
 
+/** The paragraph that starts at the line beginning `from` and runs to the line beginning `to`. */
+function runIn(page: number, from: string, to: string): string {
+  const lines = linesOf(page)
+  const start = lines.findIndex((line) => line.text.trim().startsWith(from))
+  const end = lines.findIndex((line, index) => index > start && line.text.trim().startsWith(to))
+  if (start < 0 || end < 0) throw new Error(`Rules: no paragraph ${from} on page ${page}`)
+  return prose(lines.slice(start, end))
+}
+
 function rules(): Row[] {
   const rows: Row[] = [
     { id: "selling-equipment", name: "Selling Equipment", page: 89, kind: "selling", resaleFraction: 0.5, description: section(89, "Selling Equipment", "Equipment") },
@@ -1032,6 +1041,60 @@ function rules(): Row[] {
       hammockCostPerDay: { amount: 5, unit: "sp" },
       cabinCostPerDay: { amount: 2, unit: "gp" },
       description: section(101, "Passengers", "Damage Threshold"),
+    },
+    {
+      id: "armor-strength",
+      name: "Armor Strength",
+      page: 92,
+      kind: "armor-strength",
+      speedReduction: { feet: 10, unlessStrengthAtLeast: "listed-score" },
+      description: runIn(92, "Strength. If the table", "Stealth. If the table"),
+    },
+    {
+      id: "armor-stealth",
+      name: "Armor Stealth",
+      page: 92,
+      kind: "armor-stealth",
+      disadvantageOn: { ability: "dex", skill: "stealth" },
+      description: runIn(92, "Stealth. If the table", "Armor Training"),
+    },
+    {
+      id: "crafting-nonmagical-items-tools",
+      name: "Crafting Nonmagical Items (Tools)",
+      page: 103,
+      kind: "crafting-tools",
+      requiresProficiency: true,
+      helpersNeedProficiency: true,
+      description: section(103, "Tools", "Raw Materials"),
+    },
+    {
+      id: "scribing-spell-scrolls-time-and-cost",
+      name: "Scribing Spell Scrolls (Time and Cost)",
+      page: 103,
+      kind: "scribing-time-and-cost",
+      workHoursPerDay: 8,
+      daysNeedNotBeConsecutive: true,
+      description: section(103, "Time and Cost", "Prerequisites for the Scribe"),
+    },
+    {
+      id: "scribing-spell-scrolls-prerequisites",
+      name: "Scribing Spell Scrolls (Prerequisites for the Scribe)",
+      page: 103,
+      kind: "scribing-prerequisites",
+      proficiencyAnyOf: { skill: "arcana", tool: "calligraphers-supplies" },
+      spellPreparedEachDay: true,
+      materialComponentsAtHand: true,
+      consumedComponentsUsedOnCompletion: true,
+      usesScribeSaveDcAndAttackBonus: true,
+      description: section(103, "Prerequisites for the Scribe", "Cantrips"),
+    },
+    {
+      id: "scribing-spell-scrolls-cantrips",
+      name: "Scribing Spell Scrolls (Cantrips)",
+      page: 103,
+      kind: "scribing-cantrips",
+      worksAsIfCasterLevel: "scribe",
+      description: section(103, "Cantrips", "Spell Scroll Costs"),
     },
     {
       id: "harvesting-poison",

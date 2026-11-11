@@ -323,10 +323,10 @@ function components(list: string[], material: string | undefined): Components {
   const result: Components = { verbal: list.includes("V"), somatic: list.includes("S") }
   if (!list.includes("M")) return result
   if (!material) throw new Error("spells: an M component has no material")
-  const units: Record<string, Cost["unit"]> = { GP: "gp", CP: "cp", "Copper Pieces": "cp" }
+  const units: Record<string, Cost["unit"]> = { GP: "gp", CP: "cp", "Copper Piece": "cp", "Copper Pieces": "cp" }
   // A priced part is consumed when "which the spell consumes" follows its price before the next price, or when the
   // material ends "all of which the spell consumes".
-  const prices = [...material.matchAll(/([\d,]+)\+? (GP|CP|Copper Pieces)\b/g)]
+  const prices = [...material.matchAll(/([\d,]+)\+? (GP|CP|Copper Pieces?)\b/g)]
   const all = /all of which the spell consumes/.test(material)
   const costs = prices.map((match, index) => {
     const after = material.slice((match.index ?? 0) + match[0].length, prices[index + 1]?.index ?? material.length)
@@ -366,8 +366,8 @@ type Mention = { index: number; ability: Save["ability"]; repeat: boolean; befor
 
 /**
  * The saving throws a sentence has a creature make, in order: "makes a Dexterity saving throw", "makes another
- * Wisdom saving throw", "repeats the save". A save named as a benefit or a penalty ("Advantage on Strength saving
- * throws") is not one.
+ * Wisdom saving throw", "repeats the save", "must repeat the saving throw". A save named as a benefit or a penalty
+ * ("Advantage on Strength saving throws") is not one.
  */
 function mentionsIn(sentence: string, last: Save["ability"] | undefined): Mention[] {
   const found: Mention[] = []
@@ -376,7 +376,7 @@ function mentionsIn(sentence: string, last: Save["ability"] | undefined): Mentio
     if (match[2] || /(?:Advantage|Disadvantage|bonus|penalty) (?:on|to) (?:all |its |their |your |any )?$/.test(before)) continue
     found.push({ index: match.index ?? 0, ability: abilityNames[match[1]], repeat: /\banother $/.test(before), before })
   }
-  for (const match of sentence.matchAll(/\brepeats? the save\b/g)) {
+  for (const match of sentence.matchAll(/\brepeats? the (?:save|saving throw)\b/g)) {
     const index = match.index ?? 0
     const ability = found.filter((mention) => mention.index < index).at(-1)?.ability ?? last
     if (ability) found.push({ index, ability, repeat: true, before: sentence.slice(0, index) })
@@ -386,27 +386,27 @@ function mentionsIn(sentence: string, last: Save["ability"] | undefined): Mentio
 
 /**
  * When a save is made, from the words before it in its sentence or right after it: "At the end of each of its turns,
- * the target repeats the save", "makes a Constitution saving throw at the end of each of its turns". A repeated save
- * with no such words is "later".
+ * the target repeats the save", "makes a Constitution saving throw at the end of each of its turns". A single save at
+ * the start of the caster's next turn, and a repeated save with no such words, are "later".
  */
 function timings(sentence: string, mention: Mention): Save["when"][] {
-  const near = `${mention.before} ${sentence.slice(mention.index, mention.index + 60).replace(/^\w+ saving throw|^repeats? the save/, "")}`
+  const near = `${mention.before} ${sentence.slice(mention.index, mention.index + 60).replace(/^\w+ saving throw|^repeats? the (?:save|saving throw)/, "")}`
   const found: Save["when"][] = []
   if (/[Aa]t the end of each of (?:its|the target’s) turns|(?:If|if) the [\w ]*?creature ends its turn|at which point it must/.test(near)) found.push("end-of-turn")
-  if (/[Aa]t the start of each of its turns|at the start of your next turn/.test(near)) found.push("start-of-turn")
-  if (/(?:each time|whenever|Whenever) (?:it|the target) takes damage|damages the (?:\w+ )?creature/.test(mention.before)) found.push("on-damage")
+  if (/[Aa]t the start of each of its turns/.test(near)) found.push("start-of-turn")
+  if (/(?:each time|whenever|Whenever) (?:it|the target) takes damage|damages the (?:\w+ )?creature|takes the damage from it/.test(mention.before)) found.push("on-damage")
   if (/take an action to [^.]*$/.test(mention.before)) found.push("action")
   if (found.length) return found
-  return mention.repeat ? ["later"] : ["initial"]
+  return mention.repeat || /at the start of your next turn|each of your (?:later )?turns/.test(near) ? ["later"] : ["initial"]
 }
 
 /** What a success does, read from the text that follows the save up to the next save. */
 function outcome(scope: string): Save["onSuccess"] {
   if (/half as much damage|half the initial damage|half damage/i.test(scope)) return "half"
+  if (/succeeds on three of these saves|successfully saves[^.]*three times/.test(scope)) return "other"
   if (/ending (?:the spell|the effect|the condition)(?: on itself)? on a success|saving throw to end (?:the|this) effect/.test(scope)) return "ends"
   const success = /(On a successful save|On a success|If it succeeds|if it succeeds|If it successfully saves[^,]*), ([^.]*)/.exec(scope)
   if (!success) return "none"
-  if (/three times/.test(success[1])) return "other"
   if (/isn’t affected|is unaffected|has no effect|resists your efforts/.test(success[2])) return "none"
   if (/\bends\b|is no longer (?:affected|Restrained)|isn’t Restrained/.test(success[2])) return "ends"
   return "other"
@@ -422,9 +422,14 @@ function chosenTypes(description: string): Damage["types"] {
   throw new Error(`spells: no damage type choice in "${description.slice(0, 60)}"`)
 }
 
+type Link = { trigger?: "hit" | "failed-save"; save?: number }
+
 /**
  * Saves, damage and conditions, read sentence by sentence from the description and the last cell of each table row,
- * and linked where a sentence ties a roll or a condition to a hit or to a failed save.
+ * and linked by meaning as the reading rules say: to a failed save stated in the sentence or earlier ("On a failed
+ * save", "or take", a sentence that begins "While Charmed" after the save that charms), or to a hit ("on a hit",
+ * "when you hit", "whenever you hit it with an attack roll", "extra damage from the attack"). Links the patterns
+ * cannot see are overrides that quote the text.
  */
 function effects(description: string, tables: SpellTable[], higherLevel = "", cantripUpgrade = "") {
   const rows = tables.flatMap((table) => table.rows.map((row) => row.at(-1) ?? ""))
@@ -439,7 +444,14 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
     last = allMentions[at].at(-1)?.ability ?? last
   }
   const flat = allMentions.flat()
+  // A paragraph that opens with a run-in name ("Death. Each target makes …") names the saves in it. Saves are labelled
+  // only where several named options or effects have a save each.
+  const heading = (paragraph: number) => /^(?:\d+ )?([A-Z][\w’]*(?: (?:[A-Z0-9][\w’–]*|of|the|and|or|a|an|to|in|on|with|for|from))*)\. /.exec(paragraphs[paragraph])?.[1]
+  // Entries are labelled where the spell has several named options or effects, or a table of named rows.
+  const named = new Set(paragraphs.map((_, at) => heading(at)).filter(Boolean))
+  const labelOf = (paragraph: number) => (named.size > 1 ? heading(paragraph) : undefined)
   const saves: Save[] = []
+  const savedIn: number[] = []
   let tableMention: (typeof flat)[number] | undefined
   const indexOf = new Map<(typeof flat)[number], number[]>()
   for (const [order, mention] of flat.entries()) {
@@ -453,37 +465,58 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
       rest.push(sentences[at].text)
     }
     let onSuccess = outcome(rest.join(" "))
-    // A save whose outcome the spell's table gives row by row: the same outcome in every row, or "other".
+    // A save that sends the creature to a table of outcomes: "half" where the rows halve damage on a success.
     if (/\btable\b/.test(rest.join(" ")) && rows.some((row) => /Failed Save:/.test(row))) {
-      const outcomes = new Set(rows.filter((row) => /Failed Save:/.test(row)).map((row) => (/Successful Save: Half as much damage/.test(row) ? "half" : "none")))
-      onSuccess = outcomes.size === 1 ? ([...outcomes][0] as Save["onSuccess"]) : "other"
+      onSuccess = rows.some((row) => /Successful Save: Half as much damage/.test(row)) ? "half" : "none"
       tableMention = mention
     }
     const dc = /DC (\d+) $/.exec(mention.before)
     const caster = /\byou make a $|When you cast this spell, make a (?:DC \d+ )?$/.test(mention.before)
+    const label = labelOf(sentences[mention.sentence].paragraph)
     indexOf.set(
       mention,
       timings(sentence, mention).map((when) => {
-        const save: Save = { ability: mention.ability, dc: dc ? Number(dc[1]) : "spell-save-dc", when, onSuccess, ...(caster ? { target: "caster" as const } : {}) }
-        const found = saves.findIndex((other) => JSON.stringify(other) === JSON.stringify(save))
-        if (found >= 0) return found
+        // A success on the save that decides whether the effect lands leaves the creature unaffected, even where the
+        // text adds that the spell then ends.
+        const result = when === "initial" && onSuccess === "ends" ? "none" : onSuccess
+        const save: Save = {
+          ability: mention.ability,
+          dc: dc ? Number(dc[1]) : "spell-save-dc",
+          ...(label ? { label } : {}),
+          when,
+          onSuccess: result,
+          ...(caster ? { target: "caster" as const } : {}),
+        }
+        // Two mentions in one sentence that are the same in every respect are one save stated twice.
+        const twice = saves.findIndex((other, index) => JSON.stringify(other) === JSON.stringify(save) && savedIn[index] === mention.sentence)
+        if (twice >= 0) return twice
         saves.push(save)
+        savedIn.push(mention.sentence)
         return saves.length - 1
       })
     )
   }
-  // The link a roll or a condition at `index` of sentence `at` takes from its sentence.
-  const link = (at: number, index: number): { trigger?: "hit" | "failed-save"; save?: number } => {
+  // Links given by sentence, kept so that "While Charmed, …" and "While there, …" take the link of what came before.
+  const sentenceLinks: Link[] = sentences.map(() => ({}))
+  const link = (at: number, index: number): Link => {
     const text = sentences[at].text
     const before = allMentions[at].filter((mention) => mention.index < index).at(-1)
     if (before) return { trigger: "failed-save", save: indexOf.get(before)?.[0] }
-    if (/\b[Oo]n a hit\b/.test(text)) return { trigger: "hit" }
+    if (/\b[Oo]n a hit\b|\bwhen you hit\b|\bwhenever you hit\b|\bAs you hit the target\b|\bhit by the strike\b|damage from the attack\b/.test(text)) return { trigger: "hit" }
     // In a table row, "Failed Save:" is the save the description sends to the table.
     if (/^Failed Save:|\. Failed Save:|^\w+\. Failed Save:/.test(text) && sentences[at].paragraph >= descriptionCount && tableMention)
       return { trigger: "failed-save", save: indexOf.get(tableMention)?.[0] }
-    if (/[Oo]n (?:a )?failed save|Failed Save:|fails (?:the|its|this|that)(?: second)? save|succeed on that save or/.test(text)) {
+    if (/[Oo]n (?:a )?failed save|Failed Save:|fails (?:the|its|this|that)(?: second)? save\b|succeed on that save or/.test(text)) {
       const latest = flat.filter((mention) => mention.sentence < at || (mention.sentence === at && mention.index < index)).at(-1)
       if (latest) return { trigger: "failed-save", save: indexOf.get(latest)?.[0] }
+    }
+    // "While Restrained, …" takes the link of the condition it names. "While there, …" takes the save of the sentence before.
+    const state = /^While ([A-Z]\w+)\b/.exec(text)?.[1]
+    const given = state ? conditions.find((entry) => entry.condition === state.toLowerCase() && entry.trigger) : undefined
+    if (given) return { trigger: given.trigger, save: given.save }
+    if (/^While there\b/.test(text) && at > 0) {
+      const earlier = allMentions[at - 1].at(-1)
+      if (earlier) return { trigger: "failed-save", save: indexOf.get(earlier)?.[0] }
     }
     return {}
   }
@@ -492,12 +525,18 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
   const casterConditions: NonNullable<Spell["casterConditions"]> = []
   const typeList = `((?:${typeNames})(?:(?:, or |, | or )(?:${typeNames}))*)`
   const dice = "(\\d+d\\d+(?: \\+ \\d+)?)( plus your spellcasting ability modifier)?"
+  const record = (at: number, entry: Link) => {
+    if (entry.trigger && !sentenceLinks[at].trigger) sentenceLinks[at] = { trigger: entry.trigger, save: entry.save }
+  }
   for (const [at, sentence] of sentences.entries()) {
     if (sentence.paragraph >= descriptionCount) {
       // Table rows give conditions. Their damage is typed through the table.
       for (const match of sentence.text.matchAll(new RegExp(`\\b(?:has|have) the ${conditionList} conditions?`, "g")))
         for (const name of [match[1], ...match[2].split(/, and |, or |, | and | or /).filter(Boolean)]) {
-          const entry = { condition: name.toLowerCase() as ConditionId, ...link(at, match.index ?? 0) }
+          const label = labelOf(sentence.paragraph)
+          const several = /fails (?:its|three of the|the) saves|fails three times|three failures/.test(sentence.text)
+          const when = several ? /(If it fails[^,.]*)/.exec(sentence.text)?.[1] : undefined
+          const entry = { condition: name.toLowerCase() as ConditionId, ...(several ? {} : link(at, match.index ?? 0)), ...(label ? { label } : {}), ...(when ? { appliesWhen: when } : {}) }
           if (!conditions.some((other) => JSON.stringify(other) === JSON.stringify(entry))) conditions.push(entry)
         }
       continue
@@ -519,7 +558,7 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
         modifier: match[3],
         types: types(match[1]),
       })),
-      // "3d8 damage of the chosen type", "an extra 2d8 damage": the types are the choice the description lists.
+      // "3d8 damage of the chosen type", "an extra 2d8 damage when you hit": the types are the choice the description lists.
       ...[...text.matchAll(/(\d+d\d+) damage(?= of the chosen type| of a type you choose| of the spirit’s type| when you hit)/g)].map((match) => ({
         index: match.index ?? 0,
         end: (match.index ?? 0) + match[0].length,
@@ -539,23 +578,26 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
       })),
     ].sort((a, b) => a.index - b.index)
     // "3d8 Radiant damage (if you are good or neutral) or 3d8 Necrotic damage (if you are evil)" is one roll of either type.
-    for (let at = rolls.length - 1; at > 0; at--) {
-      const [first, second] = [rolls[at - 1], rolls[at]]
+    for (let index = rolls.length - 1; index > 0; index--) {
+      const [first, second] = [rolls[index - 1], rolls[index]]
       if (first.dice && first.dice === second.dice && / or $/.test(text.slice(first.end, second.index)) && !/[.;]/.test(text.slice(first.end, second.index))) {
         first.types = [...first.types, ...second.types]
-        rolls.splice(at, 1)
+        rolls.splice(index, 1)
       }
     }
     for (const roll of rolls) {
       const target = /you and any creature traveling with you each take/.test(text) ? "caster-and-companions" : /\byou take\b|damage to you\b/.test(text) ? "caster" : undefined
-      const entry = {
+      const tie = link(at, roll.index)
+      record(at, tie)
+      damage.push({
         ...(roll.dice ? { dice: roll.dice } : { amount: roll.amount }),
         types: roll.types,
         ...(roll.modifier ? { modifier: true as const } : {}),
         ...(target ? { target: target as Damage["target"] } : {}),
-        ...link(at, roll.index),
-      }
-      if (!damage.some(({ paragraph, ...other }) => JSON.stringify(other) === JSON.stringify(entry))) damage.push({ ...entry, paragraph: sentence.paragraph })
+        ...tie,
+        ...(labelOf(sentence.paragraph) ? { label: labelOf(sentence.paragraph) } : {}),
+        paragraph: sentence.paragraph,
+      })
     }
     const found = [
       ...[...text.matchAll(new RegExp(`\\b(?:has|have|gains?|is given|giving it|having|with) the ${conditionList} conditions?`, "g"))].map((match) => ({
@@ -564,7 +606,7 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
         names: [match[1], ...match[2].split(/, and |, or |, | and | or /).filter(Boolean)],
       })),
       ...[...text.matchAll(new RegExp(`\\b(?:is|be|falls?) (${conditionNames})\\b`, "g"))].map((match) => ({ index: match.index ?? 0, end: (match.index ?? 0) + match[0].length, names: [match[1]] })),
-    ]
+    ].sort((a, b) => a.index - b.index)
     for (const match of found) {
       const before = text.slice(0, match.index)
       // The negation that matters is in the match's own clause.
@@ -572,20 +614,27 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
       const after = text.slice(match.end)
       // A condition the text ends, prevents, names as immune, or names as a state the creature already has is not given.
       if (
-        /\b(?:if|If|unless) (?:it|the creature|the target|you|a target|they)\b[^,]*$|can’t (?:gain|be|have)|neither|Immunity|immune|from such creatures|no longer|\bthat (?:is possessed by or )?$/.test(
+        /\b(?:if|If|unless) (?:it|the creature|the target|you|a target|they)\b[^,]*$|can’t $|can’t (?:gain|be|have)|neither|Immunity|immune|from such creatures|no longer|\bthat (?:is possessed by or )?$/.test(
           clause
         ) ||
         /^[^.]*?(?:removed|the condition ends|doesn’t end)|^ (?:conditions? )?from (?:such|one or more)/.test(after)
       )
         continue
       const caster = /^(?:You|On a failed save, you|If expelled, you)\b/.test(before)
+      // A condition given only after several failures is not linked to one save.
+      const several = /fails (?:its|three of the|the) saves|fails three times|three failures/.test(text)
       for (const name of match.names) {
         const condition = name.toLowerCase() as ConditionId
         if (caster) {
           if (!casterConditions.includes(condition)) casterConditions.push(condition)
           continue
         }
-        const entry = { condition, ...link(at, match.index) }
+        const tie = several ? {} : link(at, match.index)
+        record(at, tie)
+        const label = labelOf(sentence.paragraph)
+        // "If it fails its saves three times, it is turned to stone and has the Petrified condition".
+        const when = several ? /(If it fails[^,.]*)/.exec(text)?.[1] : undefined
+        const entry = { condition, ...tie, ...(label ? { label } : {}), ...(when ? { appliesWhen: when } : {}) }
         if (!conditions.some((other) => JSON.stringify(other) === JSON.stringify(entry))) conditions.push(entry)
       }
     }
@@ -614,7 +663,8 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
   }
   const upgrade = /levels 5 \((\d+d\d+)\), 11 \((\d+d\d+)\), and 17 \((\d+d\d+)\)/.exec(cantripUpgrade)
   if (upgrade) for (const part of damage) part.cantrip = { 5: upgrade[1], 11: upgrade[2], 17: upgrade[3] }
-  return { saves, damage: damage.map(({ paragraph, ...part }) => part), conditions, casterConditions }
+  const tableLink = tableMention ? { trigger: "failed-save" as const, save: indexOf.get(tableMention)?.[0] } : {}
+  return { saves, damage: damage.map(({ paragraph, ...part }) => part), conditions, casterConditions, tableLink }
 }
 
 /**
@@ -640,7 +690,19 @@ function area(text: string): Area | undefined {
       })
       .map((match) => ({ index: match.index ?? 0, area: make(match as RegExpExecArray) }))
   )
-  return found.sort((a, b) => a.index - b.index)[0]?.area
+  found.sort((a, b) => a.index - b.index)
+  const first = found[0]?.area
+  // An area that belongs to one of several named options, or one of two areas of different shapes, is not the spell's area.
+  const paragraphs = text.split("\n")
+  const optionsCount = paragraphs.filter((paragraph) => /^[A-Z][\w’]*(?: [A-Z][\w’]*)*\. /.test(paragraph)).length
+  const at = found[0] ? text.slice(0, found[0].index).split("\n").length - 1 : 0
+  if (!first) return undefined
+  if (found.some((other) => other.area.shape !== first.shape)) return undefined
+  if (optionsCount > 1 && /^[A-Z][\w’]*(?: [A-Z][\w’]*)*\. /.test(paragraphs[at])) return undefined
+  // The caster picks which creatures in the region are affected or spared.
+  const selective =
+    /creatures? of your choice in\b|creatures of your choice have\b|creature you choose\b|[Cc]hoose up to \w+ creatures in|designate creatures to be unaffected|you can force that creature/.test(text)
+  return first && selective ? { ...first, selective: true } : first
 }
 
 const numbers: Record<string, number> = { a: 1, one: 1, two: 2, three: 3, four: 4 }
@@ -680,7 +742,10 @@ function projectiles(text: string, higherLevel = "", cantripUpgrade = ""): Spell
 
 /** "You can target one additional creature for each spell slot level above 1", and Chain Lightning's extra bolt to another target. */
 function extraTargets(higherLevel = ""): number | undefined {
-  const match = /(?:You can (?:target|affect) (one|two) additional \w+|(One) additional bolt leaps from the first target to another target) for each spell slot level above/.exec(higherLevel)
+  const match =
+    /(?:(?:You can (?:target|affect)|You animate or reassert control over) (one|two) additional [\w ]+?|(One) additional bolt leaps from the first target to another target) for each spell slot level above/.exec(
+      higherLevel
+    )
   return match ? numbers[(match[1] ?? match[2]).toLowerCase()] : undefined
 }
 
@@ -702,7 +767,11 @@ function rollModifier(text: string): Spell["rollModifier"] {
   const dice = /(adds|subtracts?) (\d+d\d+) (?:to|from) (the attack roll or save|any ability check|all its damage rolls)/.exec(text)
   if (dice) return { dice: dice[2], ...(dice[1] === "adds" ? {} : { subtract: true as const }), rolls: rolls[dice[3]] }
   const flat = /\+(\d+) bonus to AC and saving throws/.exec(text)
-  return flat ? { amount: Number(flat[1]), rolls: ["saving-throw"] } : undefined
+  if (flat) return { amount: Number(flat[1]), rolls: ["saving-throw"] }
+  const weapon = /a \+(\d+) bonus to attack rolls and damage rolls/.exec(text)
+  if (weapon) return { amount: Number(weapon[1]), rolls: ["attack-roll", "damage-roll"] }
+  const skill = /a \+(\d+) bonus to \w+ \(\w+\) checks/.exec(text)
+  return skill ? { amount: Number(skill[1]), rolls: ["ability-check"] } : undefined
 }
 
 function hitPointMaximum(text: string, higherLevel = ""): Spell["hitPointMaximum"] {
@@ -728,7 +797,7 @@ export default function build() {
     const spellArea = area(text.description)
     const tables = text.tables?.map(withDamageTypes)
     const read = effects(text.description, tables ?? [], text.higherLevel, text.cantripUpgrade)
-    const rolls = [...read.damage, ...tableDamage(tables ?? [])]
+    const rolls = [...read.damage, ...tableDamage(tables ?? []).map((part) => ({ ...part, ...read.tableLink }))]
     return {
       id,
       name: text.name,
@@ -761,6 +830,14 @@ export default function build() {
       ...optional("hitPointMaximum", hitPointMaximum(text.description, text.higherLevel)),
     }
   })
+  // The unlinked fields describe a creature the spell affects. Where the spell's only save is an initial one that a
+  // success avoids, failing it is what makes a creature affected and the field stands. Where a success has any other
+  // outcome (Ray of Enfeeblement), the field cannot say which creatures it holds for, so it is left out.
+  for (const entry of entries) {
+    const saves = entry.saves ?? []
+    if (!saves.length || (saves.length === 1 && saves[0].when === "initial" && saves[0].onSuccess === "none")) continue
+    for (const field of ["rollModifier", "ac", "hitPointMaximum", "damageReduction"] as const) delete entry[field]
+  }
   if (official.size !== entries.length) throw new Error(`spells: ${official.size} official spells, ${entries.length} in the base source`)
   writeData("spells", spellSchema, applyOverrides("spells", entries, overrides))
 }

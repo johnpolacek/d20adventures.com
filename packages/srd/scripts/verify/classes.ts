@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs"
 import type { Class, ClassFeature, ClassLevel, FeatureOption, Subclass } from "../../src/schema/classes"
 import { classFeatureSchema, classSchema, subclassSchema } from "../../src/schema/classes"
+import { creatureTypes } from "../../src/schema/common"
 import type { Equipment } from "../../src/schema/equipment"
 import type { Feat } from "../../src/schema/origins"
 import type { Spell } from "../../src/schema/spells"
@@ -29,10 +30,7 @@ function join(lines: (Line | string)[]): string {
   let hard = false
   for (const entry of lines) {
     const raw = typeof entry === "string" ? entry : entry.raw
-    const text = raw
-      .replace(/\u00ad/g, "")
-      .replace(/^[•\t ]+/, "")
-      .trim()
+    const text = raw.replace(/^[•\t ]+/, "").trim()
     if (!text) continue
     if (!out) out = text
     else if (out.endsWith("-") && !hard) out = out.slice(0, -1) + text
@@ -68,7 +66,7 @@ function chapterLines(first: number, last: number): Line[] {
   const lines: Line[] = []
   for (let page = first; page <= last; page++) {
     for (const raw of pages[page - 1].split("\n")) {
-      const text = raw.replace(/\u00ad/g, "").trim()
+      const text = raw.trim()
       if (text) lines.push({ raw, text, page })
     }
   }
@@ -233,6 +231,12 @@ const typeList = `(?:${typeNames})(?:,? (?:or |and )?(?:${typeNames}))*`
 const listOf = (text: string) => (text.match(new RegExp(typeNames, "g")) ?? []).map((type) => type.toLowerCase())
 const conditionNames = "Blinded|Charmed|Deafened|Frightened|Grappled|Incapacitated|Invisible|Paralyzed|Petrified|Poisoned|Prone|Restrained|Stunned|Unconscious"
 
+/**
+ * Features whose one printed distance belongs to a part of the feature, not to the feature, read by hand. Heightened
+ * Focus: the 5 feet is Step of the Wind’s. Dark One’s Blessing: the 10 feet is for an enemy someone else reduces.
+ */
+const subPartDistance: Record<string, number> = { "Heightened Focus": 5, "Dark One’s Blessing": 10 }
+
 /** The phrases that state each condition a passive benefit holds under. */
 const whilePhrase: Record<string, RegExp> = {
   raging: /while your Rage is active|While active, your Rage/,
@@ -240,27 +244,123 @@ const whilePhrase: Record<string, RegExp> = {
   "in-aura-of-protection": /while in your Aura of Protection/,
 }
 
+/** Fields read by hand, by field name. `null` means the field must be absent: the text states it with a condition the shape cannot hold, or it belongs to something else. */
+type HandReading = Record<string, unknown>
+
+const channelDivinity = { resource: "channel-divinity", amount: 1 }
+
+/**
+ * Values read by hand from the official text for every entry where a plain reading would claim more than the text:
+ * a chooser, a creature-type or size limit, a value that holds only for one option or one condition, or a value
+ * that belongs to a summoned creature. Pages are where each reading comes from.
+ */
+const handReadings: Record<string, HandReading> = {
+  // Page 30: "each creature of your choice in a 30-foot Emanation"; a use is restored by "a use of your Rage".
+  "path-of-the-berserker-intimidating-presence": {
+    activation: ["bonus-action"],
+    area: { shape: "emanation", size: 30, selective: true },
+    uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "rage", amount: 1 } },
+  },
+  // Page 46: "Each creature of your choice in the Sphere".
+  "circle-of-the-land-lands-aid": { area: { shape: "sphere", size: 10, selective: true } },
+  // Page 37: the save and its damage types hold only if you choose harm over healing; the 1d8 total serves both.
+  // Every Channel Divinity effect spends one use (page 37: "Each time you use this class’s Channel Divinity").
+  "cleric-channel-divinity/divine-spark": { save: null, damageTypes: null, dice: "1d8", spend: channelDivinity },
+  // Page 37: "Each Undead of your choice within 30 feet of you must make a Wisdom saving throw."
+  "cleric-channel-divinity/turn-undead": { save: { ability: "wis", onlyCreatureTypes: ["undead"], selective: true }, spend: channelDivinity },
+  // Page 72: the slotless casting is only "to contact your patron".
+  "warlock-contact-patron": { freeCast: [{ spell: "contact-other-plane", appliesWhen: "to contact your patron" }] },
+  // Page 46: the Bonus Action only moves the Cube already in place; the Half Cover is for "You and your allies".
+  "circle-of-the-land-natures-sanctuary": { activation: ["magic-action"], area: { shape: "cube", size: 15, allies: true } },
+  // Page 55: "You and your allies in the aura gain a bonus"; Aura Expansion widens that same aura.
+  "paladin-aura-of-protection": { area: { shape: "emanation", size: 10, allies: true } },
+  "paladin-aura-expansion": { area: { shape: "emanation", size: 30, allies: true } },
+  // Page 55: "you can target a number of creatures equal to your Charisma modifier"; you choose who saves.
+  "paladin-abjure-foes": { save: { ability: "wis", selective: true } },
+  // Page 55: Divine Sense is a Channel Divinity effect, so it spends one use.
+  "paladin-channel-divinity/divine-sense": { spend: channelDivinity },
+  // Page 37: Sear Undead harms only the Undead that fail the save.
+  "cleric-sear-undead": { damageOnlyTo: ["undead"] },
+  // Page 51: the Dexterity save comes only from the redirect.
+  "monk-deflect-attacks": { save: { ability: "dex", appliesWhen: "If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force" } },
+  // Page 50: the Bonus Action strike and the die hold only "while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield".
+  "monk-martial-arts": { activation: null, diceFromColumn: null, dice: null },
+  // Page 52: the action and "(no action required)" only end the vibrations.
+  "warrior-of-the-open-hand-quivering-palm": { activation: null },
+  // Page 49: weapons and Unarmed Strikes only.
+  "champion-improved-critical": { criticalHit: { minRoll: 19, attacks: "weapons-and-unarmed-strikes" } },
+  "champion-superior-critical": { criticalHit: { minRoll: 18, attacks: "weapons-and-unarmed-strikes" } },
+  // Pages 73 and 74: the extra attacks are with the pact weapon only.
+  "warlock-eldritch-invocations/thirsting-blade": { attacks: null, pactWeaponAttacks: 2 },
+  "warlock-eldritch-invocations/devouring-blade": { attacks: null, pactWeaponAttacks: 3 },
+  // Pages 72 to 74: the slotless castings, with "on yourself" and One with Shadows' condition.
+  "warlock-eldritch-invocations/armor-of-shadows": { freeCast: [{ spell: "mage-armor", selfOnly: true }] },
+  "warlock-eldritch-invocations/ascendant-step": { freeCast: [{ spell: "levitate", selfOnly: true }] },
+  "warlock-eldritch-invocations/fiendish-vigor": { freeCast: [{ spell: "false-life", selfOnly: true }] },
+  "warlock-eldritch-invocations/otherworldly-leap": { freeCast: [{ spell: "jump", selfOnly: true }] },
+  "warlock-eldritch-invocations/one-with-shadows": { freeCast: [{ spell: "invisibility", selfOnly: true, appliesWhen: "While you’re in an area of Dim Light or Darkness" }] },
+  "warlock-eldritch-invocations/mask-of-many-faces": { freeCast: [{ spell: "disguise-self" }] },
+  "warlock-eldritch-invocations/master-of-myriad-forms": { freeCast: [{ spell: "alter-self" }] },
+  "warlock-eldritch-invocations/misty-visions": { freeCast: [{ spell: "silent-image" }] },
+  "warlock-eldritch-invocations/visions-of-distant-realms": { freeCast: [{ spell: "arcane-eye" }] },
+  "warlock-eldritch-invocations/whispers-of-the-grave": { freeCast: [{ spell: "speak-with-dead" }] },
+  "warlock-eldritch-invocations/gift-of-the-depths": { freeCast: [{ spell: "water-breathing" }] },
+  "warlock-eldritch-invocations/pact-of-the-chain": { freeCast: [{ spell: "find-familiar" }] },
+  // Page 73: the familiar deals the Necrotic or Radiant damage, not you.
+  "warlock-eldritch-invocations/investment-of-the-chain-master": { damageTypes: null },
+  // Page 73: the Magic action only erases a name.
+  "warlock-eldritch-invocations/gift-of-the-protectors": { activation: null },
+  // Page 63: "If the target is Large or smaller, it must succeed on a Dexterity saving throw".
+  "rogue-cunning-strike/trip": { save: { ability: "dex", appliesWhen: "If the target is Large or smaller" } },
+  // Page 61: the 1d8 needs the target to be missing Hit Points as well as the hit.
+  "hunter-hunters-prey/colossus-slayer": { dice: null },
+  // Page 64: the 1d6 is a chance roll inside the Charges benefit, not the feature's main roll.
+  "thief-use-magic-device": { dice: null },
+  // Pages 57, 67 and 76: a use is restored by spending a resource.
+  "oath-of-devotion-holy-nimbus": { activation: ["bonus-action"], uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "spell-slot", amount: 1, slotLevel: 5 } } },
+  "draconic-sorcery-dragon-wings": { activation: ["bonus-action"], uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "sorcery-points", amount: 3 } } },
+  "fiend-patron-hurl-through-hell": { activation: null, uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "pact-magic-slot", amount: 1 } } },
+  // Pages 32 and 43: using these takes no action.
+  "bard-font-of-inspiration": { activation: ["no-action"] },
+  "druid-wild-resurgence": { activation: ["no-action"] },
+  "druid-archdruid": { activation: ["no-action"] },
+  "oath-of-devotion-sacred-weapon": { activation: null },
+}
+
 /**
  * Mechanics against the text, both ways. Every typed value must be stated in `own`, the entry's own text. And where
  * `own` states uses, a recharge, a save, dice, damage types, resistances, immunities, an action or a condition in
  * the standard wording, the entry must hold it, and a printed list must be held whole.
  */
-function mechanicsFailures(entry: Record<string, any>, own: string, related: string, classSkills: string[], name = ""): string[] {
+function mechanicsFailures(entry: Record<string, any>, own: string, related: string, classSkills: string[], name = "", hand: HandReading = {}): string[] {
   const failures: string[] = []
   const need = (ok: boolean, field: string) => {
     if (!ok) failures.push(field)
   }
   const has = (pattern: RegExp | string, text = own) => (typeof pattern === "string" ? text.includes(pattern) : pattern.test(text))
+  // A field read by hand settles that field: the automatic reading below is skipped for it.
+  const byHand = (field: string) => field in hand
+  for (const [field, value] of Object.entries(hand)) need(same(entry[field], value ?? undefined), `${field} ${JSON.stringify(entry[field])}, read by hand ${JSON.stringify(value)}`)
+  // Every quoted condition is one unbroken span of the entry's own text.
+  for (const quote of [entry.save?.appliesWhen, ...(entry.freeCast ?? []).map((item: { appliesWhen?: string }) => item.appliesWhen)].filter(Boolean))
+    need(has(quote), `appliesWhen “${quote}” is not an unbroken span of its text`)
 
   // Activation: every action kind the text names for using it.
   const kinds: [string, RegExp][] = [
     ["bonus-action", /\b(?:[Aa]s|use) a Bonus Action/],
     ["reaction", /take a Reaction/],
     ["magic-action", /[Aa]s a Magic action/],
-    ["no-action", /no action required/],
   ]
   const named = kinds.filter(([, pattern]) => has(pattern)).map(([kind]) => kind)
-  need(same(sorted(entry.activation ?? []), sorted(named)), `activation ${JSON.stringify(entry.activation)}, the text names ${JSON.stringify(named)}`)
+  // "(no action required)" counts only where it is a way to use the feature, not to end, dismiss or restore it.
+  const takesNoAction = own
+    .replace(/([.!?]) /g, "$1\n")
+    .split("\n")
+    .some((sentence) => sentence.includes("no action required") && !/\b(?:end|ends|dismiss|restore)\b/.test(sentence))
+  if (takesNoAction) named.push("no-action")
+  // An action that only moves an effect already in place is not a way to use the feature.
+  if (has(/As a Bonus Action, you can move the/) && !has(/\b(?:[Aa]s|use) a Bonus Action(?!, you can move the)/) && named.includes("bonus-action")) named.splice(named.indexOf("bonus-action"), 1)
+  if (!byHand("activation")) need(same(sorted(entry.activation ?? []), sorted(named)), `activation ${JSON.stringify(entry.activation)}, the text names ${JSON.stringify(named)}`)
 
   // A later feature that changes this one's recharge, as Font of Inspiration does for Bardic Inspiration.
   const changed = name ? related.match(new RegExp(`Level (\\d+): [^:]*? You now regain all your expended uses of ${name} when you finish a Short or Long Rest`)) : null
@@ -270,7 +370,7 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   // Uses: the count, what restores it, and the Short Rest regain.
   const uses = entry.uses
   const statesUses =
-    /You can (?:use (?:this feature|this class’s Channel Divinity|Wild Shape|this action)|enter your Rage|confer a Bardic Inspiration die|cast it) (?:twice|the number of times|a number of times)|(?:Once you use this feature, you can’t (?:use it|do so)|can’t use this feature) again until you finish|you regain all expended uses of this ability|Focus Points column|cast the spell once without expending|cast (?:it|the spell|Water Breathing) once without|cast each of them once|must finish a Long Rest before you can cast it|can’t do so in this way again until|arcanum spell once without/
+    /You can (?:use (?:this feature|this class’s Channel Divinity|Wild Shape|this action)|enter your Rage|confer a Bardic Inspiration die|cast it) (?:twice|the number of times|a number of times)|(?:Once you use this feature, you can’t (?:use it|do so)|can’t use this feature) again until you finish|you regain all expended uses of this ability|Focus Points column|Sorcery Points column|cast the spell once without expending|cast (?:it|the spell|Water Breathing) once without|cast each of them once|must finish a Long Rest before you can cast it|can’t do so in this way again until|arcanum spell once without/
   need(Boolean(uses) === has(statesUses), uses ? "uses, which the text does not state in the standard wording" : "no uses, though the text states them")
   if (uses) {
     const count = uses.count
@@ -292,6 +392,20 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     else need(false, `recharge ${uses.recharge}`)
     need(Boolean(uses.shortRestRegain) === has(/regain one (?:of its )?expended uses? when you finish a Short Rest/), "shortRestRegain")
   }
+  // A second way to restore a use, by spending a resource.
+  const restore = own.match(
+    /unless you (?:expend a use of your (Rage)|spend (\d+) (Sorcery) Points|expend a (Pact Magic) spell slot) \(no action required\) to restore your use of it|restore your use of it by expending a level (\d) spell slot/
+  )
+  const restoredBy = !restore
+    ? undefined
+    : restore[1]
+      ? { resource: "rage", amount: 1 }
+      : restore[2]
+        ? { resource: "sorcery-points", amount: Number(restore[2]) }
+        : restore[4]
+          ? { resource: "pact-magic-slot", amount: 1 }
+          : { resource: "spell-slot", amount: 1, slotLevel: Number(restore[5]) }
+  if (!byHand("uses")) need(same(uses?.restoredBy, restoredBy), `uses.restoredBy ${JSON.stringify(uses?.restoredBy)}, the text states ${JSON.stringify(restoredBy)}`)
 
   const resources: Record<string, (amount: number) => RegExp> = {
     "focus-points": (amount) => new RegExp(`${amount} Focus Points?`),
@@ -305,9 +419,10 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   }
   // The main cost, both ways: a sentence that opens with the use, not a condition, an alternative or a restoration.
   // A printed "Cost:" label settles it; otherwise the first such sentence does.
-  const label = own.match(/Cost: (\d+)(d6| Sorcery Points?)/)
-  const costs = label
-    ? [`${label[2] === "d6" ? "sneak-attack-dice" : "sorcery-points"}:${label[1]}`]
+  // A printed "Cost:" is read in the options check against the hand table of costs.
+  const labeled = /Cost: /.test(own)
+  const costs = labeled
+    ? [entry.spend ? `${entry.spend.resource}:${entry.spend.amount}` : "?"]
     : own
         .replace(/([.!?]) /g, "$1\n")
         .split("\n")
@@ -320,8 +435,8 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
           return []
         })
   const spent = entry.spend ? `${entry.spend.resource}:${entry.spend.amount}` : undefined
-  need(same(spent, costs[0]), `spend ${spent}, the text spends ${costs[0]}`)
-  if (entry.spend) {
+  if (!byHand("spend")) need(same(spent, costs[0]), `spend ${spent}, the text spends ${costs[0]}`)
+  if (entry.spend && !byHand("spend")) {
     need(has(resources[entry.spend.resource](entry.spend.amount)), `spend ${entry.spend.amount} ${entry.spend.resource}`)
     need(Boolean(entry.spend.keptOnFailure) === has(/isn’t expended/), "spend keptOnFailure")
   }
@@ -335,11 +450,11 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     ...(entry.diceByLevel ?? []).map((step: { dice: string }) => step.dice),
   ].filter(Boolean)
   const stated = [...own.matchAll(/(?:extra|[Rr]oll|take|takes|taking|equal to|equals|add|increases to) (\d+d\d+)\b/g)].map((match) => match[1])
-  for (const dice of stated) need(held.includes(dice), `the text rolls ${dice}, the data does not hold it`)
+  if (!byHand("dice")) for (const dice of stated) need(held.includes(dice), `the text rolls ${dice}, the data does not hold it`)
   if (entry.dice) need(has(entry.dice), `dice ${entry.dice}`)
   const perSlot = own.match(/another (\d+d\d+) per level of the spell slot/)?.[1]
   need(entry.dicePerSlotLevel === perSlot, `dicePerSlotLevel ${entry.dicePerSlotLevel}, the text adds ${perSlot} per slot level`)
-  need(Boolean(entry.diceFromColumn) === has(/roll 1d6 in place of the normal damage|deal an extra 1d6 damage/), `diceFromColumn ${entry.diceFromColumn}`)
+  if (!byHand("diceFromColumn")) need(Boolean(entry.diceFromColumn) === has(/roll 1d6 in place of the normal damage|deal an extra 1d6 damage/), `diceFromColumn ${entry.diceFromColumn}`)
   if (entry.diceFromColumn) need(has(`${headings[entry.diceFromColumn]} column`), `diceFromColumn ${entry.diceFromColumn}`)
   // Dice by level, both ways: "Cleric levels 7 (2d8), 13 (3d8)" in its own text, or a later feature that raises it.
   const steps = [...own.matchAll(/(\d+) \((\d+d\d+)\)/g)].map((match) => ({ level: Number(match[1]), dice: match[2] }))
@@ -359,13 +474,19 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     ...listOf(own.match(new RegExp(`Choose one of those types: (${typeList})`))?.[1] ?? ""),
   ]
   const typed = [...(entry.damageTypes ?? []), ...(entry.selfDamage ? [entry.selfDamage.damageType] : [])]
-  for (const type of new Set(dealt)) need(typed.includes(type), `the text deals ${type} damage, the data does not hold it`)
+  if (!byHand("damageTypes")) for (const type of new Set(dealt)) need(typed.includes(type), `the text deals ${type} damage, the data does not hold it`)
+  const only = own.match(/Each (\w+) that fails its saving throw/)?.[1]
+  const onlyTypes = only && (creatureTypes as readonly string[]).includes(toId(only)) ? [toId(only)] : undefined
+  if (!byHand("damageOnlyTo")) need(same(entry.damageOnlyTo, onlyTypes), `damageOnlyTo ${JSON.stringify(entry.damageOnlyTo)}, the text states ${JSON.stringify(onlyTypes)}`)
   for (const type of typed) need(has(capital(type)), `damage type ${type}`)
   const spared = (own.match(/if it isn’t an? (\w+)/)?.[1] ?? "").toLowerCase()
   need(same(entry.damageNotTo ?? [], spared ? [spared] : []), `damageNotTo ${JSON.stringify(entry.damageNotTo)}, the text spares ${spared}`)
   if (entry.selfDamage) {
-    const { dicePerSlotLevel, increasePerUse } = entry.selfDamage
-    need(has(`take ${dicePerSlotLevel}`) && has(`for each level of the spell slot`) && has(`increases by ${increasePerUse}`) && has("The first time you do so, you suffer no adverse"), "selfDamage")
+    const { dicePerSlotLevel, increaseAfterSecondUse } = entry.selfDamage
+    need(
+      has(`take ${dicePerSlotLevel}`) && has(`for each level of the spell slot`) && has(`increases by ${increaseAfterSecondUse}`) && has("The first time you do so, you suffer no adverse"),
+      "selfDamage"
+    )
   }
 
   // Saves, both ways: each ability whose saving throw the text forces or makes is held, with its DC.
@@ -379,7 +500,11 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     .filter((match) => abilityByName[match[1]] && !/(?:allows you to make an?|check or) $/.test(own.slice(0, match.index)))
     .map((match) => abilityByName[match[1]])
   const savesHeld = [entry.save?.ability, entry.selfSave?.ability].filter(Boolean)
-  need(same([...new Set(saves)].sort(), sorted(savesHeld)), `saves ${JSON.stringify(savesHeld)}, the text has ${JSON.stringify([...new Set(saves)])}`)
+  if (!byHand("save")) {
+    need(same([...new Set(saves)].sort(), sorted(savesHeld)), `saves ${JSON.stringify(savesHeld)}, the text has ${JSON.stringify([...new Set(saves)])}`)
+    // A condition, a creature-type limit or a chooser on a save is read only by hand.
+    if (entry.save) need(!entry.save.appliesWhen && !entry.save.onlyCreatureTypes && !entry.save.selective, "a save condition not read by hand")
+  }
   if (entry.save?.dc !== undefined) need(dc(entry.save.dc), `save DC ${JSON.stringify(entry.save.dc)}`)
   const printedDc = own.match(/DC (\d+) \w+ saving throw|against your spell save DC|\(DC 8 plus your (\w+) modifier/)
   if (entry.save) need((entry.save.dc !== undefined) === Boolean(printedDc), "save DC presence")
@@ -401,21 +526,32 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   const pool = own.match(/a total number of Hit Points equal to (\w+) times your \w+ level/)
   if (pool) expected.pool = { perLevel: word[pool[1]], recharge: has(/replenishes when you finish a Long Rest/) ? "long-rest" : "?" }
   const ranges = [...new Set([...own.matchAll(/within (\d+) feet of (?:you|yourself)\b/g)].map((match) => Number(match[1])))]
-  if (ranges.length === 1) expected.range = ranges[0]
+  if (ranges.length === 1 && !subPartDistance[name]) expected.range = ranges[0]
+  if (subPartDistance[name]) need(ranges.includes(subPartDistance[name]), `the distance ${subPartDistance[name]} of a part of ${name}`)
+  const hitPoints = own.match(/Hit Point maximum increases by (\d+), and it increases by (\d+) whenever you gain another/)
+  if (hitPoints) expected.hitPointMaximum = { increase: Number(hitPoints[1]), perLaterClassLevel: Number(hitPoints[2]) }
   const area = own.match(/(\d+)-foot (Emanation|Cube)|(\d+)-foot-radius Sphere/)
-  if (area) expected.area = area[3] ? { shape: "sphere", size: Number(area[3]) } : { shape: area[2].toLowerCase(), size: Number(area[1]) }
+  const chooser = {
+    ...(has(/creatures? of your choice in (?:a|the)\b/) ? { selective: true } : {}),
+    ...(has(/You and your allies (?:in the aura|have)/) ? { allies: true } : {}),
+  }
+  if (area) expected.area = area[3] ? { shape: "sphere", size: Number(area[3]), ...chooser } : { shape: area[2].toLowerCase(), size: Number(area[1]), ...chooser }
   const attacks = own.match(/attack (twice|three times|four times)[^.]*instead of once|confers (two) extra attacks rather than one/)
-  if (attacks) expected.attacks = attacks[2] ? 3 : { twice: 2, "three times": 3, "four times": 4 }[attacks[1]]
+  // Extra attacks for the pact weapon only are their own field, so `attacks` always means any weapon.
+  if (attacks) expected[has(/pact weapon only|Thirsting Blade invocation/) ? "pactWeaponAttacks" : "attacks"] = attacks[2] ? 3 : { twice: 2, "three times": 3, "four times": 4 }[attacks[1]]
   // A spell name: capitalized words, with the small words SRD spell names use ("Speak with Animals").
   const spell = "[A-Z][\\w’]*(?: (?:[A-Z][\\w’]*|with|of|the|from)\\b)*"
   const prepared = own.match(new RegExp(`always have the (${spell}(?: and ${spell})?) spells? prepared`))
   if (prepared) expected.alwaysPrepared = names(prepared[1])
-  const free = [...own.matchAll(new RegExp(`cast (${spell}) (?:on yourself |once )?without (?:expending )?a spell slot`, "g"))].map((match) => toId(match[1]))
+  const free = [...own.matchAll(new RegExp(`cast (${spell}) (on yourself |once )?without (?:expending )?a spell slot`, "g"))].map((match) => ({
+    spell: toId(match[1]),
+    ...(match[2] === "on yourself " ? { selfOnly: true } : {}),
+  }))
   if (/cast (?:it|the spell)\b[^.]*?without (?:expending )?a spell slot/.test(own)) {
     const named = own.match(new RegExp(`the (${spell}) spell\\b|cast (${spell})`))
-    if (named) free.push(toId(named[1] ?? named[2]))
+    if (named) free.push({ spell: toId(named[1] ?? named[2]) })
   }
-  if (free.length) expected.freeCast = [...new Set(free)]
+  if (free.length) expected.freeCast = free.filter((item, index) => free.findIndex((other) => other.spell === item.spell) === index)
   const featId = own.match(/gain the ([A-Z][\w ]*?) feat\b/)?.[1]
   const featCategory = own.match(/(Epic Boon|Fighting Style|Origin) feat\b/)?.[1]
   if (featId || featCategory) {
@@ -433,7 +569,12 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   const skillCount = own.match(/proficiency (?:in another skill of your choice from the skill list|with (\w+) skills of your choice)/)
   if (skillCount) expected.skillProficiencies = skillCount[1] ? { count: word[skillCount[1]] } : { count: 1, from: sorted(classSkills) }
   const expertise = own.match(/in (two|one) of your skill proficiencies of your choice|Choose (two|one) of your skill proficiencies with which you lack Expertise|Expertise in the chosen skill/)
-  if (expertise) expected.expertise = word[expertise[1] ?? expertise[2] ?? "one"]
+  const expertiseFrom = own.match(/Choose one of the following skills in which you have proficiency: ([^.]+)\./)?.[1]
+  if (expertise)
+    expected.expertise = {
+      count: word[expertise[1] ?? expertise[2] ?? "one"],
+      ...(expertiseFrom ? { from: sorted(expertiseFrom.split(/, (?:or )?/).map(toId)) } : {}),
+    }
   const speed = own.match(/[Ss]peed increases by (\d+) feet/)
   if (speed && !has("This bonus increases")) expected.speedBonus = Number(speed[1])
   const masteries = own.match(/mastery properties of (\w+) kinds/)
@@ -445,22 +586,24 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     const shield = has("You can use a Shield and still gain this benefit") ? true : has("or wielding a Shield") ? false : undefined
     expected.armorClass = { base: 10, abilities: [abilityByName[armor[1]], abilityByName[armor[2]]], ...(shield === undefined ? {} : { shield }) }
   }
-  const critical = own.match(/Critical Hit on a roll of (19 or 20|18–20)/)
-  if (critical) expected.criticalRange = critical[1] === "18–20" ? 18 : 19
+  const critical = own.match(/Your attack rolls with weapons and Unarmed Strikes can (?:now )?score a Critical Hit on a roll of (19 or 20|18–20)/)
+  if (critical) expected.criticalHit = { minRoll: critical[1] === "18–20" ? 18 : 19, attacks: "weapons-and-unarmed-strikes" }
   const sense = own.match(/(Blindsight|Truesight) with a range of (\d+) feet/)
   if (sense) expected.sense = { type: sense[1].toLowerCase(), range: Number(sense[2]) }
   const read = (field: string) => {
     const value = entry[field]
     if (field === "speedBonus") return value?.feet
-    if (field === "skillProficiencies" && value?.from) return { ...value, from: sorted(value.from) }
+    if ((field === "skillProficiencies" || field === "expertise") && value?.from) return { ...value, from: sorted(value.from) }
     return value
   }
   for (const field of [
+    "hitPointMaximum",
     "saveDc",
     "pool",
     "range",
     "area",
     "attacks",
+    "pactWeaponAttacks",
     "alwaysPrepared",
     "freeCast",
     "feat",
@@ -471,10 +614,10 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     "weaponMasteries",
     "abilityIncrease",
     "armorClass",
-    "criticalRange",
+    "criticalHit",
     "sense",
   ])
-    need(same(read(field), expected[field]), `${field} ${JSON.stringify(read(field))}, the text states ${JSON.stringify(expected[field])}`)
+    if (!byHand(field)) need(same(read(field), expected[field]), `${field} ${JSON.stringify(read(field))}, the text states ${JSON.stringify(expected[field])}`)
 
   // Resistances and immunities, both ways, whole lists, with the condition they hold under.
   const resisted = listOf(own.match(new RegExp(`Resistance to (${typeList}) damage`))?.[1] ?? "")
@@ -574,6 +717,201 @@ function armorFrom(text: string): string[] | undefined {
       .map((kind) => kind.toLowerCase()),
     ...(match[2] ? ["shields"] : []),
   ]
+}
+
+const capitalize = (id: string) =>
+  id
+    .split("-")
+    .map((word, index) => (index && ["of", "the"].includes(word) ? word : word[0].toUpperCase() + word.slice(1)))
+    .join(" ")
+
+/** Option costs read by hand: the "(Cost: Nd6)" labels on pages 63 and 64, the "Cost:" lines on pages 66 and 67. */
+const costByHand: Record<string, { resource: string; amount: number }> = {
+  "rogue-cunning-strike/poison": { resource: "sneak-attack-dice", amount: 1 },
+  "rogue-cunning-strike/trip": { resource: "sneak-attack-dice", amount: 1 },
+  "rogue-cunning-strike/withdraw": { resource: "sneak-attack-dice", amount: 1 },
+  "rogue-devious-strikes/daze": { resource: "sneak-attack-dice", amount: 2 },
+  "rogue-devious-strikes/knock-out": { resource: "sneak-attack-dice", amount: 6 },
+  "rogue-devious-strikes/obscure": { resource: "sneak-attack-dice", amount: 3 },
+  "thief-supreme-sneak/stealth-attack": { resource: "sneak-attack-dice", amount: 1 },
+  "sorcerer-metamagic/careful-spell": { resource: "sorcery-points", amount: 1 },
+  "sorcerer-metamagic/distant-spell": { resource: "sorcery-points", amount: 1 },
+  "sorcerer-metamagic/empowered-spell": { resource: "sorcery-points", amount: 1 },
+  "sorcerer-metamagic/extended-spell": { resource: "sorcery-points", amount: 1 },
+  "sorcerer-metamagic/heightened-spell": { resource: "sorcery-points", amount: 2 },
+  "sorcerer-metamagic/quickened-spell": { resource: "sorcery-points", amount: 2 },
+  "sorcerer-metamagic/seeking-spell": { resource: "sorcery-points", amount: 1 },
+  "sorcerer-metamagic/subtle-spell": { resource: "sorcery-points", amount: 1 },
+  "sorcerer-metamagic/transmuted-spell": { resource: "sorcery-points", amount: 1 },
+  "sorcerer-metamagic/twinned-spell": { resource: "sorcery-points", amount: 1 },
+}
+
+/** Eldritch Invocations read by hand from pages 72 to 74: the prerequisite level, invocation and further words, and the Repeatable mark. */
+const invocationsByHand: Record<string, { level?: number; invocation?: string; also?: string; repeatable?: true }> = {
+  "agonizing-blast": { level: 2, also: "a Warlock Cantrip That Deals Damage", repeatable: true },
+  "armor-of-shadows": {},
+  "ascendant-step": { level: 5 },
+  "devils-sight": { level: 2 },
+  "devouring-blade": { level: 12, invocation: "thirsting-blade" },
+  "eldritch-mind": {},
+  "eldritch-smite": { level: 5, invocation: "pact-of-the-blade" },
+  "eldritch-spear": { level: 2, also: "a Warlock Cantrip That Deals Damage", repeatable: true },
+  "fiendish-vigor": { level: 2 },
+  "gaze-of-two-minds": { level: 5 },
+  "gift-of-the-depths": { level: 5 },
+  "gift-of-the-protectors": { level: 9, invocation: "pact-of-the-tome" },
+  "investment-of-the-chain-master": { level: 5, invocation: "pact-of-the-chain" },
+  "lessons-of-the-first-ones": { level: 2, repeatable: true },
+  lifedrinker: { level: 9, invocation: "pact-of-the-blade" },
+  "mask-of-many-faces": { level: 2 },
+  "master-of-myriad-forms": { level: 5 },
+  "misty-visions": { level: 2 },
+  "one-with-shadows": { level: 5 },
+  "otherworldly-leap": { level: 2 },
+  "pact-of-the-blade": {},
+  "pact-of-the-chain": {},
+  "pact-of-the-tome": {},
+  "repelling-blast": { level: 2, also: "a Warlock Cantrip That Deals Damage via an Attack Roll", repeatable: true },
+  "thirsting-blade": { level: 5, invocation: "pact-of-the-blade" },
+  "visions-of-distant-realms": { level: 9 },
+  "whispers-of-the-grave": { level: 7 },
+  "witch-sight": { level: 15 },
+}
+
+/**
+ * Spellcasting read by hand from the official text, pages 31 to 78, with the sentences each value comes from. The
+ * check confirms each quote is printed in that class's feature, then compares the values with the data.
+ */
+type SpellcastingRead = {
+  feature: string
+  ability: string
+  focus: string[]
+  slotsRestore: string
+  changePrepared: { when: string; count?: 1 }
+  changeCantrip?: { when: string; count: 1 }
+  ritualFromSpellbook?: true
+  quotes: string[]
+}
+const longRestSlots = "You regain all expended slots when you finish a Long Rest."
+const cantripOnLevel = (name: string) => `Whenever you gain a ${name} level, you can replace one of your cantrips`
+const spellcastingByHand: Record<string, SpellcastingRead> = {
+  bard: {
+    feature: "bard-spellcasting",
+    ability: "cha",
+    focus: ["musical-instrument"],
+    slotsRestore: "long-rest",
+    changePrepared: { when: "level-up", count: 1 },
+    changeCantrip: { when: "level-up", count: 1 },
+    quotes: [
+      "Charisma is your spellcasting ability for your Bard spells.",
+      "You can use a Musical Instrument as a Spellcasting Focus for your Bard spells.",
+      longRestSlots,
+      "Whenever you gain a Bard level, you can replace one spell on your list with another Bard spell",
+      cantripOnLevel("Bard"),
+    ],
+  },
+  cleric: {
+    feature: "cleric-spellcasting",
+    ability: "wis",
+    focus: ["holy-symbol"],
+    slotsRestore: "long-rest",
+    changePrepared: { when: "long-rest" },
+    changeCantrip: { when: "level-up", count: 1 },
+    quotes: [
+      "Wisdom is your spellcasting ability for your Cleric spells.",
+      "You can use a Holy Symbol as a Spellcasting Focus for your Cleric spells.",
+      longRestSlots,
+      "Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there",
+      cantripOnLevel("Cleric"),
+    ],
+  },
+  druid: {
+    feature: "druid-spellcasting",
+    ability: "wis",
+    focus: ["druidic-focus"],
+    slotsRestore: "long-rest",
+    changePrepared: { when: "long-rest" },
+    changeCantrip: { when: "level-up", count: 1 },
+    quotes: [
+      "Wisdom is your spellcasting ability for your Druid spells.",
+      "You can use a Druidic Focus as a Spellcasting Focus for your Druid spells.",
+      longRestSlots,
+      "Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells with other Druid spells",
+      cantripOnLevel("Druid"),
+    ],
+  },
+  paladin: {
+    feature: "paladin-spellcasting",
+    ability: "cha",
+    focus: ["holy-symbol"],
+    slotsRestore: "long-rest",
+    changePrepared: { when: "long-rest", count: 1 },
+    quotes: [
+      "Charisma is your spellcasting ability for your Paladin spells.",
+      "You can use a Holy Symbol as a Spellcasting Focus for your Paladin spells.",
+      longRestSlots,
+      "Whenever you finish a Long Rest, you can replace one spell on your list with another Paladin spell",
+    ],
+  },
+  ranger: {
+    feature: "ranger-spellcasting",
+    ability: "wis",
+    focus: ["druidic-focus"],
+    slotsRestore: "long-rest",
+    changePrepared: { when: "long-rest", count: 1 },
+    quotes: [
+      "Wisdom is your spellcasting ability for your Ranger spells.",
+      "You can use a Druidic Focus as a Spellcasting Focus for your Ranger spells.",
+      longRestSlots,
+      "Whenever you finish a Long Rest, you can replace one spell on your list with another Ranger spell",
+    ],
+  },
+  sorcerer: {
+    feature: "sorcerer-spellcasting",
+    ability: "cha",
+    focus: ["arcane-focus"],
+    slotsRestore: "long-rest",
+    changePrepared: { when: "level-up", count: 1 },
+    changeCantrip: { when: "level-up", count: 1 },
+    quotes: [
+      "Charisma is your spellcasting ability for your Sorcerer spells.",
+      "You can use an Arcane Focus as a Spellcasting Focus for your Sorcerer spells.",
+      longRestSlots,
+      "Whenever you gain a Sorcerer level, you can replace one spell on your list with another Sorcerer spell",
+      cantripOnLevel("Sorcerer"),
+    ],
+  },
+  warlock: {
+    feature: "warlock-pact-magic",
+    ability: "cha",
+    focus: ["arcane-focus"],
+    slotsRestore: "short-or-long-rest",
+    changePrepared: { when: "level-up", count: 1 },
+    changeCantrip: { when: "level-up", count: 1 },
+    quotes: [
+      "Charisma is the spellcasting ability for your Warlock spells.",
+      "You can use an Arcane Focus as a Spellcasting Focus for your Warlock spells.",
+      "You regain all expended Pact Magic spell slots when you finish a Short or Long Rest.",
+      "Whenever you gain a Warlock level, you can replace one spell on your list with another Warlock spell",
+      cantripOnLevel("Warlock"),
+    ],
+  },
+  wizard: {
+    feature: "wizard-spellcasting",
+    ability: "int",
+    focus: ["arcane-focus", "spellbook"],
+    slotsRestore: "long-rest",
+    changePrepared: { when: "long-rest" },
+    changeCantrip: { when: "long-rest", count: 1 },
+    ritualFromSpellbook: true,
+    quotes: [
+      "Intelligence is your spellcasting ability for your Wizard spells.",
+      "You can use an Arcane Focus or your spellbook as a Spellcasting Focus for your Wizard spells.",
+      longRestSlots,
+      "Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with spells from your spellbook.",
+      "Whenever you finish a Long Rest, you can replace one of your cantrips from this feature with another Wizard cantrip",
+    ],
+  },
 }
 
 export default function verify(report: Report) {
@@ -829,10 +1167,11 @@ export default function verify(report: Report) {
           else if (later.page !== heading.page) failures.push(`${id} at ${heading.level}: page ${later.page}, the heading is on ${heading.page}`)
         }
         for (const feature of features.filter((item) => (owner === entry.id ? item.class === entry.id && !item.subclass : item.subclass === owner))) {
-          for (const level of [feature.level, ...(feature.laterText ?? []).map((text) => text.level)]) {
-            total++
-            if (!headingsFound.some((heading) => `${owner}-${toId(heading.name)}` === feature.id && heading.level === level)) failures.push(`${feature.id} at level ${level} has no official heading`)
-          }
+          const levels = [feature.level, ...(feature.laterText ?? []).map((text) => text.level)]
+          const printed = headingsFound.filter((heading) => `${owner}-${toId(heading.name)}` === feature.id).map((heading) => heading.level)
+          total++
+          // One entry per heading: the first level, then one later text for each later heading, no more.
+          if (!same(levels, printed)) failures.push(`${feature.id}: headings at ${levels}, the official text prints them at ${printed}`)
         }
       }
       owners.push({ id: entry.id, name: entry.name, lines: section, heading: subclassStart })
@@ -923,6 +1262,12 @@ export default function verify(report: Report) {
     }
     for (const feature of features) {
       const byLevel = (feature.uses?.count as { byLevel?: { level: number }[] })?.byLevel
+      // Each table note is one step, so no step may repeat.
+      for (const steps of [byLevel, feature.spellLevels]) {
+        if (!steps) continue
+        total++
+        if (new Set(steps.map((step) => step.level)).size !== steps.length) failures.push(`${feature.id}: a step repeats a level`)
+      }
       for (const step of [...(byLevel ?? []), ...(feature.spellLevels ?? [])]) {
         total++
         const row = tables.get(feature.class)?.rows[step.level - 1]
@@ -1009,30 +1354,24 @@ export default function verify(report: Report) {
         total++
         if (!same(official, value)) failures.push(`${entry.id} spellcasting ${field}: official ${JSON.stringify(official)}, data ${JSON.stringify(value)}`)
       }
-      compare("feature", featureText.has(`${entry.id}-spellcasting`) ? `${entry.id}-spellcasting` : `${entry.id}-pact-magic`, data.feature)
-      compare("ability", abilityByName[spellcasting.match(/(\w+) is (?:your|the) spellcasting ability for your \w+ spells/)?.[1] ?? ""], data.ability)
-      const focus = spellcasting.match(/You can use (?:a |an )?(.+?) as a Spellcasting Focus for your/)?.[1] ?? ""
-      compare(
-        "focus",
-        focus.split(/ or (?:your )?/).map((name) => toId(name)),
-        data.focus
-      )
-      const restore = spellcasting.match(/You regain all expended (?:Pact Magic )?(?:spell )?slots when you finish an? (Short or Long|Long) Rest/)?.[1]
-      compare("slotsRestore", restore === "Long" ? "long-rest" : restore ? "short-rest" : undefined, data.slotsRestore)
+      // Read by hand from each Spellcasting or Pact Magic feature, with the sentence that states each value. The
+      // builder reads the base source; this table is a separate reading of the official text.
+      const read = spellcastingByHand[entry.id]
+      for (const quote of read.quotes) {
+        total++
+        if (!squash(spellcasting).includes(squash(quote))) failures.push(`${entry.id} spellcasting: the hand table quotes “${quote}”, which its feature does not print`)
+      }
+      const { quotes: _, ...expected } = read
+      compare("fields", expected, {
+        feature: data.feature,
+        ability: data.ability,
+        focus: data.focus,
+        slotsRestore: data.slotsRestore,
+        changePrepared: data.changePrepared,
+        ...(data.changeCantrip ? { changeCantrip: data.changeCantrip } : {}),
+        ...(data.ritualFromSpellbook ? { ritualFromSpellbook: data.ritualFromSpellbook } : {}),
+      })
       compare("multiclassLevels", full.includes(entry.id) ? "all" : half.includes(entry.id) ? "half-round-up" : undefined, data.multiclassLevels)
-      const changing = spellcasting.match(/Changing Your Prepared Spells\. (.+?\.)/)?.[1] ?? ""
-      compare(
-        "changePrepared",
-        {
-          when: /^Whenever you finish a Long Rest/.test(changing) ? "long-rest" : /^Whenever you gain a \w+ level/.test(changing) ? "level-up" : "?",
-          ...(/replace one spell/.test(changing) ? { count: 1 } : {}),
-        },
-        data.changePrepared
-      )
-      const cantrip = spellcasting.match(/Whenever you (finish a Long Rest|gain a \w+ level), you can replace one of your cantrips/)?.[1]
-      compare("changeCantrip", cantrip ? { when: cantrip.startsWith("finish") ? "long-rest" : "level-up", count: 1 } : undefined, data.changeCantrip)
-      const ritual = featureText.get(`${entry.id}-ritual-adept`)
-      compare("ritualFromSpellbook", ritual && /Ritual tag and the spell is in your spellbook/.test(ritual) ? true : undefined, data.ritualFromSpellbook)
 
       // The spell list printed in the class section.
       const start = owner.lines.findIndex((line) => line.text === `${entry.name} Spell List`)
@@ -1090,33 +1429,34 @@ export default function verify(report: Report) {
         }
         if (owner.lines[at].page !== option.page) failures.push(`${feature.id}/${option.id}: page ${option.page}, official ${owner.lines[at].page}`)
         if (option.id !== toId(option.name)) failures.push(`${feature.id}/${option.id}: the id should be ${toId(option.name)}`)
-        const cost = costed >= 0 ? owner.lines[costed].text.match(/\(Cost: (\d+)d6\)/) : at === titled ? owner.lines[at + 1]?.text.match(/^Cost: (\d+) Sorcery Points?$/) : null
-        const official = cost ? { resource: costed >= 0 ? "sneak-attack-dice" : "sorcery-points", amount: Number(cost[1]) } : undefined
+        // Costs and prerequisites come from tables read by hand, each confirmed against the printed line.
+        const cost = costByHand[`${feature.id}/${option.id}`]
         total++
-        // A printed cost must match. A cost only the prose states, such as Flurry of Blows, is read in the mechanics check.
-        const printedOnly = option.spend?.resource === "sneak-attack-dice" || option.spend?.resource === "sorcery-points"
-        if (official ? !same(official, option.spend) : printedOnly) failures.push(`${feature.id}/${option.id}: cost ${JSON.stringify(option.spend)}, official ${JSON.stringify(official)}`)
-        if (at === titled) {
-          const next = owner.lines[at + 1]?.text ?? ""
-          const prerequisite = next.startsWith("Prerequisite: ")
-            ? join([next.slice(14), ...owner.lines.slice(at + 2, at + 3).filter((line) => /^[A-Z][\w’]*(?: (?:[A-Z][\w’]*|a|an|of|the|via))*$/.test(line.text))])
-            : undefined
+        if (!same(cost, option.spend?.resource === "sneak-attack-dice" || option.spend?.resource === "sorcery-points" ? option.spend : undefined))
+          failures.push(`${feature.id}/${option.id}: cost ${JSON.stringify(option.spend)}, read by hand ${JSON.stringify(cost)}`)
+        if (cost) {
           total++
-          if (prerequisite !== option.prerequisite?.text)
-            failures.push(`${feature.id}/${option.id}: prerequisite ${JSON.stringify(option.prerequisite?.text)}, official ${JSON.stringify(prerequisite)}`)
-          if (prerequisite) {
-            total++
-            const level = prerequisite.match(/Level (\d+)\+/)?.[1]
-            const invocation = prerequisite.match(/(Pact of the \w+|Thirsting Blade) Invocation/)?.[1]
-            if (option.prerequisite?.level !== (level ? Number(level) : undefined) || option.prerequisite?.invocation !== (invocation ? toId(invocation) : undefined))
-              failures.push(`${feature.id}/${option.id}: prerequisite fields ${JSON.stringify(option.prerequisite)}`)
-            if (option.prerequisite?.invocation && !feature.options?.some((other) => other.id === option.prerequisite?.invocation))
-              failures.push(`${feature.id}/${option.id}: prerequisite invocation does not resolve`)
-          }
-          total++
-          const repeatable = squash(option.description).includes("repeatableyoucangainthisinvocationmorethanonce")
-          if (repeatable !== Boolean(option.repeatable)) failures.push(`${feature.id}/${option.id}: repeatable ${option.repeatable}, official ${repeatable}`)
+          const printed =
+            cost.resource === "sneak-attack-dice"
+              ? owner.lines[costed]?.text.includes(`(Cost: ${cost.amount}d6)`)
+              : owner.lines[titled + 1]?.text === `Cost: ${cost.amount} Sorcery Point${cost.amount > 1 ? "s" : ""}`
+          if (!printed) failures.push(`${feature.id}/${option.id}: the hand cost ${cost.amount} is not the printed one`)
         }
+        if (feature.id !== "warlock-eldritch-invocations") continue
+        const read = invocationsByHand[option.id]
+        total += 3
+        if (!read) {
+          failures.push(`${feature.id}/${option.id}: not in the hand table of invocations`)
+          continue
+        }
+        const text = read.level ? [`Level ${read.level}+ Warlock`, ...(read.invocation ? [`${capitalize(read.invocation)} Invocation`] : []), ...(read.also ? [read.also] : [])].join(", ") : undefined
+        if (option.prerequisite?.text !== text) failures.push(`${feature.id}/${option.id}: prerequisite ${JSON.stringify(option.prerequisite?.text)}, read by hand ${JSON.stringify(text)}`)
+        if (option.prerequisite?.level !== read.level || option.prerequisite?.invocation !== read.invocation)
+          failures.push(`${feature.id}/${option.id}: prerequisite fields ${JSON.stringify(option.prerequisite)}`)
+        if (text && !squash(join(owner.lines.slice(titled + 1, titled + 3))).startsWith(squash(`Prerequisite: ${text}`)))
+          failures.push(`${feature.id}/${option.id}: the hand prerequisite is not the printed one`)
+        if (Boolean(read.repeatable) !== Boolean(option.repeatable)) failures.push(`${feature.id}/${option.id}: repeatable ${option.repeatable}, read by hand ${read.repeatable}`)
+        if (read.repeatable && !squash(option.description).includes("repeatableyoucangainthisinvocationmorethanonce")) failures.push(`${feature.id}/${option.id}: no Repeatable paragraph`)
       }
     }
     // Every title in the options sections is an option in the data.
@@ -1149,6 +1489,7 @@ export default function verify(report: Report) {
       "selfSave",
       "selfDamage",
       "damageNotTo",
+      "hitPointMaximum",
       "diceByLevel",
       "damageTypes",
       "save",
@@ -1157,6 +1498,7 @@ export default function verify(report: Report) {
       "range",
       "area",
       "attacks",
+      "pactWeaponAttacks",
       "alwaysPrepared",
       "freeCast",
       "feat",
@@ -1167,7 +1509,8 @@ export default function verify(report: Report) {
       "weaponMasteries",
       "abilityIncrease",
       "armorClass",
-      "criticalRange",
+      "criticalHit",
+      "damageOnlyTo",
       "sense",
       "resistances",
       "conditionImmunities",
@@ -1199,7 +1542,7 @@ export default function verify(report: Report) {
       const firstOption = optionNames.length ? Math.min(...optionNames.map((name) => own.search(new RegExp(`${name}(?: \\(Cost|\\.)`))).filter((index) => index >= 0)) : own.length
       const body = own.slice(0, firstOption)
       total += keys.filter((key) => (feature as Record<string, unknown>)[key] !== undefined).length
-      for (const failure of mechanicsFailures(feature, body, related, skills, feature.name)) failures.push(`${feature.id}: ${failure} is not what its text says`)
+      for (const failure of mechanicsFailures(feature, body, related, skills, feature.name, handReadings[feature.id])) failures.push(`${feature.id}: ${failure} is not what its text says`)
       for (const option of feature.options ?? []) {
         const owner = owners.find((item) => item.id === feature.class) as Owner
         const titled = owner.lines.findIndex((line) => line.text === option.name)
@@ -1215,8 +1558,27 @@ export default function verify(report: Report) {
           text = own.slice(start, after.length ? start + 1 + Math.min(...after) : own.length)
         }
         total += keys.filter((key) => (option as Record<string, unknown>)[key] !== undefined).length
-        for (const failure of mechanicsFailures(option, text, `${text} ${own}`, skills)) failures.push(`${feature.id}/${option.id}: ${failure} is not what its text says`)
+        for (const failure of mechanicsFailures(option, text, `${text} ${own}`, skills, "", handReadings[`${feature.id}/${option.id}`]))
+          failures.push(`${feature.id}/${option.id}: ${failure} is not what its text says`)
       }
+    }
+    // Overchannel, read by hand on page 82: no damage the first time, 2d12 per slot level the second, and 1d12 more
+    // per slot level each time after. The data's two dice must give these per-use totals.
+    const self = featureById.get("evoker-overchannel")?.selfDamage
+    const byUse: Record<number, string> = { 2: "2d12", 3: "3d12", 4: "4d12" }
+    for (const [use, dice] of Object.entries(byUse)) {
+      total++
+      const count = self ? Number(self.dicePerSlotLevel.split("d")[0]) + (Number(use) - 2) * Number(self.increaseAfterSecondUse.split("d")[0]) : 0
+      if (!self || `${count}d12` !== dice || self.from !== "second-use")
+        failures.push(`evoker-overchannel: use ${use} deals ${self ? `${count}d12` : "nothing"} per slot level, the text gives ${dice}`)
+    }
+    for (const quote of [
+      "The first time you do so, you suffer no adverse effect.",
+      "you take 2d12 Necrotic damage for each level of the spell slot",
+      "the Necrotic damage per spell level increases by 1d12",
+    ]) {
+      total++
+      if (!squash(featureText.get("evoker-overchannel") ?? "").includes(squash(quote))) failures.push(`evoker-overchannel: the hand reading quotes “${quote}”, which the feature does not print`)
     }
     report.check(
       category,
@@ -1230,27 +1592,19 @@ export default function verify(report: Report) {
   {
     const failures: string[] = []
     let total = 0
-    // Breaks the PDF text does not mark with a tab or bullet. On page 50 this sentence is its own paragraph.
-    const unmarked = ["You gain the following benefits while you are un-"]
-    const label = /^[A-Z][\w’]*(?: [A-Z][\w’]*)*\. [A-Z]/
+    // A paragraph starts at a tab or a bullet. The PDF text marks no other break, so the rest are read by hand: the
+    // lines below each open a paragraph (pages 29, 43, 50 and 66).
+    const unmarked = [
+      "Each time the Rage is extended, it lasts until the end",
+      "Temporary Hit Points. When you assume a Wild",
+      "Game Statistics. Your game statistics are replaced",
+      "No Spellcasting. You can’t cast spells, but shape-",
+      "Objects. Your ability to handle objects is deter-",
+      "You gain the following benefits while you are un-",
+      "You can use this feature twice, and you regain all",
+    ]
     /** The squashed openings of the paragraphs a run of official lines prints. */
-    const starts = (lines: Line[]) => {
-      const out: string[] = []
-      let bullet = false
-      for (const [index, line] of lines.entries()) {
-        const previous = lines[index - 1]?.text ?? ""
-        const opens =
-          line.raw.startsWith("\t") ||
-          line.raw.startsWith("•") ||
-          unmarked.includes(line.text) ||
-          (/[.:]$/.test(previous) && label.test(line.text)) ||
-          (bullet && /\.$/.test(previous) && /^[A-Z]/.test(line.text))
-        if (opens) out.push(squash(line.text).slice(0, 24))
-        if (line.raw.startsWith("•")) bullet = true
-        else if (opens) bullet = false
-      }
-      return out
-    }
+    const starts = (lines: Line[]) => lines.filter((line) => line.raw.startsWith("\t") || line.raw.startsWith("•") || unmarked.includes(line.text)).map((line) => squash(line.text).slice(0, 24))
     const opening = (paragraph: string) => squash(paragraph).slice(0, 24)
     const compare = (where: string, lines: Line[], paragraphs: string[], firsts: string[]) => {
       total++
@@ -1448,7 +1802,7 @@ export default function verify(report: Report) {
       for (const subclass of subclasses) for (const group of subclass.alwaysPrepared ?? []) for (const id of group.spells) resolve("spells", spells, `${subclass.id} always prepared`, id)
       for (const feature of features) {
         for (const item of [feature, ...(feature.options ?? [])] as (ClassFeature | FeatureOption)[]) {
-          for (const id of [...(item.alwaysPrepared ?? []), ...(item.freeCast ?? [])]) resolve("spells", spells, feature.id, id)
+          for (const id of [...(item.alwaysPrepared ?? []), ...(item.freeCast ?? []).map((cast) => cast.spell)]) resolve("spells", spells, feature.id, id)
         }
       }
     }
