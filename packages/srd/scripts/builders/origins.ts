@@ -57,7 +57,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
           damageTypeFromChoice: "draconic-ancestry",
           uses: proficiencyBonusLong,
           breathWeapon: {
-            shapes: [
+            shapeOptions: [
               { shape: "cone", feet: 15 },
               { shape: "line", feet: 30, width: 5 },
             ],
@@ -68,33 +68,41 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
               { level: 11, dice: "3d10" },
               { level: 17, dice: "4d10" },
             ],
-            onSave: "half",
+            onSuccess: "half",
           },
         },
       },
       { name: "Damage Resistance", mech: { damageTypeFromChoice: "draconic-ancestry" } },
-      { name: "Darkvision", mech: { darkvision: 60 } },
+      { name: "Darkvision", mech: { senses: [{ type: "darkvision", range: 60 }] } },
       { name: "Draconic Flight", mech: { level: 5, activation: ["bonus-action"], durationMinutes: 10, flySpeed: "speed", uses: onceLong } },
     ],
   },
   {
     name: "Dwarf",
     traits: [
-      { name: "Darkvision", mech: { darkvision: 120 } },
+      { name: "Darkvision", mech: { senses: [{ type: "darkvision", range: 120 }] } },
       { name: "Dwarven Resilience", mech: { resistances: { damageTypes: ["poison"] }, savingThrowAdvantage: { conditions: ["poisoned"] } } },
-      { name: "Dwarven Toughness", mech: { hitPointBonus: { initial: 1, perLevel: 1 } } },
-      { name: "Stonecunning", mech: { activation: ["bonus-action"], requires: "stone-surface", tremorsense: 60, durationMinutes: 10, uses: proficiencyBonusLong } },
+      { name: "Dwarven Toughness", mech: { hitPointMaximum: { increase: 1, perLevel: 1, levelsCounted: "character" } } },
+      {
+        name: "Stonecunning",
+        mech: {
+          activation: ["bonus-action"],
+          senses: [{ type: "tremorsense", range: 60, appliesWhen: "You must be on a stone surface or touching a stone surface to use this Tremorsense" }],
+          durationMinutes: 10,
+          uses: proficiencyBonusLong,
+        },
+      },
     ],
   },
   {
     name: "Elf",
     traits: [
-      { name: "Darkvision", mech: { darkvision: 60 } },
+      { name: "Darkvision", mech: { senses: [{ type: "darkvision", range: 60 }] } },
       {
         name: "Elven Lineage",
         choice: "table",
         mech: { spellcastingAbility: abilityChoice },
-        options: { Drow: { darkvision: 120 }, "High Elf": {}, "Wood Elf": { speed: 35 } },
+        options: { Drow: { senses: [{ type: "darkvision", range: 120 }] }, "High Elf": {}, "Wood Elf": { speed: 35 } },
       },
       { name: "Fey Ancestry", mech: { savingThrowAdvantage: { conditions: ["charmed"] } } },
       { name: "Keen Senses", mech: { skillChoice: { count: 1, from: ["insight", "perception", "survival"] } } },
@@ -104,7 +112,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
   {
     name: "Gnome",
     traits: [
-      { name: "Darkvision", mech: { darkvision: 60 } },
+      { name: "Darkvision", mech: { senses: [{ type: "darkvision", range: 60 }] } },
       { name: "Gnomish Cunning", mech: { savingThrowAdvantage: { abilities: ["int", "wis", "cha"] } } },
       {
         name: "Gnomish Lineage",
@@ -137,14 +145,25 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
         mech: { uses: proficiencyBonusLong },
         options: {
           "Cloud’s Jaunt": { activation: ["bonus-action"], teleportFeet: 30 },
-          "Fire’s Burn": { trigger: "hit-with-attack-roll", damage: { dice: "1d10", type: "fire" } },
-          "Frost’s Chill": { trigger: "hit-with-attack-roll", damage: { dice: "1d6", type: "cold" }, targetSpeedReduction: { feet: 10, until: "start-of-user-next-turn" } },
-          "Hill’s Tumble": { trigger: "hit-with-attack-roll", targetMaxSize: "Large", targetCondition: "prone" },
+          "Fire’s Burn": { trigger: "hit-with-attack-roll-and-deal-damage", damage: { dice: "1d10", types: ["fire"] } },
+          "Frost’s Chill": { trigger: "hit-with-attack-roll-and-deal-damage", damage: { dice: "1d6", types: ["cold"] }, targetSpeedReduction: { feet: 10, until: "start-of-user-next-turn" } },
+          "Hill’s Tumble": { trigger: "hit-with-attack-roll-and-deal-damage", targetMaxSize: "Large", targetCondition: { condition: "prone" } },
           "Stone’s Endurance": { activation: ["reaction"], trigger: "take-damage", damageReduction: { dice: "1d12", ability: "con" } },
-          "Storm’s Thunder": { activation: ["reaction"], trigger: "take-damage", damage: { dice: "1d8", type: "thunder" }, range: 60 },
+          "Storm’s Thunder": { activation: ["reaction"], trigger: "take-damage", damage: { dice: "1d8", types: ["thunder"] }, range: 60 },
         },
       },
-      { name: "Large Form", mech: { level: 5, activation: ["bonus-action"], sizeChange: "Large", durationMinutes: 10, speedBonus: { feet: 10 }, uses: onceLong } },
+      {
+        name: "Large Form",
+        mech: {
+          level: 5,
+          activation: ["bonus-action"],
+          usableWhen: "if you’re in a big enough space",
+          sizeChange: "Large",
+          durationMinutes: 10,
+          speedBonus: { feet: 10, appliesWhen: "For that duration" },
+          uses: onceLong,
+        },
+      },
       { name: "Powerful Build", mech: { grappledEscapeAdvantage: true, carryingCapacitySizeBonus: 1 } },
     ],
   },
@@ -162,21 +181,21 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
     traits: [
       { name: "Resourceful", mech: { heroicInspiration: "long-rest" } },
       { name: "Skillful", mech: { skillChoice: { count: 1, from: "any" } } },
-      { name: "Versatile", mech: { featChoice: { category: "origin", recommended: "skilled" } } },
+      { name: "Versatile", mech: { feat: { category: "origin", recommended: "skilled" } } },
     ],
   },
   {
     name: "Orc",
     traits: [
       { name: "Adrenaline Rush", mech: { activation: ["bonus-action"], temporaryHitPoints: "proficiency-bonus", uses: { count: "proficiency-bonus", recharge: "short-or-long-rest" } } },
-      { name: "Darkvision", mech: { darkvision: 120 } },
+      { name: "Darkvision", mech: { senses: [{ type: "darkvision", range: 120 }] } },
       { name: "Relentless Endurance", mech: { uses: onceLong } },
     ],
   },
   {
     name: "Tiefling",
     traits: [
-      { name: "Darkvision", mech: { darkvision: 60 } },
+      { name: "Darkvision", mech: { senses: [{ type: "darkvision", range: 60 }] } },
       {
         name: "Fiendish Legacy",
         choice: "table",
@@ -371,14 +390,19 @@ const fightingStyle = { features: ["fighting-style"] }
 
 type FeatSpec = { prerequisite?: Mechanics; abilityScoreIncrease?: Mechanics; mech?: Mechanics; benefits?: Record<string, Mechanics> }
 const featSpecs: Record<string, FeatSpec> = {
-  Alert: { benefits: { "Initiative Proficiency": { initiativeBonus: "proficiency-bonus" }, "Initiative Swap": { initiativeSwap: { allies: 1, blockedByCondition: "incapacitated" } } } },
+  Alert: {
+    benefits: {
+      "Initiative Proficiency": { initiativeBonus: "proficiency-bonus" },
+      "Initiative Swap": { initiativeSwap: { allies: 1, blockedByCondition: "incapacitated", appliesWhen: "one willing ally in the same combat" } },
+    },
+  },
   "Magic Initiate": {
     benefits: {
       "Two Cantrips": { cantrips: 2, spellLists: ["cleric", "druid", "wizard"], spellcastingAbility: abilityChoice },
       "Level 1 Spell": { spellLevel: 1, uses: onceLong },
     },
   },
-  "Savage Attacker": { mech: { trigger: "hit-with-weapon", damageDiceRolledTwice: { perTurn: 1 } } },
+  "Savage Attacker": { mech: { trigger: "hit-with-weapon", oncePerTurn: "any-turn", damageDiceRolledTwice: true } },
   Skilled: { mech: { proficiencyChoice: { count: 3, kinds: ["skill", "tool"] } } },
   "Ability Score Improvement": {
     prerequisite: { level: 4 },
@@ -416,11 +440,15 @@ const featSpecs: Record<string, FeatSpec> = {
     prerequisite: { level: 19 },
     abilityScoreIncrease: boonScore,
     benefits: {
-      "Merge with Shadows": { activation: ["bonus-action"], requires: "dim-light-or-darkness", selfCondition: "invisible" },
-      "Shadowy Form": { requires: "dim-light-or-darkness", resistanceExcept: ["psychic", "radiant"] },
+      "Merge with Shadows": {
+        activation: ["bonus-action"],
+        usableWhen: "While within Dim Light or Darkness",
+        selfCondition: { condition: "invisible", endsAfter: ["action", "bonus-action", "reaction"] },
+      },
+      "Shadowy Form": { resistances: { allExcept: ["psychic", "radiant"], appliesWhen: "While within Dim Light or Darkness" } },
     },
   },
-  "Boon of Truesight": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { Truesight: { truesight: 60 } } },
+  "Boon of Truesight": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { Truesight: { senses: [{ type: "truesight", range: 60 }] } } },
 }
 
 function prerequisiteOf(text: string | undefined, spec: Mechanics | undefined) {

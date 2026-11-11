@@ -480,13 +480,14 @@ export default function verify(report: Report) {
   }
   // Typed effects against the independent readers' files. Readers who saw neither this builder nor this check read
   // every spell from the official text by READING.md and wrote what they found. Each field is compared exactly; this
-  // check computes no expected value of its own. `label` and `appliesWhen` are compared ignoring layout.
+  // check computes no expected value of its own. `label`, `appliesWhen`, `unless` and `timing` are compared ignoring
+  // layout. A reader's `notes` are not compared.
   {
     const fixtureFiles = [1, 2, 3].map((number) => resolve(root, `scripts/verify/fixtures/spell-effects-${number}.json`)).filter((path) => existsSync(path))
     const failures: string[] = []
     let total = 0
     if (!fixtureFiles.length) failures.push("no readers’ files in scripts/verify/fixtures")
-    const textKeys = new Set(["label", "appliesWhen"])
+    const textKeys = new Set(["label", "appliesWhen", "unless", "timing"])
     // Sort object keys and squash quoted words, so key order and layout do not count as differences.
     const canonical = (value: unknown, key = ""): unknown => {
       if (Array.isArray(value)) return value.map((item) => canonical(item))
@@ -498,21 +499,7 @@ export default function verify(report: Report) {
         )
       return typeof value === "string" && textKeys.has(key) ? squash(value) : value
     }
-    const fields = [
-      "attack",
-      "saves",
-      "damage",
-      "healing",
-      "conditions",
-      "casterConditions",
-      "area",
-      "projectiles",
-      "extraTargetsPerSlot",
-      "ac",
-      "rollModifier",
-      "damageReduction",
-      "hitPointMaximum",
-    ] as const
+    const fields = ["attack", "saves", "damage", "healing", "conditions", "area", "projectiles", "extraTargetsPerSlot", "ac", "rollModifier", "damageReduction", "hitPointMaximum", "untyped"] as const
     const dataField = (spell: Spell, field: (typeof fields)[number]): unknown => (field === "area" ? spell.range.area : spell[field])
     // The readers split the spells between them, so each spell is in exactly one file.
     const readers = new Map<string, { reader: string; entry: Record<string, unknown> }>()
@@ -604,7 +591,7 @@ export default function verify(report: Report) {
     const refs: [string, (spell: Spell) => string[]][] = [
       ["classes", (spell) => spell.classes],
       ["magic-schools", (spell) => [spell.school]],
-      ["conditions", (spell) => [...(spell.conditions ?? []).map((entry) => entry.condition), ...(spell.casterConditions ?? [])]],
+      ["conditions", (spell) => (spell.conditions ?? []).map((entry) => entry.condition)],
       ["damage-types", (spell) => (spell.damage ?? []).flatMap((damage) => damage.types)],
     ]
     for (const [name, get] of refs) {
@@ -696,7 +683,12 @@ export default function verify(report: Report) {
       if (fields.damage_roll) {
         const held = (spell.damage ?? []).some((damage) => damage.dice === fields.damage_roll)
         const typed = new RegExp(`${fields.damage_roll.replace(/[+]/g, "\\+")} (${typeNames.join("|")})`).test(body)
-        compare("damage dice", fields.damage_roll, held ? fields.damage_roll : spell.damage?.[0]?.dice, held || !typed || irregularDamage[spell.id] !== undefined)
+        compare(
+          "damage dice",
+          fields.damage_roll,
+          held ? fields.damage_roll : spell.damage?.[0]?.dice,
+          held || !typed || irregularDamage[spell.id] !== undefined || Boolean(spell.untyped?.includes("damage"))
+        )
       }
       if (fields.damage_types?.length)
         compare(

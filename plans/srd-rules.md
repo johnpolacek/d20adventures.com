@@ -63,6 +63,8 @@ Status, 2026-11-11: substages 1 to 10 are built, `pnpm test:srd` passes, and the
 
 Judge rounds so far: 8.4, then 8.8. Round 2 found that a check which copies its builder's reading proves nothing. So round 3 added a second reading that owes nothing to the builders: independent readers wrote the typed effects of every spell and magic item (`scripts/verify/fixtures`), auditors read every class, origin, equipment and monster entry beside the official text, and `READING.md` holds the rules all of them work to. A typed value that holds only under a condition now carries it as `appliesWhen`, in every category.
 
+Round 3 scored 8.9 and found that the readers' files shared the data's wrong readings where the first reader had settled a dispute alone. Round 4 answers that: new readers who took no part reread the files, the lead decides every difference against the official text, blind auditors read every entry of all six categories, and a typed value now carries its cost, its alternative, how often and whom it falls on, or is named in `untyped`. A package check proves every quoted condition is one unbroken span of its entry's text.
+
 Found along the way: both upstream sources hold many errors, so origins, equipment and magic items are built from the official text alone, and the rest take wording and corrections from it.
 
 Not in this stage: the rules text itself (how play works, the rules glossary). The engine stages encode it.

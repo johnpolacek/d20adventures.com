@@ -16,13 +16,18 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "appliesWhen": "When you attack a creature that has fewer than 100 Hit Points with this weapon and roll a 20 on the d20 for the attack roll",
+        "unless": "Constructs and Undead succeed on the save automatically"
       }
     ],
+    "untyped": [
+      "charges"
+    ],
     "notes": [
-      "The save is forced only when you roll a 20 on the attack roll against a creature with fewer than 100 Hit Points. On a failed save the creature is slain instantly.",
-      "Constructs and Undead succeed on the save automatically.",
-      "The weapon loses 1 charge only if the creature is slain. With no charges remaining it loses the Life Stealing property. No regaining of charges is stated."
+      "On a failed save the creature is slain instantly. Constructs and Undead succeed on the save automatically.",
+      "The weapon loses 1 charge only if the creature is slain, and loses the property with no charges left. No regaining is stated, and the charges object cannot hold either fact, so charges is untyped."
     ]
   },
   "oathbow": {
@@ -52,9 +57,12 @@
     ]
   },
   "oil-of-sharpness": {
+    "untyped": [
+      "bonuses"
+    ],
     "notes": [
       "One vial coats one Melee weapon or twenty pieces of ammunition that are nonmagical and deal Slashing or Piercing damage.",
-      "After 1 minute of application, the coated weapon becomes a +3 Weapon or the ammunition becomes +3 Ammunition. The bonus belongs to the coated item, not the oil."
+      "After 1 minute of application, the coated weapon becomes a +3 Weapon or the ammunition becomes +3 Ammunition. That bonus belongs to the coated item and is not printed as a “+N bonus to”, so bonuses is untyped."
     ]
   },
   "oil-of-slipperiness": {
@@ -63,23 +71,39 @@
         "id": "freedom-of-movement"
       },
       {
-        "id": "grease"
+        "id": "grease",
+        "alternativeTo": 0
       }
     ],
     "notes": [
       "Applied to a creature (10 minutes), it gives the effect of Freedom of Movement for 8 hours. One vial covers one Medium or smaller creature, one more vial per size category above Medium.",
-      "Alternatively, poured on the ground as a Magic action, it covers a 10-foot square and duplicates the effect of Grease in that area for 8 hours. The two uses are alternatives."
+      "Alternatively, poured on the ground as a Magic action, it covers a 10-foot square and duplicates the effect of Grease in that area for 8 hours. Grease carries alternativeTo 0, so the two never both apply."
     ]
   },
   "pearl-of-power": {
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
+    ],
     "notes": [
       "As a Magic action while the pearl is on your person, you regain one expended spell slot of level 3 or lower. Once used, it can't be used again until the next dawn."
     ]
   },
   "periapt-of-health": {
+    "uses": [
+      {
+        "label": "regain 2d4 + 2 Hit Points",
+        "recharge": "dawn"
+      }
+    ],
+    "untyped": [
+      "healing"
+    ],
     "notes": [
       "As a Magic action you regain 2d4 + 2 Hit Points. Once used, this property can't be used again until the next dawn.",
-      "You have Advantage on saving throws to avoid or end the Poisoned condition while you wear it."
+      "You have Advantage on saving throws to avoid or end the Poisoned condition while you wear it.",
+      "The limited property has no printed name, so the use’s label is the few official words that name it."
     ]
   },
   "periapt-of-proof-against-poison": {
@@ -88,12 +112,19 @@
     ]
   },
   "periapt-of-wound-closure": {
+    "untyped": [
+      "healing"
+    ],
     "notes": [
       "Life Preservation: on a Death Saving Throw you can change a roll of 9 or lower to a 10.",
-      "Natural Healing Boost: whenever you roll a Hit Point Die to regain Hit Points, double the Hit Points it restores."
+      "Natural Healing Boost: whenever you roll a Hit Point Die to regain Hit Points, double the Hit Points it restores.",
+      "Natural Healing Boost doubles Hit Points restored by a Hit Point Die, so healing is untyped."
     ]
   },
   "philter-of-love": {
+    "untyped": [
+      "conditions"
+    ],
     "notes": [
       "The next time you see a creature within 10 minutes after drinking, you have the Charmed condition (charmed by that creature) for 1 hour. No save is stated."
     ]
@@ -109,12 +140,18 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "other",
+        "charges": 1
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ],
     "notes": [
       "Playing them is a Magic action that expends 1 charge. Each creature of your choice within 30 feet makes the save or has the Frightened condition for 1 minute.",
-      "A creature that fails repeats the save at the end of each of its turns, ending the effect on itself on a success. The saves schema has no field for when a save is made, so the repeated save is not a separate entry.",
+      "A creature that fails repeats the save at the end of each of its turns, ending the effect on a success. Item saves have no timing, so saves is untyped.",
       "A creature that succeeds on its save is immune to these pipes for 24 hours."
     ]
   },
@@ -129,12 +166,18 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "other",
+        "appliesWhen": "Whenever a Swarm of Rats that isn’t under another creature’s control comes within 30 feet of you while you are playing the pipes"
       }
+    ],
+    "untyped": [
+      "charges",
+      "saves"
     ],
     "notes": [
       "While the pipes are on your person, ordinary rats and giant rats are Indifferent toward you and won't attack unless threatened or harmed.",
-      "After playing as a Magic action, you can take a Bonus Action to expend 1 to 3 charges, calling one Swarm of Rats per charge if enough rats are within half a mile. Otherwise the charge is wasted.",
+      "After playing as a Magic action, you can take a Bonus Action to expend 1 to 3 charges, calling one Swarm of Rats per charge if enough rats are within half a mile. Otherwise the charge is wasted. Calling swarms costs charges and is neither a roll, a save nor a spell, so charges is untyped.",
       "The save is made by a Swarm of Rats not under another creature's control that comes within 30 feet while you play. On a failure it becomes Friendly and obeys you while you keep playing each round as a Magic action. On a success, or when it starts its turn more than 30 feet away, it can't be swayed for 24 hours."
     ]
   },
@@ -144,12 +187,25 @@
         "id": "etherealness"
       }
     ],
+    "uses": [
+      {
+        "spell": "etherealness",
+        "recharge": "dawn"
+      }
+    ],
     "notes": [
       "Gaining the effect takes a Magic action and a command word. It ends if you remove the armor or take a Magic action to repeat the command word.",
       "This property can't be used again until the next dawn."
     ]
   },
   "portable-hole": {
+    "checks": [
+      {
+        "ability": "str",
+        "skill": "athletics",
+        "dc": 10
+      }
+    ],
     "notes": [
       "Opens an extradimensional hole 10 feet deep from a 6-foot-diameter cloth. Opening and closing each take a Magic action.",
       "A creature inside a folded hole can take an action to make a DC 10 Strength (Athletics) check to force its way out.",
@@ -184,7 +240,8 @@
   "potion-of-diminution": {
     "spellEffects": [
       {
-        "id": "enlarge-reduce"
+        "id": "enlarge-reduce",
+        "label": "Reduce"
       }
     ],
     "notes": [
@@ -232,7 +289,8 @@
   "potion-of-growth": {
     "spellEffects": [
       {
-        "id": "enlarge-reduce"
+        "id": "enlarge-reduce",
+        "label": "Enlarge"
       }
     ],
     "notes": [
@@ -245,12 +303,18 @@
         "id": "bless"
       }
     ],
+    "untyped": [
+      "healing"
+    ],
     "notes": [
       "You gain 10 Temporary Hit Points that last for 1 hour.",
       "The Bless effect lasts the same 1 hour, no Concentration required."
     ]
   },
   "potion-of-invisibility": {
+    "untyped": [
+      "conditions"
+    ],
     "notes": [
       "You have the Invisible condition for 1 hour. It ends early if you make an attack roll, deal damage, or cast a spell."
     ]
@@ -281,7 +345,8 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 13
+        "dc": 13,
+        "onSuccess": "none"
       }
     ],
     "damage": [
@@ -291,8 +356,11 @@
         "role": "to-user"
       }
     ],
+    "untyped": [
+      "conditions"
+    ],
     "notes": [
-      "The drinker takes the 4d6 Poison damage with no save, and on a failed save also has the Poisoned condition for 1 hour.",
+      "The drinker takes the 4d6 Poison damage with no save. The save decides only the Poisoned condition for 1 hour.",
       "It looks, smells and tastes like a Potion of Healing or another beneficial potion. Identify reveals its true nature."
     ]
   },
@@ -312,6 +380,9 @@
     ]
   },
   "potion-of-vitality": {
+    "untyped": [
+      "healing"
+    ],
     "notes": [
       "Removes any Exhaustion levels and ends the Poisoned condition.",
       "For 24 hours you regain the maximum number of Hit Points for any Hit Point Die you spend."
@@ -353,15 +424,20 @@
       {
         "to": "armor-class",
         "value": 5,
-        "appliesWhen": "When you are hit by an attack while holding the weapon"
+        "appliesWhen": "Quarterstaff Form Only). When you are hit by an attack while holding the weapon"
+      }
+    ],
+    "uses": [
+      {
+        "label": "Attack Deflection",
+        "recharge": "short-or-long-rest"
       }
     ],
     "notes": [
       "As a Bonus Action it emits or extinguishes green Dim Light out to 10 feet. It can also be lit after you roll Initiative.",
       "As a Bonus Action it becomes a 6-inch rod, a 10-foot pole, or a Quarterstaff again.",
       "Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only): Advantage on Dexterity (Acrobatics) checks.",
-      "Attack Deflection works in Quarterstaff form only, takes a Reaction, and the +5 applies against the triggering attack only.",
-      "Attack Deflection can't be used again until you finish a Short or Long Rest.",
+      "Attack Deflection takes a Reaction, and the +5 applies against the triggering attack only. The span holds both the form and the trigger. The uses entry is Attack Deflection's.",
       "Ranged Weapon (Quarterstaff Form Only): the Thrown property with range 30/120 feet. It flies back to your hand after a ranged attack."
     ]
   },
@@ -382,19 +458,20 @@
       {
         "id": "fear",
         "charges": 1,
-        "saveDc": 13
+        "saveDc": 13,
+        "appliesWhen": "affects Beasts only"
       },
       {
         "id": "speak-with-animals",
         "charges": 1,
         "saveDc": 13
       }
-    ],
-    "notes": [
-      "Fear cast from the ring affects Beasts only."
     ]
   },
   "ring-of-djinni-summoning": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
       "As a Magic action you summon a particular Djinni within 120 feet. It stays while you maintain Concentration, up to 1 hour, or until it drops to 0 Hit Points.",
       "The djinni is Friendly and obeys your commands. Without commands it defends itself and takes no other actions.",
@@ -412,7 +489,8 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 18
+        "dc": 18,
+        "onSuccess": "none"
       }
     ],
     "spells": [
@@ -519,6 +597,9 @@
         "saveDc": 18
       }
     ],
+    "untyped": [
+      "conditions"
+    ],
     "notes": [
       "The ring is linked to one Elemental Plane, chosen or rolled by the GM. Only the spells of that plane's row can be cast.",
       "Elemental Bane: Advantage on attack rolls against Elementals, and they have Disadvantage on attack rolls against you.",
@@ -534,8 +615,12 @@
         "time": "dawn"
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "notes": [
-      "When you fail a Dexterity saving throw while wearing the ring, you can take a Reaction to expend 1 charge and succeed on that save instead."
+      "When you fail a Dexterity saving throw while wearing the ring, you can take a Reaction to expend 1 charge and succeed on that save instead.",
+      "The charge buys a success on your own failed save, which no field holds, so charges is untyped."
     ]
   },
   "ring-of-feather-falling": {
@@ -550,6 +635,9 @@
     ]
   },
   "ring-of-invisibility": {
+    "untyped": [
+      "conditions"
+    ],
     "notes": [
       "As a Magic action you give yourself the Invisible condition until the ring is removed or you take a Bonus Action to become visible again."
     ]
@@ -557,11 +645,9 @@
   "ring-of-jumping": {
     "spells": [
       {
-        "id": "jump"
+        "id": "jump",
+        "selfOnly": true
       }
-    ],
-    "notes": [
-      "When you cast Jump from the ring, you can target only yourself."
     ]
   },
   "ring-of-mind-shielding": {
@@ -584,6 +670,9 @@
     ]
   },
   "ring-of-regeneration": {
+    "untyped": [
+      "healing"
+    ],
     "notes": [
       "You regain 1d6 Hit Points every 10 minutes if you have at least 1 Hit Point.",
       "A lost body part regrows after 1d6 + 1 days if you have at least 1 Hit Point the whole time."
@@ -618,38 +707,57 @@
       {
         "ability": "dex",
         "dc": 15,
-        "label": "Lightning Spheres"
+        "onSuccess": "half",
+        "label": "Lightning Spheres",
+        "charges": 2
       },
       {
         "ability": "dex",
         "dc": 15,
-        "label": "Shooting Stars"
+        "onSuccess": "half",
+        "label": "Shooting Stars",
+        "charges": 1
       }
     ],
     "damage": [
       {
         "dice": "5d4",
         "type": "radiant",
-        "role": "effect"
+        "role": "effect",
+        "label": "Shooting Stars",
+        "appliesWhen": "Each creature in a 15-foot Cube originating from that point",
+        "charges": 1,
+        "perCharge": {
+          "maxTimes": 3
+        }
       }
     ],
     "notes": [
       "Dancing Lights and Light are cast with no charge cost stated.",
-      "Lightning Spheres: expend 2 charges as a Magic action for up to four spheres that last while you maintain Concentration, up to 1 minute. A sphere discharges at the first creature other than you that it comes within 5 feet of. On a failed save the creature takes Lightning damage by the number of spheres created, from the table only: 1 sphere 4d12, 2 spheres 5d4, 3 spheres 2d6, 4 spheres 2d4. Half on a success. These rows are not typed.",
-      "Shooting Stars: expend 1 to 3 charges as a Magic action, one mote per charge. Each creature in a 15-foot Cube makes the save, taking 5d4 Radiant damage on a failure or half on a success."
+      "Lightning Spheres: expend 2 charges as a Magic action for up to four spheres. A sphere discharges at the first creature other than you that it comes within 5 feet of. The Lightning damage by number of spheres is printed only in the table rows, half on a success, so it is not typed on the item.",
+      "Shooting Stars: expend 1 to 3 charges as a Magic action, one mote per charge. Each creature in a mote's 15-foot Cube makes the save, taking 5d4 Radiant damage on a failure or half on a success.",
+      "Each mote costs 1 charge and brings about the Shooting Stars save and its 5d4, so both carry charges 1 and the label Shooting Stars, and the cost is paid once per mote."
     ]
   },
   "ring-of-spell-storing": {
+    "untyped": [
+      "spells"
+    ],
     "notes": [
       "Stores up to 5 levels of spells. When found it holds 1d6 − 1 levels chosen by the GM.",
       "Any creature can cast a spell of level 1 through 5 into it by touching it. The slot level sets the space used.",
-      "While wearing it you can cast any stored spell, using the original caster's slot level, spell save DC, spell attack bonus and spellcasting ability. No specific spell is named."
+      "While wearing it you can cast any stored spell, using the original caster's slot level, spell save DC, spell attack bonus and spellcasting ability. No specific spell is named.",
+      "The spells cast from the ring are whatever was stored, so the typed spell list cannot hold them."
     ]
   },
   "ring-of-spell-turning": {
+    "untyped": [
+      "saves"
+    ],
     "notes": [
       "Advantage on saving throws against spells. On a successful save against a spell of level 7 or lower, the spell has no effect on you.",
-      "If that spell targeted only you and created no area of effect, you can take a Reaction to deflect it back at its caster, who saves against its own spell save DC."
+      "If that spell targeted only you and created no area of effect, you can take a Reaction to deflect it back at its caster, who saves against its own spell save DC.",
+      "The deflected spell's caster saves with its own spell save DC, which is not a printed number."
     ]
   },
   "ring-of-swimming": {
@@ -676,13 +784,21 @@
       {
         "dice": "2d10",
         "type": "force",
-        "role": "effect"
+        "role": "effect",
+        "charges": 1,
+        "perCharge": {
+          "maxTimes": 3
+        },
+        "attackBonus": 7
       }
     ],
+    "untyped": [
+      "charges"
+    ],
     "notes": [
-      "As a Magic action you expend 1 to 3 charges for a ranged spell attack against a creature within 60 feet. The ring makes the attack roll with a +7 bonus.",
-      "On a hit, for each charge spent the target takes 2d10 Force damage and is pushed 5 feet away.",
-      "Alternatively, expending 1 to 3 charges as a Magic action, the ring tries to break a nonmagical object within 60 feet not worn or carried, making a Strength check with a +5 bonus per charge."
+      "As a Magic action you expend 1 to 3 charges for a ranged spell attack against a creature within 60 feet. The ring makes the attack roll with a +7 bonus. On a hit, for each charge spent the target takes 2d10 Force damage and is pushed 5 feet away.",
+      "Alternatively the ring tries to break a nonmagical object within 60 feet, making a Strength check with a +5 bonus per charge. That is the ring's own check, not a bonus to the user.",
+      "Breaking an object costs 1 to 3 charges and is a check, not a roll, save or spell, so charges is untyped."
     ]
   },
   "ring-of-three-wishes": {
@@ -695,8 +811,11 @@
         "charges": 1
       }
     ],
+    "untyped": [
+      "charges"
+    ],
     "notes": [
-      "The ring has no stated way to regain charges. It becomes nonmagical when you use the last charge."
+      "No regaining of charges is stated. The ring becomes nonmagical when you use the last charge, which the charges object cannot hold."
     ]
   },
   "ring-of-warmth": {
@@ -708,19 +827,22 @@
   "ring-of-water-walking": {
     "spells": [
       {
-        "id": "water-walk"
+        "id": "water-walk",
+        "selfOnly": true
       }
-    ],
-    "notes": [
-      "Water Walk cast from the ring targets only yourself."
     ]
   },
   "ring-of-x-ray-vision": {
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "appliesWhen": "Whenever you use the ring again before taking a Long Rest"
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "notes": [
       "As a Magic action you gain X-ray vision with a range of 30 feet for 1 minute, through up to 1 foot of stone, 1 inch of common metal, or 3 feet of wood or dirt. A thin sheet of lead blocks it.",
@@ -732,18 +854,24 @@
       {
         "ability": "con",
         "dc": 11,
+        "onSuccess": "other",
         "label": "Light"
       },
       {
         "ability": "con",
         "dc": 15,
+        "onSuccess": "other",
         "label": "Daylight"
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ],
     "notes": [
       "All-Around Vision: Advantage on Wisdom (Perception) checks that rely on sight.",
       "Special Senses: Darkvision and Truesight, both with a range of 120 feet.",
-      "Drawbacks: a Light spell cast on the robe or a Daylight spell cast within 5 feet of it gives you the Blinded condition for 1 minute. You make the save at the end of each of your turns, ending the condition on a success. These spells are cast by others, not by the robe."
+      "Drawbacks: a Light spell cast on the robe or a Daylight spell cast within 5 feet of it gives you the Blinded condition for 1 minute. The save is made at the end of each of your turns, ending the condition on a success. Item saves have no timing, so saves is untyped. These spells are cast by others, not by the robe."
     ]
   },
   "robe-of-scintillating-colors": {
@@ -757,8 +885,13 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "charges": 1
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "notes": [
       "As a Magic action expending 1 charge, the robe shows dazzling hues until the end of your next turn, shedding Bright Light in a 30-foot radius and Dim Light for 30 more feet.",
@@ -779,8 +912,12 @@
         "level": 5
       }
     ],
+    "untyped": [
+      "uses",
+      "spells"
+    ],
     "notes": [
-      "Casting Magic Missile takes a Magic action and removes and expends one of six large stars. Daily at dusk, 1d6 removed stars reappear. The stars are not called charges, and the charges schema regains only at dawn, so they are not typed as charges.",
+      "Casting Magic Missile takes a Magic action and expends one of six large stars. Daily at dusk, 1d6 removed stars reappear. No field holds the star cost or the dusk return, so spells and uses are untyped.",
       "As a Magic action you enter the Astral Plane with what you wear and carry, and return with another Magic action."
     ]
   },
@@ -834,12 +971,18 @@
       {
         "to": "armor-class",
         "value": 1,
-        "appliesWhen": "While in that Bright Light"
+        "appliesWhen": "While in that Bright Light, you and your allies"
       },
       {
         "to": "saving-throws",
         "value": 1,
-        "appliesWhen": "While in that Bright Light"
+        "appliesWhen": "While in that Bright Light, you and your allies"
+      }
+    ],
+    "uses": [
+      {
+        "label": "Protective Aura",
+        "recharge": "dawn"
       }
     ],
     "notes": [
@@ -882,23 +1025,40 @@
       {
         "to": "athletics-checks",
         "value": 10,
-        "appliesWhen": "made to break through doors, barricades, and other barriers"
+        "appliesWhen": "The rod transforms into a handheld battering ram and grants its user a +10 bonus to Strength (Athletics) checks made to break through doors, barricades, and other barriers"
+      }
+    ],
+    "uses": [
+      {
+        "label": "Drain Life",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Paralyze",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Terrify",
+        "recharge": "dawn"
       }
     ],
     "saves": [
       {
         "ability": "con",
         "dc": 17,
+        "onSuccess": "none",
         "label": "Drain Life"
       },
       {
         "ability": "con",
         "dc": 17,
+        "onSuccess": "none",
         "label": "Paralyze"
       },
       {
         "ability": "wis",
         "dc": 17,
+        "onSuccess": "none",
         "label": "Terrify"
       }
     ],
@@ -912,18 +1072,23 @@
       {
         "dice": "4d6",
         "type": "necrotic",
-        "role": "effect"
+        "role": "effect",
+        "label": "Drain Life"
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions",
+      "healing"
     ],
     "notes": [
       "Buttons are pressed as a Bonus Action. An effect lasts until another button is pushed or the same button is pushed again.",
-      "The +10 bonus holds only while Button 5 has turned the rod into a handheld battering ram.",
-      "Button 1 states no attack or damage bonus for the blade. It sheds Bright Light in a 40-foot radius and Dim Light for 40 more feet.",
-      "Button 4: a climbing pole up to 50 feet long that bears up to 4,000 pounds. Button 6: points to magnetic north and gives your approximate depth or height.",
-      "Drain Life: you regain Hit Points equal to half the Necrotic damage. Once used, it can't be used again until the next dawn.",
-      "Drain Life: when you hit a creature with a melee attack using the rod, the target makes the DC 17 Constitution save and takes the 4d6 Necrotic damage on a failure.",
-      "Paralyze: on a hit with a melee attack, on a failed save the target has the Paralyzed condition for 1 minute and repeats the save at the end of each of its turns. Once per dawn.",
-      "Terrify: as a Magic action, each creature you can see within 30 feet saves or has the Frightened condition for 1 minute, repeating the save at the end of each of its turns. Once per dawn."
+      "The +10 bonus needs both Button 5's form and a check made to break through a barrier, so its span is the whole sentence.",
+      "Button 1 states no attack or damage bonus for the blade. Button 4: a climbing pole. Button 6: points to magnetic north.",
+      "Drain Life: on a melee hit, the DC 17 Constitution save, and the 4d6 Necrotic on a failure. You regain Hit Points equal to half that damage.",
+      "Paralyze: on a failed save the target has the Paralyzed condition for 1 minute and repeats the save at the end of each of its turns.",
+      "Terrify: each creature you can see within 30 feet saves or has the Frightened condition for 1 minute, repeating the save at the end of each of its turns.",
+      "The repeated saves have no timing field, so saves is untyped."
     ]
   },
   "rod-of-resurrection": {
@@ -955,11 +1120,20 @@
     ]
   },
   "rod-of-rulership": {
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
+    ],
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none"
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "notes": [
       "As a Magic action, each creature of your choice you can see within 120 feet makes the save or has the Charmed condition for 8 hours, regarding you as its trusted leader.",
@@ -968,6 +1142,10 @@
     ]
   },
   "rod-of-security": {
+    "untyped": [
+      "uses",
+      "healing"
+    ],
     "notes": [
       "As a Magic action you and up to 199 willing creatures you can see go to a demiplane of your chosen form that sustains its visitors.",
       "Each hour there a visitor regains Hit Points as if it had spent 1 Hit Point Die. Creatures don't age there.",
@@ -985,13 +1163,30 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": 15,
+        "onSuccess": "none"
+      }
+    ],
+    "checks": [
+      {
+        "ability": "str",
+        "skill": "athletics",
+        "dc": 15
+      },
+      {
+        "ability": "dex",
+        "skill": "acrobatics",
         "dc": 15
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "notes": [
       "As a Magic action the rope entangles one creature you can see within 20 feet, which makes the save or has the Restrained condition.",
       "A Restrained target can take an action to make its choice of a DC 15 Strength (Athletics) or Dexterity (Acrobatics) check, escaping on a success.",
-      "It has AC 20, HP 20, and Immunity to Poison and Psychic damage, and regains 1 Hit Point every 5 minutes while it has at least 1."
+      "It has AC 20, HP 20, and Immunity to Poison and Psychic damage, and regains 1 Hit Point every 5 minutes while it has at least 1.",
+      "The two escape checks are the target's choice of one, not both."
     ]
   },
   "scarab-of-protection": {
@@ -1004,9 +1199,12 @@
     "charges": {
       "max": 12
     },
+    "untyped": [
+      "charges"
+    ],
     "notes": [
       "Preservation: if you fail a saving throw against a Necromancy spell or a harmful effect from an Undead, you can take a Reaction to expend 1 charge and succeed instead. No regaining of charges is stated.",
-      "The scarab crumbles to powder and is destroyed when its last charge is expended.",
+      "The scarab is destroyed when its last charge is expended, which the charges object cannot hold.",
       "Spell Resistance: Advantage on saving throws against spells."
     ]
   },
@@ -1029,6 +1227,12 @@
     "spells": [
       {
         "id": "sending"
+      }
+    ],
+    "uses": [
+      {
+        "spell": "sending",
+        "recharge": "dawn"
       }
     ],
     "notes": [
@@ -1085,17 +1289,28 @@
         "value": 2
       }
     ],
+    "uses": [
+      {
+        "label": "Protective Field",
+        "recharge": "dawn"
+      }
+    ],
     "damage": [
       {
         "dice": "2d6 + 2",
         "type": "force",
-        "role": "base"
+        "role": "base",
+        "label": "Forceful Bash",
+        "modifier": "str"
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "notes": [
       "The AC bonus is in addition to the Shield's normal bonus to AC.",
-      "Forceful Bash: when you take the Attack action, one attack roll can be made with the Shield against a target within 5 feet, adding your Proficiency Bonus and Strength modifier. The damage is 2d6 + 2 plus your Strength modifier. You can push a creature up to 10 feet away, and give one your size or smaller the Prone condition.",
-      "Protective Field: as a Reaction when you or an ally within 5 feet is targeted by an attack or saves against an area of effect, you create an immobile 5-foot Emanation that the triggering attack or effect can't affect. It lasts while you maintain Concentration, up to 1 minute, and nothing passes in or out. Once per dawn."
+      "Forceful Bash: when you take the Attack action, one attack roll can be made with the Shield against a target within 5 feet, adding your Proficiency Bonus and Strength modifier. On a hit, 2d6 + 2 plus your Strength modifier Force damage. You can push a creature up to 10 feet away, and give one your size or smaller the Prone condition.",
+      "Protective Field: a Reaction, an immobile 5-foot Emanation. The uses entry is this property's."
     ]
   },
   "slippers-of-spider-climbing": {
@@ -1162,10 +1377,14 @@
         "attackBonus": 11
       }
     },
+    "untyped": [
+      "spells"
+    ],
     "notes": [
       "The scroll holds a single unnamed spell. If it is on your spell list you can cast it without Material components, with its normal casting time. The scroll crumbles once the spell is cast, but isn't lost if the casting is interrupted.",
       "If the spell is of a higher level than you can normally cast, you make an ability check with your spellcasting ability, DC 10 plus the spell's level. On a failure the spell disappears.",
-      "A Wizard spell can be copied into a spellbook with an Intelligence (Arcana) check, DC 10 plus the spell's level. The scroll is destroyed either way."
+      "A Wizard spell can be copied into a spellbook with an Intelligence (Arcana) check, DC 10 plus the spell's level. The scroll is destroyed either way.",
+      "The spell is whichever one the scroll bears, so no spell is typed."
     ]
   },
   "spellguard-shield": {
@@ -1177,10 +1396,24 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 19
+        "dc": 19,
+        "onSuccess": "none"
+      }
+    ],
+    "checks": [
+      {
+        "ability": "int",
+        "skill": "arcana",
+        "dc": 25
       }
     ],
     "damage": [
+      {
+        "dice": "8d10",
+        "type": "force",
+        "role": "effect",
+        "appliesWhen": "Anything else that touches the sphere but isn’t wholly engulfed and obliterated by it"
+      },
       {
         "dice": "8d10",
         "type": "force",
@@ -1188,14 +1421,26 @@
       }
     ],
     "notes": [
-      "It obliterates all matter it passes through and that passes through it, except Artifacts not susceptible to it. Anything that touches it but isn't wholly engulfed takes 8d10 Force damage.",
-      "A creature whose space the controlled sphere enters makes the save or is touched by it, taking the same 8d10 Force damage. A creature reduced to 0 Hit Points by it is obliterated.",
-      "Control takes a Magic action within 60 feet and a DC 25 Intelligence (Arcana) check. On a success you control it until the start of your next turn. On a failure it moves 10 feet toward you.",
-      "While in control, as a Bonus Action you move it up to 5 times your Intelligence modifier in feet (minimum 5 feet).",
+      "The first roll is dealt to anything that touches the sphere. The second is dealt to a creature whose space the controlled sphere enters and that fails the DC 19 Dexterity save. A creature reduced to 0 Hit Points by it is obliterated.",
+      "Control takes a Magic action within 60 feet and the DC 25 Intelligence (Arcana) check. On a failure the sphere moves 10 feet toward you.",
       "Contact with a planar portal or extradimensional space is resolved on a 1d100 table. Gate is only mentioned."
     ]
   },
   "staff-of-charming": {
+    "spells": [
+      {
+        "id": "charm-person",
+        "charges": 1
+      },
+      {
+        "id": "command",
+        "charges": 1
+      },
+      {
+        "id": "comprehend-languages",
+        "charges": 1
+      }
+    ],
     "charges": {
       "max": 10,
       "regains": {
@@ -1212,23 +1457,19 @@
         ]
       }
     },
-    "spells": [
+    "uses": [
       {
-        "id": "charm-person",
-        "charges": 1
-      },
-      {
-        "id": "command",
-        "charges": 1
-      },
-      {
-        "id": "comprehend-languages",
-        "charges": 1
+        "label": "Resist Enchantment",
+        "recharge": "dawn"
       }
+    ],
+    "untyped": [
+      "spells",
+      "charges"
     ],
     "notes": [
       "Spells are cast using your spell save DC.",
-      "Reflect Enchantment: if you succeed on a save against an Enchantment spell that targets only you, you can take a Reaction and expend 1 charge to turn the spell back on its caster as if you had cast it.",
+      "Reflect Enchantment: if you succeed on a save against an Enchantment spell that targets only you, you can take a Reaction and expend 1 charge to turn the spell back on its caster as if you had cast it. The 1 charge it costs has no field, and the spell turned back is not named, so charges and spells are untyped.",
       "Resist Enchantment: if you fail a save against an Enchantment spell that targets only you, you can succeed instead. Once per dawn."
     ]
   },
@@ -1431,8 +1672,12 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 17
+        "dc": 17,
+        "onSuccess": "half"
       }
+    ],
+    "untyped": [
+      "damage"
     ],
     "notes": [
       "The attack and damage bonuses apply when it is wielded as a magic Quarterstaff. The AC, saving throw and spell attack bonuses apply while holding it.",
@@ -1472,7 +1717,11 @@
       {
         "dice": "1d6",
         "type": "force",
-        "role": "extra"
+        "role": "extra",
+        "charges": 1,
+        "perCharge": {
+          "maxTimes": 3
+        }
       }
     ],
     "notes": [
@@ -1506,9 +1755,13 @@
         "charges": 5
       }
     ],
+    "untyped": [
+      "charges"
+    ],
     "notes": [
       "Spells are cast using your spell save DC and spell attack modifier.",
-      "Insect Cloud: as a Magic action expending 1 charge, harmless insects fill a 30-foot Emanation for 10 minutes, Heavily Obscured for creatures other than you. A strong wind such as Gust of Wind disperses it. Gust of Wind is only mentioned."
+      "Insect Cloud: as a Magic action expending 1 charge, harmless insects fill a 30-foot Emanation for 10 minutes, Heavily Obscured for creatures other than you. A strong wind such as Gust of Wind disperses it. Gust of Wind is only mentioned.",
+      "Insect Cloud costs 1 charge and is not a roll, save or spell, so charges is untyped."
     ]
   },
   "staff-of-the-magi": {
@@ -1625,18 +1878,27 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 17
+        "dc": 17,
+        "onSuccess": "half"
       }
+    ],
+    "untyped": [
+      "charges",
+      "damage"
     ],
     "notes": [
       "The attack and damage bonuses apply when it is wielded as a magic Quarterstaff. The spell attack bonus applies while you hold it.",
       "Spells are cast using your spell save DC.",
       "Spell Absorption: Advantage on saving throws against spells. As a Reaction when another creature casts a spell that targets only you, the staff cancels it and gains charges equal to its level. If that takes it above 50 charges, it explodes as if by Retributive Strike.",
       "Retributive Strike: as a Magic action you break the staff, which explodes in a 30-foot Emanation. You have a 50 percent chance to travel to a random plane and avoid it. Otherwise you take Force damage equal to 16 times the charges in the staff.",
-      "Each other creature in the area makes the save, taking Force damage equal to 6 times the charges in the staff on a failure or half on a success. These amounts depend on the charges, so they are not typed as damage."
+      "Each other creature in the area makes the save, taking Force damage equal to 6 times the charges in the staff on a failure or half on a success. These amounts depend on the charges, so they are not typed as damage.",
+      "Spell Absorption adds charges and can explode the staff above 50, which the charges object cannot hold."
     ]
   },
   "staff-of-the-python": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
       "As a Magic action you throw the staff to within 10 feet, where it becomes a Giant Constrictor Snake under your control that acts right after you on your Initiative count.",
       "You command it mentally (no action) within 60 feet if you aren't Incapacitated.",
@@ -1708,10 +1970,14 @@
         "charges": 6
       }
     ],
+    "untyped": [
+      "charges"
+    ],
     "notes": [
       "The attack and damage bonuses apply when it is wielded as a magic Quarterstaff. The spell attack bonus applies while holding it.",
       "Spells are cast using your spell save DC.",
-      "Tree Form: as a Magic action expending 1 charge, the planted staff becomes a 60-foot tree. A Magic action while touching it returns it to staff form. Detect Magic is only mentioned, as a way to discern the tree's aura."
+      "Tree Form: as a Magic action expending 1 charge, the planted staff becomes a 60-foot tree. A Magic action while touching it returns it to staff form. Detect Magic is only mentioned, as a way to discern the tree's aura.",
+      "Tree Form costs 1 charge and is not a roll, save or spell, so charges is untyped."
     ]
   },
   "staff-of-thunder-and-lightning": {
@@ -1725,20 +1991,45 @@
         "value": 2
       }
     ],
+    "uses": [
+      {
+        "label": "Lightning",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Thunder",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Thunder and Lightning",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Lightning Strike",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Thunderclap",
+        "recharge": "dawn"
+      }
+    ],
     "saves": [
       {
         "ability": "con",
         "dc": 17,
+        "onSuccess": "none",
         "label": "Thunder"
       },
       {
         "ability": "dex",
         "dc": 17,
+        "onSuccess": "half",
         "label": "Lightning Strike"
       },
       {
         "ability": "con",
         "dc": 17,
+        "onSuccess": "half",
         "label": "Thunderclap"
       }
     ],
@@ -1746,18 +2037,24 @@
       {
         "dice": "2d6",
         "type": "lightning",
-        "role": "extra"
+        "role": "extra",
+        "label": "Lightning"
       },
       {
         "dice": "9d6",
         "type": "lightning",
-        "role": "effect"
+        "role": "effect",
+        "label": "Lightning Strike"
       },
       {
         "dice": "2d6",
         "type": "thunder",
-        "role": "effect"
+        "role": "effect",
+        "label": "Thunderclap"
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "notes": [
       "Each of Lightning, Thunder, Thunder and Lightning, Lightning Strike and Thunderclap can't be used again until the next dawn once used.",
@@ -1779,23 +2076,34 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "label": "deal an extra 2d10 Necrotic damage",
+        "charges": 1
       }
     ],
     "damage": [
       {
         "dice": "2d10",
         "type": "necrotic",
-        "role": "extra"
+        "role": "extra",
+        "label": "deal an extra 2d10 Necrotic damage",
+        "charges": 1
       }
     ],
     "notes": [
       "It is wielded as a magic Quarterstaff with no stated bonus, dealing normal Quarterstaff damage.",
       "On a hit, you can expend 1 charge to deal the extra 2d10 Necrotic damage.",
-      "The save is forced by the same charge as the extra damage. On a failed save the target has Disadvantage for 1 hour on ability checks and saving throws that use Strength or Constitution."
+      "The save is forced by the same charge as the extra damage. On a failed save the target has Disadvantage for 1 hour on ability checks and saving throws that use Strength or Constitution.",
+      "The one charge brings about the 2d10 and the save, so both carry charges 1 and the same label, and the cost is paid once."
     ]
   },
   "stone-of-controlling-earth-elementals": {
+    "uses": [
+      {
+        "recharge": "dawn"
+      }
+    ],
     "notes": [
       "While touching it to the ground, as a Magic action you summon an Earth Elemental within 30 feet that obeys you and acts right after you.",
       "It disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The stone can't be used this way again until the next dawn."
@@ -1832,6 +2140,9 @@
         "appliesWhen": "When you hit an Undead with it"
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "notes": [
       "The blade exists only after a Bonus Action. It functions as a Longsword with the Finesse property. Proficiency with Longswords or Shortswords gives proficiency with it.",
       "It deals Radiant damage instead of Slashing damage.",
@@ -1844,11 +2155,14 @@
         "amount": 15,
         "type": "necrotic",
         "role": "extra",
-        "appliesWhen": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll"
+        "appliesWhen": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 15 Necrotic damage if it isn’t a Construct or an Undead"
       }
     ],
+    "untyped": [
+      "healing"
+    ],
     "notes": [
-      "The extra damage applies only if the target isn’t a Construct or an Undead.",
+      "The roll needs both the 20 and a target that isn't a Construct or an Undead. No shorter single span holds both, so the span is the whole clause.",
       "You gain Temporary Hit Points equal to the Necrotic damage taken."
     ]
   },
@@ -1861,8 +2175,12 @@
         "appliesWhen": "When you attack a creature with this weapon and roll a 20 on the d20 for the attack roll"
       }
     ],
+    "untyped": [
+      "damage",
+      "conditions"
+    ],
     "notes": [
-      "When you hit an object, maximize your weapon damage dice against it.",
+      "When you hit an object, maximize your weapon damage dice against it. No typed field holds that.",
       "On the roll of 20 against a creature, the target also gains 1 Exhaustion level."
     ]
   },
@@ -1870,7 +2188,8 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none"
       }
     ],
     "damage": [
@@ -1879,6 +2198,9 @@
         "type": "necrotic",
         "role": "extra"
       }
+    ],
+    "untyped": [
+      "saves"
     ],
     "notes": [
       "The extra damage and the save both follow every hit on a creature. On a failed save the target can't regain Hit Points for 1 hour.",
@@ -1898,7 +2220,10 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 20
+        "dc": 20,
+        "onSuccess": "other",
+        "label": "Pure Rebuke",
+        "charges": 1
       }
     ],
     "damage": [
@@ -1912,14 +2237,21 @@
         "dice": "4d6",
         "type": "psychic",
         "role": "effect",
-        "appliesWhen": "On a successful save"
+        "label": "Pure Rebuke",
+        "appliesWhen": "On a successful save",
+        "charges": 1
       }
     ],
+    "untyped": [
+      "damage",
+      "charges"
+    ],
     "notes": [
-      "The 8d6 Radiant damage is taken again each time the Fiend or Undead ends its turn holding or carrying the talisman.",
+      "The 8d6 Radiant damage is taken again each time the Fiend or Undead ends its turn holding or carrying the talisman. Item damage has no timing field, so damage is untyped.",
       "Holy Symbol: it can be used as a Holy Symbol. The spell attack bonus applies while you wear or hold it.",
-      "Pure Rebuke: as a Magic action expending 1 charge, a creature you can see on the ground within 120 feet makes the save. A Fiend or Undead has Disadvantage. On a failure it falls into a fissure and is destroyed, leaving no remains.",
-      "No regaining of charges is stated. When the last charge is expended, the talisman is destroyed."
+      "Pure Rebuke: a creature you can see on the ground within 120 feet makes the save. A Fiend or Undead has Disadvantage. On a failure it falls into the fissure and is destroyed.",
+      "No regaining of charges is stated. When the last charge is expended, the talisman is destroyed, which the charges object cannot hold.",
+      "The 1 charge brings about the save and the 4d6, so both carry charges 1 and the same label, and the cost is paid once."
     ]
   },
   "talisman-of-the-sphere": {
@@ -1941,7 +2273,10 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 20
+        "dc": 20,
+        "onSuccess": "other",
+        "label": "Ultimate End",
+        "charges": 1
       }
     ],
     "damage": [
@@ -1955,37 +2290,56 @@
         "dice": "4d6",
         "type": "psychic",
         "role": "effect",
-        "appliesWhen": "On a successful save"
+        "label": "Ultimate End",
+        "appliesWhen": "On a successful save",
+        "charges": 1
       }
     ],
+    "untyped": [
+      "damage",
+      "charges"
+    ],
     "notes": [
-      "The 8d6 Necrotic damage is taken again each time the creature ends its turn holding or carrying the talisman.",
+      "The 8d6 Necrotic damage is taken again each time the creature ends its turn holding or carrying the talisman. Item damage has no timing field, so damage is untyped.",
       "Holy Symbol: it can be used as a Holy Symbol. The spell attack bonus applies while you wear or hold it.",
-      "Ultimate End: as a Magic action expending 1 charge, a creature you can see on the ground within 120 feet makes the save. A Celestial has Disadvantage. On a failure it falls into a fissure and is destroyed, leaving no remains.",
-      "No regaining of charges is stated. When the last charge is expended, the talisman is destroyed."
+      "Ultimate End: a creature you can see on the ground within 120 feet makes the save. A Celestial has Disadvantage. On a failure it falls into the fissure and is destroyed.",
+      "No regaining of charges is stated. When the last charge is expended, the talisman is destroyed, which the charges object cannot hold.",
+      "The 1 charge brings about the save and the 4d6, so both carry charges 1 and the same label, and the cost is paid once."
     ]
   },
   "thunderous-greatclub": {
+    "uses": [
+      {
+        "label": "Earthquake",
+        "recharge": "dawn"
+      }
+    ],
     "saves": [
       {
         "ability": "str",
         "dc": 15,
+        "onSuccess": "none",
         "label": "Clap of Thunder"
       },
       {
         "ability": "dex",
         "dc": 20,
-        "label": "each creature on the ground"
+        "onSuccess": "none",
+        "label": "Earthquake"
       },
       {
         "ability": "con",
         "dc": 20,
-        "label": "also concentrating"
+        "onSuccess": "none",
+        "label": "Earthquake",
+        "appliesWhen": "If that creature is also concentrating"
       },
       {
         "ability": "dex",
         "dc": 20,
-        "label": "where the fissure opens"
+        "onSuccess": "other",
+        "label": "Earthquake",
+        "appliesWhen": "Any creature on a spot where the fissure opens"
       }
     ],
     "damage": [
@@ -2005,36 +2359,50 @@
         "dice": "3d8",
         "type": "thunder",
         "role": "effect",
+        "label": "Clap of Thunder",
         "appliesWhen": "Nonmagical objects in the Cone that aren’t being worn or carried"
       },
       {
         "amount": 50,
         "type": "bludgeoning",
         "role": "effect",
+        "label": "Earthquake",
         "appliesWhen": "Structures in contact with the ground in that area"
       }
     ],
+    "untyped": [
+      "conditions"
+    ],
     "notes": [
       "While attuned, your Strength is 20 unless it is already 20 or higher.",
-      "Clap of Thunder: as a Magic action, a 30-foot Cone. Each creature in it makes the Strength save or has the Prone condition.",
-      "Earthquake: as a Magic action, a 50-foot-radius circle. A creature on the ground that fails the Dexterity save has the Prone condition. A concentrating creature that fails the Constitution save loses Concentration.",
-      "You can open a 30-foot-deep, 10-foot-wide fissure. A creature on that spot falls in on a failed save or moves with the edge on a success. Structures there collapse into it.",
-      "Earthquake can't be used again until the next dawn."
+      "Clap of Thunder: a 30-foot Cone. Each creature in it makes the Strength save or has the Prone condition.",
+      "Earthquake: a 50-foot-radius circle. A creature on the ground that fails the Dexterity save has the Prone condition. A concentrating creature makes the Constitution save or loses Concentration. The fissure is optional: a creature on its spot falls in on a failed save.",
+      "The uses entry is Earthquake's.",
+      "One use of Earthquake brings about its 50 damage and its three saves, so all carry the label Earthquake. The concentrating save and the fissure save carry the words that tell them apart as appliesWhen."
     ]
   },
   "tome-of-clear-thought": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
-      "After 48 hours of study over 6 days or fewer, your Intelligence increases by 2, to a maximum of 30. The book then loses its magic but regains it in a century."
+      "After 48 hours of study over 6 days or fewer, your Intelligence increases by 2, to a maximum of 30. The book then loses its magic but regains it in a century, a wait no recharge holds, so uses is untyped."
     ]
   },
   "tome-of-leadership-and-influence": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
-      "After 48 hours of study over 6 days or fewer, your Charisma increases by 2, to a maximum of 30. The book then loses its magic but regains it in a century."
+      "After 48 hours of study over 6 days or fewer, your Charisma increases by 2, to a maximum of 30. The book then loses its magic but regains it in a century, a wait no recharge holds, so uses is untyped."
     ]
   },
   "tome-of-understanding": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
-      "After 48 hours of study over 6 days or fewer, your Wisdom increases by 2, to a maximum of 30. The book then loses its magic but regains it in a century."
+      "After 48 hours of study over 6 days or fewer, your Wisdom increases by 2, to a maximum of 30. The book then loses its magic but regains it in a century, a wait no recharge holds, so uses is untyped."
     ]
   },
   "trident-of-fish-command": {
@@ -2049,11 +2417,12 @@
       {
         "id": "dominate-beast",
         "charges": 1,
-        "saveDc": 15
+        "saveDc": 15,
+        "appliesWhen": "on a Beast that has a Swim Speed"
       }
     ],
     "notes": [
-      "Dominate Beast cast from the trident targets only a Beast that has a Swim Speed. No attack or damage bonus is stated for the weapon."
+      "No attack or damage bonus is stated for the weapon."
     ]
   },
   "universal-solvent": {
@@ -2062,8 +2431,15 @@
     ]
   },
   "vicious-weapon": {
+    "damage": [
+      {
+        "dice": "2d6",
+        "type": "weapon",
+        "role": "extra"
+      }
+    ],
     "notes": [
-      "The weapon deals an extra 2d6 damage to any creature it hits, of the same type as the weapon's normal damage. The damage type is not fixed, so the roll is not typed."
+      "The extra 2d6 is of the same type as the weapon's normal damage."
     ]
   },
   "vorpal-sword": {
@@ -2077,18 +2453,13 @@
         "value": 3
       }
     ],
-    "damage": [
-      {
-        "amount": 30,
-        "type": "slashing",
-        "role": "extra",
-        "appliesWhen": "A creature is immune to this effect if it has Immunity to Slashing damage, if it doesn’t have or need a head, or if the GM decides that the creature is too big for its head to be cut off with this weapon"
-      }
+    "untyped": [
+      "damage"
     ],
     "notes": [
       "The weapon ignores Resistance to Slashing damage.",
       "When you roll a 20 on the attack roll against a creature with at least one head, you cut off a head. The creature dies if it can't survive without it.",
-      "The extra 30 Slashing damage applies on the roll of 20 that would cut off a head. A creature with Legendary Resistance can also expend a daily use to keep its head and take the extra damage instead."
+      "The extra 30 Slashing damage falls only on that roll of 20, and only on a creature immune to the beheading or one that spends Legendary Resistance. The 20 and the immunity are in different sentences and no single span holds them, so the roll is left out."
     ]
   },
   "wand-of-binding": {
@@ -2138,8 +2509,12 @@
         ]
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "notes": [
-      "As a Magic action expending 1 charge, for 1 minute you know the direction, not the distance, of the nearest Hostile creature within 60 feet, including Invisible, ethereal, disguised or hidden ones. It ends if you stop holding the wand."
+      "As a Magic action expending 1 charge, for 1 minute you know the direction, not the distance, of the nearest Hostile creature within 60 feet, including Invisible, ethereal, disguised or hidden ones. It ends if you stop holding the wand.",
+      "The sensing costs 1 charge and is not a roll, save or spell, so charges is untyped."
     ]
   },
   "wand-of-fear": {
@@ -2163,7 +2538,8 @@
       {
         "id": "command",
         "charges": 1,
-        "saveDc": 15
+        "saveDc": 15,
+        "appliesWhen": "“flee” or “grovel” only"
       },
       {
         "id": "fear",
@@ -2171,8 +2547,11 @@
         "saveDc": 15
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
-      "Command from the wand is limited to \"flee\" or \"grovel\". Fear from the wand is a 60-foot Cone."
+      "Command from the wand is limited to flee or grovel, a limit on the spell’s options, quoted from the table cell. Fear from the wand is a 60-foot Cone, a change no field holds, so spells is untyped."
     ]
   },
   "wand-of-fireballs": {
@@ -2293,8 +2672,14 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "charges": 1
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ],
     "notes": [
       "As a Magic action expending 1 charge, a ray targets a creature you can see within 60 feet, which makes the save or has the Paralyzed condition for 1 minute.",
@@ -2334,8 +2719,12 @@
         "time": "dawn"
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "notes": [
-      "As a Magic action expending 1 charge, if a secret door or trap is within 60 feet, the wand points at the nearest one."
+      "As a Magic action expending 1 charge, if a secret door or trap is within 60 feet, the wand points at the nearest one.",
+      "The pointing costs 1 charge and is not a roll, save or spell, so charges is untyped."
     ]
   },
   "wand-of-the-war-mage-1-2-or-3": {
@@ -2411,11 +2800,17 @@
         ]
       }
     },
+    "untyped": [
+      "charges",
+      "spells"
+    ],
     "notes": [
       "As a Magic action expending 1 charge, you choose a point within 120 feet, and the effect is rolled on the 1d100 Wand of Wonder Effects table.",
       "Spells cast from the wand have a save DC of 15, and a spell's range under 120 feet becomes 120 feet.",
       "The spells named in the table (Darkness, Faerie Fire, Fireball, Slow, Stinking Cloud, Gust of Wind, Lightning Bolt, Invisibility, Polymorph, and Enlarge/Reduce as an effect) belong to its rows and are left out of spells and spellEffects. Greater Restoration is only mentioned.",
-      "The table rows' own saves (DC 15 Constitution), damage (1d6 Psychic to you, 1 Bludgeoning per gem) and conditions belong to the rows and are not typed on the item."
+      "The table rows' own saves (DC 15 Constitution), damage (1d6 Psychic to you, 1 Bludgeoning per gem) and conditions belong to the rows and are not typed on the item.",
+      "The DC 15 for spells cast from the wand applies to the table rows' spells. The wand forces no save of its own outside the rows.",
+      "The 1 charge pays for a roll on the table, not for a typed roll, save or spell, so charges is untyped. The wand sets the save DC and raises a short range to 120 feet for every spell cast from it, changes no field holds, so spells is untyped."
     ]
   },
   "weapon-1-2-or-3": {
@@ -2466,6 +2861,9 @@
     ]
   },
   "well-of-many-worlds": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
       "As a Magic action you unfold it on a solid surface to form a two-way, 6-foot-diameter portal to a world or plane the GM decides. It stays open until a creature within 5 feet folds it as a Magic action.",
       "After opening a portal, it can't do so again for 1d8 hours."
@@ -2477,6 +2875,9 @@
         "id": "gust-of-wind",
         "saveDc": 13
       }
+    ],
+    "untyped": [
+      "uses"
     ],
     "notes": [
       "Each later use before the next dawn has a cumulative 20 percent chance of failing. If it fails, the fan tears into useless, nonmagical tatters."
@@ -2490,11 +2891,18 @@
         "time": "dawn"
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "notes": [
-      "As a Magic action expending 1 charge, you gain a Fly Speed of 30 feet for 1 hour. If you are flying when it expires, you descend 30 feet per round until you land."
+      "As a Magic action expending 1 charge, you gain a Fly Speed of 30 feet for 1 hour. If you are flying when it expires, you descend 30 feet per round until you land.",
+      "The Fly Speed costs 1 charge and is not a roll, save or spell, so charges is untyped."
     ]
   },
   "wings-of-flying": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
       "As a Magic action the cloak becomes wings that give a Fly Speed of 60 feet for 1 hour or until you end them as a Magic action.",
       "If you are aloft when the wings disappear, you fall. After they disappear, you can't use them again for 1d12 hours."

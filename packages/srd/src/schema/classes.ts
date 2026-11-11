@@ -4,20 +4,32 @@ import {
   activationSchema,
   classIdSchema,
   conditionIdSchema,
-  creatureTypeSchema,
+  damageEffectSchema,
   damageTypeIdSchema,
   diceSchema,
   entryShape,
   equipmentOptionSchema,
+  featGrantSchema,
   feetSchema,
   forcedSaveShape,
+  hitPointMaximumSchema,
   idSchema,
+  oncePerTurnSchema,
   pageSchema,
   proseSchema,
   rechargeSchema,
+  repeatableSchema,
+  resistancesSchema,
   saveDcSchema,
+  saveOutcomeSchema,
+  sensesSchema,
   skillIdSchema,
+  spanShape,
+  speedBonusSchema,
+  targetLimitShape,
   usesCountSchema,
+  usesShape,
+  whileSchema,
 } from "./common"
 
 const levelSchema = z.number().int().min(1).max(20)
@@ -172,6 +184,7 @@ export type Class = z.infer<typeof classSchema>
 
 /** How many times a feature can be used, and what restores it. */
 const usesSchema = z.strictObject({
+  ...usesShape,
   count: z.union([
     /** A number, the Proficiency Bonus, or an ability modifier of at least 1. */
     usesCountSchema,
@@ -182,7 +195,6 @@ const usesSchema = z.strictObject({
   ]),
   /** "spell": the count is for each spell the feature names, as with Mystic Arcanum and Signature Spells. */
   per: z.literal("spell").optional(),
-  recharge: rechargeSchema,
   /** Uses regained on a Short Rest when `recharge` is "long-rest". */
   shortRestRegain: z.literal(1).optional(),
   /**
@@ -195,6 +207,12 @@ const usesSchema = z.strictObject({
       amount: positiveSchema,
       /** The spell slot level the text names: exactly that level, not a minimum ("a level 5 spell slot"). */
       slotLevel: z.number().int().min(1).max(9).optional(),
+      /** The class level from which this restore is open, where a later feature grants it (Font of Inspiration at 5). */
+      fromLevel: levelSchema.optional(),
+      /** The restore is only open when no uses are left ("if you have no uses of Wild Shape left"). */
+      whenNoneLeft: z.literal(true).optional(),
+      /** The restore can be made at most once a turn, in the form the text prints. */
+      oncePerTurn: oncePerTurnSchema.optional(),
     })
     .optional(),
   /** A later feature changes the recharge from this class level on, as Font of Inspiration does at level 5. */
@@ -206,34 +224,91 @@ const usesSchema = z.strictObject({
 
 /** A class resource a feature or option spends, such as Focus Points. Not money. */
 const resourceCostSchema = z.strictObject({
-  resource: z.enum(["bardic-inspiration", "channel-divinity", "focus-points", "rage", "second-wind", "sneak-attack-dice", "sorcery-points", "wild-shape"]),
+  resource: z.enum(["bardic-inspiration", "channel-divinity", "focus-points", "rage", "second-wind", "sneak-attack-dice", "sorcery-points", "wild-shape", "spell-slot", "pact-magic-slot"]),
   amount: positiveSchema,
   /** The text says the resource isn’t expended if the roll it boosts still fails. */
   keptOnFailure: z.literal(true).optional(),
 })
 
-/** The official words of a condition a typed value holds under: one unbroken span of the text. */
-const appliesWhenSchema = z.string().min(1)
-
 /**
- * A condition a passive benefit holds under, as the text states it. "raging": while your Rage is active.
- * "no-heavy-armor": while you aren’t wearing Heavy armor. "in-aura-of-protection": while in your Aura of Protection.
+ * The attacks a feature works with, any one of those listed. "weapon": an attack roll using a weapon. "pact-weapon":
+ * your Warlock pact weapon, the one you bond with Pact of the Blade. "imbued-weapon": the weapon Sacred Weapon
+ * imbues. "beast-form-attack": a Beast form's attack in Wild Shape. "strength-based": a Strength-based attack roll.
  */
-const whileSchema = z.enum(["raging", "no-heavy-armor", "in-aura-of-protection"])
+export const attackKindSchema = z.enum([
+  "weapon",
+  "melee-weapon",
+  "finesse-weapon",
+  "ranged-weapon",
+  "monk-weapon",
+  "pact-weapon",
+  "imbued-weapon",
+  "unarmed-strike",
+  "beast-form-attack",
+  "strength-based",
+])
 
 /**
  * Mechanics stated plainly in a feature's or option's text. Each field is checked against the official wording.
  * What is not here stays in the prose.
  *
- * Standing and triggered values. `attacks`, `pactWeaponAttacks`, `criticalHit`, `freeCast`, `speedBonus` and
+ * Standing and triggered values. `attacks`, `criticalHit`, `freeCast`, `speedBonus`, `senses`, `resistances` and
  * `armorClass` are standing: they hold whenever the character has the feature, so any limit the text puts on them
- * (one weapon, on yourself, only in Dim Light) is typed. `dice`, `damageTypes` and `save` are triggered: they
+ * (one weapon, on yourself, only in Dim Light) is typed. `dice`, `damage` and `save` are triggered: they
  * describe what happens when the feature takes effect, and the feature's own text says when that is (which hit,
  * which weapon, which action), so the trigger is not repeated on them. A further condition on the target, or a
  * choice within the feature, is still a condition and is carried (`appliesWhen`, `onlyCreatureTypes`, `selective`),
  * or the value is not typed. What a familiar or summoned creature does is not typed on the feature.
  */
+/**
+ * `usableWhen`: the official words of a precondition on using the thing at all. It gates the use and nothing after
+ * it. `appliesWhen` is for a condition a value holds under, for as long as it holds.
+ */
+const usableWhenSchema = z.string().min(1)
+
+const classSaveSchema = z.strictObject({
+  ...forcedSaveShape,
+  ...targetLimitShape,
+  onSuccess: saveOutcomeSchema,
+  selective: z.literal(true).optional(),
+  ...spanShape,
+  timing: z.string().min(1).optional(),
+})
+
+/**
+ * Kinds of typed effect for which the feature's text states something its typed fields do not hold, so an engine
+ * must read the text: a condition on a roll, a repeated save, a condition applied, a later or chosen resistance, a
+ * movement mode, a bonus, a use limit the shape cannot hold.
+ */
+export const classUntypedKinds = ["activation", "uses", "spend", "dice", "damage", "save", "conditions", "healing", "resistances", "speed", "bonus"] as const
+
+/** A part of a feature with its own typed values: `label` is the printed name or the printed words that name it. */
+const featurePartSchema = z.strictObject({
+  label: z.string().min(1),
+  activation: activationSchema.optional(),
+  spend: resourceCostSchema.optional(),
+  uses: usesSchema.optional(),
+  oncePerTurn: oncePerTurnSchema.optional(),
+  save: classSaveSchema.optional(),
+  damage: damageEffectSchema.optional(),
+  ...spanShape,
+  usableWhen: usableWhenSchema.optional(),
+})
+
 const mechanicsShape = {
+  /**
+   * `appliesWhen` and `unless` on the feature itself: the feature can be used, or works, only when (or not when) the
+   * official words say ("only if you haven’t moved during this turn").
+   */
+  ...spanShape,
+  /** The official words of a precondition on using the feature at all ("only if you haven’t moved during this turn"). It gates the use only. */
+  usableWhen: usableWhenSchema.optional(),
+  /** Parts of the feature whose values differ from the rest, each under its label (Wild Resurgence, Deflect Attacks' redirect). */
+  parts: z.array(featurePartSchema).min(1).optional(),
+  /** See `classUntypedKinds`. */
+  untyped: z.array(z.enum(classUntypedKinds)).min(1).optional(),
+  /** An item you must have to use it, by equipment id ("you must have a Poisoner’s Kit on your person"). */
+  requiresItem: idSchema.optional(),
   /**
    * The kinds of action it takes to use the feature, including "no-action" where using it takes none. An action, or
    * "no action required", that only ends or moves an effect already in place, or restores a use of this same feature,
@@ -249,7 +324,7 @@ const mechanicsShape = {
    * the target ("if it’s missing any of its Hit Points") is not typed.
    */
   dice: diceSchema.optional(),
-  /** The main roll is the die of a class table column, such as the Martial Arts die or Sneak Attack. */
+  /** The main roll is the die of a class table column: the Martial Arts die ("roll your Martial Arts die") or Sneak Attack. */
   diceFromColumn: z.enum(["martialArts", "sneakAttack"]).optional(),
   /** `dice` from the listed class levels on. */
   diceByLevel: z
@@ -263,26 +338,30 @@ const mechanicsShape = {
     .array(z.union([abilityIdSchema, z.literal("class-level")]))
     .min(1)
     .optional(),
-  /** Damage types the feature deals or lets you choose from. */
-  damageTypes: z.array(damageTypeIdSchema).min(1).optional(),
-  /** Creature types the damage is not dealt to, as Hurl Through Hell’s "if it isn’t a Fiend". */
-  damageNotTo: z.array(creatureTypeSchema).min(1).optional(),
-  /** The only creature types the damage is dealt to, as Sear Undead’s "Each Undead that fails its saving throw". */
-  damageOnlyTo: z.array(creatureTypeSchema).min(1).optional(),
+  /**
+   * The damage the feature deals: `dice` where the damage roll is the main roll, and `types`, the one type or those
+   * you choose from. A roll by level or from a table column stays in `diceByLevel` or `diceFromColumn`, with `dice`
+   * as the first step, and `damage` then holds only the types. A roll that is not damage stays in `dice` alone.
+   * `onlyCreatureTypes` and `notCreatureTypes` on it say who takes the damage (Sear Undead: only Undead; Hurl Through
+   * Hell: not a Fiend). The damage, like `dice` and `diceFromColumn`, is dealt only when the feature's own text says it
+   * takes effect: that text is part of the value. Sneak Attack's die needs Advantage or an ally within 5 feet, which
+   * no field holds, so an engine reads the feature's text to know when the roll is made.
+   */
+  damage: damageEffectSchema.optional(),
+  /**
+   * At most once a turn, in the form the text prints: "any-turn" for "Once per turn" (an Opportunity Attack on
+   * another creature's turn counts), "own-turn" for "Once on each of your turns" or wording tied to your own turn.
+   */
+  oncePerTurn: oncePerTurnSchema.optional(),
   /**
    * A saving throw the feature forces. Without `dc`, the DC is the one `saveDc` of another feature of the class sets.
    * `onlyCreatureTypes`: only creatures of these types make it. `selective`: you choose which creatures make it, where
    * the feature has no `area` to carry the choice (an `area` with `selective` covers the save made in it).
-   * `appliesWhen`: the official words of the condition under which it is forced.
+   * `targetMaxSize`: only targets of this size or smaller make it. `onSuccess`: what a success does.
+   * `appliesWhen`: the official words of the condition under which it is forced. `timing`: the official words of when
+   * it is made, where that is later than the feature's use (Quivering Palm: "When you end them").
    */
-  save: z
-    .strictObject({
-      ...forcedSaveShape,
-      onlyCreatureTypes: z.array(creatureTypeSchema).min(1).optional(),
-      selective: z.literal(true).optional(),
-      appliesWhen: appliesWhenSchema.optional(),
-    })
-    .optional(),
+  save: classSaveSchema.optional(),
   /** A saving throw you make yourself, with a DC that rises with each use until a rest resets it (Relentless Rage). */
   selfSave: z.strictObject({ ability: abilityIdSchema, dc: positiveSchema, increasePerUse: positiveSchema.optional(), resetOn: rechargeSchema.optional() }).optional(),
   /**
@@ -292,7 +371,7 @@ const mechanicsShape = {
    */
   selfDamage: z.strictObject({ from: z.literal("second-use"), dicePerSlotLevel: diceSchema, damageType: damageTypeIdSchema, increaseAfterSecondUse: diceSchema }).optional(),
   /** Added to your Hit Point maximum when you gain the feature, and more each time you gain another level in the class (Draconic Resilience). */
-  hitPointMaximum: z.strictObject({ increase: positiveSchema, perLaterClassLevel: positiveSchema }).optional(),
+  hitPointMaximum: hitPointMaximumSchema.optional(),
   /** The DC this feature sets for the saves its options and related features force. */
   saveDc: saveDcSchema.optional(),
   /** A pool of points: `perLevel` times the class level, restored by `recharge`. */
@@ -303,11 +382,17 @@ const mechanicsShape = {
    * The area the feature affects. `selective`: you choose which creatures in it are affected ("each creature of your
    * choice in"). `allies`: its benefit is for you and your allies only ("You and your allies in the aura").
    */
-  area: z.strictObject({ shape: z.enum(["emanation", "sphere", "cube"]), size: feetSchema, selective: z.literal(true).optional(), allies: z.literal(true).optional() }).optional(),
-  /** Attacks per Attack action, with any weapon. */
+  area: z.strictObject({ shape: z.enum(["emanation", "sphere", "cube"]), size: feetSchema, selective: z.literal(true).optional(), allies: z.literal(true).optional(), ...spanShape }).optional(),
+  /** Attacks per Attack action, with any weapon unless `attacksWith` limits them (Thirsting Blade: the pact weapon). */
   attacks: z.number().int().min(2).max(4).optional(),
-  /** Attacks per Attack action with your pact weapon only (Thirsting Blade, Devouring Blade). */
-  pactWeaponAttacks: z.number().int().min(2).max(3).optional(),
+  /**
+   * The attacks the feature's values hold for: its extra attacks, Critical Hit range, extra damage, damage types or
+   * save. Absent where the feature names no weapon or attack. The hit that triggers the feature is not repeated, but a
+   * limit on which weapon or attack it works with is this field.
+   */
+  attacksWith: z.array(attackKindSchema).min(1).optional(),
+  /** The printed name of the part of the feature its typed values belong to, where they describe one part only (Tireless's Temporary Hit Points). */
+  label: z.string().min(1).optional(),
   /** Spells always prepared, by spell id. */
   alwaysPrepared: z.array(idSchema).min(1).optional(),
   /**
@@ -315,18 +400,11 @@ const mechanicsShape = {
    * condition the slotless casting holds under. `uses` limits them where the text does.
    */
   freeCast: z
-    .array(z.strictObject({ spell: idSchema, selfOnly: z.literal(true).optional(), appliesWhen: appliesWhenSchema.optional() }))
+    .array(z.strictObject({ spell: idSchema, selfOnly: z.literal(true).optional(), ...spanShape, usableWhen: usableWhenSchema.optional() }))
     .min(1)
     .optional(),
   /** A feat granted: one by id, or one of a category. `orAnother` allows another feat you qualify for. */
-  feat: z
-    .strictObject({
-      id: idSchema.optional(),
-      category: z.enum(["origin", "fighting-style", "epic-boon"]).optional(),
-      recommended: idSchema.optional(),
-      orAnother: z.literal(true).optional(),
-    })
-    .optional(),
+  feat: featGrantSchema.optional(),
   savingThrowProficiencies: z.array(abilityIdSchema).min(1).optional(),
   /** Skill proficiencies gained. Without `from`, any skill. */
   skillProficiencies: z.strictObject({ count: positiveSchema, from: z.array(skillIdSchema).min(2).optional() }).optional(),
@@ -334,18 +412,27 @@ const mechanicsShape = {
   expertise: z.strictObject({ count: positiveSchema, from: z.array(skillIdSchema).min(2).optional() }).optional(),
   /** Kinds of weapons whose mastery properties you can use, where no table column counts them. */
   weaponMasteries: positiveSchema.optional(),
-  /** Feet added to Speed, and the condition it holds under. */
-  speedBonus: z.strictObject({ feet: feetSchema, while: whileSchema.optional() }).optional(),
+  /** Feet added to Speed, and the condition it holds under. Where the bonus grows with the class table, `feet` is its first value. */
+  speedBonus: speedBonusSchema.optional(),
+  /** `speedBonus.feet` from the listed class levels on, from the class table (Unarmored Movement). */
+  speedBonusByLevel: z
+    .array(z.strictObject({ level: levelSchema, feet: feetSchema }))
+    .min(1)
+    .optional(),
   abilityIncrease: z.strictObject({ abilities: z.array(abilityIdSchema).min(1), amount: positiveSchema, maximum: positiveSchema }).optional(),
-  /** Base Armor Class without armor: 10 plus the listed modifiers. */
+  /**
+   * Base Armor Class without armor: 10 plus the listed modifiers. `shield`: true where the text lets you use a Shield
+   * and keep it, false where wielding a Shield ends it. Absent where the text says nothing about Shields (Draconic
+   * Resilience): the general rules for a Shield then apply.
+   */
   armorClass: z.strictObject({ base: z.literal(10), abilities: z.array(abilityIdSchema).length(2), shield: z.boolean().optional() }).optional(),
-  /** The lowest d20 roll that scores a Critical Hit, on the attacks named: attack rolls with weapons and Unarmed Strikes (Champion). */
-  criticalHit: z.strictObject({ minRoll: z.number().int().min(18).max(19), attacks: z.literal("weapons-and-unarmed-strikes") }).optional(),
-  sense: z.strictObject({ type: z.enum(["blindsight", "truesight"]), range: feetSchema }).optional(),
+  /** The lowest d20 roll that scores a Critical Hit, on the attacks `attacksWith` names. */
+  criticalHit: z.strictObject({ minRoll: z.number().int().min(18).max(19) }).optional(),
+  senses: sensesSchema.optional(),
   /** Resistances, and the condition they hold under. */
-  resistances: z.strictObject({ damageTypes: z.array(damageTypeIdSchema).min(1), while: whileSchema.optional() }).optional(),
+  resistances: resistancesSchema.optional(),
   /** Condition immunities, the condition they hold under, and whether your allies share them. */
-  conditionImmunities: z.strictObject({ conditions: z.array(conditionIdSchema).min(1), while: whileSchema.optional(), allies: z.literal(true).optional() }).optional(),
+  conditionImmunities: z.strictObject({ conditions: z.array(conditionIdSchema).min(1), while: whileSchema.optional(), allies: z.literal(true).optional(), ...spanShape }).optional(),
 } as const
 
 /** A choice a feature offers: an effect, a style, an invocation, a Metamagic option. */
@@ -356,7 +443,8 @@ export const featureOptionSchema = z.strictObject({
   description: proseSchema,
   /** As printed after "Prerequisite:", with the class level and invocation it names. */
   prerequisite: z.strictObject({ text: z.string().min(1), level: levelSchema.optional(), invocation: idSchema.optional() }).optional(),
-  repeatable: z.literal(true).optional(),
+  /** The option can be taken more than once: `text` is its Repeatable paragraph, without the label. */
+  repeatable: repeatableSchema.optional(),
   ...mechanicsShape,
 })
 export type FeatureOption = z.infer<typeof featureOptionSchema>

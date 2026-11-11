@@ -307,7 +307,7 @@ function expectedHeader(official: Official) {
   for (let k = 0; k < tokens.length; k += 4) abilities[abilityWords[tokens[k]]] = { score: Number(tokens[k + 1]), mod: num(tokens[k + 2]), save: num(tokens[k + 3]) }
   const skills = f.has("Skills") ? Object.fromEntries(items(f.get("Skills") as string).map((item) => [toId(item.replace(/ [+−]\d+$/, "")), num(item.split(" ").at(-1) as string)])) : undefined
   // A defense printed with a qualifier goes to conditionalDefenses with its qualifying words, never to a plain list.
-  const conditional: { kind: string; value?: string; appliesWhen: string }[] = []
+  const conditional: { kind: string; value?: string; qualifier: string }[] = []
   const damageList = (key: string, kind: string) => {
     if (!f.has(key)) return undefined
     const list: string[] = []
@@ -315,8 +315,8 @@ function expectedHeader(official: Official) {
       if (damageWords.includes(item)) list.push(item.toLowerCase())
       else {
         const lead = /^(\w+) damage (.+)$/.exec(item)
-        if (lead && damageWords.includes(lead[1])) conditional.push({ kind, value: lead[1].toLowerCase(), appliesWhen: lead[2] })
-        else conditional.push({ kind, appliesWhen: item })
+        if (lead && damageWords.includes(lead[1])) conditional.push({ kind, value: lead[1].toLowerCase(), qualifier: lead[2] })
+        else conditional.push({ kind, qualifier: item })
       }
     }
     return list.length ? list : undefined
@@ -334,7 +334,7 @@ function expectedHeader(official: Official) {
         for (const item of list) {
           const m = /^(\w+)(?: \((.+)\))?$/.exec(item)
           if (!m || !conditionWords.includes(m[1])) throw new Error(`${official.name}: immunity ${item}`)
-          if (m[2]) conditional.push({ kind: "condition-immunity", value: m[1].toLowerCase(), appliesWhen: m[2] })
+          if (m[2]) conditional.push({ kind: "condition-immunity", value: m[1].toLowerCase(), qualifier: m[2] })
           else plain.push(m[1].toLowerCase())
         }
         if (plain.length) conditionImmunities = plain
@@ -508,7 +508,10 @@ function linkString(link: { on?: string; save?: number; label?: string; appliesW
 }
 
 /** A save's own spans, written as the hand tables write them: "L:First Roar", "W:If the target is a Humanoid", "-". */
-const saveString = (save: { label?: string; appliesWhen?: string }) => [save.label && `L:${save.label}`, save.appliesWhen && `W:${save.appliesWhen}`].filter(Boolean).join("|") || "-"
+const saveString = (save: { label?: string; appliesWhen?: string; oncePerTurn?: string; alsoSelf?: { appliesWhen: string } }) =>
+  [save.label && `L:${save.label}`, save.appliesWhen && `W:${save.appliesWhen}`, save.oncePerTurn && `O:${save.oncePerTurn}`, save.alsoSelf && `S:${save.alsoSelf.appliesWhen}`]
+    .filter(Boolean)
+    .join("|") || "-"
 
 /**
  * The plain link of a feature, or undefined when the feature needs a row in `links`. A feature is plain when it is
@@ -639,6 +642,8 @@ export default function verify(report: Report) {
     const usedNotGiven = new Set<string>()
     const usedLinks = new Set<string>()
     const usedProse = new Set<string>()
+    const usedByHand = new Set<string>()
+    let oncePerTurnCount = 0
     let prose = 0
     const proseFailures: string[] = []
     for (const block of blocks) {
@@ -715,12 +720,19 @@ export default function verify(report: Report) {
           )
           if (saveOrder.missing !== undefined || occurrences(body, "Saving Throw: DC") !== saves.length)
             failures.push(`${own}: saves ${JSON.stringify(saves.map((save) => [save.ability, save.dc]))} are not the printed saves`)
+          if (body.includes("must make this save") !== saves.some((save) => save.alsoSelf)) failures.push(`${own}: the monster's own save is typed in only one of text and data`)
           const dataLabels: Record<string, number> = {}
           const bump = (kind: string) => {
             dataLabels[kind] = (dataLabels[kind] ?? 0) + 1
           }
           for (const save of saves) {
             const dcAt = body.indexOf(`${abilityName[save.ability]} Saving Throw: DC ${save.dc}`)
+            const dcEnd = dcAt + `${abilityName[save.ability]} Saving Throw: DC ${save.dc}`.length
+            // How often a creature makes the save, as the parenthetical after the DC says it.
+            const parenthetical = body.startsWith(" (", dcEnd) ? body.slice(dcEnd + 2, body.indexOf(")", dcEnd)) : ""
+            const printedOnce = parenthetical.includes("once per turn") ? "any-turn" : parenthetical.includes("once on each of its turns") ? "own-turn" : undefined
+            if (printedOnce !== save.oncePerTurn) failures.push(`${own}: save oncePerTurn ${save.oncePerTurn}, the text prints "${parenthetical}"`)
+            if (printedOnce) oncePerTurnCount++
             let after = body.slice(dcAt).replace(/^[^,.(]*/, "")
             if (after.startsWith("(")) after = after.slice(after.indexOf(")") + 1)
             const printedTargets = after.startsWith(",") ? after.slice(1) : undefined
@@ -780,18 +792,22 @@ export default function verify(report: Report) {
           const positions = [...damage.map((part) => body.search(printedDamage(part))), ...given.map((mention) => mention.at)]
           const plain = positions.length ? plainLink(body, want.paragraphs.length, saves.length, positions) : undefined
           const gotLinks = {
-            s: saves.some((save) => save.label || save.appliesWhen) ? saves.map(saveString) : [],
+            s: saves.some((save) => save.label || save.appliesWhen || save.oncePerTurn || save.alsoSelf) ? saves.map(saveString) : [],
             d: damage.map(linkString),
             c: (item.conditions ?? []).map((entry) => `${entry.condition}=${linkString(entry)}`),
           }
           // Every printed span is one unbroken run of the feature's own words.
           const flat = item.text.replace(/\n/g, " ")
-          for (const span of [...saves, ...damage, ...(item.conditions ?? [])].flatMap((link) => [
-            link.label,
-            link.appliesWhen,
-            "unless" in link ? link.unless : undefined,
-            "timing" in link ? link.timing : undefined,
-          ]))
+          for (const span of [
+            item.spellcasting?.appliesWhen,
+            ...[...saves, ...damage, ...(item.conditions ?? [])].flatMap((link) => [
+              link.label,
+              link.appliesWhen,
+              "alsoSelf" in link ? link.alsoSelf?.appliesWhen : undefined,
+              "unless" in link ? link.unless : undefined,
+              "timing" in link ? link.timing : undefined,
+            ]),
+          ])
             if (span && !flat.includes(span)) failures.push(`${own}: "${span}" is not a span of the feature's text`)
           // An exception stands only on words that make one.
           if ([...damage, ...(item.conditions ?? [])].some((link) => link.unless) && !/therwise|unless|instead/.test(flat))
@@ -822,14 +838,19 @@ export default function verify(report: Report) {
                 : `${ar.size}-?foot${ar.shape === "sphere" ? "-?radius" : ""} ${shapeWord}`
             : ""
           const anyArea = /(?:in an?|fills a) \d+-?foot[-\w]*,?(?: \d+-?foot[-\w]*)? (?:Cone|Cube|Cylinder|Emanation|Line|Sphere)\b/.exec(body)
+          // A chosen area: "each creature of the azer’s choice in a 5-foot Emanation".
+          if (anyArea && !!ar?.selective !== /choice $/.test(body.slice(0, anyArea.index))) failures.push(`${own}: area selective is ${!!ar?.selective}, the text says otherwise`)
           if (!!ar !== !!anyArea || (ar && !new RegExp(`^(?:in an?|fills a) ${areaPrint}`).test(body.slice(anyArea?.index))))
             failures.push(`${own}: area ${JSON.stringify(ar)} is not the first printed area of effect`)
 
           // Spells: lists rendered back against their paragraphs, casts rendered back against the sentence.
           total++
           const casting = item.spellcasting
-          const listParagraphs = want.paragraphs.filter((paragraph) => /^(At Will|\d\/Day)/.test(paragraph))
-          const renderedLists = (casting?.lists ?? []).map(
+          const byHand = castingByHand[key]
+          if (byHand) usedByHand.add(key)
+          if (byHand && !same(casting, byHand)) failures.push(`${own}: spellcasting ${JSON.stringify(casting)}, the hand table reads ${JSON.stringify(byHand)}`)
+          const listParagraphs = byHand ? [] : want.paragraphs.filter((paragraph) => /^(At Will|\d\/Day)/.test(paragraph))
+          const renderedLists = (byHand ? [] : (casting?.lists ?? [])).map(
             (list) => squash(`${list.frequency === "at-will" ? "At Will" : `${list.frequency}/Day${list.each ? " Each" : ""}`}: `) + list.spells.map(printedSpell).join("")
           )
           if (!same(renderedLists, listParagraphs.map(squash))) failures.push(`${own}: spell lists ${JSON.stringify(casting?.lists)} do not print as the official lists`)
@@ -850,8 +871,21 @@ export default function verify(report: Report) {
             if (parts.some((part) => part && !sq.includes(part))) failures.push(`${own}: spellcasting ${JSON.stringify(casting)} is not printed`)
             if ((casting.saveDc !== undefined) !== body.includes("spell save DC") || (casting.attackBonus !== undefined) !== body.includes("to hit with spell attacks"))
               failures.push(`${own}: spellcasting DC or bonus present in only one of text and data`)
-            if (casting.sameAsSpellcasting && !(body.includes("same spellcasting ability as Spellcasting") || body.includes("Spellcasting to cast")))
-              failures.push(`${own}: sameAsSpellcasting with no such words`)
+            // Whose ability: the monster's Spellcasting action exactly when the text says so, else a named ability.
+            const viaSpellcasting = body.includes("same spellcasting ability as Spellcasting") || (body.includes("Spellcasting to cast") && !body.includes("as the spellcasting ability"))
+            if ((casting.sameAsSpellcasting === true) !== viaSpellcasting || (casting.ability === undefined) === !viaSpellcasting)
+              failures.push(`${own}: sameAsSpellcasting ${casting.sameAsSpellcasting} and ability ${casting.ability} disagree with the text`)
+            // Self-only spells, from "(self only)" or "casts X on itself", and the other limits from the hand tables.
+            for (const spell of [...(casting.lists ?? []).flatMap((list) => list.spells), ...(casting.spells ?? [])]) {
+              const name = spell.id.replace(/-/g, "[ -]")
+              const self = (spell.note ?? "").startsWith("self only") || new RegExp(`${name}(?: \\([^)]*\\))? on itself`, "i").test(body)
+              if (!!spell.selfOnly !== self) failures.push(`${own}: ${spell.id} selfOnly ${spell.selfOnly}, the text says ${self}`)
+              if (spell.appliesWhen !== spellLimits[key]) failures.push(`${own}: ${spell.id} appliesWhen "${spell.appliesWhen}", the hand table reads "${spellLimits[key]}"`)
+              if (spell.appliesWhen && !item.text.includes(spell.appliesWhen)) failures.push(`${own}: "${spell.appliesWhen}" is not a span of the feature's text`)
+            }
+            if (!byHand && casting.appliesWhen !== castingGates[key]) failures.push(`${own}: spellcasting appliesWhen "${casting.appliesWhen}", the hand table reads "${castingGates[key]}"`)
+            // Spells cast: a list, the named spells, or neither only where the hand table says the shape cannot hold them.
+            if (!casting.lists && !casting.spells && !byHand) failures.push(`${own}: spellcasting names no spells`)
             if (casting.spells) {
               const names = casting.spells.map(printedSpell)
               const printed = names.length === 1 ? names[0] : names.length === 2 ? `${names[0]}or${names[1]}` : `${names.slice(0, -1).join("")}or${names[names.length - 1]}`
@@ -872,7 +906,11 @@ export default function verify(report: Report) {
       if (!!legendary !== !!block.legendaryIntro) failures.push(`${monster.id}: legendary actions ${legendary ? "present" : "absent"} in the data only`)
       else if (legendary && block.legendaryIntro) {
         const printed = `Legendary Action Uses: ${legendary.uses.count}${legendary.uses.countInLair ? ` (${legendary.uses.countInLair} in Lair)` : ""}. `
-        if (!block.legendaryIntro.startsWith(printed) || !block.legendaryIntro.includes("regains all expended uses at the start of each of its turns"))
+        if (
+          !block.legendaryIntro.startsWith(printed) ||
+          !block.legendaryIntro.includes("regains all expended uses at the start of each of its turns") ||
+          legendary.uses.recharge !== "start-of-next-turn"
+        )
           failures.push(`${monster.id}: legendary uses ${JSON.stringify(legendary.uses)}, official "${block.legendaryIntro.slice(0, 40)}"`)
         if (squash(legendary.text) !== squash(block.legendaryIntro)) failures.push(`${monster.id}: legendary text differs from the official paragraph`)
         prose++
@@ -887,12 +925,17 @@ export default function verify(report: Report) {
       if (labelsInText[kind] !== labelsInData[kind]) failures.push(`the chapter prints ${labelsInText[kind]} "${kind}" outcomes, the data types ${labelsInData[kind]}`)
     }
     total++
+    // Every once-per-turn limit the chapter prints is a typed oncePerTurn.
+    total++
+    const onceInText = ["once per turn", "once on each of its turns", "once per round"].reduce((n, words) => n + occurrences(chapterText, words), 0)
+    if (onceInText !== oncePerTurnCount) failures.push(`the chapter prints ${onceInText} once-per-turn limits, the data types ${oncePerTurnCount}`)
     const nextTurnInText = occurrences(chapterText, "can’t take this action again until the start of its next turn")
     if (nextTurnInText !== nextTurnInData) failures.push(`the chapter prints the "next turn" sentence ${nextTurnInText} times, the data types ${nextTurnInData}`)
     // A hand table row that no feature uses is stale.
     for (const key of Object.keys(links)) if (!usedLinks.has(key)) failures.push(`links row ${key} matches no feature`)
     for (const key of Object.keys(namedNotGiven)) if (!usedNotGiven.has(key)) failures.push(`namedNotGiven row ${key} matches no feature`)
     for (const key of Object.keys(castingProse)) if (!usedProse.has(key)) failures.push(`castingProse row ${key} matches no feature`)
+    for (const key of Object.keys(castingByHand)) if (!usedByHand.has(key)) failures.push(`castingByHand row ${key} matches no feature`)
     for (const failure of failures) unsettled.add(failure.split(" ")[0].replace(/:$/, ""))
     report.check(
       "monsters",
@@ -1065,7 +1108,7 @@ export default function verify(report: Report) {
         "which also recharges when the monster finishes a Short or Long Rest",
       ],
       ["limited-usage", "afterRest", { count: 1, recharge: "short-or-long-rest" }, "the monster can use the stat block part once and must then finish a Short or Long Rest to use it again"],
-      ["legendary-actions", "timing", "after-another-creatures-turn", "only after another creature’s turn ends"],
+      ["legendary-actions", "takenAfter", "another-creatures-turn", "only after another creature’s turn ends"],
       ["legendary-actions", "oneAtATime", true, "Only one of these actions can be taken at a time"],
       ["legendary-actions", "usesPerAction", 1, "The monster expends one use whenever it takes a Legendary Action"],
       ["legendary-actions", "recharge", "start-of-next-turn", "it regains all expended uses at the start of each of its turns"],
@@ -1162,10 +1205,16 @@ const namedNotGiven: Record<string, string[]> = {
 }
 
 /**
- * The link of every save, damage roll and condition in features that are not plain, read by hand from the official
- * text, written as `linkString` and `saveString` write them.
+ * The link of every save, damage roll and condition in features that are not plain, written as `linkString` and
+ * `saveString` write them. Every row was reread from the official text, feature by feature, before it was compared
+ * with the data.
  */
 const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
+  "centaur-trooper/Trampling Charge": {
+    s: ["W:Each creature whose space the centaur enters is targeted once by the following effect"],
+    d: ["failure@0|W:Each creature whose space the centaur enters is targeted once by the following effect"],
+    c: ["prone=failure@0|W:Each creature whose space the centaur enters is targeted once by the following effect"],
+  },
   "aboleth/Tentacle": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
   "aboleth/Dominate Mind": { c: ["charmed=failure@0"] },
   "ankheg/Bite": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
@@ -1173,9 +1222,9 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "balor/Flame Whip": { d: ["hit", "hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
   "barbed-devil/Claws": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
   "barbed-devil/Hurl Flame": { d: ["hit"] },
-  "basilisk/Petrifying Gaze": { c: ["restrained=first-failure@0", "petrified=second-failure@0"] },
+  "basilisk/Petrifying Gaze": { s: ["S:If the basilisk sees its reflection in the Cone"], c: ["restrained=first-failure@0", "petrified=second-failure@0"] },
   "bearded-devil/Infernal Glaive": { s: ["W:If the target is a creature and doesn’t already have an infernal wound"], d: ["hit"] },
-  "behir/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0"] },
+  "behir/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0|W:until the grapple ends"] },
   "black-pudding/Corrosive Form": { d: ["-|W:A creature that hits the pudding with a melee attack roll"] },
   "black-pudding/Dissolving Pseudopod": { d: ["hit"] },
   "brass-dragon-wyrmling/Sleep Breath": { c: ["incapacitated=first-failure@0", "unconscious=second-failure@0"] },
@@ -1183,27 +1232,27 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "adult-brass-dragon/Sleep Breath": { c: ["incapacitated=first-failure@0", "unconscious=second-failure@0"] },
   "ancient-brass-dragon/Sleep Breath": { c: ["incapacitated=first-failure@0", "unconscious=second-failure@0"] },
   "bugbear-warrior/Grab": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
-  "chain-devil/Chain": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "chain-devil/Chain": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:until the grapple ends"] },
   "chain-devil/Conjure Infernal Chain": { d: ["failure@0"], c: ["restrained=failure@0"] },
   "chimera/Bite": { d: ["hit", "hit|W:if the chimera had Advantage on the attack roll|alt0"] },
   "chimera/Ram": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
   "chuul/Pincer": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
-  "chuul/Paralyzing Tentacles": { c: ["poisoned=failure@0", "paralyzed=failure@0"] },
-  "cloaker/Attach": { d: ["hit"], c: ["blinded=hit|W:If the target is a Large or smaller creature"] },
+  "chuul/Paralyzing Tentacles": { c: ["poisoned=failure@0", "paralyzed=failure@0|W:While Poisoned"] },
+  "cloaker/Attach": { d: ["hit"], c: ["blinded=hit|W:While the cloaker is attached"] },
   "cockatrice/Petrifying Bite": {
     s: ["W:If the target is a creature"],
     d: ["hit"],
     c: ["restrained=first-failure@0|W:If the target is a creature", "petrified=second-failure@0|W:If the target is a creature"],
   },
-  "couatl/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0"] },
+  "couatl/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0|W:until the grapple ends"] },
   "swarm-of-crawling-claws/Swarm of Grasping Hands": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
   "darkmantle/Crush": { d: ["hit"], c: ["blinded=hit|W:If the target is a Medium or smaller creature and the darkmantle had Advantage on the attack roll"] },
   "death-dog/Bite": { s: ["W:If the target is a creature"], d: ["hit"], c: ["poisoned=first-failure@0|W:If the target is a creature"] },
   "djinni/Storm Bolt": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
   "djinni/Create Whirlwind": {
-    s: ["W:Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind"],
-    d: ["failure@0|W:Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind|T:At the start of each of its turns"],
-    c: ["restrained=failure@0|W:Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind"],
+    s: ["W:Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind|O:any-turn"],
+    d: ["failure@0|W:While in the whirlwind|T:At the start of each of its turns"],
+    c: ["restrained=failure@0|W:While in the whirlwind"],
   },
   "dragon-turtle/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
   "earth-elemental/Rock Launch": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
@@ -1212,8 +1261,8 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "fire-elemental/Fire Aura": { d: ["-|T:At the end of each of the elemental’s turns"] },
   "fire-elemental/Fire Form": { d: ["-|W:The first time it enters a creature’s space on a turn"] },
   "fire-elemental/Burn": { d: ["hit"] },
-  "gelatinous-cube/Ooze Cube": { d: ["-|W:by succeeding on a DC 12 Strength (Athletics) check"] },
-  "gelatinous-cube/Engulf": { d: ["failure@0", "failure@0|T:at the start of each of the cube’s turns"], c: ["restrained=failure@0"] },
+  "gelatinous-cube/Ooze Cube": { d: ["-|W:a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check"] },
+  "gelatinous-cube/Engulf": { d: ["failure@0", "failure@0|W:An engulfed target|T:at the start of each of the cube’s turns"], c: ["restrained=failure@0|W:An engulfed target"] },
   "ghast/Claw": { s: ["W:If the target is a non-Undead creature"], d: ["hit"], c: ["paralyzed=failure@0|W:If the target is a non-Undead creature"] },
   "ghost/Possession": { c: ["incapacitated=failure@0"] },
   "ghoul/Claw": { s: ["W:If the target is a creature that isn’t an Undead or elf"], d: ["hit"], c: ["paralyzed=failure@0|W:If the target is a creature that isn’t an Undead or elf"] },
@@ -1230,17 +1279,17 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "gray-ooze/Pseudopod": { d: ["hit"] },
   "grick/Tentacles": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
   "griffon/Rend": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
-  "harpy/Luring Song": { c: ["charmed=failure@0", "incapacitated=failure@0"] },
+  "harpy/Luring Song": { c: ["charmed=failure@0", "incapacitated=failure@0|W:While Charmed"] },
   "hill-giant/Tree Club": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
   "horned-devil/Hurl Flame": { d: ["hit"] },
   "horned-devil/Infernal Tail": { d: ["failure@0"] },
   "ice-devil/Ice Spear": { d: ["hit", "hit"] },
-  "invisible-stalker/Vortex": { d: ["failure@0", "failure@0|T:at the start of each of the stalker’s turns"], c: ["grappled=failure@0"] },
-  "kraken/Tentacle": { d: ["hit"], c: ["grappled=hit", "restrained=hit"] },
-  "lamia/Corrupting Touch": { d: ["failure@0"], c: ["charmed=failure@0", "poisoned=failure@0"] },
+  "invisible-stalker/Vortex": { d: ["failure@0", "failure@0|W:Until the grapple ends|T:at the start of each of the stalker’s turns"], c: ["grappled=failure@0"] },
+  "kraken/Tentacle": { d: ["hit"], c: ["grappled=hit", "restrained=hit|W:until the grapple ends"] },
+  "lamia/Corrupting Touch": { d: ["failure@0"], c: ["charmed=failure@0|W:Until the curse ends", "poisoned=failure@0|W:Until the curse ends"] },
   "magmin/Touch": { d: ["hit"] },
-  "marilith/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0"] },
-  "medusa/Petrifying Gaze": { c: ["restrained=first-failure@0", "petrified=second-failure@0"] },
+  "marilith/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0|W:until the grapple ends"] },
+  "medusa/Petrifying Gaze": { s: ["S:If the medusa sees its reflection in the Cone"], c: ["restrained=first-failure@0", "petrified=second-failure@0"] },
   "merfolk-skirmisher/Ocean Spear": { d: ["hit", "hit"] },
   "merrow/Harpoon": { d: ["hit"] },
   "mimic/Adhesive": { c: ["grappled=-|W:A Huge or smaller creature adhered to the mimic"] },
@@ -1252,30 +1301,29 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   },
   "mummy/Rotting Fist": { d: ["hit", "hit"] },
   "mummy-lord/Rotting Fist": { d: ["hit", "hit"] },
-  "mummy-lord/Whirlwind of Sand": { c: ["blinded=-"] },
+  "mummy-lord/Whirlwind of Sand": { c: ["blinded=-|W:Each creature of its choice that it can see within 5 feet of its destination space"] },
   "nalfeshnee/Horror Nimbus": { d: ["failure@0"], c: ["frightened=failure@0"] },
   "otyugh/Bite": { s: ["W:Whenever the Poisoned target finishes a Long Rest"], d: ["hit"], c: ["poisoned=hit"] },
   "otyugh/Tentacle": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
-  "phase-spider/Bite": { d: ["hit", "hit"], c: ["poisoned=hit|W:If this damage reduces the target to 0 Hit Points", "paralyzed=hit|W:If this damage reduces the target to 0 Hit Points"] },
+  "phase-spider/Bite": { d: ["hit", "hit"], c: ["poisoned=hit|W:If this damage reduces the target to 0 Hit Points", "paralyzed=hit|W:While Poisoned"] },
   "pit-fiend/Fear Aura": { s: ["W:while it doesn’t have the Incapacitated condition"], c: ["frightened=failure@0|W:while it doesn’t have the Incapacitated condition"] },
-  "pit-fiend/Bite": {
-    s: ["W:If the target is a creature"],
-    d: ["hit", "failure@0|W:If the target is a creature|T:at the start of each of its turns"],
-    c: ["poisoned=failure@0|W:If the target is a creature"],
-  },
-  "purple-worm/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "pit-fiend/Bite": { s: ["W:If the target is a creature"], d: ["hit", "failure@0|W:While Poisoned|T:at the start of each of its turns"], c: ["poisoned=failure@0|W:If the target is a creature"] },
+  "purple-worm/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:until the grapple ends"] },
   "rakshasa/Cursed Touch": { d: ["hit", "hit"] },
   "remorhaz/Heat Aura": { d: ["-|T:At the end of each of the remorhaz’s turns"] },
-  "remorhaz/Bite": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
-  "roc/Talons": { d: ["hit"], c: ["grappled=hit|W:If the target is a Huge or smaller creature", "restrained=hit|W:If the target is a Huge or smaller creature"] },
-  "roper/Tentacle": { c: ["grappled=hit", "poisoned=hit"] },
+  "remorhaz/Bite": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:until the grapple ends"] },
+  "roc/Talons": { d: ["hit"], c: ["grappled=hit|W:If the target is a Huge or smaller creature", "restrained=hit|W:until the grapple ends"] },
+  "roper/Tentacle": { c: ["grappled=hit", "poisoned=hit|W:until the grapple ends"] },
   "salamander/Fire Aura": { d: ["-|T:At the end of each of the salamander’s turns"] },
   "salamander/Flame Spear": { d: ["hit", "hit"] },
-  "salamander/Constrict": { d: ["failure@0", "failure@0"], c: ["grappled=failure@0", "restrained=failure@0"] },
+  "salamander/Constrict": { d: ["failure@0", "failure@0"], c: ["grappled=failure@0", "restrained=failure@0|W:until the grapple ends"] },
   "satyr/Hooves": { d: ["hit"] },
   "shadow/Draining Swipe": { d: ["hit"] },
   "shambling-mound/Charged Tendril": { d: ["hit", "hit"] },
-  "shambling-mound/Engulf": { d: ["failure@0|T:at the start of each of its turns"], c: ["grappled=failure@0", "blinded=failure@0", "restrained=failure@0"] },
+  "shambling-mound/Engulf": {
+    d: ["failure@0|W:Until the grapple ends|T:at the start of each of its turns"],
+    c: ["grappled=failure@0", "blinded=failure@0|W:Until the grapple ends", "restrained=failure@0|W:Until the grapple ends"],
+  },
   "silver-dragon-wyrmling/Paralyzing Breath": { c: ["incapacitated=first-failure@0", "paralyzed=second-failure@0"] },
   "young-silver-dragon/Paralyzing Breath": { c: ["incapacitated=first-failure@0", "paralyzed=second-failure@0"] },
   "adult-silver-dragon/Paralyzing Breath": { c: ["incapacitated=first-failure@0", "paralyzed=second-failure@0"] },
@@ -1292,24 +1340,21 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
     d: ["failure@2|L:Third Roar"],
     c: ["frightened=failure@0|L:First Roar", "paralyzed=failure@1|L:Second Roar", "prone=failure@2|L:Third Roar"],
   },
-  "stirge/Proboscis": { d: ["hit", "hit|T:at the start of each of the stirge’s turns"] },
+  "stirge/Proboscis": { d: ["hit", "hit|W:While attached|T:at the start of each of the stirge’s turns"] },
   "stone-giant/Boulder": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
   "stone-giant/Deflect Missile": { s: ["W:if that damage is reduced to 0"], d: ["failure@0|W:if that damage is reduced to 0"] },
-  "tarrasque/Bite": { d: ["hit"], c: ["grappled=hit", "restrained=hit"] },
+  "tarrasque/Bite": { d: ["hit"], c: ["grappled=hit", "restrained=hit|W:Until the grapple ends"] },
   "tarrasque/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
   "tarrasque/World-Shaking Movement": { c: ["prone=-|W:if Medium or smaller"] },
   "tough-boss/Warhammer": { d: ["hit"] },
-  "vampire-familiar/Umbral Dagger": {
-    d: ["hit", "hit"],
-    c: ["poisoned=hit|W:If the target is reduced to 0 Hit Points by this attack", "paralyzed=hit|W:If the target is reduced to 0 Hit Points by this attack"],
-  },
+  "vampire-familiar/Umbral Dagger": { d: ["hit", "hit"], c: ["poisoned=hit|W:If the target is reduced to 0 Hit Points by this attack", "paralyzed=hit|W:While it has the Poisoned condition"] },
   "vampire-spawn/Claw": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
   "vampire/Grave Strike": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
-  "vrock/Spores": { d: ["failure@0|T:at the start of each of its turns"], c: ["poisoned=failure@0"] },
+  "vrock/Spores": { d: ["failure@0|W:While Poisoned|T:at the start of each of its turns"], c: ["poisoned=failure@0"] },
   "water-elemental/Slam": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
   "water-elemental/Whelm": {
-    d: ["failure@0", "failure@0|W:If the target is a Large or smaller creature|T:at the start of each of the elemental’s turns"],
-    c: ["grappled=failure@0|W:If the target is a Large or smaller creature", "restrained=failure@0|W:If the target is a Large or smaller creature"],
+    d: ["failure@0", "failure@0|W:Until the grapple ends|T:at the start of each of the elemental’s turns"],
+    c: ["grappled=failure@0|W:If the target is a Large or smaller creature", "restrained=failure@0|W:Until the grapple ends"],
   },
   "werebear/Bite": { s: ["W:If the target is a Humanoid"], d: ["hit"] },
   "wereboar/Gore": { s: ["W:If the target is a Humanoid"], d: ["hit"] },
@@ -1331,7 +1376,7 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
     c: ["prone=hit|W:If the target is a Medium or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit"],
   },
   "brown-bear/Claw": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
-  "crocodile/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature", "restrained=hit|W:If the target is a Medium or smaller creature"] },
+  "crocodile/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature", "restrained=hit|W:While Grappled"] },
   "dire-wolf/Bite": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
   "elephant/Gore": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature and the elephant moved 20+ feet straight toward it immediately before the hit"] },
   "elk/Ram": {
@@ -1344,23 +1389,26 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
     c: ["prone=hit|W:If the target is a Large or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit"],
   },
   "giant-crab/Claw": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
-  "giant-crocodile/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "giant-crocodile/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:While Grappled"] },
   "giant-crocodile/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
   "giant-elk/Ram": {
     d: ["hit", "hit", "hit|W:If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit"],
     c: ["prone=hit|W:If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit"],
   },
   "giant-frog/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
-  "giant-frog/Swallow": { d: ["-|T:At the end of the frog’s next turn"], c: ["blinded=-", "restrained=-", "prone=-|W:if the frog dies", "prone=-|W:If that damage doesn’t kill it"] },
+  "giant-frog/Swallow": {
+    d: ["-|W:While swallowed|T:At the end of the frog’s next turn"],
+    c: ["blinded=-|W:While swallowed", "restrained=-|W:While swallowed", "prone=-|W:if the frog dies", "prone=-|W:If that damage doesn’t kill it"],
+  },
   "giant-goat/Ram": {
     d: ["hit", "hit|W:If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit"],
     c: ["prone=hit|W:If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit"],
   },
-  "giant-octopus/Tentacles": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature", "restrained=hit|W:If the target is a Medium or smaller creature"] },
+  "giant-octopus/Tentacles": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature", "restrained=hit|W:While Grappled"] },
   "giant-scorpion/Claw": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
   "giant-seahorse/Ram": { d: ["hit", "hit|W:if the seahorse moved 20+ feet straight toward the target immediately before the hit|alt0"] },
   "giant-toad/Bite": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
-  "giant-toad/Swallow": { d: ["-|T:at the end of each of the toad’s turns"], c: ["blinded=-", "restrained=-", "prone=-|W:If the toad dies"] },
+  "giant-toad/Swallow": { d: ["-|W:While swallowed|T:at the end of each of the toad’s turns"], c: ["blinded=-|W:While swallowed", "restrained=-|W:While swallowed", "prone=-|W:If the toad dies"] },
   "goat/Ram": { d: ["hit", "hit|W:if the goat moved 20+ feet straight toward the target immediately before the hit|alt0"] },
   "mammoth/Gore": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature and the mammoth moved 20+ feet straight toward it immediately before the hit"] },
   "mastiff/Bite": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
@@ -1379,14 +1427,13 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
     d: ["hit", "hit|W:If the target is Huge or smaller and the triceratops moved 20+ feet straight toward it immediately before the hit"],
     c: ["prone=hit|W:If the target is Huge or smaller and the triceratops moved 20+ feet straight toward it immediately before the hit"],
   },
-  "tyrannosaurus-rex/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:If the target is a Large or smaller creature"] },
+  "tyrannosaurus-rex/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:While Grappled"] },
   "tyrannosaurus-rex/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
   "warhorse/Hooves": {
     d: ["hit", "hit|W:If the target is a Large or smaller creature and the horse moved 20+ feet straight toward it immediately before the hit"],
     c: ["prone=hit|W:If the target is a Large or smaller creature and the horse moved 20+ feet straight toward it immediately before the hit"],
   },
   "wolf/Bite": { d: ["hit"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
-  // The rows below were written from the official text for the gate audit rulings, not drafted from the data.
   "aboleth/Mucus Cloud": {
     s: ["W:While underwater"],
     d: ["failure@0|W:While the cursed creature is outside a body of water|U:moisture is applied to its skin before those minutes have passed|T:at the end of every 10 minutes"],
@@ -1398,10 +1445,10 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "azer-sentinel/Fire Aura": { d: ["-|U:the azer has the Incapacitated condition|T:At the end of each of the azer’s turns"] },
   "barbed-devil/Barbed Hide": { d: ["-|W:to any creature it is grappling or any creature grappling it|T:At the start of each of its turns"] },
   "behir/Swallow": {
-    d: ["failure@0|T:at the start of each of the behir’s turns"],
+    d: ["failure@0|W:While swallowed|T:at the start of each of the behir’s turns"],
     c: [
-      "blinded=failure@0",
-      "restrained=failure@0",
+      "blinded=failure@0|W:While swallowed",
+      "restrained=failure@0|W:While swallowed",
       "prone=failure@0|W:If the behir takes 30 damage or more on a single turn from the swallowed creature, the behir must succeed on a DC 14 Constitution saving throw at the end of that turn or regurgitate the creature",
       "prone=failure@0|W:If the behir dies",
     ],
@@ -1411,33 +1458,33 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "specter/Incorporeal Movement": { d: ["-|W:if it ends its turn inside an object|self"] },
   "will-o-wisp/Incorporeal Movement": { d: ["-|W:if it ends its turn inside an object|self"] },
   "wraith/Incorporeal Movement": { d: ["-|W:if it ends its turn inside an object|self"] },
-  "homunculus/Bite": { d: ["hit"], c: ["poisoned=failure@0", "poisoned=failure-by-margin@0", "unconscious=failure-by-margin@0"] },
+  "homunculus/Bite": { d: ["hit"], c: ["poisoned=failure@0", "poisoned=failure-by-margin@0", "unconscious=failure-by-margin@0|W:While Poisoned"] },
   "incubus/Nightmare": { d: ["failure@0|U:If the target has 20 Hit Points or fewer"], c: ["unconscious=failure@0|W:If the target has 20 Hit Points or fewer"] },
   "invisible-stalker/Invisibility": { c: ["invisible=-|self"] },
   "kraken/Swallow": {
-    d: ["failure@0", "failure@0|W:If the target is Large or smaller|T:at the start of each of its turns"],
+    d: ["failure@0", "failure@0|W:A swallowed creature|T:at the start of each of its turns"],
     c: [
-      "restrained=failure@0|W:If the target is Large or smaller",
+      "restrained=failure@0|W:A swallowed creature",
       "prone=failure@0|W:If the kraken takes 50 damage or more on a single turn from a creature inside it, the kraken must succeed on a DC 25 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures",
       "prone=failure@0|W:If the kraken dies",
     ],
   },
   "lich/Deathly Teleport": { d: ["-|W:each creature within 10 feet of the space it left"] },
-  "pseudodragon/Sting": { d: ["failure@0"], c: ["poisoned=failure@0", "unconscious=failure-by-margin@0"] },
+  "pseudodragon/Sting": { d: ["failure@0"], c: ["poisoned=failure@0", "unconscious=failure-by-margin@0|W:While Poisoned"] },
   "purple-worm/Swallow": {
-    d: ["failure@0|T:at the start of each of the worm’s turns"],
+    d: ["failure@0|W:A swallowed creature|T:at the start of each of the worm’s turns"],
     c: [
-      "blinded=failure@0",
-      "restrained=failure@0",
+      "blinded=failure@0|W:A swallowed creature",
+      "restrained=failure@0|W:A swallowed creature",
       "prone=failure@0|W:If the worm takes 30 damage or more on a single turn from a creature inside it, the worm must succeed on a DC 21 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures",
       "prone=failure@0|W:If the worm dies",
     ],
   },
   "remorhaz/Swallow": {
-    d: ["failure@0|T:at the start of each of the remorhaz’s turns", "failure@0|T:at the start of each of the remorhaz’s turns"],
+    d: ["failure@0|W:A swallowed creature|T:at the start of each of the remorhaz’s turns", "failure@0|W:A swallowed creature|T:at the start of each of the remorhaz’s turns"],
     c: [
-      "blinded=failure@0",
-      "restrained=failure@0",
+      "blinded=failure@0|W:A swallowed creature",
+      "restrained=failure@0|W:A swallowed creature",
       "prone=failure@0|W:If the remorhaz takes 30 damage or more on a single turn from a creature inside it, the remorhaz must succeed on a DC 15 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures",
       "prone=failure@0|W:If the remorhaz dies",
     ],
@@ -1445,10 +1492,10 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "sea-hag/Death Glare": { d: ["failure@0|U:If the target has 20 Hit Points or fewer"] },
   "solar/Slaying Bow": { d: ["failure@0|U:If the creature has 100 Hit Points or fewer", "failure@0|U:If the creature has 100 Hit Points or fewer"] },
   "tarrasque/Swallow": {
-    d: ["failure@0|T:at the start of each of the tarrasque’s turns"],
+    d: ["failure@0|W:A swallowed creature|T:at the start of each of the tarrasque’s turns"],
     c: [
-      "blinded=failure@0",
-      "restrained=failure@0",
+      "blinded=failure@0|W:A swallowed creature",
+      "restrained=failure@0|W:A swallowed creature",
       "prone=failure@0|W:If the tarrasque takes 60 damage or more on a single turn from a creature inside it, the tarrasque must succeed on a DC 20 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures",
       "prone=failure@0|W:If the tarrasque dies",
     ],
@@ -1463,11 +1510,26 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "will-o-wisp/Vanish": { c: ["invisible=-|self"] },
 }
 
+/** Castings the text makes available only in a place or state, written from the text. */
+const castingGates: Record<string, string> = { "night-hag/Nightmare Haunting": "While on the Ethereal Plane" }
+
+/** Spells the text limits to another creature, written from the text. */
+const spellLimits: Record<string, string> = { "unicorn/Unicorn’s Blessing": "The unicorn touches another creature with its horn" }
+
 /** Features that cast spells in a way the shape does not hold, and why. */
 const castingProse: Record<string, string> = {
-  "pit-fiend/Hellfire Spellcasting": "casts Fireball twice and may replace one with another spell",
-  "green-hag/Coven Magic": "only near two hag allies, and each spell once per Long Rest",
-  "night-hag/Coven Magic": "only near two hag allies, and each spell once per Long Rest",
-  "sea-hag/Coven Magic": "only near two hag allies, and each spell once per Long Rest",
   "shield-guardian/Spell Storing": "casts a spell stored by another caster, with that caster’s ability",
+}
+
+/**
+ * Casting features whose spells are not in "At Will:" or "N/Day:" paragraphs, written from the text. Coven Magic:
+ * each spell once per Long Rest, the shape of "1/Day Each". Hellfire Spellcasting: the ability and DC only, since
+ * "casts Fireball … twice … It can replace one Fireball with Hold Monster … or Wall of Fire" fits no list.
+ */
+const coven = ["augury", "find-familiar", "identify", "locate-object", "scrying", "unseen-servant"].map((id) => ({ id }))
+const castingByHand: Record<string, unknown> = {
+  "green-hag/Coven Magic": { ability: "int", saveDc: 11, lists: [{ frequency: 1, each: true, spells: coven }], appliesWhen: "While within 30 feet of at least two hag allies" },
+  "night-hag/Coven Magic": { ability: "int", saveDc: 14, lists: [{ frequency: 1, each: true, spells: coven }], appliesWhen: "While within 30 feet of at least two hag allies" },
+  "sea-hag/Coven Magic": { ability: "int", saveDc: 11, lists: [{ frequency: 1, each: true, spells: coven }], appliesWhen: "While within 30 feet of at least two hag allies" },
+  "pit-fiend/Hellfire Spellcasting": { ability: "cha", saveDc: 21 },
 }

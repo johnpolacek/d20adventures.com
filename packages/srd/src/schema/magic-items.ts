@@ -2,6 +2,8 @@ import { z } from "zod"
 import {
   abilityIdSchema,
   activationSchema,
+  bonusTargetSchema,
+  bonusTargets,
   classIdSchema,
   costSchema,
   damageRollShape,
@@ -13,8 +15,9 @@ import {
   isDiceOrAmount,
   proseSchema,
   rechargeSchema,
+  saveOutcomeSchema,
   skillIdSchema,
-  skillIds,
+  spanShape,
   usesCountSchema,
 } from "./common"
 import { spellStatBlockSchema } from "./spells"
@@ -54,25 +57,21 @@ export type Attunement = z.infer<typeof attunementSchema>
  * A bonus that holds whenever the item is worn, held or wielded, such as "+2 bonus to Armor Class". `to` is the id of
  * the stated target and `text` the sentence that states it.
  */
-export const bonusTargets = [
-  "armor-class",
-  "attack-rolls",
-  "damage-rolls",
-  "spell-attack-rolls",
-  "spell-save-dc",
-  "saving-throws",
-  "ability-checks",
-  "initiative",
-  "proficiency-bonus",
-  ...skillIds.map((skill) => `${skill}-checks` as const),
-] as const
-export const bonusTargetSchema = z.enum(bonusTargets)
+export { bonusTargets, bonusTargetSchema }
 
 export const bonusSchema = z.strictObject({ to: bonusTargetSchema, value: z.number().int(), text: proseSchema })
 export type Bonus = z.infer<typeof bonusSchema>
 
 /** A bonus that holds only under a condition or trigger the text states. `appliesWhen` is the official wording of it. */
-export const conditionalBonusSchema = z.strictObject({ to: bonusTargetSchema, value: z.number().int(), appliesWhen: proseSchema, text: proseSchema })
+export const conditionalBonusSchema = z.strictObject({
+  to: bonusTargetSchema,
+  value: z.number().int(),
+  ...spanShape,
+  appliesWhen: proseSchema,
+  /** The index in the item's `bonuses` of the plain bonus this one replaces, so the two are never added: the Mace of Smiting's +3 against a Construct replaces its +1. */
+  alternativeTo: z.number().int().nonnegative().optional(),
+  text: proseSchema,
+})
 export type ConditionalBonus = z.infer<typeof conditionalBonusSchema>
 
 export const chargesSchema = z.strictObject({
@@ -88,10 +87,25 @@ export type Charges = z.infer<typeof chargesSchema>
  * A saving throw the item's text forces, with the printed DC. Where an item forces several saves with different DCs,
  * `label` says in the official words what each is for.
  */
-export const savingThrowSchema = z.strictObject({ ...forcedSaveShape, dc: z.number().int().positive(), label: proseSchema.optional() })
+export const savingThrowSchema = z.strictObject({
+  ...forcedSaveShape,
+  dc: z.number().int().positive(),
+  /** What a success does: "none" (not affected, no damage), "half" (half damage), "other" (anything else the text states). */
+  onSuccess: saveOutcomeSchema,
+  label: proseSchema.optional(),
+  ...spanShape,
+  /**
+   * The charges the user expends to force the save ("expend 1 charge to release a wave of terror"). Where one expenditure
+   * brings about more than one typed effect (the Staff of Withering's extra 2d10 and its save, a Talisman's save and roll),
+   * each carries the same `charges` and the same `label`, and the cost is paid once for that label: an engine never adds
+   * up the charges of effects that share a label.
+   */
+  charges: z.number().int().positive().optional(),
+})
 export const checkSchema = z.strictObject({ ability: abilityIdSchema, skill: skillIdSchema.optional(), dc: z.number().int() })
 /**
- * Damage the text states, with `dice` or a fixed `amount`. `role` says whose damage it is: "extra" is added to a hit the
+ * Damage the text states, with `dice` or a fixed `amount`. `type` is a damage type, or "weapon" where the text deals "damage
+ * of the weapon’s type" (Giant Slayer) or "of the same type as the weapon’s normal damage" (Vicious Weapon). `role` says whose damage it is: "extra" is added to a hit the
  * item helps make, "base" replaces the usual damage of an attack, "effect" is dealt by a property of the item,
  * "to-user" is what the user takes, "to-item" is what the item takes. `appliesWhen`, in the official words, is what limits
  * the roll: a target, a natural 20, an alternative ("or an extra 2d8 ... if the target is a Giant"). Without it the roll
@@ -99,7 +113,34 @@ export const checkSchema = z.strictObject({ ability: abilityIdSchema, skill: ski
  */
 export const damageRoles = ["extra", "base", "effect", "to-user", "to-item"] as const
 export const damageSchema = z
-  .strictObject({ ...damageRollShape, type: damageTypeIdSchema, role: z.enum(damageRoles), appliesWhen: proseSchema.optional(), text: proseSchema })
+  .strictObject({
+    ...damageRollShape,
+    type: z.union([damageTypeIdSchema, z.literal("weapon")]),
+    role: z.enum(damageRoles),
+    /** The printed name of the property that deals the roll ("Geyser", "Lightning Strike"). */
+    label: proseSchema.optional(),
+    ...spanShape,
+    /**
+     * The index in this list of the roll this one replaces. It holds when its own `appliesWhen` holds and then stands in
+     * for that roll, which is not dealt as well. The roll it replaces keeps its own condition: Dwarven Thrower's 2d8
+     * "if the target is a Giant" replaces the 1d8 of a ranged hit.
+     */
+    alternativeTo: z.number().int().nonnegative().optional(),
+    /**
+     * The charges the user expends to deal the roll, or one step of it where `perCharge` says it repeats. Without it the roll
+     * costs nothing. Where the same expenditure also forces a save, or brings about another effect, each carries the same
+     * `charges` and the same `label`, and the cost is paid once for that label: an engine never adds up the charges of
+     * effects that share a label.
+     */
+    charges: z.number().int().positive().optional(),
+    /** The roll is dealt once for each `charges` spent, up to this many times: Staff of Striking's 1d6 for each charge, up to 3. */
+    perCharge: z.strictObject({ maxTimes: z.number().int().positive() }).optional(),
+    /** The ability whose modifier is added to the roll: "2d6 + 2 plus your Strength modifier". */
+    modifier: abilityIdSchema.optional(),
+    /** The attack bonus of the item's own attack roll, where the text gives one ("makes its attack roll with a +7 bonus"). */
+    attackBonus: z.number().int().optional(),
+    text: proseSchema,
+  })
   .refine(isDiceOrAmount, "give dice or an amount")
 
 /** A spell the item lets its user cast. `charges` is the cost per cast, `level` a fixed spell level the text names. A spell whose effect the item applies without casting is in `spellEffects` instead. */
@@ -115,6 +156,13 @@ export const itemSpellSchema = z.strictObject({
   /** Staff of Healing: "1 charge per spell level (maximum 4 for a level 4 spell)". */
   chargesPerSpellLevel: z.literal(true).optional(),
   saveDc: z.number().int().positive().optional(),
+  /** The user can target only themselves: "can target only yourself". */
+  selfOnly: z.literal(true).optional(),
+  /** The printed name of the one option of the spell the item gives (Enlarge or Reduce). */
+  label: proseSchema.optional(),
+  /** The attack bonus the text gives for the casting: "cast Scorching Ray with it (+5 to hit)". */
+  attackBonus: z.number().int().optional(),
+  ...spanShape,
 })
 export type ItemSpell = z.infer<typeof itemSpellSchema>
 
@@ -123,7 +171,34 @@ export type ItemSpell = z.infer<typeof itemSpellSchema>
  * "detonates as a level 3 Fireball (save DC 15)", or a spell the item casts on its own user. `level` and `saveDc` are
  * set where the text states them. No charges: the user does not cast it.
  */
-export const spellEffectSchema = z.strictObject({ id: idSchema, level: z.number().int().min(1).max(9).optional(), saveDc: z.number().int().positive().optional() })
+export const spellEffectSchema = z.strictObject({
+  id: idSchema,
+  level: z.number().int().min(1).max(9).optional(),
+  saveDc: z.number().int().positive().optional(),
+  label: proseSchema.optional(),
+  /** The index in this list of the effect it is an alternative to: a die or a choice picks one of the effects, so the others carry 0 (the Oil of Slipperiness's Grease replaces its Freedom of Movement). */
+  alternativeTo: z.number().int().nonnegative().optional(),
+  ...spanShape,
+})
+
+/**
+ * One limit on the use of the item or of one of its properties. `label` is the printed name of the property, or `spell`
+ * the spell it limits, where the item has several separately limited properties. `count` is how many uses, a number or
+ * dice ("1d3"); no count means one. `recharge` is what restores them; without it the limit never resets (the Chime of
+ * Opening's ten uses). `minutes` is a budget of time spent, not a count (Boots of Speed's 10 minutes). `appliesWhen`
+ * says when a use is spent ("On a successful check").
+ */
+export const useSchema = z.strictObject({
+  label: z.string().min(1).optional(),
+  spell: idSchema.optional(),
+  count: z.union([usesCountSchema, diceSchema]).optional(),
+  minutes: z.number().int().positive().optional(),
+  recharge: rechargeSchema.optional(),
+  ...spanShape,
+})
+
+/** The kinds of typed effect of an item or variant that the typed fields do not fully hold. An engine that finds a kind here reads the prose for it. */
+export const itemUntyped = ["damage", "saves", "spells", "bonuses", "charges", "uses", "conditions", "healing"] as const
 
 /** One named version of an item that has its own rarity. Fields beyond name and rarity are the values the official text gives that version. */
 export const variantSchema = z.strictObject({
@@ -150,6 +225,19 @@ export const variantSchema = z.strictObject({
 })
 export type MagicItemVariant = z.infer<typeof variantSchema>
 
+/** A spell a table row has the user cast. `level` and `saveDc` where the row or the item states them. */
+export const rowSpellSchema = z.strictObject({
+  id: idSchema,
+  level: z.number().int().min(1).max(9).optional(),
+  saveDc: z.number().int().positive().optional(),
+  /** The printed name of the one option of the spell the row gives (Enlarge or Reduce). */
+  label: proseSchema.optional(),
+  /** The row says "cast on yourself". */
+  selfOnly: z.literal(true).optional(),
+  /** The index in the row's list of the spell this one is an alternative to: where a die picks one of several spells, each after the first carries 0, so they never read as all cast. */
+  alternativeTo: z.number().int().nonnegative().optional(),
+})
+
 /** A table of the description. Rows keep the PDF's cell text. `dice` and `roll` are present on random tables. */
 export const itemTableSchema = z.strictObject({
   caption: z.string().min(1).optional(),
@@ -163,12 +251,12 @@ export const itemTableSchema = z.strictObject({
       z.strictObject({
         roll: z.strictObject({ min: z.number().int(), max: z.number().int() }).optional(),
         /** Spells the user of the item casts as this result: "You cast ...". A spell cast by a creature the result calls is in neither list. */
-        spells: z.array(idSchema).min(1).optional(),
+        spells: z.array(rowSpellSchema).min(1).optional(),
         /** Spells whose effect this result applies without the user casting them: "as if you had cast ...". */
         spellEffects: z.array(spellEffectSchema).min(1).optional(),
         /** Damage whose dice are printed only in this row, such as the lightning damage by number of spheres. */
         damage: z
-          .array(z.strictObject({ dice: diceSchema, type: damageTypeIdSchema, role: z.enum(damageRoles) }))
+          .array(z.strictObject({ dice: diceSchema, type: damageTypeIdSchema, role: z.enum(damageRoles), ...spanShape }))
           .min(1)
           .optional(),
         cells: z.array(z.string().min(1)).min(1),
@@ -195,10 +283,7 @@ export const magicItemSchema = z.strictObject({
    * uses it allows first where the text says ("three fuzzy objects"). No count means one use. Other waits (hours, days)
    * stay in the prose.
    */
-  uses: z
-    .array(z.strictObject({ count: usesCountSchema.optional(), recharge: rechargeSchema }))
-    .min(1)
-    .optional(),
+  uses: z.array(useSchema).min(1).optional(),
   bonuses: z.array(bonusSchema).min(1).optional(),
   conditionalBonuses: z.array(conditionalBonusSchema).min(1).optional(),
   charges: chargesSchema.optional(),
@@ -217,6 +302,8 @@ export const magicItemSchema = z.strictObject({
     .array(spellStatBlockSchema.extend({ actions: spellStatBlockSchema.shape.actions.optional() }))
     .min(1)
     .optional(),
+  /** The kinds of effect the text states that the typed lists do not hold. A kind not listed is complete. */
+  untyped: z.array(z.enum(itemUntyped)).min(1).optional(),
   description: proseSchema,
 })
 export type MagicItem = z.infer<typeof magicItemSchema>

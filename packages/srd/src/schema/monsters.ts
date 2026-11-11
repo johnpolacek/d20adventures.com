@@ -11,6 +11,7 @@ import {
   forcedSaveShape,
   idSchema,
   isDiceOrAmount,
+  oncePerTurnSchema,
   proseSchema,
   rechargeSchema,
   saveDcSchema,
@@ -44,10 +45,11 @@ export const outcomes = ["hit", "miss", "hit-or-miss", "failure", "first-failure
  * What an effect depends on. `on` is the outcome label it follows from and `save` the index in `saves` of the save
  * that outcome belongs to, even when the effect is stated sentences or a paragraph later. `label` is the printed name
  * of the option that holds it: "First Roar", "Running Water". A staged outcome has no label: `on` holds the stage.
+ * An effect that lasts only as long as something else does carries the printed words that say so as `appliesWhen`:
+ * "Until the grapple ends", "While attached", "While in the whirlwind", "A swallowed creature".
  * `appliesWhen` is the one unbroken span of official words that gates it, when one does: "If the target is a Large
- * or smaller creature", "if the swarm is Bloodied", "If the target is a Humanoid". An effect that only lasts while an
- * earlier effect of the same feature lasts ("Until the grapple ends", "While swallowed") carries the gate of that
- * earlier effect, if it had one. With no `appliesWhen`, the effect follows from its outcome without a further gate.
+ * or smaller creature", "if the swarm is Bloodied", "If the target is a Humanoid". With no `appliesWhen`, the effect
+ * follows from its outcome without a further gate.
  */
 const linkShape = {
   on: z.enum(outcomes).optional(),
@@ -113,6 +115,14 @@ export const saveSchema = z.strictObject({
   label: z.string().min(1).optional(),
   /** The official words that limit who makes the save: "If the target is a Humanoid", "While underwater". */
   appliesWhen: z.string().min(1).optional(),
+  /** "a creature makes this save only once per turn" is "any-turn": a creature makes the save at most once during each turn. */
+  oncePerTurn: oncePerTurnSchema.optional(),
+  /**
+   * The monster itself makes this save too, when the official words given hold: "If the basilisk sees its reflection
+   * in the Cone". An engine adds the monster to the creatures that make the save when those words hold, and applies
+   * every outcome linked to this save to the monster as it would to any target.
+   */
+  alsoSelf: z.strictObject({ appliesWhen: z.string().min(1) }).optional(),
   /** Who makes the save, as printed after the DC: "each creature in a 30-foot Cone". */
   targets: proseSchema.optional(),
   failure: proseSchema.optional(),
@@ -138,6 +148,8 @@ export const areaSchema = z.strictObject({
   size: feetSchema,
   width: feetSchema.optional(),
   height: feetSchema.optional(),
+  /** The monster chooses who in the area is affected: "each creature of the azer’s choice in a 5-foot Emanation". */
+  selective: z.literal(true).optional(),
 })
 export type Area = z.infer<typeof areaSchema>
 
@@ -152,6 +164,10 @@ export const spellListSchema = z.strictObject({
         id: idSchema,
         /** The printed parenthetical, such as "level 4 version" or "self only". */
         note: z.string().min(1).optional(),
+        /** The monster can cast it only on itself: "(self only)", "casts Invisibility on itself". */
+        selfOnly: z.literal(true).optional(),
+        /** The official words that limit whom it is cast on: "The unicorn touches another creature with its horn". */
+        appliesWhen: z.string().min(1).optional(),
       })
     )
     .min(1),
@@ -161,7 +177,8 @@ export const spellListSchema = z.strictObject({
  * Spells the feature casts. A Spellcasting action has `lists`. A feature that casts named spells itself ("casts
  * Command, … using Charisma as the spellcasting ability (spell save DC 17)") has `spells`, one of which it casts per
  * use. `sameAsSpellcasting` says the ability and DC are those of the monster’s Spellcasting action: "using the same
- * spellcasting ability as Spellcasting", "uses Spellcasting to cast Fear".
+ * spellcasting ability as Spellcasting", "uses Spellcasting to cast Fear". A feature whose spells the shape cannot hold
+ * (the Pit Fiend casts Fireball twice and may swap one) has its ability and DC with neither `lists` nor `spells`.
  */
 export const spellcastingSchema = z
   .strictObject({
@@ -171,9 +188,11 @@ export const spellcastingSchema = z
     attackBonus: bonus.optional(),
     lists: z.array(spellListSchema).min(1).optional(),
     spells: spellListSchema.shape.spells.optional(),
+    /** The official words of a condition the casting is available under: "While within 30 feet of at least two hag allies". */
+    appliesWhen: z.string().min(1).optional(),
   })
   .refine((casting) => (casting.ability === undefined) !== (casting.sameAsSpellcasting === undefined), "give the ability or sameAsSpellcasting")
-  .refine((casting) => (casting.lists === undefined) !== (casting.spells === undefined), "give lists or spells")
+  .refine((casting) => casting.lists === undefined || casting.spells === undefined, "give lists or spells, not both")
 export type Spellcasting = z.infer<typeof spellcastingSchema>
 
 /** A trait, action, bonus action, reaction or legendary action: the official text, with the numbers an engine needs. */
@@ -246,14 +265,14 @@ export const monsterSchema = z.strictObject({
   /**
    * Defenses the stat block qualifies, kept out of the plain lists above: "Piercing damage from weapons wielded by
    * creatures under the effect of a Bless spell", "Charmed (with Mind Blank)". `value` is absent when the text names
-   * no type ("Damage type chosen for the Draconic Origin trait below"). `appliesWhen` is the qualifying words as printed.
+   * no type ("Damage type chosen for the Draconic Origin trait below"). `qualifier` is the qualifying words as printed in the defense line.
    */
   conditionalDefenses: z
     .array(
       z.strictObject({
         kind: z.enum(["vulnerability", "resistance", "immunity", "condition-immunity"]),
         value: z.union([damageTypeIdSchema, conditionIdSchema]).optional(),
-        appliesWhen: z.string().min(1),
+        qualifier: z.string().min(1),
       })
     )
     .min(1)
@@ -325,13 +344,17 @@ export const monsterRuleSchema = z.union([
     ...entryShape,
     id: z.literal("legendary-actions"),
     /** Taken only immediately after another creature’s turn ends, one at a time. */
-    timing: z.literal("after-another-creatures-turn"),
+    takenAfter: z.literal("another-creatures-turn"),
     oneAtATime: z.literal(true),
     /** Each legendary action expends one use. */
     usesPerAction: z.literal(1),
     /** All expended uses return at the start of each of the monster’s turns. */
     recharge: z.literal("start-of-next-turn"),
-    /** Not while the monster has the Incapacitated condition or is otherwise unable to take actions. */
+    /**
+     * Conditions under which no Legendary Action can be taken: Incapacitated. Page 257 adds "or is otherwise unable to
+     * take actions", which names no condition and is not typed: an engine also blocks Legendary Actions whenever its
+     * own rules leave the monster unable to take actions.
+     */
     blockedBy: z.array(conditionIdSchema).min(1),
   }),
 ])

@@ -15,6 +15,7 @@ import {
   forcedSaveShape,
   idSchema,
   isDiceOrAmount,
+  oncePerTurnSchema,
   proseSchema,
   saveDcSchema,
   sizeSchema,
@@ -158,6 +159,12 @@ const checkSchema = z.strictObject({
 })
 
 const hazardSchema = z.strictObject({
+  /** Thrown items target a creature, or a creature or object. */
+  targets: z.enum(["creature", "creature-or-object"]).optional(),
+  /** What triggers the effect on a creature in the area or at the trap. */
+  triggers: z.array(z.enum(["enters-area-first-time-on-a-turn", "steps-on-pressure-plate", "enters-area", "ends-turn-in-area"])).optional(),
+  /** A creature takes the damage only once per turn. */
+  oncePerTurn: oncePerTurnSchema.optional(),
   /** Thrown at a target this far away. */
   range: feetSchema.optional(),
   /** Side of the square area covered, and how near the user it is placed. */
@@ -237,6 +244,8 @@ export const gearMechanics = {
   lengthFeet: feetSchema.optional(),
   heightFeet: feetSchema.optional(),
   sleeps: z.number().int().optional(),
+  /** The sizes of creature it sleeps. */
+  sleepsSizes: z.array(sizeSchema).optional(),
   uses: z.number().int().optional(),
   hazard: hazardSchema.optional(),
   /** Oil: dousing a space. */
@@ -244,13 +253,17 @@ export const gearMechanics = {
   checks: z.array(checkSchema).optional(),
   /**
    * Chain, Manacles and Rope bind only a creature that already has one of these conditions. The bound creature has
-   * `appliesCondition` only when `appliesWhen` holds: its legs are bound (Chain, Rope) or the Manacles are attached to a fixed chain or hook.
+   * `appliesCondition` only when `appliesIf` holds: its legs are bound (Chain, Rope) or the Manacles are attached to a fixed chain or hook.
    */
   binding: z
     .strictObject({
       requiresAnyCondition: z.array(conditionIdSchema),
       appliesCondition: conditionIdSchema,
-      appliesWhen: z.enum(["legs-bound", "attached-to-fixed-anchor"]),
+      appliesIf: z.enum(["legs-bound", "attached-to-fixed-anchor"]),
+      /** The text binds only an unwilling creature. */
+      targetUnwilling: z.literal(true),
+      /** While bound, the creature has Disadvantage on attack rolls (Manacles). */
+      boundAttackRolls: z.literal("disadvantage").optional(),
       sizes: z.array(sizeSchema).optional(),
     })
     .optional(),
@@ -265,7 +278,11 @@ export const gearMechanics = {
   dig: z.strictObject({ sideFeet: feetSchema, hours: z.number().int(), inSoilOrSimilar: z.literal(true) }).optional(),
   /** Tinderbox: lighting anything with exposed fuel takes `exposedFuel`, any other fire takes `otherFireMinutes`. */
   ignite: z.strictObject({ exposedFuel: activationSchema, otherFireMinutes: z.number().int() }).optional(),
-  /** Every kind of action the text names for using the item. Only the Utilize action and the Bonus Action are typed. */
+  /**
+   * Every kind of action the text names for using the item. Only the Utilize action and the Bonus Action are typed. An action
+   * that only ends, undoes or changes an effect already in place (undoing the Climber's Kit anchor, lowering a lantern hood) is
+   * not an activation.
+   */
   activation: activationSchema.optional(),
   /** Damage when the item is used as a Simple Melee weapon (Torch). */
   attackDamage: damageSchema.optional(),
@@ -279,13 +296,27 @@ export const gearMechanics = {
     .optional(),
   coating: z
     .strictObject({
+      /** One weapon, or up to this many pieces of ammunition. */
+      weapons: z.number().int(),
       ammunitionPieces: z.number().int(),
+      /** The coating ends when its damage is first dealt, if that comes before `potencyMinutes` pass. */
+      endsWhenDamageIsDealt: z.literal(true),
       triggerDamageTypes: z.array(damageTypeIdSchema),
       extraDamage: damageSchema,
       potencyMinutes: z.number().int(),
     })
     .optional(),
-  spellScroll: z.strictObject({ spellLevel: z.number().int().min(0).max(1), saveDc: z.number().int(), attackBonus: z.number().int() }).optional(),
+  spellScroll: z
+    .strictObject({
+      spellLevel: z.number().int().min(0).max(1),
+      saveDc: z.number().int(),
+      attackBonus: z.number().int(),
+      /** The scroll can be read only if the spell is on the reader's class spell list. */
+      requiresSpellOnUserClassList: z.literal(true),
+      /** The scroll disintegrates when the casting is completed: it works once. */
+      disintegratesAfterCasting: z.literal(true),
+    })
+    .optional(),
   /** The magic item this entry prices (Potion of Healing, Spell Scroll): an id in magic-items.json. */
   magicItem: idSchema.optional(),
   /** Saddles: Advantage text lives in `modifiers`. An Exotic Saddle is required for aquatic or flying mounts. */
@@ -428,7 +459,11 @@ export const weaponMasterySchema = z.strictObject({
   /** Push: feet the target moves, and the largest size it can be. */
   pushFeet: feetSchema.optional(),
   maxSize: sizeSchema.optional(),
-  /** Slow: the target's Speed drops by `feet` until the start of the user's next turn. */
+  /** What the mastery needs before it can be used: a hit, a hit that deals damage, a miss, or the extra attack of the Light property. */
+  trigger: z.enum(["hit", "hit-and-deal-damage", "miss", "light-extra-attack"]),
+  /** Cleave and Nick: "only once per turn". */
+  oncePerTurn: oncePerTurnSchema.optional(),
+  /** Slow: the target's Speed drops by `feet` until the start of the user's next turn, and by no more than `capAcrossHits` in all. */
   targetSpeedReduction: targetSpeedReductionSchema.optional(),
   /** Topple: the save, DC 8 plus the attack ability modifier and Proficiency Bonus. A failed save gives `failureCondition`. */
   save: z.strictObject({ ...forcedSaveShape, dc: saveDcSchema, failureCondition: conditionIdSchema }).optional(),
@@ -455,6 +490,8 @@ export const poisonSchema = z.strictObject({
         duration: durationSchema.optional(),
         /** Held only while the creature is Poisoned by this poison. */
         whilePoisoned: z.literal(true).optional(),
+        /** What ends this condition before the poison does: damage, or another creature spending an action to shake the creature awake. */
+        endsWhen: z.array(z.enum(["takes-damage", "another-creature-shakes-it-awake"])).optional(),
         /** Held only if the creature fails the save by this much or more. */
         failedByAtLeast: z.number().int().optional(),
       })
@@ -471,9 +508,10 @@ export const poisonSchema = z.strictObject({
   delayedUntilMidnight: z.literal(true).optional(),
   /** Any effect that ends the Poisoned condition neutralizes the poison (Midnight Tears). */
   neutralizedByEndingPoisoned: z.literal(true).optional(),
-  speedHalved: z.literal(true).optional(),
-  cannotKnowinglyLie: z.literal(true).optional(),
-  damageCannotBeHealed: z.literal(true).optional(),
+  /** Held only while the creature is Poisoned by this poison. */
+  speedHalvedWhilePoisoned: z.literal(true).optional(),
+  cannotKnowinglyLieWhilePoisoned: z.literal(true).optional(),
+  damageCannotBeHealedWhilePoisoned: z.literal(true).optional(),
   description: proseSchema,
 })
 export type Poison = z.infer<typeof poisonSchema>

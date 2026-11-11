@@ -10,6 +10,7 @@
     },
     "weight": 1,
     "hazard": {
+      "targets": "creature-or-object",
       "range": 20,
       "save": {
         "ability": "dex",
@@ -52,6 +53,7 @@
     },
     "weight": 1,
     "hazard": {
+      "targets": "creature-or-object",
       "range": 20,
       "save": {
         "ability": "dex",
@@ -289,6 +291,9 @@
     },
     "weight": 2,
     "hazard": {
+      "triggers": [
+        "enters-area-first-time-on-a-turn"
+      ],
       "areaSideFeet": 10,
       "withinFeet": 10,
       "save": {
@@ -368,6 +373,10 @@
     },
     "weight": 7,
     "sleeps": 1,
+    "sleepsSizes": [
+      "Small",
+      "Medium"
+    ],
     "modifiers": [
       {
         "effect": "automatic-success",
@@ -697,6 +706,9 @@
     },
     "weight": 2,
     "hazard": {
+      "triggers": [
+        "enters-area-first-time-on-a-turn"
+      ],
       "areaSideFeet": 5,
       "withinFeet": 5,
       "save": {
@@ -914,7 +926,8 @@
         "restrained"
       ],
       "appliesCondition": "restrained",
-      "appliesWhen": "legs-bound"
+      "appliesIf": "legs-bound",
+      "targetUnwilling": true
     },
     "activation": [
       "utilize-action"
@@ -1005,8 +1018,7 @@
     "weight": 12,
     "anchorFeet": 25,
     "activation": [
-      "utilize-action",
-      "bonus-action"
+      "utilize-action"
     ],
     "description": "A Climber’s Kit includes boot tips, gloves, pitons, and a harness. As a Utilize action, you can use the Climber’s Kit to anchor yourself; when you do, you can’t fall more than 25 feet from the anchor point, and you can’t move more than 25 feet from there without undoing the anchor as a Bonus Action."
   },
@@ -2107,6 +2119,7 @@
     },
     "weight": 1,
     "hazard": {
+      "targets": "creature",
       "range": 20,
       "save": {
         "ability": "dex",
@@ -2184,6 +2197,9 @@
     },
     "weight": 25,
     "hazard": {
+      "triggers": [
+        "steps-on-pressure-plate"
+      ],
       "save": {
         "ability": "dex",
         "dc": 13
@@ -2476,9 +2492,6 @@
       "fuel": "oil",
       "loweredHoodDimRadiusFeet": 5
     },
-    "activation": [
-      "bonus-action"
-    ],
     "description": "A Hooded Lantern burns Oil as fuel to cast Bright Light in a 30-foot radius and Dim Light for an additional 30 feet. As a Bonus Action, you can lower the hood, reducing the light to Dim Light in a 5-foot radius, or raise it again."
   },
   {
@@ -2814,7 +2827,9 @@
         "restrained"
       ],
       "appliesCondition": "restrained",
-      "appliesWhen": "attached-to-fixed-anchor",
+      "appliesIf": "attached-to-fixed-anchor",
+      "targetUnwilling": true,
+      "boundAttackRolls": "disadvantage",
       "sizes": [
         "Small",
         "Medium"
@@ -3143,6 +3158,7 @@
     },
     "weight": 3,
     "hazard": {
+      "targets": "creature",
       "range": 15,
       "save": {
         "ability": "dex",
@@ -3188,6 +3204,7 @@
     "weight": 1,
     "fuelHours": 6,
     "hazard": {
+      "targets": "creature-or-object",
       "range": 20,
       "save": {
         "ability": "dex",
@@ -3202,6 +3219,11 @@
       "dryAfterMinutes": 1
     },
     "spaceHazard": {
+      "triggers": [
+        "enters-area",
+        "ends-turn-in-area"
+      ],
+      "oncePerTurn": "any-turn",
       "areaSideFeet": 5,
       "withinFeet": 5,
       "damage": {
@@ -3448,7 +3470,9 @@
       "bonus-action"
     ],
     "coating": {
+      "weapons": 1,
       "ammunitionPieces": 3,
+      "endsWhenDamageIsDealt": true,
       "triggerDamageTypes": [
         "piercing",
         "slashing"
@@ -3861,7 +3885,8 @@
         "restrained"
       ],
       "appliesCondition": "restrained",
-      "appliesWhen": "legs-bound"
+      "appliesIf": "legs-bound",
+      "targetUnwilling": true
     },
     "activation": [
       "utilize-action"
@@ -4342,7 +4367,9 @@
     "spellScroll": {
       "spellLevel": 0,
       "saveDc": 13,
-      "attackBonus": 5
+      "attackBonus": 5,
+      "requiresSpellOnUserClassList": true,
+      "disintegratesAfterCasting": true
     },
     "magicItem": "spell-scroll",
     "description": "A Spell Scroll (Cantrip) or Spell Scroll (Level 1) is a magic item that bears the words of a cantrip or level 1 spell, respectively, determined by the scroll’s creator. If the spell is on your class’s spell list, you can read the scroll and cast the spell using its normal casting time and without providing any Material components.\nIf the spell requires a saving throw or an attack roll, the spell save DC is 13, and the attack bonus is +5. The scroll disintegrates when the casting is completed."
@@ -4359,7 +4386,9 @@
     "spellScroll": {
       "spellLevel": 1,
       "saveDc": 13,
-      "attackBonus": 5
+      "attackBonus": 5,
+      "requiresSpellOnUserClassList": true,
+      "disintegratesAfterCasting": true
     },
     "magicItem": "spell-scroll",
     "description": "A Spell Scroll (Cantrip) or Spell Scroll (Level 1) is a magic item that bears the words of a cantrip or level 1 spell, respectively, determined by the scroll’s creator. If the spell is on your class’s spell list, you can read the scroll and cast the spell using its normal casting time and without providing any Material components.\nIf the spell requires a saving throw or an attack roll, the spell save DC is 13, and the attack bonus is +5. The scroll disintegrates when the casting is completed."
@@ -4599,6 +4628,10 @@
     },
     "weight": 20,
     "sleeps": 2,
+    "sleepsSizes": [
+      "Small",
+      "Medium"
+    ],
     "description": "A Tent sleeps up to two Small or Medium creatures."
   },
   {

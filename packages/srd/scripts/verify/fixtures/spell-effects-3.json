@@ -21,16 +21,23 @@
         "perSlot": "1d10",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "4d10",
+        "types": ["psychic"],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 1
       }
     ],
     "notes": [
-      "A success on the first save also ends the spell.",
-      "On a failed first save the target has Disadvantage on ability checks and attack rolls for the duration.",
-      "On a failed repeated save the target takes the Psychic damage again. That is the same roll, not a new one."
+      "A success on the first save halves the damage and ends the spell.",
+      "On a failed first save the target has Disadvantage on ability checks and attack rolls for the duration. That is not a condition.",
+      "The second roll is the Psychic damage dealt again on a failed repeated save, linked to save 1. The higher-slot increase covers both."
     ]
   },
   "phantom-steed": {
-    "notes": ["The steed uses the Riding Horse stat block with a Speed of 100 feet."]
+    "notes": ["The steed uses the Riding Horse stat block with a Speed of 100 feet. The spell ends early if the steed takes any damage."]
   },
   "planar-ally": {},
   "planar-binding": {
@@ -75,20 +82,28 @@
         "onSuccess": "none"
       }
     ],
-    "notes": ["The target gains Temporary Hit Points equal to the Hit Points of the Beast form."]
+    "untyped": ["healing"],
+    "notes": ["The target gains Temporary Hit Points equal to the Hit Points of the Beast form. That amount has no dice or number, so healing is untyped."]
   },
   "power-word-heal": {
-    "notes": ["The target regains all its Hit Points.", "A Prone target can use its Reaction to stand up."]
+    "untyped": ["healing"],
+    "notes": [
+      "The target regains all its Hit Points, which the healing shape can't hold.",
+      "Charmed, Frightened, Paralyzed, Poisoned and Stunned are only ended, so they are not listed.",
+      "A Prone target can use its Reaction to stand up."
+    ]
   },
   "power-word-kill": {
     "damage": [
       {
         "dice": "12d12",
         "types": ["psychic"],
-        "appliesWhen": "if the target has more than 100 Hit Points"
+        "unless": "If the target has 100 Hit Points or fewer"
       }
     ],
-    "notes": ["A target with 100 Hit Points or fewer dies. The 12d12 Psychic damage applies only to a target with more than 100 Hit Points."]
+    "notes": [
+      "A target with 100 Hit Points or fewer dies. Otherwise it takes the 12d12 Psychic damage. The old appliesWhen \"if the target has more than 100 Hit Points\" is not printed, so the roll now carries unless."
+    ]
   },
   "power-word-stun": {
     "saves": [
@@ -96,7 +111,8 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "end-of-turn",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "appliesWhen": "If the target has 150 Hit Points or fewer"
       }
     ],
     "conditions": [
@@ -107,7 +123,7 @@
     ],
     "notes": [
       "Stunned applies only if the target has 150 Hit Points or fewer. Otherwise its Speed is 0 until the start of the caster's next turn.",
-      "There is no initial save. The save is made only by a Stunned target, at the end of each of its turns."
+      "There is no initial save. Only the Stunned target makes the repeated save, so it carries the same span as the condition."
     ]
   },
   "prayer-of-healing": {
@@ -115,7 +131,11 @@
       "dice": "2d8",
       "perSlot": "1d8"
     },
-    "notes": ["Up to five creatures also gain the benefits of a Short Rest."]
+    "notes": [
+      "Up to five creatures also gain the benefits of a Short Rest.",
+      "A creature can't be affected by this spell again until it finishes a Long Rest. No field holds that bar, so healing is untyped."
+    ],
+    "untyped": ["healing"]
   },
   "prestidigitation": {},
   "prismatic-spray": {
@@ -153,7 +173,8 @@
         "dc": "spell-save-dc",
         "when": "later",
         "onSuccess": "ends",
-        "label": "Violet"
+        "label": "Violet",
+        "timing": "at the start of your next turn"
       }
     ],
     "damage": [
@@ -192,7 +213,7 @@
     "notes": [
       "The text has one Dexterity save per creature. Its outcome depends on the ray rolled: half damage on a success for Red, Orange, Yellow, Green and Blue (save 0), no effect on a success for Indigo and Violet.",
       "Indigo: three successes on the repeated Constitution save end Restrained. Three failures give Petrified until freed by an effect like Greater Restoration.",
-      "Violet: the Wisdom save is at the start of the caster's next turn. On a failure Blinded ends and the creature teleports to another plane.",
+      "Violet: the Wisdom save is at the start of the caster's next turn. A success ends Blinded. A failure ends Blinded and the creature teleports to another plane.",
       "A roll of 8 means the target is struck by two rays, rerolling any 8."
     ]
   },
@@ -201,84 +222,169 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "another creature that can see the wall",
+        "unless": "You and creatures you designate when you cast the spell",
         "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Red",
         "when": "initial",
-        "onSuccess": "half",
-        "label": "Red, Orange, Yellow, Green, Blue"
+        "onSuccess": "half"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Orange",
         "when": "initial",
-        "onSuccess": "none",
-        "label": "Indigo"
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Yellow",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Green",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Blue",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Indigo",
+        "when": "initial",
+        "onSuccess": "none"
       },
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Indigo",
         "when": "end-of-turn",
-        "onSuccess": "other",
-        "label": "Indigo"
+        "onSuccess": "other"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Violet",
         "when": "initial",
-        "onSuccess": "none",
-        "label": "Violet"
+        "onSuccess": "none"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Violet",
         "when": "later",
         "onSuccess": "ends",
-        "label": "Violet"
+        "timing": "at the start of your next turn"
       }
     ],
     "damage": [
       {
         "dice": "12d6",
-        "types": ["fire", "acid", "lightning", "poison", "cold"],
-        "table": "Prismatic Layers",
+        "types": ["fire"],
         "trigger": "failed-save",
         "save": 1,
-        "label": "Red, Orange, Yellow, Green, Blue"
+        "label": "Red",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
+      },
+      {
+        "dice": "12d6",
+        "types": ["acid"],
+        "trigger": "failed-save",
+        "save": 2,
+        "label": "Orange",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
+      },
+      {
+        "dice": "12d6",
+        "types": ["lightning"],
+        "trigger": "failed-save",
+        "save": 3,
+        "label": "Yellow",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
+      },
+      {
+        "dice": "12d6",
+        "types": ["poison"],
+        "trigger": "failed-save",
+        "save": 4,
+        "label": "Green",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
+      },
+      {
+        "dice": "12d6",
+        "types": ["cold"],
+        "trigger": "failed-save",
+        "save": 5,
+        "label": "Blue",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
       }
     ],
     "conditions": [
       {
         "condition": "blinded",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "moves within 20 feet of it or starts its turn there"
       },
       {
         "condition": "restrained",
         "trigger": "failed-save",
-        "save": 2,
-        "label": "Indigo"
+        "save": 6,
+        "label": "Indigo",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
       },
       {
         "condition": "petrified",
         "label": "Indigo",
-        "appliesWhen": "If it fails three times"
+        "appliesWhen": "If it fails three times",
+        "unless": "You and creatures you designate when you cast the spell"
       },
       {
         "condition": "blinded",
         "trigger": "failed-save",
-        "save": 4,
-        "label": "Violet"
+        "save": 8,
+        "label": "Violet",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
       }
     ],
     "notes": [
-      "The Constitution save (save 0) is for a creature that can see the wall and moves within 20 feet of it or starts its turn there. Blinded lasts 1 minute.",
-      "Each layer a creature passes through forces its own Dexterity save. Save 1 covers the Red to Blue layers, each dealing 12d6 of its layer's type.",
+      "The caster and creatures designated at casting pass through and near the wall without harm, carried as unless on every save, roll and condition.",
+      "The Constitution save (save 0) is for a creature that can see the wall. The moment it is made is the timing of the Blinded it gives. Blinded lasts 1 minute.",
+      "A creature passing through goes through every layer in turn, each with its own Dexterity save and its own row's effect.",
       "Indigo: three successes on the repeated Constitution save end Restrained. Three failures give Petrified until freed by an effect like Greater Restoration.",
-      "Violet: the Wisdom save is at the start of the caster's next turn. On a failure Blinded ends and the creature teleports to another plane.",
+      "Violet: the Wisdom save is at the start of the caster's next turn. A success ends Blinded. A failure ends Blinded and the creature teleports to another plane.",
       "The wall is up to 90 feet long and 30 feet high, or a globe up to 30 feet in diameter, so it has no area of one shape and size.",
       "The wall has AC 10 and each layer is destroyed by the means its row gives."
     ]
@@ -297,7 +403,8 @@
           "11": "3d8",
           "17": "4d8"
         },
-        "trigger": "hit"
+        "trigger": "hit",
+        "timing": "Until the spell ends, you can take a Magic action to hurl fire at a creature or an object within 60 feet of you"
       }
     ]
   },
@@ -322,7 +429,10 @@
     }
   },
   "raise-dead": {
-    "notes": ["The creature returns to life with 1 Hit Point.", "The target takes a -4 penalty to D20 Tests, reduced by 1 each time it finishes a Long Rest."]
+    "healing": {
+      "amount": 1
+    },
+    "notes": ["The creature returns to life with 1 Hit Point, typed as healing of 1.", "The target takes a -4 penalty to D20 Tests, reduced by 1 each time it finishes a Long Rest."]
   },
   "ray-of-enfeeblement": {
     "saves": [
@@ -381,7 +491,11 @@
     "healing": {
       "dice": "4d8 + 15"
     },
-    "notes": ["For the duration the target regains 1 Hit Point at the start of each of its turns, and severed body parts regrow after 2 minutes."]
+    "untyped": ["healing"],
+    "notes": [
+      "The typed healing is the 4d8 + 15 on the touch. For the duration the target also regains 1 Hit Point at the start of each of its turns, which the single healing value can't hold.",
+      "Severed body parts regrow after 2 minutes."
+    ]
   },
   "reincarnate": {
     "notes": ["The new body's species is rolled on the spell's 1d10 table."]
@@ -393,18 +507,24 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "An unwilling creature"
       }
     ],
-    "notes": ["Only an unwilling creature makes the save."]
+    "notes": ["Only an unwilling creature makes the save. A willing creature is enclosed with no save."]
   },
   "resistance": {
-    "damageReduction": "1d4",
-    "notes": ["Applies to one damage type chosen from the listed types, and only once per turn."]
+    "damageReduction": {
+      "dice": "1d4",
+      "oncePerTurn": "any-turn",
+      "timing": "When the creature takes damage of the chosen type before the spell ends"
+    },
+    "notes": ["Applies to one damage type chosen from the listed types, once per turn."]
   },
   "resurrection": {
+    "untyped": ["healing"],
     "notes": [
-      "The creature returns to life with all its Hit Points.",
+      "The creature returns to life with all its Hit Points, which the healing shape can't hold.",
       "The target takes a -4 penalty to D20 Tests, reduced by 1 each time it finishes a Long Rest.",
       "Reviving a creature dead 365 days or longer leaves the caster unable to cast spells and with Disadvantage on D20 Tests until a Long Rest."
     ]
@@ -423,10 +543,17 @@
       "size": 50,
       "height": 100
     },
-    "notes": ["The save is optional: a creature can make it to grab a fixed object it can reach and avoid the fall upward."]
+    "untyped": ["damage"],
+    "notes": [
+      "The save is optional: a creature can make it to grab a fixed object it can reach and avoid the fall upward.",
+      "Creatures that strike a ceiling or anchored object do so as in a downward fall, and fall when the spell ends. The text gives no dice, so damage is untyped."
+    ]
   },
   "revivify": {
-    "notes": ["The creature revives with 1 Hit Point."]
+    "healing": {
+      "amount": 1
+    },
+    "notes": ["The creature revives with 1 Hit Point, typed as healing of 1."]
   },
   "rope-trick": {},
   "sacred-flame": {
@@ -459,10 +586,11 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "any creature who targets the warded creature with an attack roll or a damaging spell"
       }
     ],
-    "notes": ["The save is made by any creature that targets the warded creature with an attack roll or a damaging spell. On a failure it must choose a new target or lose the attack or spell."]
+    "notes": ["The save falls on an attacker, not on the warded creature. On a failure it must choose a new target or lose the attack or spell."]
   },
   "scorching-ray": {
     "attack": "ranged",
@@ -488,9 +616,10 @@
       }
     ],
     "notes": [
-      "The save is modified by the caster's knowledge of and connection to the target, per the spell's two tables (+5 to -10).",
-      "On a success the caster can't use the spell on that target again for 24 hours."
-    ]
+      "The save is modified by the caster's knowledge of and connection to the target, per the spell's two tables (+5 to -10). The save is typed. Its modifier is not.",
+      "On a success the caster can't use the spell on that target again for 24 hours. No field holds that bar, so saves is untyped."
+    ],
+    "untyped": ["saves"]
   },
   "searing-smite": {
     "saves": [
@@ -511,10 +640,11 @@
       {
         "dice": "1d6",
         "types": ["fire"],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "timing": "At the start of each of its turns"
       }
     ],
-    "notes": ["The second roll is dealt at the start of each of the target's turns, before it makes the save."]
+    "notes": ["The second roll is dealt at the start of each of the target's turns until the spell ends, before it makes the save. It has no save of its own."]
   },
   "secret-chest": {},
   "see-invisibility": {},
@@ -524,7 +654,8 @@
         "ability": "cha",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "An unwilling target"
       }
     ],
     "notes": ["Only an unwilling target makes the save."]
@@ -543,7 +674,8 @@
     "notes": ["Unconscious applies only if the target is a creature."]
   },
   "shapechange": {
-    "notes": ["The caster gains Temporary Hit Points equal to the Hit Points of the first form."]
+    "untyped": ["healing"],
+    "notes": ["The caster gains Temporary Hit Points equal to the Hit Points of the first form. That amount has no dice or number."]
   },
   "shatter": {
     "saves": [
@@ -581,8 +713,9 @@
     }
   },
   "shillelagh": {
+    "untyped": ["damage"],
     "notes": [
-      "Melee attacks with the weapon use the spellcasting ability, and its damage die becomes a d8 (d10, d12 and 2d6 at levels 5, 11 and 17).",
+      "Melee attacks with the weapon use the spellcasting ability, and its damage die becomes a d8 (d10, d12 and 2d6 at levels 5, 11 and 17). The damage shape can't hold a changed weapon die.",
       "Damage can be Force or the weapon's normal type."
     ]
   },
@@ -627,20 +760,25 @@
     "notes": ["Creatures have Deafened while entirely inside the Sphere.", "Creatures and objects entirely inside have Immunity to Thunder damage."]
   },
   "silent-image": {},
-  "simulacrum": {},
+  "simulacrum": {
+    "untyped": ["healing"],
+    "notes": ["The simulacrum's Hit Points can be restored only by repair during a Long Rest, at 100 GP of components per Hit Point. No amount is typed."]
+  },
   "sleep": {
     "saves": [
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "unless": "Creatures that don’t sleep, such as elves, or that have Immunity to the Exhaustion condition"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "other"
+        "onSuccess": "none",
+        "unless": "Creatures that don’t sleep, such as elves, or that have Immunity to the Exhaustion condition"
       }
     ],
     "conditions": [
@@ -652,7 +790,8 @@
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "until the end of its next turn, at which point it must repeat the save"
       }
     ],
     "area": {
@@ -661,7 +800,7 @@
       "selective": true
     },
     "notes": [
-      "The second save is made once, at the end of the target's next turn. The text does not state the outcome of a success.",
+      "The second save is made once, at the end of the target's next turn. A failure gives Unconscious. A success leaves the target without it, so onSuccess is none.",
       "Creatures that don't sleep or have Immunity to Exhaustion automatically succeed."
     ]
   },
@@ -678,7 +817,8 @@
       {
         "condition": "prone",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "When a creature enters the Cylinder for the first time on a turn or starts its turn there"
       }
     ],
     "area": {
@@ -724,7 +864,8 @@
         "trigger": "hit"
       }
     ],
-    "notes": ["Each 8 rolled on a d8 lets the caster roll another d8 and add it, up to a number of extra d8s equal to the spellcasting ability modifier."]
+    "untyped": ["damage"],
+    "notes": ["Each 8 rolled on a d8 lets the caster roll another d8 and add it, up to a number of extra d8s equal to the spellcasting ability modifier. The typed roll can't hold this."]
   },
   "spare-the-dying": {},
   "speak-with-animals": {},
@@ -743,14 +884,15 @@
       {
         "dice": "2d4",
         "types": ["piercing"],
-        "appliesWhen": "When a creature moves into or within the area"
+        "timing": "When a creature moves into or within the area",
+        "appliesWhen": "for every 5 feet it travels"
       }
     ],
     "area": {
       "shape": "sphere",
       "size": 20
     },
-    "notes": ["The damage is dealt for every 5 feet a creature travels into or within the area."]
+    "notes": ["The 2d4 is dealt for every 5 feet a creature travels into or within the area. The multiplier is appliesWhen, beside the timing."]
   },
   "spirit-guardians": {
     "saves": [
@@ -758,7 +900,9 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn",
+        "unless": "you can designate creatures to be unaffected by it"
       }
     ],
     "damage": [
@@ -767,7 +911,9 @@
         "types": ["radiant", "necrotic"],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "whenever the Emanation enters a creature’s space and whenever a creature enters the Emanation or ends its turn there",
+        "unless": "you can designate creatures to be unaffected by it"
       }
     ],
     "area": {
@@ -777,7 +923,7 @@
     },
     "notes": [
       "The damage is Radiant if the caster is good or neutral and Necrotic if evil.",
-      "Non-designated creatures have their Speed halved in the Emanation. A creature makes the save only once per turn."
+      "Non-designated creatures have their Speed halved in the Emanation. No save is made at casting. A creature makes the save only once per turn."
     ]
   },
   "spiritual-weapon": {
@@ -789,6 +935,14 @@
         "modifier": true,
         "perSlot": "1d8",
         "trigger": "hit"
+      },
+      {
+        "dice": "1d8",
+        "types": ["force"],
+        "modifier": true,
+        "perSlot": "1d8",
+        "trigger": "hit",
+        "timing": "As a Bonus Action on your later turns"
       }
     ]
   },
@@ -821,7 +975,8 @@
       {
         "condition": "poisoned",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Each creature that starts its turn in the Sphere"
       }
     ],
     "area": {
@@ -845,7 +1000,8 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
-        "when": "initial",
+        "appliesWhen": "six different creatures or objects beneath it",
+        "when": "later",
         "onSuccess": "half",
         "label": "Turn 3"
       }
@@ -860,24 +1016,28 @@
       {
         "dice": "4d6",
         "types": ["acid"],
-        "label": "Turn 2"
+        "label": "Turn 2",
+        "timing": "At the start of each of your later turns"
       },
       {
         "dice": "10d6",
         "types": ["lightning"],
         "trigger": "failed-save",
         "save": 1,
-        "label": "Turn 3"
+        "label": "Turn 3",
+        "timing": "At the start of each of your later turns"
       },
       {
         "dice": "2d6",
         "types": ["bludgeoning"],
-        "label": "Turn 4"
+        "label": "Turn 4",
+        "timing": "At the start of each of your later turns"
       },
       {
         "dice": "1d6",
         "types": ["cold"],
-        "label": "Turns 5–10"
+        "label": "Turns 5–10",
+        "timing": "At the start of each of your later turns"
       }
     ],
     "conditions": [
@@ -889,7 +1049,8 @@
     ],
     "notes": [
       "The cloud spreads to a radius of 300 feet with no shape named, so no area is typed.",
-      "The rolls fall at the start of the caster's later turns: 4d6 Acid on turn 2, 10d6 Lightning on six targets on turn 3, 2d6 Bludgeoning on turn 4, 1d6 Cold on each of turns 5 to 10."
+      "Each later roll falls at the start of the caster's turn its label names: 4d6 Acid on turn 2, 10d6 Lightning on six targets on turn 3, 2d6 Bludgeoning on turn 4, 1d6 Cold on each of turns 5 to 10.",
+      "The turn 3 save is at a time set by the caster's turns, so it is later, not initial."
     ]
   },
   "suggestion": {
@@ -898,7 +1059,8 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "that can hear and understand you"
       }
     ],
     "conditions": [
@@ -910,7 +1072,9 @@
     ]
   },
   "summon-dragon": {
-    "notes": ["The Draconic Spirit stat block's attacks, saves and damage belong to the creature, not the spell, and are left out."]
+    "notes": [
+      "The Draconic Spirit stat block's attacks, saves and damage belong to the creature, not the spell, and are left out. Its Shared Resistances trait gives the caster Resistance to one damage type."
+    ]
   },
   "sunbeam": {
     "saves": [
@@ -927,6 +1091,13 @@
         "types": ["radiant"],
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "6d8",
+        "types": ["radiant"],
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "Until the spell ends, you can take a Magic action to create a new Line of radiance"
       }
     ],
     "conditions": [
@@ -934,6 +1105,12 @@
         "condition": "blinded",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "Until the spell ends, you can take a Magic action to create a new Line of radiance"
       }
     ],
     "area": {
@@ -941,7 +1118,7 @@
       "size": 60,
       "width": 5
     },
-    "notes": ["The caster can take a Magic action to create a new Line until the spell ends."]
+    "notes": ["Each new Line repeats the save, the damage and Blinded. The repeat roll carries the timing."]
   },
   "sunburst": {
     "saves": [
@@ -985,42 +1162,48 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "half",
-        "label": "Death"
+        "label": "Death",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none",
-        "label": "Discord"
+        "label": "Discord",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none",
-        "label": "Fear"
+        "label": "Fear",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none",
-        "label": "Pain"
+        "label": "Pain",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none",
-        "label": "Sleep"
+        "label": "Sleep",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none",
-        "label": "Stunning"
+        "label": "Stunning",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -1029,7 +1212,16 @@
         "types": ["necrotic"],
         "trigger": "failed-save",
         "save": 0,
-        "label": "Death"
+        "label": "Death",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "dice": "10d10",
+        "types": ["necrotic"],
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Death",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       }
     ],
     "conditions": [
@@ -1037,25 +1229,57 @@
         "condition": "frightened",
         "trigger": "failed-save",
         "save": 2,
-        "label": "Fear"
+        "label": "Fear",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "condition": "frightened",
+        "trigger": "failed-save",
+        "save": 2,
+        "label": "Fear",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "incapacitated",
         "trigger": "failed-save",
         "save": 3,
-        "label": "Pain"
+        "label": "Pain",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 3,
+        "label": "Pain",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "unconscious",
         "trigger": "failed-save",
         "save": 4,
-        "label": "Sleep"
+        "label": "Sleep",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "condition": "unconscious",
+        "trigger": "failed-save",
+        "save": 4,
+        "label": "Sleep",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
         "save": 5,
-        "label": "Stunning"
+        "label": "Stunning",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "condition": "stunned",
+        "trigger": "failed-save",
+        "save": 5,
+        "label": "Stunning",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       }
     ],
     "area": {
@@ -1064,8 +1288,10 @@
     },
     "notes": [
       "The glyph bears one effect chosen when it is inscribed.",
-      "Discord: on a failed save the target argues for 1 minute and has Disadvantage on attack rolls and ability checks.",
-      "Unconscious from Sleep ends if the creature takes damage or is shaken awake."
+      "Discord: on a failed save the target argues for 1 minute and has Disadvantage on attack rolls and ability checks. That is not a condition.",
+      "Unconscious from Sleep ends if the creature takes damage or is shaken awake.",
+      "The caster can refine the trigger so that only creatures of certain types activate the glyph. The area is not typed selective, since that limits who triggers it and the text does not let the caster spare creatures in the Sphere.",
+      "A creature is targeted only once per turn, typed as oncePerTurn on every save. The Death roll is dealt when the glyph activates and again on a creature that enters the Sphere or ends its turn there."
     ]
   },
   "telekinesis": {
@@ -1075,14 +1301,17 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none",
-        "label": "Creature"
+        "label": "Creature",
+        "appliesWhen": "a Huge or smaller creature"
       },
       {
         "ability": "str",
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none",
-        "label": "Object"
+        "label": "Object",
+        "appliesWhen": "If the object is worn or carried by a creature",
+        "timing": "When you cast the spell and as a Magic action on your later turns before the spell ends"
       }
     ],
     "conditions": [
@@ -1090,11 +1319,12 @@
         "condition": "restrained",
         "trigger": "failed-save",
         "save": 0,
-        "label": "Creature"
+        "label": "Creature",
+        "timing": "When you cast the spell and as a Magic action on your later turns before the spell ends"
       }
     ],
     "notes": [
-      "The Object save is made only by a creature wearing or carrying the object.",
+      "The Object save is made only by a creature wearing or carrying the object, not by the object the spell targets.",
       "The official text breaks off mid-sentence at \"such as manipulating a simple tool,\" before Telepathic Bond."
     ]
   },
@@ -1105,10 +1335,13 @@
         "dice": "3d10",
         "types": ["force"],
         "target": "caster-and-companions",
-        "appliesWhen": "Mishap"
+        "label": "Mishap"
       }
     ],
-    "notes": ["The 3d10 Force damage is dealt only on a Mishap result on the Teleportation Outcome table, to each teleporting creature or the target object, and again on each further Mishap."]
+    "notes": [
+      "The 3d10 Force damage is dealt only on a Mishap result on the Teleportation Outcome table, to each teleporting creature or the target object, and again on each further Mishap.",
+      "\"Mishap\" is the printed name of the outcome, so it is a label, not appliesWhen."
+    ]
   },
   "teleportation-circle": {},
   "thaumaturgy": {},
@@ -1154,16 +1387,20 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "An unwilling creature"
       }
     ],
-    "notes": ["Only an unwilling creature makes the save.", "A creature turned into another creature gains Temporary Hit Points equal to the Hit Points of the new form."]
+    "untyped": ["healing"],
+    "notes": ["Only an unwilling creature makes the save.", "Under Creature into Creature the target gains Temporary Hit Points equal to the Hit Points of the new form. That amount has no dice or number."]
   },
   "true-resurrection": {
-    "notes": ["The creature is revived with all its Hit Points."]
+    "untyped": ["healing"],
+    "notes": ["The creature is revived with all its Hit Points, which the healing shape can't hold."]
   },
   "true-seeing": {},
   "true-strike": {
+    "untyped": ["damage"],
     "notes": [
       "The attack uses the spellcasting ability for attack and damage rolls, and its damage can be Radiant or the weapon's normal type.",
       "The attack deals extra Radiant damage of 1d6, 2d6 and 3d6 at levels 5, 11 and 17. With no base roll the damage shape can't hold this."
@@ -1181,7 +1418,8 @@
         "ability": "str",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "Any Huge or smaller creature inside the wall or whose space the wall enters when it moves"
       }
     ],
     "damage": [
@@ -1195,12 +1433,14 @@
         "dice": "5d10",
         "types": ["bludgeoning"],
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "At the start of each of your turns after the wall appears"
       }
     ],
+    "untyped": ["damage"],
     "notes": [
-      "Save 1 is made at the start of each of the caster's turns by a Huge or smaller creature inside the wall or whose space the wall enters as it moves. A creature takes this damage only once per round.",
-      "The 5d10 is reduced by 1d10 on each later round as the wall loses 50 feet of height.",
+      "The 5d10 is dealt at the start of each of the caster's turns. A creature takes this damage only once per round, a limit no field holds.",
+      "The 5d10 is reduced by 1d10 on each later round as the wall loses 50 feet of height. The typed roll holds only the first round, so damage is untyped.",
       "The wall is up to 300 feet long, 300 feet high and 50 feet thick, with no area shape."
     ]
   },
@@ -1213,9 +1453,20 @@
         "types": ["necrotic"],
         "perSlot": "1d6",
         "trigger": "hit"
+      },
+      {
+        "dice": "3d6",
+        "types": ["necrotic"],
+        "perSlot": "1d6",
+        "trigger": "hit",
+        "timing": "Until the spell ends, you can make the attack again on each of your turns as a Magic action"
       }
     ],
-    "notes": ["On a hit the caster regains Hit Points equal to half the Necrotic damage dealt."]
+    "untyped": ["healing"],
+    "notes": [
+      "On a hit the caster regains Hit Points equal to half the Necrotic damage dealt. That amount has no dice or number.",
+      "The caster can repeat the attack as a Magic action on later turns. The repeat roll carries the timing."
+    ]
   },
   "vicious-mockery": {
     "saves": [
@@ -1262,7 +1513,9 @@
         "dice": "5d4",
         "types": ["acid"],
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "onSuccess": "none",
+        "timing": "at the end of its next turn"
       }
     ],
     "area": {
@@ -1292,11 +1545,17 @@
         "dice": "5d8",
         "types": ["fire"],
         "perSlot": "1d8",
-        "appliesWhen": "each creature that ends its turn within 10 feet of that side or inside the wall"
+        "timing": "each creature that ends its turn within 10 feet of that side or inside the wall"
+      },
+      {
+        "dice": "5d8",
+        "types": ["fire"],
+        "perSlot": "1d8",
+        "timing": "when it enters the wall for the first time on a turn"
       }
     ],
     "notes": [
-      "The second roll, with no save, falls on a creature that ends its turn within 10 feet of the chosen side or inside the wall. A creature takes the same damage when it enters the wall for the first time on a turn.",
+      "The second roll, with no save, falls on a creature that ends its turn within 10 feet of the chosen side or inside the wall. The third is the same damage dealt when a creature enters the wall for the first time on a turn. The text's \"or ends its turn there\" restates the second roll, so it is not typed twice. The other side deals no damage.",
       "The wall is up to 60 feet long or a ring up to 20 feet in diameter, so no area is typed."
     ]
   },
@@ -1307,7 +1566,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "appliesWhen": "If the wall cuts through a creature’s space when it appears"
       },
       {
         "ability": "con",
@@ -1329,11 +1589,12 @@
         "types": ["cold"],
         "perSlot": "1d6",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "A creature moving through the sheet of frigid air for the first time on a turn"
       }
     ],
     "notes": [
-      "The Dexterity save is made by a creature whose space the wall cuts through when it appears. The Constitution save is made by a creature moving through the sheet of frigid air for the first time on a turn.",
+      "The Dexterity save is made by a creature whose space the wall cuts through when it appears. The Constitution save is made by a creature moving through the sheet of frigid air for the first time on a turn, the timing of its roll.",
       "Each 10-foot section has AC 12 and 30 Hit Points, Immunity to Cold, Poison and Psychic damage, and Vulnerability to Fire damage."
     ]
   },
@@ -1343,7 +1604,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "other"
+        "onSuccess": "other",
+        "appliesWhen": "If a creature would be surrounded on all sides by the wall (or the wall and another solid surface)"
       }
     ],
     "notes": [
@@ -1363,7 +1625,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -1379,23 +1642,30 @@
         "types": ["slashing"],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "the first time a creature enters a space in the wall on a turn or ends its turn there"
       }
     ],
     "notes": [
-      "Save 0 is made when the wall appears. Save 1 is made the first time a creature enters a space in the wall on a turn or ends its turn there, once per turn.",
+      "Save 0 is made when the wall appears. Save 1 is made the first time a creature enters a space in the wall on a turn or ends its turn there, the timing of its roll, only once per turn.",
       "Moving through the wall costs 4 feet of movement per foot."
     ]
   },
   "warding-bond": {
     "ac": {
-      "bonus": 1
+      "bonus": 1,
+      "appliesWhen": "While the target is within 60 feet of you"
     },
     "rollModifier": {
       "amount": 1,
-      "rolls": ["saving-throw"]
+      "to": ["saving-throws"],
+      "appliesWhen": "While the target is within 60 feet of you"
     },
-    "notes": ["The bonuses and Resistance to all damage apply while the target is within 60 feet of the caster.", "Each time the target takes damage, the caster takes the same amount."]
+    "untyped": ["damage"],
+    "notes": [
+      "The bonuses and Resistance to all damage apply while the target is within 60 feet of the caster.",
+      "Each time the target takes damage, the caster takes the same amount. No dice or number is printed, so damage is untyped."
+    ]
   },
   "water-breathing": {},
   "water-walk": {},
@@ -1412,14 +1682,15 @@
       {
         "dice": "2d4",
         "types": ["fire"],
-        "appliesWhen": "any creature that starts its turn in the fire"
+        "timing": "any creature that starts its turn in the fire"
       }
     ],
     "conditions": [
       {
         "condition": "restrained",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "The first time a creature enters the webs on a turn or starts its turn there"
       }
     ],
     "area": {
@@ -1427,7 +1698,7 @@
       "size": 20
     },
     "notes": [
-      "The 2d4 Fire damage falls only when webs exposed to fire burn, on a creature that starts its turn in the fire.",
+      "The 2d4 Fire damage falls only when webs exposed to fire burn, on a creature that starts its turn in the fire. The span moved from appliesWhen to timing.",
       "A Restrained creature can take an action to make a Strength (Athletics) check against the spell save DC to end it."
     ]
   },
@@ -1474,15 +1745,9 @@
     }
   },
   "wind-walk": {
-    "conditions": [
-      {
-        "condition": "stunned",
-        "appliesWhen": "Reverting takes 1 minute, during which"
-      }
-    ],
-    "casterConditions": ["stunned"],
+    "untyped": ["conditions"],
     "notes": [
-      "A target, the caster included, has the Stunned condition only during the 1 minute it takes to revert to its normal form.",
+      "A target, the caster included, has the Stunned condition during the 1 minute it takes to revert to its normal form. No unbroken span states that condition (\"Reverting takes 1 minute, during which\"), so Stunned is left out and conditions is untyped.",
       "In cloud form a target has a Fly Speed of 300 feet, Immunity to the Prone condition, and Resistance to Bludgeoning, Piercing and Slashing damage."
     ]
   },
@@ -1505,6 +1770,7 @@
     ]
   },
   "wish": {
+    "untyped": ["damage", "healing"],
     "notes": [
       "After a use other than duplicating a spell, the caster takes 1d10 Necrotic damage per level of each spell cast until a Long Rest. The damage shape can't hold dice per level of another spell.",
       "The stress also sets the caster's Strength to 3 for 2d4 days and has a 33 percent chance of losing Wish forever.",

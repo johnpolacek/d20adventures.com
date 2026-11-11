@@ -584,7 +584,8 @@ export default function verify(report: Report) {
       // A table of dice by a count (the lightning spheres) names its row as "Column value".
       const rowLabel = (part: string) => (item.tables ?? []).some((table) => !table.dice && table.rows.some((row) => part === `${table.columns[0]} ${row.cells[0]}`))
       for (const part of (damage.appliesWhen ?? "").split("; ")) if (part && !rowLabel(part) && !inOfficial(part)) structureFailures.push(`${item.name}: "${part}" is not official wording`)
-      if (!damage.text.includes(damage.type.charAt(0).toUpperCase() + damage.type.slice(1))) structureFailures.push(`${item.name}: damage sentence does not name ${damage.type}`)
+      if (damage.type !== "weapon" && !damage.text.includes(damage.type.charAt(0).toUpperCase() + damage.type.slice(1)))
+        structureFailures.push(`${item.name}: damage sentence does not name ${damage.type}`)
       if (
         !damage.text.includes(String(damage.dice ?? damage.amount).replace("-", "−")) &&
         !damage.text.includes(String(damage.dice ?? damage.amount)) &&
@@ -607,7 +608,7 @@ export default function verify(report: Report) {
     }
     for (const table of item.tables ?? []) {
       for (const row of table.rows) {
-        for (const id of [...(row.spells ?? []), ...(row.spellEffects ?? []).map((effect) => effect.id)]) {
+        for (const id of [...(row.spells ?? []).map((spell) => spell.id), ...(row.spellEffects ?? []).map((effect) => effect.id)]) {
           structureTotal++
           if (!officialSpellIds.has(id)) structureFailures.push(`${item.name}: row spell ${id} is not a spell of the official text`)
           else if (!spellMentions(row.cells.join(" ")).some((mention) => mention.id === id)) structureFailures.push(`${item.name}: row spell ${officialSpellIds.get(id)} is not named in its row`)
@@ -642,6 +643,30 @@ export default function verify(report: Report) {
       }
     }
   }
+  // Effects that one expenditure of charges brings about each carry the same `charges` and the same `label`, so a cost is paid once
+  // for a label. These items spend one charge on a save and a roll together (hand-kept from the text).
+  const sharedCharges: Record<string, string[]> = {
+    "staff-of-withering": ["deal an extra 2d10 Necrotic damage"],
+    "talisman-of-pure-good": ["Pure Rebuke"],
+    "talisman-of-ultimate-evil": ["Ultimate End"],
+    "ring-of-shooting-stars": ["Shooting Stars"],
+  }
+  for (const item of items) {
+    const wanted = sharedCharges[item.id] ?? []
+    structureTotal += wanted.length
+    for (const label of wanted) {
+      const saves = (item.saves ?? []).filter((save) => save.label === label)
+      const rolls = (item.damage ?? []).filter((roll) => roll.label === label)
+      if (saves.length !== 1 || rolls.length !== 1 || !saves[0].charges || saves[0].charges !== rolls[0].charges)
+        structureFailures.push(
+          `${item.name}: "${label}" save and roll must share one label and the same charges, the data has ${JSON.stringify(saves.map((save) => save.charges))} and ${JSON.stringify(rolls.map((roll) => roll.charges))}`
+        )
+    }
+    // Any save and roll that share a label share the charges.
+    for (const save of item.saves ?? [])
+      for (const roll of item.damage ?? [])
+        if (save.label !== undefined && save.label === roll.label && save.charges !== roll.charges) structureFailures.push(`${item.name}: "${save.label}" save and roll carry different charges`)
+  }
   report.check("magic-items", "typed effects: official wording, names and numbers found in the text, spell tables read by row", structureTotal, structureFailures)
 
   // Ability checks with a DC, kept by hand from the text: ability, skill and DC for each.
@@ -657,6 +682,8 @@ export default function verify(report: Report) {
     "iron-bands:str:athletics:20",
     "portable-hole:str:athletics:10",
     "sphere-of-annihilation:int:arcana:25",
+    "rope-of-entanglement:str:athletics:15",
+    "rope-of-entanglement:dex:acrobatics:15",
   ]
   const gotChecks = items.flatMap((item) => (item.checks ?? []).map((check) => `${item.id}:${check.ability}:${check.skill}:${check.dc}`))
   report.check(
@@ -669,16 +696,16 @@ export default function verify(report: Report) {
   // The spells and spell effects of the rows of random tables, and the rolls typed on a table's rows, kept by hand from
   // the text: "item:first roll:spells|effects".
   const rowTable = [
-    "hat-of-many-spells:1:enlarge-reduce,faerie-fire,fireball,gust-of-wind,invisibility,lightning-bolt,phantasmal-force,polymorph,stinking-cloud|",
-    "wand-of-wonder:1:darkness,faerie-fire,fireball,slow,stinking-cloud|",
-    "wand-of-wonder:26:gust-of-wind|",
-    "wand-of-wonder:46:lightning-bolt|",
-    "wand-of-wonder:51:|enlarge-reduce",
-    "wand-of-wonder:69:|enlarge-reduce",
-    "wand-of-wonder:83:invisibility|",
-    "wand-of-wonder:93:polymorph|",
+    "hat-of-many-spells:1:enlarge-reduce~enlarge effect,enlarge-reduce~reduce effect^0,faerie-fire^0,fireball^0,gust-of-wind^0,invisibility!^0,lightning-bolt^0,phantasmal-force^0,polymorph^0,stinking-cloud^0|",
+    "wand-of-wonder:1:darkness#15,faerie-fire#15^0,fireball#15^0,slow#15^0,stinking-cloud#15^0|",
+    "wand-of-wonder:26:gust-of-wind#15|",
+    "wand-of-wonder:46:lightning-bolt#15|",
+    "wand-of-wonder:51:|enlarge-reduce~enlarged",
+    "wand-of-wonder:69:|enlarge-reduce~shrink",
+    "wand-of-wonder:83:invisibility#15!|",
+    "wand-of-wonder:93:polymorph#15|",
     "necklace-of-prayer-beads:1:bless|",
-    "necklace-of-prayer-beads:7:cure-wounds|",
+    "necklace-of-prayer-beads:7:cure-wounds@2|",
     "necklace-of-prayer-beads:13:greater-restoration|",
     "necklace-of-prayer-beads:17:shining-smite|",
     "necklace-of-prayer-beads:19:guardian-of-faith|",
@@ -687,24 +714,40 @@ export default function verify(report: Report) {
   const gotRows = items.flatMap((item) =>
     (item.tables ?? []).flatMap((table) =>
       table.rows.flatMap((row) =>
-        row.spells || row.spellEffects ? [`${item.id}:${row.roll?.min}:${(row.spells ?? []).join(",")}|${(row.spellEffects ?? []).map((effect) => effect.id).join(",")}`] : []
+        row.spells || row.spellEffects
+          ? [
+              `${item.id}:${row.roll?.min}:${(row.spells ?? []).map((spell) => `${spell.id}${spell.label ? `~${spell.label}` : ""}${spell.level ? `@${spell.level}` : ""}${spell.saveDc ? `#${spell.saveDc}` : ""}${spell.selfOnly ? "!" : ""}${spell.alternativeTo === undefined ? "" : `^${spell.alternativeTo}`}`).join(",")}|${(row.spellEffects ?? []).map((effect) => `${effect.id}${effect.label ? `~${effect.label}` : ""}`).join(",")}`,
+            ]
+          : []
       )
     )
   )
   const rowDamage = items.flatMap((item) =>
-    (item.tables ?? []).flatMap((table) => table.rows.flatMap((row) => (row.damage ?? []).map((roll) => `${item.id}:${row.cells[0]}:${roll.dice}:${roll.type}:${roll.role}`)))
+    (item.tables ?? []).flatMap((table) =>
+      table.rows.flatMap((row) => (row.damage ?? []).map((roll) => `${item.id}:${row.roll?.min ?? row.cells[0]}:${roll.dice}:${roll.type}:${roll.role}:${roll.appliesWhen ?? ""}`))
+    )
   )
   const rowDamageByHand = [
-    "ring-of-shooting-stars:1:4d12:lightning:effect",
-    "ring-of-shooting-stars:2:5d4:lightning:effect",
-    "ring-of-shooting-stars:3:2d6:lightning:effect",
-    "ring-of-shooting-stars:4:2d4:lightning:effect",
+    "apparatus-of-the-crab:5:2d6:bludgeoning:effect:Each extended claw makes the following melee attack: +8 to hit, reach 5 ft. Hit: 7 (2d6) Bludgeoning damage",
+    "bag-of-beans:1:5d6:poison:effect:On an odd roll",
+    "bag-of-beans:81:10d6:force:effect:",
+    "wand-of-wonder:31:1d6:psychic:to-user:",
+    "ring-of-shooting-stars:1:4d12:lightning:effect:",
+    "ring-of-shooting-stars:2:5d4:lightning:effect:",
+    "ring-of-shooting-stars:3:2d6:lightning:effect:",
+    "ring-of-shooting-stars:4:2d4:lightning:effect:",
   ]
-  const usesWithCount = items.flatMap((item) => (item.uses ?? []).flatMap((use) => (use.count === undefined ? [] : [`${item.id}:${use.count}:${use.recharge}`])))
+  const usesWithCount = items.flatMap((item) =>
+    (item.uses ?? []).flatMap((use) => (use.count === undefined && use.minutes === undefined ? [] : [`${item.id}:${use.count ?? `${use.minutes} minutes`}:${use.recharge ?? "never"}`]))
+  )
   report.check("magic-items", "spells of table rows, damage typed on table rows and use counts match the hand-kept tables", rowTable.length + rowDamageByHand.length + 1, [
     ...(sameSet(gotRows, rowTable) ? [] : [`row spells are ${gotRows.join("; ")}, the table has ${rowTable.join("; ")}`]),
     ...(sameSet(rowDamage, rowDamageByHand) ? [] : [`row damage is ${rowDamage.join("; ")}, the table has ${rowDamageByHand.join("; ")}`]),
-    ...(sameSet(usesWithCount, ["bag-of-tricks:3:dawn"]) ? [] : [`counted uses are ${usesWithCount.join("; ")}, the text says three fuzzy objects before the dawn for the Bag of Tricks`]),
+    ...(sameSet(usesWithCount, ["bag-of-tricks:3:dawn", "boots-of-speed:10 minutes:long-rest", "candle-of-invocation:240 minutes:never", "chime-of-opening:10:never", "mysterious-deck:1d3:never"])
+      ? []
+      : [
+          `counted uses are ${usesWithCount.join("; ")}, the text gives three fuzzy objects before the dawn for the Bag of Tricks, four hours of burning for the Candle (240 minutes), ten minutes of the Boots of Speed before a Long Rest, ten uses of the chime, 1d3 castings of Wish, and no count for the beads`,
+        ]),
   ])
 
   // Every "DC n" in the prose is one a field states, or one printed only inside a table row of the item.
@@ -772,6 +815,7 @@ export default function verify(report: Report) {
     "elemental-gem": ["bonus-action"],
     "potion-of-gaseous-form": ["bonus-action"],
     "staff-of-the-python": ["bonus-action"],
+    "bead-of-force": ["utilize-action"],
   }
   for (const { item, off } of pairs) {
     const text = flat(off)
@@ -785,12 +829,12 @@ export default function verify(report: Report) {
       else if (/until you finish a Long Rest/.test(sentence)) reuse.add("long-rest")
       else if (/until you finish a Short Rest/.test(sentence)) reuse.add("short-rest")
     }
-    if (
-      !sameSet(
-        [...reuse],
-        (item.uses ?? []).map((use) => use.recharge)
-      )
-    )
+    // Each prayer bead has its own use, and no one use holds them: `uses` is untyped (p. 233).
+    if (item.id === "necklace-of-prayer-beads") {
+      if (item.uses?.length || !item.untyped?.includes("uses") || !reuse.has("dawn")) reuseFailures.push(`${item.name}: uses ${JSON.stringify(item.uses)}, untyped ${JSON.stringify(item.untyped)}`)
+      continue
+    }
+    if (!sameSet([...reuse], [...new Set((item.uses ?? []).flatMap((use) => (use.recharge ? [use.recharge] : [])))]))
       reuseFailures.push(`${item.name}: uses ${JSON.stringify(item.uses)}, the text says ${[...reuse].join(", ") || "none"}`)
   }
   report.check("magic-items", "activation: the action kinds the text names", pairs.length, actionFailures)
@@ -881,11 +925,11 @@ const canon = (value: unknown, key = ""): unknown => {
     for (const [name, entry] of Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1))) if (name !== "text" && name !== "notes" && entry !== undefined) out[name] = canon(entry, name)
     return out
   }
-  return typeof value === "string" && ["appliesWhen", "label", "effect"].includes(key) ? squash(value) : value
+  return typeof value === "string" && ["appliesWhen", "unless", "label", "effect"].includes(key) ? squash(value) : value
 }
 const empty = (value: unknown) => value === undefined || (Array.isArray(value) && !value.length) || (value && typeof value === "object" && !Array.isArray(value) && !Object.keys(value).length)
 
-const effectFields = ["spells", "spellEffects", "charges", "bonuses", "conditionalBonuses", "saves", "damage"] as const
+const effectFields = ["spells", "spellEffects", "charges", "bonuses", "conditionalBonuses", "saves", "damage", "uses", "checks", "untyped"] as const
 const variantFields = ["strength", "healing", "spellLevel", "saveDc", "attackBonus", ...effectFields] as const
 
 function compareEffects(report: Report, items: MagicItem[]) {
@@ -902,8 +946,10 @@ function compareEffects(report: Report, items: MagicItem[]) {
   let total = 0
   const differ = (label: string, ours: unknown, theirs: unknown) => {
     total++
-    const a = empty(ours) ? undefined : canon(ours)
-    const b = empty(theirs) ? undefined : canon(theirs)
+    // The kinds in `untyped` are a set, so their order is not compared.
+    const settle = (value: unknown) => (label.endsWith(".untyped") && Array.isArray(value) ? [...value].sort() : value)
+    const a = empty(ours) ? undefined : canon(settle(ours))
+    const b = empty(theirs) ? undefined : canon(settle(theirs))
     if (JSON.stringify(a) === JSON.stringify(b)) return
     const sorted = (value: unknown) => JSON.stringify(Array.isArray(value) ? [...value].map((entry) => JSON.stringify(entry)).sort() : value)
     failures.push(`${label}: data ${show(a)}, reader ${show(b)}${sorted(a) === sorted(b) ? " (order only)" : ""}`)
@@ -1173,6 +1219,15 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
     for (const refusal of conflict.refusals) if (!inOfficial(refusal)) ruleFailures.push(`refusal "${refusal.slice(0, 40)}" is not official text`)
     if (conflict.refusals.length !== bullets) ruleFailures.push(`conflict lists ${conflict.refusals.length} refusals, the text has ${bullets} bullets`)
     for (const demand of conflict.demands) if (!inOfficial(`${demand.name}. ${demand.text}`)) ruleFailures.push(`demand ${demand.name} is not official text`)
+    // Each demand is exactly its own printed paragraph: it runs from its name to the next demand's name or the refusal lead.
+    const endOfDemand = /(?:Chase My Dreams|Get Rid of It|It’s Time for a Change|Keep Me Close)\. |If its bearer refuses to comply/
+    for (const demand of conflict.demands) {
+      const start = rollText.indexOf(`${demand.name}. `)
+      if (start < 0) continue
+      const after = rollText.slice(start + demand.name.length + 2)
+      const printed = after.slice(0, after.search(endOfDemand)).trim()
+      if (printed !== demand.text) ruleFailures.push(`demand ${demand.name} reads "${demand.text.slice(0, 60)}", its paragraph is "${printed.slice(0, 60)}"`)
+    }
   }
   const needed = [
     "activating-a-magic-item",

@@ -3,7 +3,7 @@ import type { ItemTable, MagicItem, MagicItemRule } from "../../src/schema/magic
 import { magicItemRuleSchema, magicItemSchema } from "../../src/schema/magic-items"
 import { applyOverrides, toId, writeData } from "../lib/data"
 import { pages } from "../lib/official"
-import { overrides } from "../overrides/magic-items"
+import { overrides, untypedByHand } from "../overrides/magic-items"
 
 // The base source (5e-bits) has no entry for ten of the official items, splits the "+1, +2, or +3" items into
 // separate rows and paraphrases the text. This builder therefore reads the official text itself: headings,
@@ -529,7 +529,7 @@ function mentions(text: string): { name: string; index: number }[] {
   return found.sort((a, b) => a.index - b.index)
 }
 
-type Spell = { id: string; group?: string; level?: number; charges?: number; maxCharges?: number; upcastsWithCharges?: true; chargesPerSpellLevel?: true; saveDc?: number }
+type Spell = { id: string; group?: string; selfOnly?: true; level?: number; charges?: number; maxCharges?: number; upcastsWithCharges?: true; chargesPerSpellLevel?: true; saveDc?: number }
 
 // A spell is listed only when the item lets its user cast it, or gives its effect (a potion): the name follows "cast",
 // follows "effect of the", or is a spell the item detonates ("as a level 3 Fireball (save DC 15)").
@@ -574,7 +574,10 @@ function spellsOf(paras: string[], tables: ItemTable[]): { spells: Spell[]; effe
       if (/^ spell\b/.test(after) && !castsIt) continue
       const level = /level (\d) version of (?:the )?$/.exec(before)?.[1]
       const saveDc = paren[1] ?? unitDc
+      // "cast Polymorph on yourself", "can target only yourself", "targeting only yourself".
+      const self = /^[^.,]{0,12}on yourself|only yourself|^[^.,]*targeting only yourself/.test(after) || /can target only yourself|targeting only yourself/.test(unit)
       add(mention.name, {
+        ...(self ? { selfOnly: true as const } : {}),
         ...(saveDc ? { saveDc: Number(saveDc) } : {}),
         ...(paren[2] ? { level: Number(paren[2]) } : level ? { level: Number(level) } : {}),
         ...(paren[3] ? { charges: Number(paren[3]) } : cost ? { charges: Number(cost[1]) } : pendingCost ? { charges: Number(pendingCost) } : {}),
@@ -654,7 +657,7 @@ function damageCondition(sentence: string, start: number, end: number) {
   const while_ = /^While [^,]+/.exec(sentence)?.[0]
   // A situation that limits which hits count: a natural 20, a kind of target, a ranged attack, a form of the weapon.
   // "On a hit" and "when you hit with a melee attack" are part of what "extra" means.
-  const situation = /roll a 20|hit an? [A-Z]|ranged attack|blazing weapon|^On a successful save|^If an? [a-z]+ of that type/
+  const situation = /roll a 20|hit an? [A-Z]|ranged attack|blazing weapon|^On a successful save/
   // "Any Undead that starts its turn in that area takes 1d6": the subject names who it falls on.
   const subject = /^((?:Any|A|An|Glass|Nonmagical|Structures)\b[^,]*?) takes? \d/.exec(sentence)?.[1]
   const leading = lead && situation.test(lead) ? lead : (while_ ?? subject)
@@ -669,29 +672,37 @@ function damageCondition(sentence: string, start: number, end: number) {
 // Each distinct save once. Where the item forces several, each property's save carries the property's printed name as its label.
 function savesOf(paras: string[]) {
   const abilities = Object.keys(abilityByName).join("|")
-  const found: { ability: string; dc: number; label?: string; sentence: string }[] = []
+  const found: { ability: string; dc: number; label?: string; sentence: string; after: string }[] = []
   // A property's label holds for the paragraphs after it, until the next label.
   let label: string | undefined
   for (const para of paras) {
     label = /^([A-Z][A-Za-z’ ]{1,30})\. /.exec(para)?.[1] ?? label
-    for (const sentence of sentences(para)) {
+    const all = sentences(para)
+    for (const [at, sentence] of all.entries()) {
+      // The save's own sentence and the two after it say what a success does.
+      const after = all.slice(at, at + 3).join(" ")
       for (const match of sentence.matchAll(new RegExp(String.raw`DC (\d+) (${abilities}) saving throw`, "g")))
-        found.push({ ability: abilityByName[match[2]], dc: Number(match[1]), ...(label ? { label } : {}), sentence })
+        found.push({ ability: abilityByName[match[2]], dc: Number(match[1]), ...(label ? { label } : {}), sentence, after })
       // "make a Constitution saving throw (DC 11 for Light or DC 15 for Daylight)"
       for (const match of sentence.matchAll(new RegExp(String.raw`(${abilities}) saving throw \(DC (\d+) for ([A-Za-z ]+) or DC (\d+) for ([A-Za-z ]+)\)`, "g"))) {
-        found.push({ ability: abilityByName[match[1]], dc: Number(match[2]), label: match[3], sentence }, { ability: abilityByName[match[1]], dc: Number(match[4]), label: match[5], sentence })
+        found.push(
+          { ability: abilityByName[match[1]], dc: Number(match[2]), label: match[3], sentence, after },
+          { ability: abilityByName[match[1]], dc: Number(match[4]), label: match[5], sentence, after }
+        )
       }
     }
   }
   const kinds = new Set(found.map((save) => `${save.label}|${save.ability}|${save.dc}`))
   const several = kinds.size > 1
-  const out: { ability: string; dc: number; label?: string }[] = []
+  const out: { ability: string; dc: number; label?: string; onSuccess: "none" | "half" | "other" }[] = []
   const seen = new Set<string>()
   for (const save of found) {
     const key = several ? `${save.label}|${save.ability}|${save.dc}|${save.sentence}` : `${save.ability}|${save.dc}`
     if (seen.has(key)) continue
     seen.add(key)
-    out.push({ ability: save.ability, dc: save.dc, ...(several && save.label ? { label: save.label } : {}) })
+    // "half": damage halves. "other": the text states something else for a success. "none": the creature is not affected.
+    const onSuccess = /half as much|half that/.test(save.after) ? "half" : /On a successful save|On a successful check/.test(save.after) ? "other" : "none"
+    out.push({ ability: save.ability, dc: save.dc, ...(several && save.label ? { label: save.label } : {}), onSuccess })
   }
   return out
 }
@@ -925,11 +936,14 @@ function build(): MagicItem[] {
         const own = row.cells.flatMap((cell) => sentences(cell)).filter((sentence) => /\byou cast\b|determine the spell|as if you had cast/i.test(sentence))
         // The beads of a Necklace of Prayer Beads are rows that each hold one spell the user casts from that bead.
         if (table.columns.join("|") === "Bead|Spell") {
-          row.spells = [toId(row.cells[1].replace(/ \([^)]*\)$/, ""))]
+          const level = /\(level (\d) version\)/.exec(row.cells[1])?.[1]
+          row.spells = [{ id: toId(row.cells[1].replace(/ \([^)]*\)$/, "")), ...(level ? { level: Number(level) } : {}) }]
           continue
         }
         const found = spellsOf(own, [])
-        if (found.spells.length) row.spells = found.spells.map((spell) => spell.id)
+        // "Spells cast from the wand have a save DC of 15."
+        const rowDc = /save DC of (\d+)/.exec(itemFlat)?.[1]
+        if (found.spells.length) row.spells = found.spells.map((spell) => ({ id: spell.id, ...(rowDc ? { saveDc: Number(rowDc) } : {}) }))
         if (found.effects.length) row.spellEffects = found.effects
       }
     }
@@ -971,6 +985,22 @@ function build(): MagicItem[] {
     const cursed = paras.some((para) => /^Curse\. /.test(para))
     const consumable = sub.category === "potion" || sub.category === "scroll" || usedUp.test(flat)
 
+    // The kinds of effect the text states and no typed list holds. A table row holds its own effects, so cells are not read.
+    const conditionText =
+      /\b(?:have|has|gain|gives? (?:yourself|you|it)|giving it|imposes)\b[^.]{0,40}?\b(?:Blinded|Charmed|Deafened|Frightened|Grappled|Incapacitated|Invisible|Paralyzed|Petrified|Poisoned|Prone|Restrained|Stunned|Unconscious) condition\b|Exhaustion level/
+    const healingText = /\bregains?\b[^.]{0,30}Hit Points|Temporary Hit Points/
+    // Sentences that only mention a condition or a regaining: immunity, a prerequisite, a time limit, the item's own Hit Points.
+    const given = (pattern: RegExp, exclude: RegExp) => sentences(flat).some((sentence) => pattern.test(sentence) && !exclude.test(sentence))
+    const notGivenCondition = /Immunity|that has the|until you die|when you die|neither|don’t have|without gaining|\bends? (?:the|this)\b|remove/
+    const notGivenHealing = /unable to regain|\bits Hit Points|remove/
+    const untypedKinds = new Set<string>(untypedByHand[id] ?? [])
+    if (given(conditionText, notGivenCondition)) untypedKinds.add("conditions")
+    if (given(healingText, notGivenHealing) && id !== "potions-of-healing") untypedKinds.add("healing")
+    // A repeated save has no field. A limit of hours, days or a century has no recharge of ours.
+    if (given(/\brepeats? (?:the (?:saving throw|save)|its?)\b/, /^$/)) untypedKinds.add("saves")
+    if (given(/can’t (?:be used|use|be summoned|do so)[^.]*again[^.]*(?:\d+|1d\d+|a certain amount of) (?:hours?|days?)|in a century/, /^$/)) untypedKinds.add("uses")
+    const untyped = ["damage", "saves", "spells", "bonuses", "charges", "uses", "conditions", "healing"].filter((kind) => untypedKinds.has(kind))
+
     const entry = {
       id,
       name: heading.name,
@@ -994,6 +1024,7 @@ function build(): MagicItem[] {
       ...(spellEffects.length ? { spellEffects } : {}),
       ...(tables.length ? { tables } : {}),
       ...(withoutStats.statBlocks.length ? { statBlocks: withoutStats.statBlocks } : {}),
+      ...(untyped.length ? { untyped } : {}),
       description: paras.join("\n"),
     }
     return entry as unknown as MagicItem

@@ -1,5 +1,6 @@
 import { z } from "zod"
 import {
+  bonusTargetSchema,
   classIdSchema,
   conditionIdSchema,
   costSchema,
@@ -10,9 +11,11 @@ import {
   feetSchema,
   forcedSaveShape,
   isDiceOrAmount,
+  oncePerTurnSchema,
   proseSchema,
   saveDcSchema,
   schoolIdSchema,
+  spanShape,
 } from "./common"
 
 const count = z.number().int().positive()
@@ -105,33 +108,55 @@ const targetSchema = z.enum(["caster", "caster-and-companions"])
  * where the text adds that the spell then ends), "half" when it takes half
  * damage, "ends" when it ends the spell or the effect on that creature, "other" for any other stated outcome, including
  * a count of successes to reach. `target` is set only where the caster makes the save.
+ *
+ * `appliesWhen` and `unless` hold the official words of a condition the save is made under, or not made under (Fear's
+ * repeated save: "If the creature ends its turn in a space where it doesn’t have line of sight to you"). A save made by
+ * a creature other than the spell's targets (Holy Aura's Fiend or Undead attacker) carries the words that say who.
  */
 export const saveSchema = z.strictObject({
   ...forcedSaveShape,
   dc: saveDcSchema,
+  ...spanShape,
   label: z.string().min(1).optional(),
   when: z.enum(["initial", "end-of-turn", "start-of-turn", "on-damage", "action", "later"]),
   onSuccess: z.enum(["none", "half", "ends", "other"]),
   target: targetSchema.optional(),
+  /** "any-turn": a creature makes this save at most once during each turn, whoever's turn it is ("A creature makes this save only once per turn"). */
+  oncePerTurn: oncePerTurnSchema.optional(),
+  /**
+   * The words of when the save is made, only where nothing linked to the save can carry them: a save that guards no
+   * typed roll or condition (Contagion's "Whenever the Poisoned target receives an effect that would end the Poisoned
+   * condition"). Where a roll or condition is linked, the time is that entry's `timing` instead.
+   */
+  timing: z.string().min(1).optional(),
 })
 export type Save = z.infer<typeof saveSchema>
 
 /** Damage at the cantrip upgrade levels, as printed: "levels 5 (2d6), 11 (3d6), and 17 (4d6)". */
 const cantripDiceSchema = z.strictObject({ 5: diceSchema, 11: diceSchema, 17: diceSchema })
 
+/** The words of when a roll is dealt or an effect happens, where that is not the moment the spell takes effect ("At the start of each of its turns"). One unbroken span of the entry's text. */
+const timingSchema = z.string().min(1)
+
 /**
- * One distinct damage roll the text states, in text order, as `dice` or a fixed `amount`. A roll restated ("takes the
- * damage again") is not a new entry. Several `types` mean one of them, chosen as the text says, or by the row of the
- * table `table` names. `modifier` adds the caster's spellcasting ability modifier. `perSlot` is the dice added per slot
- * level above the spell's level, on the roll its sentence names. `target` is set where the damage falls on the caster.
+ * One distinct damage roll the text states, in text order, as `dice` or a fixed `amount`. A roll dealt again on a
+ * different save or at a different time is its own entry; only a restatement with the same save and time is not.
+ * Several `types` mean one of them, chosen as the text says, or by the row of the table `table` names. `modifier` adds
+ * the caster's spellcasting ability modifier. `perSlot` is the dice added per slot level above the spell's level, on
+ * the roll its sentence names. `target` is set where the damage falls on the caster. `label` is the printed name of
+ * the option or table row the roll belongs to.
  *
  * Links are by meaning, not by sentence: `trigger: "failed-save"` with `save` (an index into `saves`) where the roll is
- * dealt on that failed save, even when the save is stated a sentence earlier and also when a success halves it;
- * `trigger: "hit"` where it is dealt when an attack hits, the spell's own or one the text names ("when you hit",
- * "whenever you hit it with an attack roll"), by the creature the spell arms. Damage to a creature because it hits the
- * caster (Fire Shield) is not a hit of the spell's. `appliesWhen` holds the official words of any other condition the
- * roll needs ("if the target has more than 100 Hit Points"). A roll with no `appliesWhen`, `trigger` or `save` is dealt
- * every time the spell takes effect. `label` is the printed name of the option or table row the roll belongs to.
+ * dealt on that failed save, even when the save is stated a sentence earlier; `trigger: "hit"` where it is dealt when
+ * an attack by the creature the spell arms hits ("when you hit", "whenever you hit it with an attack roll"). Damage to
+ * a creature because it hits the caster (Fire Shield) is not a hit of the spell's. A linked roll takes its save's
+ * `onSuccess` unless it carries its own ("none" where a success avoids this roll though it halves another: Vitriolic
+ * Sphere's later 5d4).
+ *
+ * `appliesWhen` and `unless` hold the official words of any other condition the roll needs or is withheld under
+ * (Power Word Kill's 12d12 is dealt `unless` "If the target has 100 Hit Points or fewer"). `timing` holds the words of
+ * when it is dealt where that is later or repeated ("at the end of its next turn"). A roll with none of `appliesWhen`,
+ * `unless`, `timing`, `trigger` and `save` is dealt once, when the spell takes effect.
  */
 export const damageSchema = z
   .strictObject({
@@ -144,13 +169,20 @@ export const damageSchema = z
     target: targetSchema.optional(),
     trigger: z.enum(["hit", "failed-save"]).optional(),
     save: z.number().int().nonnegative().optional(),
+    onSuccess: z.enum(["none", "half"]).optional(),
     label: z.string().min(1).optional(),
-    appliesWhen: z.string().min(1).optional(),
+    ...spanShape,
+    timing: timingSchema.optional(),
   })
   .refine(isDiceOrAmount, "give dice or an amount")
 export type Damage = z.infer<typeof damageSchema>
 
-/** Hit Points regained as dice or as a fixed `amount`. `temporary` marks Temporary Hit Points. `perSlot` and `perSlotAmount` are added for each slot level above the spell's level. */
+/**
+ * Hit Points each target regains, as dice or as a fixed `amount`. `temporary` marks Temporary Hit Points. `perSlot` and
+ * `perSlotAmount` are added for each slot level above the spell's level. A pool shared out among targets is not typed.
+ * `label` names the option it belongs to (Conjure Celestial's Healing Light). `appliesWhen`, `unless` and `timing` carry
+ * the words that limit it or say when it happens ("If an ally with 0 Hit Points starts its turn in the aura").
+ */
 export const healingSchema = z.strictObject({
   dice: diceSchema.optional(),
   amount: count.optional(),
@@ -158,6 +190,9 @@ export const healingSchema = z.strictObject({
   temporary: z.literal(true).optional(),
   perSlot: diceSchema.optional(),
   perSlotAmount: count.optional(),
+  label: z.string().min(1).optional(),
+  ...spanShape,
+  timing: timingSchema.optional(),
 })
 export type Healing = z.infer<typeof healingSchema>
 
@@ -199,19 +234,26 @@ export const spellStatBlockSchema = z.strictObject({
 export type SpellStatBlock = z.infer<typeof spellStatBlockSchema>
 
 /**
- * A condition the spell gives its targets, once for each distinct way it gives it, in text order. Linked by meaning
- * like a damage roll: `trigger: "failed-save"` with `save` where one failed save applies it, `trigger: "hit"` where a
- * hit does. A condition applied only after several failures, by a choice the caster makes, or under another stated
- * condition has no link and carries `appliesWhen`, the official words that say when it applies. `label` is the printed
- * name of the option or table row it belongs to.
+ * A condition the spell gives, once for each distinct way it gives it, in text order. Linked by meaning like a damage
+ * roll: `trigger: "failed-save"` with `save` where one failed save applies it, `trigger: "hit"` where a hit does. A
+ * condition applied only after several failures, or under another stated condition, carries `appliesWhen` (or
+ * `unless`), the official words that say when it applies. `target: "caster"` where the caster gets it. A condition on
+ * a creature that is neither a target nor the caster carries the words that say who. `label` is the printed name of
+ * the option or table row it belongs to.
  */
 export const conditionLinkSchema = z.strictObject({
   condition: conditionIdSchema,
+  target: z.literal("caster").optional(),
   trigger: z.enum(["hit", "failed-save"]).optional(),
   save: z.number().int().nonnegative().optional(),
   label: z.string().min(1).optional(),
-  appliesWhen: z.string().min(1).optional(),
+  ...spanShape,
+  /** The words of when the condition is given, where that is not when the spell takes effect: the save that gives it is made on entering an area or at the start or end of a turn there ("When a creature enters the Cylinder for the first time on a turn or starts its turn there"). */
+  timing: z.string().min(1).optional(),
 })
+
+/** The kinds of effect whose typed list does not hold everything the text states. An engine reads the prose for these. */
+export const untypedKinds = ["saves", "damage", "conditions", "healing"] as const
 
 export const spellSchema = z.strictObject({
   ...entryShape,
@@ -233,14 +275,16 @@ export const spellSchema = z.strictObject({
   cantripUpgrade: proseSchema.optional(),
   tables: z.array(spellTableSchema).min(1).optional(),
   statBlocks: z.array(spellStatBlockSchema).min(1).optional(),
+  /**
+   * "melee" or "ranged" where the spell has the caster make a melee or ranged spell attack. The attack may belong to one
+   * labelled option only (Arcane Hand's Clenched Fist); the damage roll it deals carries that `label` and the hit link.
+   */
   attack: z.enum(["melee", "ranged"]).optional(),
   saves: z.array(saveSchema).min(1).optional(),
   damage: z.array(damageSchema).min(1).optional(),
   healing: healingSchema.optional(),
-  /** Conditions the spell can give its targets, each linked like a damage roll where its sentence ties it to a hit or a failed save. */
+  /** Conditions the spell gives, each linked like a damage roll where the text ties it to a hit or a failed save. */
   conditions: z.array(conditionLinkSchema).min(1).optional(),
-  /** Conditions the spell gives the caster. */
-  casterConditions: z.array(conditionIdSchema).min(1).optional(),
   /** Beams, darts or rays, each its own attack or hit: the base count, the count added per slot level above the spell's level, and the count at cantrip upgrade levels. */
   projectiles: z
     .strictObject({
@@ -251,21 +295,28 @@ export const spellSchema = z.strictObject({
     .optional(),
   /** Creatures the spell can target for each slot level above the spell's level. */
   extraTargetsPerSlot: count.optional(),
-  /** Armor Class the spell gives: a `bonus`, a `base` that adds the Dexterity modifier, or a `minimum`. */
-  ac: z.strictObject({ bonus: count.optional(), base: count.optional(), minimum: count.optional() }).optional(),
-  /** Dice or an amount added to, or with `subtract` taken from, the named rolls. */
+  /** Armor Class the spell gives: a `bonus`, a `base` that adds the Dexterity modifier, or a `minimum`, with the words that limit it. */
+  ac: z.strictObject({ bonus: count.optional(), base: count.optional(), minimum: count.optional(), ...spanShape }).optional(),
+  /**
+   * Dice or an amount added to, or with `subtract` taken from, the rolls `to` names, in the words magic item bonuses
+   * use (`attack-rolls`, `saving-throws`, `stealth-checks`). `appliesWhen` and `unless` carry the words that limit it
+   * ("using the chosen skill").
+   */
   rollModifier: z
     .strictObject({
       dice: diceSchema.optional(),
       amount: count.optional(),
       subtract: z.literal(true).optional(),
-      rolls: z.array(z.enum(["attack-roll", "saving-throw", "ability-check", "damage-roll"])).min(1),
+      to: z.array(bonusTargetSchema).min(1),
+      ...spanShape,
     })
     .refine((modifier) => (modifier.dice === undefined) !== (modifier.amount === undefined), "give dice or an amount")
     .optional(),
-  /** Dice taken off damage of the chosen type. */
-  damageReduction: diceSchema.optional(),
+  /** Dice taken off damage of the chosen type: `timing` for when it applies ("When the creature takes damage of the chosen type before the spell ends"), `appliesWhen`/`unless` for a limit, and `oncePerTurn` where it applies at most once each turn ("A creature can benefit from this spell only once per turn"). */
+  damageReduction: z.strictObject({ dice: diceSchema, ...spanShape, timing: z.string().min(1).optional(), oncePerTurn: oncePerTurnSchema.optional() }).optional(),
   /** The increase to the Hit Point maximum, which the target also gains as Hit Points. `perSlotAmount` is added for each slot level above the spell's level. */
   hitPointMaximum: z.strictObject({ dice: diceSchema.optional(), amount: count.optional(), perSlotAmount: count.optional() }).optional(),
+  /** Each kind of effect the typed lists do not fully hold. See `untypedKinds`. */
+  untyped: z.array(z.enum(untypedKinds)).min(1).optional(),
 })
 export type Spell = z.infer<typeof spellSchema>

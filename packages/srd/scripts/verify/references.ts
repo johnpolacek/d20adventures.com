@@ -16,6 +16,7 @@ const references: Record<string, [path: string, target: string][]> = {
     ["toolProficiency.oneOfKind", "equipment"],
   ],
   "class-features": [
+    ["options[].requiresItem", "equipment"],
     ["class", "classes"],
     ["subclass", "subclasses"],
     ["alwaysPrepared[]", "spells"],
@@ -67,11 +68,13 @@ const references: Record<string, [path: string, target: string][]> = {
     ["base.except[]", "equipment"],
     ["spells[].id", "spells"],
     ["spellEffects[].id", "spells"],
-    ["tables[].rows[].spells[]", "spells"],
+    ["tables[].rows[].spells[].id", "spells"],
+    ["uses[].spell", "spells"],
   ],
   monsters: [
     ["gear[].id", "equipment"],
     ["actions[].spellcasting.lists[].spells[].id", "spells"],
+    ["traits[].spellcasting.lists[].spells[].id", "spells"],
     ["actions[].spellcasting.spells[].id", "spells"],
     ["bonusActions[].spellcasting.spells[].id", "spells"],
     ["legendaryActions.actions[].spellcasting.spells[].id", "spells"],
@@ -80,7 +83,7 @@ const references: Record<string, [path: string, target: string][]> = {
   species: [
     ["traits[].spells[].spell", "spells"],
     ["traits[].choice.options[].spells[].spell", "spells"],
-    ["traits[].featChoice.recommended", "feats"],
+    ["traits[].feat.recommended", "feats"],
   ],
   spells: [["classes[]", "classes"]],
   subclasses: [

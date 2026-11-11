@@ -105,9 +105,14 @@ function mutate(text: string, task: Task): string {
 }
 
 /** Run a file's check, with the package and reference checks, in a copy of the package. Resolves to the names of the checks that failed. */
-function failedChecks(copy: string, check: string): Promise<string[] | null> {
+function failedChecks(copy: string, check: string, attempt = 1): Promise<string[] | null> {
   return new Promise((done) => {
-    execFile(process.execPath, [...process.execArgv, "scripts/verify.ts", check, "package", "references"], { cwd: copy, maxBuffer: 64 * 1024 * 1024 }, (error, stdout) => {
+    // A check run takes seconds. Now and then a run finishes its work and then hangs on exit, so it gets a time limit
+    // and a few more tries, and a run that never ends stops the whole test rather than counting as caught.
+    execFile(process.execPath, [...process.execArgv, "scripts/verify.ts", check, "package", "references"], { cwd: copy, maxBuffer: 64 * 1024 * 1024, timeout: 5 * 60 * 1000 }, (error, stdout) => {
+      const timedOut = Boolean(error && (error as { killed?: boolean }).killed)
+      if (timedOut && attempt < 3) return done(failedChecks(copy, check, attempt + 1))
+      if (timedOut) throw new Error(`The ${check} check did not finish in three tries`)
       const failed = stdout.split("\n").filter((line) => line.trimStart().startsWith("✗"))
       done(error ? failed : null)
     })

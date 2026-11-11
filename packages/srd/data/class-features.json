@@ -58,6 +58,10 @@
         "level": 17,
         "dice": "2d10"
       }
+    ],
+    "oncePerTurn": "own-turn",
+    "attacksWith": [
+      "strength-based"
     ]
   },
   {
@@ -69,7 +73,8 @@
     "levels": [
       2
     ],
-    "description": "You gain an uncanny sense of when things aren’t as they should be, giving you an edge when you dodge perils. You have Advantage on Dexterity saving throws unless you have the Incapacitated condition."
+    "description": "You gain an uncanny sense of when things aren’t as they should be, giving you an edge when you dodge perils. You have Advantage on Dexterity saving throws unless you have the Incapacitated condition.",
+    "unless": "you have the Incapacitated condition"
   },
   {
     "id": "barbarian-epic-boon",
@@ -189,7 +194,10 @@
     "levels": [
       15
     ],
-    "description": "When you roll Initiative, you can regain all expended uses of Rage. After you regain uses of Rage in this way, you can’t do so again until you finish a Long Rest.\nIn addition, your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor."
+    "description": "When you roll Initiative, you can regain all expended uses of Rage. After you regain uses of Rage in this way, you can’t do so again until you finish a Long Rest.\nIn addition, your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor.",
+    "untyped": [
+      "uses"
+    ]
   },
   {
     "id": "barbarian-primal-champion",
@@ -246,10 +254,10 @@
       "bonus-action"
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "column": "rages"
       },
-      "recharge": "long-rest",
       "shortRestRegain": 1
     },
     "resistances": {
@@ -362,11 +370,16 @@
       "bonus-action"
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "ability": "cha",
         "minimum": 1
       },
-      "recharge": "long-rest",
+      "restoredBy": {
+        "resource": "spell-slot",
+        "amount": 1,
+        "fromLevel": 5
+      },
       "rechargeByLevel": [
         {
           "level": 5,
@@ -533,9 +546,12 @@
       3
     ],
     "description": "Your attack rolls with weapons and Unarmed Strikes can score a Critical Hit on a roll of 19 or 20 on the d20.",
+    "attacksWith": [
+      "weapon",
+      "unarmed-strike"
+    ],
     "criticalHit": {
-      "minRoll": 19,
-      "attacks": "weapons-and-unarmed-strikes"
+      "minRoll": 19
     }
   },
   {
@@ -561,9 +577,12 @@
       15
     ],
     "description": "Your attack rolls with weapons and Unarmed Strikes can now score a Critical Hit on a roll of 18–20 on the d20.",
+    "attacksWith": [
+      "weapon",
+      "unarmed-strike"
+    ],
     "criticalHit": {
-      "minRoll": 18,
-      "attacks": "weapons-and-unarmed-strikes"
+      "minRoll": 18
     }
   },
   {
@@ -619,12 +638,15 @@
         "dice": "4d6"
       }
     ],
-    "damageTypes": [
-      "necrotic"
-    ],
+    "damage": {
+      "types": [
+        "necrotic"
+      ]
+    },
     "save": {
       "ability": "con",
-      "dc": "spell-save-dc"
+      "dc": "spell-save-dc",
+      "onSuccess": "half"
     },
     "range": 60,
     "area": {
@@ -643,7 +665,10 @@
     "levels": [
       6
     ],
-    "description": "You can cast one of the level 1+ spells that you have prepared from your Circle Spells feature without expending a spell slot, and you must finish a Long Rest before you do so again.\nIn addition, when you finish a Short Rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your Druid level (round up), and none of them can be level 6+. For example, if you’re a level 6 Druid, you can recover up to three levels’ worth of spell slots. You can recover a level 3 spell slot, a level 2 and a level 1 spell slot, or three level 1 spell slots. Once you recover spell slots with this feature, you can’t do so again until you finish a Long Rest."
+    "description": "You can cast one of the level 1+ spells that you have prepared from your Circle Spells feature without expending a spell slot, and you must finish a Long Rest before you do so again.\nIn addition, when you finish a Short Rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your Druid level (round up), and none of them can be level 6+. For example, if you’re a level 6 Druid, you can recover up to three levels’ worth of spell slots. You can recover a level 3 spell slot, a level 2 and a level 1 spell slot, or three level 1 spell slots. Once you recover spell slots with this feature, you can’t do so again until you finish a Long Rest.",
+    "untyped": [
+      "uses"
+    ]
   },
   {
     "id": "circle-of-the-land-natures-sanctuary",
@@ -740,9 +765,21 @@
         "page": 38,
         "description": "Once on each of your turns when you hit a creature with an attack roll using a weapon, you can cause the target to take an extra 1d8 Necrotic or Radiant damage (your choice).",
         "dice": "1d8",
-        "damageTypes": [
-          "necrotic",
-          "radiant"
+        "diceByLevel": [
+          {
+            "level": 14,
+            "dice": "2d8"
+          }
+        ],
+        "damage": {
+          "types": [
+            "necrotic",
+            "radiant"
+          ]
+        },
+        "oncePerTurn": "own-turn",
+        "attacksWith": [
+          "weapon"
         ]
       },
       {
@@ -769,6 +806,10 @@
         "name": "Divine Spark",
         "page": 37,
         "description": "As a Magic action, you point your Holy Symbol at another creature you can see within 30 feet of yourself and focus divine energy at it. Roll 1d8 and add your Wisdom modifier. You either restore Hit Points to the creature equal to that total or force the creature to make a Constitution saving throw. On a failed save, the creature takes Necrotic or Radiant damage (your choice) equal to that total. On a successful save, the creature takes half as much damage (round down).\nYou roll an additional d8 when you reach Cleric levels 7 (2d8), 13 (3d8), and 18 (4d8).",
+        "untyped": [
+          "save",
+          "damage"
+        ],
         "activation": [
           "magic-action"
         ],
@@ -801,6 +842,9 @@
         "name": "Turn Undead",
         "page": 37,
         "description": "As a Magic action, you present your Holy Symbol and censure Undead creatures. Each Undead of your choice within 30 feet of you must make a Wisdom saving throw. If the creature fails its save, it has the Frightened and Incapacitated conditions for 1 minute. For that duration, it tries to move as far from you as it can on its turns. This effect ends early on the creature if it takes any damage, if you have the Incapacitated condition, or if you die.",
+        "untyped": [
+          "conditions"
+        ],
         "activation": [
           "magic-action"
         ],
@@ -813,16 +857,17 @@
           "onlyCreatureTypes": [
             "undead"
           ],
+          "onSuccess": "none",
           "selective": true
         },
         "range": 30
       }
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "column": "channelDivinity"
       },
-      "recharge": "long-rest",
       "shortRestRegain": 1
     },
     "saveDc": "spell-save-dc"
@@ -848,12 +893,15 @@
       10
     ],
     "description": "You can call on your deity or pantheon to intervene on your behalf. As a Magic action, choose any Cleric spell of level 5 or lower that doesn’t require a Reaction to cast. As part of the same action, you cast that spell without expending a spell slot or needing Material components. You can’t use this feature again until you finish a Long Rest.",
+    "untyped": [
+      "uses"
+    ],
     "activation": [
       "magic-action"
     ],
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 1
     }
   },
   {
@@ -906,7 +954,10 @@
     "levels": [
       20
     ],
-    "description": "You can call on even more powerful divine intervention. When you use your Divine Intervention feature, you can choose Wish when you select a spell. If you do so, you can’t use Divine Intervention again until you finish 2d4 Long Rests."
+    "description": "You can call on even more powerful divine intervention. When you use your Divine Intervention feature, you can choose Wish when you select a spell. If you do so, you can’t use Divine Intervention again until you finish 2d4 Long Rests.",
+    "untyped": [
+      "uses"
+    ]
   },
   {
     "id": "cleric-improved-blessed-strikes",
@@ -923,8 +974,7 @@
         "id": "divine-strike",
         "name": "Divine Strike",
         "page": 38,
-        "description": "The extra damage of your Divine Strike increases to 2d8.",
-        "dice": "2d8"
+        "description": "The extra damage of your Divine Strike increases to 2d8."
       },
       {
         "id": "potent-spellcasting",
@@ -945,12 +995,12 @@
       5
     ],
     "description": "Whenever you use Turn Undead, you can roll a number of d8s equal to your Wisdom modifier (minimum of 1d8) and add the rolls together. Each Undead that fails its saving throw against that use of Turn Undead takes Radiant damage equal to the roll’s total. This damage doesn’t end the turn effect.",
-    "damageTypes": [
-      "radiant"
-    ],
-    "damageOnlyTo": [
-      "undead"
-    ]
+    "damage": {
+      "types": [
+        "radiant"
+      ],
+      "appliesWhen": "that fails its saving throw against that use of Turn Undead"
+    }
   },
   {
     "id": "cleric-spellcasting",
@@ -1040,7 +1090,8 @@
     "description": "The magic in your body manifests physical traits of your draconic gift. Your Hit Point maximum increases by 3, and it increases by 1 whenever you gain another Sorcerer level.\nParts of you are also covered by dragon-like scales. While you aren’t wearing armor, your base Armor Class equals 10 plus your Dexterity and Charisma modifiers.",
     "hitPointMaximum": {
       "increase": 3,
-      "perLaterClassLevel": 1
+      "perLevel": 1,
+      "levelsCounted": "class"
     },
     "armorClass": {
       "base": 10,
@@ -1074,8 +1125,8 @@
     ],
     "description": "You can cast Summon Dragon without a Material component. You can also cast it once without a spell slot, and you regain the ability to cast it in this way when you finish a Long Rest.\nWhenever you start casting the spell, you can modify it so that it doesn’t require Concentration. If you do so, the spell’s duration becomes 1 minute for that casting.",
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 1
     },
     "freeCast": [
       {
@@ -1094,12 +1145,15 @@
       14
     ],
     "description": "As a Bonus Action, you can cause draconic wings to appear on your back. The wings last for 1 hour or until you dismiss them (no action required). For the duration, you have a Fly Speed of 60 feet.\nOnce you use this feature, you can’t use it again until you finish a Long Rest unless you spend 3 Sorcery Points (no action required) to restore your use of it.",
+    "untyped": [
+      "speed"
+    ],
     "activation": [
       "bonus-action"
     ],
     "uses": {
-      "count": 1,
       "recharge": "long-rest",
+      "count": 1,
       "restoredBy": {
         "resource": "sorcery-points",
         "amount": 3
@@ -1117,12 +1171,9 @@
       6
     ],
     "description": "Your draconic magic has an affinity with a damage type associated with dragons. Choose one of those types: Acid, Cold, Fire, Lightning, or Poison.\nYou have Resistance to that damage type, and when you cast a spell that deals damage of that type, you can add your Charisma modifier to one damage roll of that spell.",
-    "damageTypes": [
-      "acid",
-      "cold",
-      "fire",
-      "lightning",
-      "poison"
+    "untyped": [
+      "resistances",
+      "damage"
     ]
   },
   {
@@ -1155,7 +1206,12 @@
     "description": "The vitality of nature constantly blooms within you, granting you the following benefits.\nEvergreen Wild Shape. Whenever you roll Initiative and have no uses of Wild Shape left, you regain one expended use of it.\nNature Magician. You can convert uses of Wild Shape into a spell slot (no action required). Choose a number of your unexpended uses of Wild Shape and convert them into a single spell slot, with each use contributing 2 spell levels. For example, if you convert two uses of Wild Shape, you produce a level 4 spell slot. Once you use this benefit, you can’t do so again until you finish a Long Rest.\nLongevity. The primal magic that you wield causes you to age more slowly. For every ten years that pass, your body ages only one year.",
     "activation": [
       "no-action"
-    ]
+    ],
+    "uses": {
+      "recharge": "long-rest",
+      "count": 1
+    },
+    "label": "Nature Magician"
   },
   {
     "id": "druid-beast-spells",
@@ -1216,11 +1272,24 @@
         "page": 43,
         "description": "Once on each of your turns when you hit a creature with an attack roll using a weapon or a Beast form’s attack in Wild Shape, you can cause the target to take an extra 1d8 Cold, Fire, Lightning, or Thunder damage (choose when you hit).",
         "dice": "1d8",
-        "damageTypes": [
-          "cold",
-          "fire",
-          "lightning",
-          "thunder"
+        "diceByLevel": [
+          {
+            "level": 15,
+            "dice": "2d8"
+          }
+        ],
+        "damage": {
+          "types": [
+            "cold",
+            "fire",
+            "lightning",
+            "thunder"
+          ]
+        },
+        "oncePerTurn": "own-turn",
+        "attacksWith": [
+          "weapon",
+          "beast-form-attack"
         ]
       }
     ]
@@ -1262,8 +1331,7 @@
         "id": "primal-strike",
         "name": "Primal Strike",
         "page": 43,
-        "description": "The extra damage of your Primal Strike increases to 2d8.",
-        "dice": "2d8"
+        "description": "The extra damage of your Primal Strike increases to 2d8."
       }
     ]
   },
@@ -1327,6 +1395,28 @@
       5
     ],
     "description": "Once on each of your turns, if you have no uses of Wild Shape left, you can give yourself one use by expending a spell slot (no action required).\nIn addition, you can expend one use of Wild Shape (no action required) to give yourself a level 1 spell slot, but you can’t do so again until you finish a Long Rest.",
+    "parts": [
+      {
+        "label": "give yourself one use by expending a spell slot",
+        "spend": {
+          "resource": "spell-slot",
+          "amount": 1
+        },
+        "oncePerTurn": "own-turn",
+        "usableWhen": "if you have no uses of Wild Shape left"
+      },
+      {
+        "label": "to give yourself a level 1 spell slot",
+        "spend": {
+          "resource": "wild-shape",
+          "amount": 1
+        },
+        "uses": {
+          "recharge": "long-rest",
+          "count": 1
+        }
+      }
+    ],
     "activation": [
       "no-action"
     ]
@@ -1345,11 +1435,18 @@
       "bonus-action"
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "column": "wildShape"
       },
-      "recharge": "long-rest",
-      "shortRestRegain": 1
+      "shortRestRegain": 1,
+      "restoredBy": {
+        "resource": "spell-slot",
+        "amount": 1,
+        "fromLevel": 5,
+        "whenNoneLeft": true,
+        "oncePerTurn": "own-turn"
+      }
     },
     "forms": [
       {
@@ -1462,11 +1559,11 @@
     ],
     "description": "You can call on your fiendish patron to alter fate in your favor. When you make an ability check or a saving throw, you can use this feature to add 1d10 to your roll. You can do so after seeing the roll but before any of the roll’s effects occur.\nYou can use this feature a number of times equal to your Charisma modifier (minimum of once), but you can use it no more than once per roll. You regain all expended uses when you finish a Long Rest.",
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "ability": "cha",
         "minimum": 1
-      },
-      "recharge": "long-rest"
+      }
     },
     "dice": "1d10"
   },
@@ -1492,7 +1589,10 @@
     "levels": [
       10
     ],
-    "description": "Choose one damage type, other than Force, whenever you finish a Short or Long Rest. You have Resistance to that damage type until you choose a different one with this feature."
+    "description": "Choose one damage type, other than Force, whenever you finish a Short or Long Rest. You have Resistance to that damage type until you choose a different one with this feature.",
+    "untyped": [
+      "resistances"
+    ]
   },
   {
     "id": "fiend-patron-hurl-through-hell",
@@ -1505,24 +1605,31 @@
       14
     ],
     "description": "Once per turn when you hit a creature with an attack roll, you can try to instantly transport the target through the Lower Planes. The target must succeed on a Charisma saving throw against your spell save DC, or the target disappears and hurtles through a nightmare landscape. The target takes 8d10 Psychic damage if it isn’t a Fiend, and it has the Incapacitated condition until the end of your next turn, when it returns to the space it previously occupied or the nearest unoccupied space.\nOnce you use this feature, you can’t use it again until you finish a Long Rest unless you expend a Pact Magic spell slot (no action required) to restore your use of it.",
+    "untyped": [
+      "conditions"
+    ],
     "uses": {
-      "count": 1,
       "recharge": "long-rest",
+      "count": 1,
       "restoredBy": {
         "resource": "pact-magic-slot",
         "amount": 1
       }
     },
-    "dice": "8d10",
-    "damageTypes": [
-      "psychic"
-    ],
-    "damageNotTo": [
-      "fiend"
-    ],
+    "damage": {
+      "dice": "8d10",
+      "types": [
+        "psychic"
+      ],
+      "notCreatureTypes": [
+        "fiend"
+      ]
+    },
+    "oncePerTurn": "any-turn",
     "save": {
       "ability": "cha",
-      "dc": "spell-save-dc"
+      "dc": "spell-save-dc",
+      "onSuccess": "none"
     }
   },
   {
@@ -1557,6 +1664,7 @@
     ],
     "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action.\nOnce you use this feature, you can’t do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",
     "uses": {
+      "recharge": "short-or-long-rest",
       "count": {
         "byLevel": [
           {
@@ -1568,9 +1676,9 @@
             "count": 2
           }
         ]
-      },
-      "recharge": "short-or-long-rest"
-    }
+      }
+    },
+    "oncePerTurn": "any-turn"
   },
   {
     "id": "fighter-epic-boon",
@@ -1639,6 +1747,7 @@
     ],
     "description": "If you fail a saving throw, you can reroll it with a bonus equal to your Fighter level. You must use the new roll, and you can’t use this feature again until you finish a Long Rest.\nYou can use this feature twice before a Long Rest starting at level 13 and three times before a Long Rest starting at level 17.",
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "byLevel": [
           {
@@ -1654,8 +1763,7 @@
             "count": 3
           }
         ]
-      },
-      "recharge": "long-rest"
+      }
     }
   },
   {
@@ -1672,10 +1780,10 @@
       "bonus-action"
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "column": "secondWind"
       },
-      "recharge": "long-rest",
       "shortRestRegain": 1
     },
     "dice": "1d10",
@@ -1822,13 +1930,18 @@
         "id": "colossus-slayer",
         "name": "Colossus Slayer",
         "page": 61,
-        "description": "Your tenacity can wear down even the most resilient foes. When you hit a creature with a weapon, the weapon deals an extra 1d8 damage to the target if it’s missing any of its Hit Points. You can deal this extra damage only once per turn."
+        "description": "Your tenacity can wear down even the most resilient foes. When you hit a creature with a weapon, the weapon deals an extra 1d8 damage to the target if it’s missing any of its Hit Points. You can deal this extra damage only once per turn.",
+        "untyped": [
+          "damage"
+        ],
+        "oncePerTurn": "any-turn"
       },
       {
         "id": "horde-breaker",
         "name": "Horde Breaker",
         "page": 61,
-        "description": "Once on each of your turns when you make an attack with a weapon, you can make another attack with the same weapon against a different creature that is within 5 feet of the original target, that is within the weapon’s range, and that you haven’t attacked this turn."
+        "description": "Once on each of your turns when you make an attack with a weapon, you can make another attack with the same weapon against a different creature that is within 5 feet of the original target, that is within the weapon’s range, and that you haven’t attacked this turn.",
+        "oncePerTurn": "own-turn"
       }
     ]
   },
@@ -1843,6 +1956,9 @@
       15
     ],
     "description": "When you take damage, you can take a Reaction to give yourself Resistance to that damage and any other damage of the same type until the end of the current turn.",
+    "untyped": [
+      "resistances"
+    ],
     "activation": [
       "reaction"
     ]
@@ -1857,7 +1973,8 @@
     "levels": [
       11
     ],
-    "description": "Once per turn when you deal damage to a creature marked by your Hunter’s Mark, you can also deal that spell’s extra damage to a different creature that you can see within 30 feet of the first creature."
+    "description": "Once per turn when you deal damage to a creature marked by your Hunter’s Mark, you can also deal that spell’s extra damage to a different creature that you can see within 30 feet of the first creature.",
+    "oncePerTurn": "any-turn"
   },
   {
     "id": "life-domain-blessed-healer",
@@ -1985,6 +2102,20 @@
       3
     ],
     "description": "When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, you can take a Reaction to reduce the attack’s total damage against you. The reduction equals 1d10 plus your Dexterity modifier and Monk level.\nIf you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force. If you do so, choose a creature you can see within 5 feet of yourself if the attack was a melee attack or a creature you can see within 60 feet of yourself that isn’t behind Total Cover if the attack was a ranged attack. That creature must succeed on a Dexterity saving throw or take damage equal to two rolls of your Martial Arts die plus your Dexterity modifier. The damage is the same type dealt by the attack.",
+    "parts": [
+      {
+        "label": "redirect some of the attack’s force",
+        "spend": {
+          "resource": "focus-points",
+          "amount": 1
+        },
+        "save": {
+          "ability": "dex",
+          "onSuccess": "none"
+        },
+        "usableWhen": "If you reduce the damage to 0"
+      }
+    ],
     "activation": [
       "reaction"
     ],
@@ -1992,11 +2123,7 @@
     "rollAdds": [
       "dex",
       "class-level"
-    ],
-    "save": {
-      "ability": "dex",
-      "appliesWhen": "If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force"
-    }
+    ]
   },
   {
     "id": "monk-deflect-energy",
@@ -2038,8 +2165,14 @@
       6
     ],
     "description": "Whenever you deal damage with your Unarmed Strike, it can deal your choice of Force damage or its normal damage type.",
-    "damageTypes": [
-      "force"
+    "damage": {
+      "types": [
+        "force"
+      ],
+      "orNormalType": true
+    },
+    "attacksWith": [
+      "unarmed-strike"
     ]
   },
   {
@@ -2067,7 +2200,8 @@
     "levels": [
       7
     ],
-    "description": "When you’re subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail.\nYou don’t benefit from this feature if you have the Incapacitated condition."
+    "description": "When you’re subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail.\nYou don’t benefit from this feature if you have the Incapacitated condition.",
+    "unless": "if you have the Incapacitated condition"
   },
   {
     "id": "monk-extra-attack",
@@ -2101,7 +2235,11 @@
     "levels": [
       1
     ],
-    "description": "Your practice of martial arts gives you mastery of combat styles that use your Unarmed Strike and Monk weapons, which are the following:\n• Simple Melee weapons\n• Martial Melee weapons that have the Light property\nYou gain the following benefits while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield.\nBonus Unarmed Strike. You can make an Unarmed Strike as a Bonus Action.\nMartial Arts Die. You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table.\nDexterous Attacks. You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
+    "description": "Your practice of martial arts gives you mastery of combat styles that use your Unarmed Strike and Monk weapons, which are the following:\n• Simple Melee weapons\n• Martial Melee weapons that have the Light property\nYou gain the following benefits while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield.\nBonus Unarmed Strike. You can make an Unarmed Strike as a Bonus Action.\nMartial Arts Die. You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table.\nDexterous Attacks. You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC.",
+    "untyped": [
+      "activation",
+      "dice"
+    ]
   },
   {
     "id": "monk-monk-subclass",
@@ -2158,10 +2296,10 @@
       }
     ],
     "uses": {
+      "recharge": "short-or-long-rest",
       "count": {
         "column": "focusPoints"
-      },
-      "recharge": "short-or-long-rest"
+      }
     },
     "saveDc": {
       "plusModifierOf": "wis"
@@ -2213,13 +2351,22 @@
       5
     ],
     "description": "Once per turn when you hit a creature with a Monk weapon or an Unarmed Strike, you can expend 1 Focus Point to attempt a stunning strike. The target must make a Constitution saving throw. On a failed save, the target has the Stunned condition until the start of your next turn. On a successful save, the target’s Speed is halved until the start of your next turn, and the next attack roll made against the target before then has Advantage.",
+    "untyped": [
+      "conditions"
+    ],
     "spend": {
       "resource": "focus-points",
       "amount": 1
     },
+    "oncePerTurn": "any-turn",
     "save": {
-      "ability": "con"
-    }
+      "ability": "con",
+      "onSuccess": "other"
+    },
+    "attacksWith": [
+      "monk-weapon",
+      "unarmed-strike"
+    ]
   },
   {
     "id": "monk-superior-defense",
@@ -2231,6 +2378,9 @@
       18
     ],
     "description": "At the start of your turn, you can expend 3 Focus Points to bolster yourself against harm for 1 minute or until you have the Incapacitated condition. During that time, you have Resistance to all damage except Force damage.",
+    "untyped": [
+      "resistances"
+    ],
     "spend": {
       "resource": "focus-points",
       "amount": 3
@@ -2264,7 +2414,29 @@
     "levels": [
       2
     ],
-    "description": "Your speed increases by 10 feet while you aren’t wearing armor or wielding a Shield. This bonus increases when you reach certain Monk levels, as shown on the Monk Features table."
+    "description": "Your speed increases by 10 feet while you aren’t wearing armor or wielding a Shield. This bonus increases when you reach certain Monk levels, as shown on the Monk Features table.",
+    "speedBonus": {
+      "feet": 10,
+      "appliesWhen": "while you aren’t wearing armor or wielding a Shield"
+    },
+    "speedBonusByLevel": [
+      {
+        "level": 6,
+        "feet": 15
+      },
+      {
+        "level": 10,
+        "feet": 20
+      },
+      {
+        "level": 14,
+        "feet": 25
+      },
+      {
+        "level": 18,
+        "feet": 30
+      }
+    ]
   },
   {
     "id": "monk-uncanny-metabolism",
@@ -2277,9 +2449,13 @@
     ],
     "description": "When you roll Initiative, you can regain all expended Focus Points. When you do so, roll your Martial Arts die, and regain a number of Hit Points equal to your Monk level plus the number rolled.\nOnce you use this feature, you can’t use it again until you finish a Long Rest.",
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
-    }
+      "recharge": "long-rest",
+      "count": 1
+    },
+    "diceFromColumn": "martialArts",
+    "rollAdds": [
+      "class-level"
+    ]
   },
   {
     "id": "oath-of-devotion-aura-of-devotion",
@@ -2311,21 +2487,32 @@
       20
     ],
     "description": "As a Bonus Action, you can imbue your Aura of Protection with holy power, granting the benefits below for 10 minutes or until you end them (no action required). Once you use this feature, you can’t use it again until you finish a Long Rest. You can also restore your use of it by expending a level 5 spell slot (no action required).\nHoly Ward. You have Advantage on any saving throw you are forced to make by a Fiend or an Undead.\nRadiant Damage. Whenever an enemy starts its turn in the aura, that creature takes Radiant damage equal to your Charisma modifier plus your Proficiency Bonus.\nSunlight. The aura is filled with Bright Light that is sunlight.",
+    "parts": [
+      {
+        "label": "Radiant Damage",
+        "damage": {
+          "types": [
+            "radiant"
+          ],
+          "appliesWhen": "Whenever an enemy starts its turn in the aura"
+        }
+      }
+    ],
+    "untyped": [
+      "damage"
+    ],
     "activation": [
       "bonus-action"
     ],
     "uses": {
-      "count": 1,
       "recharge": "long-rest",
+      "count": 1,
       "restoredBy": {
         "resource": "spell-slot",
         "amount": 1,
         "slotLevel": 5
       }
-    },
-    "damageTypes": [
-      "radiant"
-    ]
+    }
   },
   {
     "id": "oath-of-devotion-oath-of-devotion-spells",
@@ -2350,12 +2537,21 @@
       3
     ],
     "description": "When you take the Attack action, you can expend one use of your Channel Divinity to imbue one Melee weapon that you are holding with positive energy. For 10 minutes or until you use this feature again, you add your Charisma modifier to attack rolls you make with that weapon (minimum bonus of +1), and each time you hit with it, you cause it to deal its normal damage type or Radiant damage.\nThe weapon also emits Bright Light in a 20-foot radius and Dim Light 20 feet beyond that.\nYou can end this effect early (no action required). This effect also ends if you aren’t carrying the weapon.",
+    "untyped": [
+      "bonus"
+    ],
     "spend": {
       "resource": "channel-divinity",
       "amount": 1
     },
-    "damageTypes": [
-      "radiant"
+    "damage": {
+      "types": [
+        "radiant"
+      ],
+      "orNormalType": true
+    },
+    "attacksWith": [
+      "imbued-weapon"
     ]
   },
   {
@@ -2398,6 +2594,9 @@
       9
     ],
     "description": "As a Magic action, you can expend one use of this class’s Channel Divinity to overwhelm foes with awe. As you present your Holy Symbol or weapon, you can target a number of creatures equal to your Charisma modifier (minimum of one creature) that you can see within 60 feet of yourself. Each target must succeed on a Wisdom saving throw or have the Frightened condition for 1 minute or until it takes any damage. While Frightened in this way, a target can do only one of the following on its turns: move, take an action, or take a Bonus Action.",
+    "untyped": [
+      "conditions"
+    ],
     "activation": [
       "magic-action"
     ],
@@ -2407,6 +2606,7 @@
     },
     "save": {
       "ability": "wis",
+      "onSuccess": "none",
       "selective": true
     },
     "range": 60
@@ -2455,10 +2655,14 @@
       6
     ],
     "description": "You radiate a protective, unseeable aura in a 10-foot Emanation that originates from you. The aura is inactive while you have the Incapacitated condition.\nYou and your allies in the aura gain a bonus to saving throws equal to your Charisma modifier (minimum bonus of +1).\nIf another Paladin is present, a creature can benefit from only one Aura of Protection at a time; the creature chooses which aura while in them.",
+    "untyped": [
+      "bonus"
+    ],
     "area": {
       "shape": "emanation",
       "size": 10,
-      "allies": true
+      "allies": true,
+      "unless": "while you have the Incapacitated condition"
     }
   },
   {
@@ -2488,10 +2692,10 @@
       }
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "column": "channelDivinity"
       },
-      "recharge": "long-rest",
       "shortRestRegain": 1
     },
     "saveDc": "spell-save-dc"
@@ -2535,8 +2739,8 @@
     ],
     "description": "You can call on the aid of an otherworldly steed. You always have the Find Steed spell prepared.\nYou can also cast the spell once without expending a spell slot, and you regain the ability to do so when you finish a Long Rest.",
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 1
     },
     "alwaysPrepared": [
       "find-steed"
@@ -2609,8 +2813,8 @@
     ],
     "description": "You always have the Divine Smite spell prepared. In addition, you can cast it without expending a spell slot, but you must finish a Long Rest before you can cast it in this way again.",
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 1
     },
     "alwaysPrepared": [
       "divine-smite"
@@ -2631,9 +2835,15 @@
       11
     ],
     "description": "Your strikes now carry supernatural power. When you hit a target with an attack roll using a Melee weapon or an Unarmed Strike, the target takes an extra 1d8 Radiant damage.",
-    "dice": "1d8",
-    "damageTypes": [
-      "radiant"
+    "damage": {
+      "dice": "1d8",
+      "types": [
+        "radiant"
+      ]
+    },
+    "attacksWith": [
+      "melee-weapon",
+      "unarmed-strike"
     ]
   },
   {
@@ -2680,7 +2890,10 @@
     "levels": [
       3
     ],
-    "description": "If you use Reckless Attack while your Rage is active, you deal extra damage to the first target you hit on your turn with a Strength-based attack. To determine the extra damage, roll a number of d6s equal to your Rage Damage bonus, and add them together. The damage has the same type as the weapon or Unarmed Strike used for the attack."
+    "description": "If you use Reckless Attack while your Rage is active, you deal extra damage to the first target you hit on your turn with a Strength-based attack. To determine the extra damage, roll a number of d6s equal to your Rage Damage bonus, and add them together. The damage has the same type as the weapon or Unarmed Strike used for the attack.",
+    "untyped": [
+      "damage"
+    ]
   },
   {
     "id": "path-of-the-berserker-intimidating-presence",
@@ -2693,12 +2906,16 @@
       14
     ],
     "description": "As a Bonus Action, you can strike terror into others with your menacing presence and primal power. When you do so, each creature of your choice in a 30-foot Emanation originating from you must make a Wisdom saving throw (DC 8 plus your Strength modifier and Proficiency Bonus). On a failed save, a creature has the Frightened condition for 1 minute. At the end of each of the Frightened creature’s turns, the creature repeats the save, ending the effect on itself on a success.\nOnce you use this feature, you can’t use it again until you finish a Long Rest unless you expend a use of your Rage (no action required) to restore your use of it.",
+    "untyped": [
+      "conditions",
+      "save"
+    ],
     "activation": [
       "bonus-action"
     ],
     "uses": {
-      "count": 1,
       "recharge": "long-rest",
+      "count": 1,
       "restoredBy": {
         "resource": "rage",
         "amount": 1
@@ -2708,7 +2925,8 @@
       "ability": "wis",
       "dc": {
         "plusModifierOf": "str"
-      }
+      },
+      "onSuccess": "none"
     },
     "area": {
       "shape": "emanation",
@@ -2836,10 +3054,10 @@
     ],
     "description": "You always have the Hunter’s Mark spell prepared. You can cast it twice without expending a spell slot, and you regain all expended uses of this ability when you finish a Long Rest.\nThe number of times you can cast the spell without a spell slot increases when you reach certain Ranger levels, as shown in the Favored Enemy column of the Ranger Features table.",
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "column": "favoredEnemy"
-      },
-      "recharge": "long-rest"
+      }
     },
     "alwaysPrepared": [
       "hunters-mark"
@@ -2860,10 +3078,12 @@
       18
     ],
     "description": "Your connection to the forces of nature grants you Blindsight with a range of 30 feet.",
-    "sense": {
-      "type": "blindsight",
-      "range": 30
-    }
+    "senses": [
+      {
+        "type": "blindsight",
+        "range": 30
+      }
+    ]
   },
   {
     "id": "ranger-fighting-style",
@@ -2908,15 +3128,18 @@
       14
     ],
     "description": "You invoke spirits of nature to magically hide yourself. As a Bonus Action, you can give yourself the Invisible condition until the end of your next turn.\nYou can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest.",
+    "untyped": [
+      "conditions"
+    ],
     "activation": [
       "bonus-action"
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "ability": "wis",
         "minimum": 1
-      },
-      "recharge": "long-rest"
+      }
     }
   },
   {
@@ -2962,6 +3185,9 @@
       6
     ],
     "description": "Your Speed increases by 10 feet while you aren’t wearing Heavy armor. You also have a Climb Speed and a Swim Speed equal to your Speed.",
+    "untyped": [
+      "speed"
+    ],
     "speedBonus": {
       "feet": 10,
       "while": "no-heavy-armor"
@@ -2992,16 +3218,17 @@
       "magic-action"
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "ability": "wis",
         "minimum": 1
-      },
-      "recharge": "long-rest"
+      }
     },
     "dice": "1d8",
     "rollAdds": [
       "wis"
-    ]
+    ],
+    "label": "Temporary Hit Points"
   },
   {
     "id": "ranger-weapon-mastery",
@@ -3064,12 +3291,19 @@
         "name": "Poison",
         "page": 63,
         "description": "You add a toxin to your strike, forcing the target to make a Constitution saving throw. On a failed save, the target has the Poisoned condition for 1 minute. At the end of each of its turns, the Poisoned target repeats the save, ending the effect on itself on a success.\nTo use this effect, you must have a Poisoner’s Kit on your person.",
+        "usableWhen": "you must have a Poisoner’s Kit on your person",
+        "untyped": [
+          "conditions",
+          "save"
+        ],
+        "requiresItem": "poisoners-kit",
         "spend": {
           "resource": "sneak-attack-dice",
           "amount": 1
         },
         "save": {
-          "ability": "con"
+          "ability": "con",
+          "onSuccess": "none"
         }
       },
       {
@@ -3077,13 +3311,17 @@
         "name": "Trip",
         "page": 63,
         "description": "If the target is Large or smaller, it must succeed on a Dexterity saving throw or have the Prone condition.",
+        "untyped": [
+          "conditions"
+        ],
         "spend": {
           "resource": "sneak-attack-dice",
           "amount": 1
         },
         "save": {
           "ability": "dex",
-          "appliesWhen": "If the target is Large or smaller"
+          "targetMaxSize": "Large",
+          "onSuccess": "none"
         }
       },
       {
@@ -3122,7 +3360,8 @@
           "amount": 2
         },
         "save": {
-          "ability": "con"
+          "ability": "con",
+          "onSuccess": "none"
         }
       },
       {
@@ -3130,12 +3369,17 @@
         "name": "Knock Out",
         "page": 63,
         "description": "The target must succeed on a Constitution saving throw, or it has the Unconscious condition for 1 minute or until it takes any damage. The Unconscious target repeats the save at the end of each of its turns, ending the effect on itself on a success.",
+        "untyped": [
+          "conditions",
+          "save"
+        ],
         "spend": {
           "resource": "sneak-attack-dice",
           "amount": 6
         },
         "save": {
-          "ability": "con"
+          "ability": "con",
+          "onSuccess": "none"
         }
       },
       {
@@ -3143,12 +3387,16 @@
         "name": "Obscure",
         "page": 63,
         "description": "The target must succeed on a Dexterity saving throw, or it has the Blinded condition until the end of its next turn.",
+        "untyped": [
+          "conditions"
+        ],
         "spend": {
           "resource": "sneak-attack-dice",
           "amount": 3
         },
         "save": {
-          "ability": "dex"
+          "ability": "dex",
+          "onSuccess": "none"
         }
       }
     ]
@@ -3162,7 +3410,8 @@
     "levels": [
       18
     ],
-    "description": "You’re so evasive that attackers rarely gain the upper hand against you. No attack roll can have Advantage against you unless you have the Incapacitated condition."
+    "description": "You’re so evasive that attackers rarely gain the upper hand against you. No attack roll can have Advantage against you unless you have the Incapacitated condition.",
+    "unless": "you have the Incapacitated condition"
   },
   {
     "id": "rogue-epic-boon",
@@ -3189,7 +3438,8 @@
     "levels": [
       7
     ],
-    "description": "You can nimbly dodge out of the way of certain dangers. When you’re subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail. You can’t use this feature if you have the Incapacitated condition."
+    "description": "You can nimbly dodge out of the way of certain dangers. When you’re subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail. You can’t use this feature if you have the Incapacitated condition.",
+    "unless": "if you have the Incapacitated condition"
   },
   {
     "id": "rogue-expertise",
@@ -3264,7 +3514,15 @@
       1
     ],
     "description": "You know how to strike subtly and exploit a foe’s distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. The extra damage’s type is the same as the weapon’s type.\nYou don’t need Advantage on the attack roll if at least one of your allies is within 5 feet of the target, the ally doesn’t have the Incapacitated condition, and you don’t have Disadvantage on the attack roll.\nThe extra damage increases as you gain Rogue levels, as shown in the Sneak Attack column of the Rogue Features table.",
-    "diceFromColumn": "sneakAttack"
+    "untyped": [
+      "dice"
+    ],
+    "diceFromColumn": "sneakAttack",
+    "oncePerTurn": "any-turn",
+    "attacksWith": [
+      "finesse-weapon",
+      "ranged-weapon"
+    ]
   },
   {
     "id": "rogue-steady-aim",
@@ -3276,6 +3534,7 @@
       3
     ],
     "description": "As a Bonus Action, you give yourself Advantage on your next attack roll on the current turn. You can use this feature only if you haven’t moved during this turn, and after you use it, your Speed is 0 until the end of the current turn.",
+    "usableWhen": "if you haven’t moved during this turn",
     "activation": [
       "bonus-action"
     ]
@@ -3291,8 +3550,8 @@
     ],
     "description": "You have a marvelous knack for succeeding when you need to. If you fail a D20 Test, you can turn the roll into a 20.\nOnce you use this feature, you can’t use it again until you finish a Short or Long Rest.",
     "uses": {
-      "count": 1,
-      "recharge": "short-or-long-rest"
+      "recharge": "short-or-long-rest",
+      "count": 1
     }
   },
   {
@@ -3359,7 +3618,8 @@
     "levels": [
       20
     ],
-    "description": "While your Innate Sorcery feature is active, you can use one Metamagic option on each of your turns without spending Sorcery Points on it."
+    "description": "While your Innate Sorcery feature is active, you can use one Metamagic option on each of your turns without spending Sorcery Points on it.",
+    "oncePerTurn": "own-turn"
   },
   {
     "id": "sorcerer-epic-boon",
@@ -3395,7 +3655,11 @@
         "description": "You can expend a spell slot to gain a number of Sorcery Points equal to the slot’s level (no action required).",
         "activation": [
           "no-action"
-        ]
+        ],
+        "spend": {
+          "resource": "spell-slot",
+          "amount": 1
+        }
       },
       {
         "id": "creating-spell-slots",
@@ -3408,10 +3672,10 @@
       }
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "column": "sorceryPoints"
-      },
-      "recharge": "long-rest"
+      }
     },
     "slotCreation": [
       {
@@ -3455,8 +3719,8 @@
       "bonus-action"
     ],
     "uses": {
-      "count": 2,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 2
     }
   },
   {
@@ -3596,8 +3860,8 @@
     ],
     "description": "When you finish a Short Rest, you can regain expended Sorcery Points, but no more than a number equal to half your Sorcerer level (round down). Once you use this feature, you can’t do so again until you finish a Long Rest.",
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 1
     }
   },
   {
@@ -3661,7 +3925,10 @@
     "levels": [
       3
     ],
-    "description": "You’ve trained to get into especially hard-to-reach places, granting you these benefits.\nClimber. You gain a Climb Speed equal to your Speed.\nJumper. You can determine your jump distance using your Dexterity rather than your Strength."
+    "description": "You’ve trained to get into especially hard-to-reach places, granting you these benefits.\nClimber. You gain a Climb Speed equal to your Speed.\nJumper. You can determine your jump distance using your Dexterity rather than your Strength.",
+    "untyped": [
+      "speed"
+    ]
   },
   {
     "id": "thief-supreme-sneak",
@@ -3709,7 +3976,10 @@
     "levels": [
       13
     ],
-    "description": "You’ve learned how to maximize use of magic items, granting you the following benefits.\nAttunement. You can attune to up to four magic items at once.\nCharges. Whenever you use a magic item property that expends charges, roll 1d6. On a roll of 6, you use the property without expending the charges.\nScrolls. You can use any Spell Scroll, using Intelligence as your spellcasting ability for the spell. If the spell is a cantrip or a level 1 spell, you can cast it reliably. If the scroll contains a higher-level spell, you must first succeed on an Intelligence (Arcana) check (DC 10 plus the spell’s level). On a successful check, you cast the spell from the scroll. On a failed check, the scroll disintegrates."
+    "description": "You’ve learned how to maximize use of magic items, granting you the following benefits.\nAttunement. You can attune to up to four magic items at once.\nCharges. Whenever you use a magic item property that expends charges, roll 1d6. On a roll of 6, you use the property without expending the charges.\nScrolls. You can use any Spell Scroll, using Intelligence as your spellcasting ability for the spell. If the spell is a cantrip or a level 1 spell, you can cast it reliably. If the scroll contains a higher-level spell, you must first succeed on an Intelligence (Arcana) check (DC 10 plus the spell’s level). On a successful check, you cast the spell from the scroll. On a failed check, the scroll disintegrates.",
+    "untyped": [
+      "dice"
+    ]
   },
   {
     "id": "warlock-ability-score-improvement",
@@ -3740,8 +4010,8 @@
     ],
     "description": "In the past, you usually contacted your patron through intermediaries. Now you can communicate directly; you always have the Contact Other Plane spell prepared. With this feature, you can cast the spell without expending a spell slot to contact your patron, and you automatically succeed on the spell’s saving throw.\nOnce you cast the spell with this feature, you can’t do so in this way again until you finish a Long Rest.",
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 1
     },
     "alwaysPrepared": [
       "contact-other-plane"
@@ -3749,7 +4019,7 @@
     "freeCast": [
       {
         "spell": "contact-other-plane",
-        "appliesWhen": "to contact your patron"
+        "usableWhen": "to contact your patron"
       }
     ]
   },
@@ -3773,7 +4043,9 @@
           "text": "Level 2+ Warlock, a Warlock Cantrip That Deals Damage",
           "level": 2
         },
-        "repeatable": true
+        "repeatable": {
+          "text": "You can gain this invocation more than once. Each time you do so, choose a different eligible cantrip."
+        }
       },
       {
         "id": "armor-of-shadows",
@@ -3824,7 +4096,10 @@
           "level": 12,
           "invocation": "thirsting-blade"
         },
-        "pactWeaponAttacks": 3
+        "attacks": 3,
+        "attacksWith": [
+          "pact-weapon"
+        ]
       },
       {
         "id": "eldritch-mind",
@@ -3842,10 +4117,23 @@
           "level": 5,
           "invocation": "pact-of-the-blade"
         },
-        "dice": "1d8",
+        "untyped": [
+          "conditions"
+        ],
+        "spend": {
+          "resource": "pact-magic-slot",
+          "amount": 1
+        },
         "dicePerSlotLevel": "1d8",
-        "damageTypes": [
-          "force"
+        "damage": {
+          "dice": "1d8",
+          "types": [
+            "force"
+          ]
+        },
+        "oncePerTurn": "any-turn",
+        "attacksWith": [
+          "pact-weapon"
         ]
       },
       {
@@ -3857,7 +4145,9 @@
           "text": "Level 2+ Warlock, a Warlock Cantrip That Deals Damage",
           "level": 2
         },
-        "repeatable": true
+        "repeatable": {
+          "text": "You can gain this invocation more than once. Each time you do so, choose a different eligible cantrip."
+        }
       },
       {
         "id": "fiendish-vigor",
@@ -3897,9 +4187,12 @@
           "text": "Level 5+ Warlock",
           "level": 5
         },
+        "untyped": [
+          "speed"
+        ],
         "uses": {
-          "count": 1,
-          "recharge": "long-rest"
+          "recharge": "long-rest",
+          "count": 1
         },
         "freeCast": [
           {
@@ -3942,7 +4235,9 @@
           "text": "Level 2+ Warlock",
           "level": 2
         },
-        "repeatable": true,
+        "repeatable": {
+          "text": "You can gain this invocation more than once. Each time you do so, choose a different Origin feat."
+        },
         "feat": {
           "category": "origin"
         }
@@ -3957,11 +4252,20 @@
           "level": 9,
           "invocation": "pact-of-the-blade"
         },
-        "dice": "1d6",
-        "damageTypes": [
-          "necrotic",
-          "psychic",
-          "radiant"
+        "untyped": [
+          "healing"
+        ],
+        "damage": {
+          "dice": "1d6",
+          "types": [
+            "necrotic",
+            "psychic",
+            "radiant"
+          ]
+        },
+        "oncePerTurn": "any-turn",
+        "attacksWith": [
+          "pact-weapon"
         ]
       },
       {
@@ -4022,7 +4326,7 @@
           {
             "spell": "invisibility",
             "selfOnly": true,
-            "appliesWhen": "While you’re in an area of Dim Light or Darkness"
+            "usableWhen": "While you’re in an area of Dim Light or Darkness"
           }
         ]
       },
@@ -4050,10 +4354,16 @@
         "activation": [
           "bonus-action"
         ],
-        "damageTypes": [
-          "necrotic",
-          "psychic",
-          "radiant"
+        "damage": {
+          "types": [
+            "necrotic",
+            "psychic",
+            "radiant"
+          ],
+          "orNormalType": true
+        },
+        "attacksWith": [
+          "pact-weapon"
         ]
       },
       {
@@ -4085,7 +4395,9 @@
           "text": "Level 2+ Warlock, a Warlock Cantrip That Deals Damage via an Attack Roll",
           "level": 2
         },
-        "repeatable": true
+        "repeatable": {
+          "text": "You can gain this invocation more than once. Each time you do so, choose a different eligible cantrip."
+        }
       },
       {
         "id": "thirsting-blade",
@@ -4097,7 +4409,10 @@
           "level": 5,
           "invocation": "pact-of-the-blade"
         },
-        "pactWeaponAttacks": 2
+        "attacks": 2,
+        "attacksWith": [
+          "pact-weapon"
+        ]
       },
       {
         "id": "visions-of-distant-realms",
@@ -4138,10 +4453,12 @@
           "text": "Level 15+ Warlock",
           "level": 15
         },
-        "sense": {
-          "type": "truesight",
-          "range": 30
-        }
+        "senses": [
+          {
+            "type": "truesight",
+            "range": 30
+          }
+        ]
       }
     ]
   },
@@ -4183,8 +4500,8 @@
     ],
     "description": "You can perform an esoteric rite for 1 minute. At the end of it, you regain expended Pact Magic spell slots but no more than a number equal to half your maximum (round up). Once you use this feature, you can’t do so again until you finish a Long Rest.",
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 1
     }
   },
   {
@@ -4201,9 +4518,9 @@
     ],
     "description": "Your patron grants you a magical secret called an arcanum. Choose one level 6 Warlock spell as this arcanum.\nYou can cast your arcanum spell once without expending a spell slot, and you must finish a Long Rest before you can cast it in this way again.\nAs shown in the Warlock Features table, you gain another Warlock spell of your choice that can be cast in this way when you reach Warlock levels 13 (level 7 spell), 15 (level 8 spell), and 17 (level 9 spell). You regain all uses of your Mystic Arcanum when you finish a Long Rest.\nWhenever you gain a Warlock level, you can replace one of your arcanum spells with another Warlock spell of the same level.",
     "uses": {
+      "recharge": "long-rest",
       "count": 1,
-      "per": "spell",
-      "recharge": "long-rest"
+      "per": "spell"
     },
     "spellLevels": [
       {
@@ -4282,7 +4599,8 @@
         "page": 52,
         "description": "The target must succeed on a Strength saving throw or be pushed up to 15 feet away from you.",
         "save": {
-          "ability": "str"
+          "ability": "str",
+          "onSuccess": "none"
         }
       },
       {
@@ -4290,8 +4608,12 @@
         "name": "Topple",
         "page": 52,
         "description": "The target must succeed on a Dexterity saving throw or have the Prone condition.",
+        "untyped": [
+          "conditions"
+        ],
         "save": {
-          "ability": "dex"
+          "ability": "dex",
+          "onSuccess": "none"
         }
       }
     ]
@@ -4311,13 +4633,21 @@
       "resource": "focus-points",
       "amount": 4
     },
-    "dice": "10d12",
-    "damageTypes": [
-      "force"
-    ],
+    "damage": {
+      "dice": "10d12",
+      "types": [
+        "force"
+      ],
+      "timing": "When you end them"
+    },
     "save": {
-      "ability": "con"
-    }
+      "ability": "con",
+      "onSuccess": "half",
+      "timing": "When you end them"
+    },
+    "attacksWith": [
+      "unarmed-strike"
+    ]
   },
   {
     "id": "warrior-of-the-open-hand-wholeness-of-body",
@@ -4334,12 +4664,16 @@
       "bonus-action"
     ],
     "uses": {
+      "recharge": "long-rest",
       "count": {
         "ability": "wis",
         "minimum": 1
-      },
-      "recharge": "long-rest"
-    }
+      }
+    },
+    "diceFromColumn": "martialArts",
+    "rollAdds": [
+      "wis"
+    ]
   },
   {
     "id": "wizard-ability-score-improvement",
@@ -4370,8 +4704,8 @@
     ],
     "description": "You can regain some of your magical energy by studying your spellbook. When you finish a Short Rest, you can choose expended spell slots to recover. The spell slots can have a combined level equal to no more than half your Wizard level (round up), and none of the slots can be level 6 or higher. For example, if you’re a level 4 Wizard, you can recover up to two levels’ worth of spell slots, regaining either one level 2 spell slot or two level 1 spell slots.\nOnce you use this feature, you can’t do so again until you finish a Long Rest.",
     "uses": {
-      "count": 1,
-      "recharge": "long-rest"
+      "recharge": "long-rest",
+      "count": 1
     }
   },
   {
@@ -4445,9 +4779,9 @@
     ],
     "description": "Choose two level 3 spells in your spellbook as your signature spells. You always have these spells prepared, and you can cast each of them once at level 3 without expending a spell slot. When you do so, you can’t cast them in this way again until you finish a Short or Long Rest. To cast either spell at a higher level, you must expend a spell slot.",
     "uses": {
+      "recharge": "short-or-long-rest",
       "count": 1,
-      "per": "spell",
-      "recharge": "short-or-long-rest"
+      "per": "spell"
     }
   },
   {

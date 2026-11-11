@@ -689,7 +689,8 @@
             "sameAsSpellcasting": true,
             "spells": [
               {
-                "id": "invisibility"
+                "id": "invisibility",
+                "selfOnly": true
               }
             ]
           }
@@ -3580,7 +3581,8 @@
             "sameAsSpellcasting": true,
             "spells": [
               {
-                "id": "invisibility"
+                "id": "invisibility",
+                "selfOnly": true
               }
             ]
           }
@@ -6607,7 +6609,7 @@
       {
         "kind": "condition-immunity",
         "value": "charmed",
-        "appliesWhen": "with Mind Blank"
+        "qualifier": "with Mind Blank"
       }
     ],
     "gear": [
@@ -7263,7 +7265,8 @@
         ],
         "area": {
           "shape": "emanation",
-          "size": 5
+          "size": 5,
+          "selective": true
         }
       },
       {
@@ -8202,6 +8205,9 @@
           {
             "ability": "con",
             "dc": 12,
+            "alsoSelf": {
+              "appliesWhen": "If the basilisk sees its reflection in the Cone"
+            },
             "targets": "each creature in a 30-foot Cone",
             "firstFailure": "The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success.",
             "secondFailure": "The target has the Petrified condition instead of the Restrained condition."
@@ -8574,7 +8580,8 @@
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 16
@@ -8631,6 +8638,7 @@
             "type": "acid",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "While swallowed",
             "timing": "at the start of each of the behir’s turns"
           }
         ],
@@ -8638,12 +8646,14 @@
           {
             "condition": "blinded",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "While swallowed"
           },
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "While swallowed"
           },
           {
             "condition": "prone",
@@ -10853,6 +10863,7 @@
           {
             "ability": "str",
             "dc": 14,
+            "appliesWhen": "Each creature whose space the centaur enters is targeted once by the following effect",
             "failure": "7 (1d6 + 4) Bludgeoning damage, and the target has the Prone condition."
           }
         ],
@@ -10862,14 +10873,16 @@
             "average": 7,
             "type": "bludgeoning",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "Each creature whose space the centaur enters is targeted once by the following effect"
           }
         ],
         "conditions": [
           {
             "condition": "prone",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "Each creature whose space the centaur enters is targeted once by the following effect"
           }
         ]
       }
@@ -10995,7 +11008,7 @@
           {
             "condition": "restrained",
             "on": "hit",
-            "appliesWhen": "If the target is a Large or smaller creature"
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 14
@@ -11355,7 +11368,8 @@
           {
             "condition": "paralyzed",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "While Poisoned"
           }
         ]
       }
@@ -11599,7 +11613,7 @@
           {
             "condition": "blinded",
             "on": "hit",
-            "appliesWhen": "If the target is a Large or smaller creature"
+            "appliesWhen": "While the cloaker is attached"
           }
         ]
       },
@@ -12441,7 +12455,8 @@
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 13
@@ -12709,7 +12724,7 @@
           {
             "condition": "restrained",
             "on": "hit",
-            "appliesWhen": "If the target is a Medium or smaller creature"
+            "appliesWhen": "While Grappled"
           }
         ],
         "escapeDc": 12
@@ -13709,6 +13724,7 @@
             "ability": "str",
             "dc": 17,
             "appliesWhen": "Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind",
+            "oncePerTurn": "any-turn",
             "failure": "While in the whirlwind, the target has the Restrained condition and moves with the whirlwind. At the start of each of its turns, the Restrained target takes 21 (6d6) Thunder damage. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success."
           }
         ],
@@ -13719,7 +13735,7 @@
             "type": "thunder",
             "on": "failure",
             "save": 0,
-            "appliesWhen": "Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind",
+            "appliesWhen": "While in the whirlwind",
             "timing": "At the start of each of its turns"
           }
         ],
@@ -13728,7 +13744,7 @@
             "condition": "restrained",
             "on": "failure",
             "save": 0,
-            "appliesWhen": "Whenever the whirlwind enters a creature’s space or a creature enters the whirlwind"
+            "appliesWhen": "While in the whirlwind"
           }
         ],
         "area": {
@@ -16942,7 +16958,7 @@
             "dice": "3d6",
             "average": 10,
             "type": "acid",
-            "appliesWhen": "by succeeding on a DC 12 Strength (Athletics) check"
+            "appliesWhen": "a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check"
           }
         ]
       },
@@ -16996,6 +17012,7 @@
             "type": "acid",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "An engulfed target",
             "timing": "at the start of each of the cube’s turns"
           }
         ],
@@ -17003,7 +17020,8 @@
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "An engulfed target"
           }
         ]
       }
@@ -18319,7 +18337,7 @@
           {
             "condition": "restrained",
             "on": "hit",
-            "appliesWhen": "If the target is a Large or smaller creature"
+            "appliesWhen": "While Grappled"
           }
         ],
         "escapeDc": 15
@@ -18760,15 +18778,18 @@
             "dice": "2d4",
             "average": 5,
             "type": "acid",
+            "appliesWhen": "While swallowed",
             "timing": "At the end of the frog’s next turn"
           }
         ],
         "conditions": [
           {
-            "condition": "blinded"
+            "condition": "blinded",
+            "appliesWhen": "While swallowed"
           },
           {
-            "condition": "restrained"
+            "condition": "restrained",
+            "appliesWhen": "While swallowed"
           },
           {
             "condition": "prone",
@@ -19165,7 +19186,7 @@
           {
             "condition": "restrained",
             "on": "hit",
-            "appliesWhen": "If the target is a Medium or smaller creature"
+            "appliesWhen": "While Grappled"
           }
         ],
         "escapeDc": 13
@@ -19958,15 +19979,18 @@
             "dice": "3d6",
             "average": 10,
             "type": "acid",
+            "appliesWhen": "While swallowed",
             "timing": "at the end of each of the toad’s turns"
           }
         ],
         "conditions": [
           {
-            "condition": "blinded"
+            "condition": "blinded",
+            "appliesWhen": "While swallowed"
           },
           {
-            "condition": "restrained"
+            "condition": "restrained",
+            "appliesWhen": "While swallowed"
           },
           {
             "condition": "prone",
@@ -22176,7 +22200,38 @@
       },
       {
         "name": "Coven Magic",
-        "text": "While within 30 feet of at least two hag allies, the hag can cast one of the following spells, requiring no Material components, using the spell’s normal casting time, and using Intelligence as the spellcasting ability (spell save DC 11): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant. The hag must finish a Long Rest before using this trait to cast that spell again."
+        "text": "While within 30 feet of at least two hag allies, the hag can cast one of the following spells, requiring no Material components, using the spell’s normal casting time, and using Intelligence as the spellcasting ability (spell save DC 11): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant. The hag must finish a Long Rest before using this trait to cast that spell again.",
+        "spellcasting": {
+          "ability": "int",
+          "saveDc": 11,
+          "lists": [
+            {
+              "frequency": 1,
+              "each": true,
+              "spells": [
+                {
+                  "id": "augury"
+                },
+                {
+                  "id": "find-familiar"
+                },
+                {
+                  "id": "identify"
+                },
+                {
+                  "id": "locate-object"
+                },
+                {
+                  "id": "scrying"
+                },
+                {
+                  "id": "unseen-servant"
+                }
+              ]
+            }
+          ],
+          "appliesWhen": "While within 30 feet of at least two hag allies"
+        }
       },
       {
         "name": "Mimicry",
@@ -22231,7 +22286,8 @@
                 },
                 {
                   "id": "invisibility",
-                  "note": "self only, and the hag leaves no tracks while Invisible"
+                  "note": "self only, and the hag leaves no tracks while Invisible",
+                  "selfOnly": true
                 },
                 {
                   "id": "minor-illusion"
@@ -23029,7 +23085,7 @@
     "conditionalDefenses": [
       {
         "kind": "resistance",
-        "appliesWhen": "Damage type chosen for the Draconic Origin trait below"
+        "qualifier": "Damage type chosen for the Draconic Origin trait below"
       }
     ],
     "senses": {
@@ -23213,7 +23269,8 @@
           {
             "condition": "incapacitated",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "While Charmed"
           }
         ],
         "area": {
@@ -24291,7 +24348,8 @@
           {
             "condition": "unconscious",
             "on": "failure-by-margin",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "While Poisoned"
           }
         ]
       }
@@ -25215,7 +25273,8 @@
           "ability": "cha",
           "spells": [
             {
-              "id": "invisibility"
+              "id": "invisibility",
+              "selfOnly": true
             }
           ]
         }
@@ -25551,6 +25610,7 @@
             "type": "thunder",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "Until the grapple ends",
             "timing": "at the start of each of the stalker’s turns"
           }
         ],
@@ -26283,7 +26343,8 @@
           },
           {
             "condition": "restrained",
-            "on": "hit"
+            "on": "hit",
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 20
@@ -26366,7 +26427,7 @@
             "type": "acid",
             "on": "failure",
             "save": 0,
-            "appliesWhen": "If the target is Large or smaller",
+            "appliesWhen": "A swallowed creature",
             "timing": "at the start of each of its turns"
           }
         ],
@@ -26375,7 +26436,7 @@
             "condition": "restrained",
             "on": "failure",
             "save": 0,
-            "appliesWhen": "If the target is Large or smaller"
+            "appliesWhen": "A swallowed creature"
           },
           {
             "condition": "prone",
@@ -26559,12 +26620,14 @@
           {
             "condition": "charmed",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "Until the curse ends"
           },
           {
             "condition": "poisoned",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "Until the curse ends"
           }
         ]
       },
@@ -28100,7 +28163,8 @@
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 14
@@ -28359,6 +28423,9 @@
           {
             "ability": "con",
             "dc": 13,
+            "alsoSelf": {
+              "appliesWhen": "If the medusa sees its reflection in the Cone"
+            },
             "targets": "each creature in a 30-foot Cone",
             "firstFailure": "The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success.",
             "secondFailure": "The target has the Petrified condition instead of the Restrained condition."
@@ -29468,7 +29535,8 @@
         "text": "Trigger: The mummy is hit by an attack roll. Response: The mummy adds 2 to its AC against the attack, possibly causing the attack to miss, and the mummy teleports up to 60 feet to an unoccupied space it can see. Each creature of its choice that it can see within 5 feet of its destination space has the Blinded condition until the end of the mummy’s next turn.",
         "conditions": [
           {
-            "condition": "blinded"
+            "condition": "blinded",
+            "appliesWhen": "Each creature of its choice that it can see within 5 feet of its destination space"
           }
         ]
       }
@@ -29759,7 +29827,38 @@
     "traits": [
       {
         "name": "Coven Magic",
-        "text": "While within 30 feet of at least two hag allies, the hag can cast one of the following spells, requiring no Material components, using the spell’s normal casting time, and using Intelligence as the spellcasting ability (spell save DC 14): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant. The hag must finish a Long Rest before using this trait to cast that spell again."
+        "text": "While within 30 feet of at least two hag allies, the hag can cast one of the following spells, requiring no Material components, using the spell’s normal casting time, and using Intelligence as the spellcasting ability (spell save DC 14): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant. The hag must finish a Long Rest before using this trait to cast that spell again.",
+        "spellcasting": {
+          "ability": "int",
+          "saveDc": 14,
+          "lists": [
+            {
+              "frequency": 1,
+              "each": true,
+              "spells": [
+                {
+                  "id": "augury"
+                },
+                {
+                  "id": "find-familiar"
+                },
+                {
+                  "id": "identify"
+                },
+                {
+                  "id": "locate-object"
+                },
+                {
+                  "id": "scrying"
+                },
+                {
+                  "id": "unseen-servant"
+                }
+              ]
+            }
+          ],
+          "appliesWhen": "While within 30 feet of at least two hag allies"
+        }
       },
       {
         "name": "Magic Resistance",
@@ -29806,7 +29905,8 @@
             {
               "id": "dream"
             }
-          ]
+          ],
+          "appliesWhen": "While on the Ethereal Plane"
         }
       },
       {
@@ -29840,7 +29940,8 @@
                 },
                 {
                   "id": "plane-shift",
-                  "note": "self only"
+                  "note": "self only",
+                  "selfOnly": true
                 }
               ]
             }
@@ -30668,7 +30769,8 @@
           "sameAsSpellcasting": true,
           "spells": [
             {
-              "id": "invisibility"
+              "id": "invisibility",
+              "selfOnly": true
             }
           ]
         }
@@ -31315,7 +31417,7 @@
           {
             "condition": "paralyzed",
             "on": "hit",
-            "appliesWhen": "If this damage reduces the target to 0 Hit Points"
+            "appliesWhen": "While Poisoned"
           }
         ]
       }
@@ -31840,7 +31942,7 @@
             "type": "poison",
             "on": "failure",
             "save": 0,
-            "appliesWhen": "If the target is a creature",
+            "appliesWhen": "While Poisoned",
             "timing": "at the start of each of its turns"
           }
         ],
@@ -31899,6 +32001,10 @@
         "rechargeRoll": {
           "min": 4,
           "max": 6
+        },
+        "spellcasting": {
+          "ability": "cha",
+          "saveDc": 21
         }
       }
     ]
@@ -32872,7 +32978,8 @@
           {
             "condition": "unconscious",
             "on": "failure-by-margin",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "While Poisoned"
           }
         ]
       }
@@ -33072,7 +33179,7 @@
           {
             "condition": "restrained",
             "on": "hit",
-            "appliesWhen": "If the target is a Large or smaller creature"
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 19
@@ -33120,6 +33227,7 @@
             "type": "acid",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "A swallowed creature",
             "timing": "at the start of each of the worm’s turns"
           }
         ],
@@ -33127,12 +33235,14 @@
           {
             "condition": "blinded",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "A swallowed creature"
           },
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "A swallowed creature"
           },
           {
             "condition": "prone",
@@ -33266,7 +33376,8 @@
           "ability": "cha",
           "spells": [
             {
-              "id": "invisibility"
+              "id": "invisibility",
+              "selfOnly": true
             }
           ]
         }
@@ -33367,7 +33478,7 @@
       {
         "kind": "vulnerability",
         "value": "piercing",
-        "appliesWhen": "from weapons wielded by creatures under the effect of a Bless spell"
+        "qualifier": "from weapons wielded by creatures under the effect of a Bless spell"
       }
     ],
     "senses": {
@@ -34039,7 +34150,7 @@
           {
             "condition": "restrained",
             "on": "hit",
-            "appliesWhen": "If the target is a Large or smaller creature"
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 17
@@ -34064,6 +34175,7 @@
             "type": "acid",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "A swallowed creature",
             "timing": "at the start of each of the remorhaz’s turns"
           },
           {
@@ -34072,6 +34184,7 @@
             "type": "fire",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "A swallowed creature",
             "timing": "at the start of each of the remorhaz’s turns"
           }
         ],
@@ -34079,12 +34192,14 @@
           {
             "condition": "blinded",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "A swallowed creature"
           },
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "A swallowed creature"
           },
           {
             "condition": "prone",
@@ -34390,7 +34505,7 @@
           {
             "condition": "restrained",
             "on": "hit",
-            "appliesWhen": "If the target is a Huge or smaller creature"
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 19
@@ -34517,7 +34632,8 @@
           },
           {
             "condition": "poisoned",
-            "on": "hit"
+            "on": "hit",
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 14
@@ -34942,7 +35058,8 @@
         ],
         "area": {
           "shape": "emanation",
-          "size": 5
+          "size": 5,
+          "selective": true
         }
       }
     ],
@@ -35014,7 +35131,8 @@
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "until the grapple ends"
           }
         ],
         "escapeDc": 14
@@ -35414,7 +35532,38 @@
       },
       {
         "name": "Coven Magic",
-        "text": "While within 30 feet of at least two hag allies, the hag can cast one of the following spells, requiring no Material components, using the spell’s normal casting time, and using Intelligence as the spellcasting ability (spell save DC 11): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant. The hag must finish a Long Rest before using this trait to cast that spell again."
+        "text": "While within 30 feet of at least two hag allies, the hag can cast one of the following spells, requiring no Material components, using the spell’s normal casting time, and using Intelligence as the spellcasting ability (spell save DC 11): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant. The hag must finish a Long Rest before using this trait to cast that spell again.",
+        "spellcasting": {
+          "ability": "int",
+          "saveDc": 11,
+          "lists": [
+            {
+              "frequency": 1,
+              "each": true,
+              "spells": [
+                {
+                  "id": "augury"
+                },
+                {
+                  "id": "find-familiar"
+                },
+                {
+                  "id": "identify"
+                },
+                {
+                  "id": "locate-object"
+                },
+                {
+                  "id": "scrying"
+                },
+                {
+                  "id": "unseen-servant"
+                }
+              ]
+            }
+          ],
+          "appliesWhen": "While within 30 feet of at least two hag allies"
+        }
       },
       {
         "name": "Vile Appearance",
@@ -35830,6 +35979,7 @@
             "type": "lightning",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "Until the grapple ends",
             "timing": "at the start of each of its turns"
           }
         ],
@@ -35842,12 +35992,14 @@
           {
             "condition": "blinded",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "Until the grapple ends"
           },
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "Until the grapple ends"
           }
         ],
         "escapeDc": 14
@@ -37781,7 +37933,8 @@
           "ability": "cha",
           "spells": [
             {
-              "id": "invisibility"
+              "id": "invisibility",
+              "selfOnly": true
             }
           ]
         }
@@ -38178,6 +38331,7 @@
             "average": 5,
             "type": "necrotic",
             "on": "hit",
+            "appliesWhen": "While attached",
             "timing": "at the start of each of the stirge’s turns"
           }
         ]
@@ -39834,7 +39988,8 @@
           },
           {
             "condition": "restrained",
-            "on": "hit"
+            "on": "hit",
+            "appliesWhen": "Until the grapple ends"
           }
         ],
         "escapeDc": 20
@@ -39943,6 +40098,7 @@
             "type": "acid",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "A swallowed creature",
             "timing": "at the start of each of the tarrasque’s turns"
           }
         ],
@@ -39950,12 +40106,14 @@
           {
             "condition": "blinded",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "A swallowed creature"
           },
           {
             "condition": "restrained",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "appliesWhen": "A swallowed creature"
           },
           {
             "condition": "prone",
@@ -40880,7 +41038,7 @@
           {
             "condition": "restrained",
             "on": "hit",
-            "appliesWhen": "If the target is a Large or smaller creature"
+            "appliesWhen": "While Grappled"
           }
         ],
         "escapeDc": 17
@@ -41090,10 +41248,12 @@
           "sameAsSpellcasting": true,
           "spells": [
             {
-              "id": "cure-wounds"
+              "id": "cure-wounds",
+              "appliesWhen": "The unicorn touches another creature with its horn"
             },
             {
-              "id": "lesser-restoration"
+              "id": "lesser-restoration",
+              "appliesWhen": "The unicorn touches another creature with its horn"
             }
           ]
         }
@@ -41440,7 +41600,7 @@
       {
         "kind": "condition-immunity",
         "value": "charmed",
-        "appliesWhen": "except from its vampire master"
+        "qualifier": "except from its vampire master"
       }
     ],
     "gear": [
@@ -41503,7 +41663,7 @@
           {
             "condition": "paralyzed",
             "on": "hit",
-            "appliesWhen": "If the target is reduced to 0 Hit Points by this attack"
+            "appliesWhen": "While it has the Poisoned condition"
           }
         ]
       }
@@ -41998,6 +42158,7 @@
             "type": "poison",
             "on": "failure",
             "save": 0,
+            "appliesWhen": "While Poisoned",
             "timing": "at the start of each of its turns"
           }
         ],
@@ -42716,7 +42877,7 @@
             "type": "bludgeoning",
             "on": "failure",
             "save": 0,
-            "appliesWhen": "If the target is a Large or smaller creature",
+            "appliesWhen": "Until the grapple ends",
             "timing": "at the start of each of the elemental’s turns"
           }
         ],
@@ -42731,7 +42892,7 @@
             "condition": "restrained",
             "on": "failure",
             "save": 0,
-            "appliesWhen": "If the target is a Large or smaller creature"
+            "appliesWhen": "Until the grapple ends"
           }
         ],
         "escapeDc": 14

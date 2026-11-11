@@ -105,6 +105,14 @@ export const saveGates: { id: string; feature: string; save: number; appliesWhen
     page: 314,
   },
   {
+    id: "centaur-trooper",
+    feature: "Trampling Charge",
+    save: 0,
+    appliesWhen: "Each creature whose space the centaur enters is targeted once by the following effect",
+    reason: "the save falls only on “Each creature whose space the centaur enters”, once",
+    page: 272,
+  },
+  {
     id: "stone-giant",
     feature: "Deflect Missile",
     save: 0,
@@ -140,7 +148,7 @@ export const overrides: Override[] = [
   {
     id: "half-dragon",
     path: "conditionalDefenses",
-    value: [{ kind: "resistance", appliesWhen: "Damage type chosen for the Draconic Origin trait below" }],
+    value: [{ kind: "resistance", qualifier: "Damage type chosen for the Draconic Origin trait below" }],
     reason: "the Resistances entry reads “Damage type chosen for the Draconic Origin trait below”",
     page: 297,
   },
@@ -154,14 +162,14 @@ export const overrides: Override[] = [
   {
     id: "archmage",
     path: "conditionalDefenses",
-    value: [{ kind: "condition-immunity", value: "charmed", appliesWhen: "with Mind Blank" }],
+    value: [{ kind: "condition-immunity", value: "charmed", qualifier: "with Mind Blank" }],
     reason: "the Immunities entry reads “Psychic; Charmed (with Mind Blank)”",
     page: 305,
   },
   {
     id: "rakshasa",
     path: "conditionalDefenses",
-    value: [{ kind: "vulnerability", value: "piercing", appliesWhen: "from weapons wielded by creatures under the effect of a Bless spell" }],
+    value: [{ kind: "vulnerability", value: "piercing", qualifier: "from weapons wielded by creatures under the effect of a Bless spell" }],
     reason: "the Vulnerabilities entry reads “Piercing damage from weapons wielded by creatures under the effect of a Bless spell”",
     page: 317,
   },
@@ -175,7 +183,7 @@ export const overrides: Override[] = [
   {
     id: "vampire-familiar",
     path: "conditionalDefenses",
-    value: [{ kind: "condition-immunity", value: "charmed", appliesWhen: "except from its vampire master" }],
+    value: [{ kind: "condition-immunity", value: "charmed", qualifier: "except from its vampire master" }],
     reason: "the Immunities entry reads “Charmed (except from its vampire master)”",
     page: 334,
   },
@@ -212,8 +220,9 @@ export const overrides: Override[] = [
   {
     id: "gelatinous-cube",
     path: "traits.0.damage.0.appliesWhen",
-    value: "by succeeding on a DC 12 Strength (Athletics) check",
-    reason: "the puller takes the Acid damage when it pulls a creature out “by succeeding on a DC 12 Strength (Athletics) check”",
+    value: "a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check",
+    reason:
+      "the Acid damage falls on the puller: “a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check, and the puller takes 10 (3d6) Acid damage”",
     page: 286,
   },
   {
@@ -236,5 +245,34 @@ export const overrides: Override[] = [
     value: "each creature within 10 feet of the space it left",
     reason: "only “each creature within 10 feet of the space it left takes 11 (2d10) Necrotic damage”",
     page: 304,
+  },
+  {
+    id: "mummy-lord",
+    path: "reactions.0.conditions.0.appliesWhen",
+    value: "Each creature of its choice that it can see within 5 feet of its destination space",
+    reason: "the Blinded condition falls not on the attacker but on “Each creature of its choice that it can see within 5 feet of its destination space”",
+    page: 310,
+  },
+  // Rolls that last only as long as a state the feature's earlier sentence names, printed in that sentence.
+  {
+    id: "djinni",
+    path: "actions.3.damage.0.appliesWhen",
+    value: "While in the whirlwind",
+    reason: "“the Restrained target takes 21 (6d6) Thunder damage” lasts with the Restrained condition, which holds “While in the whirlwind”",
+    page: 280,
+  },
+  {
+    id: "giant-frog",
+    path: "actions.1.damage.0.appliesWhen",
+    value: "While swallowed",
+    reason: "“the swallowed target takes 5 (2d4) Acid damage” falls only on a target that is still swallowed",
+    page: 351,
+  },
+  {
+    id: "giant-toad",
+    path: "actions.1.damage.0.appliesWhen",
+    value: "While swallowed",
+    reason: "“In addition, the target takes 10 (3d6) Acid damage at the end of each of the toad’s turns” follows “While swallowed”",
+    page: 354,
   },
 ]

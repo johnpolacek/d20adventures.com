@@ -252,7 +252,7 @@
     "id": "legendary-actions",
     "name": "Legendary Actions",
     "page": 257,
-    "timing": "after-another-creatures-turn",
+    "takenAfter": "another-creatures-turn",
     "oneAtATime": true,
     "usesPerAction": 1,
     "recharge": "start-of-next-turn",

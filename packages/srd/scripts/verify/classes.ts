@@ -6,7 +6,7 @@ import type { Equipment } from "../../src/schema/equipment"
 import type { Feat } from "../../src/schema/origins"
 import type { Spell } from "../../src/schema/spells"
 import { dataPath, readData, toId } from "../lib/data"
-import { missingSentences, pages, squash } from "../lib/official"
+import { inOfficial, missingSentences, pages, squash } from "../lib/official"
 import type { Report } from "../lib/report"
 import { hasUpstream, readOpen5e } from "../lib/sources"
 
@@ -21,7 +21,18 @@ type Owner = { id: string; name: string; lines: Line[]; heading: number }
 const abilityByName: Record<string, string> = { Strength: "str", Dexterity: "dex", Constitution: "con", Intelligence: "int", Wisdom: "wis", Charisma: "cha" }
 const abilityName = Object.fromEntries(Object.entries(abilityByName).map(([name, id]) => [id, name]))
 const capital = (id: string) => id.replace(/(^|-)(\w)/g, (_, dash, letter) => `${dash ? " " : ""}${letter.toUpperCase()}`)
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+/** Equal as data: lists in order, object keys in any order. */
+const canonical = (value: unknown): unknown =>
+  Array.isArray(value)
+    ? value.map(canonical)
+    : value && typeof value === "object"
+      ? Object.fromEntries(
+          Object.keys(value)
+            .sort()
+            .map((key) => [key, canonical((value as Record<string, unknown>)[key])])
+        )
+      : value
+const same = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b))
 const sorted = <T>(list: T[]) => [...list].sort()
 
 /** Join PDF lines: a word broken at a line end ("Na-" "ture") closes up; "shape- " keeps its hyphen; a dash joins tight. */
@@ -260,71 +271,195 @@ const handReadings: Record<string, HandReading> = {
     activation: ["bonus-action"],
     area: { shape: "emanation", size: 30, selective: true },
     uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "rage", amount: 1 } },
+    // The Frightened condition and the repeated save at the end of each of its turns are not typed.
+    untyped: ["conditions", "save"],
   },
   // Page 46: "Each creature of your choice in the Sphere".
   "circle-of-the-land-lands-aid": { area: { shape: "sphere", size: 10, selective: true } },
   // Page 37: the save and its damage types hold only if you choose harm over healing; the 1d8 total serves both.
   // Every Channel Divinity effect spends one use (page 37: "Each time you use this class’s Channel Divinity").
-  "cleric-channel-divinity/divine-spark": { save: null, damageTypes: null, dice: "1d8", spend: channelDivinity },
+  "cleric-channel-divinity/divine-spark": { save: null, damage: null, dice: "1d8", spend: channelDivinity, untyped: ["save", "damage"] },
   // Page 37: "Each Undead of your choice within 30 feet of you must make a Wisdom saving throw."
-  "cleric-channel-divinity/turn-undead": { save: { ability: "wis", onlyCreatureTypes: ["undead"], selective: true }, spend: channelDivinity },
+  "cleric-channel-divinity/turn-undead": { save: { ability: "wis", onlyCreatureTypes: ["undead"], selective: true, onSuccess: "none" }, spend: channelDivinity, untyped: ["conditions"] },
   // Page 72: the slotless casting is only "to contact your patron".
-  "warlock-contact-patron": { freeCast: [{ spell: "contact-other-plane", appliesWhen: "to contact your patron" }] },
+  "warlock-contact-patron": { freeCast: [{ spell: "contact-other-plane", usableWhen: "to contact your patron" }] },
   // Page 46: the Bonus Action only moves the Cube already in place; the Half Cover is for "You and your allies".
   "circle-of-the-land-natures-sanctuary": { activation: ["magic-action"], area: { shape: "cube", size: 15, allies: true } },
   // Page 55: "You and your allies in the aura gain a bonus"; Aura Expansion widens that same aura.
-  "paladin-aura-of-protection": { area: { shape: "emanation", size: 10, allies: true } },
+  // Page 55: "The aura is inactive while you have the Incapacitated condition"; its Charisma bonus to saves is not typed.
+  "paladin-aura-of-protection": { area: { shape: "emanation", size: 10, allies: true, unless: "while you have the Incapacitated condition" }, untyped: ["bonus"] },
   "paladin-aura-expansion": { area: { shape: "emanation", size: 30, allies: true } },
   // Page 55: "you can target a number of creatures equal to your Charisma modifier"; you choose who saves.
-  "paladin-abjure-foes": { save: { ability: "wis", selective: true } },
+  "paladin-abjure-foes": { save: { ability: "wis", selective: true, onSuccess: "none" }, untyped: ["conditions"] },
   // Page 55: Divine Sense is a Channel Divinity effect, so it spends one use.
   "paladin-channel-divinity/divine-sense": { spend: channelDivinity },
-  // Page 37: Sear Undead harms only the Undead that fail the save.
-  "cleric-sear-undead": { damageOnlyTo: ["undead"] },
-  // Page 51: the Dexterity save comes only from the redirect.
-  "monk-deflect-attacks": { save: { ability: "dex", appliesWhen: "If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force" } },
+  // Page 37: Sear Undead harms only the Undead "that fails its saving throw against that use of Turn Undead".
+  "cleric-sear-undead": { damage: { types: ["radiant"], appliesWhen: "that fails its saving throw against that use of Turn Undead" } },
+  // Page 51: the redirect is a part with its own cost, condition and save.
+  "monk-deflect-attacks": {
+    save: null,
+    parts: [
+      {
+        label: "redirect some of the attack’s force",
+        usableWhen: "If you reduce the damage to 0",
+        spend: { resource: "focus-points", amount: 1 },
+        save: { ability: "dex", onSuccess: "none" },
+      },
+    ],
+  },
   // Page 50: the Bonus Action strike and the die hold only "while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield".
-  "monk-martial-arts": { activation: null, diceFromColumn: null, dice: null },
+  "monk-martial-arts": { activation: null, diceFromColumn: null, dice: null, untyped: ["activation", "dice"] },
   // Page 52: the action and "(no action required)" only end the vibrations.
-  "warrior-of-the-open-hand-quivering-palm": { activation: null },
   // Page 49: weapons and Unarmed Strikes only.
-  "champion-improved-critical": { criticalHit: { minRoll: 19, attacks: "weapons-and-unarmed-strikes" } },
-  "champion-superior-critical": { criticalHit: { minRoll: 18, attacks: "weapons-and-unarmed-strikes" } },
+  "champion-improved-critical": { criticalHit: { minRoll: 19 }, attacksWith: ["weapon", "unarmed-strike"] },
+  "champion-superior-critical": { criticalHit: { minRoll: 18 }, attacksWith: ["weapon", "unarmed-strike"] },
   // Pages 73 and 74: the extra attacks are with the pact weapon only.
-  "warlock-eldritch-invocations/thirsting-blade": { attacks: null, pactWeaponAttacks: 2 },
-  "warlock-eldritch-invocations/devouring-blade": { attacks: null, pactWeaponAttacks: 3 },
+  "warlock-eldritch-invocations/thirsting-blade": { attacks: 2, attacksWith: ["pact-weapon"] },
+  "warlock-eldritch-invocations/devouring-blade": { attacks: 3, attacksWith: ["pact-weapon"] },
+  // The weapon or attack each feature works with (a limit, not its trigger), read from its own words.
+  // Page 72: "you can expend a Pact Magic spell slot"; the Prone condition is not typed.
+  "warlock-eldritch-invocations/eldritch-smite": { attacksWith: ["pact-weapon"], spend: { resource: "pact-magic-slot", amount: 1 }, untyped: ["conditions"] },
+  // Page 73: the Hit Point Dice healing is not typed.
+  "warlock-eldritch-invocations/lifedrinker": { attacksWith: ["pact-weapon"], untyped: ["healing"] },
+  "warlock-eldritch-invocations/pact-of-the-blade": { attacksWith: ["pact-weapon"], damage: { types: ["necrotic", "psychic", "radiant"], orNormalType: true } }, // p. 74
+  // Page 56: "its normal damage type or Radiant damage"; the Charisma bonus to attack rolls is not typed.
+  "oath-of-devotion-sacred-weapon": { activation: null, attacksWith: ["imbued-weapon"], damage: { types: ["radiant"], orNormalType: true }, untyped: ["bonus"] },
+  "monk-empowered-strikes": { attacksWith: ["unarmed-strike"], damage: { types: ["force"], orNormalType: true } }, // p. 51
+  "monk-stunning-strike": { attacksWith: ["monk-weapon", "unarmed-strike"], untyped: ["conditions"] }, // "with a Monk weapon or an Unarmed Strike", p. 51
+  "paladin-radiant-strikes": { attacksWith: ["melee-weapon", "unarmed-strike"] }, // "using a Melee weapon or an Unarmed Strike", p. 55
+  // Pages 38 and 43: "The extra damage of your Divine Strike increases to 2d8" (level 14) and Primal Strike's (level
+  // 15) are typed as a step on the base option, as Brutal Strike's 2d10 is, so the two amounts never stack.
+  "cleric-blessed-strikes/divine-strike": { attacksWith: ["weapon"], dice: "1d8", diceByLevel: [{ level: 14, dice: "2d8" }] }, // "using a weapon", p. 38
+  "cleric-improved-blessed-strikes/divine-strike": { dice: null },
+  "druid-elemental-fury/primal-strike": { attacksWith: ["weapon", "beast-form-attack"], dice: "1d8", diceByLevel: [{ level: 15, dice: "2d8" }] }, // p. 43
+  "druid-improved-elemental-fury/primal-strike": { dice: null },
+  // Page 62: the Advantage-or-ally rule on the die is not typed.
+  "rogue-sneak-attack": { attacksWith: ["finesse-weapon", "ranged-weapon"], untyped: ["dice"] }, // "uses a Finesse or a Ranged weapon"
+  // Page 29: "one Strength-based attack roll of your choice on your turn": tied to your own turn.
+  "barbarian-brutal-strike": { attacksWith: ["strength-based"], oncePerTurn: "own-turn" },
+  // Page 66: "one Metamagic option on each of your turns".
+  "sorcerer-arcane-apotheosis": { oncePerTurn: "own-turn" },
+  // Page 70: the five types are a choice for a resistance and a damage bonus, not damage the feature deals.
+  "draconic-sorcery-elemental-affinity": { damage: null, untyped: ["resistances", "damage"] },
+  // Page 51: "while you aren’t wearing armor or wielding a Shield"; the bonus grows with the Monk table.
+  "monk-unarmored-movement": {
+    speedBonus: { feet: 10, appliesWhen: "while you aren’t wearing armor or wielding a Shield" },
+    speedBonusByLevel: [
+      { level: 6, feet: 15 },
+      { level: 10, feet: 20 },
+      { level: 14, feet: 25 },
+      { level: 18, feet: 30 },
+    ],
+  },
+  // Page 52: the save and the 10d12 come "When you end them", not on the hit.
+  "warrior-of-the-open-hand-quivering-palm": {
+    activation: null,
+    attacksWith: ["unarmed-strike"],
+    save: { ability: "con", onSuccess: "half", timing: "When you end them" },
+    damage: { dice: "10d12", types: ["force"], timing: "When you end them" },
+  },
+  // Pages 51 and 52: the roll is the Martial Arts die.
+  "monk-uncanny-metabolism": { diceFromColumn: "martialArts", rollAdds: ["class-level"] },
+  "warrior-of-the-open-hand-wholeness-of-body": { diceFromColumn: "martialArts", rollAdds: ["wis"] },
+  // Pages 59 and 43: the typed values describe one printed part.
+  "ranger-tireless": { label: "Temporary Hit Points" },
+  "druid-archdruid": { label: "Nature Magician", activation: ["no-action"], uses: { count: 1, recharge: "long-rest" } },
   // Pages 72 to 74: the slotless castings, with "on yourself" and One with Shadows' condition.
   "warlock-eldritch-invocations/armor-of-shadows": { freeCast: [{ spell: "mage-armor", selfOnly: true }] },
   "warlock-eldritch-invocations/ascendant-step": { freeCast: [{ spell: "levitate", selfOnly: true }] },
   "warlock-eldritch-invocations/fiendish-vigor": { freeCast: [{ spell: "false-life", selfOnly: true }] },
   "warlock-eldritch-invocations/otherworldly-leap": { freeCast: [{ spell: "jump", selfOnly: true }] },
-  "warlock-eldritch-invocations/one-with-shadows": { freeCast: [{ spell: "invisibility", selfOnly: true, appliesWhen: "While you’re in an area of Dim Light or Darkness" }] },
+  "warlock-eldritch-invocations/one-with-shadows": { freeCast: [{ spell: "invisibility", selfOnly: true, usableWhen: "While you’re in an area of Dim Light or Darkness" }] },
   "warlock-eldritch-invocations/mask-of-many-faces": { freeCast: [{ spell: "disguise-self" }] },
   "warlock-eldritch-invocations/master-of-myriad-forms": { freeCast: [{ spell: "alter-self" }] },
   "warlock-eldritch-invocations/misty-visions": { freeCast: [{ spell: "silent-image" }] },
   "warlock-eldritch-invocations/visions-of-distant-realms": { freeCast: [{ spell: "arcane-eye" }] },
   "warlock-eldritch-invocations/whispers-of-the-grave": { freeCast: [{ spell: "speak-with-dead" }] },
-  "warlock-eldritch-invocations/gift-of-the-depths": { freeCast: [{ spell: "water-breathing" }] },
+  "warlock-eldritch-invocations/gift-of-the-depths": { freeCast: [{ spell: "water-breathing" }], untyped: ["speed"] },
   "warlock-eldritch-invocations/pact-of-the-chain": { freeCast: [{ spell: "find-familiar" }] },
   // Page 73: the familiar deals the Necrotic or Radiant damage, not you.
-  "warlock-eldritch-invocations/investment-of-the-chain-master": { damageTypes: null },
+  "warlock-eldritch-invocations/investment-of-the-chain-master": { damage: null },
   // Page 73: the Magic action only erases a name.
   "warlock-eldritch-invocations/gift-of-the-protectors": { activation: null },
   // Page 63: "If the target is Large or smaller, it must succeed on a Dexterity saving throw".
-  "rogue-cunning-strike/trip": { save: { ability: "dex", appliesWhen: "If the target is Large or smaller" } },
+  "rogue-cunning-strike/trip": { save: { ability: "dex", targetMaxSize: "Large", onSuccess: "none" }, untyped: ["conditions"] },
+  // Page 63: "you must have a Poisoner’s Kit on your person"; Poisoned and its repeated save are not typed.
+  "rogue-cunning-strike/poison": { requiresItem: "poisoners-kit", usableWhen: "you must have a Poisoner’s Kit on your person", untyped: ["conditions", "save"] },
+  "rogue-devious-strikes/knock-out": { untyped: ["conditions", "save"] },
+  "rogue-devious-strikes/obscure": { untyped: ["conditions"] },
+  "warrior-of-the-open-hand-open-hand-technique/topple": { untyped: ["conditions"] },
+  // Page 62: "You can use this feature only if you haven’t moved during this turn".
+  "rogue-steady-aim": { usableWhen: "if you haven’t moved during this turn" },
+  // The Incapacitated condition switches these off (pages 29, 51, 63).
+  "barbarian-danger-sense": { unless: "you have the Incapacitated condition" },
+  "monk-evasion": { unless: "if you have the Incapacitated condition" },
+  "rogue-evasion": { unless: "if you have the Incapacitated condition" },
+  "rogue-elusive": { unless: "you have the Incapacitated condition" },
   // Page 61: the 1d8 needs the target to be missing Hit Points as well as the hit.
-  "hunter-hunters-prey/colossus-slayer": { dice: null },
+  "hunter-hunters-prey/colossus-slayer": { dice: null, untyped: ["damage"] },
   // Page 64: the 1d6 is a chance roll inside the Charges benefit, not the feature's main roll.
-  "thief-use-magic-device": { dice: null },
+  "thief-use-magic-device": { dice: null, untyped: ["dice"] },
   // Pages 57, 67 and 76: a use is restored by spending a resource.
-  "oath-of-devotion-holy-nimbus": { activation: ["bonus-action"], uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "spell-slot", amount: 1, slotLevel: 5 } } },
-  "draconic-sorcery-dragon-wings": { activation: ["bonus-action"], uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "sorcery-points", amount: 3 } } },
-  "fiend-patron-hurl-through-hell": { activation: null, uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "pact-magic-slot", amount: 1 } } },
-  // Pages 32 and 43: using these takes no action.
+  // Page 57: the Radiant damage is the "Radiant Damage" part's, at the start of an enemy's turn; its amount is not typed.
+  "oath-of-devotion-holy-nimbus": {
+    activation: ["bonus-action"],
+    uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "spell-slot", amount: 1, slotLevel: 5 } },
+    parts: [{ label: "Radiant Damage", damage: { types: ["radiant"], appliesWhen: "Whenever an enemy starts its turn in the aura" } }],
+    damage: null,
+    untyped: ["damage"],
+  },
+  "draconic-sorcery-dragon-wings": { activation: ["bonus-action"], uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "sorcery-points", amount: 3 } }, untyped: ["speed"] },
+  "fiend-patron-hurl-through-hell": { activation: null, uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "pact-magic-slot", amount: 1 } }, untyped: ["conditions"] },
+  // Page 32: using it takes no action; the spell-slot restore it grants is typed on Bardic Inspiration from level 5.
   "bard-font-of-inspiration": { activation: ["no-action"] },
-  "druid-wild-resurgence": { activation: ["no-action"] },
-  "druid-archdruid": { activation: ["no-action"] },
-  "oath-of-devotion-sacred-weapon": { activation: null },
+  "bard-bardic-inspiration": {
+    uses: {
+      count: { ability: "cha", minimum: 1 },
+      recharge: "long-rest",
+      rechargeByLevel: [{ level: 5, recharge: "short-or-long-rest" }],
+      restoredBy: { resource: "spell-slot", amount: 1, fromLevel: 5 },
+    },
+  },
+  // Page 43: Wild Resurgence's two parts have their own costs and limits. The first restores a Wild Shape use, typed
+  // on Wild Shape from level 5, once on each of your turns, only with none left.
+  "druid-wild-resurgence": {
+    activation: ["no-action"],
+    oncePerTurn: null,
+    parts: [
+      {
+        label: "give yourself one use by expending a spell slot",
+        spend: { resource: "spell-slot", amount: 1 },
+        oncePerTurn: "own-turn",
+        usableWhen: "if you have no uses of Wild Shape left",
+      },
+      { label: "to give yourself a level 1 spell slot", spend: { resource: "wild-shape", amount: 1 }, uses: { count: 1, recharge: "long-rest" } },
+    ],
+  },
+  "druid-wild-shape": {
+    uses: {
+      count: { column: "wildShape" },
+      recharge: "long-rest",
+      shortRestRegain: 1,
+      restoredBy: { resource: "spell-slot", amount: 1, fromLevel: 5, whenNoneLeft: true, oncePerTurn: "own-turn" },
+    },
+  },
+  // Spell slots spent in the standard wording that are not the feature's cost: an alternative or a higher-level casting.
+  "druid-wild-companion": { spend: null },
+  "wizard-signature-spells": { spend: null },
+  "wizard-spell-mastery": { spend: null },
+  // Use limits the shape cannot hold: 2d4 Long Rests after a Wish, and once-per-Long-Rest limits on one part.
+  "cleric-divine-intervention": { untyped: ["uses"] },
+  "cleric-greater-divine-intervention": { untyped: ["uses"] },
+  "circle-of-the-land-natural-recovery": { untyped: ["uses"] },
+  "barbarian-persistent-rage": { untyped: ["uses"] },
+  // Typed nowhere: Frenzy's d6 count, chosen or later resistances, extra movement modes, a condition given to yourself.
+  "path-of-the-berserker-frenzy": { untyped: ["damage"] },
+  "monk-superior-defense": { untyped: ["resistances"] },
+  "fiend-patron-fiendish-resilience": { untyped: ["resistances"] },
+  "hunter-superior-hunters-defense": { untyped: ["resistances"] },
+  "ranger-roving": { untyped: ["speed"] },
+  "thief-second-story-work": { untyped: ["speed"] },
+  "ranger-natures-veil": { untyped: ["conditions"] },
 }
 
 /**
@@ -341,9 +476,46 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   // A field read by hand settles that field: the automatic reading below is skipped for it.
   const byHand = (field: string) => field in hand
   for (const [field, value] of Object.entries(hand)) need(same(entry[field], value ?? undefined), `${field} ${JSON.stringify(entry[field])}, read by hand ${JSON.stringify(value)}`)
+  // Which attacks a feature works with, and the label of the part its values belong to, are read only by hand. A
+  // feature with a typed triggered value whose text names a weapon or an attack must have its limit read by hand.
+  if (!byHand("attacksWith")) {
+    need(entry.attacksWith === undefined, "attacksWith not read by hand")
+    const triggered = ["dice", "diceFromColumn", "damage", "save", "attacks", "criticalHit"].some((field) => entry[field] !== undefined)
+    if (triggered)
+      need(
+        !/with (?:your|a|an) (?:pact weapon|Monk weapon|Unarmed Strike)|using a (?:Melee )?weapon|Finesse or a Ranged weapon|Strength-based attack|with that weapon|bonded weapon|weapons and Unarmed Strikes/.test(
+          own
+        ),
+        "a weapon or attack limit not read by hand"
+      )
+  }
+  if (!byHand("label")) need(entry.label === undefined, "label not read by hand")
+  if (!byHand("speedBonusByLevel")) need(entry.speedBonusByLevel === undefined, "speedBonusByLevel not read by hand")
+  // Parts, the untyped list and conditions on the feature itself are read only by hand.
+  for (const field of ["parts", "untyped", "appliesWhen", "unless", "usableWhen"]) if (!byHand(field)) need(entry[field] === undefined, `${field} not read by hand`)
+  // A required item: "you must have a Poisoner’s Kit on your person".
+  const required = own.match(/you must have an? ([A-Z][\w’ ]+?) on your person/)?.[1]
+  if (!byHand("requiresItem")) need(entry.requiresItem === (required ? toId(required) : undefined), `requiresItem ${entry.requiresItem}, the text requires ${required}`)
+  if (entry.requiresItem && required) need(entry.requiresItem === toId(required), "requiresItem")
   // Every quoted condition is one unbroken span of the entry's own text.
-  for (const quote of [entry.save?.appliesWhen, ...(entry.freeCast ?? []).map((item: { appliesWhen?: string }) => item.appliesWhen)].filter(Boolean))
-    need(has(quote), `appliesWhen “${quote}” is not an unbroken span of its text`)
+  const parts: Record<string, any>[] = entry.parts ?? []
+  const spans = [
+    entry,
+    entry.save,
+    entry.damage,
+    entry.area,
+    entry.speedBonus,
+    entry.resistances,
+    entry.conditionImmunities,
+    ...(entry.freeCast ?? []),
+    ...parts,
+    ...parts.map((part) => part.save),
+    ...parts.map((part) => part.damage),
+  ].flatMap((item) => [item?.appliesWhen, item?.unless, item?.timing, item?.usableWhen, item?.label])
+  if (!byHand("area")) need(!entry.area?.unless && !entry.area?.appliesWhen, "an area condition not read by hand")
+  for (const field of ["damage", "speedBonus", "resistances", "conditionImmunities"])
+    if (!byHand(field)) need(!entry[field]?.appliesWhen && !entry[field]?.unless, `a ${field} condition not read by hand`)
+  for (const quote of spans.filter(Boolean)) need(has(quote), `appliesWhen “${quote}” is not an unbroken span of its text`)
 
   // Activation: every action kind the text names for using it.
   const kinds: [string, RegExp][] = [
@@ -370,7 +542,7 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   // Uses: the count, what restores it, and the Short Rest regain.
   const uses = entry.uses
   const statesUses =
-    /You can (?:use (?:this feature|this class’s Channel Divinity|Wild Shape|this action)|enter your Rage|confer a Bardic Inspiration die|cast it) (?:twice|the number of times|a number of times)|(?:Once you use this feature, you can’t (?:use it|do so)|can’t use this feature) again until you finish|you regain all expended uses of this ability|Focus Points column|Sorcery Points column|cast the spell once without expending|cast (?:it|the spell|Water Breathing) once without|cast each of them once|must finish a Long Rest before you can cast it|can’t do so in this way again until|arcanum spell once without/
+    /You can (?:use (?:this feature|this class’s Channel Divinity|Wild Shape|this action)|enter your Rage|confer a Bardic Inspiration die|cast it) (?:twice|the number of times|a number of times)|(?:Once you use this (?:feature|benefit), you can’t (?:use it|do so)|can’t use this feature) again until you finish|you regain all expended uses of this ability|Focus Points column|Sorcery Points column|cast the spell once without expending|cast (?:it|the spell|Water Breathing) once without|cast each of them once|must finish a Long Rest before you can cast it|can’t do so in this way again until|arcanum spell once without/
   need(Boolean(uses) === has(statesUses), uses ? "uses, which the text does not state in the standard wording" : "no uses, though the text states them")
   if (uses) {
     const count = uses.count
@@ -411,6 +583,8 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     "focus-points": (amount) => new RegExp(`${amount} Focus Points?`),
     "sorcery-points": (amount) => new RegExp(`${amount} Sorcery Points?`),
     "sneak-attack-dice": (amount) => new RegExp(`Cost: ${amount}d6`),
+    "spell-slot": () => /expend an? spell slot/,
+    "pact-magic-slot": () => /expend a Pact Magic spell slot/,
     "channel-divinity": (amount) => new RegExp(`${amount === 1 ? "(?:a|one)" : "-"} use of (?:your |this class’s )?Channel Divinity`),
     "wild-shape": (amount) => new RegExp(`${amount === 1 ? "(?:a|one)" : "-"} use of your Wild Shape`),
     "bardic-inspiration": (amount) => new RegExp(`${amount === 1 ? "(?:a|one)" : "-"} use of (?:your )?Bardic Inspiration`),
@@ -430,7 +604,9 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
         .flatMap((sentence) => {
           const points = sentence.match(/expend (\d+) (Focus|Sorcery) Points?/)
           const use = sentence.match(/expend (?:a|one) use of (?:your |this class’s )?(Channel Divinity|Wild Shape|Bardic Inspiration|Second Wind|Rage)\b/)
+          const slot = sentence.match(/expend an? (Pact Magic )?spell slot/)
           if (points) return [`${toId(points[2])}-points:${points[1]}`]
+          if (slot) return [`${slot[1] ? "pact-magic-slot" : "spell-slot"}:1`]
           if (use) return [`${toId(use[1])}:1`]
           return []
         })
@@ -445,6 +621,7 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   const held = [
     entry.diceFromColumn ? "1d6" : undefined,
     entry.dice,
+    entry.damage?.dice,
     entry.dicePerSlotLevel,
     entry.selfDamage?.dicePerSlotLevel,
     ...(entry.diceByLevel ?? []).map((step: { dice: string }) => step.dice),
@@ -452,20 +629,32 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   const stated = [...own.matchAll(/(?:extra|[Rr]oll|take|takes|taking|equal to|equals|add|increases to) (\d+d\d+)\b/g)].map((match) => match[1])
   if (!byHand("dice")) for (const dice of stated) need(held.includes(dice), `the text rolls ${dice}, the data does not hold it`)
   if (entry.dice) need(has(entry.dice), `dice ${entry.dice}`)
+  if (entry.damage?.dice) need(has(entry.damage.dice), `damage dice ${entry.damage.dice}`)
+  // A roll printed as damage of a type ("an extra 1d8 Radiant damage") is the damage's dice, not a bare roll.
+  if (!byHand("damage"))
+    for (const match of own.matchAll(new RegExp(`(\\d+d\\d+) (${typeList}) damage`, "g")))
+      need(
+        match[1] === entry.damage?.dice ||
+          match[1] === entry.selfDamage?.dicePerSlotLevel ||
+          (entry.diceByLevel && match[1] === entry.dice) ||
+          (entry.diceByLevel ?? []).some((step: { dice: string }) => step.dice === match[1]),
+        `${match[1]} ${match[2]} damage is not the damage's dice`
+      )
   const perSlot = own.match(/another (\d+d\d+) per level of the spell slot/)?.[1]
   need(entry.dicePerSlotLevel === perSlot, `dicePerSlotLevel ${entry.dicePerSlotLevel}, the text adds ${perSlot} per slot level`)
-  if (!byHand("diceFromColumn")) need(Boolean(entry.diceFromColumn) === has(/roll 1d6 in place of the normal damage|deal an extra 1d6 damage/), `diceFromColumn ${entry.diceFromColumn}`)
-  if (entry.diceFromColumn) need(has(`${headings[entry.diceFromColumn]} column`), `diceFromColumn ${entry.diceFromColumn}`)
+  const column = has(/roll 1d6 in place of the normal damage|roll your Martial Arts die/) ? "martialArts" : has(/deal an extra 1d6 damage/) ? "sneakAttack" : undefined
+  if (!byHand("diceFromColumn")) need(entry.diceFromColumn === column, `diceFromColumn ${entry.diceFromColumn}, the text rolls ${column}`)
+  if (entry.diceFromColumn) need(has(`${headings[entry.diceFromColumn]} column`) || has(`your ${headings[entry.diceFromColumn]} die`), `diceFromColumn ${entry.diceFromColumn}`)
   // Dice by level, both ways: "Cleric levels 7 (2d8), 13 (3d8)" in its own text, or a later feature that raises it.
   const steps = [...own.matchAll(/(\d+) \((\d+d\d+)\)/g)].map((match) => ({ level: Number(match[1]), dice: match[2] }))
   const raised = name ? related.match(new RegExp(`Level (\\d+): [^:]*? The extra damage of your ${name} increases to (\\d+d\\d+)`)) : null
   if (!steps.length && raised) steps.push({ level: Number(raised[1]), dice: raised[2] })
-  need(same(entry.diceByLevel, steps.length ? steps : undefined), `diceByLevel ${JSON.stringify(entry.diceByLevel)}, the text states ${JSON.stringify(steps)}`)
+  if (!byHand("diceByLevel")) need(same(entry.diceByLevel, steps.length ? steps : undefined), `diceByLevel ${JSON.stringify(entry.diceByLevel)}, the text states ${JSON.stringify(steps)}`)
   const adds: string[] = []
   const after = own.match(/\d+d\d+ (?:plus your|and add your) ([^.]+?)(?:\.|,| \(| to )/)?.[1] ?? ""
   for (const [ability, id] of Object.entries(abilityByName)) if (after.includes(`${ability} modifier`)) adds.push(id)
   if (/level/.test(after)) adds.push("class-level")
-  need(same(sorted(entry.rollAdds ?? []), sorted(adds)), `rollAdds ${JSON.stringify(entry.rollAdds)}, the text adds ${JSON.stringify(adds)}`)
+  if (!byHand("rollAdds")) need(same(sorted(entry.rollAdds ?? []), sorted(adds)), `rollAdds ${JSON.stringify(entry.rollAdds)}, the text adds ${JSON.stringify(adds)}`)
 
   // Damage types, both ways: each printed list of types dealt is held whole.
   const dealt = [
@@ -473,14 +662,24 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     // A list to choose a type from: "Choose one of those types: Acid, Cold, Fire, Lightning, or Poison."
     ...listOf(own.match(new RegExp(`Choose one of those types: (${typeList})`))?.[1] ?? ""),
   ]
-  const typed = [...(entry.damageTypes ?? []), ...(entry.selfDamage ? [entry.selfDamage.damageType] : [])]
-  if (!byHand("damageTypes")) for (const type of new Set(dealt)) need(typed.includes(type), `the text deals ${type} damage, the data does not hold it`)
+  const typed = [...(entry.damage?.types ?? []), ...parts.flatMap((part) => part.damage?.types ?? []), ...(entry.selfDamage ? [entry.selfDamage.damageType] : [])]
+  if (!byHand("damage")) {
+    need(Boolean(entry.damage?.orNormalType) === has("its normal damage type"), `damage orNormalType ${entry.damage?.orNormalType}`)
+    for (const type of new Set(dealt)) need(typed.includes(type), `the text deals ${type} damage, the data does not hold it`)
+    for (const type of typed) need(has(capital(type)), `damage type ${type}`)
+    need(!entry.damage?.appliesWhen && !entry.damage?.unless && !entry.damage?.timing, "a damage condition not read by hand")
+  }
   const only = own.match(/Each (\w+) that fails its saving throw/)?.[1]
   const onlyTypes = only && (creatureTypes as readonly string[]).includes(toId(only)) ? [toId(only)] : undefined
-  if (!byHand("damageOnlyTo")) need(same(entry.damageOnlyTo, onlyTypes), `damageOnlyTo ${JSON.stringify(entry.damageOnlyTo)}, the text states ${JSON.stringify(onlyTypes)}`)
-  for (const type of typed) need(has(capital(type)), `damage type ${type}`)
+  if (!byHand("damage"))
+    need(same(entry.damage?.onlyCreatureTypes, onlyTypes), `damage onlyCreatureTypes ${JSON.stringify(entry.damage?.onlyCreatureTypes)}, the text states ${JSON.stringify(onlyTypes)}`)
   const spared = (own.match(/if it isn’t an? (\w+)/)?.[1] ?? "").toLowerCase()
-  need(same(entry.damageNotTo ?? [], spared ? [spared] : []), `damageNotTo ${JSON.stringify(entry.damageNotTo)}, the text spares ${spared}`)
+  need(same(entry.damage?.notCreatureTypes ?? [], spared ? [spared] : []), `damage notCreatureTypes ${JSON.stringify(entry.damage?.notCreatureTypes)}, the text spares ${spared}`)
+  need(!entry.damage?.targetMaxSize, "damage targetMaxSize: no class damage names a size")
+  // Once per turn, both ways.
+  // "Once on each of your turns" is your own turn; "Once per turn" and "once on a turn" are any turn.
+  const oncePerTurn = has(/Once on each of your turns/) ? "own-turn" : has(/Once per turn|only once per turn|only once on a turn/) ? "any-turn" : undefined
+  if (!byHand("oncePerTurn")) need(entry.oncePerTurn === oncePerTurn, `oncePerTurn ${entry.oncePerTurn}, the text states ${oncePerTurn}`)
   if (entry.selfDamage) {
     const { dicePerSlotLevel, increaseAfterSecondUse } = entry.selfDamage
     need(
@@ -499,11 +698,21 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   const saves = [...own.matchAll(/(\w+) saving throw(?!s)/g)]
     .filter((match) => abilityByName[match[1]] && !/(?:allows you to make an?|check or) $/.test(own.slice(0, match.index)))
     .map((match) => abilityByName[match[1]])
-  const savesHeld = [entry.save?.ability, entry.selfSave?.ability].filter(Boolean)
+  const savesHeld = [entry.save?.ability, entry.selfSave?.ability, ...parts.map((part) => part.save?.ability)].filter(Boolean)
   if (!byHand("save")) {
     need(same([...new Set(saves)].sort(), sorted(savesHeld)), `saves ${JSON.stringify(savesHeld)}, the text has ${JSON.stringify([...new Set(saves)])}`)
     // A condition, a creature-type limit or a chooser on a save is read only by hand.
-    if (entry.save) need(!entry.save.appliesWhen && !entry.save.onlyCreatureTypes && !entry.save.selective, "a save condition not read by hand")
+    if (entry.save) {
+      need(
+        !entry.save.appliesWhen && !entry.save.unless && !entry.save.timing && !entry.save.onlyCreatureTypes && !entry.save.notCreatureTypes && !entry.save.selective,
+        "a save condition not read by hand"
+      )
+      // What a success does: half damage, another stated outcome, or nothing.
+      const outcome = has(/half as much damage on a successful/) ? "half" : has(/On a successful save,/) ? "other" : "none"
+      need(entry.save.onSuccess === outcome, `save onSuccess ${entry.save.onSuccess}, the text gives ${outcome}`)
+      const size = own.match(/If the target is (\w+) or smaller/)?.[1]
+      need(entry.save.targetMaxSize === size, `save targetMaxSize ${entry.save.targetMaxSize}, the text gives ${size}`)
+    }
   }
   if (entry.save?.dc !== undefined) need(dc(entry.save.dc), `save DC ${JSON.stringify(entry.save.dc)}`)
   const printedDc = own.match(/DC (\d+) \w+ saving throw|against your spell save DC|\(DC 8 plus your (\w+) modifier/)
@@ -529,7 +738,7 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   if (ranges.length === 1 && !subPartDistance[name]) expected.range = ranges[0]
   if (subPartDistance[name]) need(ranges.includes(subPartDistance[name]), `the distance ${subPartDistance[name]} of a part of ${name}`)
   const hitPoints = own.match(/Hit Point maximum increases by (\d+), and it increases by (\d+) whenever you gain another/)
-  if (hitPoints) expected.hitPointMaximum = { increase: Number(hitPoints[1]), perLaterClassLevel: Number(hitPoints[2]) }
+  if (hitPoints) expected.hitPointMaximum = { increase: Number(hitPoints[1]), perLevel: Number(hitPoints[2]), levelsCounted: "class" }
   const area = own.match(/(\d+)-foot (Emanation|Cube)|(\d+)-foot-radius Sphere/)
   const chooser = {
     ...(has(/creatures? of your choice in (?:a|the)\b/) ? { selective: true } : {}),
@@ -538,7 +747,7 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   if (area) expected.area = area[3] ? { shape: "sphere", size: Number(area[3]), ...chooser } : { shape: area[2].toLowerCase(), size: Number(area[1]), ...chooser }
   const attacks = own.match(/attack (twice|three times|four times)[^.]*instead of once|confers (two) extra attacks rather than one/)
   // Extra attacks for the pact weapon only are their own field, so `attacks` always means any weapon.
-  if (attacks) expected[has(/pact weapon only|Thirsting Blade invocation/) ? "pactWeaponAttacks" : "attacks"] = attacks[2] ? 3 : { twice: 2, "three times": 3, "four times": 4 }[attacks[1]]
+  if (attacks) expected.attacks = attacks[2] ? 3 : { twice: 2, "three times": 3, "four times": 4 }[attacks[1]]
   // A spell name: capitalized words, with the small words SRD spell names use ("Speak with Animals").
   const spell = "[A-Z][\\w’]*(?: (?:[A-Z][\\w’]*|with|of|the|from)\\b)*"
   const prepared = own.match(new RegExp(`always have the (${spell}(?: and ${spell})?) spells? prepared`))
@@ -587,9 +796,9 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     expected.armorClass = { base: 10, abilities: [abilityByName[armor[1]], abilityByName[armor[2]]], ...(shield === undefined ? {} : { shield }) }
   }
   const critical = own.match(/Your attack rolls with weapons and Unarmed Strikes can (?:now )?score a Critical Hit on a roll of (19 or 20|18–20)/)
-  if (critical) expected.criticalHit = { minRoll: critical[1] === "18–20" ? 18 : 19, attacks: "weapons-and-unarmed-strikes" }
+  if (critical) expected.criticalHit = { minRoll: critical[1] === "18–20" ? 18 : 19 }
   const sense = own.match(/(Blindsight|Truesight) with a range of (\d+) feet/)
-  if (sense) expected.sense = { type: sense[1].toLowerCase(), range: Number(sense[2]) }
+  if (sense) expected.senses = [{ type: sense[1].toLowerCase(), range: Number(sense[2]) }]
   const read = (field: string) => {
     const value = entry[field]
     if (field === "speedBonus") return value?.feet
@@ -603,7 +812,6 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     "range",
     "area",
     "attacks",
-    "pactWeaponAttacks",
     "alwaysPrepared",
     "freeCast",
     "feat",
@@ -615,7 +823,7 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     "abilityIncrease",
     "armorClass",
     "criticalHit",
-    "sense",
+    "senses",
   ])
     if (!byHand(field)) need(same(read(field), expected[field]), `${field} ${JSON.stringify(read(field))}, the text states ${JSON.stringify(expected[field])}`)
 
@@ -1457,6 +1665,13 @@ export default function verify(report: Report) {
           failures.push(`${feature.id}/${option.id}: the hand prerequisite is not the printed one`)
         if (Boolean(read.repeatable) !== Boolean(option.repeatable)) failures.push(`${feature.id}/${option.id}: repeatable ${option.repeatable}, read by hand ${read.repeatable}`)
         if (read.repeatable && !squash(option.description).includes("repeatableyoucangainthisinvocationmorethanonce")) failures.push(`${feature.id}/${option.id}: no Repeatable paragraph`)
+        // The Repeatable text is the printed paragraph after its label, word for word.
+        const printedRepeatable = option.description
+          .split("\n")
+          .find((paragraph) => paragraph.startsWith("Repeatable. "))
+          ?.slice("Repeatable. ".length)
+        if (option.repeatable && (option.repeatable.text !== printedRepeatable || !inOfficial(option.repeatable.text)))
+          failures.push(`${feature.id}/${option.id}: repeatable text is not its printed paragraph`)
       }
     }
     // Every title in the options sections is an option in the data.
@@ -1488,17 +1703,25 @@ export default function verify(report: Report) {
       "rollAdds",
       "selfSave",
       "selfDamage",
-      "damageNotTo",
+      "oncePerTurn",
+      "speedBonusByLevel",
       "hitPointMaximum",
       "diceByLevel",
-      "damageTypes",
+      "damage",
       "save",
       "saveDc",
       "pool",
       "range",
       "area",
       "attacks",
-      "pactWeaponAttacks",
+      "attacksWith",
+      "label",
+      "parts",
+      "untyped",
+      "requiresItem",
+      "appliesWhen",
+      "unless",
+      "usableWhen",
       "alwaysPrepared",
       "freeCast",
       "feat",
@@ -1510,8 +1733,7 @@ export default function verify(report: Report) {
       "abilityIncrease",
       "armorClass",
       "criticalHit",
-      "damageOnlyTo",
-      "sense",
+      "senses",
       "resistances",
       "conditionImmunities",
     ]
@@ -1562,6 +1784,15 @@ export default function verify(report: Report) {
           failures.push(`${feature.id}/${option.id}: ${failure} is not what its text says`)
       }
     }
+    // Unarmored Movement's steps against the Monk Features table as the data holds it (checked cell by cell above).
+    const monk = classes.find((entry) => entry.id === "monk")
+    const movement = featureById.get("monk-unarmored-movement")
+    const tableSteps = (monk?.levels ?? [])
+      .filter((row, index, rows) => row.unarmoredMovement !== undefined && row.unarmoredMovement !== rows[index - 1]?.unarmoredMovement)
+      .map((row) => ({ level: row.level, feet: row.unarmoredMovement }))
+    total++
+    if (!same([{ level: movement?.level, feet: movement?.speedBonus?.feet }, ...(movement?.speedBonusByLevel ?? [])], tableSteps))
+      failures.push(`monk-unarmored-movement: speed bonus steps ${JSON.stringify(movement?.speedBonusByLevel)}, the Monk table gives ${JSON.stringify(tableSteps)}`)
     // Overchannel, read by hand on page 82: no damage the first time, 2d12 per slot level the second, and 1d12 more
     // per slot level each time after. The data's two dice must give these per-use totals.
     const self = featureById.get("evoker-overchannel")?.selfDamage

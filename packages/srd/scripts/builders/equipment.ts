@@ -204,8 +204,8 @@ class Names {
 }
 
 const gearMechanics: Record<string, Row> = {
-  acid: { hazard: { range: 20, save: dexSave, damage: { dice: "2d6", type: "acid" } } },
-  "alchemists-fire": { hazard: { range: 20, save: dexSave, damage: { dice: "1d4", type: "fire" }, burning: true } },
+  acid: { hazard: { targets: "creature-or-object", range: 20, save: dexSave, damage: { dice: "2d6", type: "acid" } } },
+  "alchemists-fire": { hazard: { targets: "creature-or-object", range: 20, save: dexSave, damage: { dice: "1d4", type: "fire" }, burning: true } },
   antitoxin: {
     modifiers: [
       {
@@ -218,10 +218,14 @@ const gearMechanics: Record<string, Row> = {
     ],
   },
   backpack: { capacity: { pounds: 30, cubicFeet: 1 } },
-  "ball-bearings": { hazard: { areaSideFeet: 10, withinFeet: 10, save: fixedDexSave(10), condition: "prone", recoverMinutes: 10 } },
+  "ball-bearings": { hazard: { triggers: ["enters-area-first-time-on-a-turn"], areaSideFeet: 10, withinFeet: 10, save: fixedDexSave(10), condition: "prone", recoverMinutes: 10 } },
   barrel: { capacity: { gallons: 40, cubicFeet: 4 } },
   basket: { capacity: { pounds: 40, cubicFeet: 2 } },
-  bedroll: { sleeps: 1, modifiers: [{ effect: "automatic-success", on: "save", when: "While in a Bedroll, you automatically succeed on saving throws against extreme cold" }] },
+  bedroll: {
+    sleeps: 1,
+    sleepsSizes: ["Small", "Medium"],
+    modifiers: [{ effect: "automatic-success", on: "save", when: "While in a Bedroll, you automatically succeed on saving throws against extreme cold" }],
+  },
   bell: { audibleFeet: 60 },
   blanket: { modifiers: [{ effect: "advantage", on: "save", when: "While wrapped in a blanket, you have Advantage on saving throws against extreme cold" }] },
   "block-and-tackle": { liftMultiplier: 4 },
@@ -239,7 +243,9 @@ const gearMechanics: Record<string, Row> = {
   },
   "bottle-glass": { capacity: { pints: 1.5 } },
   bucket: { capacity: { cubicFeet: 0.5 } },
-  caltrops: { hazard: { areaSideFeet: 5, withinFeet: 5, save: fixedDexSave(15), damage: piercing1, speedZeroUntilStartOfNextTurn: true, recoverMinutes: 10 } },
+  caltrops: {
+    hazard: { triggers: ["enters-area-first-time-on-a-turn"], areaSideFeet: 5, withinFeet: 5, save: fixedDexSave(15), damage: piercing1, speedZeroUntilStartOfNextTurn: true, recoverMinutes: 10 },
+  },
   candle: { light: { shape: "radius", brightFeet: 5, dimFeet: 5, durationHours: 1 } },
   "case-crossbow-bolt": { capacity: { holds: [{ item: "bolts", quantity: 20, unit: "single" }] } },
   "case-map-or-scroll": {
@@ -251,7 +257,7 @@ const gearMechanics: Record<string, Row> = {
     },
   },
   chain: {
-    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "legs-bound" },
+    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesIf: "legs-bound", targetUnwilling: true },
     checks: [
       { use: "bind", ability: "str", skill: "athletics", dc: 13, range: 5, activation: ["utilize-action"] },
       { use: "escape", ability: "dex", skill: "acrobatics", dc: 18, activation: ["action"] },
@@ -267,9 +273,16 @@ const gearMechanics: Record<string, Row> = {
   flask: { capacity: { pints: 1 } },
   "grappling-hook": { checks: [{ use: "catch", ability: "dex", skill: "acrobatics", dc: 13, range: 50, activation: ["utilize-action"] }] },
   "healers-kit": { uses: 10, stabilize: { requiresCondition: "unconscious", atHitPoints: 0, replacesCheck: { ability: "wis", skill: "medicine" } } },
-  "holy-water": { hazard: { range: 20, save: dexSave, damage: { dice: "2d8", type: "radiant" }, onlyAgainst: ["fiend", "undead"] } },
+  "holy-water": { hazard: { targets: "creature", range: 20, save: dexSave, damage: { dice: "2d8", type: "radiant" }, onlyAgainst: ["fiend", "undead"] } },
   "hunting-trap": {
-    hazard: { save: fixedDexSave(13), damage: { dice: "1d4", type: "piercing" }, speedZeroUntilStartOfNextTurn: true, chainFeet: 3, failedFreeAttemptDamage: piercing1 },
+    hazard: {
+      triggers: ["steps-on-pressure-plate"],
+      save: fixedDexSave(13),
+      damage: { dice: "1d4", type: "piercing" },
+      speedZeroUntilStartOfNextTurn: true,
+      chainFeet: 3,
+      failedFreeAttemptDamage: piercing1,
+    },
     checks: [{ use: "free", ability: "str", skill: "athletics", dc: 13, activation: ["action"] }],
   },
   jug: { capacity: { gallons: 1 } },
@@ -280,7 +293,14 @@ const gearMechanics: Record<string, Row> = {
   lock: { checks: [{ use: "pick", ability: "dex", skill: "sleight-of-hand", dc: 15, tool: "thieves-tools" }] },
   "magnifying-glass": { modifiers: [{ effect: "advantage", on: "check", when: "A Magnifying Glass grants Advantage on any ability check made to appraise or inspect a highly detailed item" }] },
   manacles: {
-    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "attached-to-fixed-anchor", sizes: ["Small", "Medium"] },
+    binding: {
+      requiresAnyCondition: unboundable,
+      appliesCondition: "restrained",
+      appliesIf: "attached-to-fixed-anchor",
+      targetUnwilling: true,
+      boundAttackRolls: "disadvantage",
+      sizes: ["Small", "Medium"],
+    },
     checks: [
       { use: "bind", ability: "dex", skill: "sleight-of-hand", dc: 13, range: 5, activation: ["utilize-action"] },
       { use: "escape", ability: "dex", skill: "sleight-of-hand", dc: 20, activation: ["action"] },
@@ -301,14 +321,14 @@ const gearMechanics: Record<string, Row> = {
     ],
   },
   net: {
-    hazard: { range: 15, save: dexSave, condition: "restrained", succeedsAutomaticallyIfSizeAtLeast: "Huge" },
+    hazard: { targets: "creature", range: 15, save: dexSave, condition: "restrained", succeedsAutomaticallyIfSizeAtLeast: "Huge" },
     checks: [{ use: "escape", ability: "str", skill: "athletics", dc: 10, range: 5, activation: ["action"] }],
     object: { ac: 10, hp: 5, immunities: ["bludgeoning", "poison", "psychic"] },
   },
   oil: {
     fuelHours: 6,
-    hazard: { range: 20, save: dexSave, dryAfterMinutes: 1, extraFireDamage: fire5 },
-    spaceHazard: { areaSideFeet: 5, withinFeet: 5, burnsUntilRoundsAfterLit: 2, damage: fire5, onlyWhenLit: true },
+    hazard: { targets: "creature-or-object", range: 20, save: dexSave, dryAfterMinutes: 1, extraFireDamage: fire5 },
+    spaceHazard: { areaSideFeet: 5, withinFeet: 5, burnsUntilRoundsAfterLit: 2, damage: fire5, onlyWhenLit: true, triggers: ["enters-area", "ends-turn-in-area"], oncePerTurn: "any-turn" },
   },
   perfume: {
     modifiers: [
@@ -323,7 +343,7 @@ const gearMechanics: Record<string, Row> = {
     ],
   },
   "poison-basic": {
-    coating: { ammunitionPieces: 3, triggerDamageTypes: ["piercing", "slashing"], extraDamage: { dice: "1d4", type: "poison" }, potencyMinutes: 1 },
+    coating: { weapons: 1, ammunitionPieces: 3, endsWhenDamageIsDealt: true, triggerDamageTypes: ["piercing", "slashing"], extraDamage: { dice: "1d4", type: "poison" }, potencyMinutes: 1 },
   },
   pole: {
     lengthFeet: 10,
@@ -348,7 +368,7 @@ const gearMechanics: Record<string, Row> = {
     ],
   },
   rope: {
-    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "legs-bound" },
+    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesIf: "legs-bound", targetUnwilling: true },
     checks: [
       { use: "knot", ability: "dex", skill: "sleight-of-hand", dc: 10, activation: ["utilize-action"] },
       { use: "burst", ability: "str", skill: "athletics", dc: 20 },
@@ -358,11 +378,11 @@ const gearMechanics: Record<string, Row> = {
   sack: { capacity: { pounds: 30, cubicFeet: 1 } },
   shovel: { dig: { sideFeet: 5, hours: 1, inSoilOrSimilar: true } },
   "signal-whistle": { audibleFeet: 600 },
-  "spell-scroll-cantrip": { magicItem: "spell-scroll", spellScroll: { spellLevel: 0, saveDc: 13, attackBonus: 5 } },
-  "spell-scroll-level-1": { magicItem: "spell-scroll", spellScroll: { spellLevel: 1, saveDc: 13, attackBonus: 5 } },
+  "spell-scroll-cantrip": { magicItem: "spell-scroll", spellScroll: { spellLevel: 0, saveDc: 13, attackBonus: 5, requiresSpellOnUserClassList: true, disintegratesAfterCasting: true } },
+  "spell-scroll-level-1": { magicItem: "spell-scroll", spellScroll: { spellLevel: 1, saveDc: 13, attackBonus: 5, requiresSpellOnUserClassList: true, disintegratesAfterCasting: true } },
   spyglass: { magnification: 2 },
   string: { lengthFeet: 10 },
-  tent: { sleeps: 2 },
+  tent: { sleeps: 2, sleepsSizes: ["Small", "Medium"] },
   tinderbox: { ignite: { exposedFuel: ["bonus-action"], otherFireMinutes: 1 } },
   torch: { light: { shape: "radius", brightFeet: 20, dimFeet: 20, durationHours: 1 }, attackDamage: { amount: 1, type: "fire" } },
   vial: { capacity: { ounces: 4 } },
@@ -370,8 +390,10 @@ const gearMechanics: Record<string, Row> = {
 }
 
 /** The kinds of action a gear description names: the Utilize action and the Bonus Action. */
-function activationOf(description: string): { activation?: string[] } {
-  const kinds = [...(/Utilize action/.test(description) ? ["utilize-action"] : []), ...(/Bonus Action/.test(description) ? ["bonus-action"] : [])]
+function activationOf(description: string, id: string): { activation?: string[] } {
+  // Climber's Kit: the Bonus Action only undoes the anchor. Hooded Lantern: it only lowers or raises the hood of a lit lantern.
+  const undoesOnly = ["climbers-kit", "lantern-hooded"].includes(id)
+  const kinds = [...(/Utilize action/.test(description) ? ["utilize-action"] : []), ...(!undoesOnly && /Bonus Action/.test(description) ? ["bonus-action"] : [])]
   return kinds.length ? { activation: kinds } : {}
 }
 
@@ -589,7 +611,7 @@ function gearAndTools(names: Names, ids: Set<string>): Row[] {
       ...(w === undefined ? {} : { weight: w }),
       ...(weight.includes("(full)") ? { weightWhenFull: true } : {}),
       ...(gearMechanics[id] ?? {}),
-      ...activationOf(description),
+      ...activationOf(description, id),
       description,
     })
   }
@@ -816,6 +838,17 @@ function properties(): Row[] {
   }))
 }
 
+const masteryTriggers: Record<string, string> = {
+  Cleave: "hit",
+  Graze: "miss",
+  Nick: "light-extra-attack",
+  Push: "hit",
+  Sap: "hit",
+  Slow: "hit-and-deal-damage",
+  Topple: "hit",
+  Vex: "hit-and-deal-damage",
+}
+
 function masteries(): Row[] {
   const names = readBase("Weapon-Mastery-Properties").map((entry) => entry.name as string)
   return definitions(90, 90, "The properties are defined below.", "\u0000", names).map((entry) => ({
@@ -824,7 +857,9 @@ function masteries(): Row[] {
     page: entry.page,
     description: entry.description,
     ...(entry.name === "Push" ? { pushFeet: 10, maxSize: "Large" } : {}),
-    ...(entry.name === "Slow" ? { targetSpeedReduction: { feet: 10, until: "start-of-user-next-turn" } } : {}),
+    trigger: masteryTriggers[entry.name],
+    ...(entry.name === "Cleave" || entry.name === "Nick" ? { oncePerTurn: "any-turn" } : {}),
+    ...(entry.name === "Slow" ? { targetSpeedReduction: { feet: 10, until: "start-of-user-next-turn", capAcrossHits: 10 } } : {}),
     ...(entry.name === "Topple" ? { save: { ability: "con", dc: { plusModifierOf: "attack-ability" }, failureCondition: "prone" } } : {}),
   }))
 }
@@ -844,7 +879,7 @@ const poisonFacts: Record<string, Row> = {
     save: 15,
     conditions: [
       { condition: "poisoned", duration: { amount: 8, unit: "hour" } },
-      { condition: "unconscious", whilePoisoned: true },
+      { condition: "unconscious", whilePoisoned: true, endsWhen: ["takes-damage", "another-creature-shakes-it-awake"] },
     ],
   },
   malice: {
@@ -859,7 +894,7 @@ const poisonFacts: Record<string, Row> = {
     save: 13,
     conditions: [
       { condition: "poisoned", duration: { amount: 24, unit: "hour" } },
-      { condition: "unconscious", whilePoisoned: true },
+      { condition: "unconscious", whilePoisoned: true, endsWhen: ["takes-damage"] },
     ],
   },
   "pale-tincture": {
@@ -867,7 +902,7 @@ const poisonFacts: Record<string, Row> = {
     damage: [3, "1d6"],
     conditions: [{ condition: "poisoned" }],
     repeat: { when: "every-24-hours", damage: { average: 3, dice: "1d6", type: "poison" }, endsAfterSuccesses: 7 },
-    damageCannotBeHealed: true,
+    damageCannotBeHealedWhilePoisoned: true,
   },
   "purple-worm-poison": { save: 21, damage: [35, "10d6"], half: true },
   "serpent-venom": { save: 11, damage: [10, "3d6"], half: true },
@@ -875,11 +910,11 @@ const poisonFacts: Record<string, Row> = {
     save: 13,
     conditions: [
       { condition: "poisoned", duration: { amount: 1, unit: "hour" } },
-      { condition: "unconscious", whilePoisoned: true, failedByAtLeast: 5 },
+      { condition: "unconscious", whilePoisoned: true, endsWhen: ["takes-damage", "another-creature-shakes-it-awake"], failedByAtLeast: 5 },
     ],
   },
-  torpor: { save: 15, conditions: [{ condition: "poisoned", duration: { amount: "4d6", unit: "hour" } }], speedHalved: true },
-  "truth-serum": { save: 11, conditions: [{ condition: "poisoned", duration: { amount: 1, unit: "hour" } }], cannotKnowinglyLie: true },
+  torpor: { save: 15, conditions: [{ condition: "poisoned", duration: { amount: "4d6", unit: "hour" } }], speedHalvedWhilePoisoned: true },
+  "truth-serum": { save: 11, conditions: [{ condition: "poisoned", duration: { amount: 1, unit: "hour" } }], cannotKnowinglyLieWhilePoisoned: true },
   "wyvern-poison": { save: 14, damage: [24, "7d6"], half: true },
 }
 

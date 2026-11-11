@@ -89,7 +89,9 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 17
+        "dc": 17,
+        "onSuccess": "half",
+        "appliesWhen": "If a creature of that type takes damage from the ammunition"
       }
     ],
     "damage": [
@@ -97,7 +99,6 @@
         "dice": "6d10",
         "type": "force",
         "role": "effect",
-        "appliesWhen": "If a creature of that type takes damage from the ammunition",
         "text": "If a creature of that type takes damage from the ammunition, the creature makes a DC 17 Constitution saving throw, taking an extra 6d10 Force damage on a failed save or half as much extra damage on a successful one."
       }
     ],
@@ -282,7 +283,8 @@
     ],
     "spells": [
       {
-        "id": "plane-shift"
+        "id": "plane-shift",
+        "appliesWhen": "On a successful check"
       }
     ],
     "tables": [
@@ -377,14 +379,6 @@
         "dc": 20
       }
     ],
-    "damage": [
-      {
-        "dice": "2d6",
-        "type": "bludgeoning",
-        "role": "to-item",
-        "text": "Below that, the vehicle takes 2d6 Bludgeoning damage each minute from pressure."
-      }
-    ],
     "tables": [
       {
         "caption": "Apparatus of the Crab Levers",
@@ -423,6 +417,14 @@
             ]
           },
           {
+            "damage": [
+              {
+                "dice": "2d6",
+                "type": "bludgeoning",
+                "role": "effect",
+                "appliesWhen": "Each extended claw makes the following melee attack: +8 to hit, reach 5 ft. Hit: 7 (2d6) Bludgeoning damage"
+              }
+            ],
             "cells": [
               "5",
               "Each extended claw makes the following melee attack: +8 to hit, reach 5 ft. Hit: 7 (2d6) Bludgeoning damage.",
@@ -466,6 +468,9 @@
           }
         ]
       }
+    ],
+    "untyped": [
+      "damage"
     ],
     "description": "This item first appears to be a sealed iron barrel weighing 500 pounds. The barrel has a hidden catch, which can be found with a successful DC 20 Intelligence (Investigation) check. Releasing the catch unlocks a hatch at one end of the barrel, allowing two Medium or smaller creatures to crawl inside. Ten levers are set in a row at the far end, each in a neutral position, able to move up or down. When certain levers are used, the apparatus transforms to resemble a giant lobster.\nThe Apparatus of the Crab is a Large object with the following statistics: AC 20; HP 200; Speed 30 ft., Swim 30 ft. (or 0 ft. for both if the legs aren’t extended); Immunity to Poison and Psychic damage.\nTo be used as a vehicle, the apparatus requires one pilot. While the apparatus’s hatch is closed, the compartment is airtight and watertight. The compartment holds enough air for 10 hours of breathing, divided by the number of breathing creatures inside.\nThe apparatus floats on water. It can also go underwater to a depth of 900 feet. Below that, the vehicle takes 2d6 Bludgeoning damage each minute from pressure.\nA creature in the compartment can take a Utilize action to move as many as two of the apparatus’s levers up or down. After each use, a lever goes back to its neutral position. Each lever, from left to right, functions as shown in the Apparatus of the Crab Levers table."
   },
@@ -535,6 +540,7 @@
     ],
     "uses": [
       {
+        "label": "Metal Shell",
         "recharge": "dawn"
       }
     ],
@@ -713,7 +719,8 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "half"
       }
     ],
     "damage": [
@@ -736,6 +743,14 @@
               "min": 1,
               "max": 1
             },
+            "damage": [
+              {
+                "dice": "5d6",
+                "type": "poison",
+                "role": "effect",
+                "appliesWhen": "On an odd roll"
+              }
+            ],
             "cells": [
               "5d4 toadstools sprout. If a creature eats a toadstool, roll any die. On an odd roll, the eater must succeed on a DC 15 Constitution saving throw or take 5d6 Poison damage and have the Poisoned condition for 1 hour. On an even roll, the eater gains 5d6 Temporary Hit Points for 1 hour."
             ]
@@ -817,6 +832,13 @@
               "min": 81,
               "max": 90
             },
+            "damage": [
+              {
+                "dice": "10d6",
+                "type": "force",
+                "role": "effect"
+              }
+            ],
             "cells": [
               "A nest of 1d4 + 3 rainbow-colored eggs springs up. Any creature that eats an egg makes a DC 20 Constitution saving throw. On a successful save, a creature permanently increases its lowest ability score by 1, randomly choosing among equally low scores. On a failed save, the creature takes 10d6 Force damage from an internal explosion."
             ]
@@ -1146,13 +1168,13 @@
     "rarity": "rare",
     "consumable": true,
     "activation": [
-      "magic-action",
-      "utilize-action"
+      "magic-action"
     ],
     "saves": [
       {
         "ability": "dex",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "other"
       }
     ],
     "damage": [
@@ -1301,7 +1323,9 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "appliesWhen": "Whenever another creature damages you while the weapon is in your possession"
       }
     ],
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon. In addition, while you are attuned to this weapon, your Hit Point maximum increases by 1 for each level you have attained.\nCurse. This weapon is cursed, and becoming attuned to it extends the curse to you. As long as you remain cursed, you are unwilling to part with the weapon, keeping it within reach at all times. You also have Disadvantage on attack rolls with weapons other than this one.\nWhenever another creature damages you while the weapon is in your possession, you must succeed on a DC 15 Wisdom saving throw or go berserk. This berserk state ends when you start your turn and there are no creatures within 60 feet of you that you can see or hear.\nWhile berserk, you regard the creature nearest to you that you can see or hear as your enemy. If there are multiple possible creatures, choose one at random. On each of your turns, you must move as close to the creature as possible and take the Attack action, targeting the creature. If you’re unable to get close enough to the creature to attack it with the weapon, your turn ends after you’ve used up all your available movement. If the creature dies or can no longer be seen or heard by you, the next nearest creature that you can see or hear becomes your new target."
@@ -1325,7 +1349,8 @@
     },
     "spells": [
       {
-        "id": "levitate"
+        "id": "levitate",
+        "selfOnly": true
       }
     ],
     "description": "While you wear these boots, you can cast Levitate on yourself."
@@ -1344,6 +1369,7 @@
     ],
     "uses": [
       {
+        "minutes": 10,
         "recharge": "long-rest"
       }
     ],
@@ -1400,7 +1426,7 @@
       {
         "to": "damage-rolls",
         "value": 2,
-        "appliesWhen": "made with such weapons",
+        "appliesWhen": "you have proficiency with the Longbow and Shortbow, and you gain a +2 bonus to damage rolls made with such weapons",
         "text": "While wearing these bracers, you have proficiency with the Longbow and Shortbow, and you gain a +2 bonus to damage rolls made with such weapons."
       }
     ],
@@ -1478,9 +1504,15 @@
     "activation": [
       "magic-action"
     ],
+    "uses": [
+      {
+        "minutes": 240
+      }
+    ],
     "spells": [
       {
-        "id": "gate"
+        "id": "gate",
+        "appliesWhen": "when you light the candle for the first time"
       }
     ],
     "tables": [
@@ -1637,6 +1669,9 @@
         ]
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "description": "This candle’s magic is activated when the candle is lit, which requires a Magic action. After burning for 4 hours, the candle is destroyed. You can snuff it out early for use at a later time. Deduct the time it burned in increments of 1 minute from its total burn time.\nWhile lit, the candle sheds Dim Light in a 30-foot radius. While you are within that light, you have Advantage on D20 Tests. In addition, a Cleric or Druid in the light can cast level 1 spells they have prepared without expending spell slots.\nAlternatively, when you light the candle for the first time, you can cast Gate with it. Doing so destroys the candle. The portal created by the spell links to a particular Outer Plane chosen by the GM or determined by rolling on the following table."
   },
   {
@@ -1650,6 +1685,7 @@
     ],
     "uses": [
       {
+        "spell": "dimension-door",
         "recharge": "dawn"
       }
     ],
@@ -1752,6 +1788,12 @@
     "activation": [
       "magic-action"
     ],
+    "uses": [
+      {
+        "spell": "knock",
+        "count": 10
+      }
+    ],
     "spells": [
       {
         "id": "knock"
@@ -1767,12 +1809,14 @@
     "rarity": "uncommon",
     "uses": [
       {
+        "spell": "scorching-ray",
         "recharge": "dawn"
       }
     ],
     "spells": [
       {
-        "id": "scorching-ray"
+        "id": "scorching-ray",
+        "attackBonus": 5
       }
     ],
     "description": "While wearing this circlet, you can cast Scorching Ray with it (+5 to hit). The circlet can’t cast this spell again until the next dawn."
@@ -1788,6 +1832,7 @@
     },
     "uses": [
       {
+        "spell": "web",
         "recharge": "dawn"
       }
     ],
@@ -1796,6 +1841,9 @@
         "id": "web",
         "saveDc": 13
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "This fine garment is made of black silk interwoven with faint, silvery threads. While wearing it, you gain the following benefits.\nPoison Resistance. You have Resistance to Poison damage.\nSpider Climb. You have a Climb Speed equal to your Speed and can move up, down, and across vertical surfaces and along ceilings, while leaving your hands free.\nSpider Walk. You can’t be caught in webs of any sort and can move through webs as if they were Difficult Terrain.\nWeb. You can cast Web (save DC 13). The web created by the spell fills twice its normal area. Once used, this property can’t be used again until the next dawn."
   },
@@ -1840,6 +1888,10 @@
         "time": "dawn"
       }
     },
+    "untyped": [
+      "charges",
+      "conditions"
+    ],
     "description": "This cloak has 3 charges and regains 1d3 expended charges daily at dawn. While wearing the cloak, you can take a Magic action to pull its hood over your head and expend 1 charge to give yourself the Invisible condition for 1 hour. The effect ends early if you pull the hood down (no action required) or cease wearing the cloak."
   },
   {
@@ -1876,13 +1928,19 @@
     },
     "uses": [
       {
+        "spell": "polymorph",
         "recharge": "dawn"
       }
     ],
     "spells": [
       {
-        "id": "polymorph"
+        "id": "polymorph",
+        "selfOnly": true,
+        "appliesWhen": "While wearing the cloak in an area of Dim Light or Darkness"
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "While wearing this cloak, you have Advantage on Dexterity (Stealth) checks. In an area of Dim Light or Darkness, you can grip the edges of the cloak and use it to gain a Fly Speed of 40 feet. If you ever fail to grip the cloak’s edges while flying in this way, or if you are no longer in Dim Light or Darkness, you lose this Fly Speed.\nWhile wearing the cloak in an area of Dim Light or Darkness, you can cast Polymorph on yourself, shape-shifting into a Bat. While in that form, you retain your Intelligence, Wisdom, and Charisma scores. The cloak can’t be used this way again until the next dawn."
   },
@@ -1930,8 +1988,12 @@
       },
       {
         "id": "detect-thoughts",
-        "saveDc": 17
+        "saveDc": 17,
+        "appliesWhen": "targeting creatures you can see within 30 feet of the spell’s sensor"
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "While touching this crystal orb, you can cast Scrying (save DC 17) with it. In addition, you can cast Detect Thoughts (save DC 17) targeting creatures you can see within 30 feet of the spell’s sensor. You don’t need to concentrate on this Detect Thoughts spell to maintain it during its duration, but it ends if the Scrying spell ends."
   },
@@ -1946,6 +2008,7 @@
     },
     "uses": [
       {
+        "spell": "suggestion",
         "recharge": "dawn"
       }
     ],
@@ -1956,8 +2019,12 @@
       },
       {
         "id": "suggestion",
-        "saveDc": 17
+        "saveDc": 17,
+        "appliesWhen": "through the sensor on one of those creatures"
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "While touching this crystal orb, you can cast Scrying (save DC 17) with it. In addition, you can communicate telepathically with creatures you can see within 30 feet of the spell’s sensor. You can also cast Suggestion (save DC 17) through the sensor on one of those creatures. You don’t need to concentrate on this Suggestion to maintain it during its duration, but it ends if Scrying ends. You can’t cast Suggestion in this way again until the next dawn."
   },
@@ -2101,6 +2168,9 @@
         "charges": 1
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "description": "This cube is 3 inches across and radiates palpable magical energy. The six sides of the cube are each keyed to a different plane of existence, one of which is the Material Plane. The other sides are linked to planes determined by the GM.\nThe cube has 3 charges and regains 1d3 expended charges daily at dawn. As a Magic action, you can expend 1 of the cube’s charges to cast one of the following spells using the cube.\nGate. Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side.\nPlane Shift. Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side."
   },
   {
@@ -2119,6 +2189,7 @@
     ],
     "uses": [
       {
+        "label": "coat the blade with poison",
         "recharge": "dawn"
       }
     ],
@@ -2137,7 +2208,9 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "label": "coat the blade with poison"
       }
     ],
     "damage": [
@@ -2145,8 +2218,12 @@
         "dice": "2d10",
         "type": "poison",
         "role": "effect",
+        "label": "coat the blade with poison",
         "text": "That creature must succeed on a DC 15 Constitution saving throw or take 2d10 Poison damage and have the Poisoned condition for 1 minute."
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon.\nYou can take a Bonus Action to magically coat the blade with poison. The poison remains for 1 minute or until an attack using this weapon hits a creature. That creature must succeed on a DC 15 Constitution saving throw or take 2d10 Poison damage and have the Poisoned condition for 1 minute. The weapon can’t be used this way again until the next dawn."
   },
@@ -2185,7 +2262,9 @@
     "saves": [
       {
         "ability": "str",
-        "dc": 13
+        "dc": 13,
+        "onSuccess": "none",
+        "label": "Geyser"
       }
     ],
     "damage": [
@@ -2193,8 +2272,12 @@
         "dice": "1d4",
         "type": "bludgeoning",
         "role": "effect",
+        "label": "Geyser",
         "text": "One creature of your choice in the Line must succeed on a DC 13 Strength saving throw or take 1d4 Bludgeoning damage and have the Prone condition."
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "This stoppered flask sloshes when shaken, as if it contains water. The decanter weighs 2 pounds.\nYou can take a Magic action to remove the stopper and issue one of three command words, whereupon an amount of fresh water or salt water (your choice) pours out of the flask. The water stops pouring out at the start of your next turn. Choose from the following command words:\nSplash. The decanter produces 1 gallon of water.\nFountain. The decanter produces 5 gallons of water.\nGeyser. The decanter produces 30 gallons of water that gushes forth in a Line 30 feet long and 1 foot wide. If you’re holding the decanter, you can aim the geyser in one direction (no action required). One creature of your choice in the Line must succeed on a DC 13 Strength saving throw or take 1d4 Bludgeoning damage and have the Prone condition. Instead of a creature, you can target one object in the Line that isn’t being worn or carried and that weighs no more than 200 pounds. The object is knocked over by the geyser."
   },
@@ -2550,6 +2633,9 @@
         "text": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon."
       }
     ],
+    "untyped": [
+      "bonuses"
+    ],
     "description": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon.\nThe first time you attack with the weapon on each of your turns, you can transfer some or all of the weapon’s bonus to your Armor Class. For example, you could reduce the bonus to your attack rolls and damage rolls to +1 and gain a +2 bonus to Armor Class. The adjusted bonuses remain in effect until the start of your next turn, although you must hold the weapon to gain a bonus to AC from it."
   },
   {
@@ -2641,37 +2727,44 @@
     "saves": [
       {
         "ability": "cha",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "other"
       }
     ],
     "spells": [
       {
         "id": "cure-wounds",
         "level": 9,
-        "charges": 4
+        "charges": 4,
+        "appliesWhen": "If you control the orb"
       },
       {
         "id": "daylight",
-        "charges": 1
+        "charges": 1,
+        "appliesWhen": "If you control the orb"
       },
       {
         "id": "death-ward",
-        "charges": 2
+        "charges": 2,
+        "appliesWhen": "If you control the orb"
       },
       {
         "id": "detect-magic",
-        "charges": 0
+        "charges": 0,
+        "appliesWhen": "If you control the orb"
       },
       {
         "id": "scrying",
         "charges": 3,
-        "saveDc": 18
+        "saveDc": 18,
+        "appliesWhen": "If you control the orb"
       }
     ],
     "spellEffects": [
       {
         "id": "suggestion",
-        "saveDc": 18
+        "saveDc": 18,
+        "appliesWhen": "While you are Charmed by the orb"
       }
     ],
     "tables": [
@@ -2714,6 +2807,10 @@
         ]
       }
     ],
+    "untyped": [
+      "uses",
+      "conditions"
+    ],
     "description": "An orb is an etched crystal globe about 10 inches in diameter. When used, it grows to about 20 inches in diameter, and mist swirls inside it.\nWhile attuned to an orb, you can take a Magic action to peer into the orb’s depths. You must then make a DC 15 Charisma saving throw. On a successful save, you control the orb for as long as you remain attuned to it. On a failed save, the orb imposes the Charmed condition on you for as long as you remain attuned to it.\nWhile you are Charmed by the orb, you can’t voluntarily end your Attunement to it, and the orb casts Suggestion on you at will (save DC 18), urging you to work toward the evil ends it desires. The dragon essence within the orb might want many things: the annihilation of a particular society or organization, freedom from the orb, to spread suffering in the world, to advance the worship of Tiamat, or something else the GM decides.\nSpells. The orb has 7 charges and regains 1d4 + 3 expended charges daily at dawn. If you control the orb, you can cast one of the spells on the following table from it. The table indicates how many charges you must expend to cast the spell.\nCall Dragons. While you control the orb, you can take a Magic action to cause the orb to issue a telepathic call that extends in all directions for 40 miles. Chromatic dragons in range feel compelled to come to the orb as soon as possible by the most direct route. Dragon deities such as Tiamat are unaffected by this call. Chromatic dragons drawn to the orb might be Hostile toward you for compelling them against their will. Once you have used this property, it can’t be used again for 1 hour.\nDestroying an Orb. A Dragon Orb has AC 20 and is destroyed if it takes damage from a +3 Weapon or a Disintegrate spell. Nothing else can harm it."
   },
   {
@@ -2735,6 +2832,7 @@
     ],
     "uses": [
       {
+        "label": "focus your senses",
         "recharge": "dawn"
       }
     ],
@@ -2841,6 +2939,15 @@
         "text": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon."
       }
     ],
+    "damage": [
+      {
+        "dice": "3d6",
+        "type": "weapon",
+        "role": "extra",
+        "appliesWhen": "if the target is a Dragon",
+        "text": "The weapon deals an extra 3d6 damage of the weapon’s type if the target is a Dragon."
+      }
+    ],
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon.\nThe weapon deals an extra 3d6 damage of the weapon’s type if the target is a Dragon."
   },
   {
@@ -2852,6 +2959,9 @@
     "consumable": true,
     "activation": [
       "utilize-action"
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "This powder resembles fine sand. There is enough of it for one use. When you take a Utilize action to throw the dust into the air, you and each creature and object within a 10-foot Emanation originating from you have the Invisible condition for 2d4 minutes. The duration is the same for all subjects, and the dust is consumed when its magic takes effect. Immediately after an affected creature makes an attack roll, deals damage, or casts a spell, the Invisible condition ends for that creature."
   },
@@ -2867,7 +2977,9 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 13
+        "dc": 13,
+        "onSuccess": "half",
+        "appliesWhen": "an Elemental within 5 feet of yourself that is composed mostly of water"
       }
     ],
     "damage": [
@@ -2875,7 +2987,6 @@
         "dice": "10d6",
         "type": "necrotic",
         "role": "effect",
-        "appliesWhen": "an Elemental within 5 feet of yourself that is composed mostly of water",
         "text": "Such a creature exposed to a pinch of the dust makes a DC 13 Constitution saving throw, taking 10d6 Necrotic damage on a failed save or half as much damage on a successful one."
       }
     ],
@@ -2894,8 +3005,14 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "unless": "Constructs, Elementals, Oozes, Plants, and Undead succeed on the save automatically"
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ],
     "description": "Found in a small container, this powder resembles Dust of Disappearance, and Identify reveals it to be such. There is enough of it for one use.\nAs a Utilize action, you can throw the dust into the air, forcing yourself and every creature in a 30-foot Emanation originating from you to make a DC 15 Constitution saving throw. Constructs, Elementals, Oozes, Plants, and Undead succeed on the save automatically.\nOn a failed save, a creature begins sneezing uncontrollably; it has the Incapacitated condition and is suffocating. The creature repeats the save at the end of each of its turns, ending the effect on itself on a success. The effect also ends on any creature targeted by a Lesser Restoration spell."
   },
@@ -2963,6 +3080,7 @@
         "type": "force",
         "role": "extra",
         "appliesWhen": "if the target is a Giant",
+        "alternativeTo": 0,
         "text": "When you hit with a ranged attack using this weapon, it deals an extra 1d8 Force damage, or an extra 2d8 Force damage if the target is a Giant."
       }
     ],
@@ -3133,7 +3251,10 @@
     "saves": [
       {
         "ability": "str",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "label": "Arrow of Restraint",
+        "appliesWhen": "If the arrow hits"
       }
     ],
     "checks": [
@@ -3142,6 +3263,10 @@
         "skill": "athletics",
         "dc": 20
       }
+    ],
+    "untyped": [
+      "damage",
+      "conditions"
     ],
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon, which has no string. Each time you pull your arm back in a firing motion, a magical arrow made of golden energy appears nocked and ready to fire. An arrow produced by this weapon deals Force damage instead of Piercing damage on a hit, and it disappears after it hits or misses its target. Until it disappears, the arrow emits Bright Light in a 20-foot radius and Dim Light for an additional 20 feet.\nThis weapon has the following additional properties.\nArrow of Restraint. Whenever you use this weapon to make a ranged attack against a creature, you can try to restrain the target instead of dealing damage to it. If the arrow hits, the target must succeed on a DC 15 Strength saving throw or have the Restrained condition for 1 minute. As an action, a creature Restrained by an arrow can make a DC 20 Strength (Athletics) check to try to break the restraint, ending the effect on itself on a successful check.\nArrow of Transport. As a Magic action, you can fire one energy arrow from this weapon at a target you can see within 60 feet of yourself. The target can be either a willing Medium or smaller creature or an object that isn’t being worn or carried, provided the object is small enough to fit inside a 5-foot Cube. The arrow teleports the target to an unoccupied space you can see within 10 feet of you.\nEnergy Ladder. As a Magic action, you can loose a flurry of energy arrows from this weapon at a wall up to 60 feet away from yourself. The arrows become glowing rungs that stick out of the wall, forming a magical ladder up to 60 feet long on the wall. This ladder lasts for 1 minute before disappearing."
   },
@@ -3348,7 +3473,9 @@
         "saves": [
           {
             "ability": "wis",
-            "dc": 15
+            "dc": 15,
+            "onSuccess": "other",
+            "appliesWhen": "While you ride the goat, any Hostile creature that starts its turn within a 30-foot Emanation originating from the goat"
           }
         ]
       },
@@ -3384,7 +3511,8 @@
         "rarity": "uncommon",
         "spells": [
           {
-            "id": "animal-messenger"
+            "id": "animal-messenger",
+            "appliesWhen": "While in raven form, the figurine grants you the ability to cast Animal Messenger on it"
           }
         ]
       }
@@ -3435,6 +3563,13 @@
         "languages": "None",
         "cr": "0 (XP 0; PB +2)"
       }
+    ],
+    "untyped": [
+      "saves",
+      "bonuses",
+      "charges",
+      "uses",
+      "conditions"
     ],
     "description": "A Figurine of Wondrous Power is a statuette small enough to fit in a pocket. If you take a Magic action to throw the figurine to a point on the ground within 60 feet of yourself, the figurine becomes a living creature specified in the figurine’s description below. If the space where the creature would appear is occupied by other creatures or objects, or if there isn’t enough space for the creature, the figurine doesn’t become a creature.\nThe creature is Friendly to you and your allies. It understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count. If you issue no commands, the creature defends itself but takes no other actions.\nThe creature exists for a duration specific to each figurine. At the end of the duration, the creature reverts to its figurine form. It reverts to a figurine early if its creature form drops to 0 Hit Points or if you take a Magic action while touching the creature to make it revert to figurine form. When the creature becomes a figurine again, its property can’t be used again until a certain amount of time has passed, as specified in the figurine’s description.\nBronze Griffon (Rare). This bronze statuette is of a griffon rampant. It can become a Griffon for up to 6 hours. Once it has been used, it can’t be used again until 5 days have passed.\nEbony Fly (Rare). This ebony statuette, carved in the likeness of a horsefly, can become a Giant Fly (see the accompanying stat block) for up to 12 hours and can be ridden as a mount. Once it has been used, it can’t be used again until 2 days have passed.\nGolden Lions (Rare). These gold statuettes of lions are always created in pairs. You can use one figurine or both simultaneously. Each can become a Lion for up to 1 hour. Once a lion has been used, it can’t be used again until 7 days have passed.\nIvory Goats (Rare). These ivory statuettes of goats are always created in sets of three. Each goat looks unique and functions differently from the others. Their properties are as follows:\nGoat of Terror. This figurine can become a Giant Goat for up to 3 hours. The goat can’t attack, but you can (harmlessly) remove its horns and use them as weapons. One horn becomes a +1 Lance, and the other becomes a +2 Longsword. Removing a horn requires a Magic action, and the weapons disappear and the horns return when the goat reverts to figurine form. While you ride the goat, any Hostile creature that starts its turn within a 30-foot Emanation originating from the goat must succeed on a DC 15 Wisdom saving throw or have the Frightened condition for 1 minute, until you are no longer riding the goat, or until the goat reverts to figurine form. The Frightened creature repeats the save at the end of each of its turns, ending the effect on itself on a success. Once it succeeds on the save, a creature is immune to this effect for the next 24 hours. Once the figurine has been used, it can’t be used again until 15 days have passed.\nGoat of Traveling. This figurine can become a Large goat with the same statistics as a Riding Horse. It has 24 charges, and each hour or portion thereof it spends in goat form costs 1 charge. While it has charges, you can use it as often as you wish. When it runs out of charges, it reverts to a figurine and can’t be used again until 7 days have passed, when it regains all expended charges.\nGoat of Travail. This figurine can become a Giant Goat for up to 3 hours. Once it has been used, it can’t be used again until 30 days have passed.\nMarble Elephant (Rare). This marble statuette resembles a trumpeting elephant. It can become an Elephant for up to 24 hours. Once it has been used, it can’t be used again until 7 days have passed.\nObsidian Steed (Very Rare). This polished obsidian horse can become a Nightmare for up to 24 hours. The nightmare fights only to defend itself. Once it has been used, it can’t be used again until 5 days have passed.\nThe figurine has a 10 percent chance each time you use it to ignore your orders, including a command to revert to figurine form. If you mount the nightmare while it is ignoring your orders, you and the nightmare are instantly transported to a random location on the plane of Hades, where the nightmare reverts to figurine form.\nOnyx Dog (Rare). This onyx statuette of a dog can become a Mastiff for up to 6 hours. The mastiff has an Intelligence of 8 and can speak Common. It also has Blindsight with a range of 60 feet. Once it has been used, it can’t be used again until 7 days have passed.\nSerpentine Owl (Rare). This serpentine statuette of an owl can become a Giant Owl for up to 8 hours. The owl can communicate telepathically with you at any range if you and it are on the same plane of existence. Once it has been used, it can’t be used again until 2 days have passed.\nSilver Raven (Uncommon). This silver statuette of a raven can become a Raven for up to 12 hours. Once it has been used, it can’t be used again until 2 days have passed. While in raven form, the figurine grants you the ability to cast Animal Messenger on it."
   },
@@ -3504,6 +3639,9 @@
         "text": "When you hit with an attack roll using this magic weapon, the target takes an extra 1d6 Cold damage."
       }
     ],
+    "untyped": [
+      "uses"
+    ],
     "description": "When you hit with an attack roll using this magic weapon, the target takes an extra 1d6 Cold damage. In addition, while you hold the weapon, you have Resistance to Fire damage.\nIn freezing temperatures, the weapon sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet.\nWhen you draw this weapon, you can extinguish all nonmagical flames within 30 feet of yourself. Once used, this property can’t be used again for 1 hour."
   },
   {
@@ -3533,8 +3671,23 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "label": "Second Command Word",
+        "charges": 1
+      },
+      {
+        "ability": "con",
+        "dc": 15,
+        "onSuccess": "none",
+        "label": "Third Command Word",
+        "charges": 5
       }
+    ],
+    "untyped": [
+      "saves",
+      "charges",
+      "conditions"
     ],
     "description": "This prism has 50 charges. While you are holding it, you can take a Magic action and use one of three command words to cause one of the following effects:\nFirst Command Word. The gem sheds Bright Light in a 30-foot radius and Dim Light for an additional 30 feet. This effect doesn’t expend a charge. It lasts until you take a Bonus Action to repeat the command word or until you use another function of the gem.\nSecond Command Word. You expend 1 charge and cause the gem to fire a brilliant beam of light at one creature you can see within 60 feet of yourself. The creature must succeed on a DC 15 Constitution saving throw or have the Blinded condition for 1 minute. The creature repeats the save at the end of each of its turns, ending the effect on itself on a success.\nThird Command Word. You expend 5 charges and cause the gem to flare with intense light in a 30-foot Cone. Each creature in the Cone makes a saving throw as if struck by the beam created with the second command word. When all of the gem’s charges are expended, the gem becomes a nonmagical jewel worth 50 GP."
   },
@@ -3557,6 +3710,9 @@
         "time": "dawn"
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "description": "This gem has 3 charges. As a Magic action, you can expend 1 charge. For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem.\nThe gem regains 1d3 expended charges daily at dawn."
   },
   {
@@ -3586,8 +3742,22 @@
     "saves": [
       {
         "ability": "str",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "appliesWhen": "When you hit a Giant with this weapon"
       }
+    ],
+    "damage": [
+      {
+        "dice": "2d6",
+        "type": "weapon",
+        "role": "extra",
+        "appliesWhen": "When you hit a Giant with this weapon",
+        "text": "When you hit a Giant with this weapon, the Giant takes an extra 2d6 damage of the weapon’s type and must succeed on a DC 15 Strength saving throw or have the Prone condition."
+      }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon.\nWhen you hit a Giant with this weapon, the Giant takes an extra 2d6 damage of the weapon’s type and must succeed on a DC 15 Strength saving throw or have the Prone condition."
   },
@@ -3708,13 +3878,21 @@
       {
         "ability": "con",
         "dc": 17,
-        "label": "thunderclap"
+        "onSuccess": "none",
+        "label": "thunderclap",
+        "appliesWhen": "If the attack hits",
+        "charges": 1
       },
       {
         "ability": "con",
         "dc": 17,
-        "label": "Giants’ Bane"
+        "onSuccess": "none",
+        "label": "Giants’ Bane",
+        "appliesWhen": "While you are attuned to the weapon and wearing either a Belt of Giant Strength or Gauntlets of Ogre Power to which you are also attuned, you gain the following benefits:\nGiants’ Bane. When you roll a 20 on the d20 for an attack roll made with this weapon against a Giant"
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon.\nThe weapon has 5 charges. You can expend 1 charge and make a ranged attack with the weapon, hurling it as if it had the Thrown property with a normal range of 20 feet and a long range of 60 feet. If the attack hits, the weapon unleashes a thunderclap audible out to 300 feet. The target and every creature within 30 feet of it other than you must succeed on a DC 17 Constitution saving throw or have the Stunned condition until the end of your next turn. Immediately after hitting or missing, the weapon flies back to your hand. The weapon regains 1d4 + 1 expended charges daily at dawn.\nGiant’s Bane. While you are attuned to the weapon and wearing either a Belt of Giant Strength or Gauntlets of Ogre Power to which you are also attuned, you gain the following benefits:\nGiants’ Bane. When you roll a 20 on the d20 for an attack roll made with this weapon against a Giant, the creature must succeed on a DC 17 Constitution saving throw or die.\nMight of Giants. The Strength score bestowed by your Belt of Giant Strength or Gauntlets of Ogre Power increases by 4, to a maximum of 30."
   },
@@ -3744,6 +3922,9 @@
         "id": "disguise-self"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "description": "While wearing this hat, you can cast the Disguise Self spell. The spell ends if the hat is removed."
   },
   {
@@ -3761,7 +3942,9 @@
     },
     "uses": [
       {
-        "recharge": "short-or-long-rest"
+        "label": "Unknown Spell",
+        "recharge": "short-or-long-rest",
+        "appliesWhen": "On a successful check"
       }
     ],
     "tables": [
@@ -3777,15 +3960,48 @@
               "max": 50
             },
             "spells": [
-              "enlarge-reduce",
-              "faerie-fire",
-              "fireball",
-              "gust-of-wind",
-              "invisibility",
-              "lightning-bolt",
-              "phantasmal-force",
-              "polymorph",
-              "stinking-cloud"
+              {
+                "id": "enlarge-reduce",
+                "label": "enlarge effect"
+              },
+              {
+                "id": "enlarge-reduce",
+                "label": "reduce effect",
+                "alternativeTo": 0
+              },
+              {
+                "id": "faerie-fire",
+                "alternativeTo": 0
+              },
+              {
+                "id": "fireball",
+                "alternativeTo": 0
+              },
+              {
+                "id": "gust-of-wind",
+                "alternativeTo": 0
+              },
+              {
+                "id": "invisibility",
+                "selfOnly": true,
+                "alternativeTo": 0
+              },
+              {
+                "id": "lightning-bolt",
+                "alternativeTo": 0
+              },
+              {
+                "id": "phantasmal-force",
+                "alternativeTo": 0
+              },
+              {
+                "id": "polymorph",
+                "alternativeTo": 0
+              },
+              {
+                "id": "stinking-cloud",
+                "alternativeTo": 0
+              }
             ],
             "cells": [
               "You cast a random spell determined by rolling 1d10: on a 1, Enlarge/Reduce (enlarge effect); on a 2, Enlarge/Reduce (reduce effect); on a 3, Faerie Fire; on a 4, Fireball; on a 5, Gust of Wind; on a 6, Invisibility (cast on yourself); on a 7, Lightning Bolt; on an 8, Phantasmal Force; on a 9, Polymorph; on a 10, Stinking Cloud."
@@ -3884,6 +4100,9 @@
         ]
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "description": "This pointed hat has the following properties.\nSpellcasting Focus. While holding the hat, you can use it as a Spellcasting Focus for your Wizard spells. Any spell you cast using the hat gains a special Somatic component: you must reach into the hat and “pull” the spell out of it.\nUnknown Spell. While holding the hat, you can try to cast a level 1+ spell you don’t know. The spell must be on the Wizard spell list, it must be of a level you can cast, and it can’t have Material components costing more than 1,000 GP. Once you decide on the spell, you must expend a spell slot of the spell’s level. Then, to determine whether you cast the spell, make an Intelligence (Arcana) check (DC 10 plus the spell’s level). On a successful check, you cast the spell using its normal casting time, and you can’t use this property again until you finish a Short or Long Rest. On a failed check, you fail to cast the spell and a random effect occurs instead, determined by rolling on the following table.\nAny spell you cast from the hat uses your spell save DC and spell attack bonus."
   },
   {
@@ -3913,7 +4132,9 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 17
+        "dc": 17,
+        "onSuccess": "none",
+        "appliesWhen": "Roll 1d20 if you are wearing the helm and take Fire damage as a result of failing a saving throw against a spell. On a roll of 1"
       }
     ],
     "damage": [
@@ -3950,6 +4171,10 @@
         "saveDc": 18
       }
     ],
+    "untyped": [
+      "damage",
+      "spells"
+    ],
     "description": "This helm is set with 1d10 diamonds, 2d10 rubies, 3d10 fire opals, and 4d10 opals. Any gem pried from the helm crumbles to dust. When all the gems are removed or destroyed, the helm loses its magic.\nYou gain the following benefits while wearing the helm.\nDiamond Light. As long as it has at least one diamond, the helm emits a 30-foot Emanation. When at least one Undead is within that area, the Emanation is filled with Dim Light. Any Undead that starts its turn in that area takes 1d6 Radiant damage.\nFire Opal Flames. As long as the helm has at least one fire opal, you can take a Magic action to cause one weapon you are holding to burst into flames. The flames emit Bright Light in a 10-foot radius and Dim Light for an additional 10 feet. The flames are harmless to you and the weapon. When you hit with an attack using the blazing weapon, the target takes an extra 1d6 Fire damage. The flames last until you take a Bonus Action to extinguish them or until you drop or stow the weapon.\nRuby Resistance. As long as the helm has at least one ruby, you have Resistance to Fire damage.\nSpells. You can cast one of the following spells (save DC 18), using one of the helm’s gems of the specified type as a component: Daylight (opal), Fireball (fire opal), Prismatic Spray (diamond), or Wall of Fire (ruby). The gem is destroyed when the spell is cast and disappears from the helm.\nTaking Fire Damage. Roll 1d20 if you are wearing the helm and take Fire damage as a result of failing a saving throw against a spell. On a roll of 1, the helm emits beams of light from its remaining gems and is then destroyed. Each creature within a 60-foot Emanation originating from you must succeed on a DC 17 Dexterity saving throw or be struck by a beam, taking Radiant damage equal to the number of gems in the helm."
   },
   {
@@ -3976,12 +4201,18 @@
     },
     "uses": [
       {
+        "spell": "detect-thoughts",
+        "recharge": "dawn"
+      },
+      {
+        "spell": "suggestion",
         "recharge": "dawn"
       }
     ],
     "spells": [
       {
-        "id": "detect-thoughts"
+        "id": "detect-thoughts",
+        "saveDc": 13
       },
       {
         "id": "suggestion",
@@ -4068,7 +4299,8 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "half"
       }
     ],
     "damage": [
@@ -4092,6 +4324,9 @@
         "appliesWhen": "Each use of the horn’s magic has a 20 percent chance of causing the horn to explode",
         "text": "The explosion deals 10d6 Force damage to the user and destroys the horn."
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "You can take a Magic action to blow the horn, which emits a thunderous blast in a 30-foot Cone that is audible out to 600 feet. Each creature in the Cone makes a DC 15 Constitution saving throw. On a failed save, a creature takes 5d8 Thunder damage and has the Deafened condition for 1 minute. On a successful save, a creature takes half as much damage only. Glass or crystal objects in the Cone that aren’t being worn or carried take 10d8 Thunder damage.\nEach use of the horn’s magic has a 20 percent chance of causing the horn to explode. The explosion deals 10d6 Force damage to the user and destroys the horn."
   },
@@ -4177,6 +4412,9 @@
           }
         ]
       }
+    ],
+    "untyped": [
+      "uses"
     ],
     "description": "You can take a Magic action to blow this horn. In response, warrior spirits from the plane of Ysgard appear in unoccupied spaces within 60 feet of you. Each spirit uses the Berserker stat block and returns to Ysgard after 1 hour or when it drops to 0 Hit Points. The spirits look like living, breathing warriors, and they have Immunity to the Charmed and Frightened conditions. Once you use the horn, it can’t be used again until 7 days have passed.\nFour types of Horn of Valhalla are known to exist, each made of a different metal. The horn’s type determines how many spirits it summons, as well as the requirement for its use. The GM chooses the horn’s type or determines it randomly by rolling on the following table.\nIf you blow the horn without meeting its requirement, the summoned spirits attack you. If you meet the requirement, they are Friendly to you and your allies and follow your commands."
   },
@@ -4319,6 +4557,11 @@
       "utilize-action",
       "reaction"
     ],
+    "untyped": [
+      "spells",
+      "uses",
+      "healing"
+    ],
     "description": "Roughly marble sized, Ioun Stones are named after Ioun, a god of knowledge and prophecy revered on some worlds. Many types of Ioun Stones exist, each type a distinct combination of shape and color.\nWhen you take a Magic action to toss an Ioun Stone into the air, the stone orbits your head at a distance of 1d3 feet, conferring its benefit to you while doing so. You can have up to three Ioun Stones orbiting your head at the same time.\nEach Ioun Stone orbiting your head is considered to be an object you are wearing. The orbiting stone avoids contact with other creatures and objects, adjusting its orbit to avoid collisions and thwarting all attempts by other creatures to attack or snatch it.\nAs a Utilize action, you can seize and stow any number of Ioun Stones orbiting your head. If your Attunement to an Ioun Stone ends while it’s orbiting your head, the stone falls as though you had dropped it.\nThe type of stone determines its rarity and effects.\nAbsorption (Very Rare). While this pale lavender ellipsoid orbits your head, you can take a Reaction to cancel a spell of level 4 or lower cast by a creature you can see. A canceled spell has no effect, and any resources used to cast it are wasted. Once the stone has canceled 20 levels of spells, it burns out, turns dull gray, and loses its magic.\nAgility (Very Rare). Your Dexterity increases by 2, to a maximum of 20, while this deep-red sphere orbits your head.\nAwareness (Rare). While this dark-blue rhomboid orbits your head, you have Advantage on Initiative rolls and Wisdom (Perception) checks.\nFortitude (Very Rare). Your Constitution increases by 2, to a maximum of 20, while this pink rhomboid orbits your head.\nGreater Absorption (Legendary). While this marbled lavender and green ellipsoid orbits your head, you can take a Reaction to cancel a spell of level 8 or lower cast by a creature you can see. A canceled spell has no effect, and any resources used to cast it are wasted. Once the stone has canceled 20 levels of spells, it burns out, turns dull gray, and loses its magic.\nInsight (Very Rare). Your Wisdom increases by 2, to a maximum of 20, while this incandescent blue sphere orbits your head.\nIntellect (Very Rare). Your Intelligence increases by 2, to a maximum of 20, while this marbled scarlet and blue sphere orbits your head.\nLeadership (Very Rare). Your Charisma increases by 2, to a maximum of 20, while this marbled pink and green sphere orbits your head.\nMastery (Legendary). Your Proficiency Bonus increases by 1 while this pale green prism orbits your head.\nProtection (Rare). You gain a +1 bonus to Armor Class while this dusty-rose prism orbits your head.\nRegeneration (Legendary). You regain 15 Hit Points at the end of each hour this pearly white spindle orbits your head if you have at least 1 Hit Point.\nReserve (Rare). This vibrant purple prism stores spells cast into it, holding them until you use them. The stone can store up to 4 levels of spells at a time. When found, it contains 1d4 levels of stored spells chosen by the GM.\nAny creature can cast a spell of level 1 through 4 into the stone by touching it as the spell is cast. The spell has no effect, other than to be stored in the stone. If the stone can’t hold the spell, the spell is expended without effect. The level of the slot used to cast the spell determines how much space it uses.\nWhile this stone orbits your head, you can cast any spell stored in it. The spell uses the slot level, spell save DC, spell attack bonus, and spellcasting ability of the original caster but is otherwise treated as if you cast the spell. The spell cast from the stone is no longer stored in it, freeing up space.\nStrength (Very Rare). Your Strength increases by 2, to a maximum of 20, while this pale blue rhomboid orbits your head.\nSustenance (Rare). You don’t need to eat or drink while this clear spindle orbits your head."
   },
   {
@@ -4343,6 +4586,9 @@
         "dc": 20
       }
     ],
+    "untyped": [
+      "conditions"
+    ],
     "description": "This rusty iron sphere measures 3 inches in diameter and weighs 1 pound. You can take a Magic action to throw the sphere at a Huge or smaller creature you can see within 60 feet of yourself. As the sphere moves through the air, it opens into a tangle of metal bands.\nMake a ranged attack roll with an attack bonus equal to your Dexterity modifier plus your Proficiency Bonus. On a hit, the target has the Restrained condition until you take a Bonus Action to issue a command that releases it. Doing so or missing with the attack causes the bands to contract and become a sphere once more.\nA creature that can touch the bands, including the one Restrained, can take an action to make a DC 20 Strength (Athletics) check to break the iron bands. On a successful check, the item is destroyed, and the Restrained creature is freed. On a failed check, any further attempts made by that creature automatically fail until 24 hours have elapsed.\nOnce the bands are used, they can’t be used again until the next dawn."
   },
   {
@@ -4357,7 +4603,9 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 17
+        "dc": 17,
+        "onSuccess": "none",
+        "appliesWhen": "If the flask is empty and the target is native to a plane of existence other than the one you’re on"
       }
     ],
     "description": "While holding this brass-stoppered iron flask, you can take a Magic action to target a creature that you can see within 60 feet of yourself. If the flask is empty and the target is native to a plane of existence other than the one you’re on, the target must succeed on a DC 17 Wisdom saving throw or be trapped in the flask. If the target has been trapped by the flask before, it has Advantage on the save. Once trapped, a creature remains in the flask until released. The flask can hold only one creature at a time. A creature trapped in the flask doesn’t age and doesn’t need to breathe, eat, or drink.\nYou can take a Magic action to remove the flask’s stopper and release the creature in the flask. The creature then obeys your commands for 1 hour, understanding those commands even if it doesn’t know the language in which the commands are given. If you issue no commands or give the creature a command that is likely to result in its death or imprisonment, it defends itself but otherwise takes no actions. At the end of the duration, the creature acts in accordance with its normal disposition and alignment.\nAn Identify spell reveals if the flask contains a creature, but the only way to determine the type of creature is to open the flask. A newly discovered Iron Flask might already contain a creature chosen by the GM."
@@ -4375,13 +4623,16 @@
     "rarity": "uncommon",
     "uses": [
       {
+        "label": "Lightning Bolt",
         "recharge": "dawn"
       }
     ],
     "saves": [
       {
         "ability": "dex",
-        "dc": 13
+        "dc": 13,
+        "onSuccess": "half",
+        "label": "Lightning Bolt"
       }
     ],
     "damage": [
@@ -4389,8 +4640,12 @@
         "dice": "4d6",
         "type": "lightning",
         "role": "effect",
+        "label": "Lightning Bolt",
         "text": "The target and each other creature in the Line (excluding you) makes a DC 13 Dexterity saving throw, taking 4d6 Lightning damage on a failed save or half as much damage on a successful one."
       }
+    ],
+    "untyped": [
+      "damage"
     ],
     "description": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage.\nLightning Bolt. When you throw this weapon at a target no farther than 120 feet from you, you can forgo making a ranged attack roll and instead turn the weapon into a bolt of lightning. This bolt forms a 5-foot-wide Line between you and the target. The target and each other creature in the Line (excluding you) makes a DC 13 Dexterity saving throw, taking 4d6 Lightning damage on a failed save or half as much damage on a successful one. Immediately after dealing this damage, the weapon reappears in your hand. This property can’t be used again until the next dawn."
   },
@@ -4427,6 +4682,11 @@
     },
     "uses": [
       {
+        "label": "Luck",
+        "recharge": "dawn"
+      },
+      {
+        "spell": "wish",
         "recharge": "dawn"
       }
     ],
@@ -4475,7 +4735,9 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "other",
+        "appliesWhen": "If the target has 25 Hit Points or fewer after taking this damage"
       }
     ],
     "damage": [
@@ -4486,6 +4748,9 @@
         "appliesWhen": "When you hit a Fiend or an Undead with this magic weapon",
         "text": "When you hit a Fiend or an Undead with this magic weapon, that creature takes an extra 2d6 Radiant damage."
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "When you hit a Fiend or an Undead with this magic weapon, that creature takes an extra 2d6 Radiant damage. If the target has 25 Hit Points or fewer after taking this damage, it must succeed on a DC 15 Wisdom saving throw or be destroyed. On a successful save, the creature has the Frightened condition until the end of your next turn.\nLight. While you hold this weapon, it sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet."
   },
@@ -4517,12 +4782,14 @@
         "to": "attack-rolls",
         "value": 3,
         "appliesWhen": "when you use the weapon to attack a Construct",
+        "alternativeTo": 0,
         "text": "The bonus increases to +3 when you use the weapon to attack a Construct."
       },
       {
         "to": "damage-rolls",
         "value": 3,
         "appliesWhen": "when you use the weapon to attack a Construct",
+        "alternativeTo": 1,
         "text": "The bonus increases to +3 when you use the weapon to attack a Construct."
       }
     ],
@@ -4539,6 +4806,7 @@
         "type": "bludgeoning",
         "role": "extra",
         "appliesWhen": "if it’s a Construct",
+        "alternativeTo": 0,
         "text": "When you roll a 20 on an attack roll made with this weapon, the target takes an extra 7 Bludgeoning damage, or 14 Bludgeoning damage if it’s a Construct."
       }
     ],
@@ -4571,8 +4839,14 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "charges": 1
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ],
     "description": "This magic weapon has 3 charges and regains 1d3 expended charges daily at dawn. While holding the weapon, you can take a Magic action and expend 1 charge to release a wave of terror from it. Each creature of your choice within 30 feet of you must succeed on a DC 15 Wisdom saving throw or have the Frightened condition for 1 minute. While Frightened in this way, a creature must spend its turns trying to move as far away from you as it can, and it can’t make Opportunity Attacks. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If it has nowhere it can move, the creature can take the Dodge action. At the end of each of its turns, a creature repeats the save, ending the effect on itself on a success."
   },
@@ -4593,6 +4867,9 @@
     "page": 229,
     "category": "wondrous-item",
     "rarity": "very-rare",
+    "untyped": [
+      "uses"
+    ],
     "description": "This book contains health and nutrition tips, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book’s contents and practicing its guidelines, your Constitution increases by 2, to a maximum of 30. The manual then loses its magic but regains it in a century."
   },
   {
@@ -4601,6 +4878,9 @@
     "page": 229,
     "category": "wondrous-item",
     "rarity": "very-rare",
+    "untyped": [
+      "uses"
+    ],
     "description": "This book describes fitness exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book’s contents and practicing its guidelines, your Strength increases by 2, to a maximum of 30. The manual then loses its magic but regains it in a century."
   },
   {
@@ -4682,6 +4962,9 @@
     "page": 230,
     "category": "wondrous-item",
     "rarity": "very-rare",
+    "untyped": [
+      "uses"
+    ],
     "description": "This book contains coordination and balance exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book’s contents and practicing its guidelines, your Dexterity increases by 2, to a maximum of 30. The manual then loses its magic but regains it in a century."
   },
   {
@@ -4729,7 +5012,10 @@
     "saves": [
       {
         "ability": "cha",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "appliesWhen": "Any creature other than you that sees its reflection in the activated mirror while within 30 feet of the mirror",
+        "unless": "Constructs succeed on the save automatically"
       }
     ],
     "description": "When this 4-foot-tall, 2-foot-wide mirror is viewed indirectly, its surface shows faint images of creatures. The mirror weighs 50 pounds, and it has AC 11, HP 10, Immunity to Poison and Psychic damage, and Vulnerability to Bludgeoning damage. It shatters and is destroyed when reduced to 0 Hit Points.\nIf the mirror is hanging on a vertical surface and you are within 5 feet of it, you can take a Magic action and use a command word to activate it. It remains activated until you take a Magic action and repeat the command word to deactivate it.\nAny creature other than you that sees its reflection in the activated mirror while within 30 feet of the mirror must succeed on a DC 15 Charisma saving throw or be trapped, along with anything it is wearing or carrying, in one of the mirror’s twelve extradimensional cells. A creature that knows the mirror’s nature makes the save with Advantage, and Constructs succeed on the save automatically.\nAn extradimensional cell is an infinite expanse filled with thick fog that reduces visibility to 10 feet. Creatures trapped in the mirror’s cells don’t age, and they don’t need to eat, drink, or sleep. A creature trapped within a cell can escape using magic that permits planar travel. Otherwise, the creature is confined to the cell until freed.\nIf the mirror traps a creature but its twelve extradimensional cells are already occupied, the mirror frees one trapped creature at random to accommodate the new prisoner. A freed creature appears in an unoccupied space within sight of the mirror but facing away from it. If the mirror is shattered, all creatures it contains are freed and appear in unoccupied spaces near it.\nWhile within 5 feet of the mirror, you can take a Magic action to name one creature trapped in it or call out a particular cell by number. The creature named or contained in the named cell appears as an image on the mirror’s surface. You and the creature can then communicate.\nIn a similar way, you can take a Magic action and use a second command word to free one creature trapped in the mirror. The freed creature appears, along with its possessions, in the unoccupied space nearest to the mirror and facing away from it.\nPlacing the mirror inside an extradimensional space created by a Bag of Holding, Portable Hole, or similar item instantly destroys both items and opens a gate to the Astral Plane. The gate originates where the one item was placed inside the other. Any creature within 10 feet of the gate and not behind Total Cover is sucked through it to a random location on the Astral Plane. The gate then closes. The gate is one-way only and can’t be reopened."
@@ -4757,6 +5043,12 @@
     "page": 231,
     "category": "wondrous-item",
     "rarity": "legendary",
+    "uses": [
+      {
+        "spell": "wish",
+        "count": "1d3"
+      }
+    ],
     "spells": [
       {
         "id": "wish",
@@ -4990,6 +5282,11 @@
         ]
       }
     ],
+    "untyped": [
+      "bonuses",
+      "uses",
+      "healing"
+    ],
     "description": "Usually found in a box or pouch, this deck contains a number of cards made of ivory or vellum. Most (75 percent) of these decks have thirteen cards, but some have twenty-two. Use the appropriate column of the Mysterious Deck table when randomly determining cards drawn from the deck.\nBefore you draw a card, you must declare how many cards you intend to draw and then draw them randomly. Any cards drawn in excess of this number have no effect. Otherwise, as soon as you draw a card from the deck, its magic takes effect. You must draw each card no more than 1 hour after the previous draw. If you fail to draw the chosen number, the remaining number of cards fly from the deck on their own and take effect all at once.\nOnce a card is drawn, it disappears. Unless the card is the Fool or Jester, the card reappears in the deck, making it possible to draw the same card twice. (Once the Fool or Jester has left the deck, reroll on the table if that card comes up again.)\nEach card’s effect is described below.\nBalance. You can increase one of your ability scores by 2, to a maximum of 22, provided you also decrease another one of your ability scores by 2. You can’t decrease an ability that has a score of 5 or lower. Alternatively, you can choose not to adjust your ability scores, in which case this card has no effect.\nComet. The next time you enter combat against one or more Hostile creatures, you can select one of them as your foe when you roll Initiative. If you reduce your foe to 0 Hit Points during that combat, you have Advantage on Death Saving Throws for 1 year. If someone else reduces your chosen foe to 0 Hit Points or you don’t choose a foe, this card has no effect.\nDonjon. You disappear and become entombed in a state of suspended animation in an extradimensional sphere. Everything you’re wearing and carrying disappears with you except for Artifacts, which stay behind in the space you occupied when you disappeared. You remain imprisoned until you are found and removed from the sphere. You can’t be located by any Divination magic, but a Wish spell can reveal the location of your prison. You draw no more cards.\nEuryale. The card’s medusa-like visage curses you. You take a −2 penalty to saving throws while cursed in this way. Only a god or the magic of the Fates card can end this curse.\nFates. Reality’s fabric unravels and spins anew, allowing you to avoid or erase one event as if it never happened. You can use the card’s magic as soon as you draw the card or at any other time before you die.\nFlames. A powerful devil becomes your enemy. The devil seeks your ruin and torments you, savoring your suffering before attempting to slay you. This enmity lasts until either you or the devil dies.\nFool. You have Disadvantage on D20 Tests for the next 72 hours. Draw another card; this draw doesn’t count as one of your declared draws.\nGem. Twenty-five pieces of jewelry worth 2,000 GP each or fifty gems worth 1,000 GP each appear at your feet.\nJester. You have Advantage on D20 Tests for the next 72 hours, or you can draw two additional cards beyond your declared draws.\nKey. A Rare or rarer magic weapon with which you are proficient appears on your person. The GM chooses the weapon.\nKnight. You gain the service of a Knight, who magically appears in an unoccupied space you choose within 30 feet of yourself. The knight has the same alignment as you and serves you loyally until death, believing the two of you have been drawn together by fate. Work with your GM to create a name and backstory for this NPC. The GM can use a different stat block to represent the knight, as desired.\nMoon. You gain the ability to cast Wish 1d3 times.\nPuzzle. Permanently reduce your Intelligence or Wisdom by 1d4 + 1 (to a minimum score of 1). You can draw one additional card beyond your declared draws.\nRogue. An NPC of the GM’s choice becomes Hostile toward you. You don’t know the identity of this NPC until they or someone else reveals it. Nothing less than a Wish spell or divine intervention can end the NPC’s hostility toward you.\nRuin. All forms of wealth that you carry or own, other than magic items, are lost to you. Portable property vanishes. Businesses, buildings, and land you own are lost in a way that alters reality the least. Any documentation that proves you should own something lost to this card also disappears.\nSage. At any time you choose within one year of drawing this card, you can ask a question in meditation and mentally receive a truthful answer to that question.\nSkull. An Avatar of Death (see the accompanying stat block) appears in an unoccupied space as close to you as possible. The avatar targets only you with its attacks, appearing as a ghostly skeleton clad in a tattered black robe and carrying a spectral scythe. The avatar disappears when it drops to 0 Hit Points or you die. If an ally of yours deals damage to the avatar, that ally summons another Avatar of Death. The new avatar appears in an unoccupied space as close to that ally as possible and targets only that ally with its attacks. You and your allies can each summon only one avatar as a consequence of this draw. A creature slain by an avatar can’t be restored to life.\nStar. Increase one of your ability scores by 2, to a maximum of 24.\nSun. A magic item (chosen by the GM) appears on your person. In addition, you gain 10 Temporary Hit Points daily at dawn until you die.\nTalons. Every magic item you wear or carry disintegrates. Artifacts in your possession vanish instead.\nThrone. You gain proficiency and Expertise in your choice of History, Insight, Intimidation, or Persuasion. In addition, you gain rightful ownership of a small keep somewhere in the world. However, the keep is currently home to one or more monsters, which must be cleared out before you can claim the keep as yours.\nVoid. Your soul is drawn from your body and contained in an object in a place of the GM’s choice. One or more powerful beings guard the place. While your soul is trapped in this way, your body is inert, ceases aging, and requires no food, air, or water. A Wish spell can’t return your soul to your body, but the spell reveals the location of the object that holds your soul. You draw no more cards."
   },
   {
@@ -5019,6 +5316,9 @@
         "saveDc": 15
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "description": "This necklace has 1d6 + 3 beads hanging from it. You can take a Magic action to detach a bead and throw it up to 60 feet away. When it reaches the end of its trajectory, the bead detonates as a level 3 Fireball (save DC 15).\nYou can hurl multiple beads, or even the whole necklace, at one time. When you do so, increase the damage of the Fireball by 1d6 for each bead after the first (maximum 12d6)."
   },
   {
@@ -5039,11 +5339,6 @@
     "activation": [
       "bonus-action"
     ],
-    "uses": [
-      {
-        "recharge": "dawn"
-      }
-    ],
     "tables": [
       {
         "dice": "1d20",
@@ -5058,7 +5353,9 @@
               "max": 6
             },
             "spells": [
-              "bless"
+              {
+                "id": "bless"
+              }
             ],
             "cells": [
               "Bead of Blessing",
@@ -5071,7 +5368,10 @@
               "max": 12
             },
             "spells": [
-              "cure-wounds"
+              {
+                "id": "cure-wounds",
+                "level": 2
+              }
             ],
             "cells": [
               "Bead of Curing",
@@ -5084,7 +5384,9 @@
               "max": 16
             },
             "spells": [
-              "greater-restoration"
+              {
+                "id": "greater-restoration"
+              }
             ],
             "cells": [
               "Bead of Favor",
@@ -5097,7 +5399,9 @@
               "max": 18
             },
             "spells": [
-              "shining-smite"
+              {
+                "id": "shining-smite"
+              }
             ],
             "cells": [
               "Bead of Smiting",
@@ -5110,7 +5414,9 @@
               "max": 19
             },
             "spells": [
-              "guardian-of-faith"
+              {
+                "id": "guardian-of-faith"
+              }
             ],
             "cells": [
               "Bead of Summons",
@@ -5123,7 +5429,9 @@
               "max": 20
             },
             "spells": [
-              "wind-walk"
+              {
+                "id": "wind-walk"
+              }
             ],
             "cells": [
               "Bead of Wind Walking",
@@ -5132,6 +5440,9 @@
           }
         ]
       }
+    ],
+    "untyped": [
+      "uses"
     ],
     "description": "This necklace has 1d4 + 2 magic beads made from aquamarine, black pearl, or topaz. It also has many nonmagical beads made from stones such as amber, bloodstone, citrine, coral, jade, pearl, or quartz. If a magic bead is removed from the necklace, that bead loses its magic.\nSix types of magic beads exist. The GM decides the type of each bead on the necklace or determines it randomly by rolling on the table below. A necklace can have more than one bead of the same type. To use one, you must be wearing the necklace. Each bead contains a spell that you can cast from it as a Bonus Action (using your spell save DC if a save is necessary). Once a magic bead’s spell is cast, that bead can’t be used again until the next dawn."
   },
@@ -5168,8 +5479,14 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "appliesWhen": "When you attack a creature that has fewer than 100 Hit Points with this weapon and roll a 20 on the d20 for the attack roll",
+        "unless": "Constructs and Undead succeed on the save automatically"
       }
+    ],
+    "untyped": [
+      "charges"
     ],
     "description": "You gain a +2 bonus to attack rolls and damage rolls made with this magic weapon.\nLife Stealing. The weapon has 1d8 + 1 charges. When you attack a creature that has fewer than 100 Hit Points with this weapon and roll a 20 on the d20 for the attack roll, the creature must succeed on a DC 15 Constitution saving throw or be slain instantly as the sword tears its life force from its body. Constructs and Undead succeed on the save automatically. The weapon loses 1 charge if the creature is slain. When the weapon has no charges remaining, it loses this property."
   },
@@ -5220,6 +5537,9 @@
     "category": "potion",
     "rarity": "very-rare",
     "consumable": true,
+    "untyped": [
+      "bonuses"
+    ],
     "description": "One vial of this oil can coat one Melee weapon or twenty pieces of ammunition, but only ammunition and Melee weapons that are nonmagical and deal Slashing or Piercing damage are affected. Applying the oil takes 1 minute, after which the oil magically seeps into whatever it coats, turning the coated weapon into a +3 Weapon or the coated ammunition into +3 Ammunition.\nThis clear, gelatinous oil sparkles with tiny, ultrathin silver shards."
   },
   {
@@ -5237,7 +5557,8 @@
         "id": "freedom-of-movement"
       },
       {
-        "id": "grease"
+        "id": "grease",
+        "alternativeTo": 0
       }
     ],
     "description": "One vial of this oil can cover one Medium or smaller creature, along with the equipment it’s wearing and carrying (one additional vial is required for each size category above Medium). Applying the oil takes 10 minutes. The affected creature then gains the effect of the Freedom of Movement spell for 8 hours.\nAlternatively, the oil can be poured on the ground as a Magic action, where it covers a 10-foot square, duplicating the effect of the Grease spell in that area for 8 hours.\nThis sticky, black unguent is thick and heavy, but it flows quickly when poured."
@@ -5277,8 +5598,12 @@
     ],
     "uses": [
       {
+        "label": "regain 2d4 + 2 Hit Points",
         "recharge": "dawn"
       }
+    ],
+    "untyped": [
+      "healing"
     ],
     "description": "While wearing this pendant, you can take a Magic action to regain 2d4 + 2 Hit Points. Once used, this property can’t be used again until the next dawn.\nIn addition, you have Advantage on saving throws to avoid or end the Poisoned condition while you wear this pendant."
   },
@@ -5302,6 +5627,9 @@
     "attunement": {
       "required": true
     },
+    "untyped": [
+      "healing"
+    ],
     "description": "While wearing this pendant, you gain the following benefits.\nLife Preservation. Whenever you make a Death Saving Throw, you can change a roll of 9 or lower to a 10, turning a failed save into a successful one.\nNatural Healing Boost. Whenever you roll a Hit Point Die to regain Hit Points, double the number of Hit Points it restores."
   },
   {
@@ -5311,6 +5639,9 @@
     "category": "potion",
     "rarity": "uncommon",
     "consumable": true,
+    "untyped": [
+      "conditions"
+    ],
     "description": "The next time you see a creature within 10 minutes after drinking this philter, you are charmed by that creature and have the Charmed condition for 1 hour.\nThis rose-hued, effervescent liquid contains one easy-to-miss bubble shaped like a heart."
   },
   {
@@ -5332,8 +5663,14 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "other",
+        "charges": 1
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ],
     "description": "These pipes have 3 charges and regain 1d3 expended charges daily at dawn. You can take a Magic action to play them and expend 1 charge to create an eerie, spellbinding tune. Each creature of your choice within 30 feet of you must succeed on a DC 15 Wisdom saving throw or have the Frightened condition for 1 minute. A creature that fails the save repeats it at the end of each of its turns, ending the effect on itself on a success. A creature that succeeds on its save is immune to the effect of these pipes for 24 hours."
   },
@@ -5360,8 +5697,14 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "other",
+        "appliesWhen": "Whenever a Swarm of Rats that isn’t under another creature’s control comes within 30 feet of you while you are playing the pipes"
       }
+    ],
+    "untyped": [
+      "saves",
+      "charges"
     ],
     "description": "While these pipes are on your person, ordinary rats and giant rats are Indifferent toward you and won’t attack you unless you threaten or harm them.\nThe pipes have 3 charges and regain 1d3 expended charges daily at dawn. If you play the pipes as a Magic action, you can take a Bonus Action to expend 1 to 3 charges, calling forth one Swarm of Rats with each expended charge if enough rats are within half a mile of you to be called in this fashion (as determined by the GM). If there aren’t enough rats to form a swarm, the charge is wasted. Called swarms move toward the music by the shortest available route but aren’t under your control otherwise.\nWhenever a Swarm of Rats that isn’t under another creature’s control comes within 30 feet of you while you are playing the pipes, the swarm makes a DC 15 Wisdom saving throw. On a successful save, the swarm behaves as it normally would and can’t be swayed by the pipes’ music for the next 24 hours. On a failed save, the swarm is swayed by the pipes’ music and becomes Friendly to you and your allies for as long as you continue to play the pipes each round as a Magic action. A Friendly swarm obeys your commands. If you issue no commands to a Friendly swarm, it defends itself but otherwise takes no actions. If a Friendly swarm starts its turn more than 30 feet away from you, your control over that swarm ends, and the swarm behaves as it normally would and can’t be swayed by the pipes’ music for the next 24 hours."
   },
@@ -5385,6 +5728,7 @@
     ],
     "uses": [
       {
+        "spell": "etherealness",
         "recharge": "dawn"
       }
     ],
@@ -5461,7 +5805,8 @@
     "consumable": true,
     "spellEffects": [
       {
-        "id": "enlarge-reduce"
+        "id": "enlarge-reduce",
+        "label": "reduce"
       }
     ],
     "description": "When you drink this potion, you gain the “reduce” effect of the Enlarge/Reduce spell for 1d4 hours (no Concentration required).\nThe red in the potion’s liquid continuously contracts to a tiny bead and then expands to color the clear liquid around it. Shaking the bottle fails to interrupt this process."
@@ -5580,7 +5925,8 @@
     "consumable": true,
     "spellEffects": [
       {
-        "id": "enlarge-reduce"
+        "id": "enlarge-reduce",
+        "label": "enlarge"
       }
     ],
     "description": "When you drink this potion, you gain the “enlarge” effect of the Enlarge/Reduce spell for 10 minutes (no Concentration required).\nThe red in the potion’s liquid continuously expands from a tiny bead to color the clear liquid around it and then contracts. Shaking the bottle fails to interrupt this process."
@@ -5597,6 +5943,9 @@
         "id": "bless"
       }
     ],
+    "untyped": [
+      "healing"
+    ],
     "description": "When you drink this potion, you gain 10 Temporary Hit Points that last for 1 hour. For the same duration, you are under the effect of the Bless spell (no Concentration required).\nThis potion’s blue liquid bubbles and steams as if boiling."
   },
   {
@@ -5606,6 +5955,9 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "untyped": [
+      "conditions"
+    ],
     "description": "This potion’s container looks empty but feels as though it holds liquid. When you drink the potion, you have the Invisible condition for 1 hour. The effect ends early if you make an attack roll, deal damage, or cast a spell."
   },
   {
@@ -5651,7 +6003,8 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 13
+        "dc": 13,
+        "onSuccess": "none"
       }
     ],
     "damage": [
@@ -5661,6 +6014,9 @@
         "role": "to-user",
         "text": "If you drink this potion, you take 4d6 Poison damage and must succeed on a DC 13 Constitution saving throw or have the Poisoned condition for 1 hour."
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "This concoction looks, smells, and tastes like a Potion of Healing or another beneficial potion. However, it is actually poison masked by illusion magic. Identify reveals its true nature.\nIf you drink this potion, you take 4d6 Poison damage and must succeed on a DC 13 Constitution saving throw or have the Poisoned condition for 1 hour."
   },
@@ -5794,6 +6150,9 @@
     "category": "potion",
     "rarity": "very-rare",
     "consumable": true,
+    "untyped": [
+      "healing"
+    ],
     "description": "When you drink this potion, it removes any Exhaustion levels you have and ends the Poisoned condition on you. For the next 24 hours, you regain the maximum number of Hit Points for any Hit Point Die you spend.\nThis potion’s crimson liquid regularly pulses with dull light, calling to mind a heartbeat."
   },
   {
@@ -5895,6 +6254,7 @@
     ],
     "uses": [
       {
+        "label": "Attack Deflection",
         "recharge": "short-or-long-rest"
       }
     ],
@@ -5914,7 +6274,7 @@
       {
         "to": "armor-class",
         "value": 5,
-        "appliesWhen": "When you are hit by an attack while holding the weapon",
+        "appliesWhen": "Quarterstaff Form Only). When you are hit by an attack while holding the weapon",
         "text": "When you are hit by an attack while holding the weapon, you can take a Reaction to twirl the weapon around you, gaining a +5 bonus to your Armor Class against the triggering attack, potentially causing the attack to miss you."
       }
     ],
@@ -5942,7 +6302,8 @@
       {
         "id": "fear",
         "charges": 1,
-        "saveDc": 13
+        "saveDc": 13,
+        "appliesWhen": "affects Beasts only"
       },
       {
         "id": "speak-with-animals",
@@ -5963,6 +6324,9 @@
     },
     "activation": [
       "magic-action"
+    ],
+    "untyped": [
+      "uses"
     ],
     "description": "While wearing this ring, you can take a Magic action to summon a particular Djinni from the Elemental Plane of Air. The djinni appears in an unoccupied space you choose within 120 feet of yourself. It remains as long as you maintain Concentration, to a maximum of 1 hour, or until it drops to 0 Hit Points.\nWhile summoned, the djinni is Friendly to you and your allies, and it obeys your commands. If you fail to command it, the djinni defends itself against attackers but takes no other actions.\nAfter the djinni departs, it can’t be summoned again for 24 hours, and the ring becomes nonmagical if the djinni dies.\nRings of Djinni Summoning are often created by the djinn they summon and given to mortals as gifts of friendship or tokens of esteem."
   },
@@ -5988,7 +6352,8 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 18
+        "dc": 18,
+        "onSuccess": "none"
       }
     ],
     "spells": [
@@ -6129,6 +6494,9 @@
         ]
       }
     ],
+    "untyped": [
+      "conditions"
+    ],
     "description": "Each Ring of Elemental Command is linked to one of the four Elemental Planes. The GM chooses or randomly determines the linked plane. For example, a Ring of Elemental Command (air) is linked to the Elemental Plane of Air.\nEvery Ring of Elemental Command has the following two properties:\nElemental Bane. While wearing the ring, you have Advantage on attack rolls against Elementals and they have Disadvantage on attack rolls against you.\nElemental Compulsion. While wearing the ring, you can take a Magic action to try to compel an Elemental you see within 60 feet of yourself. The Elemental makes a DC 18 Wisdom saving throw. On a failed save, the Elemental has the Charmed condition until the start your next turn, and you determine what it does with its move and action on its next turn.\nElemental Focus. While wearing the ring, you benefit from additional properties corresponding to the ring’s linked Elemental Plane:\nAir. You know Auran, you have Resistance to Lightning damage, and you have a Fly Speed equal to your Speed and can hover.\nEarth. You know Terran, and you have Resistance to Acid damage. Terrain composed of rubble, rocks, or dirt isn’t Difficult Terrain for you. In addition, you can move through solid earth or rock as if those areas were Difficult Terrain without disturbing the matter through which you pass. If you end your turn in solid earth or rock, you are shunted out to the nearest unoccupied space you last occupied.\nFire. You know Ignan, and you have Immunity to Fire damage.\nWater. You know Aquan, you gain a Swim Speed of 60 feet, and you can breathe underwater.\nSpellcasting. The ring has 5 charges and regains 1d4 + 1 expended charges daily at dawn. While wearing the ring, you can cast a spell from it. Choose the spell from the list of available spells based on the Elemental Plane the ring is linked to, as shown in the following table. The table indicates how many charges you must expend to cast the spell, which has a save DC of 18."
   },
   {
@@ -6150,6 +6518,9 @@
         "time": "dawn"
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "description": "This ring has 3 charges, and it regains 1d3 expended charges daily at dawn. When you fail a Dexterity saving throw while wearing the ring, you can take a Reaction to expend 1 charge to succeed on that save instead."
   },
   {
@@ -6187,6 +6558,9 @@
       "magic-action",
       "bonus-action"
     ],
+    "untyped": [
+      "conditions"
+    ],
     "description": "While wearing this ring, you can take a Magic action to give yourself the Invisible condition. You remain Invisible until the ring is removed or until you take a Bonus Action to become visible again."
   },
   {
@@ -6200,7 +6574,8 @@
     },
     "spells": [
       {
-        "id": "jump"
+        "id": "jump",
+        "selfOnly": true
       }
     ],
     "description": "While wearing this ring, you can cast Jump from it, but can target only yourself when you do so."
@@ -6251,6 +6626,9 @@
     "attunement": {
       "required": true
     },
+    "untyped": [
+      "healing"
+    ],
     "description": "While wearing this ring, you regain 1d6 Hit Points every 10 minutes if you have at least 1 Hit Point. If you lose a body part, the ring causes the missing part to regrow and return to full functionality after 1d6 + 1 days if you have at least 1 Hit Point the whole time."
   },
   {
@@ -6396,12 +6774,16 @@
       {
         "ability": "dex",
         "dc": 15,
-        "label": "Lightning Spheres"
+        "onSuccess": "half",
+        "label": "Lightning Spheres",
+        "charges": 2
       },
       {
         "ability": "dex",
         "dc": 15,
-        "label": "Shooting Stars"
+        "onSuccess": "half",
+        "label": "Shooting Stars",
+        "charges": 1
       }
     ],
     "damage": [
@@ -6409,6 +6791,12 @@
         "dice": "5d4",
         "type": "radiant",
         "role": "effect",
+        "label": "Shooting Stars",
+        "appliesWhen": "Each creature in a 15-foot Cube originating from that point",
+        "charges": 1,
+        "perCharge": {
+          "maxTimes": 3
+        },
         "text": "Each creature in a 15-foot Cube originating from that point is showered in sparks and makes a DC 15 Dexterity saving throw, taking 5d4 Radiant damage on a failed save or half as much damage on a successful one."
       }
     ],
@@ -6497,6 +6885,9 @@
     "attunement": {
       "required": true
     },
+    "untyped": [
+      "spells"
+    ],
     "description": "This ring stores spells cast into it, holding them until the attuned wearer uses them. The ring can store up to 5 levels worth of spells at a time. When found, it contains 1d6 − 1 levels of stored spells chosen by the GM.\nAny creature can cast a spell of level 1 through 5 into the ring by touching the ring as the spell is cast. The spell has no effect other than to be stored in the ring. If the ring can’t hold the spell, the spell is expended without effect. The level of the slot used to cast the spell determines how much space it uses.\nWhile wearing this ring, you can cast any spell stored in it. The spell uses the slot level, spell save DC, spell attack bonus, and spellcasting ability of the original caster but is otherwise treated as if you cast the spell. The spell cast from the ring is no longer stored in it, freeing up space."
   },
   {
@@ -6510,6 +6901,9 @@
     },
     "activation": [
       "reaction"
+    ],
+    "untyped": [
+      "saves"
     ],
     "description": "While wearing this ring, you have Advantage on saving throws against spells. If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you. If that spell targeted only you and didn’t create an area of effect, you can take a Reaction to deflect the spell back at the spell’s caster; the caster must make a saving throw against the spell using their own spell save DC."
   },
@@ -6561,8 +6955,16 @@
         "dice": "2d10",
         "type": "force",
         "role": "effect",
+        "charges": 1,
+        "perCharge": {
+          "maxTimes": 3
+        },
+        "attackBonus": 7,
         "text": "On a hit, for each charge you spend, the target takes 2d10 Force damage and is pushed 5 feet away from you."
       }
+    ],
+    "untyped": [
+      "charges"
     ],
     "description": "This ring has 3 charges and regains 1d3 expended charges daily at dawn. While wearing the ring, you can take a Magic action to expend 1 to 3 charges to make a ranged spell attack against one creature you can see within 60 feet of yourself. The ring produces a spectral ram’s head and makes its attack roll with a +7 bonus. On a hit, for each charge you spend, the target takes 2d10 Force damage and is pushed 5 feet away from you.\nAlternatively, you can expend 1 to 3 of the ring’s charges as a Magic action to try to break a nonmagical object you can see within 60 feet of yourself that isn’t being worn or carried. The ring makes a Strength check with a +5 bonus for each charge you spend."
   },
@@ -6580,6 +6982,9 @@
         "id": "wish",
         "charges": 1
       }
+    ],
+    "untyped": [
+      "charges"
     ],
     "description": "While wearing this ring, you can expend 1 of its 3 charges to cast Wish from it. The ring becomes nonmagical when you use the last charge."
   },
@@ -6602,7 +7007,8 @@
     "rarity": "uncommon",
     "spells": [
       {
-        "id": "water-walk"
+        "id": "water-walk",
+        "selfOnly": true
       }
     ],
     "description": "While wearing this ring, you cast Water Walk from it, targeting only yourself."
@@ -6622,8 +7028,13 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "appliesWhen": "Whenever you use the ring again before taking a Long Rest"
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "While wearing this ring, you can take a Magic action to gain X-ray vision with a range of 30 feet for 1 minute. To you, solid objects within that radius appear transparent and don’t prevent light from passing through them. The vision can penetrate 1 foot of stone, 1 inch of common metal, or up to 3 feet of wood or dirt. Thicker substances or a thin sheet of lead block the vision.\nWhenever you use the ring again before taking a Long Rest, you must succeed on a DC 15 Constitution saving throw or gain 1 Exhaustion level."
   },
@@ -6640,13 +7051,19 @@
       {
         "ability": "con",
         "dc": 11,
+        "onSuccess": "other",
         "label": "Light"
       },
       {
         "ability": "con",
         "dc": 15,
+        "onSuccess": "other",
         "label": "Daylight"
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ],
     "description": "This robe is adorned with eyelike patterns. While you wear the robe, you gain the following benefits:\nAll-Around Vision. The robe gives you Advantage on Wisdom (Perception) checks that rely on sight.\nSpecial Senses. You have Darkvision and Truesight, both with a range of 120 feet.\nDrawbacks. A Light spell cast on the robe or a Daylight spell cast within 5 feet of the robe gives you the Blinded condition for 1 minute. At the end of each of your turns, you make a Constitution saving throw (DC 11 for Light or DC 15 for Daylight), ending the condition on yourself on a success."
   },
@@ -6672,8 +7089,13 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "charges": 1
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "This robe has 3 charges, and it regains 1d3 expended charges daily at dawn. While you wear it, you can take a Magic action and expend 1 charge to cause the garment to display a shifting pattern of dazzling hues until the end of your next turn. During this time, the robe sheds Bright Light in a 30-foot radius and Dim Light for an additional 30 feet, and creatures that can see you have Disadvantage on attack rolls against you. Any creature in the Bright Light that can see you when the robe’s power is activated must succeed on a DC 15 Wisdom saving throw or have the Stunned condition until the effect ends."
   },
@@ -6701,6 +7123,10 @@
         "id": "magic-missile",
         "level": 5
       }
+    ],
+    "untyped": [
+      "spells",
+      "uses"
     ],
     "description": "This black or dark-blue robe is embroidered with small white or silver stars. You gain a +1 bonus to saving throws while you wear it.\nSix stars, located on the robe’s upper-front portion, are particularly large. While wearing this robe, you can take a Magic action to remove one of the stars and expend it to cast the level 5 version of Magic Missile. Daily at dusk, 1d6 removed stars reappear on the robe.\nWhile you wear the robe, you can take a Magic action to enter the Astral Plane along with everything you are wearing and carrying. You remain there until you take a Magic action to return to the plane you were on. You reappear in the last space you occupied or, if that space is occupied, the nearest unoccupied space."
   },
@@ -6899,6 +7325,7 @@
     ],
     "uses": [
       {
+        "label": "Protective Aura",
         "recharge": "dawn"
       }
     ],
@@ -6906,13 +7333,13 @@
       {
         "to": "armor-class",
         "value": 1,
-        "appliesWhen": "While in that Bright Light",
+        "appliesWhen": "While in that Bright Light, you and your allies",
         "text": "While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws and can sense the location of any Invisible creature that is also in the Bright Light."
       },
       {
         "to": "saving-throws",
         "value": 1,
-        "appliesWhen": "While in that Bright Light",
+        "appliesWhen": "While in that Bright Light, you and your allies",
         "text": "While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws and can sense the location of any Invisible creature that is also in the Bright Light."
       }
     ],
@@ -6947,6 +7374,15 @@
     ],
     "uses": [
       {
+        "label": "Drain Life",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Paralyze",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Terrify",
         "recharge": "dawn"
       }
     ],
@@ -6990,7 +7426,7 @@
       {
         "to": "athletics-checks",
         "value": 10,
-        "appliesWhen": "made to break through doors, barricades, and other barriers",
+        "appliesWhen": "The rod transforms into a handheld battering ram and grants its user a +10 bonus to Strength (Athletics) checks made to break through doors, barricades, and other barriers",
         "text": "Button 5. The rod transforms into a handheld battering ram and grants its user a +10 bonus to Strength (Athletics) checks made to break through doors, barricades, and other barriers."
       }
     ],
@@ -6998,16 +7434,19 @@
       {
         "ability": "con",
         "dc": 17,
+        "onSuccess": "none",
         "label": "Drain Life"
       },
       {
         "ability": "con",
         "dc": 17,
+        "onSuccess": "none",
         "label": "Paralyze"
       },
       {
         "ability": "wis",
         "dc": 17,
+        "onSuccess": "none",
         "label": "Terrify"
       }
     ],
@@ -7023,8 +7462,14 @@
         "dice": "4d6",
         "type": "necrotic",
         "role": "effect",
+        "label": "Drain Life",
         "text": "On a failed save, the target takes an extra 4d6 Necrotic damage, and you regain a number of Hit Points equal to half that Necrotic damage."
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions",
+      "healing"
     ],
     "description": "This rod has a flanged head, and it functions as a magic Mace that grants a +3 bonus to attack rolls and damage rolls made with it. The rod has properties associated with six different buttons that are set in a row along the haft. It has three other properties as well, detailed below.\nButtons. You can press one of the following buttons as a Bonus Action; a button’s effect lasts until you push a different button or until you push the same button again, which causes the rod to revert to its normal form:\nButton 1. A fiery blade sprouts from the end opposite the rod’s flanged head. The flames shed Bright Light in a 40-foot radius and Dim Light for an additional 40 feet, and the blade functions as a magic Longsword or Shortsword (your choice) that deals an extra 2d6 Fire damage on a hit.\nButton 2. The rod’s flanged head folds down and two crescent-shaped blades spring out, transforming the rod into a magic Battleaxe that grants a +3 bonus to attack rolls and damage rolls made with it.\nButton 3. The rod’s flanged head folds down, a spear point springs from the rod’s tip, and the rod’s handle lengthens into a 6-foot haft, transforming the rod into a magic Spear that grants a +3 bonus to attack rolls and damage rolls made with it.\nButton 4. The rod transforms into a climbing pole up to 50 feet long (you specify the length), though the rod’s buttons remain within your reach. In surfaces as hard as granite, a spike at the bottom and three hooks at the top anchor the pole. Horizontal bars 3 inches long fold out from the sides, 1 foot apart, forming a ladder. The pole can bear up to 4,000 pounds. More weight or lack of solid anchoring causes the rod to revert to its normal form.\nButton 5. The rod transforms into a handheld battering ram and grants its user a +10 bonus to Strength (Athletics) checks made to break through doors, barricades, and other barriers.\nButton 6. The rod assumes or remains in its normal form and indicates magnetic north. (Nothing happens if this function of the rod is used in a location that has no magnetic north.) The rod also gives you knowledge of your approximate depth beneath the ground or your height above it.\nDrain Life. When you hit a creature with a melee attack using the rod, you can force the target to make a DC 17 Constitution saving throw. On a failed save, the target takes an extra 4d6 Necrotic damage, and you regain a number of Hit Points equal to half that Necrotic damage. Once used, this property can’t be used again until the next dawn.\nParalyze. When you hit a creature with a melee attack using the rod, you can force the target to make a DC 17 Constitution saving throw. On a failed save, the target has the Paralyzed condition for 1 minute. The target repeats the save at the end of each of its turns, ending the effect on a success. Once used, this property can’t be used again until the next dawn.\nTerrify. While holding the rod, you can take a Magic action to force each creature you can see within 30 feet of yourself to make a DC 17 Wisdom saving throw. On a failed save, a target has the Frightened condition for 1 minute. A Frightened target repeats the save at the end of each of its turns, ending the effect on itself on a success. Once used, this property can’t be used again until the next dawn."
   },
@@ -7085,8 +7530,12 @@
     "saves": [
       {
         "ability": "wis",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none"
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "You can take a Magic action to present the rod and command obedience from each creature of your choice that you can see within 120 feet of yourself. Each target must succeed on a DC 15 Wisdom saving throw or have the Charmed condition for 8 hours. While Charmed in this way, the creature regards you as its trusted leader. If harmed by you or your allies or commanded to do something contrary to its nature, a target ceases to be Charmed in this way. Once used, this property can’t be used again until the next dawn."
   },
@@ -7098,6 +7547,10 @@
     "rarity": "very-rare",
     "activation": [
       "magic-action"
+    ],
+    "untyped": [
+      "uses",
+      "healing"
     ],
     "description": "While holding this rod, you can take a Magic action to activate it. The rod then instantly transports you and up to 199 other willing creatures you can see to a demiplane. You choose the form the demiplane takes. It could be a tranquil garden, a cheery tavern, an immense palace, a tropical island, a fantastic carnival, or whatever else you can imagine. Regardless of its nature, the demiplane contains enough water and food to sustain its visitors, and the demiplane’s environment can’t harm its occupants. Everything else that can be interacted with there can exist only there. For example, a flower picked from a garden there disappears if it is taken outside the demiplane.\nFor each hour spent in the demiplane, a visitor regains Hit Points as if it had spent 1 Hit Point Die. Also, creatures don’t age while there, although time passes normally. Visitors can remain there for up to 200 days divided by the number of creatures present (round down).\nWhen the time runs out or you take a Magic action to end the effect, all visitors reappear in the location they occupied when you activated the rod or an unoccupied space nearest that location. Once used, this property can’t be used again until 10 days have passed."
   },
@@ -7126,8 +7579,24 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": 15,
+        "onSuccess": "none"
+      }
+    ],
+    "checks": [
+      {
+        "ability": "str",
+        "skill": "athletics",
+        "dc": 15
+      },
+      {
+        "ability": "dex",
+        "skill": "acrobatics",
         "dc": 15
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "This rope is 30 feet long. While holding one end of the rope, you can take a Magic action to command the other end to dart forward and entangle one creature you can see within 20 feet of yourself. The target must succeed on a DC 15 Dexterity saving throw or have the Restrained condition. You can release the target by letting go of your end of the rope (causing the rope to coil up in the target’s space) or by using a Bonus Action to repeat the command (causing the rope to coil up in your hand).\nA target Restrained by the rope can take an action to make its choice of a DC 15 Strength (Athletics) or Dexterity (Acrobatics) check. On a successful check, the target is no longer Restrained by the rope. If you’re still holding onto the rope when a target escapes from it, you can take a Reaction to command the rope to coil up in your hand; otherwise, the rope coils up in the target’s space.\nThe rope has AC 20, HP 20, and Immunity to Poison and Psychic damage. It regains 1 Hit Point every 5 minutes as long as it has at least 1 Hit Point. If the rope drops to 0 Hit Points, it is destroyed."
   },
@@ -7153,6 +7622,9 @@
     "charges": {
       "max": 12
     },
+    "untyped": [
+      "charges"
+    ],
     "description": "This beetle-shaped medallion provides three benefits while it is on your person.\nDefense. You gain a +1 bonus to Armor Class.\nPreservation. The scarab has 12 charges. If you fail a saving throw against a Necromancy spell or a harmful effect originating from an Undead, you can take a Reaction to expend 1 charge and turn the failed save into a successful one. The scarab crumbles into powder and is destroyed when its last charge is expended.\nSpell Resistance. You have Advantage on saving throws against spells."
   },
   {
@@ -7194,6 +7666,7 @@
     "rarity": "uncommon",
     "uses": [
       {
+        "spell": "sending",
         "recharge": "dawn"
       }
     ],
@@ -7298,6 +7771,7 @@
     ],
     "uses": [
       {
+        "label": "Protective Field",
         "recharge": "dawn"
       }
     ],
@@ -7313,8 +7787,13 @@
         "dice": "2d6 + 2",
         "type": "force",
         "role": "base",
+        "label": "Forceful Bash",
+        "modifier": "str",
         "text": "On a hit, the Shield deals Force damage to the target equal to 2d6 + 2 plus your Strength modifier, and if the target is a creature, you can push it up to 10 feet directly away from yourself."
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "While holding this Shield, you have a +2 bonus to Armor Class. This bonus is in addition to the Shield’s normal bonus to AC.\nThe Shield has the following additional properties that you can use while holding it.\nForceful Bash. When you take the Attack action, you can make one of the attack rolls using the Shield against a target within 5 feet of yourself. Apply your Proficiency Bonus and Strength modifier to the attack roll. On a hit, the Shield deals Force damage to the target equal to 2d6 + 2 plus your Strength modifier, and if the target is a creature, you can push it up to 10 feet directly away from yourself. If the creature is your size or smaller, you can also knock it down, giving it the Prone condition.\nProtective Field. As a Reaction, when you or an ally you can see within 5 feet of you is targeted by an attack or makes a saving throw against an area of effect, you can use the Shield to create an immobile 5-foot Emanation originating from you. When the Emanation appears, any creatures or objects not fully contained within it are pushed into the nearest unoccupied spaces outside it. The attack or area of effect that triggered the Reaction has no effect on creatures and objects inside the Emanation, which lasts as long as you maintain Concentration, up to 1 minute. Nothing can pass into or out of the Emanation. A creature or object inside the Emanation can’t be damaged by attacks or effects originating from outside, nor can a creature inside the Emanation damage anything outside it. Once this property is used, it can’t be used again until the next dawn."
   },
@@ -7511,6 +7990,9 @@
         ]
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "description": "A Spell Scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your spell list, you can read the scroll and cast its spell without Material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell’s normal casting time. Once the spell is cast, the scroll crumbles to dust. If the casting is interrupted, the scroll isn’t lost.\nIf the spell is on your spell list but of a higher level than you can normally cast, you make an ability check using your spellcasting ability to determine whether you cast the spell. The DC equals 10 plus the spell’s level. On a failed check, the spell disappears from the scroll with no other effect.\nThe level of the spell on the scroll determines the spell’s saving throw DC and attack bonus, as well as the scroll’s rarity, as shown in the following table.\nCopying a Scroll into a Spellbook. A Wizard spell on a Spell Scroll can be copied into a spellbook. When a spell is copied in this way, the copier must succeed on an Intelligence (Arcana) check with a DC equal to 10 plus the spell’s level. On a successful check, the spell is copied. Whether the check succeeds or fails, the Spell Scroll is destroyed."
   },
   {
@@ -7542,7 +8024,8 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 19
+        "dc": 19,
+        "onSuccess": "none"
       }
     ],
     "checks": [
@@ -7557,7 +8040,14 @@
         "dice": "8d10",
         "type": "force",
         "role": "effect",
+        "appliesWhen": "Anything else that touches the sphere but isn’t wholly engulfed and obliterated by it",
         "text": "Anything else that touches the sphere but isn’t wholly engulfed and obliterated by it takes 8d10 Force damage."
+      },
+      {
+        "dice": "8d10",
+        "type": "force",
+        "role": "effect",
+        "text": "Any creature whose space the sphere enters must succeed on a DC 19 Dexterity saving throw or be touched by it, taking 8d10 Force damage."
       }
     ],
     "tables": [
@@ -7622,6 +8112,7 @@
     ],
     "uses": [
       {
+        "label": "Resist Enchantment",
         "recharge": "dawn"
       }
     ],
@@ -7654,6 +8145,10 @@
         "id": "comprehend-languages",
         "charges": 1
       }
+    ],
+    "untyped": [
+      "spells",
+      "charges"
     ],
     "description": "This staff has 10 charges. While holding the staff, you can use any of its properties:\nCast Spell. You can expend 1 of the staff’s charges to cast Charm Person, Command, or Comprehend Languages from it using your spell save DC.\nReflect Enchantment. If you succeed on a saving throw against an Enchantment spell that targets only you, you can take a Reaction to expend 1 charge from the staff and turn the spell back on its caster as if you had cast the spell.\nResist Enchantment. If you fail a saving throw against an Enchantment spell that targets only you, you can turn your failed save into a successful one. You can’t use this property of the staff again until the next dawn.\nRegaining Charges. The staff regains 1d8 + 2 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff crumbles to dust and is destroyed."
   },
@@ -7963,7 +8458,8 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 17
+        "dc": 17,
+        "onSuccess": "half"
       }
     ],
     "spells": [
@@ -8070,6 +8566,9 @@
         ]
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "description": "This staff has 20 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you gain a +2 bonus to Armor Class, saving throws, and spell attack rolls.\nSpells. While holding the staff, you can cast one of the spells on the following table from it, using your spell save DC. The table indicates how many charges you must expend to cast the spell.\nRegaining Charges. The staff regains 2d8 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff retains its +2 bonus to attack rolls and damage rolls but loses all other properties. On a 20, the staff regains 1d8 + 2 charges.\nRetributive Strike. You can take a Magic action to break the staff over your knee or against a solid surface. The staff is destroyed and releases its magic in an explosion that fills a 30-foot Emanation originating from itself. You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion. If you fail to avoid the effect, you take Force damage equal to 16 times the number of charges in the staff. Each other creature in the area makes a DC 17 Dexterity saving throw. On a failed save, a creature takes Force damage equal to 4 times the number of charges in the staff. On a successful save, a creature takes half as much damage."
   },
   {
@@ -8114,6 +8613,10 @@
         "dice": "1d6",
         "type": "force",
         "role": "extra",
+        "charges": 1,
+        "perCharge": {
+          "maxTimes": 3
+        },
         "text": "For each charge you expend, the target takes an extra 1d6 Force damage."
       }
     ],
@@ -8188,6 +8691,9 @@
         ]
       }
     ],
+    "untyped": [
+      "charges"
+    ],
     "description": "This staff has 10 charges.\nInsect Cloud. While holding the staff, you can take a Magic action and expend 1 charge to cause a swarm of harmless flying insects to fill a 30-foot Emanation originating from you. The insects remain for 10 minutes, making the area Heavily Obscured for creatures other than you. A strong wind (like that created by Gust of Wind) disperses the swarm and ends the effect.\nSpells. While holding the staff, you can cast one of the spells on the following table from it, using your spell save DC and spell attack modifier. The table indicates how many charges you must expend to cast the spell.\nRegaining Charges. The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, a swarm of insects consumes and destroys the staff, then disperses."
   },
   {
@@ -8245,7 +8751,8 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 17
+        "dc": 17,
+        "onSuccess": "half"
       }
     ],
     "spells": [
@@ -8452,6 +8959,10 @@
         ]
       }
     ],
+    "untyped": [
+      "damage",
+      "charges"
+    ],
     "description": "This staff has 50 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While you hold it, you gain a +2 bonus to spell attack rolls.\nSpell Absorption. While holding the staff, you have Advantage on saving throws against spells. In addition, you can take a Reaction when another creature casts a spell that targets only you. If you do, the staff absorbs the magic of the spell, canceling its effect and gaining a number of charges equal to the absorbed spell’s level. However, if doing so brings the staff’s total number of charges above 50, the staff explodes as if you activated its Retributive Strike (see below).\nSpells. While holding the staff, you can cast one of the spells on the following table from it, using your spell save DC. The table indicates how many charges you must expend to cast the spell.\nRegaining Charges. The staff regains 4d6 + 2 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 20, the staff regains 1d12 + 1 charges.\nRetributive Strike. You can take a Magic action to break the staff over your knee or against a solid surface. The staff is destroyed and releases its magic in an explosion that fills a 30-foot Emanation originating from itself. You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion. If you fail to avoid the effect, you take Force damage equal to 16 times the number of charges in the staff. Each other creature in the area makes a DC 17 Dexterity saving throw. On a failed save, a creature takes Force damage equal to 6 times the number of charges in the staff. On a successful save, a creature takes half as much damage."
   },
   {
@@ -8465,6 +8976,9 @@
     },
     "activation": [
       "magic-action"
+    ],
+    "untyped": [
+      "uses"
     ],
     "description": "As a Magic action, you can throw this staff so that it lands in an unoccupied space within 10 feet of you, causing the staff to become a Giant Constrictor Snake in that space. The snake is under your control and shares your Initiative count, taking its turn immediately after yours.\nOn your turn, you can mentally command the snake (no action required) if it is within 60 feet of you and you don’t have the Incapacitated condition. You decide what action the snake takes and where it moves during its turn, or you can issue it a general command, such as to attack your enemies or guard a location. Absent commands from you, the snake defends itself.\nAs a Bonus Action, you can command the snake to revert to staff form in its current space, and you can’t use the staff’s property again for 1 hour. If the snake is reduced to 0 Hit Points, it dies and reverts to its staff form; the staff then shatters and is destroyed. If the snake reverts to staff form before losing all its Hit Points, it regains all of them."
   },
@@ -8609,6 +9123,9 @@
         ]
       }
     ],
+    "untyped": [
+      "charges"
+    ],
     "description": "This staff has 6 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you have a +2 bonus to spell attack rolls.\nSpells. While holding the staff, you can cast one of the spells on the following table from it, using your spell save DC. The table indicates how many charges you must expend to cast the spell.\nTree Form. You can take a Magic action to plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree. The tree is 60 feet tall and has a 5-foot-diameter trunk, and its branches at the top spread out in a 20-foot radius. The tree appears ordinary but radiates a faint aura of Transmutation magic that can be discerned with the Detect Magic spell. While touching the tree and using a Magic action, you return the staff to its normal form. Any creature in the tree falls when the tree reverts to a staff.\nRegaining Charges. The staff regains 1d6 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff."
   },
   {
@@ -8626,6 +9143,23 @@
     ],
     "uses": [
       {
+        "label": "Lightning",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Thunder",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Thunder and Lightning",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Lightning Strike",
+        "recharge": "dawn"
+      },
+      {
+        "label": "Thunderclap",
         "recharge": "dawn"
       }
     ],
@@ -8645,16 +9179,19 @@
       {
         "ability": "con",
         "dc": 17,
+        "onSuccess": "none",
         "label": "Thunder"
       },
       {
         "ability": "dex",
         "dc": 17,
+        "onSuccess": "half",
         "label": "Lightning Strike"
       },
       {
         "ability": "con",
         "dc": 17,
+        "onSuccess": "half",
         "label": "Thunderclap"
       }
     ],
@@ -8663,20 +9200,26 @@
         "dice": "2d6",
         "type": "lightning",
         "role": "extra",
+        "label": "Lightning",
         "text": "When you hit with a melee attack using the staff, you can cause the target to take an extra 2d6 Lightning damage (no action required)."
       },
       {
         "dice": "9d6",
         "type": "lightning",
         "role": "effect",
+        "label": "Lightning Strike",
         "text": "Each creature in that Line makes a DC 17 Dexterity saving throw, taking 9d6 Lightning damage on a failed save or half as much damage on a successful one."
       },
       {
         "dice": "2d6",
         "type": "thunder",
         "role": "effect",
+        "label": "Thunderclap",
         "text": "On a failed save, a creature takes 2d6 Thunder damage and has the Deafened condition for 1 minute."
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "This staff can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. It also has the following additional properties. Once one of these properties is used, it can’t be used again until the next dawn.\nLightning. When you hit with a melee attack using the staff, you can cause the target to take an extra 2d6 Lightning damage (no action required).\nThunder. When you hit with a melee attack using the staff, you can cause the staff to emit a crack of thunder audible out to 300 feet (no action required). The target you hit must succeed on a DC 17 Constitution saving throw or have the Stunned condition until the end of your next turn.\nThunder and Lightning. Immediately after you hit with a melee attack using the staff, you can take a Bonus Action to use the Lightning and Thunder properties (see above) at the same time. Doing so doesn’t expend the daily use of those properties, only the use of this one.\nLightning Strike. You can take a Magic action to cause a bolt of lightning to leap from the staff’s tip in a Line that is 5 feet wide and 120 feet long. Each creature in that Line makes a DC 17 Dexterity saving throw, taking 9d6 Lightning damage on a failed save or half as much damage on a successful one.\nThunderclap. You can take a Magic action to cause the staff to produce a thunderclap audible out to 600 feet. Every creature within a 60-foot Emanation originating from you makes a DC 17 Constitution saving throw. On a failed save, a creature takes 2d6 Thunder damage and has the Deafened condition for 1 minute. On a successful save, a creature takes half as much damage only."
   },
@@ -8699,7 +9242,10 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "label": "deal an extra 2d10 Necrotic damage",
+        "charges": 1
       }
     ],
     "damage": [
@@ -8707,6 +9253,8 @@
         "dice": "2d10",
         "type": "necrotic",
         "role": "extra",
+        "label": "deal an extra 2d10 Necrotic damage",
+        "charges": 1,
         "text": "On a hit, it deals damage as a normal Quarterstaff, and you can expend 1 charge to deal an extra 2d10 Necrotic damage to the target and force it to make a DC 15 Constitution saving throw."
       }
     ],
@@ -8790,6 +9338,9 @@
         "text": "When you hit an Undead with it, that target takes an extra 1d8 Radiant damage."
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "description": "This item appears to be a sword hilt.\nBlade of Radiance. While grasping the hilt, you can take a Bonus Action to cause a blade of pure radiance to spring into existence or make the blade disappear. While the blade exists, this magic weapon functions as a Longsword with the Finesse property. If you are proficient with Longswords or Shortswords, you are proficient with the Sun Blade.\nYou gain a +2 bonus to attack rolls and damage rolls made with this weapon, which deals Radiant damage instead of Slashing damage. When you hit an Undead with it, that target takes an extra 1d8 Radiant damage.\nSunlight. The sword’s luminous blade emits Bright Light in a 15-foot radius and Dim Light for an additional 15 feet. The light is sunlight. While the blade persists, you can take a Magic action to expand or reduce its radius of Bright Light and Dim Light by 5 feet each, to a maximum of 30 feet each or a minimum of 10 feet each."
   },
   {
@@ -8816,9 +9367,12 @@
         "amount": 15,
         "type": "necrotic",
         "role": "extra",
-        "appliesWhen": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll",
+        "appliesWhen": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 15 Necrotic damage if it isn’t a Construct or an Undead",
         "text": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 15 Necrotic damage if it isn’t a Construct or an Undead, and you gain Temporary Hit Points equal to the amount of Necrotic damage taken."
       }
+    ],
+    "untyped": [
+      "healing"
     ],
     "description": "When you attack a creature with this magic weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 15 Necrotic damage if it isn’t a Construct or an Undead, and you gain Temporary Hit Points equal to the amount of Necrotic damage taken."
   },
@@ -8848,6 +9402,10 @@
         "text": "When you attack a creature with this weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 14 Slashing damage and gains 1 Exhaustion level."
       }
     ],
+    "untyped": [
+      "damage",
+      "conditions"
+    ],
     "description": "When you attack an object with this magic weapon and hit, maximize your weapon damage dice against the target.\nWhen you attack a creature with this weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 14 Slashing damage and gains 1 Exhaustion level."
   },
   {
@@ -8872,7 +9430,8 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none"
       }
     ],
     "damage": [
@@ -8882,6 +9441,9 @@
         "role": "extra",
         "text": "When you hit a creature with an attack using this magic weapon, the target takes an extra 2d6 Necrotic damage and must succeed on a DC 15 Constitution saving throw or be unable to regain Hit Points for 1 hour."
       }
+    ],
+    "untyped": [
+      "saves"
     ],
     "description": "When you hit a creature with an attack using this magic weapon, the target takes an extra 2d6 Necrotic damage and must succeed on a DC 15 Constitution saving throw or be unable to regain Hit Points for 1 hour. The target repeats the save at the end of each of its turns, ending the effect on itself on a success."
   },
@@ -8915,7 +9477,10 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 20
+        "dc": 20,
+        "onSuccess": "other",
+        "label": "Pure Rebuke",
+        "charges": 1
       }
     ],
     "damage": [
@@ -8930,9 +9495,15 @@
         "dice": "4d6",
         "type": "psychic",
         "role": "effect",
+        "label": "Pure Rebuke",
         "appliesWhen": "On a successful save",
+        "charges": 1,
         "text": "On a successful save, the target isn’t cast into the fissure but takes 4d6 Psychic damage from the ordeal."
       }
+    ],
+    "untyped": [
+      "damage",
+      "charges"
     ],
     "description": "This talisman is a mighty symbol of goodness. A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman.\nHoly Symbol. You can use the talisman as a Holy Symbol. You gain a +2 bonus to spell attack rolls while you wear or hold it.\nPure Rebuke. The talisman has 7 charges. While wearing or holding the talisman, you can take a Magic action to expend 1 charge and target one creature you can see on the ground within 120 feet of yourself. A flaming fissure opens under the target, and the target makes a DC 20 Dexterity saving throw. If the target is a Fiend or an Undead, it has Disadvantage on the save. On a failed save, the target falls into the fissure and is destroyed, leaving no remains. On a successful save, the target isn’t cast into the fissure but takes 4d6 Psychic damage from the ordeal. In either case, the fissure then closes, leaving no trace of its existence. When you expend the last charge, the talisman disperses into motes of golden light and is destroyed."
   },
@@ -8975,7 +9546,10 @@
     "saves": [
       {
         "ability": "dex",
-        "dc": 20
+        "dc": 20,
+        "onSuccess": "other",
+        "label": "Ultimate End",
+        "charges": 1
       }
     ],
     "damage": [
@@ -8990,9 +9564,15 @@
         "dice": "4d6",
         "type": "psychic",
         "role": "effect",
+        "label": "Ultimate End",
         "appliesWhen": "On a successful save",
+        "charges": 1,
         "text": "On a successful save, the target isn’t cast into the fissure but takes 4d6 Psychic damage from the ordeal."
       }
+    ],
+    "untyped": [
+      "damage",
+      "charges"
     ],
     "description": "This item symbolizes unrepentant evil. A creature that isn’t a Fiend or an Undead that touches the talisman takes 8d6 Necrotic damage and takes the damage again each time it ends its turn holding or carrying the talisman.\nHoly Symbol. You can use the talisman as a Holy Symbol. You gain a +2 bonus to spell attack rolls while you wear or hold it.\nUltimate End. The talisman has 6 charges. While wearing or holding the talisman, you can take a Magic action to expend 1 charge and target one creature you can see on the ground within 120 feet of yourself. A flaming fissure opens under the target, and the target makes a DC 20 Dexterity saving throw. If the target is a Celestial, it has Disadvantage on the save. On a failed save, the target falls into the fissure and is destroyed, leaving no remains. On a successful save, the target isn’t cast into the fissure but takes 4d6 Psychic damage from the ordeal. In either case, the fissure then closes, leaving no trace of its existence. When you expend the last charge, the talisman dissolves into foul-smelling slime and is destroyed."
   },
@@ -9015,6 +9595,7 @@
     ],
     "uses": [
       {
+        "label": "Earthquake",
         "recharge": "dawn"
       }
     ],
@@ -9022,22 +9603,28 @@
       {
         "ability": "str",
         "dc": 15,
+        "onSuccess": "none",
         "label": "Clap of Thunder"
       },
       {
         "ability": "dex",
         "dc": 20,
-        "label": "each creature on the ground"
+        "onSuccess": "none",
+        "label": "Earthquake"
       },
       {
         "ability": "con",
         "dc": 20,
-        "label": "also concentrating"
+        "onSuccess": "none",
+        "label": "Earthquake",
+        "appliesWhen": "If that creature is also concentrating"
       },
       {
         "ability": "dex",
         "dc": 20,
-        "label": "where the fissure opens"
+        "onSuccess": "other",
+        "label": "Earthquake",
+        "appliesWhen": "Any creature on a spot where the fissure opens"
       }
     ],
     "damage": [
@@ -9059,6 +9646,7 @@
         "dice": "3d8",
         "type": "thunder",
         "role": "effect",
+        "label": "Clap of Thunder",
         "appliesWhen": "Nonmagical objects in the Cone that aren’t being worn or carried",
         "text": "Nonmagical objects in the Cone that aren’t being worn or carried take 3d8 Thunder damage."
       },
@@ -9066,9 +9654,13 @@
         "amount": 50,
         "type": "bludgeoning",
         "role": "effect",
+        "label": "Earthquake",
         "appliesWhen": "Structures in contact with the ground in that area",
         "text": "Structures in contact with the ground in that area take 50 Bludgeoning damage, and each creature on the ground in that area must succeed on a DC 20 Dexterity saving throw or have the Prone condition."
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "description": "While you are attuned to this magic weapon, your Strength is 20 unless your Strength is already equal to or greater than that score. The weapon deals an extra 1d8 Thunder damage to any creature it hits and an extra 3d8 Thunder damage to objects it hits that aren’t being worn or carried.\nThe weapon has the following additional properties.\nClap of Thunder. As a Magic action, you can strike the weapon against a hard surface to create a loud clap of thunder audible out to 300 feet. You also create a 30-foot Cone of thunderous energy. Each creature in the Cone must succeed on a DC 15 Strength saving throw or have the Prone condition. Nonmagical objects in the Cone that aren’t being worn or carried take 3d8 Thunder damage.\nEarthquake. As a Magic action, you can strike the weapon against the ground to create an intense seismic disturbance in a 50-foot-radius circle centered on the point of impact. Structures in contact with the ground in that area take 50 Bludgeoning damage, and each creature on the ground in that area must succeed on a DC 20 Dexterity saving throw or have the Prone condition. If that creature is also concentrating, it must succeed on a DC 20 Constitution saving throw, or its Concentration is broken. In addition, you can cause a 30-foot-deep, 10-foot-wide fissure to open up on the ground anywhere in the area. Any creature on a spot where the fissure opens must make a DC 20 Dexterity saving throw, falling into the fissure on a failed save or moving with the fissure’s edge on a successful one. Any structure on a spot where the fissure opens collapses into the fissure. Once you use this property, it can’t be used again until the next dawn."
   },
@@ -9078,6 +9670,9 @@
     "page": 249,
     "category": "wondrous-item",
     "rarity": "very-rare",
+    "untyped": [
+      "uses"
+    ],
     "description": "This book contains memory and logic exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book’s contents and practicing its guidelines, your Intelligence increases by 2, to a maximum of 30. The manual then loses its magic but regains it in a century."
   },
   {
@@ -9086,6 +9681,9 @@
     "page": 249,
     "category": "wondrous-item",
     "rarity": "very-rare",
+    "untyped": [
+      "uses"
+    ],
     "description": "This book contains guidelines for influencing and charming others, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book’s contents and practicing its guidelines, your Charisma increases by 2, to a maximum of 30. The manual then loses its magic but regains it in a century."
   },
   {
@@ -9094,6 +9692,9 @@
     "page": 250,
     "category": "wondrous-item",
     "rarity": "very-rare",
+    "untyped": [
+      "uses"
+    ],
     "description": "This book contains intuition and insight exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book’s contents and practicing its guidelines, your Wisdom increases by 2, to a maximum of 30. The manual then loses its magic, but regains it in a century."
   },
   {
@@ -9121,7 +9722,8 @@
       {
         "id": "dominate-beast",
         "charges": 1,
-        "saveDc": 15
+        "saveDc": 15,
+        "appliesWhen": "on a Beast that has a Swim Speed"
       }
     ],
     "description": "This magic weapon has 3 charges, and it regains 1d3 expended charges daily at dawn. While you carry it, you can expend 1 charge to cast Dominate Beast (save DC 15) from it on a Beast that has a Swim Speed."
@@ -9149,6 +9751,14 @@
       ]
     },
     "rarity": "rare",
+    "damage": [
+      {
+        "dice": "2d6",
+        "type": "weapon",
+        "role": "extra",
+        "text": "This magic weapon deals an extra 2d6 damage to any creature it hits. This extra damage is of the same type as the weapon’s normal damage."
+      }
+    ],
     "description": "This magic weapon deals an extra 2d6 damage to any creature it hits. This extra damage is of the same type as the weapon’s normal damage."
   },
   {
@@ -9180,14 +9790,8 @@
         "text": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon."
       }
     ],
-    "damage": [
-      {
-        "amount": 30,
-        "type": "slashing",
-        "role": "extra",
-        "appliesWhen": "A creature is immune to this effect if it has Immunity to Slashing damage, if it doesn’t have or need a head, or if the GM decides that the creature is too big for its head to be cut off with this weapon",
-        "text": "Such a creature instead takes an extra 30 Slashing damage from the hit."
-      }
+    "untyped": [
+      "damage"
     ],
     "description": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. In addition, the weapon ignores Resistance to Slashing damage.\nWhen you use this weapon to attack a creature that has at least one head and roll a 20 on the d20 for the attack roll, you cut off one of the creature’s heads. The creature dies if it can’t survive without the lost head. A creature is immune to this effect if it has Immunity to Slashing damage, if it doesn’t have or need a head, or if the GM decides that the creature is too big for its head to be cut off with this weapon. Such a creature instead takes an extra 30 Slashing damage from the hit. If the creature has Legendary Resistance, it can expend one daily use of that trait to avoid losing its head, taking the extra damage instead."
   },
@@ -9280,6 +9884,9 @@
         ]
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "description": "This wand has 7 charges. While holding it, you can take a Magic action to expend 1 charge. For 1 minute, you know the direction of the nearest creature Hostile to you within 60 feet, but not its distance from you. The wand can sense the presence of Hostile creatures that are Invisible, ethereal, disguised, or hidden, as well as those in plain sight. The effect ends if you stop holding the wand.\nRegaining Charges. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand’s last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."
   },
   {
@@ -9311,7 +9918,8 @@
       {
         "id": "command",
         "charges": 1,
-        "saveDc": 15
+        "saveDc": 15,
+        "appliesWhen": "“flee” or “grovel” only"
       },
       {
         "id": "fear",
@@ -9340,6 +9948,9 @@
           }
         ]
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "This wand has 7 charges.\nSpells. While holding the wand, you can cast one of the spells (save DC 15) on the following table from it. The table indicates how many charges you must expend to cast the spell.\nRegaining Charges. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand’s last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."
   },
@@ -9508,8 +10119,14 @@
     "saves": [
       {
         "ability": "con",
-        "dc": 15
+        "dc": 15,
+        "onSuccess": "none",
+        "charges": 1
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ],
     "description": "This wand has 7 charges. While holding it, you can take a Magic action to expend 1 charge to cause a thin blue ray to streak from the tip toward a creature you can see within 60 feet of yourself. The target must succeed on a DC 15 Constitution saving throw or have the Paralyzed condition for 1 minute. At the end of each of the target’s turns, it repeats the save, ending the effect on itself on a success.\nRegaining Charges. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand’s last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."
   },
@@ -9565,6 +10182,9 @@
         "time": "dawn"
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "description": "This wand has 3 charges and regains 1d3 expended charges daily at dawn. While holding it, you can take a Magic action to expend 1 charge, and if a secret door or trap is within 60 feet of you, the wand pulses and points at the one nearest to you."
   },
   {
@@ -9690,11 +10310,30 @@
               "max": 20
             },
             "spells": [
-              "darkness",
-              "faerie-fire",
-              "fireball",
-              "slow",
-              "stinking-cloud"
+              {
+                "id": "darkness",
+                "saveDc": 15
+              },
+              {
+                "id": "faerie-fire",
+                "saveDc": 15,
+                "alternativeTo": 0
+              },
+              {
+                "id": "fireball",
+                "saveDc": 15,
+                "alternativeTo": 0
+              },
+              {
+                "id": "slow",
+                "saveDc": 15,
+                "alternativeTo": 0
+              },
+              {
+                "id": "stinking-cloud",
+                "saveDc": 15,
+                "alternativeTo": 0
+              }
             ],
             "cells": [
               "You cast a spell originating from the chosen point. Roll 1d10 to determine the spell: on a 1–2, Darkness; on a 3–4, Faerie Fire; on a 5–6, Fireball; on a 7–8, Slow; on a 9–10, Stinking Cloud."
@@ -9715,7 +10354,10 @@
               "max": 30
             },
             "spells": [
-              "gust-of-wind"
+              {
+                "id": "gust-of-wind",
+                "saveDc": 15
+              }
             ],
             "cells": [
               "You cast Gust of Wind. The Line created by the spell extends from you to the chosen point of origin."
@@ -9726,6 +10368,13 @@
               "min": 31,
               "max": 35
             },
+            "damage": [
+              {
+                "dice": "1d6",
+                "type": "psychic",
+                "role": "to-user"
+              }
+            ],
             "cells": [
               "Nothing happens at the chosen point of origin. Instead, you take 1d6 Psychic damage."
             ]
@@ -9754,7 +10403,10 @@
               "max": 50
             },
             "spells": [
-              "lightning-bolt"
+              {
+                "id": "lightning-bolt",
+                "saveDc": 15
+              }
             ],
             "cells": [
               "You cast Lightning Bolt. The Line created by the spell extends from you to the chosen point of origin."
@@ -9767,7 +10419,8 @@
             },
             "spellEffects": [
               {
-                "id": "enlarge-reduce"
+                "id": "enlarge-reduce",
+                "label": "enlarged"
               }
             ],
             "cells": [
@@ -9808,7 +10461,8 @@
             },
             "spellEffects": [
               {
-                "id": "enlarge-reduce"
+                "id": "enlarge-reduce",
+                "label": "shrink"
               }
             ],
             "cells": [
@@ -9839,7 +10493,11 @@
               "max": 87
             },
             "spells": [
-              "invisibility"
+              {
+                "id": "invisibility",
+                "saveDc": 15,
+                "selfOnly": true
+              }
             ],
             "cells": [
               "Nothing happens at the chosen point of origin. Instead, you cast Invisibility on yourself."
@@ -9860,7 +10518,10 @@
               "max": 97
             },
             "spells": [
-              "polymorph"
+              {
+                "id": "polymorph",
+                "saveDc": 15
+              }
             ],
             "cells": [
               "You cast Polymorph, targeting the creature closest to the chosen point of origin. Roll 1d4 to determine the target’s new form. On a 1, the new form is a Black Bear; on a 2, the new form is a Giant Wasp; on a 3–4, the new form is a Frog."
@@ -9877,6 +10538,10 @@
           }
         ]
       }
+    ],
+    "untyped": [
+      "spells",
+      "charges"
     ],
     "description": "This wand has 7 charges. While holding it, you can take a Magic action to expend 1 charge while choosing a point within 120 feet of yourself. That location becomes the point of origin of a spell or other magical effect determined by rolling on the Wand of Wonder Effects table. Spells cast from the wand have a save DC of 15. If a spell’s maximum range is normally less than 120 feet, it becomes 120 feet when cast from the wand. If an effect has multiple possible subjects, the GM determines randomly which among them are affected.\nRegaining Charges. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand’s last charge, roll 1d20. On a 1, the wand crumbles into dust and is destroyed."
   },
@@ -9964,6 +10629,9 @@
     "activation": [
       "magic-action"
     ],
+    "untyped": [
+      "uses"
+    ],
     "description": "This fine black cloth, soft as silk, is folded up to the dimensions of a handkerchief. It unfolds into a circular sheet 6 feet in diameter.\nYou can take a Magic action to unfold the Well of Many Worlds and place it on a solid surface, whereupon it forms a two-way, 6-foot-diameter, circular portal to another world or plane of existence. Each time the item opens a portal, the GM decides where it leads. The portal remains open until a creature within 5 feet of it takes a Magic action to close it by taking hold of the edges of the cloth and folding it up.\nOnce the Well of Many Worlds has opened a portal, it can’t do so again for 1d8 hours."
   },
   {
@@ -9977,6 +10645,9 @@
         "id": "gust-of-wind",
         "saveDc": 13
       }
+    ],
+    "untyped": [
+      "uses"
     ],
     "description": "While holding this fan, you can cast Gust of Wind (save DC 13) from it. Each subsequent time the fan is used before the next dawn, it has a cumulative 20 percent chance of not working; if the fan fails to work, it tears into useless, nonmagical tatters."
   },
@@ -9999,6 +10670,9 @@
         "time": "dawn"
       }
     },
+    "untyped": [
+      "charges"
+    ],
     "description": "These boots have 4 charges and regain 1d4 expended charges daily at dawn. While wearing the boots, you can take a Magic action to expend 1 charge, gaining a Fly Speed of 30 feet for 1 hour. If you are flying when the duration expires, you descend at a rate of 30 feet per round until you land."
   },
   {
@@ -10012,6 +10686,9 @@
     },
     "activation": [
       "magic-action"
+    ],
+    "untyped": [
+      "uses"
     ],
     "description": "While wearing this cloak, you can take a Magic action to turn the cloak into a pair of wings on your back. The wings lasts for 1 hour or until you end the effect early as a Magic action. The wings give you a Fly Speed of 60 feet. If you are aloft when the wings disappear, you fall. When the wings disappear, you can’t use them again for 1d12 hours."
   }

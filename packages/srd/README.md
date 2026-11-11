@@ -111,8 +111,15 @@ A printed value is one the text states in a fixed place: a price in a table, a s
 
 A read value is one somebody had to read a sentence to get: which save a condition depends on, whether a damage roll needs a hit, when a bonus applies. A check that derives these with the builder's own patterns agrees with the builder even when both are wrong. So read values are checked by a second reading that owes nothing to the builder:
 
-- **Spells and magic items.** Readers who never saw the builders, the checks or the data read all 339 spells and all 258 magic items in the official text and wrote down the typed effects they found. Their files are `scripts/verify/fixtures/*.json`. The checks compare the data with them field by field. A builder never edits a fixture. A difference is settled against the official text by `READING.md`, and where the rules did not settle it, the rule was written first and both sides reread.
-- **Classes, origins, equipment and monsters.** The irregular entries have hand-kept tables of expected values in the checks, each row read against the text. The monsters table was drafted from the data and then read row by row, so it is weaker than a reading made blind. To cover that, auditors who had not seen the builders or checks read every entry's typed fields beside its official text, and read the conditions again after the builders' fixes.
+- **Spells and magic items.** Readers who never saw the builders, the checks or the data read all 339 spells and all 258 magic items in the official text and wrote down the typed effects they found. Their files are `scripts/verify/fixtures/*.json`. The checks compare the data with them field by field. A builder never edits a fixture. The files were then read again by new readers who took no part in the first reading or its disputes. A difference between a reader and a builder is never settled by either of them: the lead rules on it against the official text and `READING.md`, and where the rules did not settle it, the rule was written first and both sides reread.
+- **Classes, origins, equipment and monsters.** The irregular entries have hand-kept tables of expected values in the checks, each row read against the text. The monsters table was drafted from the data and then read row by row, so it is weaker than a reading made blind.
+- **Blind readings of every category.** Auditors who had not seen the builders, the checks or the fixtures read every entry's typed fields beside its official text, and asked one question of each: would an engine that reads only the typed fields resolve this entry wrongly? Spells and magic items were read this way twice, the other four categories at least twice with the conditions read again after the fixes. The last reading found no wrong printed number. Every fault it found was a read value, and each was fixed with its siblings.
+
+A read value says what it does not hold:
+
+- `appliesWhen`, `unless`, `timing` and `usableWhen` carry the official words of a condition, an exception, a moment or a precondition. A package check proves each is one unbroken span of its own entry's text, so none is paraphrased or joined from fragments.
+- `untyped` on a spell or a magic item lists each kind of effect (`saves`, `damage`, `conditions`, `healing`, `spells`, `bonuses`, `charges`, `uses`) the text states and the typed fields do not fully hold. An engine that sees a kind there reads the prose for it. A kind that is absent means the typed fields hold everything of that kind.
+- A typed value read alone never claims more than the text: it carries its condition, its cost (`charges`), its alternative (`alternativeTo`), how often (`oncePerTurn`) and whom it falls on (`target`, `selfOnly`), or it is left out and named in `untyped`.
 
 `READING.md` holds the rules for turning a sentence into a typed value. The builders, the readers and the auditors all work to it.
 
@@ -122,10 +129,11 @@ The package checks:
 - every id that points at another entry resolves, and no reference field goes unlisted
 - every word in the data is a word the official text prints, which catches words broken or fused at a PDF line end
 - no stray marks from PDF extraction
+- every `appliesWhen`, `unless`, `timing` and `usableWhen` is one unbroken span of another text of the same entry
 
 ### Testing the checks
 
-A check that passes proves little unless it can fail. `mutate` takes the first value at every distinct typed field of every data file, changes it, runs the checks, then deletes it and runs them again. It also adds an item to every list and deletes every group of fields. It works on copies in a temp folder. A mutation that no check catches is printed as `MISSED` and fails the run.
+A check that passes proves little unless it can fail. `mutate` takes the first value at every distinct typed field of every data file, changes it, runs the checks, then deletes it and runs them again. It also adds an item to every list and deletes every group of fields. It works on copies in a temp folder. A check run that does not finish in five minutes is tried again, up to three times. A mutation that no check catches is printed as `MISSED` and fails the run.
 
 It reports three counts: mutations caught by a content check, mutations caught only because the schema requires the field, and misses. Run it after changing a schema, a builder or a check. A new typed field with no check shows up as a miss.
 

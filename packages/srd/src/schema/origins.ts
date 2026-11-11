@@ -1,29 +1,38 @@
 import { z } from "zod"
 import {
   abilityIdSchema,
+  actionKindSchema,
   activationSchema,
   classIdSchema,
   conditionIdSchema,
   costSchema,
   creatureTypeSchema,
+  damageEffectSchema,
   damageTypeIdSchema,
   diceSchema,
   entryShape,
   equipmentOptionSchema,
+  featGrantSchema,
   feetSchema,
   forcedSaveShape,
+  hitPointMaximumSchema,
   idSchema,
+  oncePerTurnSchema,
   proseSchema,
-  rechargeSchema,
+  repeatableSchema,
+  resistancesSchema,
   saveDcSchema,
+  saveOutcomeSchema,
+  sensesSchema,
   sizeSchema,
   skillIdSchema,
+  spanShape,
+  speedBonusSchema,
+  targetLimitShape,
   targetSpeedReductionSchema,
-  usesCountSchema,
+  usesSchema,
 } from "./common"
 
-/** Uses between recharges. `count` is a number, or "proficiency-bonus" for "a number of times equal to your Proficiency Bonus". */
-export const usesSchema = z.strictObject({ count: usesCountSchema, recharge: rechargeSchema })
 export type Uses = z.infer<typeof usesSchema>
 
 /** A spell the origin gives. `level` is the character level at which it is gained. A spell without `cantrip` is always prepared. */
@@ -37,10 +46,11 @@ export type GrantedSpell = z.infer<typeof grantedSpellSchema>
 
 /** Damage that grows with character level. `level` is the first character level of each step. */
 const breathWeaponSchema = z.strictObject({
-  shapes: z.array(z.strictObject({ shape: z.enum(["cone", "line"]), feet: feetSchema, width: feetSchema.optional() })).min(1),
+  /** The areas the breath can fill. They are alternatives: the user chooses one shape each time the breath is used, and it fills only that one. */
+  shapeOptions: z.array(z.strictObject({ shape: z.enum(["cone", "line"]), feet: feetSchema, width: feetSchema.optional() })).min(1),
   save: z.strictObject({ ...forcedSaveShape, dc: saveDcSchema }),
   damage: z.array(z.strictObject({ level: z.number().int().min(1).max(20), dice: diceSchema })).min(1),
-  onSave: z.literal("half"),
+  onSuccess: saveOutcomeSchema,
 })
 
 /**
@@ -48,30 +58,22 @@ const breathWeaponSchema = z.strictObject({
  * official text states it. The prose stays in `text`.
  */
 export const mechanicsShape = {
-  /** The character has Darkvision with this range in feet. */
-  darkvision: feetSchema.optional(),
-  /** The character has Tremorsense with this range in feet, for `durationMinutes` after using the trait, while `requires` holds. */
-  tremorsense: feetSchema.optional(),
-  /** The character has Truesight with this range in feet. */
-  truesight: feetSchema.optional(),
-  /** The character has Resistance to these damage types. */
-  resistances: z.strictObject({ damageTypes: z.array(damageTypeIdSchema).min(1) }).optional(),
-  /** The character has Resistance to all damage except these types, while `requires` holds. */
-  resistanceExcept: z.array(damageTypeIdSchema).min(1).optional(),
+  /** The character's senses, each with its range in feet. A limit on one sense sits on its entry. */
+  senses: sensesSchema.optional(),
+  /** The character has Resistance, as `resistancesSchema` says. */
+  resistances: resistancesSchema.optional(),
   /** The damage type of the Breath Weapon, or the type the Damage Resistance covers, is the one on the option the player chose in the choice trait with this id (Draconic Ancestry). */
   damageTypeFromChoice: idSchema.optional(),
   /** The character has Advantage on saving throws against these conditions, or on saving throws with these abilities. */
   savingThrowAdvantage: z.strictObject({ conditions: z.array(conditionIdSchema).min(1).optional(), abilities: z.array(abilityIdSchema).min(1).optional() }).optional(),
-  /** The character's Hit Point maximum rises by `initial` and by `perLevel` at each level gained. */
-  hitPointBonus: z.strictObject({ initial: z.number().int(), perLevel: z.number().int() }).optional(),
+  /** The character's Hit Point maximum rises, as `hitPointMaximumSchema` says. */
+  hitPointMaximum: hitPointMaximumSchema.optional(),
   /** The kinds of action the trait takes to use. */
   activation: activationSchema.optional(),
-  /** What must be true to use the trait: standing on or touching stone, or being within Dim Light or Darkness. */
-  requires: z.enum(["stone-surface", "dim-light-or-darkness"]).optional(),
   /** The moment that lets the trait act. */
-  trigger: z.enum(["hit-with-attack-roll", "hit-with-weapon", "take-damage", "after-attack-or-magic-action"]).optional(),
-  /** The condition or damage applies only to targets of this size or smaller. */
-  targetMaxSize: sizeSchema.optional(),
+  trigger: z.enum(["hit-with-attack-roll-and-deal-damage", "hit-with-weapon", "take-damage", "after-attack-or-magic-action"]).optional(),
+  /** Limits on which targets the condition or damage affects: their size or creature type. */
+  ...targetLimitShape,
   /** The character level at which the trait starts. */
   level: z.number().int().min(1).max(20).optional(),
   /** How long the trait's effect lasts after the character uses it. */
@@ -87,7 +89,7 @@ export const mechanicsShape = {
   /** The character's own Speed becomes this many feet. */
   speed: feetSchema.optional(),
   /** The character's own Speed rises by this many feet for `durationMinutes` after using the trait. */
-  speedBonus: z.strictObject({ feet: feetSchema }).optional(),
+  speedBonus: speedBonusSchema.optional(),
   /** The target's Speed, not the character's, is reduced by `feet` until the start of the character's next turn. */
   targetSpeedReduction: targetSpeedReductionSchema.optional(),
   /** A Fly Speed equal to the character's Speed. */
@@ -103,19 +105,28 @@ export const mechanicsShape = {
   /** The character's Breath Weapon: the areas it fills, the save it forces, and its damage by character level. */
   breathWeapon: breathWeaponSchema.optional(),
   /** Extra damage the character deals to the target or triggering creature, when `trigger` happens. */
-  damage: z.strictObject({ dice: diceSchema, type: damageTypeIdSchema }).optional(),
+  damage: damageEffectSchema.optional(),
   /** The character reduces damage it takes by the roll plus its ability modifier, when `trigger` happens. */
   damageReduction: z.strictObject({ dice: diceSchema, ability: abilityIdSchema }).optional(),
   /** The character teleports up to this many feet to an unoccupied space it can see. */
   teleportFeet: feetSchema.optional(),
   /** The distance in feet within which the creature that triggers or is affected by the trait must be. */
   range: feetSchema.optional(),
-  /** A condition the trait can give its target, when `trigger` happens. */
-  targetCondition: conditionIdSchema.optional(),
+  /** A condition the trait gives its target, when `trigger` happens. */
+  targetCondition: z.strictObject({ condition: conditionIdSchema, ...spanShape }).optional(),
   /** A condition the trait gives the character itself. Its duration is in the text. */
-  selfCondition: conditionIdSchema.optional(),
-  /** The character gains one feat of the player's choice from this category, with this one recommended. */
-  featChoice: z.strictObject({ category: z.literal("origin"), recommended: idSchema }).optional(),
+  selfCondition: z
+    .strictObject({
+      condition: conditionIdSchema,
+      /** The condition ends on the character immediately after it takes one of these kinds of action. */
+      endsAfter: z.array(actionKindSchema).min(1).optional(),
+      ...spanShape,
+    })
+    .optional(),
+  /** The official words of a precondition on using the trait, such as being in a big enough space. It gates the use, not the effect after it begins. */
+  usableWhen: z.string().min(1).optional(),
+  /** The character gains a feat, as `featGrantSchema` says. */
+  feat: featGrantSchema.optional(),
   /** The Rock Gnome device: its AC and HP, how many can exist, the casting time and how long each lasts. */
   clockworkDevice: z.strictObject({ armorClass: z.number().int(), hitPoints: z.number().int(), maximum: z.number().int(), castMinutes: z.number().int(), durationHours: z.number().int() }).optional(),
   /** Magic Initiate: cantrips learned, the level of the one spell, and the lists to choose from. */
@@ -135,16 +146,18 @@ export const mechanicsShape = {
   /** Alert: add the Proficiency Bonus to Initiative rolls. */
   initiativeBonus: z.literal("proficiency-bonus").optional(),
   /** Alert: swap Initiative with this many willing allies, unless the character or the ally has the condition. */
-  initiativeSwap: z.strictObject({ allies: z.number().int().positive(), blockedByCondition: conditionIdSchema }).optional(),
-  /** Savage Attacker: once per `perTurn`, when a weapon hits, roll the damage dice twice and use either roll. */
-  damageDiceRolledTwice: z.strictObject({ perTurn: z.number().int().positive() }).optional(),
+  initiativeSwap: z.strictObject({ allies: z.number().int().positive(), blockedByCondition: conditionIdSchema, ...spanShape }).optional(),
+  /** The effect happens at most once on each of the character's turns. */
+  oncePerTurn: oncePerTurnSchema.optional(),
+  /** Savage Attacker: when a weapon hits, roll the weapon's damage dice twice and use either roll. */
+  damageDiceRolledTwice: z.literal(true).optional(),
   /** Two-Weapon Fighting: the extra attack from a weapon with this property adds the ability modifier to its damage. */
   addAbilityModifierToExtraAttack: z.strictObject({ weaponProperty: idSchema }).optional(),
   /** Luck: when the d20 of a D20 Test shows this number, the die may be rerolled and the new roll must be used. */
   rerollD20On: z.number().int().min(1).max(20).optional(),
-  /** Halfling Nimbleness: move through the space of a creature this many sizes larger, but not stop there. */
+  /** Halfling Nimbleness: the character can move through the space of a creature exactly this many size categories larger ("a size larger than you"), but cannot stop there. The text does not extend it to creatures larger still. */
   moveThroughCreatures: z.strictObject({ sizesLarger: z.number().int().positive(), canStop: z.literal(false) }).optional(),
-  /** Naturally Stealthy: the Hide action works when obscured only by a creature at least this many sizes larger. */
+  /** Naturally Stealthy: the Hide action works when obscured only by a creature at least this many size categories larger ("at least one size larger"), so any larger creature also counts. */
   hideBehindCreatures: z.strictObject({ minSizesLarger: z.number().int().positive() }).optional(),
   /** Powerful Build: Advantage on ability checks to end the Grappled condition. */
   grappledEscapeAdvantage: z.literal(true).optional(),
@@ -200,7 +213,7 @@ export const backgroundSchema = z.strictObject({
   /** The three ability scores the background lists. */
   abilityScores: z.array(abilityIdSchema).length(3),
   /** The Origin feat. `spellList` is the list for Magic Initiate, "Magic Initiate (Cleric)". */
-  feat: z.strictObject({ id: idSchema, spellList: classIdSchema.optional() }),
+  feat: featGrantSchema,
   skills: z.array(skillIdSchema).length(2),
   toolProficiency: toolProficiencySchema,
   /** Option A is the package with its gold, and option B is gold alone. */
@@ -228,7 +241,7 @@ export const featSchema = z.strictObject({
         .optional(),
     })
     .optional(),
-  repeatable: z.strictObject({ text: proseSchema, differentSpellList: z.literal(true).optional() }).optional(),
+  repeatable: repeatableSchema.optional(),
   /** The score increase the feat gives. `choices` are the ways to spend it, and `from` the abilities allowed. */
   abilityScoreIncrease: z
     .strictObject({

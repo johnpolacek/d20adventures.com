@@ -16,12 +16,15 @@
           "acid"
         ],
         "perSlot": "1d4",
-        "trigger": "hit"
+        "trigger": "hit",
+        "timing": "at the end of its next turn"
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "notes": [
-      "The 2d4 Acid damage is dealt at the end of the target's next turn.",
-      "On a miss, the target takes half as much of the initial damage only.",
+      "On a miss the target takes half the initial damage only. No dice or amount holds that, so damage is untyped.",
       "The per-slot increase applies to both the initial and the later damage."
     ]
   },
@@ -80,12 +83,11 @@
         "modifier": true,
         "trigger": "hit",
         "label": "Natural Weapons",
-        "appliesWhen": "When you use your Unarmed Strike to deal damage with that new growth"
+        "timing": "When you use your Unarmed Strike to deal damage with that new growth"
       }
     ],
     "notes": [
-      "The 1d6 damage applies only with the Natural Weapons option, when the caster deals damage with an Unarmed Strike using the new growth. The type is that of the chosen growth.",
-      "With Natural Weapons the caster uses the spellcasting ability modifier for the attack and damage rolls instead of Strength.",
+      "The type is that of the chosen growth. The 1d6 replaces the normal Unarmed Strike damage.",
       "Aquatic Adaptation gives a Swim Speed equal to Speed and water breathing."
     ]
   },
@@ -107,8 +109,7 @@
     ],
     "extraTargetsPerSlot": 1,
     "notes": [
-      "The target must be a Beast.",
-      "The spell ends if the caster or an ally deals damage to the target."
+      "The target must be a Beast. The spell ends if the caster or an ally deals damage to the target."
     ]
   },
   "animal-messenger": {
@@ -117,17 +118,21 @@
         "ability": "cha",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "unless": "if the target’s Challenge Rating isn’t 0"
       }
     ],
     "notes": [
-      "A target whose Challenge Rating isn't 0 automatically succeeds.",
+      "A target whose Challenge Rating isn't 0 automatically succeeds, so the save carries that as unless.",
       "The duration increases by 48 hours for each slot level above 2."
     ]
   },
   "animal-shapes": {
+    "untyped": [
+      "healing"
+    ],
     "notes": [
-      "Each target gains Temporary Hit Points equal to the Hit Points of its first form, which no healing field can hold."
+      "Each target gains Temporary Hit Points equal to the Hit Points of its first form, which the healing shape can't hold."
     ]
   },
   "animate-dead": {
@@ -139,8 +144,7 @@
   },
   "animate-objects": {
     "notes": [
-      "The Animated Object stat block's Slam attack and damage belong to the creature, not the spell, and are left out.",
-      "The per-slot increase to Slam damage (1d4, 1d6 or 1d12 by size) is the creature's and is left out.",
+      "The Animated Object stat block's Slam attack and damage belong to the creature, not the spell, and are left out, as is its per-slot increase.",
       "The number of objects equals the spellcasting ability modifier, with Large counting as two and Huge as three."
     ]
   },
@@ -165,41 +169,48 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "A creature of the chosen kind makes a Wisdom saving throw when it comes within 120 feet of the target"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "on-damage",
         "onSuccess": "ends",
-        "label": "Sympathy"
+        "label": "Sympathy",
+        "appliesWhen": "If the target damages the Charmed creature"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "end-of-turn",
         "onSuccess": "ends",
-        "label": "Ending the Effect"
+        "label": "Ending the Effect",
+        "appliesWhen": "If the Frightened or Charmed creature ends its turn more than 120 feet away from the target"
       }
     ],
     "conditions": [
       {
         "condition": "frightened",
-        "label": "Antipathy",
-        "appliesWhen": "Your choice of antipathy or sympathy determines what happens to a creature when it fails that save"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Antipathy"
       },
       {
         "condition": "charmed",
-        "label": "Sympathy",
-        "appliesWhen": "Your choice of antipathy or sympathy determines what happens to a creature when it fails that save"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Sympathy"
       }
     ],
     "notes": [
-      "The first save is made when a creature of the chosen kind comes within 120 feet of the target.",
-      "A failed first save gives Frightened if the caster chose antipathy, or Charmed if the caster chose sympathy.",
-      "The Sympathy save is made when the target damages the Charmed creature.",
-      "The Ending the Effect save is made only when the creature ends its turn more than 120 feet from the target.",
-      "A creature that succeeds is immune to the effect for 1 minute."
+      "The saves fall on creatures of the chosen kind, not on the spell's target, so the first save carries the words that say who and when.",
+      "A failed first save gives Frightened under Antipathy or Charmed under Sympathy, the choice made at casting.",
+      "A creature that succeeds is immune to the effect for 1 minute. No field holds that bar, so saves and conditions are untyped."
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ]
   },
   "arcane-eye": {},
@@ -229,7 +240,8 @@
         ],
         "perSlot": "2d8",
         "trigger": "hit",
-        "label": "Clenched Fist"
+        "label": "Clenched Fist",
+        "timing": "When you cast the spell and as a Bonus Action on your later turns"
       },
       {
         "dice": "4d6",
@@ -241,7 +253,8 @@
         "trigger": "failed-save",
         "save": 1,
         "label": "Grasping Hand",
-        "appliesWhen": "While the hand grapples the target, you can take a Bonus Action to cause the hand to crush it"
+        "appliesWhen": "While the hand grapples the target",
+        "timing": "you can take a Bonus Action to cause the hand to crush it"
       }
     ],
     "conditions": [
@@ -253,12 +266,10 @@
       }
     ],
     "notes": [
-      "The melee spell attack and the 5d8 Force damage belong to Clenched Fist.",
-      "The 4d6 Bludgeoning damage is the Grasping Hand's crush, dealt by a Bonus Action while the hand grapples the target.",
+      "The melee spell attack belongs to Clenched Fist. Each option can be used when cast and again as a Bonus Action on later turns.",
       "The Grappled escape DC equals the spell save DC.",
       "Forceful Hand pushes a target that fails up to 5 feet plus five times the spellcasting ability modifier in feet.",
-      "Interposing Hand grants Half Cover and makes its space Difficult Terrain for enemies.",
-      "The hand is an object with AC 20 and Hit Points equal to the caster's Hit Point maximum."
+      "Interposing Hand grants Half Cover and makes its space Difficult Terrain for enemies."
     ]
   },
   "arcane-lock": {},
@@ -272,10 +283,19 @@
         ],
         "modifier": true,
         "trigger": "hit"
+      },
+      {
+        "dice": "4d12",
+        "types": [
+          "force"
+        ],
+        "modifier": true,
+        "trigger": "hit",
+        "timing": "On your later turns"
       }
     ],
     "notes": [
-      "On later turns a Bonus Action moves the sword up to 30 feet and repeats the attack."
+      "The second roll is the repeated attack, made by moving the sword as a Bonus Action on later turns."
     ]
   },
   "arcanists-magic-aura": {},
@@ -285,24 +305,22 @@
         "condition": "unconscious"
       }
     ],
-    "casterConditions": [
-      "unconscious"
-    ],
     "notes": [
-      "Unconscious applies to each target's body left behind, the caster's included, not to the astral form."
+      "Unconscious applies to each target's body left behind, the caster's included, not to the astral form. The caster is one of the targets, so it is listed once."
     ]
   },
   "augury": {},
   "aura-of-life": {
     "healing": {
-      "amount": 1
+      "amount": 1,
+      "appliesWhen": "If an ally with 0 Hit Points",
+      "timing": "starts its turn in the aura"
     },
     "area": {
       "shape": "emanation",
       "size": 30
     },
     "notes": [
-      "The 1 Hit Point is regained only by an ally with 0 Hit Points that starts its turn in the aura.",
       "The caster and allies in the aura have Resistance to Necrotic damage, and their Hit Point maximums can't be reduced."
     ]
   },
@@ -328,9 +346,9 @@
     "rollModifier": {
       "dice": "1d4",
       "subtract": true,
-      "rolls": [
-        "attack-roll",
-        "saving-throw"
+      "to": [
+        "attack-rolls",
+        "saving-throws"
       ]
     },
     "extraTargetsPerSlot": 1,
@@ -382,7 +400,8 @@
         "ability": "int",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "timing": "At the end of every 30 days"
       }
     ],
     "damage": [
@@ -397,8 +416,7 @@
     ],
     "notes": [
       "On a failed save the target also can't cast spells or take the Magic action. A success halves the damage only.",
-      "The repeated save is made at the end of every 30 days and ends the effect on a success.",
-      "Greater Restoration, Heal or Wish also ends the effect."
+      "The repeated save is made at the end of every 30 days. Greater Restoration, Heal or Wish also ends the effect."
     ]
   },
   "bestow-curse": {
@@ -408,29 +426,17 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none"
-      },
-      {
-        "ability": "wis",
-        "dc": "spell-save-dc",
-        "when": "start-of-turn",
-        "onSuccess": "none"
       }
     ],
-    "damage": [
-      {
-        "dice": "1d8",
-        "types": [
-          "necrotic"
-        ],
-        "appliesWhen": "If you deal damage to the target with an attack roll or a spell"
-      }
+    "untyped": [
+      "saves",
+      "damage"
     ],
     "notes": [
-      "The curse is one effect of the caster's choice.",
-      "The start-of-turn save applies only with the effect that forces the Dodge action in combat. A failure forces the Dodge action that turn.",
-      "The extra 1d8 Necrotic damage applies only with that effect, whenever the caster deals damage to the target with an attack roll or a spell.",
-      "Other effects: Disadvantage on ability checks and saves with one chosen ability, or Disadvantage on attack rolls against the caster.",
-      "Higher slots extend the duration and remove Concentration at level 5 and above."
+      "The curse is one of four unnamed effects of the caster's choice. No label or single span ties a value to the chosen effect.",
+      "One effect has the target make a Wisdom save at the start of each of its turns in combat or take the Dodge action. It is left out, since typed it would read as applying under every effect.",
+      "Another effect deals an extra 1d8 Necrotic damage whenever the caster deals damage to the target with an attack roll or a spell. It is left out for the same reason.",
+      "Other effects: Disadvantage on ability checks and saves with one chosen ability, or Disadvantage on attack rolls against the caster."
     ]
   },
   "black-tentacles": {
@@ -439,7 +445,8 @@
         "ability": "str",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -450,6 +457,15 @@
         ],
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "3d6",
+        "types": [
+          "bludgeoning"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "A creature also makes that save if it enters the area or ends it turn there"
       }
     ],
     "conditions": [
@@ -457,11 +473,17 @@
         "condition": "restrained",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "A creature also makes that save if it enters the area or ends it turn there"
       }
     ],
     "notes": [
       "The area is a 20-foot square on the ground, which no area shape holds.",
-      "A creature also makes the save when it enters the area or ends its turn there, only once per turn.",
+      "The roll is dealt when the spell takes effect and again when a creature enters the area or ends its turn there. The text prints \"ends it turn\", and the timing quotes it as printed.",
       "A Restrained creature can take an action to make a Strength (Athletics) check against the spell save DC to end the condition."
     ]
   },
@@ -471,7 +493,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -482,19 +505,28 @@
         ],
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "6d10",
+        "types": [
+          "force"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "A creature also makes that save if it enters the wall’s space or ends it turn there"
       }
     ],
     "notes": [
-      "The wall is up to 100 feet long or a ring up to 60 feet in diameter, 20 feet high and 5 feet thick. It gives Three-Quarters Cover and its space is Difficult Terrain.",
-      "A creature also makes the save when it enters the wall's space or ends its turn there, only once per turn."
+      "The wall is up to 100 feet long or a ring up to 60 feet in diameter, 20 feet high and 5 feet thick, which no area shape holds.",
+      "The roll is dealt when the wall appears and again when a creature enters the wall's space or ends its turn there. The text prints \"ends it turn\", and the timing quotes it as printed."
     ]
   },
   "bless": {
     "rollModifier": {
       "dice": "1d4",
-      "rolls": [
-        "attack-roll",
-        "saving-throw"
+      "to": [
+        "attack-rolls",
+        "saving-throws"
       ]
     },
     "extraTargetsPerSlot": 1
@@ -520,7 +552,7 @@
       }
     ],
     "notes": [
-      "A Plant creature automatically fails the save.",
+      "A Plant creature automatically fails the save. The save shape has no field for an automatic failure.",
       "A nonmagical plant that isn't a creature makes no save and withers and dies."
     ]
   },
@@ -542,10 +574,14 @@
     "conditions": [
       {
         "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0,
         "appliesWhen": "your choice"
       },
       {
         "condition": "deafened",
+        "trigger": "failed-save",
+        "save": 0,
         "appliesWhen": "your choice"
       }
     ],
@@ -607,12 +643,24 @@
         "perSlot": "1d10",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "3d10",
+        "types": [
+          "lightning"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "Until the spell ends, you can take a Magic action to call down lightning in that way again"
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "notes": [
-      "The storm cloud is a Cylinder 10 feet tall with a 60-foot radius, but the bolt affects each creature within 5 feet of the chosen point, so no area is typed.",
-      "A Magic action calls down the bolt again on later turns.",
-      "If cast outdoors in a storm, the damage increases by 1d10."
+      "The bolt affects each creature within 5 feet of the chosen point, so no area is typed.",
+      "If cast outdoors in a storm, the damage of every bolt increases by 1d10. That increase is left out, so damage is untyped."
     ]
   },
   "calm-emotions": {
@@ -736,11 +784,28 @@
         ],
         "perSlot": "1d8",
         "trigger": "hit"
+      },
+      {
+        "dice": "3d8",
+        "types": [
+          "acid",
+          "cold",
+          "fire",
+          "lightning",
+          "poison",
+          "thunder"
+        ],
+        "perSlot": "1d8",
+        "trigger": "hit",
+        "appliesWhen": "If you roll the same number on two or more of the d8s, the orb leaps to a different target of your choice within 30 feet of the target"
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "notes": [
-      "If two or more d8s show the same number, the orb leaps to another target within 30 feet, with a new attack roll and a new damage roll.",
-      "The orb can't leap again unless cast with a level 2+ slot. It can leap a number of times equal to the slot level, and a creature can be targeted only once per casting."
+      "The second roll is the leap: a new attack and a new damage roll against a different target.",
+      "With a level 2+ slot the orb can leap again, up to the slot level in total, and a creature can be targeted only once per casting. Those further leaps are left out, so damage is untyped."
     ]
   },
   "circle-of-death": {
@@ -776,7 +841,8 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -788,6 +854,16 @@
         "perSlot": "1d8",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "5d8",
+        "types": [
+          "poison"
+        ],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "when the Sphere moves into its space and when it enters the Sphere or ends its turn there"
       }
     ],
     "area": {
@@ -795,7 +871,7 @@
       "size": 20
     },
     "notes": [
-      "A creature also makes the save when the Sphere moves into its space and when it enters the Sphere or ends its turn there, only once per turn.",
+      "The roll is dealt when the spell takes effect and again when the Sphere moves into a creature's space or it enters the Sphere or ends its turn there.",
       "The area is Heavily Obscured and moves 10 feet away from the caster at the start of each of the caster's turns."
     ]
   },
@@ -835,13 +911,14 @@
     "conditions": [
       {
         "condition": "prone",
-        "label": "Grovel",
-        "appliesWhen": "Choose the command from these options"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Grovel"
       }
     ],
     "extraTargetsPerSlot": 1,
     "notes": [
-      "Prone applies only with the Grovel command, on a failed save. A failed save makes the target follow the chosen command on its next turn."
+      "Prone applies only with the Grovel command, on a failed save, on the target's next turn."
     ]
   },
   "commune": {},
@@ -859,7 +936,8 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "timing": "After moving in this way"
       }
     ],
     "conditions": [
@@ -928,7 +1006,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -939,11 +1018,12 @@
         ],
         "perSlot": "1d10",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Whenever the pack moves within 10 feet of a creature you can see and whenever a creature you can see enters a space within 10 feet of the pack or ends its turn there"
       }
     ],
     "notes": [
-      "The caster can force the save when the pack moves within 10 feet of a creature or a creature enters a space within 10 feet of the pack or ends its turn there, only once per turn.",
+      "No save is made at casting. The events that bring the save about are the timing of its roll, not a condition on the save. The caster chooses whether to force it.",
       "The caster has Advantage on Strength saving throws within 5 feet of the pack."
     ]
   },
@@ -954,7 +1034,8 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "half",
-        "label": "Searing Light"
+        "label": "Searing Light",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -967,22 +1048,38 @@
         "trigger": "failed-save",
         "save": 0,
         "label": "Searing Light"
+      },
+      {
+        "dice": "6d12",
+        "types": [
+          "radiant"
+        ],
+        "perSlot": "1d12",
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Searing Light",
+        "timing": "Whenever the Cylinder moves into the space of a creature you can see and whenever a creature you can see enters the Cylinder or ends its turn there"
       }
     ],
-    "healing": {
-      "dice": "4d12",
-      "modifier": true,
-      "perSlot": "1d12"
-    },
     "area": {
       "shape": "cylinder",
       "size": 10,
       "height": 40
     },
+    "untyped": [
+      "healing"
+    ],
     "notes": [
-      "Each creature in the Cylinder gets either Healing Light or Searing Light, the caster's choice. The healing belongs to Healing Light, and the healing shape has no label.",
-      "The caster can apply a light when the Cylinder moves into a creature's space or a creature enters it or ends its turn there, once per turn."
-    ]
+      "Each creature the caster sees in the Cylinder gets Healing Light or Searing Light, the caster's choice.",
+      "The typed healing is the first Healing Light. The caster can bathe a creature in it again when the Cylinder moves into its space or it enters or ends its turn there. The single healing value can't hold that repeat, so healing stays untyped.",
+      "A creature can be affected by the spell only once per turn, typed as oncePerTurn on the save. The healing has no such field."
+    ],
+    "healing": {
+      "dice": "4d12",
+      "modifier": true,
+      "perSlot": "1d12",
+      "label": "Healing Light"
+    }
   },
   "conjure-elemental": {
     "saves": [
@@ -990,7 +1087,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "if the spirit has no creature Restrained"
       },
       {
         "ability": "dex",
@@ -1010,7 +1108,8 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Whenever a creature you can see enters the spirit’s space or starts its turn within 5 feet of the spirit"
       },
       {
         "dice": "4d8",
@@ -1022,7 +1121,8 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "At the start of each of its turns"
       }
     ],
     "conditions": [
@@ -1034,7 +1134,7 @@
     ],
     "notes": [
       "The damage type is set by the chosen element: air Lightning, earth Thunder, fire Fire, water Cold.",
-      "The caster can force the first save when a creature enters the spirit's space or starts its turn within 5 feet of it, only if the spirit has no creature Restrained.",
+      "No save is made at casting. The events that bring the first save about are the timing of its roll. The save carries only the condition on whether it is made.",
       "The higher-level text says only that the damage increases by 1d8, so the per-slot dice are typed on both rolls."
     ]
   },
@@ -1049,17 +1149,32 @@
         "modifier": true,
         "perSlot": "1d12",
         "trigger": "hit"
+      },
+      {
+        "dice": "3d12",
+        "types": [
+          "psychic"
+        ],
+        "modifier": true,
+        "perSlot": "1d12",
+        "trigger": "hit",
+        "timing": "As a Bonus Action on your later turns"
       }
     ],
     "conditions": [
       {
         "condition": "frightened",
         "trigger": "hit"
+      },
+      {
+        "condition": "frightened",
+        "trigger": "hit",
+        "timing": "As a Bonus Action on your later turns"
       }
     ],
     "notes": [
       "Frightened lasts until the start of the caster's next turn, with the caster and the spirit as its source.",
-      "On later turns a Bonus Action teleports the spirit up to 30 feet and repeats the attack."
+      "The second roll is the repeated attack after teleporting the spirit on later turns. Its hit also gives Frightened, listed again with that timing."
     ]
   },
   "conjure-minor-elementals": {
@@ -1074,7 +1189,7 @@
         ],
         "perSlot": "1d8",
         "trigger": "hit",
-        "appliesWhen": "when you hit a creature in the Emanation"
+        "timing": "when you hit a creature in the Emanation"
       }
     ],
     "area": {
@@ -1092,7 +1207,8 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -1103,7 +1219,8 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Whenever the Emanation enters the space of a creature you can see and whenever a creature you can see enters the Emanation or ends its turn there"
       }
     ],
     "area": {
@@ -1112,7 +1229,7 @@
       "selective": true
     },
     "notes": [
-      "The caster can force the save when the Emanation enters a creature's space or a creature enters it or ends its turn there, only once per turn.",
+      "No save is made at casting. The events that bring the save about are the timing of its roll, not a condition on the save. The caster chooses whether to force it.",
       "The caster can take the Disengage action as a Bonus Action for the duration."
     ]
   },
@@ -1137,8 +1254,13 @@
         "save": 0
       }
     ],
-    "casterConditions": [
-      "incapacitated"
+    "conditions": [
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0,
+        "target": "caster"
+      }
     ],
     "notes": [
       "On a failed save the caster is Incapacitated until finishing a Long Rest. A Greater Restoration spell ends this.",
@@ -1163,7 +1285,8 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "timing": "Whenever the Poisoned target receives an effect that would end the Poisoned condition"
       }
     ],
     "damage": [
@@ -1186,7 +1309,7 @@
     "notes": [
       "While Poisoned, the target has Disadvantage on saving throws with one ability chosen at casting.",
       "The end-of-turn save repeats until three successes or three failures. Three successes end the spell, three failures make it last 7 days.",
-      "The later save is made whenever the Poisoned target receives an effect that would end Poisoned. On a failure the condition doesn't end."
+      "On a failed third save the Poisoned condition doesn't end."
     ]
   },
   "contingency": {},
@@ -1209,12 +1332,12 @@
         ],
         "trigger": "failed-save",
         "save": 0,
-        "label": "Whirlpool"
+        "label": "Whirlpool",
+        "timing": "When a creature enters the whirlpool for the first time on a turn or ends its turn there"
       }
     ],
     "notes": [
       "The caster chooses an area that is a Cube up to 100 feet on a side. 100 feet is a limit, so no area is typed.",
-      "The save and damage belong to the Whirlpool effect, made when a creature enters the whirlpool for the first time on a turn or ends its turn there.",
       "Leaving the whirlpool needs an action and a Strength (Athletics) check against the spell save DC."
     ]
   },
@@ -1280,7 +1403,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "other"
+        "onSuccess": "other",
+        "appliesWhen": "If a creature touches the glowing bead before the spell ends"
       }
     ],
     "damage": [
@@ -1291,23 +1415,27 @@
         ],
         "perSlot": "1d6",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "When the spell ends, the bead explodes"
       }
     ],
     "area": {
       "shape": "sphere",
       "size": 20
     },
+    "untyped": [
+      "damage"
+    ],
     "notes": [
-      "The damage increases by 1d6 whenever the caster's turn ends and the spell hasn't ended.",
-      "The second save is made by a creature that touches the bead. On a failure the bead explodes, on a success the creature can throw it up to 40 feet."
+      "12d6 is the base. The damage increases by 1d6 whenever the caster's turn ends and the spell hasn't ended. The accumulated total is left out, so damage is untyped.",
+      "A creature that touches the bead and fails makes it explode. On a success it can throw the bead up to 40 feet."
     ]
   },
   "demiplane": {
     "conditions": [
       {
         "condition": "prone",
-        "appliesWhen": "unless they opt to be shunted through the door as it vanishes"
+        "appliesWhen": "they opt to be shunted through the door as it vanishes"
       }
     ],
     "notes": [
@@ -1324,7 +1452,8 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none",
-        "label": "Read Thoughts"
+        "label": "Read Thoughts",
+        "appliesWhen": "If you probe deeper"
       }
     ],
     "notes": [
@@ -1344,7 +1473,7 @@
       }
     ],
     "notes": [
-      "The damage is dealt only if the caster or the other creature would arrive in an occupied or filled space, and the teleportation fails."
+      "The teleportation also fails when the damage is dealt."
     ]
   },
   "disguise-self": {},
@@ -1385,7 +1514,7 @@
     ],
     "notes": [
       "Celestials, Elementals, Fey, Fiends and Undead have Disadvantage on attack rolls against the caster.",
-      "The save belongs to Dismissal. A failure sends the target to its home plane."
+      "A failed Dismissal save sends the target to its home plane."
     ]
   },
   "dispel-magic": {
@@ -1428,9 +1557,6 @@
         "trigger": "hit",
         "appliesWhen": "your attacks with weapons"
       }
-    ],
-    "notes": [
-      "The extra damage applies to the caster's attacks with weapons."
     ]
   },
   "divine-smite": {
@@ -1492,41 +1618,41 @@
         "condition": "blinded",
         "trigger": "failed-save",
         "save": 1,
-        "appliesWhen": "21–30"
+        "label": "21–30"
       },
       {
         "condition": "deafened",
         "trigger": "failed-save",
         "save": 1,
-        "appliesWhen": "21–30"
+        "label": "21–30"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
         "save": 1,
-        "appliesWhen": "21–30"
+        "label": "21–30"
       },
       {
         "condition": "blinded",
         "trigger": "failed-save",
         "save": 2,
-        "appliesWhen": "31–40"
+        "label": "31–40"
       },
       {
         "condition": "deafened",
         "trigger": "failed-save",
         "save": 2,
-        "appliesWhen": "31–40"
+        "label": "31–40"
       },
       {
         "condition": "deafened",
         "trigger": "failed-save",
         "save": 3,
-        "appliesWhen": "41–50"
+        "label": "41–50"
       }
     ],
     "notes": [
-      "The save is one Charisma save. Its outcome for a target with 50 Hit Points or fewer depends on the Divine Word Effects row for its current Hit Points, so each row is an entry: 0–20 dies, 21–30 Blinded, Deafened and Stunned for 1 hour, 31–40 Blinded and Deafened for 10 minutes, 41–50 Deafened for 1 minute.",
+      "One Charisma save. Its outcome for a target with 50 Hit Points or fewer depends on the Divine Word Effects row for its current Hit Points, so each row is an entry: 0–20 dies, 21–30 Blinded, Deafened and Stunned for 1 hour, 31–40 Blinded and Deafened for 10 minutes, 41–50 Deafened for 1 minute.",
       "Regardless of its Hit Points, a Celestial, Elemental, Fey or Fiend that fails is forced back to its plane of origin and can't return for 24 hours short of Wish."
     ]
   },
@@ -1629,7 +1755,8 @@
         ],
         "perSlot": "1d6",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Until the spell ends, the target can take a Magic action to exhale a 15-foot Cone"
       }
     ],
     "area": {
@@ -1637,7 +1764,7 @@
       "size": 15
     },
     "notes": [
-      "The touched creature exhales the Cone as a Magic action until the spell ends."
+      "Nothing is dealt at casting. The touched creature exhales the Cone as a Magic action, as often as it likes, until the spell ends."
     ]
   },
   "dream": {
@@ -1646,7 +1773,8 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "You can make the messenger terrifying to the target"
       }
     ],
     "damage": [
@@ -1657,12 +1785,15 @@
         ],
         "trigger": "failed-save",
         "save": 0,
-        "appliesWhen": "when it wakes up"
+        "timing": "when it wakes up"
       }
+    ],
+    "untyped": [
+      "conditions"
     ],
     "notes": [
       "The save is made only if the caster makes the messenger terrifying. On a failure the target gains no benefit from its rest and takes the damage when it wakes.",
-      "The messenger, the caster or a willing creature touched, is Incapacitated with Speed 0 while in the trance."
+      "The messenger, the caster or a willing creature touched, is Incapacitated with Speed 0 while in the trance. It may not be the caster, so Incapacitated is left out."
     ]
   },
   "druidcraft": {},
@@ -1672,27 +1803,32 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "each creature on the ground in the area"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "each creature on the ground in the area"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
-        "when": "initial",
+        "when": "later",
         "onSuccess": "none",
-        "label": "Fissures"
+        "label": "Fissures",
+        "appliesWhen": "A creature in the same space as a fissure",
+        "timing": "at the end of the turn you cast it"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "half",
-        "label": "Structures"
+        "label": "Structures",
+        "appliesWhen": "A creature within a distance from a collapsing structure equal to half the structure’s height"
       }
     ],
     "damage": [
@@ -1715,7 +1851,8 @@
       {
         "condition": "prone",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "at the end of each of your turns for the duration"
       },
       {
         "condition": "prone",
@@ -1724,12 +1861,15 @@
         "label": "Structures"
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "notes": [
       "The area is a 100-foot-radius circle on the ground, which no area shape holds.",
       "The tremor save is made by each creature on the ground in the area when the spell is cast and again at the end of each of the caster's turns. A failure also breaks Concentration.",
       "A creature in a fissure's space that fails the Fissures save falls in.",
-      "The tremor deals 50 Bludgeoning damage to structures in contact with the ground when cast and at the end of each of the caster's turns. Damage to structures only is left out.",
-      "The Structures save is made by a creature within half a collapsing structure's height of it. A failure also buries it, needing a DC 20 Strength (Athletics) check as an action to escape."
+      "The tremor deals 50 Bludgeoning damage to structures in contact with the ground when cast and at the end of each of the caster's turns. Damage to structures only is left out, so damage is untyped.",
+      "A creature that fails the Structures save is also buried, needing a DC 20 Strength (Athletics) check as an action to escape."
     ]
   },
   "eldritch-blast": {
@@ -1769,12 +1909,15 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "appliesWhen": "If the target is an unwilling creature"
       }
     ],
+    "untyped": [
+      "damage"
+    ],
     "notes": [
-      "Only an unwilling creature makes the save.",
-      "Enlarge gives Advantage on Strength checks and saves and an extra 1d4 damage on hits with enlarged weapons or Unarmed Strikes. The damage has no stated type, so it is left out.",
+      "Enlarge gives Advantage on Strength checks and saves and an extra 1d4 damage on hits with enlarged weapons or Unarmed Strikes. The damage has no stated type, so damage is untyped.",
       "Reduce gives Disadvantage on Strength checks and saves and 1d4 less damage on hits, to a minimum of 1."
     ]
   },
@@ -1794,9 +1937,10 @@
           "piercing"
         ],
         "perSlot": "1d6",
-        "appliesWhen": "While Restrained, the target takes 1d6 Piercing damage at the start of each of its turns",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "appliesWhen": "While Restrained",
+        "timing": "at the start of each of its turns"
       }
     ],
     "conditions": [
@@ -1807,9 +1951,7 @@
       }
     ],
     "notes": [
-      "A successful first save also ends the spell.",
-      "A Large or larger creature has Advantage on the save.",
-      "The 1d6 Piercing damage is dealt at the start of each of the target's turns while it is Restrained.",
+      "A successful save also ends the spell. A Large or larger creature has Advantage on the save.",
       "The target or a creature within reach can take an action to make a Strength (Athletics) check against the spell save DC, ending the spell on a success."
     ]
   },
@@ -1831,7 +1973,7 @@
     ],
     "notes": [
       "The area is a 20-foot square on the ground, which no area shape holds. It is Difficult Terrain.",
-      "Only creatures in the area when the spell is cast make the save.",
+      "Only creatures other than the caster in the area when the spell is cast make the save.",
       "A Restrained creature can take an action to make a Strength (Athletics) check against the spell save DC to free itself."
     ]
   },
@@ -1841,17 +1983,28 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "unless": "Any creature you or your companions are fighting"
       }
     ],
+    "rollModifier": {
+      "amount": 10,
+      "subtract": true,
+      "to": [
+        "perception-checks"
+      ]
+    },
     "notes": [
-      "A creature the caster or companions are fighting automatically succeeds.",
-      "On a failed save the target has a -10 penalty to Wisdom (Perception) checks and Passive Perception, which the roll modifier can't hold without covering all ability checks."
+      "A creature the caster or companions are fighting automatically succeeds, so the save carries that as unless.",
+      "On a failed save the target has a -10 penalty to Wisdom (Perception) checks and Passive Perception. The roll modifier holds the checks, not Passive Perception."
     ]
   },
   "etherealness": {
+    "untyped": [
+      "damage"
+    ],
     "notes": [
-      "If the caster returns into an occupied space, it is shunted and takes Force damage equal to twice the feet moved.",
+      "If the caster returns into an occupied space, it is shunted and takes Force damage equal to twice the feet moved, which no dice or amount holds.",
       "With a higher slot the caster can target up to three willing creatures, the caster included, for each slot level above 7. This count includes the caster, so it is not typed as extra targets."
     ]
   },
@@ -1868,23 +2021,30 @@
     "conditions": [
       {
         "condition": "unconscious",
-        "label": "Asleep",
-        "appliesWhen": "one of the following effects of your choice"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Asleep"
       },
       {
         "condition": "frightened",
-        "label": "Panicked",
-        "appliesWhen": "one of the following effects of your choice"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Panicked"
       },
       {
         "condition": "poisoned",
-        "label": "Sickened",
-        "appliesWhen": "one of the following effects of your choice"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Sickened"
       }
     ],
     "notes": [
       "A failed save gives one effect of the caster's choice: Asleep (Unconscious), Panicked (Frightened) or Sickened (Poisoned).",
-      "On each of the caster's turns a Magic action targets another creature, but not one that has succeeded on a save against this casting."
+      "On each of the caster's turns a Magic action targets another creature, but not one that has succeeded on a save against this casting. No field holds the repeat or that bar, so saves and conditions are untyped."
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ]
   },
   "fabricate": {},

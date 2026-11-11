@@ -167,12 +167,147 @@ export const entryShape = {
   page: pageSchema,
 } as const
 
-/** Body text in the SRD's own words. Paragraphs are separated by one "\n". Apostrophes and quotes are typographic (’ “ ”), as printed. */
 /** A target's Speed, not the user's, is reduced by `feet` until the start of the user's next turn ("reduce its Speed by 10 feet until the start of your next turn"). */
-export const targetSpeedReductionSchema = z.strictObject({ feet: feetSchema, until: z.literal("start-of-user-next-turn") })
+export const targetSpeedReductionSchema = z.strictObject({
+  feet: feetSchema,
+  until: z.literal("start-of-user-next-turn"),
+  /** The most the target's Speed drops in total when hit more than once by weapons that give this reduction ("doesn’t exceed 10 feet"). */
+  capAcrossHits: feetSchema.optional(),
+})
 
+/** Body text in the SRD's own words. Paragraphs are separated by one "\n". Apostrophes and quotes are typographic (’ “ ”), as printed. */
 export const proseSchema = z
   .string()
   .min(1)
   .refine((text) => !/['"]/.test(text), "use typographic quotes (’ “ ”), as the SRD prints them")
   .refine((text) => text === text.trim() && !/\n\s*\n| {2,}|\n /.test(text), "one newline between paragraphs, no doubled or leading spaces")
+
+// ---------------------------------------------------------------------------------------------------------
+// Shared effect shapes. A category that types one of these ideas uses the shape and the field name given here.
+
+/**
+ * One unbroken span of the entry's own text, in its official words, that states a limit on a typed value.
+ * `appliesWhen`: the value holds only when this is true ("while you aren’t wearing armor or wielding a Shield").
+ * `unless`: the value does not hold when this is true. Use a typed field instead where one exists for the limit
+ * (`targetLimitShape`, `whileSchema`, `activation`, `uses`). Spread into any object that holds a typed effect.
+ */
+export const spanShape = { appliesWhen: z.string().min(1).optional(), unless: z.string().min(1).optional() } as const
+
+/**
+ * `whileSchema`: a standing condition some benefits hold under, as the text states it. "raging": while your Rage is
+ * active. "no-heavy-armor": while you aren’t wearing Heavy armor. "in-aura-of-protection": while in your Aura of Protection.
+ */
+export const whileSchema = z.enum(["raging", "no-heavy-armor", "in-aura-of-protection"])
+
+export const senseTypes = ["darkvision", "blindsight", "tremorsense", "truesight"] as const
+
+/**
+ * Field name `senses`. The senses the character has, one entry for each: its type and its range in feet. The senses
+ * belong to the character. A limit on one sense (it works only on stone, only for a time) sits on that entry in
+ * `appliesWhen`, and the entry's duration is the feature's own `durationMinutes` where it has one.
+ */
+export const sensesSchema = z.array(z.strictObject({ type: z.enum(senseTypes), range: feetSchema, ...spanShape })).min(1)
+
+/** Field name `onSuccess`, beside `forcedSaveShape`. What a successful save does: "none" (not affected, no damage), "half" (half damage), "other" (anything else the text states). */
+export const saveOutcomeSchema = z.enum(["none", "half", "other"])
+
+/**
+ * Typed limits on which targets an effect affects, beside the effect, on the same object. `targetMaxSize`: only
+ * targets of this size or smaller ("a Large or smaller creature"). `onlyCreatureTypes`: only creatures of these
+ * types. `notCreatureTypes`: creatures of these types are not affected ("if it isn’t a Fiend"). A limit that is
+ * none of these goes in `appliesWhen`, never one of these and `appliesWhen` for the same fact.
+ */
+export const targetLimitShape = {
+  targetMaxSize: sizeSchema.optional(),
+  onlyCreatureTypes: z.array(creatureTypeSchema).min(1).optional(),
+  notCreatureTypes: z.array(creatureTypeSchema).min(1).optional(),
+} as const
+
+/**
+ * Field name `oncePerTurn`. How often the effect can happen, as the text says. The two printed forms differ in play:
+ * "any-turn" is "once per turn" or "only once per turn": at most once during each turn, whoever's turn it is, so it
+ * can happen again on another creature's turn (a Sneak Attack on an Opportunity Attack). "own-turn" is "once on each
+ * of your turns" or "once on a turn" said of the user's own turn: at most once, and only on the user's own turns.
+ * Absent where the text sets no such limit.
+ */
+export const oncePerTurnSchema = z.enum(["any-turn", "own-turn"])
+
+/**
+ * Field name `hitPointMaximum`. The user's Hit Point maximum rises by `increase`, and by `perLevel` more each time the
+ * user gains a level. `levelsCounted`: "character" for any level, "class" for a level in the class that gave the feature.
+ */
+export const hitPointMaximumSchema = z.strictObject({
+  increase: z.number().int().positive(),
+  perLevel: z.number().int().positive(),
+  levelsCounted: z.enum(["character", "class"]),
+})
+
+/**
+ * Field name `damage`. Damage the effect deals to its target, or to the creature that triggers it: `dice` or a fixed
+ * `amount` (not both, and neither where the text only names the type), and `types`, which is one type, or the
+ * types the user may choose from. Healing and other rolls that are not damage are not this shape.
+ * `orNormalType` is set where the user may instead keep the attack's normal damage type ("its normal damage type"),
+ * so `types` alone does not read as replacing it.
+ * `timing` is the official words of when the damage is dealt, where that is later than the use of the thing itself
+ * ("When you end them"). It is one unbroken span of the entry's text.
+ * A limit on which targets take the damage (`targetMaxSize`, `onlyCreatureTypes`, `notCreatureTypes`) sits on the damage
+ * itself, so it does not read as limiting a save or a condition beside it.
+ */
+export const damageEffectSchema = z
+  .strictObject({ ...damageRollShape, types: z.array(damageTypeIdSchema).min(1), orNormalType: z.literal(true).optional(), timing: z.string().min(1).optional(), ...targetLimitShape, ...spanShape })
+  .refine((damage) => damage.dice === undefined || damage.amount === undefined, "dice or amount, not both")
+
+/**
+ * Field name `feat`. A feat the feature gives: one by `id`, or one of a `category`. `recommended`: the feat the text
+ * recommends. `orAnother`: any other feat the character qualifies for is allowed. `spellList`: Magic Initiate’s spell list.
+ */
+export const featGrantSchema = z.strictObject({
+  id: idSchema.optional(),
+  category: z.enum(["origin", "general", "fighting-style", "epic-boon"]).optional(),
+  recommended: idSchema.optional(),
+  orAnother: z.literal(true).optional(),
+  spellList: classIdSchema.optional(),
+})
+
+/**
+ * Field name `repeatable`. The thing can be taken more than once. `text`: the official words of its Repeatable
+ * paragraph. `differentSpellList`: each time must use a different spell list.
+ */
+export const repeatableSchema = z.strictObject({ text: proseSchema, differentSpellList: z.literal(true).optional() })
+
+/**
+ * Field name `resistances`. The user has Resistance to `damageTypes`, or to all damage except `allExcept` (exactly one
+ * of the two). `while` and `appliesWhen`/`unless` carry the condition it holds under.
+ */
+export const resistancesSchema = z
+  .strictObject({ damageTypes: z.array(damageTypeIdSchema).min(1).optional(), allExcept: z.array(damageTypeIdSchema).min(1).optional(), while: whileSchema.optional(), ...spanShape })
+  .refine((resistances) => (resistances.damageTypes === undefined) !== (resistances.allExcept === undefined), "set exactly one of damageTypes and allExcept")
+
+/** Field name `speedBonus`. Feet added to the user’s own Speed, and the condition it holds under. */
+export const speedBonusSchema = z.strictObject({ feet: feetSchema, while: whileSchema.optional(), ...spanShape })
+
+/**
+ * Field name `uses`. How often the effect can be used and what restores it. A category with more kinds of count
+ * (a table column, a count by level) builds its own object from `usesShape` and a wider `count`.
+ */
+export const usesShape = { recharge: rechargeSchema } as const
+export const usesSchema = z.strictObject({ count: usesCountSchema, ...usesShape })
+
+/**
+ * What a bonus, a penalty or added dice apply to: the vocabulary of a magic item's `to` and a spell's
+ * `rollModifier.to`. One skill's checks are `<skill id>-checks`, so a bonus to Dexterity (Stealth) checks is
+ * `stealth-checks`, never `ability-checks`.
+ */
+export const bonusTargets = [
+  "armor-class",
+  "attack-rolls",
+  "damage-rolls",
+  "spell-attack-rolls",
+  "spell-save-dc",
+  "saving-throws",
+  "ability-checks",
+  "initiative",
+  "proficiency-bonus",
+  ...skillIds.map((skill) => `${skill}-checks` as const),
+] as const
+export const bonusTargetSchema = z.enum(bonusTargets)

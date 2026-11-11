@@ -238,16 +238,9 @@ function linkAt(text: string, index: number, saves: Save[]): Link & { first: boo
     const gate = lastGate(text.slice(previous.start, previous.end).replace(labelAtStart, ""))
     if (gate) link.unless = gate
   } else if (opening) {
-    // Back through the earlier sentences of the same outcome for the gate of the effect this one lasts with.
-    let at = span.start
-    while (at > from && !link.appliesWhen) {
-      const previous = sentenceSpan(text, Math.max(from, at - 2))
-      const gate = lastGate(text.slice(previous.start, previous.end).replace(labelAtStart, ""))
-      // What lasts only while a grapple the monster chose lasts carries the words that say so, not the gate on the choice.
-      if (gate && !lasting.some((words) => text.slice(previous.start).startsWith(words)))
-        link.appliesWhen = / can give it the Grappled condition/.test(text.slice(previous.start, previous.end)) ? opening : gate
-      at = previous.start
-    }
+    // What lasts only as long as something else does carries the printed words that say so. A gate on whether that
+    // something happens at all stays on the effect it decides.
+    link.appliesWhen = opening
   }
   if (!link.appliesWhen && link.save !== undefined && saves[link.save]?.appliesWhen) link.appliesWhen = saves[link.save].appliesWhen
   return link
@@ -311,6 +304,13 @@ function parseSaves(text: string): Save[] {
     }
     const item = /^([A-Z][\w’ ]{0,40})\. [A-Z]/.exec(text.slice(lead.lastIndexOf("\n") + 1))
     if (lead.lastIndexOf("\n") >= 0 && item) save.label = item[1]
+    // "(a creature makes this save only once per turn, …)": the same creature saves at most once in each turn.
+    const parenthetical = /^\(([^)]*)\)/.exec(body)?.[1] ?? ""
+    if (/\bonce per turn\b/.test(parenthetical)) save.oncePerTurn = "any-turn"
+    else if (/\bonce on each of its turns\b/.test(parenthetical)) save.oncePerTurn = "own-turn"
+    // "If the basilisk sees its reflection in the Cone, the basilisk must make this save."
+    const self = /(?:^|\. )((?:If|When) [^,.]+), the [\w’ ]+ must make this save\./.exec(body)
+    if (self) save.alsoSelf = { appliesWhen: self[1] }
     const targets = /^(?:\([^)]*\))?,? ?([\s\S]*?)\.(?: |$)/.exec(body)
     if (targets?.[1] && !/^(?:Failure|Success)/.test(targets[1])) save.targets = targets[1]
     const markers = [...body.matchAll(/(Failure or Success|Failure by (\d+) or More|First Failure|Second Failure|Subsequent Failures|Failure|Success): /g)]
@@ -345,7 +345,10 @@ function parseArea(text: string): Area | undefined {
     found.push({ index: m.index as number, area: { shape: "cylinder", size: Number(m[1]), height: Number(m[2]) } })
   for (const m of text.matchAll(new RegExp(`${lead}(\\d+)-foot(?:-radius)? (Cone|Cube|Emanation|Sphere)`, "g")))
     found.push({ index: m.index as number, area: { shape: m[2].toLowerCase() as Area["shape"], size: Number(m[1]) } })
-  return found.sort((a, b) => a.index - b.index)[0]?.area
+  const first = found.sort((a, b) => a.index - b.index)[0]
+  if (!first) return undefined
+  // "each creature of the azer’s choice in a 5-foot Emanation": the monster chooses who is affected.
+  return /(?:of its choice|’s choice) $/.test(text.slice(0, first.index)) ? { ...first.area, selective: true } : first.area
 }
 
 /**
@@ -377,6 +380,9 @@ function parseConditions(text: string, saves: Save[]): MonsterFeature["condition
     // A count or rate right after the condition limits it: "1 Exhaustion level for each missing limb".
     const trailing = /^[^.,]*? ((?:for each|for every) [^.,]+)/.exec(text.slice(index))?.[1]
     if (trailing && !link.appliesWhen) link.appliesWhen = trailing
+    // "… and it has the Restrained condition until the grapple ends": it lasts with the grapple, whose gate stays on Grappled.
+    const lastsWith = /^[^.,]*? (until the grapple ends)\b/.exec(text.slice(index))?.[1]
+    if (lastsWith) link.appliesWhen = lastsWith
     const instead = /instead of dealing damage/.test(text.slice(index, sentenceSpan(text, index).end))
     for (const name of names) {
       const entry = { condition: name.toLowerCase() as ConditionId, ...link, ...(instead ? { insteadOfDamage: true as const } : {}) }
@@ -405,7 +411,7 @@ function parseSpellcasting(text: string): Spellcasting | undefined {
       ...(match[3] ? { each: true as const } : {}),
       spells: splitTop(match[4]).map((spell) => {
         const parts = /^(.*?)(?: \((.*)\))?$/.exec(spell) as RegExpExecArray
-        return { id: toId(parts[1]), ...(parts[2] ? { note: parts[2] } : {}) }
+        return { id: toId(parts[1]), ...(parts[2] ? { note: parts[2] } : {}), ...(parts[2]?.startsWith("self only") ? { selfOnly: true as const } : {}) }
       }),
     })),
   }
@@ -414,18 +420,16 @@ function parseSpellcasting(text: string): Spellcasting | undefined {
 /** Spell ids, when the spells data is built, to prove each name a feature casts is a spell. */
 const spellIds = existsSync(dataPath("spells")) ? new Set(readData("spells").map((spell) => spell.id as string)) : undefined
 
-/**
- * Features whose casting the shape cannot hold, left as prose. Pit Fiend: casts Fireball twice and may swap one for
- * another spell. The hags' Coven Magic: only near two hag allies, and once per Long Rest for each spell.
- */
-const castingInProse = new Set(["Hellfire Spellcasting", "Coven Magic"])
+/** Features whose spells the shape cannot hold, typed with their ability and DC only. Pit Fiend: casts Fireball twice and may swap one. */
+const dcOnly = new Set(["Hellfire Spellcasting"])
 
 /** One spell as printed, "Mind Spike (level 4 version)", as an id and a note. */
 function spellRef(name: string) {
   const parts = /^(?:the )?(.*?)(?: spell)?(?: \((.*)\))?$/.exec(name.trim()) as RegExpExecArray
   const id = toId(parts[1])
   if (spellIds && !spellIds.has(id)) throw new Error(`not a spell: ${name}`)
-  return { id, ...(parts[2] ? { note: parts[2] } : {}) }
+  // "(self only)": the monster can cast it only on itself.
+  return { id, ...(parts[2] ? { note: parts[2] } : {}), ...(parts[2]?.startsWith("self only") ? { selfOnly: true as const } : {}) }
 }
 
 /**
@@ -434,21 +438,47 @@ function spellRef(name: string) {
  * Spellcasting", or "uses Spellcasting to cast Fear".
  */
 function parseCasts(name: string, text: string): Spellcasting | undefined {
-  if (castingInProse.has(name)) return undefined
+  // The hags' Coven Magic: "the hag can cast one of the following spells, … (spell save DC 11): Augury, …", each once
+  // per Long Rest, which is the shape of "1/Day Each".
+  const coven =
+    /can cast one of the following spells, [^:]*?using (\w+) as the spellcasting ability \(spell save DC (\d+)\): ([^.]+)\. The [\w ]+ must finish a Long Rest before using this trait to cast that spell again\./.exec(
+      text
+    )
+  if (coven) {
+    const gate = /^(While [^,]+),/.exec(text)?.[1]
+    return {
+      ability: abilityOf(coven[1]),
+      saveDc: Number(coven[2]),
+      lists: [{ frequency: 1, each: true, spells: coven[3].split(/, or |, | or /).map(spellRef) }],
+      ...(gate ? { appliesWhen: gate } : {}),
+    }
+  }
+  if (dcOnly.has(name)) {
+    const m = /using (\w+) as the spellcasting ability \(spell save DC (\d+)\)/.exec(text) as RegExpExecArray
+    return { ability: abilityOf(m[1]), saveDc: Number(m[2]) }
+  }
   const own =
     /\bcasts ((?:the )?[A-Z][\s\S]*?)(?: on itself| on that creature| in response to the spell’s trigger)?, (?:requiring [^,]*?(?:,| and) )?using (?:(\w+) as the spellcasting ability|the same spellcasting ability as Spellcasting)/.exec(
       text
     )
-  const via = [...text.matchAll(/Spellcasting to cast ([A-Z][^.,]*?(?: \([^)]*\))?)(?= on itself|,|\.| or \(|$)/g)]
+  const via = [...text.matchAll(/Spellcasting to cast ([A-Z][^.,]*?(?: \([^)]*\))?)( on itself)?(?=,|\.| or \(|$)/g)]
   if (own) {
     const dc = /\(spell save DC (\d+)\)/.exec(text)
+    const sentence = text.slice(text.lastIndexOf(". ", own.index) + 1, own.index).trim()
+    // "While on the Ethereal Plane, the hag casts Dream": the casting is available only there.
+    const lead = /^(?:While|If) [^,]+(?=, )/.exec(sentence)?.[0]
+    // "casts Invisibility on itself" is self only. "touches another creature with its horn and casts … on that creature"
+    // limits the spells to that other creature.
+    const self = own[0].includes(" on itself,")
+    const other = own[0].includes(" on that creature,") ? /^(.+?) and$/.exec(sentence)?.[1] : undefined
     return {
       ...(own[2] ? { ability: abilityOf(own[2]) } : { sameAsSpellcasting: true as const }),
       ...(dc ? { saveDc: Number(dc[1]) } : {}),
-      spells: own[1].split(/, or |, | or /).map(spellRef),
+      spells: own[1].split(/, or |, | or /).map((name) => ({ ...spellRef(name), ...(self ? { selfOnly: true as const } : {}), ...(other ? { appliesWhen: other } : {}) })),
+      ...(lead ? { appliesWhen: lead } : {}),
     }
   }
-  if (via.length) return { sameAsSpellcasting: true, spells: via.map((match) => spellRef(match[1])) }
+  if (via.length) return { sameAsSpellcasting: true, spells: via.map((match) => ({ ...spellRef(match[1]), ...(match[2] ? { selfOnly: true as const } : {}) })) }
   return undefined
 }
 
@@ -532,10 +562,10 @@ function fromBase(base: Base): Record<string, unknown> {
     }
   }
   // Anything that is not a plain damage type is a qualified defense. The overrides give its official wording.
-  const conditional: { kind: string; appliesWhen: string }[] = []
+  const conditional: { kind: string; qualifier: string }[] = []
   const damageList = (key: string, kind: string) => {
     const ids = (base[key] as string[]).filter((value) => (damageTypeIds as readonly string[]).includes(value))
-    for (const value of base[key] as string[]) if (!ids.includes(value)) conditional.push({ kind, appliesWhen: value })
+    for (const value of base[key] as string[]) if (!ids.includes(value)) conditional.push({ kind, qualifier: value })
     return ids.length ? ids : undefined
   }
   const vulnerabilities = damageList("damage_vulnerabilities", "vulnerability")
@@ -662,7 +692,7 @@ function rules() {
       id: "legendary-actions",
       name: "Legendary Actions",
       page: 257,
-      timing: "after-another-creatures-turn",
+      takenAfter: "another-creatures-turn",
       oneAtATime: true,
       usesPerAction: 1,
       recharge: "start-of-next-turn",

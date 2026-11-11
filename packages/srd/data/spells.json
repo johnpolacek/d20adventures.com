@@ -46,8 +46,12 @@
           "acid"
         ],
         "perSlot": "1d4",
-        "trigger": "hit"
+        "trigger": "hit",
+        "timing": "at the end of its next turn"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -223,7 +227,7 @@
         "modifier": true,
         "trigger": "hit",
         "label": "Natural Weapons",
-        "appliesWhen": "When you use your Unarmed Strike to deal damage with that new growth"
+        "timing": "When you use your Unarmed Strike to deal damage with that new growth"
       }
     ]
   },
@@ -318,6 +322,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "unless": "if the target’s Challenge Rating isn’t 0",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -350,7 +355,10 @@
       "unit": "hour",
       "concentration": false
     },
-    "description": "Choose any number of willing creatures that you can see within range. Each target shape-shifts into a Large or smaller Beast of your choice that has a Challenge Rating of 4 or lower. You can choose a different form for each target. On later turns, you can take a Magic action to transform the targets again.\nA target’s game statistics are replaced by the chosen Beast’s statistics, but the target retains its creature type; Hit Points; Hit Point Dice; alignment; ability to communicate; and Intelligence, Wisdom, and Charisma scores. The target’s actions are limited by the Beast form’s anatomy, and it can’t cast spells. The target’s equipment melds into the new form, and the target can’t use any of that equipment while in that form.\nThe target gains a number of Temporary Hit Points equal to the Hit Points of the first form into which it shape-shifts. These Temporary Hit Points vanish if any remain when the spell ends. The transformation lasts for the duration or until the target ends it as a Bonus Action."
+    "description": "Choose any number of willing creatures that you can see within range. Each target shape-shifts into a Large or smaller Beast of your choice that has a Challenge Rating of 4 or lower. You can choose a different form for each target. On later turns, you can take a Magic action to transform the targets again.\nA target’s game statistics are replaced by the chosen Beast’s statistics, but the target retains its creature type; Hit Points; Hit Point Dice; alignment; ability to communicate; and Intelligence, Wisdom, and Charisma scores. The target’s actions are limited by the Beast form’s anatomy, and it can’t cast spells. The target’s equipment melds into the new form, and the target can’t use any of that equipment while in that form.\nThe target gains a number of Temporary Hit Points equal to the Hit Points of the first form into which it shape-shifts. These Temporary Hit Points vanish if any remain when the spell ends. The transformation lasts for the duration or until the target ends it as a Bonus Action.",
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "animate-dead",
@@ -581,12 +589,14 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "A creature of the chosen kind makes a Wisdom saving throw when it comes within 120 feet of the target",
         "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the target damages the Charmed creature",
         "label": "Sympathy",
         "when": "on-damage",
         "onSuccess": "ends"
@@ -594,6 +604,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the Frightened or Charmed creature ends its turn more than 120 feet away from the target",
         "label": "Ending the Effect",
         "when": "end-of-turn",
         "onSuccess": "ends"
@@ -602,14 +613,20 @@
     "conditions": [
       {
         "condition": "frightened",
-        "label": "Antipathy",
-        "appliesWhen": "Your choice of antipathy or sympathy determines what happens to a creature when it fails that save"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Antipathy"
       },
       {
         "condition": "charmed",
-        "label": "Sympathy",
-        "appliesWhen": "Your choice of antipathy or sympathy determines what happens to a creature when it fails that save"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Sympathy"
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ]
   },
   {
@@ -706,7 +723,8 @@
         ],
         "perSlot": "2d8",
         "trigger": "hit",
-        "label": "Clenched Fist"
+        "label": "Clenched Fist",
+        "timing": "When you cast the spell and as a Bonus Action on your later turns"
       },
       {
         "dice": "4d6",
@@ -718,7 +736,8 @@
         "trigger": "failed-save",
         "save": 1,
         "label": "Grasping Hand",
-        "appliesWhen": "While the hand grapples the target, you can take a Bonus Action to cause the hand to crush it"
+        "appliesWhen": "While the hand grapples the target",
+        "timing": "you can take a Bonus Action to cause the hand to crush it"
       }
     ],
     "conditions": [
@@ -821,6 +840,15 @@
         ],
         "modifier": true,
         "trigger": "hit"
+      },
+      {
+        "dice": "4d12",
+        "types": [
+          "force"
+        ],
+        "modifier": true,
+        "trigger": "hit",
+        "timing": "On your later turns"
       }
     ]
   },
@@ -909,9 +937,6 @@
       {
         "condition": "unconscious"
       }
-    ],
-    "casterConditions": [
-      "unconscious"
     ]
   },
   {
@@ -1017,7 +1042,9 @@
     },
     "description": "An aura radiates from you in a 30-foot Emanation for the duration. While in the aura, you and your allies have Resistance to Necrotic damage, and your Hit Point maximums can’t be reduced. If an ally with 0 Hit Points starts its turn in the aura, that ally regains 1 Hit Point.",
     "healing": {
-      "amount": 1
+      "amount": 1,
+      "appliesWhen": "If an ally with 0 Hit Points",
+      "timing": "starts its turn in the aura"
     }
   },
   {
@@ -1114,9 +1141,9 @@
     "rollModifier": {
       "dice": "1d4",
       "subtract": true,
-      "rolls": [
-        "attack-roll",
-        "saving-throw"
+      "to": [
+        "attack-rolls",
+        "saving-throws"
       ]
     }
   },
@@ -1285,7 +1312,8 @@
         "ability": "int",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "timing": "At the end of every 30 days"
       }
     ],
     "damage": [
@@ -1336,22 +1364,11 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none"
-      },
-      {
-        "ability": "wis",
-        "dc": "spell-save-dc",
-        "when": "start-of-turn",
-        "onSuccess": "none"
       }
     ],
-    "damage": [
-      {
-        "dice": "1d8",
-        "types": [
-          "necrotic"
-        ],
-        "appliesWhen": "If you deal damage to the target with an attack roll or a spell"
-      }
+    "untyped": [
+      "saves",
+      "damage"
     ]
   },
   {
@@ -1392,7 +1409,8 @@
         "ability": "str",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -1403,6 +1421,15 @@
         ],
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "3d6",
+        "types": [
+          "bludgeoning"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "A creature also makes that save if it enters the area or ends it turn there"
       }
     ],
     "conditions": [
@@ -1410,6 +1437,12 @@
         "condition": "restrained",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "A creature also makes that save if it enters the area or ends it turn there"
       }
     ]
   },
@@ -1447,7 +1480,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -1458,6 +1492,15 @@
         ],
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "6d10",
+        "types": [
+          "force"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "A creature also makes that save if it enters the wall’s space or ends it turn there"
       }
     ]
   },
@@ -1508,9 +1551,9 @@
     "extraTargetsPerSlot": 1,
     "rollModifier": {
       "dice": "1d4",
-      "rolls": [
-        "attack-roll",
-        "saving-throw"
+      "to": [
+        "attack-rolls",
+        "saving-throws"
       ]
     }
   },
@@ -1613,10 +1656,14 @@
     "conditions": [
       {
         "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0,
         "appliesWhen": "your choice"
       },
       {
         "condition": "deafened",
+        "trigger": "failed-save",
+        "save": 0,
         "appliesWhen": "your choice"
       }
     ],
@@ -1779,7 +1826,20 @@
         "perSlot": "1d10",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "3d10",
+        "types": [
+          "lightning"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "Until the spell ends, you can take a Magic action to call down lightning in that way again"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -2076,7 +2136,24 @@
         ],
         "perSlot": "1d8",
         "trigger": "hit"
+      },
+      {
+        "dice": "3d8",
+        "types": [
+          "acid",
+          "cold",
+          "fire",
+          "lightning",
+          "poison",
+          "thunder"
+        ],
+        "perSlot": "1d8",
+        "trigger": "hit",
+        "appliesWhen": "If you roll the same number on two or more of the d8s, the orb leaps to a different target of your choice within 30 feet of the target"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -2279,7 +2356,8 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -2291,6 +2369,16 @@
         "perSlot": "1d8",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "5d8",
+        "types": [
+          "poison"
+        ],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "when the Sphere moves into its space and when it enters the Sphere or ends its turn there"
       }
     ]
   },
@@ -2385,8 +2473,9 @@
     "conditions": [
       {
         "condition": "prone",
-        "label": "Grovel",
-        "appliesWhen": "Choose the command from these options"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Grovel"
       }
     ],
     "extraTargetsPerSlot": 1
@@ -2527,7 +2616,8 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "timing": "After moving in this way"
       }
     ],
     "conditions": [
@@ -2712,7 +2802,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -2723,7 +2814,8 @@
         ],
         "perSlot": "1d10",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Whenever the pack moves within 10 feet of a creature you can see and whenever a creature you can see enters a space within 10 feet of the pack or ends its turn there"
       }
     ]
   },
@@ -2768,7 +2860,8 @@
         "dc": "spell-save-dc",
         "label": "Searing Light",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -2781,13 +2874,28 @@
         "trigger": "failed-save",
         "save": 0,
         "label": "Searing Light"
+      },
+      {
+        "dice": "6d12",
+        "types": [
+          "radiant"
+        ],
+        "perSlot": "1d12",
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Searing Light",
+        "timing": "Whenever the Cylinder moves into the space of a creature you can see and whenever a creature you can see enters the Cylinder or ends its turn there"
       }
     ],
     "healing": {
       "dice": "4d12",
       "modifier": true,
-      "perSlot": "1d12"
-    }
+      "perSlot": "1d12",
+      "label": "Healing Light"
+    },
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "conjure-elemental",
@@ -2824,6 +2932,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "if the spirit has no creature Restrained",
         "when": "initial",
         "onSuccess": "none"
       },
@@ -2845,7 +2954,8 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Whenever a creature you can see enters the spirit’s space or starts its turn within 5 feet of the spirit"
       },
       {
         "dice": "4d8",
@@ -2857,7 +2967,8 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "At the start of each of its turns"
       }
     ],
     "conditions": [
@@ -2908,12 +3019,27 @@
         "modifier": true,
         "perSlot": "1d12",
         "trigger": "hit"
+      },
+      {
+        "dice": "3d12",
+        "types": [
+          "psychic"
+        ],
+        "modifier": true,
+        "perSlot": "1d12",
+        "trigger": "hit",
+        "timing": "As a Bonus Action on your later turns"
       }
     ],
     "conditions": [
       {
         "condition": "frightened",
         "trigger": "hit"
+      },
+      {
+        "condition": "frightened",
+        "trigger": "hit",
+        "timing": "As a Bonus Action on your later turns"
       }
     ]
   },
@@ -2962,7 +3088,7 @@
         ],
         "perSlot": "1d8",
         "trigger": "hit",
-        "appliesWhen": "when you hit a creature in the Emanation"
+        "timing": "when you hit a creature in the Emanation"
       }
     ]
   },
@@ -3006,7 +3132,8 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -3017,7 +3144,8 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Whenever the Emanation enters the space of a creature you can see and whenever a creature you can see enters the Emanation or ends its turn there"
       }
     ]
   },
@@ -3070,8 +3198,13 @@
         "save": 0
       }
     ],
-    "casterConditions": [
-      "incapacitated"
+    "conditions": [
+      {
+        "condition": "incapacitated",
+        "target": "caster",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -3119,7 +3252,8 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "later",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "timing": "Whenever the Poisoned target receives an effect that would end the Poisoned condition"
       }
     ],
     "damage": [
@@ -3275,7 +3409,8 @@
         ],
         "trigger": "failed-save",
         "save": 0,
-        "label": "Whirlpool"
+        "label": "Whirlpool",
+        "timing": "When a creature enters the whirlpool for the first time on a turn or ends its turn there"
       }
     ]
   },
@@ -3870,6 +4005,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "If a creature touches the glowing bead before the spell ends",
         "when": "initial",
         "onSuccess": "other"
       }
@@ -3882,8 +4018,12 @@
         ],
         "perSlot": "1d6",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "When the spell ends, the bead explodes"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -3919,7 +4059,7 @@
     "conditions": [
       {
         "condition": "prone",
-        "appliesWhen": "unless they opt to be shunted through the door as it vanishes"
+        "appliesWhen": "they opt to be shunted through the door as it vanishes"
       }
     ]
   },
@@ -4072,6 +4212,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "If you probe deeper",
         "label": "Read Thoughts",
         "when": "initial",
         "onSuccess": "none"
@@ -4538,37 +4679,37 @@
         "condition": "blinded",
         "trigger": "failed-save",
         "save": 1,
-        "appliesWhen": "21–30"
+        "label": "21–30"
       },
       {
         "condition": "deafened",
         "trigger": "failed-save",
         "save": 1,
-        "appliesWhen": "21–30"
+        "label": "21–30"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
         "save": 1,
-        "appliesWhen": "21–30"
+        "label": "21–30"
       },
       {
         "condition": "blinded",
         "trigger": "failed-save",
         "save": 2,
-        "appliesWhen": "31–40"
+        "label": "31–40"
       },
       {
         "condition": "deafened",
         "trigger": "failed-save",
         "save": 2,
-        "appliesWhen": "31–40"
+        "label": "31–40"
       },
       {
         "condition": "deafened",
         "trigger": "failed-save",
         "save": 3,
-        "appliesWhen": "41–50"
+        "label": "41–50"
       }
     ]
   },
@@ -4793,7 +4934,8 @@
         ],
         "perSlot": "1d6",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Until the spell ends, the target can take a Magic action to exhale a 15-foot Cone"
       }
     ]
   },
@@ -4835,6 +4977,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "You can make the messenger terrifying to the target",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -4847,8 +4990,11 @@
         ],
         "trigger": "failed-save",
         "save": 0,
-        "appliesWhen": "when it wakes up"
+        "timing": "when it wakes up"
       }
+    ],
+    "untyped": [
+      "conditions"
     ]
   },
   {
@@ -4917,25 +5063,30 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "each creature on the ground in the area",
         "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "each creature on the ground in the area",
         "when": "later",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "A creature in the same space as a fissure",
         "label": "Fissures",
-        "when": "initial",
-        "onSuccess": "none"
+        "when": "later",
+        "onSuccess": "none",
+        "timing": "at the end of the turn you cast it"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "A creature within a distance from a collapsing structure equal to half the structure’s height",
         "label": "Structures",
         "when": "initial",
         "onSuccess": "half"
@@ -4961,7 +5112,8 @@
       {
         "condition": "prone",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "at the end of each of your turns for the duration"
       },
       {
         "condition": "prone",
@@ -4969,6 +5121,9 @@
         "save": 3,
         "label": "Structures"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -5126,9 +5281,13 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the target is an unwilling creature",
         "when": "initial",
         "onSuccess": "none"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -5178,7 +5337,8 @@
         "perSlot": "1d6",
         "trigger": "failed-save",
         "save": 0,
-        "appliesWhen": "While Restrained, the target takes 1d6 Piercing damage at the start of each of its turns"
+        "appliesWhen": "While Restrained",
+        "timing": "at the start of each of its turns"
       }
     ],
     "conditions": [
@@ -5269,10 +5429,18 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "unless": "Any creature you or your companions are fighting",
         "when": "initial",
         "onSuccess": "none"
       }
-    ]
+    ],
+    "rollModifier": {
+      "amount": 10,
+      "subtract": true,
+      "to": [
+        "perception-checks"
+      ]
+    }
   },
   {
     "id": "etherealness",
@@ -5306,7 +5474,10 @@
       "concentration": false
     },
     "description": "You step into the border regions of the Ethereal Plane, where it overlaps with your current plane. You remain in the Border Ethereal for the duration. During this time, you can move in any direction. If you move up or down, every foot of movement costs an extra foot. You can perceive the plane you left, which looks gray, and you can’t see anything there more than 60 feet away.\nWhile on the Ethereal Plane, you can affect and be affected only by creatures, objects, and effects on that plane. Creatures that aren’t on the Ethereal Plane can’t perceive or interact with you unless a feature gives them the ability to do so.\nWhen the spell ends, you return to the plane you left in the spot that corresponds to your space in the Border Ethereal. If you appear in an occupied space, you are shunted to the nearest unoccupied space and take Force damage equal to twice the number of feet you are moved.\nThis spell ends instantly if you cast it while you are on the Ethereal Plane or a plane that doesn’t border it, such as one of the Outer Planes.",
-    "higherLevel": "You can target up to three willing creatures (including yourself) for each spell slot level above 7. The creatures must be within 10 feet of you when you cast the spell."
+    "higherLevel": "You can target up to three willing creatures (including yourself) for each spell slot level above 7. The creatures must be within 10 feet of you when you cast the spell.",
+    "untyped": [
+      "damage"
+    ]
   },
   {
     "id": "expeditious-retreat",
@@ -5381,19 +5552,26 @@
     "conditions": [
       {
         "condition": "unconscious",
-        "label": "Asleep",
-        "appliesWhen": "one of the following effects of your choice"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Asleep"
       },
       {
         "condition": "frightened",
-        "label": "Panicked",
-        "appliesWhen": "one of the following effects of your choice"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Panicked"
       },
       {
         "condition": "poisoned",
-        "label": "Sickened",
-        "appliesWhen": "one of the following effects of your choice"
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Sickened"
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ]
   },
   {
@@ -5514,7 +5692,8 @@
           "force"
         ],
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "At the start of each of your turns"
       }
     ]
   },
@@ -5604,6 +5783,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the creature ends its turn in a space where it doesn’t have line of sight to you",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -5996,7 +6176,7 @@
           "fire",
           "cold"
         ],
-        "appliesWhen": "whenever a creature within 5 feet of you hits you with a melee attack roll"
+        "timing": "whenever a creature within 5 feet of you hits you with a melee attack roll"
       }
     ]
   },
@@ -6146,7 +6326,8 @@
         ],
         "modifier": true,
         "perSlot": "1d6",
-        "trigger": "hit"
+        "trigger": "hit",
+        "timing": "As a Magic action, you can make a melee spell attack with the fiery blade"
       }
     ]
   },
@@ -6267,7 +6448,18 @@
         ],
         "perSlot": "1d6",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Any creature that ends its turn within 5 feet of the sphere"
+      },
+      {
+        "dice": "2d6",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0,
+        "appliesWhen": "If you move the sphere into a creature’s space"
       }
     ]
   },
@@ -6310,12 +6502,14 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "unless": "Constructs",
         "when": "initial",
         "onSuccess": "other"
       },
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "A Restrained target",
         "when": "end-of-turn",
         "onSuccess": "other"
       }
@@ -6488,7 +6682,8 @@
           "radiant",
           "necrotic"
         ],
-        "appliesWhen": "When a creature of a chosen type enters the spell’s area for the first time on a turn or ends its turn there"
+        "unless": "A creature that speaks the password as it enters the area",
+        "timing": "When a creature of a chosen type enters the spell’s area for the first time on a turn or ends its turn there"
       }
     ]
   },
@@ -6540,6 +6735,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the creature tries to use teleportation or interplanar travel to leave",
         "when": "later",
         "onSuccess": "other"
       }
@@ -6801,6 +6997,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "unless": "if it can’t understand your command",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -6813,7 +7010,7 @@
         ],
         "trigger": "failed-save",
         "save": 0,
-        "appliesWhen": "While Charmed, the creature takes 5d10 Psychic damage if it acts in a manner directly counter to your command"
+        "appliesWhen": "if it acts in a manner directly counter to your command"
       }
     ],
     "conditions": [
@@ -6822,6 +7019,9 @@
         "trigger": "failed-save",
         "save": 0
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -7100,7 +7300,8 @@
         "perSlot": "1d8",
         "trigger": "failed-save",
         "save": 0,
-        "label": "Explosive Rune"
+        "label": "Explosive Rune",
+        "timing": "When triggered"
       }
     ]
   },
@@ -7137,7 +7338,8 @@
     },
     "description": "Ten berries appear in your hand and are infused with magic for the duration. A creature can take a Bonus Action to eat one berry. Eating a berry restores 1 Hit Point, and the berry provides enough nourishment to sustain a creature for one day.\nUneaten berries disappear when the spell ends.",
     "healing": {
-      "amount": 1
+      "amount": 1,
+      "timing": "Eating a berry"
     }
   },
   {
@@ -7186,6 +7388,12 @@
         "condition": "prone",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "A creature that enters the area or ends its turn there"
       }
     ]
   },
@@ -7311,8 +7519,12 @@
           "radiant"
         ],
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Any enemy that moves to a space within 10 feet of the guardian for the first time on a turn or starts its turn there"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -7389,9 +7601,10 @@
     "description": "You touch a willing creature and choose a skill. Until the spell ends, the creature adds 1d4 to any ability check using the chosen skill.",
     "rollModifier": {
       "dice": "1d4",
-      "rolls": [
-        "ability-check"
-      ]
+      "to": [
+        "ability-checks"
+      ],
+      "appliesWhen": "using the chosen skill"
     }
   },
   {
@@ -7527,7 +7740,7 @@
       {
         "condition": "frightened",
         "label": "Fear",
-        "appliesWhen": "Creatures of any types you choose … while in the area"
+        "appliesWhen": "Creatures of any types you choose have the Frightened condition while in the area"
       }
     ]
   },
@@ -7654,7 +7867,7 @@
     "conditions": [
       {
         "condition": "incapacitated",
-        "appliesWhen": "When the spell ends"
+        "timing": "When the spell ends"
       }
     ],
     "ac": {
@@ -7768,6 +7981,7 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "If a creature is holding or wearing the object and takes the damage from it",
         "when": "on-damage",
         "onSuccess": "other"
       }
@@ -7778,7 +7992,17 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "appliesWhen": "Any creature in physical contact with the object"
+      },
+      {
+        "dice": "2d8",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d8",
+        "appliesWhen": "Any creature in physical contact with the object",
+        "timing": "on each of your later turns to deal this damage again if the object is within range"
       }
     ]
   },
@@ -7907,7 +8131,8 @@
     "higherLevel": "You can target one additional creature for each spell slot level above 1.",
     "healing": {
       "modifier": true,
-      "temporary": true
+      "temporary": true,
+      "timing": "at the start of each of its turns"
     },
     "extraTargetsPerSlot": 1
   },
@@ -8198,14 +8423,16 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "timing": "when a Fiend or an Undead hits an affected creature with a melee attack roll"
       }
     ],
     "conditions": [
       {
         "condition": "blinded",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "when a Fiend or an Undead hits an affected creature with a melee attack roll"
       }
     ]
   },
@@ -8293,6 +8520,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "Each creature in the area who can see the pattern",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -8574,12 +8802,20 @@
     "conditions": [
       {
         "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0,
         "label": "Chaining"
       },
       {
         "condition": "unconscious",
+        "trigger": "failed-save",
+        "save": 0,
         "label": "Slumber"
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ]
   },
   {
@@ -8622,7 +8858,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -8633,6 +8870,15 @@
         ],
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "10d8",
+        "types": [
+          "fire"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "when the Sphere moves into its space and when it enters the Sphere or ends its turn there"
       }
     ]
   },
@@ -8727,7 +8973,8 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -8739,6 +8986,16 @@
         "perSlot": "1d10",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "4d10",
+        "types": [
+          "piercing"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "when it enters the spell’s area for the first time on a turn or ends its turn there"
       }
     ]
   },
@@ -9060,6 +9317,7 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "An unwilling creature",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -9424,6 +9682,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the creature tries to use teleportation or interplanar travel to do so",
         "when": "later",
         "onSuccess": "other"
       }
@@ -9478,6 +9737,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the host body dies while you’re in it",
         "when": "later",
         "onSuccess": "other",
         "target": "caster"
@@ -9489,6 +9749,10 @@
         "trigger": "failed-save",
         "save": 0
       }
+    ],
+    "untyped": [
+      "saves",
+      "conditions"
     ]
   },
   {
@@ -9607,10 +9871,11 @@
     "higherLevel": "The bonus increases to +2 with a level 3–5 spell slot. The bonus increases to +3 with a level 6+ spell slot.",
     "rollModifier": {
       "amount": 1,
-      "rolls": [
-        "attack-roll",
-        "damage-roll"
-      ]
+      "to": [
+        "attack-rolls",
+        "damage-rolls"
+      ],
+      "appliesWhen": "that weapon becomes a magic weapon"
     }
   },
   {
@@ -9760,7 +10025,10 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "A flood of healing energy flows from you into creatures around you. You restore up to 700 Hit Points, divided as you choose among any number of creatures that you can see within range. Creatures healed by this spell also have the Blinded, Deafened, and Poisoned conditions removed from them."
+    "description": "A flood of healing energy flows from you into creatures around you. You restore up to 700 Hit Points, divided as you choose among any number of creatures that you can see within range. Creatures healed by this spell also have the Blinded, Deafened, and Poisoned conditions removed from them.",
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "mass-healing-word",
@@ -9835,6 +10103,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "that can hear and understand you",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -9924,8 +10193,12 @@
         "appliesWhen": "The stone’s complete destruction (or transmutation into a different substance)"
       }
     ],
-    "casterConditions": [
-      "prone"
+    "conditions": [
+      {
+        "condition": "prone",
+        "target": "caster",
+        "appliesWhen": "If expelled"
+      }
     ]
   },
   {
@@ -10266,8 +10539,11 @@
       "concentration": true
     },
     "description": "You gain the Invisible condition at the same time that an illusory double of you appears where you are standing. The double lasts for the duration, but the invisibility ends immediately after you make an attack roll, deal damage, or cast a spell.\nAs a Magic action, you can move the illusory double up to twice your Speed and make it gesture, speak, and behave in whatever way you choose. It is intangible and invulnerable.\nYou can see through its eyes and hear through its ears as if you were located where it is.",
-    "casterConditions": [
-      "invisible"
+    "conditions": [
+      {
+        "condition": "invisible",
+        "target": "caster"
+      }
     ]
   },
   {
@@ -10394,7 +10670,8 @@
         "ability": "con",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -10406,6 +10683,16 @@
         "perSlot": "1d10",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "2d10",
+        "types": [
+          "radiant"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "when the spell’s area moves into its space and when it enters the spell’s area or ends its turn there"
       }
     ]
   },
@@ -10528,9 +10815,10 @@
     "description": "You radiate a concealing aura in a 30-foot Emanation for the duration. While in the aura, you and each creature you choose have a +10 bonus to Dexterity (Stealth) checks and leave no tracks.",
     "rollModifier": {
       "amount": 10,
-      "rolls": [
-        "ability-check"
-      ]
+      "to": [
+        "stealth-checks"
+      ],
+      "appliesWhen": "While in the aura"
     }
   },
   {
@@ -10617,7 +10905,8 @@
         ],
         "trigger": "failed-save",
         "save": 0,
-        "appliesWhen": "if the phantasm represents a dangerous creature or hazard … if it is in the phantasm’s area or within 5 feet of the phantasm"
+        "appliesWhen": "if the phantasm represents a dangerous creature or hazard. On each of your turns, such a phantasm can deal 2d8 Psychic damage to the target if it is in the phantasm’s area or within 5 feet of the phantasm",
+        "timing": "On each of your turns"
       }
     ]
   },
@@ -10675,6 +10964,15 @@
         "perSlot": "1d10",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "4d10",
+        "types": [
+          "psychic"
+        ],
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 1
       }
     ]
   },
@@ -10959,6 +11257,9 @@
         "when": "initial",
         "onSuccess": "none"
       }
+    ],
+    "untyped": [
+      "healing"
     ]
   },
   {
@@ -10987,7 +11288,10 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "A wave of healing energy washes over one creature you can see within range. The target regains all its Hit Points. If the creature has the Charmed, Frightened, Paralyzed, Poisoned, or Stunned condition, the condition ends. If the creature has the Prone condition, it can use its Reaction to stand up."
+    "description": "A wave of healing energy washes over one creature you can see within range. The target regains all its Hit Points. If the creature has the Charmed, Frightened, Paralyzed, Poisoned, or Stunned condition, the condition ends. If the creature has the Prone condition, it can use its Reaction to stand up.",
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "power-word-kill",
@@ -11024,7 +11328,7 @@
         "types": [
           "psychic"
         ],
-        "appliesWhen": "if the target has more than 100 Hit Points"
+        "unless": "If the target has 100 Hit Points or fewer"
       }
     ]
   },
@@ -11061,6 +11365,7 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the target has 150 Hit Points or fewer",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -11104,7 +11409,10 @@
     "healing": {
       "dice": "2d8",
       "perSlot": "1d8"
-    }
+    },
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "prestidigitation",
@@ -11254,7 +11562,8 @@
         "dc": "spell-save-dc",
         "label": "Violet",
         "when": "later",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "timing": "at the start of your next turn"
       }
     ],
     "damage": [
@@ -11372,19 +11681,55 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "another creature that can see the wall",
+        "unless": "You and creatures you designate when you cast the spell",
         "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
-        "label": "Red, Orange, Yellow, Green, Blue",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Red",
         "when": "initial",
         "onSuccess": "half"
       },
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Orange",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Yellow",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Green",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
+        "label": "Blue",
+        "when": "initial",
+        "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
         "label": "Indigo",
         "when": "initial",
         "onSuccess": "none"
@@ -11392,6 +11737,7 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
         "label": "Indigo",
         "when": "end-of-turn",
         "onSuccess": "other"
@@ -11399,6 +11745,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
         "label": "Violet",
         "when": "initial",
         "onSuccess": "none"
@@ -11406,49 +11753,99 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "unless": "You and creatures you designate when you cast the spell",
         "label": "Violet",
         "when": "later",
-        "onSuccess": "ends"
+        "onSuccess": "ends",
+        "timing": "at the start of your next turn"
       }
     ],
     "damage": [
       {
         "dice": "12d6",
         "types": [
-          "fire",
-          "acid",
-          "lightning",
-          "poison",
-          "cold"
+          "fire"
         ],
-        "table": "Prismatic Layers",
         "trigger": "failed-save",
         "save": 1,
-        "label": "Red, Orange, Yellow, Green, Blue"
+        "label": "Red",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
+      },
+      {
+        "dice": "12d6",
+        "types": [
+          "acid"
+        ],
+        "trigger": "failed-save",
+        "save": 2,
+        "label": "Orange",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
+      },
+      {
+        "dice": "12d6",
+        "types": [
+          "lightning"
+        ],
+        "trigger": "failed-save",
+        "save": 3,
+        "label": "Yellow",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
+      },
+      {
+        "dice": "12d6",
+        "types": [
+          "poison"
+        ],
+        "trigger": "failed-save",
+        "save": 4,
+        "label": "Green",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
+      },
+      {
+        "dice": "12d6",
+        "types": [
+          "cold"
+        ],
+        "trigger": "failed-save",
+        "save": 5,
+        "label": "Blue",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
       }
     ],
     "conditions": [
       {
         "condition": "blinded",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "moves within 20 feet of it or starts its turn there"
       },
       {
         "condition": "restrained",
         "trigger": "failed-save",
-        "save": 2,
-        "label": "Indigo"
+        "save": 6,
+        "label": "Indigo",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
       },
       {
         "condition": "petrified",
         "label": "Indigo",
-        "appliesWhen": "If it fails three times"
+        "appliesWhen": "If it fails three times",
+        "unless": "You and creatures you designate when you cast the spell"
       },
       {
         "condition": "blinded",
         "trigger": "failed-save",
-        "save": 4,
-        "label": "Violet"
+        "save": 8,
+        "label": "Violet",
+        "unless": "You and creatures you designate when you cast the spell",
+        "timing": "When a creature reaches into or passes through the wall"
       }
     ]
   },
@@ -11527,7 +11924,8 @@
           "11": "3d8",
           "17": "4d8"
         },
-        "trigger": "hit"
+        "trigger": "hit",
+        "timing": "Until the spell ends, you can take a Magic action to hurl fire at a creature or an object within 60 feet of you"
       }
     ]
   },
@@ -11799,7 +12197,10 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "With a touch, you revive a dead creature if it has been dead no longer than 10 days and it wasn’t Undead when it died.\nThe creature returns to life with 1 Hit Point. This spell also neutralizes any poisons that affected the creature at the time of death.\nThis spell closes all mortal wounds, but it doesn’t restore missing body parts. If the creature is lacking body parts or organs integral for its survival—its head, for instance—the spell automatically fails.\nComing back from the dead is an ordeal. The target takes a −4 penalty to D20 Tests. Every time the target finishes a Long Rest, the penalty is reduced by 1 until it becomes 0."
+    "description": "With a touch, you revive a dead creature if it has been dead no longer than 10 days and it wasn’t Undead when it died.\nThe creature returns to life with 1 Hit Point. This spell also neutralizes any poisons that affected the creature at the time of death.\nThis spell closes all mortal wounds, but it doesn’t restore missing body parts. If the creature is lacking body parts or organs integral for its survival—its head, for instance—the spell automatically fails.\nComing back from the dead is an ordeal. The target takes a −4 penalty to D20 Tests. Every time the target finishes a Long Rest, the penalty is reduced by 1 until it becomes 0.",
+    "healing": {
+      "amount": 1
+    }
   },
   {
     "id": "ray-of-enfeeblement",
@@ -11972,7 +12373,10 @@
     "description": "A creature you touch regains 4d8 + 15 Hit Points. For the duration, the target regains 1 Hit Point at the start of each of its turns, and any severed body parts regrow after 2 minutes.",
     "healing": {
       "dice": "4d8 + 15"
-    }
+    },
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "reincarnate",
@@ -12130,6 +12534,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "An unwilling creature",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -12164,7 +12569,11 @@
       "concentration": true
     },
     "description": "You touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder. When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn.",
-    "damageReduction": "1d4"
+    "damageReduction": {
+      "dice": "1d4",
+      "timing": "When the creature takes damage of the chosen type before the spell ends",
+      "oncePerTurn": "any-turn"
+    }
   },
   {
     "id": "resurrection",
@@ -12205,7 +12614,10 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "With a touch, you revive a dead creature that has been dead for no more than a century, didn’t die of old age, and wasn’t Undead when it died.\nThe creature returns to life with all its Hit Points. This spell also neutralizes any poisons that affected the creature at the time of death. This spell closes all mortal wounds and restores any missing body parts.\nComing back from the dead is an ordeal. The target takes a −4 penalty to D20 Tests. Every time the target finishes a Long Rest, the penalty is reduced by 1 until it becomes 0.\nCasting this spell to revive a creature that has been dead for 365 days or longer taxes you. Until you finish a Long Rest, you can’t cast spells again, and you have Disadvantage on D20 Tests."
+    "description": "With a touch, you revive a dead creature that has been dead for no more than a century, didn’t die of old age, and wasn’t Undead when it died.\nThe creature returns to life with all its Hit Points. This spell also neutralizes any poisons that affected the creature at the time of death. This spell closes all mortal wounds and restores any missing body parts.\nComing back from the dead is an ordeal. The target takes a −4 penalty to D20 Tests. Every time the target finishes a Long Rest, the penalty is reduced by 1 until it becomes 0.\nCasting this spell to revive a creature that has been dead for 365 days or longer taxes you. Until you finish a Long Rest, you can’t cast spells again, and you have Disadvantage on D20 Tests.",
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "reverse-gravity",
@@ -12254,6 +12666,9 @@
         "when": "initial",
         "onSuccess": "none"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -12296,7 +12711,10 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "You touch a creature that has died within the last minute. That creature revives with 1 Hit Point. This spell can’t revive a creature that has died of old age, nor does it restore any missing body parts."
+    "description": "You touch a creature that has died within the last minute. That creature revives with 1 Hit Point. This spell can’t revive a creature that has died of old age, nor does it restore any missing body parts.",
+    "healing": {
+      "amount": 1
+    }
   },
   {
     "id": "rope-trick",
@@ -12417,6 +12835,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "any creature who targets the warded creature with an attack roll or a damaging spell",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -12560,6 +12979,9 @@
         "when": "initial",
         "onSuccess": "none"
       }
+    ],
+    "untyped": [
+      "saves"
     ]
   },
   {
@@ -12613,7 +13035,8 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "timing": "At the start of each of its turns"
       }
     ]
   },
@@ -12731,6 +13154,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "appliesWhen": "An unwilling target",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -12857,7 +13281,10 @@
       "upTo": true,
       "concentration": true
     },
-    "description": "You shape-shift into another creature for the duration or until you take a Magic action to shape-shift into a different eligible form. The new form must be of a creature that has a Challenge Rating no higher than your level or Challenge Rating. You must have seen the sort of creature before, and it can’t be a Construct or an Undead.\nWhen you cast the spell, you gain a number of Temporary Hit Points equal to the Hit Points of the first form into which you shape-shift. These Temporary Hit Points vanish if any remain when the spell ends.\nYour game statistics are replaced by the stat block of the chosen form, but you retain your creature type; alignment; personality; Intelligence, Wisdom, and Charisma scores; Hit Points; Hit Point Dice; proficiencies; and ability to communicate. If you have the Spellcasting feature, you retain it too.\nUpon shape-shifting, you determine whether your equipment drops to the ground or changes in size and shape to fit the new form while you’re in it."
+    "description": "You shape-shift into another creature for the duration or until you take a Magic action to shape-shift into a different eligible form. The new form must be of a creature that has a Challenge Rating no higher than your level or Challenge Rating. You must have seen the sort of creature before, and it can’t be a Construct or an Undead.\nWhen you cast the spell, you gain a number of Temporary Hit Points equal to the Hit Points of the first form into which you shape-shift. These Temporary Hit Points vanish if any remain when the spell ends.\nYour game statistics are replaced by the stat block of the chosen form, but you retain your creature type; alignment; personality; Intelligence, Wisdom, and Charisma scores; Hit Points; Hit Point Dice; proficiencies; and ability to communicate. If you have the Spellcasting feature, you retain it too.\nUpon shape-shifting, you determine whether your equipment drops to the ground or changes in size and shape to fit the new form while you’re in it.",
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "shatter",
@@ -13018,7 +13445,10 @@
       "concentration": false
     },
     "description": "A Club or Quarterstaff you are holding is imbued with nature’s power. For the duration, you can use your spellcasting ability instead of Strength for the attack and damage rolls of melee attacks using that weapon, and the weapon’s damage die becomes a d8. If the attack deals damage, it can be Force damage or the weapon’s normal damage type (your choice).\nThe spell ends early if you cast it again or if you let go of the weapon.",
-    "cantripUpgrade": "The damage die changes when you reach levels 5 (d10), 11 (d12), and 17 (2d6)."
+    "cantripUpgrade": "The damage die changes when you reach levels 5 (d10), 11 (d12), and 17 (2d6).",
+    "untyped": [
+      "damage"
+    ]
   },
   {
     "id": "shining-smite",
@@ -13220,7 +13650,10 @@
       "kind": "until-dispelled",
       "concentration": false
     },
-    "description": "You create a simulacrum of one Beast or Humanoid that is within 10 feet of you for the entire casting of the spell. You finish the casting by touching both the creature and a pile of ice or snow that is the same size as that creature, and the pile turns into the simulacrum, which is a creature. It uses the game statistics of the original creature at the time of casting, except it is a Construct, its Hit Point maximum is half as much, and it can’t cast this spell.\nThe simulacrum is Friendly to you and creatures you designate. It obeys your commands and acts on your turn in combat. The simulacrum can’t gain levels, and it can’t take Short or Long Rests.\nIf the simulacrum takes damage, the only way to restore its Hit Points is to repair it as you take a Long Rest, during which you expend components worth 100 GP per Hit Point restored. The simulacrum must stay within 5 feet of you for the repair.\nThe simulacrum lasts until it drops to 0 Hit Points, at which point it reverts to snow and melts away. If you cast this spell again, any simulacrum you created with this spell is instantly destroyed."
+    "description": "You create a simulacrum of one Beast or Humanoid that is within 10 feet of you for the entire casting of the spell. You finish the casting by touching both the creature and a pile of ice or snow that is the same size as that creature, and the pile turns into the simulacrum, which is a creature. It uses the game statistics of the original creature at the time of casting, except it is a Construct, its Hit Point maximum is half as much, and it can’t cast this spell.\nThe simulacrum is Friendly to you and creatures you designate. It obeys your commands and acts on your turn in combat. The simulacrum can’t gain levels, and it can’t take Short or Long Rests.\nIf the simulacrum takes damage, the only way to restore its Hit Points is to repair it as you take a Long Rest, during which you expend components worth 100 GP per Hit Point restored. The simulacrum must stay within 5 feet of you for the repair.\nThe simulacrum lasts until it drops to 0 Hit Points, at which point it reverts to snow and melts away. If you cast this spell again, any simulacrum you created with this spell is instantly destroyed.",
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "sleep",
@@ -13266,14 +13699,16 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "unless": "Creatures that don’t sleep, such as elves, or that have Immunity to the Exhaustion condition",
         "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "unless": "Creatures that don’t sleep, such as elves, or that have Immunity to the Exhaustion condition",
         "when": "later",
-        "onSuccess": "other"
+        "onSuccess": "none"
       }
     ],
     "conditions": [
@@ -13285,7 +13720,8 @@
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "until the end of its next turn, at which point it must repeat the save"
       }
     ]
   },
@@ -13341,7 +13777,8 @@
       {
         "condition": "prone",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "When a creature enters the Cylinder for the first time on a turn or starts its turn there"
       }
     ]
   },
@@ -13447,6 +13884,9 @@
         },
         "trigger": "hit"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -13659,7 +14099,8 @@
         "types": [
           "piercing"
         ],
-        "appliesWhen": "When a creature moves into or within the area"
+        "appliesWhen": "for every 5 feet it travels",
+        "timing": "When a creature moves into or within the area"
       }
     ]
   },
@@ -13705,8 +14146,10 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "unless": "you can designate creatures to be unaffected by it",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -13718,7 +14161,9 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "unless": "you can designate creatures to be unaffected by it",
+        "timing": "whenever the Emanation enters a creature’s space and whenever a creature enters the Emanation or ends its turn there"
       }
     ]
   },
@@ -13762,6 +14207,16 @@
         "modifier": true,
         "perSlot": "1d8",
         "trigger": "hit"
+      },
+      {
+        "dice": "1d8",
+        "types": [
+          "force"
+        ],
+        "modifier": true,
+        "perSlot": "1d8",
+        "trigger": "hit",
+        "timing": "As a Bonus Action on your later turns"
       }
     ]
   },
@@ -13860,7 +14315,8 @@
       {
         "condition": "poisoned",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "Each creature that starts its turn in the Sphere"
       }
     ]
   },
@@ -13980,8 +14436,9 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "six different creatures or objects beneath it",
         "label": "Turn 3",
-        "when": "initial",
+        "when": "later",
         "onSuccess": "half"
       }
     ],
@@ -13999,7 +14456,8 @@
         "types": [
           "acid"
         ],
-        "label": "Turn 2"
+        "label": "Turn 2",
+        "timing": "At the start of each of your later turns"
       },
       {
         "dice": "10d6",
@@ -14008,21 +14466,24 @@
         ],
         "trigger": "failed-save",
         "save": 1,
-        "label": "Turn 3"
+        "label": "Turn 3",
+        "timing": "At the start of each of your later turns"
       },
       {
         "dice": "2d6",
         "types": [
           "bludgeoning"
         ],
-        "label": "Turn 4"
+        "label": "Turn 4",
+        "timing": "At the start of each of your later turns"
       },
       {
         "dice": "1d6",
         "types": [
           "cold"
         ],
-        "label": "Turns 5–10"
+        "label": "Turns 5–10",
+        "timing": "At the start of each of your later turns"
       }
     ],
     "conditions": [
@@ -14073,6 +14534,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "that can hear and understand you",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -14251,6 +14713,15 @@
         ],
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "dice": "6d8",
+        "types": [
+          "radiant"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "Until the spell ends, you can take a Magic action to create a new Line of radiance"
       }
     ],
     "conditions": [
@@ -14258,6 +14729,12 @@
         "condition": "blinded",
         "trigger": "failed-save",
         "save": 0
+      },
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0,
+        "timing": "Until the spell ends, you can take a Magic action to create a new Line of radiance"
       }
     ]
   },
@@ -14382,42 +14859,48 @@
         "dc": "spell-save-dc",
         "label": "Death",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "label": "Discord",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "label": "Fear",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "con",
         "dc": "spell-save-dc",
         "label": "Pain",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "label": "Sleep",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       },
       {
         "ability": "wis",
         "dc": "spell-save-dc",
         "label": "Stunning",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -14428,7 +14911,18 @@
         ],
         "trigger": "failed-save",
         "save": 0,
-        "label": "Death"
+        "label": "Death",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "dice": "10d10",
+        "types": [
+          "necrotic"
+        ],
+        "trigger": "failed-save",
+        "save": 0,
+        "label": "Death",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       }
     ],
     "conditions": [
@@ -14436,25 +14930,57 @@
         "condition": "frightened",
         "trigger": "failed-save",
         "save": 2,
-        "label": "Fear"
+        "label": "Fear",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "condition": "frightened",
+        "trigger": "failed-save",
+        "save": 2,
+        "label": "Fear",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "incapacitated",
         "trigger": "failed-save",
         "save": 3,
-        "label": "Pain"
+        "label": "Pain",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 3,
+        "label": "Pain",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "unconscious",
         "trigger": "failed-save",
         "save": 4,
-        "label": "Sleep"
+        "label": "Sleep",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "condition": "unconscious",
+        "trigger": "failed-save",
+        "save": 4,
+        "label": "Sleep",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
         "save": 5,
-        "label": "Stunning"
+        "label": "Stunning",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "condition": "stunned",
+        "trigger": "failed-save",
+        "save": 5,
+        "label": "Stunning",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       }
     ]
   },
@@ -14492,6 +15018,7 @@
       {
         "ability": "str",
         "dc": "spell-save-dc",
+        "appliesWhen": "a Huge or smaller creature",
         "label": "Creature",
         "when": "initial",
         "onSuccess": "none"
@@ -14499,9 +15026,11 @@
       {
         "ability": "str",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the object is worn or carried by a creature",
         "label": "Object",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "timing": "When you cast the spell and as a Magic action on your later turns before the spell ends"
       }
     ],
     "conditions": [
@@ -14509,7 +15038,8 @@
         "condition": "restrained",
         "trigger": "failed-save",
         "save": 0,
-        "label": "Creature"
+        "label": "Creature",
+        "timing": "When you cast the spell and as a Magic action on your later turns before the spell ends"
       }
     ]
   },
@@ -14638,7 +15168,7 @@
           "force"
         ],
         "target": "caster-and-companions",
-        "appliesWhen": "Mishap"
+        "label": "Mishap"
       }
     ]
   },
@@ -14970,9 +15500,13 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "An unwilling creature",
         "when": "initial",
         "onSuccess": "none"
       }
+    ],
+    "untyped": [
+      "healing"
     ]
   },
   {
@@ -15014,7 +15548,10 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "You touch a creature that has been dead for no longer than 200 years and that died for any reason except old age. The creature is revived with all its Hit Points.\nThis spell closes all wounds, neutralizes any poison, cures all magical contagions, and lifts any curses affecting the creature when it died. The spell replaces damaged or missing organs and limbs. If the creature was Undead, it is restored to its non-Undead form.\nThe spell can provide a new body if the original no longer exists, in which case you must speak the creature’s name. The creature then appears in an unoccupied space you choose within 10 feet of you."
+    "description": "You touch a creature that has been dead for no longer than 200 years and that died for any reason except old age. The creature is revived with all its Hit Points.\nThis spell closes all wounds, neutralizes any poison, cures all magical contagions, and lifts any curses affecting the creature when it died. The spell replaces damaged or missing organs and limbs. If the creature was Undead, it is restored to its non-Undead form.\nThe spell can provide a new body if the original no longer exists, in which case you must speak the creature’s name. The creature then appears in an unoccupied space you choose within 10 feet of you.",
+    "untyped": [
+      "healing"
+    ]
   },
   {
     "id": "true-seeing",
@@ -15102,7 +15639,10 @@
       "concentration": false
     },
     "description": "Guided by a flash of magical insight, you make one attack with the weapon used in the spell’s casting. The attack uses your spellcasting ability for the attack and damage rolls instead of using Strength or Dexterity. If the attack deals damage, it can be Radiant damage or the weapon’s normal damage type (your choice).",
-    "cantripUpgrade": "Whether you deal Radiant damage or the weapon’s normal damage type, the attack deals extra Radiant damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6)."
+    "cantripUpgrade": "Whether you deal Radiant damage or the weapon’s normal damage type, the attack deals extra Radiant damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6).",
+    "untyped": [
+      "damage"
+    ]
   },
   {
     "id": "tsunami",
@@ -15144,6 +15684,7 @@
       {
         "ability": "str",
         "dc": "spell-save-dc",
+        "appliesWhen": "Any Huge or smaller creature inside the wall or whose space the wall enters when it moves",
         "when": "later",
         "onSuccess": "none"
       }
@@ -15163,8 +15704,12 @@
           "bludgeoning"
         ],
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "At the start of each of your turns after the wall appears"
       }
+    ],
+    "untyped": [
+      "damage"
     ]
   },
   {
@@ -15242,7 +15787,19 @@
         ],
         "perSlot": "1d6",
         "trigger": "hit"
+      },
+      {
+        "dice": "3d6",
+        "types": [
+          "necrotic"
+        ],
+        "perSlot": "1d6",
+        "trigger": "hit",
+        "timing": "Until the spell ends, you can make the attack again on each of your turns as a Magic action"
       }
+    ],
+    "untyped": [
+      "healing"
     ]
   },
   {
@@ -15356,7 +15913,9 @@
           "acid"
         ],
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "onSuccess": "none",
+        "timing": "at the end of its next turn"
       }
     ]
   },
@@ -15420,7 +15979,15 @@
           "fire"
         ],
         "perSlot": "1d8",
-        "appliesWhen": "each creature that ends its turn within 10 feet of that side or inside the wall"
+        "timing": "each creature that ends its turn within 10 feet of that side or inside the wall"
+      },
+      {
+        "dice": "5d8",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d8",
+        "timing": "when it enters the wall for the first time on a turn"
       }
     ]
   },
@@ -15496,6 +16063,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "If the wall cuts through a creature’s space when it appears",
         "when": "initial",
         "onSuccess": "half"
       },
@@ -15523,7 +16091,8 @@
         ],
         "perSlot": "1d6",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "A creature moving through the sheet of frigid air for the first time on a turn"
       }
     ]
   },
@@ -15566,6 +16135,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "If a creature would be surrounded on all sides by the wall (or the wall and another solid surface)",
         "when": "initial",
         "onSuccess": "other"
       }
@@ -15616,7 +16186,8 @@
         "ability": "dex",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "half",
+        "oncePerTurn": "any-turn"
       }
     ],
     "damage": [
@@ -15636,7 +16207,8 @@
         ],
         "perSlot": "1d8",
         "trigger": "failed-save",
-        "save": 1
+        "save": 1,
+        "timing": "the first time a creature enters a space in the wall on a turn or ends its turn there"
       }
     ]
   },
@@ -15682,14 +16254,19 @@
     },
     "description": "You touch another creature that is willing and create a mystic connection between you and the target until the spell ends. While the target is within 60 feet of you, it gains a +1 bonus to AC and saving throws, and it has Resistance to all damage. Also, each time it takes damage, you take the same amount of damage.\nThe spell ends if you drop to 0 Hit Points or if you and the target become separated by more than 60 feet. It also ends if the spell is cast again on either of the connected creatures.",
     "ac": {
-      "bonus": 1
+      "bonus": 1,
+      "appliesWhen": "While the target is within 60 feet of you"
     },
     "rollModifier": {
       "amount": 1,
-      "rolls": [
-        "saving-throw"
-      ]
-    }
+      "to": [
+        "saving-throws"
+      ],
+      "appliesWhen": "While the target is within 60 feet of you"
+    },
+    "untyped": [
+      "damage"
+    ]
   },
   {
     "id": "water-breathing",
@@ -15815,14 +16392,15 @@
         "types": [
           "fire"
         ],
-        "appliesWhen": "any creature that starts its turn in the fire"
+        "timing": "any creature that starts its turn in the fire"
       }
     ],
     "conditions": [
       {
         "condition": "restrained",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "timing": "The first time a creature enters the webs on a turn or starts its turn there"
       }
     ]
   },
@@ -15934,14 +16512,8 @@
       "concentration": false
     },
     "description": "You and up to ten willing creatures of your choice within range assume gaseous forms for the duration, appearing as wisps of cloud. While in this cloud form, a target has a Fly Speed of 300 feet and can hover; it has Immunity to the Prone condition; and it has Resistance to Bludgeoning, Piercing, and Slashing damage. The only actions a target can take in this form are the Dash action or a Magic action to begin reverting to its normal form. Reverting takes 1 minute, during which the target has the Stunned condition. Until the spell ends, the target can revert to cloud form, which also requires a Magic action followed by a 1-minute transformation.\nIf a target is in cloud form and flying when the effect ends, the target descends 60 feet per round for 1 minute until it lands, which it does safely. If it can’t land after 1 minute, it falls the remaining distance.",
-    "conditions": [
-      {
-        "condition": "stunned",
-        "appliesWhen": "Reverting takes 1 minute, during which"
-      }
-    ],
-    "casterConditions": [
-      "stunned"
+    "untyped": [
+      "conditions"
     ]
   },
   {
@@ -16022,7 +16594,11 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "Wish is the mightiest spell a mortal can cast. By simply speaking aloud, you can alter reality itself.\nThe basic use of this spell is to duplicate any other spell of level 8 or lower. If you use it this way, you don’t need to meet any requirements to cast that spell, including costly components. The spell simply takes effect.\nAlternatively, you can create one of the following effects of your choice:\nObject Creation. You create one object of up to 25,000 GP in value that isn’t a magic item. The object can be no more than 300 feet in any dimension, and it appears in an unoccupied space that you can see on the ground.\nInstant Health. You allow yourself and up to twenty creatures that you can see to regain all Hit Points, and you end all effects on them listed in the Greater Restoration spell.\nResistance. You grant up to ten creatures that you can see Resistance to one damage type that you choose. This Resistance is permanent.\nSpell Immunity. You grant up to ten creatures you can see immunity to a single spell or other magical effect for 8 hours.\nSudden Learning. You replace one of your feats with another feat for which you are eligible. You lose all the benefits of the old feat and gain the benefits of the new one. You can’t replace a feat that is a prerequisite for any of your other feats or features.\nRoll Redo. You undo a single recent event by forcing a reroll of any die roll made within the last round (including your last turn). Reality reshapes itself to accommodate the new result. For example, a Wish spell could undo an ally’s failed saving throw or a foe’s Critical Hit. You can force the reroll to be made with Advantage or Disadvantage, and you choose whether to use the reroll or the original roll.\nReshape Reality. You may wish for something not included in any of the other effects. To do so, state your wish to the GM as precisely as possible. The GM has great latitude in ruling what occurs in such an instance; the greater the wish, the greater the likelihood that something goes wrong. This spell might simply fail, the effect you desire might be achieved only in part, or you might suffer an unforeseen consequence as a result of how you worded the wish. For example, wishing that a villain were dead might propel you forward in time to a period when that villain is no longer alive, effectively removing you from the game. Similarly, wishing for a Legendary magic item or an Artifact might instantly transport you to the presence of the item’s current owner. If your wish is granted and its effects have consequences for a whole community, region, or world, you are likely to attract powerful foes. If your wish would affect a god, the god’s divine servants might instantly intervene to prevent it or to encourage you to craft the wish in a particular way. If your wish would undo the multiverse itself, your wish fails.\nThe stress of casting Wish to produce any effect other than duplicating another spell weakens you. After enduring that stress, each time you cast a spell until you finish a Long Rest, you take 1d10 Necrotic damage per level of that spell. This damage can’t be reduced or prevented in any way. In addition, your Strength score becomes 3 for 2d4 days. For each of those days that you spend resting and doing nothing more than light activity, your remaining recovery time decreases by 2 days. Finally, there is a 33 percent chance that you are unable to cast Wish ever again if you suffer this stress."
+    "description": "Wish is the mightiest spell a mortal can cast. By simply speaking aloud, you can alter reality itself.\nThe basic use of this spell is to duplicate any other spell of level 8 or lower. If you use it this way, you don’t need to meet any requirements to cast that spell, including costly components. The spell simply takes effect.\nAlternatively, you can create one of the following effects of your choice:\nObject Creation. You create one object of up to 25,000 GP in value that isn’t a magic item. The object can be no more than 300 feet in any dimension, and it appears in an unoccupied space that you can see on the ground.\nInstant Health. You allow yourself and up to twenty creatures that you can see to regain all Hit Points, and you end all effects on them listed in the Greater Restoration spell.\nResistance. You grant up to ten creatures that you can see Resistance to one damage type that you choose. This Resistance is permanent.\nSpell Immunity. You grant up to ten creatures you can see immunity to a single spell or other magical effect for 8 hours.\nSudden Learning. You replace one of your feats with another feat for which you are eligible. You lose all the benefits of the old feat and gain the benefits of the new one. You can’t replace a feat that is a prerequisite for any of your other feats or features.\nRoll Redo. You undo a single recent event by forcing a reroll of any die roll made within the last round (including your last turn). Reality reshapes itself to accommodate the new result. For example, a Wish spell could undo an ally’s failed saving throw or a foe’s Critical Hit. You can force the reroll to be made with Advantage or Disadvantage, and you choose whether to use the reroll or the original roll.\nReshape Reality. You may wish for something not included in any of the other effects. To do so, state your wish to the GM as precisely as possible. The GM has great latitude in ruling what occurs in such an instance; the greater the wish, the greater the likelihood that something goes wrong. This spell might simply fail, the effect you desire might be achieved only in part, or you might suffer an unforeseen consequence as a result of how you worded the wish. For example, wishing that a villain were dead might propel you forward in time to a period when that villain is no longer alive, effectively removing you from the game. Similarly, wishing for a Legendary magic item or an Artifact might instantly transport you to the presence of the item’s current owner. If your wish is granted and its effects have consequences for a whole community, region, or world, you are likely to attract powerful foes. If your wish would affect a god, the god’s divine servants might instantly intervene to prevent it or to encourage you to craft the wish in a particular way. If your wish would undo the multiverse itself, your wish fails.\nThe stress of casting Wish to produce any effect other than duplicating another spell weakens you. After enduring that stress, each time you cast a spell until you finish a Long Rest, you take 1d10 Necrotic damage per level of that spell. This damage can’t be reduced or prevented in any way. In addition, your Strength score becomes 3 for 2d4 days. For each of those days that you spend resting and doing nothing more than light activity, your remaining recovery time decreases by 2 days. Finally, there is a 33 percent chance that you are unable to cast Wish ever again if you suffer this stress.",
+    "untyped": [
+      "damage",
+      "healing"
+    ]
   },
   {
     "id": "word-of-recall",

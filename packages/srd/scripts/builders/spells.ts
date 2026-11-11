@@ -522,7 +522,7 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
   }
   const damage: (Damage & { paragraph: number })[] = []
   const conditions: NonNullable<Spell["conditions"]> = []
-  const casterConditions: NonNullable<Spell["casterConditions"]> = []
+
   const typeList = `((?:${typeNames})(?:(?:, or |, | or )(?:${typeNames}))*)`
   const dice = "(\\d+d\\d+(?: \\+ \\d+)?)( plus your spellcasting ability modifier)?"
   const record = (at: number, entry: Link) => {
@@ -626,7 +626,8 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
       for (const name of match.names) {
         const condition = name.toLowerCase() as ConditionId
         if (caster) {
-          if (!casterConditions.includes(condition)) casterConditions.push(condition)
+          const entry = { condition, target: "caster" as const, ...link(at, match.index) }
+          if (!conditions.some((other) => JSON.stringify(other) === JSON.stringify(entry))) conditions.push(entry)
           continue
         }
         const tie = several ? {} : link(at, match.index)
@@ -664,7 +665,7 @@ function effects(description: string, tables: SpellTable[], higherLevel = "", ca
   const upgrade = /levels 5 \((\d+d\d+)\), 11 \((\d+d\d+)\), and 17 \((\d+d\d+)\)/.exec(cantripUpgrade)
   if (upgrade) for (const part of damage) part.cantrip = { 5: upgrade[1], 11: upgrade[2], 17: upgrade[3] }
   const tableLink = tableMention ? { trigger: "failed-save" as const, save: indexOf.get(tableMention)?.[0] } : {}
-  return { saves, damage: damage.map(({ paragraph, ...part }) => part), conditions, casterConditions, tableLink }
+  return { saves, damage: damage.map(({ paragraph, ...part }) => part), conditions, tableLink }
 }
 
 /**
@@ -754,24 +755,51 @@ function armorClass(text: string): Spell["ac"] {
   const base = /base AC becomes (\d+) plus its Dexterity modifier/.exec(text)
   const minimum = /has an Armor Class of (\d+) if its AC is lower than that/.exec(text)
   if (!bonus && !base && !minimum) return undefined
-  return { ...(bonus ? { bonus: Number(bonus[1]) } : {}), ...(base ? { base: Number(base[1]) } : {}), ...(minimum ? { minimum: Number(minimum[1]) } : {}) }
+  // Warding Bond: "While the target is within 60 feet of you, it gains a +1 bonus to AC".
+  const limit = /(While the target is within \d+ feet of you), it gains a \+\d+ bonus to AC/.exec(text)?.[1]
+  return {
+    ...(bonus ? { bonus: Number(bonus[1]) } : {}),
+    ...(base ? { base: Number(base[1]) } : {}),
+    ...(minimum ? { minimum: Number(minimum[1]) } : {}),
+    ...(limit ? { appliesWhen: limit } : {}),
+  }
 }
 
 /** Bless, Bane, Guidance, Ray of Enfeeblement and Warding Bond's saves. */
+/**
+ * Bless, Bane, Guidance, Ray of Enfeeblement, Magic Weapon, Warding Bond, Pass without Trace and Enthrall. `to` uses the
+ * magic item bonus words. A limit printed beside the value is carried in `appliesWhen`.
+ */
 function rollModifier(text: string): Spell["rollModifier"] {
-  const rolls: Record<string, NonNullable<Spell["rollModifier"]>["rolls"]> = {
-    "the attack roll or save": ["attack-roll", "saving-throw"],
-    "any ability check": ["ability-check"],
-    "all its damage rolls": ["damage-roll"],
+  type To = NonNullable<Spell["rollModifier"]>["to"]
+  const rolls: Record<string, To> = {
+    "the attack roll or save": ["attack-rolls", "saving-throws"],
+    "any ability check": ["ability-checks"],
+    "all its damage rolls": ["damage-rolls"],
   }
   const dice = /(adds|subtracts?) (\d+d\d+) (?:to|from) (the attack roll or save|any ability check|all its damage rolls)/.exec(text)
-  if (dice) return { dice: dice[2], ...(dice[1] === "adds" ? {} : { subtract: true as const }), rolls: rolls[dice[3]] }
-  const flat = /\+(\d+) bonus to AC and saving throws/.exec(text)
-  if (flat) return { amount: Number(flat[1]), rolls: ["saving-throw"] }
-  const weapon = /a \+(\d+) bonus to attack rolls and damage rolls/.exec(text)
-  if (weapon) return { amount: Number(weapon[1]), rolls: ["attack-roll", "damage-roll"] }
-  const skill = /a \+(\d+) bonus to \w+ \(\w+\) checks/.exec(text)
-  return skill ? { amount: Number(skill[1]), rolls: ["ability-check"] } : undefined
+  if (dice) {
+    // Guidance: "adds 1d4 to any ability check using the chosen skill".
+    const chosen = /any ability check (using the chosen skill)/.exec(text)?.[1]
+    return { dice: dice[2], ...(dice[1] === "adds" ? {} : { subtract: true as const }), to: rolls[dice[3]], ...(chosen ? { appliesWhen: chosen } : {}) }
+  }
+  const flat = /(While the target is within \d+ feet of you), it gains a \+(\d+) bonus to AC and saving throws/.exec(text)
+  if (flat) return { amount: Number(flat[2]), to: ["saving-throws"], appliesWhen: flat[1] }
+  const weapon = /(that weapon becomes a magic weapon) with a \+(\d+) bonus to attack rolls and damage rolls/.exec(text)
+  if (weapon) return { amount: Number(weapon[2]), to: ["attack-rolls", "damage-rolls"], appliesWhen: weapon[1] }
+  // "a +10 bonus to Dexterity (Stealth) checks", "a −10 penalty to Wisdom (Perception) checks".
+  const skill = /a ([+−])(\d+) (?:bonus|penalty) to \w+ \((\w+)\) checks/.exec(text)
+  if (!skill) return undefined
+  return { amount: Number(skill[2]), ...(skill[1] === "−" ? { subtract: true as const } : {}), to: [`${skill[3].toLowerCase()}-checks` as To[number]] }
+}
+
+/** Resistance: "When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn." */
+function damageReduction(text: string): Spell["damageReduction"] {
+  const dice = /reduces the total damage taken by (\d+d\d+)/.exec(text)?.[1]
+  if (!dice) return undefined
+  const when = /(When the creature takes damage of the chosen type before the spell ends)/.exec(text)?.[1]
+  const once = /can benefit from this spell only once per turn/.test(text)
+  return { dice, ...(when ? { timing: when } : {}), ...(once ? { oncePerTurn: "any-turn" as const } : {}) }
 }
 
 function hitPointMaximum(text: string, higherLevel = ""): Spell["hitPointMaximum"] {
@@ -821,12 +849,12 @@ export default function build() {
       ...(rolls.length ? { damage: rolls } : {}),
       ...optional("healing", healing(text.description, text.higherLevel)),
       ...(read.conditions.length ? { conditions: read.conditions } : {}),
-      ...(read.casterConditions.length ? { casterConditions: read.casterConditions } : {}),
+
       ...optional("projectiles", projectiles(text.description, text.higherLevel, text.cantripUpgrade)),
       ...optional("extraTargetsPerSlot", extraTargets(text.higherLevel)),
       ...optional("ac", armorClass(text.description)),
       ...optional("rollModifier", rollModifier(text.description)),
-      ...optional("damageReduction", /reduces the total damage taken by (\d+d\d+)/.exec(text.description)?.[1]),
+      ...optional("damageReduction", damageReduction(text.description)),
       ...optional("hitPointMaximum", hitPointMaximum(text.description, text.higherLevel)),
     }
   })

@@ -80,7 +80,7 @@
           "recharge": "long-rest"
         },
         "breathWeapon": {
-          "shapes": [
+          "shapeOptions": [
             {
               "shape": "cone",
               "feet": 15
@@ -115,7 +115,7 @@
               "dice": "4d10"
             }
           ],
-          "onSave": "half"
+          "onSuccess": "half"
         }
       },
       {
@@ -126,7 +126,12 @@
       {
         "name": "Darkvision",
         "text": "You have Darkvision with a range of 60 feet.",
-        "darkvision": 60
+        "senses": [
+          {
+            "type": "darkvision",
+            "range": 60
+          }
+        ]
       },
       {
         "name": "Draconic Flight",
@@ -160,7 +165,12 @@
       {
         "name": "Darkvision",
         "text": "You have Darkvision with a range of 120 feet.",
-        "darkvision": 120
+        "senses": [
+          {
+            "type": "darkvision",
+            "range": 120
+          }
+        ]
       },
       {
         "name": "Dwarven Resilience",
@@ -179,19 +189,25 @@
       {
         "name": "Dwarven Toughness",
         "text": "Your Hit Point maximum increases by 1, and it increases by 1 again whenever you gain a level.",
-        "hitPointBonus": {
-          "initial": 1,
-          "perLevel": 1
+        "hitPointMaximum": {
+          "increase": 1,
+          "perLevel": 1,
+          "levelsCounted": "character"
         }
       },
       {
         "name": "Stonecunning",
         "text": "As a Bonus Action, you gain Tremorsense with a range of 60 feet for 10 minutes. You must be on a stone surface or touching a stone surface to use this Tremorsense. The stone can be natural or worked.\nYou can use this Bonus Action a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest.",
-        "tremorsense": 60,
+        "senses": [
+          {
+            "type": "tremorsense",
+            "range": 60,
+            "appliesWhen": "You must be on a stone surface or touching a stone surface to use this Tremorsense"
+          }
+        ],
         "activation": [
           "bonus-action"
         ],
-        "requires": "stone-surface",
         "durationMinutes": 10,
         "uses": {
           "count": "proficiency-bonus",
@@ -216,7 +232,12 @@
       {
         "name": "Darkvision",
         "text": "You have Darkvision with a range of 60 feet.",
-        "darkvision": 60
+        "senses": [
+          {
+            "type": "darkvision",
+            "range": 60
+          }
+        ]
       },
       {
         "name": "Elven Lineage",
@@ -233,7 +254,12 @@
               "id": "drow",
               "name": "Drow",
               "text": "The range of your Darkvision increases to 120 feet. You also know the Dancing Lights cantrip.",
-              "darkvision": 120,
+              "senses": [
+                {
+                  "type": "darkvision",
+                  "range": 120
+                }
+              ],
               "spells": [
                 {
                   "spell": "dancing-lights",
@@ -363,7 +389,12 @@
       {
         "name": "Darkvision",
         "text": "You have Darkvision with a range of 60 feet.",
-        "darkvision": 60
+        "senses": [
+          {
+            "type": "darkvision",
+            "range": 60
+          }
+        ]
       },
       {
         "name": "Gnomish Cunning",
@@ -474,10 +505,12 @@
               "name": "Fire’s Burn",
               "text": "When you hit a target with an attack roll and deal damage to it, you can also deal 1d10 Fire damage to that target.",
               "giant": "Fire Giant",
-              "trigger": "hit-with-attack-roll",
+              "trigger": "hit-with-attack-roll-and-deal-damage",
               "damage": {
                 "dice": "1d10",
-                "type": "fire"
+                "types": [
+                  "fire"
+                ]
               }
             },
             {
@@ -485,14 +518,16 @@
               "name": "Frost’s Chill",
               "text": "When you hit a target with an attack roll and deal damage to it, you can also deal 1d6 Cold damage to that target and reduce its Speed by 10 feet until the start of your next turn.",
               "giant": "Frost Giant",
-              "trigger": "hit-with-attack-roll",
+              "trigger": "hit-with-attack-roll-and-deal-damage",
               "targetSpeedReduction": {
                 "feet": 10,
                 "until": "start-of-user-next-turn"
               },
               "damage": {
                 "dice": "1d6",
-                "type": "cold"
+                "types": [
+                  "cold"
+                ]
               }
             },
             {
@@ -500,9 +535,11 @@
               "name": "Hill’s Tumble",
               "text": "When you hit a Large or smaller creature with an attack roll and deal damage to it, you can give that target the Prone condition.",
               "giant": "Hill Giant",
-              "trigger": "hit-with-attack-roll",
+              "trigger": "hit-with-attack-roll-and-deal-damage",
               "targetMaxSize": "Large",
-              "targetCondition": "prone"
+              "targetCondition": {
+                "condition": "prone"
+              }
             },
             {
               "id": "stones-endurance",
@@ -529,7 +566,9 @@
               "trigger": "take-damage",
               "damage": {
                 "dice": "1d8",
-                "type": "thunder"
+                "types": [
+                  "thunder"
+                ]
               },
               "range": 60
             }
@@ -549,9 +588,11 @@
           "recharge": "long-rest"
         },
         "speedBonus": {
-          "feet": 10
+          "feet": 10,
+          "appliesWhen": "For that duration"
         },
-        "sizeChange": "Large"
+        "sizeChange": "Large",
+        "usableWhen": "if you’re in a big enough space"
       },
       {
         "name": "Powerful Build",
@@ -638,7 +679,7 @@
       {
         "name": "Versatile",
         "text": "You gain an Origin feat of your choice (see “Feats”). Skilled is recommended.",
-        "featChoice": {
+        "feat": {
           "category": "origin",
           "recommended": "skilled"
         }
@@ -673,7 +714,12 @@
       {
         "name": "Darkvision",
         "text": "You have Darkvision with a range of 120 feet.",
-        "darkvision": 120
+        "senses": [
+          {
+            "type": "darkvision",
+            "range": 120
+          }
+        ]
       },
       {
         "name": "Relentless Endurance",
@@ -705,7 +751,12 @@
       {
         "name": "Darkvision",
         "text": "You have Darkvision with a range of 60 feet.",
-        "darkvision": 60
+        "senses": [
+          {
+            "type": "darkvision",
+            "range": 60
+          }
+        ]
       },
       {
         "name": "Fiendish Legacy",

@@ -90,20 +90,24 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
     const match = t.match(pattern)
     return match ? Number(match[1]) : undefined
   }
-  set("darkvision", num(/Darkvision (?:with a range of|increases to) (\d+) feet/))
-  set("tremorsense", num(/Tremorsense with a range of (\d+) feet/))
-  set("truesight", num(/Truesight with a range of (\d+) feet/))
+  const senses = [...t.matchAll(/(Darkvision|Tremorsense|Truesight) (?:with a range of|increases to) (\d+) feet/g)].map((match) => ({ type: match[1].toLowerCase(), range: Number(match[2]) }))
+  const stone = t.match(/You must be on a stone surface or touching a stone surface to use this Tremorsense/)
+  if (senses.length)
+    set(
+      "senses",
+      senses.map((sense) => (sense.type === "tremorsense" && stone ? { ...sense, appliesWhen: stone[0] } : sense))
+    )
   const resistance = [...t.matchAll(/Resistance to (\w+) damage/g)].map((match) => match[1].toLowerCase()).filter((type) => damageTypeIds.includes(type as never))
   if (resistance.length) set("resistances", { damageTypes: resistance })
-  const except = t.match(/Resistance to all damage except (\w+) and (\w+)/)
-  if (except) set("resistanceExcept", [except[1].toLowerCase(), except[2].toLowerCase()])
+  const except = t.match(/^(While within Dim Light or Darkness), .*Resistance to all damage except (\w+) and (\w+)/)
+  if (except) set("resistances", { allExcept: [except[2].toLowerCase(), except[3].toLowerCase()], appliesWhen: except[1] })
   if (/the (?:damage )?type determined by your Draconic Ancestry trait/.test(t)) set("damageTypeFromChoice", "draconic-ancestry")
   const conditions = [...t.matchAll(/Advantage on saving throws you make to avoid or end the (\w+) condition/g)].map((match) => match[1].toLowerCase())
   const abilities = t.match(/Advantage on (Intelligence), (Wisdom), and (Charisma) saving throws/)
   if (conditions.length || abilities)
     set("savingThrowAdvantage", { ...(conditions.length ? { conditions } : {}), ...(abilities ? { abilities: [1, 2, 3].map((i) => abilityByName[abilities[i]]) } : {}) })
   const hp = t.match(/Hit Point maximum increases by (\d+), and it increases by (\d+) again whenever you gain a level/)
-  if (hp) set("hitPointBonus", { initial: Number(hp[1]), perLevel: Number(hp[2]) })
+  if (hp) set("hitPointMaximum", { increase: Number(hp[1]), perLevel: Number(hp[2]), levelsCounted: "character" })
   if (/\bas a Bonus Action\b/i.test(t) && !/^You can use this Bonus Action/.test(t)) set("activation", ["bonus-action"])
   else if (/take a Reaction to/.test(t)) set("activation", ["reaction"])
   set("level", num(/character level (\d+)\b/))
@@ -117,29 +121,37 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   set("speed", num(/Your Speed increases to (\d+) feet/))
   {
     const bonus = num(/your Speed increases by (\d+) feet/)
-    if (bonus !== undefined) set("speedBonus", { feet: bonus })
+    if (bonus !== undefined) set("speedBonus", { feet: bonus, ...(/For that duration, /.test(t) ? { appliesWhen: "For that duration" } : {}) })
   }
   {
     const reduction = t.match(/reduce its Speed by (\d+) feet until the start of your next turn/)
     if (reduction) set("targetSpeedReduction", { feet: Number(reduction[1]), until: "start-of-user-next-turn" })
   }
   if (/Fly Speed equal to your Speed/.test(t)) set("flySpeed", "speed")
+  {
+    const span = t.match(/^(While within Dim Light or Darkness)(?=, you can give yourself)/) ?? t.match(/(if you’re in a big enough space)/)
+    if (span) set("usableWhen", span[1])
+  }
   set("sizeChange", t.match(/change your size to (\w+)/)?.[1])
   set("longRestHours", num(/Long Rest in (\d+) hours/))
   if (/Temporary Hit Points equal to your Proficiency Bonus/.test(t)) set("temporaryHitPoints", "proficiency-bonus")
   if (/gain Heroic Inspiration whenever you finish a Long Rest/.test(t)) set("heroicInspiration", "long-rest")
   const damage = t.match(new RegExp(`(\\d+d\\d+) (${damageTypeWords}) damage to (?:that|the) (?:target|creature)`))
-  if (damage) set("damage", { dice: damage[1], type: damage[2].toLowerCase() })
+  if (damage) set("damage", { dice: damage[1], types: [damage[2].toLowerCase()] })
   const reduction = t.match(/roll (\d+d\d+)\. Add your (\w+) modifier to the number rolled and reduce the damage/)
   if (reduction) set("damageReduction", { dice: reduction[1], ability: abilityByName[reduction[2]] })
   set("teleportFeet", num(/teleport up to (\d+) feet/))
   set("range", num(/within (\d+) feet of you/))
   const onTarget = t.match(/give that target the (\w+) condition/)
-  if (onTarget) set("targetCondition", onTarget[1].toLowerCase())
+  if (onTarget) set("targetCondition", { condition: onTarget[1].toLowerCase() })
   const onSelf = t.match(/give yourself the (\w+) condition/)
-  if (onSelf) set("selfCondition", onSelf[1].toLowerCase())
+  if (onSelf)
+    set("selfCondition", {
+      condition: onSelf[1].toLowerCase(),
+      ...(/The condition ends on you immediately after you take an action, a Bonus Action, or a Reaction/.test(t) ? { endsAfter: ["action", "bonus-action", "reaction"] } : {}),
+    })
   const feat = t.match(/Origin feat of your choice \(see “Feats”\)\. (\w+) is recommended/)
-  if (feat) set("featChoice", { category: "origin", recommended: toId(feat[1]) })
+  if (feat) set("feat", { category: "origin", recommended: toId(feat[1]) })
   const device = t.match(/\(AC (\d+), (\d+) HP\).*?(\w+) such devices in existence at a time, and each falls apart (\d+) hours after/)
   const minutes = t.match(/you can spend (\d+) minutes casting Prestidigitation/)
   if (device && minutes)
@@ -168,8 +180,11 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   }
   if (/roll Initiative, you can add your Proficiency Bonus to the roll/.test(t)) set("initiativeBonus", "proficiency-bonus")
   if (/swap your Initiative with the Initiative of one willing ally.*can’t make this swap if you or the ally has the Incapacitated condition/.test(t))
-    set("initiativeSwap", { allies: 1, blockedByCondition: "incapacitated" })
-  if (/Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either roll/.test(t)) set("damageDiceRolledTwice", { perTurn: 1 })
+    set("initiativeSwap", { allies: 1, blockedByCondition: "incapacitated", appliesWhen: "one willing ally in the same combat" })
+  if (/Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either roll/.test(t)) {
+    set("damageDiceRolledTwice", true)
+    set("oncePerTurn", /Once per turn when/.test(t) ? "any-turn" : /Once on each of your turns/.test(t) ? "own-turn" : undefined)
+  }
   const extra = t.match(/extra attack as a result of using a weapon that has the (\w+) property, you can add your ability modifier to the damage of that attack/)
   if (extra) set("addAbilityModifierToExtraAttack", { weaponProperty: extra[1].toLowerCase() })
   set("rerollD20On", num(/When you roll a (\d+) on the d20 of a D20 Test, you can reroll the die, and you must use the new roll/))
@@ -178,9 +193,7 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   if (/Advantage on any ability check you make to end the Grappled condition/.test(t)) set("grappledEscapeAdvantage", true)
   if (/count as one size larger when determining your carrying capacity/.test(t)) set("carryingCapacitySizeBonus", 1)
   if (/magic can’t put you to sleep/.test(t)) set("sleepImmunity", true)
-  if (/must be on a stone surface or touching a stone surface/.test(t)) set("requires", "stone-surface")
-  else if (/^While within Dim Light or Darkness/.test(t)) set("requires", "dim-light-or-darkness")
-  if (/(?:^|\. )When you hit (?:a target|a Large or smaller creature) with an attack roll and deal damage/.test(t)) set("trigger", "hit-with-attack-roll")
+  if (/(?:^|\. )When you hit (?:a target|a Large or smaller creature) with an attack roll and deal damage/.test(t)) set("trigger", "hit-with-attack-roll-and-deal-damage")
   else if (/Once per turn when you hit a target with a weapon/.test(t)) set("trigger", "hit-with-weapon")
   else if (/^Immediately after you take the Attack action or the Magic action, you can teleport/.test(t)) set("trigger", "after-attack-or-magic-action")
   else if (/(?:^|\. )When you take damage/.test(t)) set("trigger", "take-damage")
@@ -190,14 +203,11 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
 }
 
 const derivedKeys = [
-  "darkvision",
-  "tremorsense",
-  "truesight",
+  "senses",
   "resistances",
-  "resistanceExcept",
   "damageTypeFromChoice",
   "savingThrowAdvantage",
-  "hitPointBonus",
+  "hitPointMaximum",
   "activation",
   "level",
   "durationMinutes",
@@ -218,7 +228,8 @@ const derivedKeys = [
   "range",
   "targetCondition",
   "selfCondition",
-  "featChoice",
+  "usableWhen",
+  "feat",
   "clockworkDevice",
   "cantrips",
   "spellLevel",
@@ -239,7 +250,7 @@ const derivedKeys = [
   "grappledEscapeAdvantage",
   "carryingCapacitySizeBonus",
   "sleepImmunity",
-  "requires",
+  "oncePerTurn",
   "trigger",
   "targetMaxSize",
 ]
@@ -737,7 +748,7 @@ function verifySpecies(report: Report) {
         const first = t.match(/takes (\d+d\d+) damage of the type/)
         const steps = t.match(/character levels (\d+) \((\d+d\d+)\), (\d+) \((\d+d\d+)\), and (\d+) \((\d+d\d+)\)/)
         const expected = {
-          shapes: shapes
+          shapeOptions: shapes
             ? [
                 { shape: "cone", feet: Number(shapes[1]) },
                 { shape: "line", feet: Number(shapes[2]), width: Number(shapes[3]) },
@@ -753,7 +764,7 @@ function verifySpecies(report: Report) {
                   { level: Number(steps[5]), dice: steps[6] },
                 ]
               : [],
-          onSave: /On a successful save, a creature takes half as much damage/.test(t) ? "half" : "",
+          onSuccess: /On a successful save, a creature takes half as much damage/.test(t) ? "half" : "",
         }
         if (!same(trait.breathWeapon, expected)) breathFailures.push(`${entry.name} ${trait.name}: ${show(trait.breathWeapon)}, official ${show(expected)}`)
       }
@@ -929,12 +940,12 @@ function verifySpecies(report: Report) {
     )
   }
   const feats = readData("feats")
-  const versatile = species.flatMap((e) => e.traits).filter((t: any) => t.featChoice)
+  const versatile = species.flatMap((e) => e.traits).filter((t: any) => t.feat)
   report.check(
     "species",
     "recommended feat resolves",
     versatile.length,
-    versatile.filter((t: any) => !feats.some((f) => f.id === t.featChoice.recommended)).map((t: any) => `${t.name}: no feat ${t.featChoice.recommended}`)
+    versatile.filter((t: any) => !feats.some((f) => f.id === t.feat.recommended)).map((t: any) => `${t.name}: no feat ${t.feat.recommended}`)
   )
 
   // Open5e: names, sizes, speed.
@@ -1386,9 +1397,9 @@ function verifyFeats(report: Report) {
 
 /** Every `trigger` the data should hold, by "species/option" or "feat/benefit", written by reading the sentence that opens each text. */
 const handTriggers: Record<string, string> = {
-  "goliath/Fire’s Burn": "hit-with-attack-roll",
-  "goliath/Frost’s Chill": "hit-with-attack-roll",
-  "goliath/Hill’s Tumble": "hit-with-attack-roll",
+  "goliath/Fire’s Burn": "hit-with-attack-roll-and-deal-damage",
+  "goliath/Frost’s Chill": "hit-with-attack-roll-and-deal-damage",
+  "goliath/Hill’s Tumble": "hit-with-attack-roll-and-deal-damage",
   "goliath/Stone’s Endurance": "take-damage",
   "goliath/Storm’s Thunder": "take-damage",
   "savage-attacker/": "hit-with-weapon",
@@ -1411,5 +1422,23 @@ function verifyTriggers(report: Report) {
   const failures: string[] = []
   for (const key of new Set([...Object.keys(actual), ...Object.keys(handTriggers)]))
     if (actual[key] !== handTriggers[key]) failures.push(`${key}: trigger ${show(actual[key])}, the hand table has ${show(handTriggers[key])}`)
-  report.check("origins", "triggers match the hand-kept table, both ways", total + Object.keys(handTriggers).length, failures)
+  // Gates on use and limits on frequency, by key, written by reading each sentence: a precondition to use, how often, and what ends a condition.
+  const gates: Record<string, unknown> = {}
+  const noteGate = (key: string, item: any) => {
+    const gate = { usableWhen: item.usableWhen, oncePerTurn: item.oncePerTurn, endsAfter: item.selfCondition?.endsAfter }
+    if (gate.usableWhen || gate.oncePerTurn || gate.endsAfter) gates[key] = JSON.parse(JSON.stringify(gate))
+  }
+  for (const entry of readData("species")) for (const trait of entry.traits) noteGate(`${entry.id}/${trait.name}`, trait)
+  for (const feat of readData("feats")) {
+    noteGate(`${feat.id}/`, feat)
+    for (const benefit of feat.benefits ?? []) noteGate(`${feat.id}/${benefit.name}`, benefit)
+  }
+  const handGates: Record<string, unknown> = {
+    "goliath/Large Form": { usableWhen: "if you’re in a big enough space" },
+    "savage-attacker/": { oncePerTurn: "any-turn" },
+    "boon-of-the-night-spirit/Merge with Shadows": { usableWhen: "While within Dim Light or Darkness", endsAfter: ["action", "bonus-action", "reaction"] },
+  }
+  for (const key of new Set([...Object.keys(gates), ...Object.keys(handGates)]))
+    if (JSON.stringify(gates[key]) !== JSON.stringify(handGates[key])) failures.push(`${key}: gates ${show(gates[key])}, the hand table has ${show(handGates[key])}`)
+  report.check("origins", "triggers match the hand-kept table, both ways", total + Object.keys(handTriggers).length + Object.keys(handGates).length, failures)
 }

@@ -116,6 +116,7 @@ const numberGroups: { pattern: RegExp; paths: string[]; stripModifiers?: boolean
   { pattern: /(\d+) feet on each side/g, paths: ["dig.sideFeet"] },
   { pattern: /that has (\d+) Hit Points/g, paths: ["stabilize.atHitPoints"] },
   { pattern: /up to (three) pieces/g, paths: ["coating.ammunitionPieces"] },
+  { pattern: /coat (one) weapon/g, paths: ["coating.weapons"] },
   { pattern: /spell save DC is (\d+)/g, paths: ["spellScroll.saveDc"] },
   { pattern: /attack bonus is \+(\d+)/g, paths: ["spellScroll.attackBonus"] },
   { pattern: /\+(\d+) bonus/g, paths: ["modifiers.amount"] },
@@ -129,6 +130,7 @@ const mechanicKeys = [
   "lengthFeet",
   "heightFeet",
   "sleeps",
+  "sleepsSizes",
   "uses",
   "hazard",
   "spaceHazard",
@@ -570,14 +572,15 @@ export default function verify(report: Report) {
     }
     if (Boolean(binding) !== /has the Grappled, Incapacitated, or Restrained condition/.test(flat(text)))
       mechFailures.push(`${entry.id}: binding differs from the sentence that names Grappled, Incapacitated or Restrained`)
-    if (binding && !bindingWords[binding.appliesWhen as "legs-bound"]?.test(flat(text)))
-      mechFailures.push(`${entry.id}: bound condition applies when ${binding.appliesWhen}, which the text does not say`)
+    if (binding && !bindingWords[binding.appliesIf as "legs-bound"]?.test(flat(text))) mechFailures.push(`${entry.id}: bound condition applies if ${binding.appliesIf}, which the text does not say`)
     if (Boolean(entry.spaceHazard?.onlyWhenLit) !== /If lit, the oil burns/.test(flat(text))) mechFailures.push(`${entry.id}: onlyWhenLit differs from "If lit"`)
     const speedZero = [entry.hazard, entry.spaceHazard].some((hazard) => hazard?.speedZeroUntilStartOfNextTurn)
     if (speedZero !== /Speed reduced to 0 until the start of its next turn/.test(flat(text))) mechFailures.push(`${entry.id}: speed to 0 differs from the text`)
     if (Boolean(entry.dig?.inSoilOrSimilar) !== /in soil or similar material/.test(flat(text))) mechFailures.push(`${entry.id}: dig material differs from the text`)
     // Activation: the Utilize action and the Bonus Action the text names.
-    const wantActivation = [...(/Utilize action/.test(text) ? ["utilize-action"] : []), ...(/Bonus Action/.test(text) ? ["bonus-action"] : [])]
+    // The Bonus Action that only undoes the Climber's Kit anchor, or lowers a lantern hood, is not a way to use the item.
+    const undoesOnly = ["climbers-kit", "lantern-hooded"].includes(entry.id)
+    const wantActivation = [...(/Utilize action/.test(text) ? ["utilize-action"] : []), ...(!undoesOnly && /Bonus Action/.test(text) ? ["bonus-action"] : [])]
     mechTotal++
     if (!same(entry.activation ?? [], wantActivation)) mechFailures.push(`${entry.id}: activation ${JSON.stringify(entry.activation)} but the text names ${wantActivation}`)
     if (entry.ignite && !same(entry.ignite.exposedFuel, ["bonus-action"])) mechFailures.push(`${entry.id}: ignite action differs`)
@@ -1099,6 +1102,38 @@ export default function verify(report: Report) {
     expect(same(entry.capacity?.holds ?? [], holds), `${entry.id}: container contents ${JSON.stringify(entry.capacity?.holds)} differ from ${JSON.stringify(holds)}`)
     for (const hold of holds) expect(squash((byId.get(hold.item) as Entry)?.name ?? "").startsWith(squash(hold.item)), `${entry.id}: ${hold.item} is not the right entry`)
   }
+  for (const entry of of("gear")) {
+    const text = flat(entry.description)
+    // What triggers a hazard, who it targets, and the limits the text puts on a bound creature or a reader.
+    const hazardTriggers = [...(/for the first time on a turn/.test(text) ? ["enters-area-first-time-on-a-turn"] : []), ...(/steps on the plate/.test(text) ? ["steps-on-pressure-plate"] : [])]
+    expect(same(entry.hazard?.triggers ?? [], hazardTriggers), `${entry.id}: hazard triggers ${JSON.stringify(entry.hazard?.triggers)} differ from the text ${hazardTriggers}`)
+    const spaceTriggers = /enters the area or ends its turn there/.test(text) ? ["enters-area", "ends-turn-in-area"] : []
+    expect(same(entry.spaceHazard?.triggers ?? [], spaceTriggers), `${entry.id}: space hazard triggers differ from the text`)
+    expect(
+      entry.spaceHazard?.oncePerTurn === (/only once per turn/.test(text) ? "any-turn" : /once on each of your turns|once on a turn/i.test(text) ? "own-turn" : undefined),
+      `${entry.id}: once per turn differs from the text`
+    )
+    if (entry.hazard?.range !== undefined) {
+      const targets = /Target one creature or object/.test(text) ? "creature-or-object" : /Target (?:one|a) creature/.test(text) ? "creature" : undefined
+      expect(entry.hazard.targets === targets, `${entry.id}: targets ${entry.hazard.targets}, the text says ${targets}`)
+    } else expect(entry.hazard?.targets === undefined, `${entry.id}: has targets but no thrown range`)
+    const sleeping = new RegExp(`sleeps (?:up to \\w+ |one )?(${sizeWord}(?: or ${sizeWord})*) creature`).exec(text)
+    expect(same(entry.sleepsSizes, sleeping ? sleeping[1].split(" or ") : undefined), `${entry.id}: sleeping sizes differ from the text`)
+    expect(Boolean(entry.binding?.targetUnwilling) === (Boolean(entry.binding) && /unwilling/.test(text)), `${entry.id}: unwilling target differs from the text`)
+    expect(
+      entry.binding?.boundAttackRolls === (/While bound, a creature has Disadvantage on attack rolls/.test(text) ? "disadvantage" : undefined),
+      `${entry.id}: attack roll penalty while bound differs from the text`
+    )
+    expect(Boolean(entry.coating?.endsWhenDamageIsDealt) === (Boolean(entry.coating) && /or until its damage is dealt/.test(text)), `${entry.id}: coating end differs from the text`)
+    expect(
+      Boolean(entry.spellScroll?.disintegratesAfterCasting) === (Boolean(entry.spellScroll) && /The scroll disintegrates when the casting is completed/.test(text)),
+      `${entry.id}: scroll disintegration differs from the text`
+    )
+    expect(
+      Boolean(entry.spellScroll?.requiresSpellOnUserClassList) === (Boolean(entry.spellScroll) && /If the spell is on your class’s spell list/.test(text)),
+      `${entry.id}: class spell list requirement differs from the text`
+    )
+  }
   // Armor training: the categories each rule covers are the words of its official heading.
   const armorHeadings = P(92)
   for (const rule of rules.filter((item) => item.kind === "armor-training")) {
@@ -1149,7 +1184,12 @@ export default function verify(report: Report) {
     ["reach", prop("reach")?.reachBonusFeet, 5, /adds 5 feet to your reach/],
     ["push", mastery("push")?.pushFeet, 10, /up to 10 feet straight away/],
     ["push", mastery("push")?.maxSize, "Large", /if it is Large or smaller/],
-    ["slow", mastery("slow")?.targetSpeedReduction, { feet: 10, until: "start-of-user-next-turn" }, /reduce its Speed by 10 feet until the start of your next turn/],
+    [
+      "slow",
+      mastery("slow")?.targetSpeedReduction,
+      { feet: 10, until: "start-of-user-next-turn", capAcrossHits: 10 },
+      /reduce its Speed by 10 feet until the start of your next turn[\s\S]*Speed reduction doesn’t exceed 10 feet/,
+    ],
     ["topple", mastery("topple")?.save?.ability, "con", /Constitution saving throw/],
     ["topple", mastery("topple")?.save?.dc, { plusModifierOf: "attack-ability" }, /DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus/],
     ["topple", mastery("topple")?.save?.failureCondition, "prone", /has the Prone condition/],
@@ -1162,11 +1202,41 @@ export default function verify(report: Report) {
     for (const field of Object.keys(entry))
       if (["minimumScore", "reachBonusFeet", "pushFeet", "maxSize", "targetSpeedReduction", "save"].includes(field) && !typedProps.some(([name]) => name === entry.id))
         propertyFailures.push(`${entry.id}: unexpected typed field ${field}`)
+  // Each mastery's trigger and once-per-turn limit, from its own text and from a hand-kept table.
+  const handTriggers: Record<string, string> = {
+    cleave: "hit",
+    graze: "miss",
+    nick: "light-extra-attack",
+    push: "hit",
+    sap: "hit",
+    slow: "hit-and-deal-damage",
+    topple: "hit",
+    vex: "hit-and-deal-damage",
+  }
+  for (const entry of masteries) {
+    const text = flat(entry.description)
+    const fromText = /and deal damage to (?:it|the creature)/.test(text)
+      ? "hit-and-deal-damage"
+      : /attack roll with this weapon misses/.test(text)
+        ? "miss"
+        : /extra attack of the Light property/.test(text)
+          ? "light-extra-attack"
+          : /If you hit/.test(text)
+            ? "hit"
+            : undefined
+    propertyFailures.push(
+      ...(entry.trigger === fromText && entry.trigger === handTriggers[entry.id] ? [] : [`${entry.id}: trigger ${entry.trigger}, text says ${fromText}, hand table says ${handTriggers[entry.id]}`])
+    )
+    propertyFailures.push(...(entry.oncePerTurn === (/only once per turn/.test(text) ? "any-turn" : undefined) ? [] : [`${entry.id}: once per turn differs from the text`]))
+  }
   // Every mastery whose text reduces a target's Speed carries the reduction, with its feet and its end, and no other does.
   for (const entry of masteries) {
     const stated = /reduce its Speed by (\d+) feet until the start of your next turn/.exec(flat(entry.description))
     propertyFailures.push(
-      ...(same(entry.targetSpeedReduction, stated ? { feet: Number(stated[1]), until: "start-of-user-next-turn" } : undefined)
+      ...(same(
+        entry.targetSpeedReduction,
+        stated ? { feet: Number(stated[1]), until: "start-of-user-next-turn", capAcrossHits: Number(/Speed reduction doesn’t exceed (\d+) feet/.exec(flat(entry.description))?.[1]) } : undefined
+      )
         ? []
         : [`${entry.id}: target Speed reduction ${JSON.stringify(entry.targetSpeedReduction)} differs from the text`])
     )
@@ -1217,9 +1287,21 @@ export default function verify(report: Report) {
       if (item.condition !== "poisoned" && item.whilePoisoned !== (/while Poisoned in this way/.test(text) ? true : undefined)) wrong(`${item.condition} should be held while Poisoned`)
       if ((item.failedByAtLeast === 5) !== /fails the save by 5 or more/.test(text) && item.condition !== "poisoned") wrong("fails-by-5 rule differs")
     }
-    if (/Speed is halved/.test(text) !== Boolean(entry.speedHalved)) wrong("speed halved differs")
-    if (/can’t knowingly communicate a lie/.test(text) !== Boolean(entry.cannotKnowinglyLie)) wrong("cannot lie differs")
-    if (/can’t be healed by any means/.test(text) !== Boolean(entry.damageCannotBeHealed)) wrong("damage cannot be healed differs")
+    if (/Speed is halved/.test(text) !== Boolean(entry.speedHalvedWhilePoisoned)) wrong("speed halved differs")
+    if (/can’t knowingly communicate a lie/.test(text) !== Boolean(entry.cannotKnowinglyLieWhilePoisoned)) wrong("cannot lie differs")
+    if (/can’t be healed by any means/.test(text) !== Boolean(entry.damageCannotBeHealedWhilePoisoned)) wrong("damage cannot be healed differs")
+    const waking = [
+      ...(/wakes up if it takes damage/.test(text) ? ["takes-damage"] : []),
+      ...(/another creature takes an action to shake it awake/.test(text) ? ["another-creature-shakes-it-awake"] : []),
+    ]
+    const typedWaking = (entry.conditions ?? []).flatMap((item: Entry) => (item.endsWhen ?? []).map((value: string) => `${item.condition}:${value}`))
+    if (
+      !same(
+        typedWaking,
+        waking.map((value) => `unconscious:${value}`)
+      )
+    )
+      wrong(`what ends Unconscious ${typedWaking} differs from the text ${waking}`)
     if (/stroke of midnight/.test(text) !== Boolean(entry.delayedUntilMidnight)) wrong("midnight delay differs")
     const successes = /After (\w+) successful saves?/.exec(text)?.[1]
     const wantSuccesses = successes ? (numberWords[successes] ?? (successes === "seven" ? 7 : undefined)) : /ending the effect on itself on a success/.test(text) ? 1 : undefined
@@ -1736,14 +1818,16 @@ const handAmmunition = ["Arrows|20|quiver|1|1 gp", "Bolts|20|case-crossbow-bolt|
 
 // id: the typed facts of each gear entry, as "path=value", read from its description. Gear not listed has none.
 const handMechanics: Record<string, string> = {
-  acid: "hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=2d6; hazard.damage.type=acid",
-  "alchemists-fire": "hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=1d4; hazard.damage.type=fire; hazard.burning=true",
+  acid: "hazard.targets=creature-or-object; hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=2d6; hazard.damage.type=acid",
+  "alchemists-fire":
+    "hazard.targets=creature-or-object; hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=1d4; hazard.damage.type=fire; hazard.burning=true",
   antitoxin: "activation=bonus-action; modifiers.effect=advantage; modifiers.on=save; modifiers.againstCondition=poisoned; modifiers.durationHours=1",
   backpack: "capacity.pounds=30; capacity.cubicFeet=1",
-  "ball-bearings": "activation=utilize-action; hazard.areaSideFeet=10; hazard.withinFeet=10; hazard.save.ability=dex; hazard.save.dc=10; hazard.condition=prone; hazard.recoverMinutes=10",
+  "ball-bearings":
+    "activation=utilize-action; hazard.triggers=enters-area-first-time-on-a-turn; hazard.areaSideFeet=10; hazard.withinFeet=10; hazard.save.ability=dex; hazard.save.dc=10; hazard.condition=prone; hazard.recoverMinutes=10",
   barrel: "capacity.gallons=40; capacity.cubicFeet=4",
   basket: "capacity.pounds=40; capacity.cubicFeet=2",
-  bedroll: "sleeps=1; modifiers.effect=automatic-success; modifiers.on=save",
+  bedroll: "sleeps=1; sleepsSizes=Small; sleepsSizes=Medium; modifiers.effect=automatic-success; modifiers.on=save",
   bell: "activation=utilize-action; audibleFeet=60",
   blanket: "modifiers.effect=advantage; modifiers.on=save",
   "block-and-tackle": "liftMultiplier=4",
@@ -1751,53 +1835,56 @@ const handMechanics: Record<string, string> = {
   "bottle-glass": "capacity.pints=1.5",
   bucket: "capacity.cubicFeet=0.5",
   caltrops:
-    "activation=utilize-action; hazard.areaSideFeet=5; hazard.withinFeet=5; hazard.save.ability=dex; hazard.save.dc=15; hazard.damage.amount=1; hazard.damage.type=piercing; hazard.speedZeroUntilStartOfNextTurn=true; hazard.recoverMinutes=10",
+    "activation=utilize-action; hazard.triggers=enters-area-first-time-on-a-turn; hazard.areaSideFeet=5; hazard.withinFeet=5; hazard.save.ability=dex; hazard.save.dc=15; hazard.damage.amount=1; hazard.damage.type=piercing; hazard.speedZeroUntilStartOfNextTurn=true; hazard.recoverMinutes=10",
   candle: "light.shape=radius; light.brightFeet=5; light.dimFeet=5; light.durationHours=1",
   "case-crossbow-bolt": "capacity.holds.item=bolts; capacity.holds.quantity=20; capacity.holds.unit=single",
   "case-map-or-scroll": "capacity.holds.item=paper; capacity.holds.quantity=10; capacity.holds.item=parchment; capacity.holds.quantity=5",
   chain:
-    "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesWhen=legs-bound; checks.use=bind; checks.ability=str; checks.skill=athletics; checks.dc=13; checks.range=5; checks.activation=utilize-action; checks.use=escape; checks.ability=dex; checks.skill=acrobatics; checks.dc=18; checks.activation=action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=20; checks.activation=action",
+    "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesIf=legs-bound; binding.targetUnwilling=true; checks.use=bind; checks.ability=str; checks.skill=athletics; checks.dc=13; checks.range=5; checks.activation=utilize-action; checks.use=escape; checks.ability=dex; checks.skill=acrobatics; checks.dc=18; checks.activation=action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=20; checks.activation=action",
   chest: "capacity.cubicFeet=12",
-  "climbers-kit": "activation=utilize-action; activation=bonus-action; anchorFeet=25",
+  "climbers-kit": "activation=utilize-action; anchorFeet=25",
   costume: "modifiers.effect=advantage; modifiers.on=check",
   crowbar: "modifiers.effect=advantage; modifiers.on=check; modifiers.ability=str",
   flask: "capacity.pints=1",
   "grappling-hook": "activation=utilize-action; checks.use=catch; checks.ability=dex; checks.skill=acrobatics; checks.dc=13; checks.range=50; checks.activation=utilize-action",
   "healers-kit": "activation=utilize-action; uses=10; stabilize.requiresCondition=unconscious; stabilize.atHitPoints=0; stabilize.replacesCheck.ability=wis; stabilize.replacesCheck.skill=medicine",
-  "holy-water": "hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=2d8; hazard.damage.type=radiant; hazard.onlyAgainst=fiend; hazard.onlyAgainst=undead",
+  "holy-water":
+    "hazard.targets=creature; hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.damage.dice=2d8; hazard.damage.type=radiant; hazard.onlyAgainst=fiend; hazard.onlyAgainst=undead",
   "hunting-trap":
-    "activation=utilize-action; hazard.save.ability=dex; hazard.save.dc=13; hazard.damage.dice=1d4; hazard.damage.type=piercing; hazard.speedZeroUntilStartOfNextTurn=true; hazard.chainFeet=3; hazard.failedFreeAttemptDamage.amount=1; hazard.failedFreeAttemptDamage.type=piercing; checks.use=free; checks.ability=str; checks.skill=athletics; checks.dc=13; checks.activation=action",
+    "activation=utilize-action; hazard.triggers=steps-on-pressure-plate; hazard.save.ability=dex; hazard.save.dc=13; hazard.damage.dice=1d4; hazard.damage.type=piercing; hazard.speedZeroUntilStartOfNextTurn=true; hazard.chainFeet=3; hazard.failedFreeAttemptDamage.amount=1; hazard.failedFreeAttemptDamage.type=piercing; checks.use=free; checks.ability=str; checks.skill=athletics; checks.dc=13; checks.activation=action",
   jug: "capacity.gallons=1",
   ladder: "heightFeet=10",
   lamp: "light.shape=radius; light.brightFeet=15; light.dimFeet=30; light.fuel=oil",
   "lantern-bullseye": "light.shape=cone; light.brightFeet=60; light.dimFeet=60; light.fuel=oil",
-  "lantern-hooded": "activation=bonus-action; light.shape=radius; light.brightFeet=30; light.dimFeet=30; light.fuel=oil; light.loweredHoodDimRadiusFeet=5",
+  "lantern-hooded": "light.shape=radius; light.brightFeet=30; light.dimFeet=30; light.fuel=oil; light.loweredHoodDimRadiusFeet=5",
   lock: "checks.use=pick; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=15; checks.tool=thieves-tools",
   "magnifying-glass": "modifiers.effect=advantage; modifiers.on=check",
   manacles:
-    "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesWhen=attached-to-fixed-anchor; binding.sizes=Small; binding.sizes=Medium; checks.use=bind; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=13; checks.range=5; checks.activation=utilize-action; checks.use=escape; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=20; checks.activation=action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=25; checks.activation=action; checks.use=pick; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=15; checks.tool=thieves-tools",
+    "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesIf=attached-to-fixed-anchor; binding.targetUnwilling=true; binding.boundAttackRolls=disadvantage; binding.sizes=Small; binding.sizes=Medium; checks.use=bind; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=13; checks.range=5; checks.activation=utilize-action; checks.use=escape; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=20; checks.activation=action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=25; checks.activation=action; checks.use=pick; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=15; checks.tool=thieves-tools",
   map: "modifiers.effect=bonus; modifiers.on=check; modifiers.ability=wis; modifiers.skills=survival; modifiers.amount=5",
-  net: "hazard.range=15; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.condition=restrained; hazard.succeedsAutomaticallyIfSizeAtLeast=Huge; checks.use=escape; checks.ability=str; checks.skill=athletics; checks.dc=10; checks.range=5; checks.activation=action; object.ac=10; object.hp=5; object.immunities=bludgeoning; object.immunities=poison; object.immunities=psychic",
-  oil: "activation=utilize-action; fuelHours=6; hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.dryAfterMinutes=1; hazard.extraFireDamage.amount=5; hazard.extraFireDamage.type=fire; spaceHazard.areaSideFeet=5; spaceHazard.withinFeet=5; spaceHazard.burnsUntilRoundsAfterLit=2; spaceHazard.damage.amount=5; spaceHazard.damage.type=fire; spaceHazard.onlyWhenLit=true",
+  net: "hazard.targets=creature; hazard.range=15; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.condition=restrained; hazard.succeedsAutomaticallyIfSizeAtLeast=Huge; checks.use=escape; checks.ability=str; checks.skill=athletics; checks.dc=10; checks.range=5; checks.activation=action; object.ac=10; object.hp=5; object.immunities=bludgeoning; object.immunities=poison; object.immunities=psychic",
+  oil: "activation=utilize-action; fuelHours=6; hazard.targets=creature-or-object; hazard.range=20; hazard.save.ability=dex; hazard.save.dc.plusModifierOf=dex; hazard.dryAfterMinutes=1; hazard.extraFireDamage.amount=5; hazard.extraFireDamage.type=fire; spaceHazard.areaSideFeet=5; spaceHazard.withinFeet=5; spaceHazard.burnsUntilRoundsAfterLit=2; spaceHazard.damage.amount=5; spaceHazard.damage.type=fire; spaceHazard.onlyWhenLit=true; spaceHazard.triggers=enters-area; spaceHazard.triggers=ends-turn-in-area; spaceHazard.oncePerTurn=any-turn",
   perfume: "modifiers.effect=advantage; modifiers.on=check; modifiers.ability=cha; modifiers.skills=persuasion; modifiers.durationHours=1",
   "poison-basic":
-    "activation=bonus-action; coating.ammunitionPieces=3; coating.triggerDamageTypes=piercing; coating.triggerDamageTypes=slashing; coating.extraDamage.dice=1d4; coating.extraDamage.type=poison; coating.potencyMinutes=1",
+    "activation=bonus-action; coating.weapons=1; coating.ammunitionPieces=3; coating.endsWhenDamageIsDealt=true; coating.triggerDamageTypes=piercing; coating.triggerDamageTypes=slashing; coating.extraDamage.dice=1d4; coating.extraDamage.type=poison; coating.potencyMinutes=1",
   pole: "lengthFeet=10; modifiers.effect=advantage; modifiers.on=check; modifiers.ability=str; modifiers.skills=athletics",
   "pot-iron": "capacity.gallons=1",
   "potion-of-healing": "activation=bonus-action; magicItem=potions-of-healing; healing.dice=2d4 + 2; healing.range=5",
   pouch: "capacity.pounds=6; capacity.cubicFeet=0.2",
   quiver: "capacity.holds.item=arrows; capacity.holds.quantity=20; capacity.holds.unit=single",
   "ram-portable": "modifiers.effect=bonus; modifiers.on=check; modifiers.ability=str; modifiers.amount=4; modifiers.effect=advantage; modifiers.on=check",
-  rope: "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesWhen=legs-bound; checks.use=knot; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=10; checks.activation=utilize-action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=20; checks.use=escape; checks.ability=dex; checks.skill=acrobatics; checks.dc=15; checks.activation=action",
+  rope: "activation=utilize-action; binding.requiresAnyCondition=grappled; binding.requiresAnyCondition=incapacitated; binding.requiresAnyCondition=restrained; binding.appliesCondition=restrained; binding.appliesIf=legs-bound; binding.targetUnwilling=true; checks.use=knot; checks.ability=dex; checks.skill=sleight-of-hand; checks.dc=10; checks.activation=utilize-action; checks.use=burst; checks.ability=str; checks.skill=athletics; checks.dc=20; checks.use=escape; checks.ability=dex; checks.skill=acrobatics; checks.dc=15; checks.activation=action",
   sack: "capacity.pounds=30; capacity.cubicFeet=1",
   shovel: "dig.sideFeet=5; dig.hours=1; dig.inSoilOrSimilar=true",
   "signal-whistle": "activation=utilize-action; audibleFeet=600",
-  "spell-scroll-cantrip": "magicItem=spell-scroll; spellScroll.spellLevel=0; spellScroll.saveDc=13; spellScroll.attackBonus=5",
-  "spell-scroll-level-1": "magicItem=spell-scroll; spellScroll.spellLevel=1; spellScroll.saveDc=13; spellScroll.attackBonus=5",
+  "spell-scroll-cantrip":
+    "magicItem=spell-scroll; spellScroll.spellLevel=0; spellScroll.saveDc=13; spellScroll.attackBonus=5; spellScroll.requiresSpellOnUserClassList=true; spellScroll.disintegratesAfterCasting=true",
+  "spell-scroll-level-1":
+    "magicItem=spell-scroll; spellScroll.spellLevel=1; spellScroll.saveDc=13; spellScroll.attackBonus=5; spellScroll.requiresSpellOnUserClassList=true; spellScroll.disintegratesAfterCasting=true",
   "spikes-iron": "activation=utilize-action",
   spyglass: "magnification=2",
   string: "activation=utilize-action; lengthFeet=10",
-  tent: "sleeps=2",
+  tent: "sleeps=2; sleepsSizes=Small; sleepsSizes=Medium",
   tinderbox: "activation=bonus-action; ignite.exposedFuel=bonus-action; ignite.otherFireMinutes=1",
   torch: "light.shape=radius; light.brightFeet=20; light.dimFeet=20; light.durationHours=1; attackDamage.amount=1; attackDamage.type=fire",
   vial: "capacity.ounces=4",

@@ -31,6 +31,9 @@ const stray: [RegExp, string][] = [
   [/\/api\/|\burl\b:/, "an upstream API path"],
 ]
 
+// Fields that hold the official words of a condition or a time, in every data file.
+const quoted = /\.(appliesWhen|unless|timing|usableWhen)$/
+
 // A word keeps its inner hyphens and apostrophes: "foul-smelling", "can’t".
 const words = (text: string) => text.toLowerCase().match(/[a-z]+(?:[’-][a-z]+)*/g) ?? []
 
@@ -75,9 +78,11 @@ export default async function verify(report: Report) {
   const moduleFailures: string[] = []
   const textFailures: string[] = []
   const wordFailures: string[] = []
+  const spanFailures: string[] = []
   const printed = officialSpelling()
   let entries = 0
   let texts = 0
+  let spans = 0
   for (const name of names.filter((name) => files.includes(name))) {
     const data = readData<{ id: string }>(name)
     entries += data.length
@@ -87,6 +92,13 @@ export default async function verify(report: Report) {
       // Parsing must change nothing, or the file would differ from what the types promise.
       else if (JSON.stringify(result.data) !== JSON.stringify(entry)) schemaFailures.push(`${name} ${entry.id}: parsing changes the entry`)
       for (const path of nulls(entry)) textFailures.push(`${name} ${entry.id}${path}: null`)
+      // A stated condition or time is quoted, never written by us: one unbroken span of another text of the same entry.
+      const all = [...strings(entry)]
+      const prose = all.filter(([path]) => !quoted.test(path)).map(([, text]) => text)
+      for (const [path, text] of all.filter(([path]) => quoted.test(path))) {
+        spans++
+        if (!prose.some((other) => other.length > text.length && other.includes(text))) spanFailures.push(`${name} ${entry.id}${path}: “${text}” is not a span of the entry’s own text`)
+      }
       for (const [path, text] of strings(entry)) {
         texts++
         if (text === "") textFailures.push(`${name} ${entry.id}${path}: an empty string`)
@@ -114,6 +126,7 @@ export default async function verify(report: Report) {
   report.check("package", "every data file has a module that exports its entries and a lookup by id", names.length, moduleFailures)
   report.check("package", "no null, empty string, extraction mark or upstream API path in any text", texts, textFailures)
   report.check("package", "every word of every text is a word the official text prints", texts, wordFailures)
+  report.check("package", "every appliesWhen, unless, timing and usableWhen is one unbroken span of its own entry’s text", spans, spanFailures)
 
   // Data is imported by category so a host bundles only what it uses. The shared entry point must stay free of it.
   const shared = ["src/index.ts", "src/lookup.ts", "src/attribution.ts", ...readdirSync(resolve(root, "src/schema")).map((file) => `src/schema/${file}`)]

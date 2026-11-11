@@ -44,7 +44,8 @@
         "text": "Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can’t make this swap if you or the ally has the Incapacitated condition.",
         "initiativeSwap": {
           "allies": 1,
-          "blockedByCondition": "incapacitated"
+          "blockedByCondition": "incapacitated",
+          "appliesWhen": "one willing ally in the same combat"
         }
       }
     ]
@@ -283,17 +284,26 @@
         "activation": [
           "bonus-action"
         ],
-        "requires": "dim-light-or-darkness",
-        "selfCondition": "invisible"
+        "selfCondition": {
+          "condition": "invisible",
+          "endsAfter": [
+            "action",
+            "bonus-action",
+            "reaction"
+          ]
+        },
+        "usableWhen": "While within Dim Light or Darkness"
       },
       {
         "name": "Shadowy Form",
         "text": "While within Dim Light or Darkness, you have Resistance to all damage except Psychic and Radiant.",
-        "resistanceExcept": [
-          "psychic",
-          "radiant"
-        ],
-        "requires": "dim-light-or-darkness"
+        "resistances": {
+          "allExcept": [
+            "psychic",
+            "radiant"
+          ],
+          "appliesWhen": "While within Dim Light or Darkness"
+        }
       }
     ]
   },
@@ -325,7 +335,12 @@
       {
         "name": "Truesight",
         "text": "You have Truesight with a range of 60 feet.",
-        "truesight": 60
+        "senses": [
+          {
+            "type": "truesight",
+            "range": 60
+          }
+        ]
       }
     ]
   },
@@ -469,9 +484,8 @@
     "category": "origin",
     "text": "You’ve trained to deal particularly damaging strikes. Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either roll against the target.",
     "trigger": "hit-with-weapon",
-    "damageDiceRolledTwice": {
-      "perTurn": 1
-    }
+    "oncePerTurn": "any-turn",
+    "damageDiceRolledTwice": true
   },
   {
     "id": "skilled",
