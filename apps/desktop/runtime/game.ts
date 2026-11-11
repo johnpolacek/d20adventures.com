@@ -194,7 +194,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     const before = findCurrentActor(store.current().characters)
     await core.processNpcTurnsAfterCurrent(store.current()._id)
     const actor = findCurrentActor(store.current().characters)
-    if (actor && actor.id === before?.id && (actor.type === "npc" || actor.controlledBy === "ai")) throw new Error("The GM could not finish this character's turn. Continue to retry.")
+    if (actor && actor.id === before?.id && (actor.type === "npc" || actor.controlledBy === "ai")) throw inferenceFailure ?? new Error("The GM could not finish this character's turn. Continue to retry.")
   }
   return async (input: GameCommand) => {
     inferenceFailure = undefined

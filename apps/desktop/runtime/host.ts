@@ -128,7 +128,7 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
       await core.processNpcTurnsAfterCurrent(turn._id)
       const after = await store.getTurn({ turnId: turn._id })
       next = after ? (findCurrentActor(after.characters) as Actor | undefined) : undefined
-      if (next?.type === "npc" || next?.controlledBy === "ai") throw new Error("The GM could not finish this character's turn. Continue to retry.")
+      if (next?.type === "npc" || next?.controlledBy === "ai") throw inferenceFailure ?? new Error("The GM could not finish this character's turn. Continue to retry.")
     }
     // With everyone done the round ends in the same job. Local play ends it on a Continue of its own, once the last
     // turns are read.
