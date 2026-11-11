@@ -394,8 +394,12 @@ export class Crowd {
     this.setPose(p, s.x - s.dz * w.lat, s.z + s.dx * w.lat, Math.atan2(s.dx * sg, s.dz * sg), 1)
   }
   // Walkers advance; call flush() afterwards (every frame, even when nothing animates) to upload what changed.
-  update(dt: number) {
-    for (const p of this.walkers) this.stepWalker(p, dt)
+  // `still` has them stand where they are instead: a painted set's close-up, where nobody is seen to walk.
+  update(dt: number, still = false) {
+    for (const p of this.walkers) {
+      if (!still) this.stepWalker(p, dt)
+      else if (p.walk) this.setPose(p, p.x, p.z, p.ry, 0)
+    }
     if (this.walkers.length) this.matricesDirty = true
   }
   flush() {

@@ -109,6 +109,13 @@ export async function createStage(o: StageOptions): Promise<Stage> {
 
 // The steepest the player can tilt the camera: its angle from straight overhead.
 const STEEPEST_ORBIT = Math.PI * 0.28
+// On a painted set nobody is seen to walk in a close-up: a view whose subject stands this tall, as a share of the
+// frame's height. A card is a photograph of someone standing. Far off, sliding along with a bob reads as walking. Up
+// close it reads as a cut-out pushed across the picture (owner, 2026-11-10: "the characters walking is awkward",
+// "keep characters static on closer up views"). In a close-up the crowd's passers-by stand where they are, and a
+// cast member who has somewhere to go is put there while the picture dips for a moment, as it does when the camera
+// cuts. So is one who stands this tall in a wider view, near the camera.
+const CLOSE_SHARE = 0.15
 type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number }
 
 export class Stage {
@@ -133,6 +140,8 @@ export class Stage {
   private tripod: { point: TripodPoint; aim: THREE.Vector3; want: { target: THREE.Vector3; fov: number; placed: boolean } } | null = null
   private look: LookControls | null = null
   private cut: { arrive: () => void; timer: ReturnType<typeof setTimeout> } | null = null
+  // The picture dipped to put someone in a new place unseen (see `unseen`).
+  private dip: { dark: Promise<void>; lift: ReturnType<typeof setTimeout> | null } | null = null
   // What the paintings were made of: the built set alone.
   private plate: THREE.Object3D[] = []
   tier: TierName
@@ -175,7 +184,8 @@ export class Stage {
   private cueWaiters = new Map<string, (() => void)[]>()
   readonly loops = new Map<string, QueueLoop>()
   private coinMesh: THREE.Mesh | null = null
-  private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void }>()
+  // `unseen`: not walked, but put there once the picture has dipped.
+  private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void; unseen?: boolean }>()
   private insets = { right: 0, bottom: 0 }
   private raf = 0
   private running = false
@@ -732,7 +742,8 @@ export class Stage {
       // The window may have changed shape since the view was worked out.
       this.refit()
       this.standees.reset()
-      this.canvas.style.opacity = "1"
+      // A dip under way brings the picture back itself, once whoever it hides has been put in place.
+      if (!this.dip) this.canvas.style.opacity = "1"
       this.settle()
     }
     if (this.tripod?.point === view.point && !instant && this.motion) {
@@ -843,6 +854,13 @@ export class Stage {
       c.z = p.z
       return Promise.resolve()
     }
+    // Seen up close, where they stand or where they are going, they are not walked there (see CLOSE_SHARE).
+    if (this.painted?.on && (this.looksClose(c.x, c.z, c.height) || this.looksClose(p.x, p.z, c.height))) {
+      return new Promise<void>((resolve) => {
+        this.moves.set(id, { tx: p.x, tz: p.z, speed, resolve, unseen: true })
+        this.putUnseen(id)
+      })
+    }
     // Frames stop while the window is hidden or covered. The walk still arrives on time, so nothing awaiting it stalls.
     const due = (Math.hypot(p.x - c.x, p.z - c.z) / speed) * 1000 + 1000
     return new Promise<void>((resolve) => {
@@ -920,9 +938,72 @@ export class Stage {
     c.walking = false
     if (facing !== undefined) this.faceCast(id, facing)
   }
+  // Whether the view is a close-up: someone standing where the camera aims is taller than CLOSE_SHARE of the frame.
+  // Once it is one it stays one a little longer, so that zooming about the line does not start and stop the crowd.
+  private closeUp = false
+  private readCloseUp() {
+    const t = this.painted?.on ? this.tripod : null
+    if (!t) return (this.closeUp = false)
+    const half = t.point.position.distanceTo(t.aim) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2)
+    return (this.closeUp = 1.75 / (2 * half) > CLOSE_SHARE * (this.closeUp ? 0.85 : 1))
+  }
+  // Whether someone at a spot would be seen to walk awkwardly: in the frame, or just off its edge, and either the view
+  // is a close-up or they stand taller than CLOSE_SHARE of it themselves.
+  private looksClose(x: number, z: number, height: number) {
+    const v = this.closeAt.set(x, height * 0.5, z).applyMatrix4(this.camera.matrixWorldInverse)
+    if (v.z > -0.1) return false
+    const half = -v.z * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2)
+    if (Math.abs(v.x) > half * this.camera.aspect * 1.1 + height * 0.25 || Math.abs(v.y) > half * 1.1 + height * 0.5) return false
+    return this.closeUp || height / (2 * half) > CLOSE_SHARE
+  }
+  private closeAt = new THREE.Vector3()
+  // The picture dips to dark and comes back, as it does when the camera cuts. Resolves while it is dark, which is when
+  // to put someone in a new place. Placements that follow one another at once, such as the legs of one walk, share
+  // the dip: it lifts a moment after the last of them.
+  private unseen() {
+    if (!this.dip) {
+      this.canvas.style.transition = "opacity 170ms ease"
+      this.canvas.style.opacity = "0"
+      this.dip = { dark: new Promise<void>((r) => setTimeout(r, 190)), lift: null }
+    }
+    const d = this.dip
+    return d.dark.then(() => {
+      if (d.lift) clearTimeout(d.lift)
+      d.lift = setTimeout(() => {
+        if (this.dip === d) this.dip = null
+        // A cut under way brings the picture back itself.
+        if (!this.cut) this.canvas.style.opacity = "1"
+      }, 90)
+    })
+  }
+  // Puts a cast member where their move was taking them, once the picture has dipped. A move that was replaced or
+  // finished meanwhile is left alone.
+  private putUnseen(id: string) {
+    const m = this.moves.get(id)
+    if (!m) return
+    m.unseen = true
+    const c = this.member(id)
+    c.walking = false
+    void this.unseen().then(() => {
+      if (this.moves.get(id) !== m) return
+      // They end facing the way they went, as a walk leaves them.
+      if (Math.hypot(m.tx - c.x, m.tz - c.z) > 0.02) c.ry = Math.atan2(m.tx - c.x, m.tz - c.z)
+      c.x = m.tx
+      c.z = m.tz
+      this.moves.delete(id)
+      m.resolve()
+    })
+  }
   private stepMoves(dt: number) {
+    const painted = this.painted?.on
     for (const [id, m] of this.moves) {
+      if (m.unseen) continue
       const c = this.member(id)
+      // A walk that comes up close, or that the camera cuts to, ends unseen.
+      if (painted && this.looksClose(c.x, c.z, c.height)) {
+        this.putUnseen(id)
+        continue
+      }
       const dx = m.tx - c.x
       const dz = m.tz - c.z
       const dist = Math.hypot(dx, dz)
@@ -1089,10 +1170,11 @@ export class Stage {
       this.fpsT = this.fpsN = 0
     }
     if (this.motion) {
+      this.readCloseUp()
       this.stepMoves(dt)
       for (const l of this.loops.values()) l.update(dt)
       this.shared.time.value += dt
-      this.crowd.update(dt)
+      this.crowd.update(dt, this.closeUp)
       for (const f of this.life) f(this.shared.time.value)
     }
     if (this.transition) {
@@ -1332,6 +1414,7 @@ export class Stage {
     this.controls?.dispose()
     this.look?.dispose()
     if (this.cut) clearTimeout(this.cut.timer)
+    if (this.dip?.lift) clearTimeout(this.dip.lift)
     this.painted?.dispose()
     for (const m of this.statics) m.geometry.dispose()
     for (const e of this.extras)

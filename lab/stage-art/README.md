@@ -182,6 +182,15 @@ Owner, 10 PM the same evening: "The people look a little washed out. The word ba
 - Play screen: the turn line and the "Saved locally" line are gone. A shared table keeps its one line, whether the GM is online. The map is 200 by 112 px at the right end of the bar, a little over its rule, with the place's name under it. The narration card sits over the rule. Skip is a round double-chevron control. Scene Settings is a round icon button. The turn order lights whoever's turn the game waits on and marks them, also while an earlier turn is read.
 - Not seen in the app: checked on `/dev/turn`, with the map added for one screenshot. The demo's crowd bubbles can point at empty air, which the app does not have, since only the cast speaks there.
 
+Owner, 11 PM the same evening: "the characters walking is awkward. i think we should keep characters static on closer up views".
+
+- A card is a photograph of someone standing, so up close a walk is a cut-out sliding across the picture.
+- A view is a close-up when someone standing where the camera aims is taller than 15% of the frame (`CLOSE_SHARE` in `stage.ts`). At the gate that is the checkpoint, party, two-shot and close views. The gate, the line and the ramparts are far.
+- In a close-up the crowd's passers-by stand where they are and walk on when the view is far again.
+- A cast member told to walk in a close-up, or one standing that tall near the camera in a far view, is put where they were going while the picture dips for 190 ms, as on a cut. The legs of one walk share a dip. A walk under way when the camera cuts to it ends the same way.
+- Tried first and dropped: stopping each passer-by who looked large. They piled up at the edge of the frame, since every path that passes the camera ends there.
+- Not covered: the queue loop, which still shuffles in a close-up. The app holds every loop still, so only the `/dev/turn` demo shows it.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
