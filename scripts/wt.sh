@@ -1,6 +1,6 @@
 #!/bin/sh
 # Parallel dev worktree workflow for d20adventures.com
-# Usage: pnpm wt:<cmd> [args]  (see wiki/plans/parallel-dev-worktrees.md)
+# Usage: pnpm wt:<cmd> [args]
 set -eu
 
 PROJECT_NAME="d20adventures"
@@ -119,31 +119,12 @@ cmd_create() {
   # `--configure new` rewrites convex scaffolding files; revert that noise
   git -C "$path" checkout -- convex/README.md convex/tsconfig.json 2>/dev/null || true
 
-  if [ ! -f "$path/wiki/plans/$slug.md" ]; then
-    cat > "$path/wiki/plans/$slug.md" <<EOF
-# $branch
-
-[Plans](index.md) · [Wiki Home](../index.md)
-
-Status: Active ($(date +%Y-%m-%d))
-
-## Goal
-
-(describe the feature)
-
-## Progress
-
-- [ ] ...
-EOF
-  fi
-
   cat <<EOF
 
 == worktree ready ==
 Branch: $branch
 Path:   $path
 URL:    $(url_for_branch "$branch")
-Plan:   wiki/plans/$slug.md
 DB:     Convex project $PROJECT_NAME-$slug (empty — seed with: pnpm wt:seed $branch)
 Start:  cd $path && pnpm wt:dev
 Finish: pnpm wt:finish $branch
@@ -193,12 +174,6 @@ cmd_resume() {
   git -C "$path" status --short | sed 's/^/    /'
   echo "Recent commits:"
   git -C "$path" log --oneline -5 | sed 's/^/    /'
-  if [ -f "$path/wiki/plans/$slug.md" ]; then
-    echo "Plan: wiki/plans/$slug.md"
-    sed -n '1,20p' "$path/wiki/plans/$slug.md" | sed 's/^/    /'
-  else
-    echo "Plan: none found at wiki/plans/$slug.md"
-  fi
   echo "Start:  cd $path && pnpm wt:dev"
   echo "Finish: pnpm wt:finish $branch"
 }
@@ -252,16 +227,6 @@ cmd_finish() {
   done
   rm -rf "$tmpdir"
 
-  if [ -f "$path/wiki/plans/$slug.md" ]; then
-    echo "== archiving plan to wiki/plans/zzz-completed/ =="
-    (cd "$path" \
-      && printf '\nFinished: %s (merged to main, policy: merge)\n' "$(date +%Y-%m-%d)" >> "wiki/plans/$slug.md" \
-      && mkdir -p wiki/plans/zzz-completed \
-      && git mv "wiki/plans/$slug.md" "wiki/plans/zzz-completed/$slug.md" \
-      && git add "wiki/plans/zzz-completed/$slug.md" \
-      && git commit -m "Archive plan for $branch")
-  fi
-
   echo "== merging $branch into main (no-ff) =="
   git -C "$root" merge --no-ff -m "Merge $branch" "$branch"
 
@@ -291,7 +256,7 @@ cmd_clean() {
 
 cmd_help() {
   cat <<'EOF'
-wt — parallel dev worktrees (see wiki/plans/parallel-dev-worktrees.md)
+wt — parallel dev worktrees
   pnpm wt:doctor            environment + isolation checks
   pnpm wt:create <branch>   new worktree + env + install + isolated Convex project
   pnpm wt:seed <branch>     clone main's Convex data into the worktree's project
