@@ -214,24 +214,22 @@ export function tripodView(
   return best!.view
 }
 
-// The most a sway slides something half way to the subject across the frame, as a share of the frame's height.
-const SWAY_ON_SCREEN = 0.01
+// The most a drift slides something half way to the subject across the frame, as a share of the frame's height.
+const DRIFT_ON_SCREEN = 0.01
 
-// How far the camera has wandered from its point: sideways most, a little up and down and in and out, over `period`
-// seconds. `aim` runs from the point to what the camera looks at. `amp` is the widest sway, in metres, which a wide view
-// of something far takes whole. A close view takes less, so that things slide across the screen no faster than they do
-// in a far one: a subject 3 m off through a 35 degree lens sways under 2 cm, where 15 cm would swing the foreground
-// a tenth of the frame.
-export function sway(aim: THREE.Vector3, fov: number, amp: number, time: number, period = 8, out = new THREE.Vector3()) {
-  const k = Math.min(amp, SWAY_ON_SCREEN * aim.length() * rad(fov))
+// How far the camera still is from its point as it drifts in: off to one side and a little back. `left` is the share of
+// the way still to go, 1 on arriving and 0 at rest. `aim` runs from the point to what the camera looks at. `amp` is
+// the farthest it starts, in metres, which a wide view of something far takes whole. A close view takes less, so that
+// things slide across the screen no faster than they do in a far one: a subject 3 m off through a 35 degree lens
+// drifts under 2 cm, where 15 cm would swing the foreground a tenth of the frame.
+export function driftIn(aim: THREE.Vector3, fov: number, amp: number, left: number, out = new THREE.Vector3()) {
+  const k = Math.min(amp, DRIFT_ON_SCREEN * aim.length() * rad(fov)) * left
   const fwd = aim.clone().normalize()
   const right = new THREE.Vector3().crossVectors(fwd, UP)
   if (right.lengthSq() < 1e-8) right.set(1, 0, 0)
   right.normalize()
-  const w = (2 * Math.PI * time) / period
   return out
     .set(0, 0, 0)
-    .addScaledVector(right, k * Math.sin(w))
-    .addScaledVector(UP, k * 0.35 * Math.sin(w / 0.62))
-    .addScaledVector(fwd, k * 0.5 * Math.sin(w / 1.37))
+    .addScaledVector(right, k)
+    .addScaledVector(fwd, -k * 0.5)
 }

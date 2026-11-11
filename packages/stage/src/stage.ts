@@ -23,7 +23,7 @@ import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
 import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
-import { fitView, minFov, type Spot, sway, type TripodPoint, tripodView, type View } from "./tripod"
+import { driftIn, fitView, minFov, type Spot, type TripodPoint, tripodView, type View } from "./tripod"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -109,13 +109,17 @@ export async function createStage(o: StageOptions): Promise<Stage> {
 
 // The steepest the player can tilt the camera: its angle from straight overhead.
 const STEEPEST_ORBIT = Math.PI * 0.28
-// On a painted set nobody is seen to walk in a close-up: a view whose subject stands this tall, as a share of the
-// frame's height. A card is a photograph of someone standing. Far off, sliding along with a bob reads as walking. Up
-// close it reads as a cut-out pushed across the picture (owner, 2026-11-10: "the characters walking is awkward",
-// "keep characters static on closer up views"). In a close-up the crowd's passers-by stand where they are, and a
+// On a painted set the only movement is the camera's drift in and the set's own life: cloth in the wind, smoke, birds
+// (owner, 2026-11-11: "a drift in only then after that is static with just minor ambient animations like flags,
+// banners billowing, smoke", "the people should be locked in"). A card is a photograph of someone standing, and
+// sliding one along with a bob reads as a cut-out pushed across the picture. So the crowd stands where it is, and a
 // cast member who has somewhere to go is put there while the picture dips for a moment, as it does when the camera
-// cuts. So is one who stands this tall in a wider view, near the camera.
-const CLOSE_SHARE = 0.15
+// cuts.
+// The drift: on arriving at a point the camera starts a little off it (see driftIn) and a touch wide, and over these
+// seconds comes to rest, easing all the way. It ends this much closer than the view it was given, never wider, so a
+// view fitted to the edge of its painting stays on the paint.
+const DRIFT_SECONDS = 7
+const DRIFT_PUSH = 0.03
 type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number }
 
 export class Stage {
@@ -142,6 +146,8 @@ export class Stage {
   private cut: { arrive: () => void; timer: ReturnType<typeof setTimeout> } | null = null
   // The picture dipped to put someone in a new place unseen (see `unseen`).
   private dip: { dark: Promise<void>; lift: ReturnType<typeof setTimeout> | null } | null = null
+  // When the camera arrived at its painted point, on the stage's clock: its drift in runs from here.
+  private arrived = 0
   // What the paintings were made of: the built set alone.
   private plate: THREE.Object3D[] = []
   tier: TierName
@@ -184,7 +190,7 @@ export class Stage {
   private cueWaiters = new Map<string, (() => void)[]>()
   readonly loops = new Map<string, QueueLoop>()
   private coinMesh: THREE.Mesh | null = null
-  // `unseen`: not walked, but put there once the picture has dipped.
+  // `unseen`: not walked, but put there once the picture has dipped (a painted set).
   private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void; unseen?: boolean }>()
   private insets = { right: 0, bottom: 0 }
   private raf = 0
@@ -742,6 +748,7 @@ export class Stage {
       // The window may have changed shape since the view was worked out.
       this.refit()
       this.standees.reset()
+      this.arrived = this.shared.time.value
       // A dip under way brings the picture back itself, once whoever it hides has been put in place.
       if (!this.dip) this.canvas.style.opacity = "1"
       this.settle()
@@ -854,8 +861,8 @@ export class Stage {
       c.z = p.z
       return Promise.resolve()
     }
-    // Seen up close, where they stand or where they are going, they are not walked there (see CLOSE_SHARE).
-    if (this.painted?.on && (this.looksClose(c.x, c.z, c.height) || this.looksClose(p.x, p.z, c.height))) {
+    // On a painted set nobody is seen to walk (see DRIFT_SECONDS).
+    if (this.painted?.on) {
       return new Promise<void>((resolve) => {
         this.moves.set(id, { tx: p.x, tz: p.z, speed, resolve, unseen: true })
         this.putUnseen(id)
@@ -938,25 +945,6 @@ export class Stage {
     c.walking = false
     if (facing !== undefined) this.faceCast(id, facing)
   }
-  // Whether the view is a close-up: someone standing where the camera aims is taller than CLOSE_SHARE of the frame.
-  // Once it is one it stays one a little longer, so that zooming about the line does not start and stop the crowd.
-  private closeUp = false
-  private readCloseUp() {
-    const t = this.painted?.on ? this.tripod : null
-    if (!t) return (this.closeUp = false)
-    const half = t.point.position.distanceTo(t.aim) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2)
-    return (this.closeUp = 1.75 / (2 * half) > CLOSE_SHARE * (this.closeUp ? 0.85 : 1))
-  }
-  // Whether someone at a spot would be seen to walk awkwardly: in the frame, or just off its edge, and either the view
-  // is a close-up or they stand taller than CLOSE_SHARE of it themselves.
-  private looksClose(x: number, z: number, height: number) {
-    const v = this.closeAt.set(x, height * 0.5, z).applyMatrix4(this.camera.matrixWorldInverse)
-    if (v.z > -0.1) return false
-    const half = -v.z * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2)
-    if (Math.abs(v.x) > half * this.camera.aspect * 1.1 + height * 0.25 || Math.abs(v.y) > half * 1.1 + height * 0.5) return false
-    return this.closeUp || height / (2 * half) > CLOSE_SHARE
-  }
-  private closeAt = new THREE.Vector3()
   // The picture dips to dark and comes back, as it does when the camera cuts. Resolves while it is dark, which is when
   // to put someone in a new place. Placements that follow one another at once, such as the legs of one walk, share
   // the dip: it lifts a moment after the last of them.
@@ -999,8 +987,8 @@ export class Stage {
     for (const [id, m] of this.moves) {
       if (m.unseen) continue
       const c = this.member(id)
-      // A walk that comes up close, or that the camera cuts to, ends unseen.
-      if (painted && this.looksClose(c.x, c.z, c.height)) {
+      // A walk begun before the paintings were up ends unseen.
+      if (painted) {
         this.putUnseen(id)
         continue
       }
@@ -1170,11 +1158,10 @@ export class Stage {
       this.fpsT = this.fpsN = 0
     }
     if (this.motion) {
-      this.readCloseUp()
       this.stepMoves(dt)
       for (const l of this.loops.values()) l.update(dt)
       this.shared.time.value += dt
-      this.crowd.update(dt, this.closeUp)
+      this.crowd.update(dt, !!this.painted?.on)
       for (const f of this.life) f(this.shared.time.value)
     }
     if (this.transition) {
@@ -1194,11 +1181,17 @@ export class Stage {
       }
     }
     if (this.tripod) {
-      // The camera sways about its point and keeps looking at what it was aimed at.
+      // The camera drifts in to its point, looking at what it was aimed at, and then holds still.
       const { point, aim } = this.tripod
-      const off = this.motion ? sway(V().subVectors(aim, point.position), this.camera.fov, this.set.painted?.sway ?? 0, this.shared.time.value) : V()
-      this.camera.position.copy(point.position).add(off)
+      const amp = this.set.painted?.drift ?? 0
+      const left = this.motion && amp ? (1 - THREE.MathUtils.clamp((this.shared.time.value - this.arrived) / DRIFT_SECONDS, 0, 1)) ** 3 : 0
+      this.camera.position.copy(point.position).add(driftIn(V().subVectors(aim, point.position), this.camera.fov, amp, left))
       this.camera.lookAt(aim)
+      const zoom = amp ? 1 + DRIFT_PUSH * (1 - left) : 1
+      if (zoom !== this.camera.zoom) {
+        this.camera.zoom = zoom
+        this.camera.updateProjectionMatrix()
+      }
     } else {
       this.controls?.update()
       this.constrain()

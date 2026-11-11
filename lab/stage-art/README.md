@@ -191,6 +191,16 @@ Owner, 11 PM the same evening: "the characters walking is awkward. i think we sh
 - Tried first and dropped: stopping each passer-by who looked large. They piled up at the edge of the frame, since every path that passes the camera ends there.
 - Not covered: the queue loop, which still shuffles in a close-up. The app holds every loop still, so only the `/dev/turn` demo shows it.
 
+Movement: owner, 2026-11-11, "a drift in only then after that is static with just minor ambient animations like flags, banners billowing, smoke", "the people should be locked in". This replaces the sway and the close-up rule above.
+
+- The camera drifts in once on arriving at a point, by a cut or as the first view, and then holds still. It starts off to one side and a little back, as far as the sway went (`driftIn` in `tripod.ts`, the set's `painted.drift`, 16 cm at the gate and 2 cm on a close view), and comes to rest over 7 seconds, easing all the way.
+- It also pushes in 3% (`DRIFT_PUSH` in `stage.ts`, the camera's `zoom`). The view ends that much closer than the one it was fitted to and never wider, so a view at the edge of its painting stays on the paint.
+- A turn or zoom from the same point does not drift again: the turn is the movement.
+- Nobody walks in any view. The crowd's passers-by stand where they are, and a standing card no longer leans from side to side.
+- A cast member told to move is put there while the picture dips for 190 ms, in every view.
+- What still moves: cloth, smoke, birds, dust, and a figure struck in a fight.
+- Not covered, as before: the queue loop in the `/dev/turn` demo.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
