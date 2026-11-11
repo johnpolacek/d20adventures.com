@@ -1,0 +1,240 @@
+[
+  {
+    "id": "armor-training-light-medium-or-heavy-armor",
+    "name": "Armor Training (Light, Medium, or Heavy Armor)",
+    "page": 92,
+    "description": "If you wear Light, Medium, or Heavy armor and lack training with it, you have Disadvantage on any D20 Test that involves Strength or Dexterity, and you can’t cast spells.",
+    "kind": "armor-training",
+    "covers": [
+      "light",
+      "medium",
+      "heavy"
+    ],
+    "untrainedDisadvantageOn": [
+      "str",
+      "dex"
+    ],
+    "untrainedCannotCast": true
+  },
+  {
+    "id": "armor-training-shield",
+    "name": "Armor Training (Shield)",
+    "page": 92,
+    "description": "You gain the Armor Class benefit of a Shield only if you have training with it.",
+    "kind": "armor-training",
+    "covers": [
+      "shield"
+    ],
+    "benefitRequiresTraining": true
+  },
+  {
+    "id": "barding",
+    "name": "Barding",
+    "page": 100,
+    "description": "Barding is armor designed for a mount. Any type of armor on the Armor table in “Equipment” can be purchased as barding. The cost is four times the normal cost, and it weighs twice as much.",
+    "kind": "barding",
+    "costMultiplier": 4,
+    "weightMultiplier": 2
+  },
+  {
+    "id": "brewing-potions-of-healing",
+    "name": "Brewing Potions of Healing",
+    "page": 103,
+    "description": "A character who has proficiency with the Herbalism Kit can create a Potion of Healing. Doing so requires using that kit and 25 GP of raw material over the course of 1 day (8 hours of work).",
+    "kind": "potion-brewing",
+    "tool": "herbalism-kit",
+    "rawMaterialsGp": 25,
+    "days": 1,
+    "workHoursPerDay": 8
+  },
+  {
+    "id": "coin-weight",
+    "name": "Coin Weight",
+    "page": 89,
+    "description": "A coin weighs about a third of an ounce, so fifty coins weigh a pound.",
+    "kind": "coin-weight",
+    "coinsPerPound": 50
+  },
+  {
+    "id": "crafting-nonmagical-items",
+    "name": "Crafting Nonmagical Items",
+    "page": 103,
+    "description": "To make an item, you need raw materials worth half its purchase cost (round down). For example, you need 750 GP of raw materials to make Plate Armor, which sells for 1,500 GP. The GM determines whether appropriate raw materials are available.\nTo determine how many days (working 8 hours a day) it takes to make an item, divide its purchase cost in GP by 10 (round a fraction up to a day). For example, you need 5 days to make a Heavy Crossbow, which sells for 50 GP.\nIf an item requires multiple days, the days needn’t be consecutive.\nCharacters can combine their efforts to shorten the crafting time. Divide the time needed to create an item by the number of characters working on it. Normally, only one other character can assist you, but the GM might allow more assistants.",
+    "kind": "crafting",
+    "rawMaterialsFraction": 0.5,
+    "workHoursPerDay": 8,
+    "costGpPerDay": 10,
+    "maxAssistants": 1
+  },
+  {
+    "id": "mounts-and-cargo",
+    "name": "Mounts and Cargo",
+    "page": 100,
+    "description": "An animal pulling a carriage, cart, chariot, sled, or wagon can move weight up to five times its base carrying capacity, including the weight of the vehicle. If multiple animals pull the same vehicle, add their carrying capacities together.",
+    "kind": "draft-cargo",
+    "capacityMultiplier": 5
+  },
+  {
+    "id": "one-at-a-time",
+    "name": "One at a Time",
+    "page": 92,
+    "description": "A creature can wear only one suit of armor at a time and wield only one Shield at a time.",
+    "kind": "one-at-a-time",
+    "maxArmor": 1,
+    "maxShield": 1
+  },
+  {
+    "id": "passengers",
+    "name": "Passengers",
+    "page": 101,
+    "description": "The table lists the number of Small and Medium passengers the ship can accommodate using hammocks. A ship outfitted with private accommodations can carry one-fifth as many passengers. A passenger usually pays 5 SP per day for a hammock, but prices can vary from ship to ship. A small private cabin usually costs 2 GP per day.",
+    "kind": "ship-passengers",
+    "privateAccommodationsFraction": 0.2,
+    "hammockCostPerDay": {
+      "amount": 5,
+      "unit": "sp"
+    },
+    "cabinCostPerDay": {
+      "amount": 2,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "selling-equipment",
+    "name": "Selling Equipment",
+    "page": 89,
+    "description": "Equipment fetches half its cost when sold. In contrast, trade goods and valuables—like gems and art objects—retain their full value in the marketplace. “Magic Items” has prices for magic items.",
+    "kind": "selling",
+    "resaleFraction": 0.5
+  },
+  {
+    "id": "ship-repair",
+    "name": "Ship Repair",
+    "page": 101,
+    "description": "Repairs to a damaged ship can be made while the vessel is berthed. Repairing 1 Hit Point of damage requires 1 day and costs 20 GP for materials and labor. If the repairs are made in a location where supplies and skilled labor are abundant, such as a city shipyard, the repair time and cost are halved.",
+    "kind": "ship-repair",
+    "hitPointsPerDay": 1,
+    "costGpPerHitPoint": 20,
+    "shipyardFraction": 0.5
+  },
+  {
+    "id": "spell-scroll-costs-cantrip",
+    "name": "Spell Scroll Costs (Cantrip)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 0,
+    "days": 1,
+    "cost": {
+      "amount": 15,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-1",
+    "name": "Spell Scroll Costs (Level 1)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 1,
+    "days": 1,
+    "cost": {
+      "amount": 25,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-2",
+    "name": "Spell Scroll Costs (Level 2)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 2,
+    "days": 3,
+    "cost": {
+      "amount": 100,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-3",
+    "name": "Spell Scroll Costs (Level 3)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 3,
+    "days": 5,
+    "cost": {
+      "amount": 150,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-4",
+    "name": "Spell Scroll Costs (Level 4)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 4,
+    "days": 10,
+    "cost": {
+      "amount": 1000,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-5",
+    "name": "Spell Scroll Costs (Level 5)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 5,
+    "days": 25,
+    "cost": {
+      "amount": 1500,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-6",
+    "name": "Spell Scroll Costs (Level 6)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 6,
+    "days": 40,
+    "cost": {
+      "amount": 10000,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-7",
+    "name": "Spell Scroll Costs (Level 7)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 7,
+    "days": 50,
+    "cost": {
+      "amount": 12500,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-8",
+    "name": "Spell Scroll Costs (Level 8)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 8,
+    "days": 60,
+    "cost": {
+      "amount": 15000,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "spell-scroll-costs-level-9",
+    "name": "Spell Scroll Costs (Level 9)",
+    "page": 103,
+    "kind": "scribing",
+    "spellLevel": 9,
+    "days": 120,
+    "cost": {
+      "amount": 50000,
+      "unit": "gp"
+    }
+  }
+]

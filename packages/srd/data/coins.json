@@ -1,0 +1,37 @@
+[
+  {
+    "id": "copper-piece",
+    "name": "Copper Piece",
+    "page": 89,
+    "abbreviation": "cp",
+    "gpValue": 0.01
+  },
+  {
+    "id": "electrum-piece",
+    "name": "Electrum Piece",
+    "page": 89,
+    "abbreviation": "ep",
+    "gpValue": 0.5
+  },
+  {
+    "id": "gold-piece",
+    "name": "Gold Piece",
+    "page": 89,
+    "abbreviation": "gp",
+    "gpValue": 1
+  },
+  {
+    "id": "platinum-piece",
+    "name": "Platinum Piece",
+    "page": 89,
+    "abbreviation": "pp",
+    "gpValue": 10
+  },
+  {
+    "id": "silver-piece",
+    "name": "Silver Piece",
+    "page": 89,
+    "abbreviation": "sp",
+    "gpValue": 0.1
+  }
+]
