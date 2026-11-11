@@ -681,6 +681,11 @@ export class Stage {
     if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
     return best.r
   }
+  // Whether the camera is on its way to a view, or the picture has dipped. A painted set's slow drift in is not counted.
+  // What is pinned to someone on screen, such as a speech bubble, waits for this to end.
+  get cameraMoving() {
+    return !!(this.transition || this.cut || this.dip)
+  }
   // Resolves when the current camera move has finished.
   shotSettled() {
     return this.transition || this.cut ? new Promise<void>((r) => this.settleWaiters.push(r)) : Promise.resolve()

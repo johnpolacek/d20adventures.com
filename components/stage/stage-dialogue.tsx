@@ -14,6 +14,13 @@ const bubbleScale = (speakerPx: number) => Math.min(1, 0.92 + (speakerPx - SPEAK
 // The band at the top of the screen that holds the turn order and the name under it. A bubble with no room above its
 // speaker below that band sits beside their face instead, so it never runs under the portraits.
 const SAFE_TOP = { wide: 150, compact: 96 }
+// A bubble waits for the camera: pinned to a speaker, it would be dragged across the screen by every move and cut.
+// It is hidden while the camera is on its way or its speaker slides faster than this, and fades in once both have
+// been still a moment. A slow drift is under the speed, and the bubble rides it.
+const MOVING_PX_PER_SECOND = 40
+const STILL_MS = 120
+const FADE_IN_MS = 300
+const FADE_OUT_MS = 120
 export interface Bubble {
   key: number
   anchor: Anchor
@@ -21,20 +28,31 @@ export interface Bubble {
   named: boolean
 }
 
-function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
+function BubbleView({ bubble, compact, moving }: { bubble: Bubble; compact: boolean; moving?: () => boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const tail = useRef<HTMLSpanElement>(null)
+  const cameraMoving = useRef(moving)
+  cameraMoving.current = moving
   useEffect(() => {
     let raf = 0
+    let last: { x: number; y: number; at: number } | null = null
+    let still: number | null = null
     const follow = () => {
       raf = requestAnimationFrame(follow)
       const p = bubble.anchor()
       const el = ref.current
       if (!p || !el) return
+      const now = performance.now()
+      const speed = last && now > last.at ? (Math.hypot(p.x - last.x, p.y - last.y) / (now - last.at)) * 1000 : 0
+      last = { x: p.x, y: p.y, at: now }
+      if (cameraMoving.current?.() || speed > MOVING_PX_PER_SECOND) still = null
+      else still ??= now
       const speakerPx = (p.ppm ?? 1600 / p.distance) * 1.7
-      const on = p.visible && speakerPx >= SPEAKER_MIN_PX
+      const seen = p.visible && speakerPx >= SPEAKER_MIN_PX
+      const on = seen && still !== null && now - still >= STILL_MS
+      el.style.transitionDuration = `${on ? FADE_IN_MS : FADE_OUT_MS}ms`
       el.style.opacity = on ? "1" : "0"
-      if (!on) return
+      if (!seen) return
       const scale = bubbleScale(speakerPx)
       const h = el.offsetHeight * scale
       const w = el.offsetWidth * scale
@@ -65,7 +83,7 @@ function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
     <div
       ref={ref}
       className={cn(
-        "absolute top-0 left-0 origin-bottom rounded-[10px] px-3.5 pt-2.5 pb-[11px] text-center font-serif leading-[1.4] text-[#2a1a10] italic opacity-0 shadow-[0_6px_18px_#0005] transition-opacity duration-200",
+        "absolute top-0 left-0 origin-bottom rounded-[10px] px-3.5 pt-2.5 pb-[11px] text-center font-serif leading-[1.4] text-[#2a1a10] italic opacity-0 shadow-[0_6px_18px_#0005] transition-opacity",
         "group after:absolute after:bottom-[-7px] after:left-1/2 after:-ml-[7px] after:border-[7px] after:border-b-0 after:border-transparent data-[side=l]:after:hidden data-[side=r]:after:hidden",
         bubble.named ? "border border-stage-brass bg-[#fbf1dc] after:border-t-[#fbf1dc]" : "bg-stage-parchment/95 after:border-t-[#f3e6c8f2]",
         compact ? "max-w-[240px] text-[14px]" : cn("max-w-[330px]", bubble.named ? "text-[18px]" : "text-[17px]")
@@ -84,11 +102,12 @@ function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
   )
 }
 
-export function Bubbles({ bubbles, compact = false }: { bubbles: Bubble[]; compact?: boolean }) {
+// `moving` says whether the camera is on its way to a view (Stage.cameraMoving).
+export function Bubbles({ bubbles, compact = false, moving }: { bubbles: Bubble[]; compact?: boolean; moving?: () => boolean }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10" aria-live="polite">
       {bubbles.map((b) => (
-        <BubbleView key={b.key} bubble={b} compact={compact} />
+        <BubbleView key={b.key} bubble={b} compact={compact} moving={moving} />
       ))}
     </div>
   )

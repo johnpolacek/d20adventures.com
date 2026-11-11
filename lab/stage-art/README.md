@@ -211,6 +211,8 @@ Owner, later that morning: "i'm still seeing the standees move around", "i want 
 
 Owner, 8 AM, on the Harvest Festival in the app: "still seeing the people move in this view". That set is built, not painted, and the lock was tied to painted sets. It now holds on every set (`PEOPLE_STILL` in `stage.ts`): crowd, cast, lines, falls and hits as above, and the crowd's idle lean is gone from cards and pawns alike. Only the drift in is a painted set's own. Checked on `/dev/stage` with the festival's staging: 44 walkers and 454 people, through four shots, a move, a fall and a hit, nothing changed place or pose while the picture showed.
 
+Owner, 8:36 AM: "the word balloon dialogue jumps around as the camera moves, can we make it do a 300ms fade in after the camera settles". A bubble is hidden while the camera is on its way (`Stage.cameraMoving`: a turn, a cut, a dip) or its speaker slides faster than 40 px a second, and fades in over 300 ms once both have been still for 120 ms (`components/stage/stage-dialogue.tsx`). A painted set's drift in is under that speed, so the bubble rides it. Measured on `/dev/turn`: never shown during a move, 0.1 px the most it shifted in a frame while showing, back about 140 ms after a turn or zoom ends.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.

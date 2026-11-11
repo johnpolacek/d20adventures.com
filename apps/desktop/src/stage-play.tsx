@@ -891,7 +891,11 @@ export function StagePlay(props: {
       {save && !hidden && !props.overlay && (
         <>
           {stage && speech.length > 0 && (
-            <Bubbles compact={compact} bubbles={speech.map((l, i) => ({ key: paragraph * 100 + i, anchor: () => stage.project(l.cast.id), text: l.text, named: true }))} />
+            <Bubbles
+              compact={compact}
+              moving={() => stage.cameraMoving}
+              bubbles={speech.map((l, i) => ({ key: paragraph * 100 + i, anchor: () => stage.project(l.cast.id), text: l.text, named: true }))}
+            />
           )}
           {!scene && voice && <Plate compact={compact} line={{ key: paragraph, side: "right", ...voice }} />}
           <TurnOrder
