@@ -7,7 +7,7 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button, epicReducedButtonStyle } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Chevron, eyebrow, Pill, panel } from "./hud"
+import { Chevron, eyebrow, panel } from "./hud"
 import { RollResult, type RollResultData } from "./roll-result"
 
 function Control({ label, children, ...rest }: React.ComponentProps<"button"> & { label: string; children: ReactNode }) {
@@ -140,12 +140,11 @@ export function Narration({
                 </svg>
               </Control>
             )}
-            <Pill className="ml-1 inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-1" onClick={onSkip}>
-              Skip
-              <svg viewBox="0 0 14 12" fill="currentColor" aria-hidden="true" className="h-2.5 w-3">
-                <path d="M2 2.2 6.5 6 2 9.8zM7.5 2.2 12 6l-4.5 3.8z" />
+            <Control label="Skip to the End" onClick={onSkip}>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <path d="M2.5 2.5 6 6 2.5 9.5M6.5 2.5 10 6 6.5 9.5" />
               </svg>
-            </Pill>
+            </Control>
           </div>
         </div>
       </div>

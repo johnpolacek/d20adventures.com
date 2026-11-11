@@ -259,7 +259,14 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
     afterBeats(turnIndex)
   }
   // While the GM card is up, shots compose in the space above it (the character being asked stays in view).
-  const onCardTop = useCallback((px: number) => stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 }), [stage])
+  // As in the app's play screen: a tall card leaves the column beside it, a short one the top of the screen.
+  const onCardTop = useCallback(
+    (px: number, rect?: DOMRect) => {
+      if (px > innerHeight * 0.45 && rect && rect.left > innerWidth * 0.22) stage?.setInsets({ right: innerWidth - rect.left + 12, bottom: 0 })
+      else stage?.setInsets({ bottom: px > 0 ? px + 12 : 0 })
+    },
+    [stage]
+  )
   const advance = (reply: string, roll: RollOutcome, rollInfo: JournalRoll | undefined, wait = 1600) => {
     const from = holdOf(turnIndex)?.actor
     setPhase("thinking")
@@ -428,8 +435,6 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   else if (phase === "roll" && rolling) mode = { kind: "roll", roll: rolling.roll, prompt: rolling.prompt }
   else if (phase === "thinking") mode = { kind: "thinking", note }
   else if (phase === "done") mode = { kind: "done", next: "Next: The Harvest Festival" }
-  const place = stage?.loops.get("gate-line")?.partyPosition ?? -1
-  const status = phase === "done" || place < 0 ? "Your party: inside the city" : place === 0 ? "Your party: at the checkpoint" : `Your party: ${place} group${place > 1 ? "s" : ""} from the front`
   const order: OrderEntry[] = [
     ...party.map((c) => ({ id: c.id, name: c.name, portrait: c.portrait })),
     ...(stage ? stage.cast.filter((c) => c.id === "garlan").map((c) => ({ id: c.id, name: c.name, portrait: c.art.portrait, npc: true })) : []),
@@ -442,12 +447,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
     <StageHud
       containerRef={containerRef}
       title={{ eyebrow: "Welcome to Kordavos  ·  Arrival", text: "The Gates of Kordavos" }}
-      location={{
-        eyebrow: "Arrival at Kordavos",
-        title: actor ? `${actor.name.split(" ")[0]}'s turn` : TURNS[turnIndex].intro ? "Intro" : `Round ${TURNS[turnIndex].round}`,
-        status,
-        hidden: !!plates.right,
-      }}
+      location={{ name: "Arrival at Kordavos", hidden: !!plates.right }}
       views={views}
       activeView={stage?.activeShot ?? null}
       onView={(id) => {
@@ -484,10 +484,10 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
         </>
       }
     >
-      {stage && !hideUi && phase !== "title" && <TurnOrder order={order} activeId={activeId} label={orderLabel} compact={compact} onPick={focus} />}
+      {stage && !hideUi && phase !== "title" && <TurnOrder order={order} activeId={activeId} turnId={actorId ?? null} label={orderLabel} compact={compact} onPick={focus} />}
       {stage && !hideUi && <Bubbles bubbles={bubbles} compact={compact} />}
       {!hideUi && phase !== "title" && (
-        <div className={cn("pointer-events-none absolute z-20 flex flex-col gap-3", compact ? "bottom-[52px] left-4 w-[min(380px,48vw)]" : "bottom-[118px] left-10 w-[min(440px,34vw)]")}>
+        <div className={cn("pointer-events-none absolute z-20 flex flex-col gap-3", compact ? "bottom-[52px] left-4 w-[min(380px,48vw)]" : "bottom-[84px] left-10 w-[min(440px,34vw)]")}>
           {/* On phones the bubble carries the line; a plate over the narration would cover half the screen. */}
           {plates.left && !compact && <Plate line={plates.left} compact={compact} docked />}
           <Narration
@@ -507,7 +507,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
         </div>
       )}
       {!hideUi && phase === "hold" && (
-        <div className={cn("absolute z-20", compact ? "bottom-[52px] left-4" : "bottom-[118px] left-10")}>
+        <div className={cn("absolute z-20", compact ? "bottom-[52px] left-4" : "bottom-[84px] left-10")}>
           <Pill className="fade-in flex items-center gap-2 rounded-full px-4" onClick={replay}>
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true" className="h-3 w-3">
               <path d="M2.2 6a3.8 3.8 0 1 0 1.2-2.8" />

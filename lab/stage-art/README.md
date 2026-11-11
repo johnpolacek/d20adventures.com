@@ -174,6 +174,14 @@ Owner, later the same evening, on a hero's line in the desktop app: "the charact
 - That view was a close-up of belts with the speaker under a panel. The lens had been fitted to the part of the canvas the panels left free, so the whole canvas, two or three times as tall, had to stay on one painting, and the lens narrowed to 10 to 16 degrees. The lens is now the whole canvas, and the subject is set in the free part by turning the camera (`Spot` in `tripod.ts`).
 - Play screen: the portrait plate is gone from the 3D scene, since a line was already in the narration and in a bubble. The "Choose a perspective" label and the "Drag to look" hint are gone. The mini-map moved from over the scene to the end of the perspective bar, 128 by 72 px, and still opens the full map.
 
+Owner, 10 PM the same evening: "The people look a little washed out. The word balloon is in an odd place", and a list of play screen trims.
+
+- Washed out: with the light gone, what was left was the card grade meant for hand-painted sets, which lifts shadows with umber and takes a seventh of the colour. Black hair came out brown and a grey coat came out yellow. A painted set now shows the art as it was drawn (`cardArt` in the card shaders), with the paintings' gain and a slighter warm tint.
+- Bubble: with no room above a speaker it sat 40 px beside the top of the head with no tail. In a close-up that is on the face. It now clears the head by its size on screen, centres on the face and points at it.
+- A subject placed beside a panel slid out of frame when the painting narrowed the lens, since the turn away from it was sized for the lens asked. `fitView` fits again with the lens it got.
+- Play screen: the turn line and the "Saved locally" line are gone. A shared table keeps its one line, whether the GM is online. The map is 200 by 112 px at the right end of the bar, a little over its rule, with the place's name under it. The narration card sits over the rule. Skip is a round double-chevron control. Scene Settings is a round icon button. The turn order lights whoever's turn the game waits on and marks them, also while an earlier turn is read.
+- Not seen in the app: checked on `/dev/turn`, with the map added for one screenshot. The demo's crowd bubbles can point at empty air, which the app does not have, since only the cast speaks there.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.

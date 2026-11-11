@@ -339,7 +339,9 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
       .addScaledVector(ahead, SUN_RADIUS * 0.6)
   }
 
-  // Cards show their art evenly lit, graded as the paintings are. A card is a photograph with its own soft light, and
+  // Cards show their art as it was drawn, evenly lit and graded as the paintings are: `cardArt`, from before the
+  // grade toward a hand-painted set's palette, which lifts the shadows with umber and takes a seventh of the colour,
+  // and left photographs washed out. A card is a photograph with its own soft light, and
   // the owner found the engine's light on it wrong both ways: the sun's highlights and relief read as a glaze, and the
   // set's shade as a figure blacked out. Their shadows on the ground still place them. A flash when one is struck
   // still shows, since it is light of the card's own. The slight warm tint is the morning sun of the paintings.
@@ -355,7 +357,7 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
           .replace("#include <common>", `#include <common>\nuniform vec2 uPaintGrade; uniform float uPaintFigure;\n${GLSL}`)
           .replace(
             "#include <opaque_fragment>",
-            "outgoingLight = mix(outgoingLight, paintGrade(diffuseColor.rgb, vec2(uPaintGrade.x, 1.0)) * vec3(1.04, 1.0, .93) + totalEmissiveRadiance, uPaintFigure);\n#include <opaque_fragment>"
+            "outgoingLight = mix(outgoingLight, paintGrade(cardArt, vec2(uPaintGrade.x, 1.0)) * vec3(1.03, 1.0, .95) + totalEmissiveRadiance, uPaintFigure);\n#include <opaque_fragment>"
           )
       }
       m.customProgramCacheKey = () => `${key()}|flat`

@@ -1,8 +1,9 @@
 "use client"
 
-// Turn order across the top of the stage, as in Baldur's Gate 3: everyone in initiative order, whoever is acting larger
-// and framed in gold. Clicking a portrait takes the camera to that character. A bar under each portrait is that
-// character's health, and a hero's portrait carries the number.
+// Turn order across the top of the stage, as in Baldur's Gate 3: everyone in initiative order, whoever the story is
+// about larger and framed in gold. Whoever's turn the game waits on is lit in gold and carries a small brass marker,
+// also while the story of an earlier turn is still read. Clicking a portrait takes the camera to that character. A bar
+// under each portrait is that character's health, and a hero's portrait carries the number.
 
 import { useLayoutEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
@@ -19,7 +20,22 @@ export interface OrderEntry {
 
 const healthColor = (health: number) => (health <= 25 ? "#c8452f" : health <= 50 ? "#d98a3a" : health <= 75 ? "#d9b44a" : "#7fb069")
 
-export function TurnOrder({ order, activeId, label, compact = false, onPick }: { order: OrderEntry[]; activeId: string | null; label?: string; compact?: boolean; onPick: (id: string) => void }) {
+export function TurnOrder({
+  order,
+  activeId,
+  turnId = null,
+  label,
+  compact = false,
+  onPick,
+}: {
+  order: OrderEntry[]
+  activeId: string | null
+  // Whose turn the game is on.
+  turnId?: string | null
+  label?: string
+  compact?: boolean
+  onPick: (id: string) => void
+}) {
   // Half the strip's width, for the encounter's title at the top left to keep clear of it however many take turns.
   const strip = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
@@ -38,10 +54,24 @@ export function TurnOrder({ order, activeId, label, compact = false, onPick }: {
       <div ref={strip} className="flex items-end gap-1.5">
         {order.map((c) => {
           const active = c.id === activeId
+          const turn = c.id === turnId
           const health = c.health === undefined ? undefined : Math.max(0, Math.min(100, Math.round(c.health)))
-          const name = health === undefined ? c.name : `${c.name}, ${health}% health${c.status ? `, ${c.status}` : ""}`
+          const name = `${c.name}${health === undefined ? "" : `, ${health}% health${c.status ? `, ${c.status}` : ""}`}${turn ? ", their turn" : ""}`
           return (
-            <div key={c.id} className="flex flex-col items-center">
+            <div key={c.id} className="relative flex flex-col items-center">
+              {turn && (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "stage-brass pointer-events-none absolute left-1/2 z-10 grid -translate-x-1/2 place-items-center rounded-full border shadow-[0_0_0_2px_#1c1410,0_2px_6px_#000a]",
+                    compact ? "-top-1.5 h-3 w-3" : "-top-2 h-4 w-4"
+                  )}
+                >
+                  <svg viewBox="0 0 10 10" fill="currentColor" className={compact ? "h-1.5 w-1.5" : "h-2 w-2"}>
+                    <path d="M1.5 3h7L5 8z" />
+                  </svg>
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => onPick(c.id)}
@@ -50,9 +80,9 @@ export function TurnOrder({ order, activeId, label, compact = false, onPick }: {
                 aria-current={active ? "true" : undefined}
                 className={cn(
                   "relative overflow-hidden border bg-stage-ink p-[2px] shadow-[0_4px_14px_#0008] transition-all duration-300",
-                  active ? "border-stage-gold shadow-[0_0_0_2px_#1c1410,0_0_18px_#e3b67c55]" : "border-stage-brass/50 opacity-75 hover:opacity-100",
+                  active || turn ? "border-stage-gold shadow-[0_0_0_2px_#1c1410,0_0_18px_#e3b67c55]" : "border-stage-brass/50 opacity-75 hover:opacity-100",
                   compact ? (active ? "h-12 w-10" : "h-9 w-7") : active ? "h-[78px] w-[62px]" : "h-[58px] w-[46px]",
-                  c.npc && !active && "border-[#8a4a3a]/70"
+                  c.npc && !active && !turn && "border-[#8a4a3a]/70"
                 )}
               >
                 {c.portrait ? (

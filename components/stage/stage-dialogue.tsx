@@ -12,7 +12,7 @@ export type Anchor = () => { x: number; y: number; visible: boolean; distance: n
 const SPEAKER_MIN_PX = 70
 const bubbleScale = (speakerPx: number) => Math.min(1, 0.92 + (speakerPx - SPEAKER_MIN_PX) / 600)
 // The band at the top of the screen that holds the turn order and the name under it. A bubble with no room above its
-// speaker below that band sits beside their head instead, so it never runs under the portraits.
+// speaker below that band sits beside their face instead, so it never runs under the portraits.
 const SAFE_TOP = { wide: 150, compact: 96 }
 export interface Bubble {
   key: number
@@ -23,6 +23,7 @@ export interface Bubble {
 
 function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
+  const tail = useRef<HTMLSpanElement>(null)
   useEffect(() => {
     let raf = 0
     const follow = () => {
@@ -44,12 +45,18 @@ function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
         el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, calc(-100% - 8px)) scale(${scale.toFixed(3)})`
         return
       }
+      // Beside the face, clear of the head however large the shot draws it, with a tail that points at the mouth.
       const room = el.parentElement?.clientWidth ?? window.innerWidth
-      const right = p.x + 40 + w < room - 16
-      el.dataset.side = "1"
+      const ppm = p.ppm ?? 1600 / p.distance
+      const gap = Math.max(40, ppm * 0.24)
+      const right = p.x + gap + w < room - 16
+      const face = p.y + ppm * 0.22
+      const top = Math.max(safe, face - h * 0.5)
+      el.dataset.side = right ? "r" : "l"
       el.style.transformOrigin = right ? "top left" : "top right"
-      const x = right ? p.x + 40 : p.x - 40 - el.offsetWidth
-      el.style.transform = `translate(${x.toFixed(1)}px, ${Math.max(safe, p.y - h * 0.25).toFixed(1)}px) scale(${scale.toFixed(3)})`
+      const x = right ? p.x + gap : p.x - gap - el.offsetWidth
+      el.style.transform = `translate(${x.toFixed(1)}px, ${top.toFixed(1)}px) scale(${scale.toFixed(3)})`
+      if (tail.current) tail.current.style.top = `${Math.min(el.offsetHeight - 22, Math.max(8, (face - top) / scale - 7)).toFixed(1)}px`
     }
     follow()
     return () => cancelAnimationFrame(raf)
@@ -59,12 +66,20 @@ function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
       ref={ref}
       className={cn(
         "absolute top-0 left-0 origin-bottom rounded-[10px] px-3.5 pt-2.5 pb-[11px] text-center font-serif leading-[1.4] text-[#2a1a10] italic opacity-0 shadow-[0_6px_18px_#0005] transition-opacity duration-200",
-        "after:absolute after:bottom-[-7px] after:left-1/2 after:-ml-[7px] after:border-[7px] after:border-b-0 after:border-transparent data-[side=1]:after:hidden",
+        "group after:absolute after:bottom-[-7px] after:left-1/2 after:-ml-[7px] after:border-[7px] after:border-b-0 after:border-transparent data-[side=l]:after:hidden data-[side=r]:after:hidden",
         bubble.named ? "border border-stage-brass bg-[#fbf1dc] after:border-t-[#fbf1dc]" : "bg-stage-parchment/95 after:border-t-[#f3e6c8f2]",
         compact ? "max-w-[240px] text-[14px]" : cn("max-w-[330px]", bubble.named ? "text-[18px]" : "text-[17px]")
       )}
     >
       {bubble.text}
+      <span
+        ref={tail}
+        aria-hidden="true"
+        className={cn(
+          "absolute hidden border-[7px] border-transparent group-data-[side=l]:right-[-7px] group-data-[side=l]:block group-data-[side=l]:border-r-0 group-data-[side=r]:left-[-7px] group-data-[side=r]:block group-data-[side=r]:border-l-0",
+          bubble.named ? "group-data-[side=l]:border-l-[#fbf1dc] group-data-[side=r]:border-r-[#fbf1dc]" : "group-data-[side=l]:border-l-[#f3e6c8f2] group-data-[side=r]:border-r-[#f3e6c8f2]"
+        )}
+      />
     </div>
   )
 }

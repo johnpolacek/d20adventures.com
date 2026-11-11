@@ -145,23 +145,33 @@ export function minFov(point: TripodPoint, aim: THREE.Vector3) {
 export function fitView(point: TripodPoint, aim: THREE.Vector3, fov: number, aspect: number, at: Spot = [0, 0]) {
   const subject = aim.clone().normalize()
   const asked = THREE.MathUtils.clamp(fov, minFov(point, subject), 110)
-  // The way the camera looks so that the subject sits at `at`: off the subject by that share of the lens.
+  // The way the camera looks so that the subject sits at `at`: off the subject by that share of the lens it ends with.
+  // A painting that narrows the lens narrows that turn with it, or the subject would slide out of the frame, so the
+  // view is fitted again with the lens it got.
   const right = new THREE.Vector3().crossVectors(subject, UP)
   if (right.lengthSq() < 1e-8) right.set(1, 0, 0)
   right.normalize()
-  const t = Math.tan(rad(asked) / 2)
-  const want = subject
-    .clone()
-    .addScaledVector(right, -at[0] * t * aspect)
-    .addScaledVector(new THREE.Vector3().crossVectors(right, subject), -at[1] * t)
-    .normalize()
+  const up = new THREE.Vector3().crossVectors(right, subject)
+  const want = new THREE.Vector3()
+  let lens = asked
   let best: { dir: THREE.Vector3; fov: number; turned: number; narrowed: number; cost: number } | undefined
-  for (const f of point.frames) {
-    const r = fitFrame(f, want, asked, aspect)
-    const turned = r.dir.angleTo(want) / rad(r.fov)
-    const narrowed = 1 - r.fov / asked
-    const cost = turned + narrowed + (r.ok ? 0 : 10)
-    if (!best || cost < best.cost) best = { dir: r.dir, fov: r.fov, turned, narrowed, cost }
+  for (let pass = 0; pass < 4; pass++) {
+    const t = Math.tan(rad(lens) / 2)
+    want
+      .copy(subject)
+      .addScaledVector(right, -at[0] * t * aspect)
+      .addScaledVector(up, -at[1] * t)
+      .normalize()
+    best = undefined
+    for (const f of point.frames) {
+      const r = fitFrame(f, want, asked, aspect)
+      const turned = r.dir.angleTo(want) / rad(r.fov)
+      const narrowed = 1 - r.fov / asked
+      const cost = turned + narrowed + (r.ok ? 0 : 10)
+      if (!best || cost < best.cost) best = { dir: r.dir, fov: r.fov, turned, narrowed, cost }
+    }
+    if (!best || (!at[0] && !at[1]) || Math.abs(best.fov - lens) < 0.05) break
+    lens = best.fov
   }
   return best!
 }

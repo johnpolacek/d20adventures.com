@@ -156,7 +156,8 @@ type BackUniforms = { uMapB: THREE.IUniform<THREE.Texture | null>; uBack: THREE.
 // Grade toward the set palette: warmed with umber in the shadows (unless the set grades neutral), painted saturation down about 13%, and the brightest painted
 // metal eased toward the world's values (highlights lose a little chroma and peak brightness); mid-tones, and with them the
 // faces, are left alone. Below 80 degrees off its facing the card shows its front, above 100 its back; in between the colours
-// are dissolved with a screen-space dither and the alpha is blended.
+// are dissolved with a screen-space dither and the alpha is blended. `cardArt` keeps the art as it was drawn, which a
+// painted set shows in place of the graded colour (see Painted.flatFigures).
 function standeeMaterial(shared: SharedUniforms, back: BackUniforms) {
   const m = new THREE.MeshStandardMaterial({ color: "#fff", roughness: 0.95, metalness: 0, alphaTest: 0.5, side: THREE.DoubleSide, normalScale: new THREE.Vector2(1, 1) })
   return stageMaterial(m, shared, "standee", (s) => {
@@ -175,6 +176,7 @@ function standeeMaterial(shared: SharedUniforms, back: BackUniforms) {
  }
  diffuseColor *= sampledDiffuseColor;
 #endif
+ vec3 cardArt = diffuseColor.rgb;
  { vec3 c = diffuseColor.rgb; float l = dot(c, vec3(.299, .587, .114));
    float hi = smoothstep(.55, .95, l); c = mix(vec3(l), c, .87 - hi * .1); c *= 1.0 - hi * .14; c *= mix(vec3(1.0), vec3(1.025, 1.0, .95), uWarmth);
    c += vec3(.04, .016, -.01) * (1.0 - smoothstep(0.0, .55, l)) * uWarmth; c = mix(c, c * c * (3.0 - 2.0 * c), .18);

@@ -110,8 +110,10 @@ float cAlpha(){
   return { COMMON, SETUP, POS, ALPHA, FADE }
 }
 
-// Grade toward the set palette, as the hero standees get, a touch stronger on the crowd.
+// Grade toward the set palette, as the hero standees get, a touch stronger on the crowd. `cardArt` keeps the art as it
+// was drawn, which a painted set shows in place of the graded colour (see Painted.flatFigures).
 const GRADE = `
+ vec3 cardArt = diffuseColor.rgb;
  { vec3 c = diffuseColor.rgb; float l = dot(c, vec3(.299, .587, .114));
    c = mix(vec3(l), c, .9); c *= vec3(1.025, 1.0, .95);
    c += vec3(.04, .016, -.01) * (1.0 - smoothstep(0.0, .55, l)); float hi = smoothstep(.62, .95, l); c = mix(c, vec3(l), hi * .3) * (1.0 - hi * .1);

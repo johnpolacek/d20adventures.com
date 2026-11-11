@@ -344,13 +344,7 @@ export function DesktopGame() {
       art={art}
       fallbackEncounter={chosen?.start}
       controls={hosting ? (c) => (c as { userId?: string }).userId === hosted?.userId && (c as { controlledBy?: string }).controlledBy !== "ai" : () => true}
-      status={
-        hosting
-          ? `Hosting · ${hosted?.summary.watching ? "watching" : `${hosted?.summary.players ?? 1} at the table`} · ${gmLabel}`
-          : save
-            ? `Saved locally · ${save.model ? `${save.provider} ${save.model}` : save.provider}`
-            : ""
-      }
+      status={hosting ? `Hosting · ${hosted?.summary.watching ? "watching" : `${hosted?.summary.players ?? 1} at the table`} · ${gmLabel}` : undefined}
       overlay={screen !== null || Boolean(hosting && !hostedView)}
       actions={<Pill onClick={goHome}>Home</Pill>}
       chat={hosting ? hosted?.chat : undefined}

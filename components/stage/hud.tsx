@@ -1,8 +1,8 @@
 "use client"
 
 // The stage's heads-up display, in the Kordavos prototype's language: the painted world full-screen under a soft vignette;
-// the encounter's title top-left and icon buttons top-right; where the party stands bottom-right; and a perspective bar
-// along the bottom. Everything else (the narration, the GM card, plates, bubbles, the journal, character cards) is
+// the encounter's title top-left and icon buttons top-right; a perspective bar along the bottom, and at its right end
+// the map with the name of the place under it. Everything else (the narration, the GM card, plates, bubbles, the journal, character cards) is
 // layered in as children.
 
 import { type ReactNode, type RefObject, useEffect, useState } from "react"
@@ -100,7 +100,8 @@ export function StageHud({
 }: {
   containerRef: RefObject<HTMLDivElement | null>
   title: { eyebrow: string; text: string }
-  location: { eyebrow: string; title: string; status?: string; hidden?: boolean }
+  // The name of the place, under the map.
+  location: { name: string; status?: string; hidden?: boolean }
   views: HudView[]
   activeView: string | null
   onView: (id: string) => void
@@ -109,7 +110,7 @@ export function StageHud({
   compact?: boolean
   // Shown where the stage would be when there is none, such as story view's painting.
   backdrop?: ReactNode
-  // A small map, at the end of the perspective bar, where it covers none of the scene.
+  // A small map at the right end of the perspective bar, standing a little over its rule. Without one a compass.
   map?: ReactNode
   children?: ReactNode
 }) {
@@ -137,46 +138,46 @@ export function StageHud({
           <div className="flex items-center gap-2.5">{actions}</div>
         </header>
 
-        <aside className={cn("pointer-events-none absolute text-right transition-opacity duration-300", compact ? "hidden" : "right-10 bottom-[130px]", location.hidden && "opacity-0")}>
-          {!map && (
-            <svg viewBox="0 0 60 60" aria-hidden="true" className="mb-3 ml-auto h-12 w-12 fill-none stroke-stage-gold" strokeWidth=".8">
-              <circle cx="30" cy="30" r="23" opacity=".4" />
-              <path d="m30 1 4 25 25 4-25 4-4 25-4-25-25-4 25-4Z" />
-              <circle cx="30" cy="30" r="4" />
-            </svg>
-          )}
-          <div className="text-[8px] tracking-[0.25em] text-stage-sage uppercase">{location.eyebrow}</div>
-          <p className="mt-2 font-serif text-[17px] text-stage-sage">{location.title}</p>
-          {location.status && <div className="mt-2 text-[10px] tracking-wide text-[#e8c898]">{location.status}</div>}
-        </aside>
-
         {/* The rule over the perspective bar runs edge to edge. */}
+        {views.length > 0 && <div aria-hidden="true" className={cn("stage-rule pointer-events-none absolute inset-x-0 h-px opacity-60", compact ? "bottom-11" : "bottom-24")} />}
+        {!compact && (
+          <aside className={cn("absolute right-10 bottom-2.5 flex flex-col items-center gap-1.5 transition-opacity duration-300", location.hidden && "pointer-events-none opacity-0")}>
+            {map ?? (
+              <svg viewBox="0 0 60 60" aria-hidden="true" className="h-12 w-12 fill-none stroke-stage-gold" strokeWidth=".8">
+                <circle cx="30" cy="30" r="23" opacity=".4" />
+                <path d="m30 1 4 25 25 4-25 4-4 25-4-25-25-4 25-4Z" />
+                <circle cx="30" cy="30" r="4" />
+              </svg>
+            )}
+            <div className="max-w-[200px] truncate text-[9px] tracking-[0.25em] text-stage-sage uppercase [text-shadow:0_1px_6px_#000]">{location.name}</div>
+            {location.status && <div className="text-[10px] tracking-wide text-[#e8c898] [text-shadow:0_1px_6px_#000]">{location.status}</div>}
+          </aside>
+        )}
+
         {views.length > 0 && (
-          <>
-            <div aria-hidden="true" className={cn("stage-rule pointer-events-none absolute inset-x-0 h-px opacity-60", compact ? "bottom-11" : "bottom-24")} />
-            <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
-              {!compact && <div className="hidden flex-1 lg:block" />}
-              <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
-                {views.map((v, i) => (
-                  <button
-                    key={v.id}
-                    type="button"
-                    aria-pressed={activeView === v.id}
-                    onClick={() => onView(v.id)}
-                    className={cn(
-                      "flex shrink-0 items-center gap-2.5 rounded-[3px] border whitespace-nowrap transition-colors",
-                      compact ? "px-2 py-1 text-[10px]" : "px-4 py-3 text-[11px]",
-                      activeView === v.id ? "stage-leather border-stage-brass/50 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
-                    )}
-                  >
-                    <small className={cn("text-[8px]", activeView === v.id ? "text-stage-gold" : "text-[#a6a58c]")}>{String(i + 1).padStart(2, "0")}</small>
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-              {!compact && <div className="hidden flex-1 justify-end lg:flex">{map}</div>}
-            </nav>
-          </>
+          <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
+            {!compact && <div className="hidden flex-1 lg:block" />}
+            <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
+              {views.map((v, i) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  aria-pressed={activeView === v.id}
+                  onClick={() => onView(v.id)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-2.5 rounded-[3px] border whitespace-nowrap transition-colors",
+                    compact ? "px-2 py-1 text-[10px]" : "px-4 py-3 text-[11px]",
+                    activeView === v.id ? "stage-leather border-stage-brass/50 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  <small className={cn("text-[8px]", activeView === v.id ? "text-stage-gold" : "text-[#a6a58c]")}>{String(i + 1).padStart(2, "0")}</small>
+                  {v.label}
+                </button>
+              ))}
+            </div>
+            {/* Room for the map and the place's name at the right end. */}
+            {!compact && <div className={cn("flex-1", map ? "min-w-[216px] shrink-0" : "hidden lg:block")} />}
+          </nav>
         )}
       </div>
       {children}

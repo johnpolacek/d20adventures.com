@@ -8,7 +8,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { CharacterCard } from "@/components/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@/components/stage/city-map"
 import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
-import { Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
+import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
@@ -168,8 +168,8 @@ export function StagePlay(props: {
   fallbackEncounter?: string
   // Whether this player acts for a hero on their turn. AI companions always act through Continue.
   controls: (character: Character) => boolean
-  // A line under the location, such as where the game is saved.
-  status: string
+  // A line under the name of the place, for what a player at a shared table needs to know: whether the GM is online.
+  status?: string
   // Something over the stage, such as the home screen, which hides the play interface.
   overlay: boolean
   // Header buttons before Journal and Scene settings, and after them.
@@ -861,16 +861,12 @@ export function StagePlay(props: {
       containerRef={containerRef}
       backdrop={!scene && save && shown ? <StoryArt src={`/stage/art/${save.adventure.planId}/${shown.encounterId}.webp`} /> : undefined}
       title={{ eyebrow: (save?.adventure.title ?? "").toUpperCase(), text: shown?.title ?? "" }}
-      location={{
-        eyebrow: scene?.location ?? "Story view",
-        title: ended ? "Adventure complete" : actor ? `${callName(actor)}'s turn` : `Round ${turn?.order ?? 1}`,
-        status: props.status,
-      }}
+      location={{ name: scene?.location ?? "Story View", status: props.status }}
       views={stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []}
       activeView={stage?.activeShot ?? null}
       onView={(id) => stage?.shot(id)}
       hidden={hidden || !save || props.overlay}
-      map={city && <CityMapInset className="h-[72px] w-[128px]" map={city.map} trail={city.trail} onOpen={() => setOpen("map")} />}
+      map={city && <CityMapInset className="h-[112px] w-[200px]" map={city.map} trail={city.trail} onOpen={() => setOpen("map")} />}
       compact={compact}
       actions={
         <>
@@ -882,7 +878,12 @@ export function StagePlay(props: {
               Chat{unread > 0 ? ` · ${unread}` : ""}
             </Pill>
           )}
-          <Pill onClick={() => setOpen(open === "settings" ? null : "settings")}>Scene settings</Pill>
+          <IconButton label="Scene Settings" active={open === "settings"} onClick={() => setOpen(open === "settings" ? null : "settings")}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35" aria-hidden="true">
+              <path d="M5 3v18M12 3v18M19 3v18" />
+              <path d="M2 8h6M9 16h6M16 9h6" strokeWidth="3" />
+            </svg>
+          </IconButton>
           {props.trailingActions}
         </>
       }
@@ -890,20 +891,19 @@ export function StagePlay(props: {
       {save && !hidden && !props.overlay && (
         <>
           {stage && speech.length > 0 && (
-            <>
-              <Bubbles compact={compact} bubbles={speech.map((l, i) => ({ key: paragraph * 100 + i, anchor: () => stage.project(l.cast.id), text: l.text, named: true }))} />
-            </>
+            <Bubbles compact={compact} bubbles={speech.map((l, i) => ({ key: paragraph * 100 + i, anchor: () => stage.project(l.cast.id), text: l.text, named: true }))} />
           )}
           {!scene && voice && <Plate compact={compact} line={{ key: paragraph, side: "right", ...voice }} />}
           <TurnOrder
             order={(shown?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", health: c.healthPercent, status: c.status }))}
             activeId={ended ? null : (spotlit?.id ?? null)}
+            turnId={ended ? null : (actor?.id ?? null)}
             label={ended ? undefined : spotlit?.name}
             compact={compact}
             onPick={focus}
           />
           <div
-            className={`pointer-events-none absolute z-20 ${!scene && reading ? "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2" : compact ? "bottom-[118px] left-8 w-[min(460px,45vw)]" : "bottom-[118px] left-8 w-[min(460px,35vw)]"}`}
+            className={`pointer-events-none absolute z-20 ${!scene && reading ? "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2" : compact ? "bottom-[118px] left-8 w-[min(460px,45vw)]" : "bottom-[84px] left-8 w-[min(460px,35vw)]"}`}
           >
             {reading && (
               <Narration
@@ -992,7 +992,7 @@ export function StagePlay(props: {
           {card && <CharacterCard info={card} compact={compact} onClose={() => setCardId(null)} />}
           {open === "settings" && (
             <section className={`${panel} absolute right-10 top-24 z-40 w-72 p-6`}>
-              <h2 className="mb-4 font-serif text-2xl">Scene settings</h2>
+              <h2 className="mb-4 font-serif text-2xl">Scene Settings</h2>
               <div className="mb-4 flex gap-2">
                 <Pill active={!auto} onClick={() => setAuto(false)}>
                   Step through
