@@ -154,6 +154,14 @@ The gate has eleven points and fourteen paintings: `gate` (with a cloth-free twi
 
 Sway: owner, 2026-11-10, "the drift on the far away shots is great but on closeups it moves too fast". The sway now shrinks with the subject's distance and the lens, so the foreground slides at most about 1% of the frame's height (`SWAY_ON_SCREEN` in `tripod.ts`). Measured live: 16 cm at the gate as before, 2.3 cm on Garlan's close view where it was 6, 2.4 cm on a hero from the party point where it was 12.
 
+Owner review of the live gate, 2026-11-10: Branka's art looked off, the characters did not look as 3D as in the lab, and bubble text was too small.
+
+- Branka: the card prompt said "natural proportions", which made a dwarf taller and slimmer with a younger face. It now says to keep the body's proportions and the face's age, lines and scars. Branka was painted again. The other small folk were painted with the old wording and looked right on review.
+- Flat figures, cause one: in a painted set only figures cast sun shadows, so the set's shade never fell on them. The lab shots the owner liked had it. `render/painted.ts` now renders the built set from the sun over 80 m about the current point, and figures take 65% of that shade. At full strength Garlan under his awning was a silhouette.
+- Cause two: the sun's shadow map covered the whole set, 300 m, so a figure's own shadow was a few texels. It now covers the same 80 m.
+- Cause three: a card seen from the side sat half way through the dissolve between its front and back, as a speckled ghost. A tripod can stand to one side of someone for a whole scene. `figures/standees.ts` now settles on one face, with 80 and 100 degrees as the two thresholds, and dissolves in a quarter of a second when it changes. This applies to every set.
+- Bubbles: 17 and 18 px, from 13 and 14, in a 330 px box, and 14 px in the compact layout, from 11.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.

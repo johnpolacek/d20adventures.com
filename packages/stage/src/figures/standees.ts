@@ -34,10 +34,6 @@ const GAIN = 0.6
 const RATE = 4.5
 const D = THREE.MathUtils.degToRad
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
-const smoothstep = (a: number, b: number, x: number) => {
-  const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1)
-  return t * t * (3 - 2 * t)
-}
 
 // Exact squared distance transform (Felzenszwalb & Huttenlocher), used for the alpha "bulge".
 function edt(inside: Uint8Array, w: number, h: number) {
@@ -198,6 +194,8 @@ interface Standee {
   yaw: number | null
   loaded: boolean
   back: number
+  // The face the card has settled on: 0 its front, 1 its back, null until it is first seen.
+  side: 0 | 1 | null
   // 0 standing, 1 lying on the ground.
   fall: number
   map?: THREE.Texture
@@ -261,6 +259,7 @@ export class Standees {
     if (s && instant) {
       s.fall = down ? 1 : 0
       s.yaw = null
+      s.side = null
     }
   }
   hit(id: string, color: string, strength = 1) {
@@ -304,7 +303,7 @@ export class Standees {
     contact.name = `contact:${cast.id}`
     grp.add(contact)
     this.group.add(grp)
-    const s: Standee = { cast, grp, mesh, mat, depth, bu, yaw: null, loaded: false, back: 0, fall: cast.down ? 1 : 0, aspect: 0.4, aspectB: 0.4, contact }
+    const s: Standee = { cast, grp, mesh, mat, depth, bu, yaw: null, loaded: false, back: 0, side: null, fall: cast.down ? 1 : 0, aspect: 0.4, aspectB: 0.4, contact }
     if (cast.down) this.down.add(cast.id)
     this.items.set(cast.id, s)
   }
@@ -345,10 +344,9 @@ export class Standees {
     return [...this.items.values()].map((s) => ({ src: s.mesh, map: () => (s.loaded ? (s.map ?? null) : null), mapB: () => s.mapB ?? null, mix: () => s.back }))
   }
   // Yaw toward the camera, but only part of the way and never more than 60 degrees from where the figure is facing; damped
-  // so the card swings rather than snaps. With a back view the card shows its front below 80 degrees off its facing and its
-  // back above 100 (leaning toward the camera from the opposite side), and in between swings from the front lean to the
-  // back lean (70 to 110) while the art dissolves, so it is face-on to the camera at 90 instead of popping. Without a back
-  // view the card turns about to show its front once the camera is behind the figure.
+  // so the card swings rather than snaps. With a back view the card shows its front or its back, leaning toward the
+  // camera from that side, and dissolves from one to the other as the camera passes its edge (see `side` below). Without a
+  // back view the card turns about to show its front once the camera is behind the figure.
   update(dt: number, camera: THREE.Camera) {
     const k = 1 - Math.exp(-dt * RATE)
     for (const s of this.items.values()) {
@@ -363,8 +361,15 @@ export class Standees {
         const sg = off < 0 ? -1 : 1
         const front = THREE.MathUtils.clamp(off * GAIN, -LEAN, LEAN)
         const back = sg * Math.PI + THREE.MathUtils.clamp(wrap(off - sg * Math.PI) * GAIN, -LEAN, LEAN)
-        target = c.ry + THREE.MathUtils.lerp(front, back, smoothstep(D(70), D(110), a))
-        s.back = smoothstep(D(80), D(100), a)
+        // Which face shows is settled, not blended by the angle: past 100 degrees off its facing the card turns its
+        // back, and it comes round again under 80. Between the two it keeps the face it had. A camera that stands to
+        // one side of someone, as a painted set's tripod can for a whole scene, sees one clean picture and never a
+        // card held half way through its dissolve. The change itself takes a quarter of a second.
+        if (s.side === null) s.side = a > D(90) ? 1 : 0
+        else if (a > D(100)) s.side = 1
+        else if (a < D(80)) s.side = 0
+        target = c.ry + (s.side ? back : front)
+        s.back = s.yaw === null ? s.side : s.back + THREE.MathUtils.clamp(s.side - s.back, -dt * 4, dt * 4)
       } else {
         const flip = a > 2.1
         const rest = c.ry + (flip ? Math.PI : 0)
@@ -425,7 +430,10 @@ export class Standees {
     return out.set(s.cast.x, s.cast.height * 1.04, s.cast.z)
   }
   reset() {
-    for (const s of this.items.values()) s.yaw = null
+    for (const s of this.items.values()) {
+      s.yaw = null
+      s.side = null
+    }
   }
   dispose() {
     for (const s of this.items.values()) {

@@ -28,7 +28,7 @@ const FIXTURES = "public/stage/fixtures/welcome-to-kordavos"
 const OUT = `${PUB}/cards`
 const GREEN = "#00ff00"
 
-const REAL = `Render it as a real person photographed on location for a film: real skin with pores and stubble, real hair, forged and worn metal, woven wool and linen, oiled and scuffed leather, real stitching and wear. Natural proportions. Soft overcast daylight from the upper left, gentle and even, with no rim light and no hard shadow.
+const REAL = `Render it as a real person photographed on location for a film: real skin with pores and stubble, real hair, forged and worn metal, woven wool and linen, oiled and scuffed leather, real stitching and wear. Soft overcast daylight from the upper left, gentle and even, with no rim light and no hard shadow.
 
 Full body, head to toe, nothing cropped, about 6% margin on all sides, feet flat near the bottom of the frame, eye-level view without perspective distortion. No outline, no halo, no cast shadow and no ground shadow.
 
@@ -36,7 +36,9 @@ Background: SOLID UNIFORM PURE GREEN (#00FF00) everywhere, edge to edge. No scen
 
 const FRONT = `The attached image is a painted game character on a green screen. Make a photograph of the SAME person, in the SAME pose and stance, seen from the same angle, at the same scale and position in the frame.
 
-Keep the face, the age, the hair and beard, the build and height, and every piece of the outfit and gear: its shapes, colours, emblems, layers, and what each hand holds. Keep the silhouette. Only the finish changes, from painting to photograph.
+Keep the face: the same features, the same age and lines, the same scars and the same expression. Keep the hair and beard. Keep every piece of the outfit and gear: its shapes, colours, emblems, layers, and what each hand holds.
+
+Keep the body's proportions exactly as painted: the size of the head against the body, the length of the legs and arms, the width of the shoulders and hips. A stocky dwarf stays stocky with a large head and short legs, a halfling stays small, a half-orc stays heavy. Do not make anyone taller, slimmer, younger or more like an ordinary human. Keep the silhouette. Only the finish changes, from painting to photograph.
 
 ${REAL}`
 

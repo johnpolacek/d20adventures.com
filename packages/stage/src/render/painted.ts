@@ -69,6 +69,31 @@ const slotSky = (i: number) => /* glsl */ `{
  float a = inside * (pow(uPaintLens${i}.y, 4.0) * smoothstep(0.0, .06, e) + 1e-6);
  paintSum += a * tx; paintW += a; paintIn = max(paintIn, inside); }`
 
+// The set's shadow on a figure. Only figures are in the sun's own shadow map, so that their shadows alone darken the
+// paint. What the set would cast on them, an awning's shade or a tower's, comes from a second map: the built set alone,
+// seen from the sun, over the ground about the current point.
+const SHADE_SIZE = 2048
+const SHADE_RADIUS = 40
+// How much of the sun the set's shade takes from a figure. Not all: under an awning a painting's own figures would
+// still catch light off the ground and the walls, and at full strength the sergeant at his table is a silhouette.
+const SHADE_STRENGTH = 0.65
+const SHADE_GLSL = /* glsl */ `
+uniform sampler2D uSetShadeMap; uniform mat4 uSetShadeView; uniform float uSetShadeOn;
+float setShade(vec3 viewPosition){
+ vec3 p = (uSetShadeView * vec4(viewPosition, 1.0)).xyz * .5 + .5;
+ float e = min(min(p.x, 1.0 - p.x), min(p.y, 1.0 - p.y));
+ if (uSetShadeOn < .5 || e < 0.0 || p.z > 1.0) return 1.0;
+ float lit = 0.0;
+ for (int k = 0; k < 4; k++) {
+  vec2 o = vec2(k == 0 || k == 2 ? -.75 : .75, k < 2 ? -.75 : .75) / ${SHADE_SIZE}.0;
+  lit += step(p.z - .0006, textureLod(uSetShadeMap, p.xy + o, 0.0).x); }
+ return mix(1.0, lit * .25, uSetShadeOn * smoothstep(0.0, .05, e)); }`
+// The sun's light on a figure, dimmed by that shade, where three works out each directional light.
+const SHADED_LIGHTS = `float setShadeNow = setShade(-vViewPosition);\n${THREE.ShaderChunk.lights_fragment_begin.replace(
+  "getDirectionalLightInfo( directionalLight, directLight );",
+  "getDirectionalLightInfo( directionalLight, directLight );\n\t\tdirectLight.color *= setShadeNow;"
+)}`
+
 const slots = (each: (i: number) => string) => Array.from({ length: N }, (_, i) => each(i)).join("\n")
 
 export class Painted {
@@ -84,12 +109,25 @@ export class Painted {
   private patched = new Set<THREE.Material>()
   private cloths: THREE.Mesh[] = []
   private plate: THREE.Mesh[] = []
+  // What stands among the plate's meshes without taking paint: flames, glass, mist.
+  private aside: THREE.Mesh[] = []
+  private scene: THREE.Scene | null = null
+  private hidden: THREE.Object3D[] = []
+  private shade = { uSetShadeMap: { value: null as THREE.Texture | null }, uSetShadeView: { value: new THREE.Matrix4() }, uSetShadeOn: { value: 0 } }
+  private shadeTarget: THREE.WebGLRenderTarget | null = null
+  private shadeCamera = new THREE.OrthographicCamera(-SHADE_RADIUS, SHADE_RADIUS, SHADE_RADIUS, -SHADE_RADIUS, 1, 700)
+  private shadeMatrix = new THREE.Matrix4()
+  private shadeDepth = new THREE.MeshDepthMaterial({ side: THREE.DoubleSide })
+  // The ground the sun's shadows are worked out over: about the current point, more of it ahead than behind.
+  readonly shadeBox = { center: new THREE.Vector3(), radius: SHADE_RADIUS }
 
   constructor(
     private renderer: THREE.WebGLRenderer,
     private spec: Spec,
     private shared: SharedUniforms,
-    skyRadius: number
+    skyRadius: number,
+    // Toward the sun.
+    private sun: THREE.Vector3
   ) {
     this.points = tripodPoints(spec)
     this.blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1)
@@ -141,6 +179,7 @@ ${slots(slotSky)}
           if (!this.patched.has(m)) this.patchMaterial(m as Patched)
         }
         if (takes) this.plate.push(o)
+        else this.aside.push(o)
       }
       for (const c of o.children) visit(c)
     }
@@ -230,6 +269,8 @@ ${slots(slotSurface)}
   // What each painting's camera saw of the built set. `hidden` is everything that was not in its plate: cast, crowd,
   // effects, birds, the sky. Plates are made with motion off, which holds the wind at time 0, so depth is taken there.
   bake(scene: THREE.Scene, hidden: THREE.Object3D[]) {
+    this.scene = scene
+    this.hidden = hidden
     const r = this.renderer
     const hide = [...hidden, this.dome]
     const was = hide.map((h) => h.visible)
@@ -322,6 +363,73 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
       if (p) (this.uniforms[`uPaintVP${i}`].value as THREE.Matrix4).copy(p.viewProjection)
       ;(this.uniforms[`uPaintLens${i}`].value as THREE.Vector3).set(p ? 1 : 0, p?.lens ?? 0, p?.clear ? 1 : 0)
     }
+    this.renderShade(point)
+  }
+
+  // Figures take the set's shade (see SHADE_GLSL): every lit material under `roots`, the cast's cards and the crowd's.
+  shadeFigures(roots: THREE.Object3D[]) {
+    const done = new Set<THREE.Material>()
+    for (const root of roots)
+      root.traverse((o) => {
+        if (!(o instanceof THREE.Mesh)) return
+        for (const m of (Array.isArray(o.material) ? o.material : [o.material]) as Patched[]) {
+          if (!(m instanceof THREE.MeshStandardMaterial) || done.has(m)) continue
+          done.add(m)
+          const before = m.onBeforeCompile
+          const key = m.customProgramCacheKey.bind(m)
+          m.onBeforeCompile = (s, renderer) => {
+            before.call(m, s, renderer)
+            Object.assign(s.uniforms, this.shade)
+            s.fragmentShader = s.fragmentShader.replace("#include <common>", `#include <common>\n${SHADE_GLSL}`).replace("#include <lights_fragment_begin>", SHADED_LIGHTS)
+          }
+          m.customProgramCacheKey = () => `${key()}|shade`
+          m.needsUpdate = true
+        }
+      })
+  }
+
+  // The set's shade about a point: the built set alone, seen from the sun.
+  private renderShade(point: TripodPoint) {
+    if (!this.scene) return
+    const r = this.renderer
+    const ahead = new THREE.Vector3(0, 0, -1).applyQuaternion(point.frames[0].quaternion).setY(0)
+    if (ahead.lengthSq() > 1e-6) ahead.normalize()
+    const center = this.shadeBox.center
+      .copy(point.position)
+      .setY(0)
+      .addScaledVector(ahead, SHADE_RADIUS * 0.6)
+    const cam = this.shadeCamera
+    cam.position.copy(center).addScaledVector(this.sun, 300)
+    cam.lookAt(center)
+    cam.updateMatrixWorld(true)
+    this.shadeMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)
+    this.shadeTarget ??= new THREE.WebGLRenderTarget(SHADE_SIZE, SHADE_SIZE, { depthTexture: new THREE.DepthTexture(SHADE_SIZE, SHADE_SIZE) })
+    const hide = [...this.hidden, this.dome, ...this.aside]
+    const was = hide.map((h) => h.visible)
+    for (const h of hide) h.visible = false
+    const prev = r.getRenderTarget()
+    const auto = r.shadowMap.autoUpdate
+    r.shadowMap.autoUpdate = false
+    this.scene.overrideMaterial = this.shadeDepth
+    try {
+      r.setRenderTarget(this.shadeTarget)
+      r.clear()
+      r.render(this.scene, cam)
+    } finally {
+      this.scene.overrideMaterial = null
+      r.shadowMap.autoUpdate = auto
+      r.setRenderTarget(prev)
+      hide.forEach((h, i) => {
+        h.visible = was[i]
+      })
+    }
+    this.shade.uSetShadeMap.value = this.shadeTarget.depthTexture
+    this.shade.uSetShadeOn.value = SHADE_STRENGTH
+  }
+
+  // Once a frame: the way from the camera's own space into the shade map.
+  frame(camera: THREE.Camera) {
+    this.shade.uSetShadeView.value.multiplyMatrices(this.shadeMatrix, camera.matrixWorld)
   }
 
   dispose() {
@@ -329,6 +437,9 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
     this.dome.geometry.dispose()
     ;(this.dome.material as THREE.Material).dispose()
     this.blank.dispose()
+    this.shadeTarget?.depthTexture?.dispose()
+    this.shadeTarget?.dispose()
+    this.shadeDepth.dispose()
     for (const list of this.paintings.values())
       for (const p of list) {
         p.map.dispose()

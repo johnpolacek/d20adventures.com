@@ -271,7 +271,7 @@ export class Stage {
     this.sky.renderOrder = -1
     this.sky.frustumCulled = false
     this.scene.add(this.sky)
-    if (set.painted) this.painted = new Painted(renderer, set.painted, this.shared, (this.sky.geometry as THREE.SphereGeometry).parameters.radius)
+    if (set.painted) this.painted = new Painted(renderer, set.painted, this.shared, (this.sky.geometry as THREE.SphereGeometry).parameters.radius, V(...A.sun.direction).normalize())
     const pmrem = new THREE.PMREMGenerator(renderer)
     const envScene = new THREE.Scene()
     const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
@@ -376,6 +376,7 @@ export class Stage {
 
     // A painted set's camera is a tripod, with its own controls once the paintings are up (see load).
     this.painted?.patch(this.plate)
+    this.painted?.shadeFigures([this.standees.group, this.crowd.group])
     if (!this.painted) this.orbit()
 
     this.resizeObserver = new ResizeObserver(() => this.resize())
@@ -698,6 +699,7 @@ export class Stage {
       this.cut = null
       this.tripod = { point: view.point, aim: view.target.clone(), want: { target: view.wanted.clone(), fov: view.asked } }
       this.painted?.setPoint(view.point)
+      this.fitSun()
       this.camera.position.copy(view.point.position)
       this.camera.lookAt(view.target)
       this.camera.fov = view.fov
@@ -724,6 +726,24 @@ export class Stage {
     this.canvas.style.transition = "opacity 170ms ease"
     this.canvas.style.opacity = "0"
     this.cut = { arrive, timer: setTimeout(arrive, 190) }
+  }
+  // The sun's shadow map covers the ground about the current point and no more: figures' shadows are the only ones in
+  // it, and over the whole set a figure is a few texels wide.
+  private fitSun() {
+    const box = this.painted?.shadeBox
+    if (!box) return
+    const A = this.set.atmosphere
+    this.sun.target.position.copy(box.center)
+    this.sun.target.updateMatrixWorld()
+    this.sun.position
+      .set(...A.sun.direction)
+      .normalize()
+      .multiplyScalar(A.sun.distance)
+      .add(box.center)
+    const c = this.sun.shadow.camera
+    c.left = c.bottom = -box.radius
+    c.right = c.top = box.radius
+    c.updateProjectionMatrix()
   }
   // The player turns the camera: a drag of the canvas's height turns it by one lens. It stops at the paint's edge.
   private turnTripod(dx: number, dy: number) {
@@ -1070,6 +1090,8 @@ export class Stage {
       const off = this.motion ? sway(V().subVectors(aim, point.position), this.camera.fov, this.set.painted?.sway ?? 0, this.shared.time.value) : V()
       this.camera.position.copy(point.position).add(off)
       this.camera.lookAt(aim)
+      this.camera.updateMatrixWorld()
+      this.painted?.frame(this.camera)
     } else {
       this.controls?.update()
       this.constrain()

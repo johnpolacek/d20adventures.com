@@ -10,7 +10,7 @@ export type Anchor = () => { x: number; y: number; visible: boolean; distance: n
 // A bubble shows only while its speaker reads as a person on screen (a wide shot hides it rather than shrinking it to
 // unreadable), and scales a little with them, never below a readable size.
 const SPEAKER_MIN_PX = 70
-const bubbleScale = (speakerPx: number) => Math.min(1, 0.85 + (speakerPx - SPEAKER_MIN_PX) / 400)
+const bubbleScale = (speakerPx: number) => Math.min(1, 0.92 + (speakerPx - SPEAKER_MIN_PX) / 600)
 // The band at the top of the screen that holds the turn order and the name under it. A bubble with no room above its
 // speaker below that band sits beside their head instead, so it never runs under the portraits.
 const SAFE_TOP = { wide: 150, compact: 96 }
@@ -58,10 +58,10 @@ function BubbleView({ bubble, compact }: { bubble: Bubble; compact: boolean }) {
     <div
       ref={ref}
       className={cn(
-        "absolute top-0 left-0 origin-bottom rounded-[10px] px-3 pt-2 pb-[9px] text-center font-serif leading-[1.4] text-[#2a1a10] italic opacity-0 shadow-[0_6px_18px_#0005] transition-opacity duration-200",
+        "absolute top-0 left-0 origin-bottom rounded-[10px] px-3.5 pt-2.5 pb-[11px] text-center font-serif leading-[1.4] text-[#2a1a10] italic opacity-0 shadow-[0_6px_18px_#0005] transition-opacity duration-200",
         "after:absolute after:bottom-[-7px] after:left-1/2 after:-ml-[7px] after:border-[7px] after:border-b-0 after:border-transparent data-[side=1]:after:hidden",
         bubble.named ? "border border-stage-brass bg-[#fbf1dc] after:border-t-[#fbf1dc]" : "bg-stage-parchment/95 after:border-t-[#f3e6c8f2]",
-        compact ? "max-w-[190px] text-[11px]" : cn("max-w-[240px]", bubble.named ? "text-[14px]" : "text-[13px]")
+        compact ? "max-w-[240px] text-[14px]" : cn("max-w-[330px]", bubble.named ? "text-[18px]" : "text-[17px]")
       )}
     >
       {bubble.text}
