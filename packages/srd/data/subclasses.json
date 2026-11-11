@@ -1,0 +1,682 @@
+[
+  {
+    "id": "champion",
+    "name": "Champion",
+    "page": 49,
+    "class": "fighter",
+    "level": 3,
+    "tagline": "Pursue Physical Excellence in Combat",
+    "description": "A Champion focuses on the development of martial prowess in a relentless pursuit of victory. Champions combine rigorous training with physical excellence to deal devastating blows, withstand peril, and garner glory. Whether in athletic contests or bloody battle, Champions strive for the crown of the victor.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "champion-improved-critical",
+          "champion-remarkable-athlete"
+        ]
+      },
+      {
+        "level": 7,
+        "features": [
+          "champion-additional-fighting-style"
+        ]
+      },
+      {
+        "level": 10,
+        "features": [
+          "champion-heroic-warrior"
+        ]
+      },
+      {
+        "level": 15,
+        "features": [
+          "champion-superior-critical"
+        ]
+      },
+      {
+        "level": 18,
+        "features": [
+          "champion-survivor"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "circle-of-the-land",
+    "name": "Circle of the Land",
+    "page": 46,
+    "class": "druid",
+    "level": 3,
+    "tagline": "Celebrate Connection to the Natural World",
+    "description": "The Circle of the Land comprises mystics and sages who safeguard ancient knowledge and rites. These Druids meet within sacred circles of trees or standing stones to whisper primal secrets in Druidic. The circle’s wisest members preside as the chief priests of their communities.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "circle-of-the-land-circle-of-the-land-spells",
+          "circle-of-the-land-lands-aid"
+        ]
+      },
+      {
+        "level": 6,
+        "features": [
+          "circle-of-the-land-natural-recovery"
+        ]
+      },
+      {
+        "level": 10,
+        "features": [
+          "circle-of-the-land-natures-ward"
+        ]
+      },
+      {
+        "level": 14,
+        "features": [
+          "circle-of-the-land-natures-sanctuary"
+        ]
+      }
+    ],
+    "alwaysPrepared": [
+      {
+        "level": 3,
+        "spells": [
+          "blur",
+          "burning-hands",
+          "fire-bolt"
+        ],
+        "land": "arid"
+      },
+      {
+        "level": 5,
+        "spells": [
+          "fireball"
+        ],
+        "land": "arid"
+      },
+      {
+        "level": 7,
+        "spells": [
+          "blight"
+        ],
+        "land": "arid"
+      },
+      {
+        "level": 9,
+        "spells": [
+          "wall-of-stone"
+        ],
+        "land": "arid"
+      },
+      {
+        "level": 3,
+        "spells": [
+          "fog-cloud",
+          "hold-person",
+          "ray-of-frost"
+        ],
+        "land": "polar"
+      },
+      {
+        "level": 5,
+        "spells": [
+          "sleet-storm"
+        ],
+        "land": "polar"
+      },
+      {
+        "level": 7,
+        "spells": [
+          "ice-storm"
+        ],
+        "land": "polar"
+      },
+      {
+        "level": 9,
+        "spells": [
+          "cone-of-cold"
+        ],
+        "land": "polar"
+      },
+      {
+        "level": 3,
+        "spells": [
+          "misty-step",
+          "shocking-grasp",
+          "sleep"
+        ],
+        "land": "temperate"
+      },
+      {
+        "level": 5,
+        "spells": [
+          "lightning-bolt"
+        ],
+        "land": "temperate"
+      },
+      {
+        "level": 7,
+        "spells": [
+          "freedom-of-movement"
+        ],
+        "land": "temperate"
+      },
+      {
+        "level": 9,
+        "spells": [
+          "tree-stride"
+        ],
+        "land": "temperate"
+      },
+      {
+        "level": 3,
+        "spells": [
+          "acid-splash",
+          "ray-of-sickness",
+          "web"
+        ],
+        "land": "tropical"
+      },
+      {
+        "level": 5,
+        "spells": [
+          "stinking-cloud"
+        ],
+        "land": "tropical"
+      },
+      {
+        "level": 7,
+        "spells": [
+          "polymorph"
+        ],
+        "land": "tropical"
+      },
+      {
+        "level": 9,
+        "spells": [
+          "insect-plague"
+        ],
+        "land": "tropical"
+      }
+    ]
+  },
+  {
+    "id": "college-of-lore",
+    "name": "College of Lore",
+    "page": 35,
+    "class": "bard",
+    "level": 3,
+    "tagline": "Plumb the Depths of Magical Knowledge",
+    "description": "Bards of the College of Lore collect spells and secrets from diverse sources, such as scholarly tomes, mystical rites, and peasant tales. The college’s members gather in libraries and universities to share their lore with one another. They also meet at festivals or affairs of state, where they can expose corruption, unravel lies, and poke fun at self-important figures of authority.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "college-of-lore-bonus-proficiencies",
+          "college-of-lore-cutting-words"
+        ]
+      },
+      {
+        "level": 6,
+        "features": [
+          "college-of-lore-magical-discoveries"
+        ]
+      },
+      {
+        "level": 14,
+        "features": [
+          "college-of-lore-peerless-skill"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "draconic-sorcery",
+    "name": "Draconic Sorcery",
+    "page": 69,
+    "class": "sorcerer",
+    "level": 3,
+    "tagline": "Breathe the Magic of Dragons",
+    "description": "Your innate magic comes from the gift of a dragon. Perhaps an ancient dragon facing death bequeathed some of its magical power to you or your ancestor. You might have absorbed magic from a site infused with dragons’ power. Or perhaps you handled a treasure taken from a dragon’s hoard that was steeped in draconic power. Or you might have a dragon for an ancestor.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "draconic-sorcery-draconic-resilience",
+          "draconic-sorcery-draconic-spells"
+        ]
+      },
+      {
+        "level": 6,
+        "features": [
+          "draconic-sorcery-elemental-affinity"
+        ]
+      },
+      {
+        "level": 14,
+        "features": [
+          "draconic-sorcery-dragon-wings"
+        ]
+      },
+      {
+        "level": 18,
+        "features": [
+          "draconic-sorcery-dragon-companion"
+        ]
+      }
+    ],
+    "alwaysPrepared": [
+      {
+        "level": 3,
+        "spells": [
+          "alter-self",
+          "chromatic-orb",
+          "command",
+          "dragons-breath"
+        ]
+      },
+      {
+        "level": 5,
+        "spells": [
+          "fear",
+          "fly"
+        ]
+      },
+      {
+        "level": 7,
+        "spells": [
+          "arcane-eye",
+          "charm-monster"
+        ]
+      },
+      {
+        "level": 9,
+        "spells": [
+          "legend-lore",
+          "summon-dragon"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "evoker",
+    "name": "Evoker",
+    "page": 82,
+    "class": "wizard",
+    "level": 3,
+    "tagline": "Create Explosive Elemental Effects",
+    "description": "Your studies focus on magic that creates powerful elemental effects such as bitter cold, searing flame, rolling thunder, crackling lightning, and burning acid. Some Evokers find employment in military forces, serving as artillery to blast armies from afar. Others use their power to protect others, while some seek their own gain.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "evoker-evocation-savant",
+          "evoker-potent-cantrip"
+        ]
+      },
+      {
+        "level": 6,
+        "features": [
+          "evoker-sculpt-spells"
+        ]
+      },
+      {
+        "level": 10,
+        "features": [
+          "evoker-empowered-evocation"
+        ]
+      },
+      {
+        "level": 14,
+        "features": [
+          "evoker-overchannel"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fiend-patron",
+    "name": "Fiend Patron",
+    "page": 76,
+    "class": "warlock",
+    "level": 3,
+    "tagline": "Make a Deal with the Lower Planes",
+    "description": "Your pact draws on the Lower Planes, the realms of perdition. You might forge a bargain with a demon lord, an archdevil, or another fiend that is especially mighty. That patron’s aims are evil—the corruption or destruction of all things, ultimately including you—and your path is defined by the extent to which you strive against those aims.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "fiend-patron-dark-ones-blessing",
+          "fiend-patron-fiend-spells"
+        ]
+      },
+      {
+        "level": 6,
+        "features": [
+          "fiend-patron-dark-ones-own-luck"
+        ]
+      },
+      {
+        "level": 10,
+        "features": [
+          "fiend-patron-fiendish-resilience"
+        ]
+      },
+      {
+        "level": 14,
+        "features": [
+          "fiend-patron-hurl-through-hell"
+        ]
+      }
+    ],
+    "alwaysPrepared": [
+      {
+        "level": 3,
+        "spells": [
+          "burning-hands",
+          "command",
+          "scorching-ray",
+          "suggestion"
+        ]
+      },
+      {
+        "level": 5,
+        "spells": [
+          "fireball",
+          "stinking-cloud"
+        ]
+      },
+      {
+        "level": 7,
+        "spells": [
+          "fire-shield",
+          "wall-of-fire"
+        ]
+      },
+      {
+        "level": 9,
+        "spells": [
+          "geas",
+          "insect-plague"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hunter",
+    "name": "Hunter",
+    "page": 61,
+    "class": "ranger",
+    "level": 3,
+    "tagline": "Protect Nature and People from Destruction",
+    "description": "You stalk prey in the wilds and elsewhere, using your abilities as a Hunter to protect nature and people everywhere from forces that would destroy them.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "hunter-hunters-lore",
+          "hunter-hunters-prey"
+        ]
+      },
+      {
+        "level": 7,
+        "features": [
+          "hunter-defensive-tactics"
+        ]
+      },
+      {
+        "level": 11,
+        "features": [
+          "hunter-superior-hunters-prey"
+        ]
+      },
+      {
+        "level": 15,
+        "features": [
+          "hunter-superior-hunters-defense"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "life-domain",
+    "name": "Life Domain",
+    "page": 40,
+    "class": "cleric",
+    "level": 3,
+    "tagline": "Soothe the Hurts of the World",
+    "description": "The Life Domain focuses on the positive energy that helps sustain all life in the multiverse. Clerics who tap into this domain are masters of healing, using that life force to cure many hurts.\nExistence itself relies on the positive energy associated with this domain, so a Cleric of almost any religious tradition might choose it. This domain is particularly associated with agricultural deities, gods of healing or endurance, and gods of home and community. Religious orders of healing also seek the magic of this domain.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "life-domain-disciple-of-life",
+          "life-domain-life-domain-spells",
+          "life-domain-preserve-life"
+        ]
+      },
+      {
+        "level": 6,
+        "features": [
+          "life-domain-blessed-healer"
+        ]
+      },
+      {
+        "level": 17,
+        "features": [
+          "life-domain-supreme-healing"
+        ]
+      }
+    ],
+    "alwaysPrepared": [
+      {
+        "level": 3,
+        "spells": [
+          "aid",
+          "bless",
+          "cure-wounds",
+          "lesser-restoration"
+        ]
+      },
+      {
+        "level": 5,
+        "spells": [
+          "mass-healing-word",
+          "revivify"
+        ]
+      },
+      {
+        "level": 7,
+        "spells": [
+          "aura-of-life",
+          "death-ward"
+        ]
+      },
+      {
+        "level": 9,
+        "spells": [
+          "greater-restoration",
+          "mass-cure-wounds"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "oath-of-devotion",
+    "name": "Oath of Devotion",
+    "page": 56,
+    "class": "paladin",
+    "level": 3,
+    "tagline": "Uphold the Ideals of Justice and Order",
+    "description": "The Oath of Devotion binds Paladins to the ideals of justice and order. These Paladins meet the archetype of the knight in shining armor. They hold themselves to the highest standards of conduct, and some—for better or worse—hold the rest of the world to the same standards.\nMany who swear this oath are devoted to gods of law and good and use their gods’ tenets as the measure of personal devotion. Others hold angels as their ideals and incorporate images of angelic wings into their helmets or coats of arms.\nThese paladins share the following tenets:\n• Let your word be your promise.\n• Protect the weak and never fear to act.\n• Let your honorable deeds be an example.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "oath-of-devotion-oath-of-devotion-spells",
+          "oath-of-devotion-sacred-weapon"
+        ]
+      },
+      {
+        "level": 7,
+        "features": [
+          "oath-of-devotion-aura-of-devotion"
+        ]
+      },
+      {
+        "level": 15,
+        "features": [
+          "oath-of-devotion-smite-of-protection"
+        ]
+      },
+      {
+        "level": 20,
+        "features": [
+          "oath-of-devotion-holy-nimbus"
+        ]
+      }
+    ],
+    "alwaysPrepared": [
+      {
+        "level": 3,
+        "spells": [
+          "protection-from-evil-and-good",
+          "shield-of-faith"
+        ]
+      },
+      {
+        "level": 5,
+        "spells": [
+          "aid",
+          "zone-of-truth"
+        ]
+      },
+      {
+        "level": 9,
+        "spells": [
+          "beacon-of-hope",
+          "dispel-magic"
+        ]
+      },
+      {
+        "level": 13,
+        "spells": [
+          "freedom-of-movement",
+          "guardian-of-faith"
+        ]
+      },
+      {
+        "level": 17,
+        "spells": [
+          "commune",
+          "flame-strike"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "path-of-the-berserker",
+    "name": "Path of the Berserker",
+    "page": 30,
+    "class": "barbarian",
+    "level": 3,
+    "tagline": "Channel Rage into Violent Fury",
+    "description": "Barbarians who walk the Path of the Berserker direct their Rage primarily toward violence. Their path is one of untrammeled fury, and they thrill in the chaos of battle as they allow their Rage to seize and empower them.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "path-of-the-berserker-frenzy"
+        ]
+      },
+      {
+        "level": 6,
+        "features": [
+          "path-of-the-berserker-mindless-rage"
+        ]
+      },
+      {
+        "level": 10,
+        "features": [
+          "path-of-the-berserker-retaliation"
+        ]
+      },
+      {
+        "level": 14,
+        "features": [
+          "path-of-the-berserker-intimidating-presence"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "thief",
+    "name": "Thief",
+    "page": 64,
+    "class": "rogue",
+    "level": 3,
+    "tagline": "Hunt for Treasure as a Classic Adventurer",
+    "description": "A mix of burglar, treasure hunter, and explorer, you are the epitome of an adventurer. In addition to improving your agility and stealth, you gain abilities useful for delving into ruins and getting maximum benefit from the magic items you find there.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "thief-fast-hands",
+          "thief-second-story-work"
+        ]
+      },
+      {
+        "level": 9,
+        "features": [
+          "thief-supreme-sneak"
+        ]
+      },
+      {
+        "level": 13,
+        "features": [
+          "thief-use-magic-device"
+        ]
+      },
+      {
+        "level": 17,
+        "features": [
+          "thief-thiefs-reflexes"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "warrior-of-the-open-hand",
+    "name": "Warrior of the Open Hand",
+    "page": 52,
+    "class": "monk",
+    "level": 3,
+    "tagline": "Master Unarmed Combat Techniques",
+    "description": "Warriors of the Open Hand are masters of unarmed combat. They learn techniques to push and trip their opponents and manipulate their own energy to protect themselves from harm.",
+    "features": [
+      {
+        "level": 3,
+        "features": [
+          "warrior-of-the-open-hand-open-hand-technique"
+        ]
+      },
+      {
+        "level": 6,
+        "features": [
+          "warrior-of-the-open-hand-wholeness-of-body"
+        ]
+      },
+      {
+        "level": 11,
+        "features": [
+          "warrior-of-the-open-hand-fleet-step"
+        ]
+      },
+      {
+        "level": 17,
+        "features": [
+          "warrior-of-the-open-hand-quivering-palm"
+        ]
+      }
+    ]
+  }
+]
