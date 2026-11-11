@@ -1,0 +1,19 @@
+{
+  "name": "@d20/srd",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check": "tsc -p tsconfig.json && tsc -p tsconfig.scripts.json",
+    "sources": "tsx scripts/fetch.ts",
+    "build": "tsx scripts/build.ts",
+    "verify": "tsx scripts/verify.ts"
+  },
+  "dependencies": {
+    "zod": "4.3.6"
+  }
+}

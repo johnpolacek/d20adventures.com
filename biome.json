@@ -66,6 +66,9 @@
       "!**/playwright-report",
       "!**/*.css",
       "!wiki",
+      "!packages/srd/data",
+      "!packages/srd/sources",
+      "!packages/srd/.cache",
       "!.agent-browser"
     ]
   },

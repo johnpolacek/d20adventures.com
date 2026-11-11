@@ -41,6 +41,9 @@ importers:
       '@d20/gm-core':
         specifier: workspace:*
         version: link:packages/gm-core
+      '@d20/srd':
+        specifier: workspace:*
+        version: link:packages/srd
       '@d20/stage':
         specifier: workspace:*
         version: link:packages/stage
@@ -291,6 +294,9 @@ importers:
       '@d20/gm-core':
         specifier: workspace:*
         version: link:../../packages/gm-core
+      '@d20/srd':
+        specifier: workspace:*
+        version: link:../../packages/srd
       '@d20/stage':
         specifier: workspace:*
         version: link:../../packages/stage
@@ -348,6 +354,12 @@ importers:
         version: 7.3.6(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)
 
   packages/gm-core:
+    dependencies:
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
+
+  packages/srd:
     dependencies:
       zod:
         specifier: 4.3.6

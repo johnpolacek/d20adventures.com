@@ -34,6 +34,33 @@ Later stages stay as short as they are below until their turn.
 
 SRD 5.2.1 as typed data: classes, species, backgrounds, feats, spells, monsters, equipment, conditions. One source checked against the official text, or our own parse. The CC-BY-4.0 attribution line on the site and in the app.
 
+Started 2026-11-11.
+
+How it is built:
+
+- The data lives in a new package, `packages/srd` (`@d20/srd`). It is pure and depends only on Zod.
+- Base source: `5e-bits/5e-database`, `src/2024/en`, commit `a6212be`, MIT.
+- Second source for cross-checks: Open5e `srd-2024`, commit `bdcddf2`.
+- The official SRD 5.2.1 PDF text settles every disagreement. Its text is committed for the checks.
+- The data takes our own shape, not the upstream one. Every entry names its page in the official PDF.
+- A correction is a recorded override that cites the official text. Generated data is never edited by hand.
+
+Substages:
+
+1. Sources pinned: a lock file with commits and hashes, and the official text committed.
+2. Package shell: shared schema, build and verify runners, `pnpm test:srd`.
+3. Reference tables: abilities, skills, conditions, damage types, languages, alignments, magic schools.
+4. Equipment: weapons, armor, gear, tools, weapon properties and masteries. Then magic items.
+5. Origins: species, backgrounds, feats.
+6. Classes: all twelve, level tables to 20, features, the SRD subclass of each.
+7. Spells.
+8. Monsters.
+9. Checks against the official text: every name both ways, key fields, description text.
+10. The attribution line on the site and in the app.
+11. Review by a separate judge until it rates 9.5 or higher.
+
+Not in this stage: the rules text itself (how play works, the rules glossary). The engine stages encode it.
+
 ### 2. The sheet
 
 Class, level, species, background, hit points, Armor Class, proficiencies, saves, and the level 1 features of all twelve classes. Every bonus is derived from the sheet. Health percent stays as a derived value so current screens keep working. Existing heroes and NPCs move to the new sheet.
@@ -71,4 +98,4 @@ Levels to 20. The full spell, monster and magic item lists. The hero creator reb
 
 ## Status
 
-No stage started.
+Stage 1 in progress since 2026-11-11.

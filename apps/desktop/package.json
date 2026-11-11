@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@d20/gm-core": "workspace:*",
+    "@d20/srd": "workspace:*",
     "@d20/stage": "workspace:*",
     "@fontsource/cinzel-decorative": "^5.3.0",
     "@fontsource/rethink-sans": "^5.3.0",
