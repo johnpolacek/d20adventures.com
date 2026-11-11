@@ -235,16 +235,6 @@ export const overrides: Override[] = [
     page: 118,
   },
   {
-    id: "phantasmal-killer",
-    path: "damage",
-    value: [
-      { dice: "4d10", types: ["psychic"], perSlot: "1d10", trigger: "failed-save", save: 0 },
-      { dice: "4d10", types: ["psychic"], perSlot: "1d10", trigger: "failed-save", save: 1 },
-    ],
-    reason: "“the target makes a Wisdom saving throw at the end of each of its turns. On a failed save, it takes the Psychic damage again”",
-    page: 152,
-  },
-  {
     id: "vitriolic-sphere",
     path: "damage",
     value: [
@@ -823,20 +813,6 @@ export const overrides: Override[] = [
     page: 151,
   },
   {
-    id: "symbol",
-    path: "saves",
-    value: [
-      { ability: "con", dc: "spell-save-dc", label: "Death", when: "initial", onSuccess: "half", oncePerTurn: "any-turn" },
-      { ability: "wis", dc: "spell-save-dc", label: "Discord", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
-      { ability: "wis", dc: "spell-save-dc", label: "Fear", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
-      { ability: "con", dc: "spell-save-dc", label: "Pain", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
-      { ability: "wis", dc: "spell-save-dc", label: "Sleep", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
-      { ability: "wis", dc: "spell-save-dc", label: "Stunning", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
-    ],
-    reason: "“A creature is targeted only once per turn”",
-    page: 167,
-  },
-  {
     id: "conjure-celestial",
     path: "damage",
     value: [
@@ -944,16 +920,6 @@ export const overrides: Override[] = [
     ],
     reason: "the second save is made “the first time a creature enters a space in the wall on a turn or ends its turn there”, a time its roll carries as `timing`",
     page: 173,
-  },
-  {
-    id: "conjure-elemental",
-    path: "saves",
-    value: [
-      { ability: "dex", dc: "spell-save-dc", appliesWhen: "if the spirit has no creature Restrained", when: "initial", onSuccess: "none" },
-      { ability: "dex", dc: "spell-save-dc", when: "start-of-turn", onSuccess: "ends" },
-    ],
-    reason: "“you can force that creature to make a Dexterity saving throw if the spirit has no creature Restrained”",
-    page: 118,
   },
   {
     id: "conjure-elemental",
@@ -1350,16 +1316,6 @@ export const overrides: Override[] = [
     page: 155,
   },
   {
-    id: "sleep",
-    path: "conditions",
-    value: [
-      { condition: "incapacitated", trigger: "failed-save", save: 0 },
-      { condition: "unconscious", trigger: "failed-save", save: 1, timing: "until the end of its next turn, at which point it must repeat the save" },
-    ],
-    reason: "“have the Incapacitated condition until the end of its next turn, at which point it must repeat the save”",
-    page: 163,
-  },
-  {
     id: "spirit-guardians",
     path: "saves",
     value: [{ ability: "wis", dc: "spell-save-dc", when: "initial", onSuccess: "half", oncePerTurn: "any-turn", unless: "you can designate creatures to be unaffected by it" }],
@@ -1382,32 +1338,6 @@ export const overrides: Override[] = [
     ],
     reason: "“When you cast this spell, you can designate creatures to be unaffected by it”",
     page: 164,
-  },
-  {
-    id: "symbol",
-    path: "damage",
-    value: [
-      { dice: "10d10", types: ["necrotic"], trigger: "failed-save", save: 0, label: "Death", timing: "Each creature in the Sphere when the glyph activates" },
-      { dice: "10d10", types: ["necrotic"], trigger: "failed-save", save: 0, label: "Death", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
-    ],
-    reason: "“Each creature in the Sphere when the glyph activates is targeted by its effect”",
-    page: 167,
-  },
-  {
-    id: "symbol",
-    path: "conditions",
-    value: [
-      { condition: "frightened", trigger: "failed-save", save: 2, label: "Fear", timing: "Each creature in the Sphere when the glyph activates" },
-      { condition: "frightened", trigger: "failed-save", save: 2, label: "Fear", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
-      { condition: "incapacitated", trigger: "failed-save", save: 3, label: "Pain", timing: "Each creature in the Sphere when the glyph activates" },
-      { condition: "incapacitated", trigger: "failed-save", save: 3, label: "Pain", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
-      { condition: "unconscious", trigger: "failed-save", save: 4, label: "Sleep", timing: "Each creature in the Sphere when the glyph activates" },
-      { condition: "unconscious", trigger: "failed-save", save: 4, label: "Sleep", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
-      { condition: "stunned", trigger: "failed-save", save: 5, label: "Stunning", timing: "Each creature in the Sphere when the glyph activates" },
-      { condition: "stunned", trigger: "failed-save", save: 5, label: "Stunning", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
-    ],
-    reason: "“Each creature in the Sphere when the glyph activates is targeted by its effect”",
-    page: 167,
   },
   {
     id: "telekinesis",
@@ -1598,5 +1528,166 @@ export const overrides: Override[] = [
     ],
     reason: "Turn 3: “You call six bolts of lightning from the cloud to strike six different creatures or objects beneath it. Each target makes a Dexterity saving throw”",
     page: 165,
+  },
+
+  // Round 5: a save whose success does more than halve, who makes a repeated or limited save, and the time of a save nothing linked carries.
+  {
+    id: "phantasmal-killer",
+    path: "saves",
+    value: [
+      { ability: "wis", dc: "spell-save-dc", when: "initial", onSuccess: "other" },
+      { ability: "wis", dc: "spell-save-dc", when: "end-of-turn", onSuccess: "ends" },
+    ],
+    reason: "“On a successful save, the target takes half as much damage, and the spell ends”: a success does more than halve",
+    page: 152,
+  },
+  {
+    id: "phantasmal-killer",
+    path: "damage",
+    value: [
+      { dice: "4d10", types: ["psychic"], perSlot: "1d10", trigger: "failed-save", save: 0, onSuccess: "half" },
+      { dice: "4d10", types: ["psychic"], perSlot: "1d10", trigger: "failed-save", save: 1 },
+    ],
+    reason: "“On a successful save, the target takes half as much damage, and the spell ends”",
+    page: 152,
+  },
+  {
+    id: "weird",
+    path: "saves",
+    value: [
+      { ability: "wis", dc: "spell-save-dc", when: "initial", onSuccess: "half" },
+      { ability: "wis", dc: "spell-save-dc", when: "end-of-turn", onSuccess: "ends", appliesWhen: "A Frightened target" },
+    ],
+    reason: "“A Frightened target makes a Wisdom saving throw at the end of each of its turns”",
+    page: 174,
+  },
+  {
+    id: "sunburst",
+    path: "saves",
+    value: [
+      { ability: "con", dc: "spell-save-dc", when: "initial", onSuccess: "half" },
+      { ability: "con", dc: "spell-save-dc", when: "end-of-turn", onSuccess: "ends", appliesWhen: "A creature Blinded by this spell" },
+    ],
+    reason: "“A creature Blinded by this spell makes another Constitution saving throw at the end of each of its turns”",
+    page: 167,
+  },
+  {
+    id: "confusion",
+    path: "saves",
+    value: [
+      { ability: "wis", dc: "spell-save-dc", when: "initial", onSuccess: "none" },
+      { ability: "wis", dc: "spell-save-dc", when: "end-of-turn", onSuccess: "ends", appliesWhen: "an affected target" },
+    ],
+    reason: "“At the end of each of its turns, an affected target repeats the save”",
+    page: 117,
+  },
+  {
+    id: "slow",
+    path: "saves",
+    value: [
+      { ability: "wis", dc: "spell-save-dc", when: "initial", onSuccess: "none" },
+      { ability: "wis", dc: "spell-save-dc", when: "end-of-turn", onSuccess: "ends", appliesWhen: "An affected target" },
+    ],
+    reason: "“An affected target repeats the save at the end of each of its turns”",
+    page: 163,
+  },
+  {
+    id: "conjure-elemental",
+    path: "saves",
+    value: [
+      { ability: "dex", dc: "spell-save-dc", appliesWhen: "if the spirit has no creature Restrained", when: "initial", onSuccess: "none" },
+      { ability: "dex", dc: "spell-save-dc", when: "start-of-turn", onSuccess: "ends", appliesWhen: "the Restrained target" },
+    ],
+    reason: "“At the start of each of its turns, the Restrained target repeats the save”",
+    page: 118,
+  },
+  {
+    id: "calm-emotions",
+    path: "saves",
+    value: [{ ability: "cha", dc: "spell-save-dc", when: "initial", onSuccess: "none", appliesWhen: "Each Humanoid" }],
+    reason: "“Each Humanoid in a 20-foot-radius Sphere centered on a point you choose within range must succeed on a Charisma saving throw”",
+    page: 114,
+  },
+  {
+    id: "ice-knife",
+    path: "saves",
+    value: [{ ability: "dex", dc: "spell-save-dc", when: "initial", onSuccess: "none", appliesWhen: "The target and each creature within 5 feet of it" }],
+    reason: "“The target and each creature within 5 feet of it must succeed on a Dexterity saving throw or take 2d6 Cold damage”",
+    page: 141,
+  },
+  {
+    id: "call-lightning",
+    path: "saves",
+    value: [{ ability: "dex", dc: "spell-save-dc", when: "initial", onSuccess: "half", appliesWhen: "Each creature within 5 feet of that point" }],
+    reason: "“Each creature within 5 feet of that point makes a Dexterity saving throw”",
+    page: 114,
+  },
+  {
+    id: "zone-of-truth",
+    path: "saves",
+    value: [{ ability: "cha", dc: "spell-save-dc", when: "initial", onSuccess: "none", timing: "a creature that enters the spell’s area for the first time on a turn or starts its turn there" }],
+    reason: "“Until the spell ends, a creature that enters the spell’s area for the first time on a turn or starts its turn there makes a Charisma saving throw”",
+    page: 175,
+  },
+  {
+    id: "gust-of-wind",
+    path: "saves",
+    value: [
+      { ability: "str", dc: "spell-save-dc", when: "initial", onSuccess: "none" },
+      { ability: "str", dc: "spell-save-dc", when: "initial", onSuccess: "none", timing: "A creature that ends its turn in the Line" },
+    ],
+    reason: "“A creature that ends its turn in the Line must make the same save”",
+    page: 138,
+  },
+  {
+    id: "symbol",
+    path: "saves",
+    value: [
+      { ability: "con", dc: "spell-save-dc", label: "Death", when: "initial", onSuccess: "half", oncePerTurn: "any-turn" },
+      { ability: "wis", dc: "spell-save-dc", label: "Discord", when: "initial", onSuccess: "none", oncePerTurn: "any-turn", timing: "Each creature in the Sphere when the glyph activates" },
+      {
+        ability: "wis",
+        dc: "spell-save-dc",
+        label: "Discord",
+        when: "initial",
+        onSuccess: "none",
+        oncePerTurn: "any-turn",
+        timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there",
+      },
+      { ability: "wis", dc: "spell-save-dc", label: "Fear", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
+      { ability: "con", dc: "spell-save-dc", label: "Pain", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
+      { ability: "wis", dc: "spell-save-dc", label: "Sleep", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
+      { ability: "wis", dc: "spell-save-dc", label: "Stunning", when: "initial", onSuccess: "none", oncePerTurn: "any-turn" },
+    ],
+    reason: "Discord: “Each creature in the Sphere when the glyph activates is targeted by its effect, as is a creature that enters the Sphere for the first time on a turn or ends its turn there”",
+    page: 167,
+  },
+  {
+    id: "symbol",
+    path: "damage",
+    value: [
+      { dice: "10d10", types: ["necrotic"], trigger: "failed-save", save: 0, label: "Death", timing: "Each creature in the Sphere when the glyph activates" },
+      { dice: "10d10", types: ["necrotic"], trigger: "failed-save", save: 0, label: "Death", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
+    ],
+    reason:
+      "the Discord save, made “when the glyph activates” and again by “a creature that enters the Sphere for the first time on a turn or ends its turn there”, is now two entries, so the later saves move by one",
+    page: 167,
+  },
+  {
+    id: "symbol",
+    path: "conditions",
+    value: [
+      { condition: "frightened", trigger: "failed-save", save: 3, label: "Fear", timing: "Each creature in the Sphere when the glyph activates" },
+      { condition: "frightened", trigger: "failed-save", save: 3, label: "Fear", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
+      { condition: "incapacitated", trigger: "failed-save", save: 4, label: "Pain", timing: "Each creature in the Sphere when the glyph activates" },
+      { condition: "incapacitated", trigger: "failed-save", save: 4, label: "Pain", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
+      { condition: "unconscious", trigger: "failed-save", save: 5, label: "Sleep", timing: "Each creature in the Sphere when the glyph activates" },
+      { condition: "unconscious", trigger: "failed-save", save: 5, label: "Sleep", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
+      { condition: "stunned", trigger: "failed-save", save: 6, label: "Stunning", timing: "Each creature in the Sphere when the glyph activates" },
+      { condition: "stunned", trigger: "failed-save", save: 6, label: "Stunning", timing: "a creature that enters the Sphere for the first time on a turn or ends its turn there" },
+    ],
+    reason:
+      "the Discord save, made “when the glyph activates” and again by “a creature that enters the Sphere for the first time on a turn or ends its turn there”, is now two entries, so the later saves move by one",
+    page: 167,
   },
 ]

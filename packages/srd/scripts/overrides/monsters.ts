@@ -219,10 +219,10 @@ export const overrides: Override[] = [
   },
   {
     id: "gelatinous-cube",
-    path: "traits.0.damage.0.appliesWhen",
-    value: "a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check",
+    path: "traits.0.damage.0.timing",
+    value: "As an action, a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check, and the puller",
     reason:
-      "the Acid damage falls on the puller: “a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check, and the puller takes 10 (3d6) Acid damage”",
+      "the Acid damage is dealt when a creature pulls another out, and falls on the puller: “As an action, a creature within 5 feet of the cube can pull … by succeeding on a DC 12 Strength (Athletics) check, and the puller takes 10 (3d6) Acid damage”",
     page: 286,
   },
   {
@@ -274,5 +274,28 @@ export const overrides: Override[] = [
     value: "While swallowed",
     reason: "“In addition, the target takes 10 (3d6) Acid damage at the end of each of the toad’s turns” follows “While swallowed”",
     page: 354,
+  },
+  // A lasting effect whose source is gated: one unbroken span holds both the gate and the lasting words.
+  {
+    id: "darkmantle",
+    path: "actions.0.conditions.0.appliesWhen",
+    value:
+      "If the target is a Medium or smaller creature and the darkmantle had Advantage on the attack roll, it covers the target, which has the Blinded condition and is suffocating while the darkmantle is attached in this way",
+    reason: "the Blinded condition needs the size and Advantage gate and lasts only “while the darkmantle is attached in this way”",
+    page: 278,
+  },
+  {
+    id: "phase-spider",
+    path: "actions.1.conditions.1.appliesWhen",
+    value: "If this damage reduces the target to 0 Hit Points, the target becomes Stable, and it has the Poisoned condition for 1 hour. While Poisoned",
+    reason: "the Paralyzed condition holds while the target has the Poisoned condition this bite gave it at 0 Hit Points",
+    page: 313,
+  },
+  {
+    id: "vampire-familiar",
+    path: "actions.1.conditions.1.appliesWhen",
+    value: "If the target is reduced to 0 Hit Points by this attack, the target becomes Stable but has the Poisoned condition for 1 hour. While it has the Poisoned condition",
+    reason: "the Paralyzed condition holds while the target has the Poisoned condition this attack gave it at 0 Hit Points",
+    page: 334,
   },
 ]

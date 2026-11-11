@@ -203,10 +203,14 @@
         "role": "effect"
       }
     ],
+    "untyped": [
+      "uses"
+    ],
     "notes": [
       "The bag contains 3d4 beans when found and becomes nonmagical when empty.",
       "Dumped beans explode in a 10-foot-radius Sphere. Each creature in it, including you, takes the 5d4 on a failed save or half as much on a success.",
-      "A planted bean produces an effect chosen by the GM or rolled on a 1d100 table. The saves, damage, Poisoned condition and Temporary Hit Points in that table’s rows (01, 81–90) belong to the rows and are not typed on the item."
+      "A planted bean produces an effect chosen by the GM or rolled on a 1d100 table. The saves, damage, Poisoned condition and Temporary Hit Points in that table’s rows (01, 81–90) belong to the rows and are not typed on the item.",
+      "The bag holds 3d4 beans when found. No field holds that count."
     ]
   },
   "bag-of-devouring": {
@@ -996,9 +1000,13 @@
         "role": "effect"
       }
     ],
+    "untyped": [
+      "uses"
+    ],
     "notes": [
       "The packet holds 1d6 + 4 pinches. A pinch turns up to a 15-foot Cube of water into a pellet.",
-      "Only such an Elemental makes the save, so the limit sits on the save. The 10d6 rides the failed save, half as much on a success, and carries no condition of its own."
+      "Only such an Elemental makes the save, so the limit sits on the save. The 10d6 rides the failed save, half as much on a success, and carries no condition of its own.",
+      "The packet holds 1d6 + 4 pinches, one spent per use. No field holds that count."
     ]
   },
   "dust-of-sneezing-and-choking": {
@@ -1594,12 +1602,14 @@
     ],
     "untyped": [
       "spells",
-      "damage"
+      "damage",
+      "uses"
     ],
     "notes": [
       "The helm has 1d10 diamonds, 2d10 rubies, 3d10 fire opals, and 4d10 opals. Each spell uses and destroys one gem: Daylight an opal, Fireball a fire opal, Prismatic Spray a diamond, Wall of Fire a ruby. That cost has no typed field.",
       "Diamond Light needs at least one diamond. Fire Opal Flames needs at least one fire opal. Ruby Resistance gives Resistance to Fire damage while the helm has a ruby.",
-      "If you take Fire damage from failing a save against a spell, roll 1d20. On a 1, the helm is destroyed and each creature in a 60-foot Emanation must succeed on the Dexterity save or take Radiant damage equal to the number of gems in the helm. That damage has no fixed value."
+      "If you take Fire damage from failing a save against a spell, roll 1d20. On a 1, the helm is destroyed and each creature in a 60-foot Emanation must succeed on the Dexterity save or take Radiant damage equal to the number of gems in the helm. That damage has no fixed value.",
+      "The helm’s gem counts (1d10 diamonds, 2d10 rubies, 3d10 fire opals, 4d10 opals) are spent by casting. No field holds them."
     ]
   },
   "helm-of-comprehending-languages": {
@@ -2111,8 +2121,12 @@
     ]
   },
   "marvelous-pigments": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
-      "The box holds 1d4 pots. One pot paints real objects and terrain within a 20-foot Cube over 10 minutes with Concentration. No object can be worth more than 25 GP, and a pot’s total can’t exceed 500 GP."
+      "The box holds 1d4 pots. One pot paints real objects and terrain within a 20-foot Cube over 10 minutes with Concentration. No object can be worth more than 25 GP, and a pot’s total can’t exceed 500 GP.",
+      "The box holds 1d4 pots of pigment, one spent per painting. No field holds that count."
     ]
   },
   "medallion-of-thoughts": {
@@ -2192,11 +2206,13 @@
       }
     ],
     "untyped": [
-      "damage"
+      "damage",
+      "uses"
     ],
     "notes": [
       "The necklace has 1d6 + 3 beads, each thrown as a Magic action up to 60 feet.",
-      "Throwing several beads at once increases the Fireball’s damage by 1d6 for each bead after the first (maximum 12d6). No field holds that increase."
+      "Throwing several beads at once increases the Fireball’s damage by 1d6 for each bead after the first (maximum 12d6). No field holds that increase.",
+      "The necklace has 1d6 + 3 beads, each spent when thrown. No field holds that count."
     ]
   },
   "necklace-of-prayer-beads": {

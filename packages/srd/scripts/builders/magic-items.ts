@@ -966,7 +966,9 @@ function build(): MagicItem[] {
           return at >= 0 && !/dismiss|to end|end the effect|revert/.test(sentence.slice(Math.max(0, at - 60), at + 60))
         })
       )
-      .map(([kind]) => kind)
+      .map(([kind]) => kind as string)
+    // "Drinking a potion or administering it to another creature requires a Bonus Action" (the Potions rule): every potion that is drunk. An oil is applied, which "might take longer".
+    if (sub.category === "potion" && !id.startsWith("oil-") && !activation.includes("bonus-action")) activation.push("bonus-action")
     const uses = reuseMoments(everything).map((recharge) => ({ recharge }))
     const stats = savesChecksDamage(mechanics)
     const itemSaves = savesOf(itemParas)

@@ -334,7 +334,14 @@ const boon = (recommended: string) => ({ feat: { category: "epic-boon" as const,
 
 const mechanics: Record<string, Mechanics> = {
   // Parts of the text the typed fields do not hold, by kind, and conditions on the feature itself.
-  "path-of-the-berserker-frenzy": { untyped: ["damage"] },
+  "path-of-the-berserker-frenzy": { variableDice: { die: 6, count: { column: "rageDamage" } }, untyped: ["damage"] },
+  "barbarian-weapon-mastery": { masteryWeapons: "melee" },
+  "champion-survivor": {
+    healing: { amount: 5, rollAdds: ["con"], label: "Heroic Rally", timing: "At the start of each of your turns", appliesWhen: "if you are Bloodied and have at least 1 Hit Point" },
+  },
+  "life-domain-disciple-of-life": { healing: { amount: 2, plusSlotLevel: true } },
+  "life-domain-blessed-healer": { healing: { amount: 2, plusSlotLevel: true } },
+  "fiend-patron-dark-ones-blessing": { healing: { temporary: true, rollAdds: ["cha", "class-level"], minimum: 1 } },
   "barbarian-persistent-rage": { untyped: ["uses"] },
   "barbarian-danger-sense": { unless: "you have the Incapacitated condition" },
   "cleric-greater-divine-intervention": { untyped: ["uses"] },
@@ -347,7 +354,12 @@ const mechanics: Record<string, Mechanics> = {
   "thief-second-story-work": { untyped: ["speed"] },
   "fiend-patron-fiendish-resilience": { untyped: ["resistances"] },
   "draconic-sorcery-elemental-affinity": { untyped: ["resistances", "damage"] },
-  "barbarian-rage": { activation: ["bonus-action"], uses: column("rages"), resistances: { damageTypes: ["bludgeoning", "piercing", "slashing"], while: "raging" } },
+  "barbarian-rage": {
+    activation: ["bonus-action"],
+    usableWhen: "if you aren’t wearing Heavy armor",
+    uses: column("rages"),
+    resistances: { damageTypes: ["bludgeoning", "piercing", "slashing"], while: "raging" },
+  },
   "barbarian-unarmored-defense": { armorClass: { base: 10, abilities: ["dex", "con"], shield: true } },
   "barbarian-primal-knowledge": { skillProficiencies: { count: 1, from: ["animal-handling", "athletics", "intimidation", "nature", "perception", "survival"] } },
   "barbarian-ability-score-improvement": asi,
@@ -389,15 +401,24 @@ const mechanics: Record<string, Mechanics> = {
 
   "cleric-channel-divinity": { uses: column("channelDivinity"), saveDc: "spell-save-dc" },
   "cleric-ability-score-improvement": asi,
-  "cleric-sear-undead": { damage: { types: ["radiant"], appliesWhen: "that fails its saving throw against that use of Turn Undead" } },
+  "cleric-sear-undead": {
+    variableDice: { die: 8, count: { ability: "wis", minimum: 1 } },
+    damage: { types: ["radiant"], appliesWhen: "that fails its saving throw against that use of Turn Undead" },
+  },
   "cleric-divine-intervention": { activation: ["magic-action"], uses: longRest(1), untyped: ["uses"] },
   "cleric-epic-boon": boon("boon-of-fate"),
-  "life-domain-preserve-life": { activation: ["magic-action"], spend: { resource: "channel-divinity", amount: 1 }, range: 30 },
+  "life-domain-preserve-life": {
+    activation: ["magic-action"],
+    spend: { resource: "channel-divinity", amount: 1 },
+    range: 30,
+    healing: { perClassLevel: 5, divided: true, cap: "half-hit-point-maximum", appliesWhen: "Choose Bloodied creatures within 30 feet of yourself" },
+  },
 
   "druid-druidic": { alwaysPrepared: ["speak-with-animals"] },
   "druid-wild-shape": {
     activation: ["bonus-action"],
     uses: { ...column("wildShape"), restoredBy: { resource: "spell-slot", amount: 1, fromLevel: 5, whenNoneLeft: true, oncePerTurn: "own-turn" } },
+    healing: { temporary: true, perClassLevel: 1, label: "Temporary Hit Points", timing: "When you assume a Wild Shape form" },
   },
   "druid-wild-companion": { activation: ["magic-action"] },
   "druid-wild-resurgence": {
@@ -427,12 +448,25 @@ const mechanics: Record<string, Mechanics> = {
       { level: 14, dice: "4d6" },
     ],
     damage: { types: ["necrotic"] },
+    healing: {
+      dice: "2d6",
+      diceByLevel: [
+        { level: 10, dice: "3d6" },
+        { level: 14, dice: "4d6" },
+      ],
+    },
   },
   "circle-of-the-land-natures-ward": { conditionImmunities: { conditions: ["poisoned"] } },
   "circle-of-the-land-natures-sanctuary": { activation: ["magic-action"], spend: { resource: "wild-shape", amount: 1 }, range: 120, area: { shape: "cube", size: 15, allies: true } },
 
   "fighter-fighting-style": { feat: { category: "fighting-style", recommended: "defense" } },
-  "fighter-second-wind": { activation: ["bonus-action"], uses: column("secondWind"), dice: "1d10", rollAdds: ["class-level"] },
+  "fighter-second-wind": {
+    activation: ["bonus-action"],
+    uses: column("secondWind"),
+    dice: "1d10",
+    rollAdds: ["class-level"],
+    healing: { dice: "1d10", rollAdds: ["class-level"] },
+  },
   "fighter-action-surge": {
     uses: {
       count: {
@@ -443,7 +477,7 @@ const mechanics: Record<string, Mechanics> = {
       },
       recharge: "short-or-long-rest",
     },
-    oncePerTurn: "any-turn",
+    oncePerTurn: "own-turn",
   },
   "fighter-tactical-mind": { spend: { resource: "second-wind", amount: 1, keptOnFailure: true }, dice: "1d10" },
   "fighter-ability-score-improvement": asi,
@@ -478,9 +512,17 @@ const mechanics: Record<string, Mechanics> = {
   },
   "monk-unarmored-defense": { armorClass: { base: 10, abilities: ["dex", "wis"], shield: false } },
   "monk-monks-focus": { uses: { count: { column: "focusPoints" }, recharge: "short-or-long-rest" }, saveDc: { plusModifierOf: "wis" } },
-  "monk-uncanny-metabolism": { uses: longRest(1), diceFromColumn: "martialArts", rollAdds: ["class-level"] },
+  "monk-heightened-focus": { healing: { temporary: true, diceFromColumn: "martialArts", diceRolls: 2, label: "Patient Defense" } },
+  "monk-uncanny-metabolism": {
+    uses: longRest(1),
+    diceFromColumn: "martialArts",
+    rollAdds: ["class-level"],
+    healing: { diceFromColumn: "martialArts", rollAdds: ["class-level"] },
+  },
   "monk-deflect-attacks": {
     activation: ["reaction"],
+    usableWhen: "its damage includes Bludgeoning, Piercing, or Slashing damage",
+    usableWhenUntilLevel: 13,
     dice: "1d10",
     rollAdds: ["dex", "class-level"],
     parts: [
@@ -489,6 +531,9 @@ const mechanics: Record<string, Mechanics> = {
         usableWhen: "If you reduce the damage to 0",
         spend: { resource: "focus-points", amount: 1 },
         save: { ability: "dex", onSuccess: "none" },
+        diceFromColumn: "martialArts",
+        diceRolls: 2,
+        rollAdds: ["dex"],
       },
     ],
   },
@@ -512,6 +557,7 @@ const mechanics: Record<string, Mechanics> = {
     diceFromColumn: "martialArts",
     rollAdds: ["wis"],
     uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" },
+    healing: { diceFromColumn: "martialArts", rollAdds: ["wis"], minimum: 1 },
   },
   "warrior-of-the-open-hand-quivering-palm": {
     attacksWith: ["unarmed-strike"],
@@ -525,27 +571,31 @@ const mechanics: Record<string, Mechanics> = {
   "paladin-paladins-smite": { alwaysPrepared: ["divine-smite"], freeCast: [{ spell: "divine-smite" }], uses: longRest(1) },
   "paladin-channel-divinity": { uses: column("channelDivinity"), saveDc: "spell-save-dc" },
   "paladin-ability-score-improvement": asi,
-  "paladin-weapon-mastery": { weaponMasteries: 2 },
+  "paladin-weapon-mastery": { weaponMasteries: 2, masteryWeapons: "proficient" },
   "paladin-extra-attack": { attacks: 2 },
   "paladin-faithful-steed": { alwaysPrepared: ["find-steed"], freeCast: [{ spell: "find-steed" }], uses: longRest(1) },
-  "paladin-aura-of-protection": { area: { shape: "emanation", size: 10, allies: true, unless: "while you have the Incapacitated condition" }, untyped: ["bonus"] },
+  "paladin-aura-of-protection": {
+    area: { shape: "emanation", size: 10, allies: true, unless: "while you have the Incapacitated condition" },
+    areaSizeByLevel: [{ level: 18, size: 30 }],
+    untyped: ["bonus"],
+  },
   "paladin-abjure-foes": {
     activation: ["magic-action"],
     spend: { resource: "channel-divinity", amount: 1 },
     range: 60,
+    maxTargets: { ability: "cha", minimum: 1 },
     save: { ability: "wis", selective: true, onSuccess: "none" },
     untyped: ["conditions"],
   },
   "paladin-aura-of-courage": { conditionImmunities: { conditions: ["frightened"], while: "in-aura-of-protection", allies: true } },
   "paladin-radiant-strikes": { damage: { dice: "1d8", types: ["radiant"] }, attacksWith: ["melee-weapon", "unarmed-strike"] },
-  "paladin-aura-expansion": { area: { shape: "emanation", size: 30, allies: true } },
   "paladin-epic-boon": boon("boon-of-truesight"),
   "oath-of-devotion-sacred-weapon": { spend: { resource: "channel-divinity", amount: 1 }, damage: { types: ["radiant"], orNormalType: true }, attacksWith: ["imbued-weapon"], untyped: ["bonus"] },
   "oath-of-devotion-aura-of-devotion": { conditionImmunities: { conditions: ["charmed"], while: "in-aura-of-protection", allies: true } },
   "oath-of-devotion-holy-nimbus": {
     activation: ["bonus-action"],
     uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "spell-slot", amount: 1, slotLevel: 5 } },
-    parts: [{ label: "Radiant Damage", damage: { types: ["radiant"], appliesWhen: "Whenever an enemy starts its turn in the aura" } }],
+    parts: [{ label: "Radiant Damage", damage: { types: ["radiant"], timing: "Whenever an enemy starts its turn in the aura" } }],
     untyped: ["damage"],
   },
 
@@ -553,11 +603,18 @@ const mechanics: Record<string, Mechanics> = {
   "ranger-deft-explorer": { expertise: { count: 1 } },
   "ranger-fighting-style": { feat: { category: "fighting-style" } },
   "ranger-ability-score-improvement": asi,
-  "ranger-weapon-mastery": { weaponMasteries: 2 },
+  "ranger-weapon-mastery": { weaponMasteries: 2, masteryWeapons: "proficient" },
   "ranger-extra-attack": { attacks: 2 },
   "ranger-roving": { speedBonus: { feet: 10, while: "no-heavy-armor" }, untyped: ["speed"] },
   "ranger-expertise": { expertise: { count: 2 } },
-  "ranger-tireless": { label: "Temporary Hit Points", activation: ["magic-action"], dice: "1d8", rollAdds: ["wis"], uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" } },
+  "ranger-tireless": {
+    label: "Temporary Hit Points",
+    activation: ["magic-action"],
+    dice: "1d8",
+    rollAdds: ["wis"],
+    uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" },
+    healing: { temporary: true, dice: "1d8", rollAdds: ["wis"], minimum: 1, label: "Temporary Hit Points" },
+  },
   "ranger-natures-veil": { untyped: ["conditions"], activation: ["bonus-action"], uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" } },
   "ranger-feral-senses": { senses: [{ type: "blindsight", range: 30 }] },
   "ranger-epic-boon": boon("boon-of-dimensional-travel"),
@@ -566,7 +623,7 @@ const mechanics: Record<string, Mechanics> = {
 
   "rogue-expertise": { expertise: { count: 2 } },
   "rogue-sneak-attack": { diceFromColumn: "sneakAttack", attacksWith: ["finesse-weapon", "ranged-weapon"], oncePerTurn: "any-turn", untyped: ["dice"] },
-  "rogue-weapon-mastery": { weaponMasteries: 2 },
+  "rogue-weapon-mastery": { weaponMasteries: 2, masteryWeapons: "proficient" },
   "rogue-cunning-action": { activation: ["bonus-action"] },
   "rogue-steady-aim": { activation: ["bonus-action"], usableWhen: "if you haven’t moved during this turn" },
   "rogue-ability-score-improvement": asi,
@@ -619,6 +676,17 @@ const mechanics: Record<string, Mechanics> = {
 
 /** Mechanics of options, by "<feature id>/<option id>". */
 const optionMechanics: Record<string, OptionMechanics> = {
+  "cleric-divine-order/protector": { weaponProficiencies: [{ category: "martial" }], armorTraining: ["heavy"] },
+  "cleric-divine-order/thaumaturge": {
+    extraCantrips: { count: 1, spellList: "cleric" },
+    rollBonus: { to: ["arcana-checks", "religion-checks"], plusModifierOf: "wis", minimum: 1 },
+  },
+  "druid-primal-order/magician": {
+    extraCantrips: { count: 1, spellList: "druid" },
+    rollBonus: { to: ["arcana-checks", "nature-checks"], plusModifierOf: "wis", minimum: 1 },
+  },
+  "druid-primal-order/warden": { weaponProficiencies: [{ category: "martial" }], armorTraining: ["medium"] },
+  "sorcerer-metamagic/careful-spell": { maxTargets: { ability: "cha", minimum: 1 } },
   "hunter-hunters-prey/colossus-slayer": { oncePerTurn: "any-turn", untyped: ["damage"] },
   "hunter-hunters-prey/horde-breaker": { oncePerTurn: "own-turn" },
   "cleric-channel-divinity/divine-spark": {
@@ -630,7 +698,7 @@ const optionMechanics: Record<string, OptionMechanics> = {
       { level: 13, dice: "3d8" },
       { level: 18, dice: "4d8" },
     ],
-    untyped: ["save", "damage"],
+    untyped: ["save", "damage", "healing"],
     rollAdds: ["wis"],
     spend: { resource: "channel-divinity", amount: 1 },
   },

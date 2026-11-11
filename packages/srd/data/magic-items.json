@@ -864,6 +864,9 @@
         ]
       }
     ],
+    "untyped": [
+      "uses"
+    ],
     "description": "This heavy cloth bag contains 3d4 dry beans when found. The bag weighs half a pound regardless of how many beans it contains and becomes a nonmagical item when it no longer contains any beans.\nIf you dump one or more beans out of the bag, they explode in a 10-foot-radius Sphere centered on them. All the dumped beans are destroyed in the explosion, and each creature in the Sphere, including you, makes a DC 15 Dexterity saving throw, taking 5d4 Force damage on a failed save or half as much damage on a successful one.\nIf you remove a bean from the bag, plant it in dirt or sand, and then water it, the bean disappears as it produces an effect 1 minute later from the ground where it was planted. The GM can choose an effect from the following table or determine it randomly."
   },
   {
@@ -2990,6 +2993,9 @@
         "text": "Such a creature exposed to a pinch of the dust makes a DC 13 Constitution saving throw, taking 10d6 Necrotic damage on a failed save or half as much damage on a successful one."
       }
     ],
+    "untyped": [
+      "uses"
+    ],
     "description": "This small packet contains 1d6 + 4 pinches of dust. As a Utilize action, you can sprinkle a pinch of the dust over water, turning up to a 15-foot Cube of water into one marble-sized pellet, which floats or rests near where the dust was sprinkled. The pellet’s weight is negligible. A creature can take a Utilize action to smash the pellet against a hard surface, causing the pellet to shatter and release the water the dust absorbed. Doing so destroys the pellet and ends its magic.\nAs a Utilize action, you can sprinkle a pinch of the dust on an Elemental within 5 feet of yourself that is composed mostly of water (such as a Water Elemental). Such a creature exposed to a pinch of the dust makes a DC 13 Constitution saving throw, taking 10d6 Necrotic damage on a failed save or half as much damage on a successful one."
   },
   {
@@ -3195,6 +3201,9 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "description": "When you drink this potion, you are cured of all magical contagions. In addition, the following conditions end on you: Blinded, Deafened, Paralyzed, and Poisoned.\nThe clear, red liquid has tiny bubbles of light in it."
   },
   {
@@ -4173,7 +4182,8 @@
     ],
     "untyped": [
       "damage",
-      "spells"
+      "spells",
+      "uses"
     ],
     "description": "This helm is set with 1d10 diamonds, 2d10 rubies, 3d10 fire opals, and 4d10 opals. Any gem pried from the helm crumbles to dust. When all the gems are removed or destroyed, the helm loses its magic.\nYou gain the following benefits while wearing the helm.\nDiamond Light. As long as it has at least one diamond, the helm emits a 30-foot Emanation. When at least one Undead is within that area, the Emanation is filled with Dim Light. Any Undead that starts its turn in that area takes 1d6 Radiant damage.\nFire Opal Flames. As long as the helm has at least one fire opal, you can take a Magic action to cause one weapon you are holding to burst into flames. The flames emit Bright Light in a 10-foot radius and Dim Light for an additional 10 feet. The flames are harmless to you and the weapon. When you hit with an attack using the blazing weapon, the target takes an extra 1d6 Fire damage. The flames last until you take a Bonus Action to extinguish them or until you drop or stow the weapon.\nRuby Resistance. As long as the helm has at least one ruby, you have Resistance to Fire damage.\nSpells. You can cast one of the following spells (save DC 18), using one of the helm’s gems of the specified type as a component: Daylight (opal), Fireball (fire opal), Prismatic Spray (diamond), or Wall of Fire (ruby). The gem is destroyed when the spell is cast and disappears from the helm.\nTaking Fire Damage. Roll 1d20 if you are wearing the helm and take Fire damage as a result of failing a saving throw against a spell. On a roll of 1, the helm emits beams of light from its remaining gems and is then destroyed. Each creature within a 60-foot Emanation originating from you must succeed on a DC 17 Dexterity saving throw or be struck by a beam, taking Radiant damage equal to the number of gems in the helm."
   },
@@ -4973,6 +4983,9 @@
     "page": 230,
     "category": "wondrous-item",
     "rarity": "very-rare",
+    "untyped": [
+      "uses"
+    ],
     "description": "This fine wooden box contains 1d4 pots of pigment and a brush (weighing 1 pound in total).\nUsing the brush and expending 1 pot of pigment, you can paint any number of three-dimensional objects and terrain features (such as walls, doors, trees, flowers, weapons, webs, and pits), provided these elements are all confined to a 20-foot Cube. The effort takes 10 minutes (regardless of the number of elements you create), during which time you must remain in the Cube, and requires Concentration. If your Concentration is broken or you leave the Cube before the work is done, all the painted elements vanish, and the pot of pigment is wasted.\nWhen the work is done, all the painted objects and terrain features become real. Thus, painting a door on a wall creates an actual door, which can be opened to whatever is beyond. Painting a pit creates a real pit, the entire depth of which must lie within the 20-foot Cube.\nNo object created by a pot of pigment can have a value greater than 25 GP, and the total value of all objects created by a pot of pigment can’t exceed 500 GP. If you paint objects of greater value (such as a large pile of gold), they look authentic, but close inspection reveals they’re made from paste, cookies, or some other worthless material.\nIf you paint a form of energy such as fire or lightning, the energy dissipates as soon as you complete the painting, doing no harm."
   },
   {
@@ -5317,7 +5330,8 @@
       }
     ],
     "untyped": [
-      "damage"
+      "damage",
+      "uses"
     ],
     "description": "This necklace has 1d6 + 3 beads hanging from it. You can take a Magic action to detach a bead and throw it up to 60 feet away. When it reaches the end of its trajectory, the bead detonates as a level 3 Fireball (save DC 15).\nYou can hurl multiple beads, or even the whole necklace, at one time. When you do so, increase the damage of the Fireball by 1d6 for each bead after the first (maximum 12d6)."
   },
@@ -5528,6 +5542,9 @@
         "id": "etherealness"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "description": "One vial of this oil can cover one Medium or smaller creature, along with the equipment it’s wearing and carrying (one additional vial is required for each size category above Medium). Applying the oil takes 10 minutes. The affected creature then gains the effect of the Etherealness spell for 1 hour.\nBeads of this cloudy, gray oil form on the outside of its container and quickly evaporate."
   },
   {
@@ -5560,6 +5577,9 @@
         "id": "grease",
         "alternativeTo": 0
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "One vial of this oil can cover one Medium or smaller creature, along with the equipment it’s wearing and carrying (one additional vial is required for each size category above Medium). Applying the oil takes 10 minutes. The affected creature then gains the effect of the Freedom of Movement spell for 8 hours.\nAlternatively, the oil can be poured on the ground as a Magic action, where it covers a 10-foot square, duplicating the effect of the Grease spell in that area for 8 hours.\nThis sticky, black unguent is thick and heavy, but it flows quickly when poured."
   },
@@ -5639,6 +5659,9 @@
     "category": "potion",
     "rarity": "uncommon",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "untyped": [
       "conditions"
     ],
@@ -5737,6 +5760,9 @@
         "id": "etherealness"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "description": "While you’re wearing this armor, you can take a Magic action and use a command word to gain the effect of the Etherealness spell. The spell ends immediately if you remove the armor or take a Magic action to repeat the command word. This property of the armor can’t be used again until the next dawn."
   },
   {
@@ -5764,6 +5790,9 @@
     "category": "potion",
     "rarity": "uncommon",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "spells": [
       {
         "id": "animal-friendship",
@@ -5780,10 +5809,16 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "spellEffects": [
       {
         "id": "clairvoyance"
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "When you drink this potion, you gain the effect of the Clairvoyance spell (no Concentration required).\nAn eyeball bobs in this potion’s yellowish liquid but vanishes when the potion is opened."
   },
@@ -5794,6 +5829,9 @@
     "category": "potion",
     "rarity": "common",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "description": "When you drink this potion, you gain a Climb Speed equal to your Speed for 1 hour. During this time, you have Advantage on Strength (Athletics) checks to climb.\nThis potion is separated into brown, silver, and gray layers resembling bands of stone. Shaking the bottle fails to mix the colors."
   },
   {
@@ -5803,11 +5841,17 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "spellEffects": [
       {
         "id": "enlarge-reduce",
         "label": "reduce"
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "When you drink this potion, you gain the “reduce” effect of the Enlarge/Reduce spell for 1d4 hours (no Concentration required).\nThe red in the potion’s liquid continuously contracts to a tiny bead and then expands to color the clear liquid around it. Shaking the bottle fails to interrupt this process."
   },
@@ -5818,6 +5862,9 @@
     "category": "potion",
     "rarity": "very-rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "description": "When you drink this potion, you gain a Fly Speed equal to your Speed for 1 hour and can hover. If you’re in the air when the potion wears off, you fall unless you have some other means of staying aloft.\nThis potion’s clear liquid floats at the top of its container and has cloudy white impurities drifting in it."
   },
   {
@@ -5827,10 +5874,16 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "spellEffects": [
       {
         "id": "gaseous-form"
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "When you drink this potion, you gain the effect of the Gaseous Form spell for 1 hour (no Concentration required) or until you end the effect as a Bonus Action.\nThis potion’s container seems to hold fog that moves and pours like water."
   },
@@ -5868,6 +5921,9 @@
       }
     ],
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "tables": [
       {
         "columns": [
@@ -5923,11 +5979,17 @@
     "category": "potion",
     "rarity": "uncommon",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "spellEffects": [
       {
         "id": "enlarge-reduce",
         "label": "enlarge"
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "When you drink this potion, you gain the “enlarge” effect of the Enlarge/Reduce spell for 10 minutes (no Concentration required).\nThe red in the potion’s liquid continuously expands from a tiny bead to color the clear liquid around it and then contracts. Shaking the bottle fails to interrupt this process."
   },
@@ -5938,12 +6000,16 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "spellEffects": [
       {
         "id": "bless"
       }
     ],
     "untyped": [
+      "spells",
       "healing"
     ],
     "description": "When you drink this potion, you gain 10 Temporary Hit Points that last for 1 hour. For the same duration, you are under the effect of the Bless spell (no Concentration required).\nThis potion’s blue liquid bubbles and steams as if boiling."
@@ -5955,6 +6021,9 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "untyped": [
       "conditions"
     ],
@@ -5967,6 +6036,9 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "description": "For 1 minute after you drink this potion, you have Resistance to all damage.\nThis potion’s syrupy liquid looks like liquefied iron."
   },
   {
@@ -5976,6 +6048,9 @@
     "category": "potion",
     "rarity": "very-rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "description": "When you drink this potion, your physical age is reduced by 1d6 + 6 years, to a minimum of 13 years. Each time you subsequently drink a Potion of Longevity, there is 10 percent cumulative chance that you instead age by 1d6 + 6 years.\nSuspended in this amber liquid is a tiny heart that, against all reason, is still beating. These ingredients vanish when the potion is opened."
   },
   {
@@ -5985,11 +6060,17 @@
     "category": "potion",
     "rarity": "rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "spellEffects": [
       {
         "id": "detect-thoughts",
         "saveDc": 13
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "When you drink this potion, you gain the effect of the Detect Thoughts spell (save DC 13) for 10 minutes (no Concentration required).\nThis potion’s dense, purple liquid has an ovoid cloud of pink floating in it."
   },
@@ -6000,6 +6081,9 @@
     "category": "potion",
     "rarity": "uncommon",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "saves": [
       {
         "ability": "con",
@@ -6027,6 +6111,9 @@
     "category": "potion",
     "rarity": "uncommon",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "tables": [
       {
         "dice": "1d10",
@@ -6136,10 +6223,16 @@
     "category": "potion",
     "rarity": "very-rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "spellEffects": [
       {
         "id": "haste"
       }
+    ],
+    "untyped": [
+      "spells"
     ],
     "description": "When you drink this potion, you gain the effect of the Haste spell for 1 minute (no Concentration required) without suffering the wave of lethargy that typically occurs when the effect ends.\nThis potion’s yellow fluid is streaked with black and swirls on its own."
   },
@@ -6150,6 +6243,9 @@
     "category": "potion",
     "rarity": "very-rare",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "untyped": [
       "healing"
     ],
@@ -6162,6 +6258,9 @@
     "category": "potion",
     "rarity": "uncommon",
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "description": "You can breathe underwater for 24 hours after drinking this potion.\nThis potion’s cloudy green fluid smells of the sea and has a jellyfish-like bubble floating in it."
   },
   {
@@ -6193,6 +6292,9 @@
       }
     ],
     "consumable": true,
+    "activation": [
+      "bonus-action"
+    ],
     "tables": [
       {
         "columns": [
@@ -7295,6 +7397,9 @@
         ]
       }
     ],
+    "untyped": [
+      "uses"
+    ],
     "description": "This robe has cloth patches of various shapes and colors covering it. While wearing the robe, you can take a Magic action to detach one of the patches, causing it to become the object or creature it represents. Once the last patch is removed, the robe becomes an ordinary garment.\nThe robe has two of each of the following patches:\n• Bullseye Lantern (filled and lit)\n• Dagger\n• Mirror\n• Pole\n• Rope (coiled)\n• Sack\nIn addition, the robe has 4d4 other patches. The GM chooses the patches or determines them randomly by rolling on the following table."
   },
   {
@@ -7672,7 +7777,8 @@
     ],
     "spells": [
       {
-        "id": "sending"
+        "id": "sending",
+        "appliesWhen": "The target is the bearer of the other stone"
       }
     ],
     "description": "Sending Stones come in pairs, with each stone carved to match the other so the pairing is easily recognized. While you touch one stone, you can cast Sending from it. The target is the bearer of the other stone. If no creature bears the other stone, you know that fact as soon as you use the stone, and you don’t cast the spell.\nOnce Sending is cast using either stone, the stones can’t be used again until the next dawn. If one of the stones in a pair is destroyed, the other one becomes nonmagical."
@@ -7816,6 +7922,9 @@
     "rarity": "legendary",
     "activation": [
       "utilize-action"
+    ],
+    "untyped": [
+      "uses"
     ],
     "description": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects. It must be stored in a jar or flask that has been coated inside with Oil of Slipperiness. When found, a container contains 1d6 + 1 ounces.\nOne ounce of the glue can cover a 1-foot square surface. Applying an ounce of Sovereign Glue takes a Utilize action, and the applied glue takes 1 minute to set. Once it has done so, the bond it creates can be broken only by the application of Universal Solvent or Oil of Etherealness, or with a Wish spell."
   },
@@ -9736,6 +9845,9 @@
     "rarity": "legendary",
     "activation": [
       "utilize-action"
+    ],
+    "untyped": [
+      "uses"
     ],
     "description": "This tube holds milky liquid with a strong alcohol smell. When found, a tube contains 1d6 + 1 ounces.\nYou can take a Utilize action to pour 1 or more ounces of solvent from the tube onto a surface within reach. Each ounce instantly dissolves up to 1 square foot of adhesive it touches, including Sovereign Glue."
   },

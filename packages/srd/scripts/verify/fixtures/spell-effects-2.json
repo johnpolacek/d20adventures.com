@@ -615,6 +615,13 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "timing": "A creature that ends its turn in the Line"
       }
     ],
     "area": {
@@ -624,7 +631,8 @@
     },
     "notes": [
       "On a failed save, a creature is pushed 15 feet away from you along the Line. A creature that ends its turn in the Line makes the same save.",
-      "A creature in the Line spends 2 feet of movement for every 1 foot it moves closer to you."
+      "A creature in the Line spends 2 feet of movement for every 1 foot it moves closer to you.",
+      "The second save is the same save made by a creature that ends its turn in the Line. Nothing is linked to it, so the save carries its own timing."
     ]
   },
   "hallow": {
@@ -964,6 +972,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "The target and each creature within 5 feet of it",
         "when": "initial",
         "onSuccess": "none"
       }

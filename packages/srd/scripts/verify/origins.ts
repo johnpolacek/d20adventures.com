@@ -183,8 +183,8 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
     set("initiativeSwap", { allies: 1, blockedByCondition: "incapacitated", appliesWhen: "one willing ally in the same combat" })
   if (/Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either roll/.test(t)) {
     set("damageDiceRolledTwice", true)
-    set("oncePerTurn", /Once per turn when/.test(t) ? "any-turn" : /Once on each of your turns/.test(t) ? "own-turn" : undefined)
   }
+  set("oncePerTurn", /(?:Once per turn|only once per turn)\b/i.test(t) ? "any-turn" : /Once on each of your turns/i.test(t) ? "own-turn" : undefined)
   const extra = t.match(/extra attack as a result of using a weapon that has the (\w+) property, you can add your ability modifier to the damage of that attack/)
   if (extra) set("addAbilityModifierToExtraAttack", { weaponProperty: extra[1].toLowerCase() })
   set("rerollD20On", num(/When you roll a (\d+) on the d20 of a D20 Test, you can reroll the die, and you must use the new roll/))
@@ -1436,6 +1436,7 @@ function verifyTriggers(report: Report) {
   const handGates: Record<string, unknown> = {
     "goliath/Large Form": { usableWhen: "if you’re in a big enough space" },
     "savage-attacker/": { oncePerTurn: "any-turn" },
+    "grappler/Punch and Grab": { oncePerTurn: "any-turn" },
     "boon-of-the-night-spirit/Merge with Shadows": { usableWhen: "While within Dim Light or Darkness", endsAfter: ["action", "bonus-action", "reaction"] },
   }
   for (const key of new Set([...Object.keys(gates), ...Object.keys(handGates)]))

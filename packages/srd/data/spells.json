@@ -1813,6 +1813,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "Each creature within 5 feet of that point",
         "when": "initial",
         "onSuccess": "half"
       }
@@ -1880,6 +1881,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "appliesWhen": "Each Humanoid",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -2761,6 +2763,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "an affected target",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -2939,6 +2942,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "the Restrained target",
         "when": "start-of-turn",
         "onSuccess": "ends"
       }
@@ -7694,6 +7698,13 @@
         "dc": "spell-save-dc",
         "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "timing": "A creature that ends its turn in the Line"
       }
     ]
   },
@@ -8576,6 +8587,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "The target and each creature within 5 feet of it",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -10946,7 +10958,7 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "other"
       },
       {
         "ability": "wis",
@@ -10963,7 +10975,8 @@
         ],
         "perSlot": "1d10",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "onSuccess": "half"
       },
       {
         "dice": "4d10",
@@ -13720,8 +13733,7 @@
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 1,
-        "timing": "until the end of its next turn, at which point it must repeat the save"
+        "save": 1
       }
     ]
   },
@@ -13832,6 +13844,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "An affected target",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -14785,6 +14798,7 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "A creature Blinded by this spell",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -14868,7 +14882,17 @@
         "label": "Discord",
         "when": "initial",
         "onSuccess": "none",
-        "oncePerTurn": "any-turn"
+        "oncePerTurn": "any-turn",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "label": "Discord",
+        "when": "initial",
+        "onSuccess": "none",
+        "oncePerTurn": "any-turn",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "ability": "wis",
@@ -14929,56 +14953,56 @@
       {
         "condition": "frightened",
         "trigger": "failed-save",
-        "save": 2,
+        "save": 3,
         "label": "Fear",
         "timing": "Each creature in the Sphere when the glyph activates"
       },
       {
         "condition": "frightened",
         "trigger": "failed-save",
-        "save": 2,
+        "save": 3,
         "label": "Fear",
         "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "incapacitated",
         "trigger": "failed-save",
-        "save": 3,
+        "save": 4,
         "label": "Pain",
         "timing": "Each creature in the Sphere when the glyph activates"
       },
       {
         "condition": "incapacitated",
         "trigger": "failed-save",
-        "save": 3,
+        "save": 4,
         "label": "Pain",
         "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 4,
+        "save": 5,
         "label": "Sleep",
         "timing": "Each creature in the Sphere when the glyph activates"
       },
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 4,
+        "save": 5,
         "label": "Sleep",
         "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
-        "save": 5,
+        "save": 6,
         "label": "Stunning",
         "timing": "Each creature in the Sphere when the glyph activates"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
-        "save": 5,
+        "save": 6,
         "label": "Stunning",
         "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       }
@@ -16449,6 +16473,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "A Frightened target",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -16666,7 +16691,8 @@
         "ability": "cha",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "timing": "a creature that enters the spell’s area for the first time on a turn or starts its turn there"
       }
     ]
   }

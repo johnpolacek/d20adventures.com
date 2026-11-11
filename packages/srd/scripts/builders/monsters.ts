@@ -274,6 +274,10 @@ function parseDamage(text: string, saves: Save[]): DamagePart[] {
       ...(alternative ? { alternativeTo: k - 1 } : {}),
     }
   })
+  // "The mephit explodes when it dies.": the rolls of the save that follows are dealt at that moment.
+  const firstSave = text.search(saveStart)
+  const event = firstSave > 0 ? /\b(when it dies)\. $/.exec(text.slice(0, firstSave))?.[1] : undefined
+  if (event) for (const [k, part] of parts.entries()) if (part.save !== undefined && !part.timing) parts[k] = { ...part, timing: event }
   // One time for two rolls: "takes 10 (3d6) Acid damage plus 10 (3d6) Fire damage at the start of each of its turns".
   for (let k = parts.length - 2; k >= 0; k--) {
     const gap = text.slice((matches[k].index as number) + matches[k][0].length, matches[k + 1].index)

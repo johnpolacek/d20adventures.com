@@ -418,6 +418,7 @@ const featSpecs: Record<string, FeatSpec> = {
   Grappler: {
     prerequisite: { level: 4, abilityMinimum: { abilities: ["str", "dex"], minimum: 13 } },
     abilityScoreIncrease: { from: ["str", "dex"], choices: [{ count: 1, amount: 1 }], maximum: 20 },
+    benefits: { "Punch and Grab": { oncePerTurn: "any-turn" } },
   },
   Archery: { prerequisite: fightingStyle, mech: { attackBonus: { bonus: 2, weapon: "ranged" } } },
   Defense: { prerequisite: fightingStyle, mech: { armorClassBonus: { bonus: 1, armor: ["light", "medium", "heavy"] } } },

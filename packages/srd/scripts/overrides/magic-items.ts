@@ -889,6 +889,13 @@ export const overrides: Override[] = [
     reason: '"You can take a Bonus Action to magically coat the blade with poison": the property whose use is limited.',
     page: 219,
   },
+  {
+    id: "sending-stones",
+    path: "spells.0.appliesWhen",
+    value: "The target is the bearer of the other stone",
+    reason: '"While you touch one stone, you can cast Sending from it. The target is the bearer of the other stone.": a limit on whom the spell can affect.',
+    page: 243,
+  },
 ]
 
 /**
@@ -896,6 +903,22 @@ export const overrides: Override[] = [
  * and Hit Points are found by the builder; these are the rest, each with what is left out.
  */
 export const untypedByHand: Record<string, string[]> = {
+  "universal-solvent": ["uses"],
+  "sovereign-glue": ["uses"],
+  "robe-of-useful-items": ["uses"],
+  "marvelous-pigments": ["uses"],
+  "bag-of-beans": ["uses"],
+  "dust-of-dryness": ["uses"],
+  "plate-armor-of-etherealness": ["spells"],
+  "oil-of-slipperiness": ["spells"],
+  "oil-of-etherealness": ["spells"],
+  "potion-of-speed": ["spells"],
+  "potion-of-mind-reading": ["spells"],
+  "potion-of-heroism": ["spells"],
+  "potion-of-growth": ["spells"],
+  "potion-of-gaseous-form": ["spells"],
+  "potion-of-diminution": ["spells"],
+  "potion-of-clairvoyance": ["spells"],
   "wand-of-wonder": ["charges", "spells"],
   "cubic-gate": ["spells"],
   "wand-of-fear": ["spells"],
@@ -919,9 +942,9 @@ export const untypedByHand: Record<string, string[]> = {
   "staff-of-charming": ["charges", "spells"],
   "pipes-of-the-sewers": ["charges", "saves"],
   // p. 247 "Radiant damage equal to the number of gems in the helm"; "using one of the helm’s gems ... as a component", each casting destroying a gem.
-  "helm-of-brilliance": ["damage", "spells"],
+  "helm-of-brilliance": ["damage", "spells", "uses"],
   // p. 233 "increase the damage of the Fireball by 1d6 for each bead after the first (maximum 12d6)".
-  "necklace-of-fireballs": ["damage"],
+  "necklace-of-fireballs": ["damage", "uses"],
   // pp. 245, 246 "Force damage equal to 16 times the number of charges in the staff"; the staff gains and loses charges in ways no field holds.
   "staff-of-power": ["damage"],
   "staff-of-the-magi": ["damage", "charges"],

@@ -92,7 +92,7 @@ Run from the repo root.
 - `pnpm --filter @d20/srd sources`: download the pinned upstream files.
 - `pnpm --filter @d20/srd build [name…]`: regenerate data.
 - `pnpm --filter @d20/srd fresh`: rebuild without writing, and fail if the committed data differs.
-- `pnpm --filter @d20/srd mutate [file…]`: test the checks themselves. It takes about ten minutes for every file.
+- `pnpm --filter @d20/srd mutate [file…]`: test the checks themselves. It takes about thirty minutes for every file.
 
 ## How the checks work
 
@@ -120,6 +120,7 @@ A read value says what it does not hold:
 - `appliesWhen`, `unless`, `timing` and `usableWhen` carry the official words of a condition, an exception, a moment or a precondition. A package check proves each is one unbroken span of its own entry's text, so none is paraphrased or joined from fragments.
 - `untyped` on a spell or a magic item lists each kind of effect (`saves`, `damage`, `conditions`, `healing`, `spells`, `bonuses`, `charges`, `uses`) the text states and the typed fields do not fully hold. An engine that sees a kind there reads the prose for it. A kind that is absent means the typed fields hold everything of that kind.
 - A typed value read alone never claims more than the text: it carries its condition, its cost (`charges`), its alternative (`alternativeTo`), how often (`oncePerTurn`) and whom it falls on (`target`, `selfOnly`), or it is left out and named in `untyped`.
+- Origins, monsters and equipment have no `untyped`. A class feature has one, for the kinds it types in part (a save it types whose repeat it does not). In all four, the typed fields are right as far as they go and never claim to be the whole entry: an engine reads a feature's text for what its typed fields do not say. Rage's effects, Martial Arts, Multiattack, Pack Tactics, most weapon properties and how long a condition lasts are prose by design. Spell `untyped` names four kinds only (`saves`, `damage`, `conditions`, `healing`), so a bonus or an unusual area a spell states is prose too.
 
 `READING.md` holds the rules for turning a sentence into a typed value. The builders, the readers and the auditors all work to it.
 

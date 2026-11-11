@@ -274,11 +274,21 @@ const handReadings: Record<string, HandReading> = {
     // The Frightened condition and the repeated save at the end of each of its turns are not typed.
     untyped: ["conditions", "save"],
   },
-  // Page 46: "Each creature of your choice in the Sphere".
-  "circle-of-the-land-lands-aid": { area: { shape: "sphere", size: 10, selective: true } },
+  // Page 46: "Each creature of your choice in the Sphere"; "One creature of your choice in that area regains 2d6 Hit
+  // Points", rising "to 3d6 at level 10 and 4d6 at level 14".
+  "circle-of-the-land-lands-aid": {
+    area: { shape: "sphere", size: 10, selective: true },
+    healing: {
+      dice: "2d6",
+      diceByLevel: [
+        { level: 10, dice: "3d6" },
+        { level: 14, dice: "4d6" },
+      ],
+    },
+  },
   // Page 37: the save and its damage types hold only if you choose harm over healing; the 1d8 total serves both.
   // Every Channel Divinity effect spends one use (page 37: "Each time you use this class’s Channel Divinity").
-  "cleric-channel-divinity/divine-spark": { save: null, damage: null, dice: "1d8", spend: channelDivinity, untyped: ["save", "damage"] },
+  "cleric-channel-divinity/divine-spark": { save: null, damage: null, healing: null, dice: "1d8", spend: channelDivinity, untyped: ["save", "damage", "healing"] },
   // Page 37: "Each Undead of your choice within 30 feet of you must make a Wisdom saving throw."
   "cleric-channel-divinity/turn-undead": { save: { ability: "wis", onlyCreatureTypes: ["undead"], selective: true, onSuccess: "none" }, spend: channelDivinity, untyped: ["conditions"] },
   // Page 72: the slotless casting is only "to contact your patron".
@@ -287,16 +297,31 @@ const handReadings: Record<string, HandReading> = {
   "circle-of-the-land-natures-sanctuary": { activation: ["magic-action"], area: { shape: "cube", size: 15, allies: true } },
   // Page 55: "You and your allies in the aura gain a bonus"; Aura Expansion widens that same aura.
   // Page 55: "The aura is inactive while you have the Incapacitated condition"; its Charisma bonus to saves is not typed.
-  "paladin-aura-of-protection": { area: { shape: "emanation", size: 10, allies: true, unless: "while you have the Incapacitated condition" }, untyped: ["bonus"] },
-  "paladin-aura-expansion": { area: { shape: "emanation", size: 30, allies: true } },
-  // Page 55: "you can target a number of creatures equal to your Charisma modifier"; you choose who saves.
-  "paladin-abjure-foes": { save: { ability: "wis", selective: true, onSuccess: "none" }, untyped: ["conditions"] },
+  // Page 55, Aura Expansion: "Your Aura of Protection is now a 30-foot Emanation", a step on the one aura, so the
+  // Incapacitated rule still holds at level 18. Aura Expansion types no area of its own.
+  "paladin-aura-of-protection": {
+    area: { shape: "emanation", size: 10, allies: true, unless: "while you have the Incapacitated condition" },
+    areaSizeByLevel: [{ level: 18, size: 30 }],
+    untyped: ["bonus"],
+  },
+  "paladin-aura-expansion": { area: null },
+  // Page 55: "you can target a number of creatures equal to your Charisma modifier (minimum of one creature)"; you choose who saves.
+  "paladin-abjure-foes": { maxTargets: { ability: "cha", minimum: 1 }, save: { ability: "wis", selective: true, onSuccess: "none" }, untyped: ["conditions"] },
+  // Page 66: "choose a number of those creatures up to your Charisma modifier (minimum of one creature)".
+  "sorcerer-metamagic/careful-spell": { maxTargets: { ability: "cha", minimum: 1 } },
   // Page 55: Divine Sense is a Channel Divinity effect, so it spends one use.
   "paladin-channel-divinity/divine-sense": { spend: channelDivinity },
   // Page 37: Sear Undead harms only the Undead "that fails its saving throw against that use of Turn Undead".
-  "cleric-sear-undead": { damage: { types: ["radiant"], appliesWhen: "that fails its saving throw against that use of Turn Undead" } },
-  // Page 51: the redirect is a part with its own cost, condition and save.
+  // Its roll is "a number of d8s equal to your Wisdom modifier (minimum of 1d8)".
+  "cleric-sear-undead": {
+    variableDice: { die: 8, count: { ability: "wis", minimum: 1 } },
+    damage: { types: ["radiant"], appliesWhen: "that fails its saving throw against that use of Turn Undead" },
+  },
+  // Page 51: the redirect is a part with its own cost, condition and save, dealing "two rolls of your Martial Arts die
+  // plus your Dexterity modifier". The damage-type limit holds until level 13, when Deflect Energy (page 51) lifts it.
   "monk-deflect-attacks": {
+    usableWhen: "its damage includes Bludgeoning, Piercing, or Slashing damage",
+    usableWhenUntilLevel: 13,
     save: null,
     parts: [
       {
@@ -304,9 +329,35 @@ const handReadings: Record<string, HandReading> = {
         usableWhen: "If you reduce the damage to 0",
         spend: { resource: "focus-points", amount: 1 },
         save: { ability: "dex", onSuccess: "none" },
+        diceFromColumn: "martialArts",
+        diceRolls: 2,
+        rollAdds: ["dex"],
       },
     ],
   },
+  // Page 28: "You can enter it as a Bonus Action if you aren’t wearing Heavy armor".
+  "barbarian-rage": { usableWhen: "if you aren’t wearing Heavy armor" },
+  // Healing, read from each feature's sentence. Page 48: "regain Hit Points equal to 1d10 plus your Fighter level".
+  "fighter-second-wind": { healing: { dice: "1d10", rollAdds: ["class-level"] } },
+  // Page 49: "you regain Hit Points equal to 5 plus your Constitution modifier if you are Bloodied and have at least 1 Hit Point".
+  "champion-survivor": {
+    healing: { amount: 5, rollAdds: ["con"], label: "Heroic Rally", timing: "At the start of each of your turns", appliesWhen: "if you are Bloodied and have at least 1 Hit Point" },
+  },
+  // Page 39: "restore a number of Hit Points equal to five times your Cleric level", divided, "no more than half".
+  "life-domain-preserve-life": {
+    healing: { perClassLevel: 5, divided: true, cap: "half-hit-point-maximum", appliesWhen: "Choose Bloodied creatures within 30 feet of yourself" },
+  },
+  // Page 39: "2 plus the spell slot’s level", for the target and for yourself.
+  "life-domain-disciple-of-life": { healing: { amount: 2, plusSlotLevel: true } },
+  "life-domain-blessed-healer": { healing: { amount: 2, plusSlotLevel: true } },
+  // Page 39 and page 54: a rule on other healing, and the Lay On Hands pool, which `pool` holds.
+  "life-domain-supreme-healing": { healing: null },
+  "paladin-lay-on-hands": { healing: null },
+  "paladin-restoring-touch": { healing: null },
+  // Page 76: "Temporary Hit Points equal to your Charisma modifier plus your Warlock level (minimum of 1 Temporary Hit Point)".
+  "fiend-patron-dark-ones-blessing": { healing: { temporary: true, rollAdds: ["cha", "class-level"], minimum: 1 } },
+  // Page 51: "Temporary Hit Points equal to two rolls of your Martial Arts die", under Patient Defense.
+  "monk-heightened-focus": { healing: { temporary: true, diceFromColumn: "martialArts", diceRolls: 2, label: "Patient Defense" } },
   // Page 50: the Bonus Action strike and the die hold only "while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield".
   "monk-martial-arts": { activation: null, diceFromColumn: null, dice: null, untyped: ["activation", "dice"] },
   // Page 52: the action and "(no action required)" only end the vibrations.
@@ -359,10 +410,10 @@ const handReadings: Record<string, HandReading> = {
     damage: { dice: "10d12", types: ["force"], timing: "When you end them" },
   },
   // Pages 51 and 52: the roll is the Martial Arts die.
-  "monk-uncanny-metabolism": { diceFromColumn: "martialArts", rollAdds: ["class-level"] },
-  "warrior-of-the-open-hand-wholeness-of-body": { diceFromColumn: "martialArts", rollAdds: ["wis"] },
+  "monk-uncanny-metabolism": { diceFromColumn: "martialArts", rollAdds: ["class-level"], healing: { diceFromColumn: "martialArts", rollAdds: ["class-level"] } },
+  "warrior-of-the-open-hand-wholeness-of-body": { diceFromColumn: "martialArts", rollAdds: ["wis"], healing: { diceFromColumn: "martialArts", rollAdds: ["wis"], minimum: 1 } },
   // Pages 59 and 43: the typed values describe one printed part.
-  "ranger-tireless": { label: "Temporary Hit Points" },
+  "ranger-tireless": { label: "Temporary Hit Points", healing: { temporary: true, dice: "1d8", rollAdds: ["wis"], minimum: 1, label: "Temporary Hit Points" } },
   "druid-archdruid": { label: "Nature Magician", activation: ["no-action"], uses: { count: 1, recharge: "long-rest" } },
   // Pages 72 to 74: the slotless castings, with "on yourself" and One with Shadows' condition.
   "warlock-eldritch-invocations/armor-of-shadows": { freeCast: [{ spell: "mage-armor", selfOnly: true }] },
@@ -404,7 +455,7 @@ const handReadings: Record<string, HandReading> = {
   "oath-of-devotion-holy-nimbus": {
     activation: ["bonus-action"],
     uses: { count: 1, recharge: "long-rest", restoredBy: { resource: "spell-slot", amount: 1, slotLevel: 5 } },
-    parts: [{ label: "Radiant Damage", damage: { types: ["radiant"], appliesWhen: "Whenever an enemy starts its turn in the aura" } }],
+    parts: [{ label: "Radiant Damage", damage: { types: ["radiant"], timing: "Whenever an enemy starts its turn in the aura" } }],
     damage: null,
     untyped: ["damage"],
   },
@@ -442,6 +493,8 @@ const handReadings: Record<string, HandReading> = {
       shortRestRegain: 1,
       restoredBy: { resource: "spell-slot", amount: 1, fromLevel: 5, whenNoneLeft: true, oncePerTurn: "own-turn" },
     },
+    // Page 42: "a number of Temporary Hit Points equal to your Druid level".
+    healing: { temporary: true, perClassLevel: 1, label: "Temporary Hit Points", timing: "When you assume a Wild Shape form" },
   },
   // Spell slots spent in the standard wording that are not the feature's cost: an alternative or a higher-level casting.
   "druid-wild-companion": { spend: null },
@@ -452,8 +505,9 @@ const handReadings: Record<string, HandReading> = {
   "cleric-greater-divine-intervention": { untyped: ["uses"] },
   "circle-of-the-land-natural-recovery": { untyped: ["uses"] },
   "barbarian-persistent-rage": { untyped: ["uses"] },
-  // Typed nowhere: Frenzy's d6 count, chosen or later resistances, extra movement modes, a condition given to yourself.
-  "path-of-the-berserker-frenzy": { untyped: ["damage"] },
+  // Page 30: "roll a number of d6s equal to your Rage Damage bonus"; the damage takes the weapon's type, not typed.
+  "path-of-the-berserker-frenzy": { variableDice: { die: 6, count: { column: "rageDamage" } }, untyped: ["damage"] },
+  // Typed nowhere: chosen or later resistances, extra movement modes, a condition given to yourself.
   "monk-superior-defense": { untyped: ["resistances"] },
   "fiend-patron-fiendish-resilience": { untyped: ["resistances"] },
   "hunter-superior-hunters-defense": { untyped: ["resistances"] },
@@ -492,7 +546,37 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   if (!byHand("label")) need(entry.label === undefined, "label not read by hand")
   if (!byHand("speedBonusByLevel")) need(entry.speedBonusByLevel === undefined, "speedBonusByLevel not read by hand")
   // Parts, the untyped list and conditions on the feature itself are read only by hand.
-  for (const field of ["parts", "untyped", "appliesWhen", "unless", "usableWhen"]) if (!byHand(field)) need(entry[field] === undefined, `${field} not read by hand`)
+  for (const field of ["parts", "untyped", "appliesWhen", "unless", "usableWhen", "usableWhenUntilLevel", "healing", "maxTargets", "variableDice", "areaSizeByLevel"])
+    if (!byHand(field)) need(entry[field] === undefined, `${field} not read by hand`)
+  need(entry.usableWhenUntilLevel === undefined || entry.usableWhen !== undefined, "usableWhenUntilLevel without usableWhen")
+  // Statements that must be read by hand or listed untyped: healing, a target cap, a variable number of dice.
+  const untypedList: string[] = entry.untyped ?? []
+  if (has(/(?:regains?|gain|restore) (?:a number of |additional )?(?:Temporary )?Hit Points/)) need(byHand("healing") || untypedList.includes("healing"), "a healing statement not read by hand")
+  if (has(/a number of (?:creatures|those creatures) (?:equal to|up to) your \w+ modifier/)) need(byHand("maxTargets"), "a target cap not read by hand")
+  if (has(/roll a number of d\d+s equal to/)) need(byHand("variableDice"), "a variable number of dice not read by hand")
+  // Which weapons the mastery properties are for: "Simple or Martial Melee weapons" or weapons "with which you have proficiency".
+  const masteryWeapons = has(/mastery properties of \w+ kinds of Simple or Martial Melee weapons/)
+    ? "melee"
+    : has(/mastery properties of \w+ kinds of weapons of your choice with which you have proficiency/)
+      ? "proficient"
+      : undefined
+  need(entry.masteryWeapons === masteryWeapons, `masteryWeapons ${entry.masteryWeapons}, the text states ${masteryWeapons}`)
+  // Proficiency and training an option grants: "you gain proficiency with Martial weapons and training with Heavy armor".
+  const weaponCategory = own.match(/gain proficiency with (Simple|Martial) weapons/)?.[1]
+  need(same(entry.weaponProficiencies, weaponCategory ? [{ category: weaponCategory.toLowerCase() }] : undefined), `weaponProficiencies, the text states ${weaponCategory}`)
+  const armorCategory = own.match(/training with (Light|Medium|Heavy) armor/)?.[1]
+  need(same(entry.armorTraining, armorCategory ? [armorCategory.toLowerCase()] : undefined), `armorTraining, the text states ${armorCategory}`)
+  const cantrips = own.match(/You know (one|two) extra cantrips? from the (\w+) spell list/)
+  need(same(entry.extraCantrips, cantrips ? { count: cantrips[1] === "one" ? 1 : 2, spellList: cantrips[2].toLowerCase() } : undefined), `extraCantrips, the text states ${cantrips?.[0]}`)
+  // "a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)".
+  const checkBonus = own.match(/a bonus to your \w+ \((\w+) or (\w+)\) checks\. The bonus equals your (\w+) modifier \(minimum (?:bonus )?of \+1\)/)
+  need(
+    same(
+      entry.rollBonus,
+      checkBonus ? { to: [`${checkBonus[1].toLowerCase()}-checks`, `${checkBonus[2].toLowerCase()}-checks`], plusModifierOf: abilityByName[checkBonus[3]], minimum: 1 } : undefined
+    ),
+    `rollBonus, the text states ${checkBonus?.[0]}`
+  )
   // A required item: "you must have a Poisoner’s Kit on your person".
   const required = own.match(/you must have an? ([A-Z][\w’ ]+?) on your person/)?.[1]
   if (!byHand("requiresItem")) need(entry.requiresItem === (required ? toId(required) : undefined), `requiresItem ${entry.requiresItem}, the text requires ${required}`)
@@ -507,6 +591,7 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     entry.speedBonus,
     entry.resistances,
     entry.conditionImmunities,
+    entry.healing,
     ...(entry.freeCast ?? []),
     ...parts,
     ...parts.map((part) => part.save),
@@ -677,8 +762,11 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   need(same(entry.damage?.notCreatureTypes ?? [], spared ? [spared] : []), `damage notCreatureTypes ${JSON.stringify(entry.damage?.notCreatureTypes)}, the text spares ${spared}`)
   need(!entry.damage?.targetMaxSize, "damage targetMaxSize: no class damage names a size")
   // Once per turn, both ways.
-  // "Once on each of your turns" is your own turn; "Once per turn" and "once on a turn" are any turn.
-  const oncePerTurn = has(/Once on each of your turns/) ? "own-turn" : has(/Once per turn|only once per turn|only once on a turn/) ? "any-turn" : undefined
+  // "Once on each of your turns" is your own turn, and so is "only once on a turn" for a feature used "On your turn"
+  // (Action Surge, page 48). "Once per turn" and "only once per turn" are any turn.
+  const onYourTurn = has(/^On your turn, you can|[.] On your turn, you can/)
+  const oncePerTurn =
+    has(/Once on each of your turns/) || (onYourTurn && has(/only once on a turn/)) ? "own-turn" : has(/Once per turn|only once per turn|only once on a turn/) ? "any-turn" : undefined
   if (!byHand("oncePerTurn")) need(entry.oncePerTurn === oncePerTurn, `oncePerTurn ${entry.oncePerTurn}, the text states ${oncePerTurn}`)
   if (entry.selfDamage) {
     const { dicePerSlotLevel, increaseAfterSecondUse } = entry.selfDamage
@@ -1736,6 +1824,16 @@ export default function verify(report: Report) {
       "senses",
       "resistances",
       "conditionImmunities",
+      "usableWhenUntilLevel",
+      "healing",
+      "maxTargets",
+      "variableDice",
+      "areaSizeByLevel",
+      "masteryWeapons",
+      "weaponProficiencies",
+      "armorTraining",
+      "extraCantrips",
+      "rollBonus",
     ]
     // No field goes unread: every key is an entry field, a mechanic read here, or a table read above.
     const known = new Set([...keys, "id", "name", "page", "class", "subclass", "level", "levels", "description", "options", "laterText", "forms", "slotCreation", "spellLevels", "landResistances"])

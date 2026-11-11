@@ -51,9 +51,13 @@
         "id": "etherealness"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
       "One vial covers one Medium or smaller creature with its equipment. One more vial is needed for each size category above Medium.",
-      "Applying the oil takes 10 minutes. The effect lasts 1 hour."
+      "Applying the oil takes 10 minutes. The effect lasts 1 hour.",
+      "Etherealness lasts 1 hour on the creature the oil covers, a change no field holds."
     ]
   },
   "oil-of-sharpness": {
@@ -75,9 +79,13 @@
         "alternativeTo": 0
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
       "Applied to a creature (10 minutes), it gives the effect of Freedom of Movement for 8 hours. One vial covers one Medium or smaller creature, one more vial per size category above Medium.",
-      "Alternatively, poured on the ground as a Magic action, it covers a 10-foot square and duplicates the effect of Grease in that area for 8 hours. Grease carries alternativeTo 0, so the two never both apply."
+      "Alternatively, poured on the ground as a Magic action, it covers a 10-foot square and duplicates the effect of Grease in that area for 8 hours. Grease carries alternativeTo 0, so the two never both apply.",
+      "Freedom of Movement and Grease each last 8 hours, a change no field holds."
     ]
   },
   "pearl-of-power": {
@@ -193,9 +201,13 @@
         "recharge": "dawn"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
       "Gaining the effect takes a Magic action and a command word. It ends if you remove the armor or take a Magic action to repeat the command word.",
-      "This property can't be used again until the next dawn."
+      "This property can't be used again until the next dawn.",
+      "Etherealness ends if you remove the armor or repeat the command word, a change no field holds."
     ]
   },
   "portable-hole": {
@@ -228,8 +240,12 @@
         "id": "clairvoyance"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
-      "No Concentration required."
+      "No Concentration required.",
+      "Clairvoyance needs no Concentration here, a change no field holds."
     ]
   },
   "potion-of-climbing": {
@@ -244,8 +260,12 @@
         "label": "Reduce"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
-      "Only the \"reduce\" effect of Enlarge/Reduce, for 1d4 hours, no Concentration required."
+      "Only the \"reduce\" effect of Enlarge/Reduce, for 1d4 hours, no Concentration required.",
+      "The reduce effect lasts 1d4 hours with no Concentration, a change no field holds."
     ]
   },
   "potion-of-flying": {
@@ -259,8 +279,12 @@
         "id": "gaseous-form"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
-      "Lasts 1 hour, no Concentration required, or until you end it as a Bonus Action."
+      "Lasts 1 hour, no Concentration required, or until you end it as a Bonus Action.",
+      "Gaseous Form lasts 1 hour with no Concentration and can be ended as a Bonus Action, a change no field holds."
     ]
   },
   "potion-of-giant-strength": {
@@ -293,8 +317,12 @@
         "label": "Enlarge"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
-      "Only the \"enlarge\" effect of Enlarge/Reduce, for 10 minutes, no Concentration required."
+      "Only the \"enlarge\" effect of Enlarge/Reduce, for 10 minutes, no Concentration required.",
+      "The enlarge effect lasts 10 minutes with no Concentration, a change no field holds."
     ]
   },
   "potion-of-heroism": {
@@ -304,11 +332,13 @@
       }
     ],
     "untyped": [
-      "healing"
+      "healing",
+      "spells"
     ],
     "notes": [
       "You gain 10 Temporary Hit Points that last for 1 hour.",
-      "The Bless effect lasts the same 1 hour, no Concentration required."
+      "The Bless effect lasts the same 1 hour, no Concentration required.",
+      "Bless lasts 1 hour with no Concentration, a change no field holds."
     ]
   },
   "potion-of-invisibility": {
@@ -337,8 +367,12 @@
         "saveDc": 13
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
-      "Lasts 10 minutes, no Concentration required."
+      "Lasts 10 minutes, no Concentration required.",
+      "Detect Thoughts lasts 10 minutes with no Concentration, a change no field holds."
     ]
   },
   "potion-of-poison": {
@@ -375,8 +409,12 @@
         "id": "haste"
       }
     ],
+    "untyped": [
+      "spells"
+    ],
     "notes": [
-      "Lasts 1 minute, no Concentration required, and without the wave of lethargy when the effect ends."
+      "Lasts 1 minute, no Concentration required, and without the wave of lethargy when the effect ends.",
+      "Haste lasts 1 minute with no Concentration and no lethargy at its end, a change no field holds."
     ]
   },
   "potion-of-vitality": {
@@ -938,10 +976,14 @@
     ]
   },
   "robe-of-useful-items": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
       "As a Magic action you detach a patch, which becomes the object or creature it represents. The robe becomes ordinary once the last patch is removed.",
       "It has two each of Bullseye Lantern (filled and lit), Dagger, Mirror, Pole, Rope (coiled) and Sack, plus 4d4 other patches chosen or rolled on a 1d100 table.",
-      "The table's Spell Scroll patch (one spell of level 1, 2 or 3) belongs to that row. No spell is cast by the robe."
+      "The table's Spell Scroll patch (one spell of level 1, 2 or 3) belongs to that row. No spell is cast by the robe.",
+      "The robe has a fixed set of patches plus 4d4 others, each spent when detached. No field holds that count."
     ]
   },
   "rod-of-absorption": {
@@ -1226,7 +1268,8 @@
   "sending-stones": {
     "spells": [
       {
-        "id": "sending"
+        "id": "sending",
+        "appliesWhen": "The target is the bearer of the other stone"
       }
     ],
     "uses": [
@@ -1319,9 +1362,13 @@
     ]
   },
   "sovereign-glue": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
       "A container holds 1d6 + 1 ounces when found. One ounce covers a 1-foot square and takes a Utilize action to apply. It sets in 1 minute.",
-      "The bond can be broken only by Universal Solvent, Oil of Etherealness, or a Wish spell. Wish is only mentioned."
+      "The bond can be broken only by Universal Solvent, Oil of Etherealness, or a Wish spell. Wish is only mentioned.",
+      "A container holds 1d6 + 1 ounces, one spent per application. No field holds that count."
     ]
   },
   "spell-scroll": {
@@ -2426,8 +2473,12 @@
     ]
   },
   "universal-solvent": {
+    "untyped": [
+      "uses"
+    ],
     "notes": [
-      "A tube holds 1d6 + 1 ounces when found. As a Utilize action you pour 1 or more ounces on a surface within reach. Each ounce dissolves up to 1 square foot of adhesive, including Sovereign Glue."
+      "A tube holds 1d6 + 1 ounces when found. As a Utilize action you pour 1 or more ounces on a surface within reach. Each ounce dissolves up to 1 square foot of adhesive, including Sovereign Glue.",
+      "A tube holds 1d6 + 1 ounces, spent as poured. No field holds that count."
     ]
   },
   "vicious-weapon": {

@@ -814,7 +814,8 @@ export default function verify(report: Report) {
             failures.push(`${own}: an unless with no "otherwise", "unless" or "instead" in the text`)
           const row = links[key]
           if (row) usedLinks.add(key)
-          const needsRow = (positions.length && !plain) || gotLinks.s.length > 0
+          // A plain feature has no span on any link. A span anywhere needs a row written from the text.
+          const needsRow = (positions.length && !plain) || gotLinks.s.length > 0 || [...gotLinks.d, ...gotLinks.c].some((link) => link.includes("|"))
           if (needsRow && !row) failures.push(`${own}: needs a links row: "${key}": ${JSON.stringify(gotLinks)},`)
           else if (row && !needsRow) failures.push(`${own}: is plain, so it needs no links row`)
           else if (row && !same({ s: row.s ?? [], d: row.d ?? [], c: row.c ?? [] }, gotLinks)) failures.push(`${own}: links ${JSON.stringify(gotLinks)}, the table reads ${JSON.stringify(row)}`)
@@ -1210,6 +1211,12 @@ const namedNotGiven: Record<string, string[]> = {
  * with the data.
  */
 const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
+  "steam-mephit/Death Burst": { d: ["failure@0|T:when it dies"] },
+  "magma-mephit/Death Burst": { d: ["failure@0|T:when it dies"] },
+  "ice-mephit/Death Burst": { d: ["failure@0|T:when it dies"] },
+  "dust-mephit/Death Burst": { d: ["failure@0|T:when it dies"] },
+  "magmin/Death Burst": { d: ["failure@0|T:when it dies"] },
+  "balor/Death Throes": { d: ["failure@0|T:when it dies", "failure@0|T:when it dies"] },
   "centaur-trooper/Trampling Charge": {
     s: ["W:Each creature whose space the centaur enters is targeted once by the following effect"],
     d: ["failure@0|W:Each creature whose space the centaur enters is targeted once by the following effect"],
@@ -1246,7 +1253,12 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   },
   "couatl/Constrict": { d: ["failure@0"], c: ["grappled=failure@0", "restrained=failure@0|W:until the grapple ends"] },
   "swarm-of-crawling-claws/Swarm of Grasping Hands": { d: ["hit", "hit|W:if the swarm is Bloodied|alt0"], c: ["prone=hit|W:If the target is a Medium or smaller creature"] },
-  "darkmantle/Crush": { d: ["hit"], c: ["blinded=hit|W:If the target is a Medium or smaller creature and the darkmantle had Advantage on the attack roll"] },
+  "darkmantle/Crush": {
+    d: ["hit"],
+    c: [
+      "blinded=hit|W:If the target is a Medium or smaller creature and the darkmantle had Advantage on the attack roll, it covers the target, which has the Blinded condition and is suffocating while the darkmantle is attached in this way",
+    ],
+  },
   "death-dog/Bite": { s: ["W:If the target is a creature"], d: ["hit"], c: ["poisoned=first-failure@0|W:If the target is a creature"] },
   "djinni/Storm Bolt": { d: ["hit"], c: ["prone=hit|W:If the target is a Large or smaller creature"] },
   "djinni/Create Whirlwind": {
@@ -1261,7 +1273,9 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "fire-elemental/Fire Aura": { d: ["-|T:At the end of each of the elemental’s turns"] },
   "fire-elemental/Fire Form": { d: ["-|W:The first time it enters a creature’s space on a turn"] },
   "fire-elemental/Burn": { d: ["hit"] },
-  "gelatinous-cube/Ooze Cube": { d: ["-|W:a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check"] },
+  "gelatinous-cube/Ooze Cube": {
+    d: ["-|T:As an action, a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check, and the puller"],
+  },
   "gelatinous-cube/Engulf": { d: ["failure@0", "failure@0|W:An engulfed target|T:at the start of each of the cube’s turns"], c: ["restrained=failure@0|W:An engulfed target"] },
   "ghast/Claw": { s: ["W:If the target is a non-Undead creature"], d: ["hit"], c: ["paralyzed=failure@0|W:If the target is a non-Undead creature"] },
   "ghost/Possession": { c: ["incapacitated=failure@0"] },
@@ -1305,7 +1319,13 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "nalfeshnee/Horror Nimbus": { d: ["failure@0"], c: ["frightened=failure@0"] },
   "otyugh/Bite": { s: ["W:Whenever the Poisoned target finishes a Long Rest"], d: ["hit"], c: ["poisoned=hit"] },
   "otyugh/Tentacle": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
-  "phase-spider/Bite": { d: ["hit", "hit"], c: ["poisoned=hit|W:If this damage reduces the target to 0 Hit Points", "paralyzed=hit|W:While Poisoned"] },
+  "phase-spider/Bite": {
+    d: ["hit", "hit"],
+    c: [
+      "poisoned=hit|W:If this damage reduces the target to 0 Hit Points",
+      "paralyzed=hit|W:If this damage reduces the target to 0 Hit Points, the target becomes Stable, and it has the Poisoned condition for 1 hour. While Poisoned",
+    ],
+  },
   "pit-fiend/Fear Aura": { s: ["W:while it doesn’t have the Incapacitated condition"], c: ["frightened=failure@0|W:while it doesn’t have the Incapacitated condition"] },
   "pit-fiend/Bite": { s: ["W:If the target is a creature"], d: ["hit", "failure@0|W:While Poisoned|T:at the start of each of its turns"], c: ["poisoned=failure@0|W:If the target is a creature"] },
   "purple-worm/Bite": { d: ["hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature", "restrained=hit|W:until the grapple ends"] },
@@ -1347,7 +1367,13 @@ const links: Record<string, { s?: string[]; d?: string[]; c?: string[] }> = {
   "tarrasque/Tail": { d: ["hit"], c: ["prone=hit|W:If the target is a Huge or smaller creature"] },
   "tarrasque/World-Shaking Movement": { c: ["prone=-|W:if Medium or smaller"] },
   "tough-boss/Warhammer": { d: ["hit"] },
-  "vampire-familiar/Umbral Dagger": { d: ["hit", "hit"], c: ["poisoned=hit|W:If the target is reduced to 0 Hit Points by this attack", "paralyzed=hit|W:While it has the Poisoned condition"] },
+  "vampire-familiar/Umbral Dagger": {
+    d: ["hit", "hit"],
+    c: [
+      "poisoned=hit|W:If the target is reduced to 0 Hit Points by this attack",
+      "paralyzed=hit|W:If the target is reduced to 0 Hit Points by this attack, the target becomes Stable but has the Poisoned condition for 1 hour. While it has the Poisoned condition",
+    ],
+  },
   "vampire-spawn/Claw": { d: ["hit"], c: ["grappled=hit|W:If the target is a Medium or smaller creature"] },
   "vampire/Grave Strike": { d: ["hit", "hit"], c: ["grappled=hit|W:If the target is a Large or smaller creature"] },
   "vrock/Spores": { d: ["failure@0|W:While Poisoned|T:at the start of each of its turns"], c: ["poisoned=failure@0"] },

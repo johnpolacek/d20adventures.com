@@ -250,6 +250,7 @@
       1
     ],
     "description": "You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren’t wearing Heavy armor.\nYou can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.\nWhile active, your Rage follows the rules below.\nDamage Resistance. You have Resistance to Bludgeoning, Piercing, and Slashing damage.\nRage Damage. When you make an attack using Strength—with either a weapon or an Unarmed Strike—and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Barbarian, as shown in the Rage Damage column of the Barbarian Features table.\nStrength Advantage. You have Advantage on Strength checks and Strength saving throws.\nNo Concentration or Spells. You can’t maintain Concentration, and you can’t cast spells.\nDuration. The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following:\n• Make an attack roll against an enemy.\n• Force an enemy to make a saving throw.\n• Take a Bonus Action to extend your Rage.\nEach time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.",
+    "usableWhen": "if you aren’t wearing Heavy armor",
     "activation": [
       "bonus-action"
     ],
@@ -325,7 +326,8 @@
     "levels": [
       1
     ],
-    "description": "Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice, such as Greataxes and Handaxes. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.\nWhen you reach certain Barbarian levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table."
+    "description": "Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice, such as Greataxes and Handaxes. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.\nWhen you reach certain Barbarian levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table.",
+    "masteryWeapons": "melee"
   },
   {
     "id": "bard-ability-score-improvement",
@@ -595,7 +597,16 @@
     "levels": [
       18
     ],
-    "description": "You attain the pinnacle of resilience in battle, giving you these benefits.\nDefy Death. You have Advantage on Death Saving Throws. Moreover, when you roll 18–20 on a Death Saving Throw, you gain the benefit of rolling a 20 on it.\nHeroic Rally. At the start of each of your turns, you regain Hit Points equal to 5 plus your Constitution modifier if you are Bloodied and have at least 1 Hit Point."
+    "description": "You attain the pinnacle of resilience in battle, giving you these benefits.\nDefy Death. You have Advantage on Death Saving Throws. Moreover, when you roll 18–20 on a Death Saving Throw, you gain the benefit of rolling a 20 on it.\nHeroic Rally. At the start of each of your turns, you regain Hit Points equal to 5 plus your Constitution modifier if you are Bloodied and have at least 1 Hit Point.",
+    "healing": {
+      "amount": 5,
+      "rollAdds": [
+        "con"
+      ],
+      "label": "Heroic Rally",
+      "appliesWhen": "if you are Bloodied and have at least 1 Hit Point",
+      "timing": "At the start of each of your turns"
+    }
   },
   {
     "id": "circle-of-the-land-circle-of-the-land-spells",
@@ -620,6 +631,19 @@
       3
     ],
     "description": "As a Magic action, you can expend a use of your Wild Shape and choose a point within 60 feet of yourself. Vitality-giving flowers and life-draining thorns appear for a moment in a 10-foot-radius Sphere centered on that point. Each creature of your choice in the Sphere must make a Constitution saving throw against your spell save DC, taking 2d6 Necrotic damage on a failed save or half as much damage on a successful one. One creature of your choice in that area regains 2d6 Hit Points.\nThe damage and healing increase by 1d6 when you reach Druid levels 10 (3d6) and 14 (4d6).",
+    "healing": {
+      "dice": "2d6",
+      "diceByLevel": [
+        {
+          "level": 10,
+          "dice": "3d6"
+        },
+        {
+          "level": 14,
+          "dice": "4d6"
+        }
+      ]
+    },
     "activation": [
       "magic-action"
     ],
@@ -808,7 +832,8 @@
         "description": "As a Magic action, you point your Holy Symbol at another creature you can see within 30 feet of yourself and focus divine energy at it. Roll 1d8 and add your Wisdom modifier. You either restore Hit Points to the creature equal to that total or force the creature to make a Constitution saving throw. On a failed save, the creature takes Necrotic or Radiant damage (your choice) equal to that total. On a successful save, the creature takes half as much damage (round down).\nYou roll an additional d8 when you reach Cleric levels 7 (2d8), 13 (3d8), and 18 (4d8).",
         "untyped": [
           "save",
-          "damage"
+          "damage",
+          "healing"
         ],
         "activation": [
           "magic-action"
@@ -919,13 +944,33 @@
         "id": "protector",
         "name": "Protector",
         "page": 37,
-        "description": "Trained for battle, you gain proficiency with Martial weapons and training with Heavy armor."
+        "description": "Trained for battle, you gain proficiency with Martial weapons and training with Heavy armor.",
+        "weaponProficiencies": [
+          {
+            "category": "martial"
+          }
+        ],
+        "armorTraining": [
+          "heavy"
+        ]
       },
       {
         "id": "thaumaturge",
         "name": "Thaumaturge",
         "page": 37,
-        "description": "You know one extra cantrip from the Cleric spell list. In addition, your mystical connection to the divine gives you a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)."
+        "description": "You know one extra cantrip from the Cleric spell list. In addition, your mystical connection to the divine gives you a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1).",
+        "extraCantrips": {
+          "count": 1,
+          "spellList": "cleric"
+        },
+        "rollBonus": {
+          "to": [
+            "arcana-checks",
+            "religion-checks"
+          ],
+          "plusModifierOf": "wis",
+          "minimum": 1
+        }
       }
     ]
   },
@@ -995,6 +1040,13 @@
       5
     ],
     "description": "Whenever you use Turn Undead, you can roll a number of d8s equal to your Wisdom modifier (minimum of 1d8) and add the rolls together. Each Undead that fails its saving throw against that use of Turn Undead takes Radiant damage equal to the roll’s total. This damage doesn’t end the turn effect.",
+    "variableDice": {
+      "die": 8,
+      "count": {
+        "ability": "wis",
+        "minimum": 1
+      }
+    },
     "damage": {
       "types": [
         "radiant"
@@ -1350,13 +1402,33 @@
         "id": "magician",
         "name": "Magician",
         "page": 42,
-        "description": "You know one extra cantrip from the Druid spell list. In addition, your mystical connection to nature gives you a bonus to your Intelligence (Arcana or Nature) checks. The bonus equals your Wisdom modifier (minimum bonus of +1)."
+        "description": "You know one extra cantrip from the Druid spell list. In addition, your mystical connection to nature gives you a bonus to your Intelligence (Arcana or Nature) checks. The bonus equals your Wisdom modifier (minimum bonus of +1).",
+        "extraCantrips": {
+          "count": 1,
+          "spellList": "druid"
+        },
+        "rollBonus": {
+          "to": [
+            "arcana-checks",
+            "nature-checks"
+          ],
+          "plusModifierOf": "wis",
+          "minimum": 1
+        }
       },
       {
         "id": "warden",
         "name": "Warden",
         "page": 42,
-        "description": "Trained for battle, you gain proficiency with Martial weapons and training with Medium armor."
+        "description": "Trained for battle, you gain proficiency with Martial weapons and training with Medium armor.",
+        "weaponProficiencies": [
+          {
+            "category": "martial"
+          }
+        ],
+        "armorTraining": [
+          "medium"
+        ]
       }
     ]
   },
@@ -1431,6 +1503,12 @@
       2
     ],
     "description": "The power of nature allows you to assume the form of an animal. As a Bonus Action, you shape-shift into a Beast form that you have learned for this feature (see “Known Forms” below). You stay in that form for a number of hours equal to half your Druid level or until you use Wild Shape again, have the Incapacitated condition, or die. You can also leave the form early as a Bonus Action.\nNumber of Uses. You can use Wild Shape twice. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.\nYou gain additional uses when you reach certain Druid levels, as shown in the Wild Shape column of the Druid Features table.\nKnown Forms. You know four Beast forms for this feature, chosen from among Beast stat blocks that have a maximum Challenge Rating of 1/4 and that lack a Fly Speed (see “Animals” in “Monsters” for stat block options). The Rat, Riding Horse, Spider, and Wolf are recommended. Whenever you finish a Long Rest, you can replace one of your known forms with another eligible form.\nWhen you reach certain Druid levels, your number of known forms and the maximum Challenge Rating for those forms increases, as shown in the Beast Shapes table. In addition, starting at level 8, you can adopt a form that has a Fly Speed.\nWhen choosing known forms, you may look in other sources for eligible Beasts if the Game Master permits you to do so.\nRules While Shape-Shifted. While in a form, you retain your personality, memories, and ability to speak, and the following rules apply:\nTemporary Hit Points. When you assume a Wild Shape form, you gain a number of Temporary Hit Points equal to your Druid level.\nGame Statistics. Your game statistics are replaced by the Beast’s stat block, but you retain your creature type; Hit Points; Hit Point Dice; Intelligence, Wisdom, and Charisma scores; class features; languages; and feats. You also retain your skill and saving throw proficiencies and use your Proficiency Bonus for them, in addition to gaining the proficiencies of the creature. If a skill or saving throw modifier in the Beast’s stat block is higher than yours, use the one in the stat block.\nNo Spellcasting. You can’t cast spells, but shape-shifting doesn’t break your Concentration or otherwise interfere with a spell you’ve already cast.\nObjects. Your ability to handle objects is determined by the form’s limbs rather than your own. In addition, you choose whether your equipment falls in your space, merges into your new form, or is worn by it. Worn equipment functions as normal, but the GM decides whether it’s practical for the new form to wear a piece of equipment based on the creature’s size and shape. Your equipment doesn’t change size or shape to match the new form, and any equipment that the new form can’t wear must either fall to the ground or merge with the form. Equipment that merges with the form has no effect while you’re in that form.",
+    "healing": {
+      "perClassLevel": 1,
+      "temporary": true,
+      "label": "Temporary Hit Points",
+      "timing": "When you assume a Wild Shape form"
+    },
     "activation": [
       "bonus-action"
     ],
@@ -1545,7 +1623,15 @@
     "levels": [
       3
     ],
-    "description": "When you reduce an enemy to 0 Hit Points, you gain Temporary Hit Points equal to your Charisma modifier plus your Warlock level (minimum of 1 Temporary Hit Point). You also gain this benefit if someone else reduces an enemy within 10 feet of you to 0 Hit Points."
+    "description": "When you reduce an enemy to 0 Hit Points, you gain Temporary Hit Points equal to your Charisma modifier plus your Warlock level (minimum of 1 Temporary Hit Point). You also gain this benefit if someone else reduces an enemy within 10 feet of you to 0 Hit Points.",
+    "healing": {
+      "rollAdds": [
+        "cha",
+        "class-level"
+      ],
+      "minimum": 1,
+      "temporary": true
+    }
   },
   {
     "id": "fiend-patron-dark-ones-own-luck",
@@ -1678,7 +1764,7 @@
         ]
       }
     },
-    "oncePerTurn": "any-turn"
+    "oncePerTurn": "own-turn"
   },
   {
     "id": "fighter-epic-boon",
@@ -1776,6 +1862,12 @@
       1
     ],
     "description": "You have a limited well of physical and mental stamina that you can draw on. As a Bonus Action, you can use it to regain Hit Points equal to 1d10 plus your Fighter level.\nYou can use this feature twice. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.\nWhen you reach certain Fighter levels, you gain more uses of this feature, as shown in the Second Wind column of the Fighter Features table.",
+    "healing": {
+      "dice": "1d10",
+      "rollAdds": [
+        "class-level"
+      ]
+    },
     "activation": [
       "bonus-action"
     ],
@@ -1986,7 +2078,11 @@
     "levels": [
       6
     ],
-    "description": "The healing spells you cast on others heal you as well. Immediately after you cast a spell with a spell slot that restores Hit Points to one or more creatures other than yourself, you regain Hit Points equal to 2 plus the spell slot’s level."
+    "description": "The healing spells you cast on others heal you as well. Immediately after you cast a spell with a spell slot that restores Hit Points to one or more creatures other than yourself, you regain Hit Points equal to 2 plus the spell slot’s level.",
+    "healing": {
+      "amount": 2,
+      "plusSlotLevel": true
+    }
   },
   {
     "id": "life-domain-disciple-of-life",
@@ -1998,7 +2094,11 @@
     "levels": [
       3
     ],
-    "description": "When a spell you cast with a spell slot restores Hit Points to a creature, that creature regains additional Hit Points on the turn you cast the spell. The additional Hit Points equal 2 plus the spell slot’s level."
+    "description": "When a spell you cast with a spell slot restores Hit Points to a creature, that creature regains additional Hit Points on the turn you cast the spell. The additional Hit Points equal 2 plus the spell slot’s level.",
+    "healing": {
+      "amount": 2,
+      "plusSlotLevel": true
+    }
   },
   {
     "id": "life-domain-life-domain-spells",
@@ -2023,6 +2123,12 @@
       3
     ],
     "description": "As a Magic action, you present your Holy Symbol and expend a use of your Channel Divinity to evoke healing energy that can restore a number of Hit Points equal to five times your Cleric level. Choose Bloodied creatures within 30 feet of yourself (which can include you), and divide those Hit Points among them. This feature can restore a creature to no more than half its Hit Point maximum.",
+    "healing": {
+      "perClassLevel": 5,
+      "divided": true,
+      "cap": "half-hit-point-maximum",
+      "appliesWhen": "Choose Bloodied creatures within 30 feet of yourself"
+    },
     "activation": [
       "magic-action"
     ],
@@ -2102,9 +2208,15 @@
       3
     ],
     "description": "When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, you can take a Reaction to reduce the attack’s total damage against you. The reduction equals 1d10 plus your Dexterity modifier and Monk level.\nIf you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force. If you do so, choose a creature you can see within 5 feet of yourself if the attack was a melee attack or a creature you can see within 60 feet of yourself that isn’t behind Total Cover if the attack was a ranged attack. That creature must succeed on a Dexterity saving throw or take damage equal to two rolls of your Martial Arts die plus your Dexterity modifier. The damage is the same type dealt by the attack.",
+    "usableWhen": "its damage includes Bludgeoning, Piercing, or Slashing damage",
     "parts": [
       {
         "label": "redirect some of the attack’s force",
+        "diceFromColumn": "martialArts",
+        "diceRolls": 2,
+        "rollAdds": [
+          "dex"
+        ],
         "spend": {
           "resource": "focus-points",
           "amount": 1
@@ -2116,6 +2228,7 @@
         "usableWhen": "If you reduce the damage to 0"
       }
     ],
+    "usableWhenUntilLevel": 13,
     "activation": [
       "reaction"
     ],
@@ -2224,7 +2337,13 @@
     "levels": [
       10
     ],
-    "description": "Your Flurry of Blows, Patient Defense, and Step of the Wind gain the following benefits.\nFlurry of Blows. You can expend 1 Focus Point to use Flurry of Blows and make three Unarmed Strikes with it instead of two.\nPatient Defense. When you expend a Focus Point to use Patient Defense, you gain a number of Temporary Hit Points equal to two rolls of your Martial Arts die.\nStep of the Wind. When you expend a Focus Point to use Step of the Wind, you can choose a willing creature within 5 feet of yourself that is Large or smaller. You move the creature with you until the end of your turn. The creature’s movement doesn’t provoke Opportunity Attacks."
+    "description": "Your Flurry of Blows, Patient Defense, and Step of the Wind gain the following benefits.\nFlurry of Blows. You can expend 1 Focus Point to use Flurry of Blows and make three Unarmed Strikes with it instead of two.\nPatient Defense. When you expend a Focus Point to use Patient Defense, you gain a number of Temporary Hit Points equal to two rolls of your Martial Arts die.\nStep of the Wind. When you expend a Focus Point to use Step of the Wind, you can choose a willing creature within 5 feet of yourself that is Large or smaller. You move the creature with you until the end of your turn. The creature’s movement doesn’t provoke Opportunity Attacks.",
+    "healing": {
+      "diceFromColumn": "martialArts",
+      "diceRolls": 2,
+      "temporary": true,
+      "label": "Patient Defense"
+    }
   },
   {
     "id": "monk-martial-arts",
@@ -2448,6 +2567,12 @@
       2
     ],
     "description": "When you roll Initiative, you can regain all expended Focus Points. When you do so, roll your Martial Arts die, and regain a number of Hit Points equal to your Monk level plus the number rolled.\nOnce you use this feature, you can’t use it again until you finish a Long Rest.",
+    "healing": {
+      "diceFromColumn": "martialArts",
+      "rollAdds": [
+        "class-level"
+      ]
+    },
     "uses": {
       "recharge": "long-rest",
       "count": 1
@@ -2494,7 +2619,7 @@
           "types": [
             "radiant"
           ],
-          "appliesWhen": "Whenever an enemy starts its turn in the aura"
+          "timing": "Whenever an enemy starts its turn in the aura"
         }
       }
     ],
@@ -2597,6 +2722,10 @@
     "untyped": [
       "conditions"
     ],
+    "maxTargets": {
+      "ability": "cha",
+      "minimum": 1
+    },
     "activation": [
       "magic-action"
     ],
@@ -2620,12 +2749,7 @@
     "levels": [
       18
     ],
-    "description": "Your Aura of Protection is now a 30-foot Emanation.",
-    "area": {
-      "shape": "emanation",
-      "size": 30,
-      "allies": true
-    }
+    "description": "Your Aura of Protection is now a 30-foot Emanation."
   },
   {
     "id": "paladin-aura-of-courage",
@@ -2663,7 +2787,13 @@
       "size": 10,
       "allies": true,
       "unless": "while you have the Incapacitated condition"
-    }
+    },
+    "areaSizeByLevel": [
+      {
+        "level": 18,
+        "size": 30
+      }
+    ]
   },
   {
     "id": "paladin-channel-divinity",
@@ -2878,7 +3008,8 @@
       1
     ],
     "description": "Your training with weapons allows you to use the mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Longswords and Javelins.\nWhenever you finish a Long Rest, you can change the kinds of weapons you chose. For example, you could switch to using the mastery properties of Halberds and Flails.",
-    "weaponMasteries": 2
+    "weaponMasteries": 2,
+    "masteryWeapons": "proficient"
   },
   {
     "id": "path-of-the-berserker-frenzy",
@@ -2893,7 +3024,13 @@
     "description": "If you use Reckless Attack while your Rage is active, you deal extra damage to the first target you hit on your turn with a Strength-based attack. To determine the extra damage, roll a number of d6s equal to your Rage Damage bonus, and add them together. The damage has the same type as the weapon or Unarmed Strike used for the attack.",
     "untyped": [
       "damage"
-    ]
+    ],
+    "variableDice": {
+      "die": 6,
+      "count": {
+        "column": "rageDamage"
+      }
+    }
   },
   {
     "id": "path-of-the-berserker-intimidating-presence",
@@ -3214,6 +3351,15 @@
       10
     ],
     "description": "Primal forces now help fuel you on your journeys, granting you the following benefits.\nTemporary Hit Points. As a Magic action, you can give yourself a number of Temporary Hit Points equal to 1d8 plus your Wisdom modifier (minimum of 1). You can use this action a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest.\nDecrease Exhaustion. Whenever you finish a Short Rest, your Exhaustion level, if any, decreases by 1.",
+    "healing": {
+      "dice": "1d8",
+      "rollAdds": [
+        "wis"
+      ],
+      "minimum": 1,
+      "temporary": true,
+      "label": "Temporary Hit Points"
+    },
     "activation": [
       "magic-action"
     ],
@@ -3240,7 +3386,8 @@
       1
     ],
     "description": "Your training with weapons allows you to use the mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Longbows and Shortswords.\nWhenever you finish a Long Rest, you can change the kinds of weapons you chose. For example, you could switch to using the mastery properties of Scimitars and Longswords.",
-    "weaponMasteries": 2
+    "weaponMasteries": 2,
+    "masteryWeapons": "proficient"
   },
   {
     "id": "rogue-ability-score-improvement",
@@ -3589,7 +3736,8 @@
       1
     ],
     "description": "Your training with weapons allows you to use the mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Daggers and Shortbows.\nWhenever you finish a Long Rest, you can change the kinds of weapons you chose. For example, you could switch to using the mastery properties of Scimitars and Shortswords.",
-    "weaponMasteries": 2
+    "weaponMasteries": 2,
+    "masteryWeapons": "proficient"
   },
   {
     "id": "sorcerer-ability-score-improvement",
@@ -3741,6 +3889,10 @@
         "name": "Careful Spell",
         "page": 66,
         "description": "When you cast a spell that forces other creatures to make a saving throw, you can protect some of those creatures from the spell’s full force. To do so, spend 1 Sorcery Point and choose a number of those creatures up to your Charisma modifier (minimum of one creature). A chosen creature automatically succeeds on its saving throw against the spell, and it takes no damage if it would normally take half damage on a successful save.",
+        "maxTargets": {
+          "ability": "cha",
+          "minimum": 1
+        },
         "spend": {
           "resource": "sorcery-points",
           "amount": 1
@@ -4660,6 +4812,13 @@
       6
     ],
     "description": "You gain the ability to heal yourself. As a Bonus Action, you can roll your Martial Arts die. You regain a number of Hit Points equal to the number rolled plus your Wisdom modifier (minimum of 1 Hit Point regained).\nYou can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest.",
+    "healing": {
+      "diceFromColumn": "martialArts",
+      "rollAdds": [
+        "wis"
+      ],
+      "minimum": 1
+    },
     "activation": [
       "bonus-action"
     ],

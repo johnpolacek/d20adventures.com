@@ -7580,14 +7580,16 @@
             "average": 31,
             "type": "fire",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "timing": "when it dies"
           },
           {
             "dice": "9d6",
             "average": 31,
             "type": "force",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "timing": "when it dies"
           }
         ],
         "area": {
@@ -13076,7 +13078,7 @@
           {
             "condition": "blinded",
             "on": "hit",
-            "appliesWhen": "If the target is a Medium or smaller creature and the darkmantle had Advantage on the attack roll"
+            "appliesWhen": "If the target is a Medium or smaller creature and the darkmantle had Advantage on the attack roll, it covers the target, which has the Blinded condition and is suffocating while the darkmantle is attached in this way"
           }
         ]
       },
@@ -14906,7 +14908,8 @@
             "average": 5,
             "type": "bludgeoning",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "timing": "when it dies"
           }
         ],
         "area": {
@@ -16958,7 +16961,7 @@
             "dice": "3d6",
             "average": 10,
             "type": "acid",
-            "appliesWhen": "a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check"
+            "timing": "As an action, a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check, and the puller"
           }
         ]
       },
@@ -25072,7 +25075,8 @@
             "average": 5,
             "type": "cold",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "timing": "when it dies"
           }
         ],
         "area": {
@@ -27601,7 +27605,8 @@
             "average": 7,
             "type": "fire",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "timing": "when it dies"
           }
         ],
         "area": {
@@ -27752,7 +27757,8 @@
             "average": 7,
             "type": "fire",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "timing": "when it dies"
           }
         ],
         "area": {
@@ -31417,7 +31423,7 @@
           {
             "condition": "paralyzed",
             "on": "hit",
-            "appliesWhen": "While Poisoned"
+            "appliesWhen": "If this damage reduces the target to 0 Hit Points, the target becomes Stable, and it has the Poisoned condition for 1 hour. While Poisoned"
           }
         ]
       }
@@ -38180,7 +38186,8 @@
             "average": 5,
             "type": "fire",
             "on": "failure",
-            "save": 0
+            "save": 0,
+            "timing": "when it dies"
           }
         ],
         "area": {
@@ -41663,7 +41670,7 @@
           {
             "condition": "paralyzed",
             "on": "hit",
-            "appliesWhen": "While it has the Poisoned condition"
+            "appliesWhen": "If the target is reduced to 0 Hit Points by this attack, the target becomes Stable but has the Poisoned condition for 1 hour. While it has the Poisoned condition"
           }
         ]
       }

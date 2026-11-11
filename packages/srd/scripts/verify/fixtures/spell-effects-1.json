@@ -630,6 +630,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "Each creature within 5 feet of that point",
         "when": "initial",
         "onSuccess": "half"
       }
@@ -668,6 +669,7 @@
       {
         "ability": "cha",
         "dc": "spell-save-dc",
+        "appliesWhen": "Each Humanoid",
         "when": "initial",
         "onSuccess": "none"
       }
@@ -987,6 +989,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "an affected target",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -1093,6 +1096,7 @@
       {
         "ability": "dex",
         "dc": "spell-save-dc",
+        "appliesWhen": "the Restrained target",
         "when": "start-of-turn",
         "onSuccess": "ends"
       }

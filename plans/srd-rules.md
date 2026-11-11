@@ -65,6 +65,8 @@ Judge rounds so far: 8.4, then 8.8. Round 2 found that a check which copies its 
 
 Round 3 scored 8.9 and found that the readers' files shared the data's wrong readings where the first reader had settled a dispute alone. Round 4 answers that: new readers who took no part reread the files, the lead decides every difference against the official text, blind auditors read every entry of all six categories, and a typed value now carries its cost, its alternative, how often and whom it falls on, or is named in `untyped`. A package check proves every quoted condition is one unbroken span of its entry's text.
 
+Round 4 scored 9.1. The judge found no wrong printed value for the fourth round, one wrong typed value (Action Surge), and about thirty omissions: a limit, a time or a recipient left unsaid. Its reading of the level 1 slice (classes, species, backgrounds, gear, cantrips, level 1 spells, monsters of CR 2 or lower) found nothing wrong, and its advice was to fix the short list and let stages 2 to 4 test the data through the engine. That list is fixed. Left open, for when a stage needs them: `untyped` for monsters, origins and equipment, typed condition durations, and one shape for the ideas classes and origins still type apart. Typed read values above level 1 are to be verified on first use.
+
 Found along the way: both upstream sources hold many errors, so origins, equipment and magic items are built from the official text alone, and the rest take wording and corrections from it.
 
 Not in this stage: the rules text itself (how play works, the rules glossary). The engine stages encode it.

@@ -2,6 +2,7 @@ import { z } from "zod"
 import {
   abilityIdSchema,
   activationSchema,
+  bonusTargetSchema,
   classIdSchema,
   conditionIdSchema,
   damageEffectSchema,
@@ -282,9 +283,54 @@ const classSaveSchema = z.strictObject({
  */
 export const classUntypedKinds = ["activation", "uses", "spend", "dice", "damage", "save", "conditions", "healing", "resistances", "speed", "bonus"] as const
 
+/** A die rolled a number of times the class sets: an ability modifier (at least 1) or a class table column (Sear Undead, Frenzy). */
+const variableDiceSchema = z.strictObject({
+  die: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12)]),
+  count: z.union([z.strictObject({ ability: abilityIdSchema, minimum: z.literal(1) }), z.strictObject({ column: z.enum(columnKeys) })]),
+})
+
+/**
+ * Hit Points the feature restores. `dice` or `amount`, plus `rollAdds`, `perClassLevel` (that many times your level in
+ * the class) and `plusSlotLevel` (plus the spell slot's level). `diceByLevel` steps the dice with class level.
+ * `temporary`: Temporary Hit Points. `divided`: a total shared out among the creatures you choose. `cap`: no creature
+ * is restored above half its Hit Point maximum. `label` names the part it belongs to; `appliesWhen` and `timing` are spans.
+ */
+const healingSchema = z.strictObject({
+  dice: diceSchema.optional(),
+  /** The roll is a class table die, rolled `diceRolls` times ("two rolls of your Martial Arts die"). */
+  diceFromColumn: z.enum(["martialArts"]).optional(),
+  diceRolls: z.number().int().min(2).optional(),
+  amount: positiveSchema.optional(),
+  rollAdds: z
+    .array(z.union([abilityIdSchema, z.literal("class-level")]))
+    .min(1)
+    .optional(),
+  /** "(minimum of 1 Hit Point regained)". */
+  minimum: z.literal(1).optional(),
+  perClassLevel: positiveSchema.optional(),
+  plusSlotLevel: z.literal(true).optional(),
+  diceByLevel: z
+    .array(z.strictObject({ level: levelSchema, dice: diceSchema }))
+    .min(1)
+    .optional(),
+  temporary: z.literal(true).optional(),
+  divided: z.literal(true).optional(),
+  cap: z.literal("half-hit-point-maximum").optional(),
+  label: z.string().min(1).optional(),
+  ...spanShape,
+  timing: z.string().min(1).optional(),
+})
+
 /** A part of a feature with its own typed values: `label` is the printed name or the printed words that name it. */
 const featurePartSchema = z.strictObject({
   label: z.string().min(1),
+  diceFromColumn: z.enum(["martialArts", "sneakAttack"]).optional(),
+  /** How many times `diceFromColumn` is rolled ("two rolls of your Martial Arts die"). */
+  diceRolls: z.number().int().min(2).optional(),
+  rollAdds: z
+    .array(z.union([abilityIdSchema, z.literal("class-level")]))
+    .min(1)
+    .optional(),
   activation: activationSchema.optional(),
   spend: resourceCostSchema.optional(),
   uses: usesSchema.optional(),
@@ -309,6 +355,21 @@ const mechanicsShape = {
   untyped: z.array(z.enum(classUntypedKinds)).min(1).optional(),
   /** An item you must have to use it, by equipment id ("you must have a Poisoner’s Kit on your person"). */
   requiresItem: idSchema.optional(),
+  /** The class level from which a later feature lifts `usableWhen` (Deflect Energy lifts Deflect Attacks' damage-type limit at 13). */
+  usableWhenUntilLevel: levelSchema.optional(),
+  /** The most creatures you can target: a number, or an ability modifier of at least 1 ("equal to your Charisma modifier (minimum of one creature)"). */
+  maxTargets: usesCountSchema.optional(),
+  /** A die rolled a number of times the class sets, where the count is not fixed. */
+  variableDice: variableDiceSchema.optional(),
+  /** Hit Points the feature restores. */
+  healing: healingSchema.optional(),
+  /** Weapon and armor training the feature grants, in the Core Traits shapes. */
+  weaponProficiencies: z.array(weaponProficiencySchema).min(1).optional(),
+  armorTraining: armorTrainingSchema.optional(),
+  /** Extra cantrips you know, from one class's spell list ("one extra cantrip from the Cleric spell list"). */
+  extraCantrips: z.strictObject({ count: positiveSchema, spellList: classIdSchema }).optional(),
+  /** A bonus to rolls equal to an ability modifier, at least `minimum` ("a bonus … equals your Wisdom modifier (minimum of +1)"). */
+  rollBonus: z.strictObject({ to: z.array(bonusTargetSchema).min(1), plusModifierOf: abilityIdSchema, minimum: z.literal(1).optional() }).optional(),
   /**
    * The kinds of action it takes to use the feature, including "no-action" where using it takes none. An action, or
    * "no action required", that only ends or moves an effect already in place, or restores a use of this same feature,
@@ -412,6 +473,13 @@ const mechanicsShape = {
   expertise: z.strictObject({ count: positiveSchema, from: z.array(skillIdSchema).min(2).optional() }).optional(),
   /** Kinds of weapons whose mastery properties you can use, where no table column counts them. */
   weaponMasteries: positiveSchema.optional(),
+  /** Which weapons those kinds come from, where the text limits them: Melee weapons only, or weapons you are proficient with. */
+  masteryWeapons: z.enum(["melee", "proficient"]).optional(),
+  /** The area’s size from the listed class levels on (Aura Expansion makes Aura of Protection a 30-foot Emanation at 18). */
+  areaSizeByLevel: z
+    .array(z.strictObject({ level: levelSchema, size: feetSchema }))
+    .min(1)
+    .optional(),
   /** Feet added to Speed, and the condition it holds under. Where the bonus grows with the class table, `feet` is its first value. */
   speedBonus: speedBonusSchema.optional(),
   /** `speedBonus.feet` from the listed class levels on, from the class table (Unarmored Movement). */

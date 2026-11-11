@@ -813,13 +813,14 @@ export default function verify(report: Report) {
     "censer-of-controlling-air-elementals": ["bonus-action"],
     "stone-of-controlling-earth-elementals": ["bonus-action"],
     "elemental-gem": ["bonus-action"],
-    "potion-of-gaseous-form": ["bonus-action"],
     "staff-of-the-python": ["bonus-action"],
     "bead-of-force": ["utilize-action"],
   }
   for (const { item, off } of pairs) {
     const text = flat(off)
     const wanted = kinds.filter(([kind, pattern]) => pattern.test(text) && !(dismissOnly[item.id] ?? []).includes(kind)).map(([kind]) => kind)
+    // The Potions rule: "Drinking a potion or administering it to another creature requires a Bonus Action". Oils are applied, not drunk.
+    if (item.category === "potion" && !item.id.startsWith("oil-") && !wanted.includes("bonus-action")) wanted.push("bonus-action")
     if (!sameSet(wanted, item.activation ?? [])) actionFailures.push(`${item.name}: activation ${JSON.stringify(item.activation)}, the text names ${wanted.join(", ") || "none"}`)
     const reuse = new Set<string>()
     for (const sentence of sentencesOf(text)) {
@@ -1229,6 +1230,7 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
       if (printed !== demand.text) ruleFailures.push(`demand ${demand.name} reads "${demand.text.slice(0, 60)}", its paragraph is "${printed.slice(0, 60)}"`)
     }
   }
+  if (!inOfficial("Drinking a potion or administering it to another creature requires a Bonus Action")) ruleFailures.push("the Potions rule no longer says drinking a potion takes a Bonus Action")
   const needed = [
     "activating-a-magic-item",
     "command-word",

@@ -5,7 +5,7 @@
         "ability": "wis",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "half"
+        "onSuccess": "other"
       },
       {
         "ability": "wis",
@@ -20,7 +20,8 @@
         "types": ["psychic"],
         "perSlot": "1d10",
         "trigger": "failed-save",
-        "save": 0
+        "save": 0,
+        "onSuccess": "half"
       },
       {
         "dice": "4d10",
@@ -31,7 +32,7 @@
       }
     ],
     "notes": [
-      "A success on the first save halves the damage and ends the spell.",
+      "A success on the first save halves the damage and ends the spell, so the save is other and its roll carries half.",
       "On a failed first save the target has Disadvantage on ability checks and attack rolls for the duration. That is not a condition.",
       "The second roll is the Psychic damage dealt again on a failed repeated save, linked to save 1. The higher-slot increase covers both."
     ]
@@ -790,8 +791,7 @@
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 1,
-        "timing": "until the end of its next turn, at which point it must repeat the save"
+        "save": 1
       }
     ],
     "area": {
@@ -839,6 +839,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "An affected target",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -1131,6 +1132,7 @@
       {
         "ability": "con",
         "dc": "spell-save-dc",
+        "appliesWhen": "A creature Blinded by this spell",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -1171,7 +1173,17 @@
         "when": "initial",
         "onSuccess": "none",
         "label": "Discord",
-        "oncePerTurn": "any-turn"
+        "oncePerTurn": "any-turn",
+        "timing": "Each creature in the Sphere when the glyph activates"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none",
+        "label": "Discord",
+        "oncePerTurn": "any-turn",
+        "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "ability": "wis",
@@ -1228,56 +1240,56 @@
       {
         "condition": "frightened",
         "trigger": "failed-save",
-        "save": 2,
+        "save": 3,
         "label": "Fear",
         "timing": "Each creature in the Sphere when the glyph activates"
       },
       {
         "condition": "frightened",
         "trigger": "failed-save",
-        "save": 2,
+        "save": 3,
         "label": "Fear",
         "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "incapacitated",
         "trigger": "failed-save",
-        "save": 3,
+        "save": 4,
         "label": "Pain",
         "timing": "Each creature in the Sphere when the glyph activates"
       },
       {
         "condition": "incapacitated",
         "trigger": "failed-save",
-        "save": 3,
+        "save": 4,
         "label": "Pain",
         "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 4,
+        "save": 5,
         "label": "Sleep",
         "timing": "Each creature in the Sphere when the glyph activates"
       },
       {
         "condition": "unconscious",
         "trigger": "failed-save",
-        "save": 4,
+        "save": 5,
         "label": "Sleep",
         "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
-        "save": 5,
+        "save": 6,
         "label": "Stunning",
         "timing": "Each creature in the Sphere when the glyph activates"
       },
       {
         "condition": "stunned",
         "trigger": "failed-save",
-        "save": 5,
+        "save": 6,
         "label": "Stunning",
         "timing": "a creature that enters the Sphere for the first time on a turn or ends its turn there"
       }
@@ -1713,6 +1725,7 @@
       {
         "ability": "wis",
         "dc": "spell-save-dc",
+        "appliesWhen": "A Frightened target",
         "when": "end-of-turn",
         "onSuccess": "ends"
       }
@@ -1784,7 +1797,8 @@
         "ability": "cha",
         "dc": "spell-save-dc",
         "when": "initial",
-        "onSuccess": "none"
+        "onSuccess": "none",
+        "timing": "a creature that enters the spell’s area for the first time on a turn or starts its turn there"
       }
     ],
     "area": {
