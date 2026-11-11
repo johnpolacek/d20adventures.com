@@ -124,15 +124,19 @@ function fitFrame(f: Frame, aim: THREE.Vector3, fov: number, aspect: number, rec
   return { dir, fov: deg(2 * Math.atan(t)), ok }
 }
 
-// The tightest a view toward `aim` may zoom: to half the lens of the closest painting made of what it looks at.
-export function minFov(point: TripodPoint, aim: THREE.Vector3) {
+// The lens of the closest painting made of what a view toward `aim` looks at.
+function closest(point: TripodPoint, aim: THREE.Vector3) {
   let tight = Infinity
   const tmp = new THREE.Vector3()
   for (const f of point.frames) {
     const p = inFrame(f, aim, tmp)
     if (p && Math.abs(p.u) < 1 && Math.abs(p.v) < 1) tight = Math.min(tight, f.fov)
   }
-  return Math.max(6, (Number.isFinite(tight) ? tight : point.frames[0].fov) * 0.5)
+  return Number.isFinite(tight) ? tight : point.frames[0].fov
+}
+// The tightest a view toward `aim` may zoom: to half that lens, where a painting's pixels are drawn twice their size.
+export function minFov(point: TripodPoint, aim: THREE.Vector3) {
+  return Math.max(6, closest(point, aim) * 0.5)
 }
 
 // A view from a point toward `aim`, as near the one asked for as its paintings allow. `turned` is how far it had to
@@ -171,9 +175,19 @@ export function tripodView(
     // The same subject at the same size from farther off is a longer lens.
     const fov = deg(2 * Math.atan((Math.tan(rad(shot.fov) / 2) * reach) / far))
     const fit = fitView(point, aim, fov, aspect, rect)
-    // Metres from where the camera was meant to stand, plus what the paintings could not give: a subject pushed toward
-    // the edge of the frame or out of it, and a lens narrower than asked.
-    const score = point.position.distanceTo(from) + fit.turned * 30 + fit.narrowed * 12 + (fit.cost >= 10 ? 60 : 0) + (penalty?.(point) ?? 0)
+    // Metres from where the camera was meant to stand, plus what this point cannot give, each weighed as metres:
+    // the subject pushed toward the edge of the frame or out of it, a lens narrower than asked or not as tight, a
+    // painting enlarged until it is soft, and the subject seen from another side than the shot meant.
+    const side = aim.clone().negate().angleTo(from.clone().sub(target))
+    const score =
+      point.position.distanceTo(from) +
+      Math.max(0, fit.turned - 0.15) * 40 +
+      fit.narrowed * 12 +
+      (fit.cost >= 10 ? 60 : 0) +
+      Math.max(0, fit.fov / Math.max(fov, 6) - 1) * 6 +
+      Math.max(0, closest(point, fit.dir) / fit.fov - 1) * 6 +
+      (side / (Math.PI / 2)) * 6 +
+      (penalty?.(point) ?? 0)
     if (!best || score < best.score) best = { view: { point, target: point.position.clone().addScaledVector(fit.dir, far), fov: fit.fov, asked: fov, wanted: target }, score }
   }
   return best!.view

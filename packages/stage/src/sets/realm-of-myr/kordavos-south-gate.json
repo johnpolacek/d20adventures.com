@@ -1918,6 +1918,61 @@
             "aspect": 1.5
           }
         ]
+      },
+      "through": {
+        "position": [3, 2.2, 17],
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/through.webp",
+            "quaternion": [0.037603, 0.040412, -0.001522, 0.998474],
+            "fov": 60,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "huddle": {
+        "position": [3.2, 1.7, 16.4],
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/huddle.webp",
+            "quaternion": [-0.075512, 0.535018, 0.048091, 0.840084],
+            "fov": 70,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "arch": {
+        "position": [1, 1.7, -3],
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/arch.webp",
+            "quaternion": [0.000236, 0.999733, 0.019823, -0.0119],
+            "fov": 66,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "road": {
+        "position": [4.1, 1.9, 85.07],
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/road.webp",
+            "quaternion": [-0.069109, 0.184956, 0.01304, 0.980227],
+            "fov": 62,
+            "aspect": 1.5
+          }
+        ]
+      },
+      "arrive": {
+        "position": [3.4, 1.6, 76.6],
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/arrive.webp",
+            "quaternion": [-0.008406, 0.988702, 0.060768, 0.136764],
+            "fov": 62,
+            "aspect": 1.5
+          }
+        ]
       }
     }
   },

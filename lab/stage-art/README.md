@@ -133,6 +133,29 @@ open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=cp-cli,c
 - `capture.ts --fps` prints frames a second per shot. `--view` captures the page's `&view=x,y,z,tx,ty,tz` viewpoint.
 - Pictures are also copied to `~/Desktop/kordavos-gate-spike`.
 
+## Painted sets, from 2026-11-10
+
+Owner decisions, 2026-11-10: painted, photoreal sets seen from tripod points that sway, cloth in the wind, cast and crowd repainted as photographs. The engine draws a set this way when it has a `painted` section (`packages/stage/src/spec/set.ts`, `render/painted.ts`, `tripod.ts`). The Kordavos gate is the first.
+
+Painting a set:
+
+1. One point per place the camera should stand. Start from the set's shots and each staging's shots.
+2. Plate: the set from that camera with nobody in it. `capture.ts --tier=balanced --view --camera "--q=staging=<key>&cast=off&paint=0&project=<paintings nearby>&view=x,y,z,tx,ty,tz,fov"`. Paint a few degrees wider than the shot.
+3. Paint: `repaint.ts <plate>-view photoreal --cli --fill --as=<name> "--place=<what the view shows>"`. Several run at once: five took two minutes.
+4. Publish: `publish.ts <setting>/<set> <point>=<name>[,<closer painting from the same point>]`.
+5. `pnpm stage:check` lists each staging's views by the point they are seen from, and the ones still `off the paint`.
+6. `pnpm stage:sync public/stage/paintings` before pushing.
+
+The gate has eleven points and fourteen paintings: `gate` (with a cloth-free twin), `checkpoint` (wide, zoom, close), `party` (two ways), `table`, `queue`, `ramparts`, `through`, `huddle`, `arch`, `road` and `arrive`. Both stagings on it are fully on the paint.
+
+Known limits:
+
+- A view lies inside one painting. It cannot straddle two.
+- A subject closer than about 3 m to a point sits near the edge of a 46 degree painting. Paint such points wider.
+- A point with one wide painting zooms to half its lens. A closer `--sharpen` painting lets it go tighter.
+- The checkpoint awning shows a lighter patch where the zoom painting ends.
+- A staging's `painted: false` shows a painted set as built, for a staging its paintings do not reach.
+
 ## Running it
 
 ```sh
