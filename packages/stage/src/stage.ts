@@ -79,10 +79,28 @@ export async function defaultCrowdLibrary(id: string): Promise<CrowdLibrary | nu
   return { meta, front: { rgb: `${base}/front-rgb.webp`, alpha: `${base}/front-a.webp` }, back: { rgb: `${base}/back-rgb.webp`, alpha: `${base}/back-a.webp` } }
 }
 
+// On a painted set a cast member whose card has been repainted as a photograph shows that one: the same file name in a
+// `photoreal` folder beside the painted card. /stage/photoreal.json lists the cards that have one (lab/stage-art/cards.ts
+// publish). Art from elsewhere, such as a hero painted on the player's machine, stays as it is.
+async function photographs(staging: StagingSpec) {
+  const listed = new Set<string>(
+    await fetch("/stage/photoreal.json")
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => [])
+  )
+  if (!listed.size) return
+  for (const c of staging.cast) {
+    const m = /^\/stage\/(.+)\/([^/]+)-front\.webp$/.exec(c.art.front)
+    if (!m || !listed.has(`${m[1]}/${m[2]}`)) continue
+    c.art = { ...c.art, front: `/stage/${m[1]}/photoreal/${m[2]}-front.webp`, back: `/stage/${m[1]}/photoreal/${m[2]}-back.webp` }
+  }
+}
+
 export async function createStage(o: StageOptions): Promise<Stage> {
   const parsed = setSpecSchema.parse(o.set)
   const staging = o.staging ? stagingSpecSchema.parse(o.staging) : null
   const set = staging && !staging.painted ? { ...parsed, painted: undefined } : parsed
+  if (set.painted && staging) await photographs(staging)
   const library = set.crowd ? await (o.crowdLibrary ?? defaultCrowdLibrary)(set.painted?.crowd ?? set.crowd.library).catch(() => null) : null
   const stage = new Stage(o, set, staging, library)
   await stage.load()

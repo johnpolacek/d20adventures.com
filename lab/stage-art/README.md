@@ -146,6 +146,8 @@ Painting a set:
 5. `pnpm stage:check` lists each staging's views by the point they are seen from, and the ones still `off the paint`.
 6. `pnpm stage:sync public/stage/paintings` before pushing.
 
+Cards: `cards.ts paint <ids>` repaints cast cards as photographs, and `cards.ts publish <ids>` copies them to a `photoreal` folder beside the painted card and lists them in `public/stage/photoreal.json`. On a painted set the engine shows the photograph of any listed card. Nine so far: the gate's six and the stock heroes `human-a`, `elf-b` and `dwarf-a`. The other eleven stock heroes, and art painted on a player's machine, are still paintings.
+
 The gate has eleven points and fourteen paintings: `gate` (with a cloth-free twin), `checkpoint` (wide, zoom, close), `party` (two ways), `table`, `queue`, `ramparts`, `through`, `huddle`, `arch`, `road` and `arrive`. Both stagings on it are fully on the paint.
 
 Known limits:

@@ -9,11 +9,18 @@
 //   node --import tsx lab/stage-art/cards.ts crop garlan,branka      # painted beside photoreal, for review
 //   node --import tsx lab/stage-art/cards.ts paint crowd             # the crowd's 16 people, from its atlas
 //   node --import tsx lab/stage-art/cards.ts pack                    # their atlas again, in public/stage-lab/crowd
+//   node --import tsx lab/stage-art/cards.ts paint heroes/human-a    # a card anywhere under public/stage
+//   node --import tsx lab/stage-art/cards.ts publish garlan,heroes/human-a   # into the game, beside the painted card
 //
-// Reads public/stage/fixtures/welcome-to-kordavos/<id>-front.webp and -back.webp. Writes raw/<id>-card-front.png and
-// -back.png, and public/stage-lab/cards/<id>-front.webp and -back.webp, which the lab shows with &cards=1.
+// An id is a card under public/stage: `heroes/human-a` is public/stage/heroes/human-a-front.webp and -back.webp, and a
+// bare name is one of public/stage/fixtures/welcome-to-kordavos. Writes raw/<id>-card-front.png and -back.png, and
+// public/stage-lab/cards/<id>-front.webp and -back.webp, which the lab shows with &cards=1. In those names a `/` in the
+// id is written `--`.
+//
+// `publish` copies a card's photographs to a `photoreal` folder beside the painted card and lists every such card in
+// public/stage/photoreal.json. On a painted set the engine shows the photograph of any card listed there.
 
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
 import sharp from "sharp"
 import { codexPaint, DESKTOP, dirs, jpeg, PUB, RAW, smooth } from "./gen"
 
@@ -127,7 +134,33 @@ async function crowdCard(variant: string, view: "front" | "back") {
     .toBuffer()
 }
 
-const source = (id: string, view: "front" | "back") => (id.startsWith("crowd-") ? crowdCard(id.slice(6), view) : `${FIXTURES}/${id}-${view}.webp`)
+// Where a card's painted art is under public/stage, without its view: a bare name is one of the gate's fixtures.
+const base = (id: string) => (id.includes("/") ? `public/stage/${id}` : `${FIXTURES}/${id}`)
+// The name a card's lab files go by.
+const slug = (id: string) => id.replaceAll("/", "--")
+const source = (id: string, view: "front" | "back") => (id.startsWith("crowd-") ? crowdCard(id.slice(6), view) : `${base(id)}-${view}.webp`)
+
+// Photographs into the game: <dir>/photoreal/<name>-front.webp and -back.webp beside the painted card, and the list of
+// every card that has them.
+async function publish(ids: string[]) {
+  for (const id of ids) {
+    const at = base(id)
+    const dir = `${at.slice(0, at.lastIndexOf("/"))}/photoreal`
+    await mkdir(dir, { recursive: true })
+    for (const view of ["front", "back"]) await copyFile(`${OUT}/${slug(id)}-${view}.webp`, `${dir}/${at.slice(at.lastIndexOf("/") + 1)}-${view}.webp`)
+    console.log(`${dir}/${at.slice(at.lastIndexOf("/") + 1)}`)
+  }
+  const listed: string[] = []
+  const walk = async (dir: string) => {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) await walk(`${dir}/${e.name}`)
+      else if (dir.endsWith("/photoreal") && e.name.endsWith("-front.webp")) listed.push(`${dir.slice("public/stage/".length, -"/photoreal".length)}/${e.name.slice(0, -"-front.webp".length)}`)
+    }
+  }
+  await walk("public/stage")
+  await writeFile("public/stage/photoreal.json", `${JSON.stringify(listed.sort(), null, 2)}\n`)
+  console.log(`public/stage/photoreal.json: ${listed.length} cards`)
+}
 
 async function pack() {
   const meta = await atlas()
@@ -175,19 +208,25 @@ async function pack() {
 }
 
 async function key(id: string, view: "front" | "back") {
-  const cut = await cutout(await sharp(`${RAW}/${id}-card-${view}.png`).png().toBuffer())
-  await sharp(cut).webp({ quality: 92, alphaQuality: 100, effort: 5 }).toFile(`${OUT}/${id}-${view}.webp`)
+  const cut = await cutout(
+    await sharp(`${RAW}/${slug(id)}-card-${view}.png`)
+      .png()
+      .toBuffer()
+  )
+  await sharp(cut)
+    .webp({ quality: 92, alphaQuality: 100, effort: 5 })
+    .toFile(`${OUT}/${slug(id)}-${view}.webp`)
   const { width, height } = await sharp(cut).metadata()
-  console.log(`${OUT}/${id}-${view}.webp ${width}x${height}`)
+  console.log(`${OUT}/${slug(id)}-${view}.webp ${width}x${height}`)
 }
 
 async function paint(id: string, views: ("front" | "back")[]) {
   for (const view of views) {
-    const images = view === "front" ? [await onGreen(await source(id, "front"))] : [await onGreen(`${RAW}/${id}-card-front.png`), await onGreen(await source(id, "back"))]
+    const images = view === "front" ? [await onGreen(await source(id, "front"))] : [await onGreen(`${RAW}/${slug(id)}-card-front.png`), await onGreen(await source(id, "back"))]
     // Ask again, twice at most, if the picture comes back with a backdrop that cannot be cut out.
     for (let attempt = 1; ; attempt++) {
       const png = await codexPaint(`card ${id} ${view}`, view === "front" ? FRONT : BACK, images, "portrait 2:3")
-      await writeFile(`${RAW}/${id}-card-${view}.png`, png)
+      await writeFile(`${RAW}/${slug(id)}-card-${view}.png`, png)
       const keyed = await key(id, view).then(
         () => true,
         (error) => (attempt < 3 ? false : Promise.reject(error))
@@ -201,7 +240,7 @@ async function paint(id: string, views: ("front" | "back")[]) {
 async function crop(id: string) {
   const H = 1400
   const tiles = await Promise.all(
-    [await source(id, "front"), `${OUT}/${id}-front.webp`, await source(id, "back"), `${OUT}/${id}-back.webp`].map(async (f) => {
+    [await source(id, "front"), `${OUT}/${slug(id)}-front.webp`, await source(id, "back"), `${OUT}/${slug(id)}-back.webp`].map(async (f) => {
       const data = await sharp(await sharp(f).trim({ threshold: 1 }).toBuffer())
         .resize({ height: H })
         .flatten({ background: "#6f6a62" })
@@ -219,8 +258,8 @@ async function crop(id: string) {
   await sharp({ create: { width: left - 12, height: H, channels: 3, background: "#6f6a62" } })
     .composite(layers)
     .jpeg({ quality: 90 })
-    .toFile(`${DESKTOP}/${id}-card-painted-vs-photoreal.jpg`)
-  console.log(`${DESKTOP}/${id}-card-painted-vs-photoreal.jpg`)
+    .toFile(`${DESKTOP}/${slug(id)}-card-painted-vs-photoreal.jpg`)
+  console.log(`${DESKTOP}/${slug(id)}-card-painted-vs-photoreal.jpg`)
 }
 
 async function main() {
@@ -228,7 +267,8 @@ async function main() {
   if (cmd === "pack") return pack()
   // `crowd` stands for all 16 of the crowd's people.
   const ids = (list === "crowd" ? (await atlas()).variants.map((v) => `crowd-${v.id}`).join(",") : (list ?? "")).split(",").filter(Boolean)
-  if (!ids.length || !["paint", "key", "crop"].includes(cmd)) return console.log("usage: cards.ts paint|key|crop <id,...>|crowd [--back], cards.ts pack")
+  if (cmd === "publish" && ids.length) return publish(ids)
+  if (!ids.length || !["paint", "key", "crop"].includes(cmd)) return console.log("usage: cards.ts paint|key|crop|publish <id,...>|crowd [--back], cards.ts pack")
   await dirs()
   await mkdir(OUT, { recursive: true })
   await mkdir(DESKTOP, { recursive: true })

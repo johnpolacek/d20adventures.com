@@ -143,12 +143,24 @@ function checkPainted(painted: NonNullable<Awaited<ReturnType<typeof checkSet>>[
   for (const o of off) console.log(`  off the paint: ${o}`)
 }
 
+// Every card listed as having a photograph has both of its files.
+function checkPhotographs() {
+  if (!existsSync("public/stage/photoreal.json")) return
+  const listed = JSON.parse(readFileSync("public/stage/photoreal.json", "utf8")) as string[]
+  const lost = listed
+    .flatMap((b) => ["front", "back"].map((v) => `public/stage/${b.slice(0, b.lastIndexOf("/"))}/photoreal/${b.slice(b.lastIndexOf("/") + 1)}-${v}.webp`))
+    .filter((f) => !existsSync(f))
+  if (lost.length) throw new Error(`photoreal.json lists missing cards: ${lost.join(", ")}`)
+  console.log(`PASS photographs: ${listed.length} cards`)
+}
+
 async function main() {
   const files = process.argv.slice(2)
   if (files.length) {
     for (const f of files) await checkSet(f, JSON.parse(readFileSync(f, "utf8")))
     return
   }
+  checkPhotographs()
   const sets = new Map<string, Awaited<ReturnType<typeof checkSet>>>()
   for (const [key, load] of Object.entries(SETS)) sets.set(key, await checkSet(key, await load()))
   for (const [key, load] of Object.entries(STAGINGS)) {
