@@ -9,7 +9,8 @@ import sharp from "sharp"
 export const RAW = "lab/stage-art/raw"
 export const PUB = "public/stage-lab"
 // Generated pictures are also copied here, for the owner to look at.
-export const DESKTOP = `${homedir()}/Desktop/kordavos-gate-spike`
+// STAGE_ART_DESKTOP names another folder, one per set.
+export const DESKTOP = process.env.STAGE_ART_DESKTOP || `${homedir()}/Desktop/kordavos-gate-spike`
 export const ART = {
   stones: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png",
 }

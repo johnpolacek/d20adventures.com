@@ -213,6 +213,15 @@ Owner, 8 AM, on the Harvest Festival in the app: "still seeing the people move i
 
 Owner, 8:36 AM: "the word balloon dialogue jumps around as the camera moves, can we make it do a 300ms fade in after the camera settles". A bubble is hidden while the camera is on its way (`Stage.cameraMoving`: a turn, a cut, a dip) or its speaker slides faster than 40 px a second, and fades in over 300 ms once both have been still for 120 ms (`components/stage/stage-dialogue.tsx`). A painted set's drift in is under that speed, so the bubble rides it. Measured on `/dev/turn`: never shown during a move, 0.1 px the most it shifted in a frame while showing, back about 140 ms after a turn or zoom ends.
 
+The harvest square, 2026-11-11: the second painted set (`realm-of-myr/kordavos-harvest-square`, the Harvest Festival's staging).
+
+- Nine points, one painting each, 1536 px: `square`, `stage` and `overview` from the set's own shots, `party` in front of the heroes looking back at the gate street, and `jewels`, `spices`, `fortune`, `fire` and `merrick` about 3.5 to 4 m in front of each of the five festival people, painted at 70 degrees.
+- The four wide ones were painted first, from clean plates. The five close plates were captured again with those four projected on, and painted with `--fill`, so the stalls keep the cloth and timber the square view gave them. The projected paint was badly stretched that close and the painter redrew it. One smear on the fire plate came back as a plank on the cobbles.
+- `stage:check`: every view of the staging is on the paint, the eight shots and a speaker's view of each of the nine cast.
+- Cards: Karim, Zephyra, Finnian, Liora and Merrick repainted and published, 25 so far. The party's four were done for the gate.
+- `STAGE_ART_DESKTOP` names the Desktop folder the tools copy to. This set's is `~/Desktop/kordavos-harvest-spike`.
+- Not done: cloth-free twins, so what a flag or awning uncovers as it blows takes the paint beside it. A closer second painting for `party`, whose 44 degree view enlarges its 72 degree painting by 1.6. Views of a hero who has walked to the game stall, the food stalls or the dancing, which are seen from the nearest of these nine points. The square's other set, `kordavos-harvest-square-conflict`, is still built.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
