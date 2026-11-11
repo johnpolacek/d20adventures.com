@@ -192,7 +192,7 @@ function parseSaves(text: string): Save[] {
     }
     const body = text.slice(begin + match[0].length, end).trim()
     const save: Save = { ability: abilityOf(match[1]), dc: Number(match[2]) }
-    const targets = /^(?:\([^)]*\))?,? ?(.*?)\.(?: |$)/s.exec(body)
+    const targets = /^(?:\([^)]*\))?,? ?([\s\S]*?)\.(?: |$)/.exec(body)
     if (targets?.[1] && !/^(?:Failure|Success)/.test(targets[1])) save.targets = targets[1]
     const markers = [...body.matchAll(/(Failure or Success|Failure|Success): /g)]
     for (const [i, marker] of markers.entries()) {
