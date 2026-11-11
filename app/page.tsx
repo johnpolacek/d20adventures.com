@@ -22,9 +22,9 @@ export default function HomePage() {
               D20
             </h2>
 
-            <Link className="fade-in delay-[2600ms]" href="/settings/realm-of-myr/play">
+            <Link className="fade-in delay-[2600ms]" href="/playtesters">
               <Button asChild variant="epic" size="lg" className="mt-2 relative z-10">
-                Quick Start
+                Become a Playtester
               </Button>
             </Link>
           </div>
