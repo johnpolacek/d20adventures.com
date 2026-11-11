@@ -302,6 +302,10 @@ const paintedSet = z
     shadows: unit.default(0.55),
     // How far from its point the camera starts when it drifts in, in metres, with motion on. 0 for no drift.
     drift: num(0, 0.4).default(0.15),
+    // The colour of the light the figures stand in, where it is not the paintings' morning sun: a firelit room. Cards
+    // show their art evenly lit, so in a dim amber room they read as cut-outs in daylight. This tints and dims them
+    // all alike, as a grade and not as light: no highlights, no shade.
+    light: color.optional(),
     // The crowd's art to match the paintings, in place of `crowd.library`.
     crowd: slug.optional(),
     points: z.record(name, z.object({ position: vec3, label: z.string().max(80).optional(), paintings: z.array(painting).min(1).max(PAINTINGS_PER_POINT) }).strict()),

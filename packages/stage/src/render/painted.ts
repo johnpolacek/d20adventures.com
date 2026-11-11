@@ -88,7 +88,7 @@ export class Painted {
   private cloths: THREE.Mesh[] = []
   private plate: THREE.Mesh[] = []
   // 1 once the paintings are up: figures then show their art evenly lit (see flatFigures).
-  private figures = { uPaintFigure: { value: 0 } }
+  private figures = { uPaintFigure: { value: 0 }, uPaintLight: { value: new THREE.Color(1.03, 1, 0.95) } }
   // The ground the sun's shadows are worked out over: about the current point, more of it ahead than behind. Only
   // figures cast them, and over the whole set a figure's shadow would be a few texels wide.
   readonly sunBox = { center: new THREE.Vector3(), radius: SUN_RADIUS }
@@ -105,6 +105,8 @@ export class Painted {
     this.uniforms.uPaintPos = { value: new THREE.Vector3() }
     this.uniforms.uPaintGrade = { value: new THREE.Vector2(spec.gain, spec.sat) }
     this.uniforms.uPaintShadow = { value: spec.shadows }
+    // The slight warm tint is the morning sun of the paintings, unless the set says what light its figures stand in.
+    this.figures.uPaintLight.value = spec.light ? new THREE.Color(spec.light) : new THREE.Color(1.03, 1, 0.95)
     for (let i = 0; i < N; i++) {
       this.uniforms[`uPaintMap${i}`] = { value: this.blank }
       this.uniforms[`uPaintClear${i}`] = { value: this.blank }
@@ -344,7 +346,7 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
   // and left photographs washed out. A card is a photograph with its own soft light, and
   // the owner found the engine's light on it wrong both ways: the sun's highlights and relief read as a glaze, and the
   // set's shade as a figure blacked out. Their shadows on the ground still place them. A flash when one is struck
-  // still shows, since it is light of the card's own. The slight warm tint is the morning sun of the paintings.
+  // still shows, since it is light of the card's own. `uPaintLight` is the colour of the light they stand in.
   flatFigures(materials: THREE.Material[]) {
     for (const m of new Set(materials) as Set<Patched>) {
       const before = m.onBeforeCompile
@@ -353,11 +355,12 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
         before.call(m, s, renderer)
         s.uniforms.uPaintGrade = this.uniforms.uPaintGrade
         s.uniforms.uPaintFigure = this.figures.uPaintFigure
+        s.uniforms.uPaintLight = this.figures.uPaintLight
         s.fragmentShader = s.fragmentShader
-          .replace("#include <common>", `#include <common>\nuniform vec2 uPaintGrade; uniform float uPaintFigure;\n${GLSL}`)
+          .replace("#include <common>", `#include <common>\nuniform vec2 uPaintGrade; uniform float uPaintFigure; uniform vec3 uPaintLight;\n${GLSL}`)
           .replace(
             "#include <opaque_fragment>",
-            "outgoingLight = mix(outgoingLight, paintGrade(cardArt, vec2(uPaintGrade.x, 1.0)) * vec3(1.03, 1.0, .95) + totalEmissiveRadiance, uPaintFigure);\n#include <opaque_fragment>"
+            "outgoingLight = mix(outgoingLight, paintGrade(cardArt, vec2(uPaintGrade.x, 1.0)) * uPaintLight + totalEmissiveRadiance, uPaintFigure);\n#include <opaque_fragment>"
           )
       }
       m.customProgramCacheKey = () => `${key()}|flat`

@@ -231,6 +231,16 @@ The square's other set, the same day (`realm-of-myr/kordavos-harvest-square-conf
 - Cards: Barok, Larya, and their four followers repainted and published, 31 so far.
 - From a tripod the two leaders' cards face the camera, not each other.
 
+The Dragonbone Inn, the same day: the first interior, begun and not yet published. The Codex image tool hit the subscription's usage limit at 9:53 AM, until 2:01 PM, with six of sixteen paintings made.
+
+- Made, in `public/stage-lab` and as WebP in `public/stage/paintings/dragonbone-inn` (not committed): `inn-room` and `inn-backroom` from clean plates, then `inn-front`, `inn-door`, `inn-table` and `inn-stairs` with the room projected on. Edges within 8 px: 85% for the room, whose plate was nearly black in places, 94 to 97% for the four that had its paint to go by.
+- Still to paint, plates captured in `raw/captures` as `inn-<name>-view` with the six projected on: `front-w`, `front-e`, `bar`, `hearth`, `bard`, `skull`, `darkCorner`, `table2`, `corner`, `stairs2`. The place and detail wording for each is in this session's paint helper, and follows the pattern of `GATE` in `repaint.ts` with an interior's materials and "the only light is the fire, the candles and the lanterns, each where the render has it".
+- Then: `publish.ts realm-of-myr/dragonbone-inn room=inn-room backroom=inn-backroom front=inn-front,inn-front-w,inn-front-e door=inn-door table=inn-table,inn-table2 stairs=inn-stairs,inn-stairs2 corner=inn-corner bar=inn-bar hearth=inn-hearth,inn-bard skull=inn-skull darkCorner=inn-darkCorner`, and in the set's `painted`: `"shadows": 0, "light": "#e6bf96", "crowd": "realm-of-myr-photoreal"`.
+- With six points alone, `stage:check` put ten views off the paint and showed the hearth from 9 m, so the set stays built for now.
+- Indoors, tried with those six: the paintings, the crowd and the cards all work. Two things an interior needs. `shadows: 0`, since on a painted set only figures block the sun, and the inn's dusk sun, 7 degrees up, would lay 14 m shadows across the floor through the walls. And `light` (new, `spec/set.ts`, `render/painted.ts`): cards are evenly lit, and in a dim amber room they read as cut-outs in daylight. `light` is one colour every card is multiplied by, a grade and not a light, so nothing is shaded or highlighted. `#e6bf96` sat the cast in the firelight.
+- Cards: Bram, the bard, Beric, Eamon, Elara and the six seated patrons repainted and published, 42 so far. A seated card keeps its stool.
+- The morning inn (`dragonbone-inn-morning`) is the same room in daylight with its own crowd and a few other objects. It needs its own paintings.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
