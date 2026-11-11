@@ -272,6 +272,25 @@ export class QueueLoop {
     this.shuffled = false
     this.host.cue(`${this.id}:settled`)
   }
+  // Whether anyone has somewhere to go: up the line, through the gate, or back to its tail.
+  get busy() {
+    return this.groups.some((g) => g.members.some((e) => Math.abs(e.target - e.d) > 0.02)) || [...this.moving, ...this.waiting.flatMap((g) => g.members)].some((e) => e.route?.length)
+  }
+  // Everyone with somewhere to go is there at once. A painted set, where nobody is seen to walk, holds the line still
+  // and moves it this way while its picture is dark.
+  finish() {
+    // Someone who has gone through comes back behind the stalls and then to the tail: three ways, one after another.
+    for (let pass = 0; pass < 3; pass++)
+      for (const e of [...this.moving, ...this.waiting.flatMap((g) => g.members)]) {
+        if (!e.route?.length) continue
+        const [x, z] = e.route[e.route.length - 1]
+        e.route = []
+        this.pose(e, x, z, Math.PI, false)
+        this.done(e)
+      }
+    this.settle()
+    if (this.state === "arrive") this.arrived()
+  }
   // Skip ahead to the party's turn at the front (a player skipping the intro).
   skipToFront() {
     if (!this.groups.some((g) => g.party)) return

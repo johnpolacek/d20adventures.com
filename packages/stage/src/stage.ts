@@ -114,7 +114,7 @@ const STEEPEST_ORBIT = Math.PI * 0.28
 // banners billowing, smoke", "the people should be locked in"). A card is a photograph of someone standing, and
 // sliding one along with a bob reads as a cut-out pushed across the picture. So the crowd stands where it is, and a
 // cast member who has somewhere to go is put there while the picture dips for a moment, as it does when the camera
-// cuts.
+// cuts. A fall is put the same way, a struck figure flashes without shaking, and a line of people (a loop) holds still.
 // The drift: on arriving at a point the camera starts a little off it (see driftIn) and a touch wide, and over these
 // seconds comes to rest, easing all the way. It ends this much closer than the view it was given, never wider, so a
 // view fitted to the edge of its painting stays on the paint.
@@ -146,6 +146,8 @@ export class Stage {
   private cut: { arrive: () => void; timer: ReturnType<typeof setTimeout> } | null = null
   // The picture dipped to put someone in a new place unseen (see `unseen`).
   private dip: { dark: Promise<void>; lift: ReturnType<typeof setTimeout> | null } | null = null
+  // Loops whose line is being put in its new place under a dip.
+  private closing = new Set<QueueLoop>()
   // When the camera arrived at its painted point, on the stage's clock: its drift in runs from here.
   private arrived = 0
   // What the paintings were made of: the built set alone.
@@ -505,15 +507,23 @@ export class Stage {
   }
   waitCue(name: string) {
     if (this.cues.has(name)) return Promise.resolve()
+    // A painted set's line does not move on by itself: it is put where the beats wait for it to be.
+    if (this.painted?.on && this.motion) this.skipLoops(name)
     return new Promise<void>((r) => this.cueWaiters.set(name, [...(this.cueWaiters.get(name) ?? []), r]))
   }
   // Skipping: loops jump to the moment the beats are waiting for (the party's turn at the front unless a cue says which).
+  // On a painted set they jump while the picture is dark, so nobody is seen to change place.
   skipLoops(cue?: string) {
     if (cue && this.cues.has(cue)) return
-    for (const l of this.loops.values()) {
-      if (cue) l.skipTo(cue)
-      else l.skipToFront()
+    const skip = () => {
+      if (cue && this.cues.has(cue)) return
+      for (const l of this.loops.values()) {
+        if (cue) l.skipTo(cue)
+        else l.skipToFront()
+      }
     }
+    if (this.painted?.on && this.motion) void this.unseen().then(skip)
+    else skip()
   }
 
   // ── Camera ──
@@ -929,6 +939,8 @@ export class Stage {
       const p = this.point(lands)
       c.ry = Math.atan2(c.x - p.x, c.z - p.z)
     }
+    // On a painted set nobody is seen to fall: they are down when the picture comes back.
+    if (this.painted?.on && this.motion && !instant && down !== this.standees.down.has(id)) return void this.unseen().then(() => this.standees.lay(id, down, true))
     this.standees.lay(id, down, instant)
   }
   isDown(id: string) {
@@ -1159,7 +1171,17 @@ export class Stage {
     }
     if (this.motion) {
       this.stepMoves(dt)
-      for (const l of this.loops.values()) l.update(dt)
+      // A painted set's line stands still. When the beats have moved it on, everyone is put in their new place unseen.
+      if (!this.painted?.on) for (const l of this.loops.values()) l.update(dt)
+      else
+        for (const l of this.loops.values()) {
+          if (l.paused || !l.busy || this.closing.has(l)) continue
+          this.closing.add(l)
+          void this.unseen().then(() => {
+            this.closing.delete(l)
+            l.finish()
+          })
+        }
       this.shared.time.value += dt
       this.crowd.update(dt, !!this.painted?.on)
       for (const f of this.life) f(this.shared.time.value)

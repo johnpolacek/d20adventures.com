@@ -198,8 +198,16 @@ Movement: owner, 2026-11-11, "a drift in only then after that is static with jus
 - A turn or zoom from the same point does not drift again: the turn is the movement.
 - Nobody walks in any view. The crowd's passers-by stand where they are, and a standing card no longer leans from side to side.
 - A cast member told to move is put there while the picture dips for 190 ms, in every view.
-- What still moves: cloth, smoke, birds, dust, and a figure struck in a fight.
-- Not covered, as before: the queue loop in the `/dev/turn` demo.
+- What still moves: cloth, smoke, birds and dust.
+
+Owner, later that morning: "i'm still seeing the standees move around", "i want only camera movements and ambient animations". The site had not deployed since 7:09 (a type error in `packages/srd`), so the owner was looking at the close-up rule. What was still left to move is now locked as well:
+
+- A line of people (`loops/queue.ts`) holds still on a painted set. It moves on only when a beat waits for its cue or skips to it, and then everyone is put in their new place under a dip (`finish`, `skipLoops`). Its own back and forth, the official's questions and the coins, does not run.
+- A fall is put under a dip: the figure is down when the picture comes back.
+- A struck figure flashes and does not shake.
+- A card put in a new place is turned to the camera at once, with no swing.
+- Checked on `/dev/turn`, 48 paragraphs read through: 4,049 frames, no cast member, card or crowd figure changed place or pose while the picture showed, and 129 were placed in three dips.
+- Left as it is: a card dissolves between its front and its back over a quarter second when its character turns about.
 
 Known limits:
 

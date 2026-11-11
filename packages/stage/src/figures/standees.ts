@@ -388,7 +388,8 @@ export class Standees {
         target = c.ry
         s.back = 0
       }
-      s.yaw = s.yaw === null ? target : s.yaw + wrap(target - s.yaw) * k
+      // From a tripod the card is turned at once: put in a new place, it does not swing round to the camera.
+      s.yaw = s.yaw === null || this.tripod ? target : s.yaw + wrap(target - s.yaw) * k
       s.grp.position.set(c.x, c.y ?? 0, c.z)
       s.grp.rotation.y = s.yaw
       s.grp.visible = !this.offstage.has(c.id)
@@ -409,7 +410,8 @@ export class Standees {
         const k = Math.max(0, 1 - hit.t / 0.45) * hit.strength
         s.mat.color.setRGB(1, 1, 1).lerp(hit.color, Math.min(0.7, 0.6 * k))
         s.mat.emissive.copy(hit.color).multiplyScalar(0.035 * k)
-        s.mesh.position.x = Math.sin(hit.t * 70) * 0.05 * k
+        // A photograph seen from a tripod does not shake.
+        s.mesh.position.x = this.tripod ? 0 : Math.sin(hit.t * 70) * 0.05 * k
         if (k <= 0) this.hits.delete(c.id)
       }
       // The card is as wide as the art it shows; the shadow caster and the relief follow whichever view dominates.
