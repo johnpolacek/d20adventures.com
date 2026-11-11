@@ -1,4 +1,4 @@
-// Writes the forgotten temple for Welcome to Kordavos (wiki/plans/welcome-to-kordavos-sets.md), the adventure's last bespoke set:
+// Writes the forgotten temple for Welcome to Kordavos, the adventure's last bespoke set:
 // a hidden cathedral of Old Valkara beyond the catacombs' archway. Walls of white marble glowing with a faint inner
 // starlight, pillars carved as ancient oaks branching into the vault, the vault painted with the constellations of a lost
 // sky, and at the centre an empty altar, the air above it rippling. And the stagings of Forgotten Temple and the Final

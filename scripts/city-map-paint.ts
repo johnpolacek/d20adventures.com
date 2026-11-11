@@ -1,7 +1,7 @@
 // Paints a city map's art from its map file, so the paintings keep the layout the story needs. The outer painting
 // starts from a sketch of every street and block drawn from the map file, sent with a labelled copy that says what each
 // region is. Each district's close-up redraws a crop of the outer painting at more detail, so the two match.
-// See wiki/plans/kordavos-city-map.md.
+//.
 //
 //   node --env-file=.env.local --import tsx scripts/city-map-paint.ts sketch kordavos            # sketches only
 //   node --env-file=.env.local --import tsx scripts/city-map-paint.ts paint kordavos outer       # the outer painting

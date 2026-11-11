@@ -1,4 +1,4 @@
-// Writes the Blackthorn mansion's halls for Welcome to Kordavos (wiki/plans/welcome-to-kordavos-sets.md): the stair hall where the
+// Writes the Blackthorn mansion's halls for Welcome to Kordavos: the stair hall where the
 // way divides, up to the family's floors or down to the cellars; the long upper corridor of portraits that ends at Astrid's
 // carved door and passes Thaddeus's guarded one; and Thaddeus's cold study. Each is the cellar kit's room redressed as a
 // finished interior. And the stagings of the four encounters played there.

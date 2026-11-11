@@ -1,6 +1,6 @@
 // Mapview standard piece set — top-down battle-map SVG, one renderer per catalog id.
 // Code-drawn v1; an OpenPencil art pass can replace these piece-by-piece (same registry
-// keys, same footprints) as a pure visual upgrade. See wiki/plans/mapview.md.
+// keys, same footprints) as a pure visual upgrade..
 //
 // Every renderer draws into a w×h px box (already cell-multiplied by the map renderer)
 // and must be deterministic: variation comes from a seeded PRNG keyed on the placed

@@ -1,4 +1,4 @@
-// Public server-side read of a stored encounter map (wiki/plans/mapview.md).
+// Public server-side read of a stored encounter map.
 // Maps are adventure content, not secrets — no auth gate; generation stays admin-only.
 
 import { readJsonFromS3 } from "@/lib/s3-utils"

@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's Silver Serpent Tavern (wiki/plans/welcome-to-kordavos-sets.md): a dockside drinking hall of tarred
+// Writes Welcome to Kordavos's Silver Serpent Tavern: a dockside drinking hall of tarred
 // timber, its far end a great arch open on the foggy quay, and the staging of the tavern's encounter.
 //
 //   pnpm exec tsx scripts/stage-sets/silver-serpent-tavern.ts && pnpm stage:check

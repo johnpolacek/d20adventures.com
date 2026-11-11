@@ -1,6 +1,6 @@
 // Compact text summary of the encounter battle map's token staging, injected into
 // narration prompts so described distances/movement stay consistent with the map
-// players see (wiki/plans/mapview.md — the map is a static backdrop, so this is the
+// players see
 // STARTING staging, not per-turn state).
 
 import type { Encounter2DLabel, Encounter2DMap } from "@/types/encounter-map-2d"

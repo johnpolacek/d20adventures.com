@@ -1,8 +1,8 @@
 import * as THREE from "three"
 import type { SetSpec } from "./spec/set"
 
-// A painted set's camera stands only at painted points, tripods it turns and zooms on (wiki/stage-engine.md, "Painted
-// sets"). This file is the geometry of that, with no GPU: which point a shot is seen from, and how far a view may turn
+// A painted set's camera stands only at painted points, tripods it turns and zooms on.
+// This file is the geometry of that, with no GPU: which point a shot is seen from, and how far a view may turn
 // and widen before it runs off the paint.
 
 type Spec = NonNullable<SetSpec["painted"]>

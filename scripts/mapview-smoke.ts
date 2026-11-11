@@ -1,7 +1,7 @@
 /**
  * Mapview smoke check — runs the real generation pipeline end-to-end for one encounter
  * (plan load → scene-kit inference → generateObject → assemble/clamp → S3 store) and
- * writes an SSR-rendered HTML preview for visual review. See wiki/plans/mapview.md.
+ * writes an SSR-rendered HTML preview for visual review..
  *
  * Usage: pnpm exec dotenv -e .env.local -e .env -- tsx scripts/mapview-smoke.ts [encounterId] [outDir] [designer prompt]
  */

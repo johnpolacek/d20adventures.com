@@ -1,6 +1,6 @@
 // City maps: a city's layout from its map file (content/settings/{settingId}/maps/), the geometry the game's map view
 // draws from, and the map in words for the GM, so narration and map agree. Pure: the caller passes the map in.
-// See wiki/plans/kordavos-city-map.md.
+//.
 
 export type Point = [number, number]
 export type Box = [x: number, y: number, width: number, height: number]

@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's auction house (wiki/plans/welcome-to-kordavos-sets.md): the candlelit chamber behind the Black
+// Writes Welcome to Kordavos's auction house: the candlelit chamber behind the Black
 // Market's curtained door, a horseshoe hall of old stone with a gallery round it, rows of velvet chairs facing a stone
 // lectern and a half-round stage, and the stagings of the three auction encounters. One set per lot on the lectern: the
 // jewelled dagger, the relic map, and nothing once the map is sold.

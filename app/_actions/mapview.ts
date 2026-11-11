@@ -1,6 +1,6 @@
 "use server"
 
-// Mapview server actions — generate/load 2D encounter maps (wiki/plans/mapview.md).
+// Mapview server actions — generate/load 2D encounter maps.
 // Maps are generated at authoring time by an admin and stored as per-encounter JSON
 // in S3, keyed independently of the plan so the wiki compile pipeline is untouched.
 

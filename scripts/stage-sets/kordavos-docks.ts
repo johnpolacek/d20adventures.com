@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's docks (wiki/plans/welcome-to-kordavos-sets.md): the Kordavos harbour quay in golden late light, with
+// Writes Welcome to Kordavos's docks: the Kordavos harbour quay in golden late light, with
 // the elven ship Star of Faelendar at her berth, Warehouse 14 in its shadowed corner, and the same quay wrecked after the
 // forest drake broke loose. Stagings for the five dock encounters.
 //

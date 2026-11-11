@@ -4,7 +4,7 @@ import { beam, Frame, G, M4, TAU } from "../kit/geometry"
 import { barrel, crate, sack } from "./market"
 import { defineBuilder, size } from "./types"
 
-// The road kit's dressing (wiki/plans/road-to-kordavos-sets.md): a merchant's covered wagon, a wayside shrine, and a
+// The road kit's dressing: a merchant's covered wagon, a wayside shrine, and a
 // fortune teller's table.
 
 // A spoked wheel at (x, y, z) turning about x: a wooden felloe in an iron tyre, twelve spokes and a hub. `side` is the

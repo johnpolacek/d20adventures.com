@@ -1,6 +1,6 @@
 # Stage art lab
 
-Spikes run on 2026-10-17 to test a shared workflow: block out a scene, have an image model paint over a render, project the painting back onto the 3D, and animate characters with a video model. Plan and decision: [wiki/plans/stage-art-spikes.md](../../wiki/plans/stage-art-spikes.md). Only (a) was adopted, as the set spec's `backdrops` ([wiki/plans/stage-backdrop.md](../../wiki/plans/stage-backdrop.md)). The rest of this directory leaves `packages/stage` alone.
+Spikes run on 2026-10-17 to test a shared workflow: block out a scene, have an image model paint over a render, project the painting back onto the 3D, and animate characters with a video model. Only (a) was adopted, as the set spec's `backdrops`. The rest of this directory leaves `packages/stage` alone.
 
 All tests use The Midnight Summons, Meeting at the Stones, at the high tier (DPR 1.5, 1350x900 CSS).
 
@@ -55,7 +55,7 @@ All tests use The Midnight Summons, Meeting at the Stones, at the high tier (DPR
 
 ## Environment spike, 2026-11-10
 
-The Gates of Kordavos, at the ultra tier, 1350x900 CSS at DPR 2. Plan and results: [wiki/plans/stage-fidelity-spikes.md](../../wiki/plans/stage-fidelity-spikes.md).
+The Gates of Kordavos, at the ultra tier, 1350x900 CSS at DPR 2.
 
 Painted track:
 

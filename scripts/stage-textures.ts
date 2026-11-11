@@ -1,6 +1,6 @@
 // Paints Stageview surface textures in an adventure's art style with the standee image model, then makes them tile.
 // Board textures are one board's grain, flat-lit: the `painted` material lays its own seams, wear and grime over them.
-// Cut-out textures (hanging moss) are painted on green and keyed like standees. See wiki/stage-authoring.md.
+// Cut-out textures (hanging moss) are painted on green and keyed like standees..
 //
 //   node --env-file=.env.local --import tsx scripts/stage-textures.ts paint boards-weathered,crate-oak   # new raw paintings
 //   node --env-file=.env.local --import tsx scripts/stage-textures.ts make boards-weathered               # tile and publish

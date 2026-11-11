@@ -2,7 +2,7 @@ import { z } from "zod"
 import { PIECE_IDS } from "@/lib/mapview/piece-catalog"
 
 // Mapview schema v2 — salvaged from the 2d-maps branch (ed402aa) and extended per
-// wiki/plans/mapview.md: gridType (hex-ready), registry piece refs instead of bare
+// gridType (hex-ready), registry piece refs instead of bare
 // color rects, gameplay semantics preserved. Square grid is the only v1 renderer;
 // for gridType "hex", x/y are read as offset (col/row) coordinates so v1 data
 // survives a hex-capable v2 without migration.

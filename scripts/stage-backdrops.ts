@@ -1,5 +1,5 @@
 // Paints a set's backdrop: a very wide panorama of its far scenery in the encounter art's style, on magenta, then keys the
-// magenta to alpha. A set shows it with `backdrop` (see packages/stage/src/backdrop.ts and wiki/stage-authoring.md).
+// magenta to alpha. A set shows it with `backdrop` (see packages/stage/src/backdrop.ts).
 //
 //   node --env-file=.env.local --import tsx scripts/stage-backdrops.ts paint stones-valley            # a new raw painting
 //   node --env-file=.env.local --import tsx scripts/stage-backdrops.ts key stones-valley [raw.png]    # key and publish

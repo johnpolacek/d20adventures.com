@@ -1,4 +1,4 @@
-// Writes Covert Cargo's Stageview sets and stagings from the adventure's art (wiki/plans/covert-cargo-3d.md):
+// Writes Covert Cargo's Stageview sets and stagings from the adventure's art:
 // the Mordava pier before dawn, the riverboat's cabin, the Kordavos riverfront and the old forest path.
 //
 //   pnpm exec tsx scripts/stage-sets/covert-cargo.ts && pnpm stage:check

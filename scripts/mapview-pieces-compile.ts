@@ -1,5 +1,5 @@
 /**
- * PenNode → SVG compiler for the Mapview piece art (wiki/plans/mapview.md).
+ * PenNode → SVG compiler for the Mapview piece art.
  *
  * Reads design/mapview-pieces.op (an OpenPencil document — author/edit it with the
  * OpenPencil app or `op insert --file design/mapview-pieces.op`), compiles each

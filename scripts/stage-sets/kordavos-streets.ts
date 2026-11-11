@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's street scenes from the street kit (wiki/plans/welcome-to-kordavos-sets.md): Silverhand's trail
+// Writes Welcome to Kordavos's street scenes from the street kit: Silverhand's trail
 // through the night lanes, his hideout on the waterfront, the Cowl's ambush on the way back to the inn, and the two
 // endings set in the great square, at dawn and at a funeral.
 //

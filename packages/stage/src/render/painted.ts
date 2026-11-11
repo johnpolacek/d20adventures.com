@@ -4,8 +4,8 @@ import type { SharedUniforms } from "../materials/atmosphere"
 import { PAINTINGS_PER_POINT, type SetSpec } from "../spec/set"
 import { type TripodPoint, tripodPoints } from "../tripod"
 
-// A painted set: paintings projected onto the built set from the points they were painted at (wiki/stage-engine.md,
-// "Painted sets"). The set stays real geometry, so figures stand in it, cast shadows on it and are hidden by it, and
+// A painted set: paintings projected onto the built set from the points they were painted at.
+// The set stays real geometry, so figures stand in it, cast shadows on it and are hidden by it, and
 // near things slide against far ones as the camera sways. Its colour comes from the paintings.
 //
 // For each painting a depth map from its camera says what it saw. A surface takes the paint of the paintings that saw

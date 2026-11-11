@@ -1,6 +1,6 @@
 // Mapview read-only renderer — square grid v1. Static scene backdrop: fixed piece,
 // party-slot, and NPC placements; no interaction, no positional game state.
-// See wiki/plans/mapview.md.
+//.
 
 import { getPieceDefinition } from "@/lib/mapview/piece-catalog"
 import { cn, getTextureImageUrl } from "@/lib/utils"

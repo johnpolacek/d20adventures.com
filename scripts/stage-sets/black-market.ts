@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's Black Market (wiki/plans/welcome-to-kordavos-sets.md): the curtained doorway in a court between two
+// Writes Welcome to Kordavos's Black Market: the curtained doorway in a court between two
 // crumbling buildings, and behind it a maze of stalls and tents in a lane roofed with canvas and strung with lanterns,
 // at nightfall. At the lane's far end, the auction house's door, the way on to the auction (encounters 20 to 22). The
 // stagings of the entrance and the stalls.

@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's Dragonbone Inn (wiki/plans/dragonbone-inn-stage.md): the inn's common room and backroom in the
+// Writes Welcome to Kordavos's Dragonbone Inn: the inn's common room and backroom in the
 // evening and at dawn the next day, and the stagings of the three encounters there.
 //
 //   pnpm exec tsx scripts/stage-sets/dragonbone-inn.ts && pnpm stage:check

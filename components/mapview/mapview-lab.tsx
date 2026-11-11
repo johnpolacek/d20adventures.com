@@ -1,6 +1,6 @@
 "use client"
 
-// Mapview Lab — admin development surface for 2D map generation (wiki/plans/mapview.md).
+// Mapview Lab — admin development surface for 2D map generation.
 // Pick an encounter, generate or revise its map, review the render and raw JSON.
 
 import { useCallback, useEffect, useState, useTransition } from "react"

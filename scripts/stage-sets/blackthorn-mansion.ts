@@ -1,4 +1,4 @@
-// Writes the Blackthorn mansion for Welcome to Kordavos (wiki/plans/welcome-to-kordavos-sets.md), the adventure's bespoke set:
+// Writes the Blackthorn mansion for Welcome to Kordavos, the adventure's bespoke set:
 // the ballroom of the masquerade, with and without the caged drake revealed on its stage, and the grounds by night, the
 // front court and its gates, and the garden under the ballroom balcony with the ivy wall and the drain grate. And the
 // stagings of the encounters played there.

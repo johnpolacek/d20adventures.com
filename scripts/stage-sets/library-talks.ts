@@ -1,4 +1,4 @@
-// Writes The Dust Settles for Welcome to Kordavos (wiki/plans/welcome-to-kordavos-sets.md): the truce talks at the reading table of
+// Writes The Dust Settles for Welcome to Kordavos: the truce talks at the reading table of
 // the Old Grand Library, on the library's own set. Bishop Nicolai presides; Seraphina Valtor and Lady Astrid sit across
 // from each other; Sister Danica stands by. The party watches from under the dome.
 //

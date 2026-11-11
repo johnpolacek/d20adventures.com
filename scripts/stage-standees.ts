@@ -1,5 +1,5 @@
 // Paints Stageview standees with the stage authoring pipeline: a full-body front on a green screen, a back conditioned
-// on that front, a distance-from-green key, and a portrait cropped from the keyed front. See wiki/stage-authoring.md.
+// on that front, a distance-from-green key, and a portrait cropped from the keyed front..
 //
 //   node --env-file=.env.local --import tsx scripts/stage-standees.ts front human-a,elf-b   # new raw fronts
 //   node --env-file=.env.local --import tsx scripts/stage-standees.ts back human-a           # back from the latest front

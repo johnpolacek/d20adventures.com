@@ -1,5 +1,5 @@
 // Moves lab paintings into the game: each becomes a WebP under public/stage/paintings/<set>/ and a painting on one of
-// the set's painted points (wiki/stage-engine.md, "Painted sets").
+// the set's painted points.
 //
 //   node --import tsx lab/stage-art/publish.ts realm-of-myr/kordavos-south-gate gate=gate-plate-gate-photoreal@2048 checkpoint=cp-cli,cp-zoom,cp-close
 //

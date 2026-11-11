@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's Old Grand Library (wiki/plans/old-grand-library-stage.md): the great reading hall under its
+// Writes Welcome to Kordavos's Old Grand Library: the great reading hall under its
 // painted vault and dome, with the private archives behind the red door, and the staging of the library's encounter.
 //
 //   pnpm exec tsx scripts/stage-sets/old-grand-library.ts && pnpm stage:check

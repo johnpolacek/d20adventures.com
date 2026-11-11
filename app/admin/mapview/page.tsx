@@ -35,7 +35,7 @@ export default async function MapviewLabIndexPage() {
       <Heading variant="h1" className="mb-2 text-amber-400">
         Mapview Lab
       </Heading>
-      <p className="mb-8 text-muted-foreground">Generate 2D battle maps per encounter — standalone development surface for Mapview (see wiki/plans/mapview.md).</p>
+      <p className="mb-8 text-muted-foreground">Generate 2D battle maps per encounter — standalone development surface for Mapview.</p>
       <div className="grid gap-4 md:grid-cols-2">
         {adventures.map((adventure) => (
           <Link

@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's rooms below ground from the cellar kit (wiki/plans/welcome-to-kordavos-sets.md): the low back room
+// Writes Welcome to Kordavos's rooms below ground from the cellar kit: the low back room
 // of Silverhand's hideout and the Blackthorn mansion's wine cellar, and their stagings.
 //
 //   pnpm exec tsx scripts/stage-sets/cellars.ts && pnpm stage:check

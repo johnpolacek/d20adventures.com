@@ -1,6 +1,6 @@
 # D20 desktop phase 0 spike
 
-Throwaway macOS Tauri app. Results and the decision live in [the phase 0 plan](../../wiki/plans/desktop-local-play.md#phase-0-spike). No web app dependencies or runtime behavior are changed.
+Throwaway macOS Tauri app. No web app dependencies or runtime behavior are changed.
 
 From this directory:
 

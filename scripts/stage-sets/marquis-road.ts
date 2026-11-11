@@ -1,4 +1,4 @@
-// Writes The Road to Kordavos's sets from the road kit (wiki/plans/road-to-kordavos-sets.md): the Marquis Road in the
+// Writes The Road to Kordavos's sets from the road kit: the Marquis Road in the
 // hill woods where Dmitri's caravan comes by, the road nearer the city where Borina keeps her table, and the stagings for
 // all three encounters, the last on the gate set.
 //

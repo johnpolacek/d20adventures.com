@@ -282,7 +282,7 @@ const shot = z
   })
   .strict()
 
-// A painted set (wiki/stage-engine.md, "Painted sets"). The camera stands only at `points`, tripods it turns and zooms
+// A painted set. The camera stands only at `points`, tripods it turns and zooms
 // on. Each point carries up to three paintings made from it: `map` is the picture, `quaternion`, `fov` (vertical,
 // degrees) and `aspect` the camera it was painted for. The first is the widest. Later ones are closer views of part of
 // it, which the engine prefers wherever they are sharper. `clear` is the same view painted with the flags, banners and

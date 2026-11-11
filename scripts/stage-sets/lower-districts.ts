@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's Lower Districts (wiki/plans/welcome-to-kordavos-sets.md): a narrow street of leaning tenements under
+// Writes Welcome to Kordavos's Lower Districts: a narrow street of leaning tenements under
 // a house built across it, and the side alley where the Black Market's day signs are carved, at the day's grey end. The
 // stagings of its three encounters: the walk in, the urchins, and the search for the signs.
 //

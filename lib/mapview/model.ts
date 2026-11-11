@@ -1,6 +1,6 @@
 // Mapview generation model + call — the single source of truth for how a 2D map is
 // generated, shared by the admin action and the headless smoke script so they can't
-// drift (wiki/plans/mapview.md).
+// drift.
 //
 // Gemini flash with native structured outputs OFF: numeric min/max bounds in the
 // schema drive Gemini's constrained decoder into digit-loops ("rows": 14000000…

@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's catacombs from the tunnel kit (wiki/plans/welcome-to-kordavos-sets.md): the powder chamber where
+// Writes Welcome to Kordavos's catacombs from the tunnel kit: the powder chamber where
 // the Covenant lays its fuse, the forking labyrinth that ends at a blank wall, the same wall with its black iron door
 // revealed, and the vast empty hall beyond it. And their stagings.
 //

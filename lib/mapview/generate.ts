@@ -1,5 +1,5 @@
 // Mapview generation helpers — pure functions shared by the server action.
-// Pipeline per wiki/plans/mapview.md: scene-kit inference → generateObject against
+// Pipeline: scene-kit inference → generateObject against
 // encounter2dGenerationSchema → normalize/clamp → deterministic token placement.
 
 import type { Encounter2DGeneration, Encounter2DMap, Encounter2DNpcStart, Encounter2DPartySlot, Encounter2DZone, MapSceneKit } from "@/types/encounter-map-2d"

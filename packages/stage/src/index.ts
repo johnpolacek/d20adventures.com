@@ -1,4 +1,4 @@
-// Stageview: the painted 3D encounter stage. See wiki/plans/stageview.md.
+// Stageview: the painted 3D encounter stage..
 
 export { DEFAULT_FLAGS, type Flags, TIER_NAMES, TIERS, type TierName } from "./quality"
 export { buildSetGeometry, parseSet, populateCrowd, SetBuildError } from "./spec/build"

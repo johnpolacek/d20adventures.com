@@ -1,6 +1,6 @@
 "use client"
 
-// Player-facing Mapview panels (wiki/plans/mapview.md). Two entry points share the
+// Player-facing Mapview panels. Two entry points share the
 // fullscreen overlay: MapPanel is the floating "Map" button (below xl), MapRailPanel is
 // the inline mini map docked in the turn page's right rail (desktop). Rendered only
 // when the encounter has a stored map; read-only, no game state.

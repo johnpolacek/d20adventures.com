@@ -1,4 +1,4 @@
-// Writes Welcome to Kordavos's Clan Conflict scene (wiki/plans/clan-conflict-stage.md): the harvest square cut with a ring
+// Writes Welcome to Kordavos's Clan Conflict scene: the harvest square cut with a ring
 // of onlookers at its south end, where the street from the gate opens into it, and the staging of the standoff there.
 //
 //   pnpm exec tsx scripts/stage-sets/clan-conflict.ts && pnpm stage:check

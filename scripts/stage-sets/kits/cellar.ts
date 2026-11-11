@@ -1,4 +1,4 @@
-// The cellar kit (wiki/plans/welcome-to-kordavos-sets.md): a room below ground that any encounter can redress. A dressing
+// The cellar kit: a room below ground that any encounter can redress. A dressing
 // picks its size, a stone barrel vault or a low beamed ceiling, stone or boarded walls, a stair or a door in at the
 // near end, and its own props, lamps, marks and shots, and gets back a whole set. No daylight reaches it: the room is
 // lit only by the dressing's lamps and the camera's fill.

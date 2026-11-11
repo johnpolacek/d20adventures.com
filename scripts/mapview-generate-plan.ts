@@ -1,6 +1,6 @@
 /**
  * Batch-generate 2D encounter maps for every encounter in an adventure plan
- * (wiki/plans/mapview.md). Same pipeline as scripts/mapview-smoke.ts — plan load →
+ *. Same pipeline as scripts/mapview-smoke.ts — plan load →
  * scene-kit inference → generateObject → assemble/clamp → S3 store — run across the
  * whole plan with bounded concurrency, skipping encounters that already have a map.
  *

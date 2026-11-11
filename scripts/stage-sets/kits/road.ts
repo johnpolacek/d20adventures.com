@@ -1,4 +1,4 @@
-// The road kit (wiki/plans/road-to-kordavos-sets.md): a dirt road through daylight woods that any travel encounter can
+// The road kit: a dirt road through daylight woods that any travel encounter can
 // redress. A dressing gives the road's line, the woods (hill firs or giant old trees), its backdrops, its travellers,
 // and its own props, places and views, and gets back a whole set. The road, its ruts and verges, the trees, ferns and
 // grass are the kit's; what makes the place one encounter's is the dressing's.
