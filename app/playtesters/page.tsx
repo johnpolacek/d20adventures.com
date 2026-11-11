@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { Castle, Feather, Github, type LucideIcon, ScrollText } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import Image from "@/components/ui/native-image"
 import { cn } from "@/lib/utils"
 import { CopyBlock } from "./copy-block"
@@ -10,6 +12,7 @@ export const metadata = { title: "Become a Playtester | D20 Adventures" }
 
 const repo = "https://github.com/johnpolacek/d20adventures.com"
 const installCommand = "curl -fsSL https://d20adventures.com/install.sh | sh"
+const soloDemo = "/settings/realm-of-myr/the-midnight-summons"
 const installSource = `${repo}/blob/main/public/install.sh`
 const installPrompt = `Install the D20 Adventures desktop app on this Mac.
 
@@ -57,6 +60,16 @@ function Rule({ className }: { className?: string }) {
   )
 }
 
+function Or() {
+  return (
+    <div className="flex items-center gap-4">
+      <span className="h-px flex-1 bg-gradient-to-r from-transparent to-stage-gold/40" />
+      <span className={eyebrow}>Or</span>
+      <span className="h-px flex-1 bg-gradient-to-l from-transparent to-stage-gold/40" />
+    </div>
+  )
+}
+
 function StepCards() {
   return (
     <div className="grid w-full gap-5 sm:grid-cols-3">
@@ -90,7 +103,7 @@ function Install() {
       <div className="mt-9 grid grid-cols-1 gap-9">
         <div>
           <h3 className="mb-1 font-display text-lg tracking-wide text-stage-cream">
-            <span className="mr-2 text-stage-gold">I.</span>Paste Into Terminal
+            <span className="mr-2 text-stage-gold">1.</span>Paste Into Terminal
           </h3>
           <CopyBlock label="Terminal" text={installCommand} className="mt-4" />
           <ul className="mt-4 flex flex-wrap gap-2">
@@ -102,18 +115,28 @@ function Install() {
           </ul>
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-stage-gold/40" />
-          <span className={eyebrow}>Or</span>
-          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-stage-gold/40" />
-        </div>
+        <Or />
 
         <div>
           <h3 className="mb-1 font-display text-lg tracking-wide text-stage-cream">
-            <span className="mr-2 text-stage-gold">II.</span>Let Claude Install It
+            <span className="mr-2 text-stage-gold">2.</span>Let Claude Install It
           </h3>
           <p className="font-serif text-stage-cream/80">Paste this into Claude Code. We recommend Claude Opus 5.5 on medium effort.</p>
           <CopyBlock label="Prompt for Claude" text={installPrompt} className="mt-4" />
+        </div>
+
+        <Or />
+
+        <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="mb-1 font-display text-lg tracking-wide text-stage-cream">
+              <span className="mr-2 text-stage-gold">3.</span>Play the Solo Demo Adventure
+            </h3>
+            <p className="font-serif text-stage-cream/80">The Midnight Summons runs in your browser.</p>
+          </div>
+          <Button asChild variant="epic" className="shrink-0">
+            <Link href={soloDemo}>Play Now</Link>
+          </Button>
         </div>
       </div>
 
