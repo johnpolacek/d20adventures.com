@@ -4,7 +4,7 @@ import { compileAdventureSourceTree } from "@/lib/wiki-adventures/compiler"
 import { migrateAdventurePlanToWikiSource } from "@/lib/wiki-adventures/myr-migration"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
-const sourcePath = "wiki/sources/adventure plans/the-midnight-summons.json"
+const sourcePath = "data/adventure-plans/the-midnight-summons.json"
 const assetHost = "d20-public.s3.us-east-1.amazonaws.com"
 
 const legacyPlan = JSON.parse(readFileSync(sourcePath, "utf8")) as AdventurePlan

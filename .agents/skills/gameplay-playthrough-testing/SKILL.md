@@ -60,7 +60,7 @@ Transitions fire when the AI GM picks the next encounter based on the **`## Tran
 
 ## 7. Proving a fix
 
-Reproduce the broken state, fix, and **prove the fix uses the intended path** by deliberately breaking the old source. E.g. for the legacy-plan bugs: re-stub the S3 plan (empty `sections[].scenes[].encounters`) and confirm the action still works (proving it reads the wiki runtime), then restore the complete plan from `wiki/sources/adventure plans/*.json`.
+Reproduce the broken state, fix, and **prove the fix uses the intended path** by deliberately breaking the old source. E.g. for the legacy-plan bugs: re-stub the S3 plan (empty `sections[].scenes[].encounters`) and confirm the action still works (proving it reads the wiki runtime), then restore the complete plan from `data/adventure-plans/*.json`.
 
 ## 8. Cleanup
 

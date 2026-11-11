@@ -47,7 +47,7 @@ type KordavosLegacyPlan = Omit<AdventurePlan, "sections" | "npcs"> & {
   npcs?: Record<string, Character>
 }
 
-const sourcePath = "wiki/sources/adventure plans/the-march-of-davos-plan.json"
+const sourcePath = "data/adventure-plans/the-march-of-davos-plan.json"
 const assetHost = "d20-public.s3.us-east-1.amazonaws.com"
 const cloudfrontHost = "d1dkwd3w4hheqw.cloudfront.net"
 const legacyS3Host = "s3.us-east-1.amazonaws.com"

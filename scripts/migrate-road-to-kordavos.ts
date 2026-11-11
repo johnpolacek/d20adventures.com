@@ -4,7 +4,7 @@ import { compileAdventureSourceTree } from "@/lib/wiki-adventures/compiler"
 import { migrateAdventurePlanToWikiSource } from "@/lib/wiki-adventures/myr-migration"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
-const sourcePath = "wiki/sources/adventure plans/the_road_to_kordavos_adventure_plan.json"
+const sourcePath = "data/adventure-plans/the_road_to_kordavos_adventure_plan.json"
 const assetHost = "d20-public.s3.us-east-1.amazonaws.com"
 const cloudfrontHost = "d1dkwd3w4hheqw.cloudfront.net"
 const contentVersion = "2026-05-23T00-00-00Z-road-to-kordavos-migration"
