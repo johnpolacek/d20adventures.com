@@ -1,8 +1,8 @@
 import type { z } from "zod"
 import { classFeatureSchema, classSchema, subclassSchema } from "../../src/schema/classes"
-import { coinSchema, equipmentRuleSchema, equipmentSchema, poisonSchema, weaponMasterySchema, weaponPropertySchema } from "../../src/schema/equipment"
+import { coinSchema, equipmentRuleSchema, equipmentSchema, poisonSchema, poisonTypeSchema, weaponMasterySchema, weaponPropertySchema } from "../../src/schema/equipment"
 import { magicItemRuleSchema, magicItemSchema } from "../../src/schema/magic-items"
-import { monsterSchema } from "../../src/schema/monsters"
+import { monsterRuleSchema, monsterSchema } from "../../src/schema/monsters"
 import { backgroundSchema, featSchema, originRuleSchema, speciesSchema } from "../../src/schema/origins"
 import { abilitySchema, alignmentSchema, conditionSchema, damageTypeSchema, languageSchema, magicSchoolSchema, skillSchema } from "../../src/schema/reference"
 import { spellSchema } from "../../src/schema/spells"
@@ -30,8 +30,10 @@ export const registry: Record<string, Registered> = {
   "magic-item-rules": { schema: magicItemRuleSchema, exportName: "magicItemRules" },
   "magic-items": { schema: magicItemSchema, exportName: "magicItems" },
   "magic-schools": { schema: magicSchoolSchema, exportName: "magicSchools" },
+  "monster-rules": { schema: monsterRuleSchema, exportName: "monsterRules" },
   monsters: { schema: monsterSchema, exportName: "monsters" },
   "origin-rules": { schema: originRuleSchema, exportName: "originRules" },
+  "poison-types": { schema: poisonTypeSchema, exportName: "poisonTypes" },
   poisons: { schema: poisonSchema, exportName: "poisons" },
   skills: { schema: skillSchema, exportName: "skills" },
   species: { schema: speciesSchema, exportName: "species" },

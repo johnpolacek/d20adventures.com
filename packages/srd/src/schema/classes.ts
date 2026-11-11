@@ -1,5 +1,23 @@
 import { z } from "zod"
-import { abilityIdSchema, classIdSchema, conditionIdSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, idSchema, pageSchema, proseSchema, skillIdSchema } from "./common"
+import {
+  abilityIdSchema,
+  activationSchema,
+  classIdSchema,
+  conditionIdSchema,
+  creatureTypeSchema,
+  damageTypeIdSchema,
+  diceSchema,
+  entryShape,
+  equipmentOptionSchema,
+  feetSchema,
+  forcedSaveShape,
+  idSchema,
+  pageSchema,
+  proseSchema,
+  rechargeSchema,
+  saveDcSchema,
+  skillIdSchema,
+} from "./common"
 
 const levelSchema = z.number().int().min(1).max(20)
 const countSchema = z.number().int().nonnegative()
@@ -22,22 +40,10 @@ const armorTrainingSchema = z.array(z.enum(["light", "medium", "heavy", "shields
 const skillChoiceSchema = z.strictObject({ count: positiveSchema, from: z.array(skillIdSchema).min(2).optional() })
 
 /**
- * A kind of tool the text names without naming one tool: "artisans-tools" is any tool in the Artisan’s Tools group,
- * "musical-instrument" is any Musical Instrument.
+ * A tool proficiency: one tool by equipment id, or a number chosen from kinds of tools. A kind is an equipment id
+ * too: "musical-instrument" is the tool whose variants are the instruments, "artisans-tools" every Artisan’s Tools.
  */
-export const toolKindSchema = z.enum(["artisans-tools", "musical-instrument"])
-
-/** A tool proficiency: one tool by equipment id, or a number chosen from tool kinds. */
-const toolProficiencySchema = z.union([z.strictObject({ tool: idSchema }), z.strictObject({ choose: positiveSchema, from: z.array(toolKindSchema).min(1) })])
-
-/** An item of a starting equipment option, by equipment id. `detail` is the printed qualifier, such as "Quarterstaff" or "of your choice". */
-const startingItemSchema = z.union([
-  z.strictObject({ item: idSchema, quantity: positiveSchema, detail: z.string().min(1).optional() }),
-  z.strictObject({ anyOf: z.array(toolKindSchema).min(2), quantity: positiveSchema, detail: z.string().min(1).optional() }),
-])
-
-/** One lettered option of the Starting Equipment row. `gp` is the gold it includes. */
-const startingEquipmentSchema = z.strictObject({ option: z.enum(["A", "B", "C"]), items: z.array(startingItemSchema).min(1).optional(), gp: positiveSchema })
+const toolProficiencySchema = z.union([z.strictObject({ tool: idSchema }), z.strictObject({ choose: positiveSchema, from: z.array(idSchema).min(1) })])
 
 /** What a multiclass character gains from the Core Traits table. Every class grants its Hit Point Die. */
 const multiclassSchema = z.strictObject({
@@ -60,14 +66,18 @@ const spellcastingSchema = z.strictObject({
   /** Equipment ids usable as a Spellcasting Focus. */
   focus: z.array(idSchema).min(1),
   /** Expended slots return on a Long Rest, or on a Short or Long Rest (Pact Magic). */
-  slotsRestore: z.enum(["long-rest", "short-rest"]),
+  slotsRestore: rechargeSchema,
   /** How class levels count toward the Multiclass Spellcaster table. Absent for Pact Magic, which keeps its own slots. */
   multiclassLevels: z.enum(["all", "half-round-up"]).optional(),
   changePrepared: changeSchema,
   changeCantrip: changeSchema.optional(),
   /** Ritual Adept: any Ritual spell in the spellbook can be cast as a Ritual without being prepared. */
   ritualFromSpellbook: z.literal(true).optional(),
-  /** The class spell list as the class section prints it, spell ids by spell level. */
+  /**
+   * The class spell list, spell ids by spell level: the list the class section prints, plus any spell whose own
+   * header in “Spells” names the class where the printed list omits it (Phantasmal Force, Mind Spike). Where the text
+   * contradicts itself, the spell’s own block wins.
+   */
   spellList: spellListSchema,
 })
 
@@ -137,7 +147,7 @@ export const classSchema = z.strictObject({
   weapons: z.array(weaponProficiencySchema).min(1),
   armor: armorTrainingSchema.optional(),
   tools: z.array(toolProficiencySchema).min(1).optional(),
-  startingEquipment: z.array(startingEquipmentSchema).min(2),
+  startingEquipment: z.array(equipmentOptionSchema).min(2),
   multiclass: multiclassSchema,
   spellcasting: spellcastingSchema.optional(),
   levels: z.array(classLevelSchema).length(20),
@@ -152,7 +162,7 @@ export type Class = z.infer<typeof classSchema>
 
 // Features
 
-/** How many times a feature can be used, and what restores it. "short-rest" restores all uses on a Short or Long Rest. */
+/** How many times a feature can be used, and what restores it. */
 const usesSchema = z.strictObject({
   count: z.union([
     positiveSchema,
@@ -163,45 +173,71 @@ const usesSchema = z.strictObject({
     /** A count that steps up at the listed class levels. */
     z.strictObject({ byLevel: z.array(z.strictObject({ level: levelSchema, count: positiveSchema })).min(2) }),
   ]),
-  recharge: z.enum(["short-rest", "long-rest"]),
+  /** "spell": the count is for each spell the feature names, as with Mystic Arcanum and Signature Spells. */
+  per: z.literal("spell").optional(),
+  recharge: rechargeSchema,
   /** Uses regained on a Short Rest when `recharge` is "long-rest". */
   shortRestRegain: z.literal(1).optional(),
+  /** A later feature changes the recharge from this class level on, as Font of Inspiration does at level 5. */
+  rechargeByLevel: z
+    .array(z.strictObject({ level: levelSchema, recharge: rechargeSchema }))
+    .min(1)
+    .optional(),
 })
 
-/** A resource a feature or option spends. */
-const costSchema = z.strictObject({
+/** A class resource a feature or option spends, such as Focus Points. Not money. */
+const resourceCostSchema = z.strictObject({
   resource: z.enum(["bardic-inspiration", "channel-divinity", "focus-points", "rage", "second-wind", "sneak-attack-dice", "sorcery-points", "wild-shape"]),
   amount: positiveSchema,
+  /** The text says the resource isn’t expended if the roll it boosts still fails. */
+  keptOnFailure: z.literal(true).optional(),
 })
 
-/** A save DC: the spell save DC, a number, or 8 plus an ability modifier and the Proficiency Bonus. */
-const dcSchema = z.union([z.literal("spell"), positiveSchema, z.strictObject({ ability: abilityIdSchema })])
-
-/** A saving throw the feature forces. Without `dc`, the DC is the one the class sets in `saveDc` of another feature. */
-const saveSchema = z.strictObject({ ability: abilityIdSchema, dc: dcSchema.optional() })
+/**
+ * A condition a passive benefit holds under, as the text states it. "raging": while your Rage is active.
+ * "no-heavy-armor": while you aren’t wearing Heavy armor. "in-aura-of-protection": while in your Aura of Protection.
+ */
+const whileSchema = z.enum(["raging", "no-heavy-armor", "in-aura-of-protection"])
 
 /**
  * Mechanics stated plainly in a feature's or option's text. Each field is checked against the official wording.
  * What is not here stays in the prose.
  */
 const mechanicsShape = {
-  activation: z.enum(["action", "bonus-action", "reaction", "magic-action", "no-action"]).optional(),
+  /** Every kind of action the text names for using the feature, including "(no action required)". */
+  activation: activationSchema.optional(),
   uses: usesSchema.optional(),
-  cost: costSchema.optional(),
+  spend: resourceCostSchema.optional(),
   /** The main roll, such as the extra damage or the healing. */
   dice: diceSchema.optional(),
+  /** The main roll is the die of a class table column, such as the Martial Arts die or Sneak Attack. */
+  diceFromColumn: z.enum(["martialArts", "sneakAttack"]).optional(),
   /** `dice` from the listed class levels on. */
   diceByLevel: z
     .array(z.strictObject({ level: levelSchema, dice: diceSchema }))
     .min(1)
     .optional(),
+  /** Added to `dice` for each level of the spell slot expended, as Eldritch Smite’s "another 1d8 per level of the spell slot". */
+  dicePerSlotLevel: diceSchema.optional(),
+  /** What the text adds to the roll: an ability modifier, or "class-level" for your level in the class. */
+  rollAdds: z
+    .array(z.union([abilityIdSchema, z.literal("class-level")]))
+    .min(1)
+    .optional(),
   /** Damage types the feature deals or lets you choose from. */
   damageTypes: z.array(damageTypeIdSchema).min(1).optional(),
-  save: saveSchema.optional(),
+  /** Creature types the damage is not dealt to, as Hurl Through Hell’s "if it isn’t a Fiend". */
+  damageNotTo: z.array(creatureTypeSchema).min(1).optional(),
+  /** A saving throw the feature forces. Without `dc`, the DC is the one `saveDc` of another feature of the class sets. */
+  save: z.strictObject({ ...forcedSaveShape }).optional(),
+  /** A saving throw you make yourself, with a DC that rises with each use until a rest resets it (Relentless Rage). */
+  selfSave: z.strictObject({ ability: abilityIdSchema, dc: positiveSchema, increasePerUse: positiveSchema.optional(), resetOn: rechargeSchema.optional() }).optional(),
+  /** Damage the feature deals to you: `dicePerSlotLevel` for each slot level, `increasePerUse` more for each use after the first (Overchannel). */
+  selfDamage: z.strictObject({ dicePerSlotLevel: diceSchema, damageType: damageTypeIdSchema, increasePerUse: diceSchema, from: z.literal("second-use") }).optional(),
   /** The DC this feature sets for the saves its options and related features force. */
-  saveDc: dcSchema.optional(),
+  saveDc: saveDcSchema.optional(),
   /** A pool of points: `perLevel` times the class level, restored by `recharge`. */
-  pool: z.strictObject({ perLevel: positiveSchema, recharge: z.enum(["short-rest", "long-rest"]) }).optional(),
+  pool: z.strictObject({ perLevel: positiveSchema, recharge: rechargeSchema }).optional(),
   range: feetSchema.optional(),
   area: z.strictObject({ shape: z.enum(["emanation", "sphere", "cube"]), size: feetSchema }).optional(),
   /** Attacks per Attack action. */
@@ -226,16 +262,18 @@ const mechanicsShape = {
   expertise: positiveSchema.optional(),
   /** Kinds of weapons whose mastery properties you can use, where no table column counts them. */
   weaponMasteries: positiveSchema.optional(),
-  /** Feet added to Speed. */
-  speedBonus: feetSchema.optional(),
+  /** Feet added to Speed, and the condition it holds under. */
+  speedBonus: z.strictObject({ feet: feetSchema, while: whileSchema.optional() }).optional(),
   abilityIncrease: z.strictObject({ abilities: z.array(abilityIdSchema).min(1), amount: positiveSchema, maximum: positiveSchema }).optional(),
   /** Base Armor Class without armor: 10 plus the listed modifiers. */
   armorClass: z.strictObject({ base: z.literal(10), abilities: z.array(abilityIdSchema).length(2), shield: z.boolean().optional() }).optional(),
   /** The lowest d20 roll that scores a Critical Hit. */
   criticalRange: z.number().int().min(18).max(19).optional(),
   sense: z.strictObject({ type: z.enum(["blindsight", "truesight"]), range: feetSchema }).optional(),
-  resistances: z.array(damageTypeIdSchema).min(1).optional(),
-  conditionImmunities: z.array(conditionIdSchema).min(1).optional(),
+  /** Resistances, and the condition they hold under. */
+  resistances: z.strictObject({ damageTypes: z.array(damageTypeIdSchema).min(1), while: whileSchema.optional() }).optional(),
+  /** Condition immunities, the condition they hold under, and whether your allies share them. */
+  conditionImmunities: z.strictObject({ conditions: z.array(conditionIdSchema).min(1), while: whileSchema.optional(), allies: z.literal(true).optional() }).optional(),
 } as const
 
 /** A choice a feature offers: an effect, a style, an invocation, a Metamagic option. */

@@ -1,7 +1,9 @@
 import { z } from "zod"
 import {
   abilityIdSchema,
+  activationSchema,
   classIdSchema,
+  coins,
   conditionIdSchema,
   costSchema,
   creatureTypeSchema,
@@ -9,8 +11,10 @@ import {
   diceSchema,
   entryShape,
   feetSchema,
+  forcedSaveShape,
   idSchema,
   proseSchema,
+  saveDcSchema,
   sizeSchema,
   skillIdSchema,
 } from "./common"
@@ -21,10 +25,8 @@ export const damageSchema = z
   .refine((damage) => (damage.dice === undefined) !== (damage.fixed === undefined), "give dice or fixed, not both")
 export type Damage = z.infer<typeof damageSchema>
 
-/** A save DC: a fixed number, or "8 plus your <ability> modifier and Proficiency Bonus" for the user of the item. */
-export const dcSchema = z.union([z.strictObject({ fixed: z.number().int().positive() }), z.strictObject({ base: z.literal(8), ability: abilityIdSchema, proficiencyBonus: z.literal(true) })])
-
-export const saveSchema = z.strictObject({ ability: abilityIdSchema, dc: dcSchema })
+/** A saving throw an item forces. `dc: { plusModifierOf: "dex" }` is "DC 8 plus your Dexterity modifier and Proficiency Bonus". */
+export const saveSchema = z.strictObject({ ...forcedSaveShape, dc: saveDcSchema })
 
 /** A mundane weight in pounds. Fractions are decimals: 1/4 lb. is 0.25. */
 const weightSchema = z.number().positive()
@@ -102,8 +104,8 @@ export const toolSchema = z.strictObject({
 export const ammunitionSchema = z.strictObject({
   ...entryShape,
   kind: z.literal("ammunition"),
-  /** How many pieces one purchase holds. */
-  amount: z.number().int().positive(),
+  /** How many pieces one bundle holds, as the Ammunition table's Amount column. */
+  bundleSize: z.number().int().positive(),
   /** Id of the item that usually stores it. */
   storage: idSchema,
   cost: costSchema,
@@ -161,7 +163,10 @@ const hazardSchema = z.strictObject({
   /** Damage applies only to these creature types. */
   onlyAgainst: z.array(creatureTypeSchema).optional(),
   condition: conditionIdSchema.optional(),
-  speedToZero: z.literal(true).optional(),
+  /** Speed is reduced to 0 until the start of the creature's next turn. */
+  speedZeroUntilStartOfNextTurn: z.literal(true).optional(),
+  /** The damage is dealt only while the oil is lit. */
+  onlyWhenLit: z.literal(true).optional(),
   burning: z.literal(true).optional(),
   /** Extra damage when the target takes Fire damage while covered in oil. */
   extraFireDamage: damageSchema.optional(),
@@ -193,6 +198,7 @@ const capacitySchema = z.strictObject({
   gallons: z.number().optional(),
   pints: z.number().optional(),
   ounces: z.number().optional(),
+  /** Barrel: `gallons` of liquid or `cubicFeet` of dry goods, alternatives. Backpack, Basket, Pouch and Sack: both limits at once. */
   /** What a container holds. Several entries are alternatives (a Map or Scroll Case holds paper or parchment). */
   holds: z.array(z.strictObject({ item: idSchema, quantity: z.number().int().positive() })).optional(),
 })
@@ -222,8 +228,18 @@ export const gearMechanics = {
   /** Oil: dousing a space. */
   spaceHazard: hazardSchema.optional(),
   checks: z.array(checkSchema).optional(),
-  /** Chain, Manacles and Rope bind only a creature that already has one of these conditions, and leave it with `appliesCondition`. */
-  binding: z.strictObject({ requiresAnyCondition: z.array(conditionIdSchema), appliesCondition: conditionIdSchema, sizes: z.array(sizeSchema).optional() }).optional(),
+  /**
+   * Chain, Manacles and Rope bind only a creature that already has one of these conditions. The bound creature has
+   * `appliesCondition` only when `appliesWhen` holds: its legs are bound (Chain, Rope) or the Manacles are attached to a fixed chain or hook.
+   */
+  binding: z
+    .strictObject({
+      requiresAnyCondition: z.array(conditionIdSchema),
+      appliesCondition: conditionIdSchema,
+      appliesWhen: z.enum(["legs-bound", "attached-to-fixed-anchor"]),
+      sizes: z.array(sizeSchema).optional(),
+    })
+    .optional(),
   modifiers: z.array(modifierSchema).optional(),
   /** Hit Points and defenses of the item itself (Net). */
   object: z.strictObject({ ac: z.number().int(), hp: z.number().int(), immunities: z.array(damageTypeIdSchema) }).optional(),
@@ -231,11 +247,15 @@ export const gearMechanics = {
   anchorFeet: feetSchema.optional(),
   liftMultiplier: z.number().int().optional(),
   magnification: z.number().int().optional(),
-  dig: z.strictObject({ sideFeet: feetSchema, hours: z.number().int() }).optional(),
-  ignite: z.strictObject({ action: z.literal("bonus"), otherFireMinutes: z.number().int() }).optional(),
+  /** Working for `hours`, a hole `sideFeet` on each side in soil or similar material. */
+  dig: z.strictObject({ sideFeet: feetSchema, hours: z.number().int(), inSoilOrSimilar: z.literal(true) }).optional(),
+  /** Tinderbox: lighting anything with exposed fuel takes `exposedFuel`, any other fire takes `otherFireMinutes`. */
+  ignite: z.strictObject({ exposedFuel: activationSchema, otherFireMinutes: z.number().int() }).optional(),
+  /** Every kind of action the text names for using the item. Only the Utilize action and the Bonus Action are typed. */
+  activation: activationSchema.optional(),
   /** Damage when the item is used as a Simple Melee weapon (Torch). */
   attackDamage: damageSchema.optional(),
-  healing: z.strictObject({ dice: diceSchema, action: z.literal("bonus"), rangeFeet: feetSchema }).optional(),
+  healing: z.strictObject({ dice: diceSchema, rangeFeet: feetSchema }).optional(),
   stabilize: z
     .strictObject({
       requiresCondition: conditionIdSchema,
@@ -245,7 +265,6 @@ export const gearMechanics = {
     .optional(),
   coating: z
     .strictObject({
-      action: z.literal("bonus"),
       ammunitionPieces: z.number().int(),
       triggerDamageTypes: z.array(damageTypeIdSchema),
       extraDamage: damageSchema,
@@ -397,9 +416,8 @@ export const weaponMasterySchema = z.strictObject({
   maxSize: sizeSchema.optional(),
   /** Slow: feet the target's Speed drops. */
   speedReductionFeet: feetSchema.optional(),
-  /** Topple: the save, DC 8 plus the attack ability modifier and Proficiency Bonus. */
-  save: z.strictObject({ ability: abilityIdSchema, dc: z.strictObject({ base: z.literal(8), attackAbilityModifier: z.literal(true), proficiencyBonus: z.literal(true) }) }).optional(),
-  condition: conditionIdSchema.optional(),
+  /** Topple: the save, DC 8 plus the attack ability modifier and Proficiency Bonus. A failed save gives `failureCondition`. */
+  save: z.strictObject({ ...forcedSaveShape, dc: saveDcSchema, failureCondition: conditionIdSchema }).optional(),
 })
 export type WeaponMastery = z.infer<typeof weaponMasterySchema>
 
@@ -411,9 +429,8 @@ export const poisonSchema = z.strictObject({
   type: z.enum(poisonTypes),
   /** Price of one dose. */
   cost: costSchema,
-  save: z.strictObject({ ability: z.literal("con"), dc: z.number().int().positive() }).optional(),
+  save: z.strictObject({ ...forcedSaveShape, ability: z.literal("con"), dc: z.number().int().positive(), halfDamageOnSuccess: z.literal(true).optional() }).optional(),
   damage: z.strictObject({ average: z.number().int().positive(), dice: diceSchema, type: z.literal("poison") }).optional(),
-  halfDamageOnSave: z.literal(true).optional(),
   conditions: z
     .array(
       z.strictObject({
@@ -444,9 +461,27 @@ export const poisonSchema = z.strictObject({
 })
 export type Poison = z.infer<typeof poisonSchema>
 
+/** The four kinds of poison and how each exposes a creature, from the Poison section. Poison entries name theirs in `type`. */
+export const poisonTypeSchema = z.strictObject({
+  ...entryShape,
+  exposure: z.enum(["touch-with-exposed-skin", "swallow-entire-dose", "inhale", "piercing-or-slashing-damage"]),
+  /** What ends a coating of poison: it stays potent until then. */
+  persistsUntil: z.array(z.enum(["touched", "washed-off", "delivered-through-wound"])).optional(),
+  /** Inhaled: creatures in a Cube of this side, in feet, are exposed. */
+  cubeSideFeet: feetSchema.optional(),
+  /** Inhaled: holding one's breath does not help. */
+  holdingBreathIneffective: z.literal(true).optional(),
+  /** Injury: how it is applied to a weapon, a piece of ammunition or similar object. */
+  application: activationSchema.optional(),
+  /** Injury: damage that exposes the creature when it comes from the coated object. */
+  triggerDamageTypes: z.array(damageTypeIdSchema).optional(),
+  description: proseSchema,
+})
+export type PoisonType = z.infer<typeof poisonTypeSchema>
+
 export const coinSchema = z.strictObject({
   ...entryShape,
-  abbreviation: z.enum(["cp", "sp", "ep", "gp", "pp"]),
+  abbreviation: z.enum(coins),
   /** Value in gold pieces. */
   gpValue: z.number().positive(),
 })
@@ -484,15 +519,15 @@ export const equipmentRuleSchema = z.discriminatedUnion("kind", [
     /** Raw materials are this fraction of the purchase cost, rounded down. */
     rawMaterialsFraction: z.number().positive(),
     workHoursPerDay: z.number().int().positive(),
-    /** Days needed are the purchase cost in GP divided by this, rounded up. */
-    costGpPerDay: z.number().int().positive(),
+    /** Days needed are the purchase cost divided by this, rounded up. */
+    purchaseCostPerDay: costSchema,
     maxAssistants: z.number().int().positive(),
   }),
   z.strictObject({
     ...ruleShape,
     kind: z.literal("potion-brewing"),
     tool: idSchema,
-    rawMaterialsGp: z.number().int().positive(),
+    rawMaterials: costSchema,
     days: z.number().int().positive(),
     workHoursPerDay: z.number().int().positive(),
   }),
@@ -500,7 +535,7 @@ export const equipmentRuleSchema = z.discriminatedUnion("kind", [
     ...ruleShape,
     kind: z.literal("ship-repair"),
     hitPointsPerDay: z.number().int().positive(),
-    costGpPerHitPoint: z.number().int().positive(),
+    costPerHitPoint: costSchema,
     shipyardFraction: z.number().positive(),
   }),
   z.strictObject({
@@ -509,6 +544,16 @@ export const equipmentRuleSchema = z.discriminatedUnion("kind", [
     privateAccommodationsFraction: z.number().positive(),
     hammockCostPerDay: costSchema,
     cabinCostPerDay: costSchema,
+  }),
+  z.strictObject({
+    ...ruleShape,
+    kind: z.literal("poison-harvesting"),
+    /** Time spent, in minutes, as dice. */
+    timeMinutes: diceSchema,
+    tool: idSchema,
+    check: z.strictObject({ ability: abilityIdSchema, skill: skillIdSchema, dc: z.number().int().positive() }),
+    /** A creature that fails the check by this much or more is subjected to the poison. */
+    failedByAtLeastExposes: z.number().int().positive(),
   }),
   z.strictObject({ ...ruleShape, kind: z.literal("scribing"), spellLevel: z.number().int().min(0).max(9), days: z.number().int().positive(), cost: costSchema }),
 ])

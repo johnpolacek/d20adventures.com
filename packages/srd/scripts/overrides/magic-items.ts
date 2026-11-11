@@ -6,17 +6,12 @@ const demonArmorSentence =
 export const overrides: Override[] = [
   {
     id: "demon-armor",
-    path: "bonuses",
+    path: "conditionalBonuses",
     value: [
-      {
-        to: "armor-class",
-        value: 1,
-        text: "While wearing this armor, you gain a +1 bonus to Armor Class, and you know Abyssal.",
-      },
-      { to: "unarmed-strike-attack-rolls", value: 1, text: demonArmorSentence },
-      { to: "unarmed-strike-damage-rolls", value: 1, text: demonArmorSentence },
+      { to: "attack-rolls", value: 1, condition: "the attack and damage rolls of your Unarmed Strikes", text: demonArmorSentence },
+      { to: "damage-rolls", value: 1, condition: "the attack and damage rolls of your Unarmed Strikes", text: demonArmorSentence },
     ],
-    reason: "The bonus names two rolls of Unarmed Strikes in one phrase, which the sentence parser does not split.",
+    reason: "The bonus names two rolls of Unarmed Strikes in one phrase, which the sentence parser does not split. It applies only to Unarmed Strikes.",
     page: 218,
   },
 ]

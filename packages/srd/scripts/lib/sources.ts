@@ -40,6 +40,12 @@ export function readUpstream<T = unknown>(source: UpstreamName, file: string): T
   return JSON.parse(text)
 }
 
+/**
+ * Whether every pinned file of an upstream source is cached. The cache is not in Git, so a fresh clone has none
+ * until `pnpm sources` runs. Checks against the official text never need it. Cross-checks do, and skip without it.
+ */
+export const hasUpstream = (source: UpstreamName) => Object.keys(lock.upstream[source].files).every((file) => existsSync(cachePath(source, file)))
+
 /** The base source: 5e-bits/5e-database, `src/2024/en`. Pass the name without the `5e-SRD-` prefix, e.g. "Spells". */
 export const readBase = <T = any>(name: string): T[] => readUpstream<T[]>("5e-bits", `5e-SRD-${name}.json`)
 

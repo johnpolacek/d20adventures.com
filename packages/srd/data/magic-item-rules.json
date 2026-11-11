@@ -31,11 +31,14 @@
   },
   {
     "id": "attunement",
-    "name": "No More Than Three Items",
+    "name": "Attunement",
     "page": 102,
     "kind": "attunement",
     "maxItems": 3,
-    "text": "You can be attuned to no more than three magic items at a time. Any attempt to attune to a fourth item fails; you must end your Attunement to an item first. Additionally, you can’t attune to more than one copy of an item. For example, you can’t attune to more than one Ring of Protection at a time."
+    "restsToAttune": "short-rest",
+    "endsWhenAwayFeet": 100,
+    "endsAfterAwayHours": 24,
+    "text": "Some magic items require a creature to form a bond—called Attunement—with them before the creature can use an item’s magical properties. Without becoming attuned to an item that requires Attunement, you gain only its nonmagical benefits unless its description states otherwise. For example, a magic Shield that requires Attunement provides the benefits of a normal Shield if you aren’t attuned to it, but none of its magical properties.\nAttune during a Short Rest\nAttuning to an item requires you to spend a Short Rest focused on only that item while being in physical contact with it (this can’t be the same Short Rest used to learn the item’s properties). This focus can take the form of weapon practice (for a Weapon), meditation (for a Wand), or some other appropriate activity. If the Short Rest is interrupted, the Attunement attempt fails. Otherwise, at the end of the Short Rest, you’re attuned to the magic item and can access its full magical capabilities.\nNo More Than Three Items\nYou can be attuned to no more than three magic items at a time. Any attempt to attune to a fourth item fails; you must end your Attunement to an item first. Additionally, you can’t attune to more than one copy of an item. For example, you can’t attune to more than one Ring of Protection at a time.\nEnding Attunement\nYour Attunement to an item ends if you no longer satisfy the prerequisites for Attunement, if the item has been more than 100 feet away for at least 24 hours, if you die, or if another creature attunes to the item. You can also voluntarily end Attunement by spending another Short Rest focused on the item unless the item is cursed."
   },
   {
     "id": "attunement-prerequisites",
@@ -63,9 +66,29 @@
     "name": "Common",
     "page": 206,
     "kind": "rarity",
-    "value": 100,
+    "value": {
+      "amount": 100,
+      "unit": "gp"
+    },
     "craftingDays": 5,
-    "craftingCost": 50
+    "craftingCost": {
+      "amount": 50,
+      "unit": "gp"
+    }
+  },
+  {
+    "id": "consumable-crafting",
+    "name": "Consumable Item Crafting Time and Cost",
+    "page": 207,
+    "kind": "value-rule",
+    "scope": "crafting",
+    "appliesTo": "consumable",
+    "factor": 0.5,
+    "basis": "rarity-value",
+    "except": [
+      "spell-scroll"
+    ],
+    "text": "The time and cost are halved for a consumable item other than a Spell Scroll, whose crafting time and cost are given in “Equipment.”"
   },
   {
     "id": "consumable-items",
@@ -73,6 +96,20 @@
     "page": 206,
     "kind": "rule",
     "text": "Some items are consumed—used up, in other words—when they are activated. A Potion of Healing must be swallowed, for example, while the writing vanishes from a scroll when it is read. Once used, a consumable item loses its magic."
+  },
+  {
+    "id": "consumable-value",
+    "name": "Consumable Item Value",
+    "page": 206,
+    "kind": "value-rule",
+    "scope": "value",
+    "appliesTo": "consumable",
+    "factor": 0.5,
+    "basis": "rarity-value",
+    "except": [
+      "spell-scroll"
+    ],
+    "text": "Halve the value for a consumable item other than a Spell Scroll."
   },
   {
     "id": "crafting-magic-items",
@@ -103,6 +140,13 @@
     "text": "A magic item’s description specifies whether it bears a curse. Most methods of identifying items, including the Identify spell, fail to reveal such a curse.\nAttunement to a cursed item can’t be ended voluntarily unless the curse is broken first, such as with a Remove Curse spell."
   },
   {
+    "id": "identifying-a-magic-item",
+    "name": "Identifying a Magic Item",
+    "page": 102,
+    "kind": "rule",
+    "text": "Some magic items are indistinguishable from their nonmagical counterparts, while others are conspicuously magical. Handling a magic item is enough to give you a sense that it is extraordinary, but learning a magic item’s properties isn’t automatic.\nThe Identify spell is the fastest way to reveal an item’s properties. Alternatively, you can focus on one magic item during a Short Rest while being in physical contact with the item. At the end of the rest, you learn its properties and how to use them (but not any curse the item might bear).\nSometimes a magic item carries a clue to its properties. The command word to activate a ring might be etched inside the band, or a feathered design might hint that it’s a Ring of Feather Falling.\nWearing or experimenting with an item can also offer hints about its properties. In the specific case of Potions, a little taste is enough to tell the taster what a potion does. Other items might require more experimentation. For example, if your character puts on a Ring of Swimming, the GM might say, “Your movement feels strangely fluid.” Perhaps you then dive into a river to see what happens. The GM would then say you swim unexpectedly well."
+  },
+  {
     "id": "items-made-for-specific-creatures",
     "name": "Items Made for Specific Creatures",
     "page": 205,
@@ -114,9 +158,15 @@
     "name": "Legendary",
     "page": 206,
     "kind": "rarity",
-    "value": 200000,
+    "value": {
+      "amount": 200000,
+      "unit": "gp"
+    },
     "craftingDays": 250,
-    "craftingCost": 100000
+    "craftingCost": {
+      "amount": 100000,
+      "unit": "gp"
+    }
   },
   {
     "id": "magic-item-rarity",
@@ -140,11 +190,25 @@
     "text": "Common magic items can often be bought in a town or city. Uncommon and Rare magic items are usually found only in cities, and rarer magic items might be sold only in wondrous locations, such as a city on another plane of existence. If you allow characters to buy and sell magic items in your campaign, rarity can help you set prices for those items. Gold Piece values are provided in the Magic Item Rarities and Values table, though a seller might ask for a service rather than coin as payment.\nIf a magic item incorporates an item that has a purchase cost in “Equipment” (such as a weapon or a suit of armor), add that item’s cost to the magic item’s value. For example, +1 Armor (Plate Armor) has a value of 5,500 GP, which is the sum of a Rare magic item’s value (4,000 GP) and the cost of Plate Armor (1,500 GP).\n*Halve the value for a consumable item other than a Spell Scroll. The value of a Spell Scroll is double what it costs to scribe the scroll (as specified in the “Scribing Spell Scrolls” section of “Equipment”)."
   },
   {
+    "id": "multiple-items-of-the-same-kind",
+    "name": "Multiple Items of the Same Kind",
+    "page": 103,
+    "kind": "rule",
+    "text": "You can’t wear more than one of certain magic items. You can’t normally wear more than one pair of footwear, one pair of gloves or gauntlets, one pair of bracers, one suit of armor, one item of headwear, or one cloak. The GM might make exceptions."
+  },
+  {
     "id": "paired-items",
     "name": "Paired Items",
     "page": 205,
     "kind": "rule",
     "text": "You can allow exceptions to the rule that paired items must both be worn. For example, a character with only one arm might be able to use a single Glove of Missile Snaring so long as the matching glove is on their person."
+  },
+  {
+    "id": "paired-items-worn",
+    "name": "Paired Items",
+    "page": 103,
+    "kind": "rule",
+    "text": "Items that come in pairs—such as boots, bracers, gauntlets, and gloves—impart their benefits only if both items of the pair are worn. For example, a character wearing a Boot of Striding and Springing on one foot and a Boot of Elvenkind on the other foot gains no benefit from either."
   },
   {
     "id": "potion",
@@ -153,16 +217,105 @@
     "kind": "category",
     "category": "potion",
     "tools": "Alchemist’s Supplies or Herbalism Kit",
-    "text": "An item in the Potion category might be a magical brew that must be imbibed or an oil that must be applied to a creature or an object. A typical potion consists of 1 ounce of liquid in a vial.\nUsing a Potion. Potions are consumable items. Drinking a potion or administering it to another creature requires a Bonus Action. Applying an oil might take longer as specified in its description. Once used, a potion takes effect immediately, and it is used up.\nMixing Potions. A character might drink one potion while still under the effects of another or pour several potions into a single container. The strange ingredients used in creating potions can result in unpredictable interactions.\nWhen a character mixes two potions together, roll on the Potion Miscibility table. If more than two are combined, roll again for each subsequent potion, combining the results. Unless the effects are immediately obvious, reveal them only when they become evident."
+    "text": "An item in the Potion category might be a magical brew that must be imbibed or an oil that must be applied to a creature or an object. A typical potion consists of 1 ounce of liquid in a vial.\nUsing a Potion. Potions are consumable items. Drinking a potion or administering it to another creature requires a Bonus Action. Applying an oil might take longer as specified in its description. Once used, a potion takes effect immediately, and it is used up.\nMixing Potions. A character might drink one potion while still under the effects of another or pour several potions into a single container. The strange ingredients used in creating potions can result in unpredictable interactions.\nWhen a character mixes two potions together, roll on the Potion Miscibility table. If more than two are combined, roll again for each subsequent potion, combining the results. Unless the effects are immediately obvious, reveal them only when they become evident.",
+    "tables": [
+      {
+        "caption": "Potion Miscibility",
+        "dice": "1d100",
+        "columns": [
+          "Result"
+        ],
+        "rows": [
+          {
+            "roll": {
+              "min": 1,
+              "max": 1
+            },
+            "cells": [
+              "Both potions lose their effects, and the mixture creates a magical explosion in a 5-foot-radius Sphere centered on itself. Each creature in that area takes 4d10 Force damage."
+            ]
+          },
+          {
+            "roll": {
+              "min": 2,
+              "max": 8
+            },
+            "cells": [
+              "Both potions lose their effects, and the mixture becomes an ingested poison of your choice (see “Poison” in “Gameplay Toolbox”)."
+            ]
+          },
+          {
+            "roll": {
+              "min": 9,
+              "max": 15
+            },
+            "cells": [
+              "Both potions lose their effects."
+            ]
+          },
+          {
+            "roll": {
+              "min": 16,
+              "max": 25
+            },
+            "cells": [
+              "One potion loses its effect."
+            ]
+          },
+          {
+            "roll": {
+              "min": 26,
+              "max": 35
+            },
+            "cells": [
+              "Both potions work, but with their numerical effects and durations halved. If a potion has no numerical effect and no duration, it instead loses its effect."
+            ]
+          },
+          {
+            "roll": {
+              "min": 36,
+              "max": 90
+            },
+            "cells": [
+              "Both potions work normally."
+            ]
+          },
+          {
+            "roll": {
+              "min": 91,
+              "max": 99
+            },
+            "cells": [
+              "Both potions work, but the numerical effects and duration of one potion are doubled. If neither potion has anything to double in this way, they work normally."
+            ]
+          },
+          {
+            "roll": {
+              "min": 100,
+              "max": 100
+            },
+            "cells": [
+              "Only one potion works, but its effects are permanent. Choose the simplest effect to make permanent or the one that seems the most fun. For example, a Potion of Healing might increase the drinker’s Hit Point maximum by 2d4 + 2, or a Potion of Invisibility might give the drinker the Invisible condition indefinitely. At your discretion, a Dispel Magic spell or similar magic might end this lasting effect."
+            ]
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "rare",
     "name": "Rare",
     "page": 206,
     "kind": "rarity",
-    "value": 4000,
+    "value": {
+      "amount": 4000,
+      "unit": "gp"
+    },
     "craftingDays": 50,
-    "craftingCost": 2000
+    "craftingCost": {
+      "amount": 2000,
+      "unit": "gp"
+    }
   },
   {
     "id": "ring",
@@ -190,6 +343,384 @@
     "category": "scroll",
     "tools": "Calligrapher’s Supplies",
     "text": "An item in the Scroll category is a roll of paper or parchment, sometimes attached to wooden rods and typically kept safe in a tube of ivory, jade, leather, metal, or wood. The most prevalent scroll is the Spell Scroll, a spell stored in written form.\nUsing a Scroll. Scrolls are consumable items. Unleashing the magic in a scroll requires the user to read the scroll. When its magic has been invoked, the scroll can’t be used again. Its words fade, or it crumbles into dust.\nAny creature that can understand a written language can read a scroll and attempt to activate it unless its description notes otherwise."
+  },
+  {
+    "id": "sentient-abilities",
+    "name": "Abilities",
+    "page": 207,
+    "kind": "sentient-abilities",
+    "abilityRoll": {
+      "dice": "4d6",
+      "dropLowest": 1
+    },
+    "text": "A sentient magic item has Intelligence, Wisdom, and Charisma scores. Choose the item’s abilities, or determine them randomly as follows: roll 4d6 for each one, dropping the lowest roll and totaling the rest."
+  },
+  {
+    "id": "sentient-alignment",
+    "name": "Alignment",
+    "page": 207,
+    "kind": "rule",
+    "text": "A sentient magic item has an alignment. Its creator or nature might suggest an alignment. Otherwise, pick an alignment or roll on the Sentient Item’s Alignment table.",
+    "tables": [
+      {
+        "caption": "Sentient Item’s Alignment",
+        "dice": "1d100",
+        "columns": [
+          "Alignment"
+        ],
+        "rows": [
+          {
+            "roll": {
+              "min": 1,
+              "max": 15
+            },
+            "cells": [
+              "Lawful Good"
+            ]
+          },
+          {
+            "roll": {
+              "min": 16,
+              "max": 35
+            },
+            "cells": [
+              "Neutral Good"
+            ]
+          },
+          {
+            "roll": {
+              "min": 36,
+              "max": 50
+            },
+            "cells": [
+              "Chaotic Good"
+            ]
+          },
+          {
+            "roll": {
+              "min": 51,
+              "max": 63
+            },
+            "cells": [
+              "Lawful Neutral"
+            ]
+          },
+          {
+            "roll": {
+              "min": 64,
+              "max": 73
+            },
+            "cells": [
+              "Neutral"
+            ]
+          },
+          {
+            "roll": {
+              "min": 74,
+              "max": 85
+            },
+            "cells": [
+              "Chaotic Neutral"
+            ]
+          },
+          {
+            "roll": {
+              "min": 86,
+              "max": 89
+            },
+            "cells": [
+              "Lawful Evil"
+            ]
+          },
+          {
+            "roll": {
+              "min": 90,
+              "max": 96
+            },
+            "cells": [
+              "Neutral Evil"
+            ]
+          },
+          {
+            "roll": {
+              "min": 97,
+              "max": 100
+            },
+            "cells": [
+              "Chaotic Evil"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sentient-communication",
+    "name": "Communication",
+    "page": 207,
+    "kind": "rule",
+    "text": "A sentient item communicates by sharing its emotions, broadcasting its thoughts telepathically, or speaking aloud. You can choose how it communicates or roll on the Sentient Item’s Communication table.",
+    "tables": [
+      {
+        "caption": "Sentient Item’s Communication",
+        "dice": "1d10",
+        "columns": [
+          "Communication"
+        ],
+        "rows": [
+          {
+            "roll": {
+              "min": 1,
+              "max": 6
+            },
+            "cells": [
+              "The item communicates by transmitting emotion to the creature carrying or wielding it."
+            ]
+          },
+          {
+            "roll": {
+              "min": 7,
+              "max": 9
+            },
+            "cells": [
+              "The item speaks one or more languages."
+            ]
+          },
+          {
+            "roll": {
+              "min": 10,
+              "max": 10
+            },
+            "cells": [
+              "The item speaks one or more languages. In addition, the item can communicate telepathically with any creature that carries or wields it."
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sentient-conflict",
+    "name": "Conflict",
+    "page": 208,
+    "kind": "sentient-conflict",
+    "save": {
+      "ability": "cha",
+      "dcBase": 12,
+      "plusItemModifierOf": "cha"
+    },
+    "demands": [
+      {
+        "name": "Chase My Dreams",
+        "text": "The item demands that its bearer pursue the item’s goals to the exclusion of all other goals."
+      },
+      {
+        "name": "Get Rid of It",
+        "text": "The item demands that its bearer dispose of anything the item finds repugnant."
+      },
+      {
+        "name": "It’s Time for a Change",
+        "text": "The item demands to be given to someone else."
+      },
+      {
+        "name": "Keep Me Close",
+        "text": "The item insists on being carried or worn at all times. If its bearer refuses to comply with the item’s demands, the item can do any of the following:"
+      }
+    ],
+    "refusals": [
+      "Make it impossible for its bearer to attune to it.",
+      "Suppress one or more of its activated properties.",
+      "Attempt to take control of its bearer, whereupon the bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the bearer has the Charmed condition for 1d12 hours. While Charmed in this way, the bearer must try to follow the item’s commands."
+    ],
+    "charmedHours": "1d12",
+    "text": "When the bearer of a sentient item acts in a manner opposed to the item’s alignment or purpose, conflict can arise. When such a conflict occurs, the item’s bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the item makes one or more of the following demands:\nChase My Dreams. The item demands that its bearer pursue the item’s goals to the exclusion of all other goals.\nGet Rid of It. The item demands that its bearer dispose of anything the item finds repugnant.\nIt’s Time for a Change. The item demands to be given to someone else.\nKeep Me Close. The item insists on being carried or worn at all times. If its bearer refuses to comply with the item’s demands, the item can do any of the following:\n• Make it impossible for its bearer to attune to it.\n• Suppress one or more of its activated properties.\n• Attempt to take control of its bearer, whereupon the bearer makes a Charisma saving throw (DC 12 plus the item’s Charisma modifier). On a failed save, the bearer has the Charmed condition for 1d12 hours. While Charmed in this way, the bearer must try to follow the item’s commands.\nIf the bearer takes damage, it repeats the save, ending the effect on a success. Whether or not the attempt to control its bearer succeeds, the item can’t use this power again until the next dawn."
+  },
+  {
+    "id": "sentient-magic-item-traits",
+    "name": "Sentient Magic Item Traits",
+    "page": 207,
+    "kind": "rule",
+    "text": "When you make a sentient magic item, you create the item’s persona much as you would create an NPC, with these exceptions."
+  },
+  {
+    "id": "sentient-magic-items",
+    "name": "Sentient Magic Items",
+    "page": 207,
+    "kind": "rule",
+    "text": "Some magic items have sentience and personality. Such an item might be possessed, haunted by the spirit of a previous owner, or self-aware thanks to the magic used to create it. A sentient item might be a cherished ally to its wielder or a continual thorn in the side.\nMost sentient items are weapons, but other kinds of items can manifest sentience. Single-use items such as potions and scrolls are never sentient.\nThe GM controls sentient magic items and their activated properties. A bearer who maintains a good relationship with the item can access those properties. If the relationship is strained, a conflict can ensue (see “Conflict” below)."
+  },
+  {
+    "id": "sentient-senses",
+    "name": "Senses",
+    "page": 207,
+    "kind": "rule",
+    "text": "A sentient item can perceive its surroundings out to a limited range. You can choose its senses or roll on the Sentient Item’s Senses table.",
+    "tables": [
+      {
+        "caption": "Sentient Item’s Senses",
+        "dice": "1d4",
+        "columns": [
+          "Senses"
+        ],
+        "rows": [
+          {
+            "roll": {
+              "min": 1,
+              "max": 1
+            },
+            "cells": [
+              "Hearing and standard vision out to 30 feet"
+            ]
+          },
+          {
+            "roll": {
+              "min": 2,
+              "max": 2
+            },
+            "cells": [
+              "Hearing and standard vision out to 60 feet"
+            ]
+          },
+          {
+            "roll": {
+              "min": 3,
+              "max": 3
+            },
+            "cells": [
+              "Hearing and standard vision out to 120 feet"
+            ]
+          },
+          {
+            "roll": {
+              "min": 4,
+              "max": 4
+            },
+            "cells": [
+              "Hearing and Darkvision out to 120 feet"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sentient-special-purpose",
+    "name": "Special Purpose",
+    "page": 208,
+    "kind": "rule",
+    "text": "You can give a sentient item an objective it pursues, perhaps to the exclusion of all else. As long as the wielder’s use of the item aligns with that special purpose, the item remains cooperative. Deviating from this course might cause conflict between the wielder and the item (see “Conflict” below). You can pick a special purpose or roll on the Sentient Item’s Special Purpose table.",
+    "tables": [
+      {
+        "caption": "Sentient Item’s Special Purpose",
+        "dice": "1d10",
+        "columns": [
+          "Special Purpose"
+        ],
+        "rows": [
+          {
+            "roll": {
+              "min": 1,
+              "max": 1
+            },
+            "cells": [
+              "Aligned. The item seeks to defeat or destroy those of a diametrically opposed alignment. Such an item is never Neutral."
+            ]
+          },
+          {
+            "roll": {
+              "min": 2,
+              "max": 2
+            },
+            "cells": [
+              "Bane. The item seeks to thwart or destroy creatures of a particular type, such as Constructs, Fiends, or Undead."
+            ]
+          },
+          {
+            "roll": {
+              "min": 3,
+              "max": 3
+            },
+            "cells": [
+              "Creator Seeker. The item seeks its creator and wants to understand why it was created."
+            ]
+          },
+          {
+            "roll": {
+              "min": 4,
+              "max": 4
+            },
+            "cells": [
+              "Destiny Seeker. The item believes it and its bearer have key roles to play in future events."
+            ]
+          },
+          {
+            "roll": {
+              "min": 5,
+              "max": 5
+            },
+            "cells": [
+              "Destroyer. The item craves destruction and goads its user to fight arbitrarily."
+            ]
+          },
+          {
+            "roll": {
+              "min": 6,
+              "max": 6
+            },
+            "cells": [
+              "Glory Seeker. The item seeks renown as the greatest magic item in the world by winning fame or notoriety for its user."
+            ]
+          },
+          {
+            "roll": {
+              "min": 7,
+              "max": 7
+            },
+            "cells": [
+              "Lore Seeker. The item craves knowledge or is determined to solve a mystery, learn a secret, or unravel a cryptic prophecy."
+            ]
+          },
+          {
+            "roll": {
+              "min": 8,
+              "max": 8
+            },
+            "cells": [
+              "Protector. The item seeks to defend a particular kind of creature, such as elves or werewolves."
+            ]
+          },
+          {
+            "roll": {
+              "min": 9,
+              "max": 9
+            },
+            "cells": [
+              "Soulmate Seeker. The item seeks another sentient magic item, perhaps one that is similar to itself."
+            ]
+          },
+          {
+            "roll": {
+              "min": 10,
+              "max": 10
+            },
+            "cells": [
+              "Templar. The item seeks to defend the servants and interests of a particular deity."
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spell-scroll-value",
+    "name": "Spell Scroll Value",
+    "page": 206,
+    "kind": "value-rule",
+    "scope": "value",
+    "appliesTo": "spell-scroll",
+    "factor": 2,
+    "basis": "scribing-cost",
+    "text": "The value of a Spell Scroll is double what it costs to scribe the scroll (as specified in the “Scribing Spell Scrolls” section of “Equipment”)."
   },
   {
     "id": "spells-cast-from-items",
@@ -226,9 +757,15 @@
     "name": "Uncommon",
     "page": 206,
     "kind": "rarity",
-    "value": 400,
+    "value": {
+      "amount": 400,
+      "unit": "gp"
+    },
     "craftingDays": 10,
-    "craftingCost": 200
+    "craftingCost": {
+      "amount": 200,
+      "unit": "gp"
+    }
   },
   {
     "id": "unusual-anatomy",
@@ -242,9 +779,15 @@
     "name": "Very Rare",
     "page": 206,
     "kind": "rarity",
-    "value": 40000,
+    "value": {
+      "amount": 40000,
+      "unit": "gp"
+    },
     "craftingDays": 125,
-    "craftingCost": 20000
+    "craftingCost": {
+      "amount": 20000,
+      "unit": "gp"
+    }
   },
   {
     "id": "wand",
@@ -263,6 +806,13 @@
     "category": "weapon",
     "tools": "Leatherworker’s Tools, Smith’s Tools, or Woodcarver’s Tools depending on the kind of weapon as noted in the tools’ descriptions",
     "text": "A magic weapon is typically a magical version of a weapon from “Equipment.” Some magic weapons specify the type of weapon they are in their descriptions, such as a Longsword or Longbow. If no weapon type is specified, you may choose the type or determine it randomly.\nAmmunition. If a magic weapon has the Ammunition property, ammunition fired from it is considered magical for the purpose of any rule that cares whether a weapon is magical or not."
+  },
+  {
+    "id": "wearing-and-wielding-items",
+    "name": "Wearing and Wielding Items",
+    "page": 103,
+    "kind": "rule",
+    "text": "Using a magic item’s properties might mean wearing or wielding it. A magic item meant to be worn must be donned in the intended fashion: boots go on feet, gloves on hands, hats and helmets on a head, and rings on a finger. Magic armor must be donned, a Shield strapped to the arm, a cloak fastened about the shoulders. A weapon must be held.\nIn most cases, a magic item that’s meant to be worn can fit a creature regardless of size or build. Magic garments are made to be easily adjustable, or they magically adjust themselves to the wearer."
   },
   {
     "id": "wondrous-item",

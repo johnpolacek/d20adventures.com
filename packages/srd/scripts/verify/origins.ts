@@ -3,7 +3,7 @@ import { abilityIds, damageTypeIds } from "../../src/schema/common"
 import { dataPath, readData, toId } from "../lib/data"
 import { inOfficial, missingSentences, pageOf, pages, pagesOf, pageText, squash } from "../lib/official"
 import type { Report } from "../lib/report"
-import { readBase, readOpen5e } from "../lib/sources"
+import { hasUpstream, readBase, readOpen5e } from "../lib/sources"
 
 // Reads the official pages with its own parser, apart from the builder. Typed fields are compared with what the
 // entry's own text says, and the text is compared with the pages, so a wrong number cannot pass both.
@@ -106,8 +106,8 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
     set("savingThrowAdvantage", { ...(conditions.length ? { conditions } : {}), ...(abilities ? { abilities: [1, 2, 3].map((i) => abilityByName[abilities[i]]) } : {}) })
   const hp = t.match(/Hit Point maximum increases by (\d+), and it increases by (\d+) again whenever you gain a level/)
   if (hp) set("hitPointBonus", { initial: Number(hp[1]), perLevel: Number(hp[2]) })
-  if (/\bas a Bonus Action\b/i.test(t) && !/^You can use this Bonus Action/.test(t)) set("activation", "bonus-action")
-  else if (/take a Reaction to/.test(t)) set("activation", "reaction")
+  if (/\bas a Bonus Action\b/i.test(t) && !/^You can use this Bonus Action/.test(t)) set("activation", ["bonus-action"])
+  else if (/take a Reaction to/.test(t)) set("activation", ["reaction"])
   set("level", num(/character level (\d+)\b/))
   set("durationMinutes", num(/(?:for|last for) (\d+) minutes/))
   const uses = ownUses(t) ?? (spellsOnItem ? undefined : castUses(t))
@@ -153,8 +153,8 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   if (attack) set("attackBonus", { bonus: Number(attack[1]), weapon: attack[2].toLowerCase() })
   const armor = t.match(/wearing (Light), (Medium), or (Heavy) armor, you gain a \+(\d+) bonus to Armor Class/)
   if (armor) set("armorClassBonus", { bonus: Number(armor[4]), armor: [1, 2, 3].map((i) => armor[i].toLowerCase()) })
-  const floor = t.match(/treat any 1 or 2 on a damage die as a (\d)\. The weapon must have the (Two-Handed) or (Versatile) property/)
-  if (floor) set("damageDieMinimum", { minimum: Number(floor[1]), properties: [toId(floor[2]), toId(floor[3])] })
+  const floor = t.match(/with a Melee weapon that you are holding with two hands, you can treat any 1 or 2 on a damage die as a (\d)\. The weapon must have the (Two-Handed) or (Versatile) property/)
+  if (floor) set("damageDieMinimum", { minimum: Number(floor[1]), weapon: "melee", heldWith: "two-hands", properties: [toId(floor[2]), toId(floor[3])] })
   const free = t.match(/level (\d)–(\d) spell slot, roll (\d+d\d+)\. If the number you roll is the same as the slot’s level/)
   if (free) {
     set("freeCasting", { minSlotLevel: Number(free[1]), maxSlotLevel: Number(free[2]) })
@@ -172,6 +172,12 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
   if (/Advantage on any ability check you make to end the Grappled condition/.test(t)) set("grappledEscapeAdvantage", true)
   if (/count as one size larger when determining your carrying capacity/.test(t)) set("carryingCapacitySizeBonus", 1)
   if (/magic can’t put you to sleep/.test(t)) set("sleepImmunity", true)
+  if (/must be on a stone surface or touching a stone surface/.test(t)) set("requires", "stone-surface")
+  else if (/^While within Dim Light or Darkness/.test(t)) set("requires", "dim-light-or-darkness")
+  if (/(?:^|\. )When you hit (?:a target|a Large or smaller creature) with an attack roll and deal damage/.test(t)) set("trigger", "hit-with-attack-roll")
+  else if (/Once per turn when you hit a target with a weapon/.test(t)) set("trigger", "hit-with-weapon")
+  else if (/(?:^|\. )When you take damage/.test(t)) set("trigger", "take-damage")
+  set("targetMaxSize", t.match(/with an attack roll and deal damage to it, you can give that target the Prone condition/) ? t.match(/hit a (\w+) or smaller creature/)?.[1] : undefined)
   set("dice", t.match(/you can roll (\d+d\d+) and apply the total rolled/)?.[1] ?? out.dice)
   return out
 }
@@ -225,6 +231,9 @@ const derivedKeys = [
   "grappledEscapeAdvantage",
   "carryingCapacitySizeBonus",
   "sleepImmunity",
+  "requires",
+  "trigger",
+  "targetMaxSize",
 ]
 
 /** Compare the derived fields of one item with its typed fields, both ways. Returns how many fields were compared. */
@@ -286,6 +295,9 @@ function verifyRules(report: Report) {
     for (const sentence of missingSentences(rule.text)) proseFailures.push(`${rule.id}: not in the official text: ${sentence}`)
     if (!inOfficial(rule.text)) proseFailures.push(`${rule.id}: the whole text is not one passage of the official text`)
     if (!pagesOf(rule.text).includes(rule.page) || pageOf(rule.text) !== rule.page) pageFailures.push(`${rule.id}: page ${rule.page}, the text begins on ${pageOf(rule.text)}`)
+    // One official paragraph: the text has no break, and it sits inside one tab-delimited segment of its page.
+    const segments = pages[rule.page - 1].split("\n\t").map(squash)
+    if (rule.text.includes("\n") || !segments.some((segment) => segment.includes(squash(rule.text)))) proseFailures.push(`${rule.id}: the text is not one official paragraph`)
     if (rule.id !== toId(rule.name)) failures.push(`${rule.id}: id is not toId(name)`)
 
     // Typed numbers, read from the rule text with patterns of their own.
@@ -300,7 +312,7 @@ function verifyRules(report: Report) {
     else if (grant?.[1]) expected.grants = { kind: "skill-proficiency", count: words[grant[1]] }
     else if (grant?.[2]) expected.grants = { kind: "tool-proficiency", count: words[grant[2]] }
     const gold = t.match(/choice between a package of equipment and (\d+) GP/)
-    if (gold) expected.goldInsteadOfEquipment = Number(gold[1])
+    if (gold) expected.moneyInsteadOfEquipment = { amount: Number(gold[1]), unit: "gp" }
     const type = t.match(/Every species in “Character Origins” is (\w+);/)
     if (type) expected.creatureType = type[1].toLowerCase()
     const life = t.match(/live for about (\d+) years/)
@@ -325,7 +337,7 @@ function verifyRules(report: Report) {
   for (const b of backgrounds) {
     if (b.abilityScores.length !== rule("background-ability-scores")?.abilityScoreIncrease?.listed) ruleFailures.push(`${b.name}: ability score count`)
     if (b.skills.length !== rule("background-skill-proficiencies")?.grants?.count) ruleFailures.push(`${b.name}: skill count`)
-    if (b.equipment.b.gp !== rule("background-equipment")?.goldInsteadOfEquipment) ruleFailures.push(`${b.name}: gold instead of equipment`)
+    if (!same(b.equipment[1].money, rule("background-equipment")?.moneyInsteadOfEquipment)) ruleFailures.push(`${b.name}: gold instead of equipment`)
   }
   for (const e of readData("species")) if (e.creatureType !== rule("species-creature-type")?.creatureType) ruleFailures.push(`${e.name}: creature type`)
   report.check("origin-rules", "background and species data obey the rules", backgrounds.length * 3 + 9, ruleFailures)
@@ -361,6 +373,8 @@ function verifySpecies(report: Report) {
   const optionFailures: string[] = []
   const spellFailures: string[] = []
   const refFailures: string[] = []
+  const paraFailures: string[] = []
+  let paraTotal = 0
   let headerTotal = 0
   let nameTotal = 0
   let textTotal = 0
@@ -411,6 +425,12 @@ function verifySpecies(report: Report) {
       )
     )
       nameFailures.push(`${entry.name}: traits ${show(entry.traits.map((t: any) => t.name))}, official ${show(traitNames)}`)
+
+    // Paragraph breaks: each official paragraph start is a paragraph start in the data, in order, and the counts agree.
+    const starts = (list: string[]) => list.map((paragraph) => squash(paragraph).slice(0, 30))
+    const dataParagraphs = entry.traits.flatMap((trait: any) => `${trait.name}. ${trait.text}`.split("\n"))
+    paraTotal += Math.max(paragraphs.length, dataParagraphs.length)
+    if (!same(starts(paragraphs), starts(dataParagraphs))) paraFailures.push(`${entry.name}: ${dataParagraphs.length} paragraphs in the data, ${paragraphs.length} official, or the starts differ`)
 
     // Prose: every sentence is in the species own block, and every official paragraph is in the data.
     const dataText: string[] = []
@@ -464,7 +484,7 @@ function verifySpecies(report: Report) {
                 { shape: "line", feet: Number(shapes[2]), width: Number(shapes[3]) },
               ]
             : [],
-          save: save ? { ability: abilityByName[save[1]], dc: { base: Number(save[2]), abilities: [abilityByName[save[3]]], proficiencyBonus: true } } : null,
+          save: save ? { ability: abilityByName[save[1]], dc: Number(save[2]) === 8 ? { plusModifierOf: abilityByName[save[3]] } : Number(save[2]) } : null,
           damage:
             first && steps
               ? [
@@ -493,7 +513,7 @@ function verifySpecies(report: Report) {
       const pairs = []
       for (let i = 0; i < body.length; i += 2) pairs.push([body[i], body[i + 1].toLowerCase()])
       const options = entry.traits[0].choice.options
-      const base = readBase("Subspecies")
+      const base = hasUpstream("5e-bits") ? readBase("Subspecies") : []
       optionTotal += pairs.length
       if (pairs.length !== 10 || options.length !== 10) dragonFailures.push(`expected 10 dragon ancestries, official ${pairs.length}, data ${options.length}`)
       for (const [dragon, type] of pairs) {
@@ -597,6 +617,7 @@ function verifySpecies(report: Report) {
 
   report.check("species", "creature type, sizes with heights, speed", headerTotal, headerFailures)
   report.check("species", "trait names and order", nameTotal, nameFailures)
+  report.check("species", "trait paragraph breaks match the official paragraph starts", paraTotal, paraFailures)
   report.check("species", "trait and option prose is the official wording, in the species' own pages", textTotal, textFailures)
   report.check("species", "every official trait paragraph is in the data", coverTotal, coverFailures)
   report.check("species", "typed fields match what each trait and option text says", mechTotal, mechFailures)
@@ -632,45 +653,49 @@ function verifySpecies(report: Report) {
   )
 
   // Open5e: names, sizes, speed.
-  const open = readOpen5e("Species")
-  const traits = readOpen5e("SpeciesTrait")
-  const openFailures: string[] = []
-  let openTotal = 0
-  for (const entry of species) {
-    const rows = traits.filter((row) => row.fields.parent === `srd-2024_${entry.id}`)
-    const size = rows.find((row) => row.fields.type === "SIZE")?.fields.desc ?? ""
-    const speedRow = rows.find((row) => row.fields.type === "SPEED")?.fields.desc ?? ""
-    const names = rows.filter((row) => !row.fields.type).map((row) => row.fields.name)
-    openTotal += 3 + entry.traits.length
-    if (!open.some((row) => row.fields.name === entry.name)) openFailures.push(`${entry.name}: not in Open5e`)
-    for (const { size: s, height } of entry.sizes) if (!squash(size).includes(squash(`${s} (${height})`))) openFailures.push(`${entry.name}: Open5e size "${size}" lacks ${s} (${height})`)
-    if (squash(speedRow) !== squash(`${entry.speed} feet`)) openFailures.push(`${entry.name}: Open5e speed "${speedRow}", data ${entry.speed}`)
-    if (
-      !same(
-        names,
-        entry.traits.map((t: any) => t.name)
+  if (hasUpstream("open5e")) {
+    const open = readOpen5e("Species")
+    const traits = readOpen5e("SpeciesTrait")
+    const openFailures: string[] = []
+    let openTotal = 0
+    for (const entry of species) {
+      const rows = traits.filter((row) => row.fields.parent === `srd-2024_${entry.id}`)
+      const size = rows.find((row) => row.fields.type === "SIZE")?.fields.desc ?? ""
+      const speedRow = rows.find((row) => row.fields.type === "SPEED")?.fields.desc ?? ""
+      const names = rows.filter((row) => !row.fields.type).map((row) => row.fields.name)
+      openTotal += 3 + entry.traits.length
+      if (!open.some((row) => row.fields.name === entry.name)) openFailures.push(`${entry.name}: not in Open5e`)
+      for (const { size: s, height } of entry.sizes) if (!squash(size).includes(squash(`${s} (${height})`))) openFailures.push(`${entry.name}: Open5e size "${size}" lacks ${s} (${height})`)
+      if (squash(speedRow) !== squash(`${entry.speed} feet`)) openFailures.push(`${entry.name}: Open5e speed "${speedRow}", data ${entry.speed}`)
+      if (
+        !same(
+          names,
+          entry.traits.map((t: any) => t.name)
+        )
       )
-    )
-      openFailures.push(`${entry.name}: Open5e traits ${show(names)}, data ${show(entry.traits.map((t: any) => t.name))}`)
-    for (const trait of entry.traits) {
-      const row = rows.find((r) => r.fields.name === trait.name)
-      if (row && !squash(trait.text).startsWith(squash(row.fields.desc).slice(0, 50))) openFailures.push(`${entry.name} ${trait.name}: Open5e text begins differently`)
+        openFailures.push(`${entry.name}: Open5e traits ${show(names)}, data ${show(entry.traits.map((t: any) => t.name))}`)
+      for (const trait of entry.traits) {
+        const row = rows.find((r) => r.fields.name === trait.name)
+        if (row && !squash(trait.text).startsWith(squash(row.fields.desc).slice(0, 50))) openFailures.push(`${entry.name} ${trait.name}: Open5e text begins differently`)
+      }
     }
-  }
-  report.crossCheck("species", "Open5e agrees on names, sizes, speed, trait names and trait text", openTotal, openFailures, [])
+    report.crossCheck("species", "Open5e agrees on names, sizes, speed, trait names and trait text", openTotal, openFailures, [])
+  } else report.skip("species", "Open5e agrees on names, sizes, speed, trait names and trait text")
 
-  const base = readBase("Species")
-  const baseFailures: string[] = []
-  for (const entry of species) {
-    const row = base.find((b: any) => b.index === entry.id)
-    if (!row) {
-      baseFailures.push(`${entry.name}: not in the base source`)
-      continue
+  if (hasUpstream("5e-bits")) {
+    const base = readBase("Species")
+    const baseFailures: string[] = []
+    for (const entry of species) {
+      const row = base.find((b: any) => b.index === entry.id)
+      if (!row) {
+        baseFailures.push(`${entry.name}: not in the base source`)
+        continue
+      }
+      if (row.speed !== entry.speed) baseFailures.push(`${entry.name}: base speed ${row.speed}, data ${entry.speed}`)
+      if (row.type.toLowerCase() !== entry.creatureType) baseFailures.push(`${entry.name}: base type ${row.type}`)
     }
-    if (row.speed !== entry.speed) baseFailures.push(`${entry.name}: base speed ${row.speed}, data ${entry.speed}`)
-    if (row.type.toLowerCase() !== entry.creatureType) baseFailures.push(`${entry.name}: base type ${row.type}`)
-  }
-  report.crossCheck("species", "base source agrees on speed and creature type", species.length * 2, baseFailures, [])
+    report.crossCheck("species", "base source agrees on speed and creature type", species.length * 2, baseFailures, [])
+  } else report.skip("species", "base source agrees on speed and creature type")
 }
 
 function collectSpellIds(species: any[]): string[] {
@@ -730,28 +755,33 @@ function verifyBackgrounds(report: Report) {
       fields++
       if (!same((entry as any)[key], value)) fieldFailures.push(`${entry.name}: ${key} is ${show((entry as any)[key])}, official ${show(value)}`)
     }
-    // Equipment: option A item by item, then the gold of both options.
+    // Equipment: options A and B in order, option A item by item, and the gold of both.
     const parts = equipA.split(", ")
     const gpA = Number(parts.pop()?.match(/^(\d+) GP$/)?.[1])
+    const [optionA, optionB] = entry.equipment
     fields += 2
-    if (entry.equipment.a.gp !== gpA) equipFailures.push(`${entry.name}: option A gold ${entry.equipment.a.gp}, official ${gpA}`)
-    if (entry.equipment.b.gp !== Number(gpB) || entry.equipment.b.items.length !== 0) equipFailures.push(`${entry.name}: option B is ${show(entry.equipment.b)}, official ${gpB} GP`)
-    if (entry.equipment.a.items.length !== parts.length) equipFailures.push(`${entry.name}: ${entry.equipment.a.items.length} items, official ${parts.length}`)
+    if (entry.equipment.length !== 2 || optionA.option !== "A" || optionB.option !== "B") equipFailures.push(`${entry.name}: options are not A then B`)
+    if (!same(optionA.money, { amount: gpA, unit: "gp" })) equipFailures.push(`${entry.name}: option A money ${show(optionA.money)}, official ${gpA} GP`)
+    if (!same(optionB, { option: "B", money: { amount: Number(gpB), unit: "gp" } })) equipFailures.push(`${entry.name}: option B is ${show(optionB)}, official ${gpB} GP`)
+    if (optionA.items.length !== parts.length) equipFailures.push(`${entry.name}: ${optionA.items.length} items, official ${parts.length}`)
     parts.forEach((part, i) => {
       items++
-      const item = entry.equipment.a.items[i]
+      const item = optionA.items[i]
       const count = part.match(/^(\d+) /)?.[1]
       const sheets = part.match(/\((\d+) sheets\)/)?.[1]
+      const paren = part.match(/\(([^)]*)\)/)?.[1]
       const words = toId(part.replace(/^\d+ /, "").replace(/\s*\(.*\)$/, ""))
       if (!item) return
+      const id = paren === "same as above" ? item.chooseFrom?.[0] : item.item
+      if (paren === "same as above" ? item.item !== undefined : item.chooseFrom !== undefined) equipFailures.push(`${entry.name}: item ${i + 1} sets the wrong one of item and chooseFrom`)
       // The equipment table sorts "Clothes, Traveler’s" under its first word (page 95).
       const reversed = words === "travelers-clothes" ? "clothes-travelers" : words
-      if (!reversed.startsWith(item.id)) equipFailures.push(`${entry.name}: item ${i + 1} is ${item.id}, official "${part}"`)
-      if (item.quantity !== Number(sheets ?? count ?? 1)) equipFailures.push(`${entry.name}: ${item.id} quantity ${item.quantity}, official "${part}"`)
-      const paren = part.match(/\(([^)]*)\)/)?.[1]
-      const noteExpected = paren && !sheets && paren !== "same as above" ? paren : undefined
-      if (item.note !== noteExpected) equipFailures.push(`${entry.name}: ${item.id} note ${show(item.note)}, official ${show(noteExpected)}`)
-      if (Boolean(item.sameAsTool) !== (paren === "same as above")) equipFailures.push(`${entry.name}: ${item.id} sameAsTool differs from "${part}"`)
+      if (!id || !reversed.startsWith(id)) equipFailures.push(`${entry.name}: item ${i + 1} is ${id}, official "${part}"`)
+      if (item.quantity !== Number(sheets ?? count ?? 1)) equipFailures.push(`${entry.name}: ${id} quantity ${item.quantity}, official "${part}"`)
+      const noteExpected = sheets ? "sheets" : paren
+      if (item.note !== noteExpected) equipFailures.push(`${entry.name}: ${id} note ${show(item.note)}, official ${show(noteExpected)}`)
+      if (paren === "same as above" && JSON.stringify(item.chooseFrom) !== JSON.stringify([entry.toolProficiency.oneOfKind]))
+        equipFailures.push(`${entry.name}: "same as above" must choose from the tool kind ${show(entry.toolProficiency.oneOfKind)}`)
     })
   }
   report.check("backgrounds", "ability scores, feat, skills, tool proficiency", fields, fieldFailures)
@@ -772,7 +802,15 @@ function verifyBackgrounds(report: Report) {
   if (existsSync(dataPath("equipment"))) {
     const equipment = readData("equipment")
     const ids = new Set(equipment.map((e) => e.id))
-    const needed = [...new Set(backgrounds.flatMap((b) => [...b.equipment.a.items.map((i: any) => i.id), ...(b.toolProficiency.tool ? [b.toolProficiency.tool] : [])]))]
+    const needed = [
+      ...new Set(
+        backgrounds.flatMap((b) => [
+          ...b.equipment[0].items.flatMap((i: any) => i.chooseFrom ?? [i.item]),
+          ...(b.toolProficiency.tool ? [b.toolProficiency.tool] : []),
+          ...(b.toolProficiency.oneOfKind ? [b.toolProficiency.oneOfKind] : []),
+        ])
+      ),
+    ]
     report.check(
       "backgrounds",
       "equipment and tool ids exist in equipment.json",
@@ -785,15 +823,15 @@ function verifyBackgrounds(report: Report) {
     let units = 0
     const tableAmount = Number(pages.join("\n").match(/\nArrows\n(\d+)\nQuiver\n/)?.[1])
     for (const b of backgrounds) {
-      for (const item of b.equipment.a.items) {
-        const entry = equipment.find((e) => e.id === item.id)
+      for (const item of b.equipment[0].items) {
+        const entry = equipment.find((e) => e.id === item.item)
         if (!entry) continue
         units++
         if (entry.kind === "ammunition") {
-          if (item.unit !== "single") unitFailures.push(`${b.name}: ${item.id} is ammunition and needs unit "single"`)
-          if (item.id === "arrows" && entry.amount !== tableAmount) unitFailures.push(`${b.name}: equipment Arrows amount ${entry.amount}, the official table gives ${tableAmount}`)
-          if (item.quantity % entry.amount !== 0) unitFailures.push(`${b.name}: ${item.quantity} ${item.id} is not whole bundles of ${entry.amount}`)
-        } else if (item.unit) unitFailures.push(`${b.name}: ${item.id} is not ammunition but has a unit`)
+          if (item.unit !== "single") unitFailures.push(`${b.name}: ${item.item} is ammunition and needs unit "single"`)
+          if (item.item === "arrows" && entry.bundleSize !== tableAmount) unitFailures.push(`${b.name}: equipment Arrows amount ${entry.bundleSize}, the official table gives ${tableAmount}`)
+          if (item.quantity % entry.bundleSize !== 0) unitFailures.push(`${b.name}: ${item.quantity} ${item.item} is not whole bundles of ${entry.bundleSize}`)
+        } else if (item.unit) unitFailures.push(`${b.name}: ${item.item} is not ammunition but has a unit`)
       }
     }
     report.check("backgrounds", "ammunition counts single pieces and equals whole bundles of the equipment entry", units, unitFailures)
@@ -817,46 +855,50 @@ function verifyBackgrounds(report: Report) {
   )
 
   // Open5e and the base source.
-  const open = readOpen5e("BackgroundBenefit")
-  const openFailures: string[] = []
-  let openTotal = 0
-  for (const entry of backgrounds) {
-    const rows = open.filter((row) => row.fields.parent === `srd-2024_${entry.id}`)
-    const get = (type: string) => rows.find((row) => row.fields.type === type)?.fields.desc ?? ""
-    const official = officials.find((o) => o[1] === entry.name)
-    if (!official) continue
-    openTotal += 5
-    const [, , scores, feat, skills, tool, equipA, gpB] = official
-    if (squash(get("ability_score")) !== squash(scores)) openFailures.push(`${entry.name}: Open5e ability scores "${get("ability_score")}"`)
-    if (squash(get("feat")) !== squash(feat.replace(/ \(see “Feats”\)$/, ""))) openFailures.push(`${entry.name}: Open5e feat "${get("feat")}"`)
-    if (squash(get("skill_proficiency")) !== squash(skills)) openFailures.push(`${entry.name}: Open5e skills "${get("skill_proficiency")}"`)
-    if (squash(get("tool_proficiency")) !== squash(tool.replace(/ \(see “Equipment”\)$/, ""))) openFailures.push(`${entry.name}: Open5e tool "${get("tool_proficiency")}"`)
-    if (squash(get("equipment")) !== squash(`Choose A or B: (A) ${equipA}; or (B) ${gpB} GP`)) openFailures.push(`${entry.name}: Open5e equipment "${get("equipment")}"`)
-  }
-  report.crossCheck("backgrounds", "Open5e agrees on every background field", openTotal, openFailures, [])
-
-  const base = readBase("Backgrounds")
-  const baseFailures: string[] = []
-  let baseTotal = 0
-  for (const entry of backgrounds) {
-    const row = base.find((b: any) => b.index === entry.id)
-    if (!row) {
-      baseFailures.push(`${entry.name}: not in the base source`)
-      continue
+  if (hasUpstream("open5e")) {
+    const open = readOpen5e("BackgroundBenefit")
+    const openFailures: string[] = []
+    let openTotal = 0
+    for (const entry of backgrounds) {
+      const rows = open.filter((row) => row.fields.parent === `srd-2024_${entry.id}`)
+      const get = (type: string) => rows.find((row) => row.fields.type === type)?.fields.desc ?? ""
+      const official = officials.find((o) => o[1] === entry.name)
+      if (!official) continue
+      openTotal += 5
+      const [, , scores, feat, skills, tool, equipA, gpB] = official
+      if (squash(get("ability_score")) !== squash(scores)) openFailures.push(`${entry.name}: Open5e ability scores "${get("ability_score")}"`)
+      if (squash(get("feat")) !== squash(feat.replace(/ \(see “Feats”\)$/, ""))) openFailures.push(`${entry.name}: Open5e feat "${get("feat")}"`)
+      if (squash(get("skill_proficiency")) !== squash(skills)) openFailures.push(`${entry.name}: Open5e skills "${get("skill_proficiency")}"`)
+      if (squash(get("tool_proficiency")) !== squash(tool.replace(/ \(see “Equipment”\)$/, ""))) openFailures.push(`${entry.name}: Open5e tool "${get("tool_proficiency")}"`)
+      if (squash(get("equipment")) !== squash(`Choose A or B: (A) ${equipA}; or (B) ${gpB} GP`)) openFailures.push(`${entry.name}: Open5e equipment "${get("equipment")}"`)
     }
-    baseTotal += 3
-    if (
-      !same(
-        row.ability_scores.map((a: any) => a.index),
-        entry.abilityScores
+    report.crossCheck("backgrounds", "Open5e agrees on every background field", openTotal, openFailures, [])
+  } else report.skip("backgrounds", "Open5e agrees on every background field")
+
+  if (hasUpstream("5e-bits")) {
+    const base = readBase("Backgrounds")
+    const baseFailures: string[] = []
+    let baseTotal = 0
+    for (const entry of backgrounds) {
+      const row = base.find((b: any) => b.index === entry.id)
+      if (!row) {
+        baseFailures.push(`${entry.name}: not in the base source`)
+        continue
+      }
+      baseTotal += 3
+      if (
+        !same(
+          row.ability_scores.map((a: any) => a.index),
+          entry.abilityScores
+        )
       )
-    )
-      baseFailures.push(`${entry.name}: base ability scores differ`)
-    if (row.feat.index !== entry.feat.id) baseFailures.push(`${entry.name}: base feat ${row.feat.index}`)
-    const skills = row.proficiencies.filter((p: any) => p.index.startsWith("skill-")).map((p: any) => p.index.slice(6))
-    if (!same(skills, entry.skills)) baseFailures.push(`${entry.name}: base skills ${show(skills)}`)
-  }
-  report.crossCheck("backgrounds", "base source agrees on ability scores, feat and skills", baseTotal, baseFailures, [])
+        baseFailures.push(`${entry.name}: base ability scores differ`)
+      if (row.feat.index !== entry.feat.id) baseFailures.push(`${entry.name}: base feat ${row.feat.index}`)
+      const skills = row.proficiencies.filter((p: any) => p.index.startsWith("skill-")).map((p: any) => p.index.slice(6))
+      if (!same(skills, entry.skills)) baseFailures.push(`${entry.name}: base skills ${show(skills)}`)
+    }
+    report.crossCheck("backgrounds", "base source agrees on ability scores, feat and skills", baseTotal, baseFailures, [])
+  } else report.skip("backgrounds", "base source agrees on ability scores, feat and skills")
 }
 
 // Feats ---------------------------------------------------------------------------------------------------
@@ -908,6 +950,8 @@ function verifyFeats(report: Report) {
   const mechFailures: string[] = []
   const diceFailures: string[] = []
   const asiFailures: string[] = []
+  const paraFailures: string[] = []
+  let paraTotal = 0
   let fields = 0
   let textTotal = 0
   let coverTotal = 0
@@ -970,6 +1014,17 @@ function verifyFeats(report: Report) {
       }
     } else if (entry.benefits) fieldFailures.push(`${entry.name}: has named benefits but the official text has none`)
 
+    // Paragraph breaks: the official paragraph starts, in order, against the data.
+    const dataParagraphs = [
+      ...(entry.text ?? "").split("\n"),
+      ...(entry.benefits ?? []).flatMap((b: any) => `${b.name}. ${b.text}`.split("\n")),
+      ...(entry.repeatable ? `Repeatable. ${entry.repeatable.text}`.split("\n") : []),
+    ]
+    const startsOf = (list: string[]) => list.map((paragraph) => squash(paragraph).slice(0, 30))
+    paraTotal += Math.max(official.paragraphs.length, dataParagraphs.length)
+    if (!same(startsOf(official.paragraphs), startsOf(dataParagraphs)))
+      paraFailures.push(`${entry.name}: ${dataParagraphs.length} paragraphs in the data, ${official.paragraphs.length} official, or the starts differ`)
+
     // Prose in the feat's own pages, and every official paragraph in the data.
     const dataText = [entry.text, ...(entry.benefits ?? []).map((b: any) => `${b.name}. ${b.text}`), ...(entry.repeatable ? [`Repeatable. ${entry.repeatable.text}`] : [])].filter(Boolean)
     const pageSquash = squash(pageText(entry.page, Math.min(entry.page + 1, 88)))
@@ -1016,6 +1071,7 @@ function verifyFeats(report: Report) {
 
   report.check("feats", "page where the entry begins", feats.length, pageFailures)
   report.check("feats", "category, prerequisite, repeatable, benefit names and opening text", fields, fieldFailures)
+  report.check("feats", "paragraph breaks match the official paragraph starts", paraTotal, paraFailures)
   report.check("feats", "prose is the official wording, in the feat's own pages", textTotal, textFailures)
   report.check("feats", "every official paragraph is in the data", coverTotal, coverFailures)
   report.check("feats", "typed fields match what each benefit text says", mechTotal, mechFailures)
@@ -1028,56 +1084,61 @@ function verifyFeats(report: Report) {
   report.check("feats", "ids are toId(name) and unique", feats.length, [...refFailures, ...(new Set(feats.map((f) => f.id)).size === feats.length ? [] : ["duplicate feat ids"])])
 
   // Open5e: category, prerequisite, benefit names and text. It lists the description of a feat without named benefits as an unnamed row.
-  const open = readOpen5e("Feat")
-  const benefits = readOpen5e("FeatBenefit")
-  const openFailures: string[] = []
-  const openWaived: string[] = []
-  const upstreamErrors = new Set(["Boon of Irresistible Offense/Ability Score Increase", "Boon of Spell Recall/Ability Score Increase"])
-  let openTotal = 0
-  for (const entry of feats) {
-    const row = open.find((r) => r.pk === `srd-2024_${entry.id}`)
-    if (!row) {
-      openFailures.push(`${entry.name}: not in Open5e`)
-      continue
-    }
-    openTotal += 3
-    if (toId(row.fields.type) !== entry.category) openFailures.push(`${entry.name}: Open5e category ${row.fields.type}`)
-    if ((row.fields.prerequisite || undefined) !== entry.prerequisite?.text)
-      openFailures.push(`${entry.name}: Open5e prerequisite "${row.fields.prerequisite}", data ${show(entry.prerequisite?.text)}`)
-    const rows = benefits.filter((b) => b.fields.parent === row.pk)
-    const names = rows
-      .map((b) => b.fields.name)
-      .filter((name) => name && name !== "Repeatable")
-      .map((name) => name.replace(/\bOne\b/, "1"))
-    if (
-      !same(
-        names,
-        (entry.benefits ?? []).map((b: any) => b.name)
+  if (hasUpstream("open5e")) {
+    const open = readOpen5e("Feat")
+    const benefits = readOpen5e("FeatBenefit")
+    const openFailures: string[] = []
+    const openWaived: string[] = []
+    const upstreamErrors = new Set(["Boon of Irresistible Offense/Ability Score Increase", "Boon of Spell Recall/Ability Score Increase"])
+    let openTotal = 0
+    for (const entry of feats) {
+      const row = open.find((r) => r.pk === `srd-2024_${entry.id}`)
+      if (!row) {
+        openFailures.push(`${entry.name}: not in Open5e`)
+        continue
+      }
+      openTotal += 3
+      if (toId(row.fields.type) !== entry.category) openFailures.push(`${entry.name}: Open5e category ${row.fields.type}`)
+      if ((row.fields.prerequisite || undefined) !== entry.prerequisite?.text)
+        openFailures.push(`${entry.name}: Open5e prerequisite "${row.fields.prerequisite}", data ${show(entry.prerequisite?.text)}`)
+      const rows = benefits.filter((b) => b.fields.parent === row.pk)
+      const names = rows
+        .map((b) => b.fields.name)
+        .filter((name) => name && name !== "Repeatable")
+        .map((name) => name.replace(/\bOne\b/, "1"))
+      if (
+        !same(
+          names,
+          (entry.benefits ?? []).map((b: any) => b.name)
+        )
       )
-    )
-      openFailures.push(`${entry.name}: Open5e benefits ${show(names)}, data ${show((entry.benefits ?? []).map((b: any) => b.name))}`)
-    for (const benefit of entry.benefits ?? []) {
-      const upstream = rows.find((b) => b.fields.name.replace(/\bOne\b/, "1") === benefit.name)
-      if (!upstream || squash(upstream.fields.desc) === squash(benefit.text)) continue
-      if (upstreamErrors.has(`${entry.name}/${benefit.name}`))
-        openWaived.push(`${entry.name} ${benefit.name}: Open5e says "one ability score of your choice", the official text (page 88) limits it to the listed abilities`)
-      else openFailures.push(`${entry.name} ${benefit.name}: Open5e text differs`)
+        openFailures.push(`${entry.name}: Open5e benefits ${show(names)}, data ${show((entry.benefits ?? []).map((b: any) => b.name))}`)
+      for (const benefit of entry.benefits ?? []) {
+        const upstream = rows.find((b) => b.fields.name.replace(/\bOne\b/, "1") === benefit.name)
+        if (!upstream || squash(upstream.fields.desc) === squash(benefit.text)) continue
+        if (upstreamErrors.has(`${entry.name}/${benefit.name}`))
+          openWaived.push(`${entry.name} ${benefit.name}: Open5e says "one ability score of your choice", the official text (page 88) limits it to the listed abilities`)
+        else openFailures.push(`${entry.name} ${benefit.name}: Open5e text differs`)
+      }
+      const unnamed = rows.find((b) => !b.fields.name)
+      if (unnamed && squash(unnamed.fields.desc) !== squash(entry.text ?? "")) openFailures.push(`${entry.name}: Open5e description differs`)
+      const repeat = rows.find((b) => b.fields.name === "Repeatable")
+      if (Boolean(repeat) !== Boolean(entry.repeatable) || (repeat && squash(repeat.fields.desc) !== squash(entry.repeatable?.text ?? "")))
+        openFailures.push(`${entry.name}: Open5e repeatable differs`)
     }
-    const unnamed = rows.find((b) => !b.fields.name)
-    if (unnamed && squash(unnamed.fields.desc) !== squash(entry.text ?? "")) openFailures.push(`${entry.name}: Open5e description differs`)
-    const repeat = rows.find((b) => b.fields.name === "Repeatable")
-    if (Boolean(repeat) !== Boolean(entry.repeatable) || (repeat && squash(repeat.fields.desc) !== squash(entry.repeatable?.text ?? ""))) openFailures.push(`${entry.name}: Open5e repeatable differs`)
-  }
-  report.crossCheck("feats", "Open5e agrees on category, prerequisite, benefits, description and repeatable, or the official text settles it", openTotal, openFailures, openWaived)
+    report.crossCheck("feats", "Open5e agrees on category, prerequisite, benefits, description and repeatable, or the official text settles it", openTotal, openFailures, openWaived)
+  } else report.skip("feats", "Open5e agrees on category, prerequisite, benefits, description and repeatable, or the official text settles it")
 
-  const base = readBase("Feats")
-  const baseFailures: string[] = []
-  for (const entry of feats) {
-    const row = base.find((b: any) => b.index === entry.id)
-    if (!row) baseFailures.push(`${entry.name}: not in the base source`)
-    else if (toId(row.type) !== entry.category) baseFailures.push(`${entry.name}: base category ${row.type}`)
-    else if ((row.prerequisites?.minimum_level ?? undefined) !== entry.prerequisite?.level)
-      baseFailures.push(`${entry.name}: base minimum level ${row.prerequisites?.minimum_level}, data ${entry.prerequisite?.level}`)
-  }
-  report.crossCheck("feats", "base source agrees on category and minimum level", feats.length, baseFailures, [])
+  if (hasUpstream("5e-bits")) {
+    const base = readBase("Feats")
+    const baseFailures: string[] = []
+    for (const entry of feats) {
+      const row = base.find((b: any) => b.index === entry.id)
+      if (!row) baseFailures.push(`${entry.name}: not in the base source`)
+      else if (toId(row.type) !== entry.category) baseFailures.push(`${entry.name}: base category ${row.type}`)
+      else if ((row.prerequisites?.minimum_level ?? undefined) !== entry.prerequisite?.level)
+        baseFailures.push(`${entry.name}: base minimum level ${row.prerequisites?.minimum_level}, data ${entry.prerequisite?.level}`)
+    }
+    report.crossCheck("feats", "base source agrees on category and minimum level", feats.length, baseFailures, [])
+  } else report.skip("feats", "base source agrees on category and minimum level")
 }

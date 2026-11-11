@@ -61,7 +61,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
               { shape: "cone", feet: 15 },
               { shape: "line", feet: 30, width: 5 },
             ],
-            save: { ability: "dex", dc: { base: 8, abilities: ["con"], proficiencyBonus: true } },
+            save: { ability: "dex", dc: { plusModifierOf: "con" } },
             damage: [
               { level: 1, dice: "1d10" },
               { level: 5, dice: "2d10" },
@@ -74,7 +74,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
       },
       { name: "Damage Resistance", mech: { damageTypeFromChoice: "draconic-ancestry" } },
       { name: "Darkvision", mech: { darkvision: 60 } },
-      { name: "Draconic Flight", mech: { level: 5, activation: "bonus-action", durationMinutes: 10, flySpeed: "speed", uses: onceLong } },
+      { name: "Draconic Flight", mech: { level: 5, activation: ["bonus-action"], durationMinutes: 10, flySpeed: "speed", uses: onceLong } },
     ],
   },
   {
@@ -83,7 +83,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
       { name: "Darkvision", mech: { darkvision: 120 } },
       { name: "Dwarven Resilience", mech: { resistance: ["poison"], savingThrowAdvantage: { conditions: ["poisoned"] } } },
       { name: "Dwarven Toughness", mech: { hitPointBonus: { initial: 1, perLevel: 1 } } },
-      { name: "Stonecunning", mech: { activation: "bonus-action", tremorsense: 60, durationMinutes: 10, uses: proficiencyBonusLong } },
+      { name: "Stonecunning", mech: { activation: ["bonus-action"], requires: "stone-surface", tremorsense: 60, durationMinutes: 10, uses: proficiencyBonusLong } },
     ],
   },
   {
@@ -136,15 +136,15 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
         choice: "text",
         mech: { uses: proficiencyBonusLong },
         options: {
-          "Cloud’s Jaunt": { activation: "bonus-action", teleportFeet: 30 },
-          "Fire’s Burn": { damage: { dice: "1d10", type: "fire" } },
-          "Frost’s Chill": { damage: { dice: "1d6", type: "cold" }, speedReduction: 10 },
-          "Hill’s Tumble": { condition: "prone" },
-          "Stone’s Endurance": { activation: "reaction", damageReduction: { dice: "1d12", ability: "con" } },
-          "Storm’s Thunder": { activation: "reaction", damage: { dice: "1d8", type: "thunder" }, rangeFeet: 60 },
+          "Cloud’s Jaunt": { activation: ["bonus-action"], teleportFeet: 30 },
+          "Fire’s Burn": { trigger: "hit-with-attack-roll", damage: { dice: "1d10", type: "fire" } },
+          "Frost’s Chill": { trigger: "hit-with-attack-roll", damage: { dice: "1d6", type: "cold" }, speedReduction: 10 },
+          "Hill’s Tumble": { trigger: "hit-with-attack-roll", targetMaxSize: "Large", condition: "prone" },
+          "Stone’s Endurance": { activation: ["reaction"], trigger: "take-damage", damageReduction: { dice: "1d12", ability: "con" } },
+          "Storm’s Thunder": { activation: ["reaction"], trigger: "take-damage", damage: { dice: "1d8", type: "thunder" }, rangeFeet: 60 },
         },
       },
-      { name: "Large Form", mech: { level: 5, activation: "bonus-action", sizeChange: "Large", durationMinutes: 10, speedBonus: 10, uses: onceLong } },
+      { name: "Large Form", mech: { level: 5, activation: ["bonus-action"], sizeChange: "Large", durationMinutes: 10, speedBonus: 10, uses: onceLong } },
       { name: "Powerful Build", mech: { grappledEscapeAdvantage: true, carryingCapacitySizeBonus: 1 } },
     ],
   },
@@ -168,7 +168,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
   {
     name: "Orc",
     traits: [
-      { name: "Adrenaline Rush", mech: { activation: "bonus-action", temporaryHitPoints: "proficiency-bonus", uses: { count: "proficiency-bonus", recharge: "short-or-long-rest" } } },
+      { name: "Adrenaline Rush", mech: { activation: ["bonus-action"], temporaryHitPoints: "proficiency-bonus", uses: { count: "proficiency-bonus", recharge: "short-or-long-rest" } } },
       { name: "Darkvision", mech: { darkvision: 120 } },
       { name: "Relentless Endurance", mech: { uses: onceLong } },
     ],
@@ -296,23 +296,27 @@ function buildSpecies() {
 const singular: Record<string, string> = { Daggers: "Dagger", Pouches: "Pouch", "Traveler’s Clothes": "Clothes, Traveler’s" }
 const abilityByName: Record<string, string> = { Strength: "str", Dexterity: "dex", Constitution: "con", Intelligence: "int", Wisdom: "wis", Charisma: "cha" }
 
-function equipmentOption(text: string) {
+function equipmentOption(option: string, text: string) {
   const parts = text.split(", ")
   const gp = Number(parts.pop()?.match(/^(\d+) GP$/)?.[1])
   const items = parts.map((part) => {
     const match = part.match(/^(?:(\d+) )?(.+?)(?: \((.+)\))?$/)
     if (!match) throw new Error(`equipment item ${part}`)
     const [, count, rawName, paren] = match
-    const item: Record<string, unknown> = { id: toId(singular[rawName] ?? rawName), quantity: Number(count ?? 1) }
-    const sheets = paren?.match(/^(\d+) sheets$/)
-    if (sheets) item.quantity = Number(sheets[1])
-    else if (paren === "same as above") item.sameAsTool = true
-    else if (paren) item.note = paren
+    const item: Record<string, unknown> = { quantity: Number(count ?? 1) }
+    // "Gaming Set (same as above)" is one item of the kind the player chose for the tool proficiency.
+    if (paren === "same as above") item.chooseFrom = [toId(rawName)]
+    else item.item = toId(singular[rawName] ?? rawName)
+    const sheets = paren?.match(/^(\d+) (sheets)$/)
+    if (sheets) {
+      item.quantity = Number(sheets[1])
+      item.note = sheets[2]
+    } else if (paren) item.note = paren
     // "20 Arrows" counts single arrows. The Ammunition table sells Arrows in bundles of 20 (page 96), so the background gives one bundle.
-    if (item.id === "arrows") item.unit = "single"
+    if (item.item === "arrows") item.unit = "single"
     return item
   })
-  return { items, gp }
+  return { option, ...(items.length ? { items } : {}), money: { amount: gp, unit: "gp" } }
 }
 
 function buildBackgrounds() {
@@ -345,7 +349,7 @@ function buildBackgrounds() {
       feat: { id: toId(feat[1]), ...(feat[2] ? { spellList: feat[2].toLowerCase() } : {}) },
       skills: field("Skill Proficiencies").split(" and ").map(toId),
       toolProficiency: kind ? { oneOfKind: toId(kind[1]) } : { tool: toId(tool) },
-      equipment: { a: equipmentOption(equipment[1]), b: equipmentOption(equipment[2]) },
+      equipment: [equipmentOption("A", equipment[1]), equipmentOption("B", equipment[2])],
     }
   })
 }
@@ -366,7 +370,7 @@ const featSpecs: Record<string, FeatSpec> = {
       "Level 1 Spell": { spellLevel: 1, uses: onceLong },
     },
   },
-  "Savage Attacker": { mech: { damageDiceRolledTwice: { perTurn: 1 } } },
+  "Savage Attacker": { mech: { trigger: "hit-with-weapon", damageDiceRolledTwice: { perTurn: 1 } } },
   Skilled: { mech: { proficiencyChoice: { count: 3, kinds: ["skill", "tool"] } } },
   "Ability Score Improvement": {
     prerequisite: { level: 4 },
@@ -385,7 +389,7 @@ const featSpecs: Record<string, FeatSpec> = {
   },
   Archery: { prerequisite: fightingStyle, mech: { attackBonus: { bonus: 2, weapon: "ranged" } } },
   Defense: { prerequisite: fightingStyle, mech: { armorClassBonus: { bonus: 1, armor: ["light", "medium", "heavy"] } } },
-  "Great Weapon Fighting": { prerequisite: fightingStyle, mech: { damageDieMinimum: { minimum: 3, properties: ["two-handed", "versatile"] } } },
+  "Great Weapon Fighting": { prerequisite: fightingStyle, mech: { damageDieMinimum: { minimum: 3, weapon: "melee", heldWith: "two-hands", properties: ["two-handed", "versatile"] } } },
   "Two-Weapon Fighting": { prerequisite: fightingStyle, mech: { addAbilityModifierToExtraAttack: { weaponProperty: "light" } } },
   "Boon of Combat Prowess": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { "Peerless Aim": { uses: { count: 1, recharge: "start-of-next-turn" } } } },
   "Boon of Dimensional Travel": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { "Blink Steps": { teleportFeet: 30 } } },
@@ -403,7 +407,10 @@ const featSpecs: Record<string, FeatSpec> = {
   "Boon of the Night Spirit": {
     prerequisite: { level: 19 },
     abilityScoreIncrease: boonScore,
-    benefits: { "Merge with Shadows": { activation: "bonus-action", condition: "invisible" }, "Shadowy Form": { resistanceExcept: ["psychic", "radiant"] } },
+    benefits: {
+      "Merge with Shadows": { activation: ["bonus-action"], requires: "dim-light-or-darkness", condition: "invisible" },
+      "Shadowy Form": { requires: "dim-light-or-darkness", resistanceExcept: ["psychic", "radiant"] },
+    },
   },
   "Boon of Truesight": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { Truesight: { truesight: 60 } } },
 }
@@ -481,7 +488,7 @@ const ruleSpecs: { name: string; text: string; mech: Mechanics }[] = [
     text: "Each background gives a character proficiency with one tool—either a specific tool or one chosen from the Artisan’s Tools category.",
     mech: { grants: { kind: "tool-proficiency", count: 1 } },
   },
-  { name: "Background Equipment", text: "Each background offers a choice between a package of equipment and 50 GP.", mech: { goldInsteadOfEquipment: 50 } },
+  { name: "Background Equipment", text: "Each background offers a choice between a package of equipment and 50 GP.", mech: { moneyInsteadOfEquipment: { amount: 50, unit: "gp" } } },
   { name: "Species Creature Type", text: "Every species in “Character Origins” is Humanoid; playable non-Humanoid species appear in other books.", mech: { creatureType: "humanoid" } },
   {
     name: "Species Life Span",

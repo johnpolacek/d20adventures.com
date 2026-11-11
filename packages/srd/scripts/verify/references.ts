@@ -8,7 +8,8 @@ import type { Report } from "../lib/report"
  */
 const references: Record<string, [path: string, target: string][]> = {
   backgrounds: [
-    ["equipment.a.items[].id", "equipment"],
+    ["equipment[].items[].item", "equipment"],
+    ["equipment[].items[].chooseFrom[]", "equipment"],
     ["feat.id", "feats"],
     ["feat.spellList", "classes"],
     ["toolProficiency.tool", "equipment"],
@@ -29,6 +30,7 @@ const references: Record<string, [path: string, target: string][]> = {
     ["spellcasting.spellList[].spells[]", "spells"],
     ["spellcasting.focus[]", "equipment"],
     ["startingEquipment[].items[].item", "equipment"],
+    ["startingEquipment[].items[].chooseFrom[]", "equipment"],
     ["subclasses[]", "subclasses"],
     ["tools[].tool", "equipment"],
     ["multiclass.tools[].tool", "equipment"],
@@ -69,6 +71,7 @@ const references: Record<string, [path: string, target: string][]> = {
     ["gear[].id", "equipment"],
     ["actions[].spellcasting.lists[].spells[].id", "spells"],
   ],
+  poisons: [["type", "poison-types"]],
   species: [
     ["traits[].spells[].spell", "spells"],
     ["traits[].choice.options[].spells[].spell", "spells"],

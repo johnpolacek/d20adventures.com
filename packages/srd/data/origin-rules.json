@@ -25,7 +25,10 @@
     "name": "Background Equipment",
     "page": 83,
     "text": "Each background offers a choice between a package of equipment and 50 GP.",
-    "goldInsteadOfEquipment": 50
+    "moneyInsteadOfEquipment": {
+      "amount": 50,
+      "unit": "gp"
+    }
   },
   {
     "id": "background-feat",

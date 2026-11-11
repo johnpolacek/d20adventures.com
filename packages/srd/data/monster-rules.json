@@ -1,0 +1,298 @@
+[
+  {
+    "id": "experience-points-by-challenge-rating",
+    "name": "Experience Points by Challenge Rating",
+    "page": 256,
+    "xpByCr": [
+      {
+        "cr": 0,
+        "xp": [
+          0,
+          10
+        ]
+      },
+      {
+        "cr": 0.125,
+        "xp": [
+          25
+        ]
+      },
+      {
+        "cr": 0.25,
+        "xp": [
+          50
+        ]
+      },
+      {
+        "cr": 0.5,
+        "xp": [
+          100
+        ]
+      },
+      {
+        "cr": 1,
+        "xp": [
+          200
+        ]
+      },
+      {
+        "cr": 2,
+        "xp": [
+          450
+        ]
+      },
+      {
+        "cr": 3,
+        "xp": [
+          700
+        ]
+      },
+      {
+        "cr": 4,
+        "xp": [
+          1100
+        ]
+      },
+      {
+        "cr": 5,
+        "xp": [
+          1800
+        ]
+      },
+      {
+        "cr": 6,
+        "xp": [
+          2300
+        ]
+      },
+      {
+        "cr": 7,
+        "xp": [
+          2900
+        ]
+      },
+      {
+        "cr": 8,
+        "xp": [
+          3900
+        ]
+      },
+      {
+        "cr": 9,
+        "xp": [
+          5000
+        ]
+      },
+      {
+        "cr": 10,
+        "xp": [
+          5900
+        ]
+      },
+      {
+        "cr": 11,
+        "xp": [
+          7200
+        ]
+      },
+      {
+        "cr": 12,
+        "xp": [
+          8400
+        ]
+      },
+      {
+        "cr": 13,
+        "xp": [
+          10000
+        ]
+      },
+      {
+        "cr": 14,
+        "xp": [
+          11500
+        ]
+      },
+      {
+        "cr": 15,
+        "xp": [
+          13000
+        ]
+      },
+      {
+        "cr": 16,
+        "xp": [
+          15000
+        ]
+      },
+      {
+        "cr": 17,
+        "xp": [
+          18000
+        ]
+      },
+      {
+        "cr": 18,
+        "xp": [
+          20000
+        ]
+      },
+      {
+        "cr": 19,
+        "xp": [
+          22000
+        ]
+      },
+      {
+        "cr": 20,
+        "xp": [
+          25000
+        ]
+      },
+      {
+        "cr": 21,
+        "xp": [
+          33000
+        ]
+      },
+      {
+        "cr": 22,
+        "xp": [
+          41000
+        ]
+      },
+      {
+        "cr": 23,
+        "xp": [
+          50000
+        ]
+      },
+      {
+        "cr": 24,
+        "xp": [
+          62000
+        ]
+      },
+      {
+        "cr": 25,
+        "xp": [
+          75000
+        ]
+      },
+      {
+        "cr": 26,
+        "xp": [
+          90000
+        ]
+      },
+      {
+        "cr": 27,
+        "xp": [
+          105000
+        ]
+      },
+      {
+        "cr": 28,
+        "xp": [
+          120000
+        ]
+      },
+      {
+        "cr": 29,
+        "xp": [
+          135000
+        ]
+      },
+      {
+        "cr": 30,
+        "xp": [
+          155000
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hit-dice-by-size",
+    "name": "Hit Dice by Size",
+    "page": 255,
+    "hitDiceBySize": [
+      {
+        "size": "Tiny",
+        "die": 4,
+        "averagePerDie": 2.5
+      },
+      {
+        "size": "Small",
+        "die": 6,
+        "averagePerDie": 3.5
+      },
+      {
+        "size": "Medium",
+        "die": 8,
+        "averagePerDie": 4.5
+      },
+      {
+        "size": "Large",
+        "die": 10,
+        "averagePerDie": 5.5
+      },
+      {
+        "size": "Huge",
+        "die": 12,
+        "averagePerDie": 6.5
+      },
+      {
+        "size": "Gargantuan",
+        "die": 20,
+        "averagePerDie": 10.5
+      }
+    ]
+  },
+  {
+    "id": "proficiency-bonus-by-challenge-rating",
+    "name": "Proficiency Bonus by Challenge Rating",
+    "page": 256,
+    "pbByCr": [
+      {
+        "minCr": 0,
+        "maxCr": 4,
+        "pb": 2
+      },
+      {
+        "minCr": 5,
+        "maxCr": 8,
+        "pb": 3
+      },
+      {
+        "minCr": 9,
+        "maxCr": 12,
+        "pb": 4
+      },
+      {
+        "minCr": 13,
+        "maxCr": 16,
+        "pb": 5
+      },
+      {
+        "minCr": 17,
+        "maxCr": 20,
+        "pb": 6
+      },
+      {
+        "minCr": 21,
+        "maxCr": 24,
+        "pb": 7
+      },
+      {
+        "minCr": 25,
+        "maxCr": 28,
+        "pb": 8
+      },
+      {
+        "minCr": 29,
+        "maxCr": 30,
+        "pb": 9
+      }
+    ]
+  }
+]

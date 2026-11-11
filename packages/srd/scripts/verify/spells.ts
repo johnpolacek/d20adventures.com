@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs"
-import type { Spell, SpellStatBlock } from "../../src/schema/spells"
+import type { Area, Healing, Spell, SpellStatBlock } from "../../src/schema/spells"
 import { dataPath, readData, toId } from "../lib/data"
 import { missingSentences, pages, pageText, squash } from "../lib/official"
 import type { Report } from "../lib/report"
-import { readOpen5e } from "../lib/sources"
+import { hasUpstream, readOpen5e } from "../lib/sources"
 
 const category = "spells"
 const officialCount = 339
@@ -29,6 +29,18 @@ const columnBreaks: Record<string, string> = {
   "antilife-shell": "or make attacks with Ranged or Reach weapons",
   "antipathy-sympathy": "Wisdom saving throw to end the effect",
   "find-the-path": "face a choice of paths",
+}
+
+/** Paragraphs the PDF sets flush after a list of run-in items, which no tab or heading marks. */
+const flushStarts = ["The stress of casting Wish to produce any effect"]
+
+/** Where a reading of the prose cannot reach what the text states, and the data holds it by a recorded override. */
+const readingWaivers: Record<string, { fields: string[]; reason: string }> = {
+  befuddlement: {
+    fields: ["saves", "damage"],
+    reason: "page 112 prints the first save’s outcome, “half as much damage only”, in a paragraph after the repeated save every 30 days",
+  },
+  wish: { fields: ["damage"], reason: irregularDamage.wish },
 }
 
 /** Spells where the official text contradicts itself between the spell's header and the class spell lists. The data follows the header. */
@@ -181,7 +193,7 @@ function leftover(official: string, pieces: string[], repeatable: string[]): str
   let rest = official
   for (const part of repeatable.map(squash)) rest = rest.split(part).join(" ")
   const parts = pieces
-    .flatMap((piece) => piece.split(/(?<=[.!?:])\s+/))
+    .flatMap((piece) => piece.replace(/([.!?:])\s+/g, "$1\n").split("\n"))
     .map(squash)
     .filter(Boolean)
   for (const part of parts.sort((a, b) => b.length - a.length)) rest = rest.replace(part, " ")
@@ -224,6 +236,270 @@ function classLists() {
     }
   }
   return rows
+}
+
+/** A paragraph cut into sentences. */
+const sentencesOf = (text: string) =>
+  text
+    .replace(/([.!?])\s+(?=[A-Z“•])/g, "$1\n")
+    .split("\n")
+    .filter(Boolean)
+
+const abilityIdOf: Record<string, string> = { Strength: "str", Dexterity: "dex", Constitution: "con", Intelligence: "int", Wisdom: "wis", Charisma: "cha" }
+const conditionWords = "Blinded|Charmed|Deafened|Exhaustion|Frightened|Grappled|Incapacitated|Invisible|Paralyzed|Petrified|Poisoned|Prone|Restrained|Stunned|Unconscious"
+const typeWords = typeNames.join("|")
+const listOf = (words: string) => `((?:${words})(?:(?:, and |, or |, | and | or )(?:${words}))*)`
+const split = (list: string) => list.split(/, and |, or |, | and | or /).map((name) => name.toLowerCase())
+
+type ReadSave = { ability: string; dc: number | "spell-save-dc"; when: string; onSuccess: string; target?: string }
+type Reading = { saves: ReadSave[]; damage: string[]; conditions: string[]; casterConditions: string[]; healing?: Healing; area?: Area }
+
+/**
+ * Read what a spell's prose says it does, as a referee would: every saving throw with its moment and what a success
+ * does, every damage roll and condition with the hit or failed save its own sentence ties it to, the dice each roll
+ * adds per slot level, healing, and the area of effect. The prose read here is the data's, which the checks above
+ * prove is the official wording, sentence by sentence and paragraph by paragraph. Written apart from the builder.
+ */
+function readSpell(spell: Spell): Reading {
+  const prose = spell.description.split("\n")
+  const rows = (spell.tables ?? []).flatMap((table) => table.rows.map((row) => row[row.length - 1]))
+  const units = [...prose.map((text) => ({ text, row: false })), ...rows.map((text) => ({ text, row: true }))].flatMap((paragraph, number) =>
+    sentencesOf(paragraph.text).map((text) => ({ text, number, row: paragraph.row }))
+  )
+
+  // Saving throws, in order, with the sentence each sits in.
+  type Event = { at: number; position: number; ability: string; again: boolean; lead: string }
+  const events: Event[] = []
+  let previous = ""
+  units.forEach((unit, at) => {
+    const found: Event[] = []
+    for (const match of unit.text.matchAll(/(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) saving throw(s?)/g)) {
+      const lead = unit.text.slice(0, match.index)
+      if (match[2] || /(Advantage|Disadvantage|bonus|penalty) (on|to) (all |its |their |your |any )?$/.test(lead)) continue
+      found.push({ at, position: match.index ?? 0, ability: abilityIdOf[match[1]], again: /another $/.test(lead), lead })
+    }
+    for (const match of unit.text.matchAll(/\brepeats? the save\b/g)) {
+      const position = match.index ?? 0
+      const ability = [...found].reverse().find((event) => event.position < position)?.ability ?? previous
+      found.push({ at, position, ability, again: true, lead: unit.text.slice(0, position) })
+    }
+    found.sort((a, b) => a.position - b.position)
+    if (found.length) previous = found[found.length - 1].ability
+    events.push(...found)
+  })
+
+  const saves: ReadSave[] = []
+  const savesOf = new Map<Event, string[]>()
+  let tableEvent: Event | undefined
+  events.forEach((event, order) => {
+    const sentence = units[event.at].text
+    const next = events[order + 1]
+    // What follows the save, up to the next save, within the prose or within one table row, and not past an ability check.
+    const scope = [sentence.slice(event.position, next && next.at === event.at ? next.position : undefined)]
+    for (let at = event.at + 1; at < units.length && (!next || at < next.at); at++) {
+      if ((units[at].row && units[at].number !== units[event.at].number) || /\bmakes? an? [\w ()]*?check\b/.test(units[at].text)) break
+      scope.push(units[at].text)
+    }
+    const read = scope.join(" ")
+    let onSuccess = "none"
+    const success = /(On a successful save|On a success|If it succeeds|if it succeeds|If it successfully saves[^,]*), ([^.]*)/.exec(read)
+    if (/half as much damage|half the initial damage|half damage/i.test(read)) onSuccess = "half"
+    else if (/ending (the spell|the effect|the condition)( on itself)? on a success|saving throw to end (the|this) effect/.test(read)) onSuccess = "ends"
+    else if (success) {
+      if (/three times/.test(success[1])) onSuccess = "other"
+      else if (/isn’t affected|is unaffected|has no effect|resists your efforts/.test(success[2])) onSuccess = "none"
+      else if (/\bends\b|is no longer (affected|Restrained)|isn’t Restrained/.test(success[2])) onSuccess = "ends"
+      else onSuccess = "other"
+    }
+    // A save that sends the creature to a table of outcomes takes the rows' outcome: the same in every row, or "other".
+    if (/\btable\b/.test(read) && rows.some((row) => row.includes("Failed Save:"))) {
+      const each = new Set(rows.filter((row) => row.includes("Failed Save:")).map((row) => (row.includes("Successful Save: Half as much damage") ? "half" : "none")))
+      onSuccess = each.size === 1 ? [...each][0] : "other"
+      tableEvent = event
+    }
+    const near = `${event.lead} ${sentence.slice(event.position, event.position + 60).replace(/^\w+ saving throw|^repeats? the save/, "")}`
+    const when: string[] = []
+    if (/[Aa]t the end of each of (its|the target’s) turns|(If|if) the [\w ]*?creature ends its turn|at which point it must/.test(near)) when.push("end-of-turn")
+    if (/[Aa]t the start of each of its turns|at the start of your next turn/.test(near)) when.push("start-of-turn")
+    if (/(each time|whenever|Whenever) (it|the target) takes damage|damages the (\w+ )?creature/.test(event.lead)) when.push("on-damage")
+    if (/take an action to [^.]*$/.test(event.lead)) when.push("action")
+    if (!when.length) when.push(event.again ? "later" : "initial")
+    const dc = /DC (\d+) $/.exec(event.lead)
+    const caster = /\byou make a $|When you cast this spell, make a (DC \d+ )?$/.test(event.lead)
+    const keys: string[] = []
+    for (const moment of when) {
+      const save: ReadSave = { ability: event.ability, dc: dc ? Number(dc[1]) : "spell-save-dc", when: moment, onSuccess, ...(caster ? { target: "caster" } : {}) }
+      if (!saves.some((other) => JSON.stringify(other) === JSON.stringify(save))) saves.push(save)
+      keys.push(`${save.ability}/${save.when}/${save.onSuccess}`)
+    }
+    savesOf.set(event, keys)
+  })
+
+  // What a roll or a condition at `position` of sentence `at` follows, by the words of that sentence.
+  const tie = (at: number, position: number) => {
+    const text = units[at].text
+    const before = events.filter((event) => event.at === at && event.position < position)
+    if (before.length) return `failed-save:${savesOf.get(before[before.length - 1])?.[0]}`
+    if (/\b[Oo]n a hit\b/.test(text)) return "hit"
+    if (units[at].row && tableEvent && /(^|\. )Failed Save:/.test(text)) return `failed-save:${savesOf.get(tableEvent)?.[0]}`
+    if (/[Oo]n (a )?failed save|Failed Save:|fails (the|its|this|that)( second)? save|succeed on that save or/.test(text)) {
+      const earlier = events.filter((event) => event.at < at || (event.at === at && event.position < position))
+      if (earlier.length) return `failed-save:${savesOf.get(earlier[earlier.length - 1])?.[0]}`
+    }
+    return "untied"
+  }
+
+  // Damage rolls in the prose. Table rows type theirs through the table and are read by the table check.
+  type Roll = { at: number; position: number; end: number; dice?: string; amount?: number; modifier: boolean; types: string[]; paragraph: number }
+  const rolls: Roll[] = []
+  const choice = (() => {
+    const named = new RegExp(`(?:[Cc]hoose|a type you choose:|This damage is) ${listOf(typeWords)}`).exec(spell.description)
+    if (named) return split(named[1])
+    return [...spell.description.matchAll(new RegExp(`\\((${typeWords})\\)`, "g"))].map((match) => match[1].toLowerCase())
+  })()
+  units.forEach((unit, at) => {
+    if (unit.row) return
+    const text = unit.text
+    const found: Roll[] = []
+    const add = (match: RegExpMatchArray, roll: Partial<Roll>) =>
+      found.push({ at, position: match.index ?? 0, end: (match.index ?? 0) + match[0].length, modifier: false, types: [], paragraph: unit.number, ...roll })
+    for (const match of text.matchAll(new RegExp(`(\\d+d\\d+(?: \\+ \\d+)?)( plus your spellcasting ability modifier)? ${listOf(typeWords)} damage`, "g")))
+      add(match, { dice: match[1], modifier: Boolean(match[2]), types: split(match[3]) })
+    for (const match of text.matchAll(new RegExp(`${listOf(typeWords)} damage (to the target )?equal to (\\d+d\\d+)( plus your spellcasting ability modifier)?`, "g")))
+      add(match, { dice: match[3], modifier: Boolean(match[4]), types: split(match[1]) })
+    for (const match of text.matchAll(/(\d+d\d+) damage( of the chosen type| of a type you choose| of the spirit’s type| when you hit)/g)) add(match, { dice: match[1], types: choice })
+    for (const match of text.matchAll(new RegExp(`(\\d+) (${typeWords}) damage`, "g"))) {
+      const lead = text.slice(0, match.index)
+      if (/(\d|d|\+ |at least )$/.test(lead) || /^ to any structure/.test(text.slice((match.index ?? 0) + match[0].length))) continue
+      add(match, { amount: Number(match[1]), types: [match[2].toLowerCase()] })
+    }
+    // Delayed Blast Fireball gives its roll as a base: "takes Fire damage equal to the total", "The spell’s base damage is 12d6".
+    for (const match of text.matchAll(/base damage is (\d+d\d+)/g)) {
+      const type = new RegExp(`takes (${typeWords}) damage equal to the total`).exec(spell.description)
+      if (type) add(match, { dice: match[1], types: [type[1].toLowerCase()] })
+    }
+    found.sort((a, b) => a.position - b.position)
+    // One roll of either of two types: "3d8 Radiant damage (if you are good or neutral) or 3d8 Necrotic damage (if you are evil)".
+    for (let index = found.length - 1; index > 0; index--) {
+      const between = text.slice(found[index - 1].end, found[index].position)
+      if (found[index - 1].dice && found[index - 1].dice === found[index].dice && / or $/.test(between) && !/[.;]/.test(between)) {
+        found[index - 1].types.push(...found[index].types)
+        found.splice(index, 1)
+      }
+    }
+    rolls.push(...found)
+  })
+  // Per slot: each "… damage increases by XdY" clause raises the rolls it names by type, "initial", or words of their paragraph.
+  const perSlot = new Map<Roll, string>()
+  for (const match of (spell.higherLevel ?? "").matchAll(/([\w ]*?)damage([\w ’()]*?) increases? by (\d+d\d+)/g)) {
+    const words = `${match[1]} ${match[2]}`.trim()
+    const types = [...words.matchAll(new RegExp(typeWords, "g"))].map((type) => type[0].toLowerCase())
+    const key = words
+      .replace(/^(The|the|and the|All the|Both types of)\s*/, "")
+      .split(" ")
+      .slice(-2)
+      .join(" ")
+      .toLowerCase()
+    rolls.forEach((roll, index) => {
+      const raised = types.length
+        ? roll.types.some((type) => types.includes(type))
+        : /both|All|healing and|^(The|the)?$/.test(words) || !key
+          ? true
+          : /initial/.test(words)
+            ? index === 0
+            : prose[roll.paragraph].toLowerCase().includes(key)
+      if (raised) perSlot.set(roll, match[3])
+    })
+  }
+  const upgrade = /levels 5 \((\d+d\d+)\), 11 \((\d+d\d+)\), and 17 \((\d+d\d+)\)/.exec(spell.cantripUpgrade ?? "")
+  const damage = rolls.map((roll) => {
+    const text = units[roll.at].text
+    const target = /you and any creature traveling with you each take/.test(text) ? "caster-and-companions" : /\byou take\b|damage to you\b/.test(text) ? "caster" : "targets"
+    return JSON.stringify([roll.dice ?? roll.amount, [...roll.types].sort(), roll.modifier, target, tie(roll.at, roll.position), perSlot.get(roll) ?? "", upgrade ? upgrade.slice(1) : ""])
+  })
+
+  // Conditions the prose gives, and those it ends, prevents, makes immune or names as already present, which it does not.
+  const conditions: string[] = []
+  const casterConditions: string[] = []
+  units.forEach((unit, at) => {
+    const text = unit.text
+    const found = [
+      ...[...text.matchAll(new RegExp(`\\b(has|have|gains?|is given|giving it|having|with) the ${listOf(conditionWords)} conditions?`, "g"))].map((match) => ({
+        position: match.index ?? 0,
+        end: (match.index ?? 0) + match[0].length,
+        names: split(match[2]),
+        rowForm: /^ha(s|ve)$/.test(match[1]),
+      })),
+      ...[...text.matchAll(new RegExp(`\\b(is|be|falls?) (${conditionWords})\\b`, "g"))].map((match) => ({
+        position: match.index ?? 0,
+        end: (match.index ?? 0) + match[0].length,
+        names: [match[2].toLowerCase()],
+        rowForm: false,
+      })),
+    ]
+    for (const match of found) {
+      if (unit.row && !match.rowForm) continue
+      const lead = text.slice(0, match.position)
+      const clause = lead.split(/, (and |or |but )?/).pop() ?? lead
+      const after = text.slice(match.end)
+      const notGiven =
+        /\b(if|If|unless) (it|the creature|the target|you|a target|they)\b[^,]*$|can’t (gain|be|have)|neither|Immunity|immune|from such creatures|no longer|\bthat (is possessed by or )?$/.test(
+          clause
+        ) || /^[^.]*?(removed|the condition ends|doesn’t end)|^ (conditions? )?from (such|one or more)/.test(after)
+      if (notGiven) continue
+      const onCaster = /^(You|On a failed save, you|If expelled, you)\b/.test(lead)
+      for (const name of match.names) {
+        if (onCaster) {
+          if (!casterConditions.includes(name)) casterConditions.push(name)
+        } else {
+          const key = JSON.stringify([name, tie(at, match.position)])
+          if (!conditions.includes(key)) conditions.push(key)
+        }
+      }
+    }
+  })
+
+  // Healing.
+  const text = spell.description
+  const higher = spell.higherLevel ?? ""
+  const dice = /regains? (a number of )?Hit Points equal to (\d+d\d+( \+ \d+)?)( plus your spellcasting ability modifier)?/.exec(text)
+  const plainDice = /regains? (\d+d\d+( \+ \d+)?) Hit Points/.exec(text)
+  const amount = /(regains?|restoring|restores) (\d+) Hit Points?\b/.exec(text)
+  const temporary = /gains? (\d+d\d+( \+ \d+)?) Temporary Hit Points/.exec(text)
+  const temporaryModifier = /gains Temporary Hit Points equal to your spellcasting ability modifier/.test(text)
+  const healDice = /healing (and damage )?increases? by (\d+d\d+) for each spell slot level/.exec(higher)
+  const healAmount = /healing (and damage )?increases? by (\d+) for each spell slot level/.exec(higher) ?? /gain (\d+) additional Temporary Hit Points for each spell slot level/.exec(higher)
+  let healing: Healing | undefined
+  const rolled = temporary?.[1] ?? dice?.[2] ?? plainDice?.[1]
+  if (rolled || amount || temporaryModifier) {
+    healing = {
+      ...(rolled ? { dice: rolled } : amount ? { amount: Number(amount[2]) } : {}),
+      ...((dice?.[4] && !temporary) || temporaryModifier ? { modifier: true as const } : {}),
+      ...(temporary || temporaryModifier ? { temporary: true as const } : {}),
+      ...(healDice ? { perSlot: healDice[2] } : {}),
+      ...(healAmount ? { perSlotAmount: Number(healAmount[healAmount.length - 1]) } : {}),
+    }
+  }
+
+  // The first sized area of effect that is not a limit on an object or illusion, a portion, or one of many Cubes.
+  const shapes: [RegExp, (match: RegExpMatchArray) => Area][] = [
+    [/(\d+)-foot-radius Sphere/g, (match) => ({ shape: "sphere", size: Number(match[1]) })],
+    [/(\d+)-foot[- ](Cone|Cube|Emanation)\b/g, (match) => ({ shape: match[2].toLowerCase() as Area["shape"], size: Number(match[1]) })],
+    [/(\d+)-foot-wide, (\d+)-foot-long Line/g, (match) => ({ shape: "line", size: Number(match[2]), width: Number(match[1]) })],
+    [/(\d+)-foot-long, (\d+)-foot-wide Line/g, (match) => ({ shape: "line", size: Number(match[1]), width: Number(match[2]) })],
+    [/Line of [\w ]+? (\d+) feet long and (\d+) feet wide/g, (match) => ({ shape: "line", size: Number(match[1]), width: Number(match[2]) })],
+    [/(\d+)-foot-radius, (\d+)-foot[- ](high|tall) Cylinder/g, (match) => ({ shape: "cylinder", size: Number(match[1]), height: Number(match[2]) })],
+    [/(\d+)-foot-tall, (\d+)-foot-radius Cylinder/g, (match) => ({ shape: "cylinder", size: Number(match[2]), height: Number(match[1]) })],
+  ]
+  const areas = shapes
+    .flatMap(([pattern, make]) => [...text.matchAll(pattern)].map((match) => ({ position: match.index ?? 0, match, area: make(match) })))
+    .filter(
+      ({ position, match }) =>
+        !/(no larger than|fit in|contained within|unoccupied|ten|contiguous) (an? )?$/.test(text.slice(0, position)) && !/^(s\b| portion)/.test(text.slice(position + match[0].length))
+    )
+    .sort((a, b) => a.position - b.position)
+
+  return { saves, damage, conditions, casterConditions, healing, area: areas[0]?.area }
 }
 
 export default function verify(report: Report) {
@@ -290,10 +566,18 @@ export default function verify(report: Report) {
         // The PDF breaks lines inside words. Compare exactly, then without hyphens, which keeps dashes and quotes.
         if (parts[3] !== material.text && parts[3].replace(/-/g, "") !== material.text.replace(/-/g, "")) fail("material text", parts[3], material.text)
         const coins: Record<string, string> = { GP: "gp", SP: "sp", CP: "cp", "Gold Pieces": "gp", "Silver Pieces": "sp", "Copper Pieces": "cp" }
-        const costs = [...parts[3].matchAll(/([\d,]+)\+? (GP|SP|CP|Gold Pieces|Silver Pieces|Copper Pieces)\b/g)].map((match) => `${match[1].replace(/,/g, "")} ${coins[match[2]]}`)
-        const dataCosts = (material.costs ?? []).map((cost) => `${cost.amount} ${cost.unit}`)
+        // Each part of the material is a clause before ", and". A price is consumed when its part says the spell consumes it.
+        const costs = parts[3]
+          .split(/, and /)
+          .flatMap((part) =>
+            [...part.matchAll(/([\d,]+)\+? (GP|SP|CP|Gold Pieces|Silver Pieces|Copper Pieces)\b/g)].map(
+              (match) => `${match[1].replace(/,/g, "")} ${coins[match[2]]}${/consume/.test(part) ? " consumed" : ""}`
+            )
+          )
+        const dataCosts = (material.costs ?? []).map(({ cost, consumed }) => `${cost.amount} ${cost.unit}${consumed ? " consumed" : ""}`)
         if (costs.join() !== dataCosts.join()) fail("material cost", costs, dataCosts)
-        if (/consume/.test(parts[3]) !== material.consumed) fail("material consumed", /consume/.test(parts[3]), material.consumed)
+        const consumed = !/consume/.test(parts[3]) ? "none" : costs.some((cost) => !cost.endsWith(" consumed")) ? "some" : "all"
+        if (consumed !== material.consumed) fail("material consumed", consumed, material.consumed)
       }
     }
     const duration = parseDuration(header.duration)
@@ -319,8 +603,7 @@ export default function verify(report: Report) {
       for (const piece of dataPieces(spell)) {
         total++
         for (const sentence of missingSentences(piece)) failures.push(`${spell.id}: not in the official text: "${sentence}"`)
-        for (const sentence of piece.split(/(?<=[.!?])\s+/))
-          if (squash(sentence).length >= 12 && !own.includes(squash(sentence))) failures.push(`${spell.id}: not on pages ${from}–${to}: "${sentence}"`)
+        for (const sentence of sentencesOf(piece)) if (squash(sentence).length >= 12 && !own.includes(squash(sentence))) failures.push(`${spell.id}: not on pages ${from}–${to}: "${sentence}"`)
       }
     }
     report.check(category, "every sentence is the official wording on the spell’s own pages", total, failures)
@@ -357,6 +640,53 @@ export default function verify(report: Report) {
       if (spell.level > 0 && spell.cantripUpgrade) failures.push(`${spell.id}: a leveled spell has a cantrip upgrade`)
     }
     report.check(category, "upgrade paragraphs are their own fields", total, failures)
+  }
+
+  // Paragraphs: every paragraph start in the official text is a paragraph start in the data, and back. A start is a
+  // tabbed line, a bullet, a run-in heading after a full stop, the first line after a table, or a paragraph the PDF
+  // sets flush after a list (Wish's stress). Starts are compared by their first words across the chapter, so text the
+  // PDF sets in a neighbour's block still counts.
+  {
+    const failures: string[] = []
+    const prefix = (text: string) => squash(text).slice(0, 20)
+    const runIn = /^[A-Z0-9][\w’–-]*( ([A-Z0-9][\w’–-]*|of|the|and|or|a|an|to|in|on|with|for|from))*\. [A-Z“]/
+    const officialStarts = new Map<string, string>()
+    for (const header of official) {
+      const spell = byName.get(header.name)
+      const lines = header.body.map((line) => line.text).filter((line) => line.trim())
+      const stop = lines.findIndex((_, index) => /^(Tiny|Small|Medium|Large|Huge|Gargantuan)\b/.test(lines[index + 1] ?? "") && lines[index + 2]?.startsWith("AC "))
+      const own = stop < 0 ? lines : lines.slice(0, stop)
+      const tables = spell?.tables ?? []
+      const cells = new Set(tables.flatMap((table) => [...(table.title ? [table.title] : []), ...table.columns, ...table.rows.flat()]).map(squash))
+      const inTable = (line: string) => [...cells].some((cell) => cell.includes(squash(line)))
+      const lastCells = tables.map((table) => squash(table.rows[table.rows.length - 1][table.rows[0].length - 1]))
+      own.forEach((line, index) => {
+        const text = line.trim()
+        const previous = own[index - 1]?.trim() ?? ""
+        if (index > 0 && inTable(text)) return
+        const start =
+          index === 0 ||
+          /^\s*\t/.test(line) ||
+          text.startsWith("•") ||
+          (/[.:!?”)]$/.test(previous) && runIn.test(text)) ||
+          flushStarts.some((flush) => text.startsWith(flush)) ||
+          lastCells.some((cell) => cell.endsWith(squash(previous)) && squash(previous).length > 0)
+        // A start whose first line is short is a short paragraph, so its key is that line alone.
+        if (start) officialStarts.set(prefix(squash(text).length >= 20 ? join(own.slice(index, index + 3)) : text), `${header.name}: ${text.slice(0, 40)}`)
+      })
+    }
+    const dataStarts = new Map<string, string>()
+    for (const spell of spells) {
+      const paragraphs = [
+        ...spell.description.split("\n"),
+        ...(spell.higherLevel ? [`Using a Higher-Level Spell Slot. ${spell.higherLevel}`] : []),
+        ...(spell.cantripUpgrade ? [`Cantrip Upgrade. ${spell.cantripUpgrade}`] : []),
+      ]
+      for (const paragraph of paragraphs) dataStarts.set(prefix(paragraph), `${spell.id}: ${paragraph.slice(0, 40)}`)
+    }
+    for (const [key, where] of officialStarts) if (!dataStarts.has(key)) failures.push(`${where}: a paragraph starts here in the official text, not in the data`)
+    for (const [key, where] of dataStarts) if (!officialStarts.has(key)) failures.push(`${where}: a paragraph starts here in the data, not in the official text`)
+    report.check(category, "paragraph starts match the official text both ways", officialStarts.size + dataStarts.size, failures)
   }
 
   // Stat blocks: the ability scores, read from the official text by their own pattern.
@@ -417,8 +747,7 @@ export default function verify(report: Report) {
   // neighbouring spell. Used to read what the text says the spell does.
   const ownText = (spell: Spell) => {
     const mine = squash(dataPieces(spell).join(" "))
-    return bodyOf(spell)
-      .split(/(?<=[.!?])\s+/)
+    return sentencesOf(bodyOf(spell))
       .filter((sentence) => mine.includes(squash(sentence)))
       .join(" ")
   }
@@ -456,7 +785,7 @@ export default function verify(report: Report) {
       // Damage on the caster: the data marks it exactly where the sentence that rolls it has the caster take it.
       for (const damage of spell.damage ?? []) {
         const roll = damage.dice ?? `${damage.amount} ${capital(damage.types[0])}`
-        const sentence = own.split(/(?<=[.!?])\s+/).find((line) => line.includes(roll)) ?? ""
+        const sentence = sentencesOf(own).find((line) => line.includes(roll)) ?? ""
         const target = /you and any creature traveling with you each take/.test(sentence) ? "caster-and-companions" : /\byou take\b|damage to you\b/.test(sentence) ? "caster" : undefined
         if (damage.target !== target) failures.push(`${spell.id}: ${roll} falls on ${target ?? "the targets"} in its text, the data reads ${damage.target ?? "the targets"}`)
       }
@@ -493,7 +822,7 @@ export default function verify(report: Report) {
       for (const save of spell.saves ?? []) {
         total++
         if (!text.includes(`${abilityNames[save.ability]} saving throw`)) failures.push(`${spell.id}: ${abilityNames[save.ability]} saving throw is not in its text`)
-        if (save.dc && !text.includes(`DC ${save.dc} ${abilityNames[save.ability]} saving throw`)) failures.push(`${spell.id}: DC ${save.dc} is not in its text`)
+        if (typeof save.dc === "number" && !text.includes(`DC ${save.dc} ${abilityNames[save.ability]} saving throw`)) failures.push(`${spell.id}: DC ${save.dc} is not in its text`)
         if (save.target === "caster" && !new RegExp(`(?:you make a|make a DC \\d+) ${abilityNames[save.ability]} saving throw`).test(text))
           failures.push(`${spell.id}: the caster’s ${abilityNames[save.ability]} save is not in its text`)
         if (save.onSuccess === "half" && !/half as much damage|half the initial damage|half damage/i.test(text)) failures.push(`${spell.id}: a save halves damage its text does not halve`)
@@ -511,7 +840,7 @@ export default function verify(report: Report) {
       for (const match of ownText(spell).matchAll(/(you make a|make a DC (\d+)) (\w+) saving throw/g)) {
         total++
         const id = Object.keys(abilityNames).find((key) => abilityNames[key] === match[3])
-        const dc = match[2] ? Number(match[2]) : undefined
+        const dc = match[2] ? Number(match[2]) : "spell-save-dc"
         if (!spell.saves?.some((save) => save.ability === id && save.target === "caster" && save.dc === dc)) failures.push(`${spell.id}: the caster’s “${match[0]}” is not in the data`)
       }
       for (const condition of spell.casterConditions ?? []) {
@@ -525,7 +854,7 @@ export default function verify(report: Report) {
       }
       const attack = /(melee|ranged) spell attack/.exec(ownText(spell))?.[1]
       if (attack && attack !== spell.attack) failures.push(`${spell.id}: the text makes a ${attack} spell attack, the data ${spell.attack}`)
-      for (const condition of spell.conditions ?? []) {
+      for (const { condition } of spell.conditions ?? []) {
         total++
         if (!new RegExp(`${capital(condition)}\\b[^.]*conditions?|\\b${capital(condition)}\\b`).test(text)) failures.push(`${spell.id}: condition ${condition} is not in its text`)
       }
@@ -546,6 +875,59 @@ export default function verify(report: Report) {
       }
     }
     report.check(category, "saves, attacks, conditions, healing and areas are the spell’s own text", total, failures)
+  }
+
+  // The typed effects against a reading of each spell's prose, both ways: the same saves with the same moment and
+  // outcome, the same damage rolls and conditions tied to the same hit or failed save, the same scaling, healing and
+  // area. A field the data lacks, holds wrongly, or invents fails here.
+  {
+    const failures: string[] = []
+    const waived: string[] = []
+    let total = 0
+    const saveKey = (save: { ability: string; when: string; onSuccess: string }) => `${save.ability}/${save.when}/${save.onSuccess}`
+    for (const spell of spells) {
+      const reading = readSpell(spell)
+      const saves = spell.saves ?? []
+      const tieOf = (link: { trigger?: string; save?: number }) =>
+        link.trigger === "hit" ? "hit" : link.trigger === "failed-save" ? `failed-save:${link.save === undefined ? "?" : saves[link.save] ? saveKey(saves[link.save]) : "missing"}` : "untied"
+      const compare = (field: string, text: unknown, data: unknown) => {
+        total++
+        if (JSON.stringify(text) === JSON.stringify(data)) return
+        const line = `${spell.id}: ${field} reads ${JSON.stringify(text)} in its text, the data ${JSON.stringify(data)}`
+        if (readingWaivers[spell.id]?.fields.includes(field)) waived.push(`${spell.id}: ${field}: ${readingWaivers[spell.id].reason}`)
+        else failures.push(line)
+      }
+      compare(
+        "saves",
+        reading.saves,
+        saves.map(({ ability, dc, when, onSuccess, target }) => ({ ability, dc, when, onSuccess, ...(target ? { target } : {}) }))
+      )
+      const damage = (spell.damage ?? [])
+        .filter((part) => !part.table)
+        .map((part) =>
+          JSON.stringify([
+            part.dice ?? part.amount,
+            [...part.types].sort(),
+            Boolean(part.modifier),
+            part.target ?? "targets",
+            tieOf(part),
+            part.perSlot ?? "",
+            part.cantrip ? [part.cantrip[5], part.cantrip[11], part.cantrip[17]] : "",
+          ])
+        )
+      compare("damage", [...new Set(reading.damage)].sort(), [...new Set(damage)].sort())
+      compare("conditions", [...reading.conditions].sort(), (spell.conditions ?? []).map((entry) => JSON.stringify([entry.condition, tieOf(entry)])).sort())
+      compare("caster conditions", [...reading.casterConditions].sort(), [...(spell.casterConditions ?? [])].sort())
+      compare("healing", reading.healing ?? null, spell.healing ?? null)
+      compare("area", reading.area ?? null, spell.range.area ?? null)
+      // Every link points at a save that exists.
+      for (const link of [...(spell.damage ?? []), ...(spell.conditions ?? [])]) {
+        total++
+        if ((link.trigger === "failed-save") !== (link.save !== undefined) || (link.save !== undefined && !saves[link.save]))
+          failures.push(`${spell.id}: a link names no save, or a save without a failed-save trigger`)
+      }
+    }
+    report.check(category, "saves, damage, conditions, healing and areas match a reading of the spell’s own text, both ways", total, failures, waived)
   }
 
   // Counts and fixed numbers, read from every spell's own text and compared both ways: a spell whose text has the
@@ -634,7 +1016,7 @@ export default function verify(report: Report) {
       if (flags.includes("R") !== spell.ritual) failures.push(`${spell.id}: ${row.className} list Ritual ${flags.includes("R")}`)
       // The lists mark M where the material costs gold or is consumed. True Strike's weapon “worth 1+ CP” is not marked.
       const material = spell.components.material
-      const specific = Boolean(material && (material.consumed || material.costs?.some((cost) => cost.unit === "gp")))
+      const specific = Boolean(material && (material.consumed !== "none" || material.costs?.some(({ cost }) => cost.unit === "gp")))
       if (flags.includes("M") !== specific) failures.push(`${spell.id}: ${row.className} list specific Material ${flags.includes("M")}`)
     }
     const classes = [...new Set(rows.map((row) => row.className.toLowerCase()))]
@@ -657,7 +1039,7 @@ export default function verify(report: Report) {
     const refs: [string, (spell: Spell) => string[]][] = [
       ["classes", (spell) => spell.classes],
       ["magic-schools", (spell) => [spell.school]],
-      ["conditions", (spell) => spell.conditions ?? []],
+      ["conditions", (spell) => [...(spell.conditions ?? []).map((entry) => entry.condition), ...(spell.casterConditions ?? [])]],
       ["damage-types", (spell) => (spell.damage ?? []).flatMap((damage) => damage.types)],
     ]
     for (const [name, get] of refs) {
@@ -698,7 +1080,9 @@ export default function verify(report: Report) {
   }
 
   // 6. Open5e as a second opinion. A disagreement fails only where the official text does not side with the data.
-  {
+  const open5eCheck = "agrees with Open5e, or the official text settles it"
+  if (!hasUpstream("open5e")) report.skip(category, open5eCheck)
+  else {
     const rows = readOpen5e<Record<string, any>>("Spell").filter((row) => row.pk.startsWith("srd-2024_"))
     const failures: string[] = []
     const settled: string[] = []
@@ -734,7 +1118,12 @@ export default function verify(report: Report) {
       if (fields.material_specified && spell.components.material)
         compare("material text", squash(fields.material_specified), squash(spell.components.material.text), squash(header?.components ?? "").endsWith(`${squash(spell.components.material.text)}`))
       if (spell.components.material)
-        compare("material consumed", fields.material_consumed, spell.components.material.consumed, /consume/.test(header?.components ?? "") === spell.components.material.consumed)
+        compare(
+          "material consumed",
+          fields.material_consumed,
+          spell.components.material.consumed !== "none",
+          /consume/.test(header?.components ?? "") === (spell.components.material.consumed !== "none")
+        )
       const saves = [...new Set((spell.saves ?? []).map((save) => abilityNames[save.ability].toLowerCase()))]
       compare("save ability", fields.saving_throw_ability || undefined, saves[0], !saves.length || body.includes(`${capital(saves[0])} saving throw`))
       compare("attack roll", fields.attack_roll, Boolean(spell.attack), Boolean(spell.attack) === /spell attack/.test(body))
@@ -760,6 +1149,6 @@ export default function verify(report: Report) {
         )
     }
     if (rows.length !== officialCount) failures.push(`Open5e has ${rows.length} spells, the official text ${officialCount}`)
-    report.crossCheck(category, "agrees with Open5e, or the official text settles it", total, failures, settled)
+    report.crossCheck(category, open5eCheck, total, failures, settled)
   }
 }

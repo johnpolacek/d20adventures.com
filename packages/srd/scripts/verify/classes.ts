@@ -3,7 +3,7 @@ import type { Class, ClassFeature, ClassLevel, FeatureOption, Subclass } from ".
 import { dataPath, readData, toId } from "../lib/data"
 import { missingSentences, pages, squash } from "../lib/official"
 import type { Report } from "../lib/report"
-import { readOpen5e } from "../lib/sources"
+import { hasUpstream, readOpen5e } from "../lib/sources"
 
 // Every check parses the official text on its own: the contents for names and pages, each class section line by
 // line for core traits, the features table, headings, prose, inner tables and spell lists. None of it reuses the
@@ -224,25 +224,52 @@ function spellHeader(id: string): { level: number; classes: string[]; page: numb
 
 const numberWord: Record<number, string> = { 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six" }
 
+const typeNames = "Acid|Bludgeoning|Cold|Fire|Force|Lightning|Necrotic|Piercing|Poison|Psychic|Radiant|Slashing|Thunder"
+const typeList = `(?:${typeNames})(?:,? (?:or |and )?(?:${typeNames}))*`
+const listOf = (text: string) => (text.match(new RegExp(typeNames, "g")) ?? []).map((type) => type.toLowerCase())
+const conditionNames = "Blinded|Charmed|Deafened|Frightened|Grappled|Incapacitated|Invisible|Paralyzed|Petrified|Poisoned|Prone|Restrained|Stunned|Unconscious"
+
+/** The phrases that state each condition a passive benefit holds under. */
+const whilePhrase: Record<string, RegExp> = {
+  raging: /while your Rage is active|While active, your Rage/,
+  "no-heavy-armor": /while you aren’t wearing Heavy armor/,
+  "in-aura-of-protection": /while in your Aura of Protection/,
+}
+
+/**
+ * Mechanics against the text, both ways. Every typed value must be stated in `own`, the entry's own text. And where
+ * `own` states uses, a recharge, a save, dice, damage types, resistances, immunities, an action or a condition in
+ * the standard wording, the entry must hold it, and a printed list must be held whole.
+ */
 function mechanicsFailures(entry: Record<string, any>, own: string, related: string, classSkills: string[], name = ""): string[] {
   const failures: string[] = []
   const need = (ok: boolean, field: string) => {
     if (!ok) failures.push(field)
   }
   const has = (pattern: RegExp | string, text = own) => (typeof pattern === "string" ? text.includes(pattern) : pattern.test(text))
-  const activation: Record<string, RegExp> = {
-    action: /\baction\b/,
-    "bonus-action": /Bonus Action/,
-    reaction: /\bReaction\b/,
-    "magic-action": /Magic action/,
-    "no-action": /no action required/,
-  }
-  if (entry.activation) need(has(activation[entry.activation]), `activation ${entry.activation}`)
+
+  // Activation: every action kind the text names for using it.
+  const kinds: [string, RegExp][] = [
+    ["bonus-action", /\b(?:[Aa]s|use) a Bonus Action/],
+    ["reaction", /take a Reaction/],
+    ["magic-action", /[Aa]s a Magic action/],
+    ["no-action", /no action required/],
+  ]
+  const named = kinds.filter(([, pattern]) => has(pattern)).map(([kind]) => kind)
+  need(same(sorted(entry.activation ?? []), sorted(named)), `activation ${JSON.stringify(entry.activation)}, the text names ${JSON.stringify(named)}`)
+
+  // A later feature that changes this one's recharge, as Font of Inspiration does for Bardic Inspiration.
+  const changed = Boolean(name) && related.includes(`expended uses of ${name} when you finish a Short or Long Rest`)
+  need(Boolean(entry.uses?.rechargeByLevel) === changed, `rechargeByLevel ${JSON.stringify(entry.uses?.rechargeByLevel)}`)
+
+  // Uses: the count, what restores it, and the Short Rest regain.
   const uses = entry.uses
+  const statesUses =
+    /You can (?:use (?:this feature|this class’s Channel Divinity|Wild Shape|this action)|enter your Rage|confer a Bardic Inspiration die|cast it) (?:twice|the number of times|a number of times)|(?:Once you use this feature, you can’t (?:use it|do so)|can’t use this feature) again until you finish|you regain all expended uses of this ability|Focus Points column|cast the spell once without expending|cast (?:it|the spell|Water Breathing) once without|cast each of them once|must finish a Long Rest before you can cast it|can’t do so in this way again until|arcanum spell once without/
+  need(Boolean(uses) === has(statesUses), uses ? "uses, which the text does not state in the standard wording" : "no uses, though the text states them")
   if (uses) {
     const count = uses.count
-    if (typeof count === "number")
-      need(count === 1 ? /\bonce\b|again until you finish|before you can cast it|before you do so again/.test(own) : has(count === 2 ? /\btwice\b/ : numberWord[count]), `uses ${count}`)
+    if (typeof count === "number") need(count === 1 ? /\bonce\b|again until you finish|before you can cast it/.test(own) : has(count === 2 ? /\btwice\b/ : numberWord[count]), `uses ${count}`)
     // A count read from a column: the text names the column, or the column is the feature's own (Paladin's Channel Divinity).
     else if (count.column) need(has(`${headings[count.column]} column`) || headings[count.column] === name, `uses column ${count.column}`)
     else if (count.ability) need(has(`${abilityName[count.ability]} modifier (minimum of once)`), `uses ${count.ability}`)
@@ -251,9 +278,18 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
         const word = step.count === 1 ? /\bonce\b|again until/ : step.count === 2 ? /\btwice\b/ : new RegExp(`${numberWord[step.count]} times`)
         need(has(word) && (index === 0 || has(`level ${step.level}`)), `uses ${step.count} at level ${step.level}`)
       }
-    need(has(uses.recharge === "short-rest" ? /Short or Long Rest/ : /Long Rest/), `recharge ${uses.recharge}`)
-    if (uses.shortRestRegain) need(has(/regain one (?:of its )?expended uses? when you finish a Short Rest/), "shortRestRegain")
+    // "per spell": the text gives each named spell its own use.
+    need(Boolean(uses.per) === has(/(?:arcanum spell|each of them) once/), `per ${uses.per}`)
+    const shortOrLong = has(/Short or Long Rest/)
+    const longAlone = own.replace(/Short or Long Rest/g, "").includes("Long Rest")
+    if (uses.recharge === "short-or-long-rest") need(shortOrLong, "recharge short-or-long-rest")
+    else if (uses.recharge === "long-rest") need(longAlone && (!shortOrLong || Boolean(uses.shortRestRegain)), "recharge long-rest")
+    else need(false, `recharge ${uses.recharge}`)
+    need(Boolean(uses.shortRestRegain) === has(/regain one (?:of its )?expended uses? when you finish a Short Rest/), "shortRestRegain")
+    for (const step of uses.rechargeByLevel ?? [])
+      need(has(`Level ${step.level}:`, related) && has(/regain all your expended uses of Bardic Inspiration when you finish a Short or Long Rest/, related), `recharge at level ${step.level}`)
   }
+
   const resources: Record<string, (amount: number) => RegExp> = {
     "focus-points": (amount) => new RegExp(`${amount} Focus Points?`),
     "sorcery-points": (amount) => new RegExp(`${amount} Sorcery Points?`),
@@ -264,18 +300,71 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     "second-wind": () => /use of your Second Wind/,
     rage: () => /use of your Rage/,
   }
-  if (entry.cost) need(has(resources[entry.cost.resource](entry.cost.amount)), `cost ${entry.cost.amount} ${entry.cost.resource}`)
+  if (entry.spend) {
+    need(has(resources[entry.spend.resource](entry.spend.amount)), `spend ${entry.spend.amount} ${entry.spend.resource}`)
+    need(Boolean(entry.spend.keptOnFailure) === has(/isn’t expended/), "spend keptOnFailure")
+  }
+
+  // Dice, both ways: every roll the text states in the standard wording is held.
+  const held = [
+    entry.diceFromColumn ? "1d6" : undefined,
+    entry.dice,
+    entry.dicePerSlotLevel,
+    entry.selfDamage?.dicePerSlotLevel,
+    ...(entry.diceByLevel ?? []).map((step: { dice: string }) => step.dice),
+  ].filter(Boolean)
+  const stated = [...own.matchAll(/(?:extra|[Rr]oll|take|takes|taking|equal to|equals|add|increases to) (\d+d\d+)\b/g)].map((match) => match[1])
+  for (const dice of stated) need(held.includes(dice), `the text rolls ${dice}, the data does not hold it`)
   if (entry.dice) need(has(entry.dice), `dice ${entry.dice}`)
+  const perSlot = own.match(/another (\d+d\d+) per level of the spell slot/)?.[1]
+  need(entry.dicePerSlotLevel === perSlot, `dicePerSlotLevel ${entry.dicePerSlotLevel}, the text adds ${perSlot} per slot level`)
+  need(Boolean(entry.diceFromColumn) === has(/roll 1d6 in place of the normal damage|deal an extra 1d6 damage/), `diceFromColumn ${entry.diceFromColumn}`)
+  if (entry.diceFromColumn) need(has(`${headings[entry.diceFromColumn]} column`), `diceFromColumn ${entry.diceFromColumn}`)
   for (const step of entry.diceByLevel ?? []) need(has(step.dice, related) && has(String(step.level), related), `dice ${step.dice} at level ${step.level}`)
-  for (const type of entry.damageTypes ?? []) need(has(capital(type)), `damage type ${type}`)
+  const adds: string[] = []
+  const after = own.match(/\d+d\d+ (?:plus your|and add your) ([^.]+?)(?:\.|,| \(| to )/)?.[1] ?? ""
+  for (const [ability, id] of Object.entries(abilityByName)) if (after.includes(`${ability} modifier`)) adds.push(id)
+  if (/level/.test(after)) adds.push("class-level")
+  need(same(sorted(entry.rollAdds ?? []), sorted(adds)), `rollAdds ${JSON.stringify(entry.rollAdds)}, the text adds ${JSON.stringify(adds)}`)
+
+  // Damage types, both ways: each printed list of types dealt is held whole.
+  const dealt = [...own.matchAll(new RegExp(`(?:\\d+d\\d+|take|takes|taking|deal|choice of|it deal) (${typeList}) damage`, "g"))].flatMap((match) => listOf(match[1]))
+  const typed = [...(entry.damageTypes ?? []), ...(entry.selfDamage ? [entry.selfDamage.damageType] : [])]
+  for (const type of new Set(dealt)) need(typed.includes(type), `the text deals ${type} damage, the data does not hold it`)
+  for (const type of typed) need(has(capital(type)), `damage type ${type}`)
+  const spared = (own.match(/if it isn’t an? (\w+)/)?.[1] ?? "").toLowerCase()
+  need(same(entry.damageNotTo ?? [], spared ? [spared] : []), `damageNotTo ${JSON.stringify(entry.damageNotTo)}, the text spares ${spared}`)
+  if (entry.selfDamage) {
+    const { dicePerSlotLevel, increasePerUse } = entry.selfDamage
+    need(has(`take ${dicePerSlotLevel}`) && has(`for each level of the spell slot`) && has(`increases by ${increasePerUse}`) && has("The first time you do so, you suffer no adverse"), "selfDamage")
+  }
+
+  // Saves, both ways: each ability whose saving throw the text forces or makes is held, with its DC.
   const dc = (value: unknown) =>
-    value === "spell" ? has(/spell save DC/) : typeof value === "number" ? has(`DC ${value}`) : has(`8 plus your ${abilityName[(value as { ability: string }).ability]} modifier and Proficiency Bonus`)
-  if (entry.save) {
-    need(has(`${abilityName[entry.save.ability]} saving throw`), `save ${entry.save.ability}`)
-    if (entry.save.dc !== undefined) need(dc(entry.save.dc), `save DC ${JSON.stringify(entry.save.dc)}`)
+    value === "spell-save-dc"
+      ? has(/spell save DC/)
+      : typeof value === "number"
+        ? has(`DC ${value}`)
+        : has(`8 plus your ${abilityName[(value as { plusModifierOf: string }).plusModifierOf]} modifier and Proficiency Bonus`)
+  const saves = [...own.matchAll(/(\w+) saving throw(?!s)/g)]
+    .filter((match) => abilityByName[match[1]] && !/(?:allows you to make an?|check or) $/.test(own.slice(0, match.index)))
+    .map((match) => abilityByName[match[1]])
+  const savesHeld = [entry.save?.ability, entry.selfSave?.ability].filter(Boolean)
+  need(same([...new Set(saves)].sort(), sorted(savesHeld)), `saves ${JSON.stringify(savesHeld)}, the text has ${JSON.stringify([...new Set(saves)])}`)
+  if (entry.save?.dc !== undefined) need(dc(entry.save.dc), `save DC ${JSON.stringify(entry.save.dc)}`)
+  const printedDc = own.match(/DC (\d+) \w+ saving throw|against your spell save DC|\(DC 8 plus your (\w+) modifier/)
+  if (entry.save) need((entry.save.dc !== undefined) === Boolean(printedDc), "save DC presence")
+  if (entry.selfSave) {
+    need(dc(entry.selfSave.dc), `selfSave DC ${entry.selfSave.dc}`)
+    need(
+      Boolean(entry.selfSave.increasePerUse) === has(/the DC increases by/) && (!entry.selfSave.increasePerUse || has(`the DC increases by ${entry.selfSave.increasePerUse}`)),
+      "selfSave increasePerUse"
+    )
+    need(entry.selfSave.resetOn === (has(/When you finish a Short or Long Rest, the DC resets/) ? "short-or-long-rest" : undefined), "selfSave resetOn")
   }
   if (entry.saveDc !== undefined) need(dc(entry.saveDc), `saveDc ${JSON.stringify(entry.saveDc)}`)
-  if (entry.pool) need(has(`${numberWord[entry.pool.perLevel]} times your`) && has(/Long Rest/), "pool")
+
+  if (entry.pool) need(has(`${numberWord[entry.pool.perLevel]} times your`) && has(/Long Rest/) && entry.pool.recharge === "long-rest", "pool")
   if (entry.range !== undefined) need(has(`${entry.range} feet`), `range ${entry.range}`)
   if (entry.area) {
     const area: Record<string, string> = { emanation: `${entry.area.size}-foot Emanation`, sphere: `${entry.area.size}-foot-radius Sphere`, cube: `${entry.area.size}-foot Cube` }
@@ -305,7 +394,7 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
       has("Expertise") && (entry.expertise === 1 ? has(/Expertise in (?:that|the chosen) skill/) : has(`${numberWord[entry.expertise]} of your skill proficiencies`)),
       `expertise ${entry.expertise}`
     )
-  if (entry.speedBonus) need(has(`by ${entry.speedBonus} feet`), `speed bonus ${entry.speedBonus}`)
+  if (entry.speedBonus) need(has(`by ${entry.speedBonus.feet} feet`), `speed bonus ${entry.speedBonus.feet}`)
   if (entry.weaponMasteries) need(has(`mastery properties of ${numberWord[entry.weaponMasteries]} kinds`), `weapon masteries ${entry.weaponMasteries}`)
   if (entry.abilityIncrease) {
     const { abilities, amount, maximum } = entry.abilityIncrease
@@ -319,8 +408,25 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   }
   if (entry.criticalRange) need(has(entry.criticalRange === 19 ? "roll of 19 or 20" : "18–20"), `critical range ${entry.criticalRange}`)
   if (entry.sense) need(has(`${capital(entry.sense.type)} with a range of ${entry.sense.range} feet`), "sense")
-  if (entry.resistances) need(has("Resistance to") && entry.resistances.every((type: string) => has(capital(type))), "resistances")
-  if (entry.conditionImmunities) need(has(/Immunity to|immune to/) && entry.conditionImmunities.every((id: string) => has(capital(id))), "condition immunities")
+
+  // Resistances and immunities, both ways, whole lists, with the condition they hold under.
+  const resisted = listOf(own.match(new RegExp(`Resistance to (${typeList}) damage`))?.[1] ?? "")
+  need(same(sorted(entry.resistances?.damageTypes ?? []), sorted(resisted)), `resistances ${JSON.stringify(entry.resistances?.damageTypes)}, the text has ${JSON.stringify(resisted)}`)
+  const immune = (own.match(new RegExp(`(?:Immunity to|immune to) the ((?:${conditionNames})(?: and (?:${conditionNames}))?) conditions?`))?.[1] ?? "")
+    .split(" and ")
+    .filter(Boolean)
+    .map((name) => name.toLowerCase())
+  need(
+    same(sorted(entry.conditionImmunities?.conditions ?? []), sorted(immune)),
+    `condition immunities ${JSON.stringify(entry.conditionImmunities?.conditions)}, the text has ${JSON.stringify(immune)}`
+  )
+  if (entry.conditionImmunities) need(Boolean(entry.conditionImmunities.allies) === has("You and your allies have Immunity"), "condition immunities allies")
+  for (const field of ["resistances", "conditionImmunities", "speedBonus"]) {
+    if (!entry[field]) continue
+    const condition = entry[field].while
+    const statedWhile = Object.entries(whilePhrase).find(([, pattern]) => has(pattern))?.[0]
+    need(condition === statedWhile, `${field} while ${condition}, the text holds it while ${statedWhile}`)
+  }
   return failures
 }
 
@@ -347,10 +453,35 @@ function parseItems(text: string): { quantity: number; name: string; detail?: st
 
 const toolKind: Record<string, string> = { "Musical Instruments": "musical-instrument", "Musical Instrument": "musical-instrument", "Artisan’s Tools": "artisans-tools" }
 
-function itemMatches(printed: { quantity: number; name: string; detail?: string }, item: Record<string, any>): boolean {
-  if (printed.quantity !== item.quantity || printed.detail !== item.detail) return false
-  if (item.anyOf) return same(sorted(printed.name.split(" or ").map((name) => toolKind[name])), sorted(item.anyOf))
-  return item.item === toId(printed.name) || item.item === toId(printed.name.replace(/e?s$/, "")) || item.item === toId(printed.name.replace(/s$/, ""))
+type Gear = { id: string; name: string; kind: string; group?: string; members?: string[]; variants?: string[]; bundleSize?: number; alsoQuarterstaff?: boolean }
+
+/**
+ * A printed starting item against a data line. "Musical Instrument of your choice" and "Holy Symbol" are choices
+ * from a group. "Arcane Focus (crystal)" is the group member the note names. "Book (occult lore)" is the item with a
+ * note. A line of ammunition counts single pieces. Without equipment data, group membership and ammunition go unread.
+ */
+function itemMatches(printed: { quantity: number; name: string; detail?: string }, line: Record<string, any>, gear: Map<string, Gear>): boolean {
+  if (printed.quantity !== line.quantity) return false
+  const id = toId(printed.name)
+  const singular = [id, toId(printed.name.replace(/e?s$/, "")), toId(printed.name.replace(/s$/, ""))]
+  const chooses = (ids: string[]) => JSON.stringify(line.chooseFrom) === JSON.stringify(ids)
+  if (printed.name.includes(" or ")) return chooses(printed.name.split(" or ").map((name) => toolKind[name])) && line.note === printed.detail
+  if (printed.detail === "of your choice") return chooses([id]) && line.note === undefined
+  const ammunition = gear.get(line.item ?? "")?.kind === "ammunition"
+  if (gear.size && Boolean(line.unit) !== ammunition) return false
+  const bundle = gear.get(line.item)?.bundleSize
+  if (ammunition && (!bundle || printed.quantity % bundle !== 0)) return false
+  if (printed.detail) {
+    if (line.note !== printed.detail) return false
+    const group = gear.get(id)
+    const member = gear.get(line.item)
+    const named = member?.name.toLowerCase() === printed.detail.toLowerCase() || (printed.detail === "Quarterstaff" && member?.alsoQuarterstaff === true)
+    if (group?.kind === "group") return Boolean(group.members?.includes(line.item) && named)
+    return line.item === id || !gear.size
+  }
+  if (line.note !== undefined) return false
+  if (gear.get(id)?.kind === "group") return chooses([id])
+  return singular.includes(line.item)
 }
 
 function weaponsFrom(text: string): unknown[] {
@@ -467,6 +598,7 @@ export default function verify(report: Report) {
 
       const equipment = traits.get("Starting Equipment") ?? ""
       const options = [...equipment.matchAll(/\(([ABC])\) (.+?)(?=;? (?:or )?\([ABC]\) |$)/g)]
+      const gear = new Map(existsSync(dataPath("equipment")) ? readData<Gear>("equipment").map((item) => [item.id, item] as [string, Gear]) : [])
       total++
       if (options.length !== entry.startingEquipment.length) fail("startingEquipment options", options.length, entry.startingEquipment.length)
       for (const [index, option] of options.entries()) {
@@ -474,10 +606,10 @@ export default function verify(report: Report) {
         const gp = Number(option[2].match(/(\d+) GP$/)?.[1])
         const printed = parseItems(option[2])
         total++
-        if (!data || data.option !== option[1] || data.gp !== gp) fail(`startingEquipment ${option[1]} gold`, gp, data?.gp)
+        if (!data || data.option !== option[1] || !same(data.money, { amount: gp, unit: "gp" })) fail(`startingEquipment ${option[1]} money`, gp, data?.money)
         const items = data?.items ?? []
         total++
-        if (printed.length !== items.length || printed.some((item, at) => !itemMatches(item, items[at] as Record<string, any>))) fail(`startingEquipment ${option[1]} items`, printed, items)
+        if (printed.length !== items.length || printed.some((item, at) => !itemMatches(item, items[at] as Record<string, any>, gear))) fail(`startingEquipment ${option[1]} items`, printed, items)
       }
 
       // As a Multiclass Character: "Gain the following traits from the Core X Traits table: A, B, and C."
@@ -860,8 +992,8 @@ export default function verify(report: Report) {
         const official = cost ? { resource: costed >= 0 ? "sneak-attack-dice" : "sorcery-points", amount: Number(cost[1]) } : undefined
         total++
         // A printed cost must match. A cost only the prose states, such as Flurry of Blows, is read in the mechanics check.
-        const printedOnly = option.cost?.resource === "sneak-attack-dice" || option.cost?.resource === "sorcery-points"
-        if (official ? !same(official, option.cost) : printedOnly) failures.push(`${feature.id}/${option.id}: cost ${JSON.stringify(option.cost)}, official ${JSON.stringify(official)}`)
+        const printedOnly = option.spend?.resource === "sneak-attack-dice" || option.spend?.resource === "sorcery-points"
+        if (official ? !same(official, option.spend) : printedOnly) failures.push(`${feature.id}/${option.id}: cost ${JSON.stringify(option.spend)}, official ${JSON.stringify(official)}`)
         if (at === titled) {
           const next = owner.lines[at + 1]?.text ?? ""
           const prerequisite = next.startsWith("Prerequisite: ")
@@ -907,8 +1039,14 @@ export default function verify(report: Report) {
     const keys = [
       "activation",
       "uses",
-      "cost",
+      "spend",
       "dice",
+      "diceFromColumn",
+      "dicePerSlotLevel",
+      "rollAdds",
+      "selfSave",
+      "selfDamage",
+      "damageNotTo",
       "diceByLevel",
       "damageTypes",
       "save",
@@ -940,9 +1078,19 @@ export default function verify(report: Report) {
       for (const option of feature.options ?? []) for (const key of Object.keys(option)) if (!optionKnown.has(key)) failures.push(`${feature.id}/${option.id}: ${key} is not checked`)
     }
     const classText = (classId: string) => features.filter((feature) => feature.class === classId).map((feature) => featureText.get(feature.id) ?? "")
+    // A feature's own text: its first heading's block, without the class table set in it. Later headings are related text.
+    const firstBlock = (feature: ClassFeature) => {
+      const owner = owners.find((item) => item.id === feature.class) as Owner
+      const table = tables.get(owner.id)
+      const lines = (blockLines.get(`${feature.id}@${feature.level}`) ?? []).filter((line) => {
+        const index = owner.lines.indexOf(line)
+        return !table || index < table.start || index >= table.end
+      })
+      return `Level ${feature.level}: ${feature.name} ${join(lines)}`
+    }
     for (const feature of features) {
-      const own = featureText.get(feature.id) ?? ""
-      const related = [own, ...classText(feature.class).filter((text) => text.includes(feature.name))].join(" ")
+      const own = firstBlock(feature)
+      const related = [featureText.get(feature.id) ?? "", ...classText(feature.class).filter((text) => text.includes(feature.name))].join(" ")
       const skills = classes.find((entry) => entry.id === feature.class)?.skills.from ?? []
       const optionNames = (feature.options ?? []).map((option) => option.name)
       // A feature's own mechanics are read from its text before its options begin.
@@ -968,7 +1116,97 @@ export default function verify(report: Report) {
         for (const failure of mechanicsFailures(option, text, `${text} ${own}`, skills)) failures.push(`${feature.id}/${option.id}: ${failure} is not what its text says`)
       }
     }
-    report.check(category, "every typed mechanic of every feature and option is stated in its own official text", total, failures)
+    report.check(
+      category,
+      "every typed mechanic of every feature and option is stated in its own text, and every standard statement of uses, recharge, saves, dice, damage types, resistances, immunities and actions is typed",
+      total,
+      failures
+    )
+  }
+
+  // Paragraphs: every paragraph start the official block prints is a paragraph start in the data, and the reverse.
+  {
+    const failures: string[] = []
+    let total = 0
+    // Breaks the PDF text does not mark with a tab or bullet. On page 50 this sentence is its own paragraph.
+    const unmarked = ["You gain the following benefits while you are un-"]
+    const label = /^[A-Z][\w’]*(?: [A-Z][\w’]*)*\. [A-Z]/
+    /** The squashed openings of the paragraphs a run of official lines prints. */
+    const starts = (lines: Line[]) => {
+      const out: string[] = []
+      let bullet = false
+      for (const [index, line] of lines.entries()) {
+        const previous = lines[index - 1]?.text ?? ""
+        const opens =
+          line.raw.startsWith("\t") ||
+          line.raw.startsWith("•") ||
+          unmarked.includes(line.text) ||
+          (/[.:]$/.test(previous) && label.test(line.text)) ||
+          (bullet && /\.$/.test(previous) && /^[A-Z]/.test(line.text))
+        if (opens) out.push(squash(line.text).slice(0, 24))
+        if (line.raw.startsWith("•")) bullet = true
+        else if (opens) bullet = false
+      }
+      return out
+    }
+    const opening = (paragraph: string) => squash(paragraph).slice(0, 24)
+    const compare = (where: string, lines: Line[], paragraphs: string[], firsts: string[]) => {
+      total++
+      const official = starts(lines).filter((start) => !firsts.some((first) => start.startsWith(first.slice(0, start.length)) && first.startsWith(start.slice(0, first.length))))
+      const data = paragraphs.map(opening)
+      for (const start of official)
+        if (!data.some((open) => open.startsWith(start.slice(0, open.length)) && start.startsWith(open.slice(0, start.length))))
+          failures.push(`${where}: the official paragraph “${start}…” does not start a paragraph in the data`)
+      for (const open of data)
+        if (!official.some((start) => open.startsWith(start.slice(0, open.length)) && start.startsWith(open.slice(0, start.length))))
+          failures.push(`${where}: the data paragraph “${open}…” is not an official paragraph start`)
+    }
+    for (const owner of owners) {
+      const table = tables.get(owner.id)
+      const outside = (lines: Line[]) =>
+        lines.filter((line) => {
+          const index = owner.lines.indexOf(line)
+          return !(table && index >= table.start && index < table.end) && !innerRanges.some(([start, end, id]) => id === owner.id && index >= start && index < end)
+        })
+      const sidebarLines = new Set<Line>()
+      for (const sidebar of classes.find((entry) => entry.id === owner.id)?.sidebars ?? []) {
+        const start = owner.lines.findIndex((line) => line.text === sidebar.name)
+        let end = start + 1
+        while (end < owner.lines.length && squash(join(owner.lines.slice(start + 1, end))) !== squash(sidebar.text)) end++
+        for (const line of owner.lines.slice(start, end)) sidebarLines.add(line)
+        compare(`${owner.id} sidebar ${sidebar.name}`, owner.lines.slice(start + 1, end), sidebar.text.split("\n").slice(1), [opening(sidebar.text)])
+      }
+      for (const feature of features.filter((item) => item.class === owner.id)) {
+        const titled = feature.id === "sorcerer-metamagic" || feature.id === "warlock-eldritch-invocations"
+        const labels = titled
+          ? []
+          : (feature.options ?? []).map((option) => opening(`${option.name}${option.spend?.resource === "sneak-attack-dice" ? ` (Cost: ${option.spend.amount}d6)` : ""} ${option.description}`))
+        const optionParagraphs = titled ? [] : (feature.options ?? []).flatMap((option) => option.description.split("\n").slice(1))
+        const blocks = [{ level: feature.level, text: feature.description }, ...(feature.laterText ?? []).map((later) => ({ level: later.level, text: later.description }))]
+        for (const block of blocks) {
+          const lines = outside(blockLines.get(`${feature.id}@${block.level}`) ?? []).filter((line) => !sidebarLines.has(line))
+          const paragraphs = block.text.split("\n")
+          compare(`${feature.id}@${block.level}`, lines, [...paragraphs.slice(1), ...(block.level === feature.level ? optionParagraphs : [])], [opening(paragraphs[0]), ...labels])
+        }
+        if (!titled) continue
+        const names = (feature.options ?? []).map((option) => option.name)
+        for (const option of feature.options ?? []) {
+          let start = owner.lines.findIndex((line) => line.text === option.name) + 1
+          while (/^(Cost|Prerequisite): /.test(owner.lines[start].text) || option.prerequisite?.text.endsWith(owner.lines[start].text)) start++
+          let end = start
+          while (end < owner.lines.length && !names.includes(owner.lines[end].text) && owner.lines[end].text !== `${owner.name} Spell List`) end++
+          const paragraphs = option.description.split("\n")
+          compare(`${feature.id}/${option.id}`, owner.lines.slice(start, end), paragraphs.slice(1), [opening(paragraphs[0])])
+        }
+      }
+      const subclass = subclasses.find((item) => item.class === owner.id)
+      if (subclass) {
+        const end = owner.lines.findIndex((line, index) => index > owner.heading && /^Level \d+: /.test(line.text))
+        const paragraphs = subclass.description.split("\n")
+        compare(subclass.id, owner.lines.slice(owner.heading + 3, end), paragraphs.slice(1), [opening(paragraphs[0])])
+      }
+    }
+    report.check(category, "every official paragraph start in each feature, option, later text, sidebar and subclass description is a paragraph start in the data, and the reverse", total, failures)
   }
 
   // Prose: data sentences are official, and every official prose line is in the data.
@@ -992,13 +1230,12 @@ export default function verify(report: Report) {
     }
     for (const item of texts) {
       total++
-      const missing = missingSentences(item.text.replace(/\*\*/g, "").replace(/^• /gm, "")).filter((sentence) => !clean.get(item.owner)?.includes(squash(sentence)))
+      const missing = missingSentences(item.text.replace(/^• /gm, "")).filter((sentence) => !clean.get(item.owner)?.includes(squash(sentence)))
       for (const sentence of missing) failures.push(`${item.where}: not official: "${sentence}"`)
     }
     // Each feature's sentences sit under its own heading, so no text is filed under the wrong feature.
     const sentences = (text: string) =>
       text
-        .replace(/\*\*/g, "")
         .split(/(?<=[.!?])\s+|\n+/)
         .map(squash)
         .filter((sentence) => sentence.length >= 12)
@@ -1034,7 +1271,7 @@ export default function verify(report: Report) {
     // Option names and printed costs are prose too where the text sets them as run-in labels.
     for (const feature of features)
       for (const option of feature.options ?? [])
-        texts.push({ owner: feature.class, where: "", text: `${option.name}${option.cost?.resource === "sneak-attack-dice" ? ` (Cost: ${option.cost.amount}d6)` : ""}. ${option.description}` })
+        texts.push({ owner: feature.class, where: "", text: `${option.name}${option.spend?.resource === "sneak-attack-dice" ? ` (Cost: ${option.spend.amount}d6)` : ""}. ${option.description}` })
     // Every official line in a class section must be accounted for: parsed as a field or table, or held in prose.
     for (const owner of owners) {
       const prose = squash(
@@ -1116,29 +1353,29 @@ export default function verify(report: Report) {
     }
     const waived: string[] = []
     if (existsSync(dataPath("equipment"))) {
-      const equipment = readData<{ id: string; kind: string; group?: string }>("equipment")
-      const ids = new Set(equipment.map((item) => item.id))
-      const kinds: Record<string, boolean> = { "artisans-tools": equipment.some((item) => item.kind === "tool" && item.group === "artisan"), "musical-instrument": ids.has("musical-instrument") }
+      const gear = new Map(readData<Gear>("equipment").map((item) => [item.id, item] as [string, Gear]))
       // The SRD describes the Wizard’s spellbook in the Spellcasting feature (page 78), not in “Equipment”.
       const item = (where: string, id: string) => {
         total++
         if (id === "spellbook") waived.push(`${where} spellbook: the SRD describes it in the Wizard’s Spellcasting feature (page 78), not in “Equipment”, so it has no equipment entry`)
-        else if (!ids.has(id)) failures.push(`${where}: ${id} is not in data/equipment.json`)
+        else if (!gear.has(id)) failures.push(`${where}: ${id} is not in data/equipment.json`)
       }
-      const kind = (where: string, id: string) => {
+      // A choice resolves to a group with members or a tool with variants.
+      const choice = (where: string, id: string) => {
         total++
-        if (!kinds[id]) failures.push(`${where}: equipment has no ${id}`)
+        const entry = gear.get(id)
+        if (!entry?.members?.length && !entry?.variants?.length) failures.push(`${where}: ${id} is not a group or a tool with variants in data/equipment.json`)
       }
       for (const entry of classes) {
         for (const option of entry.startingEquipment) {
-          for (const entryItem of option.items ?? []) {
-            if ("item" in entryItem) item(`${entry.id} starting equipment ${option.option}`, entryItem.item)
-            else for (const id of entryItem.anyOf) kind(`${entry.id} starting equipment ${option.option}`, id)
+          for (const line of option.items ?? []) {
+            if (line.item) item(`${entry.id} starting equipment ${option.option}`, line.item)
+            for (const from of line.chooseFrom ?? []) choice(`${entry.id} starting equipment ${option.option}`, from)
           }
         }
         for (const tool of [...(entry.tools ?? []), ...(entry.multiclass.tools ?? [])]) {
           if ("tool" in tool) item(`${entry.id} tools`, tool.tool)
-          else for (const id of tool.from) kind(`${entry.id} tools`, id)
+          else for (const id of tool.from) choice(`${entry.id} tools`, id)
         }
         for (const focus of entry.spellcasting?.focus ?? []) item(`${entry.id} focus`, focus)
       }
@@ -1170,7 +1407,9 @@ export default function verify(report: Report) {
   }
 
   // Open5e as a second opinion. A disagreement the official text settles in the data's favor is noted, not failed.
-  {
+  const open5eCheck = "Open5e agrees on hit dice, saves, caster type, every table column and feature levels, or the official text settles it"
+  if (!hasUpstream("open5e")) report.skip(category, open5eCheck)
+  else {
     const failures: string[] = []
     const waived: string[] = []
     let total = 0
@@ -1245,6 +1484,6 @@ export default function verify(report: Report) {
         else failures.push(`${entry.id} level ${level} ${key}: Open5e ${value}, data ${data}`)
       }
     }
-    report.crossCheck(category, "Open5e agrees on hit dice, saves, caster type, every table column and feature levels, or the official text settles it", total, failures, waived)
+    report.crossCheck(category, open5eCheck, total, failures, waived)
   }
 }

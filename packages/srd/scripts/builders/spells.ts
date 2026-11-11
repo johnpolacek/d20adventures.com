@@ -1,4 +1,4 @@
-import type { Cost } from "../../src/schema/common"
+import type { ConditionId, Cost } from "../../src/schema/common"
 import type { Area, CastingTime, Components, Damage, Duration, Healing, Range, Save, Spell, SpellStatBlock, SpellTable } from "../../src/schema/spells"
 import { spellSchema } from "../../src/schema/spells"
 import { applyOverrides, toId, writeData } from "../lib/data"
@@ -103,6 +103,12 @@ function join(lines: string[]): string {
 
 const runInHeading = /^[A-Z0-9][\w’–-]*(?: (?:[A-Z0-9][\w’–-]*|of|the|and|or|a|an|to|in|on|with|for|from))*\. [A-Z“]/
 
+/**
+ * Paragraphs the PDF sets flush, after a list of run-in items or after a table, so no tab marks them. Each is the
+ * start of its first line.
+ */
+const flushParagraphs = ["The stress of casting Wish to produce any effect", "The spell doesn’t account for circumstances"]
+
 /** Split body lines into paragraphs: a tab or a bullet starts one, and so does a run-in heading after a full stop. */
 function paragraphs(lines: string[]): string[] {
   const groups: string[][] = []
@@ -110,7 +116,7 @@ function paragraphs(lines: string[]): string[] {
     const tabbed = /^\s*\t/.test(line)
     const bullet = /^\s*•/.test(line)
     const previous = groups.at(-1)?.at(-1)?.trim() ?? ""
-    const heading = /[.:!?”)]$/.test(previous) && runInHeading.test(line.trim())
+    const heading = (/[.:!?”)]$/.test(previous) && runInHeading.test(line.trim())) || flushParagraphs.some((start) => line.trim().startsWith(start))
     const text = bullet ? `• ${line.replace(/^\s*•\s*/, "")}` : line
     if (!groups.length || tabbed || bullet || heading) groups.push([text])
     else groups.at(-1)?.push(text)
@@ -317,91 +323,323 @@ function components(list: string[], material: string | undefined): Components {
   const result: Components = { verbal: list.includes("V"), somatic: list.includes("S") }
   if (!list.includes("M")) return result
   if (!material) throw new Error("spells: an M component has no material")
-  const text = material
   const units: Record<string, Cost["unit"]> = { GP: "gp", CP: "cp", "Copper Pieces": "cp" }
-  const costs = [...text.matchAll(/([\d,]+)\+? (GP|CP|Copper Pieces)\b/g)].map((match) => ({ amount: Number(match[1].replace(/,/g, "")), unit: units[match[2]] }))
-  return { ...result, material: { text, ...(costs.length ? { costs } : {}), consumed: /consume/.test(text) } }
+  // A priced part is consumed when "which the spell consumes" follows its price before the next price, or when the
+  // material ends "all of which the spell consumes".
+  const prices = [...material.matchAll(/([\d,]+)\+? (GP|CP|Copper Pieces)\b/g)]
+  const all = /all of which the spell consumes/.test(material)
+  const costs = prices.map((match, index) => {
+    const after = material.slice((match.index ?? 0) + match[0].length, prices[index + 1]?.index ?? material.length)
+    return { cost: { amount: Number(match[1].replace(/,/g, "")), unit: units[match[2]] }, consumed: all || /which the spell consumes/.test(after) }
+  })
+  const consumed = !/consumes/.test(material) ? "none" : costs.some((cost) => !cost.consumed) ? "some" : "all"
+  return { ...result, material: { text: material, ...(costs.length ? { costs } : {}), consumed } }
 }
 
 const types = (text: string) => text.split(/, or |, | or /).map((name) => name.toLowerCase()) as Damage["types"]
 
-/** Damage the description states as dice and type, once per distinct roll. */
-function damage(text: string, higherLevel = "", cantripUpgrade = ""): Damage[] | undefined {
-  const found: Damage[] = []
-  const typeList = `((?:${typeNames})(?:(?:, or |, | or )(?:${typeNames}))*)`
-  const dice = "(\\d+d\\d+(?: \\+ \\d+)?)( plus your spellcasting ability modifier)?"
-  // "takes 8d6 Fire damage" and "takes Fire damage equal to 3d6 plus your spellcasting ability modifier".
-  const before = [...text.matchAll(new RegExp(`${dice} ${typeList} damage`, "g"))].map((match) => ({ index: match.index, dice: match[1], modifier: match[2], types: match[3] }))
-  const after = [...text.matchAll(new RegExp(`${typeList} damage (?:to the target )?equal to ${dice}`, "g"))].map((match) => ({
-    index: match.index,
-    dice: match[2],
-    modifier: match[3],
-    types: match[1],
-  }))
-  for (const match of [...before, ...after].sort((a, b) => a.index - b.index)) {
-    const entry: Damage = { dice: match.dice, types: types(match.types), ...(match.modifier ? { modifier: true as const } : {}) }
-    if (!found.some((other) => JSON.stringify(other) === JSON.stringify(entry))) found.push(entry)
-  }
-  if (!found.length) return undefined
-  const slot = /^(?:The |All the )?(.*?)damage(?: \([^)]*\))? increases? by (\d+d\d+) for (?:each|every) (?:spell )?slot level above \d\./.exec(higherLevel)
-  if (slot) {
-    const named = [...slot[1].matchAll(new RegExp(typeNames, "g"))].map((match) => match[0].toLowerCase())
-    for (const entry of found) if (!named.length || entry.types.some((type) => named.includes(type))) entry.perSlot = slot[2]
-  }
-  const upgrade = /levels 5 \((\d+d\d+)\), 11 \((\d+d\d+)\), and 17 \((\d+d\d+)\)/.exec(cantripUpgrade)
-  if (upgrade) for (const entry of found) entry.cantrip = { 5: upgrade[1], 11: upgrade[2], 17: upgrade[3] }
-  return found
-}
-
 function healing(text: string, higherLevel = ""): Healing | undefined {
   const dice = /regains? (?:a number of )?Hit Points equal to (\d+d\d+(?: \+ \d+)?)( plus your spellcasting ability modifier)?/.exec(text) ?? /regains? (\d+d\d+(?: \+ \d+)?) Hit Points/.exec(text)
-  const amount = /regains? (\d+) Hit Points/.exec(text)
+  const amount = /(?:regains?|restoring|restores) (\d+) Hit Points?\b/.exec(text)
   const temporary = /gains? (\d+d\d+(?: \+ \d+)?) Temporary Hit Points/.exec(text)
-  const found = temporary ?? dice
-  if (!found && !amount) return undefined
+  const temporaryModifier = /gains Temporary Hit Points equal to your spellcasting ability modifier/.test(text)
   const perSlot = /healing (?:and damage )?increases? by (\d+d\d+) for each spell slot level/.exec(higherLevel)
-  const perSlotAmount = /healing (?:and damage )?increases? by (\d+) for each spell slot level/.exec(higherLevel)
+  const perSlotAmount = /healing (?:and damage )?increases? by (\d+) for each spell slot level|gain (\d+) additional Temporary Hit Points for each spell slot level/.exec(higherLevel)
+  const rolled = temporary ?? dice
+  if (!rolled && !amount && !temporaryModifier) return undefined
   return {
-    ...(found ? { dice: found[1] } : { amount: Number(amount?.[1]) }),
-    ...(dice?.[2] && !temporary ? { modifier: true as const } : {}),
-    ...(temporary ? { temporary: true as const } : {}),
+    ...(rolled ? { dice: rolled[1] } : amount ? { amount: Number(amount[1]) } : {}),
+    ...((dice?.[2] && !temporary) || temporaryModifier ? { modifier: true as const } : {}),
+    ...(temporary || temporaryModifier ? { temporary: true as const } : {}),
     ...(perSlot ? { perSlot: perSlot[1] } : {}),
-    ...(perSlotAmount ? { perSlotAmount: Number(perSlotAmount[1]) } : {}),
+    ...(perSlotAmount ? { perSlotAmount: Number(perSlotAmount[1] ?? perSlotAmount[2]) } : {}),
   }
 }
 
-/** Every saving throw the description has a creature make, in order. A success halves damage, gives a stated lesser effect, or avoids the spell. */
-function saves(text: string): Save[] | undefined {
-  const pattern = /(?<!(?:Advantage|Disadvantage|bonus|penalty) (?:on|to) (?:all |its |their |your )?)(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) saving throw(?!s)/g
-  const abilities = [...new Set([...text.matchAll(pattern)].map((match) => abilityNames[match[1]]))]
-  if (!abilities.length) return undefined
-  const half = /half as much damage|half the damage|half damage/i.test(text)
-  const other = /On a successful save,|on a success(?:ful save)?,? (?:it|the|a|its|you)|Successful Save:/.test(text)
-  const onSuccess: Save["onSuccess"] = half ? "half" : other ? "other" : "none"
-  return abilities.map((ability) => ({ ability, onSuccess }))
+const abilityPattern = "Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma"
+const conditionList = `(${conditionNames})((?:(?:, and |, or |, | and | or )(?:${conditionNames}))*)`
+
+/** A paragraph cut into sentences. */
+const sentencesOf = (paragraph: string) => paragraph.replace(/([.!?])\s+(?=[A-Z“•])/g, "$1\n").split("\n")
+
+type Mention = { index: number; ability: Save["ability"]; repeat: boolean; before: string }
+
+/**
+ * The saving throws a sentence has a creature make, in order: "makes a Dexterity saving throw", "makes another
+ * Wisdom saving throw", "repeats the save". A save named as a benefit or a penalty ("Advantage on Strength saving
+ * throws") is not one.
+ */
+function mentionsIn(sentence: string, last: Save["ability"] | undefined): Mention[] {
+  const found: Mention[] = []
+  for (const match of sentence.matchAll(new RegExp(`(${abilityPattern}) saving throw(s?)`, "g"))) {
+    const before = sentence.slice(0, match.index)
+    if (match[2] || /(?:Advantage|Disadvantage|bonus|penalty) (?:on|to) (?:all |its |their |your |any )?$/.test(before)) continue
+    found.push({ index: match.index ?? 0, ability: abilityNames[match[1]], repeat: /\banother $/.test(before), before })
+  }
+  for (const match of sentence.matchAll(/\brepeats? the save\b/g)) {
+    const index = match.index ?? 0
+    const ability = found.filter((mention) => mention.index < index).at(-1)?.ability ?? last
+    if (ability) found.push({ index, ability, repeat: true, before: sentence.slice(0, index) })
+  }
+  return found.sort((a, b) => a.index - b.index)
 }
 
-function conditions(text: string): Spell["conditions"] {
-  const pattern = new RegExp(`(?:has|have|gains?|is given|giving it|having) the ((?:${conditionNames})(?:(?:, and |, or |, | and | or )(?:${conditionNames}))*) conditions?`, "g")
-  const found = new Set<string>()
-  for (const match of text.matchAll(pattern)) for (const name of match[1].split(/, and |, or |, | and | or /)) found.add(name.toLowerCase())
-  return found.size ? ([...found].sort() as Spell["conditions"]) : undefined
+/**
+ * When a save is made, from the words before it in its sentence or right after it: "At the end of each of its turns,
+ * the target repeats the save", "makes a Constitution saving throw at the end of each of its turns". A repeated save
+ * with no such words is "later".
+ */
+function timings(sentence: string, mention: Mention): Save["when"][] {
+  const near = `${mention.before} ${sentence.slice(mention.index, mention.index + 60).replace(/^\w+ saving throw|^repeats? the save/, "")}`
+  const found: Save["when"][] = []
+  if (/[Aa]t the end of each of (?:its|the target’s) turns|(?:If|if) the [\w ]*?creature ends its turn|at which point it must/.test(near)) found.push("end-of-turn")
+  if (/[Aa]t the start of each of its turns|at the start of your next turn/.test(near)) found.push("start-of-turn")
+  if (/(?:each time|whenever|Whenever) (?:it|the target) takes damage|damages the (?:\w+ )?creature/.test(mention.before)) found.push("on-damage")
+  if (/take an action to [^.]*$/.test(mention.before)) found.push("action")
+  if (found.length) return found
+  return mention.repeat ? ["later"] : ["initial"]
 }
 
-/** The first area of effect the description sizes. */
+/** What a success does, read from the text that follows the save up to the next save. */
+function outcome(scope: string): Save["onSuccess"] {
+  if (/half as much damage|half the initial damage|half damage/i.test(scope)) return "half"
+  if (/ending (?:the spell|the effect|the condition)(?: on itself)? on a success|saving throw to end (?:the|this) effect/.test(scope)) return "ends"
+  const success = /(On a successful save|On a success|If it succeeds|if it succeeds|If it successfully saves[^,]*), ([^.]*)/.exec(scope)
+  if (!success) return "none"
+  if (/three times/.test(success[1])) return "other"
+  if (/isn’t affected|is unaffected|has no effect|resists your efforts/.test(success[2])) return "none"
+  if (/\bends\b|is no longer (?:affected|Restrained)|isn’t Restrained/.test(success[2])) return "ends"
+  return "other"
+}
+
+/** The damage types a spell offers as a choice: "Choose Acid, Cold, … or Thunder", "a type you choose: …", "This damage is …", "air (Lightning), earth (Thunder)". */
+function chosenTypes(description: string): Damage["types"] {
+  const list = `((?:${typeNames})(?:(?:, or |, | or )(?:${typeNames}))+)`
+  const named = new RegExp(`(?:[Cc]hoose|a type you choose:|This damage is) ${list}`).exec(description)
+  if (named) return types(named[1])
+  const parens = [...description.matchAll(new RegExp(`\\((${typeNames})\\)`, "g"))].map((match) => match[1])
+  if (parens.length > 1) return types(parens.join(", "))
+  throw new Error(`spells: no damage type choice in "${description.slice(0, 60)}"`)
+}
+
+/**
+ * Saves, damage and conditions, read sentence by sentence from the description and the last cell of each table row,
+ * and linked where a sentence ties a roll or a condition to a hit or to a failed save.
+ */
+function effects(description: string, tables: SpellTable[], higherLevel = "", cantripUpgrade = "") {
+  const rows = tables.flatMap((table) => table.rows.map((row) => row.at(-1) ?? ""))
+  const paragraphs = [...description.split("\n"), ...rows]
+  const descriptionCount = description.split("\n").length
+  const sentences = paragraphs.flatMap((paragraph, at) => sentencesOf(paragraph).map((text) => ({ text, paragraph: at })))
+  // A "repeats the save" with no ability of its own repeats the save made before it.
+  const allMentions: (Mention & { sentence: number })[][] = []
+  let last: Save["ability"] | undefined
+  for (const [at, sentence] of sentences.entries()) {
+    allMentions.push(mentionsIn(sentence.text, last).map((mention) => ({ ...mention, sentence: at })))
+    last = allMentions[at].at(-1)?.ability ?? last
+  }
+  const flat = allMentions.flat()
+  const saves: Save[] = []
+  let tableMention: (typeof flat)[number] | undefined
+  const indexOf = new Map<(typeof flat)[number], number[]>()
+  for (const [order, mention] of flat.entries()) {
+    const sentence = sentences[mention.sentence].text
+    const next = flat[order + 1]
+    const rest = [sentence.slice(mention.index, next?.sentence === mention.sentence ? next.index : undefined)]
+    // The scope runs on through the description, or within its own table row, and stops at an ability check.
+    for (let at = mention.sentence + 1; at < sentences.length && at !== next?.sentence; at++) {
+      const inRows = sentences[at].paragraph >= descriptionCount
+      if ((inRows && sentences[at].paragraph !== sentences[mention.sentence].paragraph) || /\bmakes? an? [\w ()]*?check\b/.test(sentences[at].text)) break
+      rest.push(sentences[at].text)
+    }
+    let onSuccess = outcome(rest.join(" "))
+    // A save whose outcome the spell's table gives row by row: the same outcome in every row, or "other".
+    if (/\btable\b/.test(rest.join(" ")) && rows.some((row) => /Failed Save:/.test(row))) {
+      const outcomes = new Set(rows.filter((row) => /Failed Save:/.test(row)).map((row) => (/Successful Save: Half as much damage/.test(row) ? "half" : "none")))
+      onSuccess = outcomes.size === 1 ? ([...outcomes][0] as Save["onSuccess"]) : "other"
+      tableMention = mention
+    }
+    const dc = /DC (\d+) $/.exec(mention.before)
+    const caster = /\byou make a $|When you cast this spell, make a (?:DC \d+ )?$/.test(mention.before)
+    indexOf.set(
+      mention,
+      timings(sentence, mention).map((when) => {
+        const save: Save = { ability: mention.ability, dc: dc ? Number(dc[1]) : "spell-save-dc", when, onSuccess, ...(caster ? { target: "caster" as const } : {}) }
+        const found = saves.findIndex((other) => JSON.stringify(other) === JSON.stringify(save))
+        if (found >= 0) return found
+        saves.push(save)
+        return saves.length - 1
+      })
+    )
+  }
+  // The link a roll or a condition at `index` of sentence `at` takes from its sentence.
+  const link = (at: number, index: number): { trigger?: "hit" | "failed-save"; save?: number } => {
+    const text = sentences[at].text
+    const before = allMentions[at].filter((mention) => mention.index < index).at(-1)
+    if (before) return { trigger: "failed-save", save: indexOf.get(before)?.[0] }
+    if (/\b[Oo]n a hit\b/.test(text)) return { trigger: "hit" }
+    // In a table row, "Failed Save:" is the save the description sends to the table.
+    if (/^Failed Save:|\. Failed Save:|^\w+\. Failed Save:/.test(text) && sentences[at].paragraph >= descriptionCount && tableMention)
+      return { trigger: "failed-save", save: indexOf.get(tableMention)?.[0] }
+    if (/[Oo]n (?:a )?failed save|Failed Save:|fails (?:the|its|this|that)(?: second)? save|succeed on that save or/.test(text)) {
+      const latest = flat.filter((mention) => mention.sentence < at || (mention.sentence === at && mention.index < index)).at(-1)
+      if (latest) return { trigger: "failed-save", save: indexOf.get(latest)?.[0] }
+    }
+    return {}
+  }
+  const damage: (Damage & { paragraph: number })[] = []
+  const conditions: NonNullable<Spell["conditions"]> = []
+  const casterConditions: NonNullable<Spell["casterConditions"]> = []
+  const typeList = `((?:${typeNames})(?:(?:, or |, | or )(?:${typeNames}))*)`
+  const dice = "(\\d+d\\d+(?: \\+ \\d+)?)( plus your spellcasting ability modifier)?"
+  for (const [at, sentence] of sentences.entries()) {
+    if (sentence.paragraph >= descriptionCount) {
+      // Table rows give conditions. Their damage is typed through the table.
+      for (const match of sentence.text.matchAll(new RegExp(`\\b(?:has|have) the ${conditionList} conditions?`, "g")))
+        for (const name of [match[1], ...match[2].split(/, and |, or |, | and | or /).filter(Boolean)]) {
+          const entry = { condition: name.toLowerCase() as ConditionId, ...link(at, match.index ?? 0) }
+          if (!conditions.some((other) => JSON.stringify(other) === JSON.stringify(entry))) conditions.push(entry)
+        }
+      continue
+    }
+    const text = sentence.text
+    // "takes 8d6 Fire damage" and "takes Fire damage equal to 3d6 plus your spellcasting ability modifier".
+    const rolls: { index: number; end: number; dice?: string; amount?: number; modifier?: string; types: Damage["types"] }[] = [
+      ...[...text.matchAll(new RegExp(`${dice} ${typeList} damage`, "g"))].map((match) => ({
+        index: match.index ?? 0,
+        end: (match.index ?? 0) + match[0].length,
+        dice: match[1],
+        modifier: match[2],
+        types: types(match[3]),
+      })),
+      ...[...text.matchAll(new RegExp(`${typeList} damage (?:to the target )?equal to ${dice}`, "g"))].map((match) => ({
+        index: match.index ?? 0,
+        end: (match.index ?? 0) + match[0].length,
+        dice: match[2],
+        modifier: match[3],
+        types: types(match[1]),
+      })),
+      // "3d8 damage of the chosen type", "an extra 2d8 damage": the types are the choice the description lists.
+      ...[...text.matchAll(/(\d+d\d+) damage(?= of the chosen type| of a type you choose| of the spirit’s type| when you hit)/g)].map((match) => ({
+        index: match.index ?? 0,
+        end: (match.index ?? 0) + match[0].length,
+        dice: match[1],
+        types: chosenTypes(description),
+      })),
+      // A fixed amount: "taking 20 Radiant damage", "deals 50 Force damage to you". Damage to structures is left out.
+      ...[...text.matchAll(new RegExp(`\\b(\\d+) (${typeNames}) damage(?! to any structure)`, "g"))]
+        .filter((match) => !/(?:d|\+ |at least )$/.test(text.slice(0, match.index)))
+        .map((match) => ({ index: match.index ?? 0, end: (match.index ?? 0) + match[0].length, amount: Number(match[1]), types: types(match[2]) })),
+      // Delayed Blast Fireball: "A creature takes Fire damage equal to the total accumulated damage", "The spell’s base damage is 12d6".
+      ...[...text.matchAll(/base damage is (\d+d\d+)/g)].map((match) => ({
+        index: match.index ?? 0,
+        end: (match.index ?? 0) + match[0].length,
+        dice: match[1],
+        types: types(new RegExp(`takes (${typeNames}) damage equal to the total`).exec(description)?.[1] ?? ""),
+      })),
+    ].sort((a, b) => a.index - b.index)
+    // "3d8 Radiant damage (if you are good or neutral) or 3d8 Necrotic damage (if you are evil)" is one roll of either type.
+    for (let at = rolls.length - 1; at > 0; at--) {
+      const [first, second] = [rolls[at - 1], rolls[at]]
+      if (first.dice && first.dice === second.dice && / or $/.test(text.slice(first.end, second.index)) && !/[.;]/.test(text.slice(first.end, second.index))) {
+        first.types = [...first.types, ...second.types]
+        rolls.splice(at, 1)
+      }
+    }
+    for (const roll of rolls) {
+      const target = /you and any creature traveling with you each take/.test(text) ? "caster-and-companions" : /\byou take\b|damage to you\b/.test(text) ? "caster" : undefined
+      const entry = {
+        ...(roll.dice ? { dice: roll.dice } : { amount: roll.amount }),
+        types: roll.types,
+        ...(roll.modifier ? { modifier: true as const } : {}),
+        ...(target ? { target: target as Damage["target"] } : {}),
+        ...link(at, roll.index),
+      }
+      if (!damage.some(({ paragraph, ...other }) => JSON.stringify(other) === JSON.stringify(entry))) damage.push({ ...entry, paragraph: sentence.paragraph })
+    }
+    const found = [
+      ...[...text.matchAll(new RegExp(`\\b(?:has|have|gains?|is given|giving it|having|with) the ${conditionList} conditions?`, "g"))].map((match) => ({
+        index: match.index ?? 0,
+        end: (match.index ?? 0) + match[0].length,
+        names: [match[1], ...match[2].split(/, and |, or |, | and | or /).filter(Boolean)],
+      })),
+      ...[...text.matchAll(new RegExp(`\\b(?:is|be|falls?) (${conditionNames})\\b`, "g"))].map((match) => ({ index: match.index ?? 0, end: (match.index ?? 0) + match[0].length, names: [match[1]] })),
+    ]
+    for (const match of found) {
+      const before = text.slice(0, match.index)
+      // The negation that matters is in the match's own clause.
+      const clause = before.split(/, (?:and |or |but )?/).at(-1) ?? before
+      const after = text.slice(match.end)
+      // A condition the text ends, prevents, names as immune, or names as a state the creature already has is not given.
+      if (
+        /\b(?:if|If|unless) (?:it|the creature|the target|you|a target|they)\b[^,]*$|can’t (?:gain|be|have)|neither|Immunity|immune|from such creatures|no longer|\bthat (?:is possessed by or )?$/.test(
+          clause
+        ) ||
+        /^[^.]*?(?:removed|the condition ends|doesn’t end)|^ (?:conditions? )?from (?:such|one or more)/.test(after)
+      )
+        continue
+      const caster = /^(?:You|On a failed save, you|If expelled, you)\b/.test(before)
+      for (const name of match.names) {
+        const condition = name.toLowerCase() as ConditionId
+        if (caster) {
+          if (!casterConditions.includes(condition)) casterConditions.push(condition)
+          continue
+        }
+        const entry = { condition, ...link(at, match.index) }
+        if (!conditions.some((other) => JSON.stringify(other) === JSON.stringify(entry))) conditions.push(entry)
+      }
+    }
+  }
+  // Scaling: each "… damage increases by XdY for each spell slot level" clause names the parts it raises by type, by
+  // "initial", or by words of the paragraph the part is in. With no such name it raises every part.
+  for (const match of higherLevel.matchAll(/([\w ]*?)damage([\w ’()]*?) increases? by (\d+d\d+)/g)) {
+    const qualifier = `${match[1]} ${match[2]}`.trim()
+    const named = [...qualifier.matchAll(new RegExp(typeNames, "g"))].map((type) => type[0].toLowerCase())
+    const key = qualifier
+      .replace(/^(?:The|the|and the|All the|Both types of)\s*/, "")
+      .split(" ")
+      .slice(-2)
+      .join(" ")
+      .toLowerCase()
+    for (const [at, part] of damage.entries()) {
+      const raised = named.length
+        ? part.types.some((type) => named.includes(type))
+        : /both|All|healing and|^(?:The|the)?$/.test(qualifier) || !key
+          ? true
+          : /initial/.test(qualifier)
+            ? at === 0
+            : paragraphs[part.paragraph].toLowerCase().includes(key)
+      if (raised) part.perSlot = match[3]
+    }
+  }
+  const upgrade = /levels 5 \((\d+d\d+)\), 11 \((\d+d\d+)\), and 17 \((\d+d\d+)\)/.exec(cantripUpgrade)
+  if (upgrade) for (const part of damage) part.cantrip = { 5: upgrade[1], 11: upgrade[2], 17: upgrade[3] }
+  return { saves, damage: damage.map(({ paragraph, ...part }) => part), conditions, casterConditions }
+}
+
+/**
+ * The first area of effect the description sizes. A size that limits an object or an illusion ("no larger than a
+ * 20-foot Cube", "must fit in a 5-foot Cube"), a portion of a target, or one of several Cubes is not an area.
+ */
 function area(text: string): Area | undefined {
   const patterns: [RegExp, (match: RegExpExecArray) => Area][] = [
-    [/(\d+)-foot-radius Sphere/, (match) => ({ shape: "sphere", size: Number(match[1]) })],
-    [/(\d+)-foot[- ](Cone|Cube|Emanation)/, (match) => ({ shape: match[2].toLowerCase() as Area["shape"], size: Number(match[1]) })],
-    [/(\d+)-foot-wide, (\d+)-foot-long Line/, (match) => ({ shape: "line", size: Number(match[2]), width: Number(match[1]) })],
-    [/(\d+)-foot-long, (\d+)-foot-wide Line/, (match) => ({ shape: "line", size: Number(match[1]), width: Number(match[2]) })],
-    [/(\d+)-foot-radius, (\d+)-foot[- ](?:high|tall) Cylinder/, (match) => ({ shape: "cylinder", size: Number(match[1]), height: Number(match[2]) })],
-    [/(\d+)-foot-tall, (\d+)-foot-radius Cylinder/, (match) => ({ shape: "cylinder", size: Number(match[2]), height: Number(match[1]) })],
+    [/(\d+)-foot-radius Sphere/g, (match) => ({ shape: "sphere", size: Number(match[1]) })],
+    [/(\d+)-foot[- ](Cone|Cube|Emanation)\b/g, (match) => ({ shape: match[2].toLowerCase() as Area["shape"], size: Number(match[1]) })],
+    [/(\d+)-foot-wide, (\d+)-foot-long Line/g, (match) => ({ shape: "line", size: Number(match[2]), width: Number(match[1]) })],
+    [/(\d+)-foot-long, (\d+)-foot-wide Line/g, (match) => ({ shape: "line", size: Number(match[1]), width: Number(match[2]) })],
+    [/Line of [\w ]+? (\d+) feet long and (\d+) feet wide/g, (match) => ({ shape: "line", size: Number(match[1]), width: Number(match[2]) })],
+    [/(\d+)-foot-radius, (\d+)-foot[- ](?:high|tall) Cylinder/g, (match) => ({ shape: "cylinder", size: Number(match[1]), height: Number(match[2]) })],
+    [/(\d+)-foot-tall, (\d+)-foot-radius Cylinder/g, (match) => ({ shape: "cylinder", size: Number(match[2]), height: Number(match[1]) })],
   ]
-  const found = patterns.flatMap(([pattern, make]) => {
-    const match = pattern.exec(text)
-    return match ? [{ index: match.index, area: make(match) }] : []
-  })
+  const found = patterns.flatMap(([pattern, make]) =>
+    [...text.matchAll(pattern)]
+      .filter((match) => {
+        const before = text.slice(0, match.index)
+        const after = text.slice((match.index ?? 0) + match[0].length)
+        return !/(?:no larger than|fit in|contained within|unoccupied|ten|contiguous) (?:an? )?$/.test(before) && !/^(?:s\b| portion)/.test(after)
+      })
+      .map((match) => ({ index: match.index ?? 0, area: make(match as RegExpExecArray) }))
+  )
   return found.sort((a, b) => a.index - b.index)[0]?.area
 }
 
@@ -489,7 +727,8 @@ export default function build() {
     const spellRange = range(rangeText)
     const spellArea = area(text.description)
     const tables = text.tables?.map(withDamageTypes)
-    const rolls = [...(damage(text.description, text.higherLevel, text.cantripUpgrade) ?? []), ...tableDamage(tables ?? [])]
+    const read = effects(text.description, tables ?? [], text.higherLevel, text.cantripUpgrade)
+    const rolls = [...read.damage, ...tableDamage(tables ?? [])]
     return {
       id,
       name: text.name,
@@ -509,10 +748,11 @@ export default function build() {
       ...(tables ? { tables } : {}),
       ...(text.statBlocks ? { statBlocks: text.statBlocks } : {}),
       ...(attack ? { attack: attack.toLowerCase() as Spell["attack"] } : {}),
-      ...optional("saves", saves(text.description)),
+      ...(read.saves.length ? { saves: read.saves } : {}),
       ...(rolls.length ? { damage: rolls } : {}),
       ...optional("healing", healing(text.description, text.higherLevel)),
-      ...optional("conditions", conditions([text.description, ...(text.tables ?? []).flatMap((table) => table.rows.flat())].join("\n"))),
+      ...(read.conditions.length ? { conditions: read.conditions } : {}),
+      ...(read.casterConditions.length ? { casterConditions: read.casterConditions } : {}),
       ...optional("projectiles", projectiles(text.description, text.higherLevel, text.cantripUpgrade)),
       ...optional("extraTargetsPerSlot", extraTargets(text.higherLevel)),
       ...optional("ac", armorClass(text.description)),

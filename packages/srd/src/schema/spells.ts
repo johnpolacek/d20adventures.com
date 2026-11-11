@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { abilityIdSchema, classIdSchema, conditionIdSchema, costSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, proseSchema, schoolIdSchema } from "./common"
+import { classIdSchema, conditionIdSchema, costSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, forcedSaveShape, proseSchema, saveDcSchema, schoolIdSchema } from "./common"
 
 const count = z.number().int().positive()
 
@@ -36,11 +36,18 @@ export const rangeSchema = z.strictObject({
 })
 export type Range = z.infer<typeof rangeSchema>
 
-/** `costs` are the minimum values the text prints ("worth 25+ GP"), in order. `consumed` is whether the spell consumes the material. */
+/**
+ * `costs` are the minimum values the text prints ("worth 25+ GP"), in order, each with whether the spell consumes
+ * the part it prices. `consumed` says how much of the material the spell consumes: all of it, some of its parts
+ * (Clone's diamond but not its vessel), or none.
+ */
 export const materialSchema = z.strictObject({
   text: z.string().min(1),
-  costs: z.array(costSchema).min(1).optional(),
-  consumed: z.boolean(),
+  costs: z
+    .array(z.strictObject({ cost: costSchema, consumed: z.boolean() }))
+    .min(1)
+    .optional(),
+  consumed: z.enum(["all", "some", "none"]),
 })
 
 export const componentsSchema = z.strictObject({
@@ -67,14 +74,23 @@ export type Duration = z.infer<typeof durationSchema>
 const targetSchema = z.enum(["caster", "caster-and-companions"])
 
 /**
- * A save the spell forces. `onSuccess` is "none" when a success avoids the effect, "half" when it halves the damage,
- * and "other" when the text gives a lesser effect. `dc` is set where the text gives a fixed DC in place of the
- * caster's spell save DC. `target` is set where the caster makes the save.
+ * One saving throw the spell has a creature make. `dc` is the caster's spell save DC unless the text prints a number.
+ *
+ * `when` is the moment of the save: "initial" decides whether the effect lands, when the spell takes effect or when a
+ * creature meets the spell's trigger (entering an area, ending its turn there). The others are later saves by a
+ * creature already affected: "end-of-turn" and "start-of-turn" at the end or start of its turns, "on-damage" when it
+ * takes damage, "action" when it takes an action to repeat the save, "later" for a repeated save at another time the
+ * text gives (Compulsion's after moving, Befuddlement's every 30 days).
+ *
+ * `onSuccess`: "none" when a success avoids the effect, "half" when it halves the damage, "ends" when it ends the
+ * spell or the effect on that creature, "other" when the text gives another outcome. `target` is set where the caster
+ * makes the save.
  */
 export const saveSchema = z.strictObject({
-  ability: abilityIdSchema,
-  onSuccess: z.enum(["none", "half", "other"]),
-  dc: count.optional(),
+  ...forcedSaveShape,
+  dc: saveDcSchema,
+  when: z.enum(["initial", "end-of-turn", "start-of-turn", "on-damage", "action", "later"]),
+  onSuccess: z.enum(["none", "half", "ends", "other"]),
   target: targetSchema.optional(),
 })
 export type Save = z.infer<typeof saveSchema>
@@ -86,7 +102,9 @@ const cantripDiceSchema = z.strictObject({ 5: diceSchema, 11: diceSchema, 17: di
  * One damage roll the text states, as dice or as a fixed `amount`. Several `types` mean one of them, chosen as the
  * text says, or, where `table` names one of the spell's tables, the type that table's row gives. `modifier` adds the
  * caster's spellcasting ability modifier. `perSlot` is the dice added for each slot level above the spell's level.
- * `target` is set where the damage falls on the caster.
+ * `target` is set where the damage falls on the caster. `trigger` and `save` link the roll to what its sentence
+ * says it follows: a hit, or a failed save (`save` is an index into `saves`). A roll left unlinked has no such
+ * condition in its sentence.
  */
 export const damageSchema = z
   .strictObject({
@@ -98,6 +116,8 @@ export const damageSchema = z
     cantrip: cantripDiceSchema.optional(),
     table: z.string().min(1).optional(),
     target: targetSchema.optional(),
+    trigger: z.enum(["hit", "failed-save"]).optional(),
+    save: z.number().int().nonnegative().optional(),
   })
   .refine((damage) => (damage.dice === undefined) !== (damage.amount === undefined), "give dice or an amount")
 export type Damage = z.infer<typeof damageSchema>
@@ -150,6 +170,13 @@ export const spellStatBlockSchema = z.strictObject({
 })
 export type SpellStatBlock = z.infer<typeof spellStatBlockSchema>
 
+/** A condition the spell gives, and, where its sentence says so, the hit or the failed save (an index into `saves`) it follows. */
+export const conditionLinkSchema = z.strictObject({
+  condition: conditionIdSchema,
+  trigger: z.enum(["hit", "failed-save"]).optional(),
+  save: z.number().int().nonnegative().optional(),
+})
+
 export const spellSchema = z.strictObject({
   ...entryShape,
   /** 0 for a cantrip. */
@@ -174,8 +201,8 @@ export const spellSchema = z.strictObject({
   saves: z.array(saveSchema).min(1).optional(),
   damage: z.array(damageSchema).min(1).optional(),
   healing: healingSchema.optional(),
-  /** Conditions the spell can give its targets. */
-  conditions: z.array(conditionIdSchema).min(1).optional(),
+  /** Conditions the spell can give its targets, each linked like a damage roll where its sentence ties it to a hit or a failed save. */
+  conditions: z.array(conditionLinkSchema).min(1).optional(),
   /** Conditions the spell gives the caster. */
   casterConditions: z.array(conditionIdSchema).min(1).optional(),
   /** Beams, darts or rays, each its own attack or hit: the base count, the count added per slot level above the spell's level, and the count at cantrip upgrade levels. */

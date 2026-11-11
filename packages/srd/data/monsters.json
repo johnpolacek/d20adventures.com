@@ -80,8 +80,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the aboleth fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Mucus Cloud",
@@ -98,7 +101,8 @@
           {
             "average": 6,
             "dice": "1d12",
-            "type": "acid"
+            "type": "acid",
+            "condition": "While the cursed creature is outside a body of water, the creature takes 6 (1d12) Acid damage at the end of every 10 minutes unless moisture is applied to its skin before those minutes have passed."
           }
         ],
         "area": {
@@ -163,7 +167,10 @@
       {
         "name": "Dominate Mind",
         "text": "Wisdom Saving Throw: DC 16, one creature the aboleth can see within 30 feet. Failure: The target has the Charmed condition until the aboleth dies or is on a different plane of existence from the target. While Charmed, the target acts as an ally to the aboleth and is under its control while within 60 feet of it. In addition, the aboleth and the target can communicate telepathically with each other over any distance.\nThe target repeats the save whenever it takes damage as well as after every 24 hours it spends at least 1 mile away from the aboleth, ending the effect on itself on a success.",
-        "perDay": 2,
+        "uses": {
+          "count": 2,
+          "recharge": "long-rest"
+        },
         "saves": [
           {
             "ability": "wis",
@@ -278,8 +285,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -313,7 +323,7 @@
       {
         "name": "Acid Breath",
         "text": "Dexterity Saving Throw: DC 18, each creature in a 60-foot-long, 5-foot-wide Line. Failure: 54 (12d8) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -498,8 +508,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -533,7 +546,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 19, each creature in a 90-foot-long, 5-foot-wide Line. Failure: 60 (11d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -704,8 +717,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -739,7 +755,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 18, each creature in a 60-foot-long, 5-foot-wide Line. Failure: 45 (10d8) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -775,7 +791,8 @@
             "ability": "con",
             "dc": 18,
             "targets": "each creature in a 60-foot Cone",
-            "failure": "The target has the Unconscious condition for 10 minutes. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it."
+            "firstFailure": "The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save.",
+            "secondFailure": "The target has the Unconscious condition for 10 minutes. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it."
           }
         ],
         "conditions": [
@@ -954,8 +971,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -989,7 +1009,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 19, each creature in a 90-foot-long, 5-foot-wide Line. Failure: 55 (10d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -1207,8 +1227,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -1242,7 +1265,7 @@
       {
         "name": "Acid Breath",
         "text": "Dexterity Saving Throw: DC 18, each creature in an 60-foot-long, 5-foot-wide Line. Failure: 54 (12d8) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -1452,8 +1475,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -1487,7 +1513,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 21, each creature in a 60-foot Cone. Failure: 66 (12d10) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -1700,8 +1726,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -1735,7 +1764,7 @@
       {
         "name": "Poison Breath",
         "text": "Constitution Saving Throw: DC 18, each creature in a 60-foot Cone. Failure: 56 (16d6) Poison damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -1915,8 +1944,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -1950,7 +1982,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 21, each creature in a 60-foot Cone. Failure: 59 (17d6) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -2113,8 +2145,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -2148,7 +2183,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 20, each creature in a 60-foot Cone. Failure: 54 (12d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -2183,7 +2218,8 @@
             "ability": "con",
             "dc": 20,
             "targets": "each creature in a 60-foot Cone",
-            "failure": "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
+            "firstFailure": "The target has the Incapacitated condition until the end of its next turn, when it repeats the save.",
+            "secondFailure": "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
           }
         ],
         "conditions": [
@@ -2368,8 +2404,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -2403,7 +2442,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 19, each creature in a 60-foot Cone. Failure: 54 (12d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -2587,7 +2626,7 @@
       {
         "name": "Whirlwind",
         "text": "Strength Saving Throw: DC 13, one Medium or smaller creature in the elemental’s space. Failure: 24 (4d10 + 2) Thunder damage, and the target is pushed up to 20 feet straight away from the elemental and has the Prone condition. Success: Half damage only.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 4,
           "max": 6
         },
@@ -2807,8 +2846,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -2842,7 +2884,7 @@
       {
         "name": "Acid Breath",
         "text": "Dexterity Saving Throw: DC 22, each creature in a 90-foot-long, 10-foot-wide Line. Failure: 67 (15d8) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -3031,8 +3073,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -3066,7 +3111,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 23, each creature in a 120-foot-long, 10-foot-wide Line. Failure: 88 (16d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -3238,8 +3283,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -3273,7 +3321,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 21, each creature in a 90-foot-long, 5-foot-wide Line. Failure: 58 (13d8) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -3309,7 +3357,8 @@
             "ability": "con",
             "dc": 21,
             "targets": "each creature in a 90-foot Cone",
-            "failure": "The target has the Unconscious condition for 10 minutes. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it."
+            "firstFailure": "The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save.",
+            "secondFailure": "The target has the Unconscious condition for 10 minutes. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it."
           }
         ],
         "conditions": [
@@ -3489,8 +3538,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -3524,7 +3576,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 23, each creature in a 120-foot-long, 10-foot-wide Line. Failure: 82 (15d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -3748,8 +3800,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -3783,7 +3838,7 @@
       {
         "name": "Acid Breath",
         "text": "Dexterity Saving Throw: DC 22, each creature in an 90-foot-long, 10-foot-wide Line. Failure: 63 (14d8) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -3996,8 +4051,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -4031,7 +4089,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 24, each creature in a 90-foot Cone. Failure: 71 (13d10) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -4248,8 +4306,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -4283,7 +4344,7 @@
       {
         "name": "Poison Breath",
         "text": "Constitution Saving Throw: DC 22, each creature in a 90-foot Cone. Failure: 77 (22d6) Poison damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -4467,8 +4528,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -4502,7 +4566,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 24, each creature in a 90-foot Cone. Failure: 91 (26d6) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -4671,8 +4735,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -4706,7 +4773,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 24, each creature in a 90-foot Cone. Failure: 67 (15d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -4741,7 +4808,8 @@
             "ability": "con",
             "dc": 24,
             "targets": "each creature in a 90-foot Cone",
-            "failure": "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
+            "firstFailure": "The target has the Incapacitated condition until the end of its next turn, when it repeats the save.",
+            "secondFailure": "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
           }
         ],
         "conditions": [
@@ -4933,8 +5001,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the dragon fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -4968,7 +5039,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 22, each creature in a 90-foot Cone. Failure: 63 (14d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -5330,7 +5401,9 @@
           {
             "average": 10,
             "dice": "2d6 + 3",
-            "type": "bludgeoning"
+            "type": "bludgeoning",
+            "on": "hit",
+            "condition": "Until the grapple ends, the target has the Blinded and Restrained conditions, is suffocating, and takes 10 (2d6 + 3) Bludgeoning damage at the start of each of its turns."
           }
         ],
         "conditions": [
@@ -5444,7 +5517,7 @@
       {
         "name": "Acid Spray",
         "text": "Dexterity Saving Throw: DC 12, each creature in a 30-foot-long, 5-foot-wide Line. Failure: 14 (4d6) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -5656,7 +5729,7 @@
       {
         "name": "Rock",
         "text": "Ranged Attack Roll: +5, range 25/50 ft. Hit: 10 (2d6 + 3) Bludgeoning damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -5844,12 +5917,13 @@
     "immunities": [
       "psychic"
     ],
-    "conditionImmunities": [
-      "charmed"
+    "conditionalDefenses": [
+      {
+        "kind": "condition-immunity",
+        "value": "charmed",
+        "condition": "with Mind Blank"
+      }
     ],
-    "defenseNotes": {
-      "conditionImmunities": "Charmed (with Mind Blank)"
-    },
     "gear": [
       {
         "id": "wand"
@@ -5971,14 +6045,20 @@
       {
         "name": "Misty Step",
         "text": "The mage casts Misty Step, using the same spellcasting ability as Spellcasting.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       }
     ],
     "reactions": [
       {
         "name": "Protective Magic",
         "text": "The archmage casts Counterspell or Shield in response to the spell’s trigger, using the same spellcasting ability as Spellcasting.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -6468,7 +6548,8 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "fire"
+            "type": "fire",
+            "condition": "At the end of each of the azer’s turns, each creature of the azer’s choice in a 5-foot Emanation originating from the azer takes 5 (1d10) Fire damage unless the azer has the Incapacitated condition."
           }
         ],
         "area": {
@@ -6807,7 +6888,8 @@
           {
             "average": 13,
             "dice": "3d8",
-            "type": "fire"
+            "type": "fire",
+            "condition": "At the end of each of the balor’s turns, each creature in a 5-foot Emanation originating from the balor takes 13 (3d8) Fire damage."
           }
         ],
         "area": {
@@ -6818,7 +6900,10 @@
       {
         "name": "Legendary Resistance",
         "text": "If the balor fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Magic Resistance",
@@ -7220,7 +7305,8 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "piercing"
+            "type": "piercing",
+            "condition": "At the start of each of its turns, the devil deals 5 (1d10) Piercing damage to any creature it is grappling or any creature grappling it."
           }
         ]
       },
@@ -7388,7 +7474,7 @@
       {
         "name": "Petrifying Gaze",
         "text": "Constitution Saving Throw: DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 4,
           "max": 6
         },
@@ -7397,7 +7483,8 @@
             "ability": "con",
             "dc": 12,
             "targets": "each creature in a 30-foot Cone",
-            "failure": "The target has the Petrified condition instead of the Restrained condition."
+            "firstFailure": "The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success.",
+            "secondFailure": "The target has the Petrified condition instead of the Restrained condition."
           }
         ],
         "conditions": [
@@ -7754,7 +7841,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 16, each creature in a 90-foot-long, 5-foot-wide Line. Failure: 66 (12d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -7799,7 +7886,9 @@
           {
             "average": 21,
             "dice": "6d6",
-            "type": "acid"
+            "type": "acid",
+            "on": "failure",
+            "condition": "While swallowed, a creature has the Blinded and Restrained conditions, has Total Cover against attacks and other effects outside the behir, and takes 21 (6d6) Acid damage at the start of each of the behir’s turns."
           }
         ],
         "conditions": [
@@ -8110,7 +8199,7 @@
       {
         "name": "Acid Breath",
         "text": "Dexterity Saving Throw: DC 11, each creature in a 15-foot-long, 5-foot-wide Line. Failure: 22 (5d8) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -8230,7 +8319,8 @@
           {
             "average": 4,
             "dice": "1d8",
-            "type": "acid"
+            "type": "acid",
+            "condition": "A creature that hits the pudding with a melee attack roll takes 4 (1d8) Acid damage."
           }
         ]
       },
@@ -8354,7 +8444,7 @@
       {
         "name": "Teleport",
         "text": "The dog teleports up to 40 feet to an unoccupied space it can see.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 4,
           "max": 6
         }
@@ -8452,7 +8542,9 @@
             "average": 6,
             "dice": "1d8 + 2",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the target is Bloodied",
+            "alternativeTo": 0
           }
         ]
       }
@@ -8565,7 +8657,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 12, each creature in a 30-foot-long, 5-foot-wide Line. Failure: 21 (6d6) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -8681,7 +8773,9 @@
           {
             "average": 3,
             "dice": "1d6",
-            "type": "piercing"
+            "type": "piercing",
+            "on": "hit",
+            "condition": "If the target is a Medium or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Piercing damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -8929,7 +9023,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 11, each creature in a 20-foot-long, 5-foot-wide Line. Failure: 14 (4d6) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -8965,7 +9059,8 @@
             "ability": "con",
             "dc": 11,
             "targets": "each creature in a 15-foot Cone",
-            "failure": "The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it."
+            "firstFailure": "The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save.",
+            "secondFailure": "The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it."
           }
         ],
         "conditions": [
@@ -9086,7 +9181,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 12, each creature in a 40-foot-long, 5-foot-wide Line. Failure: 16 (3d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -9948,7 +10043,7 @@
       {
         "name": "Trampling Charge",
         "text": "The centaur moves up to its Speed without provoking Opportunity Attacks and can move through the spaces of Medium or smaller creatures. Each creature whose space the centaur enters is targeted once by the following effect. Strength Saving Throw: DC 14. Failure: 7 (1d6 + 4) Bludgeoning damage, and the target has the Prone condition.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -10224,7 +10319,9 @@
             "average": 18,
             "dice": "4d6 + 4",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the chimera had Advantage on the attack roll",
+            "alternativeTo": 0
           }
         ]
       },
@@ -10268,7 +10365,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 15, each creature in a 15-foot Cone. Failure: 31 (7d8) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -10554,7 +10651,7 @@
       {
         "name": "Hasten",
         "text": "The golem takes the Dash and Disengage actions.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         }
@@ -10703,7 +10800,10 @@
       {
         "name": "Phantasms",
         "text": "The cloaker casts the Mirror Image spell, requiring no spell components and using Wisdom as the spellcasting ability. The spell ends early if the cloaker starts or ends its turn in Bright Light.",
-        "rechargeAfterRest": true
+        "uses": {
+          "count": 1,
+          "recharge": "short-or-long-rest"
+        }
       }
     ]
   },
@@ -10950,7 +11050,8 @@
           {
             "ability": "con",
             "dc": 11,
-            "failure": "The target has the Petrified condition, instead of the Restrained condition, for 24 hours."
+            "firstFailure": "The target has the Restrained condition. The target repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success.",
+            "secondFailure": "The target has the Petrified condition, instead of the Restrained condition, for 24 hours."
           }
         ],
         "damage": [
@@ -11269,7 +11370,7 @@
       {
         "name": "Acid Breath",
         "text": "Dexterity Saving Throw: DC 11, each creature in a 20-foot-long, 5-foot-wide Line. Failure: 18 (4d8) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -11494,7 +11595,10 @@
       {
         "name": "Divine Aid",
         "text": "The couatl casts Bless, Lesser Restoration, or Sanctuary, requiring no spell components and using the same spellcasting ability as Spellcasting.",
-        "perDay": 2
+        "uses": {
+          "count": 2,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -11928,7 +12032,10 @@
       {
         "name": "Spiritual Weapon",
         "text": "The cultist casts the Spiritual Weapon spell, using the same spellcasting ability as Spellcasting.",
-        "perDay": 2
+        "uses": {
+          "count": 2,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -12022,7 +12129,10 @@
       {
         "name": "Darkness Aura",
         "text": "Magical Darkness fills a 15-foot Emanation originating from the darkmantle. This effect lasts while the darkmantle maintains Concentration on it, up to 10 minutes. Darkvision can’t penetrate this area, and no light can illuminate it.",
-        "perDay": 1,
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        },
         "area": {
           "shape": "emanation",
           "size": 15
@@ -12121,7 +12231,8 @@
           {
             "ability": "con",
             "dc": 12,
-            "failure": "The target has the Poisoned condition. While Poisoned, the target’s Hit Point maximum doesn’t return to normal when finishing a Long Rest, and it repeats the save every 24 hours that elapse, ending the effect on itself on a success. Subsequent Failures: The Poisoned target’s Hit Point maximum decreases by 5 (1d10)."
+            "firstFailure": "The target has the Poisoned condition. While Poisoned, the target’s Hit Point maximum doesn’t return to normal when finishing a Long Rest, and it repeats the save every 24 hours that elapse, ending the effect on itself on a success.",
+            "subsequentFailures": "The Poisoned target’s Hit Point maximum decreases by 5 (1d10)."
           }
         ],
         "damage": [
@@ -12386,7 +12497,10 @@
       {
         "name": "Divine Aid",
         "text": "The deva casts Cure Wounds, Lesser Restoration, or Remove Curse, using the same spellcasting ability as Spellcasting.",
-        "perDay": 2
+        "uses": {
+          "count": 2,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -12634,7 +12748,9 @@
           {
             "average": 21,
             "dice": "6d6",
-            "type": "thunder"
+            "type": "thunder",
+            "on": "failure",
+            "condition": "At the start of each of its turns, the Restrained target takes 21 (6d6) Thunder damage."
           }
         ],
         "conditions": [
@@ -12805,7 +12921,7 @@
       {
         "name": "Unsettling Visage",
         "text": "Wisdom Saving Throw: DC 12, each creature in a 15-foot Emanation originating from the doppelganger that can see the doppelganger. Failure: The target has the Frightened condition and repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -13037,7 +13153,7 @@
       {
         "name": "Steam Breath",
         "text": "Constitution Saving Throw: DC 19, each creature in a 60-foot Cone. Failure: 56 (16d6) Fire damage. Success: Half damage. Failure or Success: Being underwater doesn’t grant Resistance to this Fire damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -13166,7 +13282,10 @@
       {
         "name": "Fetid Cloud",
         "text": "Constitution Saving Throw: DC 11, each creature in a 10-foot Emanation originating from the dretch. Failure: The target has the Poisoned condition until the end of its next turn. While Poisoned, the creature can take either an action or a Bonus Action on its turn, not both, and it can’t take Reactions.",
-        "perDay": 1,
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        },
         "saves": [
           {
             "ability": "con",
@@ -13312,7 +13431,7 @@
       {
         "name": "Magic of the Spider Queen",
         "text": "The drider casts Darkness, Faerie Fire, or Web, requiring no Material components and using Wisdom as the spellcasting ability (spell save DC 14).",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         }
@@ -13780,7 +13899,7 @@
       {
         "name": "Blinding Breath",
         "text": "Dexterity Saving Throw: DC 10, each creature in a 15-foot Cone. Failure: The target has the Blinded condition until the end of the mephit’s next turn.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -13803,7 +13922,10 @@
       {
         "name": "Sleep",
         "text": "The mephit casts the Sleep spell, requiring no spell components and using Charisma as the spellcasting ability (spell save DC 10).",
-        "perDay": 1
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -14400,7 +14522,9 @@
           {
             "average": 3,
             "dice": "1d6",
-            "type": "bludgeoning"
+            "type": "bludgeoning",
+            "on": "hit",
+            "condition": "If the target is a Large or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Bludgeoning damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -14693,7 +14817,7 @@
       {
         "name": "Web Strand",
         "text": "Dexterity Saving Throw: DC 12, one Large or smaller creature the ettercap can see within 30 feet. Failure: The target has the Restrained condition until the web is destroyed (AC 10; HP 5; Vulnerability to Fire damage; Immunity to Bludgeoning, Poison, and Psychic damage).",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -14931,7 +15055,8 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "fire"
+            "type": "fire",
+            "condition": "At the end of each of the elemental’s turns, each creature in a 10-foot Emanation originating from the elemental takes 5 (1d10) Fire damage."
           }
         ],
         "area": {
@@ -14946,7 +15071,8 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "fire"
+            "type": "fire",
+            "condition": "The first time it enters a creature’s space on a turn, that creature takes 5 (1d10) Fire damage."
           }
         ]
       },
@@ -14961,7 +15087,8 @@
           {
             "average": 3,
             "dice": "1d6",
-            "type": "cold"
+            "type": "cold",
+            "condition": "The elemental takes 3 (1d6) Cold damage for every 5 feet the elemental moves in water or for every gallon of water splashed on it."
           }
         ]
       }
@@ -15558,7 +15685,7 @@
       {
         "name": "War Cry",
         "text": "The giant or one creature of its choice that can see or hear it gains 16 (2d10 + 5) Temporary Hit Points and has Advantage on attack rolls until the start of the giant’s next turn.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         }
@@ -15750,7 +15877,8 @@
           {
             "average": 10,
             "dice": "3d6",
-            "type": "acid"
+            "type": "acid",
+            "condition": "As an action, a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check, and the puller takes 10 (3d6) Acid damage."
           }
         ]
       },
@@ -15800,7 +15928,9 @@
           {
             "average": 10,
             "dice": "3d6",
-            "type": "acid"
+            "type": "acid",
+            "on": "failure",
+            "condition": "An engulfed target is suffocating, can’t cast spells with a Verbal component, has the Restrained condition, and takes 10 (3d6) Acid damage at the start of each of the cube’s turns."
           }
         ],
         "conditions": [
@@ -16058,7 +16188,8 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "force"
+            "type": "force",
+            "condition": "It takes 5 (1d10) Force damage if it ends its turn inside an object."
           }
         ]
       }
@@ -16120,7 +16251,7 @@
       {
         "name": "Possession",
         "text": "Charisma Saving Throw: DC 13, one Humanoid the ghost can see within 5 feet. Failure: The target is possessed by the ghost; the ghost disappears, and the target has the Incapacitated condition and loses control of its body. The ghost now controls the body, but the target retains awareness. The ghost can’t be targeted by any attack, spell, or other effect, except ones that specifically target Undead. The ghost’s game statistics are the same, except it uses the possessed target’s Speed, as well as the target’s Strength, Dexterity, and Constitution modifiers.\nThe possession lasts until the body drops to 0 Hit Points or the ghost leaves as a Bonus Action. When the possession ends, the ghost appears in an unoccupied space within 5 feet of the target, and the target is immune to this ghost’s Possession for 24 hours.\nSuccess: The target is immune to this ghost’s Possession for 24 hours.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -16358,7 +16489,7 @@
       {
         "name": "Boulder Toss",
         "text": "The ape hurls a boulder at a point it can see within 90 feet. Dexterity Saving Throw: DC 17, each creature in a 5-foot-radius Sphere centered on that point. Failure: 24 (7d6) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition. Success: Half damage only.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -16654,7 +16785,9 @@
           {
             "average": 7,
             "dice": "2d6",
-            "type": "piercing"
+            "type": "piercing",
+            "on": "hit",
+            "condition": "If the target is a Large or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 7 (2d6) Piercing damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -17272,7 +17405,9 @@
           {
             "average": 5,
             "dice": "2d4",
-            "type": "bludgeoning"
+            "type": "bludgeoning",
+            "on": "hit",
+            "condition": "If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -17478,7 +17613,8 @@
           {
             "average": 5,
             "dice": "2d4",
-            "type": "acid"
+            "type": "acid",
+            "condition": "At the end of the frog’s next turn, the swallowed target takes 5 (2d4) Acid damage."
           }
         ],
         "conditions": [
@@ -17574,7 +17710,9 @@
           {
             "average": 5,
             "dice": "2d4",
-            "type": "bludgeoning"
+            "type": "bludgeoning",
+            "on": "hit",
+            "condition": "If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -17671,7 +17809,10 @@
       {
         "name": "Rampage",
         "text": "Immediately after dealing damage to a creature that was already Bloodied, the hyena can move up to half its Speed, and it makes one Bite attack.",
-        "perDay": 1
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -17865,7 +18006,10 @@
       {
         "name": "Ink Cloud",
         "text": "Trigger: The octopus takes damage while underwater. Response: The octopus releases ink that fills a 10-foot Cube centered on itself, and the octopus moves up to its Swim Speed. The Cube is Heavily Obscured for 1 minute or until a strong current or similar effect disperses the ink.",
-        "perDay": 1,
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        },
         "area": {
           "shape": "cube",
           "size": 10
@@ -18291,7 +18435,9 @@
             "average": 11,
             "dice": "2d8 + 2",
             "type": "bludgeoning",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the seahorse moved 20+ feet straight toward the target immediately before the hit",
+            "alternativeTo": 0
           }
         ]
       }
@@ -18504,7 +18650,7 @@
       {
         "name": "Web",
         "text": "Dexterity Saving Throw: DC 13, one creature the spider can see within 60 feet. Failure: The target has the Restrained condition until the web is destroyed (AC 10; HP 5; Vulnerability to Fire damage; Immunity to Poison and Psychic damage).",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -18630,7 +18776,8 @@
           {
             "average": 10,
             "dice": "3d6",
-            "type": "acid"
+            "type": "acid",
+            "condition": "In addition, the target takes 10 (3d6) Acid damage at the end of each of the toad’s turns."
           }
         ],
         "conditions": [
@@ -19225,7 +19372,7 @@
       {
         "name": "Blinding Spittle",
         "text": "Dexterity Saving Throw: DC 10, each creature in a 10-foot-radius Sphere centered on a point within 30 feet. Failure: 7 (2d6) Radiant damage, and the target has the Blinded condition until the end of the mouther’s next turn.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -19676,7 +19823,10 @@
       {
         "name": "Rampage",
         "text": "Immediately after dealing damage to a creature that is already Bloodied, the gnoll moves up to half its Speed, and it makes one Rend attack.",
-        "perDay": 1
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -19765,7 +19915,9 @@
             "average": 2,
             "dice": "1d4",
             "type": "bludgeoning",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the goat moved 20+ feet straight toward the target immediately before the hit",
+            "alternativeTo": 0
           }
         ]
       }
@@ -19878,7 +20030,8 @@
             "average": 2,
             "dice": "1d4",
             "type": "slashing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the attack roll had Advantage"
           }
         ]
       },
@@ -19904,7 +20057,8 @@
             "average": 2,
             "dice": "1d4",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the attack roll had Advantage"
           }
         ]
       }
@@ -20130,7 +20284,8 @@
             "average": 2,
             "dice": "1d4",
             "type": "slashing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the attack roll had Advantage"
           }
         ]
       },
@@ -20156,7 +20311,8 @@
             "average": 2,
             "dice": "1d4",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the attack roll had Advantage"
           }
         ]
       }
@@ -20275,7 +20431,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 13, each creature in a 15-foot Cone. Failure: 22 (4d10) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -20413,7 +20569,7 @@
       {
         "name": "Petrifying Breath",
         "text": "Constitution Saving Throw: DC 15, each creature in a 30-foot Cone. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -20422,7 +20578,8 @@
             "ability": "con",
             "dc": 15,
             "targets": "each creature in a 30-foot Cone",
-            "failure": "The target has the Petrified condition instead of the Restrained condition."
+            "firstFailure": "The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success.",
+            "secondFailure": "The target has the Petrified condition instead of the Restrained condition."
           }
         ],
         "conditions": [
@@ -20687,7 +20844,7 @@
       {
         "name": "Poison Breath",
         "text": "Constitution Saving Throw: DC 11, each creature in a 15-foot Cone. Failure: 21 (6d6) Poison damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -21629,9 +21786,12 @@
       "perception": 5,
       "stealth": 5
     },
-    "defenseNotes": {
-      "resistances": "Damage type chosen for the Draconic Origin trait below"
-    },
+    "conditionalDefenses": [
+      {
+        "kind": "resistance",
+        "condition": "Damage type chosen for the Draconic Origin trait below"
+      }
+    ],
     "senses": {
       "blindsight": 10,
       "darkvision": 60,
@@ -21677,7 +21837,7 @@
       {
         "name": "Dragon’s Breath",
         "text": "Dexterity Saving Throw: DC 14, each creature in a 30-foot Cone. Failure: 28 (8d6) damage of the type chosen for the Draconic Origin trait. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -22003,7 +22163,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 12, each creature in a 15-foot Cone. Failure: 17 (5d6) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -23459,7 +23619,7 @@
       {
         "name": "Ice Wall",
         "text": "The devil casts Wall of Ice (level 8 version), requiring no spell components and using Intelligence as the spellcasting ability (spell save DC 17).",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         }
@@ -23600,12 +23760,15 @@
       {
         "name": "Fog Cloud",
         "text": "The mephit casts Fog Cloud, requiring no spell components and using Charisma as the spellcasting ability.",
-        "perDay": 1
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Frost Breath",
         "text": "Constitution Saving Throw: DC 10, each creature in a 15-foot Cone. Failure: 7 (3d4) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -23899,7 +24062,7 @@
       {
         "name": "Nightmare",
         "text": "Wisdom Saving Throw: DC 15, one creature the incubus can see within 60 feet. Failure: If the target has 20 Hit Points or fewer, it has the Unconscious condition for 1 hour, until it takes damage, or until a creature within 5 feet of it takes an action to wake it. Otherwise, the target takes 18 (4d8) Psychic damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -23915,7 +24078,9 @@
           {
             "average": 18,
             "dice": "4d8",
-            "type": "psychic"
+            "type": "psychic",
+            "on": "failure",
+            "condition": "Otherwise, the target takes 18 (4d8) Psychic damage."
           }
         ],
         "conditions": [
@@ -24066,7 +24231,9 @@
           {
             "average": 7,
             "dice": "2d6",
-            "type": "thunder"
+            "type": "thunder",
+            "on": "failure",
+            "condition": "Until the grapple ends, the target can’t cast spells with a Verbal component and takes 7 (2d6) Thunder damage at the start of each of the stalker’s turns."
           }
         ],
         "conditions": [
@@ -24215,7 +24382,7 @@
       {
         "name": "Poison Breath",
         "text": "Constitution Saving Throw: DC 18, each creature in a 60-foot Cone. Failure: 55 (10d10) Poison damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -24754,8 +24921,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the kraken fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Siege Monster",
@@ -24857,7 +25027,9 @@
           {
             "average": 24,
             "dice": "7d6",
-            "type": "acid"
+            "type": "acid",
+            "on": "failure",
+            "condition": "A swallowed creature has the Restrained condition, has Total Cover against attacks and other effects outside the kraken, and takes 24 (7d6) Acid damage at the start of each of its turns."
           }
         ],
         "conditions": [
@@ -25263,8 +25435,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the lich fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4,
-        "perDayInLair": 5
+        "uses": {
+          "count": 4,
+          "countInLair": 5,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Spirit Jar",
@@ -25409,7 +25584,8 @@
             {
               "average": 11,
               "dice": "2d10",
-              "type": "necrotic"
+              "type": "necrotic",
+              "condition": "The lich teleports up to 60 feet to an unoccupied space it can see, and each creature within 10 feet of the space it left takes 11 (2d10) Necrotic damage."
             }
           ]
         },
@@ -25812,14 +25988,20 @@
       {
         "name": "Misty Step",
         "text": "The mage casts Misty Step, using the same spellcasting ability as Spellcasting.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       }
     ],
     "reactions": [
       {
         "name": "Protective Magic",
         "text": "The mage casts Counterspell or Shield in response to the spell’s trigger, using the same spellcasting ability as Spellcasting.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -25956,7 +26138,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 11, each creature in a 15-foot Cone. Failure: 7 (2d6) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -26476,7 +26658,7 @@
       {
         "name": "Teleport",
         "text": "The marilith teleports up to 120 feet to an unoccupied space it can see.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         }
@@ -26713,7 +26895,7 @@
       {
         "name": "Petrifying Gaze",
         "text": "Constitution Saving Throw: DC 13, each creature in a 30-foot Cone. If the medusa sees its reflection in the Cone, the medusa must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -26722,7 +26904,8 @@
             "ability": "con",
             "dc": 13,
             "targets": "each creature in a 30-foot Cone",
-            "failure": "The target has the Petrified condition instead of the Restrained condition."
+            "firstFailure": "The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success.",
+            "secondFailure": "The target has the Petrified condition instead of the Restrained condition."
           }
         ],
         "conditions": [
@@ -27072,7 +27255,9 @@
             "average": 12,
             "dice": "2d8 + 3",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the target is Grappled by the mimic",
+            "alternativeTo": 0
           },
           {
             "average": 4,
@@ -27210,7 +27395,7 @@
       {
         "name": "Gore",
         "text": "Melee Attack Roll: +6, reach 5 ft. Hit: 18 (4d6 + 4) Piercing damage. If the target is a Large or smaller creature and the minotaur moved 10+ feet straight toward it immediately before the hit, the target takes an extra 10 (3d6) Piercing damage and has the Prone condition.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -27229,7 +27414,9 @@
           {
             "average": 10,
             "dice": "3d6",
-            "type": "piercing"
+            "type": "piercing",
+            "on": "hit",
+            "condition": "If the target is a Large or smaller creature and the minotaur moved 10+ feet straight toward it immediately before the hit, the target takes an extra 10 (3d6) Piercing damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -27330,7 +27517,9 @@
           {
             "average": 9,
             "dice": "2d8",
-            "type": "piercing"
+            "type": "piercing",
+            "on": "hit",
+            "condition": "If the target is a Large or smaller creature and the skeleton moved 20+ feet straight toward it immediately before the hit, the target takes an extra 9 (2d8) Piercing damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -27658,8 +27847,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the mummy fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Magic Resistance",
@@ -27934,7 +28126,7 @@
       {
         "name": "Horror Nimbus",
         "text": "Wisdom Saving Throw: DC 15, each creature in a 15-foot Emanation originating from the nalfeshnee. Failure: 28 (8d6) Psychic damage, and the target has the Frightened condition for 1 minute, until it takes damage, or until it ends its turn with the nalfeshnee out of line of sight. Success: The target is immune to this nalfeshnee’s Horror Nimbus for 24 hours.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -28085,7 +28277,10 @@
       {
         "name": "Nightmare Haunting",
         "text": "While on the Ethereal Plane, the hag casts Dream, using the same spellcasting ability as Spellcasting. Only the hag can serve as the spell’s messenger, and the target must be a creature the hag can see on the Material Plane. The spell fails and is wasted if the target is under the effect of the Protection from Evil and Good spell or within a Magic Circle spell.\nIf the target takes damage from the Dream spell, the target’s Hit Point maximum decreases by an amount equal to that damage. If the spell kills the target, its soul is trapped in the hag’s soul bag, and the target can’t be raised from the dead until its soul is released.",
-        "perDay": 1,
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        },
         "note": "Requires Soul Bag"
       },
       {
@@ -28555,7 +28750,10 @@
       {
         "name": "Ink Cloud",
         "text": "Trigger: A creature ends its turn within 5 feet of the octopus while underwater. Response: The octopus releases ink that fills a 5-foot Cube centered on itself, and the octopus moves up to its Swim Speed. The Cube is Heavily Obscured for 1 minute or until a strong current or similar effect disperses the ink.",
-        "perDay": 1,
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        },
         "area": {
           "shape": "cube",
           "size": 5
@@ -30026,7 +30224,10 @@
       {
         "name": "Legendary Resistance",
         "text": "If the pit fiend fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4
+        "uses": {
+          "count": 4,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Magic Resistance",
@@ -30063,7 +30264,9 @@
           {
             "average": 21,
             "dice": "6d6",
-            "type": "poison"
+            "type": "poison",
+            "on": "failure",
+            "condition": "While Poisoned, the target can’t regain Hit Points and takes 21 (6d6) Poison damage at the start of each of its turns, and it repeats the save at the end of each of its turns, ending the effect on itself on a success."
           }
         ],
         "conditions": [
@@ -30113,7 +30316,7 @@
       {
         "name": "Hellfire Spellcasting",
         "text": "The pit fiend casts Fireball (level 5 version) twice, requiring no Material components and using Charisma as the spellcasting ability (spell save DC 21). It can replace one Fireball with Hold Monster (level 7 version) or Wall of Fire.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 4,
           "max": 6
         }
@@ -30308,7 +30511,10 @@
       {
         "name": "Divine Aid",
         "text": "The planetar casts Cure Wounds, Invisibility, Lesser Restoration, or Remove Curse, using the same spellcasting ability as Spellcasting.",
-        "perDay": 2
+        "uses": {
+          "count": 2,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -30745,7 +30951,10 @@
       {
         "name": "Divine Aid",
         "text": "The priest casts Bless, Dispel Magic, Healing Word, or Lesser Restoration, using the same spellcasting ability as Spellcasting.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -30898,7 +31107,10 @@
       {
         "name": "Divine Aid",
         "text": "The priest casts Bless, Healing Word, or Sanctuary, using the same spellcasting ability as Spellcasting.",
-        "perDay": 1
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -31255,7 +31467,9 @@
           {
             "average": 17,
             "dice": "5d6",
-            "type": "acid"
+            "type": "acid",
+            "on": "failure",
+            "condition": "A swallowed creature has the Blinded and Restrained conditions, has Total Cover against attacks and other effects outside the worm, and takes 17 (5d6) Acid damage at the start of each of the worm’s turns."
           }
         ],
         "conditions": [
@@ -31379,7 +31593,10 @@
       {
         "name": "Scare",
         "text": "Wisdom Saving Throw: DC 10, one creature within 20 feet. Failure: The target has the Frightened condition. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",
-        "perDay": 1,
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        },
         "saves": [
           {
             "ability": "wis",
@@ -31457,16 +31674,17 @@
       "insight": 8,
       "perception": 8
     },
-    "vulnerabilities": [
-      "piercing"
-    ],
     "conditionImmunities": [
       "charmed",
       "frightened"
     ],
-    "defenseNotes": {
-      "vulnerabilities": "Piercing damage from weapons wielded by creatures under the effect of a Bless spell"
-    },
+    "conditionalDefenses": [
+      {
+        "kind": "vulnerability",
+        "value": "piercing",
+        "condition": "from weapons wielded by creatures under the effect of a Bless spell"
+      }
+    ],
     "senses": {
       "truesight": 60,
       "passivePerception": 18
@@ -31516,7 +31734,7 @@
       {
         "name": "Baleful Command",
         "text": "Wisdom Saving Throw: DC 18, each enemy in a 30-foot Emanation originating from the rakshasa. Failure: 28 (8d6) Psychic damage, and the target has the Frightened and Incapacitated conditions until the start of the rakshasa’s next turn.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -31883,7 +32101,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 13, each creature in a 15-foot Cone. Failure: 24 (7d6) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -32084,7 +32302,8 @@
           {
             "average": 16,
             "dice": "3d10",
-            "type": "fire"
+            "type": "fire",
+            "condition": "At the end of each of the remorhaz’s turns, each creature in a 5-foot Emanation originating from the remorhaz takes 16 (3d10) Fire damage."
           }
         ],
         "area": {
@@ -32139,12 +32358,16 @@
           {
             "average": 10,
             "dice": "3d6",
-            "type": "acid"
+            "type": "acid",
+            "on": "failure",
+            "condition": "A swallowed creature has the Blinded and Restrained conditions, it has Total Cover against attacks and other effects outside the remorhaz, and it takes 10 (3d6) Acid damage plus 10 (3d6) Fire damage at the start of each of the remorhaz’s turns."
           },
           {
             "average": 10,
             "dice": "3d6",
-            "type": "fire"
+            "type": "fire",
+            "on": "failure",
+            "condition": "A swallowed creature has the Blinded and Restrained conditions, it has Total Cover against attacks and other effects outside the remorhaz, and it takes 10 (3d6) Acid damage plus 10 (3d6) Fire damage at the start of each of the remorhaz’s turns."
           }
         ],
         "conditions": [
@@ -32235,7 +32458,9 @@
           {
             "average": 9,
             "dice": "2d8",
-            "type": "piercing"
+            "type": "piercing",
+            "on": "hit",
+            "condition": "If target is a Large or smaller creature and the rhinoceros moved 20+ feet straight toward it immediately before the hit, the target takes an extra 9 (2d8) Piercing damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -32439,7 +32664,7 @@
       {
         "name": "Swoop",
         "text": "If the roc has a creature Grappled, the roc flies up to half its Fly Speed without provoking Opportunity Attacks and drops that creature.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         }
@@ -32665,11 +32890,7 @@
       },
       {
         "name": "Destroy Metal",
-        "text": "The rust monster touches a nonmagical metal object within 5 feet of itself that isn’t being worn or carried. The touch destroys a 1-foot Cube of the object.",
-        "area": {
-          "shape": "cube",
-          "size": 1
-        }
+        "text": "The rust monster touches a nonmagical metal object within 5 feet of itself that isn’t being worn or carried. The touch destroys a 1-foot Cube of the object."
       }
     ],
     "reactions": [
@@ -32973,7 +33194,8 @@
           {
             "average": 7,
             "dice": "2d6",
-            "type": "fire"
+            "type": "fire",
+            "condition": "At the end of each of the salamander’s turns, each creature of the salamander’s choice in a 5-foot Emanation originating from the salamander takes 7 (2d6) Fire damage."
           }
         ],
         "area": {
@@ -33479,7 +33701,7 @@
       {
         "name": "Death Glare",
         "text": "Wisdom Saving Throw: DC 11, one Frightened creature the hag can see within 30 feet. Failure: If the target has 20 Hit Points or fewer, it drops to 0 Hit Points. Otherwise, the target takes 13 (3d8) Psychic damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -33495,7 +33717,9 @@
           {
             "average": 13,
             "dice": "3d8",
-            "type": "psychic"
+            "type": "psychic",
+            "on": "failure",
+            "condition": "Otherwise, the target takes 13 (3d8) Psychic damage."
           }
         ]
       },
@@ -33836,7 +34060,9 @@
           {
             "average": 10,
             "dice": "3d6",
-            "type": "lightning"
+            "type": "lightning",
+            "on": "failure",
+            "condition": "Until the grapple ends, the target has the Blinded and Restrained conditions, and it takes 10 (3d6) Lightning damage at the start of each of its turns."
           }
         ],
         "conditions": [
@@ -34148,7 +34374,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 13, each creature in a 15-foot Cone. Failure: 18 (4d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -34183,7 +34409,8 @@
             "ability": "con",
             "dc": 13,
             "targets": "each creature in a 15-foot Cone",
-            "failure": "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
+            "firstFailure": "The target has the Incapacitated condition until the end of its next turn, when it repeats the save.",
+            "secondFailure": "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
           }
         ],
         "conditions": [
@@ -34411,7 +34638,10 @@
       {
         "name": "Legendary Resistance",
         "text": "If the solar fails a saving throw, it can choose to succeed instead.",
-        "perDay": 4
+        "uses": {
+          "count": 4,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Magic Resistance",
@@ -34464,12 +34694,16 @@
           {
             "average": 24,
             "dice": "4d8 + 6",
-            "type": "piercing"
+            "type": "piercing",
+            "on": "failure",
+            "condition": "It otherwise takes 24 (4d8 + 6) Piercing damage plus 36 (8d8) Radiant damage."
           },
           {
             "average": 36,
             "dice": "8d8",
-            "type": "radiant"
+            "type": "radiant",
+            "on": "failure",
+            "condition": "It otherwise takes 24 (4d8 + 6) Piercing damage plus 36 (8d8) Radiant damage."
           }
         ]
       },
@@ -34514,7 +34748,10 @@
       {
         "name": "Divine Aid",
         "text": "The solar casts Cure Wounds (level 2 version), Lesser Restoration, or Remove Curse, using the same spellcasting ability as Spellcasting.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       }
     ],
     "legendaryActions": {
@@ -34663,7 +34900,8 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "force"
+            "type": "force",
+            "condition": "It takes 5 (1d10) Force damage if it ends its turn inside an object."
           }
         ]
       },
@@ -34782,8 +35020,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the sphinx fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -34811,7 +35052,7 @@
       {
         "name": "Mind-Rending Roar",
         "text": "Wisdom Saving Throw: DC 16, each enemy in a 300-foot Emanation originating from the sphinx. Failure: 35 (10d6) Psychic damage, and the target has the Incapacitated condition until the start of the sphinx’s next turn.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -34914,6 +35155,9 @@
               "failure": "The target gains 1 Exhaustion level. While the target has any Exhaustion levels, it appears 3d10 years older.",
               "failureOrSuccess": "The sphinx can’t take this action again until the start of its next turn."
             }
+          ],
+          "conditions": [
+            "exhaustion"
           ]
         }
       ]
@@ -35008,8 +35252,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the sphinx fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       }
     ],
     "actions": [
@@ -35037,7 +35284,10 @@
       {
         "name": "Roar",
         "text": "The sphinx emits a magical roar. Whenever it roars, the roar has a different effect, as detailed below (the sequence resets when it takes a Long Rest):\nFirst Roar. Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Frightened condition for 1 minute.\nSecond Roar. Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.\nThird Roar. Constitution Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: 44 (8d10) Thunder damage, and the target has the Prone condition. Success: Half damage only.",
-        "perDay": 3,
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        },
         "saves": [
           {
             "ability": "wis",
@@ -35141,6 +35391,9 @@
               "failure": "The target gains 1 Exhaustion level. While the target has any Exhaustion levels, it appears 3d10 years older.",
               "failureOrSuccess": "The sphinx can’t take this action again until the start of its next turn."
             }
+          ],
+          "conditions": [
+            "exhaustion"
           ]
         }
       ]
@@ -35255,7 +35508,10 @@
       {
         "name": "Burst of Ingenuity",
         "text": "Trigger: The sphinx or another creature within 30 feet makes an ability check or a saving throw. Response: The sphinx adds 2 to the roll.",
-        "perDay": 2
+        "uses": {
+          "count": 2,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -35929,7 +36185,7 @@
       {
         "name": "Steam Breath",
         "text": "Constitution Saving Throw: DC 10, each creature in a 15-foot Cone. Failure: 5 (2d4) Fire damage, and the target’s Speed decreases by 10 feet until the end of the mephit’s next turn. Success: Half damage only. Failure or Success: Being underwater doesn’t grant Resistance to this Fire damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -36041,7 +36297,9 @@
           {
             "average": 5,
             "dice": "2d4",
-            "type": "necrotic"
+            "type": "necrotic",
+            "on": "hit",
+            "condition": "While attached, the stirge can’t make Proboscis attacks, and the target takes 5 (2d4) Necrotic damage at the start of each of the stirge’s turns."
           }
         ]
       }
@@ -36164,7 +36422,7 @@
       {
         "name": "Deflect Missile",
         "text": "Trigger: The giant is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it. Response: The giant reduces the damage it takes from the attack by 11 (1d10 + 6), and if that damage is reduced to 0, the giant can redirect some of the attack’s force. Dexterity Saving Throw: DC 17, one creature the giant can see within 60 feet. Failure: 11 (1d10 + 6) Force damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -36323,7 +36581,7 @@
       {
         "name": "Slow",
         "text": "The golem casts the Slow spell, requiring no spell components and using Constitution as the spellcasting ability (spell save DC 17).",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         }
@@ -36469,7 +36727,7 @@
       {
         "name": "Lightning Storm",
         "text": "Dexterity Saving Throw: DC 18, each creature in a 10-foot-radius, 40-foot-high Cylinder originating from a point the giant can see within 500 feet. Failure: 55 (10d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -36773,7 +37031,9 @@
             "average": 2,
             "dice": "1d4",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the swarm is Bloodied",
+            "alternativeTo": 0
           }
         ]
       }
@@ -36892,7 +37152,9 @@
             "average": 11,
             "dice": "2d8 + 2",
             "type": "necrotic",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the swarm is Bloodied",
+            "alternativeTo": 0
           }
         ],
         "conditions": [
@@ -37023,7 +37285,9 @@
             "average": 3,
             "dice": "1d4 + 1",
             "type": "poison",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the swarm is Bloodied",
+            "alternativeTo": 0
           }
         ]
       }
@@ -37139,7 +37403,9 @@
             "average": 5,
             "dice": "1d4 + 3",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the swarm is Bloodied",
+            "alternativeTo": 0
           }
         ]
       }
@@ -37250,7 +37516,9 @@
             "average": 2,
             "dice": "1d4",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the swarm is Bloodied",
+            "alternativeTo": 0
           }
         ]
       }
@@ -37363,14 +37631,16 @@
             "average": 2,
             "dice": "1d4",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the swarm is Bloodied",
+            "alternativeTo": 0
           }
         ]
       },
       {
         "name": "Cacophony",
         "text": "Wisdom Saving Throw: DC 10, one creature in the swarm’s space. Failure: The target has the Deafened condition until the start of the swarm’s next turn. While Deafened, the target also has Disadvantage on ability checks and attack rolls.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -37493,7 +37763,9 @@
             "average": 6,
             "dice": "1d4 + 4",
             "type": "piercing",
-            "on": "hit"
+            "on": "hit",
+            "condition": "if the swarm is Bloodied",
+            "alternativeTo": 0
           },
           {
             "average": 10,
@@ -37595,7 +37867,10 @@
       {
         "name": "Legendary Resistance",
         "text": "If the tarrasque fails a saving throw, it can choose to succeed instead.",
-        "perDay": 6
+        "uses": {
+          "count": 6,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Magic Resistance",
@@ -37677,7 +37952,7 @@
       {
         "name": "Thunderous Bellow",
         "text": "Constitution Saving Throw: DC 27, each creature and each object that isn’t being worn or carried in a 150-foot Cone. Failure: 78 (12d12) Thunder damage, and the target has the Deafened and Frightened conditions until the end of its next turn. Success: Half damage only.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -37725,7 +38000,9 @@
           {
             "average": 56,
             "dice": "16d6",
-            "type": "acid"
+            "type": "acid",
+            "on": "failure",
+            "condition": "A swallowed creature has the Blinded and Restrained conditions and can’t teleport, it has Total Cover against attacks and other effects outside the tarrasque, and it takes 56 (16d6) Acid damage at the start of each of the tarrasque’s turns."
           }
         ],
         "conditions": [
@@ -37746,6 +38023,9 @@
         {
           "name": "World-Shaking Movement",
           "text": "The tarrasque moves up to its Speed. At the end of this movement, the tarrasque creates an instantaneous shock wave in a 60-foot Emanation originating from itself. Creatures in that area lose Concentration and, if Medium or smaller, have the Prone condition. The tarrasque can’t take this action again until the start of its next turn.",
+          "conditions": [
+            "prone"
+          ],
           "area": {
             "shape": "emanation",
             "size": 60
@@ -38211,7 +38491,10 @@
       {
         "name": "Animate Trees",
         "text": "The treant magically animates up to two trees it can see within 60 feet of itself. Each tree uses the Treant stat block, except it has Intelligence and Charisma scores of 1, it can’t speak, and it lacks this action. The tree takes its turn immediately after the treant on the same Initiative count, and it obeys the treant. A tree remains animate for 1 day or until it dies, the treant dies, or it is more than 120 feet from the treant. The tree then takes root if possible.",
-        "perDay": 1
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        }
       }
     ]
   },
@@ -38302,7 +38585,9 @@
           {
             "average": 9,
             "dice": "2d8",
-            "type": "piercing"
+            "type": "piercing",
+            "on": "hit",
+            "condition": "If the target is Huge or smaller and the triceratops moved 20+ feet straight toward it immediately before the hit, the target takes an extra 9 (2d8) Piercing damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -38380,7 +38665,10 @@
       {
         "name": "Loathsome Limbs",
         "text": "If the troll ends any turn Bloodied and took 15+ Slashing damage during that turn, one of the troll’s limbs is severed, falls into the troll’s space, and becomes a Troll Limb. The limb acts immediately after the troll’s turn. The troll has 1 Exhaustion level for each missing limb, and it grows replacement limbs the next time it regains Hit Points.",
-        "perDay": 4
+        "uses": {
+          "count": 4,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Regeneration",
@@ -38701,7 +38989,10 @@
       {
         "name": "Legendary Resistance",
         "text": "If the unicorn fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Magic Resistance",
@@ -38794,7 +39085,10 @@
       {
         "name": "Unicorn’s Blessing",
         "text": "The unicorn touches another creature with its horn and casts Cure Wounds or Lesser Restoration on that creature, using the same spellcasting ability as Spellcasting.",
-        "perDay": 3
+        "uses": {
+          "count": 3,
+          "recharge": "long-rest"
+        }
       }
     ],
     "legendaryActions": {
@@ -38889,8 +39183,11 @@
       {
         "name": "Legendary Resistance",
         "text": "If the vampire fails a saving throw, it can choose to succeed instead.",
-        "perDay": 3,
-        "perDayInLair": 4
+        "uses": {
+          "count": 3,
+          "countInLair": 4,
+          "recharge": "long-rest"
+        }
       },
       {
         "name": "Misty Escape",
@@ -38909,11 +39206,13 @@
         "damage": [
           {
             "average": 20,
-            "type": "acid"
+            "type": "acid",
+            "condition": "The vampire takes 20 Acid damage if it ends its turn in running water."
           },
           {
             "average": 20,
-            "type": "radiant"
+            "type": "radiant",
+            "condition": "The vampire takes 20 Radiant damage if it starts its turn in sunlight."
           }
         ],
         "conditions": [
@@ -38987,7 +39286,7 @@
       {
         "name": "Charm",
         "text": "The vampire casts Charm Person, requiring no spell components and using Charisma as the spellcasting ability (spell save DC 17), and the duration is 24 hours. The Charmed target is a willing recipient of the vampire’s Bite, the damage of which doesn’t end the spell. When the spell ends, the target is unaware it was Charmed by the vampire.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         }
@@ -39078,12 +39377,13 @@
     "resistances": [
       "necrotic"
     ],
-    "conditionImmunities": [
-      "charmed"
+    "conditionalDefenses": [
+      {
+        "kind": "condition-immunity",
+        "value": "charmed",
+        "condition": "except from its vampire master"
+      }
     ],
-    "defenseNotes": {
-      "conditionImmunities": "Charmed (except from its vampire master)"
-    },
     "gear": [
       {
         "id": "dagger",
@@ -39230,11 +39530,13 @@
         "damage": [
           {
             "average": 20,
-            "type": "acid"
+            "type": "acid",
+            "condition": "The vampire takes 20 Acid damage if it ends its turn in running water."
           },
           {
             "average": 20,
-            "type": "radiant"
+            "type": "radiant",
+            "condition": "The vampire takes 20 Radiant damage if it starts its turn in sunlight."
           }
         ]
       }
@@ -39600,7 +39902,7 @@
       {
         "name": "Spores",
         "text": "Constitution Saving Throw: DC 15, each creature in a 20-foot Emanation originating from the vrock. Failure: The target has the Poisoned condition and repeats the save at the end of each of its turns, ending the effect on itself on a success. While Poisoned, the target takes 5 (1d10) Poison damage at the start of each of its turns. Emptying a flask of Holy Water on the target ends the effect early.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 6,
           "max": 6
         },
@@ -39616,7 +39918,9 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "poison"
+            "type": "poison",
+            "on": "failure",
+            "condition": "While Poisoned, the target takes 5 (1d10) Poison damage at the start of each of its turns."
           }
         ],
         "conditions": [
@@ -39630,7 +39934,10 @@
       {
         "name": "Stunning Screech",
         "text": "Constitution Saving Throw: DC 15, each creature in a 20-foot Emanation originating from the vrock (demons succeed automatically). Failure: 10 (3d6) Thunder damage, and the target has the Stunned condition until the end of the vrock’s next turn.",
-        "perDay": 1,
+        "uses": {
+          "count": 1,
+          "recharge": "long-rest"
+        },
         "saves": [
           {
             "ability": "con",
@@ -39828,7 +40135,9 @@
           {
             "average": 5,
             "dice": "2d4",
-            "type": "bludgeoning"
+            "type": "bludgeoning",
+            "on": "hit",
+            "condition": "If the target is a Large or smaller creature and the horse moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -40280,7 +40589,7 @@
       {
         "name": "Whelm",
         "text": "Strength Saving Throw: DC 15, each creature in the elemental’s space. Failure: 22 (4d8 + 4) Bludgeoning damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14). Until the grapple ends, the target has the Restrained condition, is suffocating unless it can breathe water, and takes 9 (2d8) Bludgeoning damage at the start of each of the elemental’s turns. The elemental can grapple one Large creature or up to two Medium or smaller creatures at a time with Whelm. As an action, a creature within 5 feet of the elemental can pull a creature out of it by succeeding on a DC 14 Strength (Athletics) check. Success: Half damage only.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 4,
           "max": 6
         },
@@ -40304,7 +40613,9 @@
           {
             "average": 9,
             "dice": "2d8",
-            "type": "bludgeoning"
+            "type": "bludgeoning",
+            "on": "failure",
+            "condition": "Until the grapple ends, the target has the Restrained condition, is suffocating unless it can breathe water, and takes 9 (2d8) Bludgeoning damage at the start of each of the elemental’s turns."
           }
         ],
         "conditions": [
@@ -40719,7 +41030,9 @@
           {
             "average": 7,
             "dice": "2d6",
-            "type": "piercing"
+            "type": "piercing",
+            "on": "hit",
+            "condition": "If the target is a Medium or smaller creature and the wereboar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 7 (2d6) Piercing damage and has the Prone condition."
           }
         ],
         "conditions": [
@@ -41332,7 +41645,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 12, each creature in a 15-foot Cone. Failure: 22 (5d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -41627,7 +41940,8 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "force"
+            "type": "force",
+            "condition": "It takes 5 (1d10) Force damage if it ends its turn inside an object."
           }
         ]
       }
@@ -41771,7 +42085,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 12, each creature in a 15-foot Cone. Failure: 18 (4d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -42076,7 +42390,8 @@
           {
             "average": 5,
             "dice": "1d10",
-            "type": "force"
+            "type": "force",
+            "condition": "It takes 5 (1d10) Force damage if it ends its turn inside an object."
           }
         ]
       },
@@ -42471,7 +42786,7 @@
       {
         "name": "Acid Breath",
         "text": "Dexterity Saving Throw: DC 14, each creature in a 30-foot-long, 5-foot-wide Line. Failure: 49 (14d6) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -42608,7 +42923,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 16, each creature in a 60-foot-long, 5-foot-wide Line. Failure: 55 (10d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -42740,7 +43055,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 14, each creature in a 40-foot-long, 5-foot-wide Line. Failure: 38 (11d6) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -42776,7 +43091,8 @@
             "ability": "con",
             "dc": 14,
             "targets": "each creature in a 30-foot Cone",
-            "failure": "The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it."
+            "firstFailure": "The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save.",
+            "secondFailure": "The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it."
           }
         ],
         "conditions": [
@@ -42898,7 +43214,7 @@
       {
         "name": "Lightning Breath",
         "text": "Dexterity Saving Throw: DC 15, each creature in a 60-foot-long, 5-foot-wide Line. Failure: 49 (9d10) Lightning damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -43049,7 +43365,7 @@
       {
         "name": "Acid Breath",
         "text": "Dexterity Saving Throw: DC 14, each creature in a 40-foot-long, 5-foot-wide Line. Failure: 40 (9d8) Acid damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -43204,7 +43520,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 17, each creature in a 30-foot Cone. Failure: 55 (10d10) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -43366,7 +43682,7 @@
       {
         "name": "Poison Breath",
         "text": "Constitution Saving Throw: DC 14, each creature in a 30-foot Cone. Failure: 42 (12d6) Poison damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -43502,7 +43818,7 @@
       {
         "name": "Fire Breath",
         "text": "Dexterity Saving Throw: DC 17, each creature in a 30-foot Cone. Failure: 56 (16d6) Fire damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -43632,7 +43948,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 17, each creature in a 30-foot Cone. Failure: 49 (11d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },
@@ -43667,7 +43983,8 @@
             "ability": "con",
             "dc": 17,
             "targets": "each creature in a 30-foot Cone",
-            "failure": "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
+            "firstFailure": "The target has the Incapacitated condition until the end of its next turn, when it repeats the save.",
+            "secondFailure": "The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
           }
         ],
         "conditions": [
@@ -43729,7 +44046,7 @@
       "int": {
         "score": 6,
         "mod": -2,
-        "save": 2
+        "save": -2
       },
       "wis": {
         "score": 11,
@@ -43795,7 +44112,7 @@
       {
         "name": "Cold Breath",
         "text": "Constitution Saving Throw: DC 15, each creature in a 30-foot Cone. Failure: 40 (9d8) Cold damage. Success: Half damage.",
-        "recharge": {
+        "rechargeRoll": {
           "min": 5,
           "max": 6
         },

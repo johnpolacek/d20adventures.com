@@ -43,7 +43,10 @@
     "description": "A character who has proficiency with the Herbalism Kit can create a Potion of Healing. Doing so requires using that kit and 25 GP of raw material over the course of 1 day (8 hours of work).",
     "kind": "potion-brewing",
     "tool": "herbalism-kit",
-    "rawMaterialsGp": 25,
+    "rawMaterials": {
+      "amount": 25,
+      "unit": "gp"
+    },
     "days": 1,
     "workHoursPerDay": 8
   },
@@ -71,8 +74,26 @@
     "kind": "crafting",
     "rawMaterialsFraction": 0.5,
     "workHoursPerDay": 8,
-    "costGpPerDay": 10,
+    "purchaseCostPerDay": {
+      "amount": 10,
+      "unit": "gp"
+    },
     "maxAssistants": 1
+  },
+  {
+    "id": "harvesting-poison",
+    "name": "Harvesting Poison",
+    "page": 197,
+    "description": "A character can attempt to harvest poison from a venomous creature that is dead or has the Incapacitated condition. The effort takes 1d6 minutes, after which the character makes a DC 20 Intelligence (Nature) check using a Poisoner’s Kit. On a successful check, the character harvests enough poison for a single dose, and no additional poison can be harvested from that creature. On a failed check, the character is unable to extract any poison. If the character fails the check by 5 or more, the character is subjected to the creature’s poison.",
+    "kind": "poison-harvesting",
+    "timeMinutes": "1d6",
+    "tool": "poisoners-kit",
+    "check": {
+      "ability": "int",
+      "skill": "nature",
+      "dc": 20
+    },
+    "failedByAtLeastExposes": 5
   },
   {
     "id": "mounts-and-cargo",
@@ -122,7 +143,10 @@
     "description": "Repairs to a damaged ship can be made while the vessel is berthed. Repairing 1 Hit Point of damage requires 1 day and costs 20 GP for materials and labor. If the repairs are made in a location where supplies and skilled labor are abundant, such as a city shipyard, the repair time and cost are halved.",
     "kind": "ship-repair",
     "hitPointsPerDay": 1,
-    "costGpPerHitPoint": 20,
+    "costPerHitPoint": {
+      "amount": 20,
+      "unit": "gp"
+    },
     "shipyardFraction": 0.5
   },
   {

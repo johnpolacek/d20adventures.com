@@ -1,6 +1,6 @@
 import type { Override } from "../lib/data"
 
-const one = (item: string, detail?: string) => ({ item, quantity: 1, ...(detail ? { detail } : {}) })
+const one = (item: string, note?: string) => ({ item, quantity: 1, ...(note ? { note } : {}) })
 
 export const classOverrides: Override[] = [
   // Core traits
@@ -9,7 +9,7 @@ export const classOverrides: Override[] = [
   {
     id: "bard",
     path: "startingEquipment.0.items",
-    value: [one("leather-armor"), { item: "dagger", quantity: 2 }, one("musical-instrument", "of your choice"), one("entertainers-pack")],
+    value: [one("leather-armor"), { item: "dagger", quantity: 2 }, { chooseFrom: ["musical-instrument"], quantity: 1 }, one("entertainers-pack")],
     reason: "Option A includes a Musical Instrument of your choice. The base source leaves it out.",
     page: 31,
   },
@@ -21,12 +21,18 @@ export const classOverrides: Override[] = [
     reason: "A multiclass Bard gains proficiency with one Musical Instrument of your choice. The base source leaves it out.",
     page: 31,
   },
-  { id: "cleric", path: "startingEquipment.0.items.3.item", value: "holy-symbol", reason: "Option A reads Holy Symbol. The base source names a group, holy-symbols.", page: 36 },
+  {
+    id: "cleric",
+    path: "startingEquipment.0.items.3",
+    value: { chooseFrom: ["holy-symbol"], quantity: 1 },
+    reason: "Option A reads Holy Symbol, a choice of the Holy Symbol forms. The base source names holy-symbols.",
+    page: 36,
+  },
   {
     id: "druid",
     path: "startingEquipment.0.items.3",
-    value: one("druidic-focus", "Quarterstaff"),
-    reason: "Option A reads Druidic Focus (Quarterstaff). The base source has a plain Quarterstaff.",
+    value: one("wooden-staff", "Quarterstaff"),
+    reason: "Option A reads Druidic Focus (Quarterstaff): the Wooden staff, also a Quarterstaff. The base source has a plain Quarterstaff.",
     page: 41,
   },
   {
@@ -55,12 +61,21 @@ export const classOverrides: Override[] = [
   {
     id: "monk",
     path: "startingEquipment.0.items",
-    value: [one("spear"), { item: "dagger", quantity: 5 }, { anyOf: ["artisans-tools", "musical-instrument"], quantity: 1, detail: "chosen for the tool proficiency above" }, one("explorers-pack")],
+    value: [one("spear"), { item: "dagger", quantity: 5 }, { chooseFrom: ["artisans-tools", "musical-instrument"], quantity: 1, note: "chosen for the tool proficiency above" }, one("explorers-pack")],
     reason: "Option A includes Artisan’s Tools or Musical Instrument chosen for the tool proficiency above. The base source leaves it out.",
     page: 49,
   },
-  { id: "paladin", path: "startingEquipment.0.items.4.item", value: "holy-symbol", reason: "Option A reads Holy Symbol. The base source names a group, holy-symbols.", page: 53 },
-  { id: "ranger", path: "startingEquipment.0.items.6", value: one("druidic-focus", "sprig of mistletoe"), reason: "Option A reads Druidic Focus (sprig of mistletoe).", page: 57 },
+  {
+    id: "paladin",
+    path: "startingEquipment.0.items.4",
+    value: { chooseFrom: ["holy-symbol"], quantity: 1 },
+    reason: "Option A reads Holy Symbol, a choice of the Holy Symbol forms. The base source names holy-symbols.",
+    page: 53,
+  },
+  { id: "ranger", path: "startingEquipment.0.items.6.note", value: "sprig of mistletoe", reason: "Option A reads Druidic Focus (sprig of mistletoe).", page: 57 },
+  { id: "fighter", path: "startingEquipment.1.items.4.unit", value: "single", reason: "Option B reads 20 Arrows: twenty single arrows, one bundle.", page: 47 },
+  { id: "ranger", path: "startingEquipment.0.items.4.unit", value: "single", reason: "Option A reads 20 Arrows: twenty single arrows, one bundle.", page: 57 },
+  { id: "rogue", path: "startingEquipment.0.items.4.unit", value: "single", reason: "Option A reads 20 Arrows: twenty single arrows, one bundle.", page: 61 },
   {
     id: "rogue",
     path: "skills.from",
@@ -85,12 +100,12 @@ export const classOverrides: Override[] = [
   {
     id: "sorcerer",
     path: "startingEquipment.0.items",
-    value: [one("spear"), { item: "dagger", quantity: 2 }, one("arcane-focus", "crystal"), one("dungeoneers-pack")],
+    value: [one("spear"), { item: "dagger", quantity: 2 }, one("crystal", "crystal"), one("dungeoneers-pack")],
     reason: "Option A reads Spear, 2 Daggers, Arcane Focus (crystal), Dungeoneer’s Pack. The base source has Leather Armor for the Spear.",
     page: 64,
   },
-  { id: "warlock", path: "startingEquipment.0.items.3", value: one("arcane-focus", "orb"), reason: "Option A reads Arcane Focus (orb).", page: 70 },
-  { id: "warlock", path: "startingEquipment.0.items.4", value: one("book", "occult lore"), reason: "Option A reads Book (occult lore).", page: 70 },
+  { id: "warlock", path: "startingEquipment.0.items.3.note", value: "orb", reason: "Option A reads Arcane Focus (orb).", page: 70 },
+  { id: "warlock", path: "startingEquipment.0.items.4.note", value: "occult lore", reason: "Option A reads Book (occult lore).", page: 70 },
   {
     id: "wizard",
     path: "skills.from",
@@ -98,7 +113,7 @@ export const classOverrides: Override[] = [
     reason: "The Wizard skill list includes Nature. The base source leaves it out.",
     page: 77,
   },
-  { id: "wizard", path: "startingEquipment.0.items.1", value: one("arcane-focus", "Quarterstaff"), reason: "Option A reads Arcane Focus (Quarterstaff).", page: 77 },
+  { id: "wizard", path: "startingEquipment.0.items.1", value: one("staff", "Quarterstaff"), reason: "Option A reads Arcane Focus (Quarterstaff): the Staff, also a Quarterstaff.", page: 77 },
   {
     id: "wizard",
     path: "spellcasting.focus",

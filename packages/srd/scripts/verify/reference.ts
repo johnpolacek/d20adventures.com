@@ -3,7 +3,7 @@ import { abilityIds, conditionIds, damageTypeIds, skillIds } from "../../src/sch
 import { dataPath, readData } from "../lib/data"
 import { missingSentences, pageOf, pages, pageText, squash } from "../lib/official"
 import type { Report } from "../lib/report"
-import { readOpen5e } from "../lib/sources"
+import { hasUpstream, readOpen5e } from "../lib/sources"
 
 // Official names of the six abilities, in the order the tables print them. The data ids must map to them one to one.
 const abilityNames: Record<string, string> = { str: "Strength", dex: "Dexterity", con: "Constitution", int: "Intelligence", wis: "Wisdom", cha: "Charisma" }
@@ -467,7 +467,7 @@ export default function verify(report: Report) {
   }
 
   // ---- Open5e second opinion ----
-  {
+  if (hasUpstream("open5e")) {
     const open = (name: string) => new Map(readOpen5e(name).map((row) => [row.fields.describes as string, row.fields.desc as string]))
     const failures: string[] = []
     const waived: string[] = []
@@ -487,7 +487,7 @@ export default function verify(report: Report) {
     compare("damage type", open("DamageTypeDescription"), new Map(damageTypes.map((entry) => [entry.id, entry.examples])))
     compare("alignment", open("AlignmentDescription"), new Map(alignments.filter((entry) => entry.id !== "unaligned").map((entry) => [entry.id, entry.description])))
     report.crossCheck("reference: open5e", "texts agree with Open5e, or the official text settles it", total, failures, waived)
-  }
+  } else report.skip("reference: open5e", "texts agree with Open5e, or the official text settles it")
 
   // ---- Data files ----
   {

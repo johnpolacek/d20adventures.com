@@ -54,11 +54,17 @@
             "quantity": 1
           }
         ],
-        "gp": 15
+        "money": {
+          "amount": 15,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 75
+        "money": {
+          "amount": 75,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -324,20 +330,27 @@
             "quantity": 2
           },
           {
-            "item": "musical-instrument",
-            "quantity": 1,
-            "detail": "of your choice"
+            "chooseFrom": [
+              "musical-instrument"
+            ],
+            "quantity": 1
           },
           {
             "item": "entertainers-pack",
             "quantity": 1
           }
         ],
-        "gp": 19
+        "money": {
+          "amount": 19,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 90
+        "money": {
+          "amount": 90,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -1019,7 +1032,9 @@
             "quantity": 1
           },
           {
-            "item": "holy-symbol",
+            "chooseFrom": [
+              "holy-symbol"
+            ],
             "quantity": 1
           },
           {
@@ -1027,11 +1042,17 @@
             "quantity": 1
           }
         ],
-        "gp": 7
+        "money": {
+          "amount": 7,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 110
+        "money": {
+          "amount": 110,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -1684,9 +1705,9 @@
             "quantity": 1
           },
           {
-            "item": "druidic-focus",
+            "item": "wooden-staff",
             "quantity": 1,
-            "detail": "Quarterstaff"
+            "note": "Quarterstaff"
           },
           {
             "item": "explorers-pack",
@@ -1697,11 +1718,17 @@
             "quantity": 1
           }
         ],
-        "gp": 9
+        "money": {
+          "amount": 9,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 50
+        "money": {
+          "amount": 50,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -2381,7 +2408,10 @@
             "quantity": 1
           }
         ],
-        "gp": 4
+        "money": {
+          "amount": 4,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
@@ -2404,7 +2434,8 @@
           },
           {
             "item": "arrows",
-            "quantity": 20
+            "quantity": 20,
+            "unit": "single"
           },
           {
             "item": "quiver",
@@ -2415,11 +2446,17 @@
             "quantity": 1
           }
         ],
-        "gp": 11
+        "money": {
+          "amount": 11,
+          "unit": "gp"
+        }
       },
       {
         "option": "C",
-        "gp": 155
+        "money": {
+          "amount": 155,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -2679,23 +2716,29 @@
             "quantity": 5
           },
           {
-            "anyOf": [
+            "chooseFrom": [
               "artisans-tools",
               "musical-instrument"
             ],
             "quantity": 1,
-            "detail": "chosen for the tool proficiency above"
+            "note": "chosen for the tool proficiency above"
           },
           {
             "item": "explorers-pack",
             "quantity": 1
           }
         ],
-        "gp": 11
+        "money": {
+          "amount": 11,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 50
+        "money": {
+          "amount": 50,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -2970,7 +3013,9 @@
             "quantity": 6
           },
           {
-            "item": "holy-symbol",
+            "chooseFrom": [
+              "holy-symbol"
+            ],
             "quantity": 1
           },
           {
@@ -2978,11 +3023,17 @@
             "quantity": 1
           }
         ],
-        "gp": 9
+        "money": {
+          "amount": 9,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 150
+        "money": {
+          "amount": 150,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -3463,27 +3514,34 @@
           },
           {
             "item": "arrows",
-            "quantity": 20
+            "quantity": 20,
+            "unit": "single"
           },
           {
             "item": "quiver",
             "quantity": 1
           },
           {
-            "item": "druidic-focus",
+            "item": "sprig-of-mistletoe",
             "quantity": 1,
-            "detail": "sprig of mistletoe"
+            "note": "sprig of mistletoe"
           },
           {
             "item": "explorers-pack",
             "quantity": 1
           }
         ],
-        "gp": 7
+        "money": {
+          "amount": 7,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 150
+        "money": {
+          "amount": 150,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -3994,7 +4052,8 @@
           },
           {
             "item": "arrows",
-            "quantity": 20
+            "quantity": 20,
+            "unit": "single"
           },
           {
             "item": "quiver",
@@ -4009,11 +4068,17 @@
             "quantity": 1
           }
         ],
-        "gp": 8
+        "money": {
+          "amount": 8,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 100
+        "money": {
+          "amount": 100,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -4251,20 +4316,26 @@
             "quantity": 2
           },
           {
-            "item": "arcane-focus",
+            "item": "crystal",
             "quantity": 1,
-            "detail": "crystal"
+            "note": "crystal"
           },
           {
             "item": "dungeoneers-pack",
             "quantity": 1
           }
         ],
-        "gp": 28
+        "money": {
+          "amount": 28,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 50
+        "money": {
+          "amount": 50,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -4939,25 +5010,31 @@
             "quantity": 2
           },
           {
-            "item": "arcane-focus",
+            "item": "orb",
             "quantity": 1,
-            "detail": "orb"
+            "note": "orb"
           },
           {
             "item": "book",
             "quantity": 1,
-            "detail": "occult lore"
+            "note": "occult lore"
           },
           {
             "item": "scholars-pack",
             "quantity": 1
           }
         ],
-        "gp": 15
+        "money": {
+          "amount": 15,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 100
+        "money": {
+          "amount": 100,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -5378,9 +5455,9 @@
             "quantity": 2
           },
           {
-            "item": "arcane-focus",
+            "item": "staff",
             "quantity": 1,
-            "detail": "Quarterstaff"
+            "note": "Quarterstaff"
           },
           {
             "item": "robe",
@@ -5395,11 +5472,17 @@
             "quantity": 1
           }
         ],
-        "gp": 5
+        "money": {
+          "amount": 5,
+          "unit": "gp"
+        }
       },
       {
         "option": "B",
-        "gp": 55
+        "money": {
+          "amount": 55,
+          "unit": "gp"
+        }
       }
     ],
     "multiclass": {
@@ -6080,7 +6163,7 @@
       {
         "name": "Expanding and Replacing a Spellbook",
         "page": 78,
-        "text": "The spells you add to your spellbook as you gain levels reflect your ongoing magical research, but you might find other spells during your adventures that you can add to the book. You could discover a Wizard spell on a Spell Scroll, for example, and then copy it into your spellbook.\n**Copying a Spell into the Book.** When you find a level 1+ Wizard spell, you can copy it into your spellbook if it’s of a level you can prepare and if you have time to copy it. For each level of the spell, the transcription takes 2 hours and costs 50 GP. Afterward you can prepare the spell like the other spells in your spellbook.\n**Copying the Book.** You can copy a spell from your spellbook into another book. This is like copying a new spell into your spellbook but faster, since you already know how to cast the spell. You need spend only 1 hour and 10 GP for each level of the copied spell.\nIf you lose your spellbook, you can use the same procedure to transcribe the Wizard spells that you have prepared into a new spellbook. Filling out the remainder of the new book requires you to find new spells to do so. For this reason, many wizards keep a backup spellbook."
+        "text": "The spells you add to your spellbook as you gain levels reflect your ongoing magical research, but you might find other spells during your adventures that you can add to the book. You could discover a Wizard spell on a Spell Scroll, for example, and then copy it into your spellbook.\nCopying a Spell into the Book. When you find a level 1+ Wizard spell, you can copy it into your spellbook if it’s of a level you can prepare and if you have time to copy it. For each level of the spell, the transcription takes 2 hours and costs 50 GP. Afterward you can prepare the spell like the other spells in your spellbook.\nCopying the Book. You can copy a spell from your spellbook into another book. This is like copying a new spell into your spellbook but faster, since you already know how to cast the spell. You need spend only 1 hour and 10 GP for each level of the copied spell.\nIf you lose your spellbook, you can use the same procedure to transcribe the Wizard spells that you have prepared into a new spellbook. Filling out the remainder of the new book requires you to find new spells to do so. For this reason, many wizards keep a backup spellbook."
       }
     ]
   }

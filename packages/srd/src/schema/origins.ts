@@ -1,21 +1,24 @@
 import { z } from "zod"
 import {
   abilityIdSchema,
+  activationSchema,
   classIdSchema,
   conditionIdSchema,
+  costSchema,
   creatureTypeSchema,
   damageTypeIdSchema,
   diceSchema,
   entryShape,
+  equipmentOptionSchema,
   feetSchema,
+  forcedSaveShape,
   idSchema,
   proseSchema,
+  rechargeSchema,
+  saveDcSchema,
   sizeSchema,
   skillIdSchema,
 } from "./common"
-
-/** When spent uses come back. "initiative-or-short-or-long-rest" is Boon of Fate: roll Initiative or finish a Short or Long Rest. */
-export const rechargeSchema = z.enum(["long-rest", "short-or-long-rest", "start-of-next-turn", "initiative-or-short-or-long-rest"])
 
 /** Uses between recharges. `count` is a number, or "proficiency-bonus" for "a number of times equal to your Proficiency Bonus". */
 export const usesSchema = z.strictObject({ count: z.union([z.number().int().positive(), z.literal("proficiency-bonus")]), recharge: rechargeSchema })
@@ -30,13 +33,10 @@ export const grantedSpellSchema = z.strictObject({
 })
 export type GrantedSpell = z.infer<typeof grantedSpellSchema>
 
-/** "8 plus your Constitution modifier and Proficiency Bonus" is { base: 8, abilities: ["con"], proficiencyBonus: true }. */
-const saveDcSchema = z.strictObject({ base: z.number().int(), abilities: z.array(abilityIdSchema).min(1), proficiencyBonus: z.literal(true) })
-
 /** Damage that grows with character level. `level` is the first character level of each step. */
 const breathWeaponSchema = z.strictObject({
   shapes: z.array(z.strictObject({ shape: z.enum(["cone", "line"]), feet: feetSchema, width: feetSchema.optional() })).min(1),
-  save: z.strictObject({ ability: abilityIdSchema, dc: saveDcSchema }),
+  save: z.strictObject({ ...forcedSaveShape, dc: saveDcSchema }),
   damage: z.array(z.strictObject({ level: z.number().int().min(1).max(20), dice: diceSchema })).min(1),
   onSave: z.literal("half"),
 })
@@ -57,7 +57,13 @@ export const mechanicsShape = {
   damageTypeFromChoice: idSchema.optional(),
   savingThrowAdvantage: z.strictObject({ conditions: z.array(conditionIdSchema).min(1).optional(), abilities: z.array(abilityIdSchema).min(1).optional() }).optional(),
   hitPointBonus: z.strictObject({ initial: z.number().int(), perLevel: z.number().int() }).optional(),
-  activation: z.enum(["bonus-action", "reaction"]).optional(),
+  activation: activationSchema.optional(),
+  /** What must be true to use the trait: standing on or touching stone, or being within Dim Light or Darkness. */
+  requires: z.enum(["stone-surface", "dim-light-or-darkness"]).optional(),
+  /** The moment that lets the trait act. */
+  trigger: z.enum(["hit-with-attack-roll", "hit-with-weapon", "take-damage"]).optional(),
+  /** The condition or damage applies only to targets of this size or smaller. */
+  targetMaxSize: sizeSchema.optional(),
   /** The character level at which the trait starts. */
   level: z.number().int().min(1).max(20).optional(),
   durationMinutes: z.number().int().positive().optional(),
@@ -97,7 +103,7 @@ export const mechanicsShape = {
   attackBonus: z.strictObject({ bonus: z.number().int(), weapon: z.enum(["melee", "ranged"]) }).optional(),
   armorClassBonus: z.strictObject({ bonus: z.number().int(), armor: z.array(z.enum(["light", "medium", "heavy"])).min(1) }).optional(),
   /** Great Weapon Fighting: a 1 or 2 on a damage die counts as `minimum`. The weapon needs one of these properties. */
-  damageDieMinimum: z.strictObject({ minimum: z.number().int(), properties: z.array(idSchema).min(1) }).optional(),
+  damageDieMinimum: z.strictObject({ minimum: z.number().int(), weapon: z.literal("melee"), heldWith: z.literal("two-hands"), properties: z.array(idSchema).min(1) }).optional(),
   /** Boon of Spell Recall: casting with a slot of these levels rolls `dice`, and the slot is kept if the roll equals its level. */
   freeCasting: z.strictObject({ minSlotLevel: z.number().int(), maxSlotLevel: z.number().int() }).optional(),
   /** Alert: add the Proficiency Bonus to Initiative rolls. */
@@ -159,22 +165,9 @@ export type Species = z.infer<typeof speciesSchema>
 
 const toolProficiencySchema = z.union([
   z.strictObject({ tool: idSchema }),
-  /** "Choose one kind of Gaming Set": the player picks one tool of this equipment kind. */
+  /** "Choose one kind of Gaming Set": the player picks one tool of this group. It is the id `chooseFrom` uses in the equipment lines. */
   z.strictObject({ oneOfKind: idSchema }),
 ])
-
-const equipmentItemSchema = z.strictObject({
-  id: idSchema,
-  quantity: z.number().int().positive(),
-  /** "single": `quantity` counts single pieces of ammunition, not bundles. The equipment entry sells them in bundles of its `amount`. */
-  unit: z.literal("single").optional(),
-  /** "Book (prayers)". */
-  note: z.string().min(1).optional(),
-  /** "Gaming Set (same as above)": the kind the player chose for the tool proficiency. */
-  sameAsTool: z.literal(true).optional(),
-})
-
-const equipmentOptionSchema = z.strictObject({ items: z.array(equipmentItemSchema), gp: z.number().int().nonnegative() })
 
 export const backgroundSchema = z.strictObject({
   ...entryShape,
@@ -184,8 +177,8 @@ export const backgroundSchema = z.strictObject({
   feat: z.strictObject({ id: idSchema, spellList: classIdSchema.optional() }),
   skills: z.array(skillIdSchema).length(2),
   toolProficiency: toolProficiencySchema,
-  /** Option A is the package and option B is gold alone. */
-  equipment: z.strictObject({ a: equipmentOptionSchema, b: equipmentOptionSchema }),
+  /** Option A is the package with its gold, and option B is gold alone. */
+  equipment: z.array(equipmentOptionSchema).length(2),
 })
 export type Background = z.infer<typeof backgroundSchema>
 
@@ -238,7 +231,7 @@ export const originRuleSchema = z.strictObject({
   /** What a background or species gives, and how many of it. */
   grants: z.strictObject({ kind: z.enum(["feat", "skill-proficiency", "tool-proficiency"]), count: z.number().int().positive(), featCategory: z.literal("origin").optional() }).optional(),
   /** Gold taken instead of the equipment package. */
-  goldInsteadOfEquipment: z.number().int().positive().optional(),
+  moneyInsteadOfEquipment: costSchema.optional(),
   creatureType: creatureTypeSchema.optional(),
   /** Most species live about this many years. */
   typicalLifeSpanYears: z.number().int().positive().optional(),

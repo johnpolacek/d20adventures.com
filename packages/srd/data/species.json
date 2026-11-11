@@ -94,11 +94,7 @@
           "save": {
             "ability": "dex",
             "dc": {
-              "base": 8,
-              "abilities": [
-                "con"
-              ],
-              "proficiencyBonus": true
+              "plusModifierOf": "con"
             }
           },
           "damage": [
@@ -135,7 +131,9 @@
       {
         "name": "Draconic Flight",
         "text": "When you reach character level 5, you can channel draconic magic to give yourself temporary flight. As a Bonus Action, you sprout spectral wings on your back that last for 10 minutes or until you retract the wings (no action required) or have the Incapacitated condition. During that time, you have a Fly Speed equal to your Speed. Your wings appear to be made of the same energy as your Breath Weapon. Once you use this trait, you can’t use it again until you finish a Long Rest.",
-        "activation": "bonus-action",
+        "activation": [
+          "bonus-action"
+        ],
         "level": 5,
         "durationMinutes": 10,
         "uses": {
@@ -188,7 +186,10 @@
         "name": "Stonecunning",
         "text": "As a Bonus Action, you gain Tremorsense with a range of 60 feet for 10 minutes. You must be on a stone surface or touching a stone surface to use this Tremorsense. The stone can be natural or worked.\nYou can use this Bonus Action a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest.",
         "tremorsense": 60,
-        "activation": "bonus-action",
+        "activation": [
+          "bonus-action"
+        ],
+        "requires": "stone-surface",
         "durationMinutes": 10,
         "uses": {
           "count": "proficiency-bonus",
@@ -461,7 +462,9 @@
               "name": "Cloud’s Jaunt",
               "text": "As a Bonus Action, you magically teleport up to 30 feet to an unoccupied space you can see.",
               "giant": "Cloud Giant",
-              "activation": "bonus-action",
+              "activation": [
+                "bonus-action"
+              ],
               "teleportFeet": 30
             },
             {
@@ -469,6 +472,7 @@
               "name": "Fire’s Burn",
               "text": "When you hit a target with an attack roll and deal damage to it, you can also deal 1d10 Fire damage to that target.",
               "giant": "Fire Giant",
+              "trigger": "hit-with-attack-roll",
               "damage": {
                 "dice": "1d10",
                 "type": "fire"
@@ -479,6 +483,7 @@
               "name": "Frost’s Chill",
               "text": "When you hit a target with an attack roll and deal damage to it, you can also deal 1d6 Cold damage to that target and reduce its Speed by 10 feet until the start of your next turn.",
               "giant": "Frost Giant",
+              "trigger": "hit-with-attack-roll",
               "speedReduction": 10,
               "damage": {
                 "dice": "1d6",
@@ -490,6 +495,8 @@
               "name": "Hill’s Tumble",
               "text": "When you hit a Large or smaller creature with an attack roll and deal damage to it, you can give that target the Prone condition.",
               "giant": "Hill Giant",
+              "trigger": "hit-with-attack-roll",
+              "targetMaxSize": "Large",
               "condition": "prone"
             },
             {
@@ -497,7 +504,10 @@
               "name": "Stone’s Endurance",
               "text": "When you take damage, you can take a Reaction to roll 1d12. Add your Constitution modifier to the number rolled and reduce the damage by that total.",
               "giant": "Stone Giant",
-              "activation": "reaction",
+              "activation": [
+                "reaction"
+              ],
+              "trigger": "take-damage",
               "damageReduction": {
                 "dice": "1d12",
                 "ability": "con"
@@ -508,7 +518,10 @@
               "name": "Storm’s Thunder",
               "text": "When you take damage from a creature within 60 feet of you, you can take a Reaction to deal 1d8 Thunder damage to that creature.",
               "giant": "Storm Giant",
-              "activation": "reaction",
+              "activation": [
+                "reaction"
+              ],
+              "trigger": "take-damage",
               "damage": {
                 "dice": "1d8",
                 "type": "thunder"
@@ -521,7 +534,9 @@
       {
         "name": "Large Form",
         "text": "Starting at character level 5, you can change your size to Large as a Bonus Action if you’re in a big enough space. This transformation lasts for 10 minutes or until you end it (no action required). For that duration, you have Advantage on Strength checks, and your Speed increases by 10 feet. Once you use this trait, you can’t use it again until you finish a Long Rest.",
-        "activation": "bonus-action",
+        "activation": [
+          "bonus-action"
+        ],
         "level": 5,
         "durationMinutes": 10,
         "uses": {
@@ -639,7 +654,9 @@
       {
         "name": "Adrenaline Rush",
         "text": "You can take the Dash action as a Bonus Action. When you do so, you gain a number of Temporary Hit Points equal to your Proficiency Bonus.\nYou can use this trait a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest.",
-        "activation": "bonus-action",
+        "activation": [
+          "bonus-action"
+        ],
         "uses": {
           "count": "proficiency-bonus",
           "recharge": "short-or-long-rest"

@@ -279,7 +279,10 @@
       {
         "name": "Merge with Shadows",
         "text": "While within Dim Light or Darkness, you can give yourself the Invisible condition as a Bonus Action. The condition ends on you immediately after you take an action, a Bonus Action, or a Reaction.",
-        "activation": "bonus-action",
+        "activation": [
+          "bonus-action"
+        ],
+        "requires": "dim-light-or-darkness",
         "condition": "invisible"
       },
       {
@@ -288,7 +291,8 @@
         "resistanceExcept": [
           "psychic",
           "radiant"
-        ]
+        ],
+        "requires": "dim-light-or-darkness"
       }
     ]
   },
@@ -408,6 +412,8 @@
     "text": "When you roll damage for an attack you make with a Melee weapon that you are holding with two hands, you can treat any 1 or 2 on a damage die as a 3. The weapon must have the Two-Handed or Versatile property to gain this benefit.",
     "damageDieMinimum": {
       "minimum": 3,
+      "weapon": "melee",
+      "heldWith": "two-hands",
       "properties": [
         "two-handed",
         "versatile"
@@ -461,6 +467,7 @@
     "page": 87,
     "category": "origin",
     "text": "You’ve trained to deal particularly damaging strikes. Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either roll against the target.",
+    "trigger": "hit-with-weapon",
     "damageDiceRolledTwice": {
       "perTurn": 1
     }

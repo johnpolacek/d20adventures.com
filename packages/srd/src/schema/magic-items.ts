@@ -1,5 +1,19 @@
 import { z } from "zod"
-import { abilityIdSchema, classIdSchema, damageTypeIdSchema, diceSchema, entryShape, idSchema, proseSchema, skillIdSchema } from "./common"
+import {
+  abilityIdSchema,
+  activationSchema,
+  classIdSchema,
+  costSchema,
+  damageTypeIdSchema,
+  diceSchema,
+  entryShape,
+  forcedSaveShape,
+  idSchema,
+  proseSchema,
+  rechargeSchema,
+  skillIdSchema,
+} from "./common"
+import { spellStatBlockSchema } from "./spells"
 
 export const magicItemCategories = ["armor", "potion", "ring", "rod", "scroll", "staff", "wand", "weapon", "wondrous-item"] as const
 export const magicItemCategorySchema = z.enum(magicItemCategories)
@@ -32,9 +46,52 @@ export const attunementSchema = z.strictObject({
 })
 export type Attunement = z.infer<typeof attunementSchema>
 
-/** A numeric bonus the text states with a sign, such as "+2 bonus to Armor Class". `to` is the id of the stated target. */
+/**
+ * A bonus that holds whenever the item is worn, held or wielded, such as "+2 bonus to Armor Class". `to` is the id of
+ * the stated target and `text` the sentence that states it.
+ */
 export const bonusSchema = z.strictObject({ to: idSchema, value: z.number().int(), text: proseSchema })
 export type Bonus = z.infer<typeof bonusSchema>
+
+/** A bonus that holds only under a condition or trigger the text states. `condition` is the official wording of it. */
+export const conditionalBonusSchema = z.strictObject({ to: idSchema, value: z.number().int(), condition: proseSchema, text: proseSchema })
+export type ConditionalBonus = z.infer<typeof conditionalBonusSchema>
+
+export const chargesSchema = z.strictObject({
+  /** A number, or dice when the item rolls its charges ("1d3"). */
+  max: z.union([z.number().int(), diceSchema]),
+  regains: z.strictObject({ amount: z.union([z.number().int(), diceSchema, z.literal("all")]), time: z.literal("dawn") }).optional(),
+  /** What happens when the last charge is spent: roll `dice`, and on each listed number the `effect` follows. */
+  lastCharge: z.strictObject({ dice: diceSchema, outcomes: z.array(z.strictObject({ on: z.number().int(), effect: proseSchema })).min(1) }).optional(),
+})
+export type Charges = z.infer<typeof chargesSchema>
+
+/** A saving throw the item's text forces, with the printed DC. */
+export const savingThrowSchema = z.strictObject({ ...forcedSaveShape, dc: z.number().int().positive() })
+export const checkSchema = z.strictObject({ ability: abilityIdSchema, skill: skillIdSchema.optional(), dc: z.number().int() })
+/**
+ * Damage the text states with dice. `role` says whose damage it is: "extra" is added to a hit the item helps make,
+ * "base" replaces the usual damage of an attack, "effect" is dealt by a property of the item, "to-user" is what the
+ * user takes, "to-item" is what the item takes. `text` is the sentence. A summoned creature's stat block is not here.
+ */
+export const damageRoles = ["extra", "base", "effect", "to-user", "to-item"] as const
+export const damageSchema = z.strictObject({ dice: diceSchema, type: damageTypeIdSchema, role: z.enum(damageRoles), text: proseSchema })
+
+/** A spell the item lets its user cast. `charges` is the cost per cast, `level` a fixed spell level the text names. */
+export const itemSpellSchema = z.strictObject({
+  id: idSchema,
+  /** The row of the item's table that grants the spell, such as the plane of a Ring of Elemental Command. */
+  group: z.string().min(1).optional(),
+  level: z.number().int().min(1).max(9).optional(),
+  charges: z.number().int().nonnegative().optional(),
+  /** Wand of Fireballs: at most this many charges in one casting, each charge past the first raising the spell level by 1. */
+  maxCharges: z.number().int().positive().optional(),
+  upcastsWithCharges: z.literal(true).optional(),
+  /** Staff of Healing: "1 charge per spell level (maximum 4 for a level 4 spell)". */
+  chargesPerSpellLevel: z.literal(true).optional(),
+  saveDc: z.number().int().positive().optional(),
+})
+export type ItemSpell = z.infer<typeof itemSpellSchema>
 
 /** One named version of an item that has its own rarity. Fields beyond name and rarity are the values the official text gives that version. */
 export const variantSchema = z.strictObject({
@@ -50,35 +107,14 @@ export const variantSchema = z.strictObject({
   spellLevel: z.number().int().min(0).max(9).optional(),
   saveDc: z.number().int().optional(),
   attackBonus: z.number().int().optional(),
+  /** What the variant's own paragraphs state, for variants that are figurines, tokens or stones with properties of their own. */
+  charges: chargesSchema.optional(),
+  saves: z.array(savingThrowSchema).min(1).optional(),
+  checks: z.array(checkSchema).min(1).optional(),
+  damage: z.array(damageSchema).min(1).optional(),
+  spells: z.array(itemSpellSchema).min(1).optional(),
 })
 export type MagicItemVariant = z.infer<typeof variantSchema>
-
-export const chargesSchema = z.strictObject({
-  /** A number, or dice when the item rolls its charges ("1d3"). */
-  max: z.union([z.number().int(), diceSchema]),
-  regains: z.strictObject({ amount: z.union([z.number().int(), diceSchema, z.literal("all")]), time: z.literal("dawn") }).optional(),
-  /** What happens when the last charge is spent: roll `dice`, and on each listed number the `effect` follows. */
-  lastCharge: z.strictObject({ dice: diceSchema, outcomes: z.array(z.strictObject({ on: z.number().int(), effect: proseSchema })).min(1) }).optional(),
-})
-export type Charges = z.infer<typeof chargesSchema>
-
-export const savingThrowSchema = z.strictObject({ ability: abilityIdSchema, dc: z.number().int() })
-export const checkSchema = z.strictObject({ ability: abilityIdSchema, skill: skillIdSchema.optional(), dc: z.number().int() })
-export const damageSchema = z.strictObject({ dice: diceSchema, type: damageTypeIdSchema })
-
-/** A spell the item lets its user cast. `charges` is the cost per cast, `level` a fixed spell level the text names. */
-export const itemSpellSchema = z.strictObject({
-  id: idSchema,
-  level: z.number().int().min(1).max(9).optional(),
-  charges: z.number().int().nonnegative().optional(),
-  /** Wand of Fireballs: at most this many charges in one casting, each charge past the first raising the spell level by 1. */
-  maxCharges: z.number().int().positive().optional(),
-  upcastsWithCharges: z.literal(true).optional(),
-  /** Staff of Healing: "1 charge per spell level (maximum 4 for a level 4 spell)". */
-  chargesPerSpellLevel: z.literal(true).optional(),
-  saveDc: z.number().int().optional(),
-})
-export type ItemSpell = z.infer<typeof itemSpellSchema>
 
 /** A table of the description. Rows keep the PDF's cell text. `dice` and `roll` are present on random tables. */
 export const itemTableSchema = z.strictObject({
@@ -112,22 +148,25 @@ export const magicItemSchema = z.strictObject({
   cursed: z.literal(true).optional(),
   consumable: z.literal(true).optional(),
   /** The kinds of action the text names for using the item: "Magic action", "Bonus Action", "Utilize action", "Reaction". */
-  activation: z
-    .array(z.enum(["magic-action", "bonus-action", "utilize-action", "reaction"]))
-    .min(1)
-    .optional(),
+  activation: activationSchema.optional(),
   /** When a property that "can’t be used again" works again, where the text names the dawn or a rest. Other waits (hours, days) stay in the prose. */
-  reusableAfter: z
-    .array(z.enum(["dawn", "short-rest", "long-rest"]))
-    .min(1)
-    .optional(),
+  reusableAfter: z.array(rechargeSchema).min(1).optional(),
   bonuses: z.array(bonusSchema).min(1).optional(),
+  conditionalBonuses: z.array(conditionalBonusSchema).min(1).optional(),
   charges: chargesSchema.optional(),
   saves: z.array(savingThrowSchema).min(1).optional(),
   checks: z.array(checkSchema).min(1).optional(),
   damage: z.array(damageSchema).min(1).optional(),
   spells: z.array(itemSpellSchema).min(1).optional(),
   tables: z.array(itemTableSchema).min(1).optional(),
+  /**
+   * Stat blocks the text prints for creatures the item makes, in the shape the spells use. The Giant Fly of the
+   * Figurine of Wondrous Power has no traits or actions, so `actions` is optional here. Initiative is not kept.
+   */
+  statBlocks: z
+    .array(spellStatBlockSchema.extend({ actions: spellStatBlockSchema.shape.actions.optional() }))
+    .min(1)
+    .optional(),
   description: proseSchema,
 })
 export type MagicItem = z.infer<typeof magicItemSchema>
@@ -136,10 +175,10 @@ export type MagicItem = z.infer<typeof magicItemSchema>
 export const rarityRuleSchema = z.strictObject({
   ...entryShape,
   kind: z.literal("rarity"),
-  value: z.number().int().positive().optional(),
+  value: costSchema.optional(),
   priceless: z.literal(true).optional(),
   craftingDays: z.number().int().positive().optional(),
-  craftingCost: z.number().int().positive().optional(),
+  craftingCost: costSchema.optional(),
 })
 
 /** What the chapter says about a category, and the tool it needs to craft, as the Magic Item Tools table lists it. */
@@ -149,13 +188,70 @@ export const categoryRuleSchema = z.strictObject({
   category: magicItemCategorySchema,
   tools: z.string().min(1),
   text: proseSchema,
+  tables: z.array(itemTableSchema).min(1).optional(),
 })
 
-/** A named rule of the chapter, in the SRD's own words. */
-export const textRuleSchema = z.strictObject({ ...entryShape, kind: z.literal("rule"), text: proseSchema })
+/** A named rule of the chapter, in the SRD's own words, with the tables printed in it. */
+export const textRuleSchema = z.strictObject({ ...entryShape, kind: z.literal("rule"), text: proseSchema, tables: z.array(itemTableSchema).min(1).optional() })
 
-/** The attunement limit, from the Equipment chapter. */
-export const attunementRuleSchema = z.strictObject({ ...entryShape, kind: z.literal("attunement"), maxItems: z.number().int().positive(), text: proseSchema })
+/** The attunement rules of the Equipment chapter. */
+export const attunementRuleSchema = z.strictObject({
+  ...entryShape,
+  kind: z.literal("attunement"),
+  /** "You can be attuned to no more than three magic items at a time." */
+  maxItems: z.number().int().positive(),
+  /** Attuning takes one Short Rest spent focused on the item. */
+  restsToAttune: z.literal("short-rest"),
+  /** Attunement ends if the item has been more than this many feet away for at least `endsAfterAwayHours`. */
+  endsWhenAwayFeet: z.number().int().positive(),
+  endsAfterAwayHours: z.number().int().positive(),
+  text: proseSchema,
+})
 
-export const magicItemRuleSchema = z.discriminatedUnion("kind", [rarityRuleSchema, categoryRuleSchema, textRuleSchema, attunementRuleSchema])
+/** How Sentient Magic Items get their ability scores: roll `dice` for each, dropping the lowest `dropLowest` rolls. */
+export const sentientAbilitiesRuleSchema = z.strictObject({
+  ...entryShape,
+  kind: z.literal("sentient-abilities"),
+  abilityRoll: z.strictObject({ dice: diceSchema, dropLowest: z.number().int().positive() }),
+  text: proseSchema,
+})
+
+/**
+ * Conflict between a sentient item and its bearer. Both saving throws are Charisma saves with a DC of `dcBase` plus
+ * the item's Charisma modifier. The bearer who fails while taking control is Charmed for `charmedHours` (dice).
+ */
+export const sentientConflictRuleSchema = z.strictObject({
+  ...entryShape,
+  kind: z.literal("sentient-conflict"),
+  save: z.strictObject({ ability: abilityIdSchema, dcBase: z.number().int().positive(), plusItemModifierOf: abilityIdSchema }),
+  demands: z.array(z.strictObject({ name: z.string().min(1), text: proseSchema })).min(4),
+  refusals: z.array(proseSchema).min(3),
+  charmedHours: diceSchema,
+  text: proseSchema,
+})
+
+/**
+ * A change to what an item is worth or costs to make, from a footnote. `factor` multiplies the value (or crafting
+ * time and cost) of `appliesTo`, except `except`. A Spell Scroll's value is `factor` times its scribing cost.
+ */
+export const valueRuleSchema = z.strictObject({
+  ...entryShape,
+  kind: z.literal("value-rule"),
+  scope: z.enum(["value", "crafting"]),
+  appliesTo: z.enum(["consumable", "spell-scroll"]),
+  factor: z.number().positive(),
+  basis: z.enum(["rarity-value", "scribing-cost"]),
+  except: z.array(z.literal("spell-scroll")).min(1).optional(),
+  text: proseSchema,
+})
+
+export const magicItemRuleSchema = z.discriminatedUnion("kind", [
+  rarityRuleSchema,
+  categoryRuleSchema,
+  textRuleSchema,
+  attunementRuleSchema,
+  sentientAbilitiesRuleSchema,
+  sentientConflictRuleSchema,
+  valueRuleSchema,
+])
 export type MagicItemRule = z.infer<typeof magicItemRuleSchema>

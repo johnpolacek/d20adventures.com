@@ -1,5 +1,20 @@
 import { z } from "zod"
-import { abilityIdSchema, conditionIdSchema, creatureTypeSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, idSchema, proseSchema, sizeSchema, skillIdSchema } from "./common"
+import {
+  abilityIdSchema,
+  conditionIdSchema,
+  creatureTypeSchema,
+  damageTypeIdSchema,
+  diceSchema,
+  entryShape,
+  feetSchema,
+  forcedSaveShape,
+  idSchema,
+  proseSchema,
+  rechargeSchema,
+  saveDcSchema,
+  sizeSchema,
+  skillIdSchema,
+} from "./common"
 
 const count = z.number().int().positive()
 const bonus = z.number().int()
@@ -19,7 +34,14 @@ export type Speed = z.infer<typeof speedSchema>
 /** One ability column of the stat block: the score, its modifier and the saving throw bonus, as printed. */
 export const abilityLineSchema = z.strictObject({ score: z.number().int().min(1).max(30), mod: bonus, save: bonus })
 
-/** One instance of damage the entry prints, such as "12 (2d6 + 5) Bludgeoning damage". */
+/** The outcome labels the SRD prints: "Hit:", "Failure:", "Second Failure:" and the rest. */
+export const outcomes = ["hit", "miss", "hit-or-miss", "failure", "first-failure", "second-failure", "subsequent-failures", "success", "failure-or-success"] as const
+
+/**
+ * One instance of damage the entry prints, such as "12 (2d6 + 5) Bludgeoning damage". A part with no `condition`
+ * is dealt by its outcome, at once and without a further condition. Every other part carries the printed words
+ * that limit it.
+ */
 export const damagePartSchema = z.strictObject({
   /** The fixed number printed before the dice. */
   average: z.number().int().nonnegative(),
@@ -27,13 +49,16 @@ export const damagePartSchema = z.strictObject({
   dice: diceSchema.optional(),
   /** Absent only when the text names no type, as in "damage of the type chosen for the Draconic Origin trait". */
   type: damageTypeIdSchema.optional(),
+  /** The outcome whose paragraph holds the damage ("Hit:", "Failure:"). Absent when no outcome label precedes it in its paragraph. */
+  on: z.enum(outcomes).optional(),
   /**
-   * The clause the damage belongs to, when it is in the first sentence after "Hit:", "Failure:" and the like: the
-   * damage dealt by that outcome. Absent for damage stated elsewhere in the text, such as an aura or damage over time.
-   * Alternatives in one sentence ("or 5 (2d4) Piercing damage if the swarm is Bloodied") all carry the outcome, so
-   * read the text for which applies.
+   * The printed words that limit this part: the "if …" or "unless …" clause right after it ("if the swarm is
+   * Bloodied"), or, for damage outside the first sentence of its outcome or outside any outcome, the whole sentence
+   * that states it ("At the start of each of its turns, the Restrained target takes 21 (6d6) Thunder damage.").
    */
-  on: z.enum(["hit", "miss", "hit-or-miss", "failure", "success", "failure-or-success"]).optional(),
+  condition: z.string().min(1).optional(),
+  /** The index in `damage` of the part this one replaces when its condition holds: "5 (2d4) …, or 2 (1d4) … if the swarm is Bloodied". */
+  alternativeTo: z.number().int().nonnegative().optional(),
 })
 export type DamagePart = z.infer<typeof damagePartSchema>
 
@@ -48,11 +73,19 @@ export const attackSchema = z.strictObject({
 export type Attack = z.infer<typeof attackSchema>
 
 export const saveSchema = z.strictObject({
-  ability: abilityIdSchema,
-  dc: z.number().int().positive(),
+  ...forcedSaveShape,
+  /** Every monster save prints its DC. */
+  dc: saveDcSchema,
   /** Who makes the save, as printed after the DC: "each creature in a 30-foot Cone". */
   targets: proseSchema.optional(),
   failure: proseSchema.optional(),
+  /**
+   * A staged save prints "First Failure:" (or "Failure:") and "Second Failure:" or "Subsequent Failures:". Each stage
+   * is its own field, and `failure` is then absent, so the first failed save never reads as the last stage.
+   */
+  firstFailure: proseSchema.optional(),
+  secondFailure: proseSchema.optional(),
+  subsequentFailures: proseSchema.optional(),
   success: proseSchema.optional(),
   failureOrSuccess: proseSchema.optional(),
   /** The success clause is "Half damage" or "Half damage only". */
@@ -62,7 +95,7 @@ export type Save = z.infer<typeof saveSchema>
 
 export const areaSchema = z.strictObject({
   shape: z.enum(["cone", "cube", "cylinder", "emanation", "line", "sphere"]),
-  /** Length of a Cone or Line, side of a Cube, radius of a Sphere or Cylinder, distance of an Emanation. */
+  /** An area of effect the text puts creatures "in" or that something "fills". Length of a Cone or Line, side of a Cube, radius of a Sphere or Cylinder, distance of an Emanation. */
   size: feetSchema,
   width: feetSchema.optional(),
   height: feetSchema.optional(),
@@ -98,11 +131,13 @@ export const monsterFeatureSchema = z.strictObject({
   name: z.string().min(1),
   /** The text after "Name. ", with the parenthetical left out of the name. */
   text: proseSchema,
-  perDay: count.optional(),
-  perDayInLair: count.optional(),
-  /** "Recharge 5–6" is { min: 5, max: 6 }. "Recharge 6" is { min: 6, max: 6 }. */
-  recharge: z.strictObject({ min: z.number().int().min(1).max(6), max: z.number().int().min(1).max(6) }).optional(),
-  rechargeAfterRest: z.literal(true).optional(),
+  /**
+   * Limited uses. "2/Day" is { count: 2, recharge: "long-rest" }, as the chapter's X/Day rule says. "3/Day, or
+   * 4/Day in Lair" adds countInLair. "Recharge after a Short or Long Rest" is { count: 1, recharge: "short-or-long-rest" }.
+   */
+  uses: z.strictObject({ count, countInLair: count.optional(), recharge: rechargeSchema }).optional(),
+  /** "Recharge 5–6" is { min: 5, max: 6 }: the d6 roll at the start of each turn that restores the one use. */
+  rechargeRoll: z.strictObject({ min: z.number().int().min(1).max(6), max: z.number().int().min(1).max(6) }).optional(),
   /** Any other part of the name's parenthetical, such as "Vampire Form Only" or "Requires Soul Bag". */
   note: z.string().min(1).optional(),
   attack: attackSchema.optional(),
@@ -110,8 +145,9 @@ export const monsterFeatureSchema = z.strictObject({
   /** Every damage instance the text prints, in order. */
   damage: z.array(damagePartSchema).min(1).optional(),
   /**
-   * Conditions the text gives a creature: "it has the Prone condition", "exiting with the Prone condition". A
-   * condition named only as a precondition ("one creature that has the Prone condition") or a negation is left out.
+   * Conditions the text gives a creature: "it has the Prone condition", "gives it the Grappled condition", "exiting
+   * with the Prone condition", "exiting Prone", "gains 1 Exhaustion level". A condition named in a clause that is a
+   * precondition or a negation ("if the target has …", "that has …", "doesn’t have …", "no longer has …") is left out.
    */
   conditions: z.array(conditionIdSchema).min(1).optional(),
   escapeDc: z.number().int().positive().optional(),
@@ -156,13 +192,20 @@ export const monsterSchema = z.strictObject({
   resistances: z.array(damageTypeIdSchema).min(1).optional(),
   immunities: z.array(damageTypeIdSchema).min(1).optional(),
   conditionImmunities: z.array(conditionIdSchema).min(1).optional(),
-  /** A defense entry printed with a qualifier, word for word: the whole entry, or the qualified item. */
-  defenseNotes: z
-    .strictObject({
-      vulnerabilities: z.string().min(1).optional(),
-      resistances: z.string().min(1).optional(),
-      conditionImmunities: z.string().min(1).optional(),
-    })
+  /**
+   * Defenses the stat block qualifies, kept out of the plain lists above: "Piercing damage from weapons wielded by
+   * creatures under the effect of a Bless spell", "Charmed (with Mind Blank)". `value` is absent when the text names
+   * no type ("Damage type chosen for the Draconic Origin trait below"). `condition` is the qualifying words as printed.
+   */
+  conditionalDefenses: z
+    .array(
+      z.strictObject({
+        kind: z.enum(["vulnerability", "resistance", "immunity", "condition-immunity"]),
+        value: z.union([damageTypeIdSchema, conditionIdSchema]).optional(),
+        condition: z.string().min(1),
+      })
+    )
+    .min(1)
     .optional(),
   /** Equipment ids, singular, with the printed count: "Javelins (6)" is { id: "javelin", quantity: 6 }. */
   gear: z
@@ -202,3 +245,18 @@ export const monsterSchema = z.strictObject({
     .optional(),
 })
 export type Monster = z.infer<typeof monsterSchema>
+
+/** A row of Experience Points by Challenge Rating. CR 0 is worth 0 or 10 XP, so `xp` lists every value printed. */
+const xpRow = z.strictObject({ cr: z.number().nonnegative(), xp: z.array(z.number().int().nonnegative()).min(1) })
+/** A row of Proficiency Bonus by Challenge Rating: the CR range, inclusive, and its bonus. */
+const pbRow = z.strictObject({ minCr: z.number().nonnegative(), maxCr: z.number().nonnegative(), pb: z.number().int().positive() })
+/** A row of Hit Dice by Size: the die and the average Hit Points per die (2½ is 2.5). */
+const hitDieRow = z.strictObject({ size: sizeSchema, die: z.number().int().positive(), averagePerDie: z.number().positive() })
+
+/** The three tables of the Monsters chapter's stat block rules, one entry each. */
+export const monsterRuleSchema = z.union([
+  z.strictObject({ ...entryShape, id: z.literal("experience-points-by-challenge-rating"), xpByCr: z.array(xpRow).min(1) }),
+  z.strictObject({ ...entryShape, id: z.literal("proficiency-bonus-by-challenge-rating"), pbByCr: z.array(pbRow).min(1) }),
+  z.strictObject({ ...entryShape, id: z.literal("hit-dice-by-size"), hitDiceBySize: z.array(hitDieRow).min(1) }),
+])
+export type MonsterRule = z.infer<typeof monsterRuleSchema>

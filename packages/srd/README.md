@@ -22,11 +22,11 @@ Import data by category, so a host bundles only what it uses. `@d20/srd` itself 
 |---|---|---|
 | `abilities` | 6 | The six abilities and their skills |
 | `skills` | 18 | Each skill and its ability |
-| `conditions` | 15 | Full rules text, with Exhaustion's numbers typed |
-| `damage-types` | 13 | |
+| `conditions` | 15 | Full rules text, with Exhaustion’s numbers typed |
+| `damage-types` | 13 |  |
 | `languages` | 19 | Standard and rare |
 | `alignments` | 10 | The nine, and Unaligned |
-| `magic-schools` | 8 | |
+| `magic-schools` | 8 |  |
 | `species` | 9 | Traits, lineages and ancestries, with typed mechanics |
 | `backgrounds` | 4 | Ability scores, feat, proficiencies, equipment |
 | `feats` | 17 | Origin, general, fighting style and epic boon |
@@ -36,16 +36,22 @@ Import data by category, so a host bundles only what it uses. `@d20/srd` itself 
 | `subclasses` | 12 | The SRD subclass of each class |
 | `spells` | 339 | Header fields, typed mechanics, tables and stat blocks |
 | `monsters` | 330 | Every stat block, with typed actions |
-| `equipment` | 248 | Weapons, armor, tools, gear, mounts, vehicles, services |
-| `weapon-properties` | 10 | |
-| `weapon-masteries` | 8 | |
-| `poisons` | 14 | |
-| `coins` | 5 | |
-| `equipment-rules` | 24 | Selling, armor training, proficiency, crafting |
+| `monster-rules` | 3 | XP by CR, Proficiency Bonus by CR, Hit Dice by size |
+| `equipment` | 249 | Weapons, armor, tools, gear, mounts, vehicles, services |
+| `weapon-properties` | 10 |  |
+| `weapon-masteries` | 8 |  |
+| `poisons` | 14 |  |
+| `poison-types` | 4 | Contact, ingested, inhaled, injury |
+| `coins` | 5 |  |
+| `equipment-rules` | 25 | Selling, armor training, proficiency, crafting |
 | `magic-items` | 258 | One entry per official heading, with variants |
-| `magic-item-rules` | 35 | Rarity values, categories, attunement, crafting |
+| `magic-item-rules` | 50 | Rarity values, categories, attunement, crafting, sentient items |
 
-Not in this package: the rules of play themselves (the "Playing the Game" chapter and the Rules Glossary beyond conditions). The engine encodes those.
+Not in this package:
+
+- The rules of play themselves: the "Playing the Game" chapter, the Rules Glossary beyond conditions, and the "Gameplay Toolbox" beyond poisons. The engine stages encode those.
+- The Wizard's spellbook as an item. The SRD describes it in the Wizard's Spellcasting feature (p. 78), not in Equipment, so `spellbook` in the Wizard's starting equipment and focus names no equipment entry.
+- The prose that introduces a chapter or a list without stating a rule.
 
 ## Layout
 
@@ -71,13 +77,15 @@ Not in this package: the rules of play themselves (the "Playing the Game" chapte
 
 Both upstream sources hold errors: wrong prices, wrong dice, missing items. So builders take wording, tables and anything the upstream gets wrong from the official text. Origins, equipment and magic items are built from the official text alone. The checks record each upstream error they meet.
 
-Upstream files are downloaded to `.cache`, which Git ignores. A build refuses a file that does not match its locked hash.
+Upstream files are downloaded to `.cache`, which Git ignores. A build refuses a file that does not match its locked hash. `NOTICE.md` carries the notices these sources require.
+
+The website's type check covers this package's scripts at an ES2017 target, and the package's own `tsconfig` files use the same target. So a regular expression with the `s` flag or a named group fails `check` here before it can fail a deploy.
 
 ## Commands
 
 Run from the repo root.
 
-- `pnpm test:srd`: type check, then every check. Needs no network.
+- `pnpm test:srd`: type check, then every check. The checks against the official text need nothing but the repo. The cross-checks against the upstream sources need the cache, and are skipped with a printed notice when it is absent.
 - `pnpm --filter @d20/srd verify [name…] [--verbose]`: run checks. `--verbose` lists every waiver and upstream error.
 - `pnpm --filter @d20/srd sources`: download the pinned upstream files.
 - `pnpm --filter @d20/srd build [name…]`: regenerate data.
@@ -85,7 +93,7 @@ Run from the repo root.
 
 ## How the checks work
 
-A check reads only `data/*.json` and the official text. It parses the official text with its own code, not the builder's, so a builder mistake cannot hide in a check that repeats it.
+A check reads `data/*.json` and the official text. It parses the official text with its own code, not the builder's, so a builder mistake cannot hide in a check that repeats it. Cross-checks also read the cached upstream sources, as a second opinion only.
 
 Each category checks:
 
@@ -119,19 +127,29 @@ The rule: an entry's own block wins, and the data is made consistent with it.
 | Archmage | XP 8,000 at CR 12 (p. 305). The table gives 8,400. | 8,000, as printed |
 | Gray Ooze | Initiative −2 (13) (p. 293). | As printed |
 | Invisible Stalker | Initiative +7 (22) (p. 301). | As printed |
+| Young White Dragon | Intelligence save "2" with no sign (p. 340), the only unsigned save in the chapter. Its modifier is −2 and it has no proficiency. | −2, a corrected misprint |
+| Befuddlement | The first save's "half as much damage" is printed after the repeated save (p. 112). | Half damage on the first save |
 
-The Wizard's spellbook is described in the Wizard's Spellcasting feature (p. 78), not in Equipment, so it has no equipment entry.
+Printed values that only look odd are kept as printed. A value that cannot be right by the book's own rules, as with the dragon's save, is corrected by an override that cites the page.
 
 ## What is typed and what stays prose
 
-Every entry keeps the official wording in full. On top of that, values an engine computes with are typed where the text states them plainly: numbers, dice, damage types, save abilities and DCs, ranges, areas, uses and what restores them, level scaling.
+Every entry keeps the official wording in full, with the official paragraph breaks. On top of that, values an engine computes with are typed where the text states them plainly: numbers, dice, damage types, save abilities and DCs, ranges, areas, uses and what restores them, level scaling.
 
-Effects the text states only in sentences stay as prose for the engine stages to encode. Examples: what each condition does beyond its text, monster Multiattack, most feat and class feature effects that depend on a trigger, spell effects with no fixed number.
+Three rules keep the typed fields honest:
 
-A check re-reads each typed value from the entry's own official text. A few fields are readings of a sentence rather than a printed value, and the engine stages should treat them as such:
+- A typed value means one thing. If it holds only under a condition the text states, the condition sits beside it, in a typed field or in the official words. A Rakshasa's vulnerability to Piercing damage is in `conditionalDefenses` with its condition, not in `vulnerabilities`.
+- A typed value is checked both ways: the data's value is stated in the entry's own text, and every statement of that form in the text is in the data. The aim is that no value can be changed, dropped or invented without a check failing, and the checks are tested by changing the data by hand.
+- What a field cannot hold honestly stays in the prose.
 
-- Monsters: `conditions`, `area` and the `on` tag of a damage part are read by pattern from the feature text. The check confirms each is named in that text, not which clause it belongs to. Features that cast a named spell outside an "At Will" or "N/Day" list keep it in prose only.
-- Spells: `onSuccess` for a few spells with repeated saves, such as Flesh to Stone, is "other".
+One concept has one shape across categories, from `src/schema/common.ts`: what restores a use (`rechargeSchema`), how a thing is used (`activationSchema`), a save and its DC (`forcedSaveShape`, `saveDcSchema`), money (`costSchema`), and starting equipment (`equipmentOptionSchema`).
+
+Left as prose for the engine stages to encode, among others: what each condition does, monster Multiattack and reaction triggers, features that cast a named spell outside a spell list, durations, and effects that depend on a trigger with no fixed number.
+
+A few fields are readings of a sentence rather than a printed value:
+
+- Conditions an action or spell applies, and the trigger of a damage part, are read from the sentence that states them. Where the sentence gives no tie to a hit or a save, the part carries none, and the engine must read the prose.
+- A damage part's `condition` in the monsters data is the official words, not a typed test.
 - Magic items: `consumable` is set from the item's category and from wording that says it is used up.
 - Equipment: the food, drink and lodging table has no group heading on its second half, so those rows are matched to their tier by order.
 

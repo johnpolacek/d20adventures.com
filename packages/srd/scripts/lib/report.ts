@@ -1,5 +1,5 @@
 /** One named check and what it found. */
-type Result = { category: string; check: string; total: number; failures: string[]; waived: string[]; upstream: string[] }
+type Result = { category: string; check: string; total: number; failures: string[]; waived: string[]; upstream: string[]; skipped?: string }
 
 /**
  * Collects check results. A check passes only with no failures.
@@ -30,6 +30,14 @@ export class Report {
     this.results.push({ category, check, total, failures, waived: [], upstream })
   }
 
+  /**
+   * Record a cross-check that could not run because its third-party source is not cached. It is printed, never
+   * hidden, and it does not fail the run: the official text checks stand without it.
+   */
+  skip(category: string, check: string, reason = "upstream sources are not cached. Run: pnpm --filter @d20/srd sources") {
+    this.results.push({ category, check, total: 0, failures: [], waived: [], upstream: [], skipped: reason })
+  }
+
   get failed() {
     return this.results.some((result) => result.failures.length > 0)
   }
@@ -41,6 +49,10 @@ export class Report {
         category = result.category
         console.log(`\n${category}`)
       }
+      if (result.skipped) {
+        console.log(`  – ${result.check} (skipped: ${result.skipped})`)
+        continue
+      }
       const mark = result.failures.length ? "✗" : "✓"
       const waived = result.waived.length ? `, ${result.waived.length} waived` : ""
       const upstream = result.upstream.length ? `, ${result.upstream.length} upstream error(s)` : ""
@@ -51,10 +63,12 @@ export class Report {
       if (verbose) for (const waiver of result.waived) console.log(`      waived: ${waiver}`)
       if (verbose) for (const error of result.upstream) console.log(`      upstream: ${error}`)
     }
-    const checks = this.results.length
+    const skipped = this.results.filter((result) => result.skipped).length
+    const checks = this.results.length - skipped
     const bad = this.results.filter((result) => result.failures.length).length
     const waivers = this.results.reduce((sum, result) => sum + result.waived.length, 0)
     const upstream = this.results.reduce((sum, result) => sum + result.upstream.length, 0)
     console.log(`\n${checks - bad}/${checks} checks pass, ${waivers} waived difference(s), ${upstream} upstream error(s) on record.`)
+    if (skipped) console.log(`${skipped} cross-check(s) skipped: the upstream sources are not cached. Run: pnpm --filter @d20/srd sources`)
   }
 }

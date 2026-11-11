@@ -14,9 +14,7 @@
       "save": {
         "ability": "dex",
         "dc": {
-          "base": 8,
-          "ability": "dex",
-          "proficiencyBonus": true
+          "plusModifierOf": "dex"
         }
       },
       "damage": {
@@ -58,9 +56,7 @@
       "save": {
         "ability": "dex",
         "dc": {
-          "base": 8,
-          "ability": "dex",
-          "proficiencyBonus": true
+          "plusModifierOf": "dex"
         }
       },
       "damage": {
@@ -164,8 +160,11 @@
         "on": "save",
         "durationHours": 1,
         "againstCondition": "poisoned",
-        "when": "to avoid or end the Poisoned condition"
+        "when": "As a Bonus Action, you can drink a vial of Antitoxin to gain Advantage on saving throws to avoid or end the Poisoned condition for 1 hour"
       }
+    ],
+    "activation": [
+      "bonus-action"
     ],
     "description": "As a Bonus Action, you can drink a vial of Antitoxin to gain Advantage on saving throws to avoid or end the Poisoned condition for 1 hour."
   },
@@ -205,13 +204,39 @@
     "name": "Arrows",
     "page": 96,
     "kind": "ammunition",
-    "amount": 20,
+    "bundleSize": 20,
     "storage": "quiver",
     "cost": {
       "amount": 1,
       "unit": "gp"
     },
     "weight": 1
+  },
+  {
+    "id": "artisans-tools",
+    "name": "Artisan’s Tools",
+    "page": 93,
+    "kind": "group",
+    "members": [
+      "alchemists-supplies",
+      "brewers-supplies",
+      "calligraphers-supplies",
+      "carpenters-tools",
+      "cartographers-tools",
+      "cobblers-tools",
+      "cooks-utensils",
+      "glassblowers-tools",
+      "jewelers-tools",
+      "leatherworkers-tools",
+      "masons-tools",
+      "painters-supplies",
+      "potters-tools",
+      "smiths-tools",
+      "tinkers-tools",
+      "weavers-tools",
+      "woodcarvers-tools"
+    ],
+    "description": "Artisan’s Tools are each focused on crafting items and pursuing a trade. Each of these tools requires a separate proficiency."
   },
   {
     "id": "backpack",
@@ -268,13 +293,14 @@
       "withinFeet": 10,
       "save": {
         "ability": "dex",
-        "dc": {
-          "fixed": 10
-        }
+        "dc": 10
       },
       "condition": "prone",
       "recoverMinutes": 10
     },
+    "activation": [
+      "utilize-action"
+    ],
     "description": "As a Utilize action, you can spill Ball Bearings from their pouch. They spread to cover a level, 10-foot-square area within 10 feet of yourself. A creature that enters this area for the first time on a turn must succeed on a DC 10 Dexterity saving throw or have the Prone condition. It takes 10 minutes to recover the Ball Bearings."
   },
   {
@@ -346,7 +372,7 @@
       {
         "effect": "automatic-success",
         "on": "save",
-        "when": "saving throws against extreme cold"
+        "when": "While in a Bedroll, you automatically succeed on saving throws against extreme cold"
       }
     ],
     "description": "A Bedroll sleeps one Small or Medium creature. While in a Bedroll, you automatically succeed on saving throws against extreme cold (see “Gameplay Toolbox”)."
@@ -361,6 +387,9 @@
       "unit": "gp"
     },
     "audibleFeet": 60,
+    "activation": [
+      "utilize-action"
+    ],
     "description": "When rung as a Utilize action, a Bell produces a sound that can be heard up to 60 feet away."
   },
   {
@@ -377,7 +406,7 @@
       {
         "effect": "advantage",
         "on": "save",
-        "when": "saving throws against extreme cold"
+        "when": "While wrapped in a blanket, you have Advantage on saving throws against extreme cold"
       }
     ],
     "description": "While wrapped in a blanket, you have Advantage on saving throws against extreme cold (see “Gameplay Toolbox”)."
@@ -427,7 +456,7 @@
     "name": "Bolts",
     "page": 96,
     "kind": "ammunition",
-    "amount": 20,
+    "bundleSize": 20,
     "storage": "case-crossbow-bolt",
     "cost": {
       "amount": 1,
@@ -457,7 +486,7 @@
           "religion"
         ],
         "amount": 5,
-        "when": "an accurate nonfiction Book about its topic"
+        "when": "If you consult an accurate nonfiction Book about its topic, you gain a +5 bonus to Intelligence (Arcana, History, Nature, or Religion) checks you make about that topic"
       }
     ],
     "description": "A Book contains fiction or nonfiction. If you consult an accurate nonfiction Book about its topic, you gain a +5 bonus to Intelligence (Arcana, History, Nature, or Religion) checks you make about that topic."
@@ -553,7 +582,7 @@
     "name": "Bullets, Firearm",
     "page": 96,
     "kind": "ammunition",
-    "amount": 10,
+    "bundleSize": 10,
     "storage": "pouch",
     "cost": {
       "amount": 3,
@@ -566,7 +595,7 @@
     "name": "Bullets, Sling",
     "page": 96,
     "kind": "ammunition",
-    "amount": 20,
+    "bundleSize": 20,
     "storage": "pouch",
     "cost": {
       "amount": 4,
@@ -672,17 +701,18 @@
       "withinFeet": 5,
       "save": {
         "ability": "dex",
-        "dc": {
-          "fixed": 15
-        }
+        "dc": 15
       },
       "damage": {
         "fixed": 1,
         "type": "piercing"
       },
-      "speedToZero": true,
+      "speedZeroUntilStartOfNextTurn": true,
       "recoverMinutes": 10
     },
+    "activation": [
+      "utilize-action"
+    ],
     "description": "As a Utilize action, you can spread Caltrops from their bag to cover a 5-foot-square area within 5 feet of yourself. A creature that enters this area for the first time on a turn must succeed on a DC 15 Dexterity saving throw or take 1 Piercing damage and have its Speed reduced to 0 until the start of its next turn. It takes 10 minutes to recover the Caltrops."
   },
   {
@@ -873,8 +903,12 @@
         "incapacitated",
         "restrained"
       ],
-      "appliesCondition": "restrained"
+      "appliesCondition": "restrained",
+      "appliesWhen": "legs-bound"
     },
+    "activation": [
+      "utilize-action"
+    ],
     "description": "As a Utilize action, you can wrap a Chain around an unwilling creature within 5 feet of yourself that has the Grappled, Incapacitated, or Restrained condition if you succeed on a DC 13 Strength (Athletics) check. If the creature’s legs are bound, the creature has the Restrained condition until it escapes. Escaping the Chain requires the creature to make a successful DC 18 Dexterity (Acrobatics) check as an action. Bursting the Chain requires a successful DC 20 Strength (Athletics) check as an action."
   },
   {
@@ -960,6 +994,10 @@
     },
     "weight": 12,
     "anchorFeet": 25,
+    "activation": [
+      "utilize-action",
+      "bonus-action"
+    ],
     "description": "A Climber’s Kit includes boot tips, gloves, pitons, and a harness. As a Utilize action, you can use the Climber’s Kit to anchor yourself; when you do, you can’t fall more than 25 feet from the anchor point, and you can’t move more than 25 feet from there without undoing the anchor as a Bonus Action."
   },
   {
@@ -1097,7 +1135,7 @@
       {
         "effect": "advantage",
         "on": "check",
-        "when": "to impersonate the person or type of person it represents"
+        "when": "While wearing a Costume, you have Advantage on any ability check you make to impersonate the person or type of person it represents"
       }
     ],
     "description": "While wearing a Costume, you have Advantage on any ability check you make to impersonate the person or type of person it represents."
@@ -1117,7 +1155,7 @@
         "effect": "advantage",
         "on": "check",
         "ability": "str",
-        "when": "where the Crowbar’s leverage can be applied"
+        "when": "Using a Crowbar gives you Advantage on Strength checks where the Crowbar’s leverage can be applied"
       }
     ],
     "description": "Using a Crowbar gives you Advantage on Strength checks where the Crowbar’s leverage can be applied."
@@ -1767,6 +1805,9 @@
         "rangeFeet": 50
       }
     ],
+    "activation": [
+      "utilize-action"
+    ],
     "description": "As a Utilize action, you can throw the Grappling Hook at a railing, a ledge, or another catch within 50 feet of yourself, and the hook catches on if you succeed on a DC 13 Dexterity (Acrobatics) check. If you tied a Rope to the hook, you can then climb it."
   },
   {
@@ -1940,6 +1981,9 @@
     },
     "weight": 3,
     "uses": 10,
+    "activation": [
+      "utilize-action"
+    ],
     "stabilize": {
       "requiresCondition": "unconscious",
       "atHitPoints": 0,
@@ -2054,9 +2098,7 @@
       "save": {
         "ability": "dex",
         "dc": {
-          "base": 8,
-          "ability": "dex",
-          "proficiencyBonus": true
+          "plusModifierOf": "dex"
         }
       },
       "damage": {
@@ -2131,15 +2173,13 @@
     "hazard": {
       "save": {
         "ability": "dex",
-        "dc": {
-          "fixed": 13
-        }
+        "dc": 13
       },
       "damage": {
         "dice": "1d4",
         "type": "piercing"
       },
-      "speedToZero": true,
+      "speedZeroUntilStartOfNextTurn": true,
       "chainFeet": 3,
       "failedFreeAttemptDamage": {
         "fixed": 1,
@@ -2153,6 +2193,9 @@
         "skill": "athletics",
         "dc": 13
       }
+    ],
+    "activation": [
+      "utilize-action"
     ],
     "description": "As a Utilize action, you can set a Hunting Trap, which is a sawtooth steel ring that snaps shut when a creature steps on a pressure plate in the center. The trap is affixed by a heavy chain to an immobile object, such as a tree or a spike driven into the ground. A creature that steps on the plate must succeed on a DC 13 Dexterity saving throw or take 1d4 Piercing damage and have its Speed reduced to 0 until the start of its next turn. Thereafter, until the creature breaks free of the trap, its movement is limited by the length of the chain (typically 3 feet). A creature can use its action to make a DC 13 Strength (Athletics) check, freeing itself or another creature within its reach on a success. Each failed check deals 1 Piercing damage to the trapped creature."
   },
@@ -2417,6 +2460,9 @@
       "fuel": "oil",
       "loweredHoodDimRadiusFeet": 5
     },
+    "activation": [
+      "bonus-action"
+    ],
     "description": "A Hooded Lantern burns Oil as fuel to cast Bright Light in a 30-foot radius and Dim Light for an additional 30 feet. As a Bonus Action, you can lower the hood, reducing the light to Dim Light in a 5-foot radius, or raise it again."
   },
   {
@@ -2692,7 +2738,7 @@
       {
         "effect": "advantage",
         "on": "check",
-        "when": "to appraise or inspect a highly detailed item"
+        "when": "A Magnifying Glass grants Advantage on any ability check made to appraise or inspect a highly detailed item"
       }
     ],
     "description": "A Magnifying Glass grants Advantage on any ability check made to appraise or inspect a highly detailed item. Lighting a fire with a Magnifying Glass requires light as bright as sunlight to focus, tinder to ignite, and about 5 minutes for the fire to ignite."
@@ -2741,11 +2787,15 @@
         "restrained"
       ],
       "appliesCondition": "restrained",
+      "appliesWhen": "attached-to-fixed-anchor",
       "sizes": [
         "Small",
         "Medium"
       ]
     },
+    "activation": [
+      "utilize-action"
+    ],
     "description": "As a Utilize action, you can use Manacles to bind an unwilling Small or Medium creature within 5 feet of yourself that has the Grappled, Incapacitated, or Restrained condition if you succeed on a DC 13 Dexterity (Sleight of Hand) check. While bound, a creature has Disadvantage on attack rolls, and the creature is Restrained if the Manacles are attached to a chain or hook that is fixed in place. Escaping the Manacles requires a successful DC 20 Dexterity (Sleight of Hand) check as an action. Bursting them requires a successful DC 25 Strength (Athletics) check as an action.\nEach set of Manacles comes with a key. Without the key, a creature can use Thieves’ Tools to pick the Manacles’ lock with a successful DC 15 Dexterity (Sleight of Hand) check."
   },
   {
@@ -2766,7 +2816,7 @@
           "survival"
         ],
         "amount": 5,
-        "when": "to find your way in the place represented on it"
+        "when": "If you consult an accurate Map, you gain a +5 bonus to Wisdom (Survival) checks you make to find your way in the place represented on it"
       }
     ],
     "description": "If you consult an accurate Map, you gain a +5 bonus to Wisdom (Survival) checks you make to find your way in the place represented on it."
@@ -3047,7 +3097,7 @@
     "name": "Needles",
     "page": 96,
     "kind": "ammunition",
-    "amount": 50,
+    "bundleSize": 50,
     "storage": "pouch",
     "cost": {
       "amount": 1,
@@ -3070,9 +3120,7 @@
       "save": {
         "ability": "dex",
         "dc": {
-          "base": 8,
-          "ability": "dex",
-          "proficiencyBonus": true
+          "plusModifierOf": "dex"
         }
       },
       "condition": "restrained",
@@ -3114,9 +3162,7 @@
       "save": {
         "ability": "dex",
         "dc": {
-          "base": 8,
-          "ability": "dex",
-          "proficiencyBonus": true
+          "plusModifierOf": "dex"
         }
       },
       "extraFireDamage": {
@@ -3132,8 +3178,12 @@
         "fixed": 5,
         "type": "fire"
       },
+      "onlyWhenLit": true,
       "burnsUntilRoundsAfterLit": 2
     },
+    "activation": [
+      "utilize-action"
+    ],
     "description": "You can douse a creature, object, or space with Oil or use it as fuel, as detailed below.\nDousing a Creature or an Object. When you take the Attack action, you can replace one of your attacks with throwing an Oil flask. Target one creature or object within 20 feet of yourself. The target must succeed on a Dexterity saving throw (DC 8 plus your Dexterity modifier and Proficiency Bonus) or be covered in oil. If the target takes Fire damage before the oil dries (after 1 minute), the target takes an extra 5 Fire damage from burning oil.\nDousing a Space. You can take the Utilize action to pour an Oil flask on level ground to cover a 5-foot-square area within 5 feet of yourself. If lit, the oil burns until the end of the turn 2 rounds from when the oil was lit (or 12 seconds) and deals 5 Fire damage to any creature that enters the area or ends its turn there. A creature can take this damage only once per turn.\nFuel. Oil serves as fuel for Lamps and Lanterns. Once lit, a flask of Oil burns for 6 hours in a Lamp or Lantern. That duration doesn’t need to be consecutive; you can extinguish the burning Oil (as a Utilize action) and rekindle it again until it has burned for a total of 6 hours."
   },
   {
@@ -3259,7 +3309,7 @@
           "persuasion"
         ],
         "durationHours": 1,
-        "when": "to influence an Indifferent Humanoid within 5 feet of yourself"
+        "when": "For 1 hour after applying Perfume to yourself, you have Advantage on Charisma (Persuasion) checks made to influence an Indifferent Humanoid within 5 feet of yourself"
       }
     ],
     "description": "Perfume comes in a 4-ounce vial. For 1 hour after applying Perfume to yourself, you have Advantage on Charisma (Persuasion) checks made to influence an Indifferent Humanoid within 5 feet of yourself."
@@ -3364,8 +3414,10 @@
       "amount": 100,
       "unit": "gp"
     },
+    "activation": [
+      "bonus-action"
+    ],
     "coating": {
-      "action": "bonus",
       "ammunitionPieces": 3,
       "triggerDamageTypes": [
         "piercing",
@@ -3422,7 +3474,7 @@
         "skills": [
           "athletics"
         ],
-        "when": "as part of a High or Long Jump"
+        "when": "If you must make a Strength (Athletics) check as part of a High or Long Jump, you can use the Pole to vault, giving yourself Advantage on the check"
       }
     ],
     "description": "A Pole is 10 feet long. You can use it to touch something up to 10 feet away. If you must make a Strength (Athletics) check as part of a High or Long Jump, you can use the Pole to vault, giving yourself Advantage on the check."
@@ -3476,9 +3528,11 @@
       "unit": "gp"
     },
     "weight": 0.5,
+    "activation": [
+      "bonus-action"
+    ],
     "healing": {
       "dice": "2d4 + 2",
-      "action": "bonus",
       "rangeFeet": 5
     },
     "magicItem": "potions-of-healing",
@@ -3625,12 +3679,12 @@
         "on": "check",
         "ability": "str",
         "amount": 4,
-        "when": "to break down doors"
+        "when": "You can use a Portable Ram to break down doors. When doing so, you gain a +4 bonus to the Strength check"
       },
       {
         "effect": "advantage",
         "on": "check",
-        "when": "One other character can help you use the ram"
+        "when": "One other character can help you use the ram, giving you Advantage on this check"
       }
     ],
     "description": "You can use a Portable Ram to break down doors. When doing so, you gain a +4 bonus to the Strength check. One other character can help you use the ram, giving you Advantage on this check."
@@ -3769,8 +3823,12 @@
         "incapacitated",
         "restrained"
       ],
-      "appliesCondition": "restrained"
+      "appliesCondition": "restrained",
+      "appliesWhen": "legs-bound"
     },
+    "activation": [
+      "utilize-action"
+    ],
     "description": "As a Utilize action, you can tie a knot with Rope if you succeed on a DC 10 Dexterity (Sleight of Hand) check. The Rope can be burst with a successful DC 20 Strength (Athletics) check.\nYou can bind an unwilling creature with the Rope only if the creature has the Grappled, Incapacitated, or Restrained condition. If the creature’s legs are bound, the creature has the Restrained condition until it escapes. Escaping the Rope requires the creature to make a successful DC 15 Dexterity (Acrobatics) check as an action."
   },
   {
@@ -3836,7 +3894,7 @@
       {
         "effect": "advantage",
         "on": "check",
-        "when": "to remain mounted"
+        "when": "A Military Saddle gives Advantage on any ability check you make to remain mounted"
       }
     ],
     "description": "A saddle comes with a bit, a bridle, reins, and any other equipment needed to use the saddle. A Military Saddle gives Advantage on any ability check you make to remain mounted. An Exotic Saddle is required for riding an aquatic or a flying mount."
@@ -4056,7 +4114,8 @@
     "weight": 5,
     "dig": {
       "sideFeet": 5,
-      "hours": 1
+      "hours": 1,
+      "inSoilOrSimilar": true
     },
     "description": "Working for 1 hour, you can use a Shovel to dig a hole that is 5 feet on each side in soil or similar material."
   },
@@ -4091,6 +4150,9 @@
       "unit": "cp"
     },
     "audibleFeet": 600,
+    "activation": [
+      "utilize-action"
+    ],
     "description": "When blown as a Utilize action, a Signal Whistle produces a sound that can be heard up to 600 feet away."
   },
   {
@@ -4366,6 +4428,9 @@
       "unit": "gp"
     },
     "weight": 5,
+    "activation": [
+      "utilize-action"
+    ],
     "description": "Iron Spikes come in bundles of ten. As a Utilize action, you can use a blunt object, such as a Light Hammer, to hammer a spike into wood, earth, or a similar material. You can do so to jam a door shut or to then tie a Rope or Chain to the Spike."
   },
   {
@@ -4465,6 +4530,9 @@
       "unit": "sp"
     },
     "lengthFeet": 10,
+    "activation": [
+      "utilize-action"
+    ],
     "description": "String is 10 feet long. You can tie a knot in it as a Utilize action."
   },
   {
@@ -4553,9 +4621,14 @@
     },
     "weight": 1,
     "ignite": {
-      "action": "bonus",
+      "exposedFuel": [
+        "bonus-action"
+      ],
       "otherFireMinutes": 1
     },
+    "activation": [
+      "bonus-action"
+    ],
     "description": "A Tinderbox is a small container holding flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a Candle, Lamp, Lantern, or Torch—or anything else with exposed fuel—takes a Bonus Action. Lighting any other fire takes 1 minute."
   },
   {

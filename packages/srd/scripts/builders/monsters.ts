@@ -1,8 +1,8 @@
 import { abilityIds, conditionIds, creatureTypes, damageTypeIds, sizes } from "../../src/schema/common"
 import type { Area, Attack, DamagePart, Monster, MonsterFeature, Save, Spellcasting } from "../../src/schema/monsters"
-import { monsterSchema } from "../../src/schema/monsters"
+import { monsterRuleSchema, monsterSchema } from "../../src/schema/monsters"
 import { applyOverrides, toId, writeData } from "../lib/data"
-import { pages } from "../lib/official"
+import { pageOf, pages } from "../lib/official"
 import { readBase } from "../lib/sources"
 import { additions, featureFixes, overrides } from "../overrides/monsters"
 
@@ -115,11 +115,10 @@ function parseUses(note: string | undefined, feature: Partial<MonsterFeature>) {
   for (const part of note.split("; ")) {
     const perDay = /^(\d+)\/Day(?:, or (\d+)\/Day in Lair)?$/.exec(part)
     const recharge = /^Recharge (\d)(?:–(\d))?$/.exec(part)
-    if (perDay) {
-      feature.perDay = Number(perDay[1])
-      if (perDay[2]) feature.perDayInLair = Number(perDay[2])
-    } else if (recharge) feature.recharge = { min: Number(recharge[1]), max: Number(recharge[2] ?? recharge[1]) }
-    else if (part === "Recharge after a Short or Long Rest") feature.rechargeAfterRest = true
+    // The chapter's X/Day rule: a Long Rest restores the uses.
+    if (perDay) feature.uses = { count: Number(perDay[1]), ...(perDay[2] ? { countInLair: Number(perDay[2]) } : {}), recharge: "long-rest" }
+    else if (recharge) feature.rechargeRoll = { min: Number(recharge[1]), max: Number(recharge[2] ?? recharge[1]) }
+    else if (part === "Recharge after a Short or Long Rest") feature.uses = { count: 1, recharge: "short-or-long-rest" }
     else rest.push(part)
   }
   if (rest.length) feature.note = rest.join("; ")
@@ -143,39 +142,48 @@ function parseAttack(text: string): Attack | undefined {
   }
 }
 
-const outcomes: Record<string, DamagePart["on"]> = {
-  Hit: "hit",
-  Miss: "miss",
-  "Hit or Miss": "hit-or-miss",
-  Failure: "failure",
-  Success: "success",
-  "Failure or Success": "failure-or-success",
-}
+/** Outcome labels, longest first so "Failure or Success" is not read as "Failure". */
+const outcomeLabel = /(Hit or Miss|Failure or Success|First Failure|Second Failure|Subsequent Failures|Hit|Miss|Failure|Success): /g
+const outcomeOf = (label: string) => toId(label) as NonNullable<DamagePart["on"]>
 
-/** The outcome whose first sentence holds this position, if any. */
-function outcomeAt(text: string, index: number): DamagePart["on"] {
-  let found: RegExpExecArray | undefined
-  for (const match of text.slice(0, index).matchAll(/(Hit or Miss|Failure or Success|Hit|Miss|Failure|Success): /g)) found = match
-  if (!found) return undefined
-  const between = text.slice((found.index as number) + found[0].length, index)
-  return /\.\s|\n/.test(between) ? undefined : outcomes[found[1]]
+/** The sentence of `text` that holds `index`: from after the last ". " or line break before it to the next one. */
+function sentenceAt(text: string, index: number): string {
+  let start = 0
+  for (const match of text.slice(0, index).matchAll(/\. (?=[A-Z])|\n/g)) start = (match.index as number) + match[0].length
+  const rest = text.slice(index)
+  const end = /\. (?=[A-Z])|\n|$/.exec(rest) as RegExpExecArray
+  return text.slice(start, index + end.index + (end[0].startsWith(".") ? 1 : 0)).trim()
 }
 
 function parseDamage(text: string): DamagePart[] {
-  const parts: DamagePart[] = []
   const pattern = new RegExp(`(\\d+)(?: \\((\\d+d\\d+(?: [+−–] \\d+)?)\\))? (?:(${damageTypeNames}) )?damage`, "g")
-  for (const match of text.matchAll(pattern)) {
-    // A bare number with neither dice nor type is a threshold ("takes 30 damage or more"), not damage dealt.
-    if (!match[2] && !match[3]) continue
-    const on = outcomeAt(text, match.index as number)
-    parts.push({
+  // A bare number with neither dice nor type is a threshold ("takes 30 damage or more"), not damage dealt.
+  const matches = [...text.matchAll(pattern)].filter((match) => match[2] || match[3])
+  return matches.map((match, k) => {
+    const index = match.index as number
+    const end = index + match[0].length
+    const before = text.slice(0, index)
+    const labels = [...before.matchAll(outcomeLabel)]
+    const label = labels.at(-1)
+    const sinceLabel = label ? before.slice((label.index as number) + label[0].length) : ""
+    // The outcome must be in the same paragraph. The damage is plain only in the first sentence after the label.
+    const on = label && !sinceLabel.includes("\n") ? outcomeOf(label[1]) : undefined
+    const firstSentence = on !== undefined && !/\. (?=[A-Z])/.test(sinceLabel)
+    const previous = matches[k - 1]
+    const gap = previous ? text.slice((previous.index as number) + previous[0].length, index) : ""
+    const alternative = previous && firstSentence && /^(?:,? or |—or )$/.test(gap)
+    const after = text.slice(end, matches[k + 1]?.index ?? text.length)
+    const qualifier = /^ ((?:if|unless) [^.,—]+)/.exec(after)?.[1]
+    const condition = !firstSentence ? sentenceAt(text, index) : qualifier
+    return {
       average: Number(match[1]),
       ...(match[2] ? { dice: ascii(match[2]) } : {}),
       ...(match[3] ? { type: match[3].toLowerCase() as DamagePart["type"] } : {}),
       ...(on ? { on } : {}),
-    })
-  }
-  return parts
+      ...(condition ? { condition } : {}),
+      ...(alternative ? { alternativeTo: k - 1 } : {}),
+    }
+  })
 }
 
 function parseSaves(text: string): Save[] {
@@ -194,37 +202,59 @@ function parseSaves(text: string): Save[] {
     const save: Save = { ability: abilityOf(match[1]), dc: Number(match[2]) }
     const targets = /^(?:\([^)]*\))?,? ?([\s\S]*?)\.(?: |$)/.exec(body)
     if (targets?.[1] && !/^(?:Failure|Success)/.test(targets[1])) save.targets = targets[1]
-    const markers = [...body.matchAll(/(Failure or Success|Failure|Success): /g)]
+    const markers = [...body.matchAll(/(Failure or Success|First Failure|Second Failure|Subsequent Failures|Failure|Success): /g)]
+    // A plain "Failure:" followed by "Second Failure:" is the first stage.
+    const staged = markers.some((marker) => marker[1] === "Second Failure" || marker[1] === "Subsequent Failures")
+    const field = {
+      "Failure or Success": "failureOrSuccess",
+      "First Failure": "firstFailure",
+      "Second Failure": "secondFailure",
+      "Subsequent Failures": "subsequentFailures",
+      Failure: staged ? "firstFailure" : "failure",
+      Success: "success",
+    } as const
     for (const [i, marker] of markers.entries()) {
       const from = (marker.index as number) + marker[0].length
-      const clause = body.slice(from, markers[i + 1]?.index ?? body.length).trim()
-      if (marker[1] === "Failure") save.failure = clause
-      else if (marker[1] === "Success") save.success = clause
-      else save.failureOrSuccess = clause
+      save[field[marker[1] as keyof typeof field]] = body.slice(from, markers[i + 1]?.index ?? body.length).trim()
     }
     if (save.success && /^Half damage/.test(save.success)) save.halfOnSuccess = true
     return save
   })
 }
 
+/** An area of effect: one the text puts creatures "in", or one that something "fills". "Destroys a 1-foot Cube" is not one. */
 function parseArea(text: string): Area | undefined {
+  const lead = "(?:in an?|fills a) "
   const found: { index: number; area: Area }[] = []
-  for (const m of text.matchAll(/(\d+)-foot-long, (\d+)-foot-wide Line/g)) found.push({ index: m.index as number, area: { shape: "line", size: Number(m[1]), width: Number(m[2]) } })
-  for (const m of text.matchAll(/(\d+)-foot-radius, (\d+)-foot-high Cylinder/g)) found.push({ index: m.index as number, area: { shape: "cylinder", size: Number(m[1]), height: Number(m[2]) } })
-  for (const m of text.matchAll(/(\d+)-foot(?:-radius)? (Cone|Cube|Emanation|Sphere)/g))
+  for (const m of text.matchAll(new RegExp(`${lead}(\\d+)-foot-long, (\\d+)-foot-wide Line`, "g")))
+    found.push({ index: m.index as number, area: { shape: "line", size: Number(m[1]), width: Number(m[2]) } })
+  for (const m of text.matchAll(new RegExp(`${lead}(\\d+)-foot-radius, (\\d+)-foot-high Cylinder`, "g")))
+    found.push({ index: m.index as number, area: { shape: "cylinder", size: Number(m[1]), height: Number(m[2]) } })
+  for (const m of text.matchAll(new RegExp(`${lead}(\\d+)-foot(?:-radius)? (Cone|Cube|Emanation|Sphere)`, "g")))
     found.push({ index: m.index as number, area: { shape: m[2].toLowerCase() as Area["shape"], size: Number(m[1]) } })
   return found.sort((a, b) => a.index - b.index)[0]?.area
 }
 
-/** Conditions the text gives: "has the Prone condition", "gives it the Grappled condition", not "doesn’t have the …" or "while the vampire has the …". */
+/**
+ * Conditions the text gives: "has the Prone condition", "gives it the Grappled condition", "with the Prone condition",
+ * "exiting Prone", "gains 1 Exhaustion level". A clause that is a precondition or a negation gives nothing: the words
+ * from the clause start (a comma, period, colon, semicolon, dash, parenthesis or "but") to the phrase are checked.
+ */
 function parseConditions(text: string): MonsterFeature["conditions"] {
   const found = new Set<string>()
-  const pattern = new RegExp(`\\b(?:has|have|gains|gain|gives? (?:it|the target)|with) the ((?:${conditionNames})(?:(?:,? and |,? or |, )(?:${conditionNames}))*) conditions?`, "g")
-  for (const match of text.matchAll(pattern)) {
-    const before = text.slice(Math.max(0, (match.index as number) - 40), match.index)
-    // A precondition or a negation names a condition without giving it.
-    if (/(?:n’t|\bnot|\b(?:if|while|whenever|unless|until|that|who)(?: \S+){0,3}) $/.test(before)) continue
-    for (const name of match[1].split(/,? and |,? or |, /)) found.add(name.toLowerCase())
+  const phrases = [
+    new RegExp(`\\b(?:has|have|gains|gain|gives? (?:it|the target)|with) the ((?:${conditionNames})(?:(?:,? and |,? or |, )(?:${conditionNames}))*) conditions?`, "g"),
+    /\bgains? \d+ (Exhaustion) levels?/g,
+    /\bexiting (Prone)\b/g,
+  ]
+  for (const pattern of phrases) {
+    for (const match of text.matchAll(pattern)) {
+      const before = text.slice(0, match.index)
+      const clause = before.slice(Math.max(...[",", ".", ":", ";", "—", "(", "\n", " but "].map((mark) => before.lastIndexOf(mark) + mark.length)))
+      // "that" or "who" right before the verb makes a precondition ("one creature that has the Prone condition").
+      if (/(?:n’t|\bnot\b|\bno longer\b|\b(?:if|while|whenever|unless|until)\b)/.test(clause) || /\b(?:that|who) $/.test(clause)) continue
+      for (const name of match[1].split(/,? and |,? or |, /)) found.add(name.toLowerCase())
+    }
   }
   return found.size ? (conditionIds.filter((id) => found.has(id)) as MonsterFeature["conditions"]) : undefined
 }
@@ -322,16 +352,16 @@ function fromBase(base: Base): Record<string, unknown> {
       if (match[2]) senses[`${sense}Note`] = match[2]
     }
   }
-  const notes: Record<string, string> = {}
-  const damageList = (key: string, note: string) => {
+  // Anything that is not a plain damage type is a qualified defense. The overrides give its official wording.
+  const conditional: { kind: string; condition: string }[] = []
+  const damageList = (key: string, kind: string) => {
     const ids = (base[key] as string[]).filter((value) => (damageTypeIds as readonly string[]).includes(value))
-    const other = (base[key] as string[]).filter((value) => !ids.includes(value))
-    if (other.length) notes[note] = other.join(", ")
+    for (const value of base[key] as string[]) if (!ids.includes(value)) conditional.push({ kind, condition: value })
     return ids.length ? ids : undefined
   }
-  const vulnerabilities = damageList("damage_vulnerabilities", "vulnerabilities")
-  const resistances = damageList("damage_resistances", "resistances")
-  const immunities = damageList("damage_immunities", "immunities")
+  const vulnerabilities = damageList("damage_vulnerabilities", "vulnerability")
+  const resistances = damageList("damage_resistances", "resistance")
+  const immunities = damageList("damage_immunities", "immunity")
   const conditionImmunities = (base.condition_immunities as Base[]).map((condition) => condition.index)
   const [languages, telepathy] = (base.languages as string).split("; telepathy ")
   const telepathyMatch = telepathy ? (/^(\d+) ft\.(?: \((.*)\))?$/.exec(telepathy) as RegExpExecArray) : undefined
@@ -352,7 +382,7 @@ function fromBase(base: Base): Record<string, unknown> {
     ...(resistances ? { resistances } : {}),
     ...(immunities ? { immunities } : {}),
     ...(conditionImmunities.length ? { conditionImmunities: conditionImmunities as Monster["conditionImmunities"] } : {}),
-    ...(Object.keys(notes).length ? { defenseNotes: notes } : {}),
+    ...(conditional.length ? { conditionalDefenses: conditional } : {}),
     ...(gear ? { gear } : {}),
     senses: senses as Monster["senses"],
     languages: languages.replace(/'/g, "’"),
@@ -400,6 +430,39 @@ export default function build() {
     return Object.fromEntries(Object.keys(monsterSchema.shape).flatMap((key) => (key in entry ? [[key, entry[key]]] : [])))
   })
   writeData("monsters", monsterSchema, applyOverrides("monsters", entries as Monster[], overrides))
+  writeData("monster-rules", monsterRuleSchema, rules())
+}
+
+/** The table that follows a heading on its page, as one string of cells joined by line breaks. */
+function table(heading: string, until: string) {
+  const page = pageOf(heading, 254) as number
+  const text = pages[page - 1]
+  const start = text.indexOf(`${heading}\n`)
+  if (start < 0) throw new Error(`no table ${heading}`)
+  return { page, text: text.slice(start + heading.length, text.indexOf(until, start)) }
+}
+
+const crNumber = (text: string) => (text.includes("/") ? 1 / Number(text.split("/")[1]) : Number(text))
+
+/** The three tables of "Parts of a Stat Block", pages 255 and 256. The base source has none of them. */
+function rules() {
+  const xp = table("Experience Points by Challenge Rating", "Proficiency Bonus")
+  const pb = table("Proficiency Bonus by Challenge Rating", "Traits")
+  const dice = table("Hit Dice by Size", "A monster’s Constitution")
+  const xpByCr = [...xp.text.matchAll(/\n(\d+(?:\/\d+)?)\n([\d,]+(?: or [\d,]+)?)(?=\n)/g)]
+    .map((m) => ({ cr: crNumber(m[1]), xp: m[2].split(" or ").map((value) => Number(value.replace(/,/g, ""))) }))
+    .sort((a, b) => a.cr - b.cr)
+  const pbByCr = [...pb.text.matchAll(/\n(\d+)–(\d+)\n\+(\d+)(?=\n)/g)].map((m) => ({ minCr: Number(m[1]), maxCr: Number(m[2]), pb: Number(m[3]) })).sort((a, b) => a.minCr - b.minCr)
+  const hitDiceBySize = [...dice.text.matchAll(new RegExp(`\\n(${sizeNames})\\nd(\\d+)\\n(\\d+)(½?)(?=\\n)`, "g"))].map((m) => ({
+    size: m[1] as Monster["size"][number],
+    die: Number(m[2]),
+    averagePerDie: Number(m[3]) + (m[4] ? 0.5 : 0),
+  }))
+  return [
+    { id: "experience-points-by-challenge-rating", name: "Experience Points by Challenge Rating", page: xp.page, xpByCr },
+    { id: "proficiency-bonus-by-challenge-rating", name: "Proficiency Bonus by Challenge Rating", page: pb.page, pbByCr },
+    { id: "hit-dice-by-size", name: "Hit Dice by Size", page: dice.page, hitDiceBySize },
+  ]
 }
 
 /** What the official block gives that the base source lacks: the header line, initiative, and every feature's text. */

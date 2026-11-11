@@ -80,6 +80,67 @@ export const coins = ["cp", "sp", "ep", "gp", "pp"] as const
 export const costSchema = z.strictObject({ amount: z.number().nonnegative(), unit: z.enum(coins) })
 export type Cost = z.infer<typeof costSchema>
 
+/**
+ * What restores a spent use, in the SRD's own terms. "short-or-long-rest" is "when you finish a Short or Long
+ * Rest". "short-rest" is only for text that names the Short Rest alone.
+ */
+export const recharges = ["short-rest", "short-or-long-rest", "long-rest", "dawn", "start-of-next-turn", "initiative-or-short-or-long-rest"] as const
+export const rechargeSchema = z.enum(recharges)
+export type Recharge = z.infer<typeof rechargeSchema>
+
+/** The kinds of action the rules name. "no-action" is for text that says a thing takes no action. */
+export const actionKinds = ["action", "bonus-action", "reaction", "magic-action", "utilize-action", "no-action"] as const
+export const actionKindSchema = z.enum(actionKinds)
+export type ActionKind = z.infer<typeof actionKindSchema>
+
+/** How a feature, trait or item is used: every kind of action its text names for it. Always a list, even of one. */
+export const activationSchema = z.array(actionKindSchema).min(1)
+
+/**
+ * The DC of a saving throw something forces: a printed number, the user's spell save DC, or 8 plus an ability
+ * modifier and the Proficiency Bonus. `plusModifierOf` names that ability, a choice of abilities, or
+ * "attack-ability" for the ability used for the attack roll.
+ */
+export const saveDcSchema = z.union([
+  z.number().int().positive(),
+  z.literal("spell-save-dc"),
+  z.strictObject({ plusModifierOf: z.union([abilityIdSchema, z.array(abilityIdSchema).min(2), z.literal("attack-ability")]) }),
+])
+export type SaveDc = z.infer<typeof saveDcSchema>
+
+/**
+ * The core of every typed saving throw: `ability` and `dc`. A category adds its own outcome fields beside them.
+ * `dc` is left out only where another entry sets it, and that schema says which.
+ */
+export const forcedSaveShape = { ability: abilityIdSchema, dc: saveDcSchema.optional() } as const
+
+/**
+ * One line of a starting equipment option: an item, or a choice of one item from a group.
+ * Exactly one of `item` and `chooseFrom` is set.
+ */
+export const startingItemSchema = z
+  .strictObject({
+    /** An equipment id. */
+    item: idSchema.optional(),
+    /** One item of the player's choice from these equipment groups or kinds of tool, such as "musical-instrument". */
+    chooseFrom: z.array(idSchema).min(1).optional(),
+    quantity: z.number().int().positive(),
+    /** Ammunition is sold in bundles. "single" says `quantity` counts single pieces, so 20 arrows are one bundle of 20. */
+    unit: z.literal("single").optional(),
+    /** The qualifier the text prints in parentheses, such as "crystal" or "occult lore". */
+    note: z.string().min(1).optional(),
+  })
+  .refine((line) => (line.item === undefined) !== (line.chooseFrom === undefined), "set exactly one of item and chooseFrom")
+export type StartingItem = z.infer<typeof startingItemSchema>
+
+/** One lettered option of starting equipment, for a class or a background: its items and the money it includes. */
+export const equipmentOptionSchema = z.strictObject({
+  option: z.enum(["A", "B", "C"]),
+  items: z.array(startingItemSchema).min(1).optional(),
+  money: costSchema.optional(),
+})
+export type EquipmentOption = z.infer<typeof equipmentOptionSchema>
+
 /** A page of the official SRD 5.2.1 PDF, 1 to 364. The printed page number and the PDF page are the same. */
 export const pageSchema = z.number().int().min(1).max(364)
 

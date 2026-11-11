@@ -61,6 +61,12 @@ const sidebarEnds: Record<string, string> = { "Breaking Your Oath": "and adopt a
 const labelPattern = /^((?:[A-Z(][\w’+:()-]*|\d[\w+:()-]*)(?: (?:[A-Z(][\w’+:()-]*|\d[\w+:()-]*|of|the|or|and|a|an|to|with|into|from|in|on|via)){0,7})\. (?=\S)/
 
 /**
+ * Paragraph starts the PDF text does not mark: no tab, and the bullet before it does not end a sentence. On page 50
+ * "You gain the following benefits" is its own paragraph after the Monk weapon bullets.
+ */
+const unmarkedStarts = new Set(["You gain the following benefits while you are un-"])
+
+/**
  * Lines to paragraphs. A tab or a bullet starts one. So does a labeled line after a finished sentence (the rules
  * while shape-shifted are set without tabs), and a sentence after a finished bullet.
  */
@@ -71,7 +77,7 @@ function paragraphs(lines: Line[]): Paragraph[] {
     const bullet = line.text.startsWith("•")
     const previous = out.at(-1)
     const ended = previous && /[.:]$/.test(previous.body)
-    const starts = !previous || line.text.startsWith("\t") || bullet || (ended && labelPattern.test(trimmed)) || (previous.bullet && ended && /^[A-Z]/.test(trimmed))
+    const starts = !previous || line.text.startsWith("\t") || bullet || unmarkedStarts.has(trimmed) || (ended && labelPattern.test(trimmed)) || (previous.bullet && ended && /^[A-Z]/.test(trimmed))
     if (starts) {
       out.push({ body: trimmed, bullet, page: line.page, last: line })
       continue
@@ -88,7 +94,7 @@ function paragraphs(lines: Line[]): Paragraph[] {
   })
 }
 
-const render = (paragraph: Paragraph) => (paragraph.label ? `**${paragraph.label}.** ${paragraph.body}` : paragraph.bullet ? `• ${paragraph.body}` : paragraph.body)
+const render = (paragraph: Paragraph) => (paragraph.label ? `${paragraph.label}. ${paragraph.body}` : paragraph.bullet ? `• ${paragraph.body}` : paragraph.body)
 const prose = (list: Paragraph[]) => list.map(render).join("\n")
 
 type Block = { level: number; name: string; page: number; paragraphs: Paragraph[] }
@@ -244,7 +250,7 @@ const optionTitles: Record<string, string[]> = {
   ],
 }
 
-const costResource = (text: string): NonNullable<FeatureOption["cost"]> => {
+const costResource = (text: string): NonNullable<FeatureOption["spend"]> => {
   const dice = text.match(/^(\d+)d6$/)
   if (dice) return { resource: "sneak-attack-dice", amount: Number(dice[1]) }
   const points = text.match(/^(\d+) Sorcery Points?$/)
@@ -269,7 +275,7 @@ function labeledOptions(featureId: string, list: Paragraph[]): { rest: Paragraph
       name,
       page: list[index].page,
       description: prose([{ ...list[index], label: undefined }, ...list.slice(index + 1, end)]),
-      ...(cost ? { cost: costResource(cost[1]) } : {}),
+      ...(cost ? { spend: costResource(cost[1]) } : {}),
       ...optionMechanics[`${featureId}/${toId(name)}`],
     })
     index = end - 1
@@ -289,7 +295,7 @@ function titledOptions(featureId: string, lines: Line[]): FeatureOption[] {
   return names.map((name, k) => {
     const body = lines.slice(starts[k] + 1, starts[k + 1] ?? lines.length)
     let skip = 0
-    let cost: FeatureOption["cost"]
+    let cost: FeatureOption["spend"]
     let prerequisite: FeatureOption["prerequisite"]
     const first = body[0].text.trim()
     if (first.startsWith("Cost: ")) {
@@ -311,7 +317,7 @@ function titledOptions(featureId: string, lines: Line[]): FeatureOption[] {
       description: prose(list),
       ...(prerequisite ? { prerequisite } : {}),
       ...(list.some((paragraph) => paragraph.label === "Repeatable") ? { repeatable: true as const } : {}),
-      ...(cost ? { cost } : {}),
+      ...(cost ? { spend: cost } : {}),
       ...optionMechanics[`${featureId}/${toId(name)}`],
     }
   })
@@ -326,54 +332,60 @@ const asi = { feat: { id: "ability-score-improvement", orAnother: true as const 
 const boon = (recommended: string) => ({ feat: { category: "epic-boon" as const, recommended, orAnother: true as const } })
 
 const mechanics: Record<string, Mechanics> = {
-  "barbarian-rage": { activation: "bonus-action", uses: column("rages"), resistances: ["bludgeoning", "piercing", "slashing"] },
+  "barbarian-rage": { activation: ["bonus-action"], uses: column("rages"), resistances: { damageTypes: ["bludgeoning", "piercing", "slashing"], while: "raging" } },
   "barbarian-unarmored-defense": { armorClass: { base: 10, abilities: ["dex", "con"], shield: true } },
   "barbarian-primal-knowledge": { skillProficiencies: { count: 1, from: ["animal-handling", "athletics", "intimidation", "nature", "perception", "survival"] } },
   "barbarian-ability-score-improvement": asi,
   "barbarian-extra-attack": { attacks: 2 },
-  "barbarian-fast-movement": { speedBonus: 10 },
+  "barbarian-fast-movement": { speedBonus: { feet: 10, while: "no-heavy-armor" } },
   "barbarian-brutal-strike": { dice: "1d10", diceByLevel: [{ level: 17, dice: "2d10" }] },
-  "barbarian-relentless-rage": { save: { ability: "con", dc: 10 } },
-  "barbarian-persistent-rage": { uses: longRest(1) },
+  "barbarian-relentless-rage": { selfSave: { ability: "con", dc: 10, increasePerUse: 5, resetOn: "short-or-long-rest" } },
   "barbarian-epic-boon": boon("boon-of-irresistible-offense"),
   "barbarian-primal-champion": { abilityIncrease: { abilities: ["str", "con"], amount: 4, maximum: 25 } },
-  "path-of-the-berserker-mindless-rage": { conditionImmunities: ["charmed", "frightened"] },
-  "path-of-the-berserker-retaliation": { activation: "reaction" },
+  "path-of-the-berserker-mindless-rage": { conditionImmunities: { conditions: ["charmed", "frightened"], while: "raging" } },
+  "path-of-the-berserker-retaliation": { activation: ["reaction"] },
   "path-of-the-berserker-intimidating-presence": {
-    activation: "bonus-action",
+    activation: ["bonus-action", "no-action"],
     area: { shape: "emanation", size: 30 },
-    save: { ability: "wis", dc: { ability: "str" } },
+    save: { ability: "wis", dc: { plusModifierOf: "str" } },
     uses: longRest(1),
   },
 
-  "bard-bardic-inspiration": { activation: "bonus-action", range: 60, uses: { count: { ability: "cha", minimum: 1 }, recharge: "long-rest" } },
+  "bard-bardic-inspiration": {
+    activation: ["bonus-action"],
+    range: 60,
+    uses: { count: { ability: "cha", minimum: 1 }, recharge: "long-rest", rechargeByLevel: [{ level: 5, recharge: "short-or-long-rest" }] },
+  },
+  "bard-font-of-inspiration": { activation: ["no-action"] },
   "bard-expertise": { expertise: 2 },
   "bard-ability-score-improvement": asi,
-  "bard-countercharm": { activation: "reaction", range: 30 },
+  "bard-countercharm": { activation: ["reaction"], range: 30 },
   "bard-epic-boon": boon("boon-of-spell-recall"),
   "bard-words-of-creation": { alwaysPrepared: ["power-word-heal", "power-word-kill"] },
   "college-of-lore-bonus-proficiencies": { skillProficiencies: { count: 3 } },
-  "college-of-lore-cutting-words": { activation: "reaction", range: 60, cost: { resource: "bardic-inspiration", amount: 1 } },
-  "college-of-lore-peerless-skill": { cost: { resource: "bardic-inspiration", amount: 1 } },
+  "college-of-lore-cutting-words": { activation: ["reaction"], range: 60, spend: { resource: "bardic-inspiration", amount: 1 } },
+  "college-of-lore-peerless-skill": { spend: { resource: "bardic-inspiration", amount: 1, keptOnFailure: true } },
 
-  "cleric-channel-divinity": { uses: column("channelDivinity"), saveDc: "spell" },
+  "cleric-channel-divinity": { uses: column("channelDivinity"), saveDc: "spell-save-dc" },
   "cleric-ability-score-improvement": asi,
   "cleric-sear-undead": { damageTypes: ["radiant"] },
-  "cleric-divine-intervention": { activation: "magic-action", uses: longRest(1) },
+  "cleric-divine-intervention": { activation: ["magic-action"], uses: longRest(1) },
   "cleric-epic-boon": boon("boon-of-fate"),
-  "life-domain-preserve-life": { activation: "magic-action", cost: { resource: "channel-divinity", amount: 1 }, range: 30 },
+  "life-domain-preserve-life": { activation: ["magic-action"], spend: { resource: "channel-divinity", amount: 1 }, range: 30 },
 
   "druid-druidic": { alwaysPrepared: ["speak-with-animals"] },
-  "druid-wild-shape": { activation: "bonus-action", uses: column("wildShape") },
-  "druid-wild-companion": { activation: "magic-action" },
+  "druid-wild-shape": { activation: ["bonus-action"], uses: column("wildShape") },
+  "druid-wild-companion": { activation: ["magic-action"] },
+  "druid-wild-resurgence": { activation: ["no-action"] },
+  "druid-archdruid": { activation: ["no-action"] },
   "druid-ability-score-improvement": asi,
   "druid-epic-boon": boon("boon-of-dimensional-travel"),
   "circle-of-the-land-lands-aid": {
-    activation: "magic-action",
-    cost: { resource: "wild-shape", amount: 1 },
+    activation: ["magic-action"],
+    spend: { resource: "wild-shape", amount: 1 },
     range: 60,
     area: { shape: "sphere", size: 10 },
-    save: { ability: "con", dc: "spell" },
+    save: { ability: "con", dc: "spell-save-dc" },
     dice: "2d6",
     diceByLevel: [
       { level: 10, dice: "3d6" },
@@ -381,11 +393,11 @@ const mechanics: Record<string, Mechanics> = {
     ],
     damageTypes: ["necrotic"],
   },
-  "circle-of-the-land-natures-ward": { conditionImmunities: ["poisoned"] },
-  "circle-of-the-land-natures-sanctuary": { activation: "magic-action", cost: { resource: "wild-shape", amount: 1 }, range: 120, area: { shape: "cube", size: 15 } },
+  "circle-of-the-land-natures-ward": { conditionImmunities: { conditions: ["poisoned"] } },
+  "circle-of-the-land-natures-sanctuary": { activation: ["magic-action", "bonus-action"], spend: { resource: "wild-shape", amount: 1 }, range: 120, area: { shape: "cube", size: 15 } },
 
   "fighter-fighting-style": { feat: { category: "fighting-style", recommended: "defense" } },
-  "fighter-second-wind": { activation: "bonus-action", uses: column("secondWind"), dice: "1d10" },
+  "fighter-second-wind": { activation: ["bonus-action"], uses: column("secondWind"), dice: "1d10", rollAdds: ["class-level"] },
   "fighter-action-surge": {
     uses: {
       count: {
@@ -394,10 +406,10 @@ const mechanics: Record<string, Mechanics> = {
           { level: 17, count: 2 },
         ],
       },
-      recharge: "short-rest",
+      recharge: "short-or-long-rest",
     },
   },
-  "fighter-tactical-mind": { cost: { resource: "second-wind", amount: 1 }, dice: "1d10" },
+  "fighter-tactical-mind": { spend: { resource: "second-wind", amount: 1, keptOnFailure: true }, dice: "1d10" },
   "fighter-ability-score-improvement": asi,
   "fighter-extra-attack": { attacks: 2 },
   "fighter-indomitable": {
@@ -419,39 +431,40 @@ const mechanics: Record<string, Mechanics> = {
   "champion-additional-fighting-style": { feat: { category: "fighting-style" } },
   "champion-superior-critical": { criticalRange: 18 },
 
+  "monk-martial-arts": { activation: ["bonus-action"], diceFromColumn: "martialArts" },
   "monk-unarmored-defense": { armorClass: { base: 10, abilities: ["dex", "wis"], shield: false } },
-  "monk-monks-focus": { uses: { count: { column: "focusPoints" }, recharge: "short-rest" }, saveDc: { ability: "wis" } },
+  "monk-monks-focus": { uses: { count: { column: "focusPoints" }, recharge: "short-or-long-rest" }, saveDc: { plusModifierOf: "wis" } },
   "monk-uncanny-metabolism": { uses: longRest(1) },
-  "monk-deflect-attacks": { activation: "reaction", dice: "1d10" },
-  "monk-slow-fall": { activation: "reaction" },
+  "monk-deflect-attacks": { activation: ["reaction"], dice: "1d10", rollAdds: ["dex", "class-level"], save: { ability: "dex" } },
+  "monk-slow-fall": { activation: ["reaction"] },
   "monk-ability-score-improvement": asi,
   "monk-extra-attack": { attacks: 2 },
-  "monk-stunning-strike": { cost: { resource: "focus-points", amount: 1 }, save: { ability: "con" } },
+  "monk-stunning-strike": { spend: { resource: "focus-points", amount: 1 }, save: { ability: "con" } },
   "monk-empowered-strikes": { damageTypes: ["force"] },
-  "monk-disciplined-survivor": { savingThrowProficiencies: ["str", "dex", "con", "int", "wis", "cha"], cost: { resource: "focus-points", amount: 1 } },
-  "monk-superior-defense": { cost: { resource: "focus-points", amount: 3 } },
+  "monk-disciplined-survivor": { savingThrowProficiencies: ["str", "dex", "con", "int", "wis", "cha"] },
+  "monk-superior-defense": { spend: { resource: "focus-points", amount: 3 } },
   "monk-epic-boon": boon("boon-of-irresistible-offense"),
   "monk-body-and-mind": { abilityIncrease: { abilities: ["dex", "wis"], amount: 4, maximum: 25 } },
-  "warrior-of-the-open-hand-wholeness-of-body": { activation: "bonus-action", uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" } },
-  "warrior-of-the-open-hand-quivering-palm": { cost: { resource: "focus-points", amount: 4 }, save: { ability: "con" }, dice: "10d12", damageTypes: ["force"] },
+  "warrior-of-the-open-hand-wholeness-of-body": { activation: ["bonus-action"], uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" } },
+  "warrior-of-the-open-hand-quivering-palm": { activation: ["no-action"], spend: { resource: "focus-points", amount: 4 }, save: { ability: "con" }, dice: "10d12", damageTypes: ["force"] },
 
-  "paladin-lay-on-hands": { activation: "bonus-action", pool: { perLevel: 5, recharge: "long-rest" } },
+  "paladin-lay-on-hands": { activation: ["bonus-action"], pool: { perLevel: 5, recharge: "long-rest" } },
   "paladin-fighting-style": { feat: { category: "fighting-style" } },
   "paladin-paladins-smite": { alwaysPrepared: ["divine-smite"], freeCast: ["divine-smite"], uses: longRest(1) },
-  "paladin-channel-divinity": { uses: column("channelDivinity"), saveDc: "spell" },
+  "paladin-channel-divinity": { uses: column("channelDivinity"), saveDc: "spell-save-dc" },
   "paladin-ability-score-improvement": asi,
   "paladin-weapon-mastery": { weaponMasteries: 2 },
   "paladin-extra-attack": { attacks: 2 },
   "paladin-faithful-steed": { alwaysPrepared: ["find-steed"], freeCast: ["find-steed"], uses: longRest(1) },
   "paladin-aura-of-protection": { area: { shape: "emanation", size: 10 } },
-  "paladin-abjure-foes": { activation: "magic-action", cost: { resource: "channel-divinity", amount: 1 }, range: 60, save: { ability: "wis" } },
-  "paladin-aura-of-courage": { conditionImmunities: ["frightened"] },
+  "paladin-abjure-foes": { activation: ["magic-action"], spend: { resource: "channel-divinity", amount: 1 }, range: 60, save: { ability: "wis" } },
+  "paladin-aura-of-courage": { conditionImmunities: { conditions: ["frightened"], while: "in-aura-of-protection", allies: true } },
   "paladin-radiant-strikes": { dice: "1d8", damageTypes: ["radiant"] },
   "paladin-aura-expansion": { area: { shape: "emanation", size: 30 } },
   "paladin-epic-boon": boon("boon-of-truesight"),
-  "oath-of-devotion-sacred-weapon": { cost: { resource: "channel-divinity", amount: 1 } },
-  "oath-of-devotion-aura-of-devotion": { conditionImmunities: ["charmed"] },
-  "oath-of-devotion-holy-nimbus": { activation: "bonus-action", uses: longRest(1), damageTypes: ["radiant"] },
+  "oath-of-devotion-sacred-weapon": { activation: ["no-action"], spend: { resource: "channel-divinity", amount: 1 }, damageTypes: ["radiant"] },
+  "oath-of-devotion-aura-of-devotion": { conditionImmunities: { conditions: ["charmed"], while: "in-aura-of-protection", allies: true } },
+  "oath-of-devotion-holy-nimbus": { activation: ["bonus-action", "no-action"], uses: longRest(1), damageTypes: ["radiant"] },
 
   "ranger-favored-enemy": { alwaysPrepared: ["hunters-mark"], freeCast: ["hunters-mark"], uses: { count: { column: "favoredEnemy" }, recharge: "long-rest" } },
   "ranger-deft-explorer": { expertise: 1 },
@@ -459,41 +472,42 @@ const mechanics: Record<string, Mechanics> = {
   "ranger-ability-score-improvement": asi,
   "ranger-weapon-mastery": { weaponMasteries: 2 },
   "ranger-extra-attack": { attacks: 2 },
-  "ranger-roving": { speedBonus: 10 },
+  "ranger-roving": { speedBonus: { feet: 10, while: "no-heavy-armor" } },
   "ranger-expertise": { expertise: 2 },
-  "ranger-tireless": { activation: "magic-action", dice: "1d8", uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" } },
-  "ranger-natures-veil": { activation: "bonus-action", uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" } },
+  "ranger-tireless": { activation: ["magic-action"], dice: "1d8", rollAdds: ["wis"], uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" } },
+  "ranger-natures-veil": { activation: ["bonus-action"], uses: { count: { ability: "wis", minimum: 1 }, recharge: "long-rest" } },
   "ranger-feral-senses": { sense: { type: "blindsight", range: 30 } },
   "ranger-epic-boon": boon("boon-of-dimensional-travel"),
-  "hunter-superior-hunters-prey": { range: 30 },
-  "hunter-superior-hunters-defense": { activation: "reaction" },
+  "hunter-superior-hunters-defense": { activation: ["reaction"] },
 
   "rogue-expertise": { expertise: 2 },
+  "rogue-sneak-attack": { diceFromColumn: "sneakAttack" },
   "rogue-weapon-mastery": { weaponMasteries: 2 },
-  "rogue-cunning-action": { activation: "bonus-action" },
-  "rogue-steady-aim": { activation: "bonus-action" },
+  "rogue-cunning-action": { activation: ["bonus-action"] },
+  "rogue-steady-aim": { activation: ["bonus-action"] },
   "rogue-ability-score-improvement": asi,
-  "rogue-cunning-strike": { saveDc: { ability: "dex" } },
-  "rogue-uncanny-dodge": { activation: "reaction" },
+  "rogue-cunning-strike": { saveDc: { plusModifierOf: "dex" } },
+  "rogue-uncanny-dodge": { activation: ["reaction"] },
   "rogue-slippery-mind": { savingThrowProficiencies: ["wis", "cha"] },
   "rogue-epic-boon": boon("boon-of-the-night-spirit"),
-  "rogue-stroke-of-luck": { uses: { count: 1, recharge: "short-rest" } },
-  "thief-fast-hands": { activation: "bonus-action" },
+  "rogue-stroke-of-luck": { uses: { count: 1, recharge: "short-or-long-rest" } },
+  "thief-fast-hands": { activation: ["bonus-action"] },
+  "thief-use-magic-device": { dice: "1d6" },
 
-  "sorcerer-innate-sorcery": { activation: "bonus-action", uses: longRest(2) },
+  "sorcerer-innate-sorcery": { activation: ["bonus-action"], uses: longRest(2) },
   "sorcerer-ability-score-improvement": asi,
   "sorcerer-sorcerous-restoration": { uses: longRest(1) },
   "sorcerer-epic-boon": boon("boon-of-dimensional-travel"),
   "draconic-sorcery-draconic-resilience": { armorClass: { base: 10, abilities: ["dex", "cha"] } },
   "draconic-sorcery-elemental-affinity": { damageTypes: ["acid", "cold", "fire", "lightning", "poison"] },
-  "draconic-sorcery-dragon-wings": { activation: "bonus-action", uses: longRest(1) },
+  "draconic-sorcery-dragon-wings": { activation: ["bonus-action", "no-action"], uses: longRest(1) },
   "draconic-sorcery-dragon-companion": { freeCast: ["summon-dragon"], uses: longRest(1) },
 
   "warlock-magical-cunning": { uses: longRest(1) },
   "warlock-ability-score-improvement": asi,
   "warlock-contact-patron": { alwaysPrepared: ["contact-other-plane"], freeCast: ["contact-other-plane"], uses: longRest(1) },
   "warlock-mystic-arcanum": {
-    uses: longRest(1),
+    uses: { count: 1, per: "spell", recharge: "long-rest" },
     spellLevels: [
       { level: 11, spellLevel: 6 },
       { level: 13, spellLevel: 7 },
@@ -503,20 +517,20 @@ const mechanics: Record<string, Mechanics> = {
   },
   "warlock-epic-boon": boon("boon-of-fate"),
   "fiend-patron-dark-ones-own-luck": { dice: "1d10", uses: { count: { ability: "cha", minimum: 1 }, recharge: "long-rest" } },
-  "fiend-patron-hurl-through-hell": { save: { ability: "cha", dc: "spell" }, dice: "8d10", damageTypes: ["psychic"], uses: longRest(1) },
+  "fiend-patron-hurl-through-hell": { activation: ["no-action"], save: { ability: "cha", dc: "spell-save-dc" }, dice: "8d10", damageTypes: ["psychic"], damageNotTo: ["fiend"], uses: longRest(1) },
 
   "wizard-arcane-recovery": { uses: longRest(1) },
   "wizard-scholar": { expertise: 1 },
   "wizard-ability-score-improvement": asi,
   "wizard-epic-boon": boon("boon-of-spell-recall"),
-  "wizard-signature-spells": { uses: { count: 1, recharge: "short-rest" } },
-  "evoker-overchannel": { dice: "2d12", damageTypes: ["necrotic"] },
+  "wizard-signature-spells": { uses: { count: 1, per: "spell", recharge: "short-or-long-rest" } },
+  "evoker-overchannel": { selfDamage: { dicePerSlotLevel: "2d12", damageType: "necrotic", increasePerUse: "1d12", from: "second-use" } },
 }
 
 /** Mechanics of options, by "<feature id>/<option id>". */
 const optionMechanics: Record<string, OptionMechanics> = {
   "cleric-channel-divinity/divine-spark": {
-    activation: "magic-action",
+    activation: ["magic-action"],
     range: 30,
     dice: "1d8",
     diceByLevel: [
@@ -524,35 +538,38 @@ const optionMechanics: Record<string, OptionMechanics> = {
       { level: 13, dice: "3d8" },
       { level: 18, dice: "4d8" },
     ],
+    rollAdds: ["wis"],
     damageTypes: ["necrotic", "radiant"],
     save: { ability: "con" },
   },
-  "cleric-channel-divinity/turn-undead": { activation: "magic-action", range: 30, save: { ability: "wis" } },
+  "cleric-channel-divinity/turn-undead": { activation: ["magic-action"], range: 30, save: { ability: "wis" } },
   "cleric-blessed-strikes/divine-strike": { dice: "1d8", damageTypes: ["necrotic", "radiant"] },
   "cleric-improved-blessed-strikes/divine-strike": { dice: "2d8" },
   "cleric-improved-blessed-strikes/potent-spellcasting": { range: 60 },
   "druid-elemental-fury/primal-strike": { dice: "1d8", damageTypes: ["cold", "fire", "lightning", "thunder"] },
   "druid-improved-elemental-fury/primal-strike": { dice: "2d8" },
-  "monk-monks-focus/flurry-of-blows": { activation: "bonus-action", cost: { resource: "focus-points", amount: 1 } },
-  "monk-monks-focus/patient-defense": { activation: "bonus-action" },
-  "monk-monks-focus/step-of-the-wind": { activation: "bonus-action" },
+  "monk-monks-focus/flurry-of-blows": { activation: ["bonus-action"], spend: { resource: "focus-points", amount: 1 } },
+  "monk-monks-focus/patient-defense": { activation: ["bonus-action"] },
+  "monk-monks-focus/step-of-the-wind": { activation: ["bonus-action"] },
   "warrior-of-the-open-hand-open-hand-technique/push": { save: { ability: "str" } },
   "warrior-of-the-open-hand-open-hand-technique/topple": { save: { ability: "dex" } },
-  "paladin-channel-divinity/divine-sense": { activation: "bonus-action", range: 60 },
+  "paladin-channel-divinity/divine-sense": { activation: ["bonus-action"], range: 60 },
   "hunter-hunters-prey/colossus-slayer": { dice: "1d8" },
   "rogue-cunning-strike/poison": { save: { ability: "con" } },
   "rogue-cunning-strike/trip": { save: { ability: "dex" } },
   "rogue-devious-strikes/daze": { save: { ability: "con" } },
   "rogue-devious-strikes/knock-out": { save: { ability: "con" } },
   "rogue-devious-strikes/obscure": { save: { ability: "dex" } },
-  "sorcerer-font-of-magic/converting-spell-slots-to-sorcery-points": { activation: "no-action" },
-  "sorcerer-font-of-magic/creating-spell-slots": { activation: "bonus-action" },
+  "sorcerer-font-of-magic/converting-spell-slots-to-sorcery-points": { activation: ["no-action"] },
+  "sorcerer-font-of-magic/creating-spell-slots": { activation: ["bonus-action"] },
   "warlock-eldritch-invocations/armor-of-shadows": { freeCast: ["mage-armor"] },
   "warlock-eldritch-invocations/ascendant-step": { freeCast: ["levitate"] },
   "warlock-eldritch-invocations/devouring-blade": { attacks: 3 },
-  "warlock-eldritch-invocations/eldritch-smite": { dice: "1d8", damageTypes: ["force"] },
+  "warlock-eldritch-invocations/eldritch-smite": { dice: "1d8", dicePerSlotLevel: "1d8", damageTypes: ["force"] },
   "warlock-eldritch-invocations/fiendish-vigor": { freeCast: ["false-life"] },
-  "warlock-eldritch-invocations/gaze-of-two-minds": { activation: "bonus-action" },
+  "warlock-eldritch-invocations/gaze-of-two-minds": { activation: ["bonus-action"] },
+  "warlock-eldritch-invocations/gift-of-the-protectors": { activation: ["magic-action"] },
+  "warlock-eldritch-invocations/investment-of-the-chain-master": { activation: ["bonus-action", "reaction"], damageTypes: ["necrotic", "radiant"] },
   "warlock-eldritch-invocations/gift-of-the-depths": { freeCast: ["water-breathing"], uses: longRest(1) },
   "warlock-eldritch-invocations/lessons-of-the-first-ones": { feat: { category: "origin" } },
   "warlock-eldritch-invocations/lifedrinker": { dice: "1d6", damageTypes: ["necrotic", "psychic", "radiant"] },
@@ -561,8 +578,8 @@ const optionMechanics: Record<string, OptionMechanics> = {
   "warlock-eldritch-invocations/misty-visions": { freeCast: ["silent-image"] },
   "warlock-eldritch-invocations/one-with-shadows": { freeCast: ["invisibility"] },
   "warlock-eldritch-invocations/otherworldly-leap": { freeCast: ["jump"] },
-  "warlock-eldritch-invocations/pact-of-the-blade": { activation: "bonus-action", damageTypes: ["necrotic", "psychic", "radiant"] },
-  "warlock-eldritch-invocations/pact-of-the-chain": { activation: "magic-action", freeCast: ["find-familiar"] },
+  "warlock-eldritch-invocations/pact-of-the-blade": { activation: ["bonus-action"], damageTypes: ["necrotic", "psychic", "radiant"] },
+  "warlock-eldritch-invocations/pact-of-the-chain": { activation: ["magic-action"], freeCast: ["find-familiar"] },
   "warlock-eldritch-invocations/thirsting-blade": { attacks: 2 },
   "warlock-eldritch-invocations/visions-of-distant-realms": { freeCast: ["arcane-eye"] },
   "warlock-eldritch-invocations/whispers-of-the-grave": { freeCast: ["speak-with-dead"] },
@@ -641,11 +658,11 @@ function armorOf(indexes: string[]): Class["armor"] {
   return list.length ? list : undefined
 }
 
-function itemsOf(option: BaseOption): { items?: NonNullable<Class["startingEquipment"][number]["items"]>; gp: number } {
+function itemsOf(option: BaseOption): Pick<Class["startingEquipment"][number], "items" | "money"> {
   const parts = option.option_type === "multiple" ? (option.items ?? []) : [option]
   const items = parts.filter((part) => part.option_type === "counted_reference").map((part) => ({ item: part.of?.index as string, quantity: part.count as number }))
   const gp = parts.filter((part) => part.option_type === "money").reduce((sum, part) => sum + (part.count ?? 0), 0)
-  return { ...(items.length ? { items } : {}), gp }
+  return { ...(items.length ? { items } : {}), money: { amount: gp, unit: "gp" } }
 }
 
 /** Spellcasting details from the base source's spellcasting text. */

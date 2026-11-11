@@ -1,7 +1,8 @@
-import { readData, toId } from "../lib/data"
+import { existsSync, readFileSync } from "node:fs"
+import { dataPath, readData, toId } from "../lib/data"
 import { missingSentences, pages, squash } from "../lib/official"
 import type { Report } from "../lib/report"
-import { readBase, readOpen5e } from "../lib/sources"
+import { hasUpstream, readBase, readOpen5e } from "../lib/sources"
 
 // The official text, read with its own small parsers: whole-page regular expressions over the PDF's cell-per-line output.
 // Nothing here imports the builder or reads the base source to decide what is right. Base and Open5e are compared at the end.
@@ -74,11 +75,52 @@ function numbersIn(text: string): Set<number> {
 }
 
 /** Every leaf of a value, with the key it sits under. */
-function leaves(value: unknown, key = ""): [string, unknown][] {
-  if (Array.isArray(value)) return value.flatMap((item) => leaves(item, key))
-  if (value && typeof value === "object") return Object.entries(value).flatMap(([k, v]) => leaves(v, k))
+function leaves(value: unknown, key = "", asPath = false): [string, unknown][] {
+  if (Array.isArray(value)) return value.flatMap((item) => leaves(item, key, asPath))
+  if (value && typeof value === "object") return Object.entries(value).flatMap(([k, v]) => leaves(v, asPath && key ? `${key}.${k}` : k, asPath))
   return [[key, value]]
 }
+
+/** The number a statement uses, in digits or words. */
+function toNumber(text: string): number {
+  const word: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, ten: 10, twice: 2, "half a": 0.5, "one-fifth of a": 0.2, "1½": 1.5, "11/2": 1.5 }
+  return word[text] ?? Number(text)
+}
+
+/** Statements of the gear descriptions that carry a typed number. Each pattern captures the number, and `paths` are the typed fields that hold those numbers. */
+const numberGroups: { pattern: RegExp; paths: string[]; stripModifiers?: boolean }[] = [
+  { pattern: /within (\d+) feet/g, paths: ["hazard.rangeFeet", "hazard.withinFeet", "spaceHazard.rangeFeet", "spaceHazard.withinFeet", "checks.rangeFeet", "healing.rangeFeet"], stripModifiers: true },
+  { pattern: /(\d+)-foot-square/g, paths: ["hazard.areaSideFeet", "spaceHazard.areaSideFeet"] },
+  { pattern: /Bright Light in a (\d+)-foot/g, paths: ["light.brightFeet"] },
+  { pattern: /Dim Light for an additional (\d+) feet/g, paths: ["light.dimFeet"] },
+  { pattern: /Dim Light in a (\d+)-foot radius/g, paths: ["light.loweredHoodDimRadiusFeet"] },
+  { pattern: /\bfor (\d+) hours?/gi, paths: ["light.durationHours", "fuelHours", "modifiers.durationHours", "dig.hours"] },
+  { pattern: /(\d+) minutes?/g, paths: ["hazard.recoverMinutes", "hazard.dryAfterMinutes", "ignite.otherFireMinutes", "coating.potencyMinutes"] },
+  { pattern: /heard up to (\d+) feet/g, paths: ["audibleFeet"] },
+  { pattern: /can’t fall more than (\d+) feet/g, paths: ["anchorFeet"] },
+  { pattern: /\(typically (\d+) feet\)/g, paths: ["hazard.chainFeet"] },
+  { pattern: /is (\d+) feet long/g, paths: ["lengthFeet"] },
+  { pattern: /is (\d+) feet tall/g, paths: ["heightFeet"] },
+  { pattern: /\(AC (\d+);/g, paths: ["object.ac"] },
+  { pattern: /; (\d+) HP;/g, paths: ["object.hp"] },
+  { pattern: /(\d+) pounds/g, paths: ["capacity.pounds"] },
+  { pattern: /(\d+|half a|one-fifth of a) cubic (?:foot|feet)/g, paths: ["capacity.cubicFeet"] },
+  { pattern: /(\d+) gallons?/g, paths: ["capacity.gallons"] },
+  { pattern: /(1½|11\/2|\d+) pints?/g, paths: ["capacity.pints"] },
+  { pattern: /(\d+) ounces/g, paths: ["capacity.ounces"] },
+  { pattern: /(\d+) (?:Bolts|Arrows|sheets of)/g, paths: ["capacity.holds.quantity"] },
+  { pattern: /sleeps (?:up to )?(one|two)/g, paths: ["sleeps"] },
+  { pattern: /has (ten) uses/g, paths: ["uses"] },
+  { pattern: /(four) times the weight/g, paths: ["liftMultiplier"] },
+  { pattern: /(twice) their size/g, paths: ["magnification"] },
+  { pattern: /(\d+) feet on each side/g, paths: ["dig.sideFeet"] },
+  { pattern: /that has (\d+) Hit Points/g, paths: ["stabilize.atHitPoints"] },
+  { pattern: /up to (three) pieces/g, paths: ["coating.ammunitionPieces"] },
+  { pattern: /spell save DC is (\d+)/g, paths: ["spellScroll.saveDc"] },
+  { pattern: /attack bonus is \+(\d+)/g, paths: ["spellScroll.attackBonus"] },
+  { pattern: /\+(\d+) bonus/g, paths: ["modifiers.amount"] },
+  { pattern: /turn (\d+) rounds from/g, paths: ["spaceHazard.burnsUntilRoundsAfterLit"] },
+]
 
 const mechanicKeys = [
   "capacity",
@@ -242,7 +284,9 @@ export default function verify(report: Report) {
   // Tools -----------------------------------------------------------------------------------------------------
   const toolText = between(PR(93, 94), /Alchemist’s Supplies \(50 GP\)/, /\nAdventuring Gear\nThe Adventuring Gear table/)
   const toolHeadings = [...`Alchemist’s Supplies (50 GP)${toolText}`.matchAll(/^([^()\n]+?) \((Varies|[\d,]+ [CSGEP]P)\)$/gm)]
+  const otherAt = `Alchemist’s Supplies (50 GP)${toolText}`.indexOf("\nOther Tools\n")
   const toolBlocks = toolHeadings.map((match, index) => ({
+    at: match.index as number,
     name: match[1],
     cost: cost(match[2]),
     body: `Alchemist’s Supplies (50 GP)${toolText}`.slice((match.index as number) + match[0].length, toolHeadings[index + 1]?.index ?? undefined),
@@ -285,6 +329,7 @@ export default function verify(report: Report) {
     const craft = flatBody(block, "Craft")
     const checks: [string, unknown, unknown][] = [
       ["ability", entry.ability, abilityIdOf[ability]],
+      ["group", entry.group, (block.at as number) < otherAt ? "artisan" : "other"],
       ["weight", entry.weight, w],
       ["cost", entry.cost, block.cost],
       ["page", entry.page, pagesWithHeading(block.name)],
@@ -355,7 +400,7 @@ export default function verify(report: Report) {
   const gearTable = PR(95, 95).replace(/^Adventuring Gear\nItem\nWeight\nCost\n/, "")
   const gearRow = /^(.+)\n(—|Varies|[\d½/ ]+ lb\.(?: \(full\))?)\n(Varies|[\d,]+ [CSGEP]P)$/gm
   const officialGear = [...gearTable.matchAll(gearRow)].map((match) => ({ name: match[1], weightText: match[2], weight: weight(match[2]), cost: cost(match[3]), costText: match[3] }))
-  const gearEntries = data.filter((entry) => ["gear", "pack"].includes(entry.kind) || (entry.kind === "group" && entry.id !== "spell-scroll"))
+  const gearEntries = data.filter((entry) => ["gear", "pack"].includes(entry.kind) || (entry.kind === "group" && !["spell-scroll", "artisans-tools"].includes(entry.id)))
   coverage(
     "equipment",
     "Adventuring Gear table",
@@ -424,6 +469,10 @@ export default function verify(report: Report) {
     // DCs
     const textDcs = [...text.matchAll(/\bDC (?:is )?(\d+)(?! plus)\b/g)].map((match) => Number(match[1]))
     const dcs = collectDcs(mech)
+    const textStandard = [...text.matchAll(/DC 8 plus your (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) modifier and Proficiency Bonus/g)].map((match) => abilityIdOf[match[1]])
+    const typedStandard = typed.filter(([key]) => key === "plusModifierOf").map(([, value]) => value)
+    mechTotal++
+    if (!same(sorted(textStandard), sorted(typedStandard))) mechFailures.push(`${entry.id}: "DC 8 plus" saves in the text ${textStandard} but typed ${typedStandard}`)
     if (!same(sorted(textDcs), sorted(dcs))) mechFailures.push(`${entry.id}: DCs in the text ${textDcs.join(",")} but typed ${dcs.join(",")}`)
     // Dice
     const textDice = [...text.matchAll(/\d+d\d+(?: \+ \d+)?/g)].map((match) => match[0])
@@ -431,7 +480,7 @@ export default function verify(report: Report) {
     mechTotal++
     if (!same(sorted(textDice), sorted(typedDice))) mechFailures.push(`${entry.id}: dice in the text ${textDice.join(",")} but typed ${typedDice.join(",")}`)
     // Fixed damage
-    const textFixed = [...text.matchAll(new RegExp(`(?<![\\dd+] ?)(?<![\\dd])(\\d+) (?:${damageTypes.join("|")}) damage`, "g"))].map((match) => Number(match[1]))
+    const textFixed = [...text.matchAll(new RegExp(`(\\d+d\\d+|\\d+) (?:${damageTypes.join("|")}) damage`, "g"))].filter((match) => !match[1].includes("d")).map((match) => Number(match[1]))
     const typedFixed = collectFixed(mech)
     mechTotal++
     if (!same(sorted(textFixed), sorted(typedFixed))) mechFailures.push(`${entry.id}: fixed damage in the text ${textFixed.join(",")} but typed ${typedFixed.join(",")}`)
@@ -461,18 +510,54 @@ export default function verify(report: Report) {
     const saveHolders = [entry.hazard, entry.spaceHazard].filter((holder) => holder?.save).map((holder) => holder.save.ability)
     mechTotal++
     if (!same(sorted(textSaves), sorted(saveHolders))) mechFailures.push(`${entry.id}: saving throws in the text ${textSaves} but typed ${saveHolders}`)
-    // Every other typed number is a number the text states.
-    const stated = numbersIn(text)
-    for (const [key, value] of typed) {
-      if (typeof value !== "number" || (key === "spellLevel" && value === 0)) continue
+    // Every typed number is tied to its own statement in the text, both ways: a deleted, changed or invented value differs from what the text states.
+    const stripped = (entry.modifiers ?? []).reduce((rest: string, mod: Entry) => rest.replace(mod.when, ""), text)
+    const exempt: Record<string, number[]> = { "magnifying-glass": [5] }
+    const numericPaths = leaves(mech, "", true).filter(([, value]) => typeof value === "number")
+    const covered = new Set<string>()
+    for (const group of numberGroups) {
+      const source = group.stripModifiers ? stripped : text
+      const stated = [...source.matchAll(group.pattern)].map((match) => toNumber(match[1])).filter((value) => !(exempt[entry.id] ?? []).includes(value))
+      const typedValues = numericPaths.filter(([path]) => group.paths.includes(path)).map(([, value]) => value)
+      for (const path of group.paths) covered.add(path)
       mechTotal++
-      if (!stated.has(value)) mechFailures.push(`${entry.id}: ${key} ${value} is not a number in the text`)
+      if (!same(sorted(stated), sorted(typedValues))) mechFailures.push(`${entry.id}: ${group.paths.join("/")} typed ${typedValues} but the text states ${stated}`)
+    }
+    for (const [path, value] of numericPaths) {
+      mechTotal++
+      if (covered.has(path) || /(^|\.)(dc|saveDc|fixed)$/.test(path)) continue
+      if (path === "spellScroll.spellLevel") {
+        if (value !== (entry.id.endsWith("cantrip") ? 0 : 1)) mechFailures.push(`${entry.id}: spell level ${value} does not match the entry name`)
+        continue
+      }
+      mechFailures.push(`${entry.id}: typed number ${path} ${value} has no check`)
     }
     // Wording that says when a modifier applies is the SRD's own.
     for (const mod of entry.modifiers ?? []) {
       mechTotal++
       if (!squash(text).includes(squash(mod.when))) mechFailures.push(`${entry.id}: modifier wording "${mod.when}" is not in the description`)
     }
+    // Conditional values carry their condition.
+    mechTotal += 5
+    const binding = entry.binding
+    const bindingWords = {
+      "legs-bound": /If the creature’s legs are bound, the creature has the Restrained condition/,
+      "attached-to-fixed-anchor": /the creature is Restrained if the Manacles are attached to a chain or hook that is fixed in place/,
+    }
+    if (Boolean(binding) !== /has the Grappled, Incapacitated, or Restrained condition/.test(flat(text)))
+      mechFailures.push(`${entry.id}: binding differs from the sentence that names Grappled, Incapacitated or Restrained`)
+    if (binding && !bindingWords[binding.appliesWhen as "legs-bound"]?.test(flat(text)))
+      mechFailures.push(`${entry.id}: bound condition applies when ${binding.appliesWhen}, which the text does not say`)
+    if (Boolean(entry.spaceHazard?.onlyWhenLit) !== /If lit, the oil burns/.test(flat(text))) mechFailures.push(`${entry.id}: onlyWhenLit differs from "If lit"`)
+    const speedZero = [entry.hazard, entry.spaceHazard].some((hazard) => hazard?.speedZeroUntilStartOfNextTurn)
+    if (speedZero !== /Speed reduced to 0 until the start of its next turn/.test(flat(text))) mechFailures.push(`${entry.id}: speed to 0 differs from the text`)
+    if (Boolean(entry.dig?.inSoilOrSimilar) !== /in soil or similar material/.test(flat(text))) mechFailures.push(`${entry.id}: dig material differs from the text`)
+    // Activation: the Utilize action and the Bonus Action the text names.
+    const wantActivation = [...(/Utilize action/.test(text) ? ["utilize-action"] : []), ...(/Bonus Action/.test(text) ? ["bonus-action"] : [])]
+    mechTotal++
+    if (!same(entry.activation ?? [], wantActivation)) mechFailures.push(`${entry.id}: activation ${JSON.stringify(entry.activation)} but the text names ${wantActivation}`)
+    if (entry.ignite && !same(entry.ignite.exposedFuel, ["bonus-action"])) mechFailures.push(`${entry.id}: ignite action differs`)
+    if (entry.ignite && !/exposed fuel[^.]*takes a Bonus Action/.test(flat(text))) mechFailures.push(`${entry.id}: ignite wording not in the text`)
     // Ids a gear entry points at.
     for (const id of [entry.light?.fuel, ...(entry.capacity?.holds ?? []).map((hold: Entry) => hold.item)].filter(Boolean)) {
       mechTotal++
@@ -521,10 +606,10 @@ export default function verify(report: Report) {
   for (const match of officialAmmo) {
     const entry = byId.get(toId(match[1]))
     if (!entry) continue
-    if (entry.amount !== Number(match[2]) || entry.storage !== ammoStorage[match[3]] || entry.weight !== weight(match[4]) || !same(entry.cost, cost(match[5])) || entry.page !== 96)
+    if (entry.bundleSize !== Number(match[2]) || entry.storage !== ammoStorage[match[3]] || entry.weight !== weight(match[4]) || !same(entry.cost, cost(match[5])) || entry.page !== 96)
       ammoFailures.push(`${match[1]}: a cell differs from the Ammunition table`)
   }
-  report.check("equipment", "ammunition: amount, storage, weight, cost, page of each Ammunition row", officialAmmo.length * 5, ammoFailures)
+  report.check("equipment", "ammunition: bundle size, storage, weight, cost, page of each Ammunition row", officialAmmo.length * 5, ammoFailures)
 
   const focusFailures: string[] = []
   let focusCells = 0
@@ -787,6 +872,98 @@ export default function verify(report: Report) {
   }
   report.check("equipment", "hirelings: cost, unit, page", hireRows.length * 3, hireFailures)
 
+  // The Artisan’s Tools group, which classes and backgrounds name in "chooseFrom".
+  const artisanOfficial = toolBlocks.filter((block) => block.at < otherAt).map((block) => toId(block.name))
+  const artisans = byId.get("artisans-tools")
+  const artisanFailures: string[] = []
+  const artisanIntro = between(P(93), /^Artisan’s Tools\n/m, /^Alchemist’s Supplies \(50 GP\)/m)
+  if (!artisans || artisans.kind !== "group") artisanFailures.push("artisans-tools is missing")
+  else {
+    if (!same(artisans.members, artisanOfficial)) artisanFailures.push(`members ${artisans.members} differ from the official list ${artisanOfficial}`)
+    if (artisans.page !== 93 || artisans.name !== "Artisan’s Tools") artisanFailures.push("name or page differs from the official heading")
+    if (squash(artisans.description) !== squash(artisanIntro)) artisanFailures.push("description is not the paragraph under the heading")
+  }
+  for (const id of ["musical-instrument", "gaming-set"]) {
+    const group = byId.get(id)
+    const wanted = toolVariantNames(toolBlocks.find((block) => toId(block.name) === id)?.body ?? "").map((variant) => variant.name)
+    if (!group?.variants || !same(group.variants, wanted) || wanted.length === 0) artisanFailures.push(`${id}: variants differ from the official Variants list`)
+  }
+  report.check("equipment", "tool kinds that starting equipment can name: Artisan’s Tools members, Musical Instrument and Gaming Set variants", artisanOfficial.length + 3, artisanFailures)
+
+  const chooseFailures: string[] = []
+  let chooseTotal = 0
+  for (const file of ["classes", "backgrounds"]) {
+    if (!existsSync(dataPath(file))) continue
+    const walk = (value: unknown) => {
+      if (Array.isArray(value)) for (const item of value) walk(item)
+      else if (value && typeof value === "object") {
+        const record = value as Record<string, unknown>
+        for (const from of Array.isArray(record.chooseFrom) ? record.chooseFrom : []) {
+          chooseTotal++
+          const target = byId.get(from)
+          if (!target || !(target.kind === "group" || (target.kind === "tool" && target.variants))) chooseFailures.push(`${file}: chooseFrom ${from} is not a group or tool kind in the equipment data`)
+        }
+        if (record.unit === "single" && typeof record.item === "string") {
+          chooseTotal++
+          if (byId.get(record.item)?.kind !== "ammunition") chooseFailures.push(`${file}: ${record.item} is counted in single pieces but is not ammunition`)
+        }
+        for (const item of Object.values(record)) walk(item)
+      }
+    }
+    walk(JSON.parse(readFileSync(dataPath(file), "utf8")))
+  }
+  report.check("equipment", "starting equipment lines in classes and backgrounds: every chooseFrom is a group or tool kind, every single-piece line is ammunition", chooseTotal, chooseFailures)
+
+  // Poison types ----------------------------------------------------------------------------------------------
+  const poisonTypes = readData<Entry>("poison-types")
+  const typeBlocks = [...P(197).matchAll(/^(Contact|Ingested|Inhaled|Injury)\. ([\s\S]*?)(?=\n(?:Contact|Ingested|Inhaled|Injury)\. |\nPurchasing Poison)/gm)]
+  coverage(
+    "equipment",
+    "poison types",
+    typeBlocks.map((match) => match[1]),
+    poisonTypes.map((entry) => entry.name)
+  )
+  const typeFailures: string[] = []
+  for (const match of typeBlocks) {
+    const entry = poisonTypes.find((item) => item.id === toId(match[1]))
+    if (!entry) continue
+    const text = flat(match[2]).replace(/(\w)- (\w)/g, "$1$2")
+    const persists = [
+      ...(/potent until it is touched or washed off/.test(text) ? ["touched", "washed-off"] : []),
+      ...(/potent until delivered through a wound or washed off/.test(text) ? ["delivered-through-wound", "washed-off"] : []),
+    ]
+    const exposure = /touches contact poison with exposed skin/.test(text)
+      ? "touch-with-exposed-skin"
+      : /swallow an entire dose/.test(text)
+        ? "swallow-entire-dose"
+        : /when inhaled/.test(text)
+          ? "inhale"
+          : /Piercing or Slashing damage from an object coated/.test(text)
+            ? "piercing-or-slashing-damage"
+            : undefined
+    const cube = /(\d+)-foot Cube/.exec(text)?.[1]
+    const trigger = /takes? (Piercing) or (Slashing) damage from an object/.exec(text)
+    const want: Record<string, unknown> = {
+      page: 197,
+      exposure,
+      persistsUntil: persists.length ? persists : undefined,
+      cubeSideFeet: cube ? Number(cube) : undefined,
+      holdingBreathIneffective: /Holding one’s breath is ineffective/.test(text) ? true : undefined,
+      application: /applied as a Bonus Action/.test(text) ? ["bonus-action"] : undefined,
+      triggerDamageTypes: trigger ? [trigger[1].toLowerCase(), trigger[2].toLowerCase()] : undefined,
+    }
+    for (const [field, value] of Object.entries(want))
+      if (!same(entry[field], value)) typeFailures.push(`${match[1]}: ${field} is ${JSON.stringify(entry[field])}, the text says ${JSON.stringify(value)}`)
+    if (squash(entry.description) !== squash(match[2])) typeFailures.push(`${match[1]}: description is not the whole paragraph`)
+  }
+  for (const poison of poisons) if (!poisonTypes.some((entry) => entry.id === poison.type)) typeFailures.push(`${poison.id}: type ${poison.type} has no poison type entry`)
+  report.check(
+    "equipment",
+    "poison types: exposure, how long it stays potent, Cube, application, trigger damage, whole paragraph, and every poison names one",
+    typeBlocks.length * 8 + poisons.length,
+    typeFailures
+  )
+
   // Weapon properties and masteries ---------------------------------------------------------------------------
   const propertyText = `${between(P(89), /^Here are definitions .*\n/m, /$(?![\s\S])/)}\n${between(P(90), /^/, /^Mastery Properties$/m)}`
   const definitions = (text: string, entries: Entry[], label: string, firstPages: number[]) => {
@@ -824,15 +1001,16 @@ export default function verify(report: Report) {
     ["push", mastery("push")?.maxSize, "Large", /if it is Large or smaller/],
     ["slow", mastery("slow")?.speedReductionFeet, 10, /reduce its Speed by 10 feet/],
     ["topple", mastery("topple")?.save?.ability, "con", /Constitution saving throw/],
-    ["topple", mastery("topple")?.condition, "prone", /has the Prone condition/],
+    ["topple", mastery("topple")?.save?.dc, { plusModifierOf: "attack-ability" }, /DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus/],
+    ["topple", mastery("topple")?.save?.failureCondition, "prone", /has the Prone condition/],
   ]
   for (const [name, got, want, pattern] of typedProps) {
     const description = (prop(name) ?? mastery(name))?.description ?? ""
-    if (got !== want || !pattern.test(flat(description))) propertyFailures.push(`${name}: typed value ${JSON.stringify(got)} is not ${JSON.stringify(want)} per the text`)
+    if (!same(got, want) || !pattern.test(flat(description))) propertyFailures.push(`${name}: typed value ${JSON.stringify(got)} is not ${JSON.stringify(want)} per the text`)
   }
   for (const entry of [...properties, ...masteries])
     for (const field of Object.keys(entry))
-      if (["minimumScore", "reachBonusFeet", "pushFeet", "maxSize", "speedReductionFeet", "save", "condition"].includes(field) && !typedProps.some(([name]) => name === entry.id))
+      if (["minimumScore", "reachBonusFeet", "pushFeet", "maxSize", "speedReductionFeet", "save"].includes(field) && !typedProps.some(([name]) => name === entry.id))
         propertyFailures.push(`${entry.id}: unexpected typed field ${field}`)
   report.check("equipment", "properties and masteries: typed numbers, sizes, saves and conditions against the wording", typedProps.length + properties.length + masteries.length, propertyFailures)
 
@@ -865,7 +1043,7 @@ export default function verify(report: Report) {
     if (!same(typedFirst, first.slice(0, 1)) && !(entry.repeat && !entry.damage && first.length === 0))
       wrong(`damage ${JSON.stringify(typedFirst)} but the text says ${JSON.stringify(first.slice(0, 1))}`)
     if (entry.repeat?.damage && !same(entry.repeat.damage, damage.at(-1))) wrong("repeat damage differs")
-    if (Boolean(entry.halfDamageOnSave) !== /half as much damage/.test(text)) wrong("half damage on a save differs")
+    if (Boolean(entry.save?.halfDamageOnSuccess) !== /half as much damage/.test(text)) wrong("half damage on a save differs")
     const imposed = text.replace("ends the Poisoned condition neutralizes", "")
     if (/neutralizes this poison/.test(text) !== Boolean(entry.neutralizedByEndingPoisoned)) wrong("neutralized by ending Poisoned differs")
     const textConditions = new Set([...imposed.matchAll(new RegExp(`\\b(${conditions.join("|")})\\b`, "g"))].map((item) => item[1].toLowerCase()))
@@ -916,7 +1094,7 @@ export default function verify(report: Report) {
     if (rule.description) {
       const first = rule.description.split("\n")[0]
       if (missingSentences(rule.description).length) ruleFailures.push(`${rule.name}: wording is not the official text`)
-      const startPage = [89, 92, 93, 100, 101, 103, 104].find((page) => squash(P(page)).includes(squash(first.slice(0, 60))))
+      const startPage = [89, 92, 93, 100, 101, 103, 104, 197].find((page) => squash(P(page)).includes(squash(first.slice(0, 60))))
       if (startPage !== rule.page) ruleFailures.push(`${rule.name}: page ${rule.page} but its text begins on ${startPage}`)
       const stated = numbersIn(rule.description)
       for (const [key, value] of leaves(rule)) {
@@ -945,10 +1123,10 @@ export default function verify(report: Report) {
     ["barding", "weightMultiplier", 2],
     ["draft-cargo", "capacityMultiplier", 5],
     ["crafting", "rawMaterialsFraction", 0.5],
-    ["crafting", "costGpPerDay", 10],
+    ["crafting", "purchaseCostPerDay", { amount: 10, unit: "gp" }],
     ["crafting", "workHoursPerDay", 8],
-    ["potion-brewing", "rawMaterialsGp", 25],
-    ["ship-repair", "costGpPerHitPoint", 20],
+    ["potion-brewing", "rawMaterials", { amount: 25, unit: "gp" }],
+    ["ship-repair", "costPerHitPoint", { amount: 20, unit: "gp" }],
     ["ship-repair", "shipyardFraction", 0.5],
     ["ship-passengers", "privateAccommodationsFraction", 0.2],
   ]
@@ -965,7 +1143,7 @@ export default function verify(report: Report) {
   for (const [kind, field, value] of typedRules) {
     ruleCells++
     const rule = rules.find((item) => item.kind === kind)
-    if (!rule || rule[field] !== value || !wording[kind].test(flat(rule.description))) ruleFailures.push(`${kind}: ${field} is ${JSON.stringify(rule?.[field])}, expected ${value} per the text`)
+    if (!rule || !same(rule[field], value) || !wording[kind].test(flat(rule.description))) ruleFailures.push(`${kind}: ${field} is ${JSON.stringify(rule?.[field])}, expected ${value} per the text`)
   }
   const training = rules.filter((rule) => rule.kind === "armor-training")
   ruleCells += 3
@@ -984,11 +1162,15 @@ export default function verify(report: Report) {
     ["tool-proficiency", "addsProficiencyBonusTo", "ability-checks-with-the-tool", /add your Proficiency Bonus to any ability check you make that uses the tool[\s\S]*Advantage on the check too/],
     ["tool-proficiency", "advantageWithProficientSkill", true, /proficiency in a skill that’s used with that check, you have Advantage/],
     ["casting-in-armor", "requiresArmorTraining", true, /must have training with any armor you are wearing to cast spells/],
+    ["poison-harvesting", "timeMinutes", "1d6", /The effort takes 1d6 minutes/],
+    ["poison-harvesting", "tool", "poisoners-kit", /using a Poisoner’s Kit/],
+    ["poison-harvesting", "check", { ability: "int", skill: "nature", dc: 20 }, /DC 20 Intelligence \(Nature\) check/],
+    ["poison-harvesting", "failedByAtLeastExposes", 5, /fails the check by 5 or more, the character is subjected to the creature’s poison/],
   ]
   for (const [kind, field, value, pattern] of proficiency) {
     ruleCells++
     const rule = rules.find((item) => item.kind === kind)
-    if (!rule || rule[field] !== value || !pattern.test(flat(rule.description)))
+    if (!rule || !same(rule[field], value) || !pattern.test(flat(rule.description)))
       ruleFailures.push(`${kind}: ${field} is ${JSON.stringify(rule?.[field])}, expected ${JSON.stringify(value)} per the text`)
   }
   const one = rules.find((rule) => rule.kind === "one-at-a-time")
@@ -1058,68 +1240,71 @@ export default function verify(report: Report) {
   report.check("equipment", "references inside the equipment data resolve", refTotal, refFailures)
 
   // Cross-checks with the base source and Open5e. A disagreement is settled by the official text, which the checks above enforced. -----
-  const crossFailures: string[] = []
-  const crossWaived: string[] = []
-  let crossTotal = 0
-  const baseItems = readBase<Entry>("Equipment")
-  const gpOf = (value: Cost | undefined) => (value ? value.amount * ({ cp: 0.01, sp: 0.1, ep: 0.5, gp: 1, pp: 10 } as Record<string, number>)[value.unit] : undefined)
-  const baseCost = (item: Entry) => ({ amount: item.cost.quantity, unit: item.cost.unit })
-  for (const item of baseItems) {
-    const entry = byId.get(toId(item.name))
-    if (!entry) {
-      const known = ["Spellbook", "Spell Scroll, Cantrip", "Spell Scroll, Level 1"].includes(item.name)
-      if (!known) crossFailures.push(`base item ${item.name} has no entry in the data`)
-      continue
-    }
-    crossTotal += 2
-    if (entry.cost && gpOf(entry.cost) !== gpOf(baseCost(item))) crossWaived.push(`${entry.id}: base source costs ${item.cost.quantity} ${item.cost.unit}, official ${costText(entry.cost)}`)
-    if ((entry.weight ?? 0) !== (item.weight ?? 0)) crossWaived.push(`${entry.id}: base source weighs ${item.weight}, official ${entry.weight}`)
-    if (entry.kind === "weapon") {
-      crossTotal += 3
-      if (item.damage?.damage_dice !== (entry.damage.dice ?? String(entry.damage.fixed)) || item.damage?.damage_type?.index !== entry.damage.type)
-        crossWaived.push(`${entry.id}: base source damage ${item.damage?.damage_dice} ${item.damage?.damage_type?.index}, official ${entry.damage.dice ?? entry.damage.fixed} ${entry.damage.type}`)
-      if (item.mastery?.index !== entry.mastery) crossWaived.push(`${entry.id}: base source mastery ${item.mastery?.index}, official ${entry.mastery}`)
-      if ((item.ammunition?.index ?? undefined) !== entry.ammunition) crossWaived.push(`${entry.id}: base source ammunition ${item.ammunition?.index}, data ${entry.ammunition}`)
-      const baseProps = (item.properties ?? []).map((property: Entry) => property.index).sort()
-      if (!same(baseProps, [...entry.properties].sort())) crossWaived.push(`${entry.id}: base source properties ${baseProps}, official ${entry.properties}`)
-    }
-    if (entry.kind === "armor" && entry.category !== "shield") {
+  const crossName = "the base source and Open5e agree on costs, weights, damage, mastery, AC and properties, or the official text settles it"
+  if (hasUpstream("5e-bits") && hasUpstream("open5e")) {
+    const crossFailures: string[] = []
+    const crossWaived: string[] = []
+    let crossTotal = 0
+    const baseItems = readBase<Entry>("Equipment")
+    const gpOf = (value: Cost | undefined) => (value ? value.amount * ({ cp: 0.01, sp: 0.1, ep: 0.5, gp: 1, pp: 10 } as Record<string, number>)[value.unit] : undefined)
+    const baseCost = (item: Entry) => ({ amount: item.cost.quantity, unit: item.cost.unit })
+    for (const item of baseItems) {
+      const entry = byId.get(toId(item.name))
+      if (!entry) {
+        const known = ["Spellbook", "Spell Scroll, Cantrip", "Spell Scroll, Level 1"].includes(item.name)
+        if (!known) crossFailures.push(`base item ${item.name} has no entry in the data`)
+        continue
+      }
       crossTotal += 2
-      if (item.armor_class?.base !== entry.baseAc || Boolean(item.armor_class?.dex_bonus) !== entry.addsDexModifier)
-        crossWaived.push(`${entry.id}: base source AC ${item.armor_class?.base}, official ${entry.baseAc}`)
-      if ((item.str_minimum || undefined) !== entry.strengthRequired) crossWaived.push(`${entry.id}: base source Strength ${item.str_minimum}, official ${entry.strengthRequired}`)
+      if (entry.cost && gpOf(entry.cost) !== gpOf(baseCost(item))) crossWaived.push(`${entry.id}: base source costs ${item.cost.quantity} ${item.cost.unit}, official ${costText(entry.cost)}`)
+      if ((entry.weight ?? 0) !== (item.weight ?? 0)) crossWaived.push(`${entry.id}: base source weighs ${item.weight}, official ${entry.weight}`)
+      if (entry.kind === "weapon") {
+        crossTotal += 3
+        if (item.damage?.damage_dice !== (entry.damage.dice ?? String(entry.damage.fixed)) || item.damage?.damage_type?.index !== entry.damage.type)
+          crossWaived.push(`${entry.id}: base source damage ${item.damage?.damage_dice} ${item.damage?.damage_type?.index}, official ${entry.damage.dice ?? entry.damage.fixed} ${entry.damage.type}`)
+        if (item.mastery?.index !== entry.mastery) crossWaived.push(`${entry.id}: base source mastery ${item.mastery?.index}, official ${entry.mastery}`)
+        if ((item.ammunition?.index ?? undefined) !== entry.ammunition) crossWaived.push(`${entry.id}: base source ammunition ${item.ammunition?.index}, data ${entry.ammunition}`)
+        const baseProps = (item.properties ?? []).map((property: Entry) => property.index).sort()
+        if (!same(baseProps, [...entry.properties].sort())) crossWaived.push(`${entry.id}: base source properties ${baseProps}, official ${entry.properties}`)
+      }
+      if (entry.kind === "armor" && entry.category !== "shield") {
+        crossTotal += 2
+        if (item.armor_class?.base !== entry.baseAc || Boolean(item.armor_class?.dex_bonus) !== entry.addsDexModifier)
+          crossWaived.push(`${entry.id}: base source AC ${item.armor_class?.base}, official ${entry.baseAc}`)
+        if ((item.str_minimum || undefined) !== entry.strengthRequired) crossWaived.push(`${entry.id}: base source Strength ${item.str_minimum}, official ${entry.strengthRequired}`)
+      }
     }
-  }
-  for (const row of readOpen5e<Entry>("Weapon")) {
-    const entry = byId.get(toId(row.fields.name))
-    if (!entry) {
-      crossFailures.push(`Open5e weapon ${row.fields.name} has no entry`)
-      continue
+    for (const row of readOpen5e<Entry>("Weapon")) {
+      const entry = byId.get(toId(row.fields.name))
+      if (!entry) {
+        crossFailures.push(`Open5e weapon ${row.fields.name} has no entry`)
+        continue
+      }
+      crossTotal += 2
+      if (row.fields.damage_dice !== (entry.damage.dice ?? String(entry.damage.fixed)) || row.fields.damage_type !== entry.damage.type)
+        crossWaived.push(`${entry.id}: Open5e damage ${row.fields.damage_dice} ${row.fields.damage_type}, official ${entry.damage.dice ?? entry.damage.fixed} ${entry.damage.type}`)
+      if (row.fields.is_simple !== (entry.category === "simple")) crossWaived.push(`${entry.id}: Open5e simple ${row.fields.is_simple}, official ${entry.category}`)
     }
-    crossTotal += 2
-    if (row.fields.damage_dice !== (entry.damage.dice ?? String(entry.damage.fixed)) || row.fields.damage_type !== entry.damage.type)
-      crossWaived.push(`${entry.id}: Open5e damage ${row.fields.damage_dice} ${row.fields.damage_type}, official ${entry.damage.dice ?? entry.damage.fixed} ${entry.damage.type}`)
-    if (row.fields.is_simple !== (entry.category === "simple")) crossWaived.push(`${entry.id}: Open5e simple ${row.fields.is_simple}, official ${entry.category}`)
-  }
-  for (const row of readOpen5e<Entry>("Armor")) {
-    const entry = byId.get(toId(row.fields.name))
-    if (!entry) {
-      crossFailures.push(`Open5e armor ${row.fields.name} has no entry`)
-      continue
+    for (const row of readOpen5e<Entry>("Armor")) {
+      const entry = byId.get(toId(row.fields.name))
+      if (!entry) {
+        crossFailures.push(`Open5e armor ${row.fields.name} has no entry`)
+        continue
+      }
+      crossTotal += 3
+      if (row.fields.ac_base !== (entry.baseAc ?? entry.acBonus)) crossWaived.push(`${entry.id}: Open5e AC ${row.fields.ac_base}, official ${entry.baseAc}`)
+      if ((row.fields.ac_cap_dexmod ?? undefined) !== entry.dexModifierCap) crossWaived.push(`${entry.id}: Open5e Dex cap ${row.fields.ac_cap_dexmod}, official ${entry.dexModifierCap}`)
+      if (Boolean(row.fields.grants_stealth_disadvantage) !== Boolean(entry.stealthDisadvantage))
+        crossWaived.push(`${entry.id}: Open5e stealth ${row.fields.grants_stealth_disadvantage}, official ${entry.stealthDisadvantage}`)
     }
-    crossTotal += 3
-    if (row.fields.ac_base !== (entry.baseAc ?? entry.acBonus)) crossWaived.push(`${entry.id}: Open5e AC ${row.fields.ac_base}, official ${entry.baseAc}`)
-    if ((row.fields.ac_cap_dexmod ?? undefined) !== entry.dexModifierCap) crossWaived.push(`${entry.id}: Open5e Dex cap ${row.fields.ac_cap_dexmod}, official ${entry.dexModifierCap}`)
-    if (Boolean(row.fields.grants_stealth_disadvantage) !== Boolean(entry.stealthDisadvantage))
-      crossWaived.push(`${entry.id}: Open5e stealth ${row.fields.grants_stealth_disadvantage}, official ${entry.stealthDisadvantage}`)
-  }
-  for (const row of readOpen5e<Entry>("Item")) {
-    const entry = byId.get(toId(row.fields.name.replace(/ \(.*\)$/, "")))
-    if (!entry?.cost || (["tool", "ammunition"].includes(entry.kind) === false && (entry.kind === "ship") === false && !entry.cost)) continue
-    crossTotal++
-    if (Number(row.fields.cost) !== gpOf(entry.cost)) crossWaived.push(`${entry.id}: Open5e cost ${row.fields.cost} GP, official ${costText(entry.cost)}`)
-  }
-  report.crossCheck("equipment", "the base source and Open5e agree on costs, weights, damage, mastery, AC and properties, or the official text settles it", crossTotal, crossFailures, crossWaived)
+    for (const row of readOpen5e<Entry>("Item")) {
+      const entry = byId.get(toId(row.fields.name.replace(/ \(.*\)$/, "")))
+      if (!entry?.cost || (["tool", "ammunition"].includes(entry.kind) === false && (entry.kind === "ship") === false && !entry.cost)) continue
+      crossTotal++
+      if (Number(row.fields.cost) !== gpOf(entry.cost)) crossWaived.push(`${entry.id}: Open5e cost ${row.fields.cost} GP, official ${costText(entry.cost)}`)
+    }
+    report.crossCheck("equipment", crossName, crossTotal, crossFailures, crossWaived)
+  } else report.skip("equipment", crossName)
 }
 
 function collectDcs(value: unknown): number[] {
@@ -1128,8 +1313,7 @@ function collectDcs(value: unknown): number[] {
     if (Array.isArray(item)) for (const entry of item) walk(entry, key)
     else if (item && typeof item === "object") {
       const record = item as Record<string, unknown>
-      if (key === "dc" && typeof record.fixed === "number") out.push(record.fixed)
-      else for (const [k, v] of Object.entries(record)) walk(v, k)
+      for (const [k, v] of Object.entries(record)) walk(v, k)
     } else if (typeof item === "number" && (key === "dc" || key === "saveDc")) out.push(item)
   }
   walk(value)

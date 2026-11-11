@@ -21,7 +21,7 @@
       "somatic": true,
       "material": {
         "text": "powdered rhubarb leaf",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -37,14 +37,16 @@
         "types": [
           "acid"
         ],
-        "perSlot": "1d4"
+        "perSlot": "1d4",
+        "trigger": "hit"
       },
       {
         "dice": "2d4",
         "types": [
           "acid"
         ],
-        "perSlot": "1d4"
+        "perSlot": "1d4",
+        "trigger": "hit"
       }
     ]
   },
@@ -83,6 +85,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -96,7 +100,9 @@
           "5": "2d6",
           "11": "3d6",
           "17": "4d6"
-        }
+        },
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -126,7 +132,7 @@
       "somatic": true,
       "material": {
         "text": "a strip of white cloth",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -166,7 +172,7 @@
       "somatic": true,
       "material": {
         "text": "a bell and silver wire",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -231,7 +237,7 @@
       "somatic": true,
       "material": {
         "text": "a morsel of food",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -245,11 +251,17 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -277,7 +289,7 @@
       "somatic": true,
       "material": {
         "text": "a morsel of food",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -291,6 +303,8 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -348,7 +362,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of blood, a piece of flesh, and a pinch of bone dust",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -501,7 +515,7 @@
       "somatic": true,
       "material": {
         "text": "iron filings",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -538,7 +552,7 @@
       "somatic": true,
       "material": {
         "text": "a mix of vinegar and honey",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -551,12 +565,30 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "on-damage",
+        "onSuccess": "ends"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "charmed",
-      "frightened"
+      {
+        "condition": "frightened"
+      },
+      {
+        "condition": "charmed"
+      }
     ]
   },
   {
@@ -581,7 +613,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of bat fur",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -616,7 +648,7 @@
       "somatic": true,
       "material": {
         "text": "an eggshell and a glove",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -632,10 +664,14 @@
     "saves": [
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -645,7 +681,8 @@
         "types": [
           "force"
         ],
-        "perSlot": "2d8"
+        "perSlot": "2d8",
+        "trigger": "hit"
       },
       {
         "dice": "4d6",
@@ -657,7 +694,11 @@
       }
     ],
     "conditions": [
-      "grappled"
+      {
+        "condition": "grappled",
+        "trigger": "failed-save",
+        "save": 1
+      }
     ]
   },
   {
@@ -683,11 +724,14 @@
         "text": "gold dust worth 25+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 25,
-            "unit": "gp"
+            "cost": {
+              "amount": 25,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -721,11 +765,14 @@
         "text": "a miniature sword worth 250+ GP",
         "costs": [
           {
-            "amount": 250,
-            "unit": "gp"
+            "cost": {
+              "amount": 250,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -743,7 +790,8 @@
         "types": [
           "force"
         ],
-        "modifier": true
+        "modifier": true,
+        "trigger": "hit"
       }
     ]
   },
@@ -768,7 +816,7 @@
       "somatic": true,
       "material": {
         "text": "a small square of silk",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -806,15 +854,21 @@
         "text": "for each of the spell’s targets, one jacinth worth 1,000+ GP and one silver bar worth 100+ GP, all of which the spell consumes",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           },
           {
-            "amount": 100,
-            "unit": "gp"
+            "cost": {
+              "amount": 100,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -823,7 +877,9 @@
     },
     "description": "You and up to eight willing creatures within range project your astral bodies into the Astral Plane (the spell ends instantly if you are already on that plane). Each target’s body is left behind in a state of suspended animation; it has the Unconscious condition, doesn’t need food or air, and doesn’t age.\nA target’s astral form resembles its body in almost every way, replicating its game statistics and possessions. The principal difference is the addition of a silvery cord that trails from between the shoulder blades of the astral form. The cord fades from view after 1 foot. If the cord is cut—which happens only when an effect states that it does so—the target’s body and astral form both die.\nA target’s astral form can travel through the Astral Plane. The moment an astral form leaves that plane, the target’s body and possessions travel along the silver cord, causing the target to re-enter its body on the new plane.\nAny damage or other effects that apply to an astral form have no effect on the target’s body and vice versa. If a target’s body or astral form drops to 0 Hit Points, the spell ends for that target. The spell ends for all the targets if you take a Magic action to dismiss it.\nWhen the spell ends for a target who isn’t dead, the target reappears in its body and exits the state of suspended animation.",
     "conditions": [
-      "unconscious"
+      {
+        "condition": "unconscious"
+      }
     ]
   },
   {
@@ -852,18 +908,21 @@
         "text": "specially marked sticks, bones, cards, or other divinatory tokens worth 25+ GP",
         "costs": [
           {
-            "amount": 25,
-            "unit": "gp"
+            "cost": {
+              "amount": 25,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "You receive an omen from an otherworldly entity about the results of a course of action that you plan to take within the next 30 minutes. The GM chooses the omen from the Omens table. The spell doesn’t account for circumstances, such as other spells, that might change the results.\nIf you cast the spell more than once before finishing a Long Rest, there is a cumulative 25 percent chance for each casting after the first that you get no answer.",
+    "description": "You receive an omen from an otherworldly entity about the results of a course of action that you plan to take within the next 30 minutes. The GM chooses the omen from the Omens table.\nThe spell doesn’t account for circumstances, such as other spells, that might change the results.\nIf you cast the spell more than once before finishing a Long Rest, there is a cumulative 25 percent chance for each casting after the first that you get no answer.",
     "tables": [
       {
         "title": "Omens",
@@ -924,7 +983,10 @@
       "upTo": true,
       "concentration": true
     },
-    "description": "An aura radiates from you in a 30-foot Emanation for the duration. While in the aura, you and your allies have Resistance to Necrotic damage, and your Hit Point maximums can’t be reduced. If an ally with 0 Hit Points starts its turn in the aura, that ally regains 1 Hit Point."
+    "description": "An aura radiates from you in a 30-foot Emanation for the duration. While in the aura, you and your allies have Resistance to Necrotic damage, and your Hit Point maximums can’t be reduced. If an ally with 0 Hit Points starts its turn in the aura, that ally regains 1 Hit Point.",
+    "healing": {
+      "amount": 1
+    }
   },
   {
     "id": "awaken",
@@ -951,11 +1013,14 @@
         "text": "an agate worth 1,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -964,7 +1029,9 @@
     },
     "description": "You spend the casting time tracing magical pathways within a precious gemstone, and then touch the target. The target must be either a Beast or Plant creature with an Intelligence of 3 or less or a natural plant that isn’t a creature. The target gains an Intelligence of 10 and the ability to speak one language you know. If the target is a natural plant, it becomes a Plant creature and gains the ability to move its limbs, roots, vines, creepers, and so forth, and it gains senses similar to a human’s. The GM chooses statistics appropriate for the awakened Plant, such as the statistics for the Awakened Shrub or Awakened Tree in “Monsters.”\nThe awakened target has the Charmed condition for 30 days or until you or your allies deal damage to it. When that condition ends, the awakened creature chooses its attitude toward you.",
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed"
+      }
     ]
   },
   {
@@ -991,7 +1058,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of blood",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1006,6 +1073,8 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -1045,7 +1114,7 @@
       "somatic": true,
       "material": {
         "text": "a pentacle",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1060,11 +1129,15 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "incapacitated"
+      {
+        "condition": "incapacitated"
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -1090,7 +1163,7 @@
       "somatic": true,
       "material": {
         "text": "a handful of bark",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1159,7 +1232,7 @@
       "somatic": true,
       "material": {
         "text": "a key ring with no keys",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1170,7 +1243,15 @@
     "saves": [
       {
         "ability": "int",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
+      },
+      {
+        "ability": "int",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -1178,7 +1259,9 @@
         "dice": "10d12",
         "types": [
           "psychic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -1216,6 +1299,14 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "start-of-turn",
         "onSuccess": "none"
       }
     ],
@@ -1250,7 +1341,7 @@
       "somatic": true,
       "material": {
         "text": "a tentacle",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1264,6 +1355,8 @@
     "saves": [
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -1272,11 +1365,17 @@
         "dice": "3d6",
         "types": [
           "bludgeoning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "conditions": [
-      "restrained"
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -1311,6 +1410,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -1319,7 +1420,9 @@
         "dice": "6d10",
         "types": [
           "force"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -1348,11 +1451,14 @@
         "text": "a Holy Symbol worth 5+ GP",
         "costs": [
           {
-            "amount": 5,
-            "unit": "gp"
+            "cost": {
+              "amount": 5,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1406,6 +1512,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -1415,7 +1523,9 @@
         "types": [
           "necrotic"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -1454,12 +1564,28 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "blinded",
-      "deafened"
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "deafened",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -1556,6 +1682,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -1565,7 +1693,9 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -1602,6 +1732,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -1611,7 +1743,9 @@
         "types": [
           "lightning"
         ],
-        "perSlot": "1d10"
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -1652,6 +1786,8 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -1679,7 +1815,7 @@
       "somatic": true,
       "material": {
         "text": "three silver pins",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1691,6 +1827,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -1699,7 +1837,9 @@
         "dice": "10d8",
         "types": [
           "lightning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "extraTargetsPerSlot": 1
@@ -1740,11 +1880,17 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -1784,11 +1930,17 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -1831,7 +1983,8 @@
           "5": "2d10",
           "11": "3d10",
           "17": "4d10"
-        }
+        },
+        "trigger": "hit"
       }
     ]
   },
@@ -1860,11 +2013,14 @@
         "text": "a diamond worth 50+ GP",
         "costs": [
           {
-            "amount": 50,
-            "unit": "gp"
+            "cost": {
+              "amount": 50,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1885,7 +2041,8 @@
           "poison",
           "thunder"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "hit"
       }
     ]
   },
@@ -1919,11 +2076,14 @@
         "text": "the powder of a crushed black pearl worth 500+ GP",
         "costs": [
           {
-            "amount": 500,
-            "unit": "gp"
+            "cost": {
+              "amount": 500,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -1935,6 +2095,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -1944,7 +2106,9 @@
         "types": [
           "necrotic"
         ],
-        "perSlot": "2d8"
+        "perSlot": "2d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -1976,11 +2140,14 @@
         "text": "a focus worth 100+ GP, either a jeweled horn for hearing or a glass eye for seeing",
         "costs": [
           {
-            "amount": 100,
-            "unit": "gp"
+            "cost": {
+              "amount": 100,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -2016,15 +2183,21 @@
         "text": "a diamond worth 1,000+ GP, which the spell consumes, and a sealable vessel worth 2,000+ GP that is large enough to hold the creature being cloned",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           },
           {
-            "amount": 2000,
-            "unit": "gp"
+            "cost": {
+              "amount": 2000,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": true
+        "consumed": "some"
       }
     },
     "duration": {
@@ -2071,6 +2244,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -2080,7 +2255,9 @@
         "types": [
           "poison"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -2111,7 +2288,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of colorful sand",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -2122,11 +2299,17 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "blinded"
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -2161,11 +2344,15 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "prone"
+      {
+        "condition": "prone"
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -2191,7 +2378,7 @@
       "somatic": true,
       "material": {
         "text": "incense",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -2254,7 +2441,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of soot and salt",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -2297,11 +2484,23 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "later",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -2331,7 +2530,7 @@
       "somatic": true,
       "material": {
         "text": "a small crystal or glass cone",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -2343,6 +2542,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -2352,7 +2553,9 @@
         "types": [
           "cold"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -2385,7 +2588,7 @@
       "somatic": true,
       "material": {
         "text": "three nut shells",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -2426,7 +2629,15 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ]
   },
@@ -2464,6 +2675,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -2473,7 +2686,9 @@
         "types": [
           "slashing"
         ],
-        "perSlot": "1d10"
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -2515,6 +2730,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -2524,7 +2741,9 @@
         "types": [
           "radiant"
         ],
-        "perSlot": "1d12"
+        "perSlot": "1d12",
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "healing": {
@@ -2567,7 +2786,15 @@
     "saves": [
       {
         "ability": "dex",
-        "onSuccess": "other"
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "start-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -2579,7 +2806,9 @@
           "fire",
           "cold"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "4d8",
@@ -2589,11 +2818,17 @@
           "fire",
           "cold"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 1
       }
     ],
     "conditions": [
-      "restrained"
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -2634,11 +2869,15 @@
           "psychic"
         ],
         "modifier": true,
-        "perSlot": "1d12"
+        "perSlot": "1d12",
+        "trigger": "hit"
       }
     ],
     "conditions": [
-      "frightened"
+      {
+        "condition": "frightened",
+        "trigger": "hit"
+      }
     ]
   },
   {
@@ -2725,6 +2964,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -2734,7 +2975,9 @@
         "types": [
           "force"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -2770,8 +3013,9 @@
     "saves": [
       {
         "ability": "int",
-        "onSuccess": "none",
         "dc": 15,
+        "when": "initial",
+        "onSuccess": "other",
         "target": "caster"
       }
     ],
@@ -2781,7 +3025,9 @@
         "types": [
           "psychic"
         ],
-        "target": "caster"
+        "target": "caster",
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "casterConditions": [
@@ -2819,6 +3065,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -2827,11 +3075,17 @@
         "dice": "11d8",
         "types": [
           "necrotic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "conditions": [
-      "poisoned"
+      {
+        "condition": "poisoned",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -2858,11 +3112,14 @@
         "text": "a gem-encrusted statuette of yourself worth 1,500+ GP",
         "costs": [
           {
-            "amount": 1500,
-            "unit": "gp"
+            "cost": {
+              "amount": 1500,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -2898,11 +3155,14 @@
         "text": "ruby dust worth 50+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 50,
-            "unit": "gp"
+            "cost": {
+              "amount": 50,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -2935,7 +3195,7 @@
       "somatic": true,
       "material": {
         "text": "a mixture of water and dust",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -2949,6 +3209,8 @@
     "saves": [
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -2957,7 +3219,9 @@
         "dice": "2d8",
         "types": [
           "bludgeoning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -2985,7 +3249,7 @@
       "somatic": true,
       "material": {
         "text": "burning incense",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3122,6 +3386,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -3181,7 +3447,7 @@
       "somatic": true,
       "material": {
         "text": "a mix of water and sand",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3218,11 +3484,14 @@
         "text": "one 150+ GP black onyx stone for each corpse",
         "costs": [
           {
-            "amount": 150,
-            "unit": "gp"
+            "cost": {
+              "amount": 150,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3256,7 +3525,7 @@
       "somatic": true,
       "material": {
         "text": "a paintbrush",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3357,7 +3626,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of phosphorus",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3397,7 +3666,7 @@
       "somatic": false,
       "material": {
         "text": "bat fur and a piece of coal",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3433,7 +3702,7 @@
       "somatic": true,
       "material": {
         "text": "a dried carrot",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3537,7 +3806,7 @@
       "somatic": true,
       "material": {
         "text": "a ball of bat guano and sulfur",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3552,7 +3821,15 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
+      },
+      {
+        "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "other"
       }
     ],
     "damage": [
@@ -3594,7 +3871,12 @@
       "unit": "hour",
       "concentration": false
     },
-    "description": "You create a shadowy Medium door on a flat solid surface that you can see within range. This door can be opened and closed, and it leads to a demiplane that is an empty room 30 feet in each dimension, made of wood or stone (your choice).\nWhen the spell ends, the door vanishes, and any objects inside the demiplane remain there. Any creatures inside also remain unless they opt to be shunted through the door as it vanishes, landing with the Prone condition in the unoccupied spaces closest to the door’s former space.\nEach time you cast this spell, you can create a new demiplane or connect the shadowy door to a demiplane you created with a previous casting of this spell. Additionally, if you know the nature and contents of a demiplane created by a casting of this spell by another creature, you can connect the shadowy door to that demiplane instead."
+    "description": "You create a shadowy Medium door on a flat solid surface that you can see within range. This door can be opened and closed, and it leads to a demiplane that is an empty room 30 feet in each dimension, made of wood or stone (your choice).\nWhen the spell ends, the door vanishes, and any objects inside the demiplane remain there. Any creatures inside also remain unless they opt to be shunted through the door as it vanishes, landing with the Prone condition in the unoccupied spaces closest to the door’s former space.\nEach time you cast this spell, you can create a new demiplane or connect the shadowy door to a demiplane you created with a previous casting of this spell. Additionally, if you know the nature and contents of a demiplane created by a casting of this spell by another creature, you can connect the shadowy door to that demiplane instead.",
+    "conditions": [
+      {
+        "condition": "prone"
+      }
+    ]
   },
   {
     "id": "detect-evil-and-good",
@@ -3686,7 +3968,7 @@
       "somatic": true,
       "material": {
         "text": "a yew leaf",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3721,7 +4003,7 @@
       "somatic": true,
       "material": {
         "text": "1 Copper Piece",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3735,7 +4017,9 @@
     "saves": [
       {
         "ability": "wis",
-        "onSuccess": "other"
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "ends"
       }
     ]
   },
@@ -3831,7 +4115,7 @@
       "somatic": true,
       "material": {
         "text": "a lodestone and dust",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3843,6 +4127,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -3852,7 +4138,9 @@
         "types": [
           "force"
         ],
-        "perSlot": "3d6"
+        "perSlot": "3d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -3878,7 +4166,7 @@
       "somatic": true,
       "material": {
         "text": "powdered silver and iron",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -3892,6 +4180,8 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -3961,6 +4251,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -3970,7 +4262,9 @@
         "types": [
           "psychic"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -3999,11 +4293,14 @@
         "text": "incense worth 25+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 25,
-            "unit": "gp"
+            "cost": {
+              "amount": 25,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -4044,7 +4341,8 @@
         "dice": "1d4",
         "types": [
           "radiant"
-        ]
+        ],
+        "trigger": "hit"
       }
     ]
   },
@@ -4141,13 +4439,21 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "blinded",
-      "deafened",
-      "stunned"
+      {
+        "condition": "blinded"
+      },
+      {
+        "condition": "deafened"
+      },
+      {
+        "condition": "stunned"
+      }
     ]
   },
   {
@@ -4185,11 +4491,23 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "on-damage",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -4228,11 +4546,23 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "on-damage",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -4270,11 +4600,23 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "on-damage",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -4303,7 +4645,7 @@
       "somatic": true,
       "material": {
         "text": "a hot pepper",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -4318,6 +4660,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -4331,7 +4675,9 @@
           "lightning",
           "poison"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -4359,7 +4705,7 @@
       "somatic": true,
       "material": {
         "text": "a handful of sand",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -4372,6 +4718,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -4380,7 +4728,14 @@
         "dice": "3d6",
         "types": [
           "psychic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "incapacitated"
       }
     ]
   },
@@ -4399,11 +4754,7 @@
     "ritual": false,
     "range": {
       "kind": "feet",
-      "distance": 30,
-      "area": {
-        "shape": "cube",
-        "size": 5
-      }
+      "distance": 30
     },
     "components": {
       "verbal": true,
@@ -4439,7 +4790,7 @@
       "somatic": true,
       "material": {
         "text": "a fractured rock",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -4453,10 +4804,14 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -4465,11 +4820,22 @@
         "dice": "12d6",
         "types": [
           "bludgeoning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 1
       }
     ],
     "conditions": [
-      "prone"
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 1
+      }
     ]
   },
   {
@@ -4505,7 +4871,8 @@
         "dice": "1d10",
         "types": [
           "force"
-        ]
+        ],
+        "trigger": "hit"
       }
     ],
     "projectiles": {
@@ -4576,7 +4943,7 @@
       "somatic": true,
       "material": {
         "text": "fur or a feather",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -4615,7 +4982,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of powdered iron",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -4629,6 +4996,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -4666,7 +5035,9 @@
     "saves": [
       {
         "ability": "str",
-        "onSuccess": "none"
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -4679,7 +5050,11 @@
       }
     ],
     "conditions": [
-      "restrained"
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -4715,11 +5090,17 @@
     "saves": [
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "restrained"
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -4755,6 +5136,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -4858,13 +5241,21 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "frightened",
-      "poisoned",
-      "unconscious"
+      {
+        "condition": "unconscious"
+      },
+      {
+        "condition": "frightened"
+      },
+      {
+        "condition": "poisoned"
+      }
     ]
   },
   {
@@ -4932,6 +5323,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -4958,7 +5351,7 @@
       "somatic": true,
       "material": {
         "text": "a silver whistle",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -4971,6 +5364,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -4979,7 +5374,9 @@
         "dice": "4d8",
         "types": [
           "force"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -5005,7 +5402,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of alcohol",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5048,7 +5445,7 @@
       "somatic": true,
       "material": {
         "text": "a white feather",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5062,11 +5459,23 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "frightened"
+      {
+        "condition": "frightened",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -5094,7 +5503,7 @@
       "somatic": false,
       "material": {
         "text": "a small feather or piece of down",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5130,11 +5539,14 @@
         "text": "burning incense worth 10+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 10,
-            "unit": "gp"
+            "cost": {
+              "amount": 10,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -5267,11 +5679,14 @@
         "text": "a set of divination tools—such as cards or runes—worth 100+ GP",
         "costs": [
           {
-            "amount": 100,
-            "unit": "gp"
+            "cost": {
+              "amount": 100,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5343,6 +5758,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -5351,7 +5768,9 @@
         "dice": "7d8 + 30",
         "types": [
           "necrotic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -5394,7 +5813,8 @@
           "5": "2d10",
           "11": "3d10",
           "17": "4d10"
-        }
+        },
+        "trigger": "hit"
       }
     ]
   },
@@ -5421,7 +5841,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of phosphorus or a firefly",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5472,6 +5892,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -5480,7 +5902,9 @@
         "dice": "7d10",
         "types": [
           "fire"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -5511,7 +5935,7 @@
       "somatic": true,
       "material": {
         "text": "a ball of bat guano and sulfur",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5523,6 +5947,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -5532,7 +5958,9 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -5558,7 +5986,7 @@
       "somatic": true,
       "material": {
         "text": "a sumac leaf",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5578,7 +6006,8 @@
           "fire"
         ],
         "modifier": true,
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "hit"
       }
     ]
   },
@@ -5609,7 +6038,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of sulfur",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5621,6 +6050,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -5630,14 +6061,18 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "5d6",
         "types": [
           "radiant"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -5665,7 +6100,7 @@
       "somatic": true,
       "material": {
         "text": "a ball of wax",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5680,6 +6115,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -5689,7 +6126,9 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -5717,7 +6156,7 @@
       "somatic": true,
       "material": {
         "text": "a cockatrice feather",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5731,12 +6170,31 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "other"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
         "onSuccess": "other"
       }
     ],
     "conditions": [
-      "petrified",
-      "restrained"
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "petrified",
+        "trigger": "failed-save",
+        "save": 1
+      },
+      {
+        "condition": "petrified"
+      }
     ]
   },
   {
@@ -5761,7 +6219,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of mercury",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5795,7 +6253,7 @@
       "somatic": true,
       "material": {
         "text": "a feather",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5871,11 +6329,14 @@
         "text": "ruby dust worth 1,000+ GP",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -5921,11 +6382,14 @@
         "text": "ruby dust worth 1,500+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1500,
-            "unit": "gp"
+            "cost": {
+              "amount": 1500,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -5939,7 +6403,9 @@
     "saves": [
       {
         "ability": "cha",
-        "onSuccess": "none"
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "other"
       }
     ]
   },
@@ -5968,7 +6434,7 @@
       "somatic": true,
       "material": {
         "text": "a hummingbird feather",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6003,7 +6469,7 @@
       "somatic": true,
       "material": {
         "text": "a leather strap",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6043,7 +6509,7 @@
       "somatic": true,
       "material": {
         "text": "a miniature crystal sphere",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6055,6 +6521,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -6064,11 +6532,15 @@
         "types": [
           "cold"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "conditions": [
-      "restrained"
+      {
+        "condition": "restrained"
+      }
     ]
   },
   {
@@ -6094,7 +6566,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of gauze",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6135,11 +6607,14 @@
         "text": "a diamond worth 5,000+ GP",
         "costs": [
           {
-            "amount": 5000,
-            "unit": "gp"
+            "cost": {
+              "amount": 5000,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6188,6 +6663,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -6200,7 +6677,11 @@
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -6228,11 +6709,14 @@
         "text": "2 Copper Pieces, which the spell consumes",
         "costs": [
           {
-            "amount": 2,
-            "unit": "cp"
+            "cost": {
+              "amount": 2,
+              "unit": "cp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -6399,7 +6883,7 @@
       "somatic": true,
       "material": {
         "text": "a glass bead",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6442,11 +6926,14 @@
         "text": "powdered diamond worth 200+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 200,
-            "unit": "gp"
+            "cost": {
+              "amount": 200,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -6458,6 +6945,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -6471,7 +6960,9 @@
           "lightning",
           "thunder"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -6497,7 +6988,7 @@
       "somatic": true,
       "material": {
         "text": "a sprig of mistletoe",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6534,7 +7025,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of pork rind or butter",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6547,11 +7038,17 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "prone"
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -6585,7 +7082,9 @@
     },
     "description": "A creature you touch has the Invisible condition until the spell ends.",
     "conditions": [
-      "invisible"
+      {
+        "condition": "invisible"
+      }
     ]
   },
   {
@@ -6615,11 +7114,14 @@
         "text": "diamond dust worth 100+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 100,
-            "unit": "gp"
+            "cost": {
+              "amount": 100,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -6659,6 +7161,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -6667,7 +7171,9 @@
         "amount": 20,
         "types": [
           "radiant"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -6696,11 +7202,14 @@
         "text": "a silver rod worth 10+ GP",
         "costs": [
           {
-            "amount": 10,
-            "unit": "gp"
+            "cost": {
+              "amount": 10,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6783,7 +7292,8 @@
         "types": [
           "radiant"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "hit"
       }
     ]
   },
@@ -6816,7 +7326,7 @@
       "somatic": true,
       "material": {
         "text": "a legume seed",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6830,6 +7340,8 @@
     "saves": [
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -6858,11 +7370,14 @@
         "text": "incense worth 1,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -6871,7 +7386,9 @@
     },
     "description": "You touch a point and infuse an area around it with holy or unholy power. The area can have a radius up to 60 feet, and the spell fails if the radius includes an area already under the effect of Hallow. The affected area has the following effects.\nHallowed Ward. Choose any of these creature types: Aberration, Celestial, Elemental, Fey, Fiend, or Undead. Creatures of the chosen types can’t willingly enter the area, and any creature that is possessed by or that has the Charmed or Frightened condition from such creatures isn’t possessed, Charmed, or Frightened by them while in the area.\nExtra Effect. You bind an extra effect to the area from the list below:\nCourage. Creatures of any types you choose can’t gain the Frightened condition while in the area.\nDarkness. Darkness fills the area. Normal light, as well as magical light created by spells of a level lower than this spell, can’t illuminate the area.\nDaylight. Bright light fills the area. Magical Darkness created by spells of a level lower than this spell can’t extinguish the light.\nPeaceful Rest. Dead bodies interred in the area can’t be turned into Undead.\nExtradimensional Interference. Creatures of any types you choose can’t enter or exit the area using teleportation or interplanar travel.\nFear. Creatures of any types you choose have the Frightened condition while in the area.\nResistance. Creatures of any types you choose have Resistance to one damage type of your choice while in the area.\nSilence. No sound can emanate from within the area, and no sound can reach into it.\nTongues. Creatures of any types you choose can communicate with any other creature in the area even if they don’t share a common language.\nVulnerability. Creatures of any types you choose have Vulnerability to one damage type of your choice while in the area.",
     "conditions": [
-      "frightened"
+      {
+        "condition": "frightened"
+      }
     ]
   },
   {
@@ -6904,7 +7421,7 @@
       "somatic": true,
       "material": {
         "text": "a mushroom",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6944,6 +7461,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -6952,7 +7471,9 @@
         "dice": "14d6",
         "types": [
           "necrotic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -6979,7 +7500,7 @@
       "somatic": true,
       "material": {
         "text": "a shaving of licorice root",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -6991,7 +7512,9 @@
     },
     "description": "Choose a willing creature that you can see within range. Until the spell ends, the target’s Speed is doubled, it gains a +2 bonus to Armor Class, it has Advantage on Dexterity saving throws, and it gains an additional action on each of its turns. That action can be used to take only the Attack (one attack only), Dash, Disengage, Hide, or Utilize action.\nWhen the spell ends, the target is Incapacitated and has a Speed of 0 until the end of its next turn, as a wave of lethargy washes over it.",
     "conditions": [
-      "incapacitated"
+      {
+        "condition": "incapacitated"
+      }
     ],
     "ac": {
       "bonus": 2
@@ -7088,7 +7611,7 @@
       "somatic": true,
       "material": {
         "text": "a piece of iron and a flame",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7103,6 +7626,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -7147,6 +7672,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -7156,7 +7683,9 @@
         "types": [
           "fire"
         ],
-        "perSlot": "1d10"
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -7186,11 +7715,14 @@
         "text": "a gem-encrusted bowl worth 1,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -7260,7 +7792,7 @@
       "somatic": true,
       "material": {
         "text": "the petrified eye of a newt",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7305,7 +7837,7 @@
       "somatic": true,
       "material": {
         "text": "a tart and a feather",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7320,12 +7852,34 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "on-damage",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "incapacitated",
-      "prone"
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -7354,7 +7908,7 @@
       "somatic": true,
       "material": {
         "text": "a straight piece of iron",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7369,11 +7923,23 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "paralyzed"
+      {
+        "condition": "paralyzed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -7404,7 +7970,7 @@
       "somatic": true,
       "material": {
         "text": "a straight piece of iron",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7419,11 +7985,23 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "paralyzed"
+      {
+        "condition": "paralyzed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -7454,11 +8032,14 @@
         "text": "a reliquary worth 1,000+ GP",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7472,11 +8053,17 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "blinded"
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -7547,7 +8134,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of confetti",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7561,12 +8148,20 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "charmed",
-      "incapacitated"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "incapacitated"
+      }
     ]
   },
   {
@@ -7593,7 +8188,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of water or a piece of ice",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7606,6 +8201,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -7614,14 +8211,17 @@
         "dice": "1d10",
         "types": [
           "piercing"
-        ]
+        ],
+        "trigger": "hit"
       },
       {
         "dice": "2d6",
         "types": [
           "cold"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -7654,7 +8254,7 @@
       "somatic": true,
       "material": {
         "text": "a mitten",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7666,6 +8266,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -7675,13 +8277,17 @@
         "types": [
           "bludgeoning"
         ],
-        "perSlot": "1d10"
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "4d6",
         "types": [
           "cold"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -7710,11 +8316,14 @@
         "text": "a pearl worth 100+ GP",
         "costs": [
           {
-            "amount": 100,
-            "unit": "gp"
+            "cost": {
+              "amount": 100,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7749,11 +8358,14 @@
         "text": "ink worth 10+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 10,
-            "unit": "gp"
+            "cost": {
+              "amount": 10,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -7790,11 +8402,14 @@
         "text": "a statuette of the target worth 5,000+ GP",
         "costs": [
           {
-            "amount": 5000,
-            "unit": "gp"
+            "cost": {
+              "amount": 5000,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7805,12 +8420,18 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "restrained",
-      "unconscious"
+      {
+        "condition": "restrained"
+      },
+      {
+        "condition": "unconscious"
+      }
     ]
   },
   {
@@ -7851,6 +8472,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -7859,7 +8482,9 @@
         "dice": "10d8",
         "types": [
           "fire"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -7892,6 +8517,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -7901,7 +8528,9 @@
         "types": [
           "necrotic"
         ],
-        "perSlot": "1d10"
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -7933,7 +8562,7 @@
       "somatic": true,
       "material": {
         "text": "a locust",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -7948,6 +8577,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -7957,7 +8588,9 @@
         "types": [
           "piercing"
         ],
-        "perSlot": "1d10"
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -7985,11 +8618,14 @@
         "text": "a sapphire worth 1,000+ GP",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8022,7 +8658,7 @@
       "somatic": true,
       "material": {
         "text": "an eyelash in gum arabic",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8035,7 +8671,9 @@
     "description": "A creature you touch has the Invisible condition until the spell ends. The spell ends early immediately after the target makes an attack roll, deals damage, or casts a spell.",
     "higherLevel": "You can target one additional creature for each spell slot level above 2.",
     "conditions": [
-      "invisible"
+      {
+        "condition": "invisible"
+      }
     ],
     "extraTargetsPerSlot": 1
   },
@@ -8072,11 +8710,23 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "other"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "action",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -8103,7 +8753,7 @@
       "somatic": true,
       "material": {
         "text": "a grasshopper’s hind leg",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8171,15 +8821,21 @@
         "text": "incense worth 250+ GP, which the spell consumes, and four ivory strips worth 50+ GP each",
         "costs": [
           {
-            "amount": 250,
-            "unit": "gp"
+            "cost": {
+              "amount": 250,
+              "unit": "gp"
+            },
+            "consumed": true
           },
           {
-            "amount": 50,
-            "unit": "gp"
+            "cost": {
+              "amount": 50,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": true
+        "consumed": "some"
       }
     },
     "duration": {
@@ -8241,7 +8897,7 @@
       "somatic": true,
       "material": {
         "text": "a metal spring",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8255,6 +8911,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -8283,7 +8941,7 @@
       "somatic": false,
       "material": {
         "text": "a firefly or phosphorescent moss",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8321,7 +8979,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of fur and a crystal rod",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8333,6 +8991,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -8342,7 +9002,9 @@
         "types": [
           "lightning"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -8369,7 +9031,7 @@
       "somatic": true,
       "material": {
         "text": "fur from a bloodhound",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8404,7 +9066,7 @@
       "somatic": true,
       "material": {
         "text": "fur from a bloodhound",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8442,7 +9104,7 @@
       "somatic": true,
       "material": {
         "text": "a forked twig",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8478,7 +9140,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of dirt",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8513,7 +9175,7 @@
       "somatic": true,
       "material": {
         "text": "a piece of cured leather",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8592,11 +9254,14 @@
         "text": "salt and powdered silver worth 100+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 100,
-            "unit": "gp"
+            "cost": {
+              "amount": 100,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -8610,6 +9275,8 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -8638,11 +9305,14 @@
         "text": "a gem, crystal, or reliquary worth 500+ GP",
         "costs": [
           {
-            "amount": 500,
-            "unit": "gp"
+            "cost": {
+              "amount": 500,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8653,12 +9323,21 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "other",
         "target": "caster"
+      }
+    ],
+    "conditions": [
+      {
+        "condition": "incapacitated"
       }
     ]
   },
@@ -8729,11 +9408,14 @@
         "text": "jade dust worth 10+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 10,
-            "unit": "gp"
+            "cost": {
+              "amount": 10,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -8800,11 +9482,14 @@
         "text": "a miniature door worth 15+ GP",
         "costs": [
           {
-            "amount": 15,
-            "unit": "gp"
+            "cost": {
+              "amount": 15,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8840,7 +9525,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of fleece",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8977,7 +9662,7 @@
       "somatic": false,
       "material": {
         "text": "a snake’s tongue",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -8991,11 +9676,17 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -9103,7 +9794,7 @@
       "somatic": true,
       "material": {
         "text": "two lodestones",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -9137,7 +9828,7 @@
       "somatic": true,
       "material": {
         "text": "a copper wire",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -9182,6 +9873,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -9190,13 +9883,17 @@
         "dice": "20d6",
         "types": [
           "fire"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "20d6",
         "types": [
           "bludgeoning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -9264,6 +9961,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -9273,7 +9972,9 @@
         "types": [
           "psychic"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -9302,7 +10003,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of fleece",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -9471,12 +10172,20 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "charmed",
-      "incapacitated"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "incapacitated"
+      }
     ]
   },
   {
@@ -9506,7 +10215,7 @@
       "somatic": true,
       "material": {
         "text": "a moonseed leaf",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -9521,6 +10230,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -9530,7 +10241,9 @@
         "types": [
           "radiant"
         ],
-        "perSlot": "1d10"
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -9558,7 +10271,7 @@
       "somatic": true,
       "material": {
         "text": "a miniature shovel",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -9595,11 +10308,14 @@
         "text": "a pinch of diamond dust worth 25+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 25,
-            "unit": "gp"
+            "cost": {
+              "amount": 25,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -9636,7 +10352,7 @@
       "somatic": true,
       "material": {
         "text": "ashes from burned mistletoe",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -9670,7 +10386,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of sesame seeds",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -9705,7 +10421,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of fleece",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -9719,6 +10435,8 @@
     "saves": [
       {
         "ability": "int",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -9765,7 +10483,15 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -9774,7 +10500,9 @@
         "types": [
           "psychic"
         ],
-        "perSlot": "1d10"
+        "perSlot": "1d10",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -9865,11 +10593,14 @@
         "text": "a jewel worth 1,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -9883,6 +10614,8 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -9914,11 +10647,14 @@
         "text": "a forked, metal rod worth 250+ GP and attuned to a plane of existence",
         "costs": [
           {
-            "amount": 250,
-            "unit": "gp"
+            "cost": {
+              "amount": 250,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -10007,7 +10743,8 @@
           "5": "2d12",
           "11": "3d12",
           "17": "4d12"
-        }
+        },
+        "trigger": "hit"
       }
     ]
   },
@@ -10036,7 +10773,7 @@
       "somatic": true,
       "material": {
         "text": "a caterpillar cocoon",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -10050,6 +10787,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -10152,11 +10891,15 @@
     "saves": [
       {
         "ability": "con",
-        "onSuccess": "none"
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "conditions": [
-      "stunned"
+      {
+        "condition": "stunned"
+      }
     ]
   },
   {
@@ -10310,15 +11053,21 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "other"
       },
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
         "onSuccess": "other"
       },
       {
         "ability": "wis",
-        "onSuccess": "other"
+        "dc": "spell-save-dc",
+        "when": "start-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -10335,9 +11084,19 @@
       }
     ],
     "conditions": [
-      "blinded",
-      "petrified",
-      "restrained"
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "petrified"
+      },
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -10418,19 +11177,27 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "other"
       },
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
         "onSuccess": "other"
       },
       {
         "ability": "wis",
-        "onSuccess": "other"
+        "dc": "spell-save-dc",
+        "when": "start-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -10447,9 +11214,24 @@
       }
     ],
     "conditions": [
-      "blinded",
-      "petrified",
-      "restrained"
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 1
+      },
+      {
+        "condition": "petrified"
+      },
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 1
+      }
     ]
   },
   {
@@ -10475,7 +11257,7 @@
       "somatic": true,
       "material": {
         "text": "a thin sheet of lead",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -10526,7 +11308,8 @@
           "5": "2d8",
           "11": "3d8",
           "17": "4d8"
-        }
+        },
+        "trigger": "hit"
       }
     ]
   },
@@ -10555,11 +11338,14 @@
         "text": "jade dust worth 25+ GP",
         "costs": [
           {
-            "amount": 25,
-            "unit": "gp"
+            "cost": {
+              "amount": 25,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -10593,11 +11379,14 @@
         "text": "a statuette of yourself worth 5+ GP",
         "costs": [
           {
-            "amount": 5,
-            "unit": "gp"
+            "cost": {
+              "amount": 5,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -10669,11 +11458,14 @@
         "text": "a flask of Holy Water worth 25+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 25,
-            "unit": "gp"
+            "cost": {
+              "amount": 25,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -10775,11 +11567,14 @@
         "text": "a diamond worth 500+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 500,
-            "unit": "gp"
+            "cost": {
+              "amount": 500,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -10821,7 +11616,15 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "other"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "rollModifier": {
@@ -10871,7 +11674,8 @@
           "5": "2d8",
           "11": "3d8",
           "17": "4d8"
-        }
+        },
+        "trigger": "hit"
       }
     ]
   },
@@ -10910,11 +11714,15 @@
         "types": [
           "poison"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "hit"
       }
     ],
     "conditions": [
-      "poisoned"
+      {
+        "condition": "poisoned",
+        "trigger": "hit"
+      }
     ]
   },
   {
@@ -10941,7 +11749,7 @@
       "somatic": true,
       "material": {
         "text": "a prayer wheel",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -10979,11 +11787,14 @@
         "text": "rare oils worth 1,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -11093,7 +11904,7 @@
       "somatic": true,
       "material": {
         "text": "a glass sphere",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11107,6 +11918,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -11167,11 +11980,14 @@
         "text": "a diamond worth 1,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -11209,7 +12025,7 @@
       "somatic": true,
       "material": {
         "text": "a lodestone and iron filings",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11223,6 +12039,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -11253,11 +12071,14 @@
         "text": "a diamond worth 300+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 300,
-            "unit": "gp"
+            "cost": {
+              "amount": 300,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -11287,7 +12108,7 @@
       "somatic": true,
       "material": {
         "text": "a segment of rope",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11328,6 +12149,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -11341,7 +12164,9 @@
           "5": "2d8",
           "11": "3d8",
           "17": "4d8"
-        }
+        },
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -11367,7 +12192,7 @@
       "somatic": true,
       "material": {
         "text": "a shard of glass from a mirror",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11380,6 +12205,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -11418,7 +12245,8 @@
         "dice": "2d6",
         "types": [
           "fire"
-        ]
+        ],
+        "trigger": "hit"
       }
     ],
     "projectiles": {
@@ -11454,11 +12282,14 @@
         "text": "a focus worth 1,000+ GP, such as a crystal ball, mirror, or water-filled font",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11514,6 +12345,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -11550,7 +12383,9 @@
     "saves": [
       {
         "ability": "con",
-        "onSuccess": "other"
+        "dc": "spell-save-dc",
+        "when": "start-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -11586,15 +12421,21 @@
         "text": "a chest, 3 feet by 2 feet by 2 feet, constructed from rare materials worth 5,000+ GP, and a Tiny replica of the chest made from the same materials worth 50+ GP",
         "costs": [
           {
-            "amount": 5000,
-            "unit": "gp"
+            "cost": {
+              "amount": 5000,
+              "unit": "gp"
+            },
+            "consumed": false
           },
           {
-            "amount": 50,
-            "unit": "gp"
+            "cost": {
+              "amount": 50,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11626,7 +12467,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of talc",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11670,6 +12511,8 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -11697,7 +12540,7 @@
       "somatic": true,
       "material": {
         "text": "a copper wire",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11729,11 +12572,14 @@
         "text": "gem dust worth 5,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 5000,
-            "unit": "gp"
+            "cost": {
+              "amount": 5000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -11742,8 +12588,12 @@
     },
     "description": "With a touch, you magically sequester an object or a willing creature. For the duration, the target has the Invisible condition and can’t be targeted by Divination spells, detected by magic, or viewed remotely with magic.\nIf the target is a creature, it enters a state of suspended animation; it has the Unconscious condition, doesn’t age, and doesn’t need food, water, or air.\nYou can set a condition for the spell to end early. The condition can be anything you choose, but it must occur or be visible within 1 mile of the target. Examples include “after 1,000 years” or “when the tarrasque awakens.” This spell also ends if the target takes any damage.",
     "conditions": [
-      "invisible",
-      "unconscious"
+      {
+        "condition": "invisible"
+      },
+      {
+        "condition": "unconscious"
+      }
     ]
   },
   {
@@ -11770,11 +12620,14 @@
         "text": "a jade circlet worth 1,500+ GP",
         "costs": [
           {
-            "amount": 1500,
-            "unit": "gp"
+            "cost": {
+              "amount": 1500,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11814,7 +12667,7 @@
       "somatic": true,
       "material": {
         "text": "a chip of mica",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11826,6 +12679,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -11835,7 +12690,9 @@
         "types": [
           "thunder"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -11895,7 +12752,7 @@
       "somatic": true,
       "material": {
         "text": "a prayer scroll",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -11931,7 +12788,7 @@
       "somatic": true,
       "material": {
         "text": "mistletoe",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12021,7 +12878,8 @@
           "5": "2d8",
           "11": "3d8",
           "17": "4d8"
-        }
+        },
+        "trigger": "hit"
       }
     ]
   },
@@ -12061,7 +12919,9 @@
     },
     "description": "For the duration, no sound can be created within or pass through a 20-foot-radius Sphere centered on a point you choose within range. Any creature or object entirely inside the Sphere has Immunity to Thunder damage, and creatures have the Deafened condition while entirely inside it. Casting a spell that includes a Verbal component is impossible there.",
     "conditions": [
-      "deafened"
+      {
+        "condition": "deafened"
+      }
     ]
   },
   {
@@ -12088,7 +12948,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of fleece",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12124,11 +12984,14 @@
         "text": "powdered ruby worth 1,500+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1500,
-            "unit": "gp"
+            "cost": {
+              "amount": 1500,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -12165,7 +13028,7 @@
       "somatic": true,
       "material": {
         "text": "a pinch of sand or rose petals",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12179,12 +13042,28 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "incapacitated",
-      "unconscious"
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 0
+      },
+      {
+        "condition": "unconscious",
+        "trigger": "failed-save",
+        "save": 1
+      }
     ]
   },
   {
@@ -12216,7 +13095,7 @@
       "somatic": true,
       "material": {
         "text": "a miniature umbrella",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12230,11 +13109,17 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "prone"
+      {
+        "condition": "prone",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -12265,7 +13150,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of molasses",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12279,7 +13164,15 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ]
   },
@@ -12327,7 +13220,8 @@
           "5": "2d8",
           "11": "3d8",
           "17": "4d8"
-        }
+        },
+        "trigger": "hit"
       }
     ]
   },
@@ -12415,7 +13309,7 @@
       "somatic": true,
       "material": {
         "text": "burning incense",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12483,7 +13377,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of bitumen and a spider",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12524,7 +13418,7 @@
       "somatic": true,
       "material": {
         "text": "seven thorns",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12569,7 +13463,7 @@
       "somatic": true,
       "material": {
         "text": "a prayer scroll",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12584,6 +13478,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -12594,7 +13490,9 @@
           "radiant",
           "necrotic"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -12636,7 +13534,8 @@
           "force"
         ],
         "modifier": true,
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "hit"
       }
     ]
   },
@@ -12679,7 +13578,8 @@
           "5": "2d8",
           "11": "3d8",
           "17": "4d8"
-        }
+        },
+        "trigger": "hit"
       }
     ]
   },
@@ -12711,7 +13611,7 @@
       "somatic": true,
       "material": {
         "text": "a rotten egg",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12725,11 +13625,17 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "poisoned"
+      {
+        "condition": "poisoned",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -12755,7 +13661,7 @@
       "somatic": true,
       "material": {
         "text": "soft clay",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12790,11 +13696,14 @@
         "text": "diamond dust worth 100+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 100,
-            "unit": "gp"
+            "cost": {
+              "amount": 100,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -12838,10 +13747,14 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -12850,7 +13763,9 @@
         "dice": "2d6",
         "types": [
           "thunder"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "4d6",
@@ -12862,7 +13777,9 @@
         "dice": "10d6",
         "types": [
           "lightning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 1
       },
       {
         "dice": "2d6",
@@ -12878,7 +13795,11 @@
       }
     ],
     "conditions": [
-      "deafened"
+      {
+        "condition": "deafened",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -12906,7 +13827,7 @@
       "somatic": false,
       "material": {
         "text": "a drop of honey",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -12920,11 +13841,17 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "charmed"
+      {
+        "condition": "charmed",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -12951,11 +13878,14 @@
         "text": "an object with the image of a dragon engraved on it worth 500+ GP",
         "costs": [
           {
-            "amount": 500,
-            "unit": "gp"
+            "cost": {
+              "amount": 500,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13063,7 +13993,7 @@
       "somatic": true,
       "material": {
         "text": "a magnifying glass",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13077,6 +14007,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -13085,11 +14017,17 @@
         "dice": "6d8",
         "types": [
           "radiant"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "conditions": [
-      "blinded"
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -13121,7 +14059,7 @@
       "somatic": true,
       "material": {
         "text": "a piece of sunstone",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13132,7 +14070,15 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
+      },
+      {
+        "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -13140,11 +14086,17 @@
         "dice": "12d6",
         "types": [
           "radiant"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "conditions": [
-      "blinded"
+      {
+        "condition": "blinded",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -13178,11 +14130,14 @@
         "text": "powdered diamond worth 1,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 1000,
-            "unit": "gp"
+            "cost": {
+              "amount": 1000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -13193,14 +14148,20 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       },
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       },
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -13209,14 +14170,32 @@
         "dice": "10d10",
         "types": [
           "necrotic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ],
     "conditions": [
-      "frightened",
-      "incapacitated",
-      "stunned",
-      "unconscious"
+      {
+        "condition": "frightened",
+        "trigger": "failed-save",
+        "save": 1
+      },
+      {
+        "condition": "incapacitated",
+        "trigger": "failed-save",
+        "save": 2
+      },
+      {
+        "condition": "unconscious",
+        "trigger": "failed-save",
+        "save": 1
+      },
+      {
+        "condition": "stunned",
+        "trigger": "failed-save",
+        "save": 1
+      }
     ]
   },
   {
@@ -13252,11 +14231,15 @@
     "saves": [
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
     "conditions": [
-      "restrained"
+      {
+        "condition": "restrained"
+      }
     ]
   },
   {
@@ -13282,7 +14265,7 @@
       "somatic": true,
       "material": {
         "text": "two eggs",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13414,11 +14397,14 @@
         "text": "rare inks worth 50+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 50,
-            "unit": "gp"
+            "cost": {
+              "amount": 50,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -13495,6 +14481,8 @@
     "saves": [
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -13504,7 +14492,9 @@
         "types": [
           "thunder"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -13562,7 +14552,7 @@
       "somatic": true,
       "material": {
         "text": "a crystal bead",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13598,7 +14588,7 @@
       "somatic": false,
       "material": {
         "text": "a miniature ziggurat",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13692,7 +14682,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of mercury, a dollop of gum arabic, and a wisp of smoke",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13706,6 +14696,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]
@@ -13735,11 +14727,14 @@
         "text": "diamonds worth 25,000+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 25000,
-            "unit": "gp"
+            "cost": {
+              "amount": 25000,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -13775,11 +14770,14 @@
         "text": "mushroom powder worth 25+ GP, which the spell consumes",
         "costs": [
           {
-            "amount": 25,
-            "unit": "gp"
+            "cost": {
+              "amount": 25,
+              "unit": "gp"
+            },
+            "consumed": true
           }
         ],
-        "consumed": true
+        "consumed": "all"
       }
     },
     "duration": {
@@ -13816,11 +14814,14 @@
         "text": "a weapon with which you have proficiency and that is worth 1+ CP",
         "costs": [
           {
-            "amount": 1,
-            "unit": "cp"
+            "cost": {
+              "amount": 1,
+              "unit": "cp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13863,10 +14864,14 @@
     "saves": [
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       },
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -13875,13 +14880,17 @@
         "dice": "6d10",
         "types": [
           "bludgeoning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "5d10",
         "types": [
           "bludgeoning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 1
       }
     ]
   },
@@ -13909,7 +14918,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of string and of wood",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -13958,7 +14967,8 @@
         "types": [
           "necrotic"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "hit"
       }
     ]
   },
@@ -13992,6 +15002,8 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -14005,7 +15017,9 @@
           "5": "2d6",
           "11": "3d6",
           "17": "4d6"
-        }
+        },
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -14036,7 +15050,7 @@
       "somatic": true,
       "material": {
         "text": "a drop of bile",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14048,6 +15062,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -14057,13 +15073,17 @@
         "types": [
           "acid"
         ],
-        "perSlot": "2d4"
+        "perSlot": "2d4",
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "5d4",
         "types": [
           "acid"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -14091,7 +15111,7 @@
       "somatic": true,
       "material": {
         "text": "a piece of charcoal",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14106,10 +15126,21 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
     "damage": [
+      {
+        "dice": "5d8",
+        "types": [
+          "fire"
+        ],
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
+      },
       {
         "dice": "5d8",
         "types": [
@@ -14141,7 +15172,7 @@
       "somatic": true,
       "material": {
         "text": "a shard of glass",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14175,7 +15206,7 @@
       "somatic": true,
       "material": {
         "text": "a piece of quartz",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14190,10 +15221,14 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       },
       {
         "ability": "con",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -14203,14 +15238,18 @@
         "types": [
           "cold"
         ],
-        "perSlot": "2d6"
+        "perSlot": "2d6",
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "5d6",
         "types": [
           "cold"
         ],
-        "perSlot": "1d6"
+        "perSlot": "1d6",
+        "trigger": "failed-save",
+        "save": 1
       }
     ]
   },
@@ -14238,7 +15277,7 @@
       "somatic": true,
       "material": {
         "text": "a cube of granite",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14252,7 +15291,9 @@
     "saves": [
       {
         "ability": "dex",
-        "onSuccess": "none"
+        "dc": "spell-save-dc",
+        "when": "initial",
+        "onSuccess": "other"
       }
     ]
   },
@@ -14278,7 +15319,7 @@
       "somatic": true,
       "material": {
         "text": "a handful of thorns",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14293,6 +15334,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -14302,14 +15345,18 @@
         "types": [
           "piercing"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "7d8",
         "types": [
           "slashing"
         ],
-        "perSlot": "1d8"
+        "perSlot": "1d8",
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -14337,11 +15384,14 @@
         "text": "a pair of platinum rings worth 50+ GP each, which you and the target must wear for the duration",
         "costs": [
           {
-            "amount": 50,
-            "unit": "gp"
+            "cost": {
+              "amount": 50,
+              "unit": "gp"
+            },
+            "consumed": false
           }
         ],
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14386,7 +15436,7 @@
       "somatic": true,
       "material": {
         "text": "a short reed",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14422,7 +15472,7 @@
       "somatic": true,
       "material": {
         "text": "a piece of cork",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14460,7 +15510,7 @@
       "somatic": true,
       "material": {
         "text": "a bit of spiderweb",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14474,6 +15524,8 @@
     "saves": [
       {
         "ability": "dex",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ],
@@ -14486,7 +15538,11 @@
       }
     ],
     "conditions": [
-      "restrained"
+      {
+        "condition": "restrained",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -14526,7 +15582,15 @@
     "saves": [
       {
         "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
+      },
+      {
+        "ability": "wis",
+        "dc": "spell-save-dc",
+        "when": "end-of-turn",
+        "onSuccess": "ends"
       }
     ],
     "damage": [
@@ -14534,17 +15598,25 @@
         "dice": "10d10",
         "types": [
           "psychic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       },
       {
         "dice": "5d10",
         "types": [
           "psychic"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 1
       }
     ],
     "conditions": [
-      "frightened"
+      {
+        "condition": "frightened",
+        "trigger": "failed-save",
+        "save": 0
+      }
     ]
   },
   {
@@ -14570,7 +15642,7 @@
       "somatic": true,
       "material": {
         "text": "a candle",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14581,7 +15653,9 @@
     },
     "description": "You and up to ten willing creatures of your choice within range assume gaseous forms for the duration, appearing as wisps of cloud. While in this cloud form, a target has a Fly Speed of 300 feet and can hover; it has Immunity to the Prone condition; and it has Resistance to Bludgeoning, Piercing, and Slashing damage. The only actions a target can take in this form are the Dash action or a Magic action to begin reverting to its normal form. Reverting takes 1 minute, during which the target has the Stunned condition. Until the spell ends, the target can revert to cloud form, which also requires a Magic action followed by a 1-minute transformation.\nIf a target is in cloud form and flying when the effect ends, the target descends 60 feet per round for 1 minute until it lands, which it does safely. If it can’t land after 1 minute, it falls the remaining distance.",
     "conditions": [
-      "stunned"
+      {
+        "condition": "stunned"
+      }
     ]
   },
   {
@@ -14607,7 +15681,7 @@
       "somatic": true,
       "material": {
         "text": "a fan and a feather",
-        "consumed": false
+        "consumed": "none"
       }
     },
     "duration": {
@@ -14621,6 +15695,8 @@
     "saves": [
       {
         "ability": "str",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "half"
       }
     ],
@@ -14629,7 +15705,9 @@
         "dice": "4d8",
         "types": [
           "bludgeoning"
-        ]
+        ],
+        "trigger": "failed-save",
+        "save": 0
       }
     ]
   },
@@ -14658,7 +15736,7 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "Wish is the mightiest spell a mortal can cast. By simply speaking aloud, you can alter reality itself.\nThe basic use of this spell is to duplicate any other spell of level 8 or lower. If you use it this way, you don’t need to meet any requirements to cast that spell, including costly components. The spell simply takes effect.\nAlternatively, you can create one of the following effects of your choice:\nObject Creation. You create one object of up to 25,000 GP in value that isn’t a magic item. The object can be no more than 300 feet in any dimension, and it appears in an unoccupied space that you can see on the ground.\nInstant Health. You allow yourself and up to twenty creatures that you can see to regain all Hit Points, and you end all effects on them listed in the Greater Restoration spell.\nResistance. You grant up to ten creatures that you can see Resistance to one damage type that you choose. This Resistance is permanent.\nSpell Immunity. You grant up to ten creatures you can see immunity to a single spell or other magical effect for 8 hours.\nSudden Learning. You replace one of your feats with another feat for which you are eligible. You lose all the benefits of the old feat and gain the benefits of the new one. You can’t replace a feat that is a prerequisite for any of your other feats or features.\nRoll Redo. You undo a single recent event by forcing a reroll of any die roll made within the last round (including your last turn). Reality reshapes itself to accommodate the new result. For example, a Wish spell could undo an ally’s failed saving throw or a foe’s Critical Hit. You can force the reroll to be made with Advantage or Disadvantage, and you choose whether to use the reroll or the original roll.\nReshape Reality. You may wish for something not included in any of the other effects. To do so, state your wish to the GM as precisely as possible. The GM has great latitude in ruling what occurs in such an instance; the greater the wish, the greater the likelihood that something goes wrong. This spell might simply fail, the effect you desire might be achieved only in part, or you might suffer an unforeseen consequence as a result of how you worded the wish. For example, wishing that a villain were dead might propel you forward in time to a period when that villain is no longer alive, effectively removing you from the game. Similarly, wishing for a Legendary magic item or an Artifact might instantly transport you to the presence of the item’s current owner. If your wish is granted and its effects have consequences for a whole community, region, or world, you are likely to attract powerful foes. If your wish would affect a god, the god’s divine servants might instantly intervene to prevent it or to encourage you to craft the wish in a particular way. If your wish would undo the multiverse itself, your wish fails. The stress of casting Wish to produce any effect other than duplicating another spell weakens you. After enduring that stress, each time you cast a spell until you finish a Long Rest, you take 1d10 Necrotic damage per level of that spell. This damage can’t be reduced or prevented in any way. In addition, your Strength score becomes 3 for 2d4 days. For each of those days that you spend resting and doing nothing more than light activity, your remaining recovery time decreases by 2 days. Finally, there is a 33 percent chance that you are unable to cast Wish ever again if you suffer this stress."
+    "description": "Wish is the mightiest spell a mortal can cast. By simply speaking aloud, you can alter reality itself.\nThe basic use of this spell is to duplicate any other spell of level 8 or lower. If you use it this way, you don’t need to meet any requirements to cast that spell, including costly components. The spell simply takes effect.\nAlternatively, you can create one of the following effects of your choice:\nObject Creation. You create one object of up to 25,000 GP in value that isn’t a magic item. The object can be no more than 300 feet in any dimension, and it appears in an unoccupied space that you can see on the ground.\nInstant Health. You allow yourself and up to twenty creatures that you can see to regain all Hit Points, and you end all effects on them listed in the Greater Restoration spell.\nResistance. You grant up to ten creatures that you can see Resistance to one damage type that you choose. This Resistance is permanent.\nSpell Immunity. You grant up to ten creatures you can see immunity to a single spell or other magical effect for 8 hours.\nSudden Learning. You replace one of your feats with another feat for which you are eligible. You lose all the benefits of the old feat and gain the benefits of the new one. You can’t replace a feat that is a prerequisite for any of your other feats or features.\nRoll Redo. You undo a single recent event by forcing a reroll of any die roll made within the last round (including your last turn). Reality reshapes itself to accommodate the new result. For example, a Wish spell could undo an ally’s failed saving throw or a foe’s Critical Hit. You can force the reroll to be made with Advantage or Disadvantage, and you choose whether to use the reroll or the original roll.\nReshape Reality. You may wish for something not included in any of the other effects. To do so, state your wish to the GM as precisely as possible. The GM has great latitude in ruling what occurs in such an instance; the greater the wish, the greater the likelihood that something goes wrong. This spell might simply fail, the effect you desire might be achieved only in part, or you might suffer an unforeseen consequence as a result of how you worded the wish. For example, wishing that a villain were dead might propel you forward in time to a period when that villain is no longer alive, effectively removing you from the game. Similarly, wishing for a Legendary magic item or an Artifact might instantly transport you to the presence of the item’s current owner. If your wish is granted and its effects have consequences for a whole community, region, or world, you are likely to attract powerful foes. If your wish would affect a god, the god’s divine servants might instantly intervene to prevent it or to encourage you to craft the wish in a particular way. If your wish would undo the multiverse itself, your wish fails.\nThe stress of casting Wish to produce any effect other than duplicating another spell weakens you. After enduring that stress, each time you cast a spell until you finish a Long Rest, you take 1d10 Necrotic damage per level of that spell. This damage can’t be reduced or prevented in any way. In addition, your Strength score becomes 3 for 2d4 days. For each of those days that you spend resting and doing nothing more than light activity, your remaining recovery time decreases by 2 days. Finally, there is a 33 percent chance that you are unable to cast Wish ever again if you suffer this stress."
   },
   {
     "id": "word-of-recall",
@@ -14724,6 +15802,8 @@
     "saves": [
       {
         "ability": "cha",
+        "dc": "spell-save-dc",
+        "when": "initial",
         "onSuccess": "none"
       }
     ]

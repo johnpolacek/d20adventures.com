@@ -100,6 +100,8 @@ const hyphenated = new Set<string>()
 for (const page of pages) for (const line of page.split("\n")) for (const word of line.slice(0, -1).match(/[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+/g) ?? []) hyphenated.add(word.toLowerCase())
 
 function joinLines(previous: string, next: string) {
+  // "Enlarge/" at a line end is the spell "Enlarge/Reduce", which the PDF breaks after the slash.
+  if (previous.endsWith("/")) return previous + next
   if (!previous.endsWith("-")) return `${previous} ${next}`
   const left = previous.match(/[A-Za-z0-9’-]+$/)?.[0] ?? ""
   const right = next.match(/^[A-Za-z0-9’]+/)?.[0] ?? ""
@@ -107,23 +109,21 @@ function joinLines(previous: string, next: string) {
   return compound ? previous + next : previous.slice(0, -1) + next
 }
 
-const leadIn = /^(?:[A-Z][\w’-]*)(?: (?:[A-Z][\w’-]*|of|the|to|a|and|in|for|on)){0,4}\. (?=[A-Z“])/
+const leadIn = /^(?:[A-Z][\w’-]*)(?: (?:[A-Z0-9][\w’-]*|of|the|to|a|and|in|for|on)){0,4}\. (?=[A-Z“])/
 
 function paragraphs(rows: string[]): string[] {
   const out: string[] = []
-  for (const [index, row] of rows.entries()) {
+  for (const row of rows) {
     if (!row.trim()) continue
     const text = row.replace(/[\t ]+/g, " ").trim()
     const previous = out.at(-1)
-    // A line starts a paragraph when it is indented, a bullet or footnote, a run-in label after a sentence end, the name
-    // line of a stat block, or text after a bullet.
-    const statBlock = /^(?:Tiny|Small|Medium|Large|Huge|Gargantuan) [A-Z]/.test(rows[index + 1]?.trim() ?? "")
+    // A line starts a paragraph when it is indented, a bullet or footnote, a run-in label after a sentence end, or text
+    // after a bullet.
     const fresh =
       previous === undefined ||
       row.startsWith("\t") ||
       text.startsWith("•") ||
       text.startsWith("*") ||
-      statBlock ||
       (previous.startsWith("•") && /^[A-Z“]/.test(text)) ||
       (leadIn.test(text) && /[.!?:)”]$/.test(previous))
     if (fresh) out.push(text)
@@ -142,6 +142,10 @@ const rollOf = (text: string) => {
   return { min: value(match[1]), max: value(match[2] ?? match[1]) }
 }
 const endsTable = (row: string) => row.startsWith("\t") || row.startsWith("*") || row.startsWith("•")
+const lastFilled = (rows: string[], before: number) => {
+  for (let i = before; i >= 0; i--) if (rows[i].trim() !== "") return rows[i]
+  return undefined
+}
 const captionLike = (row: string | undefined, before: string | undefined) =>
   row !== undefined && /^[A-Z][A-Za-z’ ]{2,48}$/.test(row.trim()) && row.trim().split(" ").length <= 6 && (before === undefined || /[.!?:”]\s*$/.test(before))
 const clean = (rows: string[]) =>
@@ -170,6 +174,8 @@ function diceTable(id: string, rows: string[], at: number, previousEnd: number):
     const row = rows[p]
     if (row.trim() === "") continue
     if (endsTable(row)) break
+    // Another table follows: a caption line, then its die heading.
+    if (!twoUp && covered === sides && captionLike(row, undefined) && /^1d\d+$/.test((rows.slice(p + 1).find((next) => next.trim() !== "") ?? "").trim())) break
     // A two-up table has single-line cells, so it is done once every number is covered and its last row has text.
     if (twoUp && seen.size === sides && segments.at(-1)?.length === 2) break
     if (row.trim() === dice) {
@@ -198,14 +204,14 @@ function diceTable(id: string, rows: string[], at: number, previousEnd: number):
   })
   // A two-up table prints left row, right row, left row. Left rows come first in the logical order.
   const rowsOut = twoUp ? [...parsed.filter((_, i) => i % 2 === 0), ...parsed.filter((_, i) => i % 2 === 1)] : parsed
-  const caption = captionLike(rows[at - 1], rows[at - 2]) || (at - 1 === previousEnd && captionLike(rows[at - 1], undefined)) ? rows[at - 1].trim() : undefined
+  const caption = captionLike(rows[at - 1], lastFilled(rows, at - 2)) || (at - 1 === previousEnd && captionLike(rows[at - 1], undefined)) ? rows[at - 1].trim() : undefined
   return { table: { ...(caption ? { caption } : {}), dice, columns, rows: rowsOut }, from: caption ? at - 1 : at, to: p }
 }
 
 // Tables the PDF prints without a die. Each column is a pattern for one line, `any` takes one line of anything,
 // and `text` takes lines until the next column's pattern matches.
 type Col = RegExp | "any" | "text"
-type Spec = { header: string[]; cols: Col[] }
+type Spec = { header: string[]; cols: Col[]; twoUp?: boolean; columns?: string[] }
 const rarityCell = /^(Common|Uncommon|Rare|Very Rare|Legendary)$/
 const intCell = /^\d+$/
 const specs: Record<string, Spec[]> = {
@@ -216,6 +222,14 @@ const specs: Record<string, Spec[]> = {
   "dragon-scale-mail": [{ header: ["Dragon", "Resistance", "Dragon", "Resistance"], cols: ["any", "any", "any", "any"] }],
   "elemental-gem": [{ header: ["Gem", "Summoned Elemental"], cols: ["any", "any"] }],
   "cube-of-force": [{ header: ["Spell", "Charge Cost"], cols: ["any", intCell] }],
+  "ring-of-shooting-stars": [
+    {
+      header: ["Number of", "Spheres", "Lightning", "Damage", "Number of", "Spheres", "Lightning", "Damage"],
+      columns: ["Number of Spheres", "Lightning Damage"],
+      cols: [intCell, new RegExp(`^${diceText}$`), intCell, new RegExp(`^${diceText}$`)],
+      twoUp: true,
+    },
+  ],
   "ring-of-elemental-command": [{ header: ["Plane", "Spells (Charges)"], cols: [/^(Air|Earth|Fire|Water)$/, "text"] }],
 }
 const costCell = /^(\d+|\d+ charges? per .*)$/
@@ -224,8 +238,8 @@ function matches(col: Col, row: string) {
   return col === "any" || col === "text" ? true : col.test(row.trim())
 }
 
-function specTable(rows: string[], at: number, header: string[], cols: Col[], twoUp: boolean, headerLength: number): Taken {
-  const columns = twoUp ? header.slice(0, header.length / 2) : header
+function specTable(rows: string[], at: number, header: string[], cols: Col[], twoUp: boolean, headerLength: number, named?: string[]): Taken {
+  const columns = named ?? (twoUp ? header.slice(0, header.length / 2) : header)
   let p = at + headerLength
   const parsed: string[][] = []
   // A header repeated at a page break is skipped.
@@ -366,8 +380,8 @@ function takeTables(id: string, rows: string[]): { rows: string[]; tables: ItemT
   for (const spec of specs[id] ?? []) {
     const at = findHeader(rows, spec.header)
     if (at < 0) throw new Error(`${id}: table header ${spec.header.join(" / ")} not found`)
-    const twoUp = spec.header.length === 4 && spec.header[0] === spec.header[2]
-    const taken = specTable(rows, at, spec.header, spec.cols, twoUp, spec.header.length)
+    const twoUp = spec.twoUp ?? (spec.header.length === 4 && spec.header[0] === spec.header[2])
+    const taken = specTable(rows, at, spec.header, spec.cols, twoUp, spec.header.length, spec.columns)
     const caption = captionLike(rows[at - 1], rows[at - 2]) ? rows[at - 1].trim() : undefined
     if (caption) taken.from = at - 1
     take({ ...taken, table: { ...(caption ? { caption } : {}), ...taken.table } })
@@ -410,7 +424,8 @@ function leverTable(rows: string[]): ItemTable {
 
 /* ---------- mechanics ---------- */
 
-const sentences = (text: string) => text.split(/(?<=[.!?])\s+/)
+// Sentences end at ".", "!" or "?" followed by a space.
+const sentences = (text: string) => text.replace(/([.!?])\s+/g, "$1\u0000").split("\u0000")
 
 // A target phrase is a list such as "Armor Class, saving throws, and spell attack rolls". Parts are kept while they
 // still name something a bonus applies to, so "Armor Class, and you know Abyssal" gives only Armor Class.
@@ -423,14 +438,29 @@ function bonusTargets(phrase: string) {
   return targets
 }
 
+type FoundBonus = { to: string; value: number; text: string; condition?: string }
+
+// A bonus holds without a condition when nothing in its sentence limits it. It is conditional when the sentence opens
+// with a situation ("While in that Bright Light, ...", "When you are hit ...") or the target phrase is followed by a
+// limit ("against ranged attack rolls", "if you are wearing no armor", "made to climb or swim").
 function bonusesOf(text: string) {
-  const found: { to: string; value: number; text: string }[] = []
+  const found: FoundBonus[] = []
   const re = /\+(\d+) bonus to ([^.;]+?)(?= (?:made|while|if|when|against|determined|in addition|that|on|with|but|and can)\b|[.;]|$)/g
   for (const sentence of sentences(text)) {
     if (sentence.startsWith("For example")) continue
+    const lead = /^((?:While in|When|If) [^,]+),/.exec(sentence)?.[1]
     re.lastIndex = 0
     for (const match of sentence.matchAll(re)) {
-      for (const to of bonusTargets(match[2])) if (!found.some((bonus) => bonus.to === to && bonus.value === Number(match[1]))) found.push({ to, value: Number(match[1]), text: sentence })
+      const tail = sentence
+        .slice((match.index ?? 0) + match[0].length)
+        .replace(/[.;]\s*$/, "")
+        .trim()
+      const limit = /^(?:against|if|when|made to|made with such)\b/.test(tail) ? (tail.startsWith("against") ? tail.split(", ")[0] : tail) : undefined
+      const condition = [lead, limit].filter(Boolean).join("; ") || undefined
+      for (const to of bonusTargets(match[2])) {
+        if (!found.some((bonus) => bonus.to === to && bonus.value === Number(match[1]) && bonus.condition === condition))
+          found.push({ to, value: Number(match[1]), text: sentence, ...(condition ? { condition } : {}) })
+      }
     }
   }
   return found
@@ -443,8 +473,30 @@ const spellHeadings = (() => {
   return [...names].sort((a, b) => b.length - a.length)
 })()
 
-type Spell = { id: string; level?: number; charges?: number; maxCharges?: number; upcastsWithCharges?: true; chargesPerSpellLevel?: true; saveDc?: number }
+const escapeName = (name: string) => name.replace(/[/()]/g, "\\$&")
 
+// Whole spell names in the text. The longest name wins where one holds another, so "See Invisibility" is one mention
+// and never also "Invisibility".
+function mentions(text: string): { name: string; index: number }[] {
+  const taken: boolean[] = []
+  const found: { name: string; index: number }[] = []
+  for (const name of spellHeadings) {
+    const re = new RegExp(`(^|[^A-Za-z’])(${escapeName(name)})(?![A-Za-z’])`, "g")
+    for (let match = re.exec(text); match; match = re.exec(text)) {
+      const index = match.index + match[1].length
+      re.lastIndex = index + name.length
+      if (taken.slice(index, index + name.length).some(Boolean)) continue
+      for (let i = index; i < index + name.length; i++) taken[i] = true
+      found.push({ name, index })
+    }
+  }
+  return found.sort((a, b) => a.index - b.index)
+}
+
+type Spell = { id: string; group?: string; level?: number; charges?: number; maxCharges?: number; upcastsWithCharges?: true; chargesPerSpellLevel?: true; saveDc?: number }
+
+// A spell is listed only when the item lets its user cast it, or gives its effect (a potion): the name follows "cast",
+// follows "effect of the", or is a spell the item detonates ("as a level 3 Fireball (save DC 15)").
 function spellsOf(paras: string[], tables: ItemTable[]): Spell[] {
   const found = new Map<string, Spell>()
   const add = (name: string, extra: Partial<Spell> = {}) => {
@@ -457,35 +509,34 @@ function spellsOf(paras: string[], tables: ItemTable[]): Spell[] {
     if (para.startsWith("•") && units.length) units[units.length - 1] += ` ${para}`
     else units.push(...(para.endsWith(":") ? [para] : sentences(para)))
   }
-  const escapeName = (name: string) => name.replace(/[/()]/g, "\\$&")
   for (const unit of units) {
-    const castAt = unit.search(/\bcast\b|\bcasting\b|determine the spell/)
-    const cost = /\bexpend (?:no more than )?(\d+)(?: or more)?(?: of [A-Za-z’ ]+?)? charges?\b[^.]*?\bcast\b/.exec(unit)
+    const castAt = unit.search(/\bcast\b|determine the spell/)
+    const cost = /\bexpend (?:no more than )?(\d+)(?: or more)?(?: of [A-Za-z’0-9 ]+?)? charges?\b[^.]*?\bcast\b/.exec(unit)
     const unitDc = /\(save DC (\d+)\)/.exec(unit)?.[1]
-    for (const name of spellHeadings) {
-      const word = `(?<![A-Za-z’])${escapeName(name)}(?![A-Za-z’])`
-      // Potions give a spell's effect without casting it, and the Necklace of Fireballs detonates beads as a Fireball.
-      const gives = new RegExp(String.raw`effect of the ${word} spell(?: \(save DC (\d+)\))?`).exec(unit) ?? new RegExp(String.raw`as a level (\d) ${word} \(save DC (\d+)\)`).exec(unit)
-      if (gives) {
-        const asLevel = /as a level (\d)/.test(gives[0])
-        add(name, { ...(asLevel ? { level: Number(gives[1]), saveDc: Number(gives[2]) } : gives[1] ? { saveDc: Number(gives[1]) } : {}) })
+    for (const mention of mentions(unit)) {
+      const before = unit.slice(0, mention.index)
+      const after = unit.slice(mention.index + mention.name.length)
+      const paren = /^(?: spell)?(?: \((?:save DC (\d+)|level (\d) version|expends (\d+) charges?)\))?/.exec(after) as RegExpExecArray
+      if (/effect of the $/.test(before) && /^ spell/.test(after)) {
+        add(mention.name, paren[1] ? { saveDc: Number(paren[1]) } : {})
+        continue
       }
-      if (castAt < 0) continue
-      const tail = unit.slice(castAt)
-      const re = new RegExp(String.raw`${word}(?: spell)?(?: \((?:save DC (\d+)|level (\d) version|expends (\d+) charges?)\))?`, "g")
-      for (const match of tail.matchAll(re)) {
-        const before = tail.slice(0, match.index)
-        if (/\b(?:targeted by|against|from|by) (?:an? |the )?$/.test(before)) continue
-        const castsIt = /\bcast (?:the )?(?:level \d version of )?(?:the )?$/.test(before)
-        if (/^ spell\b/.test(match[0].slice(name.length)) && !castsIt) continue
-        const level = /level (\d) version of (?:the )?$/.exec(before)?.[1]
-        const saveDc = match[1] ?? unitDc
-        add(name, {
-          ...(saveDc ? { saveDc: Number(saveDc) } : {}),
-          ...(match[2] ? { level: Number(match[2]) } : level ? { level: Number(level) } : {}),
-          ...(match[3] ? { charges: Number(match[3]) } : cost ? { charges: Number(cost[1]) } : {}),
-        })
+      const detonated = /as a level (\d) $/.exec(before)
+      if (detonated && paren[1]) {
+        add(mention.name, { level: Number(detonated[1]), saveDc: Number(paren[1]) })
+        continue
       }
+      if (castAt < 0 || mention.index < castAt) continue
+      if (/\b(?:targeted by|against|from|by) (?:an? |the )?$/.test(before)) continue
+      const castsIt = /\bcast (?:the )?(?:level \d version of )?(?:the )?$/.test(before)
+      if (/^ spell\b/.test(after) && !castsIt) continue
+      const level = /level (\d) version of (?:the )?$/.exec(before)?.[1]
+      const saveDc = paren[1] ?? unitDc
+      add(mention.name, {
+        ...(saveDc ? { saveDc: Number(saveDc) } : {}),
+        ...(paren[2] ? { level: Number(paren[2]) } : level ? { level: Number(level) } : {}),
+        ...(paren[3] ? { charges: Number(paren[3]) } : cost ? { charges: Number(cost[1]) } : {}),
+      })
     }
   }
   // "For 1 charge, you cast the level 3 version of the spell. You can increase the spell’s level by 1 for each additional charge."
@@ -511,7 +562,8 @@ function spellsOf(paras: string[], tables: ItemTable[]): Spell[] {
       }
     }
     if (table.columns[1] === "Spells (Charges)") {
-      for (const { cells } of table.rows) for (const match of cells[1].matchAll(/([A-Z][A-Za-z/ ]+?) \((\d+) charges?\)/g)) add(match[1], { charges: Number(match[2]), saveDc: 18 })
+      for (const { cells } of table.rows)
+        for (const match of cells[1].matchAll(/([A-Z][A-Za-z/ ]+?) \((\d+) charges?\)/g)) add(match[1], { group: cells[0], charges: Number(match[2]), ...(tableDc ? { saveDc: Number(tableDc) } : {}) })
     }
     if (table.columns.join("|") === "Bead|Spell") {
       for (const { cells } of table.rows)
@@ -541,54 +593,163 @@ function reuseMoments(text: string) {
     if (!/can’t|cannot|ceases to function/.test(sentence)) continue
     for (const match of sentence.matchAll(/until (?:the next dawn|you finish a (Short or Long|Long|Short) Rest)/g)) {
       if (!match[0].includes("Rest")) found.add("dawn")
-      else if (match[1] === "Short or Long") found.add("short-rest").add("long-rest")
-      else found.add(`${match[1].toLowerCase()}-rest`)
+      else found.add(`${match[1].toLowerCase().replace(" or long", "-or-long")}-rest`)
     }
   }
-  return ["dawn", "short-rest", "long-rest"].filter((moment) => found.has(moment))
+  return ["dawn", "short-rest", "short-or-long-rest", "long-rest"].filter((moment) => found.has(moment))
 }
 
-function savesChecksDamage(flat: string) {
+// Whose damage a sentence states: extra on a hit, the item's own base damage, the user's, the item's, or an effect.
+function damageRole(sentence: string) {
+  if (/\bextra\b/.test(sentence)) return "extra"
+  if (/instead of the usual/.test(sentence)) return "base"
+  if (/\byou take\b|to the user\b|attempts to read it takes/.test(sentence)) return "to-user"
+  if (/\bthe vehicle takes\b/.test(sentence)) return "to-item"
+  return "effect"
+}
+
+function savesChecksDamage(text: string) {
   const saves: { ability: string; dc: number }[] = []
   const checks: { ability: string; skill?: string; dc: number }[] = []
-  const damage: { dice: string; type: string }[] = []
+  const damage: { dice: string; type: string; role: string; text: string }[] = []
   const abilities = Object.keys(abilityByName).join("|")
   const same = (a: object, b: object) => JSON.stringify(a) === JSON.stringify(b)
-  for (const match of flat.matchAll(new RegExp(String.raw`DC (\d+) (${abilities}) saving throw`, "g"))) {
+  for (const match of text.matchAll(new RegExp(String.raw`DC (\d+) (${abilities}) saving throw`, "g"))) {
     const save = { ability: abilityByName[match[2]], dc: Number(match[1]) }
     if (!saves.some((other) => same(other, save))) saves.push(save)
   }
   // "make a Constitution saving throw (DC 11 for Light or DC 15 for Daylight)"
-  for (const match of flat.matchAll(new RegExp(String.raw`(${abilities}) saving throw \(DC (\d+) for [A-Za-z ]+ or DC (\d+) for [A-Za-z ]+\)`, "g"))) {
+  for (const match of text.matchAll(new RegExp(String.raw`(${abilities}) saving throw \(DC (\d+) for [A-Za-z ]+ or DC (\d+) for [A-Za-z ]+\)`, "g"))) {
     for (const dc of [match[2], match[3]]) {
       const save = { ability: abilityByName[match[1]], dc: Number(dc) }
       if (!saves.some((other) => same(other, save))) saves.push(save)
     }
   }
-  for (const match of flat.matchAll(new RegExp(String.raw`DC (\d+) (${abilities})(?: \(([A-Za-z ]+)\))? check`, "g"))) {
+  for (const match of text.matchAll(new RegExp(String.raw`DC (\d+) (${abilities})(?: \(([A-Za-z ]+)\))? check`, "g"))) {
     const check = { ability: abilityByName[match[2]], ...(match[3] ? { skill: toId(match[3]) } : {}), dc: Number(match[1]) }
     if (!checks.some((other) => same(other, check))) checks.push(check)
   }
-  for (const match of flat.matchAll(new RegExp(String.raw`(${diceText})\)? (${damageTypes}) damage`, "g"))) {
-    const entry = { dice: asDice(match[1]), type: match[2].toLowerCase() }
-    if (!damage.some((other) => same(other, entry))) damage.push(entry)
+  for (const sentence of sentences(text)) {
+    for (const match of sentence.matchAll(new RegExp(String.raw`(${diceText})\)? (${damageTypes}) damage`, "g"))) {
+      const entry = { dice: asDice(match[1]), type: match[2].toLowerCase(), role: damageRole(sentence), text: sentence }
+      if (!damage.some((other) => other.dice === entry.dice && other.type === entry.type && other.role === entry.role)) damage.push(entry)
+    }
   }
   return { saves, checks, damage }
+}
+
+/* ---------- stat blocks ---------- */
+
+const sizeLine = /^(?:Tiny|Small|Medium|Large|Huge|Gargantuan)(?: or Smaller)? [A-Za-z]+, [A-Z][a-z]+/
+
+// A stat block runs from its name line to the line after its "CR" line, and on to the end of the item when it has
+// Traits and Actions, which the text prints after the CR line.
+function takeStatBlock(rows: string[]) {
+  const at = rows.findIndex((row, i) => row.trim() !== "" && !row.startsWith("\t") && sizeLine.test(rows[i + 1]?.trim() ?? ""))
+  if (at < 0) return { rows, statBlocks: [] as unknown[] }
+  const cr = rows.findIndex((row, i) => i > at && row.startsWith("CR "))
+  let end = cr + 1
+  while (end < rows.length && !rows[end].startsWith("\t")) end++
+  return {
+    rows: [...rows.slice(0, at), ...rows.slice(end)],
+    statBlocks: [
+      statBlock(
+        rows
+          .slice(at, end)
+          .map((row) => row.replace(/\s+/g, " ").trim())
+          .filter(Boolean)
+      ),
+    ],
+  }
+}
+
+const abilityKeys = ["str", "dex", "con", "int", "wis", "cha"] as const
+const signed = (text: string) => Number(text.replace("−", "-"))
+
+function statBlock(rows: string[]) {
+  const value = (label: string) => rows.find((row) => row.startsWith(`${label} `))?.slice(label.length + 1)
+  const labels = ["Resistances", "Immunities", "Senses", "Languages", "CR"]
+  const field = (label: string) => {
+    const at = rows.findIndex((row) => row.startsWith(`${label} `))
+    if (at < 0) return undefined
+    const parts = [rows[at].slice(label.length + 1)]
+    for (let i = at + 1; i < rows.length && !labels.some((other) => rows[i].startsWith(`${other} `)) && !["Traits", "Actions", "Bonus Actions"].includes(rows[i]); i++) parts.push(rows[i])
+    return clean(parts)
+  }
+  const speedAt = rows.findIndex((row) => row.startsWith("Speed "))
+  const abilityEnd = rows.findIndex((row, i) => i > speedAt && labels.some((label) => row.startsWith(`${label} `)))
+  const scores = rows
+    .slice(speedAt + 1, abilityEnd)
+    .filter((row) => row !== "MOD SAVE")
+    .join(" ")
+  const abilities: Record<string, { score: number; modifier: number; save: number }> = {}
+  for (const key of abilityKeys) {
+    const match = new RegExp(`${key[0].toUpperCase()}${key.slice(1)} (\\d+) ([+−-]\\d+) ([+−-]\\d+)`).exec(scores)
+    if (!match) throw new Error(`stat block ${rows[0]}: no ${key} line in "${scores}"`)
+    abilities[key] = { score: Number(match[1]), modifier: signed(match[2]), save: signed(match[3]) }
+  }
+  const section = (heading: string, until: string[]) => {
+    const at = rows.indexOf(heading)
+    if (at < 0) return undefined
+    const stop = rows.findIndex((row, i) => i > at && until.includes(row))
+    const entries = paragraphs(rows.slice(at + 1, stop < 0 ? rows.length : stop)).map((text) => {
+      const dot = text.indexOf(". ")
+      return { name: text.slice(0, dot), text: text.slice(dot + 2) }
+    })
+    return entries.length ? entries : undefined
+  }
+  const traits = section("Traits", ["Actions", "Bonus Actions"])
+  const actions = section("Actions", ["Bonus Actions"])
+  const bonusActions = section("Bonus Actions", [])
+  const resistances = field("Resistances")
+  const immunities = field("Immunities")
+  return {
+    name: rows[0],
+    type: rows[1],
+    ac: (value("AC") as string).trim(),
+    hp: value("HP") as string,
+    speed: value("Speed") as string,
+    abilities,
+    ...(resistances ? { resistances } : {}),
+    ...(immunities ? { immunities } : {}),
+    senses: field("Senses") as string,
+    languages: field("Languages") as string,
+    cr: field("CR") as string,
+    ...(traits ? { traits } : {}),
+    ...(actions ? { actions } : {}),
+    ...(bonusActions ? { bonusActions } : {}),
+  }
 }
 
 /* ---------- variants from paragraphs, tables and subtitles ---------- */
 
 const rarityId = (word: string) => toId(word)
 
+// Variants that are paragraphs ("Bird (Rare). ...") carry the values their own paragraphs state, up to the next variant.
 function paragraphVariants(paras: string[]) {
-  const variants: { name: string; rarity: string; bonuses?: { to: string; value: number }[] }[] = []
-  for (const para of paras) {
-    const match = new RegExp(String.raw`^([A-Z][A-Za-z ]+) \((${rarityWords})\)\. `).exec(para)
-    if (!match) continue
-    const bonuses = bonusesOf(para).map(({ to, value }) => ({ to, value }))
-    variants.push({ name: match[1], rarity: rarityId(match[2]), ...(bonuses.length ? { bonuses } : {}) })
-  }
-  return variants
+  const starts = paras.flatMap((para, index) => (new RegExp(String.raw`^([A-Z][A-Za-z ]+) \((${rarityWords})\)\. `).test(para) ? [index] : []))
+  const variants = starts.map((start, k) => {
+    const group = paras.slice(start, starts[k + 1] ?? paras.length)
+    const match = new RegExp(String.raw`^([A-Z][A-Za-z ]+) \((${rarityWords})\)\. `).exec(group[0]) as RegExpExecArray
+    const text = group.join(" ")
+    const bonuses = bonusesOf(text)
+      .filter((bonus) => !bonus.condition)
+      .map(({ to, value }) => ({ to, value }))
+    const stats = savesChecksDamage(text)
+    const charges = chargesOf(text)
+    const spells = spellsOf(group, [])
+    return {
+      name: match[1],
+      rarity: rarityId(match[2]),
+      ...(bonuses.length ? { bonuses } : {}),
+      ...(charges ? { charges } : {}),
+      ...(stats.saves.length ? { saves: stats.saves } : {}),
+      ...(stats.checks.length ? { checks: stats.checks } : {}),
+      ...(stats.damage.length ? { damage: stats.damage } : {}),
+      ...(spells.length ? { spells } : {}),
+    }
+  })
+  return { intro: paras.slice(0, starts[0] ?? paras.length), variants }
 }
 
 function tableVariants(id: string, tables: ItemTable[]) {
@@ -612,9 +773,6 @@ function tableVariants(id: string, tables: ItemTable[]) {
 const usedUp =
   /single-use|enough of it for one use|dust is consumed|ceases to be magical|ammunition is no longer magical|ammunition becomes nonmagical|bead explodes[^.]*is destroyed|dissolves on your tongue/
 
-// Items whose charges belong to one variant, not to the item.
-const chargesPerVariant = new Set(["figurine-of-wondrous-power"])
-
 function bodyOf(index: number): string[] {
   const next = headings[index + 1]
   return lines.slice(headings[index].subEnd + 1, next ? next.nameStart : lines.length).map((line) => line.text)
@@ -631,11 +789,16 @@ function build(): MagicItem[] {
   const items = headings.map((heading, index) => {
     const id = toId(heading.name)
     const sub = parseSubtitle(heading.subtitle)
-    const { rows, tables: parsedTables } = takeTables(id, bodies[index])
+    const withoutStats = takeStatBlock(bodies[index])
+    const { rows, tables: parsedTables } = takeTables(id, withoutStats.rows)
     const tables = id === "apparatus-of-the-crab" ? [levers, ...parsedTables] : parsedTables
     const paras = paragraphs(rows)
     const flat = paras.join(" ")
-    const paragraphForms = paragraphVariants(paras)
+    const forms = paragraphVariants(paras)
+    const paragraphForms = forms.variants
+    // Where variants carry their own paragraphs, the item itself states only what comes before them.
+    const itemParas = paragraphForms.length ? forms.intro : paras
+    const itemFlat = itemParas.join(" ")
 
     let variants = tableVariants(id, parsedTables) as MagicItem["variants"]
     if (paragraphForms.length) variants = paragraphForms as MagicItem["variants"]
@@ -653,7 +816,9 @@ function build(): MagicItem[] {
         if (ids.length) row.spells = ids
       }
     }
-    const mechanics = `${flat} ${tables.flatMap((table) => table.rows.flatMap((row) => row.cells)).join(" ")}`
+    const cells = tables.flatMap((table) => table.rows.flatMap((row) => row.cells)).join(" ")
+    const mechanics = `${itemFlat} ${cells}`
+    const everything = `${flat} ${cells}`
     const activation = (
       [
         ["magic-action", /\bMagic action\b/],
@@ -662,13 +827,22 @@ function build(): MagicItem[] {
         ["reaction", /\bReaction\b/],
       ] as const
     )
-      .filter(([, pattern]) => pattern.test(mechanics))
+      .filter(([, pattern]) => pattern.test(everything))
       .map(([kind]) => kind)
-    const reusableAfter = reuseMoments(mechanics)
+    const reusableAfter = reuseMoments(everything)
     const stats = savesChecksDamage(mechanics)
-    const charges = chargesPerVariant.has(id) ? undefined : chargesOf(flat)
-    const spells = spellsOf(paras, tables)
-    const bonuses = paragraphForms.length || sub.variants ? [] : bonusesOf(flat)
+    // A table headed "<Type> Damage" gives dice by a count, such as the lightning spheres of the Ring of Shooting Stars.
+    for (const table of tables) {
+      const type = /^(\w+) Damage$/.exec(table.columns[1] ?? "")?.[1]
+      if (!type || table.dice) continue
+      const text = sentences(flat).find((sentence) => sentence.includes(`${type} damage`) && sentence.includes("as shown in the following table")) as string
+      for (const { cells } of table.rows) stats.damage.push({ dice: cells[1], type: type.toLowerCase(), role: "effect", text })
+    }
+    const charges = chargesOf(itemFlat)
+    const spells = spellsOf(itemParas, tables)
+    const found = paragraphForms.length || sub.variants ? [] : bonusesOf(flat)
+    const bonuses = found.filter((bonus) => !bonus.condition).map(({ to, value, text }) => ({ to, value, text }))
+    const conditionalBonuses = found.filter((bonus) => bonus.condition).map(({ to, value, condition, text }) => ({ to, value, condition, text }))
     const cursed = paras.some((para) => /^Curse\. /.test(para))
     const consumable = sub.category === "potion" || sub.category === "scroll" || usedUp.test(flat)
 
@@ -686,12 +860,14 @@ function build(): MagicItem[] {
       ...(activation.length ? { activation } : {}),
       ...(reusableAfter.length ? { reusableAfter } : {}),
       ...(bonuses.length ? { bonuses } : {}),
+      ...(conditionalBonuses.length ? { conditionalBonuses } : {}),
       ...(charges ? { charges } : {}),
       ...(stats.saves.length ? { saves: stats.saves } : {}),
       ...(stats.checks.length ? { checks: stats.checks } : {}),
       ...(stats.damage.length ? { damage: stats.damage } : {}),
       ...(spells.length ? { spells } : {}),
       ...(tables.length ? { tables } : {}),
+      ...(withoutStats.statBlocks.length ? { statBlocks: withoutStats.statBlocks } : {}),
       description: paras.join("\n"),
     }
     return entry as unknown as MagicItem
@@ -701,11 +877,11 @@ function build(): MagicItem[] {
 
 /* ---------- the rules ---------- */
 
-const rulePages = [204, 205, 206, 207]
+const rulePages = [204, 205, 206, 207, 208]
 const ruleRows: Line[] = rulePages.flatMap((page) => pages[page - 1].split("\n").map((text) => ({ text, page })))
 
 // Headings of the chapter's rules, in print order. The first four share names with cells of the category table, so
-// the search starts after the last cell of that table.
+// the search starts after the last cell of that table. The sentient item tables are printed after "Special Purpose".
 const ruleHeadings = [
   "Armor",
   "Potions",
@@ -737,15 +913,26 @@ const ruleHeadings = [
   "Spells",
   "Time and Cost",
   "Sentient Magic Items",
+  "Sentient Magic Item Traits",
+  "Abilities",
+  "Alignment",
+  "Communication",
+  "Senses",
+  "Special Purpose",
+  "Conflict",
 ]
 
-// Where a table's own lines start inside a section, so the section keeps only its prose and footnote.
+// Tables the rules type elsewhere (rarity rows, tool column), cut from their section so it keeps its prose and footnote.
 const tableCaptions: Record<string, string> = {
-  Potions: "Potion Miscibility",
   Tools: "Magic Item Tools",
   "Magic Item Values by Rarity": "Magic Item Rarities and Values",
   "Time and Cost": "Magic Item Crafting Time and Cost",
 }
+
+// Sections whose printed tables become typed tables of the rule.
+const tabledSections = new Set(["Potions", "Special Purpose"])
+
+type Section = { page: number; text: string; paragraphs: string[]; tables: ItemTable[] }
 
 function ruleSections() {
   const marks: number[] = []
@@ -756,9 +943,8 @@ function ruleSections() {
     marks.push(at)
     from = at + 1
   }
-  const sections = new Map<string, { page: number; text: string }>()
+  const sections = new Map<string, Section>()
   ruleHeadings.forEach((name, i) => {
-    if (name === "Sentient Magic Items") return
     // Four rules are run-in headings: "Paired Items. You can allow ...". Their label is not part of the rule.
     const head = ruleRows[marks[i]].text.trim()
     const runIn = head.startsWith(`${name}. `) ? [head.slice(name.length + 2)] : []
@@ -770,25 +956,59 @@ function ruleSections() {
       const note = rows.findIndex((row, k) => k > at && row.startsWith("*"))
       rows = [...rows.slice(0, at), ...(note >= 0 ? rows.slice(note) : [])]
     }
-    sections.set(name, { page: ruleRows[marks[i]].page, text: paragraphs(rows).join("\n") })
+    let tables: ItemTable[] = []
+    if (tabledSections.has(name)) {
+      const taken = takeTables("rules", rows)
+      rows = taken.rows
+      tables = taken.tables
+    }
+    const paras = paragraphs(rows)
+    sections.set(name, { page: ruleRows[marks[i]].page, text: paras.join("\n"), paragraphs: paras, tables })
   })
+  return sections
+}
+
+// The Equipment chapter's rules for magic items, pages 102 and 103.
+function equipmentSections() {
+  const rows: Line[] = [102, 103].flatMap((page) => pages[page - 1].split("\n").map((text) => ({ text, page })))
+  const names = [
+    "Identifying a Magic Item",
+    "Attunement",
+    "Attune during a Short Rest",
+    "No More Than Three Items",
+    "Ending Attunement",
+    "Wearing and Wielding Items",
+    "Multiple Items of the Same Kind",
+    "Paired Items",
+    "Crafting Nonmagical Items",
+  ]
+  let from = 0
+  const marks = names.map((name) => {
+    const at = rows.findIndex((row, i) => i >= from && row.text.trim() === name)
+    if (at < 0) throw new Error(`equipment rules: heading ${name} not found`)
+    from = at + 1
+    return at
+  })
+  const sections = new Map<string, { page: number; paragraphs: string[] }>()
+  for (const [i, name] of names.slice(0, -1).entries()) sections.set(name, { page: rows[marks[i]].page, paragraphs: paragraphs(rows.slice(marks[i] + 1, marks[i + 1]).map((row) => row.text)) })
   return sections
 }
 
 function buildRules(): MagicItemRule[] {
   const rules: MagicItemRule[] = []
   const sections = ruleSections()
-  const section = (name: string) => sections.get(name) as { page: number; text: string }
+  const section = (name: string) => sections.get(name) as Section
 
   const flat = ruleRows
-    .filter((row) => row.page >= 206)
+    .filter((row) => row.page >= 206 && row.page <= 207)
     .map((row) => row.text.trim())
     .join(" ")
+  const gold = (amount: number) => ({ amount, unit: "gp" as const })
   const values = new Map<string, number | "priceless">()
-  for (const match of flat.matchAll(/(?<!Very )(Common|Uncommon|Rare|Very Rare|Legendary|Artifact) (Priceless|[\d,]+ GP)/g))
+  for (const match of flat.matchAll(/(Very Rare|Common|Uncommon|Rare|Legendary|Artifact) (Priceless|[\d,]+ GP)/g))
     values.set(toId(match[1]), match[2] === "Priceless" ? "priceless" : Number(match[2].replace(/[, GP]/g, "")))
   const crafting = new Map<string, { days: number; cost: number }>()
-  for (const match of flat.matchAll(/(?<!Very )(Common|Uncommon|Rare|Very Rare|Legendary) (\d+) days ([\d,]+) GP/g))
+  for (const match of flat.matchAll(/(Very Rare|Common|Uncommon|Rare|Legendary) (\d+) days ([\d,]+) GP/g))
     crafting.set(toId(match[1]), { days: Number(match[2]), cost: Number(match[3].replace(/,/g, "")) })
   for (const [id, name] of [
     ["common", "Common"],
@@ -805,10 +1025,42 @@ function buildRules(): MagicItemRule[] {
       name,
       page: 206,
       kind: "rarity",
-      ...(value === "priceless" ? { priceless: true } : { value }),
-      ...(craft ? { craftingDays: craft.days, craftingCost: craft.cost } : {}),
+      ...(value === "priceless" ? { priceless: true } : { value: gold(value as number) }),
+      ...(craft ? { craftingDays: craft.days, craftingCost: gold(craft.cost) } : {}),
     } as MagicItemRule)
   }
+
+  // The footnotes of the value and crafting tables.
+  const footnote = (name: string) => sentences(section(name).paragraphs.find((para) => para.startsWith("*")) as string).map((sentence) => sentence.replace(/^\*/, ""))
+  const [halve, scrollValue] = footnote("Magic Item Values by Rarity")
+  const [craftHalved] = footnote("Time and Cost")
+  rules.push(
+    {
+      id: "consumable-value",
+      name: "Consumable Item Value",
+      page: 206,
+      kind: "value-rule",
+      scope: "value",
+      appliesTo: "consumable",
+      factor: 0.5,
+      basis: "rarity-value",
+      except: ["spell-scroll"],
+      text: halve,
+    },
+    { id: "spell-scroll-value", name: "Spell Scroll Value", page: 206, kind: "value-rule", scope: "value", appliesTo: "spell-scroll", factor: 2, basis: "scribing-cost", text: scrollValue },
+    {
+      id: "consumable-crafting",
+      name: "Consumable Item Crafting Time and Cost",
+      page: 207,
+      kind: "value-rule",
+      scope: "crafting",
+      appliesTo: "consumable",
+      factor: 0.5,
+      basis: "rarity-value",
+      except: ["spell-scroll"],
+      text: craftHalved,
+    }
+  )
 
   // The Magic Item Tools table: a category name, then the lines of its tool cell.
   const toolRows = ruleRows.map((row) => row.text.trim())
@@ -833,8 +1085,17 @@ function buildRules(): MagicItemRule[] {
     ["Wondrous Items", "Wondrous Item"],
   ]
   for (const [heading, singular] of categoryHeadings) {
-    const { page, text } = section(heading)
-    rules.push({ id: toId(singular), name: singular, page, kind: "category", category: toId(singular), tools: clean(tools.get(singular) as string[]), text } as MagicItemRule)
+    const { page, text, tables } = section(heading)
+    rules.push({
+      id: toId(singular),
+      name: singular,
+      page,
+      kind: "category",
+      category: toId(singular),
+      tools: clean(tools.get(singular) as string[]),
+      text,
+      ...(tables.length ? { tables } : {}),
+    } as MagicItemRule)
   }
 
   const plain = [
@@ -857,24 +1118,81 @@ function buildRules(): MagicItemRule[] {
     "Tools",
     "Spells",
     "Time and Cost",
+    "Sentient Magic Items",
+    "Sentient Magic Item Traits",
+    "Alignment",
+    "Communication",
+    "Senses",
+    "Special Purpose",
   ]
+  // The four sentient tables are printed after "Special Purpose". Each goes to the rule its caption names.
+  const sentientTables = section("Special Purpose").tables
   for (const name of plain) {
     const { page, text } = section(name)
-    rules.push({ id: name === "Spells" ? "crafting-spells" : name === "Tools" ? "crafting-tools" : toId(name), name, page, kind: "rule", text } as MagicItemRule)
+    const tables = sentientTables.filter((table) => table.caption === `Sentient Item’s ${name}`)
+    rules.push({ id: sentientId(name), name, page, kind: "rule", text, ...(tables.length ? { tables } : {}) } as MagicItemRule)
   }
 
-  const equipment = pageLines(102, 103).map((row) => row.trim())
-  const from = equipment.indexOf("No More Than Three Items") + 1
-  const to = equipment.indexOf("Ending Attunement")
-  rules.push({ id: "attunement", name: "No More Than Three Items", page: 102, kind: "attunement", maxItems: 3, text: paragraphs(equipment.slice(from, to)).join("\n") } as MagicItemRule)
+  const abilities = section("Abilities")
+  const abilityRoll = /roll (\d+d\d+) for each one, dropping the lowest roll/.exec(abilities.text)
+  rules.push({
+    id: "sentient-abilities",
+    name: "Abilities",
+    page: abilities.page,
+    kind: "sentient-abilities",
+    abilityRoll: { dice: abilityRoll?.[1], dropLowest: 1 },
+    text: abilities.text,
+  } as MagicItemRule)
+
+  const conflict = section("Conflict")
+  const demandNames = ["Chase My Dreams", "Get Rid of It", "It’s Time for a Change", "Keep Me Close"]
+  const demands = demandNames.map((name) => {
+    const para = conflict.paragraphs.find((entry) => entry.startsWith(`${name}. `)) as string
+    return { name, text: para.slice(name.length + 2) }
+  })
+  const save = /Charisma saving throw \(DC (\d+) plus the item’s Charisma modifier\)/.exec(conflict.text)
+  rules.push({
+    id: "sentient-conflict",
+    name: "Conflict",
+    page: conflict.page,
+    kind: "sentient-conflict",
+    save: { ability: "cha", dcBase: Number(save?.[1]), plusItemModifierOf: "cha" },
+    demands,
+    refusals: conflict.paragraphs.filter((para) => para.startsWith("• ")).map((para) => para.slice(2)),
+    charmedHours: /Charmed condition for (\d+d\d+) hours/.exec(conflict.text)?.[1],
+    text: conflict.text,
+  } as MagicItemRule)
+
+  // Equipment chapter: identifying, attunement, wearing and wielding.
+  const equipment = equipmentSections()
+  const equip = (name: string) => equipment.get(name) as { page: number; paragraphs: string[] }
+  const attunementParts = ["Attunement", "Attune during a Short Rest", "No More Than Three Items", "Ending Attunement"]
+  const attunementText = attunementParts.flatMap((name) => (name === "Attunement" ? equip(name).paragraphs : [name, ...equip(name).paragraphs])).join("\n")
+  rules.push({
+    id: "attunement",
+    name: "Attunement",
+    page: equip("Attunement").page,
+    kind: "attunement",
+    maxItems: 3,
+    restsToAttune: "short-rest",
+    endsWhenAwayFeet: Number(/more than (\d+) feet away/.exec(attunementText)?.[1]),
+    endsAfterAwayHours: Number(/at least (\d+) hours/.exec(attunementText)?.[1]),
+    text: attunementText,
+  } as MagicItemRule)
+  for (const [name, id] of [
+    ["Identifying a Magic Item", "identifying-a-magic-item"],
+    ["Wearing and Wielding Items", "wearing-and-wielding-items"],
+    ["Multiple Items of the Same Kind", "multiple-items-of-the-same-kind"],
+    ["Paired Items", "paired-items-worn"],
+  ]) {
+    const { page, paragraphs: paras } = equip(name)
+    rules.push({ id, name, page, kind: "rule", text: paras.join("\n") } as MagicItemRule)
+  }
   return rules
 }
 
-const pageLines = (from: number, to: number) =>
-  pages
-    .slice(from - 1, to)
-    .join("\n")
-    .split("\n")
+const sentientId = (name: string) =>
+  ["Alignment", "Communication", "Senses", "Special Purpose"].includes(name) ? `sentient-${toId(name)}` : name === "Spells" ? "crafting-spells" : name === "Tools" ? "crafting-tools" : toId(name)
 
 export default function buildMagicItems() {
   const items = applyOverrides("magic-items", build(), overrides)

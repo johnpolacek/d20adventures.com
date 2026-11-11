@@ -1,5 +1,5 @@
 import type { Cost } from "../../src/schema/common"
-import { coinSchema, equipmentRuleSchema, equipmentSchema, poisonSchema, weaponMasterySchema, weaponPropertySchema } from "../../src/schema/equipment"
+import { coinSchema, equipmentRuleSchema, equipmentSchema, poisonSchema, poisonTypeSchema, weaponMasterySchema, weaponPropertySchema } from "../../src/schema/equipment"
 import { toId, writeData } from "../lib/data"
 import { pages } from "../lib/official"
 import { readBase } from "../lib/sources"
@@ -57,13 +57,11 @@ const titleCase = (text: string) => text.replace(/(^|[ -])([a-z])/g, (_, lead, l
 
 const abilityOf: Record<string, string> = { Strength: "str", Dexterity: "dex", Constitution: "con", Intelligence: "int", Wisdom: "wis", Charisma: "cha" }
 
-const std = { base: 8, ability: "dex", proficiencyBonus: true } as const
-const dexSave = { ability: "dex", dc: std } as const
-const fixedDexSave = (dc: number) => ({ ability: "dex", dc: { fixed: dc } })
+const dexSave = { ability: "dex", dc: { plusModifierOf: "dex" } } as const
+const fixedDexSave = (dc: number) => ({ ability: "dex", dc })
 const piercing1 = { fixed: 1, type: "piercing" } as const
 const fire5 = { fixed: 5, type: "fire" } as const
 const unboundable = ["grappled", "incapacitated", "restrained"] as const
-const extremeCold = "saving throws against extreme cold"
 
 // Weapons and armor --------------------------------------------------------------------------------------------
 
@@ -208,19 +206,40 @@ class Names {
 const gearMechanics: Record<string, Row> = {
   acid: { hazard: { rangeFeet: 20, save: dexSave, damage: { dice: "2d6", type: "acid" } } },
   "alchemists-fire": { hazard: { rangeFeet: 20, save: dexSave, damage: { dice: "1d4", type: "fire" }, burning: true } },
-  antitoxin: { modifiers: [{ effect: "advantage", on: "save", againstCondition: "poisoned", durationHours: 1, when: "to avoid or end the Poisoned condition" }] },
+  antitoxin: {
+    modifiers: [
+      {
+        effect: "advantage",
+        on: "save",
+        againstCondition: "poisoned",
+        durationHours: 1,
+        when: "As a Bonus Action, you can drink a vial of Antitoxin to gain Advantage on saving throws to avoid or end the Poisoned condition for 1 hour",
+      },
+    ],
+  },
   backpack: { capacity: { pounds: 30, cubicFeet: 1 } },
   "ball-bearings": { hazard: { areaSideFeet: 10, withinFeet: 10, save: fixedDexSave(10), condition: "prone", recoverMinutes: 10 } },
   barrel: { capacity: { gallons: 40, cubicFeet: 4 } },
   basket: { capacity: { pounds: 40, cubicFeet: 2 } },
-  bedroll: { sleeps: 1, modifiers: [{ effect: "automatic-success", on: "save", when: extremeCold }] },
+  bedroll: { sleeps: 1, modifiers: [{ effect: "automatic-success", on: "save", when: "While in a Bedroll, you automatically succeed on saving throws against extreme cold" }] },
   bell: { audibleFeet: 60 },
-  blanket: { modifiers: [{ effect: "advantage", on: "save", when: extremeCold }] },
+  blanket: { modifiers: [{ effect: "advantage", on: "save", when: "While wrapped in a blanket, you have Advantage on saving throws against extreme cold" }] },
   "block-and-tackle": { liftMultiplier: 4 },
-  book: { modifiers: [{ effect: "bonus", on: "check", ability: "int", skills: ["arcana", "history", "nature", "religion"], amount: 5, when: "an accurate nonfiction Book about its topic" }] },
+  book: {
+    modifiers: [
+      {
+        effect: "bonus",
+        on: "check",
+        ability: "int",
+        skills: ["arcana", "history", "nature", "religion"],
+        amount: 5,
+        when: "If you consult an accurate nonfiction Book about its topic, you gain a +5 bonus to Intelligence (Arcana, History, Nature, or Religion) checks you make about that topic",
+      },
+    ],
+  },
   "bottle-glass": { capacity: { pints: 1.5 } },
   bucket: { capacity: { cubicFeet: 0.5 } },
-  caltrops: { hazard: { areaSideFeet: 5, withinFeet: 5, save: fixedDexSave(15), damage: piercing1, speedToZero: true, recoverMinutes: 10 } },
+  caltrops: { hazard: { areaSideFeet: 5, withinFeet: 5, save: fixedDexSave(15), damage: piercing1, speedZeroUntilStartOfNextTurn: true, recoverMinutes: 10 } },
   candle: { light: { shape: "radius", brightFeet: 5, dimFeet: 5, durationHours: 1 } },
   "case-crossbow-bolt": { capacity: { holds: [{ item: "bolts", quantity: 20 }] } },
   "case-map-or-scroll": {
@@ -232,7 +251,7 @@ const gearMechanics: Record<string, Row> = {
     },
   },
   chain: {
-    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained" },
+    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "legs-bound" },
     checks: [
       { use: "bind", ability: "str", skill: "athletics", dc: 13, rangeFeet: 5 },
       { use: "escape", ability: "dex", skill: "acrobatics", dc: 18 },
@@ -241,14 +260,16 @@ const gearMechanics: Record<string, Row> = {
   },
   chest: { capacity: { cubicFeet: 12 } },
   "climbers-kit": { anchorFeet: 25 },
-  costume: { modifiers: [{ effect: "advantage", on: "check", when: "to impersonate the person or type of person it represents" }] },
-  crowbar: { modifiers: [{ effect: "advantage", on: "check", ability: "str", when: "where the Crowbar’s leverage can be applied" }] },
+  costume: {
+    modifiers: [{ effect: "advantage", on: "check", when: "While wearing a Costume, you have Advantage on any ability check you make to impersonate the person or type of person it represents" }],
+  },
+  crowbar: { modifiers: [{ effect: "advantage", on: "check", ability: "str", when: "Using a Crowbar gives you Advantage on Strength checks where the Crowbar’s leverage can be applied" }] },
   flask: { capacity: { pints: 1 } },
   "grappling-hook": { checks: [{ use: "catch", ability: "dex", skill: "acrobatics", dc: 13, rangeFeet: 50 }] },
   "healers-kit": { uses: 10, stabilize: { requiresCondition: "unconscious", atHitPoints: 0, replacesCheck: { ability: "wis", skill: "medicine" } } },
   "holy-water": { hazard: { rangeFeet: 20, save: dexSave, damage: { dice: "2d8", type: "radiant" }, onlyAgainst: ["fiend", "undead"] } },
   "hunting-trap": {
-    hazard: { save: fixedDexSave(13), damage: { dice: "1d4", type: "piercing" }, speedToZero: true, chainFeet: 3, failedFreeAttemptDamage: piercing1 },
+    hazard: { save: fixedDexSave(13), damage: { dice: "1d4", type: "piercing" }, speedZeroUntilStartOfNextTurn: true, chainFeet: 3, failedFreeAttemptDamage: piercing1 },
     checks: [{ use: "free", ability: "str", skill: "athletics", dc: 13 }],
   },
   jug: { capacity: { gallons: 1 } },
@@ -257,9 +278,9 @@ const gearMechanics: Record<string, Row> = {
   "lantern-bullseye": { light: { shape: "cone", brightFeet: 60, dimFeet: 60, fuel: "oil" } },
   "lantern-hooded": { light: { shape: "radius", brightFeet: 30, dimFeet: 30, fuel: "oil", loweredHoodDimRadiusFeet: 5 } },
   lock: { checks: [{ use: "pick", ability: "dex", skill: "sleight-of-hand", dc: 15 }] },
-  "magnifying-glass": { modifiers: [{ effect: "advantage", on: "check", when: "to appraise or inspect a highly detailed item" }] },
+  "magnifying-glass": { modifiers: [{ effect: "advantage", on: "check", when: "A Magnifying Glass grants Advantage on any ability check made to appraise or inspect a highly detailed item" }] },
   manacles: {
-    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", sizes: ["Small", "Medium"] },
+    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "attached-to-fixed-anchor", sizes: ["Small", "Medium"] },
     checks: [
       { use: "bind", ability: "dex", skill: "sleight-of-hand", dc: 13, rangeFeet: 5 },
       { use: "escape", ability: "dex", skill: "sleight-of-hand", dc: 20 },
@@ -267,7 +288,18 @@ const gearMechanics: Record<string, Row> = {
       { use: "pick", ability: "dex", skill: "sleight-of-hand", dc: 15 },
     ],
   },
-  map: { modifiers: [{ effect: "bonus", on: "check", ability: "wis", skills: ["survival"], amount: 5, when: "to find your way in the place represented on it" }] },
+  map: {
+    modifiers: [
+      {
+        effect: "bonus",
+        on: "check",
+        ability: "wis",
+        skills: ["survival"],
+        amount: 5,
+        when: "If you consult an accurate Map, you gain a +5 bonus to Wisdom (Survival) checks you make to find your way in the place represented on it",
+      },
+    ],
+  },
   net: {
     hazard: { rangeFeet: 15, save: dexSave, condition: "restrained", succeedsAutomaticallyIfSizeAtLeast: "Huge" },
     checks: [{ use: "escape", ability: "str", skill: "athletics", dc: 10, rangeFeet: 5 }],
@@ -276,25 +308,47 @@ const gearMechanics: Record<string, Row> = {
   oil: {
     fuelHours: 6,
     hazard: { rangeFeet: 20, save: dexSave, dryAfterMinutes: 1, extraFireDamage: fire5 },
-    spaceHazard: { areaSideFeet: 5, withinFeet: 5, burnsUntilRoundsAfterLit: 2, damage: fire5 },
+    spaceHazard: { areaSideFeet: 5, withinFeet: 5, burnsUntilRoundsAfterLit: 2, damage: fire5, onlyWhenLit: true },
   },
-  perfume: { modifiers: [{ effect: "advantage", on: "check", ability: "cha", skills: ["persuasion"], durationHours: 1, when: "to influence an Indifferent Humanoid within 5 feet of yourself" }] },
+  perfume: {
+    modifiers: [
+      {
+        effect: "advantage",
+        on: "check",
+        ability: "cha",
+        skills: ["persuasion"],
+        durationHours: 1,
+        when: "For 1 hour after applying Perfume to yourself, you have Advantage on Charisma (Persuasion) checks made to influence an Indifferent Humanoid within 5 feet of yourself",
+      },
+    ],
+  },
   "poison-basic": {
-    coating: { action: "bonus", ammunitionPieces: 3, triggerDamageTypes: ["piercing", "slashing"], extraDamage: { dice: "1d4", type: "poison" }, potencyMinutes: 1 },
+    coating: { ammunitionPieces: 3, triggerDamageTypes: ["piercing", "slashing"], extraDamage: { dice: "1d4", type: "poison" }, potencyMinutes: 1 },
   },
-  pole: { lengthFeet: 10, modifiers: [{ effect: "advantage", on: "check", ability: "str", skills: ["athletics"], when: "as part of a High or Long Jump" }] },
+  pole: {
+    lengthFeet: 10,
+    modifiers: [
+      {
+        effect: "advantage",
+        on: "check",
+        ability: "str",
+        skills: ["athletics"],
+        when: "If you must make a Strength (Athletics) check as part of a High or Long Jump, you can use the Pole to vault, giving yourself Advantage on the check",
+      },
+    ],
+  },
   "pot-iron": { capacity: { gallons: 1 } },
-  "potion-of-healing": { magicItem: "potions-of-healing", healing: { dice: "2d4 + 2", action: "bonus", rangeFeet: 5 } },
+  "potion-of-healing": { magicItem: "potions-of-healing", healing: { dice: "2d4 + 2", rangeFeet: 5 } },
   pouch: { capacity: { pounds: 6, cubicFeet: 0.2 } },
   quiver: { capacity: { holds: [{ item: "arrows", quantity: 20 }] } },
   "ram-portable": {
     modifiers: [
-      { effect: "bonus", on: "check", ability: "str", amount: 4, when: "to break down doors" },
-      { effect: "advantage", on: "check", when: "One other character can help you use the ram" },
+      { effect: "bonus", on: "check", ability: "str", amount: 4, when: "You can use a Portable Ram to break down doors. When doing so, you gain a +4 bonus to the Strength check" },
+      { effect: "advantage", on: "check", when: "One other character can help you use the ram, giving you Advantage on this check" },
     ],
   },
   rope: {
-    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained" },
+    binding: { requiresAnyCondition: unboundable, appliesCondition: "restrained", appliesWhen: "legs-bound" },
     checks: [
       { use: "knot", ability: "dex", skill: "sleight-of-hand", dc: 10 },
       { use: "burst", ability: "str", skill: "athletics", dc: 20 },
@@ -302,17 +356,23 @@ const gearMechanics: Record<string, Row> = {
     ],
   },
   sack: { capacity: { pounds: 30, cubicFeet: 1 } },
-  shovel: { dig: { sideFeet: 5, hours: 1 } },
+  shovel: { dig: { sideFeet: 5, hours: 1, inSoilOrSimilar: true } },
   "signal-whistle": { audibleFeet: 600 },
   "spell-scroll-cantrip": { magicItem: "spell-scroll", spellScroll: { spellLevel: 0, saveDc: 13, attackBonus: 5 } },
   "spell-scroll-level-1": { magicItem: "spell-scroll", spellScroll: { spellLevel: 1, saveDc: 13, attackBonus: 5 } },
   spyglass: { magnification: 2 },
   string: { lengthFeet: 10 },
   tent: { sleeps: 2 },
-  tinderbox: { ignite: { action: "bonus", otherFireMinutes: 1 } },
+  tinderbox: { ignite: { exposedFuel: ["bonus-action"], otherFireMinutes: 1 } },
   torch: { light: { shape: "radius", brightFeet: 20, dimFeet: 20, durationHours: 1 }, attackDamage: { fixed: 1, type: "fire" } },
   vial: { capacity: { ounces: 4 } },
   waterskin: { capacity: { pints: 4 } },
+}
+
+/** The kinds of action a gear description names: the Utilize action and the Bonus Action. */
+function activationOf(description: string): { activation?: string[] } {
+  const kinds = [...(/Utilize action/.test(description) ? ["utilize-action"] : []), ...(/Bonus Action/.test(description) ? ["bonus-action"] : [])]
+  return kinds.length ? { activation: kinds } : {}
 }
 
 /** Heading of a description block: "Acid (25 GP)", "Ammunition (Varies)". */
@@ -400,6 +460,15 @@ function gearAndTools(names: Names, ids: Set<string>): Row[] {
     }
   }
   rows.push(...toolRows)
+  const artisanHeading = toolLines.findIndex((line) => line.text.trim() === "Artisan’s Tools")
+  rows.push({
+    id: "artisans-tools",
+    name: "Artisan’s Tools",
+    page: toolLines[artisanHeading].page,
+    kind: "group",
+    members: toolRows.filter((row) => row.group === "artisan").map((row) => row.id),
+    description: prose(toolLines.slice(artisanHeading + 1, toolStart)),
+  })
 
   // The Adventuring Gear table: weight and cost of every item. Page 95.
   const table = linesOf(95).map((line) => line.text.trim())
@@ -461,7 +530,7 @@ function gearAndTools(names: Names, ids: Set<string>): Row[] {
       name: type,
       page: 96,
       kind: "ammunition",
-      amount: Number(amount),
+      bundleSize: Number(amount),
       storage: storage === "Case" ? "case-crossbow-bolt" : toId(storage),
       cost: costOf(cost),
       weight: weightOf(weight),
@@ -520,6 +589,7 @@ function gearAndTools(names: Names, ids: Set<string>): Row[] {
       ...(w === undefined ? {} : { weight: w }),
       ...(weight.includes("(full)") ? { weightWhenFull: true } : {}),
       ...(gearMechanics[id] ?? {}),
+      ...activationOf(description),
       description,
     })
   }
@@ -591,7 +661,7 @@ function mountsAndVehicles(): Row[] {
           cost: costOf(cost),
           weight: weightOf(weight),
           description: saddleText,
-          ...(kind === "Military" ? { modifiers: [{ effect: "advantage", on: "check", when: "to remain mounted" }] } : {}),
+          ...(kind === "Military" ? { modifiers: [{ effect: "advantage", on: "check", when: "A Military Saddle gives Advantage on any ability check you make to remain mounted" }] } : {}),
           ...(kind === "Exotic" ? { requiredForMounts: ["aquatic", "flying"] } : {}),
         })
       }
@@ -755,7 +825,7 @@ function masteries(): Row[] {
     description: entry.description,
     ...(entry.name === "Push" ? { pushFeet: 10, maxSize: "Large" } : {}),
     ...(entry.name === "Slow" ? { speedReductionFeet: 10 } : {}),
-    ...(entry.name === "Topple" ? { save: { ability: "con", dc: { base: 8, attackAbilityModifier: true, proficiencyBonus: true } }, condition: "prone" } : {}),
+    ...(entry.name === "Topple" ? { save: { ability: "con", dc: { plusModifierOf: "attack-ability" }, failureCondition: "prone" } } : {}),
   }))
 }
 
@@ -813,6 +883,26 @@ const poisonFacts: Record<string, Row> = {
   "wyvern-poison": { save: 14, damage: [24, "7d6"], half: true },
 }
 
+const poisonTypeFacts: Record<string, Row> = {
+  Contact: { exposure: "touch-with-exposed-skin", persistsUntil: ["touched", "washed-off"] },
+  Ingested: { exposure: "swallow-entire-dose" },
+  Inhaled: { exposure: "inhale", cubeSideFeet: 5, holdingBreathIneffective: true },
+  Injury: { exposure: "piercing-or-slashing-damage", persistsUntil: ["delivered-through-wound", "washed-off"], application: ["bonus-action"], triggerDamageTypes: ["piercing", "slashing"] },
+}
+
+function poisonTypes(): Row[] {
+  const lines = linesOf(197)
+  const start = lines.findIndex((line) => line.text.includes("Poisons come in the following four types"))
+  const end = lines.findIndex((line) => line.text.trim() === "Purchasing Poison")
+  const out: { name: string; lines: Line[] }[] = []
+  for (const line of lines.slice(start + 1, end)) {
+    const label = /^(Contact|Ingested|Inhaled|Injury)\. (.*)$/.exec(line.text.trim())
+    if (label) out.push({ name: label[1], lines: [{ ...line, text: label[2] }] })
+    else out.at(-1)?.lines.push(line)
+  }
+  return out.map((entry) => ({ id: toId(entry.name), name: entry.name, page: 197, ...poisonTypeFacts[entry.name], description: prose(entry.lines) }))
+}
+
 function poisons(): Row[] {
   const lines = linesOf(197, 198)
   const start = lines.findIndex((line) => line.text.trim() === "Sample Poisons")
@@ -829,9 +919,8 @@ function poisons(): Row[] {
       page: block.page,
       type: typeLine.text.trim().replace(" Poison", "").toLowerCase(),
       cost: costOf(block.cost as string),
-      save: { ability: "con", dc: save },
+      save: { ability: "con", dc: save, ...(half ? { halfDamageOnSuccess: true } : {}) },
       ...(damage ? { damage: { average: damage[0], dice: damage[1], type: "poison" } } : {}),
-      ...(half ? { halfDamageOnSave: true } : {}),
       ...more,
       description: prose(rest),
     })
@@ -930,7 +1019,7 @@ function rules(): Row[] {
       page: 101,
       kind: "ship-repair",
       hitPointsPerDay: 1,
-      costGpPerHitPoint: 20,
+      costPerHitPoint: { amount: 20, unit: "gp" },
       shipyardFraction: 0.5,
       description: section(101, "Ship Repair", "Lifestyle Expenses"),
     },
@@ -945,13 +1034,24 @@ function rules(): Row[] {
       description: section(101, "Passengers", "Damage Threshold"),
     },
     {
+      id: "harvesting-poison",
+      name: "Harvesting Poison",
+      page: 197,
+      kind: "poison-harvesting",
+      timeMinutes: "1d6",
+      tool: "poisoners-kit",
+      check: { ability: "int", skill: "nature", dc: 20 },
+      failedByAtLeastExposes: 5,
+      description: section(197, "Harvesting Poison", "Sample Poisons"),
+    },
+    {
       id: "crafting-nonmagical-items",
       name: "Crafting Nonmagical Items",
       page: 103,
       kind: "crafting",
       rawMaterialsFraction: 0.5,
       workHoursPerDay: 8,
-      costGpPerDay: 10,
+      purchaseCostPerDay: { amount: 10, unit: "gp" },
       maxAssistants: 1,
       description: [section(103, "Raw Materials", "Time"), section(103, "Time", "Brewing Potions of Healing")].join("\n"),
     },
@@ -961,7 +1061,7 @@ function rules(): Row[] {
       page: 103,
       kind: "potion-brewing",
       tool: "herbalism-kit",
-      rawMaterialsGp: 25,
+      rawMaterials: { amount: 25, unit: "gp" },
       days: 1,
       workHoursPerDay: 8,
       description: section(103, "Brewing Potions of Healing", "Scribing Spell Scrolls"),
@@ -1010,6 +1110,7 @@ export default function build() {
   writeData("weapon-properties", weaponPropertySchema, properties())
   writeData("weapon-masteries", weaponMasterySchema, masteries())
   writeData("poisons", poisonSchema, poisons())
+  writeData("poison-types", poisonTypeSchema, poisonTypes())
   writeData("coins", coinSchema, coins())
   writeData("equipment-rules", equipmentRuleSchema, ruleRows)
 }

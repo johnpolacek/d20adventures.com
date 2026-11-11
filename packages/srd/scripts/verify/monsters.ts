@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs"
-import type { Monster, MonsterFeature } from "../../src/schema/monsters"
+import type { Monster, MonsterFeature, MonsterRule } from "../../src/schema/monsters"
 import { dataPath, readData, toId } from "../lib/data"
 import { missingSentences, pages, squash } from "../lib/official"
 import type { Report } from "../lib/report"
-import { readOpen5e } from "../lib/sources"
+import { hasUpstream, readOpen5e } from "../lib/sources"
 
 // Everything here is read from the official text by this file alone. The builder's parsing and the base source are
 // not used, so a value the builder got wrong cannot pass by being read the same wrong way twice.
@@ -67,6 +67,18 @@ const same = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.s
 
 type Line = { text: string; page: number }
 
+/**
+ * Printed values the data corrects by override, because the PDF text is plainly wrong. The header check names each
+ * one as a misprint instead of failing.
+ */
+const misprints = [
+  {
+    match: "young-white-dragon: int save is -2, official 2",
+    page: 340,
+    reason: "the PDF prints the save “2” with no sign, the only unsigned save in the chapter. With modifier −2 and no proficiency it is −2",
+  },
+]
+
 /** Values the official text itself prints inconsistently with its own rules. The data keeps what is printed. */
 const officialErrors = [
   { match: "archmage: XP 8000 at CR 12", page: 305 },
@@ -84,7 +96,7 @@ type Official = {
   features: Map<string, OfficialFeature[]>
   legendaryIntro?: string
 }
-type OfficialFeature = { name: string; paren?: string; lines: string[]; subItems: string[] }
+type OfficialFeature = { name: string; lines: string[]; subItems: string[]; breaks: number[] }
 
 /** The chapter as lines with page numbers, the running header removed. */
 function chapterLines(): Line[] {
@@ -183,9 +195,10 @@ function parseBlock(block: Line[]): Omit<Official, "name" | "page" | "section" |
       const list = features.get(section) as OfficialFeature[]
       // An item of a list the previous feature introduces with a colon ("These weaknesses:") belongs to that feature.
       const parent = list.at(-1)
-      current = { name: start[1], lines: [raw], subItems: [] }
+      current = { name: start[1], lines: [raw], subItems: [], breaks: [] }
       if (parent && isListItem(parent, start[1])) {
         parent.subItems.push(start[1])
+        parent.breaks.push(parent.lines.length)
         parent.lines.push(raw)
         current = parent
       } else list.push(current)
@@ -209,12 +222,23 @@ function isListItem(parent: OfficialFeature, name: string) {
   return /as detailed below/.test(intro) && /^(First|Second|Third) Roar$/.test(name)
 }
 
-/** The parenthetical and body of an official feature. */
+/**
+ * The parenthetical and the body of an official feature, as paragraphs. A paragraph starts at a tab-led line, at a
+ * list item the feature introduces, at a spell list line, and at a numbered result such as "1–4.".
+ */
 function featureParts(feature: OfficialFeature) {
-  const text = soft(feature.lines)
-  const rest = text.slice(feature.name.length)
+  const groups: string[][] = []
+  for (const [k, raw] of feature.lines.entries()) {
+    const starts = k === 0 || raw.startsWith("\t") || feature.breaks.includes(k) || /^\s*(At Will|\d+\/Day( Each)?): /.test(raw) || /^\s*\d+–\d+\. /.test(raw)
+    if (starts) groups.push([raw])
+    else groups[groups.length - 1].push(raw)
+  }
+  const paragraphs = groups.map(soft)
+  const first = paragraphs[0]
+  const rest = first.slice(feature.name.length)
   const paren = rest.startsWith(" (") ? rest.slice(2, rest.indexOf(")")) : undefined
-  return { paren, body: text.slice(text.indexOf(". ", feature.name.length) + 2) }
+  paragraphs[0] = first.slice(first.indexOf(". ", feature.name.length) + 2)
+  return { paren, paragraphs, body: paragraphs.join("\n") }
 }
 
 /** The official XP and PB tables of the Monsters chapter, page 256, and Hit Dice by Size, page 255. */
@@ -237,8 +261,8 @@ function rulesTables() {
   }
   const dieText = pages[254].split("\n").map((line) => line.trim())
   const dieStart = dieText.indexOf("Average HP per Die")
-  const hitDie = new Map<string, number>()
-  for (let k = dieStart + 1; sizeWords.includes(dieText[k]); k += 3) hitDie.set(dieText[k], Number(dieText[k + 1].slice(1)))
+  const hitDie: { size: string; die: number; average: number }[] = []
+  for (let k = dieStart + 1; sizeWords.includes(dieText[k]); k += 3) hitDie.push({ size: dieText[k], die: Number(dieText[k + 1].slice(1)), average: Number(dieText[k + 2].replace("½", ".5")) })
   return { xp, pb, hitDie }
 }
 
@@ -283,22 +307,23 @@ function expectedHeader(official: Official) {
   const abilities: Record<string, { score: number; mod: number; save: number }> = {}
   for (let k = 0; k < tokens.length; k += 4) abilities[abilityWords[tokens[k]]] = { score: Number(tokens[k + 1]), mod: num(tokens[k + 2]), save: num(tokens[k + 3]) }
   const skills = f.has("Skills") ? Object.fromEntries(items(f.get("Skills") as string).map((item) => [toId(item.replace(/ [+−]\d+$/, "")), num(item.split(" ").at(-1) as string)])) : undefined
-  const notes: Record<string, string> = {}
-  const damageList = (key: string, note: string) => {
+  // A defense printed with a qualifier goes to conditionalDefenses with its qualifying words, never to a plain list.
+  const conditional: { kind: string; value?: string; condition: string }[] = []
+  const damageList = (key: string, kind: string) => {
     if (!f.has(key)) return undefined
     const list: string[] = []
     for (const item of items(f.get(key) as string)) {
       if (damageWords.includes(item)) list.push(item.toLowerCase())
       else {
-        notes[note] = item
-        const lead = /^(\w+) damage /.exec(item)
-        if (lead && damageWords.includes(lead[1])) list.push(lead[1].toLowerCase())
+        const lead = /^(\w+) damage (.+)$/.exec(item)
+        if (lead && damageWords.includes(lead[1])) conditional.push({ kind, value: lead[1].toLowerCase(), condition: lead[2] })
+        else conditional.push({ kind, condition: item })
       }
     }
     return list.length ? list : undefined
   }
-  const vulnerabilities = damageList("Vulnerabilities", "vulnerabilities")
-  const resistances = damageList("Resistances", "resistances")
+  const vulnerabilities = damageList("Vulnerabilities", "vulnerability")
+  const resistances = damageList("Resistances", "resistance")
   let immunities: string[] | undefined
   let conditionImmunities: string[] | undefined
   if (f.has("Immunities")) {
@@ -306,12 +331,14 @@ function expectedHeader(official: Official) {
       const list = items(part)
       if (list.every((item) => damageWords.includes(item))) immunities = list.map((item) => item.toLowerCase())
       else {
-        conditionImmunities = list.map((item) => {
-          const word = item.split(" ")[0]
-          if (!conditionWords.includes(word)) throw new Error(`${official.name}: immunity ${item}`)
-          if (item !== word) notes.conditionImmunities = item
-          return word.toLowerCase()
-        })
+        const plain: string[] = []
+        for (const item of list) {
+          const m = /^(\w+)(?: \((.+)\))?$/.exec(item)
+          if (!m || !conditionWords.includes(m[1])) throw new Error(`${official.name}: immunity ${item}`)
+          if (m[2]) conditional.push({ kind: "condition-immunity", value: m[1].toLowerCase(), condition: m[2] })
+          else plain.push(m[1].toLowerCase())
+        }
+        if (plain.length) conditionImmunities = plain
       }
     }
   }
@@ -353,7 +380,7 @@ function expectedHeader(official: Official) {
     resistances,
     immunities,
     conditionImmunities,
-    defenseNotes: Object.keys(notes).length ? notes : undefined,
+    conditionalDefenses: conditional.length ? conditional : undefined,
     gear,
     senses,
     languages: flat(languages),
@@ -366,18 +393,103 @@ function expectedHeader(official: Official) {
   }
 }
 
+const saveWord = "(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) Saving Throw: DC (\\d+)"
+const outcomeAtStart = /^(Hit or Miss|Failure or Success|First Failure|Second Failure|Subsequent Failures|Hit|Miss|Failure|Success): /
+const outcomeAnywhere = /(Failure or Success|First Failure|Second Failure|Subsequent Failures|Failure|Success): /g
+const damageAt = /(\d+)(?: \((\d+)d(\d+)(?: ([+−–]) (\d+))?\))? (\w+ )?damage/g
+
+/**
+ * Damage parts, read sentence by sentence. A sentence that opens with an outcome label sets the outcome for the rest
+ * of its paragraph. Damage in that first sentence is plain unless an "if" or "unless" clause follows it or it
+ * replaces the part before it ("…, or 2 (1d4) … if the swarm is Bloodied"). Damage anywhere else is limited by its
+ * whole sentence.
+ */
+function expectedDamage(paragraphs: string[]) {
+  const out: { average: number; dice?: string; type?: string; on?: string; condition?: string; alternativeTo?: number }[] = []
+  for (const paragraph of paragraphs) {
+    let outcome: string | undefined
+    const sentences = paragraph.split(/\. (?=[A-Z])/)
+    for (const [n, raw] of sentences.entries()) {
+      const sentence = n < sentences.length - 1 ? `${raw}.` : raw
+      const label = outcomeAtStart.exec(sentence)
+      if (label) outcome = toId(label[1])
+      const parts = [...sentence.matchAll(damageAt)].filter((m) => m[2] || (m[6] && damageWords.includes(m[6].trim())))
+      for (const [k, m] of parts.entries()) {
+        const part: (typeof out)[number] = {
+          average: Number(m[1]),
+          dice: m[2] ? `${m[2]}d${m[3]}${m[4] ? ` ${m[4] === "+" ? "+" : "-"} ${m[5]}` : ""}` : undefined,
+          type: m[6] && damageWords.includes(m[6].trim()) ? m[6].trim().toLowerCase() : undefined,
+          on: outcome,
+        }
+        if (label) {
+          const end = (m.index as number) + m[0].length
+          const qualifier = /^ ((?:if|unless) [^.,—]+)/.exec(sentence.slice(end, parts[k + 1]?.index ?? sentence.length))
+          if (qualifier) part.condition = qualifier[1]
+          const previous = parts[k - 1]
+          if (previous && /^(?:,? or |—or )$/.test(sentence.slice((previous.index as number) + previous[0].length, m.index))) part.alternativeTo = out.length - 1
+        } else part.condition = sentence.trim()
+        out.push(part)
+      }
+    }
+  }
+  return out
+}
+
+/** Each save: its ability and DC, who makes it, and the text of each outcome, staged outcomes kept apart. */
+function expectedSaves(body: string) {
+  const starts = [...body.matchAll(new RegExp(saveWord, "g"))]
+  return starts.map((m, k) => {
+    let end = starts[k + 1]?.index ?? body.length
+    const breakAt = body.lastIndexOf("\n", end)
+    if (k + 1 < starts.length && breakAt > (m.index as number)) end = breakAt
+    const segment = body.slice((m.index as number) + m[0].length, end)
+    const targets = segment.startsWith(".") ? undefined : /^(?: \([^)]*\))?, ([\s\S]*?)\.(?: |$)/.exec(segment)?.[1]
+    const labels = [...segment.matchAll(outcomeAnywhere)]
+    const staged = labels.some((label) => label[1] === "Second Failure" || label[1] === "Subsequent Failures")
+    const clauses: Record<string, string> = {}
+    for (const [i, label] of labels.entries()) {
+      const key =
+        label[1] === "Failure" ? (staged ? "firstFailure" : "failure") : label[1] === "Failure or Success" ? "failureOrSuccess" : toId(label[1]).replace(/-(\w)/g, (_, c: string) => c.toUpperCase())
+      clauses[key] = squash(segment.slice((label.index as number) + label[0].length, labels[i + 1]?.index ?? segment.length))
+    }
+    return { ability: saveWords[m[1]], dc: Number(m[2]), targets: targets && squash(targets), ...clauses, half: /^halfdamage/.test(clauses.success ?? "") }
+  })
+}
+
+/**
+ * Conditions the text gives, read phrase by phrase: "the X condition" after a verb that gives it, "gains N
+ * Exhaustion level", "exiting Prone". The words from the start of the phrase's clause must hold no precondition or
+ * negation.
+ */
+function expectedConditions(body: string): string[] {
+  const given = new Set<string>()
+  const list = `(?:${conditionWords.join("|")})(?:(?:,? and |,? or |, )(?:${conditionWords.join("|")}))*`
+  const forms = [new RegExp(`(?:\\bhas|\\bhave|\\bgains?|\\bgives? it|\\bgives? the target|\\bwith) the (${list}) conditions?\\b`, "g"), /\bgains? \d+ (Exhaustion) levels?\b/g, /\bexiting (Prone)\b/g]
+  for (const form of forms) {
+    for (const m of body.matchAll(form)) {
+      let start = m.index as number
+      while (start > 0 && !",.:;—(\n".includes(body[start - 1]) && !body.slice(0, start).endsWith(" but ")) start--
+      const clause = body.slice(start, m.index)
+      const words = clause.toLowerCase().split(/\s+/).filter(Boolean)
+      if (words.some((word) => ["if", "while", "whenever", "unless", "until", "not"].includes(word) || word.endsWith("n’t")) || clause.includes("no longer")) continue
+      if (["that", "who"].includes(words[words.length - 1])) continue
+      for (const name of m[1].split(/,? and |,? or |, /)) given.add(name.toLowerCase())
+    }
+  }
+  return [...given].sort()
+}
+
 /** The mechanics of one official feature, read from its own text. */
 function expectedFeature(feature: OfficialFeature) {
-  const { paren, body } = featureParts(feature)
+  const { paren, paragraphs, body } = featureParts(feature)
   const uses: Record<string, unknown> = {}
   const rest: string[] = []
   for (const part of paren ? paren.split("; ") : []) {
-    let m: RegExpExecArray | null
-    if ((m = /^(\d+)\/Day(?:, or (\d+)\/Day in Lair)?$/.exec(part))) {
-      uses.perDay = Number(m[1])
-      if (m[2]) uses.perDayInLair = Number(m[2])
-    } else if ((m = /^Recharge (\d)(?:–(\d))?$/.exec(part))) uses.recharge = { min: Number(m[1]), max: Number(m[2] ?? m[1]) }
-    else if (part === "Recharge after a Short or Long Rest") uses.rechargeAfterRest = true
+    const day = /^(\d+)\/Day(?:, or (\d+)\/Day in Lair)?$/.exec(part)
+    const roll = /^Recharge (\d)(?:–(\d))?$/.exec(part)
+    if (day) uses.uses = { count: Number(day[1]), countInLair: day[2] ? Number(day[2]) : undefined, recharge: "long-rest" }
+    else if (roll) uses.rechargeRoll = { min: Number(roll[1]), max: Number(roll[2] ?? roll[1]) }
+    else if (part === "Recharge after a Short or Long Rest") uses.uses = { count: 1, recharge: "short-or-long-rest" }
     else rest.push(part)
   }
   if (rest.length) uses.note = rest.join("; ")
@@ -388,22 +500,12 @@ function expectedFeature(feature: OfficialFeature) {
         bonus: num(attackMatch[2]),
         reach: Number(/reach (\d+)/.exec(attackMatch[3])?.[1]) || undefined,
         range: /range (\d+)(?:\/(\d+))?/.exec(attackMatch[3]),
+        bonusNote: /^ \(([^)]*)\)/.exec(attackMatch[3])?.[1],
       }
     : undefined
-  const damage = [...body.matchAll(/(\d+)(?: \((\d+)d(\d+)(?: ([+−–]) (\d+))?\))? (\w+ )?damage/g)]
-    .filter((m) => m[2] || (m[6] && damageWords.includes(m[6].trim())))
-    .map((m) => ({
-      average: Number(m[1]),
-      dice: m[2] ? `${m[2]}d${m[3]}${m[4] ? ` ${m[4] === "+" ? "+" : "-"} ${m[5]}` : ""}` : undefined,
-      type: m[6] && damageWords.includes(m[6].trim()) ? m[6].trim().toLowerCase() : undefined,
-    }))
-  const saves = [...body.matchAll(/(\w+) Saving Throw: DC (\d+)/g)].map((m, k, all) => {
-    const after = body.slice(m.index, all[k + 1]?.index ?? body.length)
-    return { ability: saveWords[m[1]], dc: Number(m[2]), half: /Success: Half damage/.test(after) }
-  })
   const escapeDc = /escape DC (\d+)/.exec(body)
-  // The soft join drops a hyphen at a line end before a lowercase letter, so "60-\nfoot" reads "60foot" here.
-  const areaMatch = /(\d+)-?foot(-long, (\d+)-foot-?wide Line|-radius, (\d+)-foot-?high Cylinder|-?radius Sphere| Cone| Cube| Emanation| Sphere)/.exec(body)
+  // The soft join drops a hyphen at a line end before a lowercase letter, so "5-foot-\nwide" reads "5-footwide" here.
+  const areaMatch = /(?:in an?|fills a) (\d+)-?foot(-long, (\d+)-foot-?wide Line|-radius, (\d+)-foot-?high Cylinder|-?radius Sphere| Cone| Cube| Emanation| Sphere)/.exec(body)
   const area = areaMatch
     ? {
         shape: areaMatch[2].split(" ").at(-1)?.toLowerCase(),
@@ -412,8 +514,19 @@ function expectedFeature(feature: OfficialFeature) {
         height: areaMatch[4] ? Number(areaMatch[4]) : undefined,
       }
     : undefined
-  const spellLines = body.split(/(?=At Will: |\d\/Day Each: |\d\/Day: )/).slice(1)
-  return { uses, body, attack, damage, saves, escape: escapeDc ? Number(escapeDc[1]) : undefined, area, spellLines }
+  const spellLines = paragraphs.filter((paragraph) => /^(At Will|\d\/Day( Each)?): /.test(paragraph))
+  return {
+    uses,
+    paragraphs,
+    body,
+    attack,
+    damage: expectedDamage(paragraphs),
+    saves: expectedSaves(body),
+    conditions: expectedConditions(body),
+    escape: escapeDc ? Number(escapeDc[1]) : undefined,
+    area,
+    spellLines,
+  }
 }
 
 export default function verify(report: Report) {
@@ -461,7 +574,7 @@ export default function verify(report: Report) {
       "resistances",
       "immunities",
       "conditionImmunities",
-      "defenseNotes",
+      "conditionalDefenses",
       "senses",
       "languages",
       "telepathy",
@@ -503,13 +616,21 @@ export default function verify(report: Report) {
       const officialGear = (expected.gear ?? []).map((item) => ({ id: toId(item.quantity ? item.name.replace(/s$/, "") : item.name), quantity: item.quantity }))
       if (!same(gear, officialGear)) failures.push(`${monster.id}: gear ${JSON.stringify(gear)}, official ${JSON.stringify(expected.gear)}`)
     }
-    report.check("monsters", "header fields and all 18 ability numbers equal each official stat block", total, failures)
+    const waived: string[] = []
+    const real = failures.filter((failure) => {
+      const misprint = misprints.find((entry) => failure === entry.match)
+      if (misprint) waived.push(`${failure}: misprint on page ${misprint.page}, ${misprint.reason}`)
+      return !misprint
+    })
+    for (const misprint of misprints) if (!failures.includes(misprint.match)) real.push(`misprint waiver "${misprint.match}" matches nothing. Remove it.`)
+    report.check("monsters", "header fields and all 18 ability numbers equal each official stat block", total, real, waived)
   }
 
   // ---- Features ----
   {
     const failures: string[] = []
     let total = 0
+    let stagedInData = 0
     let prose = 0
     const proseFailures: string[] = []
     for (const block of blocks) {
@@ -535,13 +656,15 @@ export default function verify(report: Report) {
           const item = (data as MonsterFeature[])[k]
           const own = `${monster.id} ${section} ${item.name}`
           const want = expectedFeature(feature)
-          total++
-          // The whole text, ignoring layout, and each sentence against the official text.
+          total += 2
+          // The whole text, ignoring layout, then paragraph by paragraph, then each sentence against the official text.
           if (squash(item.text) !== squash(want.body)) failures.push(`${own}: text differs from the official feature`)
+          const paragraphs = item.text.split("\n").map(squash)
+          if (!same(paragraphs, want.paragraphs.map(squash))) failures.push(`${own}: ${paragraphs.length} paragraphs, official ${want.paragraphs.length}, or their breaks differ`)
           prose++
           const missing = missingSentences(item.text)
           if (missing.length) proseFailures.push(`${own}: ${missing.join(" | ")}`)
-          for (const key of ["perDay", "perDayInLair", "recharge", "rechargeAfterRest", "note"] as const) {
+          for (const key of ["uses", "rechargeRoll", "note"] as const) {
             total++
             if (!same(item[key], want.uses[key])) failures.push(`${own}: ${key} ${JSON.stringify(item[key])}, official ${JSON.stringify(want.uses[key])}`)
           }
@@ -552,29 +675,34 @@ export default function verify(report: Report) {
             bonus: want.attack.bonus,
             reach: want.attack.reach,
             range: want.attack.range ? { normal: Number(want.attack.range[1]), long: want.attack.range[2] ? Number(want.attack.range[2]) : undefined } : undefined,
+            bonusNote: want.attack.bonusNote,
           }
-          const gotAttack = attack && { kind: attack.kind, bonus: attack.bonus, reach: attack.reach, range: attack.range && { normal: attack.range.normal, long: attack.range.long } }
-          if (!same(gotAttack, wantAttack)) failures.push(`${own}: attack ${JSON.stringify(gotAttack)}, official ${JSON.stringify(wantAttack)}`)
+          if (!same(attack, wantAttack)) failures.push(`${own}: attack ${JSON.stringify(attack)}, official ${JSON.stringify(wantAttack)}`)
+          // Every damage part with its outcome, condition and alternative. Conditions are compared ignoring layout.
           total++
-          const damage = (item.damage ?? []).map((part) => ({ average: part.average, dice: part.dice, type: part.type }))
-          if (!same(damage, want.damage)) failures.push(`${own}: damage ${JSON.stringify(damage)}, official ${JSON.stringify(want.damage)}`)
+          const damage = (item.damage ?? []).map((part) => ({ ...part, condition: part.condition && squash(part.condition) }))
+          const wantDamage = want.damage.map((part) => ({ ...part, condition: part.condition && squash(part.condition) }))
+          if (!same(damage, wantDamage)) failures.push(`${own}: damage ${JSON.stringify(item.damage)}, official ${JSON.stringify(want.damage)}`)
+          // Every save with its ability, DC, targets and each outcome's text, staged outcomes counted one by one.
           total++
-          const saves = (item.saves ?? []).map((save) => ({ ability: save.ability, dc: save.dc, half: !!save.halfOnSuccess }))
-          if (!same(saves, want.saves)) failures.push(`${own}: saves ${JSON.stringify(saves)}, official ${JSON.stringify(want.saves)}`)
-          for (const save of item.saves ?? []) {
-            for (const clause of [save.targets, save.failure, save.success, save.failureOrSuccess]) {
-              if (!clause) continue
-              total++
-              if (!squash(want.body).includes(squash(clause))) failures.push(`${own}: save clause "${clause.slice(0, 40)}" is not in the official text`)
-            }
-          }
-          total += 2
+          const saves = (item.saves ?? []).map((save) => ({
+            ability: save.ability,
+            dc: save.dc,
+            targets: save.targets && squash(save.targets),
+            failure: save.failure && squash(save.failure),
+            firstFailure: save.firstFailure && squash(save.firstFailure),
+            secondFailure: save.secondFailure && squash(save.secondFailure),
+            subsequentFailures: save.subsequentFailures && squash(save.subsequentFailures),
+            success: save.success && squash(save.success),
+            failureOrSuccess: save.failureOrSuccess && squash(save.failureOrSuccess),
+            half: !!save.halfOnSuccess,
+          }))
+          if (!same(saves, want.saves)) failures.push(`${own}: saves ${JSON.stringify(item.saves)}, official ${JSON.stringify(want.saves)}`)
+          for (const save of item.saves ?? []) stagedInData += (save.firstFailure ? 1 : 0) + (save.secondFailure ? 1 : 0) + (save.subsequentFailures ? 1 : 0)
+          total += 3
           if (item.escapeDc !== want.escape) failures.push(`${own}: escape DC ${item.escapeDc}, official ${want.escape}`)
           if (!same(item.area, want.area)) failures.push(`${own}: area ${JSON.stringify(item.area)}, official ${JSON.stringify(want.area)}`)
-          for (const condition of item.conditions ?? []) {
-            total++
-            if (!new RegExp(`\\b${condition}\\b`, "i").test(want.body)) failures.push(`${own}: condition ${condition} is not named in the text`)
-          }
+          if (!same([...(item.conditions ?? [])].sort(), want.conditions)) failures.push(`${own}: conditions ${JSON.stringify(item.conditions)}, official ${JSON.stringify(want.conditions)}`)
           total++
           const lists = want.spellLines.map((line) => {
             const m = /^(At Will|(\d)\/Day( Each)?): (.*)$/.exec(line.trim()) as RegExpExecArray
@@ -613,20 +741,19 @@ export default function verify(report: Report) {
         if (missing.length) proseFailures.push(`${monster.id} legendary text: ${missing.join(" | ")}`)
       }
     }
+    // Every staged outcome label in the chapter is a typed stage in the data.
+    total++
+    const chapterText = soft(lines.map((line) => line.text))
+    const stagedInText = (chapterText.match(/(?:First Failure|Second Failure|Subsequent Failures): /g) ?? []).length + (chapterText.match(/\.\s+Failure: [^:]*?Second Failure: /g) ?? []).length
+    if (stagedInData !== stagedInText) failures.push(`the data holds ${stagedInData} staged failure clauses, the official text prints ${stagedInText}`)
     for (const failure of failures) unsettled.add(failure.split(" ")[0].replace(/:$/, ""))
-    report.check("monsters", "feature names per section, text, uses, attacks, damage, saves, escape DCs, areas and spells equal the official text", total, failures)
-    // official.ts strips the running header only where it reads "System Reference Document 5.2.1" then the page
-    // number. Where the PDF gives the number first, the header stays in its text and splits a sentence that crosses
-    // the page break. Such a sentence is checked against this chapter's own text, which drops both orders.
-    const chapterText = squash(lines.map((line) => line.text).join("\n"))
-    const proseWaived: string[] = []
-    const proseReal: string[] = []
-    for (const failure of proseFailures) {
-      const [own, sentences] = [failure.slice(0, failure.indexOf(": ")), failure.slice(failure.indexOf(": ") + 2).split(" | ")]
-      if (sentences.every((sentence) => chapterText.includes(squash(sentence)))) proseWaived.push(`${own}: a sentence crosses a page break whose running header official.ts leaves in its text`)
-      else proseReal.push(failure)
-    }
-    report.check("monsters", "every feature text is official wording", prose, proseReal, proseWaived)
+    report.check(
+      "monsters",
+      "feature names, text and paragraphs, uses, attacks, damage parts, saves and their stages, conditions, escape DCs, areas and spells equal the official text",
+      total,
+      failures
+    )
+    report.check("monsters", "every feature text is official wording", prose, proseFailures)
   }
 
   // ---- Internal consistency ----
@@ -636,8 +763,11 @@ export default function verify(report: Report) {
     let total = 0
     for (const monster of monsters) {
       for (const [ability, line] of Object.entries(monster.abilities)) {
-        total++
+        total += 2
         if (line.mod !== Math.floor((line.score - 10) / 2)) failures.push(`${monster.id}: ${ability} ${line.score} has modifier ${line.mod}`)
+        // A save is the modifier, or the modifier plus PB when the monster is proficient. No stat block doubles PB.
+        if (line.save !== line.mod && line.save !== line.mod + monster.pb)
+          failures.push(`${monster.id}: ${ability} save ${line.save} is neither the modifier ${line.mod} nor ${line.mod} + PB ${monster.pb}`)
       }
       total += 5
       if (diceAverage(monster.hp.formula) !== monster.hp.average) failures.push(`${monster.id}: HP ${monster.hp.average} is not the average of ${monster.hp.formula}`)
@@ -647,7 +777,7 @@ export default function verify(report: Report) {
       if (!xp?.includes(monster.xp)) failures.push(`${monster.id}: XP ${monster.xp} at CR ${monster.cr}, the table gives ${xp}`)
       if (monster.initiative.score !== 10 + monster.initiative.modifier) failures.push(`${monster.id}: initiative score ${monster.initiative.score} is not 10 + ${monster.initiative.modifier}`)
       const die = Number(/d(\d+)/.exec(monster.hp.formula)?.[1])
-      if (!monster.size.some((size) => tables.hitDie.get(size) === die)) failures.push(`${monster.id}: hit die d${die} is not the die of size ${monster.size.join(" or ")}`)
+      if (!monster.size.some((size) => tables.hitDie.find((row) => row.size === size)?.die === die)) failures.push(`${monster.id}: hit die d${die} is not the die of size ${monster.size.join(" or ")}`)
       const features = [monster.traits, monster.actions, monster.bonusActions, monster.reactions, monster.legendaryActions?.actions].flat().filter((f): f is MonsterFeature => !!f)
       for (const feature of features) {
         for (const part of feature.damage ?? []) {
@@ -663,11 +793,13 @@ export default function verify(report: Report) {
       return !error
     })
     for (const error of officialErrors) if (!failures.some((failure) => failure.startsWith(error.match))) real.push(`waiver "${error.match}" matches nothing. Remove it.`)
-    report.check("monsters", "modifiers, HP, PB, XP, initiative scores, hit dice and damage averages agree with the official rules", total, real, waived)
+    report.check("monsters", "modifiers, saves, HP, PB, XP, initiative scores, hit dice and damage averages agree with the official rules", total, real, waived)
   }
 
-  // ---- Cross-check with Open5e ----
-  {
+  // ---- Cross-check with Open5e, only when its fixtures are cached ----
+  const open5eCheck = "Open5e agrees, or the official text settles it in the checks above"
+  if (!hasUpstream("open5e")) report.skip("monsters", open5eCheck)
+  else {
     const failures: string[] = []
     const waived: string[] = []
     let total = 0
@@ -743,7 +875,34 @@ export default function verify(report: Report) {
         }
       }
     }
-    report.crossCheck("monsters", "Open5e agrees, or the official text settles it in the checks above", total, failures, waived)
+    report.crossCheck("monsters", open5eCheck, total, failures, waived)
+  }
+
+  // ---- Stat block rules tables ----
+  {
+    const rules = readData<MonsterRule>("monster-rules")
+    const failures: string[] = []
+    let total = 0
+    const byRule = new Map(rules.map((rule) => [rule.id, rule]))
+    const xp = byRule.get("experience-points-by-challenge-rating")
+    const pb = byRule.get("proficiency-bonus-by-challenge-rating")
+    const dice = byRule.get("hit-dice-by-size")
+    const wantXp = [...tables.xp].map(([cr, values]) => ({ cr, xp: values })).sort((a, b) => a.cr - b.cr)
+    const wantPb = tables.pb.map((row) => ({ minCr: row.min, maxCr: row.max, pb: row.pb })).sort((a, b) => a.minCr - b.minCr)
+    const wantDice = tables.hitDie.map((row) => ({ size: row.size, die: row.die, averagePerDie: row.average }))
+    const compare = (label: string, got: unknown, want: unknown[], page: number, rule?: { page: number; name: string }) => {
+      total += want.length + 2
+      if (!same(got, want)) failures.push(`${label}: rows ${JSON.stringify(got)}, official ${JSON.stringify(want)}`)
+      if (!rule || rule.page !== page) failures.push(`${label}: page ${rule?.page}, the table is on ${page}`)
+      else if (!pages[page - 1].includes(`${rule.name}\n`)) failures.push(`${label}: no heading "${rule.name}" on page ${page}`)
+    }
+    compare("experience-points-by-challenge-rating", xp && "xpByCr" in xp ? xp.xpByCr : undefined, wantXp, 256, xp)
+    compare("proficiency-bonus-by-challenge-rating", pb && "pbByCr" in pb ? pb.pbByCr : undefined, wantPb, 256, pb)
+    compare("hit-dice-by-size", dice && "hitDiceBySize" in dice ? dice.hitDiceBySize : undefined, wantDice, 255, dice)
+    total++
+    if (rules.length !== 3) failures.push(`monster-rules has ${rules.length} entries, the chapter prints 3 tables`)
+    if (wantXp.length !== 34 || wantPb.length !== 8 || wantDice.length !== 6) failures.push(`the official tables read ${wantXp.length}, ${wantPb.length} and ${wantDice.length} rows, not 34, 8 and 6`)
+    report.check("monster rules", "XP by CR (34 rows), PB by CR (8) and Hit Dice by Size (6) equal the official tables", total, failures)
   }
 
   // ---- References ----

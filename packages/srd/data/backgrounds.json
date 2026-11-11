@@ -19,38 +19,46 @@
     "toolProficiency": {
       "tool": "calligraphers-supplies"
     },
-    "equipment": {
-      "a": {
+    "equipment": [
+      {
+        "option": "A",
         "items": [
           {
-            "id": "calligraphers-supplies",
+            "item": "calligraphers-supplies",
             "quantity": 1
           },
           {
-            "id": "book",
+            "item": "book",
             "quantity": 1,
             "note": "prayers"
           },
           {
-            "id": "holy-symbol",
+            "item": "holy-symbol",
             "quantity": 1
           },
           {
-            "id": "parchment",
-            "quantity": 10
+            "item": "parchment",
+            "quantity": 10,
+            "note": "sheets"
           },
           {
-            "id": "robe",
+            "item": "robe",
             "quantity": 1
           }
         ],
-        "gp": 8
+        "money": {
+          "amount": 8,
+          "unit": "gp"
+        }
       },
-      "b": {
-        "items": [],
-        "gp": 50
+      {
+        "option": "B",
+        "money": {
+          "amount": 50,
+          "unit": "gp"
+        }
       }
-    }
+    ]
   },
   {
     "id": "criminal",
@@ -71,37 +79,44 @@
     "toolProficiency": {
       "tool": "thieves-tools"
     },
-    "equipment": {
-      "a": {
+    "equipment": [
+      {
+        "option": "A",
         "items": [
           {
-            "id": "dagger",
+            "item": "dagger",
             "quantity": 2
           },
           {
-            "id": "thieves-tools",
+            "item": "thieves-tools",
             "quantity": 1
           },
           {
-            "id": "crowbar",
+            "item": "crowbar",
             "quantity": 1
           },
           {
-            "id": "pouch",
+            "item": "pouch",
             "quantity": 2
           },
           {
-            "id": "clothes-travelers",
+            "item": "clothes-travelers",
             "quantity": 1
           }
         ],
-        "gp": 16
+        "money": {
+          "amount": 16,
+          "unit": "gp"
+        }
       },
-      "b": {
-        "items": [],
-        "gp": 50
+      {
+        "option": "B",
+        "money": {
+          "amount": 50,
+          "unit": "gp"
+        }
       }
-    }
+    ]
   },
   {
     "id": "sage",
@@ -123,38 +138,46 @@
     "toolProficiency": {
       "tool": "calligraphers-supplies"
     },
-    "equipment": {
-      "a": {
+    "equipment": [
+      {
+        "option": "A",
         "items": [
           {
-            "id": "quarterstaff",
+            "item": "quarterstaff",
             "quantity": 1
           },
           {
-            "id": "calligraphers-supplies",
+            "item": "calligraphers-supplies",
             "quantity": 1
           },
           {
-            "id": "book",
+            "item": "book",
             "quantity": 1,
             "note": "history"
           },
           {
-            "id": "parchment",
-            "quantity": 8
+            "item": "parchment",
+            "quantity": 8,
+            "note": "sheets"
           },
           {
-            "id": "robe",
+            "item": "robe",
             "quantity": 1
           }
         ],
-        "gp": 8
+        "money": {
+          "amount": 8,
+          "unit": "gp"
+        }
       },
-      "b": {
-        "items": [],
-        "gp": 50
+      {
+        "option": "B",
+        "money": {
+          "amount": 50,
+          "unit": "gp"
+        }
       }
-    }
+    ]
   },
   {
     "id": "soldier",
@@ -175,46 +198,55 @@
     "toolProficiency": {
       "oneOfKind": "gaming-set"
     },
-    "equipment": {
-      "a": {
+    "equipment": [
+      {
+        "option": "A",
         "items": [
           {
-            "id": "spear",
+            "item": "spear",
             "quantity": 1
           },
           {
-            "id": "shortbow",
+            "item": "shortbow",
             "quantity": 1
           },
           {
-            "id": "arrows",
+            "item": "arrows",
             "quantity": 20,
             "unit": "single"
           },
           {
-            "id": "gaming-set",
+            "chooseFrom": [
+              "gaming-set"
+            ],
             "quantity": 1,
-            "sameAsTool": true
+            "note": "same as above"
           },
           {
-            "id": "healers-kit",
+            "item": "healers-kit",
             "quantity": 1
           },
           {
-            "id": "quiver",
+            "item": "quiver",
             "quantity": 1
           },
           {
-            "id": "clothes-travelers",
+            "item": "clothes-travelers",
             "quantity": 1
           }
         ],
-        "gp": 14
+        "money": {
+          "amount": 14,
+          "unit": "gp"
+        }
       },
-      "b": {
-        "items": [],
-        "gp": 50
+      {
+        "option": "B",
+        "money": {
+          "amount": 50,
+          "unit": "gp"
+        }
       }
-    }
+    ]
   }
 ]
