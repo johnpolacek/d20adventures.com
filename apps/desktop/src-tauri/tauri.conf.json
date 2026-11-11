@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "D20 Adventures",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "com.d20adventures.desktop",
   "build": { "beforeDevCommand": "pnpm dev", "beforeBuildCommand": "pnpm build", "devUrl": "http://127.0.0.1:1422", "frontendDist": "../dist" },
   "app": {
