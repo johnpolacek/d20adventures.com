@@ -1,9 +1,8 @@
-import Link from "next/link"
 import RedirectHandler from "@/components/nav/redirect-handler"
 import { textShadowSpreadLight } from "@/components/typography/styles"
-import { Button } from "@/components/ui/button"
 import Image from "@/components/ui/native-image"
 import HomeAdventure from "@/components/views/home-adventure"
+import PlaytesterCta from "@/components/views/playtester-cta"
 
 export default function HomePage() {
   return (
@@ -22,11 +21,7 @@ export default function HomePage() {
               D20
             </h2>
 
-            <Link className="fade-in delay-[2600ms]" href="/playtesters">
-              <Button asChild variant="epic" size="lg" className="mt-2 relative z-10">
-                Become a Playtester
-              </Button>
-            </Link>
+            <PlaytesterCta />
           </div>
         </HomeAdventure>
         <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.webp" alt="D20" />
