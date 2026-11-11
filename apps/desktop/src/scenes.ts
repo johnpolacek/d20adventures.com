@@ -109,14 +109,16 @@ import vengeanceOfTheBlackthorn from "@d20/stage/stagings/welcome-to-kordavos/ve
 import welcomeToTheLowerDistricts from "@d20/stage/stagings/welcome-to-kordavos/welcome-to-the-lower-districts.json"
 import { type FigureArt, type FigureOwner, heroFigure, PREMADE_FIGURES } from "./figures"
 import { NPC_PORTRAITS } from "./npc-portraits"
+import photoreal from "./photoreal.json"
 
 type Point = { x: number; z: number }
 type Who = { id: string; name: string; type?: string; race?: string; archetype?: string; gender?: string }
 type CastMember = { id: string; name: string; role?: string; height?: number; at: string | number[]; facing?: string | number | number[]; art: { front?: string; back?: string; portrait?: string } }
 type Shot = { subject?: string; subjects?: string[]; label?: string }
 export interface Scene {
-  set: { title: string; marks: Record<string, { at: number[]; label?: string }> }
-  staging: { cast: CastMember[]; shots?: Record<string, Shot>; loops?: Record<string, { party?: { members: string[] } }>; shot?: string }
+  // `painted`: the set is shown as photographs, unless its staging says `painted: false`.
+  set: { title: string; marks: Record<string, { at: number[]; label?: string }>; painted?: object }
+  staging: { cast: CastMember[]; shots?: Record<string, Shot>; loops?: Record<string, { party?: { members: string[] } }>; shot?: string; painted?: boolean }
   // The HUD's place name, and the opening line of the GM's map staging.
   location: string
   where: string
@@ -771,16 +773,33 @@ const PORTRAITS: Record<string, string> = {
   owlbear: "/stage/fixtures/the-midnight-summons/owlbear-portrait.jpg",
 }
 
+// On a painted set the cast's cards are photographs (the stage's `photographs`), and their portraits go with them:
+// the same head and shoulders cut from the photograph, in the `photoreal` folder beside the painted portrait
+// (lab/stage-art/cards.ts). A hand-painted set keeps the painted portrait, so a face in the turn order is the one
+// standing in the scene. Art from elsewhere, such as a hero painted on the player's machine, stays as it is.
+// `photoreal.json` here is the card tool's copy of /stage/photoreal.json.
+const PHOTOGRAPHED = new Set<string>(photoreal)
+function photograph(portrait: string | undefined, scene: Scene | undefined) {
+  if (!portrait || !scene?.set.painted || scene.staging.painted === false) return portrait
+  const m = /^\/stage\/(.+)\/([^/]+)-portrait\.jpg$/.exec(portrait)
+  return m && PHOTOGRAPHED.has(`${m[1]}/${m[2]}`) ? `/stage/${m[1]}/photoreal/${m[2]}-portrait.jpg` : portrait
+}
+
 // A character's portrait: a created hero's figure, else the current scene, else any authored scene, so story view keeps
 // the party's faces. Heroes with no art anywhere show their stock figure, and NPCs the portrait painted on their sheet.
+// With no scene to go by, such as a premade hero on the New Game page, the scene the portrait was found in decides
+// whether it is the photograph.
 export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<string, string> = {}, painted: Record<string, FigureArt> = {}) {
-  if (chosen[c.id] || painted[c.id]) return heroFigure(c as FigureOwner, chosen, painted).art.portrait
+  if (chosen[c.id] || painted[c.id]) return photograph(heroFigure(c as FigureOwner, chosen, painted).art.portrait, scene)
   for (const s of [scene, ...Object.values(SCENES)]) {
     const id = s && castIdFor(s.staging.cast, c)
     const portrait = id && s.staging.cast.find((m) => m.id === id)?.art.portrait
-    if (portrait) return portrait
+    if (portrait) return photograph(portrait, scene ?? s)
   }
-  return PORTRAITS[c.id] ?? PREMADE_FIGURES[c.id]?.art.portrait ?? (c.type === "pc" ? heroFigure(c as FigureOwner).art.portrait : NPC_PORTRAITS.has(c.id) ? `/stage/portraits/${c.id}.webp` : undefined)
+  return photograph(
+    PORTRAITS[c.id] ?? PREMADE_FIGURES[c.id]?.art.portrait ?? (c.type === "pc" ? heroFigure(c as FigureOwner).art.portrait : NPC_PORTRAITS.has(c.id) ? `/stage/portraits/${c.id}.webp` : undefined),
+    scene
+  )
 }
 
 // Map staging for the GM's narration: the place, its named spots, and where each character in the turn stands now

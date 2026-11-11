@@ -11,6 +11,7 @@
 //   node --import tsx lab/stage-art/cards.ts pack                    # their atlas again, in public/stage-lab/crowd
 //   node --import tsx lab/stage-art/cards.ts paint heroes/human-a    # a card anywhere under public/stage
 //   node --import tsx lab/stage-art/cards.ts publish garlan,heroes/human-a   # into the game, beside the painted card
+//   node --import tsx lab/stage-art/cards.ts portraits               # every published card's portrait again
 //
 // An id is a card under public/stage: `heroes/human-a` is public/stage/heroes/human-a-front.webp and -back.webp, and a
 // bare name is one of public/stage/fixtures/welcome-to-kordavos. Writes raw/<id>-card-front.png and -back.png, and
@@ -18,7 +19,9 @@
 // id is written `--`.
 //
 // `publish` copies a card's photographs to a `photoreal` folder beside the painted card and lists every such card in
-// public/stage/photoreal.json. On a painted set the engine shows the photograph of any card listed there.
+// public/stage/photoreal.json. On a painted set the engine shows the photograph of any card listed there. It also
+// crops the card's portrait from the photograph, as `photoreal/<name>-portrait.jpg`: the same head and shoulders the
+// painted portrait shows. `cards.ts portraits` does that again for every listed card.
 
 import { copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
 import sharp from "sharp"
@@ -144,6 +147,132 @@ const source = (id: string, view: "front" | "back") => (id.startsWith("crowd-") 
 
 // Photographs into the game: <dir>/photoreal/<name>-front.webp and -back.webp beside the painted card, and the list of
 // every card that has them.
+// The painted portrait is head and shoulders cut from the painted front (scripts/stage-standees.ts, `key`), on a slate
+// ground, sometimes moved by hand since. Where in the front it was cut from is not recorded, so it is found again:
+// the box of the painted front that looks most like the painted portrait, at any size and place. The photograph keeps
+// the pose, so the same box of it, measured from the figure's own outline, is its portrait.
+// Four of the gate's party have a painted scene for a portrait, which is no part of their card. Those take a box by
+// how many heads tall the figure is, centred on the head.
+const PORTRAIT_BG = "#3b4256"
+const PORTRAIT_SHAPE = 1.27
+const HEADS: Record<string, number> = {
+  "fixtures/welcome-to-kordavos/branka": 5.2,
+  "fixtures/welcome-to-kordavos/cassia": 7.4,
+  "fixtures/welcome-to-kordavos/milos": 7.6,
+  "fixtures/welcome-to-kordavos/yeva": 4.6,
+}
+type Box = { left: number; top: number; height: number }
+// A card flattened on the portrait's ground, in grey, with the box its figure fills.
+async function figure(file: string, tall?: number) {
+  const img = sharp(file).ensureAlpha()
+  const sized = tall ? img.resize({ height: tall }) : img
+  const { data, info } = await sized.raw().toBuffer({ resolveWithObject: true })
+  const [W, H] = [info.width, info.height]
+  const bg = (0.2126 * 0x3b + 0.7152 * 0x42 + 0.0722 * 0x56) / 255
+  const grey = new Float32Array(W * H)
+  const alpha = new Uint8Array(W * H)
+  let [x0, y0, x1, y1] = [W, H, 0, 0]
+  for (let i = 0; i < W * H; i++) {
+    const a = data[i * 4 + 3] / 255
+    alpha[i] = data[i * 4 + 3]
+    grey[i] = ((0.2126 * data[i * 4] + 0.7152 * data[i * 4 + 1] + 0.0722 * data[i * 4 + 2]) / 255) * a + bg * (1 - a)
+    if (a > 0.16) {
+      const [x, y] = [i % W, Math.floor(i / W)]
+      if (x < x0) x0 = x
+      if (x > x1) x1 = x
+      if (y < y0) y0 = y
+      if (y > y1) y1 = y
+    }
+  }
+  return { file, W, H, grey, alpha, bg, body: { left: x0, top: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 } }
+}
+type Fig = Awaited<ReturnType<typeof figure>>
+// The box of a card that looks most like a portrait, and how far off it still is, of 255.
+async function find(front: Fig, portraitFile: string) {
+  const [PW, PH] = [48, 38]
+  const want = await sharp(portraitFile).resize({ width: PW, height: PH, fit: "fill" }).greyscale().raw().toBuffer()
+  let best = { left: 0, top: 0, height: front.H, miss: Infinity }
+  for (let h = front.H * 0.1; h <= front.H * 1.02; h *= 1.05) {
+    const w = h * PORTRAIT_SHAPE
+    const step = Math.max(1, h / 28)
+    // A portrait starts at or above the head, so its box starts in the card's upper half.
+    for (let top = front.body.top - h * 0.3; top <= front.body.top + front.body.height * 0.5; top += step)
+      for (let left = -w * 0.5; left <= front.W - w * 0.5; left += step) {
+        let miss = 0
+        for (let py = 0; py < PH && miss < best.miss; py++) {
+          const y = Math.floor(top + ((py + 0.5) / PH) * h)
+          for (let px = 0; px < PW; px++) {
+            const x = Math.floor(left + ((px + 0.5) / PW) * w)
+            const g = x >= 0 && y >= 0 && x < front.W && y < front.H ? front.grey[y * front.W + x] : front.bg
+            miss += (g * 255 - want[py * PW + px]) ** 2
+          }
+        }
+        if (miss < best.miss) best = { left, top, height: h, miss }
+      }
+  }
+  return { left: best.left, top: best.top, height: best.height, off: Math.sqrt(best.miss / (PW * PH)) }
+}
+// The middle of the head: across the figure's top rows, the middle of the widest run of the figure in each row, so a
+// staff or a raised hand beside the head does not pull it aside.
+function headMiddle(f: Fig, rows: number) {
+  const mids: number[] = []
+  for (let y = f.body.top; y < Math.min(f.H, f.body.top + rows); y++) {
+    let [bestLen, bestMid, start] = [0, -1, -1]
+    for (let x = 0; x <= f.W; x++) {
+      const on = x < f.W && f.alpha[y * f.W + x] > 40
+      if (on && start < 0) start = x
+      if (!on && start >= 0) {
+        if (x - start > bestLen) [bestLen, bestMid] = [x - start, (start + x) / 2]
+        start = -1
+      }
+    }
+    if (bestMid >= 0) mids.push(bestMid)
+  }
+  mids.sort((p, q) => p - q)
+  return mids.length ? mids[Math.floor(mids.length / 2)] : f.W / 2
+}
+async function cut(f: Fig, box: Box, to: string) {
+  const [h, top, left] = [Math.round(box.height), Math.round(box.top), Math.round(box.left)]
+  const w = Math.round(h * PORTRAIT_SHAPE)
+  const extend = { top: Math.max(0, -top), left: Math.max(0, -left), right: Math.max(0, left + w - f.W), bottom: Math.max(0, top + h - f.H), background: PORTRAIT_BG }
+  const padded = await sharp(f.file).ensureAlpha().extend(extend).flatten({ background: PORTRAIT_BG }).toBuffer()
+  await sharp(padded)
+    .extract({ left: Math.max(0, left), top: Math.max(0, top), width: w, height: h })
+    .resize({ width: 512, height: Math.round(512 / PORTRAIT_SHAPE), fit: "fill" })
+    .jpeg({ quality: 84, mozjpeg: true })
+    .toFile(to)
+}
+async function portrait(listed: string) {
+  const at = listed.lastIndexOf("/")
+  const out = `public/stage/${listed.slice(0, at)}/photoreal/${listed.slice(at + 1)}`
+  const photo = await figure(`${out}-front.webp`)
+  let box: Box
+  let how: string
+  if (HEADS[listed]) {
+    const head = photo.body.height / HEADS[listed]
+    const height = head * 2.3
+    box = { left: headMiddle(photo, Math.round(head * 0.8)) - (height * PORTRAIT_SHAPE) / 2, top: photo.body.top - photo.body.height * 0.02, height }
+    how = `${HEADS[listed]} heads tall`
+  } else {
+    const painted = await figure(`public/stage/${listed}-front.webp`, 420)
+    const found = await find(painted, `public/stage/${listed}-portrait.jpg`)
+    // The same box, measured from each figure's own outline.
+    const k = photo.body.height / painted.body.height
+    box = {
+      left: photo.body.left + photo.body.width / 2 + (found.left - (painted.body.left + painted.body.width / 2)) * k,
+      top: photo.body.top + (found.top - painted.body.top) * k,
+      height: found.height * k,
+    }
+    how = `off by ${found.off.toFixed(1)} of 255${found.off > 30 ? "  LOOK AT THIS ONE" : ""}`
+  }
+  await cut(photo, box, `${out}-portrait.jpg`)
+  console.log(`${out}-portrait.jpg  ${how}`)
+}
+async function portraits() {
+  const listed = JSON.parse(await readFile("public/stage/photoreal.json", "utf8")) as string[]
+  for (const id of listed) await portrait(id).catch((error) => console.log(`${id}: ${error instanceof Error ? error.message : String(error)}`))
+}
+
 async function publish(ids: string[]) {
   for (const id of ids) {
     const at = base(id)
@@ -151,6 +280,7 @@ async function publish(ids: string[]) {
     await mkdir(dir, { recursive: true })
     for (const view of ["front", "back"]) await copyFile(`${OUT}/${slug(id)}-${view}.webp`, `${dir}/${at.slice(at.lastIndexOf("/") + 1)}-${view}.webp`)
     console.log(`${dir}/${at.slice(at.lastIndexOf("/") + 1)}`)
+    await portrait(at.slice("public/stage/".length))
   }
   const listed: string[] = []
   const walk = async (dir: string) => {
@@ -161,6 +291,9 @@ async function publish(ids: string[]) {
   }
   await walk("public/stage")
   await writeFile("public/stage/photoreal.json", `${JSON.stringify(listed.sort(), null, 2)}\n`)
+  // The app's own copy, for its portraits: a deploy of the website leaves public/stage out, so nothing it builds can
+  // read the list from there.
+  await writeFile("apps/desktop/src/photoreal.json", `${JSON.stringify(listed.sort(), null, 2)}\n`)
   console.log(`public/stage/photoreal.json: ${listed.length} cards`)
 }
 
@@ -267,10 +400,11 @@ async function crop(id: string) {
 async function main() {
   const [cmd, list, ...flags] = process.argv.slice(2)
   if (cmd === "pack") return pack()
+  if (cmd === "portraits") return portraits()
   // `crowd` stands for all 16 of the crowd's people.
   const ids = (list === "crowd" ? (await atlas()).variants.map((v) => `crowd-${v.id}`).join(",") : (list ?? "")).split(",").filter(Boolean)
   if (cmd === "publish" && ids.length) return publish(ids)
-  if (!ids.length || !["paint", "key", "crop"].includes(cmd)) return console.log("usage: cards.ts paint|key|crop|publish <id,...>|crowd [--back], cards.ts pack")
+  if (!ids.length || !["paint", "key", "crop"].includes(cmd)) return console.log("usage: cards.ts paint|key|crop|publish <id,...>|crowd [--back], cards.ts pack, cards.ts portraits")
   await dirs()
   await mkdir(OUT, { recursive: true })
   await mkdir(DESKTOP, { recursive: true })

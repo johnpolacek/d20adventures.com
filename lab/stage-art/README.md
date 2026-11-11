@@ -260,6 +260,14 @@ The Midnight Summons, the same day: the whole solo adventure, three forest sets 
 - Cards: Thalbern, Wollandora and the Owlbear, 45 so far. Their ids are paths, `fixtures/the-midnight-summons/thalbern`.
 - Pictures are copied to `~/Desktop/midnight-summons-spike`.
 
+Portraits, the same day. The turn order and the character card showed the painted portrait beside a photograph on the stage.
+
+- `cards.ts publish` now cuts each card's portrait from its photograph, as `photoreal/<name>-portrait.jpg` beside the painted one, and `cards.ts portraits` does it again for every listed card. All 45 have one.
+- Where to cut: the painted portrait is a box of the painted front, so the tool finds that box again, at any size and place, and cuts the same box of the photograph, measured from the figure's outline. The first try assumed the box followed the standee script's rule and only searched for the head's size. Wollandora's and the Owlbear's portraits had been moved by hand and came out as half the figure.
+- Four of the gate's party (Branka, Cassia, Milos, Yeva) have a painted scene for a portrait, no part of their card. They take a box by how many heads tall they are (`HEADS` in `cards.ts`).
+- The app (`portraitFor` in `apps/desktop/src/scenes.ts`) shows the photograph's portrait when the scene's set is painted, and the painted one on a built set, so the face in the turn order is the one on the stage. With no scene to go by, the scene the portrait was found in decides.
+- The app reads the list of photographed cards from `apps/desktop/src/photoreal.json`, a copy `publish` writes beside `public/stage/photoreal.json`: a website deploy leaves `public/stage` out, and the site type checks the app's files.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
