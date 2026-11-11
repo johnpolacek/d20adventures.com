@@ -222,6 +222,15 @@ The harvest square, 2026-11-11: the second painted set (`realm-of-myr/kordavos-h
 - `STAGE_ART_DESKTOP` names the Desktop folder the tools copy to. This set's is `~/Desktop/kordavos-harvest-spike`.
 - Not done: cloth-free twins, so what a flag or awning uncovers as it blows takes the paint beside it. A closer second painting for `party`, whose 44 degree view enlarges its 72 degree painting by 1.6. Views of a hero who has walked to the game stall, the food stalls or the dancing, which are seen from the nearest of these nine points. The square's other set, `kordavos-harvest-square-conflict`, is still built.
 
+The square's other set, the same day (`realm-of-myr/kordavos-harvest-square-conflict`, the Clan Conflict's staging). Owner, a holiday: commits at their real time.
+
+- The two sets differ only in their crowd and three marks, so the conflict set takes eight of the festival's points with their paintings as they are: `square`, `stage`, `overview`, `jewels`, `spices`, `fortune`, `fire`, `merrick`. Its file names the festival's pictures.
+- Five points of its own, eleven paintings: `standoff`, north of the two leaders (wide, and a 36 degree one painted with `--sharpen` for their close-ups). `sides`, a step closer, looking left at Larya's people and right at Barok's. `south`, behind them looking up the square, for the views that show Barok's side in the face (centre, left, right). `heroes`, between the party and the standoff looking back at the party (centre, left, right). `crowd`, the authored view of the crowd.
+- Why the side paintings: a view of someone at the end of a line of people, set beside a panel, turns well past a 70 degree painting aimed at the middle. `stage:check` named six such views `off the paint`, or sent them to a point 12 m off. A point holds three paintings (`PAINTINGS_PER_POINT`), which is why `sides` is a point of its own.
+- `stage:check`: all ten shots and a speaker's view of each of the fifteen cast are on the paint.
+- Cards: Barok, Larya, and their four followers repainted and published, 31 so far.
+- From a tripod the two leaders' cards face the camera, not each other.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
