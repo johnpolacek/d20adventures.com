@@ -1,9 +1,5 @@
 import { z } from "zod"
-import { abilityIdSchema, conditionIdSchema, costSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, proseSchema } from "./common"
-
-// Kept local, not exported, until common.ts carries shared class and school ids.
-const schoolIdSchema = z.enum(["abjuration", "conjuration", "divination", "enchantment", "evocation", "illusion", "necromancy", "transmutation"])
-const classIdSchema = z.enum(["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"])
+import { abilityIdSchema, classIdSchema, conditionIdSchema, costSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, proseSchema, schoolIdSchema } from "./common"
 
 const count = z.number().int().positive()
 

@@ -953,7 +953,7 @@ function verifyFeats(report: Report) {
     const repeat = rows.find((b) => b.fields.name === "Repeatable")
     if (Boolean(repeat) !== Boolean(entry.repeatable) || (repeat && squash(repeat.fields.desc) !== squash(entry.repeatable?.text ?? ""))) openFailures.push(`${entry.name}: Open5e repeatable differs`)
   }
-  report.check("feats", "Open5e agrees on category, prerequisite, benefits, description and repeatable", openTotal, openFailures, openWaived)
+  report.crossCheck("feats", "Open5e agrees on category, prerequisite, benefits, description and repeatable, or the official text settles it", openTotal, openFailures, openWaived)
 
   const base = readBase("Feats")
   const baseFailures: string[] = []

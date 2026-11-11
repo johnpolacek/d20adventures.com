@@ -1,9 +1,19 @@
 import { z } from "zod"
-import { abilityIdSchema, conditionIdSchema, costSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, idSchema, proseSchema, sizeSchema, skillIdSchema } from "./common"
-
-export const classIdSchema = z.enum(["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"])
-
-export const creatureTypeSchema = z.enum(["aberration", "beast", "celestial", "construct", "dragon", "elemental", "fey", "fiend", "giant", "humanoid", "monstrosity", "ooze", "plant", "undead"])
+import {
+  abilityIdSchema,
+  classIdSchema,
+  conditionIdSchema,
+  costSchema,
+  creatureTypeSchema,
+  damageTypeIdSchema,
+  diceSchema,
+  entryShape,
+  feetSchema,
+  idSchema,
+  proseSchema,
+  sizeSchema,
+  skillIdSchema,
+} from "./common"
 
 /** Damage as a dice expression or a fixed amount ("1 Piercing" has no dice). */
 export const damageSchema = z

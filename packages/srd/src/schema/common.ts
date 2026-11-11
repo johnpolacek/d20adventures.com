@@ -54,6 +54,18 @@ export const conditionIds = [
 export const conditionIdSchema = z.enum(conditionIds)
 export type ConditionId = z.infer<typeof conditionIdSchema>
 
+export const classIds = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"] as const
+export const classIdSchema = z.enum(classIds)
+export type ClassId = z.infer<typeof classIdSchema>
+
+export const schoolIds = ["abjuration", "conjuration", "divination", "enchantment", "evocation", "illusion", "necromancy", "transmutation"] as const
+export const schoolIdSchema = z.enum(schoolIds)
+export type SchoolId = z.infer<typeof schoolIdSchema>
+
+export const creatureTypes = ["aberration", "beast", "celestial", "construct", "dragon", "elemental", "fey", "fiend", "giant", "humanoid", "monstrosity", "ooze", "plant", "undead"] as const
+export const creatureTypeSchema = z.enum(creatureTypes)
+export type CreatureType = z.infer<typeof creatureTypeSchema>
+
 export const sizes = ["Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan"] as const
 export const sizeSchema = z.enum(sizes)
 export type Size = z.infer<typeof sizeSchema>

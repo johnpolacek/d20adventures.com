@@ -226,7 +226,10 @@ function specTable(rows: string[], at: number, header: string[], cols: Col[], tw
   const parsed: string[][] = []
   // A header repeated at a page break is skipped.
   const skipHeader = () => {
-    const probe = rows.slice(p).filter((row) => row.trim() !== "").slice(0, headerLength)
+    const probe = rows
+      .slice(p)
+      .filter((row) => row.trim() !== "")
+      .slice(0, headerLength)
     if (probe.length === headerLength && probe.every((row, i) => row.trim() === header[i])) {
       let seen = 0
       while (seen < headerLength) if (rows[p++].trim() !== "") seen++
@@ -251,7 +254,12 @@ function specTable(rows: string[], at: number, header: string[], cols: Col[], tw
         const parts: string[] = []
         const next = cols[c + 1]
         const lastText = next === undefined
-        while (q < rows.length && !endsTable(rows[q]) && (lastText ? !(parts.length && matches(cols[0], rows[q]) && cols[0] !== "text" && cols[0] !== "any") : !(parts.length && matches(next, rows[q])))) parts.push(rows[q++].trim())
+        while (
+          q < rows.length &&
+          !endsTable(rows[q]) &&
+          (lastText ? !(parts.length && matches(cols[0], rows[q]) && cols[0] !== "text" && cols[0] !== "any") : !(parts.length && matches(next, rows[q])))
+        )
+          parts.push(rows[q++].trim())
         if (!parts.length) ok = false
         cells.push(clean(parts))
       } else {
@@ -334,7 +342,13 @@ function takeTables(id: string, rows: string[]): { rows: string[]; tables: ItemT
     for (let i = taken.from; i < taken.to; i++) removed.add(i)
     tables.push({ at: taken.from, table: taken.table })
   }
-  if (id === "mysterious-deck") take(deckTable(rows, rows.findIndex((row) => /^1d100\s*$/.test(row))))
+  if (id === "mysterious-deck")
+    take(
+      deckTable(
+        rows,
+        rows.findIndex((row) => /^1d100\s*$/.test(row))
+      )
+    )
   let lastEnd = -1
   for (let i = 0; i < rows.length; i++) {
     if (removed.has(i)) continue
@@ -439,13 +453,13 @@ function spellsOf(paras: string[], tables: ItemTable[]): Spell[] {
     if (para.startsWith("•") && units.length) units[units.length - 1] += ` ${para}`
     else units.push(...(para.endsWith(":") ? [para] : sentences(para)))
   }
-  const escape = (name: string) => name.replace(/[/()]/g, "\\$&")
+  const escapeName = (name: string) => name.replace(/[/()]/g, "\\$&")
   for (const unit of units) {
     const castAt = unit.search(/\bcast\b|\bcasting\b/)
     const cost = /\bexpend (?:no more than )?(\d+)(?: or more)?(?: of [A-Za-z’ ]+?)? charges?\b[^.]*?\bcast\b/.exec(unit)
     const unitDc = /\(save DC (\d+)\)/.exec(unit)?.[1]
     for (const name of spellHeadings) {
-      const word = `(?<![A-Za-z’])${escape(name)}(?![A-Za-z’])`
+      const word = `(?<![A-Za-z’])${escapeName(name)}(?![A-Za-z’])`
       // Potions give a spell's effect without casting it, and the Necklace of Fireballs detonates beads as a Fireball.
       const gives = new RegExp(String.raw`effect of the ${word} spell(?: \(save DC (\d+)\))?`).exec(unit) ?? new RegExp(String.raw`as a level (\d) ${word} \(save DC (\d+)\)`).exec(unit)
       if (gives) {
@@ -457,13 +471,16 @@ function spellsOf(paras: string[], tables: ItemTable[]): Spell[] {
       const re = new RegExp(String.raw`${word}(?: spell)?(?: \((?:save DC (\d+)|level (\d) version|expends (\d+) charges?)\))?`, "g")
       for (const match of tail.matchAll(re)) {
         const before = tail.slice(0, match.index)
-        const after = tail.slice(match.index + match[0].length)
         if (/\b(?:targeted by|against|from|by) (?:an? |the )?$/.test(before)) continue
         const castsIt = /\bcast (?:the )?(?:level \d version of )?(?:the )?$/.test(before)
         if (/^ spell\b/.test(match[0].slice(name.length)) && !castsIt) continue
         const level = /level (\d) version of (?:the )?$/.exec(before)?.[1]
         const saveDc = match[1] ?? unitDc
-        add(name, { ...(saveDc ? { saveDc: Number(saveDc) } : {}), ...(match[2] ? { level: Number(match[2]) } : level ? { level: Number(level) } : {}), ...(match[3] ? { charges: Number(match[3]) } : cost ? { charges: Number(cost[1]) } : {}) })
+        add(name, {
+          ...(saveDc ? { saveDc: Number(saveDc) } : {}),
+          ...(match[2] ? { level: Number(match[2]) } : level ? { level: Number(level) } : {}),
+          ...(match[3] ? { charges: Number(match[3]) } : cost ? { charges: Number(cost[1]) } : {}),
+        })
       }
     }
   }
@@ -493,7 +510,8 @@ function spellsOf(paras: string[], tables: ItemTable[]): Spell[] {
       for (const { cells } of table.rows) for (const match of cells[1].matchAll(/([A-Z][A-Za-z/ ]+?) \((\d+) charges?\)/g)) add(match[1], { charges: Number(match[2]), saveDc: 18 })
     }
     if (table.columns.join("|") === "Bead|Spell") {
-      for (const { cells } of table.rows) add(cells[1].replace(/ \([^)]*\)$/, ""), { ...(/\(level (\d) version\)/.exec(cells[1]) ? { level: Number(/\(level (\d) version\)/.exec(cells[1])?.[1]) } : {}) })
+      for (const { cells } of table.rows)
+        add(cells[1].replace(/ \([^)]*\)$/, ""), { ...(/\(level (\d) version\)/.exec(cells[1]) ? { level: Number(/\(level (\d) version\)/.exec(cells[1])?.[1]) } : {}) })
     }
   }
   return [...found.values()]
@@ -557,8 +575,7 @@ function paragraphVariants(paras: string[]) {
 
 function tableVariants(id: string, tables: ItemTable[]) {
   const table = tables[0]
-  if (id === "belt-of-giant-strength" || id === "potion-of-giant-strength")
-    return table.rows.map(({ cells }) => ({ name: cells[0], rarity: rarityId(cells[2]), strength: Number(cells[1]) }))
+  if (id === "belt-of-giant-strength" || id === "potion-of-giant-strength") return table.rows.map(({ cells }) => ({ name: cells[0], rarity: rarityId(cells[2]), strength: Number(cells[1]) }))
   if (id === "potions-of-healing") return table.rows.map(({ cells }) => ({ name: cells[0], rarity: rarityId(cells[2]), healing: asDice(cells[1]) }))
   if (id === "spell-scroll")
     return table.rows.map(({ cells }) => ({
@@ -574,7 +591,8 @@ function tableVariants(id: string, tables: ItemTable[]) {
 /* ---------- items ---------- */
 
 // Phrases where the text itself says the item is used up. Potions and scrolls are consumable by the category rules.
-const usedUp = /single-use|enough of it for one use|dust is consumed|ceases to be magical|ammunition is no longer magical|ammunition becomes nonmagical|bead explodes[^.]*is destroyed|dissolves on your tongue/
+const usedUp =
+  /single-use|enough of it for one use|dust is consumed|ceases to be magical|ammunition is no longer magical|ammunition becomes nonmagical|bead explodes[^.]*is destroyed|dissolves on your tongue/
 
 // Items whose charges belong to one variant, not to the item.
 const chargesPerVariant = new Set(["figurine-of-wondrous-power"])
@@ -682,7 +700,12 @@ const ruleHeadings = [
 ]
 
 // Where a table's own lines start inside a section, so the section keeps only its prose and footnote.
-const tableCaptions: Record<string, string> = { Potions: "Potion Miscibility", Tools: "Magic Item Tools", "Magic Item Values by Rarity": "Magic Item Rarities and Values", "Time and Cost": "Magic Item Crafting Time and Cost" }
+const tableCaptions: Record<string, string> = {
+  Potions: "Potion Miscibility",
+  Tools: "Magic Item Tools",
+  "Magic Item Values by Rarity": "Magic Item Rarities and Values",
+  "Time and Cost": "Magic Item Crafting Time and Cost",
+}
 
 function ruleSections() {
   const marks: number[] = []
@@ -722,10 +745,19 @@ function buildRules(): MagicItemRule[] {
     .map((row) => row.text.trim())
     .join(" ")
   const values = new Map<string, number | "priceless">()
-  for (const match of flat.matchAll(/(?<!Very )(Common|Uncommon|Rare|Very Rare|Legendary|Artifact) (Priceless|[\d,]+ GP)/g)) values.set(toId(match[1]), match[2] === "Priceless" ? "priceless" : Number(match[2].replace(/[, GP]/g, "")))
+  for (const match of flat.matchAll(/(?<!Very )(Common|Uncommon|Rare|Very Rare|Legendary|Artifact) (Priceless|[\d,]+ GP)/g))
+    values.set(toId(match[1]), match[2] === "Priceless" ? "priceless" : Number(match[2].replace(/[, GP]/g, "")))
   const crafting = new Map<string, { days: number; cost: number }>()
-  for (const match of flat.matchAll(/(?<!Very )(Common|Uncommon|Rare|Very Rare|Legendary) (\d+) days ([\d,]+) GP/g)) crafting.set(toId(match[1]), { days: Number(match[2]), cost: Number(match[3].replace(/,/g, "")) })
-  for (const [id, name] of [["common", "Common"], ["uncommon", "Uncommon"], ["rare", "Rare"], ["very-rare", "Very Rare"], ["legendary", "Legendary"], ["artifact", "Artifact"]]) {
+  for (const match of flat.matchAll(/(?<!Very )(Common|Uncommon|Rare|Very Rare|Legendary) (\d+) days ([\d,]+) GP/g))
+    crafting.set(toId(match[1]), { days: Number(match[2]), cost: Number(match[3].replace(/,/g, "")) })
+  for (const [id, name] of [
+    ["common", "Common"],
+    ["uncommon", "Uncommon"],
+    ["rare", "Rare"],
+    ["very-rare", "Very Rare"],
+    ["legendary", "Legendary"],
+    ["artifact", "Artifact"],
+  ]) {
     const value = values.get(id)
     const craft = crafting.get(id)
     rules.push({
@@ -749,13 +781,43 @@ function buildRules(): MagicItemRule[] {
     if (row === order[k + 1]) tools.set(order[++k], [])
     else if (k >= 0) (tools.get(order[k]) as string[]).push(row)
   }
-  const categoryHeadings: [string, string][] = [["Armor", "Armor"], ["Potions", "Potion"], ["Rings", "Ring"], ["Rods", "Rod"], ["Scrolls", "Scroll"], ["Staffs", "Staff"], ["Wands", "Wand"], ["Weapons", "Weapon"], ["Wondrous Items", "Wondrous Item"]]
+  const categoryHeadings: [string, string][] = [
+    ["Armor", "Armor"],
+    ["Potions", "Potion"],
+    ["Rings", "Ring"],
+    ["Rods", "Rod"],
+    ["Scrolls", "Scroll"],
+    ["Staffs", "Staff"],
+    ["Wands", "Wand"],
+    ["Weapons", "Weapon"],
+    ["Wondrous Items", "Wondrous Item"],
+  ]
   for (const [heading, singular] of categoryHeadings) {
     const { page, text } = section(heading)
     rules.push({ id: toId(singular), name: singular, page, kind: "category", category: toId(singular), tools: clean(tools.get(singular) as string[]), text } as MagicItemRule)
   }
 
-  const plain = ["Magic Item Rarity", "Magic Item Values by Rarity", "Attunement Prerequisites", "Items Made for Specific Creatures", "Unusual Anatomy", "Paired Items", "Activating a Magic Item", "Command Word", "Consumable Items", "Spells Cast from Items", "Charges", "“The Next Dawn”", "Cursed Items", "Magic Item Resilience", "Crafting Magic Items", "Arcana Proficiency", "Tools", "Spells", "Time and Cost"]
+  const plain = [
+    "Magic Item Rarity",
+    "Magic Item Values by Rarity",
+    "Attunement Prerequisites",
+    "Items Made for Specific Creatures",
+    "Unusual Anatomy",
+    "Paired Items",
+    "Activating a Magic Item",
+    "Command Word",
+    "Consumable Items",
+    "Spells Cast from Items",
+    "Charges",
+    "“The Next Dawn”",
+    "Cursed Items",
+    "Magic Item Resilience",
+    "Crafting Magic Items",
+    "Arcana Proficiency",
+    "Tools",
+    "Spells",
+    "Time and Cost",
+  ]
   for (const name of plain) {
     const { page, text } = section(name)
     rules.push({ id: name === "Spells" ? "crafting-spells" : name === "Tools" ? "crafting-tools" : toId(name), name, page, kind: "rule", text } as MagicItemRule)
@@ -768,7 +830,11 @@ function buildRules(): MagicItemRule[] {
   return rules
 }
 
-const pageLines = (from: number, to: number) => pages.slice(from - 1, to).join("\n").split("\n")
+const pageLines = (from: number, to: number) =>
+  pages
+    .slice(from - 1, to)
+    .join("\n")
+    .split("\n")
 
 export default function buildMagicItems() {
   const items = applyOverrides("magic-items", build(), overrides)

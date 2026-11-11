@@ -10,7 +10,7 @@ This work includes material from the System Reference Document 5.2.1 (“SRD 5.2
 - `src/schema/<category>.ts`: the Zod schema and types of a category.
 - `src/<category>.ts`: the typed data and its lookups. Import by category: `import { spells } from "@d20/srd/spells"`.
 - `src/index.ts`: shared ids, types and the attribution line. No data.
-- `scripts/build/<category>.ts`: reads the pinned base source and writes the data.
+- `scripts/builders/<category>.ts`: reads the pinned base source and writes the data.
 - `scripts/overrides/<category>.ts`: recorded corrections to the base source, each citing the official page.
 - `scripts/verify/<category>.ts`: checks the data against the official text.
 - `sources/sources.lock.json`: every source, pinned by commit and hash.

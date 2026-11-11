@@ -1,9 +1,5 @@
 import { z } from "zod"
-import { abilityIdSchema, conditionIdSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, idSchema, proseSchema, sizeSchema, skillIdSchema } from "./common"
-
-export const creatureTypes = ["aberration", "beast", "celestial", "construct", "dragon", "elemental", "fey", "fiend", "giant", "humanoid", "monstrosity", "ooze", "plant", "undead"] as const
-export const creatureTypeSchema = z.enum(creatureTypes)
-export type CreatureType = z.infer<typeof creatureTypeSchema>
+import { abilityIdSchema, conditionIdSchema, creatureTypeSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, idSchema, proseSchema, sizeSchema, skillIdSchema } from "./common"
 
 const count = z.number().int().positive()
 const bonus = z.number().int()

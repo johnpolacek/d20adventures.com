@@ -2,9 +2,9 @@ import { readdirSync } from "node:fs"
 import { resolve } from "node:path"
 import { root } from "./lib/sources"
 
-// Run every builder in scripts/build, or only those named: pnpm build spells monsters
+// Run every builder in scripts/builders, or only those named: pnpm build spells monsters
 // A builder default-exports a function that reads the pinned sources and writes its data files.
-const dir = resolve(root, "scripts/build")
+const dir = resolve(root, "scripts/builders")
 const wanted = process.argv.slice(2)
 const names = readdirSync(dir)
   .filter((file) => file.endsWith(".ts"))

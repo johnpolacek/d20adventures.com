@@ -641,7 +641,6 @@ export default function verify(report: Report) {
         )
     }
     if (rows.length !== officialCount) failures.push(`Open5e has ${rows.length} spells, the official text ${officialCount}`)
-    // Settled differences are Open5e errors, so they are counted, not waived.
-    report.check(category, `agrees with Open5e, or the official text settles it (${settled.length} settled)`, total, failures)
+    report.crossCheck(category, "agrees with Open5e, or the official text settles it", total, failures, settled)
   }
 }

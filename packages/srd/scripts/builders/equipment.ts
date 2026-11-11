@@ -1,12 +1,5 @@
 import type { Cost } from "../../src/schema/common"
-import {
-  coinSchema,
-  equipmentRuleSchema,
-  equipmentSchema,
-  poisonSchema,
-  weaponMasterySchema,
-  weaponPropertySchema,
-} from "../../src/schema/equipment"
+import { coinSchema, equipmentRuleSchema, equipmentSchema, poisonSchema, weaponMasterySchema, weaponPropertySchema } from "../../src/schema/equipment"
 import { applyOverrides, toId, writeData } from "../lib/data"
 import { pages } from "../lib/official"
 import { readBase } from "../lib/sources"
@@ -39,7 +32,10 @@ function prose(lines: Line[]): string {
     else paragraphs[paragraphs.length - 1] = `${last} ${line}`
   }
   // The PDF text gives the glass bottle's 1½ pints as "11/2". The SRD prints a vulgar fraction.
-  return paragraphs.join("\n").replace(/'/g, "’").replace(/\b11\/2 pints/g, "1½ pints")
+  return paragraphs
+    .join("\n")
+    .replace(/'/g, "’")
+    .replace(/\b11\/2 pints/g, "1½ pints")
 }
 
 const costOf = (text: string): Cost => {
@@ -73,7 +69,11 @@ const extremeCold = "saving throws against extreme cold"
 // Weapons and armor --------------------------------------------------------------------------------------------
 
 /** Split a Properties cell at commas outside parentheses. */
-const splitTop = (text: string) => text.split(/,\s*(?![^()]*\))/).map((part) => part.trim()).filter(Boolean)
+const splitTop = (text: string) =>
+  text
+    .split(/,\s*(?![^()]*\))/)
+    .map((part) => part.trim())
+    .filter(Boolean)
 
 function weapons(): Row[] {
   const lines = linesOf(91).map((line) => line.text)
@@ -340,7 +340,7 @@ function blocks(lines: Line[]): Block[] {
 
 /** Table rows of three cells after a header, in a run of lines that ends at the first line that is not a row. */
 const triples = (lines: string[], header: string[]): string[][] => {
-  const start = lines.findIndex((line, index) => header.every((cell, offset) => lines[index + offset]?.trim() === cell))
+  const start = lines.findIndex((_line, index) => header.every((cell, offset) => lines[index + offset]?.trim() === cell))
   if (start < 0) throw new Error(`No table with header ${header.join(" | ")}`)
   const rows: string[][] = []
   for (let i = start + header.length; i + 2 < lines.length; i += 3) rows.push([lines[i], lines[i + 1], lines[i + 2]].map((cell) => cell.trim()))
@@ -406,7 +406,7 @@ function gearAndTools(names: Names, ids: Set<string>): Row[] {
   const table = linesOf(95).map((line) => line.text.trim())
   const tableRows = triples(
     table.filter((line, index) => !(["Item", "Weight", "Cost"].includes(line) && index > 4)),
-    ["Item", "Weight", "Cost"],
+    ["Item", "Weight", "Cost"]
   )
   const ammunitionTable = linesOf(96)
     .map((line) => line.text.trim())
@@ -420,7 +420,10 @@ function gearAndTools(names: Names, ids: Set<string>): Row[] {
     ...linesOf(94).slice(linesOf(94).findIndex((line) => line.text.trim() === "Acid (25 GP)")),
     ...linesOf(96).slice(linesOf(96).findIndex((line) => line.text.trim() === "Antitoxin (50 GP)")),
     ...linesOf(97, 99),
-    ...linesOf(100).slice(0, linesOf(100).findIndex((line) => line.text.trim() === "Mounts and Vehicles")),
+    ...linesOf(100).slice(
+      0,
+      linesOf(100).findIndex((line) => line.text.trim() === "Mounts and Vehicles")
+    ),
   ]
   const focusTables: Record<string, string[][]> = {}
   const tableTitles = ["Arcane Focuses", "Druidic Focuses", "Holy Symbols"]
@@ -492,7 +495,13 @@ function gearAndTools(names: Names, ids: Set<string>): Row[] {
     const base: Row = { id, name, page: heading.page }
     const w = weightOf(weight)
     if (["ammunition", "arcane-focus", "druidic-focus", "holy-symbol"].includes(id)) {
-      rows.push({ ...base, kind: "group", members: members[id], ...(id === "ammunition" ? {} : id === "arcane-focus" ? { usedBy: usedBy.arcane } : id === "druidic-focus" ? { usedBy: usedBy.druidic } : { usedBy: usedBy.holy }), description })
+      rows.push({
+        ...base,
+        kind: "group",
+        members: members[id],
+        ...(id === "ammunition" ? {} : id === "arcane-focus" ? { usedBy: usedBy.arcane } : id === "druidic-focus" ? { usedBy: usedBy.druidic } : { usedBy: usedBy.holy }),
+        description,
+      })
       continue
     }
     if (name.endsWith("Pack")) {
@@ -534,7 +543,13 @@ function craftOf(text: string, names: Names) {
     const match = /^(.+?)(?: \(except (.+)\))?$/.exec(part) as RegExpExecArray
     const category = kinds[match[1].toLowerCase()]
     if (category) {
-      const except = match[2] ? match[2].replace(/ and /g, ", ").split(/,\s*/).filter(Boolean).map((name) => names.resolve(name === "Hide" ? "Hide Armor" : name)) : []
+      const except = match[2]
+        ? match[2]
+            .replace(/ and /g, ", ")
+            .split(/,\s*/)
+            .filter(Boolean)
+            .map((name) => names.resolve(name === "Hide" ? "Hide Armor" : name))
+        : []
       categories.push({ category, ...(except.length ? { except } : {}) })
     } else items.push(names.resolve(match[1]))
   }
@@ -645,8 +660,14 @@ function lifestylesAndFood(): Row[] {
 
   // Food, Drink, and Lodging. The PDF text runs the table over two pages, so costs are read in order.
   const region = [
-    ...lines.slice(lines.map((line) => line.text.trim()).lastIndexOf("Food, Drink, and Lodging"), lines.findIndex((line) => line.text.trim() === "Airborne and Waterborne Vehicles")),
-    ...linesOf(102).slice(0, linesOf(102).findIndex((line) => line.text.trim() === "Hirelings")),
+    ...lines.slice(
+      lines.map((line) => line.text.trim()).lastIndexOf("Food, Drink, and Lodging"),
+      lines.findIndex((line) => line.text.trim() === "Airborne and Waterborne Vehicles")
+    ),
+    ...linesOf(102).slice(
+      0,
+      linesOf(102).findIndex((line) => line.text.trim() === "Hirelings")
+    ),
   ]
   const costs = region.filter((line) => /^\d+ [CSGEP]P$/.test(line.text.trim()))
   const labels: [string, Row][] = [
@@ -659,7 +680,7 @@ function lifestylesAndFood(): Row[] {
     ["Wine (Fine)", { kind: "food", unit: "bottle" }],
   ]
   if (costs.length !== labels.length) throw new Error(`Food table: ${costs.length} costs for ${labels.length} rows`)
-  labels.forEach(([name, shape], index) => rows.push({ id: toId(name), name, page: costs[index].page, ...shape, cost: costOf(costs[index].text) }))
+  for (const [index, [name, shape]] of labels.entries()) rows.push({ id: toId(name), name, page: costs[index].page, ...shape, cost: costOf(costs[index].text) })
   return rows
 }
 
@@ -743,13 +764,34 @@ const poisonFacts: Record<string, Row> = {
   "burnt-othur-fumes": { save: 13, damage: [10, "3d6"], repeat: { when: "start-of-turn", damage: { average: 3, dice: "1d6", type: "poison" }, endsAfterSuccesses: 3 } },
   "crawler-mucus": {
     save: 13,
-    conditions: [{ condition: "poisoned", duration: { amount: 1, unit: "minute" } }, { condition: "paralyzed", whilePoisoned: true }],
+    conditions: [
+      { condition: "poisoned", duration: { amount: 1, unit: "minute" } },
+      { condition: "paralyzed", whilePoisoned: true },
+    ],
     repeat: { when: "end-of-turn", endsAfterSuccesses: 1 },
   },
-  "essence-of-ether": { save: 15, conditions: [{ condition: "poisoned", duration: { amount: 8, unit: "hour" } }, { condition: "unconscious", whilePoisoned: true }] },
-  malice: { save: 15, conditions: [{ condition: "poisoned", duration: { amount: 1, unit: "hour" } }, { condition: "blinded", whilePoisoned: true }] },
+  "essence-of-ether": {
+    save: 15,
+    conditions: [
+      { condition: "poisoned", duration: { amount: 8, unit: "hour" } },
+      { condition: "unconscious", whilePoisoned: true },
+    ],
+  },
+  malice: {
+    save: 15,
+    conditions: [
+      { condition: "poisoned", duration: { amount: 1, unit: "hour" } },
+      { condition: "blinded", whilePoisoned: true },
+    ],
+  },
   "midnight-tears": { save: 17, damage: [31, "9d6"], half: true, delayedUntilMidnight: true, neutralizedByEndingPoisoned: true },
-  "oil-of-taggit": { save: 13, conditions: [{ condition: "poisoned", duration: { amount: 24, unit: "hour" } }, { condition: "unconscious", whilePoisoned: true }] },
+  "oil-of-taggit": {
+    save: 13,
+    conditions: [
+      { condition: "poisoned", duration: { amount: 24, unit: "hour" } },
+      { condition: "unconscious", whilePoisoned: true },
+    ],
+  },
   "pale-tincture": {
     save: 16,
     damage: [3, "1d6"],
@@ -761,7 +803,10 @@ const poisonFacts: Record<string, Row> = {
   "serpent-venom": { save: 11, damage: [10, "3d6"], half: true },
   "spiders-sting": {
     save: 13,
-    conditions: [{ condition: "poisoned", duration: { amount: 1, unit: "hour" } }, { condition: "unconscious", whilePoisoned: true, failedByAtLeast: 5 }],
+    conditions: [
+      { condition: "poisoned", duration: { amount: 1, unit: "hour" } },
+      { condition: "unconscious", whilePoisoned: true, failedByAtLeast: 5 },
+    ],
   },
   torpor: { save: 15, conditions: [{ condition: "poisoned", duration: { amount: "4d6", unit: "hour" } }], speedHalved: true },
   "truth-serum": { save: 11, conditions: [{ condition: "poisoned", duration: { amount: 1, unit: "hour" } }], cannotKnowinglyLie: true },
@@ -824,7 +869,12 @@ function rules(): Row[] {
       page: 89,
       kind: "coin-weight",
       coinsPerPound: 50,
-      description: prose(linesOf(89).slice(linesOf(89).findIndex((line) => line.text.includes("A coin weighs")), linesOf(89).findIndex((line) => line.text.trim() === "Coin Values"))),
+      description: prose(
+        linesOf(89).slice(
+          linesOf(89).findIndex((line) => line.text.includes("A coin weighs")),
+          linesOf(89).findIndex((line) => line.text.trim() === "Coin Values")
+        )
+      ),
     },
     {
       id: "armor-training-light-medium-or-heavy-armor",
@@ -836,7 +886,15 @@ function rules(): Row[] {
       untrainedCannotCast: true,
       description: section(92, "Light, Medium, or Heavy Armor", "Shield"),
     },
-    { id: "armor-training-shield", name: "Armor Training (Shield)", page: 92, kind: "armor-training", covers: ["shield"], benefitRequiresTraining: true, description: section(92, "Shield", "One at a Time") },
+    {
+      id: "armor-training-shield",
+      name: "Armor Training (Shield)",
+      page: 92,
+      kind: "armor-training",
+      covers: ["shield"],
+      benefitRequiresTraining: true,
+      description: section(92, "Shield", "One at a Time"),
+    },
     { id: "one-at-a-time", name: "One at a Time", page: 92, kind: "one-at-a-time", maxArmor: 1, maxShield: 1, description: section(92, "One at a Time", "Armor") },
     {
       id: "barding",
@@ -915,7 +973,7 @@ export default function build() {
     linesOf(95)
       .map((line) => line.text.trim())
       .filter((line, index) => !(["Item", "Weight", "Cost"].includes(line) && index > 4)),
-    ["Item", "Weight", "Cost"],
+    ["Item", "Weight", "Cost"]
   )
   const ids = new Set<string>()
   const register = (name: string, id = toId(name)) => {

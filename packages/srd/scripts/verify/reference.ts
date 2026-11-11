@@ -486,7 +486,7 @@ export default function verify(report: Report) {
     compare("condition", open("ConditionDescription"), new Map(conditions.map((entry) => [entry.id, entry.description])))
     compare("damage type", open("DamageTypeDescription"), new Map(damageTypes.map((entry) => [entry.id, entry.examples])))
     compare("alignment", open("AlignmentDescription"), new Map(alignments.filter((entry) => entry.id !== "unaligned").map((entry) => [entry.id, entry.description])))
-    report.check("reference: open5e", "texts agree with Open5e, or the difference is listed", total, failures, waived)
+    report.crossCheck("reference: open5e", "texts agree with Open5e, or the official text settles it", total, failures, waived)
   }
 
   // ---- Data files ----

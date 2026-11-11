@@ -150,12 +150,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
   },
   {
     name: "Halfling",
-    traits: [
-      { name: "Brave", mech: { savingThrowAdvantage: { conditions: ["frightened"] } } },
-      { name: "Halfling Nimbleness" },
-      { name: "Luck" },
-      { name: "Naturally Stealthy" },
-    ],
+    traits: [{ name: "Brave", mech: { savingThrowAdvantage: { conditions: ["frightened"] } } }, { name: "Halfling Nimbleness" }, { name: "Luck" }, { name: "Naturally Stealthy" }],
   },
   {
     name: "Human",
@@ -207,7 +202,10 @@ function speciesLines() {
 
 /** Dragon pairs. The cells come out four to a row (dragon, type, dragon, type), so pairs read in order. */
 function dragonOptions(table: string[]) {
-  const cells = table.map((line) => line.trim()).filter(Boolean).slice(5)
+  const cells = table
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(5)
   const options = []
   for (let i = 0; i < cells.length; i += 2) options.push({ id: toId(cells[i]), name: cells[i], damageType: cells[i + 1].toLowerCase() })
   return options.sort((a, b) => a.name.localeCompare(b.name))
@@ -315,7 +313,7 @@ function buildBackgrounds() {
   const from = lineIndex(lines, (line) => line === "Background Descriptions") + 1
   const to = lineIndex(lines, (line) => line === "Character Species")
   const body = lines.slice(from, to)
-  const names = body.filter((line, i) => body[i + 1]?.startsWith("Ability Scores:"))
+  const names = body.filter((_line, i) => body[i + 1]?.startsWith("Ability Scores:"))
   return names.map((name, n) => {
     const block = body.slice(body.indexOf(name) + 1, n + 1 < names.length ? body.indexOf(names[n + 1]) : body.length)
     const field = (label: string) => {
@@ -323,7 +321,9 @@ function buildBackgrounds() {
       const end = block.findIndex((line, i) => i > start && /^(Ability Scores|Feat|Skill Proficiencies|Tool Proficiency|Equipment):/.test(line))
       return joinLines(block.slice(start, end < 0 ? block.length : end)).slice(label.length + 2)
     }
-    const feat = field("Feat").replace(/ \(see “Feats”\)$/, "").match(/^(.+?)(?: \((Cleric|Druid|Wizard)\))?$/)
+    const feat = field("Feat")
+      .replace(/ \(see “Feats”\)$/, "")
+      .match(/^(.+?)(?: \((Cleric|Druid|Wizard)\))?$/)
     const tool = field("Tool Proficiency").replace(/ \(see “Equipment”\)$/, "")
     const kind = tool.match(/^Choose one kind of (.+)$/)
     const equipment = field("Equipment").match(/^Choose A or B: \(A\) (.+); or \(B\) (.+)$/)
@@ -332,7 +332,9 @@ function buildBackgrounds() {
       id: toId(name),
       name,
       page: 83,
-      abilityScores: field("Ability Scores").split(", ").map((ability) => abilityByName[ability]),
+      abilityScores: field("Ability Scores")
+        .split(", ")
+        .map((ability) => abilityByName[ability]),
       feat: { id: toId(feat[1]), ...(feat[2] ? { spellList: feat[2].toLowerCase() } : {}) },
       skills: field("Skill Proficiencies").split(" and ").map(toId),
       toolProficiency: kind ? { oneOfKind: toId(kind[1]) } : { tool: toId(tool) },
@@ -361,7 +363,14 @@ const featSpecs: Record<string, FeatSpec> = {
   Skilled: { mech: { proficiencyChoice: { count: 3, kinds: ["skill", "tool"] } } },
   "Ability Score Improvement": {
     prerequisite: { level: 4 },
-    abilityScoreIncrease: { from: "any", choices: [{ count: 1, amount: 2 }, { count: 2, amount: 1 }], maximum: 20 },
+    abilityScoreIncrease: {
+      from: "any",
+      choices: [
+        { count: 1, amount: 2 },
+        { count: 2, amount: 1 },
+      ],
+      maximum: 20,
+    },
   },
   Grappler: {
     prerequisite: { level: 4, abilityMinimum: { abilities: ["str", "dex"], minimum: 13 } },

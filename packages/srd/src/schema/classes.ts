@@ -1,9 +1,5 @@
 import { z } from "zod"
-import { abilityIdSchema, conditionIdSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, idSchema, pageSchema, proseSchema, skillIdSchema } from "./common"
-
-export const classIds = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"] as const
-export const classIdSchema = z.enum(classIds)
-export type ClassId = z.infer<typeof classIdSchema>
+import { abilityIdSchema, classIdSchema, conditionIdSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, idSchema, pageSchema, proseSchema, skillIdSchema } from "./common"
 
 const levelSchema = z.number().int().min(1).max(20)
 const countSchema = z.number().int().nonnegative()

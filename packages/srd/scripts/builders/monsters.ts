@@ -1,6 +1,6 @@
-import { abilityIds, conditionIds, damageTypeIds, sizes } from "../../src/schema/common"
+import { abilityIds, conditionIds, creatureTypes, damageTypeIds, sizes } from "../../src/schema/common"
 import type { Area, Attack, DamagePart, Monster, MonsterFeature, Save, Spellcasting } from "../../src/schema/monsters"
-import { creatureTypes, monsterSchema } from "../../src/schema/monsters"
+import { monsterSchema } from "../../src/schema/monsters"
 import { applyOverrides, toId, writeData } from "../lib/data"
 import { pages } from "../lib/official"
 import { readBase } from "../lib/sources"
@@ -211,7 +211,8 @@ function parseArea(text: string): Area | undefined {
   const found: { index: number; area: Area }[] = []
   for (const m of text.matchAll(/(\d+)-foot-long, (\d+)-foot-wide Line/g)) found.push({ index: m.index as number, area: { shape: "line", size: Number(m[1]), width: Number(m[2]) } })
   for (const m of text.matchAll(/(\d+)-foot-radius, (\d+)-foot-high Cylinder/g)) found.push({ index: m.index as number, area: { shape: "cylinder", size: Number(m[1]), height: Number(m[2]) } })
-  for (const m of text.matchAll(/(\d+)-foot(?:-radius)? (Cone|Cube|Emanation|Sphere)/g)) found.push({ index: m.index as number, area: { shape: m[2].toLowerCase() as Area["shape"], size: Number(m[1]) } })
+  for (const m of text.matchAll(/(\d+)-foot(?:-radius)? (Cone|Cube|Emanation|Sphere)/g))
+    found.push({ index: m.index as number, area: { shape: m[2].toLowerCase() as Area["shape"], size: Number(m[1]) } })
   return found.sort((a, b) => a.index - b.index)[0]?.area
 }
 
@@ -290,8 +291,8 @@ function feature(name: string, text: string): MonsterFeature {
   if (damage.length) result.damage = damage
   const conditions = parseConditions(body)
   if (conditions) result.conditions = conditions
-  const escape = /escape DC (\d+)/.exec(body)
-  if (escape) result.escapeDc = Number(escape[1])
+  const escapeDc = /escape DC (\d+)/.exec(body)
+  if (escapeDc) result.escapeDc = Number(escapeDc[1])
   const area = parseArea(body)
   if (area) result.area = area
   const spellcasting = parseSpellcasting(body)
@@ -307,7 +308,7 @@ function fromBase(base: Base): Record<string, unknown> {
     abilityIds.map((id, i) => {
       const mod = Math.floor((scores[i] - 10) / 2)
       return [id, { score: scores[i], mod, save: proficiencies.get(`saving-throw-${id}`) ?? mod }]
-    }),
+    })
   ) as Monster["abilities"]
   const skills = Object.fromEntries([...proficiencies].filter(([key]) => key.startsWith("skill-")).map(([key, value]) => [key.slice(6), value]))
   const speed: Record<string, number | true> = {}
@@ -414,7 +415,11 @@ function official(name: string, block: Line[], forms: Base[], pairs: Set<string>
   // Every feature name the base source has for this monster, in any form. Each starts a line after a sentence end.
   // The base source sometimes keeps the parenthetical in the name: "Nightmare Haunting (Requires Soul Bag)".
   const names = new Set(
-    forms.flatMap((form) => ["special_abilities", "actions", "bonus_actions", "reactions", "legendary_actions"].flatMap((key) => (form[key] ?? []).map((f: Base) => (f.name as string).replace(/ \(.*\)$/, "").replace(/'/g, "’")))),
+    forms.flatMap((form) =>
+      ["special_abilities", "actions", "bonus_actions", "reactions", "legendary_actions"].flatMap((key) =>
+        (form[key] ?? []).map((f: Base) => (f.name as string).replace(/ \(.*\)$/, "").replace(/'/g, "’"))
+      )
+    )
   )
   for (const fix of featureFixes.filter((fix) => fix.id === toId(name))) {
     for (const add of fix.add ?? []) {

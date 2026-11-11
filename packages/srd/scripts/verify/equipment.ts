@@ -1047,13 +1047,7 @@ export default function verify(report: Report) {
     crossTotal++
     if (Number(row.fields.cost) !== gpOf(entry.cost)) crossWaived.push(`${entry.id}: Open5e cost ${row.fields.cost} GP, official ${costText(entry.cost)}`)
   }
-  report.check(
-    "equipment",
-    "cross-check with the base source and Open5e (costs, weights, damage, mastery, AC, properties). Differences are settled by the official text",
-    crossTotal,
-    crossFailures,
-    crossWaived
-  )
+  report.crossCheck("equipment", "the base source and Open5e agree on costs, weights, damage, mastery, AC and properties, or the official text settles it", crossTotal, crossFailures, crossWaived)
 }
 
 function collectDcs(value: unknown): number[] {

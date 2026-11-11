@@ -79,7 +79,7 @@ const compounds = new Set([
   "long-dead",
   "nine-course",
   ...[...pages, ...readBase("Spells").map((spell) => `${spell.description} ${spell.higher_level ?? ""}`)].flatMap((text) =>
-    [...text.matchAll(/([A-Za-z]+)-([A-Za-z]+)(?=[^A-Za-z\n]|$)/gm)].map((match) => match[0].toLowerCase()),
+    [...text.matchAll(/([A-Za-z]+)-([A-Za-z]+)(?=[^A-Za-z\n]|$)/gm)].map((match) => match[0].toLowerCase())
   ),
 ])
 
@@ -196,7 +196,7 @@ function statBlock(lines: string[]): SpellStatBlock {
     [...abilityText.matchAll(/(Str|Dex|Con|Int|Wis|Cha)\s+(\d+)\s*([+−-]\d+)\s*([+−-]\d+)/g)].map((match) => [
       match[1].toLowerCase(),
       { score: Number(match[2]), modifier: number(match[3]), save: number(match[4]) },
-    ]),
+    ])
   )
   const named = (list: string[][] | undefined) =>
     list?.map((entry) => {
@@ -228,7 +228,7 @@ type Block = { name: string; page: number; material?: string; body: string[] }
 /** Cut the chapter into spells: a name line, a level line, then the Casting Time line. */
 function blocks(lines: Line[]): Block[] {
   const heads: number[] = []
-  lines.forEach((line, index) => {
+  lines.forEach((_line, index) => {
     if (!levelLine.test(lines[index + 1]?.text ?? "")) return
     if (lines[index + 2]?.text.startsWith("Casting Time:") || lines[index + 3]?.text.startsWith("Casting Time:")) heads.push(index)
   })
@@ -247,7 +247,10 @@ const isStatBlockStart = (lines: string[], index: number) => /^(Tiny|Small|Mediu
 
 /** Description, upgrade paragraphs, tables and stat blocks of every spell, keyed by id. Stat blocks go to the spell that names them. */
 function officialText() {
-  const result = new Map<string, { name: string; page: number; material?: string; description: string; higherLevel?: string; cantripUpgrade?: string; tables?: SpellTable[]; statBlocks?: SpellStatBlock[] }>()
+  const result = new Map<
+    string,
+    { name: string; page: number; material?: string; description: string; higherLevel?: string; cantripUpgrade?: string; tables?: SpellTable[]; statBlocks?: SpellStatBlock[] }
+  >()
   const loose: SpellStatBlock[] = []
   for (const block of blocks(chapter())) {
     const id = toId(block.name)
@@ -298,7 +301,12 @@ function range(text: string): Range {
 }
 
 function duration(text: string, concentration: boolean): Duration {
-  const kinds: Record<string, Duration["kind"]> = { Instantaneous: "instantaneous", "Until dispelled": "until-dispelled", "Until dispelled or triggered": "until-dispelled-or-triggered", Special: "special" }
+  const kinds: Record<string, Duration["kind"]> = {
+    Instantaneous: "instantaneous",
+    "Until dispelled": "until-dispelled",
+    "Until dispelled or triggered": "until-dispelled-or-triggered",
+    Special: "special",
+  }
   if (kinds[text]) return { kind: kinds[text], concentration }
   const timed = /^(?:Concentration,? )?([Uu]p to )?(\d+) (round|minute|hour|day)s?$/i.exec(text)
   if (!timed) throw new Error(`spells: duration "${text}"`)
@@ -324,13 +332,18 @@ function damage(text: string, higherLevel = "", cantripUpgrade = ""): Damage[] |
   const dice = "(\\d+d\\d+(?: \\+ \\d+)?)( plus your spellcasting ability modifier)?"
   // "takes 8d6 Fire damage" and "takes Fire damage equal to 3d6 plus your spellcasting ability modifier".
   const before = [...text.matchAll(new RegExp(`${dice} ${typeList} damage`, "g"))].map((match) => ({ index: match.index, dice: match[1], modifier: match[2], types: match[3] }))
-  const after = [...text.matchAll(new RegExp(`${typeList} damage (?:to the target )?equal to ${dice}`, "g"))].map((match) => ({ index: match.index, dice: match[2], modifier: match[3], types: match[1] }))
+  const after = [...text.matchAll(new RegExp(`${typeList} damage (?:to the target )?equal to ${dice}`, "g"))].map((match) => ({
+    index: match.index,
+    dice: match[2],
+    modifier: match[3],
+    types: match[1],
+  }))
   for (const match of [...before, ...after].sort((a, b) => a.index - b.index)) {
     const entry: Damage = { dice: match.dice, types: types(match.types), ...(match.modifier ? { modifier: true as const } : {}) }
     if (!found.some((other) => JSON.stringify(other) === JSON.stringify(entry))) found.push(entry)
   }
   if (!found.length) return undefined
-  const slot = new RegExp(`^(?:The |All the )?(.*?)damage(?: \\([^)]*\\))? increases? by (\\d+d\\d+) for (?:each|every) (?:spell )?slot level above \\d\\.`).exec(higherLevel)
+  const slot = /^(?:The |All the )?(.*?)damage(?: \([^)]*\))? increases? by (\d+d\d+) for (?:each|every) (?:spell )?slot level above \d\./.exec(higherLevel)
   if (slot) {
     const named = [...slot[1].matchAll(new RegExp(typeNames, "g"))].map((match) => match[0].toLowerCase())
     for (const entry of found) if (!named.length || entry.types.some((type) => named.includes(type))) entry.perSlot = slot[2]

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { abilityIdSchema, damageTypeIdSchema, diceSchema, entryShape, idSchema, proseSchema, skillIdSchema } from "./common"
+import { abilityIdSchema, classIdSchema, damageTypeIdSchema, diceSchema, entryShape, idSchema, proseSchema, skillIdSchema } from "./common"
 
 export const magicItemCategories = ["armor", "potion", "ring", "rod", "scroll", "staff", "wand", "weapon", "wondrous-item"] as const
 export const magicItemCategorySchema = z.enum(magicItemCategories)
@@ -8,8 +8,6 @@ export type MagicItemCategory = z.infer<typeof magicItemCategorySchema>
 export const rarityIds = ["common", "uncommon", "rare", "very-rare", "legendary", "artifact"] as const
 export const raritySchema = z.enum(rarityIds)
 export type Rarity = z.infer<typeof raritySchema>
-
-const classIdSchema = z.enum(["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"])
 
 /** What an item may be built on, from the parenthesis of the official subtitle. Ids are equipment ids. */
 export const baseItemSchema = z.strictObject({

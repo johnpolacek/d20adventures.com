@@ -5,13 +5,19 @@ import { lock, root, sha256 } from "./sources"
 const raw = readFileSync(resolve(root, lock.official.text), "utf8")
 if (sha256(raw) !== lock.official.textSha256) throw new Error("The official text does not match its locked hash")
 
-const header = /^System Reference Document 5\.2\.1\n\d+\n/
+// The running header is the title and the page number. Left-hand pages print the number first.
+const header = /^(?:System Reference Document 5\.2\.1\n(\d+)|(\d+)\nSystem Reference Document 5\.2\.1)\n/
 
 /**
  * The official SRD 5.2.1 text, one string per PDF page. `pages[0]` is page 1. The running header is removed.
  * Lines keep the PDF's breaks, so a word split at a line end reads "cen-\ntered".
  */
-export const pages: readonly string[] = raw.split("\f").map((page) => page.replace(header, ""))
+export const pages: readonly string[] = raw.split("\f").map((page, index) => {
+  const match = header.exec(page)
+  // The printed number must be the PDF page, since every entry's `page` relies on the two being the same.
+  if (!match || Number(match[1] ?? match[2]) !== index + 1) throw new Error(`Page ${index + 1} does not open with its running header`)
+  return page.slice(match[0].length)
+})
 if (pages.length !== lock.official.pages) throw new Error(`Expected ${lock.official.pages} pages, read ${pages.length}`)
 
 /**

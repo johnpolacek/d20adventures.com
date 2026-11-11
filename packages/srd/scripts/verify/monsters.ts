@@ -743,7 +743,7 @@ export default function verify(report: Report) {
         }
       }
     }
-    report.check("monsters", "cross-check with Open5e; each difference is settled by the official text in the checks above", total, failures, waived)
+    report.crossCheck("monsters", "Open5e agrees, or the official text settles it in the checks above", total, failures, waived)
   }
 
   // ---- References ----

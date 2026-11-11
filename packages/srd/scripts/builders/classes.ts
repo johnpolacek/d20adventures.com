@@ -1,5 +1,6 @@
-import type { Class, ClassFeature, ClassId, ClassLevel, FeatureOption, Subclass } from "../../src/schema/classes"
-import { classFeatureSchema, classIds, classSchema, subclassSchema } from "../../src/schema/classes"
+import type { Class, ClassFeature, ClassLevel, FeatureOption, Subclass } from "../../src/schema/classes"
+import { classFeatureSchema, classSchema, subclassSchema } from "../../src/schema/classes"
+import { type ClassId, classIds } from "../../src/schema/common"
 import { applyOverrides, toId, writeData } from "../lib/data"
 import { pageOf, pages } from "../lib/official"
 import { readBase } from "../lib/sources"
@@ -848,7 +849,7 @@ export default function build() {
         baseFeatures
           .filter((feature) => feature.subclass?.index === subclassBase.index && / Spells$/.test(feature.name))
           .map((feature) => feature.description as string)
-          .join("\n"),
+          .join("\n")
       ),
     })
   }

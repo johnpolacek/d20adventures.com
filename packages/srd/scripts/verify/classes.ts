@@ -1225,6 +1225,6 @@ export default function verify(report: Report) {
         else failures.push(`${entry.id} level ${level} ${key}: Open5e ${value}, data ${data}`)
       }
     }
-    report.check(category, "Open5e agrees on hit dice, saves, caster type, every table column and feature levels", total, failures, waived)
+    report.crossCheck(category, "Open5e agrees on hit dice, saves, caster type, every table column and feature levels, or the official text settles it", total, failures, waived)
   }
 }

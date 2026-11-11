@@ -608,7 +608,13 @@ export default function verify(report: Report) {
       if (o.category !== item.category) upstreamWaivers.push(`${item.name}: Open5e category ${o.category}, official ${item.category}`)
     }
   }
-  report.check("magic-items", "5e-bits and Open5e agree on rarity, attunement and category where they share an item (the official text decides)", upstreamTotal, upstreamFailures, upstreamWaivers)
+  report.crossCheck(
+    "magic-items",
+    "5e-bits and Open5e agree on rarity, attunement and category where they share an item, or the official text settles it",
+    upstreamTotal,
+    upstreamFailures,
+    upstreamWaivers
+  )
 
   verifyRules(report)
 }
