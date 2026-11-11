@@ -188,7 +188,8 @@
           },
           {
             "id": "arrows",
-            "quantity": 20
+            "quantity": 20,
+            "unit": "single"
           },
           {
             "id": "gaming-set",

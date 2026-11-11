@@ -405,6 +405,76 @@ function area(text: string): Area | undefined {
   return found.sort((a, b) => a.index - b.index)[0]?.area
 }
 
+const numbers: Record<string, number> = { a: 1, one: 1, two: 2, three: 3, four: 4 }
+
+/** Map each damaging row of a table to its damage type, where the row reads "12d6 Fire damage". */
+function withDamageTypes(table: SpellTable): SpellTable {
+  const types = new RegExp(`\\d+d\\d+ (${typeNames}) damage`)
+  const found = table.rows.flatMap((row) => {
+    const match = types.exec(row.at(-1) ?? "")
+    return match ? [[row[0], match[1].toLowerCase()]] : []
+  })
+  return found.length ? { ...table, damageTypes: Object.fromEntries(found) } : table
+}
+
+/** One damage roll whose type a table row decides, when every damaging row rolls the same dice. */
+function tableDamage(tables: SpellTable[]): Damage[] {
+  return tables.flatMap((table) => {
+    if (!table.damageTypes || !table.title) return []
+    const dice = new Set(table.rows.flatMap((row) => [...(/(\d+d\d+) \w+ damage/.exec(row.at(-1) ?? "")?.slice(1, 2) ?? [])]))
+    if (dice.size !== 1) throw new Error(`spells: table ${table.title} rolls more than one damage dice`)
+    return [{ dice: [...dice][0], types: [...new Set(Object.values(table.damageTypes))], table: table.title }]
+  })
+}
+
+/** Beams, darts and rays: "You create three glowing darts", "one more dart for each spell slot level", "two beams at level 5". */
+function projectiles(text: string, higherLevel = "", cantripUpgrade = ""): Spell["projectiles"] {
+  const base = /You (?:create|hurl) (a|three) (?:[\w ]+ )?(beam|dart|ray)s?\b/.exec(text)
+  if (!base) return undefined
+  const perSlot = /(one) (?:more|additional) (?:dart|ray) for each spell slot level above/.exec(higherLevel)
+  const cantrip = /(\w+) beams at level 5, (\w+) beams at level 11, and (\w+) beams at level 17/.exec(cantripUpgrade)
+  return {
+    count: numbers[base[1]],
+    ...(perSlot ? { perSlot: numbers[perSlot[1]] } : {}),
+    ...(cantrip ? { cantrip: { 5: numbers[cantrip[1]], 11: numbers[cantrip[2]], 17: numbers[cantrip[3]] } } : {}),
+  }
+}
+
+/** "You can target one additional creature for each spell slot level above 1", and Chain Lightning's extra bolt to another target. */
+function extraTargets(higherLevel = ""): number | undefined {
+  const match = /(?:You can (?:target|affect) (one|two) additional \w+|(One) additional bolt leaps from the first target to another target) for each spell slot level above/.exec(higherLevel)
+  return match ? numbers[(match[1] ?? match[2]).toLowerCase()] : undefined
+}
+
+function armorClass(text: string): Spell["ac"] {
+  const bonus = /\+(\d+) bonus to (?:AC|Armor Class)/.exec(text)
+  const base = /base AC becomes (\d+) plus its Dexterity modifier/.exec(text)
+  const minimum = /has an Armor Class of (\d+) if its AC is lower than that/.exec(text)
+  if (!bonus && !base && !minimum) return undefined
+  return { ...(bonus ? { bonus: Number(bonus[1]) } : {}), ...(base ? { base: Number(base[1]) } : {}), ...(minimum ? { minimum: Number(minimum[1]) } : {}) }
+}
+
+/** Bless, Bane, Guidance, Ray of Enfeeblement and Warding Bond's saves. */
+function rollModifier(text: string): Spell["rollModifier"] {
+  const rolls: Record<string, NonNullable<Spell["rollModifier"]>["rolls"]> = {
+    "the attack roll or save": ["attack-roll", "saving-throw"],
+    "any ability check": ["ability-check"],
+    "all its damage rolls": ["damage-roll"],
+  }
+  const dice = /(adds|subtracts?) (\d+d\d+) (?:to|from) (the attack roll or save|any ability check|all its damage rolls)/.exec(text)
+  if (dice) return { dice: dice[2], ...(dice[1] === "adds" ? {} : { subtract: true as const }), rolls: rolls[dice[3]] }
+  const flat = /\+(\d+) bonus to AC and saving throws/.exec(text)
+  return flat ? { amount: Number(flat[1]), rolls: ["saving-throw"] } : undefined
+}
+
+function hitPointMaximum(text: string, higherLevel = ""): Spell["hitPointMaximum"] {
+  const amount = /Hit Point maximum and current Hit Points increase by (\d+)/.exec(text)
+  const dice = /Hit Point maximum also increases by (\d+d\d+), and it gains the same number of Hit Points/.exec(text)
+  const perSlot = /Hit Points increase by (\d+) for each spell slot level above/.exec(higherLevel)
+  if (!amount && !dice) return undefined
+  return { ...(dice ? { dice: dice[1] } : { amount: Number(amount?.[1]) }), ...(perSlot ? { perSlotAmount: Number(perSlot[1]) } : {}) }
+}
+
 export default function build() {
   const official = officialText()
   const base = readBase("Spells")
@@ -418,6 +488,8 @@ export default function build() {
     const attack = /(melee|ranged) spell attack/.exec(text.description)?.[1]
     const spellRange = range(rangeText)
     const spellArea = area(text.description)
+    const tables = text.tables?.map(withDamageTypes)
+    const rolls = [...(damage(text.description, text.higherLevel, text.cantripUpgrade) ?? []), ...tableDamage(tables ?? [])]
     return {
       id,
       name: text.name,
@@ -434,13 +506,19 @@ export default function build() {
       description: text.description,
       ...(text.higherLevel ? { higherLevel: text.higherLevel } : {}),
       ...(text.cantripUpgrade ? { cantripUpgrade: text.cantripUpgrade } : {}),
-      ...(text.tables ? { tables: text.tables } : {}),
+      ...(tables ? { tables } : {}),
       ...(text.statBlocks ? { statBlocks: text.statBlocks } : {}),
       ...(attack ? { attack: attack.toLowerCase() as Spell["attack"] } : {}),
       ...optional("saves", saves(text.description)),
-      ...optional("damage", damage(text.description, text.higherLevel, text.cantripUpgrade)),
+      ...(rolls.length ? { damage: rolls } : {}),
       ...optional("healing", healing(text.description, text.higherLevel)),
       ...optional("conditions", conditions([text.description, ...(text.tables ?? []).flatMap((table) => table.rows.flat())].join("\n"))),
+      ...optional("projectiles", projectiles(text.description, text.higherLevel, text.cantripUpgrade)),
+      ...optional("extraTargetsPerSlot", extraTargets(text.higherLevel)),
+      ...optional("ac", armorClass(text.description)),
+      ...optional("rollModifier", rollModifier(text.description)),
+      ...optional("damageReduction", /reduces the total damage taken by (\d+d\d+)/.exec(text.description)?.[1]),
+      ...optional("hitPointMaximum", hitPointMaximum(text.description, text.higherLevel)),
     }
   })
   if (official.size !== entries.length) throw new Error(`spells: ${official.size} official spells, ${entries.length} in the base source`)

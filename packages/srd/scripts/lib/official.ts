@@ -16,7 +16,12 @@ export const pages: readonly string[] = raw.split("\f").map((page, index) => {
   const match = header.exec(page)
   // The printed number must be the PDF page, since every entry's `page` relies on the two being the same.
   if (!match || Number(match[1] ?? match[2]) !== index + 1) throw new Error(`Page ${index + 1} does not open with its running header`)
-  return page.slice(match[0].length)
+  // The PDF carries two invisible marks that are not part of the wording: soft hyphens inside words, at times
+  // at a line end ("extra" / "dimensional"), and non-breaking spaces ("level 4"). Neither may reach the data.
+  return page
+    .slice(match[0].length)
+    .replace(/\u00ad\n?/g, "")
+    .replace(/\u00a0/g, " ")
 })
 if (pages.length !== lock.official.pages) throw new Error(`Expected ${lock.official.pages} pages, read ${pages.length}`)
 

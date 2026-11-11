@@ -207,6 +207,19 @@ function spellList(lines: Line[]): { level: number; name: string; school: string
   return out
 }
 
+/** A spell's own header in “Spells”: "Mind Spike" then "Level 2 Divination (Sorcerer, Warlock, Wizard)". */
+function spellHeader(id: string): { level: number; classes: string[]; page: number } | undefined {
+  for (const [index, page] of pages.entries()) {
+    const lines = page.split("\n")
+    for (const [at, line] of lines.entries()) {
+      if (toId(line.trim()) !== id) continue
+      const header = lines[at + 1]?.match(/^(?:Level (\d) \w+|\w+ Cantrip) \(([^)]+)\)$/)
+      if (header) return { level: header[1] ? Number(header[1]) : 0, classes: header[2].split(", ").map(toId), page: index + 1 }
+    }
+  }
+  return undefined
+}
+
 // Mechanics, read back from the text
 
 const numberWord: Record<number, string> = { 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six" }
@@ -734,6 +747,7 @@ export default function verify(report: Report) {
   }
 
   // Spellcasting fields and the spell lists.
+  const spellWaivers: string[] = []
   const spellRanges: [number, number, string][] = []
   {
     const failures: string[] = []
@@ -802,11 +816,25 @@ export default function verify(report: Report) {
       for (const group of official) {
         const mine = value.find((item) => item.level === group.level)?.spells ?? []
         for (const spell of group.spells) if (!mine.includes(spell)) failures.push(`${entry.id} spell list level ${group.level}: ${spell} is official but not in the data`)
-        for (const spell of mine) if (!group.spells.includes(spell)) failures.push(`${entry.id} spell list level ${group.level}: ${spell} is in the data but not the official list`)
+        for (const spell of mine) {
+          if (group.spells.includes(spell)) continue
+          const own = spellHeader(spell)
+          if (own?.classes.includes(entry.id) && own.level === group.level)
+            spellWaivers.push(
+              `${entry.id} ${spell}: the printed Level ${group.level} ${entry.name} Spells list (page ${owner.lines.find((line) => line.text === `Level ${group.level} ${entry.name} Spells`)?.page}) omits it, but the spell’s own header (page ${own.page}) names ${entry.name}. The text contradicts itself and the spell’s own block wins.`
+            )
+          else failures.push(`${entry.id} spell list level ${group.level}: ${spell} is in the data but not the official list`)
+        }
       }
       for (const group of value) if (!official.some((item) => item.level === group.level)) failures.push(`${entry.id} spell list: level ${group.level} is not in the official list`)
     }
-    report.check(category, "spellcasting ability, focus, slot recovery, preparation, multiclass levels and every spell of every class spell list match the official text", total, failures)
+    report.check(
+      category,
+      "spellcasting ability, focus, slot recovery, preparation, multiclass levels and every spell of every class spell list match the official text",
+      total,
+      failures,
+      spellWaivers
+    )
   }
 
   // Options: every option against its official title or label, with prerequisites and costs.
@@ -1123,11 +1151,6 @@ export default function verify(report: Report) {
     const failures: string[] = []
     let total = 0
     const spells = readData<{ id: string; name: string; level: number; classes?: string[] }>("spells")
-    const waived: string[] = []
-    const everything = pages.join("\n")
-    // The classes a spell's own header names: "Level 2 Illusion (Bard, Sorcerer, Wizard)".
-    const header = (name: string) =>
-      (everything.match(new RegExp(`\\n${name.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}\\n(?:Level \\d \\w+|\\w+ Cantrip) \\(([^)]+)\\)`))?.[1] ?? "").split(", ").map(toId)
     for (const entry of classes) {
       if (!entry.spellcasting) continue
       for (const group of entry.spellcasting.spellList) {
@@ -1140,13 +1163,10 @@ export default function verify(report: Report) {
       }
       for (const spell of spells.filter((item) => item.classes?.includes(entry.id))) {
         total++
-        if (entry.spellcasting.spellList.some((group) => group.spells.includes(spell.id))) continue
-        if (header(spell.name).includes(entry.id))
-          waived.push(`${spell.id}: its own header in “Spells” names ${entry.name}, but the ${entry.name} spell list in “Classes” does not print it. The class list keeps the class section’s reading.`)
-        else failures.push(`${entry.id}: spells lists ${spell.id} for ${entry.id}, the class list does not`)
+        if (!entry.spellcasting.spellList.some((group) => group.spells.includes(spell.id))) failures.push(`${entry.id}: spells lists ${spell.id} for ${entry.id}, the class list does not`)
       }
     }
-    report.check(category, "class spell lists agree with the classes field of the spells data", total, failures, waived)
+    report.check(category, "class spell lists agree with the classes field of the spells data", total, failures)
   }
 
   // Open5e as a second opinion. A disagreement the official text settles in the data's favor is noted, not failed.

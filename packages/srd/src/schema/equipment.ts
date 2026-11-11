@@ -128,6 +128,8 @@ export const groupSchema = z.strictObject({
   kind: z.literal("group"),
   members: z.array(idSchema),
   usedBy: z.array(classIdSchema).optional(),
+  /** Spell Scroll: the magic item the group prices, an id in magic-items.json. */
+  magicItem: idSchema.optional(),
   ...described,
 })
 
@@ -251,6 +253,8 @@ export const gearMechanics = {
     })
     .optional(),
   spellScroll: z.strictObject({ spellLevel: z.number().int().min(0).max(1), saveDc: z.number().int(), attackBonus: z.number().int() }).optional(),
+  /** The magic item this entry prices (Potion of Healing, Spell Scroll): an id in magic-items.json. */
+  magicItem: idSchema.optional(),
   /** Saddles: Advantage text lives in `modifiers`. An Exotic Saddle is required for aquatic or flying mounts. */
   requiredForMounts: z.array(z.enum(["aquatic", "flying"])).optional(),
 } as const
@@ -448,6 +452,11 @@ export const coinSchema = z.strictObject({
 })
 export type Coin = z.infer<typeof coinSchema>
 
+/**
+ * Rules named for the official heading they come from ("Selling Equipment", "Barding", "Casting in Armor"). Two kinds of
+ * name are ours: "Armor Training (...)" joins the heading with its sub-heading, and "Spell Scroll Costs (Level N)" labels a
+ * table row. Those have descriptive names, not official headings.
+ */
 const ruleShape = { ...entryShape, ...described } as const
 export const equipmentRuleSchema = z.discriminatedUnion("kind", [
   z.strictObject({
@@ -461,6 +470,9 @@ export const equipmentRuleSchema = z.discriminatedUnion("kind", [
     /** Shield: the AC benefit needs training. */
     benefitRequiresTraining: z.literal(true).optional(),
   }),
+  z.strictObject({ ...ruleShape, kind: z.literal("weapon-proficiency"), addsProficiencyBonusTo: z.literal("attack-rolls") }),
+  z.strictObject({ ...ruleShape, kind: z.literal("tool-proficiency"), addsProficiencyBonusTo: z.literal("ability-checks-with-the-tool"), advantageWithProficientSkill: z.literal(true) }),
+  z.strictObject({ ...ruleShape, kind: z.literal("casting-in-armor"), requiresArmorTraining: z.literal(true) }),
   z.strictObject({ ...ruleShape, kind: z.literal("one-at-a-time"), maxArmor: z.literal(1), maxShield: z.literal(1) }),
   z.strictObject({ ...ruleShape, kind: z.literal("selling"), resaleFraction: z.number().positive() }),
   z.strictObject({ ...ruleShape, kind: z.literal("coin-weight"), coinsPerPound: z.number().int().positive() }),

@@ -60,10 +60,22 @@ export const durationSchema = z.strictObject({
 })
 export type Duration = z.infer<typeof durationSchema>
 
-/** A save the spell forces. `onSuccess` is "none" when a success avoids the effect, "half" when it halves the damage, and "other" when the text gives a lesser effect. */
+/**
+ * Who a save or a damage roll falls on when it is not the spell's targets: the caster alone, or the caster and the
+ * creatures travelling with the caster (Dimension Door).
+ */
+const targetSchema = z.enum(["caster", "caster-and-companions"])
+
+/**
+ * A save the spell forces. `onSuccess` is "none" when a success avoids the effect, "half" when it halves the damage,
+ * and "other" when the text gives a lesser effect. `dc` is set where the text gives a fixed DC in place of the
+ * caster's spell save DC. `target` is set where the caster makes the save.
+ */
 export const saveSchema = z.strictObject({
   ability: abilityIdSchema,
   onSuccess: z.enum(["none", "half", "other"]),
+  dc: count.optional(),
+  target: targetSchema.optional(),
 })
 export type Save = z.infer<typeof saveSchema>
 
@@ -72,8 +84,9 @@ const cantripDiceSchema = z.strictObject({ 5: diceSchema, 11: diceSchema, 17: di
 
 /**
  * One damage roll the text states, as dice or as a fixed `amount`. Several `types` mean one of them, chosen as the
- * text says. `modifier` adds the caster's spellcasting ability modifier. `perSlot` is the dice added for each slot
- * level above the spell's level.
+ * text says, or, where `table` names one of the spell's tables, the type that table's row gives. `modifier` adds the
+ * caster's spellcasting ability modifier. `perSlot` is the dice added for each slot level above the spell's level.
+ * `target` is set where the damage falls on the caster.
  */
 export const damageSchema = z
   .strictObject({
@@ -83,6 +96,8 @@ export const damageSchema = z
     modifier: z.literal(true).optional(),
     perSlot: diceSchema.optional(),
     cantrip: cantripDiceSchema.optional(),
+    table: z.string().min(1).optional(),
+    target: targetSchema.optional(),
   })
   .refine((damage) => (damage.dice === undefined) !== (damage.amount === undefined), "give dice or an amount")
 export type Damage = z.infer<typeof damageSchema>
@@ -98,11 +113,15 @@ export const healingSchema = z.strictObject({
 })
 export type Healing = z.infer<typeof healingSchema>
 
-/** A table printed in the spell, as rows of cells under its column headings. Some tables print no title. */
+/**
+ * A table printed in the spell, as rows of cells under its column headings. Some tables print no title.
+ * `damageTypes` maps a row's first cell to the damage type that row deals, for rows that deal damage.
+ */
 export const spellTableSchema = z.strictObject({
   title: z.string().min(1).optional(),
   columns: z.array(z.string().min(1)).min(2),
   rows: z.array(z.array(proseSchema).min(2)).min(1),
+  damageTypes: z.record(z.string().min(1), damageTypeIdSchema).optional(),
 })
 export type SpellTable = z.infer<typeof spellTableSchema>
 
@@ -157,5 +176,33 @@ export const spellSchema = z.strictObject({
   healing: healingSchema.optional(),
   /** Conditions the spell can give its targets. */
   conditions: z.array(conditionIdSchema).min(1).optional(),
+  /** Conditions the spell gives the caster. */
+  casterConditions: z.array(conditionIdSchema).min(1).optional(),
+  /** Beams, darts or rays, each its own attack or hit: the base count, the count added per slot level above the spell's level, and the count at cantrip upgrade levels. */
+  projectiles: z
+    .strictObject({
+      count: count,
+      perSlot: count.optional(),
+      cantrip: z.strictObject({ 5: count, 11: count, 17: count }).optional(),
+    })
+    .optional(),
+  /** Creatures the spell can target for each slot level above the spell's level. */
+  extraTargetsPerSlot: count.optional(),
+  /** Armor Class the spell gives: a `bonus`, a `base` that adds the Dexterity modifier, or a `minimum`. */
+  ac: z.strictObject({ bonus: count.optional(), base: count.optional(), minimum: count.optional() }).optional(),
+  /** Dice or an amount added to, or with `subtract` taken from, the named rolls. */
+  rollModifier: z
+    .strictObject({
+      dice: diceSchema.optional(),
+      amount: count.optional(),
+      subtract: z.literal(true).optional(),
+      rolls: z.array(z.enum(["attack-roll", "saving-throw", "ability-check", "damage-roll"])).min(1),
+    })
+    .refine((modifier) => (modifier.dice === undefined) !== (modifier.amount === undefined), "give dice or an amount")
+    .optional(),
+  /** Dice taken off damage of the chosen type. */
+  damageReduction: diceSchema.optional(),
+  /** The increase to the Hit Point maximum, which the target also gains as Hit Points. `perSlotAmount` is added for each slot level above the spell's level. */
+  hitPointMaximum: z.strictObject({ dice: diceSchema.optional(), amount: count.optional(), perSlotAmount: count.optional() }).optional(),
 })
 export type Spell = z.infer<typeof spellSchema>

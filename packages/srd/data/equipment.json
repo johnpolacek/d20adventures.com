@@ -3481,6 +3481,7 @@
       "action": "bonus",
       "rangeFeet": 5
     },
+    "magicItem": "potions-of-healing",
     "description": "This potion is a magic item. As a Bonus Action, you can drink it or administer it to another creature within 5 feet of yourself. The creature that drinks the magical red fluid in this vial regains 2d4 + 2 Hit Points."
   },
   {
@@ -4227,7 +4228,8 @@
     "members": [
       "spell-scroll-cantrip",
       "spell-scroll-level-1"
-    ]
+    ],
+    "magicItem": "spell-scroll"
   },
   {
     "id": "spell-scroll-cantrip",
@@ -4243,6 +4245,7 @@
       "saveDc": 13,
       "attackBonus": 5
     },
+    "magicItem": "spell-scroll",
     "description": "A Spell Scroll (Cantrip) or Spell Scroll (Level 1) is a magic item that bears the words of a cantrip or level 1 spell, respectively, determined by the scroll’s creator. If the spell is on your class’s spell list, you can read the scroll and cast the spell using its normal casting time and without providing any Material components.\nIf the spell requires a saving throw or an attack roll, the spell save DC is 13, and the attack bonus is +5. The scroll disintegrates when the casting is completed."
   },
   {
@@ -4259,6 +4262,7 @@
       "saveDc": 13,
       "attackBonus": 5
     },
+    "magicItem": "spell-scroll",
     "description": "A Spell Scroll (Cantrip) or Spell Scroll (Level 1) is a magic item that bears the words of a cantrip or level 1 spell, respectively, determined by the scroll’s creator. If the spell is on your class’s spell list, you can read the scroll and cast the spell using its normal casting time and without providing any Material components.\nIf the spell requires a saving throw or an attack roll, the spell save DC is 13, and the attack bonus is +5. The scroll disintegrates when the casting is completed."
   },
   {

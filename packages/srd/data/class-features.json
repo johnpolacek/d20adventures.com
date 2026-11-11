@@ -3217,7 +3217,7 @@
         "id": "creating-spell-slots",
         "name": "Creating Spell Slots",
         "page": 66,
-        "description": "As a Bonus Action, you can transform unexpended Sorcery Points into one spell slot. The Creating Spell Slots table shows the cost of creating a spell slot of a given level, and it lists the minimum Sorcerer level you must be to create a slot. You can create a spell slot no higher than level 5.\nAny spell slot you create with this feature vanishes when you finish a Long Rest.",
+        "description": "As a Bonus Action, you can transform unexpended Sorcery Points into one spell slot. The Creating Spell Slots table shows the cost of creating a spell slot of a given level, and it lists the minimum Sorcerer level you must be to create a slot. You can create a spell slot no higher than level 5.\nAny spell slot you create with this feature vanishes when you finish a Long Rest.",
         "activation": "bonus-action"
       }
     ],
@@ -3708,7 +3708,7 @@
         "id": "investment-of-the-chain-master",
         "name": "Investment of the Chain Master",
         "page": 73,
-        "description": "When you cast Find Familiar, you infuse the summoned familiar with a measure of your eldritch power, granting the creature the following benefits.\n**Aerial or Aquatic.** The familiar gains either a Fly Speed or a Swim Speed (your choice) of 40 feet.\n**Quick Attack.** As a Bonus Action, you can command the familiar to take the Attack action.\n**Necrotic or Radiant Damage.** Whenever the familiar deals Bludgeoning, Piercing, or Slashing damage, you can make it deal Necrotic or Radiant damage instead.\n**Your Save DC.** If the familiar forces a creature to make a saving throw, it uses your spell save DC.\n**Resistance.** When the familiar takes damage, you can take a Reaction to grant it Resistance against that damage.",
+        "description": "When you cast Find Familiar, you infuse the summoned familiar with a measure of your eldritch power, granting the creature the following benefits.\n**Aerial or Aquatic.** The familiar gains either a Fly Speed or a Swim Speed (your choice) of 40 feet.\n**Quick Attack.** As a Bonus Action, you can command the familiar to take the Attack action.\n**Necrotic or Radiant Damage.** Whenever the familiar deals Bludgeoning, Piercing, or Slashing damage, you can make it deal Necrotic or Radiant damage instead.\n**Your Save DC.** If the familiar forces a creature to make a saving throw, it uses your spell save DC.\n**Resistance.** When the familiar takes damage, you can take a Reaction to grant it Resistance against that damage.",
         "prerequisite": {
           "text": "Level 5+ Warlock, Pact of the Chain Invocation",
           "level": 5,

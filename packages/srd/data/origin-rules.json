@@ -1,0 +1,96 @@
+[
+  {
+    "id": "background-ability-scores",
+    "name": "Background Ability Scores",
+    "page": 83,
+    "text": "A background lists three of your character’s ability scores. Increase one by 2 and another one by 1, or increase all three by 1. None of these increases can raise a score above 20.",
+    "abilityScoreIncrease": {
+      "listed": 3,
+      "options": [
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "maximum": 20
+    }
+  },
+  {
+    "id": "background-equipment",
+    "name": "Background Equipment",
+    "page": 83,
+    "text": "Each background offers a choice between a package of equipment and 50 GP.",
+    "goldInsteadOfEquipment": 50
+  },
+  {
+    "id": "background-feat",
+    "name": "Background Feat",
+    "page": 83,
+    "text": "A background gives your character a specified Origin feat (described in “Feats”).",
+    "grants": {
+      "kind": "feat",
+      "count": 1,
+      "featCategory": "origin"
+    }
+  },
+  {
+    "id": "background-skill-proficiencies",
+    "name": "Background Skill Proficiencies",
+    "page": 83,
+    "text": "A background gives your character proficiency in two specified skills.",
+    "grants": {
+      "kind": "skill-proficiency",
+      "count": 2
+    }
+  },
+  {
+    "id": "background-tool-proficiency",
+    "name": "Background Tool Proficiency",
+    "page": 83,
+    "text": "Each background gives a character proficiency with one tool—either a specific tool or one chosen from the Artisan’s Tools category.",
+    "grants": {
+      "kind": "tool-proficiency",
+      "count": 1
+    }
+  },
+  {
+    "id": "feat-category-choice",
+    "name": "Feat Category Choice",
+    "page": 87,
+    "text": "If you’re instructed to choose a feat from a specific category, such as the Origin category, that category must appear under the feat’s name. If you’re instructed to choose a feat and no category is specified, you can choose from any category.",
+    "anyCategoryWhenUnspecified": true
+  },
+  {
+    "id": "feat-prerequisite",
+    "name": "Feat Prerequisite",
+    "page": 87,
+    "text": "To take a feat, you must meet any prerequisite in its description unless a feature allows you to take the feat without the prerequisite. If a prerequisite includes a class, you must have at least 1 level in that class to take the feat.",
+    "minimumClassLevels": 1
+  },
+  {
+    "id": "feat-repeatable",
+    "name": "Feat Repeatable",
+    "page": 87,
+    "text": "A feat can be taken only once unless its description states otherwise in a “Repeatable” subsection.",
+    "defaultTimesTaken": 1
+  },
+  {
+    "id": "species-creature-type",
+    "name": "Species Creature Type",
+    "page": 83,
+    "text": "Every species in “Character Origins” is Humanoid; playable non-Humanoid species appear in other books.",
+    "creatureType": "humanoid"
+  },
+  {
+    "id": "species-life-span",
+    "name": "Species Life Span",
+    "page": 83,
+    "text": "Members of most species live for about 80 years, with exceptions noted in the text about the species in “Character Origins.”",
+    "typicalLifeSpanYears": 80
+  }
+]

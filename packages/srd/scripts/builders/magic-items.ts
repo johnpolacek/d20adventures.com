@@ -103,7 +103,7 @@ function joinLines(previous: string, next: string) {
   if (!previous.endsWith("-")) return `${previous} ${next}`
   const left = previous.match(/[A-Za-z0-9’-]+$/)?.[0] ?? ""
   const right = next.match(/^[A-Za-z0-9’]+/)?.[0] ?? ""
-  const compound = /\d/.test(left) || left.slice(0, -1).includes("-") || hyphenated.has(`${left}${right}`.toLowerCase())
+  const compound = /\d/.test(left) || hyphenated.has(`${left}${right}`.toLowerCase())
   return compound ? previous + next : previous.slice(0, -1) + next
 }
 
@@ -144,7 +144,11 @@ const rollOf = (text: string) => {
 const endsTable = (row: string) => row.startsWith("\t") || row.startsWith("*") || row.startsWith("•")
 const captionLike = (row: string | undefined, before: string | undefined) =>
   row !== undefined && /^[A-Z][A-Za-z’ ]{2,48}$/.test(row.trim()) && row.trim().split(" ").length <= 6 && (before === undefined || /[.!?:”]\s*$/.test(before))
-const clean = (rows: string[]) => rows.reduce((text, row) => (text ? joinLines(text, row.trim()) : row.trim()), "")
+const clean = (rows: string[]) =>
+  rows
+    .map((row) => row.trim())
+    .filter(Boolean)
+    .reduce((text, row) => (text ? joinLines(text, row) : row), "")
 
 type Taken = { table: ItemTable; from: number; to: number }
 
@@ -455,7 +459,7 @@ function spellsOf(paras: string[], tables: ItemTable[]): Spell[] {
   }
   const escapeName = (name: string) => name.replace(/[/()]/g, "\\$&")
   for (const unit of units) {
-    const castAt = unit.search(/\bcast\b|\bcasting\b/)
+    const castAt = unit.search(/\bcast\b|\bcasting\b|determine the spell/)
     const cost = /\bexpend (?:no more than )?(\d+)(?: or more)?(?: of [A-Za-z’ ]+?)? charges?\b[^.]*?\bcast\b/.exec(unit)
     const unitDc = /\(save DC (\d+)\)/.exec(unit)?.[1]
     for (const name of spellHeadings) {
@@ -528,6 +532,20 @@ function chargesOf(flat: string) {
     ...(regain?.[2] ? { regains: { amount: /^\d+$/.test(regain[1]) ? Number(regain[1]) : regain[1] === "all" ? "all" : asDice(regain[1]), time: "dawn" } } : {}),
     ...(rolled ? { lastCharge: { dice: rolled[1], outcomes } } : {}),
   }
+}
+
+// "can’t be used again until the next dawn", "ceases to function for you until you finish a Long Rest".
+function reuseMoments(text: string) {
+  const found = new Set<string>()
+  for (const sentence of sentences(text)) {
+    if (!/can’t|cannot|ceases to function/.test(sentence)) continue
+    for (const match of sentence.matchAll(/until (?:the next dawn|you finish a (Short or Long|Long|Short) Rest)/g)) {
+      if (!match[0].includes("Rest")) found.add("dawn")
+      else if (match[1] === "Short or Long") found.add("short-rest").add("long-rest")
+      else found.add(`${match[1].toLowerCase()}-rest`)
+    }
+  }
+  return ["dawn", "short-rest", "long-rest"].filter((moment) => found.has(moment))
 }
 
 function savesChecksDamage(flat: string) {
@@ -627,7 +645,27 @@ function build(): MagicItem[] {
       variants = sub.variants.map((variant) => ({ ...variant, ...(plus ? { bonuses: targets.map((to) => ({ to, value: Number(variant.name.slice(1)) })) } : {}) })) as MagicItem["variants"]
     }
 
-    const stats = savesChecksDamage(`${flat} ${tables.flatMap((table) => table.rows.flatMap((row) => row.cells)).join(" ")}`)
+    // Rows of random tables that say "you cast" carry the spells, so the item's own list stays the spells it casts by choice.
+    for (const table of tables) {
+      if (!table.dice) continue
+      for (const row of table.rows) {
+        const ids = spellsOf(row.cells, []).map((spell) => spell.id)
+        if (ids.length) row.spells = ids
+      }
+    }
+    const mechanics = `${flat} ${tables.flatMap((table) => table.rows.flatMap((row) => row.cells)).join(" ")}`
+    const activation = (
+      [
+        ["magic-action", /\bMagic action\b/],
+        ["bonus-action", /\bBonus Action\b/],
+        ["utilize-action", /\bUtilize action\b/],
+        ["reaction", /\bReaction\b/],
+      ] as const
+    )
+      .filter(([, pattern]) => pattern.test(mechanics))
+      .map(([kind]) => kind)
+    const reusableAfter = reuseMoments(mechanics)
+    const stats = savesChecksDamage(mechanics)
     const charges = chargesPerVariant.has(id) ? undefined : chargesOf(flat)
     const spells = spellsOf(paras, tables)
     const bonuses = paragraphForms.length || sub.variants ? [] : bonusesOf(flat)
@@ -645,6 +683,8 @@ function build(): MagicItem[] {
       ...(sub.attunement ? { attunement: sub.attunement } : {}),
       ...(cursed ? { cursed: true } : {}),
       ...(consumable ? { consumable: true } : {}),
+      ...(activation.length ? { activation } : {}),
+      ...(reusableAfter.length ? { reusableAfter } : {}),
       ...(bonuses.length ? { bonuses } : {}),
       ...(charges ? { charges } : {}),
       ...(stats.saves.length ? { saves: stats.saves } : {}),

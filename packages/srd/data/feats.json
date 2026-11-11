@@ -36,11 +36,16 @@
     "benefits": [
       {
         "name": "Initiative Proficiency",
-        "text": "When you roll Initiative, you can add your Proficiency Bonus to the roll."
+        "text": "When you roll Initiative, you can add your Proficiency Bonus to the roll.",
+        "initiativeBonus": "proficiency-bonus"
       },
       {
         "name": "Initiative Swap",
-        "text": "Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can’t make this swap if you or the ally has the Incapacitated condition."
+        "text": "Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can’t make this swap if you or the ally has the Incapacitated condition.",
+        "initiativeSwap": {
+          "allies": 1,
+          "blockedByCondition": "incapacitated"
+        }
       }
     ]
   },
@@ -455,7 +460,10 @@
     "name": "Savage Attacker",
     "page": 87,
     "category": "origin",
-    "text": "You’ve trained to deal particularly damaging strikes. Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either roll against the target."
+    "text": "You’ve trained to deal particularly damaging strikes. Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either roll against the target.",
+    "damageDiceRolledTwice": {
+      "perTurn": 1
+    }
   },
   {
     "id": "skilled",
@@ -485,6 +493,9 @@
         "fighting-style"
       ]
     },
-    "text": "When you make an extra attack as a result of using a weapon that has the Light property, you can add your ability modifier to the damage of that attack if you aren’t already adding it to the damage."
+    "text": "When you make an extra attack as a result of using a weapon that has the Light property, you can add your ability modifier to the damage of that attack if you aren’t already adding it to the damage.",
+    "addAbilityModifierToExtraAttack": {
+      "weaponProperty": "light"
+    }
   }
 ]

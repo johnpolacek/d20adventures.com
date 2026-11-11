@@ -1,6 +1,6 @@
-import { backgroundSchema, featSchema, speciesSchema } from "../../src/schema/origins"
+import { backgroundSchema, featSchema, originRuleSchema, speciesSchema } from "../../src/schema/origins"
 import { toId, writeData } from "../lib/data"
-import { pages } from "../lib/official"
+import { pageOf, pages } from "../lib/official"
 
 // The base source (5e-bits) restructures the species traits, drops the Human Small size and the Dragonborn
 // Breath Weapon, and keeps no mechanics. So every entry here is read from the official pages, and the typed
@@ -98,7 +98,7 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
       },
       { name: "Fey Ancestry", mech: { savingThrowAdvantage: { conditions: ["charmed"] } } },
       { name: "Keen Senses", mech: { skillChoice: { count: 1, from: ["insight", "perception", "survival"] } } },
-      { name: "Trance", mech: { longRestHours: 4 } },
+      { name: "Trance", mech: { longRestHours: 4, sleepImmunity: true } },
     ],
   },
   {
@@ -145,12 +145,17 @@ const speciesSpecs: { name: string; traits: TraitSpec[] }[] = [
         },
       },
       { name: "Large Form", mech: { level: 5, activation: "bonus-action", sizeChange: "Large", durationMinutes: 10, speedBonus: 10, uses: onceLong } },
-      { name: "Powerful Build" },
+      { name: "Powerful Build", mech: { grappledEscapeAdvantage: true, carryingCapacitySizeBonus: 1 } },
     ],
   },
   {
     name: "Halfling",
-    traits: [{ name: "Brave", mech: { savingThrowAdvantage: { conditions: ["frightened"] } } }, { name: "Halfling Nimbleness" }, { name: "Luck" }, { name: "Naturally Stealthy" }],
+    traits: [
+      { name: "Brave", mech: { savingThrowAdvantage: { conditions: ["frightened"] } } },
+      { name: "Halfling Nimbleness", mech: { moveThroughCreatures: { sizesLarger: 1, canStop: false } } },
+      { name: "Luck", mech: { rerollD20On: 1 } },
+      { name: "Naturally Stealthy", mech: { hideBehindCreatures: { minSizesLarger: 1 } } },
+    ],
   },
   {
     name: "Human",
@@ -281,7 +286,7 @@ function buildSpecies() {
       delete out.options
       return out
     })
-    return { id: toId(spec.name), name: spec.name, page, creatureType: "Humanoid", sizes, speed, traits }
+    return { id: toId(spec.name), name: spec.name, page, creatureType: "humanoid", sizes, speed, traits }
   })
 }
 
@@ -303,6 +308,8 @@ function equipmentOption(text: string) {
     if (sheets) item.quantity = Number(sheets[1])
     else if (paren === "same as above") item.sameAsTool = true
     else if (paren) item.note = paren
+    // "20 Arrows" counts single arrows. The Ammunition table sells Arrows in bundles of 20 (page 96), so the background gives one bundle.
+    if (item.id === "arrows") item.unit = "single"
     return item
   })
   return { items, gp }
@@ -352,14 +359,14 @@ const fightingStyle = { features: ["fighting-style"] }
 
 type FeatSpec = { prerequisite?: Mechanics; abilityScoreIncrease?: Mechanics; mech?: Mechanics; benefits?: Record<string, Mechanics> }
 const featSpecs: Record<string, FeatSpec> = {
-  Alert: {},
+  Alert: { benefits: { "Initiative Proficiency": { initiativeBonus: "proficiency-bonus" }, "Initiative Swap": { initiativeSwap: { allies: 1, blockedByCondition: "incapacitated" } } } },
   "Magic Initiate": {
     benefits: {
       "Two Cantrips": { cantrips: 2, spellLists: ["cleric", "druid", "wizard"], spellcastingAbility: abilityChoice },
       "Level 1 Spell": { spellLevel: 1, uses: onceLong },
     },
   },
-  "Savage Attacker": {},
+  "Savage Attacker": { mech: { damageDiceRolledTwice: { perTurn: 1 } } },
   Skilled: { mech: { proficiencyChoice: { count: 3, kinds: ["skill", "tool"] } } },
   "Ability Score Improvement": {
     prerequisite: { level: 4 },
@@ -379,7 +386,7 @@ const featSpecs: Record<string, FeatSpec> = {
   Archery: { prerequisite: fightingStyle, mech: { attackBonus: { bonus: 2, weapon: "ranged" } } },
   Defense: { prerequisite: fightingStyle, mech: { armorClassBonus: { bonus: 1, armor: ["light", "medium", "heavy"] } } },
   "Great Weapon Fighting": { prerequisite: fightingStyle, mech: { damageDieMinimum: { minimum: 3, properties: ["two-handed", "versatile"] } } },
-  "Two-Weapon Fighting": { prerequisite: fightingStyle },
+  "Two-Weapon Fighting": { prerequisite: fightingStyle, mech: { addAbilityModifierToExtraAttack: { weaponProperty: "light" } } },
   "Boon of Combat Prowess": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { "Peerless Aim": { uses: { count: 1, recharge: "start-of-next-turn" } } } },
   "Boon of Dimensional Travel": { prerequisite: { level: 19 }, abilityScoreIncrease: boonScore, benefits: { "Blink Steps": { teleportFeet: 30 } } },
   "Boon of Fate": {
@@ -450,8 +457,61 @@ function buildFeats() {
   })
 }
 
+// Rules ----------------------------------------------------------------------------------------------------
+
+const ruleSpecs: { name: string; text: string; mech: Mechanics }[] = [
+  {
+    name: "Background Ability Scores",
+    text: "A background lists three of your character’s ability scores. Increase one by 2 and another one by 1, or increase all three by 1. None of these increases can raise a score above 20.",
+    mech: {
+      abilityScoreIncrease: {
+        listed: 3,
+        options: [
+          [2, 1],
+          [1, 1, 1],
+        ],
+        maximum: 20,
+      },
+    },
+  },
+  { name: "Background Feat", text: "A background gives your character a specified Origin feat (described in “Feats”).", mech: { grants: { kind: "feat", count: 1, featCategory: "origin" } } },
+  { name: "Background Skill Proficiencies", text: "A background gives your character proficiency in two specified skills.", mech: { grants: { kind: "skill-proficiency", count: 2 } } },
+  {
+    name: "Background Tool Proficiency",
+    text: "Each background gives a character proficiency with one tool—either a specific tool or one chosen from the Artisan’s Tools category.",
+    mech: { grants: { kind: "tool-proficiency", count: 1 } },
+  },
+  { name: "Background Equipment", text: "Each background offers a choice between a package of equipment and 50 GP.", mech: { goldInsteadOfEquipment: 50 } },
+  { name: "Species Creature Type", text: "Every species in “Character Origins” is Humanoid; playable non-Humanoid species appear in other books.", mech: { creatureType: "humanoid" } },
+  {
+    name: "Species Life Span",
+    text: "Members of most species live for about 80 years, with exceptions noted in the text about the species in “Character Origins.”",
+    mech: { typicalLifeSpanYears: 80 },
+  },
+  {
+    name: "Feat Category Choice",
+    text: "If you’re instructed to choose a feat from a specific category, such as the Origin category, that category must appear under the feat’s name. If you’re instructed to choose a feat and no category is specified, you can choose from any category.",
+    mech: { anyCategoryWhenUnspecified: true },
+  },
+  {
+    name: "Feat Prerequisite",
+    text: "To take a feat, you must meet any prerequisite in its description unless a feature allows you to take the feat without the prerequisite. If a prerequisite includes a class, you must have at least 1 level in that class to take the feat.",
+    mech: { minimumClassLevels: 1 },
+  },
+  { name: "Feat Repeatable", text: "A feat can be taken only once unless its description states otherwise in a “Repeatable” subsection.", mech: { defaultTimesTaken: 1 } },
+]
+
+function buildRules() {
+  return ruleSpecs.map((rule) => {
+    const page = pageOf(rule.text)
+    if (!page) throw new Error(`${rule.name}: text not in the official pages`)
+    return { id: toId(rule.name), name: rule.name, page, text: rule.text, ...rule.mech }
+  })
+}
+
 export default function build() {
   writeData("species", speciesSchema, buildSpecies())
   writeData("backgrounds", backgroundSchema, buildBackgrounds())
   writeData("feats", featSchema, buildFeats())
+  writeData("origin-rules", originRuleSchema, buildRules())
 }

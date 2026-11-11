@@ -1,9 +1,8 @@
 import type { Cost } from "../../src/schema/common"
 import { coinSchema, equipmentRuleSchema, equipmentSchema, poisonSchema, weaponMasterySchema, weaponPropertySchema } from "../../src/schema/equipment"
-import { applyOverrides, toId, writeData } from "../lib/data"
+import { toId, writeData } from "../lib/data"
 import { pages } from "../lib/official"
 import { readBase } from "../lib/sources"
-import { equipmentOverrides } from "../overrides/equipment"
 
 type Row = Record<string, unknown>
 type Line = { text: string; page: number }
@@ -285,7 +284,7 @@ const gearMechanics: Record<string, Row> = {
   },
   pole: { lengthFeet: 10, modifiers: [{ effect: "advantage", on: "check", ability: "str", skills: ["athletics"], when: "as part of a High or Long Jump" }] },
   "pot-iron": { capacity: { gallons: 1 } },
-  "potion-of-healing": { healing: { dice: "2d4 + 2", action: "bonus", rangeFeet: 5 } },
+  "potion-of-healing": { magicItem: "potions-of-healing", healing: { dice: "2d4 + 2", action: "bonus", rangeFeet: 5 } },
   pouch: { capacity: { pounds: 6, cubicFeet: 0.2 } },
   quiver: { capacity: { holds: [{ item: "arrows", quantity: 20 }] } },
   "ram-portable": {
@@ -305,8 +304,8 @@ const gearMechanics: Record<string, Row> = {
   sack: { capacity: { pounds: 30, cubicFeet: 1 } },
   shovel: { dig: { sideFeet: 5, hours: 1 } },
   "signal-whistle": { audibleFeet: 600 },
-  "spell-scroll-cantrip": { spellScroll: { spellLevel: 0, saveDc: 13, attackBonus: 5 } },
-  "spell-scroll-level-1": { spellScroll: { spellLevel: 1, saveDc: 13, attackBonus: 5 } },
+  "spell-scroll-cantrip": { magicItem: "spell-scroll", spellScroll: { spellLevel: 0, saveDc: 13, attackBonus: 5 } },
+  "spell-scroll-level-1": { magicItem: "spell-scroll", spellScroll: { spellLevel: 1, saveDc: 13, attackBonus: 5 } },
   spyglass: { magnification: 2 },
   string: { lengthFeet: 10 },
   tent: { sleeps: 2 },
@@ -530,6 +529,7 @@ function gearAndTools(names: Names, ids: Set<string>): Row[] {
     page: describe("Spell Scroll").page,
     kind: "group",
     members: members["spell-scroll"],
+    magicItem: "spell-scroll",
   })
   return rows
 }
@@ -864,8 +864,8 @@ function rules(): Row[] {
   const rows: Row[] = [
     { id: "selling-equipment", name: "Selling Equipment", page: 89, kind: "selling", resaleFraction: 0.5, description: section(89, "Selling Equipment", "Equipment") },
     {
-      id: "coin-weight",
-      name: "Coin Weight",
+      id: "coins",
+      name: "Coins",
       page: 89,
       kind: "coin-weight",
       coinsPerPound: 50,
@@ -876,6 +876,24 @@ function rules(): Row[] {
         )
       ),
     },
+    {
+      id: "weapon-proficiency",
+      name: "Weapon Proficiency",
+      page: 89,
+      kind: "weapon-proficiency",
+      addsProficiencyBonusTo: "attack-rolls",
+      description: section(89, "Weapon Proficiency", "Properties"),
+    },
+    {
+      id: "tool-proficiency",
+      name: "Tool Proficiency",
+      page: 93,
+      kind: "tool-proficiency",
+      addsProficiencyBonusTo: "ability-checks-with-the-tool",
+      advantageWithProficientSkill: true,
+      description: section(93, "Tool Proficiency", "Artisan’s Tools"),
+    },
+    { id: "casting-in-armor", name: "Casting in Armor", page: 104, kind: "casting-in-armor", requiresArmorTraining: true, description: section(104, "Casting in Armor", "Spells") },
     {
       id: "armor-training-light-medium-or-heavy-armor",
       name: "Armor Training (Light, Medium, or Heavy Armor)",
@@ -988,7 +1006,7 @@ export default function build() {
   register("Spell Scroll")
   const equipment = [...weaponRows, ...armorRows, ...gearAndTools(names, ids), ...mountsAndVehicles(), ...ships(), ...lifestylesAndFood(), ...hirelingsAndSpellcasting()]
   const ruleRows = rules()
-  writeData("equipment", equipmentSchema, applyOverrides("equipment", equipment as { id: string }[], equipmentOverrides))
+  writeData("equipment", equipmentSchema, equipment)
   writeData("weapon-properties", weaponPropertySchema, properties())
   writeData("weapon-masteries", weaponMasterySchema, masteries())
   writeData("poisons", poisonSchema, poisons())

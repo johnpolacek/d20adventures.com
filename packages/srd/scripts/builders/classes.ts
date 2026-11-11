@@ -788,7 +788,8 @@ export default function build() {
     for (const block of section.subclass.blocks) addFeature(block, `${subId}-${toId(block.name)}`, subId)
     for (const featureId of levelsOf.keys()) if (!byId.has(featureId)) throw new Error(`classes: no official heading for ${featureId}`)
 
-    // Spell lists, from the base spells' class lists.
+    // Spell lists, from the base spells' class lists. They follow each spell's own header where it names a class
+    // that the printed class list omits (Phantasmal Force, Mind Spike), since the entry's own block wins.
     const spellList = Array.from({ length: 10 }, (_, level) => ({
       level,
       spells: baseSpells

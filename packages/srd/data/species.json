@@ -3,7 +3,7 @@
     "id": "dragonborn",
     "name": "Dragonborn",
     "page": 84,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Medium",
@@ -150,7 +150,7 @@
     "id": "dwarf",
     "name": "Dwarf",
     "page": 84,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Medium",
@@ -201,7 +201,7 @@
     "id": "elf",
     "name": "Elf",
     "page": 84,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Medium",
@@ -339,7 +339,8 @@
       {
         "name": "Trance",
         "text": "You don’t need to sleep, and magic can’t put you to sleep. You can finish a Long Rest in 4 hours if you spend those hours in a trancelike meditation, during which you retain consciousness.",
-        "longRestHours": 4
+        "longRestHours": 4,
+        "sleepImmunity": true
       }
     ]
   },
@@ -347,7 +348,7 @@
     "id": "gnome",
     "name": "Gnome",
     "page": 85,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Small",
@@ -436,7 +437,7 @@
     "id": "goliath",
     "name": "Goliath",
     "page": 85,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Medium",
@@ -532,7 +533,9 @@
       },
       {
         "name": "Powerful Build",
-        "text": "You have Advantage on any ability check you make to end the Grappled condition. You also count as one size larger when determining your carrying capacity."
+        "text": "You have Advantage on any ability check you make to end the Grappled condition. You also count as one size larger when determining your carrying capacity.",
+        "grappledEscapeAdvantage": true,
+        "carryingCapacitySizeBonus": 1
       }
     ]
   },
@@ -540,7 +543,7 @@
     "id": "halfling",
     "name": "Halfling",
     "page": 86,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Small",
@@ -560,15 +563,23 @@
       },
       {
         "name": "Halfling Nimbleness",
-        "text": "You can move through the space of any creature that is a size larger than you, but you can’t stop in the same space."
+        "text": "You can move through the space of any creature that is a size larger than you, but you can’t stop in the same space.",
+        "moveThroughCreatures": {
+          "sizesLarger": 1,
+          "canStop": false
+        }
       },
       {
         "name": "Luck",
-        "text": "When you roll a 1 on the d20 of a D20 Test, you can reroll the die, and you must use the new roll."
+        "text": "When you roll a 1 on the d20 of a D20 Test, you can reroll the die, and you must use the new roll.",
+        "rerollD20On": 1
       },
       {
         "name": "Naturally Stealthy",
-        "text": "You can take the Hide action even when you are obscured only by a creature that is at least one size larger than you."
+        "text": "You can take the Hide action even when you are obscured only by a creature that is at least one size larger than you.",
+        "hideBehindCreatures": {
+          "minSizesLarger": 1
+        }
       }
     ]
   },
@@ -576,7 +587,7 @@
     "id": "human",
     "name": "Human",
     "page": 86,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Medium",
@@ -616,7 +627,7 @@
     "id": "orc",
     "name": "Orc",
     "page": 86,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Medium",
@@ -654,7 +665,7 @@
     "id": "tiefling",
     "name": "Tiefling",
     "page": 86,
-    "creatureType": "Humanoid",
+    "creatureType": "humanoid",
     "sizes": [
       {
         "size": "Medium",

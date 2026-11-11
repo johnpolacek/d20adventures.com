@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { abilityIds, damageTypeIds } from "../../src/schema/common"
 import { dataPath, readData, toId } from "../lib/data"
-import { missingSentences, pages, pageText, squash } from "../lib/official"
+import { inOfficial, missingSentences, pageOf, pages, pagesOf, pageText, squash } from "../lib/official"
 import type { Report } from "../lib/report"
 import { readBase, readOpen5e } from "../lib/sources"
 
@@ -160,6 +160,18 @@ function derive(text: string, spellsOnItem: boolean): Record<string, unknown> {
     set("freeCasting", { minSlotLevel: Number(free[1]), maxSlotLevel: Number(free[2]) })
     set("dice", free[3])
   }
+  if (/roll Initiative, you can add your Proficiency Bonus to the roll/.test(t)) set("initiativeBonus", "proficiency-bonus")
+  if (/swap your Initiative with the Initiative of one willing ally.*can’t make this swap if you or the ally has the Incapacitated condition/.test(t))
+    set("initiativeSwap", { allies: 1, blockedByCondition: "incapacitated" })
+  if (/Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either roll/.test(t)) set("damageDiceRolledTwice", { perTurn: 1 })
+  const extra = t.match(/extra attack as a result of using a weapon that has the (\w+) property, you can add your ability modifier to the damage of that attack/)
+  if (extra) set("addAbilityModifierToExtraAttack", { weaponProperty: extra[1].toLowerCase() })
+  set("rerollD20On", num(/When you roll a (\d+) on the d20 of a D20 Test, you can reroll the die, and you must use the new roll/))
+  if (/move through the space of any creature that is a size larger than you, but you can’t stop in the same space/.test(t)) set("moveThroughCreatures", { sizesLarger: 1, canStop: false })
+  if (/Hide action even when you are obscured only by a creature that is at least one size larger than you/.test(t)) set("hideBehindCreatures", { minSizesLarger: 1 })
+  if (/Advantage on any ability check you make to end the Grappled condition/.test(t)) set("grappledEscapeAdvantage", true)
+  if (/count as one size larger when determining your carrying capacity/.test(t)) set("carryingCapacitySizeBonus", 1)
+  if (/magic can’t put you to sleep/.test(t)) set("sleepImmunity", true)
   set("dice", t.match(/you can roll (\d+d\d+) and apply the total rolled/)?.[1] ?? out.dice)
   return out
 }
@@ -203,6 +215,16 @@ const derivedKeys = [
   "damageDieMinimum",
   "freeCasting",
   "dice",
+  "initiativeBonus",
+  "initiativeSwap",
+  "damageDiceRolledTwice",
+  "addAbilityModifierToExtraAttack",
+  "rerollD20On",
+  "moveThroughCreatures",
+  "hideBehindCreatures",
+  "grappledEscapeAdvantage",
+  "carryingCapacitySizeBonus",
+  "sleepImmunity",
 ]
 
 /** Compare the derived fields of one item with its typed fields, both ways. Returns how many fields were compared. */
@@ -232,6 +254,81 @@ export default function verify(report: Report) {
   verifySpecies(report)
   verifyBackgrounds(report)
   verifyFeats(report)
+  verifyRules(report)
+}
+
+// Rules ---------------------------------------------------------------------------------------------------
+
+function verifyRules(report: Report) {
+  const rules = readData("origin-rules")
+  const failures: string[] = []
+  const proseFailures: string[] = []
+  const pageFailures: string[] = []
+  const typedFailures: string[] = []
+  let typed = 0
+  const words: Record<string, number> = { one: 1, two: 2, three: 3 }
+  const sentences = [
+    "A background lists three of your character’s ability scores",
+    "A background gives your character a specified Origin feat",
+    "A background gives your character proficiency in two specified skills",
+    "Each background gives a character proficiency with one tool",
+    "Each background offers a choice between a package of equipment and 50 GP",
+    "Every species in “Character Origins” is Humanoid",
+    "Members of most species live for about 80 years",
+    "If you’re instructed to choose a feat from a specific category",
+    "To take a feat, you must meet any prerequisite in its description",
+    "A feat can be taken only once unless its description states otherwise",
+  ]
+  // Every official rule sentence that carries a number or limit is in a rule, and every rule starts with one of them.
+  for (const sentence of sentences) if (!rules.some((rule) => rule.text.startsWith(sentence))) failures.push(`no rule starts with the official sentence "${sentence}"`)
+  for (const rule of rules) if (!sentences.some((sentence) => rule.text.startsWith(sentence))) failures.push(`rule ${rule.id} does not start with an official rule sentence`)
+  for (const rule of rules) {
+    for (const sentence of missingSentences(rule.text)) proseFailures.push(`${rule.id}: not in the official text: ${sentence}`)
+    if (!inOfficial(rule.text)) proseFailures.push(`${rule.id}: the whole text is not one passage of the official text`)
+    if (!pagesOf(rule.text).includes(rule.page) || pageOf(rule.text) !== rule.page) pageFailures.push(`${rule.id}: page ${rule.page}, the text begins on ${pageOf(rule.text)}`)
+    if (rule.id !== toId(rule.name)) failures.push(`${rule.id}: id is not toId(name)`)
+
+    // Typed numbers, read from the rule text with patterns of their own.
+    const t = flat(rule.text)
+    const expected: Record<string, unknown> = {}
+    const score = t.match(
+      /lists (\w+) of your character’s ability scores\. Increase one by (\d+) and another one by (\d+), or increase all (\w+) by (\d+)\. None of these increases can raise a score above (\d+)/
+    )
+    if (score) expected.abilityScoreIncrease = { listed: words[score[1]], options: [[Number(score[2]), Number(score[3])], Array(words[score[4]]).fill(Number(score[5]))], maximum: Number(score[6]) }
+    const grant = t.match(/gives your character a specified Origin feat|proficiency in (\w+) specified skills|proficiency with (\w+) tool/)
+    if (grant?.[0].includes("Origin feat")) expected.grants = { kind: "feat", count: 1, featCategory: "origin" }
+    else if (grant?.[1]) expected.grants = { kind: "skill-proficiency", count: words[grant[1]] }
+    else if (grant?.[2]) expected.grants = { kind: "tool-proficiency", count: words[grant[2]] }
+    const gold = t.match(/choice between a package of equipment and (\d+) GP/)
+    if (gold) expected.goldInsteadOfEquipment = Number(gold[1])
+    const type = t.match(/Every species in “Character Origins” is (\w+);/)
+    if (type) expected.creatureType = type[1].toLowerCase()
+    const life = t.match(/live for about (\d+) years/)
+    if (life) expected.typicalLifeSpanYears = Number(life[1])
+    const levels = t.match(/you must have at least (\d+) level in that class/)
+    if (levels) expected.minimumClassLevels = Number(levels[1])
+    if (/can be taken only once unless/.test(t)) expected.defaultTimesTaken = 1
+    if (/no category is specified, you can choose from any category/.test(t)) expected.anyCategoryWhenUnspecified = true
+    const { id: _id, name: _name, page: _page, text: _text, ...actual } = rule
+    typed += Math.max(Object.keys(expected).length, Object.keys(actual).length)
+    if (!same(actual, expected)) typedFailures.push(`${rule.id}: typed fields ${show(actual)}, the text gives ${show(expected)}`)
+  }
+  report.check("origin-rules", `rules match the official sentences (${sentences.length} official)`, sentences.length + rules.length, failures)
+  report.check("origin-rules", "rule text is the official wording", rules.length, proseFailures)
+  report.check("origin-rules", "page where the rule begins", rules.length, pageFailures)
+  report.check("origin-rules", "typed numbers and limits match the rule text", typed, typedFailures)
+
+  // The rules agree with the data they describe: three scores, two skills, one tool, 50 GP, one Origin feat.
+  const backgrounds = readData("backgrounds")
+  const ruleFailures: string[] = []
+  const rule = (id: string) => rules.find((r) => r.id === id)
+  for (const b of backgrounds) {
+    if (b.abilityScores.length !== rule("background-ability-scores")?.abilityScoreIncrease?.listed) ruleFailures.push(`${b.name}: ability score count`)
+    if (b.skills.length !== rule("background-skill-proficiencies")?.grants?.count) ruleFailures.push(`${b.name}: skill count`)
+    if (b.equipment.b.gp !== rule("background-equipment")?.goldInsteadOfEquipment) ruleFailures.push(`${b.name}: gold instead of equipment`)
+  }
+  for (const e of readData("species")) if (e.creatureType !== rule("species-creature-type")?.creatureType) ruleFailures.push(`${e.name}: creature type`)
+  report.check("origin-rules", "background and species data obey the rules", backgrounds.length * 3 + 9, ruleFailures)
 }
 
 // Species -------------------------------------------------------------------------------------------------
@@ -292,7 +389,7 @@ function verifySpecies(report: Report) {
     const sizes = [...sizeText.matchAll(/(Tiny|Small|Medium|Large|Huge|Gargantuan) \((about [^)]+)\)/g)].map((match) => ({ size: match[1], height: match[2] }))
     const speed = Number(header.match(/Speed: (\d+) feet/)?.[1])
     headerTotal += 3
-    if (type !== entry.creatureType) headerFailures.push(`${entry.name}: creature type ${entry.creatureType}, official ${type}`)
+    if (type?.toLowerCase() !== entry.creatureType) headerFailures.push(`${entry.name}: creature type ${entry.creatureType}, official ${type}`)
     if (!same(sizes, entry.sizes) || sizes.length === 0) headerFailures.push(`${entry.name}: sizes ${show(entry.sizes)}, official ${show(sizes)}`)
     if (speed !== entry.speed) headerFailures.push(`${entry.name}: speed ${entry.speed}, official ${speed}`)
 
@@ -560,7 +657,7 @@ function verifySpecies(report: Report) {
       if (row && !squash(trait.text).startsWith(squash(row.fields.desc).slice(0, 50))) openFailures.push(`${entry.name} ${trait.name}: Open5e text begins differently`)
     }
   }
-  report.check("species", "Open5e agrees on names, sizes, speed, trait names and trait text", openTotal, openFailures)
+  report.crossCheck("species", "Open5e agrees on names, sizes, speed, trait names and trait text", openTotal, openFailures, [])
 
   const base = readBase("Species")
   const baseFailures: string[] = []
@@ -571,9 +668,9 @@ function verifySpecies(report: Report) {
       continue
     }
     if (row.speed !== entry.speed) baseFailures.push(`${entry.name}: base speed ${row.speed}, data ${entry.speed}`)
-    if (row.type !== entry.creatureType) baseFailures.push(`${entry.name}: base type ${row.type}`)
+    if (row.type.toLowerCase() !== entry.creatureType) baseFailures.push(`${entry.name}: base type ${row.type}`)
   }
-  report.check("species", "base source agrees on speed and creature type", species.length * 2, baseFailures)
+  report.crossCheck("species", "base source agrees on speed and creature type", species.length * 2, baseFailures, [])
 }
 
 function collectSpellIds(species: any[]): string[] {
@@ -682,6 +779,24 @@ function verifyBackgrounds(report: Report) {
       needed.length,
       needed.filter((id) => !ids.has(id)).map((id) => `${id} is not in equipment.json`)
     )
+
+    // Ammunition counts single pieces. The Ammunition table sells them in bundles, so the count must be whole bundles.
+    const unitFailures: string[] = []
+    let units = 0
+    const tableAmount = Number(pages.join("\n").match(/\nArrows\n(\d+)\nQuiver\n/)?.[1])
+    for (const b of backgrounds) {
+      for (const item of b.equipment.a.items) {
+        const entry = equipment.find((e) => e.id === item.id)
+        if (!entry) continue
+        units++
+        if (entry.kind === "ammunition") {
+          if (item.unit !== "single") unitFailures.push(`${b.name}: ${item.id} is ammunition and needs unit "single"`)
+          if (item.id === "arrows" && entry.amount !== tableAmount) unitFailures.push(`${b.name}: equipment Arrows amount ${entry.amount}, the official table gives ${tableAmount}`)
+          if (item.quantity % entry.amount !== 0) unitFailures.push(`${b.name}: ${item.quantity} ${item.id} is not whole bundles of ${entry.amount}`)
+        } else if (item.unit) unitFailures.push(`${b.name}: ${item.id} is not ammunition but has a unit`)
+      }
+    }
+    report.check("backgrounds", "ammunition counts single pieces and equals whole bundles of the equipment entry", units, unitFailures)
   }
   if (existsSync(dataPath("skills"))) {
     const known = new Set(readData("skills").map((skill) => skill.id))
@@ -718,7 +833,7 @@ function verifyBackgrounds(report: Report) {
     if (squash(get("tool_proficiency")) !== squash(tool.replace(/ \(see “Equipment”\)$/, ""))) openFailures.push(`${entry.name}: Open5e tool "${get("tool_proficiency")}"`)
     if (squash(get("equipment")) !== squash(`Choose A or B: (A) ${equipA}; or (B) ${gpB} GP`)) openFailures.push(`${entry.name}: Open5e equipment "${get("equipment")}"`)
   }
-  report.check("backgrounds", "Open5e agrees on every background field", openTotal, openFailures)
+  report.crossCheck("backgrounds", "Open5e agrees on every background field", openTotal, openFailures, [])
 
   const base = readBase("Backgrounds")
   const baseFailures: string[] = []
@@ -741,7 +856,7 @@ function verifyBackgrounds(report: Report) {
     const skills = row.proficiencies.filter((p: any) => p.index.startsWith("skill-")).map((p: any) => p.index.slice(6))
     if (!same(skills, entry.skills)) baseFailures.push(`${entry.name}: base skills ${show(skills)}`)
   }
-  report.check("backgrounds", "base source agrees on ability scores, feat and skills", baseTotal, baseFailures)
+  report.crossCheck("backgrounds", "base source agrees on ability scores, feat and skills", baseTotal, baseFailures, [])
 }
 
 // Feats ---------------------------------------------------------------------------------------------------
@@ -964,5 +1079,5 @@ function verifyFeats(report: Report) {
     else if ((row.prerequisites?.minimum_level ?? undefined) !== entry.prerequisite?.level)
       baseFailures.push(`${entry.name}: base minimum level ${row.prerequisites?.minimum_level}, data ${entry.prerequisite?.level}`)
   }
-  report.check("feats", "base source agrees on category and minimum level", feats.length, baseFailures)
+  report.crossCheck("feats", "base source agrees on category and minimum level", feats.length, baseFailures, [])
 }

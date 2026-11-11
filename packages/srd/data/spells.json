@@ -136,7 +136,11 @@
       "concentration": false
     },
     "description": "Choose up to three creatures within range. Each target’s Hit Point maximum and current Hit Points increase by 5 for the duration.",
-    "higherLevel": "Each target’s Hit Points increase by 5 for each spell slot level above 2."
+    "higherLevel": "Each target’s Hit Points increase by 5 for each spell slot level above 2.",
+    "hitPointMaximum": {
+      "amount": 5,
+      "perSlotAmount": 5
+    }
   },
   {
     "id": "alarm",
@@ -246,7 +250,8 @@
     ],
     "conditions": [
       "charmed"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "animal-messenger",
@@ -1003,7 +1008,16 @@
         "ability": "cha",
         "onSuccess": "none"
       }
-    ]
+    ],
+    "extraTargetsPerSlot": 1,
+    "rollModifier": {
+      "dice": "1d4",
+      "subtract": true,
+      "rolls": [
+        "attack-roll",
+        "saving-throw"
+      ]
+    }
   },
   {
     "id": "banishment",
@@ -1051,7 +1065,8 @@
     ],
     "conditions": [
       "incapacitated"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "barkskin",
@@ -1084,7 +1099,10 @@
       "unit": "hour",
       "concentration": false
     },
-    "description": "You touch a willing creature. Until the spell ends, the target’s skin assumes a bark-like appearance, and the target has an Armor Class of 17 if its AC is lower than that."
+    "description": "You touch a willing creature. Until the spell ends, the target’s skin assumes a bark-like appearance, and the target has an Armor Class of 17 if its AC is lower than that.",
+    "ac": {
+      "minimum": 17
+    }
   },
   {
     "id": "beacon-of-hope",
@@ -1345,7 +1363,15 @@
       "concentration": true
     },
     "description": "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save.",
-    "higherLevel": "You can target one additional creature for each spell slot level above 1."
+    "higherLevel": "You can target one additional creature for each spell slot level above 1.",
+    "extraTargetsPerSlot": 1,
+    "rollModifier": {
+      "dice": "1d4",
+      "rolls": [
+        "attack-roll",
+        "saving-throw"
+      ]
+    }
   },
   {
     "id": "blight",
@@ -1434,7 +1460,8 @@
     "conditions": [
       "blinded",
       "deafened"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "blink",
@@ -1674,7 +1701,8 @@
           "lightning"
         ]
       }
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "charm-monster",
@@ -1717,7 +1745,8 @@
     ],
     "conditions": [
       "charmed"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "charm-person",
@@ -1760,7 +1789,8 @@
     ],
     "conditions": [
       "charmed"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "chill-touch",
@@ -2136,7 +2166,8 @@
     ],
     "conditions": [
       "prone"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "commune",
@@ -2735,7 +2766,27 @@
       "unit": "minute",
       "concentration": false
     },
-    "description": "You mentally contact a demigod, the spirit of a long-dead sage, or some other knowledgeable entity from another plane. Contacting this otherworldly intelligence can break your mind. When you cast this spell, make a DC 15 Intelligence saving throw. On a successful save, you can ask the entity up to five questions. You must ask your questions before the spell ends. The GM answers each question with one word, such as “yes,” “no,” “maybe,” “never,” “irrelevant,” or “unclear” (if the entity doesn’t know the answer to the question). If a one-word answer would be misleading, the GM might instead offer a short phrase as an answer.\nOn a failed save, you take 6d6 Psychic damage and have the Incapacitated condition until you finish a Long Rest. A Greater Restoration spell cast on you ends this effect."
+    "description": "You mentally contact a demigod, the spirit of a long-dead sage, or some other knowledgeable entity from another plane. Contacting this otherworldly intelligence can break your mind. When you cast this spell, make a DC 15 Intelligence saving throw. On a successful save, you can ask the entity up to five questions. You must ask your questions before the spell ends. The GM answers each question with one word, such as “yes,” “no,” “maybe,” “never,” “irrelevant,” or “unclear” (if the entity doesn’t know the answer to the question). If a one-word answer would be misleading, the GM might instead offer a short phrase as an answer.\nOn a failed save, you take 6d6 Psychic damage and have the Incapacitated condition until you finish a Long Rest. A Greater Restoration spell cast on you ends this effect.",
+    "saves": [
+      {
+        "ability": "int",
+        "onSuccess": "none",
+        "dc": 15,
+        "target": "caster"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "6d6",
+        "types": [
+          "psychic"
+        ],
+        "target": "caster"
+      }
+    ],
+    "casterConditions": [
+      "incapacitated"
+    ]
   },
   {
     "id": "contagion",
@@ -3722,7 +3773,8 @@
         "dice": "4d6",
         "types": [
           "force"
-        ]
+        ],
+        "target": "caster-and-companions"
       }
     ]
   },
@@ -4455,7 +4507,15 @@
           "force"
         ]
       }
-    ]
+    ],
+    "projectiles": {
+      "count": 1,
+      "cantrip": {
+        "5": 2,
+        "11": 3,
+        "17": 4
+      }
+    }
   },
   {
     "id": "elementalism",
@@ -4527,7 +4587,8 @@
       "concentration": true
     },
     "description": "You touch a creature and choose Strength, Dexterity, Intelligence, Wisdom, or Charisma. For the duration, the target has Advantage on ability checks using the chosen ability.",
-    "higherLevel": "You can target one additional creature for each spell slot level above 2. You can choose a different ability for each target."
+    "higherLevel": "You can target one additional creature for each spell slot level above 2. You can choose a different ability for each target.",
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "enlarge-reduce",
@@ -5745,7 +5806,8 @@
       "concentration": true
     },
     "description": "You touch a willing creature. For the duration, the target gains a Fly Speed of 60 feet and can hover. When the spell ends, the target falls if it is still aloft unless it can stop the fall.",
-    "higherLevel": "You can target one additional creature for each spell slot level above 3."
+    "higherLevel": "You can target one additional creature for each spell slot level above 3.",
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "fog-cloud",
@@ -5951,7 +6013,8 @@
       "concentration": false
     },
     "description": "You touch a willing creature. For the duration, the target’s movement is unaffected by Difficult Terrain, and spells and other magical effects can neither reduce the target’s Speed nor cause the target to have the Paralyzed or Restrained conditions. The target also has a Swim Speed equal to its Speed.\nIn addition, the target can spend 5 feet of movement to automatically escape from nonmagical restraints, such as manacles or a creature imposing the Grappled condition on it.",
-    "higherLevel": "You can target one additional creature for each spell slot level above 4."
+    "higherLevel": "You can target one additional creature for each spell slot level above 4.",
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "freezing-sphere",
@@ -6042,7 +6105,8 @@
       "concentration": true
     },
     "description": "A willing creature you touch shape-shifts, along with everything it’s wearing and carrying, into a misty cloud for the duration. The spell ends on the target if it drops to 0 Hit Points or if it takes a Magic action to end the spell on itself.\nWhile in this form, the target’s only method of movement is a Fly Speed of 10 feet, and it can hover. The target can enter and occupy the space of another creature. The target has Resistance to Bludgeoning, Piercing, and Slashing damage; it has Immunity to the Prone condition; and it has Advantage on Strength, Dexterity, and Constitution saving throws. The target can pass through narrow openings, but it treats liquids as though they were solid surfaces.\nThe target can’t talk or manipulate objects, and any objects it was carrying or holding can’t be dropped, used, or otherwise interacted with. Finally, the target can’t attack or cast spells.",
-    "higherLevel": "You can target one additional creature for each spell slot level above 3."
+    "higherLevel": "You can target one additional creature for each spell slot level above 3.",
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "gate",
@@ -6675,7 +6739,13 @@
       "upTo": true,
       "concentration": true
     },
-    "description": "You touch a willing creature and choose a skill. Until the spell ends, the creature adds 1d4 to any ability check using the chosen skill."
+    "description": "You touch a willing creature and choose a skill. Until the spell ends, the creature adds 1d4 to any ability check using the chosen skill.",
+    "rollModifier": {
+      "dice": "1d4",
+      "rolls": [
+        "ability-check"
+      ]
+    }
   },
   {
     "id": "guiding-bolt",
@@ -6922,7 +6992,10 @@
     "description": "Choose a willing creature that you can see within range. Until the spell ends, the target’s Speed is doubled, it gains a +2 bonus to Armor Class, it has Advantage on Dexterity saving throws, and it gains an additional action on each of its turns. That action can be used to take only the Attack (one attack only), Dash, Disengage, Hide, or Utilize action.\nWhen the spell ends, the target is Incapacitated and has a Speed of 0 until the end of its next turn, as a wave of lethargy washes over it.",
     "conditions": [
       "incapacitated"
-    ]
+    ],
+    "ac": {
+      "bonus": 2
+    }
   },
   {
     "id": "heal",
@@ -7124,7 +7197,10 @@
       "kind": "instantaneous",
       "concentration": false
     },
-    "description": "You conjure a feast that appears on a surface in an unoccupied 10-foot Cube next to you. The feast takes 1 hour to consume and disappears at the end of that time, and the beneficial effects don’t set in until this hour is over. Up to twelve creatures can partake of the feast.\nA creature that partakes gains several benefits, which last for 24 hours. The creature has Resistance to Poison damage, and it has Immunity to the Frightened and Poisoned conditions. Its Hit Point maximum also increases by 2d10, and it gains the same number of Hit Points."
+    "description": "You conjure a feast that appears on a surface in an unoccupied 10-foot Cube next to you. The feast takes 1 hour to consume and disappears at the end of that time, and the beneficial effects don’t set in until this hour is over. Up to twelve creatures can partake of the feast.\nA creature that partakes gains several benefits, which last for 24 hours. The creature has Resistance to Poison damage, and it has Immunity to the Frightened and Poisoned conditions. Its Hit Point maximum also increases by 2d10, and it gains the same number of Hit Points.",
+    "hitPointMaximum": {
+      "dice": "2d10"
+    }
   },
   {
     "id": "heroism",
@@ -7159,7 +7235,8 @@
     "healing": {
       "modifier": true,
       "temporary": true
-    }
+    },
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "hex",
@@ -7249,7 +7326,8 @@
     "conditions": [
       "incapacitated",
       "prone"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "hold-monster",
@@ -7296,7 +7374,8 @@
     ],
     "conditions": [
       "paralyzed"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "hold-person",
@@ -7345,7 +7424,8 @@
     ],
     "conditions": [
       "paralyzed"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "holy-aura",
@@ -7956,7 +8036,8 @@
     "higherLevel": "You can target one additional creature for each spell slot level above 2.",
     "conditions": [
       "invisible"
-    ]
+    ],
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "irresistible-dance",
@@ -8032,7 +8113,8 @@
       "concentration": false
     },
     "description": "You touch a willing creature. Once on each of its turns until the spell ends, that creature can jump up to 30 feet by spending 10 feet of movement.",
-    "higherLevel": "You can target one additional creature for each spell slot level above 1."
+    "higherLevel": "You can target one additional creature for each spell slot level above 1.",
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "knock",
@@ -8406,7 +8488,8 @@
       "concentration": false
     },
     "description": "You touch a creature. The target’s Speed increases by 10 feet until the spell ends.",
-    "higherLevel": "You can target one additional creature for each spell slot level above 1."
+    "higherLevel": "You can target one additional creature for each spell slot level above 1.",
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "mage-armor",
@@ -8439,7 +8522,10 @@
       "unit": "hour",
       "concentration": false
     },
-    "description": "You touch a willing creature who isn’t wearing armor. Until the spell ends, the target’s base AC becomes 13 plus its Dexterity modifier. The spell ends early if the target dons armor."
+    "description": "You touch a willing creature who isn’t wearing armor. Until the spell ends, the target’s base AC becomes 13 plus its Dexterity modifier. The spell ends early if the target dons armor.",
+    "ac": {
+      "base": 13
+    }
   },
   {
     "id": "mage-hand",
@@ -8568,6 +8654,11 @@
       {
         "ability": "cha",
         "onSuccess": "none"
+      },
+      {
+        "ability": "cha",
+        "onSuccess": "other",
+        "target": "caster"
       }
     ]
   },
@@ -8606,7 +8697,11 @@
           "force"
         ]
       }
-    ]
+    ],
+    "projectiles": {
+      "count": 3,
+      "perSlot": 1
+    }
   },
   {
     "id": "magic-mouth",
@@ -8967,16 +9062,18 @@
         "dice": "6d6",
         "types": [
           "force"
-        ]
+        ],
+        "target": "caster"
       },
       {
         "amount": 50,
         "types": [
           "force"
-        ]
+        ],
+        "target": "caster"
       }
     ],
-    "conditions": [
+    "casterConditions": [
       "prone"
     ]
   },
@@ -9308,7 +9405,7 @@
       "concentration": true
     },
     "description": "You gain the Invisible condition at the same time that an illusory double of you appears where you are standing. The double lasts for the duration, but the invisibility ends immediately after you make an attack roll, deal damage, or cast a spell.\nAs a Magic action, you can move the illusory double up to twice your Speed and make it gesture, speak, and behave in whatever way you choose. It is intangible and invulnerable.\nYou can see through its eyes and hear through its ears as if you were located where it is.",
-    "conditions": [
+    "casterConditions": [
       "invisible"
     ]
   },
@@ -10200,7 +10297,14 @@
             "8",
             "Special. The target is struck by two rays. Roll twice, rerolling any 8."
           ]
-        ]
+        ],
+        "damageTypes": {
+          "1": "fire",
+          "2": "acid",
+          "3": "lightning",
+          "4": "poison",
+          "5": "cold"
+        }
       }
     ],
     "saves": [
@@ -10215,6 +10319,19 @@
       {
         "ability": "wis",
         "onSuccess": "other"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "12d6",
+        "types": [
+          "fire",
+          "acid",
+          "lightning",
+          "poison",
+          "cold"
+        ],
+        "table": "Prismatic Rays"
       }
     ],
     "conditions": [
@@ -10288,7 +10405,14 @@
             "7",
             "Violet. Failed Save: The target has the Blinded condition and makes a Wisdom saving throw at the start of your next turn. On a successful save, the condition ends. On a failed save, the condition ends, and the creature teleports to another plane of existence (GM’s choice). Additional Effects: This layer is destroyed by Dispel Magic."
           ]
-        ]
+        ],
+        "damageTypes": {
+          "1": "fire",
+          "2": "acid",
+          "3": "lightning",
+          "4": "poison",
+          "5": "cold"
+        }
       }
     ],
     "saves": [
@@ -10307,6 +10431,19 @@
       {
         "ability": "wis",
         "onSuccess": "other"
+      }
+    ],
+    "damage": [
+      {
+        "dice": "12d6",
+        "types": [
+          "fire",
+          "acid",
+          "lightning",
+          "poison",
+          "cold"
+        ],
+        "table": "Prismatic Layers"
       }
     ],
     "conditions": [
@@ -10686,7 +10823,14 @@
         "ability": "con",
         "onSuccess": "other"
       }
-    ]
+    ],
+    "rollModifier": {
+      "dice": "1d8",
+      "subtract": true,
+      "rolls": [
+        "damage-roll"
+      ]
+    }
   },
   {
     "id": "ray-of-frost",
@@ -10995,7 +11139,8 @@
       "upTo": true,
       "concentration": true
     },
-    "description": "You touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder. When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn."
+    "description": "You touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder. When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn.",
+    "damageReduction": "1d4"
   },
   {
     "id": "resurrection",
@@ -11151,7 +11296,7 @@
       "unit": "hour",
       "concentration": false
     },
-    "description": "You touch a rope. One end of it hovers upward until the rope hangs perpendicular to the ground or the rope reaches a ceiling. At the rope’s upper end, an Invisible 3-foot-by-5-foot portal opens to an extra­ dimensional space that lasts until the spell ends. That space can be reached by climbing the rope, which can be pulled into or dropped out of it.\nThe space can hold up to eight Medium or smaller creatures. Attacks, spells, and other effects can’t pass into or out of the space, but creatures inside it can see through the portal. Anything inside the space drops out when the spell ends."
+    "description": "You touch a rope. One end of it hovers upward until the rope hangs perpendicular to the ground or the rope reaches a ceiling. At the rope’s upper end, an Invisible 3-foot-by-5-foot portal opens to an extradimensional space that lasts until the spell ends. That space can be reached by climbing the rope, which can be pulled into or dropped out of it.\nThe space can hold up to eight Medium or smaller creatures. Attacks, spells, and other effects can’t pass into or out of the space, but creatures inside it can see through the portal. Anything inside the space drops out when the spell ends."
   },
   {
     "id": "sacred-flame",
@@ -11275,7 +11420,11 @@
           "fire"
         ]
       }
-    ]
+    ],
+    "projectiles": {
+      "count": 3,
+      "perSlot": 1
+    }
   },
   {
     "id": "scrying",
@@ -11718,7 +11867,10 @@
       "unit": "round",
       "concentration": false
     },
-    "description": "An imperceptible barrier of magical force protects you. Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from Magic Missile."
+    "description": "An imperceptible barrier of magical force protects you. Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from Magic Missile.",
+    "ac": {
+      "bonus": 5
+    }
   },
   {
     "id": "shield-of-faith",
@@ -11753,7 +11905,10 @@
       "upTo": true,
       "concentration": true
     },
-    "description": "A shimmering field surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration."
+    "description": "A shimmering field surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration.",
+    "ac": {
+      "bonus": 2
+    }
   },
   {
     "id": "shillelagh",
@@ -12339,7 +12494,8 @@
       "concentration": true
     },
     "description": "Until the spell ends, one willing creature you touch gains the ability to move up, down, and across vertical surfaces and along ceilings, while leaving its hands free. The target also gains a Climb Speed equal to its Speed.",
-    "higherLevel": "You can target one additional creature for each spell slot level above 2."
+    "higherLevel": "You can target one additional creature for each spell slot level above 2.",
+    "extraTargetsPerSlot": 1
   },
   {
     "id": "spike-growth",
@@ -14194,7 +14350,16 @@
       "unit": "hour",
       "concentration": false
     },
-    "description": "You touch another creature that is willing and create a mystic connection between you and the target until the spell ends. While the target is within 60 feet of you, it gains a +1 bonus to AC and saving throws, and it has Resistance to all damage. Also, each time it takes damage, you take the same amount of damage.\nThe spell ends if you drop to 0 Hit Points or if you and the target become separated by more than 60 feet. It also ends if the spell is cast again on either of the connected creatures."
+    "description": "You touch another creature that is willing and create a mystic connection between you and the target until the spell ends. While the target is within 60 feet of you, it gains a +1 bonus to AC and saving throws, and it has Resistance to all damage. Also, each time it takes damage, you take the same amount of damage.\nThe spell ends if you drop to 0 Hit Points or if you and the target become separated by more than 60 feet. It also ends if the spell is cast again on either of the connected creatures.",
+    "ac": {
+      "bonus": 1
+    },
+    "rollModifier": {
+      "amount": 1,
+      "rolls": [
+        "saving-throw"
+      ]
+    }
   },
   {
     "id": "water-breathing",

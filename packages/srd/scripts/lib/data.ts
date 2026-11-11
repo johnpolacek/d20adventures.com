@@ -24,7 +24,14 @@ export function writeData<T extends { id: string }>(name: string, schema: z.ZodT
     seen.add(entry.id)
   }
   parsed.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
-  writeFileSync(dataPath(name), `${JSON.stringify(parsed, null, 2)}\n`)
+  const text = `${JSON.stringify(parsed, null, 2)}\n`
+  // `pnpm fresh` rebuilds without writing, to prove the committed data is what the builders produce.
+  if (process.env.SRD_FRESH === "1") {
+    if (!existsSync(dataPath(name)) || readFileSync(dataPath(name), "utf8") !== text) throw new Error(`data/${name}.json is not what its builder produces. Run: pnpm --filter @d20/srd build`)
+    console.log(`  data/${name}.json is fresh (${parsed.length})`)
+    return parsed
+  }
+  writeFileSync(dataPath(name), text)
   console.log(`  wrote data/${name}.json (${parsed.length})`)
   return parsed
 }

@@ -524,18 +524,34 @@ export default function verify(report: Report) {
         spellFailures.push(`${item.name}: ${spell.id} level ${spell.level} is not stated`)
     }
     // Every spell the text names after "cast" is listed, unless it is known not to be cast from the item.
-    const sentences = text.split(/(?<=[.!?])\s+/).filter((sentence) => /\bcast\b/.test(sentence))
+    const sentences = text.split(/(?<=[.!?])\s+/).filter((sentence) => /\bcast\b|determine the spell/.test(sentence))
     for (const [id, name] of officialSpellIds) {
       if (listed.has(id)) continue
       const pattern = new RegExp(`(?<![A-Za-z’])${name.replace(/[/()]/g, "\\$&")}(?![A-Za-z’])`)
-      const mention = sentences.find((sentence) => pattern.test(sentence.slice(sentence.search(/\bcast\b/))))
+      const mention = sentences.find((sentence) => pattern.test(sentence.slice(sentence.search(/\bcast\b|determine the spell/))))
       const confers = new RegExp(`effect of the ${name.replace(/[/()]/g, "\\$&")} spell|as a level \\d ${name.replace(/[/()]/g, "\\$&")} \\(save DC`).test(text)
       if (!mention && !confers) continue
       const key = `${item.id}:${id}`
-      const random = ((item.tables ?? []) as any[]).some((table) => table.dice && table.rows.some((row: any) => row.cells.some((cell: string) => pattern.test(cell) && /\bcast\b/.test(cell))))
+      // A spell cast only on a result of a random table is listed on that table's row.
+      const rows = ((item.tables ?? []) as any[])
+        .flatMap((table) => (table.dice ? table.rows : []))
+        .filter((row: any) => row.cells.some((cell: string) => pattern.test(cell) && /\bcast\b|determine the spell/.test(cell)))
       if (notCast[key]) spellWaivers.push(`${item.name}: ${name} is named near "cast" but ${notCast[key]}`)
-      else if (random) spellWaivers.push(`${item.name}: ${name} is cast only as a result on a random table, which the table holds`)
+      else if (rows.length && rows.every((row: any) => (row.spells ?? []).includes(id))) continue
       else spellFailures.push(`${item.name}: "${name}" is cast or given by "${(mention ?? text).slice(0, 70)}", not listed`)
+    }
+    // Row spells are spells of the official text, named in the row, and in spells.json.
+    for (const table of (item.tables ?? []) as any[]) {
+      for (const row of table.rows) {
+        for (const id of (row.spells ?? []) as string[]) {
+          spellTotal++
+          const name = officialSpellIds.get(id)
+          if (!name) spellFailures.push(`${item.name}: row spell ${id} is not a spell of the official text`)
+          else if (!row.cells.some((cell: string) => new RegExp(`(?<![A-Za-z’])${name.replace(/[/()]/g, "\\$&")}(?![A-Za-z’])`).test(cell)))
+            spellFailures.push(`${item.name}: row spell ${name} is not named in its row`)
+          if (spellsData && !spellsData.has(id)) spellFailures.push(`${item.name}: row spell ${id} is not in spells.json`)
+        }
+      }
     }
     // The spell cell of the Necklace of Prayer Beads table is a spell of the official text.
     for (const table of (item.tables ?? []) as any[]) {
@@ -559,6 +575,33 @@ export default function verify(report: Report) {
   }
   report.check("magic-items", "spells: names, levels, charge costs, and every spell cast from the item", spellTotal || 0, spellFailures, spellWaivers)
 
+  /* ---------- activation and reuse ---------- */
+
+  const actionFailures: string[] = []
+  const reuseFailures: string[] = []
+  const kinds: [string, RegExp][] = [
+    ["magic-action", /\bMagic action\b/],
+    ["bonus-action", /\bBonus Action\b/],
+    ["utilize-action", /\bUtilize action\b/],
+    ["reaction", /\bReaction\b/],
+  ]
+  for (const { item, off } of pairs) {
+    const text = flat(off)
+    const wanted = kinds.filter(([, pattern]) => pattern.test(text)).map(([kind]) => kind)
+    if (!sameSet(wanted, item.activation ?? [])) actionFailures.push(`${item.name}: activation ${JSON.stringify(item.activation)}, the text names ${wanted.join(", ") || "none"}`)
+    const reuse = new Set<string>()
+    for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+      if (!/can’t|cannot|ceases to function/.test(sentence)) continue
+      if (/until the next dawn/.test(sentence)) reuse.add("dawn")
+      if (/until you finish a Short or Long Rest/.test(sentence)) reuse.add("short-rest").add("long-rest")
+      else if (/until you finish a Long Rest/.test(sentence)) reuse.add("long-rest")
+      else if (/until you finish a Short Rest/.test(sentence)) reuse.add("short-rest")
+    }
+    if (!sameSet([...reuse], item.reusableAfter ?? [])) reuseFailures.push(`${item.name}: reusableAfter ${JSON.stringify(item.reusableAfter)}, the text says ${[...reuse].join(", ") || "none"}`)
+  }
+  report.check("magic-items", "activation: the action kinds the text names", pairs.length, actionFailures)
+  report.check("magic-items", 'reusableAfter: dawn and rest moments after "can’t be used again until"', pairs.length, reuseFailures)
+
   /* ---------- references ---------- */
 
   const refFailures: string[] = []
@@ -576,7 +619,25 @@ export default function verify(report: Report) {
       if (!classList.map((name) => name.toLowerCase()).includes(id)) refFailures.push(`${item.name}: ${id} is not a class`)
     }
   }
-  report.check("magic-items", "references: base items, classes and spells resolve", refTotal + spellTotal, refFailures)
+  // The Equipment chapter prices Potion of Healing and the Spell Scrolls of cantrip and level 1. Their numbers match our variants.
+  if (existsSync(dataPath("equipment"))) {
+    const gear = new Map(readData("equipment").map((entry: any) => [entry.id, entry]))
+    const healing = variantsOf("potions-of-healing")[0]
+    const potion = gear.get("potion-of-healing")
+    refTotal++
+    if (!potion || potion.healing?.dice !== healing?.healing || healing?.name !== "Potion of Healing") refFailures.push(`potions-of-healing variant 0 does not match equipment potion-of-healing`)
+    for (const [index, id] of [
+      [0, "spell-scroll-cantrip"],
+      [1, "spell-scroll-level-1"],
+    ] as const) {
+      const variant = variantsOf("spell-scroll")[index]
+      const scroll = gear.get(id)?.spellScroll
+      refTotal++
+      if (!scroll || scroll.spellLevel !== variant?.spellLevel || scroll.saveDc !== variant?.saveDc || scroll.attackBonus !== variant?.attackBonus)
+        refFailures.push(`spell-scroll variant ${index} does not match equipment ${id}`)
+    }
+  }
+  report.check("magic-items", "references: base items, classes and spells resolve, and Potion of Healing and Spell Scroll match equipment", refTotal + spellTotal, refFailures)
 
   /* ---------- the other two sources ---------- */
 

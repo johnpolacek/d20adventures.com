@@ -18,15 +18,7 @@ const plural = (count: number, unit: string) => `${count} ${unit}${count === 1 ?
  * the text is in the data skips these, and says why every run.
  */
 const irregularDamage: Record<string, string> = {
-  "prismatic-spray": "the damage type depends on the ray rolled in the Prismatic Rays table",
-  "prismatic-wall": "the damage type depends on the layer in the Prismatic Layers table",
-  wish: "the stress damage is 1d10 per level of each later spell, on the caster",
-  "contact-other-plane": "the damage falls on the caster after the caster’s own DC 15 save",
-}
-
-/** Saving throws the text names that are not a save the spell forces on a creature. */
-const notTheSpellsSave: Record<string, { ability: string; reason: string }> = {
-  "contact-other-plane": { ability: "Intelligence", reason: "the DC 15 Intelligence save is the caster’s own" },
+  wish: "the stress damage on the caster is 1d10 per level of each spell cast later, so no fixed roll holds it",
 }
 
 /**
@@ -39,12 +31,8 @@ const columnBreaks: Record<string, string> = {
   "find-the-path": "face a choice of paths",
 }
 
-/** The official text contradicts itself here. The data follows the spell's own header. */
-const listConflicts: Record<string, string> = {
-  "flaming-sphere": "its header reads “Level 2 Conjuration”, the Druid, Sorcerer and Wizard spell lists read Evocation",
-  "phantasmal-force": "its header names Bard, Sorcerer and Wizard, and no class spell list prints it",
-  "mind-spike": "its header names Sorcerer, Warlock and Wizard, and the Sorcerer spell list does not print it",
-}
+/** Spells where the official text contradicts itself between the spell's header and the class spell lists. The data follows the header. */
+const listConflicts = new Set(["flaming-sphere", "phantasmal-force", "mind-spike"])
 
 type Header = { name: string; page: number; levelLine: string; castingTime: string; range: string; components: string; duration: string; body: Line[] }
 type Line = { text: string; page: number }
@@ -465,18 +453,49 @@ export default function verify(report: Report) {
         if (irregularDamage[spell.id]) waived.push(`${spell.id}: ${match[0]}: ${irregularDamage[spell.id]}`)
         else failures.push(`${spell.id}: the text’s “${match[0]}” is not in the data`)
       }
+      // Damage on the caster: the data marks it exactly where the sentence that rolls it has the caster take it.
+      for (const damage of spell.damage ?? []) {
+        const roll = damage.dice ?? `${damage.amount} ${capital(damage.types[0])}`
+        const sentence = own.split(/(?<=[.!?])\s+/).find((line) => line.includes(roll)) ?? ""
+        const target = /you and any creature traveling with you each take/.test(sentence) ? "caster-and-companions" : /\byou take\b|damage to you\b/.test(sentence) ? "caster" : undefined
+        if (damage.target !== target) failures.push(`${spell.id}: ${roll} falls on ${target ?? "the targets"} in its text, the data reads ${damage.target ?? "the targets"}`)
+      }
+      // A damage type a table row decides: the data maps exactly the rows that roll that damage, and names the table.
+      for (const damage of (spell.damage ?? []).filter((damage) => damage.table)) {
+        const table = spell.tables?.find((table) => table.title === damage.table)
+        if (!table?.damageTypes) {
+          failures.push(`${spell.id}: damage names table ${damage.table}, which has no damage types`)
+          continue
+        }
+        if ([...new Set(Object.values(table.damageTypes))].sort().join() !== [...damage.types].sort().join()) failures.push(`${spell.id}: damage types differ from table ${damage.table}`)
+      }
+      for (const table of spell.tables ?? []) {
+        for (const row of table.rows) {
+          total++
+          const rolled = new RegExp(`(\\d+d\\d+) (${typeNames.join("|")}) damage`).exec(row.at(-1) ?? "")
+          const mapped = table.damageTypes?.[row[0]]
+          if (!rolled) {
+            if (mapped) failures.push(`${spell.id}: table row ${row[0]} maps ${mapped} but rolls no damage`)
+            continue
+          }
+          if (mapped !== rolled[2].toLowerCase()) failures.push(`${spell.id}: table row ${row[0]} rolls ${rolled[0]}, the data maps ${mapped}`)
+          if (!(spell.damage ?? []).some((damage) => damage.table === table.title && damage.dice === rolled[1])) failures.push(`${spell.id}: no damage roll of ${rolled[1]} names table ${table.title}`)
+        }
+      }
     }
     report.check(category, "damage dice and types are the spell’s own text", total, failures, [...new Set(waived)])
   }
   {
     const failures: string[] = []
-    const waived: string[] = []
     let total = 0
     for (const spell of spells) {
       const text = bodyOf(spell)
       for (const save of spell.saves ?? []) {
         total++
         if (!text.includes(`${abilityNames[save.ability]} saving throw`)) failures.push(`${spell.id}: ${abilityNames[save.ability]} saving throw is not in its text`)
+        if (save.dc && !text.includes(`DC ${save.dc} ${abilityNames[save.ability]} saving throw`)) failures.push(`${spell.id}: DC ${save.dc} is not in its text`)
+        if (save.target === "caster" && !new RegExp(`(?:you make a|make a DC \\d+) ${abilityNames[save.ability]} saving throw`).test(text))
+          failures.push(`${spell.id}: the caster’s ${abilityNames[save.ability]} save is not in its text`)
         if (save.onSuccess === "half" && !/half as much damage|half the initial damage|half damage/i.test(text)) failures.push(`${spell.id}: a save halves damage its text does not halve`)
       }
       // Every save the text has a creature make is in the data, unless it is a benefit or a penalty to saves.
@@ -486,9 +505,19 @@ export default function verify(report: Report) {
       for (const name of new Set(named)) {
         total++
         const id = Object.keys(abilityNames).find((key) => abilityNames[key] === name)
-        if (spell.saves?.some((save) => save.ability === id)) continue
-        if (notTheSpellsSave[spell.id]?.ability === name) waived.push(`${spell.id}: ${notTheSpellsSave[spell.id].reason}`)
-        else failures.push(`${spell.id}: the text’s ${name} saving throw is not in the data`)
+        if (!spell.saves?.some((save) => save.ability === id)) failures.push(`${spell.id}: the text’s ${name} saving throw is not in the data`)
+      }
+      // A save the caster makes, or one against a fixed DC, is marked so.
+      for (const match of ownText(spell).matchAll(/(you make a|make a DC (\d+)) (\w+) saving throw/g)) {
+        total++
+        const id = Object.keys(abilityNames).find((key) => abilityNames[key] === match[3])
+        const dc = match[2] ? Number(match[2]) : undefined
+        if (!spell.saves?.some((save) => save.ability === id && save.target === "caster" && save.dc === dc)) failures.push(`${spell.id}: the caster’s “${match[0]}” is not in the data`)
+      }
+      for (const condition of spell.casterConditions ?? []) {
+        total++
+        if (!new RegExp(`\\b(?:You gain|you take [^.]*and have|If expelled, you[^.]*and have) the ${capital(condition)} condition`).test(text))
+          failures.push(`${spell.id}: the caster’s ${condition} condition is not in its text`)
       }
       if (spell.attack) {
         total++
@@ -516,7 +545,69 @@ export default function verify(report: Report) {
         if (!areaTexts(spell.range.area).some((phrase) => squash(text).includes(squash(phrase)))) failures.push(`${spell.id}: area ${JSON.stringify(spell.range.area)} is not in its text`)
       }
     }
-    report.check(category, "saves, attacks, conditions, healing and areas are the spell’s own text", total, failures, waived)
+    report.check(category, "saves, attacks, conditions, healing and areas are the spell’s own text", total, failures)
+  }
+
+  // Counts and fixed numbers, read from every spell's own text and compared both ways: a spell whose text has the
+  // wording has the field with the same value, and a spell without it has no field.
+  {
+    const failures: string[] = []
+    let total = 0
+    const words: Record<string, number> = { a: 1, one: 1, two: 2, three: 3, four: 4 }
+    const rolls: [RegExp, string][] = [
+      [/attack roll/, "attack-roll"],
+      [/\bsaves?\b|saving throws/, "saving-throw"],
+      [/ability check/, "ability-check"],
+      [/damage rolls/, "damage-roll"],
+    ]
+    for (const spell of spells) {
+      const text = ownText(spell)
+      const compare = (field: string, official: unknown, data: unknown) => {
+        total++
+        if (JSON.stringify(official) !== JSON.stringify(data)) failures.push(`${spell.id}: ${field} reads ${JSON.stringify(official)} in its text, the data ${JSON.stringify(data)}`)
+      }
+      const count = /You (?:create|hurl) (a|three) [\w ]*?(?:beam|darts|rays)\b/.exec(text)
+      const more = /(one) (?:more|additional) (?:dart|ray) for each spell slot level/.exec(text)
+      const beams = /creates (\w+) beams at level 5, (\w+) beams at level 11, and (\w+) beams at level 17/.exec(text)
+      compare(
+        "projectiles",
+        count && {
+          count: words[count[1]],
+          ...(more ? { perSlot: words[more[1]] } : {}),
+          ...(beams ? { cantrip: { 5: words[beams[1]], 11: words[beams[2]], 17: words[beams[3]] } } : {}),
+        },
+        spell.projectiles ?? null
+      )
+      const targets = /\b(one|two|One) additional (?:creature|Beast|Humanoid|bolt)\b[^.]*for each spell slot level above/.exec(text)
+      compare("extra targets per slot", targets ? words[targets[1].toLowerCase()] : null, spell.extraTargetsPerSlot ?? null)
+      const bonus = /\+(\d+) bonus to (?:AC|Armor Class)/.exec(text)
+      const base = /base AC becomes (\d+) plus its Dexterity modifier/.exec(text)
+      const minimum = /Armor Class of (\d+) if its AC is lower than that/.exec(text)
+      compare(
+        "AC",
+        bonus || base || minimum ? { ...(bonus ? { bonus: Number(bonus[1]) } : {}), ...(base ? { base: Number(base[1]) } : {}), ...(minimum ? { minimum: Number(minimum[1]) } : {}) } : null,
+        spell.ac ?? null
+      )
+      const sentence = /[^.]*\b(adds|subtracts?) (\d+d\d+) (?:to|from)\b[^.]*/.exec(text)
+      const flat = /\+(\d+) bonus to AC and saving throws/.exec(text)
+      const modifier = sentence
+        ? {
+            dice: sentence[2],
+            ...(sentence[1] === "adds" ? {} : { subtract: true }),
+            rolls: rolls.filter(([pattern]) => pattern.test(sentence[0].slice(sentence[0].indexOf(sentence[2])))).map(([, roll]) => roll),
+          }
+        : flat && { amount: Number(flat[1]), rolls: ["saving-throw"] }
+      compare("roll modifier", modifier, spell.rollModifier ?? null)
+      compare("damage reduction", /reduces the total damage taken by (\d+d\d+)/.exec(text)?.[1] ?? null, spell.damageReduction ?? null)
+      const maximum = /Hit Point maximum (?:and current Hit Points increase|also increases) by (\d+d\d+|\d+)/.exec(text)
+      const maximumPerSlot = /Hit Points increase by (\d+) for each spell slot level/.exec(text)
+      compare(
+        "Hit Point maximum",
+        maximum && { ...(/d/.test(maximum[1]) ? { dice: maximum[1] } : { amount: Number(maximum[1]) }), ...(maximumPerSlot ? { perSlotAmount: Number(maximumPerSlot[1]) } : {}) },
+        spell.hitPointMaximum ?? null
+      )
+    }
+    report.check(category, "projectiles, extra targets, AC, roll modifiers, damage reduction and Hit Point maximum match the spell’s own text both ways", total, failures)
   }
 
   // Class spell lists in the Classes chapter.
@@ -534,8 +625,9 @@ export default function verify(report: Report) {
       if (!spell.classes.includes(row.className.toLowerCase() as never)) failures.push(`${spell.id}: on the ${row.className} list, not in its classes`)
       if (spell.level !== row.level) failures.push(`${spell.id}: ${row.className} list level ${row.level}, data ${spell.level}`)
       if (spell.school !== row.school.toLowerCase()) {
-        if (listConflicts[spell.id]) waived.push(`${spell.id}: ${row.className} list: ${listConflicts[spell.id]}`)
-        else failures.push(`${spell.id}: ${row.className} list school ${row.school}, data ${spell.school}`)
+        const message = `${spell.id}: the ${row.className} spell list on page ${row.page} reads ${row.school}, the spell’s header on page ${spell.page} reads ${capital(spell.school)}`
+        if (listConflicts.has(spell.id)) waived.push(`${message}. The data follows the header`)
+        else failures.push(message)
       }
       const flags = row.special.split(", ")
       if (flags.includes("C") !== spell.duration.concentration) failures.push(`${spell.id}: ${row.className} list Concentration ${flags.includes("C")}`)
@@ -549,8 +641,10 @@ export default function verify(report: Report) {
     for (const spell of spells)
       for (const id of spell.classes) {
         if (!classes.includes(id) || listed.has(`${id}:${spell.name}`)) continue
-        if (listConflicts[spell.id]) waived.push(`${spell.id}: ${capital(id)} list: ${listConflicts[spell.id]}`)
-        else failures.push(`${spell.id}: ${id} is in its classes, not on the ${capital(id)} spell list`)
+        const listPages = [...new Set(rows.filter((row) => row.className.toLowerCase() === id).map((row) => row.page))]
+        const message = `${spell.id}: the spell’s header on page ${spell.page} names ${capital(id)}, the ${capital(id)} spell list on pages ${listPages[0]}–${listPages.at(-1)} does not print it`
+        if (listConflicts.has(spell.id)) waived.push(`${message}. The data follows the header`)
+        else failures.push(message)
       }
     report.check(category, `classes, levels, schools and C, R, M flags match the ${classes.length} class spell lists (${rows.length} rows)`, rows.length + spells.length, failures, waived)
   }
@@ -576,6 +670,31 @@ export default function verify(report: Report) {
         }
     }
     if (total) report.check(category, "ids that point at other categories resolve", total, failures)
+  }
+
+  // The class spell lists in classes.json, where that file exists, agree with each spell's classes and level both ways.
+  if (existsSync(dataPath("classes"))) {
+    const failures: string[] = []
+    let total = 0
+    const listed = new Map<string, number>()
+    for (const entry of readData<{ id: string; spellcasting?: { spellList?: { level: number; spells: string[] }[] } }>("classes"))
+      for (const group of entry.spellcasting?.spellList ?? []) for (const id of group.spells) listed.set(`${entry.id}:${id}`, group.level)
+    const casters = new Set([...listed.keys()].map((key) => key.split(":")[0]))
+    const byId = new Map(spells.map((spell) => [spell.id, spell]))
+    for (const [key, level] of listed) {
+      total++
+      const [classId, id] = key.split(":")
+      const spell = byId.get(id)
+      if (!spell) failures.push(`classes.json ${classId} lists unknown spell ${id}`)
+      else if (!spell.classes.includes(classId as never)) failures.push(`${id}: classes.json lists it for ${classId}, its classes do not`)
+      else if (spell.level !== level) failures.push(`${id}: classes.json ${classId} level ${level}, data ${spell.level}`)
+    }
+    for (const spell of spells)
+      for (const classId of spell.classes) {
+        total++
+        if (casters.has(classId) && !listed.has(`${classId}:${spell.id}`)) failures.push(`${spell.id}: its classes name ${classId}, the ${classId} spell list in classes.json does not`)
+      }
+    report.check(category, "classes and levels agree with the spell lists in classes.json", total, failures)
   }
 
   // 6. Open5e as a second opinion. A disagreement fails only where the official text does not side with the data.

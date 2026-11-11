@@ -48,8 +48,16 @@
     "workHoursPerDay": 8
   },
   {
-    "id": "coin-weight",
-    "name": "Coin Weight",
+    "id": "casting-in-armor",
+    "name": "Casting in Armor",
+    "page": 104,
+    "description": "You must have training with any armor you are wearing to cast spells while wearing it. You are otherwise too hampered by the armor for spellcasting.",
+    "kind": "casting-in-armor",
+    "requiresArmorTraining": true
+  },
+  {
+    "id": "coins",
+    "name": "Coins",
     "page": 89,
     "description": "A coin weighs about a third of an ounce, so fifty coins weigh a pound.",
     "kind": "coin-weight",
@@ -236,5 +244,22 @@
       "amount": 50000,
       "unit": "gp"
     }
+  },
+  {
+    "id": "tool-proficiency",
+    "name": "Tool Proficiency",
+    "page": 93,
+    "description": "If you have proficiency with a tool, add your Proficiency Bonus to any ability check you make that uses the tool. If you have proficiency in a skill that’s used with that check, you have Advantage on the check too.\nYour features might give you proficiency with a tool. A monster has proficiency with any tool in its stat block.",
+    "kind": "tool-proficiency",
+    "addsProficiencyBonusTo": "ability-checks-with-the-tool",
+    "advantageWithProficientSkill": true
+  },
+  {
+    "id": "weapon-proficiency",
+    "name": "Weapon Proficiency",
+    "page": 89,
+    "description": "Anyone can wield a weapon, but you must have proficiency with it to add your Proficiency Bonus to an attack roll you make with it. A player character’s features can provide weapon proficiencies. A monster is proficient with any weapon in its stat block.",
+    "kind": "weapon-proficiency",
+    "addsProficiencyBonusTo": "attack-rolls"
   }
 ]

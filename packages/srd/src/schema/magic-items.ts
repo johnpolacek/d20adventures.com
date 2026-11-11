@@ -92,6 +92,8 @@ export const itemTableSchema = z.strictObject({
     .array(
       z.strictObject({
         roll: z.strictObject({ min: z.number().int(), max: z.number().int() }).optional(),
+        /** Spells the row has the user cast, when the row's text says "you cast" (Hat of Many Spells, Wand of Wonder). */
+        spells: z.array(idSchema).min(1).optional(),
         cells: z.array(z.string().min(1)).min(1),
       })
     )
@@ -109,6 +111,16 @@ export const magicItemSchema = z.strictObject({
   attunement: attunementSchema.optional(),
   cursed: z.literal(true).optional(),
   consumable: z.literal(true).optional(),
+  /** The kinds of action the text names for using the item: "Magic action", "Bonus Action", "Utilize action", "Reaction". */
+  activation: z
+    .array(z.enum(["magic-action", "bonus-action", "utilize-action", "reaction"]))
+    .min(1)
+    .optional(),
+  /** When a property that "can’t be used again" works again, where the text names the dawn or a rest. Other waits (hours, days) stay in the prose. */
+  reusableAfter: z
+    .array(z.enum(["dawn", "short-rest", "long-rest"]))
+    .min(1)
+    .optional(),
   bonuses: z.array(bonusSchema).min(1).optional(),
   charges: chargesSchema.optional(),
   saves: z.array(savingThrowSchema).min(1).optional(),

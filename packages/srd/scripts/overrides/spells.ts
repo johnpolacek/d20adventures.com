@@ -92,12 +92,17 @@ export const overrides: Override[] = [
     id: "meld-into-stone",
     path: "damage",
     value: [
-      { dice: "6d6", types: ["force"] },
-      { amount: 50, types: ["force"] },
+      { dice: "6d6", types: ["force"], target: "caster" },
+      { amount: 50, types: ["force"], target: "caster" },
     ],
     reason: "“deals 6d6 Force damage to you” and “deals 50 Force damage to you”",
     page: 148,
   },
+  { id: "meld-into-stone", path: "conditions", value: undefined, reason: "the caster, once expelled, “and have the Prone condition”", page: 148 },
+  { id: "meld-into-stone", path: "casterConditions", value: ["prone"], reason: "the caster, once expelled, “and have the Prone condition”", page: 148 },
+  { id: "mislead", path: "conditions", value: undefined, reason: "“You gain the Invisible condition”", page: 150 },
+  { id: "mislead", path: "casterConditions", value: ["invisible"], reason: "“You gain the Invisible condition”", page: 150 },
+  { id: "dimension-door", path: "damage.0.target", value: "caster-and-companions", reason: "“you and any creature traveling with you each take 4d6 Force damage”", page: 124 },
   {
     id: "arcane-hand",
     path: "damage",
@@ -153,8 +158,11 @@ export const overrides: Override[] = [
   {
     id: "magic-jar",
     path: "saves",
-    value: [{ ability: "cha", onSuccess: "none" }],
-    reason: "“On a successful save, the target resists your efforts to possess it”. The other save is the caster’s own",
+    value: [
+      { ability: "cha", onSuccess: "none" },
+      { ability: "cha", onSuccess: "other", target: "caster" },
+    ],
+    reason: "“On a successful save, the target resists your efforts to possess it”, then “you make a Charisma saving throw against your own spellcasting DC”",
     page: 146,
   },
   {
@@ -218,9 +226,22 @@ export const overrides: Override[] = [
   { id: "vitriolic-sphere", path: "saves.0.onSuccess", value: "half", reason: "“On a successful save, a creature takes half the initial damage only”", page: 172 },
 
   // Contact Other Plane's save, damage and condition fall on the caster against a fixed DC 15.
-  { id: "contact-other-plane", path: "saves", value: undefined, reason: "“make a DC 15 Intelligence saving throw” is the caster’s own save", page: 119 },
-  { id: "contact-other-plane", path: "damage", value: undefined, reason: "“you take 6d6 Psychic damage” on the caster’s failed save", page: 119 },
+  {
+    id: "contact-other-plane",
+    path: "saves",
+    value: [{ ability: "int", onSuccess: "none", dc: 15, target: "caster" }],
+    reason: "“When you cast this spell, make a DC 15 Intelligence saving throw”",
+    page: 119,
+  },
+  { id: "contact-other-plane", path: "damage.0.target", value: "caster", reason: "“On a failed save, you take 6d6 Psychic damage”", page: 119 },
   { id: "contact-other-plane", path: "conditions", value: undefined, reason: "on the caster’s failed save, “you take 6d6 Psychic damage and have the Incapacitated condition”", page: 119 },
+  {
+    id: "contact-other-plane",
+    path: "casterConditions",
+    value: ["incapacitated"],
+    reason: "on the caster’s failed save, “you take 6d6 Psychic damage and have the Incapacitated condition”",
+    page: 119,
+  },
 
   // Conditions the text ends, prevents or names without giving.
   { id: "dispel-evil-and-good", path: "conditions", value: undefined, reason: "Break Enchantment: “The target is no longer possessed, Charmed, or Frightened by such creatures”", page: 124 },

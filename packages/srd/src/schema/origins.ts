@@ -1,7 +1,18 @@
 import { z } from "zod"
-import { abilityIdSchema, conditionIdSchema, damageTypeIdSchema, diceSchema, entryShape, feetSchema, idSchema, proseSchema, sizeSchema, skillIdSchema } from "./common"
-
-const spellListSchema = z.enum(["cleric", "druid", "wizard"])
+import {
+  abilityIdSchema,
+  classIdSchema,
+  conditionIdSchema,
+  creatureTypeSchema,
+  damageTypeIdSchema,
+  diceSchema,
+  entryShape,
+  feetSchema,
+  idSchema,
+  proseSchema,
+  sizeSchema,
+  skillIdSchema,
+} from "./common"
 
 /** When spent uses come back. "initiative-or-short-or-long-rest" is Boon of Fate: roll Initiative or finish a Short or Long Rest. */
 export const rechargeSchema = z.enum(["long-rest", "short-or-long-rest", "start-of-next-turn", "initiative-or-short-or-long-rest"])
@@ -80,7 +91,7 @@ export const mechanicsShape = {
   /** Magic Initiate: cantrips learned, the level of the one spell, and the lists to choose from. */
   cantrips: z.number().int().positive().optional(),
   spellLevel: z.number().int().min(1).max(9).optional(),
-  spellLists: z.array(spellListSchema).min(1).optional(),
+  spellLists: z.array(classIdSchema).min(1).optional(),
   /** Skilled: proficiencies in any mix of skills and tools. */
   proficiencyChoice: z.strictObject({ count: z.number().int().positive(), kinds: z.array(z.enum(["skill", "tool"])).min(1) }).optional(),
   attackBonus: z.strictObject({ bonus: z.number().int(), weapon: z.enum(["melee", "ranged"]) }).optional(),
@@ -89,6 +100,26 @@ export const mechanicsShape = {
   damageDieMinimum: z.strictObject({ minimum: z.number().int(), properties: z.array(idSchema).min(1) }).optional(),
   /** Boon of Spell Recall: casting with a slot of these levels rolls `dice`, and the slot is kept if the roll equals its level. */
   freeCasting: z.strictObject({ minSlotLevel: z.number().int(), maxSlotLevel: z.number().int() }).optional(),
+  /** Alert: add the Proficiency Bonus to Initiative rolls. */
+  initiativeBonus: z.literal("proficiency-bonus").optional(),
+  /** Alert: swap Initiative with this many willing allies, unless the character or the ally has the condition. */
+  initiativeSwap: z.strictObject({ allies: z.number().int().positive(), blockedByCondition: conditionIdSchema }).optional(),
+  /** Savage Attacker: once per `perTurn`, when a weapon hits, roll the damage dice twice and use either roll. */
+  damageDiceRolledTwice: z.strictObject({ perTurn: z.number().int().positive() }).optional(),
+  /** Two-Weapon Fighting: the extra attack from a weapon with this property adds the ability modifier to its damage. */
+  addAbilityModifierToExtraAttack: z.strictObject({ weaponProperty: idSchema }).optional(),
+  /** Luck: when the d20 of a D20 Test shows this number, the die may be rerolled and the new roll must be used. */
+  rerollD20On: z.number().int().min(1).max(20).optional(),
+  /** Halfling Nimbleness: move through the space of a creature this many sizes larger, but not stop there. */
+  moveThroughCreatures: z.strictObject({ sizesLarger: z.number().int().positive(), canStop: z.literal(false) }).optional(),
+  /** Naturally Stealthy: the Hide action works when obscured only by a creature at least this many sizes larger. */
+  hideBehindCreatures: z.strictObject({ minSizesLarger: z.number().int().positive() }).optional(),
+  /** Powerful Build: Advantage on ability checks to end the Grappled condition. */
+  grappledEscapeAdvantage: z.literal(true).optional(),
+  /** Powerful Build: counts as this many sizes larger for carrying capacity. */
+  carryingCapacitySizeBonus: z.number().int().positive().optional(),
+  /** Trance: no need to sleep and magic cannot put the character to sleep. */
+  sleepImmunity: z.literal(true).optional(),
   /** The dice the benefit rolls, such as the 2d4 of Boon of Fate. */
   dice: diceSchema.optional(),
 }
@@ -118,7 +149,7 @@ export type SpeciesTrait = z.infer<typeof speciesTraitSchema>
 
 export const speciesSchema = z.strictObject({
   ...entryShape,
-  creatureType: z.literal("Humanoid"),
+  creatureType: creatureTypeSchema,
   /** One size, or two when the player picks one. `height` is the SRD's own words, "about 5–7 feet tall". */
   sizes: z.array(z.strictObject({ size: sizeSchema, height: z.string().min(1) })).min(1),
   speed: feetSchema,
@@ -135,6 +166,8 @@ const toolProficiencySchema = z.union([
 const equipmentItemSchema = z.strictObject({
   id: idSchema,
   quantity: z.number().int().positive(),
+  /** "single": `quantity` counts single pieces of ammunition, not bundles. The equipment entry sells them in bundles of its `amount`. */
+  unit: z.literal("single").optional(),
   /** "Book (prayers)". */
   note: z.string().min(1).optional(),
   /** "Gaming Set (same as above)": the kind the player chose for the tool proficiency. */
@@ -148,7 +181,7 @@ export const backgroundSchema = z.strictObject({
   /** The three ability scores the background lists. */
   abilityScores: z.array(abilityIdSchema).length(3),
   /** The Origin feat. `spellList` is the list for Magic Initiate, "Magic Initiate (Cleric)". */
-  feat: z.strictObject({ id: idSchema, spellList: spellListSchema.optional() }),
+  feat: z.strictObject({ id: idSchema, spellList: classIdSchema.optional() }),
   skills: z.array(skillIdSchema).length(2),
   toolProficiency: toolProficiencySchema,
   /** Option A is the package and option B is gold alone. */
@@ -195,3 +228,25 @@ export const featSchema = z.strictObject({
   ...mechanicsShape,
 })
 export type Feat = z.infer<typeof featSchema>
+
+/** A general rule from the Character Origins and Feats chapters, with the numbers an engine needs. */
+export const originRuleSchema = z.strictObject({
+  ...entryShape,
+  text: proseSchema,
+  /** Background ability score rule: the number of listed scores, the ways to spend the increase, and the cap. */
+  abilityScoreIncrease: z.strictObject({ listed: z.number().int().positive(), options: z.array(z.array(z.number().int().positive()).min(1)).min(1), maximum: z.number().int() }).optional(),
+  /** What a background or species gives, and how many of it. */
+  grants: z.strictObject({ kind: z.enum(["feat", "skill-proficiency", "tool-proficiency"]), count: z.number().int().positive(), featCategory: z.literal("origin").optional() }).optional(),
+  /** Gold taken instead of the equipment package. */
+  goldInsteadOfEquipment: z.number().int().positive().optional(),
+  creatureType: creatureTypeSchema.optional(),
+  /** Most species live about this many years. */
+  typicalLifeSpanYears: z.number().int().positive().optional(),
+  /** A prerequisite that names a class needs at least this many levels in it. */
+  minimumClassLevels: z.number().int().positive().optional(),
+  /** A feat can be taken this many times unless its description says it is Repeatable. */
+  defaultTimesTaken: z.number().int().positive().optional(),
+  /** When no category is named, a feat may come from any category. */
+  anyCategoryWhenUnspecified: z.literal(true).optional(),
+})
+export type OriginRule = z.infer<typeof originRuleSchema>

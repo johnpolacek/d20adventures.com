@@ -1,5 +1,4 @@
-import { existsSync } from "node:fs"
-import { dataPath, readData, toId } from "../lib/data"
+import { readData, toId } from "../lib/data"
 import { missingSentences, pages, squash } from "../lib/official"
 import type { Report } from "../lib/report"
 import { readBase, readOpen5e } from "../lib/sources"
@@ -589,6 +588,7 @@ export default function verify(report: Report) {
     .join("\n")
     .split("\n")
     .map((line) => line.replace(/\.{3,}.*$/, "").trim())
+  const monsters = new Set(readData("monsters").map((monster) => monster.id))
   const mountFailures: string[] = []
   for (const match of officialMounts) {
     const entry = byId.get(toId(match[1]))
@@ -599,8 +599,7 @@ export default function verify(report: Report) {
       .map((word: string) => word[0].toUpperCase() + word.slice(1))
       .join(" ")
     if (!monsterNames.includes(statBlock)) mountFailures.push(`${match[1]}: no monster named ${statBlock} in the contents`)
-    if (existsSync(dataPath("monsters")) && !readData("monsters").some((monster) => monster.id === entry.statBlock))
-      mountFailures.push(`${match[1]}: stat block ${entry.statBlock} is not in the monsters data`)
+    if (!monsters.has(entry.statBlock)) mountFailures.push(`${match[1]}: stat block ${entry.statBlock} is not in the monsters data`)
   }
   report.check("equipment", "mounts: carrying capacity, cost, page, and the monster stat block the table points to", officialMounts.length * 4, mountFailures)
 
@@ -703,13 +702,51 @@ export default function verify(report: Report) {
     "wine-fine",
   ]
   if (foodRows.length !== orderedFood.length) foodFailures.push(`${foodRows.length} food rows in the data, ${orderedFood.length} in the table`)
-  orderedFood.forEach((id, index) => {
-    const entry = byId.get(id)
-    if (!entry) foodFailures.push(`${id} is missing`)
-    else if (!same(entry.cost, cost(expectedFoodCosts[index])) || entry.page !== (index < 12 ? 101 : 102))
-      foodFailures.push(`${id}: cost ${costText(entry.cost)} page ${entry.page} differs from cell ${expectedFoodCosts[index]}`)
+  // Walk the table text in order. Each row's label line must be followed, past any repeated "Item" and "Cost" headers, by its cost line,
+  // and each group heading must come before its rows. A swapped pair of costs or labels breaks the walk.
+  const foodLines = [
+    ...P(101)
+      .slice(P(101).lastIndexOf("Food, Drink, and Lodging"), P(101).indexOf("Airborne and Waterborne Vehicles"))
+      .split("\n")
+      .map((text) => ({ text: text.trim(), page: 101 })),
+    ...P(102)
+      .slice(0, P(102).indexOf("Hirelings"))
+      .split("\n")
+      .map((text) => ({ text: text.trim(), page: 102 })),
+  ].filter((line) => line.text)
+  const tierLabels = ["Squalid", "Poor", "Modest", "Comfortable", "Wealthy", "Aristocratic"]
+  const walk: { id: string; group?: string; label: string }[] = [
+    { id: "ale-mug", label: "Ale (mug)" },
+    { id: "bread-loaf", label: "Bread (loaf)" },
+    { id: "cheese-wedge", label: "Cheese (wedge)" },
+    ...tierLabels.map((label, index) => ({ id: `inn-stay-${label.toLowerCase()}`, label, group: index === 0 ? "Inn Stay per Day" : undefined })),
+    ...tierLabels.map((label, index) => ({ id: `meal-${label.toLowerCase()}`, label, group: index === 0 ? "Meal" : undefined })),
+    { id: "wine-common", label: "Common", group: "Wine (bottle)" },
+    { id: "wine-fine", label: "Fine" },
+  ]
+  let cursor = 0
+  const seek = (label: string) => {
+    const at = foodLines.findIndex((line, index) => index >= cursor && line.text === label)
+    if (at >= 0) cursor = at + 1
+    return at
+  }
+  walk.forEach((row, index) => {
+    if (row.group && seek(row.group) < 0) foodFailures.push(`${row.id}: group heading ${row.group} is not before its rows`)
+    const at = seek(row.label)
+    if (at < 0) {
+      foodFailures.push(`${row.id}: label ${row.label} is not in order in the table text`)
+      return
+    }
+    let next = at + 1
+    while (["Item", "Cost"].includes(foodLines[next]?.text)) next++
+    const entry = byId.get(row.id)
+    if (foodLines[next]?.text !== expectedFoodCosts[index]) foodFailures.push(`${row.id}: the cost after ${row.label} is ${foodLines[next]?.text}, expected ${expectedFoodCosts[index]}`)
+    cursor = next + 1
+    if (!entry) foodFailures.push(`${row.id} is missing`)
+    else if (!same(entry.cost, cost(foodLines[next]?.text ?? "")) || entry.page !== foodLines[next]?.page)
+      foodFailures.push(`${row.id}: cost ${costText(entry.cost)} page ${entry.page} differs from the text after ${row.label}`)
   })
-  report.check("equipment", "food, drink and lodging: every cost cell, read in table order across the page break", expectedFoodCosts.length * 2, foodFailures)
+  report.check("equipment", "food, drink and lodging: every cost cell, read in table order across the page break", expectedFoodCosts.length * 3, foodFailures)
 
   const w102 = P(102)
   const spellRows = [
@@ -879,7 +916,7 @@ export default function verify(report: Report) {
     if (rule.description) {
       const first = rule.description.split("\n")[0]
       if (missingSentences(rule.description).length) ruleFailures.push(`${rule.name}: wording is not the official text`)
-      const startPage = [89, 92, 100, 101, 103].find((page) => squash(P(page)).includes(squash(first.slice(0, 60))))
+      const startPage = [89, 92, 93, 100, 101, 103, 104].find((page) => squash(P(page)).includes(squash(first.slice(0, 60))))
       if (startPage !== rule.page) ruleFailures.push(`${rule.name}: page ${rule.page} but its text begins on ${startPage}`)
       const stated = numbersIn(rule.description)
       for (const [key, value] of leaves(rule)) {
@@ -942,6 +979,18 @@ export default function verify(report: Report) {
     ruleFailures.push("armor training: light, medium, heavy rule differs")
   const shield = training.find((rule) => rule.covers.includes("shield"))
   if (!shield?.benefitRequiresTraining || !/Armor Class benefit of a Shield only if you have training/.test(flat(shield.description))) ruleFailures.push("armor training: shield rule differs")
+  const proficiency: [string, string, unknown, RegExp][] = [
+    ["weapon-proficiency", "addsProficiencyBonusTo", "attack-rolls", /add your Proficiency Bonus to an attack roll you make with it/],
+    ["tool-proficiency", "addsProficiencyBonusTo", "ability-checks-with-the-tool", /add your Proficiency Bonus to any ability check you make that uses the tool[\s\S]*Advantage on the check too/],
+    ["tool-proficiency", "advantageWithProficientSkill", true, /proficiency in a skill that’s used with that check, you have Advantage/],
+    ["casting-in-armor", "requiresArmorTraining", true, /must have training with any armor you are wearing to cast spells/],
+  ]
+  for (const [kind, field, value, pattern] of proficiency) {
+    ruleCells++
+    const rule = rules.find((item) => item.kind === kind)
+    if (!rule || rule[field] !== value || !pattern.test(flat(rule.description)))
+      ruleFailures.push(`${kind}: ${field} is ${JSON.stringify(rule?.[field])}, expected ${JSON.stringify(value)} per the text`)
+  }
   const one = rules.find((rule) => rule.kind === "one-at-a-time")
   if (!one || one.maxArmor !== 1 || !/only one suit of armor at a time and wield only one Shield/.test(flat(one.description))) ruleFailures.push("one at a time rule differs")
   report.check("equipment", "rules: coin weight, selling, armor training, barding, cargo, crafting, potion brewing, ship repair, passengers, scroll costs", ruleCells, ruleFailures)
@@ -979,6 +1028,29 @@ export default function verify(report: Report) {
     if (entry.kind === "ammunition") ref(entry.id, entry.storage)
     if (entry.kind === "weapon" && entry.ammunition) ref(entry.id, entry.ammunition)
   }
+  const magicItems = readData<Entry>("magic-items")
+  const magicFailures: string[] = []
+  let magicTotal = 0
+  for (const entry of data.filter((item) => item.magicItem)) {
+    const item = magicItems.find((candidate) => candidate.id === entry.magicItem)
+    magicTotal++
+    if (!item) {
+      magicFailures.push(`${entry.id}: magic item ${entry.magicItem} is not in magic-items.json`)
+      continue
+    }
+    if (entry.id === "potion-of-healing") {
+      magicTotal++
+      const variant = item.variants?.find((candidate: Entry) => candidate.name === "Potion of Healing")
+      if (variant?.healing !== entry.healing?.dice) magicFailures.push(`${entry.id}: healing ${entry.healing?.dice} but the magic item says ${variant?.healing}`)
+    }
+    if (entry.spellScroll) {
+      magicTotal += 2
+      const variant = item.variants?.find((candidate: Entry) => candidate.spellLevel === entry.spellScroll.spellLevel)
+      if (variant?.saveDc !== entry.spellScroll.saveDc || variant?.attackBonus !== entry.spellScroll.attackBonus)
+        magicFailures.push(`${entry.id}: scroll DC and bonus differ from the magic item variant ${JSON.stringify(variant)}`)
+    }
+  }
+  report.check("equipment", "magic item links resolve in magic-items.json and share healing dice, scroll save DC and attack bonus", magicTotal, magicFailures)
   const poisonBasic = byId.get("poison-basic")
   refTotal++
   if (!poisonBasic) refFailures.push("poison-basic is missing")

@@ -11,6 +11,7 @@
     "check": "tsc -p tsconfig.json && tsc -p tsconfig.scripts.json",
     "sources": "tsx scripts/fetch.ts",
     "build": "tsx scripts/build.ts",
+    "fresh": "SRD_FRESH=1 tsx scripts/build.ts",
     "verify": "tsx scripts/verify.ts"
   },
   "dependencies": {
