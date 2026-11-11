@@ -1,0 +1,219 @@
+[
+  {
+    "id": "acolyte",
+    "name": "Acolyte",
+    "page": 83,
+    "abilityScores": [
+      "int",
+      "wis",
+      "cha"
+    ],
+    "feat": {
+      "id": "magic-initiate",
+      "spellList": "cleric"
+    },
+    "skills": [
+      "insight",
+      "religion"
+    ],
+    "toolProficiency": {
+      "tool": "calligraphers-supplies"
+    },
+    "equipment": {
+      "a": {
+        "items": [
+          {
+            "id": "calligraphers-supplies",
+            "quantity": 1
+          },
+          {
+            "id": "book",
+            "quantity": 1,
+            "note": "prayers"
+          },
+          {
+            "id": "holy-symbol",
+            "quantity": 1
+          },
+          {
+            "id": "parchment",
+            "quantity": 10
+          },
+          {
+            "id": "robe",
+            "quantity": 1
+          }
+        ],
+        "gp": 8
+      },
+      "b": {
+        "items": [],
+        "gp": 50
+      }
+    }
+  },
+  {
+    "id": "criminal",
+    "name": "Criminal",
+    "page": 83,
+    "abilityScores": [
+      "dex",
+      "con",
+      "int"
+    ],
+    "feat": {
+      "id": "alert"
+    },
+    "skills": [
+      "sleight-of-hand",
+      "stealth"
+    ],
+    "toolProficiency": {
+      "tool": "thieves-tools"
+    },
+    "equipment": {
+      "a": {
+        "items": [
+          {
+            "id": "dagger",
+            "quantity": 2
+          },
+          {
+            "id": "thieves-tools",
+            "quantity": 1
+          },
+          {
+            "id": "crowbar",
+            "quantity": 1
+          },
+          {
+            "id": "pouch",
+            "quantity": 2
+          },
+          {
+            "id": "clothes-travelers",
+            "quantity": 1
+          }
+        ],
+        "gp": 16
+      },
+      "b": {
+        "items": [],
+        "gp": 50
+      }
+    }
+  },
+  {
+    "id": "sage",
+    "name": "Sage",
+    "page": 83,
+    "abilityScores": [
+      "con",
+      "int",
+      "wis"
+    ],
+    "feat": {
+      "id": "magic-initiate",
+      "spellList": "wizard"
+    },
+    "skills": [
+      "arcana",
+      "history"
+    ],
+    "toolProficiency": {
+      "tool": "calligraphers-supplies"
+    },
+    "equipment": {
+      "a": {
+        "items": [
+          {
+            "id": "quarterstaff",
+            "quantity": 1
+          },
+          {
+            "id": "calligraphers-supplies",
+            "quantity": 1
+          },
+          {
+            "id": "book",
+            "quantity": 1,
+            "note": "history"
+          },
+          {
+            "id": "parchment",
+            "quantity": 8
+          },
+          {
+            "id": "robe",
+            "quantity": 1
+          }
+        ],
+        "gp": 8
+      },
+      "b": {
+        "items": [],
+        "gp": 50
+      }
+    }
+  },
+  {
+    "id": "soldier",
+    "name": "Soldier",
+    "page": 83,
+    "abilityScores": [
+      "str",
+      "dex",
+      "con"
+    ],
+    "feat": {
+      "id": "savage-attacker"
+    },
+    "skills": [
+      "athletics",
+      "intimidation"
+    ],
+    "toolProficiency": {
+      "oneOfKind": "gaming-set"
+    },
+    "equipment": {
+      "a": {
+        "items": [
+          {
+            "id": "spear",
+            "quantity": 1
+          },
+          {
+            "id": "shortbow",
+            "quantity": 1
+          },
+          {
+            "id": "arrows",
+            "quantity": 20
+          },
+          {
+            "id": "gaming-set",
+            "quantity": 1,
+            "sameAsTool": true
+          },
+          {
+            "id": "healers-kit",
+            "quantity": 1
+          },
+          {
+            "id": "quiver",
+            "quantity": 1
+          },
+          {
+            "id": "clothes-travelers",
+            "quantity": 1
+          }
+        ],
+        "gp": 14
+      },
+      "b": {
+        "items": [],
+        "gp": 50
+      }
+    }
+  }
+]
