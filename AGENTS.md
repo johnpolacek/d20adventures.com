@@ -11,6 +11,17 @@ Auto-commit local changes whenever confident that the code is good and there are
 - For admin/editor UI, keep surfaces dense and operational: do not add explanatory helper text, status phrases, or "what this does" copy unless the user asks for it or it is required for accessibility, validation, or error handling.
 - Name unknowns and contradictions instead of inventing certainty.
 
+### Where Things Live
+
+- `packages/gm-core` is the game master: turn flow, NPC turns, rolls, narrative. Game logic goes here. It imports nothing from Next, Clerk or Convex and reaches the outside only through the ports in `src/ports.ts`.
+- `lib/gm-server` binds that core to the website. Most of `lib/services` is one-line wrappers that call it, so logic does not go there. `turn-audio-service.ts` and `mailing-list.ts` are the exceptions.
+- `apps/desktop` is the Tauri app. `apps/desktop/runtime` is its bundled Node game runtime: the same core over SQLite. `apps/desktop-spike` is a throwaway phase 0 spike, not the app.
+- `packages/stage` is Stageview, the painted 3D encounter stage. `components/stage` is the React UI around it (HUD, dice, journal), shared by the site and the desktop app. `components/mapview` and `lib/mapview` are the 2D encounter map.
+- Adventures are authored as markdown under `content/settings/<setting>/adventures/<adventure>/`. `lib/wiki-adventures` compiles and validates them. `data/adventure-plans/*.json` is the old format, referenced only by the `scripts/migrate-*` scripts.
+- `app/` is the Next.js site. Server actions live in `app/_actions`, and `proxy.ts` is the Clerk middleware.
+- `convex/` is the database and its functions. `convex/_generated` is written by `npx convex codegen`, so never edit it.
+- `app/dev` and `lab/stage-art` are dev pages and experiments, not shipped features.
+
 ### Encounter Authoring
 
 - Initial NPC map placement must match the intro's implied distance: an NPC whose intro reads as a close ambush should set `startNear: "party"` on its ref in the encounter frontmatter ("distant"/absent keeps the default far placement; a zone/label name targets that spot). After changing staging hints, re-place tokens on stored maps with `scripts/mapview-replace-tokens.ts`.
