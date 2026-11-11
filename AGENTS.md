@@ -21,6 +21,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 - `app/` is the Next.js site. Server actions live in `app/_actions`, and `proxy.ts` is the Clerk middleware.
 - `convex/` is the database and its functions. `convex/_generated` is written by `npx convex codegen`, so never edit it.
 - `app/dev` and `lab/stage-art` are dev pages and experiments, not shipped features.
+- `plans/` holds open multi-session plans. `plans/srd-rules.md` is the staged move to the full SRD 5.2.1 rules.
 
 ### Encounter Authoring
 
