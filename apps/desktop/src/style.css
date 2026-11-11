@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../../../components/theme.css";
+@source "../../../components/adventure/module-cover.tsx";
 @source "../../../components/stage";
 @source "../../../components/graphics";
 @source "../../../components/typography";
