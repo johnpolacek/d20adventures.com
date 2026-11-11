@@ -534,8 +534,18 @@ export class Stage {
     this.activeShot = typeof which === "string" ? which : null
     this.activeFov = s.fov
     if (painted) {
-      const subject = authored && "subject" in authored ? this.cast.find((m) => m.id === authored.subject) : undefined
-      this.standOn(tripodView(painted.points, { ...s, fov: this.lens(s.fov) }, this.camera.aspect, this.viewRect(), subject ? (p) => this.blocked(p, s.target) : undefined), instant, duration)
+      const on = authored && "subject" in authored ? [authored.subject] : authored && "subjects" in authored ? authored.subjects : []
+      const members = this.cast.filter((m) => on.includes(m.id))
+      const one = authored && "subject" in authored
+      const framed = s
+      const view = tripodView(
+        painted.points,
+        { ...s, fov: this.lens(s.fov) },
+        this.camera.aspect,
+        this.viewRect(),
+        (p) => (one ? this.blocked(p, framed.target) : 0) + this.backs(p, framed.position, members)
+      )
+      this.standOn(view, instant, duration)
       return true
     }
     const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
@@ -688,6 +698,18 @@ export class Stage {
     }
     return 0
   }
+  // A shot that meant to show its subjects' faces is worth little from a point that shows their backs, as a card has
+  // no side view. For each subject the shot saw from the front, up to 16 as metres of the wrong place: more than a
+  // painting enlarged by half costs, which is what the wider view from the right side usually takes.
+  private backs(point: TripodPoint, from: readonly number[], members: CastMember[]) {
+    const off = (c: CastMember, x: number, z: number) => Math.abs(Math.atan2(Math.sin(Math.atan2(x - c.x, z - c.z) - c.ry), Math.cos(Math.atan2(x - c.x, z - c.z) - c.ry)))
+    let cost = 0
+    for (const c of members) {
+      if (off(c, from[0], from[2]) > THREE.MathUtils.degToRad(80)) continue
+      cost += THREE.MathUtils.clamp((THREE.MathUtils.radToDeg(off(c, point.position.x, point.position.z)) - 60) / 30, 0, 2) * 8
+    }
+    return members.length ? cost / members.length : 0
+  }
   // Take a view from a painted point. On the same point the camera turns and zooms to it. To another point it cuts,
   // through a short fade: the way between two points was never painted.
   private standOn(view: View, instant: boolean, duration: number) {
@@ -700,6 +722,8 @@ export class Stage {
       this.tripod = { point: view.point, aim: view.target.clone(), want: { target: view.wanted.clone(), fov: view.asked } }
       this.painted?.setPoint(view.point)
       this.fitSun()
+      this.standees.tripod = view.point.position
+      this.crowd.cards?.faceTripod(view.point.position)
       this.camera.position.copy(view.point.position)
       this.camera.lookAt(view.target)
       this.camera.fov = view.fov

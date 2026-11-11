@@ -63,11 +63,14 @@ export interface CardPerson {
 function glsl(N: number) {
   const COMMON = /* glsl */ `
 attribute vec4 cA; attribute vec4 cB;
-uniform vec3 uCam; uniform vec4 uVar[${2 * N}]; uniform float uTime;
+uniform vec3 uCam; uniform vec4 uVar[${2 * N}]; uniform float uTime; uniform vec4 uFace;
 varying vec3 vCUv; varying vec3 vCUb; varying float vCB; varying vec3 vCTint;
 float cWrap(float a){ return atan(sin(a), cos(a)); }
 // x = the card's yaw, y = how much of the back shows (0 front, 1 back).
 vec2 cYaw(float ry, vec3 pos){
+ // Seen from a tripod (uFace = its spot, w on): the card faces the camera squarely, since the camera never walks
+ // round it, and shows the face that stands toward the tripod's own spot, so the camera's sway cannot flip it.
+ if (uFace.w > .5) return vec2(atan(uCam.x - pos.x, uCam.z - pos.z), step(1.5708, abs(cWrap(atan(uFace.x - pos.x, uFace.z - pos.z) - ry))));
  float off = cWrap(atan(uCam.x - pos.x, uCam.z - pos.z) - ry), a = abs(off), sg = off < 0.0 ? -1.0 : 1.0;
  float front = clamp(off * .75, -1.0472, 1.0472);
  float back = sg * 3.14159265 + clamp(cWrap(off - sg * 3.14159265) * .75, -1.0472, 1.0472);
@@ -132,7 +135,13 @@ const LAYERS = `
    else { vec4 tf = texture(uAtlas, vCUv), tb = texture(uAtlas, vCUb); t = vCB > fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(.06711056, .00583715)))) ? tb : tf; t.a = mix(tf.a, tb.a, vCB); if (vCB > .5) cUvw = vCUb; }
    diffuseColor.rgb *= t.rgb * vCTint; diffuseColor.a *= t.a; }`
 
-type CardUniforms = { uCam: THREE.IUniform<THREE.Vector3>; uTime: THREE.IUniform<number>; uAtlas: THREE.IUniform<THREE.DataArrayTexture | null>; uVar: THREE.IUniform<THREE.Vector4[]> }
+type CardUniforms = {
+  uCam: THREE.IUniform<THREE.Vector3>
+  uTime: THREE.IUniform<number>
+  uAtlas: THREE.IUniform<THREE.DataArrayTexture | null>
+  uVar: THREE.IUniform<THREE.Vector4[]>
+  uFace: THREE.IUniform<THREE.Vector4>
+}
 
 function makeUniforms(meta: CrowdLibraryMeta, camera: THREE.Camera, shared: SharedUniforms): CardUniforms {
   const [LW, LH] = meta.layer
@@ -141,6 +150,7 @@ function makeUniforms(meta: CrowdLibraryMeta, camera: THREE.Camera, shared: Shar
     uCam: { value: camera.position },
     uTime: shared.time,
     uAtlas: { value: null },
+    uFace: { value: new THREE.Vector4() },
     uVar: {
       value: views.map(({ body, view }) => {
         const fh = view.vMax * LH - 2
@@ -285,6 +295,12 @@ export class CardLayer {
     this.mesh.name = "crowd-cards"
     this.mesh.customDepthMaterial = cardDepthMaterial(this.uniforms, this.N)
     this.slots = new Array(capacity)
+  }
+  // A tripod camera stands at `spot` (a painted set): cards face it squarely. Null goes back to leaning toward a camera
+  // that walks round them.
+  faceTripod(spot: THREE.Vector3 | null) {
+    if (spot) this.uniforms.uFace.value.set(spot.x, spot.y, spot.z, 1)
+    else this.uniforms.uFace.value.w = 0
   }
   async load(maxAnisotropy: number) {
     this.loading = true

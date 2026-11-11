@@ -238,6 +238,8 @@ export class Standees {
   group = new THREE.Group()
   items = new Map<string, Standee>()
   // Cast members not yet on stage (an entrance the narration has not reached).
+  // Where a tripod camera stands, in a painted set: cards then face the camera squarely (see update).
+  tripod: THREE.Vector3 | null = null
   offstage = new Set<string>()
   // Cast members lying where they fell. The card tips back onto the ground.
   down = new Set<string>()
@@ -355,7 +357,8 @@ export class Standees {
       if (c.walking) c.stride += dt * 5.6
       const toCam = Math.atan2(camera.position.x - c.x, camera.position.z - c.z)
       const off = wrap(toCam - c.ry)
-      const a = Math.abs(off)
+      // From a tripod, which face shows goes by where the tripod stands, so the camera's sway cannot flip it.
+      const a = this.tripod ? Math.abs(wrap(Math.atan2(this.tripod.x - c.x, this.tripod.z - c.z) - c.ry)) : Math.abs(off)
       let target: number
       if (s.mapB) {
         const sg = off < 0 ? -1 : 1
@@ -368,12 +371,14 @@ export class Standees {
         if (s.side === null) s.side = a > D(90) ? 1 : 0
         else if (a > D(100)) s.side = 1
         else if (a < D(80)) s.side = 0
-        target = c.ry + (s.side ? back : front)
+        // A tripod's camera never walks round the card, so the card faces it squarely: a picture leaning away from a
+        // camera that cannot move reads as a slanted board.
+        target = this.tripod ? toCam : c.ry + (s.side ? back : front)
         s.back = s.yaw === null ? s.side : s.back + THREE.MathUtils.clamp(s.side - s.back, -dt * 4, dt * 4)
       } else {
         const flip = a > 2.1
         const rest = c.ry + (flip ? Math.PI : 0)
-        target = rest + THREE.MathUtils.clamp(wrap(toCam - rest) * GAIN, -LEAN, LEAN)
+        target = this.tripod ? toCam : rest + THREE.MathUtils.clamp(wrap(toCam - rest) * GAIN, -LEAN, LEAN)
         s.back = 0
       }
       // Someone down lies on their back, head away from the way they faced, whatever the camera does.

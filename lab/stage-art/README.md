@@ -150,7 +150,7 @@ Cards: `cards.ts paint <ids>` repaints cast cards as photographs, and `cards.ts 
 
 Image models: `--cli` and `cards.ts` use the Codex CLI's own image tool on the owner's ChatGPT subscription, which names no model. The paid path (`repaint.ts` without `--cli`, `paintover.ts`) names `gpt-image-2`, which OpenAI shuts off on 2027-02-10.
 
-The gate has eleven points and fourteen paintings: `gate` (with a cloth-free twin), `checkpoint` (wide, zoom, close), `party` (two ways), `table`, `queue`, `ramparts`, `through`, `huddle`, `arch`, `road` and `arrive`. Both stagings on it are fully on the paint.
+The gate has twelve points and fifteen paintings: `gate` (with a cloth-free twin), `checkpoint` (wide, zoom, close), `party` (two ways), `table`, `queue`, `ramparts`, `through`, `huddle`, `arch`, `road`, `arrive` and `front`. Both stagings on it are fully on the paint.
 
 Sway: owner, 2026-11-10, "the drift on the far away shots is great but on closeups it moves too fast". The sway now shrinks with the subject's distance and the lens, so the foreground slides at most about 1% of the frame's height (`SWAY_ON_SCREEN` in `tripod.ts`). Measured live: 16 cm at the gate as before, 2.3 cm on Garlan's close view where it was 6, 2.4 cm on a hero from the party point where it was 12.
 
@@ -161,6 +161,12 @@ Owner review of the live gate, 2026-11-10: Branka's art looked off, the characte
 - Cause two: the sun's shadow map covered the whole set, 300 m, so a figure's own shadow was a few texels. It now covers the same 80 m.
 - Cause three: a card seen from the side sat half way through the dissolve between its front and back, as a speckled ghost. A tripod can stand to one side of someone for a whole scene. `figures/standees.ts` now settles on one face, with 80 and 100 degrees as the two thresholds, and dissolves in a quarter of a second when it changes. This applies to every set.
 - Bubbles: 17 and 18 px, from 13 and 14, in a 330 px box, and 14 px in the compact layout, from 11.
+
+Owner, same evening, on the Party view in the desktop app: "the standees look really slanted".
+
+- A card leaned only part of the way toward the camera, at most 60 degrees from the way its character faces. That suits a camera that walks round it. From a fixed tripod a card seen from the side stood at an angle to the lens, a slanted board. On a painted set cast and crowd cards now face the camera squarely, and which face shows goes by where the tripod stands, so the sway cannot flip it.
+- The Party view also showed backs: the party faces Garlan, and the only point with room for all four stood beside them. New point `front`, beside Garlan, looking back up the line at their faces.
+- A shot that meant to show its subjects' faces now counts a point that shows their backs as up to 16 m farther off (`Stage.backs`).
 
 Known limits:
 

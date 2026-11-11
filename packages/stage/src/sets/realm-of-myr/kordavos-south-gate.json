@@ -1973,6 +1973,17 @@
             "aspect": 1.5
           }
         ]
+      },
+      "front": {
+        "position": [3, 1.7, 11.7],
+        "paintings": [
+          {
+            "map": "/stage/paintings/kordavos-south-gate/front.webp",
+            "quaternion": [-0.052185, 0.876266, 0.097509, 0.468963],
+            "fov": 64,
+            "aspect": 1.5
+          }
+        ]
       }
     }
   },
