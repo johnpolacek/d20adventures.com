@@ -6,6 +6,17 @@
   "fixtures/welcome-to-kordavos/oskar",
   "fixtures/welcome-to-kordavos/yeva",
   "heroes/dwarf-a",
+  "heroes/dwarf-b",
+  "heroes/elf-a",
   "heroes/elf-b",
-  "heroes/human-a"
+  "heroes/gnome-a",
+  "heroes/gnome-b",
+  "heroes/half-elf-a",
+  "heroes/half-elf-b",
+  "heroes/half-orc-a",
+  "heroes/half-orc-b",
+  "heroes/halfling-a",
+  "heroes/halfling-b",
+  "heroes/human-a",
+  "heroes/human-b"
 ]
