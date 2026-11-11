@@ -12,7 +12,7 @@ import { PAINTERS, type Painter, paint, storeArt } from "./paint"
 // on stdin and stops it by closing stdin or with SIGTERM. Each stdout line is an event for the app.
 console.log = console.warn = console.error = () => {}
 const bundled: Packs = JSON.parse(readFileSync(join(__dirname, "packs.json"), "utf8"))
-type Start = { adventureId: string; provider: string; token: string; site: string; data: string }
+type Start = { adventureId: string; provider: string; model?: string; token: string; site: string; data: string }
 let stopped = false
 let wake: (() => void) | undefined
 const stop = () => {
@@ -46,7 +46,7 @@ async function main() {
   process.stdin.on("end", stop)
   if (!start) return
   const scratch = mkdtempSync(join(start.data, "host-"))
-  const model = localLlm(start.provider, scratch, undefined, false)
+  const model = localLlm(start.provider, scratch, undefined, false, start.model)
   try {
     const post: HostPost = async (path, body) => {
       const res = await fetch(`${start.site}${path}`, {

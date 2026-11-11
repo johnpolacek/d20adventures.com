@@ -154,6 +154,7 @@ async fn host_start(
     worker: tauri::State<'_, HostWorker>,
     adventure_id: String,
     provider: String,
+    model: Option<String>,
 ) -> Result<(), String> {
     let token = keychain()?
         .get_password()
@@ -171,6 +172,7 @@ async fn host_start(
     let start = serde_json::json!({
         "adventureId": adventure_id,
         "provider": provider,
+        "model": model,
         "token": token,
         "site": site_url(),
         "data": data.to_string_lossy(),

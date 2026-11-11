@@ -4,7 +4,8 @@ import { createSession } from "../../desktop-spike/harness/sessions.mjs"
 import { desktopPatchSchema } from "./characters"
 
 // `strict` holds advancement to the local game's world-state contract. Hosted games keep the website's contract.
-export function localLlm(provider: string, cwd: string, validatePatch?: (patch: { characterUpdates?: unknown }) => void, strict = true) {
+// `model` is a Claude alias from the Game Master picker. Without one the CLI runs its own default.
+export function localLlm(provider: string, cwd: string, validatePatch?: (patch: { characterUpdates?: unknown }) => void, strict = true, model?: string) {
   let session: ReturnType<typeof createSession> | undefined
   const ask = async (prompt: string) => {
     let result
@@ -13,7 +14,8 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
       session ??= createSession(
         provider,
         cwd,
-        "You are the Game Master for D20 Adventures. Use only supplied fictional context. Do not use tools or host operations. Follow the requested output format exactly."
+        "You are the Game Master for D20 Adventures. Use only supplied fictional context. Do not use tools or host operations. Follow the requested output format exactly.",
+        model
       )
       try {
         result = await session.ask(prompt)

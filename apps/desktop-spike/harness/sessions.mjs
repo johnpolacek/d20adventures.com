@@ -254,8 +254,9 @@ class AntigravitySession {
   }
 }
 
-export function createSession(provider, cwd, system) {
-  if (provider === "claude") return new ClaudeSession(cwd, system)
+// `model` picks a Claude model by the CLI's alias. Other CLIs run their own default.
+export function createSession(provider, cwd, system, model) {
+  if (provider === "claude") return new ClaudeSession(cwd, system, model)
   if (provider === "codex") return new CodexSession(cwd, system)
   // The Gemini CLI gave way to Antigravity, so a save started on it goes on there.
   if (["antigravity", "gemini"].includes(provider)) return new AntigravitySession(cwd, system)

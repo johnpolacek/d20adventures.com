@@ -13,7 +13,7 @@ import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stag
 import { z } from "zod"
 import { scenePlaces, spatialContext } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
-import { partyFor, writeArrivals } from "./heroes"
+import { gmModelSchema, partyFor, writeArrivals } from "./heroes"
 import type { LocalStore, Save } from "./store"
 import { carryGear, premiseWithStory, storyInto, withStory } from "./story"
 
@@ -61,6 +61,7 @@ export const commandSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("start"),
     provider: z.enum(["claude", "codex", "grok", "antigravity"]),
+    model: gmModelSchema,
     adventure: z.string().max(100).optional(),
     replace: z.boolean().optional(),
     // Who plays each hero. Without it, the suggested party, all played by the player.
@@ -194,7 +195,8 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     const before = findCurrentActor(store.current().characters)
     await core.processNpcTurnsAfterCurrent(store.current()._id)
     const actor = findCurrentActor(store.current().characters)
-    if (actor && actor.id === before?.id && (actor.type === "npc" || actor.controlledBy === "ai")) throw inferenceFailure ?? new Error("The GM could not finish this character's turn. Continue to retry.")
+    if (actor && actor.id === before?.id && (actor.type === "npc" || actor.controlledBy === "ai"))
+      throw inferenceFailure ?? new Error("The GM could not finish this character's turn. Continue to retry.")
   }
   return async (input: GameCommand) => {
     inferenceFailure = undefined
@@ -242,6 +244,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       store.replace({
         version: 1,
         provider: command.provider,
+        ...(command.provider === "claude" && command.model ? { model: command.model } : {}),
         rolls: {},
         movement: {},
         positions: {},

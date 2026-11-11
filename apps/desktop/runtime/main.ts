@@ -86,7 +86,7 @@ async function main() {
         const reader = new LocalStore(savePath)
         const save = reader.state
         reader.db.close()
-        model = localLlm(save?.provider ?? "claude", scratch)
+        model = localLlm(save?.provider ?? "claude", scratch, undefined, true, save?.model)
         const packs = await loadPacks(bundled, dirname(savePath))
         process.stdout.write(`${JSON.stringify({ suggestions: await suggest(save, packs, model.llm, suggestCommandSchema.parse(input)) })}\n`)
         return
@@ -95,9 +95,17 @@ async function main() {
       const packs = await loadPacks(bundled, dirname(savePath))
       store = new LocalStore(savePath, transitionsOf(packs))
       store.acquire()
-      model = localLlm("provider" in command ? command.provider : (store.state?.provider ?? "claude"), scratch, (patch) => {
-        applyCharacterUpdates(store!.current().characters, patch.characterUpdates)
-      })
+      const picked =
+        "provider" in command ? { provider: command.provider, model: "model" in command ? command.model : undefined } : { provider: store.state?.provider ?? "claude", model: store.state?.model }
+      model = localLlm(
+        picked.provider,
+        scratch,
+        (patch) => {
+          applyCharacterUpdates(store!.current().characters, patch.characterUpdates)
+        },
+        true,
+        picked.model
+      )
       let hero: { draft?: HeroDraft; art?: unknown } = {}
       if ("kind" in command && ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(command.kind))
         hero = await heroCommand(command as HeroCommand, store, packs, model.llm, { data: dirname(savePath), scratch })

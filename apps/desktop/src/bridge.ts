@@ -23,7 +23,7 @@ export const send = (command: GameCommand | HeroCommand) => invoke<GameResponse>
 export const suggest = (turnId: string, characterId: string) =>
   invoke<{ suggestions?: { label: string; text: string }[]; error?: string }>("suggest_command", { command: { kind: "suggest", turnId, characterId } })
 // The model a CLI runs as the GM, and its effort. Rust runs it outside the game lock too.
-export type GmModel = { name?: string; effort?: string }
+export type GmModel = { name?: string; effort?: string; options?: { value: string; name: string }[] }
 export const gmModel = (provider: string) => invoke<{ model?: GmModel }>("model_command", { provider })
 // Rust adds the Keychain token, so the webview never sends or sees it.
 type AccountRequest = AccountCommand extends infer C ? (C extends { token?: string } ? Omit<C, "token"> : never) : never
@@ -34,7 +34,7 @@ export const accountInfo = () => invoke<{ required: boolean; linked: boolean }>(
 // Hosting a website game. Rust adds the token, and runs the host worker that does the GM's jobs.
 type HostRequest = HostCommand extends infer C ? (C extends { token?: string } ? Omit<C, "token"> : never) : never
 export const host = (command: HostRequest) => invoke<HostResponse>("host_command", { command })
-export const hostStart = (adventureId: string, provider: string) => invoke<void>("host_start", { adventureId, provider })
+export const hostStart = (adventureId: string, provider: string, model?: string) => invoke<void>("host_start", { adventureId, provider, model })
 export const hostStop = () => invoke<void>("host_stop")
 export type HostWorkerState = { adventureId: string | null; event: HostEvent | { type: "starting" | "stopped" } | null }
 export const hostRunning = () => invoke<HostWorkerState>("host_running")

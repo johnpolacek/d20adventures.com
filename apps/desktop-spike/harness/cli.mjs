@@ -87,7 +87,7 @@ export const claudeArgs = [
   "",
   "--safe-mode",
   "--settings",
-  JSON.stringify({ enabledPlugins: { "cc-plugin-agents-md@builtin": false, "cc-plugin-telemetry@builtin": false, "cc-plugin-plugin-authoring@builtin": false } }),
+  JSON.stringify({ enabledPlugins: { "cc-plugin-agents-md@builtin": false, "cc-plugin-telemetry@builtin": false, "cc-plugin-plugin-authoring@builtin": false, "cc-plugin-privacy@builtin": false } }),
   "--setting-sources",
   "",
   "--strict-mcp-config",
@@ -139,10 +139,10 @@ export async function detect(cwd) {
 }
 
 export class ClaudeSession {
-  constructor(cwd, system) {
+  constructor(cwd, system, model) {
     this.start = performance.now()
     this.requests = 0
-    this.child = spawn(locate("claude"), [...claudeArgs, "--system-prompt", system], { cwd, env: minimalEnv(), detached: true, stdio: ["pipe", "pipe", "pipe"] })
+    this.child = spawn(locate("claude"), [...claudeArgs, ...(model ? ["--model", model] : []), "--system-prompt", system], { cwd, env: minimalEnv(), detached: true, stdio: ["pipe", "pipe", "pipe"] })
     this.child.stdin.on("error", () => {})
     this.child.stderr.on("data", () => {})
     this.child.on("error", () => this.fail("launch_failed"))
@@ -179,7 +179,9 @@ export class ClaudeSession {
       const models = event.response?.response?.models ?? []
       const running = models.find((m) => m.value === "default")
       const named = models.find((m) => m.value !== "default" && m.resolvedModel === running?.resolvedModel)
-      pending.resolve({ name: named ? `Claude ${named.displayName}` : undefined, effort: running?.supportsEffort ? efforts.claude : undefined })
+      // The CLI's own aliases (opus, fable, sonnet, haiku) follow its newest models, so the picker lists those.
+      const options = models.filter((m) => /^[a-z]+$/.test(m.value) && m.value !== "default").map((m) => ({ value: m.value, name: `Claude ${m.displayName}` }))
+      pending.resolve({ name: named ? `Claude ${named.displayName}` : undefined, effort: running?.supportsEffort ? efforts.claude : undefined, options })
       return
     }
     if (event.type === "assistant" && event.message?.content?.some((block) => block.type === "tool_use")) {

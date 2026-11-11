@@ -21,10 +21,17 @@ export const heroSchema = pcTemplateSchema.extend({
 })
 export type Hero = z.infer<typeof heroSchema>
 const provider = z.enum(["claude", "codex", "grok", "antigravity"])
+// A Claude model by the CLI's alias, such as opus or fable.
+export const gmModelSchema = z
+  .string()
+  .regex(/^[a-z]+$/)
+  .max(20)
+  .optional()
 export const heroCommandSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("heroDraft"),
     provider,
+    model: gmModelSchema,
     race: text(40).min(1),
     archetype: text(40).min(1),
     name: text(80).min(1),

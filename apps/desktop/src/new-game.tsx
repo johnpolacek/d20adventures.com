@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { ModuleCover } from "@/components/adventure/module-cover"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Chip, Option, siteCard, siteLabel, siteOutline, sitePanel } from "@/components/ui/site"
@@ -8,7 +9,6 @@ import type { Hero, PartyChoice } from "../runtime/heroes"
 import type { GmModel } from "./bridge"
 import { joinAs, openingParty, type Seat, seatCreated } from "./carry"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
-import { ModuleCover } from "@/components/adventure/module-cover"
 import { portraitFor } from "./scenes"
 
 type Pick = { id: string; name: string; race: string; archetype: string; portrait?: string; hero?: Hero }
@@ -51,7 +51,8 @@ export function NewGame(props: {
   // What each CLI runs as the GM, by CLI. Empty until they answer.
   models: Record<string, GmModel>
   provider: string
-  onProvider: (p: string) => void
+  claudeModel?: string
+  onProvider: (p: string, model?: string) => void
   busy: boolean
   // The opening scene is still loading.
   waiting: boolean
@@ -400,7 +401,7 @@ export function NewGame(props: {
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
-        <GameMaster providers={props.providers} models={props.models} provider={props.provider} onProvider={props.onProvider} />
+        <GameMaster providers={props.providers} models={props.models} provider={props.provider} claudeModel={props.claudeModel} onProvider={props.onProvider} />
         <div className="flex-1" />
         {hosting && sized && !hostable && <p className="text-sm text-amber-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>}
         {props.onCancel && (
@@ -446,30 +447,47 @@ export function NewGame(props: {
   )
 }
 
-// Which CLI runs the GM, each named by the model it runs and its effort. One installed CLI is stated, not chosen.
-function GameMaster(props: { providers: string[]; models: Record<string, GmModel>; provider: string; onProvider: (p: string) => void }) {
+// Which CLI runs the GM, each named by the model it runs and its effort. Claude lists each model its CLI offers. One
+// choice is stated, not chosen.
+function GameMaster(props: { providers: string[]; models: Record<string, GmModel>; provider: string; claudeModel?: string; onProvider: (p: string, model?: string) => void }) {
   if (!props.providers.length) return null
-  const line = (p: string) => (
+  type Choice = { key: string; provider: string; model?: string; name: string; effort?: string }
+  const choices = props.providers.flatMap((p): Choice[] => {
+    const effort = props.models[p]?.effort
+    const options = p === "claude" ? props.models[p]?.options : undefined
+    if (options?.length) return options.map((o) => ({ key: `${p}:${o.value}`, provider: p, model: o.value, name: o.name, effort }))
+    return [{ key: p, provider: p, model: undefined, name: props.models[p]?.name ?? CLI[p] ?? p, effort }]
+  })
+  // Before a pick, Claude's choice is the model its CLI runs by default.
+  const claudeDefault = props.models.claude?.options?.find((o) => o.name === props.models.claude?.name)?.value
+  const current = choices.find((c) => c.provider === props.provider && (!c.model || c.model === (props.claudeModel ?? claudeDefault))) ?? choices.find((c) => c.provider === props.provider)
+  const line = (c: Choice) => (
     <>
-      {props.models[p]?.name ?? CLI[p] ?? p}
-      {props.models[p]?.effort && <span className="text-sm text-white/60">{props.models[p].effort} effort</span>}
+      {c.name}
+      {c.effort && <span className="text-sm text-white/60">{c.effort} effort</span>}
     </>
   )
   return (
     <div className="flex items-center gap-3">
       <span className={siteLabel}>Game Master</span>
-      {props.providers.length === 1 ? (
-        <span className="flex items-baseline gap-2 text-base">{line(props.providers[0])}</span>
+      {choices.length === 1 ? (
+        <span className="flex items-baseline gap-2 text-base">{line(choices[0])}</span>
       ) : (
-        <Select value={props.provider} onValueChange={props.onProvider}>
+        <Select
+          value={current?.key}
+          onValueChange={(key) => {
+            const c = choices.find((choice) => choice.key === key)
+            if (c) props.onProvider(c.provider, c.model)
+          }}
+        >
           <SelectTrigger aria-label="Game Master" className={cn(siteOutline, "h-auto gap-3 py-2 text-base shadow-none focus-visible:border-primary-400 focus-visible:ring-primary-400/50")}>
             <SelectValue />
           </SelectTrigger>
           {/* Over the app's shell, which is its own layer at 100. */}
           <SelectContent className="z-[110] border-white/20 bg-black text-white ring-[6px] ring-black">
-            {props.providers.map((p) => (
-              <SelectItem key={p} value={p} className="py-2 pl-3 text-base focus:bg-primary-600 focus:text-white">
-                {line(p)}
+            {choices.map((c) => (
+              <SelectItem key={c.key} value={c.key} className="py-2 pl-3 text-base focus:bg-primary-600 focus:text-white">
+                {line(c)}
               </SelectItem>
             ))}
           </SelectContent>

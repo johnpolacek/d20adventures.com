@@ -26,6 +26,24 @@ export function DesktopGame() {
   const [loaded, setLoaded] = useState(false)
   const [providers, setProviders] = useState<string[]>([])
   const [provider, setProvider] = useState("claude")
+  // The Claude model picked for the GM, by the CLI's alias. Kept between launches. Unset runs the CLI's default.
+  const [claudeModel, setClaudeModel] = useState<string | undefined>(() => {
+    try {
+      return localStorage.getItem("gm-claude-model") ?? undefined
+    } catch {
+      return undefined
+    }
+  })
+  useEffect(() => {
+    try {
+      if (claudeModel) localStorage.setItem("gm-claude-model", claudeModel)
+    } catch {}
+  }, [claudeModel])
+  const pickedModel = provider === "claude" ? claudeModel : undefined
+  const pickGm = (p: string, model?: string) => {
+    setProvider(p)
+    if (p === "claude" && model) setClaudeModel(model)
+  }
   // What each installed CLI runs as the GM. Each is asked once and answers in its own time, so a slow one holds up
   // no other. The last answers are kept, so the picker has them at once the next time the app opens.
   const [models, setModels] = useState<Record<string, GmModel>>(() => {
@@ -164,7 +182,7 @@ export function DesktopGame() {
   }, [working, loaded, heroes, save?.painted, invoke])
   // A new game moves the saved adventure to the archive, where home lists it. Party setup stays open if the start fails.
   const start = async (chosenParty: PartyChoice[]) => {
-    const next = (await invoke({ kind: "start", provider: provider as "claude", adventure, party: chosenParty, replace: Boolean(save), continues: Boolean(carried) }))?.state
+    const next = (await invoke({ kind: "start", provider: provider as "claude", model: pickedModel, adventure, party: chosenParty, replace: Boolean(save), continues: Boolean(carried) }))?.state
     if (!next || next.adventure._id === save?.adventure._id) return
     setCreated(null)
     setCarried(null)
@@ -196,7 +214,7 @@ export function DesktopGame() {
   }
   // A hero made from a party screen is made for that adventure. One made from the Characters page is not.
   const draftHero = async ({ hook, ...idea }: HeroIdea) =>
-    (await invoke({ kind: "heroDraft", provider: provider as "claude", ...idea, ...(screen === "new" ? { adventure, ...(hook.trim() ? { hook } : {}) } : {}) }))?.draft
+    (await invoke({ kind: "heroDraft", provider: provider as "claude", model: pickedModel, ...idea, ...(screen === "new" ? { adventure, ...(hook.trim() ? { hook } : {}) } : {}) }))?.draft
   const saveHero = async (hero: Omit<Hero, "id"> & { id?: string }) => {
     const before = new Set(heroes.map((h) => h.id))
     const res = await invoke({ kind: "saveHero", hero })
@@ -255,7 +273,7 @@ export function DesktopGame() {
     setHosted(null)
     setHosting(adventureId)
     setScreen(null)
-    await hostStart(adventureId, provider).catch((e) => setError(String(e)))
+    await hostStart(adventureId, provider, pickedModel).catch((e) => setError(String(e)))
   }
   const hostGame = async (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number, bring?: number, flex = false) => {
     setSending(true)
@@ -326,7 +344,13 @@ export function DesktopGame() {
       art={art}
       fallbackEncounter={chosen?.start}
       controls={hosting ? (c) => (c as { userId?: string }).userId === hosted?.userId && (c as { controlledBy?: string }).controlledBy !== "ai" : () => true}
-      status={hosting ? `Hosting · ${hosted?.summary.watching ? "watching" : `${hosted?.summary.players ?? 1} at the table`} · ${gmLabel}` : save ? `Saved locally · ${save.provider}` : ""}
+      status={
+        hosting
+          ? `Hosting · ${hosted?.summary.watching ? "watching" : `${hosted?.summary.players ?? 1} at the table`} · ${gmLabel}`
+          : save
+            ? `Saved locally · ${save.model ? `${save.provider} ${save.model}` : save.provider}`
+            : ""
+      }
       overlay={screen !== null || Boolean(hosting && !hostedView)}
       actions={<Pill onClick={goHome}>Home</Pill>}
       chat={hosting ? hosted?.chat : undefined}
@@ -463,7 +487,8 @@ export function DesktopGame() {
                         providers={providers}
                         models={models}
                         provider={provider}
-                        onProvider={setProvider}
+                        claudeModel={claudeModel}
+                        onProvider={pickGm}
                         busy={working || sending}
                         waiting={stageState.waiting}
                         created={created}
