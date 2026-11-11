@@ -109,7 +109,7 @@ export function StageHud({
   compact?: boolean
   // Shown where the stage would be when there is none, such as story view's painting.
   backdrop?: ReactNode
-  // A small map, shown over the location in place of the compass.
+  // A small map, at the end of the perspective bar, where it covers none of the scene.
   map?: ReactNode
   children?: ReactNode
 }) {
@@ -138,9 +138,7 @@ export function StageHud({
         </header>
 
         <aside className={cn("pointer-events-none absolute text-right transition-opacity duration-300", compact ? "hidden" : "right-10 bottom-[130px]", location.hidden && "opacity-0")}>
-          {map ? (
-            <div className="pointer-events-auto mb-3 flex justify-end">{map}</div>
-          ) : (
+          {!map && (
             <svg viewBox="0 0 60 60" aria-hidden="true" className="mb-3 ml-auto h-12 w-12 fill-none stroke-stage-gold" strokeWidth=".8">
               <circle cx="30" cy="30" r="23" opacity=".4" />
               <path d="m30 1 4 25 25 4-25 4-4 25-4-25-25-4 25-4Z" />
@@ -157,7 +155,7 @@ export function StageHud({
           <>
             <div aria-hidden="true" className={cn("stage-rule pointer-events-none absolute inset-x-0 h-px opacity-60", compact ? "bottom-11" : "bottom-24")} />
             <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
-              {!compact && <span className="hidden shrink-0 text-[8px] tracking-[0.25em] text-[#c0c9be] xl:block">CHOOSE A PERSPECTIVE</span>}
+              {!compact && <div className="hidden flex-1 lg:block" />}
               <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
                 {views.map((v, i) => (
                   <button
@@ -176,7 +174,7 @@ export function StageHud({
                   </button>
                 ))}
               </div>
-              {!compact && <span className="hidden shrink-0 text-[10px] text-[#b9c2b8] lg:block">Drag to look · Scroll to zoom</span>}
+              {!compact && <div className="hidden flex-1 justify-end lg:flex">{map}</div>}
             </nav>
           </>
         )}

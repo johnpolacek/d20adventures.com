@@ -870,7 +870,7 @@ export function StagePlay(props: {
       activeView={stage?.activeShot ?? null}
       onView={(id) => stage?.shot(id)}
       hidden={hidden || !save || props.overlay}
-      map={city && <CityMapInset map={city.map} trail={city.trail} onOpen={() => setOpen("map")} />}
+      map={city && <CityMapInset className="h-[72px] w-[128px]" map={city.map} trail={city.trail} onOpen={() => setOpen("map")} />}
       compact={compact}
       actions={
         <>
@@ -892,7 +892,6 @@ export function StagePlay(props: {
           {stage && speech.length > 0 && (
             <>
               <Bubbles compact={compact} bubbles={speech.map((l, i) => ({ key: paragraph * 100 + i, anchor: () => stage.project(l.cast.id), text: l.text, named: true }))} />
-              <Plate compact={compact} line={{ key: paragraph, side: "right", name: speech[0].cast.name, role: speech[0].cast.role, portrait: speech[0].cast.art.portrait, text: speech[0].text }} />
             </>
           )}
           {!scene && voice && <Plate compact={compact} line={{ key: paragraph, side: "right", ...voice }} />}

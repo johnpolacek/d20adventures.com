@@ -23,7 +23,7 @@ import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
 import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
-import { fitView, minFov, sway, type TripodPoint, tripodView, type View, type ViewRect } from "./tripod"
+import { fitView, minFov, type Spot, sway, type TripodPoint, tripodView, type View } from "./tripod"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
 // Plain imperative three.js; the host (a React component) creates it, calls shot()/setTier()/pause(), and disposes it.
@@ -128,7 +128,9 @@ export class Stage {
   // A painted set's paintings, and the tripod the camera stands on: the point, what it looks at, and a cut to another
   // point in progress. `tripod` is null until the paintings are up, and for good if they fail.
   readonly painted: Painted | null = null
-  private tripod: { point: TripodPoint; aim: THREE.Vector3; want: { target: THREE.Vector3; fov: number } } | null = null
+  // `want` is what the camera was asked for: a shot's subject, set where the panels leave room (`placed`), or the way
+  // the player turned it.
+  private tripod: { point: TripodPoint; aim: THREE.Vector3; want: { target: THREE.Vector3; fov: number; placed: boolean } } | null = null
   private look: LookControls | null = null
   private cut: { arrive: () => void; timer: ReturnType<typeof setTimeout> } | null = null
   // What the paintings were made of: the built set alone.
@@ -271,7 +273,7 @@ export class Stage {
     this.sky.renderOrder = -1
     this.sky.frustumCulled = false
     this.scene.add(this.sky)
-    if (set.painted) this.painted = new Painted(renderer, set.painted, this.shared, (this.sky.geometry as THREE.SphereGeometry).parameters.radius, V(...A.sun.direction).normalize())
+    if (set.painted) this.painted = new Painted(renderer, set.painted, this.shared, (this.sky.geometry as THREE.SphereGeometry).parameters.radius)
     const pmrem = new THREE.PMREMGenerator(renderer)
     const envScene = new THREE.Scene()
     const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
@@ -376,7 +378,7 @@ export class Stage {
 
     // A painted set's camera is a tripod, with its own controls once the paintings are up (see load).
     this.painted?.patch(this.plate)
-    this.painted?.shadeFigures([this.standees.group, this.crowd.group])
+    this.painted?.flatFigures([...[...this.standees.items.values()].map((s) => s.mat), ...(this.crowd.cards ? [this.crowd.cards.mesh.material as THREE.Material] : [])])
     if (!this.painted) this.orbit()
 
     this.resizeObserver = new ResizeObserver(() => this.resize())
@@ -542,7 +544,7 @@ export class Stage {
         painted.points,
         { ...s, fov: this.lens(s.fov) },
         this.camera.aspect,
-        this.viewRect(),
+        this.spot(),
         (p) => (one ? this.blocked(p, framed.target) : 0) + this.backs(p, framed.position, members)
       )
       this.standOn(view, instant, duration)
@@ -678,13 +680,11 @@ export class Stage {
   }
 
   // ── Tripod (painted sets) ──
-  // What the canvas shows in the lens's own units: wider or taller than the lens under a docked panel (see setInsets).
-  private viewRect(): ViewRect {
+  // Where a shot's subject sits on the canvas: the middle of what a docked panel leaves uncovered (see setInsets).
+  private spot(): Spot {
     const w = Math.max(1, this.o.container.clientWidth)
     const h = Math.max(1, this.o.container.clientHeight)
-    const vw = Math.max(1, w - this.insets.right)
-    const vh = Math.max(1, h - this.insets.bottom)
-    return [-1, 1 - (2 * h) / vh, (2 * w) / vw - 1, 1]
+    return [-Math.min(this.insets.right, w) / w, Math.min(this.insets.bottom, h) / h]
   }
   // Whether something solid stands between a point and what a shot looks at: 20 if so, as metres of the wrong place.
   private blocked(point: TripodPoint, target: readonly number[]) {
@@ -719,7 +719,7 @@ export class Stage {
     }
     const arrive = () => {
       this.cut = null
-      this.tripod = { point: view.point, aim: view.target.clone(), want: { target: view.wanted.clone(), fov: view.asked } }
+      this.tripod = { point: view.point, aim: view.target.clone(), want: { target: view.wanted.clone(), fov: view.asked, placed: true } }
       this.painted?.setPoint(view.point)
       this.fitSun()
       this.standees.tripod = view.point.position
@@ -736,7 +736,7 @@ export class Stage {
       this.settle()
     }
     if (this.tripod?.point === view.point && !instant && this.motion) {
-      this.tripod.want = { target: view.wanted.clone(), fov: view.asked }
+      this.tripod.want = { target: view.wanted.clone(), fov: view.asked, placed: true }
       this.transition = {
         from: { pos: view.point.position.clone(), target: this.tripod.aim.clone(), fov: this.camera.fov },
         to: { pos: view.point.position.clone(), target: view.target, fov: view.fov },
@@ -754,7 +754,7 @@ export class Stage {
   // The sun's shadow map covers the ground about the current point and no more: figures' shadows are the only ones in
   // it, and over the whole set a figure is a few texels wide.
   private fitSun() {
-    const box = this.painted?.shadeBox
+    const box = this.painted?.sunBox
     if (!box) return
     const A = this.set.atmosphere
     this.sun.target.position.copy(box.center)
@@ -779,16 +779,16 @@ export class Stage {
     const s = new THREE.Spherical().setFromVector3(aim)
     s.theta += dx * k
     s.phi = THREE.MathUtils.clamp(s.phi - dy * k, 0.05, Math.PI - 0.05)
-    this.lookFrom(t, aim.setFromSpherical(s), far, this.camera.fov)
-    t.want.target.copy(t.aim)
+    this.lookFrom(t, aim.setFromSpherical(s), far, this.camera.fov, [0, 0])
+    t.want = { target: t.aim.clone(), fov: t.want.fov, placed: false }
   }
   // The wheel or a pinch: the lens the player ends with is the one a resized window keeps.
   private zoomTripod(factor: number) {
     const t = this.tripod
     if (!t) return
     const aim = t.aim.clone().sub(t.point.position)
-    this.lookFrom(t, aim, aim.length(), THREE.MathUtils.clamp(this.camera.fov * factor, minFov(t.point, aim), 110))
-    t.want = { target: t.aim.clone(), fov: this.camera.fov }
+    this.lookFrom(t, aim, aim.length(), THREE.MathUtils.clamp(this.camera.fov * factor, minFov(t.point, aim), 110), [0, 0])
+    t.want = { target: t.aim.clone(), fov: this.camera.fov, placed: false }
   }
   // The view the camera was asked for, fitted to the paintings again: the window or a docked panel changed its shape.
   // A move in progress ends at the new fit.
@@ -798,13 +798,14 @@ export class Stage {
     const p = t.point.position
     const aim = V().subVectors(t.want.target, p)
     const tr = this.transition
-    if (!tr) return this.lookFrom(t, aim, aim.length(), t.want.fov)
-    const fit = fitView(t.point, aim, t.want.fov, this.camera.aspect, this.viewRect())
+    const at: Spot = t.want.placed ? this.spot() : [0, 0]
+    if (!tr) return this.lookFrom(t, aim, aim.length(), t.want.fov, at)
+    const fit = fitView(t.point, aim, t.want.fov, this.camera.aspect, at)
     tr.to.target.copy(p).addScaledVector(fit.dir, aim.length())
     tr.to.fov = fit.fov
   }
-  private lookFrom(t: { point: TripodPoint; aim: THREE.Vector3 }, aim: THREE.Vector3, far: number, fov: number) {
-    const fit = fitView(t.point, aim, fov, this.camera.aspect, this.viewRect())
+  private lookFrom(t: { point: TripodPoint; aim: THREE.Vector3 }, aim: THREE.Vector3, far: number, fov: number, at: Spot) {
+    const fit = fitView(t.point, aim, fov, this.camera.aspect, at)
     t.aim.copy(t.point.position).addScaledVector(fit.dir, far)
     this.camera.fov = fit.fov
     this.camera.updateProjectionMatrix()
@@ -1038,8 +1039,10 @@ export class Stage {
     const h = Math.max(1, this.o.container.clientHeight)
     const vw = Math.max(1, w - this.insets.right)
     const vh = Math.max(1, h - this.insets.bottom)
-    this.camera.aspect = vw / vh
-    if (vw !== w || vh !== h) this.camera.setViewOffset(vw, vh, 0, 0, w, h)
+    // A painted set's lens is the whole canvas, and a docked panel moves the subject by turning the camera (see spot).
+    const whole = !!this.painted?.on
+    this.camera.aspect = whole ? w / h : vw / vh
+    if (!whole && (vw !== w || vh !== h)) this.camera.setViewOffset(vw, vh, 0, 0, w, h)
     else this.camera.clearViewOffset()
     if (this.tripod) this.refit()
     else if (!this.transition && this.activeFov) this.camera.fov = this.lens(this.activeFov)
@@ -1114,8 +1117,6 @@ export class Stage {
       const off = this.motion ? sway(V().subVectors(aim, point.position), this.camera.fov, this.set.painted?.sway ?? 0, this.shared.time.value) : V()
       this.camera.position.copy(point.position).add(off)
       this.camera.lookAt(aim)
-      this.camera.updateMatrixWorld()
-      this.painted?.frame(this.camera)
     } else {
       this.controls?.update()
       this.constrain()

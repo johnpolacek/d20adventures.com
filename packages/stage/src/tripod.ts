@@ -22,9 +22,10 @@ export interface TripodPoint {
   position: THREE.Vector3
   frames: Frame[]
 }
-// What the canvas shows, in units where the lens covers -1..1 each way: [x0, y0, x1, y1]. A panel docked over the canvas
-// makes it wider or taller than the lens, since the scene carries on under the panel.
-export type ViewRect = [number, number, number, number]
+// Where on the canvas a shot's subject should sit, -1..1 each way with 0 the middle: the middle of what a docked panel
+// leaves uncovered. The lens is always the whole canvas. A lens fitted to the uncovered part alone would have to keep a
+// canvas two or three times its height on one painting, and narrows to a close-up of someone's belt.
+export type Spot = readonly [number, number]
 export interface View {
   point: TripodPoint
   target: THREE.Vector3
@@ -62,7 +63,7 @@ function inFrame(f: Frame, dir: THREE.Vector3, v = new THREE.Vector3()) {
 }
 
 // The closest view to the one asked for that stays on one painting: narrowed until it fits, then turned back inside.
-function fitFrame(f: Frame, aim: THREE.Vector3, fov: number, aspect: number, rect: ViewRect) {
+function fitFrame(f: Frame, aim: THREE.Vector3, fov: number, aspect: number) {
   const dir = aim.clone().normalize()
   const right = new THREE.Vector3()
   const up = new THREE.Vector3()
@@ -82,8 +83,8 @@ function fitFrame(f: Frame, aim: THREE.Vector3, fov: number, aspect: number, rec
     let v0 = Infinity
     let v1 = -Infinity
     let behind = false
-    for (const x of [rect[0], (rect[0] + rect[2]) / 2, rect[2]])
-      for (const y of [rect[1], (rect[1] + rect[3]) / 2, rect[3]]) {
+    for (const x of [-1, 0, 1])
+      for (const y of [-1, 0, 1]) {
         ray
           .copy(dir)
           .addScaledVector(right, x * t * aspect)
@@ -141,12 +142,22 @@ export function minFov(point: TripodPoint, aim: THREE.Vector3) {
 
 // A view from a point toward `aim`, as near the one asked for as its paintings allow. `turned` is how far it had to
 // turn away, as a share of the lens it ends with, and `narrowed` how much of the lens it lost.
-export function fitView(point: TripodPoint, aim: THREE.Vector3, fov: number, aspect: number, rect: ViewRect = [-1, -1, 1, 1]) {
-  const want = aim.clone().normalize()
-  const asked = THREE.MathUtils.clamp(fov, minFov(point, want), 110)
+export function fitView(point: TripodPoint, aim: THREE.Vector3, fov: number, aspect: number, at: Spot = [0, 0]) {
+  const subject = aim.clone().normalize()
+  const asked = THREE.MathUtils.clamp(fov, minFov(point, subject), 110)
+  // The way the camera looks so that the subject sits at `at`: off the subject by that share of the lens.
+  const right = new THREE.Vector3().crossVectors(subject, UP)
+  if (right.lengthSq() < 1e-8) right.set(1, 0, 0)
+  right.normalize()
+  const t = Math.tan(rad(asked) / 2)
+  const want = subject
+    .clone()
+    .addScaledVector(right, -at[0] * t * aspect)
+    .addScaledVector(new THREE.Vector3().crossVectors(right, subject), -at[1] * t)
+    .normalize()
   let best: { dir: THREE.Vector3; fov: number; turned: number; narrowed: number; cost: number } | undefined
   for (const f of point.frames) {
-    const r = fitFrame(f, want, asked, aspect, rect)
+    const r = fitFrame(f, want, asked, aspect)
     const turned = r.dir.angleTo(want) / rad(r.fov)
     const narrowed = 1 - r.fov / asked
     const cost = turned + narrowed + (r.ok ? 0 : 10)
@@ -162,7 +173,7 @@ export function tripodView(
   points: TripodPoint[],
   shot: { position: readonly number[]; target: readonly number[]; fov: number },
   aspect: number,
-  rect: ViewRect = [-1, -1, 1, 1],
+  at: Spot = [0, 0],
   penalty?: (point: TripodPoint) => number
 ): View {
   const from = new THREE.Vector3(...(shot.position as [number, number, number]))
@@ -174,7 +185,7 @@ export function tripodView(
     const far = Math.max(aim.length(), 0.1)
     // The same subject at the same size from farther off is a longer lens.
     const fov = deg(2 * Math.atan((Math.tan(rad(shot.fov) / 2) * reach) / far))
-    const fit = fitView(point, aim, fov, aspect, rect)
+    const fit = fitView(point, aim, fov, aspect, at)
     // Metres from where the camera was meant to stand, plus what this point cannot give, each weighed as metres:
     // the subject pushed toward the edge of the frame or out of it, a lens narrower than asked or not as tight, a
     // painting enlarged until it is soft, and the subject seen from another side than the shot meant.

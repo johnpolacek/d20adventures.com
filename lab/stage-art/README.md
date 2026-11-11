@@ -168,6 +168,12 @@ Owner, same evening, on the Party view in the desktop app: "the standees look re
 - The Party view also showed backs: the party faces Garlan, and the only point with room for all four stood beside them. New point `front`, beside Garlan, looking back up the line at their faces.
 - A shot that meant to show its subjects' faces now counts a point that shows their backs as up to 16 m farther off (`Stage.backs`).
 
+Owner, later the same evening, on a hero's line in the desktop app: "the characters are still too shaded in this view. the lighting effects whether making darker or brighter look weird", and the screen held "way too much".
+
+- Cards are no longer lit at all on a painted set. A card is a photograph with its own soft light, so it shows evenly, graded as the paintings are, with a slight warm tint. The set's shade on figures, added hours earlier, is gone again. Figures still cast shadows on the ground.
+- That view was a close-up of belts with the speaker under a panel. The lens had been fitted to the part of the canvas the panels left free, so the whole canvas, two or three times as tall, had to stay on one painting, and the lens narrowed to 10 to 16 degrees. The lens is now the whole canvas, and the subject is set in the free part by turning the camera (`Spot` in `tripod.ts`).
+- Play screen: the portrait plate is gone from the 3D scene, since a line was already in the narration and in a bubble. The "Choose a perspective" label and the "Drag to look" hint are gone. The mini-map moved from over the scene to the end of the perspective bar, 128 by 72 px, and still opens the full map.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
