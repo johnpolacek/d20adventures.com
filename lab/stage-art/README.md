@@ -241,6 +241,13 @@ The Dragonbone Inn, the same day: the first interior, begun and not yet publishe
 - Cards: Bram, the bard, Beric, Eamon, Elara and the six seated patrons repainted and published, 42 so far. A seated card keeps its stool.
 - The morning inn (`dragonbone-inn-morning`) is the same room in daylight with its own crowd and a few other objects. It needs its own paintings.
 
+The inn finished, 2:40 PM the same day, once the image tool's allowance came back. The ten remaining plates were painted with `--fill`, edges within 8 px 94 to 98%, and the set is published: eleven points, sixteen paintings.
+
+- `room`, `backroom`, `door`, `bar`, `skull`, `darkCorner` and `corner` (one painting each), `front` (the room from the front door, and its hearth end and stairs end), `table` and `stairs` (two each), `hearth` (the hearth, and the bard's corner beside it).
+- `stage:check`: both evening stagings, The Dragonbone Inn and An Unsolicited Opportunity, have every shot and every speaker's view on the paint.
+- Two speaker's views are seen from the `room` point 8 m off, the sailor's and Bram's at the bar, so they enlarge its painting past what is sharp.
+- A picture's file name is lower case, so `publish.ts` writes the `darkCorner` point's as `dark-corner.webp`.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.

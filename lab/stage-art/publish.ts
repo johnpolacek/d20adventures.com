@@ -42,7 +42,8 @@ async function main() {
       const at = cam.position.map((v) => round(v, 3))
       if (position && at.some((v, k) => Math.abs(v - (position as number[])[k]) > 0.01)) throw new Error(`${name} was not painted from ${point}'s point`)
       position = at
-      const file = `${point}${i ? `-${i + 1}` : ""}`
+      // A picture's name is lower case: `darkCorner` is written `dark-corner`.
+      const file = `${point.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}${i ? `-${i + 1}` : ""}`
       await webp(`${PUB}/${name}.png`, `${dir}/${file}.webp`, Number(width) || 1536)
       const clear = existsSync(`${PUB}/${name}-clear.png`)
       if (clear) await webp(`${PUB}/${name}-clear.png`, `${dir}/${file}-clear.webp`, Number(width) || 1536)
