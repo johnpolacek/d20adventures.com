@@ -88,8 +88,8 @@ float cYawA = cYB.x, cSin = sin(cYawA), cCos = cos(cYawA);`
  float ph = cA.w * 6.2832, walk = cB.w, stride = sin(uTime * 5.2 * (.85 + .3 * fract(cA.w * 7.13)) + ph);
  vec3 lp = vec3(position.x * cV.x * cV.y, position.y * cV.x, 0.0);
  lp.y += walk * abs(stride) * .035;
- // Someone standing leans a little from side to side. Not a photograph seen from a tripod: it stands still.
- lp.x += (walk * stride * .012 + (1.0 - walk) * (1.0 - uFace.w) * sin(uTime * (.8 + cA.w * .5) + ph) * .012) * position.y * cV.x;
+ // Someone standing stands still: a picture leaning from side to side reads as a cut-out rocked on its foot.
+ lp.x += walk * stride * .012 * position.y * cV.x;
  transformed = vec3(lp.x * cCos, lp.y, -lp.x * cSin);
  // Someone the camera all but touches is left out, so a passer-by's head never fills the frame.
  transformed *= step(1.1, distance(uCam, cPos + vec3(0.0, 1.1, 0.0)));

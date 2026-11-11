@@ -209,6 +209,8 @@ Owner, later that morning: "i'm still seeing the standees move around", "i want 
 - Checked on `/dev/turn`, 48 paragraphs read through: 4,049 frames, no cast member, card or crowd figure changed place or pose while the picture showed, and 129 were placed in three dips.
 - Left as it is: a card dissolves between its front and its back over a quarter second when its character turns about.
 
+Owner, 8 AM, on the Harvest Festival in the app: "still seeing the people move in this view". That set is built, not painted, and the lock was tied to painted sets. It now holds on every set (`PEOPLE_STILL` in `stage.ts`): crowd, cast, lines, falls and hits as above, and the crowd's idle lean is gone from cards and pawns alike. Only the drift in is a painted set's own. Checked on `/dev/stage` with the festival's staging: 44 walkers and 454 people, through four shots, a move, a fall and a hit, nothing changed place or pose while the picture showed.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.

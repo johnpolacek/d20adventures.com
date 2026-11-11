@@ -410,8 +410,6 @@ export class Standees {
         const k = Math.max(0, 1 - hit.t / 0.45) * hit.strength
         s.mat.color.setRGB(1, 1, 1).lerp(hit.color, Math.min(0.7, 0.6 * k))
         s.mat.emissive.copy(hit.color).multiplyScalar(0.035 * k)
-        // A photograph seen from a tripod does not shake.
-        s.mesh.position.x = this.tripod ? 0 : Math.sin(hit.t * 70) * 0.05 * k
         if (k <= 0) this.hits.delete(c.id)
       }
       // The card is as wide as the art it shows; the shadow caster and the relief follow whichever view dominates.

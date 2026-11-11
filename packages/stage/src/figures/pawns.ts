@@ -421,7 +421,6 @@ uniform float uTime; varying float vZone; varying vec3 vA; varying vec3 vB; vary
 vZone = zone; vA = iA; vB = iB; vSkin = iP.z;
 float ph = iP.x * 6.2832, walk = iP.y, sc = iP.w;
 float stride = sin(uTime * 5.2 * sc + ph);
-transformed.x += sin(uTime * (.8 + iP.x * .5) + ph) * .012 * position.y * (1.0 - walk);
 transformed.y += walk * abs(stride) * .035 * smoothstep(.6, 1.5, position.y);
 transformed.z += walk * stride * .05 * (1.0 - smoothstep(0.0, .9, position.y)) * sign(position.x + .001);
 transformed.z += walk * .03 * smoothstep(.8, 1.6, position.y);`

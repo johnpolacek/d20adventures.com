@@ -109,13 +109,16 @@ export async function createStage(o: StageOptions): Promise<Stage> {
 
 // The steepest the player can tilt the camera: its angle from straight overhead.
 const STEEPEST_ORBIT = Math.PI * 0.28
-// On a painted set the only movement is the camera's drift in and the set's own life: cloth in the wind, smoke, birds
-// (owner, 2026-11-11: "a drift in only then after that is static with just minor ambient animations like flags,
-// banners billowing, smoke", "the people should be locked in"). A card is a photograph of someone standing, and
-// sliding one along with a bob reads as a cut-out pushed across the picture. So the crowd stands where it is, and a
-// cast member who has somewhere to go is put there while the picture dips for a moment, as it does when the camera
-// cuts. A fall is put the same way, a struck figure flashes without shaking, and a line of people (a loop) holds still.
-// The drift: on arriving at a point the camera starts a little off it (see driftIn) and a touch wide, and over these
+// The only movement on a stage is the camera's and the set's own life: cloth in the wind, smoke, fire, birds (owner,
+// 2026-11-11: "a drift in only then after that is static with just minor ambient animations like flags, banners
+// billowing, smoke", "the people should be locked in", "i want only camera movements and ambient animations. when
+// the standees move it looks weird"). That holds on every set, painted or built. A card is a picture of someone
+// standing, and sliding one along with a bob reads as a cut-out pushed across the frame. So the crowd stands where
+// it is, and a cast member who has somewhere to go is put there while the picture dips for a moment, as it does when
+// a painted set's camera cuts. A fall is put the same way, a struck figure flashes without shaking, and a line of
+// people (a loop) holds still. The walking is all still here, behind this one switch.
+const PEOPLE_STILL = true
+// A painted set's drift: on arriving at a point the camera starts a little off it (see driftIn) and a touch wide, and over these
 // seconds comes to rest, easing all the way. It ends this much closer than the view it was given, never wider, so a
 // view fitted to the edge of its painting stays on the paint.
 const DRIFT_SECONDS = 7
@@ -192,7 +195,7 @@ export class Stage {
   private cueWaiters = new Map<string, (() => void)[]>()
   readonly loops = new Map<string, QueueLoop>()
   private coinMesh: THREE.Mesh | null = null
-  // `unseen`: not walked, but put there once the picture has dipped (a painted set).
+  // `unseen`: not walked, but put there once the picture has dipped.
   private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void; unseen?: boolean }>()
   private insets = { right: 0, bottom: 0 }
   private raf = 0
@@ -507,12 +510,12 @@ export class Stage {
   }
   waitCue(name: string) {
     if (this.cues.has(name)) return Promise.resolve()
-    // A painted set's line does not move on by itself: it is put where the beats wait for it to be.
-    if (this.painted?.on && this.motion) this.skipLoops(name)
+    // A line does not move on by itself: it is put where the beats wait for it to be.
+    if (PEOPLE_STILL && this.motion) this.skipLoops(name)
     return new Promise<void>((r) => this.cueWaiters.set(name, [...(this.cueWaiters.get(name) ?? []), r]))
   }
   // Skipping: loops jump to the moment the beats are waiting for (the party's turn at the front unless a cue says which).
-  // On a painted set they jump while the picture is dark, so nobody is seen to change place.
+  // They jump while the picture is dark, so nobody is seen to change place.
   skipLoops(cue?: string) {
     if (cue && this.cues.has(cue)) return
     const skip = () => {
@@ -522,7 +525,7 @@ export class Stage {
         else l.skipToFront()
       }
     }
-    if (this.painted?.on && this.motion) void this.unseen().then(skip)
+    if (PEOPLE_STILL && this.motion) void this.unseen().then(skip)
     else skip()
   }
 
@@ -871,8 +874,8 @@ export class Stage {
       c.z = p.z
       return Promise.resolve()
     }
-    // On a painted set nobody is seen to walk (see DRIFT_SECONDS).
-    if (this.painted?.on) {
+    // Nobody is seen to walk (see PEOPLE_STILL).
+    if (PEOPLE_STILL) {
       return new Promise<void>((resolve) => {
         this.moves.set(id, { tx: p.x, tz: p.z, speed, resolve, unseen: true })
         this.putUnseen(id)
@@ -939,8 +942,8 @@ export class Stage {
       const p = this.point(lands)
       c.ry = Math.atan2(c.x - p.x, c.z - p.z)
     }
-    // On a painted set nobody is seen to fall: they are down when the picture comes back.
-    if (this.painted?.on && this.motion && !instant && down !== this.standees.down.has(id)) return void this.unseen().then(() => this.standees.lay(id, down, true))
+    // Nobody is seen to fall: they are down when the picture comes back.
+    if (PEOPLE_STILL && this.motion && !instant && down !== this.standees.down.has(id)) return void this.unseen().then(() => this.standees.lay(id, down, true))
     this.standees.lay(id, down, instant)
   }
   isDown(id: string) {
@@ -995,12 +998,10 @@ export class Stage {
     })
   }
   private stepMoves(dt: number) {
-    const painted = this.painted?.on
     for (const [id, m] of this.moves) {
       if (m.unseen) continue
       const c = this.member(id)
-      // A walk begun before the paintings were up ends unseen.
-      if (painted) {
+      if (PEOPLE_STILL) {
         this.putUnseen(id)
         continue
       }
@@ -1171,8 +1172,8 @@ export class Stage {
     }
     if (this.motion) {
       this.stepMoves(dt)
-      // A painted set's line stands still. When the beats have moved it on, everyone is put in their new place unseen.
-      if (!this.painted?.on) for (const l of this.loops.values()) l.update(dt)
+      // A line stands still. When the beats have moved it on, everyone is put in their new place unseen.
+      if (!PEOPLE_STILL) for (const l of this.loops.values()) l.update(dt)
       else
         for (const l of this.loops.values()) {
           if (l.paused || !l.busy || this.closing.has(l)) continue
@@ -1183,7 +1184,7 @@ export class Stage {
           })
         }
       this.shared.time.value += dt
-      this.crowd.update(dt, !!this.painted?.on)
+      this.crowd.update(dt, PEOPLE_STILL)
       for (const f of this.life) f(this.shared.time.value)
     }
     if (this.transition) {
