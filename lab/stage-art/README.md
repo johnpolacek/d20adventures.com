@@ -248,6 +248,18 @@ The inn finished, 2:40 PM the same day, once the image tool's allowance came bac
 - Two speaker's views are seen from the `room` point 8 m off, the sailor's and Bram's at the bar, so they enlarge its painting past what is sharp.
 - A picture's file name is lower case, so `publish.ts` writes the `darkCorner` point's as `dark-corner.webp`.
 
+The Midnight Summons, the same day: the whole solo adventure, three forest sets and seven stagings, 21 paintings and three cards.
+
+- `thalberns-forest-home`, a cottage by day: `home` (the door, and Thalbern's side of it), `porch`, `woods`, `ranger`.
+- `valkarr-forest-trail`, fog and moonlight: the set's `trail`, `clearing` and `oak`, then one point for where each scene stands its cast: `start` (Broken Silence), `standoff` and `fight` looking at Thalbern and at the Owlbear (Owlbear Confrontation), `rescue`, `fallen` and `druid` (Timely Rescue).
+- `old-standing-stones`, a full moon over the river: `stones`, `river`, `path`, `meeting`, and `circle` inside the ring, looking at Wollandora and at Thalbern.
+- Wide views first from clean plates, the rest with those projected on and `--fill`. Edges within 8 px: 84 to 95% on the wide ones. A forest scores lower than a street, since a crown of leaves has no one edge to keep.
+- `stage:check`: all seven stagings have every shot and every speaker's view on the paint.
+- Night sets take `light`, a cool one (`#aebfdc` on the trail, `#b4c4dc` at the stones), and `shadows: 0.4`.
+- Grass, ferns and leaves still blow in the built set, but a painted set shows them still: paint is looked up by where a point is, and everything along one line of sight from the tripod takes the same paint. Only cloth carries its paint with it. The river is a still picture too.
+- Cards: Thalbern, Wollandora and the Owlbear, 45 so far. Their ids are paths, `fixtures/the-midnight-summons/thalbern`.
+- Pictures are copied to `~/Desktop/midnight-summons-spike`.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
