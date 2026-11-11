@@ -47,12 +47,12 @@ test("continuing the story keeps the heroes who can go on, on the seats they had
     { id: "hero-b", race: "Dwarf", archetype: "Cleric" },
     { id: "hero-c", race: "Dragonborn", archetype: "Fighter" },
   ]
-  assert.deepEqual(openingParty(info("welcome-to-kordavos"), roster, [you("hero-a")]), [you("hero-a"), ai("branka-stoneveil"), ai("cassia-verane"), ai("yeva-softstep")])
-  assert.deepEqual(openingParty(info("welcome-to-kordavos"), roster, [ai("hero-b"), you("hero-a")]), [ai("hero-b"), you("hero-a"), ai("branka-stoneveil"), ai("cassia-verane")])
+  assert.deepEqual(openingParty(info("welcome-to-kordavos"), roster, [you("hero-a")]), [you("hero-a"), ai("branka-stoneveil"), ai("milos-radan")])
+  assert.deepEqual(openingParty(info("welcome-to-kordavos"), roster, [ai("hero-b"), you("hero-a")]), [ai("hero-b"), you("hero-a"), ai("branka-stoneveil")])
   // A hero the adventure does not accept, or one no longer in the roster, stays behind.
   assert.deepEqual(openingParty(info("welcome-to-kordavos"), roster, [you("hero-c"), ai("hero-gone")]), openingParty(info("welcome-to-kordavos"), roster))
   // The three from the pier can go straight on too, and a party the AI ran gives its first hero to the player.
-  assert.deepEqual(openingParty(info("welcome-to-kordavos"), [], [ai(THALBERN), ai(LYRA), ai(POPPEN)]), [you(THALBERN), ai(LYRA), ai(POPPEN), ai("branka-stoneveil")])
+  assert.deepEqual(openingParty(info("welcome-to-kordavos"), [], [ai(THALBERN), ai(LYRA), ai(POPPEN)]), [you(THALBERN), ai(LYRA), ai(POPPEN)])
   // Never more than the adventure seats.
   assert.equal(openingParty(info("welcome-to-kordavos"), [], [...info("welcome-to-kordavos").premades.map((p) => you(p.id))]).length, info("welcome-to-kordavos").players[1])
   assert.deepEqual(openingParty(undefined, roster, [you("hero-a")]), [])

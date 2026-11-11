@@ -14,7 +14,7 @@ export function openingParty(
   const fits = (h: Pick<Hero, "race" | "archetype">) => Boolean(info.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
   const seatable = new Set([...info.premades.map((p) => p.id), ...heroes.filter(fits).map((h) => h.id)])
   const kept = carried.filter((c) => seatable.has(c.id)).slice(0, max)
-  if (!kept.length) return info.party.map((id, i) => ({ id, ai: i > 0 }))
+  if (!kept.length) return info.party.filter((id) => seatable.has(id)).map((id, i) => ({ id, ai: i > 0 }))
   const size = Math.min(max, Math.max(min, kept.length, info.party.length))
   const fill = info.party
     .filter((id) => !kept.some((c) => c.id === id))

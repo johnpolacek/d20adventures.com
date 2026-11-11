@@ -28,8 +28,10 @@ export type Pack = {
 export type Packs = Record<string, Pack>
 // The bundled adventures share no encounter ids, so one list of legal transitions serves every save.
 export const transitionsOf = (packs: Packs) => Object.values(packs).flatMap((p) => p.artifacts.graph.encounterTransitions)
-// The heroes a new game suggests. Welcome to Kordavos uses the four premades in its authored scenes.
-const PARTY: Record<string, string[]> = { "welcome-to-kordavos": ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"] }
+// The heroes a new game suggests, where it is not the first premades. Only current premades are suggested, so a hero
+// dropped from an adventure never holds an unseen seat.
+const PARTY: Record<string, string[]> = { "welcome-to-kordavos": ["branka-stoneveil", "milos-radan", "thalbern"] }
+const suggestedParty = (id: string, premadeIds: string[], max: number) => (PARTY[id]?.filter((cid) => premadeIds.includes(cid)) ?? premadeIds).slice(0, max)
 // What the new game screen offers for each adventure: its player range, premades, and the heroes it accepts.
 export const adventureList = (packs: Packs) =>
   Object.entries(packs).map(([id, p]) => {
@@ -47,7 +49,7 @@ export const adventureList = (packs: Packs) =>
       // Why a hero made for it may have come, offered in the hero creator.
       hooks: m.heroHooks ?? [],
       premades: premades.map((s) => ({ id: s.id, name: s.name, race: s.race, archetype: s.archetype, gender: s.gender })),
-      party: PARTY[id] ?? m.premadeCharacterIds.slice(0, m.maxPlayers),
+      party: suggestedParty(id, m.premadeCharacterIds, m.maxPlayers ?? m.premadeCharacterIds.length),
       // The adventure the story goes on to, which the ending offers.
       next: m.nextAdventureId ?? null,
     }
@@ -217,7 +219,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       const encounter = artifacts.encounters[artifacts.manifest.startEncounterId]
       const id = randomUUID(),
         turnId = randomUUID()
-      const choices = command.party ?? (PARTY[plan] ?? artifacts.manifest.premadeCharacterIds).map((id) => ({ id, ai: false }))
+      const choices = command.party ?? suggestedParty(plan, artifacts.manifest.premadeCharacterIds, artifacts.manifest.premadeCharacterIds.length).map((id) => ({ id, ai: false }))
       // Checked before any arrival is written.
       partyFor(packFor(plan), choices, store.heroes())
       await writeArrivals(
