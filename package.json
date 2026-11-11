@@ -81,6 +81,7 @@
     "test:gm-core": "tsx scripts/gm-core-check.ts && tsx scripts/gm-server-check.ts && tsc -p convex/tsconfig.json --noEmit",
     "desktop:dev": "pnpm --filter @d20/desktop tauri dev",
     "desktop:build": "pnpm --filter @d20/desktop tauri build",
+    "desktop:release": "sh scripts/desktop-release.sh",
     "desktop:wipe": "NODE_NO_WARNINGS=1 tsx scripts/desktop-wipe.ts"
   },
   "dependencies": {
