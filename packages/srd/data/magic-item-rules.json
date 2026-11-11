@@ -1,0 +1,276 @@
+[
+  {
+    "id": "activating-a-magic-item",
+    "name": "Activating a Magic Item",
+    "page": 206,
+    "kind": "rule",
+    "text": "It usually takes a Magic action to activate a magic item. The item’s user might also need to do something special. The description of each item category or individual item details how an item is activated. Certain items use the following rules for their activation."
+  },
+  {
+    "id": "arcana-proficiency",
+    "name": "Arcana Proficiency",
+    "page": 206,
+    "kind": "rule",
+    "text": "To craft a magic item, you and any assistants must have proficiency in the Arcana skill."
+  },
+  {
+    "id": "armor",
+    "name": "Armor",
+    "page": 204,
+    "kind": "category",
+    "category": "armor",
+    "tools": "Leatherworker’s Tools, Smith’s Tools, or Weaver’s Tools depending on the kind of armor as noted in the tools’ descriptions",
+    "text": "An item in the Armor category is typically a magical version of armor from “Equipment.” Unless an armor’s description notes otherwise, the armor must be worn for its magic to function.\nSome suits of magic armor specify the type of armor they are, such as Chain Mail or Plate Armor. If no type is specified, choose the type or determine it randomly."
+  },
+  {
+    "id": "artifact",
+    "name": "Artifact",
+    "page": 206,
+    "kind": "rarity",
+    "priceless": true
+  },
+  {
+    "id": "attunement",
+    "name": "No More Than Three Items",
+    "page": 102,
+    "kind": "attunement",
+    "maxItems": 3,
+    "text": "You can be attuned to no more than three magic items at a time. Any attempt to attune to a fourth item fails; you must end your Attunement to an item first. Additionally, you can’t attune to more than one copy of an item. For example, you can’t attune to more than one Ring of Protection at a time."
+  },
+  {
+    "id": "attunement-prerequisites",
+    "name": "Attunement Prerequisites",
+    "page": 205,
+    "kind": "rule",
+    "text": "If a magic item has a class prerequisite, a creature must be a member of that class to attune to the item. If a creature must be a spellcaster to attune to an item, the creature qualifies if it can cast at least one spell using its traits or features, not by using a magic item or the like."
+  },
+  {
+    "id": "charges",
+    "name": "Charges",
+    "page": 206,
+    "kind": "rule",
+    "text": "Some magic items have charges that must be expended to activate their properties. The number of charges an item has remaining is revealed when the Identify spell is cast on it. A creature attuned to an item knows how many charges the item has and how many it regains."
+  },
+  {
+    "id": "command-word",
+    "name": "Command Word",
+    "page": 206,
+    "kind": "rule",
+    "text": "A command word is a word or short phrase that must be spoken or signed for an item to work. Spoken command words must be audible and fail to work in areas where all sound is suppressed, as in the area of the Silence spell."
+  },
+  {
+    "id": "common",
+    "name": "Common",
+    "page": 206,
+    "kind": "rarity",
+    "value": 100,
+    "craftingDays": 5,
+    "craftingCost": 50
+  },
+  {
+    "id": "consumable-items",
+    "name": "Consumable Items",
+    "page": 206,
+    "kind": "rule",
+    "text": "Some items are consumed—used up, in other words—when they are activated. A Potion of Healing must be swallowed, for example, while the writing vanishes from a scroll when it is read. Once used, a consumable item loses its magic."
+  },
+  {
+    "id": "crafting-magic-items",
+    "name": "Crafting Magic Items",
+    "page": 206,
+    "kind": "rule",
+    "text": "“Equipment” contains rules on brewing Potions of Healing and scribing Spell Scrolls. To create other magic items, follow the rules below. In these rules, “you” refers to the character crafting the magic item."
+  },
+  {
+    "id": "crafting-spells",
+    "name": "Spells",
+    "page": 207,
+    "kind": "rule",
+    "text": "If a magic item allows its user to cast any spells from it, you must have all those spells prepared every day you spend crafting the item."
+  },
+  {
+    "id": "crafting-tools",
+    "name": "Tools",
+    "page": 206,
+    "kind": "rule",
+    "text": "The Magic Item Tools table lists which tool is required to make a magic item of each category. You must use the required tool to make an item and have proficiency with that tool. Any assistants must also have proficiency with it. For more information on the tools, see “Equipment.”"
+  },
+  {
+    "id": "cursed-items",
+    "name": "Cursed Items",
+    "page": 206,
+    "kind": "rule",
+    "text": "A magic item’s description specifies whether it bears a curse. Most methods of identifying items, including the Identify spell, fail to reveal such a curse.\nAttunement to a cursed item can’t be ended voluntarily unless the curse is broken first, such as with a Remove Curse spell."
+  },
+  {
+    "id": "items-made-for-specific-creatures",
+    "name": "Items Made for Specific Creatures",
+    "page": 205,
+    "kind": "rule",
+    "text": "Magic items that are meant to be worn tend to magically adjust themselves to the wearer. However, you can decide that a magic item doesn’t adjust its size to fit any wearer. For example, a particular armorer might make items usable only by folk who are sized and shaped like dwarves."
+  },
+  {
+    "id": "legendary",
+    "name": "Legendary",
+    "page": 206,
+    "kind": "rarity",
+    "value": 200000,
+    "craftingDays": 250,
+    "craftingCost": 100000
+  },
+  {
+    "id": "magic-item-rarity",
+    "name": "Magic Item Rarity",
+    "page": 205,
+    "kind": "rule",
+    "text": "Every magic item has a rarity, which provides a rough measure of an item’s power relative to other magic items. The rarities are shown in the Magic Item Rarities and Values table.\nCommon magic items, such as a Potion of Healing, are the most plentiful. Artifacts, such as the Dragon Orb, are priceless, unique, and difficult to acquire."
+  },
+  {
+    "id": "magic-item-resilience",
+    "name": "Magic Item Resilience",
+    "page": 206,
+    "kind": "rule",
+    "text": "A magic item is at least as durable as a nonmagical item of its kind. Most magic items, other than Potions and Scrolls, have Resistance to all damage.\nAn Artifact can be destroyed only in some special way. Otherwise, it is impervious to damage. Learning how to destroy an Artifact usually requires research or the completion of a quest."
+  },
+  {
+    "id": "magic-item-values-by-rarity",
+    "name": "Magic Item Values by Rarity",
+    "page": 205,
+    "kind": "rule",
+    "text": "Common magic items can often be bought in a town or city. Uncommon and Rare magic items are usually found only in cities, and rarer magic items might be sold only in wondrous locations, such as a city on another plane of existence. If you allow characters to buy and sell magic items in your campaign, rarity can help you set prices for those items. Gold Piece values are provided in the Magic Item Rarities and Values table, though a seller might ask for a service rather than coin as payment.\nIf a magic item incorporates an item that has a purchase cost in “Equipment” (such as a weapon or a suit of armor), add that item’s cost to the magic item’s value. For example, +1 Armor (Plate Armor) has a value of 5,500 GP, which is the sum of a Rare magic item’s value (4,000 GP) and the cost of Plate Armor (1,500 GP).\n*Halve the value for a consumable item other than a Spell Scroll. The value of a Spell Scroll is double what it costs to scribe the scroll (as specified in the “Scribing Spell Scrolls” section of “Equipment”)."
+  },
+  {
+    "id": "paired-items",
+    "name": "Paired Items",
+    "page": 205,
+    "kind": "rule",
+    "text": "You can allow exceptions to the rule that paired items must both be worn. For example, a character with only one arm might be able to use a single Glove of Missile Snaring so long as the matching glove is on their person."
+  },
+  {
+    "id": "potion",
+    "name": "Potion",
+    "page": 204,
+    "kind": "category",
+    "category": "potion",
+    "tools": "Alchemist’s Supplies or Herbalism Kit",
+    "text": "An item in the Potion category might be a magical brew that must be imbibed or an oil that must be applied to a creature or an object. A typical potion consists of 1 ounce of liquid in a vial.\nUsing a Potion. Potions are consumable items. Drinking a potion or administering it to another creature requires a Bonus Action. Applying an oil might take longer as specified in its description. Once used, a potion takes effect immediately, and it is used up.\nMixing Potions. A character might drink one potion while still under the effects of another or pour several potions into a single container. The strange ingredients used in creating potions can result in unpredictable interactions.\nWhen a character mixes two potions together, roll on the Potion Miscibility table. If more than two are combined, roll again for each subsequent potion, combining the results. Unless the effects are immediately obvious, reveal them only when they become evident."
+  },
+  {
+    "id": "rare",
+    "name": "Rare",
+    "page": 206,
+    "kind": "rarity",
+    "value": 4000,
+    "craftingDays": 50,
+    "craftingCost": 2000
+  },
+  {
+    "id": "ring",
+    "name": "Ring",
+    "page": 204,
+    "kind": "category",
+    "category": "ring",
+    "tools": "Jeweler’s Tools",
+    "text": "For its magic to function, an item in the Ring category must be worn on a finger or a similar digit unless its description notes otherwise."
+  },
+  {
+    "id": "rod",
+    "name": "Rod",
+    "page": 204,
+    "kind": "category",
+    "category": "rod",
+    "tools": "Woodcarver’s Tools",
+    "text": "An item in the Rod category is a scepter usually made of metal, wood, or bone. A typical rod weighs 2 to 5 pounds.\nUnless its description notes otherwise, a rod can be used as an Arcane Focus."
+  },
+  {
+    "id": "scroll",
+    "name": "Scroll",
+    "page": 205,
+    "kind": "category",
+    "category": "scroll",
+    "tools": "Calligrapher’s Supplies",
+    "text": "An item in the Scroll category is a roll of paper or parchment, sometimes attached to wooden rods and typically kept safe in a tube of ivory, jade, leather, metal, or wood. The most prevalent scroll is the Spell Scroll, a spell stored in written form.\nUsing a Scroll. Scrolls are consumable items. Unleashing the magic in a scroll requires the user to read the scroll. When its magic has been invoked, the scroll can’t be used again. Its words fade, or it crumbles into dust.\nAny creature that can understand a written language can read a scroll and attempt to activate it unless its description notes otherwise."
+  },
+  {
+    "id": "spells-cast-from-items",
+    "name": "Spells Cast from Items",
+    "page": 206,
+    "kind": "rule",
+    "text": "Some magic items allow the user to cast a spell from the item. The spell is cast at the lowest possible spell and caster level, doesn’t expend any of the user’s spell slots, and requires no components unless the item’s description notes otherwise. The spell uses its normal casting time, range, and duration, and the user of the item must concentrate if the spell requires Concentration. Many items, such as Potions, bypass the casting of a spell and confer the spell’s effects with its usual duration. Certain items make exceptions to these rules, changing the casting time, duration, or other parts of a spell.\nA magic item may require the user to use their own spellcasting ability when casting a spell from the item. If the user has more than one spellcasting ability, the user chooses which one to use with the item. If the user doesn’t have a spellcasting ability, their spellcasting ability modifier is +0 for the item, and the user’s Proficiency Bonus applies."
+  },
+  {
+    "id": "staff",
+    "name": "Staff",
+    "page": 205,
+    "kind": "category",
+    "category": "staff",
+    "tools": "Woodcarver’s Tools",
+    "text": "Items in the Staff category vary widely in appearance: some are of nearly equal diameter throughout and smooth, others are gnarled and twisted, some are made of wood, and others are composed of polished metal or crystal. A staff weighs between 2 and 7 pounds and serves well as a walking stick or cane.\nUnless its description notes otherwise, a staff can be used as a nonmagical Quarterstaff and an Arcane Focus."
+  },
+  {
+    "id": "the-next-dawn",
+    "name": "“The Next Dawn”",
+    "page": 206,
+    "kind": "rule",
+    "text": "Magic items often have charges or properties that recharge at the next dawn or some other specified time. If such an item is on a world or plane of existence where the specified event doesn’t occur, the GM determines when the item recharges."
+  },
+  {
+    "id": "time-and-cost",
+    "name": "Time and Cost",
+    "page": 207,
+    "kind": "rule",
+    "text": "Crafting a magic item takes an amount of time and money based on the item’s rarity as shown in the Magic Item Crafting Time and Cost table.\nWork per Day. For each day of crafting, you must work for 8 hours. If an item requires multiple days, those days needn’t be consecutive.\nAssistants. Characters can combine their efforts to shorten the crafting time. Divide the time needed to create an item by the number of characters working on it. Normally, only one other character can assist you, but the GM might allow more assistants.\nRaw Materials. The cost in the table represents the raw materials needed to make a magic item. The GM determines whether appropriate raw materials are available. In a city, there is a 75 percent chance that the materials are available, and in any other settlement, that chance is 25 percent. If materials aren’t available, you must wait at least 7 days before checking on the availability again.\nIf a magic item incorporates an item that has a purchase cost (such as a weapon or a suit of armor), you must also pay that entire cost or craft that item using the rules in “Equipment.” For example, to make +1 Armor (Plate Armor), you must pay 3,500 GP or pay 2,000 GP and craft the armor.\n*The time and cost are halved for a consumable item other than a Spell Scroll, whose crafting time and cost are given in “Equipment.”"
+  },
+  {
+    "id": "uncommon",
+    "name": "Uncommon",
+    "page": 206,
+    "kind": "rarity",
+    "value": 400,
+    "craftingDays": 10,
+    "craftingCost": 200
+  },
+  {
+    "id": "unusual-anatomy",
+    "name": "Unusual Anatomy",
+    "page": 205,
+    "kind": "rule",
+    "text": "Use your discretion to decide whether a creature can wear an item not made for its anatomy. A ring placed on a tentacle might work, but a yuan-ti with a snakelike tail instead of legs can’t wear magic boots."
+  },
+  {
+    "id": "very-rare",
+    "name": "Very Rare",
+    "page": 206,
+    "kind": "rarity",
+    "value": 40000,
+    "craftingDays": 125,
+    "craftingCost": 20000
+  },
+  {
+    "id": "wand",
+    "name": "Wand",
+    "page": 205,
+    "kind": "category",
+    "category": "wand",
+    "tools": "Woodcarver’s Tools",
+    "text": "An item in the Wand category is typically 12 to 15 inches long and crafted of metal, bone, or wood. It is tipped with metal, crystal, stone, or some other material.\nUnless its description notes otherwise, a wand can be used as an Arcane Focus."
+  },
+  {
+    "id": "weapon",
+    "name": "Weapon",
+    "page": 205,
+    "kind": "category",
+    "category": "weapon",
+    "tools": "Leatherworker’s Tools, Smith’s Tools, or Woodcarver’s Tools depending on the kind of weapon as noted in the tools’ descriptions",
+    "text": "A magic weapon is typically a magical version of a weapon from “Equipment.” Some magic weapons specify the type of weapon they are in their descriptions, such as a Longsword or Longbow. If no weapon type is specified, you may choose the type or determine it randomly.\nAmmunition. If a magic weapon has the Ammunition property, ammunition fired from it is considered magical for the purpose of any rule that cares whether a weapon is magical or not."
+  },
+  {
+    "id": "wondrous-item",
+    "name": "Wondrous Item",
+    "page": 205,
+    "kind": "category",
+    "category": "wondrous-item",
+    "tools": "Tinker’s Tools or the tool required to make the nonmagical item on which the magic item is based",
+    "text": "Wondrous Items include wearable items such as boots, belts, capes, amulets, brooches, and circlets. Bags, carpets, figurines, horns, musical instruments, and more also fall into this category."
+  }
+]
