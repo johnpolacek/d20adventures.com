@@ -152,6 +152,8 @@ Image models: `--cli` and `cards.ts` use the Codex CLI's own image tool on the o
 
 The gate has eleven points and fourteen paintings: `gate` (with a cloth-free twin), `checkpoint` (wide, zoom, close), `party` (two ways), `table`, `queue`, `ramparts`, `through`, `huddle`, `arch`, `road` and `arrive`. Both stagings on it are fully on the paint.
 
+Sway: owner, 2026-11-10, "the drift on the far away shots is great but on closeups it moves too fast". The sway now shrinks with the subject's distance and the lens, so the foreground slides at most about 1% of the frame's height (`SWAY_ON_SCREEN` in `tripod.ts`). Measured live: 16 cm at the gate as before, 2.3 cm on Garlan's close view where it was 6, 2.4 cm on a hero from the party point where it was 12.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.

@@ -193,10 +193,16 @@ export function tripodView(
   return best!.view
 }
 
+// The most a sway slides something half way to the subject across the frame, as a share of the frame's height.
+const SWAY_ON_SCREEN = 0.01
+
 // How far the camera has wandered from its point: sideways most, a little up and down and in and out, over `period`
-// seconds. A long lens sways less, since it magnifies the slide of near things against far ones.
+// seconds. `aim` runs from the point to what the camera looks at. `amp` is the widest sway, in metres, which a wide view
+// of something far takes whole. A close view takes less, so that things slide across the screen no faster than they do
+// in a far one: a subject 3 m off through a 35 degree lens sways under 2 cm, where 15 cm would swing the foreground
+// a tenth of the frame.
 export function sway(aim: THREE.Vector3, fov: number, amp: number, time: number, period = 8, out = new THREE.Vector3()) {
-  const k = amp * THREE.MathUtils.clamp(fov / 50, 0.3, 1)
+  const k = Math.min(amp, SWAY_ON_SCREEN * aim.length() * rad(fov))
   const fwd = aim.clone().normalize()
   const right = new THREE.Vector3().crossVectors(fwd, UP)
   if (right.lengthSq() < 1e-8) right.set(1, 0, 0)
