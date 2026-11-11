@@ -1,5 +1,9 @@
 import { existsSync } from "node:fs"
 import type { Class, ClassFeature, ClassLevel, FeatureOption, Subclass } from "../../src/schema/classes"
+import { classFeatureSchema, classSchema, subclassSchema } from "../../src/schema/classes"
+import type { Equipment } from "../../src/schema/equipment"
+import type { Feat } from "../../src/schema/origins"
+import type { Spell } from "../../src/schema/spells"
 import { dataPath, readData, toId } from "../lib/data"
 import { missingSentences, pages, squash } from "../lib/official"
 import type { Report } from "../lib/report"
@@ -259,8 +263,9 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   need(same(sorted(entry.activation ?? []), sorted(named)), `activation ${JSON.stringify(entry.activation)}, the text names ${JSON.stringify(named)}`)
 
   // A later feature that changes this one's recharge, as Font of Inspiration does for Bardic Inspiration.
-  const changed = Boolean(name) && related.includes(`expended uses of ${name} when you finish a Short or Long Rest`)
-  need(Boolean(entry.uses?.rechargeByLevel) === changed, `rechargeByLevel ${JSON.stringify(entry.uses?.rechargeByLevel)}`)
+  const changed = name ? related.match(new RegExp(`Level (\\d+): [^:]*? You now regain all your expended uses of ${name} when you finish a Short or Long Rest`)) : null
+  const recharges = changed ? [{ level: Number(changed[1]), recharge: "short-or-long-rest" }] : undefined
+  need(same(entry.uses?.rechargeByLevel, recharges), `rechargeByLevel ${JSON.stringify(entry.uses?.rechargeByLevel)}, the text states ${JSON.stringify(recharges)}`)
 
   // Uses: the count, what restores it, and the Short Rest regain.
   const uses = entry.uses
@@ -286,20 +291,36 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     else if (uses.recharge === "long-rest") need(longAlone && (!shortOrLong || Boolean(uses.shortRestRegain)), "recharge long-rest")
     else need(false, `recharge ${uses.recharge}`)
     need(Boolean(uses.shortRestRegain) === has(/regain one (?:of its )?expended uses? when you finish a Short Rest/), "shortRestRegain")
-    for (const step of uses.rechargeByLevel ?? [])
-      need(has(`Level ${step.level}:`, related) && has(/regain all your expended uses of Bardic Inspiration when you finish a Short or Long Rest/, related), `recharge at level ${step.level}`)
   }
 
   const resources: Record<string, (amount: number) => RegExp> = {
     "focus-points": (amount) => new RegExp(`${amount} Focus Points?`),
     "sorcery-points": (amount) => new RegExp(`${amount} Sorcery Points?`),
     "sneak-attack-dice": (amount) => new RegExp(`Cost: ${amount}d6`),
-    "channel-divinity": () => /use of (?:your |this class’s )?Channel Divinity/,
-    "wild-shape": () => /use of your Wild Shape/,
-    "bardic-inspiration": () => /use of (?:your )?Bardic Inspiration/,
-    "second-wind": () => /use of your Second Wind/,
-    rage: () => /use of your Rage/,
+    "channel-divinity": (amount) => new RegExp(`${amount === 1 ? "(?:a|one)" : "-"} use of (?:your |this class’s )?Channel Divinity`),
+    "wild-shape": (amount) => new RegExp(`${amount === 1 ? "(?:a|one)" : "-"} use of your Wild Shape`),
+    "bardic-inspiration": (amount) => new RegExp(`${amount === 1 ? "(?:a|one)" : "-"} use of (?:your )?Bardic Inspiration`),
+    "second-wind": (amount) => new RegExp(`${amount === 1 ? "(?:a|one)" : "-"} use of your Second Wind`),
+    rage: (amount) => new RegExp(`${amount === 1 ? "(?:a|one)" : "-"} use of your Rage`),
   }
+  // The main cost, both ways: a sentence that opens with the use, not a condition, an alternative or a restoration.
+  // A printed "Cost:" label settles it; otherwise the first such sentence does.
+  const label = own.match(/Cost: (\d+)(d6| Sorcery Points?)/)
+  const costs = label
+    ? [`${label[2] === "d6" ? "sneak-attack-dice" : "sorcery-points"}:${label[1]}`]
+    : own
+        .replace(/([.!?]) /g, "$1\n")
+        .split("\n")
+        .filter((sentence) => !/^(?:If|Alternatively|Additionally|In addition|Whenever|Once)\b/.test(sentence) && !/to restore your use|to redirect|to reroll|Points? to use /.test(sentence))
+        .flatMap((sentence) => {
+          const points = sentence.match(/expend (\d+) (Focus|Sorcery) Points?/)
+          const use = sentence.match(/expend (?:a|one) use of (?:your |this class’s )?(Channel Divinity|Wild Shape|Bardic Inspiration|Second Wind|Rage)\b/)
+          if (points) return [`${toId(points[2])}-points:${points[1]}`]
+          if (use) return [`${toId(use[1])}:1`]
+          return []
+        })
+  const spent = entry.spend ? `${entry.spend.resource}:${entry.spend.amount}` : undefined
+  need(same(spent, costs[0]), `spend ${spent}, the text spends ${costs[0]}`)
   if (entry.spend) {
     need(has(resources[entry.spend.resource](entry.spend.amount)), `spend ${entry.spend.amount} ${entry.spend.resource}`)
     need(Boolean(entry.spend.keptOnFailure) === has(/isn’t expended/), "spend keptOnFailure")
@@ -320,7 +341,11 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   need(entry.dicePerSlotLevel === perSlot, `dicePerSlotLevel ${entry.dicePerSlotLevel}, the text adds ${perSlot} per slot level`)
   need(Boolean(entry.diceFromColumn) === has(/roll 1d6 in place of the normal damage|deal an extra 1d6 damage/), `diceFromColumn ${entry.diceFromColumn}`)
   if (entry.diceFromColumn) need(has(`${headings[entry.diceFromColumn]} column`), `diceFromColumn ${entry.diceFromColumn}`)
-  for (const step of entry.diceByLevel ?? []) need(has(step.dice, related) && has(String(step.level), related), `dice ${step.dice} at level ${step.level}`)
+  // Dice by level, both ways: "Cleric levels 7 (2d8), 13 (3d8)" in its own text, or a later feature that raises it.
+  const steps = [...own.matchAll(/(\d+) \((\d+d\d+)\)/g)].map((match) => ({ level: Number(match[1]), dice: match[2] }))
+  const raised = name ? related.match(new RegExp(`Level (\\d+): [^:]*? The extra damage of your ${name} increases to (\\d+d\\d+)`)) : null
+  if (!steps.length && raised) steps.push({ level: Number(raised[1]), dice: raised[2] })
+  need(same(entry.diceByLevel, steps.length ? steps : undefined), `diceByLevel ${JSON.stringify(entry.diceByLevel)}, the text states ${JSON.stringify(steps)}`)
   const adds: string[] = []
   const after = own.match(/\d+d\d+ (?:plus your|and add your) ([^.]+?)(?:\.|,| \(| to )/)?.[1] ?? ""
   for (const [ability, id] of Object.entries(abilityByName)) if (after.includes(`${ability} modifier`)) adds.push(id)
@@ -328,7 +353,11 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
   need(same(sorted(entry.rollAdds ?? []), sorted(adds)), `rollAdds ${JSON.stringify(entry.rollAdds)}, the text adds ${JSON.stringify(adds)}`)
 
   // Damage types, both ways: each printed list of types dealt is held whole.
-  const dealt = [...own.matchAll(new RegExp(`(?:\\d+d\\d+|take|takes|taking|deal|choice of|it deal) (${typeList}) damage`, "g"))].flatMap((match) => listOf(match[1]))
+  const dealt = [
+    ...[...own.matchAll(new RegExp(`(?:\\d+d\\d+|take|takes|taking|deal|choice of|it deal) (${typeList}) damage`, "g"))].flatMap((match) => listOf(match[1])),
+    // A list to choose a type from: "Choose one of those types: Acid, Cold, Fire, Lightning, or Poison."
+    ...listOf(own.match(new RegExp(`Choose one of those types: (${typeList})`))?.[1] ?? ""),
+  ]
   const typed = [...(entry.damageTypes ?? []), ...(entry.selfDamage ? [entry.selfDamage.damageType] : [])]
   for (const type of new Set(dealt)) need(typed.includes(type), `the text deals ${type} damage, the data does not hold it`)
   for (const type of typed) need(has(capital(type)), `damage type ${type}`)
@@ -362,52 +391,90 @@ function mechanicsFailures(entry: Record<string, any>, own: string, related: str
     )
     need(entry.selfSave.resetOn === (has(/When you finish a Short or Long Rest, the DC resets/) ? "short-or-long-rest" : undefined), "selfSave resetOn")
   }
-  if (entry.saveDc !== undefined) need(dc(entry.saveDc), `saveDc ${JSON.stringify(entry.saveDc)}`)
-
-  if (entry.pool) need(has(`${numberWord[entry.pool.perLevel]} times your`) && has(/Long Rest/) && entry.pool.recharge === "long-rest", "pool")
-  if (entry.range !== undefined) need(has(`${entry.range} feet`), `range ${entry.range}`)
-  if (entry.area) {
-    const area: Record<string, string> = { emanation: `${entry.area.size}-foot Emanation`, sphere: `${entry.area.size}-foot-radius Sphere`, cube: `${entry.area.size}-foot Cube` }
-    need(has(area[entry.area.shape]), `area ${entry.area.shape} ${entry.area.size}`)
+  // Fields read whole from the text, both ways: the data holds exactly what the standard wording states, and
+  // nothing where the text states nothing.
+  const word: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, twice: 2 }
+  const names = (text: string) => text.split(" and ").map(toId)
+  const expected: Record<string, unknown> = {}
+  const dcText = own.match(/(?:the DC|The save DC) equals (?:the (spell save DC)|8 plus your (\w+) modifier and Proficiency Bonus)/)
+  if (dcText) expected.saveDc = dcText[1] ? "spell-save-dc" : { plusModifierOf: abilityByName[dcText[2]] }
+  const pool = own.match(/a total number of Hit Points equal to (\w+) times your \w+ level/)
+  if (pool) expected.pool = { perLevel: word[pool[1]], recharge: has(/replenishes when you finish a Long Rest/) ? "long-rest" : "?" }
+  const ranges = [...new Set([...own.matchAll(/within (\d+) feet of (?:you|yourself)\b/g)].map((match) => Number(match[1])))]
+  if (ranges.length === 1) expected.range = ranges[0]
+  const area = own.match(/(\d+)-foot (Emanation|Cube)|(\d+)-foot-radius Sphere/)
+  if (area) expected.area = area[3] ? { shape: "sphere", size: Number(area[3]) } : { shape: area[2].toLowerCase(), size: Number(area[1]) }
+  const attacks = own.match(/attack (twice|three times|four times)[^.]*instead of once|confers (two) extra attacks rather than one/)
+  if (attacks) expected.attacks = attacks[2] ? 3 : { twice: 2, "three times": 3, "four times": 4 }[attacks[1]]
+  // A spell name: capitalized words, with the small words SRD spell names use ("Speak with Animals").
+  const spell = "[A-Z][\\w’]*(?: (?:[A-Z][\\w’]*|with|of|the|from)\\b)*"
+  const prepared = own.match(new RegExp(`always have the (${spell}(?: and ${spell})?) spells? prepared`))
+  if (prepared) expected.alwaysPrepared = names(prepared[1])
+  const free = [...own.matchAll(new RegExp(`cast (${spell}) (?:on yourself |once )?without (?:expending )?a spell slot`, "g"))].map((match) => toId(match[1]))
+  if (/cast (?:it|the spell)\b[^.]*?without (?:expending )?a spell slot/.test(own)) {
+    const named = own.match(new RegExp(`the (${spell}) spell\\b|cast (${spell})`))
+    if (named) free.push(toId(named[1] ?? named[2]))
   }
-  if (entry.attacks) need(has(entry.attacks === 2 ? "attack twice" : entry.attacks === 3 ? /three times|two extra attacks/ : "four times"), `attacks ${entry.attacks}`)
-  for (const spell of entry.alwaysPrepared ?? []) need(squash(own).includes(squash(spell)) && /always have/.test(own), `always prepared ${spell}`)
-  for (const spell of entry.freeCast ?? []) need(squash(own).includes(squash(spell)) && /without (?:expending )?a spell slot/.test(own), `free cast ${spell}`)
-  if (entry.feat) {
-    const categories: Record<string, string> = { "epic-boon": "Epic Boon feat", "fighting-style": "Fighting Style feat", origin: "Origin feat" }
-    if (entry.feat.id) need(squash(own).includes(`${squash(entry.feat.id)}feat`), `feat ${entry.feat.id}`)
-    if (entry.feat.category) need(has(categories[entry.feat.category]), `feat category ${entry.feat.category}`)
-    if (entry.feat.recommended) need(squash(own).includes(`${squash(entry.feat.recommended)}isrecommended`), `recommended ${entry.feat.recommended}`)
-    if (entry.feat.orAnother) need(has("or another feat of your choice for which you qualify"), "feat orAnother")
+  if (free.length) expected.freeCast = [...new Set(free)]
+  const featId = own.match(/gain the ([A-Z][\w ]*?) feat\b/)?.[1]
+  const featCategory = own.match(/(Epic Boon|Fighting Style|Origin) feat\b/)?.[1]
+  if (featId || featCategory) {
+    const recommended = own.match(/([A-Z][\w’]*(?: (?:of|the|[A-Z][\w’]*))*) is recommended/)?.[1]
+    expected.feat = {
+      ...(featId ? { id: toId(featId) } : {}),
+      ...(featCategory ? { category: toId(featCategory) } : {}),
+      ...(recommended ? { recommended: toId(recommended) } : {}),
+      ...(has("or another feat of your choice for which you qualify") ? { orAnother: true } : {}),
+    }
   }
-  if (entry.savingThrowProficiencies) {
-    const all = entry.savingThrowProficiencies.length === 6
-    need(all ? has("proficiency in all saving throws") : entry.savingThrowProficiencies.every((id: string) => has(abilityName[id])) && has("saving throws"), "saving throw proficiencies")
+  const proficientSaves = own.match(/proficiency in (\w+) and (\w+) saving throws/)
+  if (has("proficiency in all saving throws")) expected.savingThrowProficiencies = ["str", "dex", "con", "int", "wis", "cha"]
+  else if (proficientSaves) expected.savingThrowProficiencies = [abilityByName[proficientSaves[1]], abilityByName[proficientSaves[2]]]
+  const skillCount = own.match(/proficiency (?:in another skill of your choice from the skill list|with (\w+) skills of your choice)/)
+  if (skillCount) expected.skillProficiencies = skillCount[1] ? { count: word[skillCount[1]] } : { count: 1, from: sorted(classSkills) }
+  const expertise = own.match(/in (two|one) of your skill proficiencies of your choice|Choose (two|one) of your skill proficiencies with which you lack Expertise|Expertise in the chosen skill/)
+  if (expertise) expected.expertise = word[expertise[1] ?? expertise[2] ?? "one"]
+  const speed = own.match(/[Ss]peed increases by (\d+) feet/)
+  if (speed && !has("This bonus increases")) expected.speedBonus = Number(speed[1])
+  const masteries = own.match(/mastery properties of (\w+) kinds/)
+  if (masteries && !has("Weapon Mastery column")) expected.weaponMasteries = word[masteries[1]]
+  const increase = own.match(/Your (\w+) and (\w+) scores increase by (\d+), to a maximum of (\d+)/)
+  if (increase) expected.abilityIncrease = { abilities: [abilityByName[increase[1]], abilityByName[increase[2]]], amount: Number(increase[3]), maximum: Number(increase[4]) }
+  const armor = own.match(/base Armor Class equals 10 plus your (\w+) and (\w+) modifiers/)
+  if (armor) {
+    const shield = has("You can use a Shield and still gain this benefit") ? true : has("or wielding a Shield") ? false : undefined
+    expected.armorClass = { base: 10, abilities: [abilityByName[armor[1]], abilityByName[armor[2]]], ...(shield === undefined ? {} : { shield }) }
   }
-  if (entry.skillProficiencies) {
-    const { count, from } = entry.skillProficiencies
-    need(has(count === 1 ? "another skill" : `${numberWord[count]} skills`), `skill proficiencies ${count}`)
-    need(from ? has(/skill list available to/) && same(sorted(from), sorted(classSkills)) : !has(/skill list available to/), "skill proficiencies from")
+  const critical = own.match(/Critical Hit on a roll of (19 or 20|18–20)/)
+  if (critical) expected.criticalRange = critical[1] === "18–20" ? 18 : 19
+  const sense = own.match(/(Blindsight|Truesight) with a range of (\d+) feet/)
+  if (sense) expected.sense = { type: sense[1].toLowerCase(), range: Number(sense[2]) }
+  const read = (field: string) => {
+    const value = entry[field]
+    if (field === "speedBonus") return value?.feet
+    if (field === "skillProficiencies" && value?.from) return { ...value, from: sorted(value.from) }
+    return value
   }
-  if (entry.expertise)
-    need(
-      has("Expertise") && (entry.expertise === 1 ? has(/Expertise in (?:that|the chosen) skill/) : has(`${numberWord[entry.expertise]} of your skill proficiencies`)),
-      `expertise ${entry.expertise}`
-    )
-  if (entry.speedBonus) need(has(`by ${entry.speedBonus.feet} feet`), `speed bonus ${entry.speedBonus.feet}`)
-  if (entry.weaponMasteries) need(has(`mastery properties of ${numberWord[entry.weaponMasteries]} kinds`), `weapon masteries ${entry.weaponMasteries}`)
-  if (entry.abilityIncrease) {
-    const { abilities, amount, maximum } = entry.abilityIncrease
-    need(abilities.every((id: string) => has(abilityName[id])) && has(`increase by ${amount}`) && has(`maximum of ${maximum}`), "ability increase")
-  }
-  if (entry.armorClass) {
-    const [a, b] = entry.armorClass.abilities.map((id: string) => abilityName[id])
-    need(has(`${entry.armorClass.base} plus your ${a} and ${b} modifiers`), "armor class")
-    if (entry.armorClass.shield === true) need(has("You can use a Shield and still gain this benefit"), "armor class with a Shield")
-    if (entry.armorClass.shield === false) need(has("or wielding a Shield"), "armor class without a Shield")
-  }
-  if (entry.criticalRange) need(has(entry.criticalRange === 19 ? "roll of 19 or 20" : "18–20"), `critical range ${entry.criticalRange}`)
-  if (entry.sense) need(has(`${capital(entry.sense.type)} with a range of ${entry.sense.range} feet`), "sense")
+  for (const field of [
+    "saveDc",
+    "pool",
+    "range",
+    "area",
+    "attacks",
+    "alwaysPrepared",
+    "freeCast",
+    "feat",
+    "savingThrowProficiencies",
+    "skillProficiencies",
+    "expertise",
+    "speedBonus",
+    "weaponMasteries",
+    "abilityIncrease",
+    "armorClass",
+    "criticalRange",
+    "sense",
+  ])
+    need(same(read(field), expected[field]), `${field} ${JSON.stringify(read(field))}, the text states ${JSON.stringify(expected[field])}`)
 
   // Resistances and immunities, both ways, whole lists, with the condition they hold under.
   const resisted = listOf(own.match(new RegExp(`Resistance to (${typeList}) damage`))?.[1] ?? "")
@@ -453,7 +520,12 @@ function parseItems(text: string): { quantity: number; name: string; detail?: st
 
 const toolKind: Record<string, string> = { "Musical Instruments": "musical-instrument", "Musical Instrument": "musical-instrument", "Artisan’s Tools": "artisans-tools" }
 
-type Gear = { id: string; name: string; kind: string; group?: string; members?: string[]; variants?: string[]; bundleSize?: number; alsoQuarterstaff?: boolean }
+type Gear = Equipment
+// Fields of other categories' entries, read through their exported types so a rename breaks the type check.
+const membersOf = (entry?: Equipment) => (entry?.kind === "group" ? entry.members : undefined)
+const variantsOf = (entry?: Equipment) => (entry?.kind === "tool" ? entry.variants : undefined)
+const bundleOf = (entry?: Equipment) => (entry?.kind === "ammunition" ? entry.bundleSize : undefined)
+const alsoQuarterstaff = (entry?: Equipment) => entry?.kind === "focus" && entry.alsoQuarterstaff === true
 
 /**
  * A printed starting item against a data line. "Musical Instrument of your choice" and "Holy Symbol" are choices
@@ -469,14 +541,14 @@ function itemMatches(printed: { quantity: number; name: string; detail?: string 
   if (printed.detail === "of your choice") return chooses([id]) && line.note === undefined
   const ammunition = gear.get(line.item ?? "")?.kind === "ammunition"
   if (gear.size && Boolean(line.unit) !== ammunition) return false
-  const bundle = gear.get(line.item)?.bundleSize
+  const bundle = bundleOf(gear.get(line.item))
   if (ammunition && (!bundle || printed.quantity % bundle !== 0)) return false
   if (printed.detail) {
     if (line.note !== printed.detail) return false
     const group = gear.get(id)
     const member = gear.get(line.item)
-    const named = member?.name.toLowerCase() === printed.detail.toLowerCase() || (printed.detail === "Quarterstaff" && member?.alsoQuarterstaff === true)
-    if (group?.kind === "group") return Boolean(group.members?.includes(line.item) && named)
+    const named = member?.name.toLowerCase() === printed.detail.toLowerCase() || (printed.detail === "Quarterstaff" && alsoQuarterstaff(member))
+    if (group?.kind === "group") return Boolean(membersOf(group)?.includes(line.item) && named)
     return line.item === id || !gear.size
   }
   if (line.note !== undefined) return false
@@ -510,6 +582,21 @@ export default function verify(report: Report) {
   const subclasses = readData<Subclass>("subclasses")
   const featureById = new Map(features.map((feature) => [feature.id, feature]))
   const subclassById = new Map(subclasses.map((subclass) => [subclass.id, subclass]))
+
+  // Every entry as shipped passes its strict schema, so a value outside a field's literal or enum fails here.
+  {
+    const failures: string[] = []
+    const parse = (schema: { safeParse: (value: unknown) => { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } } }, list: { id: string }[]) => {
+      for (const entry of list) {
+        const result = schema.safeParse(entry)
+        if (!result.success) failures.push(`${entry.id}: ${result.error?.issues.map((issue) => `${issue.path.join(".")} ${issue.message}`).join("; ")}`)
+      }
+    }
+    parse(classSchema, classes)
+    parse(classFeatureSchema, features)
+    parse(subclassSchema, subclasses)
+    report.check(category, "every class, feature and subclass passes its strict schema", classes.length + features.length + subclasses.length, failures)
+  }
 
   // Names and pages from the contents.
   const entries = contents()
@@ -795,6 +882,21 @@ export default function verify(report: Report) {
       if (choice?.level !== subclass.level) failures.push(`${subclass.id}: level ${subclass.level}, the class grants a subclass at ${choice?.level}`)
     }
     report.check(category, "feature levels match the class table rows and the text, and subclass features match the subclass levels", total, failures)
+  }
+
+  // Subclass taglines: the line after the subclass heading, whose name the contents give.
+  {
+    const failures: string[] = []
+    for (const subclass of subclasses) {
+      const owner = owners.find((item) => item.id === subclass.class) as Owner
+      const printed = subclassEntries.find((entry) => toId(entry.name) === subclass.id)?.name ?? ""
+      let at = owner.heading
+      let heading = owner.lines[at].text.replace(/^\w+ Subclass:/, "").trim()
+      while (squash(heading) !== squash(printed) && at < owner.heading + 3) heading = `${heading} ${owner.lines[++at].text}`.trim()
+      const tagline = owner.lines[at + 1]?.text
+      if (subclass.tagline !== tagline) failures.push(`${subclass.id}: tagline ${JSON.stringify(subclass.tagline)}, official ${JSON.stringify(tagline)}`)
+    }
+    report.check(category, "every subclass tagline is the line the official text prints under its heading", subclasses.length, failures)
   }
 
   // Table parentheticals: "Action Surge (two uses)" and "Mystic Arcanum (level 7 spell)".
@@ -1174,6 +1276,8 @@ export default function verify(report: Report) {
         let end = start + 1
         while (end < owner.lines.length && squash(join(owner.lines.slice(start + 1, end))) !== squash(sidebar.text)) end++
         for (const line of owner.lines.slice(start, end)) sidebarLines.add(line)
+        total++
+        if (owner.lines[start]?.page !== sidebar.page) failures.push(`${owner.id} sidebar ${sidebar.name}: page ${sidebar.page}, its title is on ${owner.lines[start]?.page}`)
         compare(`${owner.id} sidebar ${sidebar.name}`, owner.lines.slice(start + 1, end), sidebar.text.split("\n").slice(1), [opening(sidebar.text)])
       }
       for (const feature of features.filter((item) => item.class === owner.id)) {
@@ -1236,7 +1340,8 @@ export default function verify(report: Report) {
     // Each feature's sentences sit under its own heading, so no text is filed under the wrong feature.
     const sentences = (text: string) =>
       text
-        .split(/(?<=[.!?])\s+|\n+/)
+        .replace(/([.!?])\s+/g, "$1\n")
+        .split(/\n+/)
         .map(squash)
         .filter((sentence) => sentence.length >= 12)
     for (const owner of owners) {
@@ -1338,7 +1443,7 @@ export default function verify(report: Report) {
       if (!ids.has(id)) failures.push(`${where}: ${id} is not in data/${name}.json`)
     }
     if (existsSync(dataPath("spells"))) {
-      const spells = new Set(readData<{ id: string }>("spells").map((spell) => spell.id))
+      const spells = new Set(readData<Spell>("spells").map((spell) => spell.id))
       for (const entry of classes) for (const group of entry.spellcasting?.spellList ?? []) for (const id of group.spells) resolve("spells", spells, `${entry.id} spell list`, id)
       for (const subclass of subclasses) for (const group of subclass.alwaysPrepared ?? []) for (const id of group.spells) resolve("spells", spells, `${subclass.id} always prepared`, id)
       for (const feature of features) {
@@ -1348,7 +1453,7 @@ export default function verify(report: Report) {
       }
     }
     if (existsSync(dataPath("feats"))) {
-      const feats = new Set(readData<{ id: string }>("feats").map((feat) => feat.id))
+      const feats = new Set(readData<Feat>("feats").map((feat) => feat.id))
       for (const feature of features) for (const id of [feature.feat?.id, feature.feat?.recommended].filter(Boolean) as string[]) resolve("feats", feats, feature.id, id)
     }
     const waived: string[] = []
@@ -1364,7 +1469,7 @@ export default function verify(report: Report) {
       const choice = (where: string, id: string) => {
         total++
         const entry = gear.get(id)
-        if (!entry?.members?.length && !entry?.variants?.length) failures.push(`${where}: ${id} is not a group or a tool with variants in data/equipment.json`)
+        if (!membersOf(entry)?.length && !variantsOf(entry)?.length) failures.push(`${where}: ${id} is not a group or a tool with variants in data/equipment.json`)
       }
       for (const entry of classes) {
         for (const option of entry.startingEquipment) {
@@ -1387,7 +1492,7 @@ export default function verify(report: Report) {
   if (existsSync(dataPath("spells"))) {
     const failures: string[] = []
     let total = 0
-    const spells = readData<{ id: string; name: string; level: number; classes?: string[] }>("spells")
+    const spells = readData<Spell>("spells")
     for (const entry of classes) {
       if (!entry.spellcasting) continue
       for (const group of entry.spellcasting.spellList) {

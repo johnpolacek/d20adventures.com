@@ -360,12 +360,25 @@ export default function verify(report: Report) {
         for (const id of category.except ?? [])
           if (!squash(craft).includes(squash((byId.get(id) as Entry).name.replace(/ Armor$/, "")))) toolFailures.push(`${block.name}: exception ${id} is not in the Craft line`)
       }
+      const expectedItems: string[] = []
+      const idOfName = (name: string) => nameOf.get(squash(name === "Hide" ? "Hide Armor" : name))
       for (const segment of segments) {
+        const excepted = /^(.+?) \(except (.+)\)$/.exec(segment)
+        const category = categories.find(
+          (item) =>
+            squash({ "melee-weapon": "Any Melee weapon", "ranged-weapon": "Ranged weapons", "medium-armor": "Medium armor", "heavy-armor": "Heavy armor" }[item.category as string] as string) ===
+            squash(excepted?.[1] ?? segment)
+        )
+        if (category) {
+          const names = excepted ? excepted[2].split(/,\s*(?:and\s+)?|\s+and\s+/).filter(Boolean) : []
+          if (!same(category.except ?? [], names.map(idOfName))) toolFailures.push(`${block.name}: exceptions ${JSON.stringify(category.except)} differ from the Craft line "${segment}"`)
+        } else expectedItems.push(idOfName(segment) as string)
         const id = [...nameOf].find(([name]) => name === squash(segment.replace(/ \(except.*$/, "")))?.[1]
         const categoryNames = ["anymeleeweapon", "rangedweapons", "mediumarmor", "heavyarmor"]
         if (!id && !categoryNames.includes(squash(segment.replace(/ \(except.*$/, "")))) toolFailures.push(`${block.name}: Craft names "${segment}", which is no entry`)
         else if (id && !items.includes(id as unknown as Entry)) toolFailures.push(`${block.name}: Craft names ${id}, which the data lacks`)
       }
+      if (!same(items, expectedItems)) toolFailures.push(`${block.name}: craft items ${JSON.stringify(items)} differ, in order, from the Craft line ${JSON.stringify(expectedItems)}`)
     }
     toolCells++
     const variants = toolVariantNames(block.body)
@@ -422,6 +435,14 @@ export default function verify(report: Report) {
       if (!same(got, want)) gearFailures.push(`${row.name}: ${field} is ${JSON.stringify(got)}, the table says ${JSON.stringify(want)}`)
     }
   }
+  gearCells++
+  if (
+    !same(
+      (byId.get("spell-scroll") as Entry).members,
+      officialGear.filter((row) => row.name.startsWith("Spell Scroll")).map((row) => toId(row.name))
+    )
+  )
+    gearFailures.push("the Spell Scroll group's members differ from the table rows, in order")
   report.check("equipment", "gear: weight and cost of every Adventuring Gear row", gearCells, gearFailures)
 
   // Description blocks, by heading, with the tables left out.
@@ -609,6 +630,13 @@ export default function verify(report: Report) {
     if (entry.bundleSize !== Number(match[2]) || entry.storage !== ammoStorage[match[3]] || entry.weight !== weight(match[4]) || !same(entry.cost, cost(match[5])) || entry.page !== 96)
       ammoFailures.push(`${match[1]}: a cell differs from the Ammunition table`)
   }
+  if (
+    !same(
+      (byId.get("ammunition") as Entry).members,
+      officialAmmo.map((match) => toId(match[1]))
+    )
+  )
+    ammoFailures.push("the Ammunition group's members differ from the Ammunition table, in order")
   report.check("equipment", "ammunition: bundle size, storage, weight, cost, page of each Ammunition row", officialAmmo.length * 5, ammoFailures)
 
   const focusFailures: string[] = []
@@ -620,6 +648,11 @@ export default function verify(report: Report) {
   ]
   const officialFocus: string[] = []
   for (const source of focusSources) {
+    const groupText = flat((byId.get(source.group) as Entry).description)
+    const users = /A ([A-Z][a-z]+(?:, [A-Z][a-z]+)*,? (?:or [A-Z][a-z]+|[A-Z][a-z]+)|[A-Z][a-z]+ or [A-Z][a-z]+) can use/.exec(groupText)?.[1] ?? ""
+    const officialUsers = users.split(/,\s*(?:or\s+)?|\s+or\s+/).map((word) => word.toLowerCase())
+    if (!same(officialUsers, source.classes)) focusFailures.push(`${source.group}: classes ${source.classes} differ from the sentence "A ${users} can use"`)
+    if (!same((byId.get(source.group) as Entry).usedBy, officialUsers)) focusFailures.push(`${source.group}: usedBy differs from the sentence`)
     const table = between(P(source.page), new RegExp(`^${source.title}\\n(?:Focus|Symbol)\\nWeight\\nCost\\n`, "m"), /\n(?:[^\n]+ \((?:Varies|[\d,]+ [CSGEP]P)\)|Backpack)\n/)
     const rows = [...`${table}\n`.matchAll(/^(.+)\n(—|[\d½/ ]+ lb\.)\n([\d,]+ [CSGEP]P)\n/gm)]
     const group = byId.get(source.group) as Entry
@@ -634,7 +667,8 @@ export default function verify(report: Report) {
       if (
         !same(entry.cost, cost(row[3])) ||
         entry.weight !== weight(row[2]) ||
-        !same(entry.usedBy, source.classes) ||
+        !same(entry.usedBy, officialUsers) ||
+        entry.focus !== { "Arcane Focuses": "arcane", "Druidic Focuses": "druidic", "Holy Symbols": "holy" }[source.title] ||
         !same(entry.carried, carried) ||
         entry.alsoQuarterstaff !== (detail === "also a Quarterstaff" ? true : undefined) ||
         entry.page !== group.page
@@ -673,7 +707,7 @@ export default function verify(report: Report) {
     .join("\n")
     .split("\n")
     .map((line) => line.replace(/\.{3,}.*$/, "").trim())
-  const monsters = new Set(readData("monsters").map((monster) => monster.id))
+  const monsterEntries = new Map(readData("monsters").map((monster) => [monster.id, monster]))
   const mountFailures: string[] = []
   for (const match of officialMounts) {
     const entry = byId.get(toId(match[1]))
@@ -684,7 +718,10 @@ export default function verify(report: Report) {
       .map((word: string) => word[0].toUpperCase() + word.slice(1))
       .join(" ")
     if (!monsterNames.includes(statBlock)) mountFailures.push(`${match[1]}: no monster named ${statBlock} in the contents`)
-    if (!monsters.has(entry.statBlock)) mountFailures.push(`${match[1]}: stat block ${entry.statBlock} is not in the monsters data`)
+    const monster = monsterEntries.get(entry.statBlock)
+    const reversed = match[1].split(", ").reverse().join(" ")
+    if (!monster) mountFailures.push(`${match[1]}: stat block ${entry.statBlock} is not in the monsters data`)
+    else if (squash(monster.name) !== squash(match[1]) && squash(monster.name) !== squash(reversed)) mountFailures.push(`${match[1]}: stat block ${entry.statBlock} is the monster ${monster.name}`)
   }
   report.check("equipment", "mounts: carrying capacity, cost, page, and the monster stat block the table points to", officialMounts.length * 4, mountFailures)
 
@@ -800,14 +837,14 @@ export default function verify(report: Report) {
       .map((text) => ({ text: text.trim(), page: 102 })),
   ].filter((line) => line.text)
   const tierLabels = ["Squalid", "Poor", "Modest", "Comfortable", "Wealthy", "Aristocratic"]
-  const walk: { id: string; group?: string; label: string }[] = [
-    { id: "ale-mug", label: "Ale (mug)" },
-    { id: "bread-loaf", label: "Bread (loaf)" },
-    { id: "cheese-wedge", label: "Cheese (wedge)" },
-    ...tierLabels.map((label, index) => ({ id: `inn-stay-${label.toLowerCase()}`, label, group: index === 0 ? "Inn Stay per Day" : undefined })),
-    ...tierLabels.map((label, index) => ({ id: `meal-${label.toLowerCase()}`, label, group: index === 0 ? "Meal" : undefined })),
-    { id: "wine-common", label: "Common", group: "Wine (bottle)" },
-    { id: "wine-fine", label: "Fine" },
+  const walk: { id: string; group?: string; label: string; kind: string; unit?: string; tier?: string }[] = [
+    { id: "ale-mug", label: "Ale (mug)", kind: "food", unit: "mug" },
+    { id: "bread-loaf", label: "Bread (loaf)", kind: "food", unit: "loaf" },
+    { id: "cheese-wedge", label: "Cheese (wedge)", kind: "food", unit: "wedge" },
+    ...tierLabels.map((label, index) => ({ id: `inn-stay-${label.toLowerCase()}`, label, kind: "inn-stay", tier: label.toLowerCase(), group: index === 0 ? "Inn Stay per Day" : undefined })),
+    ...tierLabels.map((label, index) => ({ id: `meal-${label.toLowerCase()}`, label, kind: "meal", tier: label.toLowerCase(), group: index === 0 ? "Meal" : undefined })),
+    { id: "wine-common", label: "Common", kind: "food", unit: "bottle", group: "Wine (bottle)" },
+    { id: "wine-fine", label: "Fine", kind: "food", unit: "bottle" },
   ]
   let cursor = 0
   const seek = (label: string) => {
@@ -827,11 +864,13 @@ export default function verify(report: Report) {
     const entry = byId.get(row.id)
     if (foodLines[next]?.text !== expectedFoodCosts[index]) foodFailures.push(`${row.id}: the cost after ${row.label} is ${foodLines[next]?.text}, expected ${expectedFoodCosts[index]}`)
     cursor = next + 1
+    if (entry && (entry.kind !== row.kind || entry.unit !== row.unit || entry.tier !== row.tier))
+      foodFailures.push(`${row.id}: kind, unit or tier is ${entry.kind} ${entry.unit} ${entry.tier}, the table says ${row.kind} ${row.unit} ${row.tier}`)
     if (!entry) foodFailures.push(`${row.id} is missing`)
     else if (!same(entry.cost, cost(foodLines[next]?.text ?? "")) || entry.page !== foodLines[next]?.page)
       foodFailures.push(`${row.id}: cost ${costText(entry.cost)} page ${entry.page} differs from the text after ${row.label}`)
   })
-  report.check("equipment", "food, drink and lodging: every cost cell, read in table order across the page break", expectedFoodCosts.length * 3, foodFailures)
+  report.check("equipment", "food, drink and lodging: every cost cell, read in table order across the page break", expectedFoodCosts.length * 4, foodFailures)
 
   const w102 = P(102)
   const spellRows = [
@@ -962,6 +1001,102 @@ export default function verify(report: Report) {
     "poison types: exposure, how long it stays potent, Cube, application, trigger damage, whole paragraph, and every poison names one",
     typeBlocks.length * 8 + poisons.length,
     typeFailures
+  )
+
+  // Typed kinds, lists and links of gear and tack, each read from the entry's own text. -----------------------------------------
+  const kindFailures: string[] = []
+  let kindTotal = 0
+  const expect = (ok: boolean, message: string) => {
+    kindTotal++
+    if (!ok) kindFailures.push(message)
+  }
+  const wordsOf = (list: string) => list.split(/,\s*(?:or\s+)?|\s+or\s+/).filter(Boolean)
+  const sizeWord = "(?:Tiny|Small|Medium|Large|Huge|Gargantuan)"
+  const useWords: [string, RegExp][] = [
+    ["escape", /Escaping|escape/],
+    ["burst", /Bursting|burst/],
+    ["knot", /tie a knot/],
+    ["pick", /pick/],
+    ["catch", /catches on/],
+    ["free", /freeing/],
+    ["bind", /wrap|bind/],
+  ]
+  for (const entry of [...of("gear"), ...of("tack")]) {
+    const text = flat(entry.description ?? "")
+    const sentences = text.split(/\.\s+(?=[A-Z“])/)
+    const variant = entry.kind === "tack" ? /^Saddle, (\w+)/.exec(entry.name)?.[1] : undefined
+    // Modifiers: one per sentence that states an Advantage, a bonus or an automatic success, and each one's effect, kind of roll and condition from its own wording.
+    const stating = sentences.filter((sentence) => /\bAdvantage\b|\+\d+ bonus|automatically succeed/.test(sentence) && (!variant || sentence.includes(`${variant} Saddle`)))
+    expect((entry.modifiers ?? []).length === stating.length, `${entry.id}: ${(entry.modifiers ?? []).length} modifiers but the text has ${stating.length} such sentences`)
+    for (const mod of entry.modifiers ?? []) {
+      const effect = /\+\d+ bonus/.test(mod.when) ? "bonus" : /\bAdvantage\b/.test(mod.when) ? "advantage" : /automatically succeed/.test(mod.when) ? "automatic-success" : undefined
+      expect(mod.effect === effect, `${entry.id}: modifier effect ${mod.effect}, the wording says ${effect}`)
+      expect(mod.on === (/saving throws?/.test(mod.when) ? "save" : "check"), `${entry.id}: modifier is on ${mod.on}, the wording says otherwise`)
+      expect(
+        mod.againstCondition === (/the (Poisoned) condition/.exec(mod.when)?.[1] ?? "").toLowerCase() || (mod.againstCondition === undefined && !/the (Poisoned) condition/.test(mod.when)),
+        `${entry.id}: modifier condition differs`
+      )
+    }
+    // Saddles
+    const required = variant ? new RegExp(`${variant} Saddle is required for riding an? (\\w+) or an? (\\w+) mount`).exec(text) : null
+    expect(
+      same(entry.requiredForMounts, required ? [required[1], required[2]] : undefined),
+      `${entry.id}: requiredForMounts ${JSON.stringify(entry.requiredForMounts)} differs from the saddle sentence`
+    )
+    if (entry.kind !== "gear") continue
+    // Checks: the kind of use, from the sentence that states the DC.
+    for (const check of entry.checks ?? []) {
+      const sentence = sentences.find((item) => item.includes(`DC ${check.dc} ${abilityName[check.ability]} (`)) ?? ""
+      const use = useWords.find(([, pattern]) => pattern.test(sentence))?.[0]
+      expect(check.use === use, `${entry.id}: check use ${check.use}, its sentence says ${use}`)
+    }
+    // Binding: the conditions required, the condition applied, the sizes.
+    if (entry.binding) {
+      const required = /(?:that|creature) has the ([A-Za-z, ]+?) condition/.exec(text)
+      expect(
+        same(
+          entry.binding.requiresAnyCondition,
+          wordsOf(required?.[1] ?? "").map((word) => word.toLowerCase())
+        ),
+        `${entry.id}: bound creature conditions differ from the text`
+      )
+      const applied = /the creature (?:has the|is) ([A-Z][a-z]+)(?: condition until it escapes| if the Manacles)/.exec(text)?.[1]?.toLowerCase()
+      expect(entry.binding.appliesCondition === applied, `${entry.id}: applied condition ${entry.binding.appliesCondition}, the text says ${applied}`)
+      const sizes = new RegExp(`unwilling (${sizeWord}(?: or ${sizeWord})*) creature`).exec(text)
+      expect(same(entry.binding.sizes, sizes ? sizes[1].split(" or ") : undefined), `${entry.id}: sizes differ from the text`)
+    }
+    // Hazard flags, targets and light.
+    if (entry.hazard || /start burning/.test(text)) expect(Boolean(entry.hazard?.burning) === /start burning/.test(text), `${entry.id}: burning differs from the text`)
+    const only = /if it is an? ([A-Z][a-z]+)(?: or an? ([A-Z][a-z]+))? damage|if it is an? ([A-Z][a-z]+) or an? ([A-Z][a-z]+)\./.exec(text)
+    expect(
+      same(entry.hazard?.onlyAgainst, only ? [only[3] ?? only[1], only[4] ?? only[2]].filter(Boolean).map((word) => (word as string).toLowerCase()) : undefined),
+      `${entry.id}: creature types it works against differ`
+    )
+    const auto = new RegExp(`succeeds automatically if it is (${sizeWord}) or larger`).exec(text)
+    expect(entry.hazard?.succeedsAutomaticallyIfSizeAtLeast === auto?.[1], `${entry.id}: automatic success size differs`)
+    if (entry.light || /Bright Light in a/.test(text)) {
+      expect(entry.light?.shape === (/-foot Cone/.test(text) ? "cone" : "radius"), `${entry.id}: light shape differs from the text`)
+      expect(entry.light?.fuel === (/burns Oil as fuel/.test(text) ? "oil" : undefined), `${entry.id}: light fuel differs from "burns Oil as fuel"`)
+      if (entry.light?.fuel) expect(squash((byId.get(entry.light.fuel) as Entry)?.name ?? "") === "oil", `${entry.id}: fuel ${entry.light.fuel} is not Oil`)
+    }
+    // Containers hold what the text names.
+    const holds = [...text.matchAll(/(\d+) (?:sheets of (paper|parchment)|(Bolts|Arrows))/g)].map((match) => ({ item: (match[2] ?? match[3]).toLowerCase(), quantity: Number(match[1]) }))
+    expect(same(entry.capacity?.holds ?? [], holds), `${entry.id}: container contents ${JSON.stringify(entry.capacity?.holds)} differ from ${JSON.stringify(holds)}`)
+    for (const hold of holds) expect(squash((byId.get(hold.item) as Entry)?.name ?? "").startsWith(squash(hold.item)), `${entry.id}: ${hold.item} is not the right entry`)
+  }
+  // Armor training: the categories each rule covers are the words of its official heading.
+  const armorHeadings = P(92)
+  for (const rule of rules.filter((item) => item.kind === "armor-training")) {
+    const heading = /\((.+)\)$/.exec(rule.name)?.[1] ?? ""
+    const categories = heading.split(/,\s*(?:or\s+)?|\s+or\s+/).map((word) => word.toLowerCase().replace(/ armor$/, ""))
+    expect(new RegExp(`^${esc(heading)}$`, "m").test(armorHeadings), `${rule.id}: heading "${heading}" is not a line of page 92`)
+    expect(same(rule.covers, categories), `${rule.id}: covers ${rule.covers} differ from the heading ${heading}`)
+  }
+  report.check(
+    "equipment",
+    "gear and tack: modifier effects and conditions, check uses, binding, hazard flags and targets, light, containers, saddles, armor training coverage",
+    kindTotal,
+    kindFailures
   )
 
   // Weapon properties and masteries ---------------------------------------------------------------------------
@@ -1129,16 +1264,22 @@ export default function verify(report: Report) {
     ["ship-repair", "costPerHitPoint", { amount: 20, unit: "gp" }],
     ["ship-repair", "shipyardFraction", 0.5],
     ["ship-passengers", "privateAccommodationsFraction", 0.2],
+    ["ship-passengers", "hammockCostPerDay", { amount: 5, unit: "sp" }],
+    ["ship-passengers", "cabinCostPerDay", { amount: 2, unit: "gp" }],
+    ["crafting", "maxAssistants", 1],
+    ["ship-repair", "hitPointsPerDay", 1],
+    ["potion-brewing", "days", 1],
+    ["potion-brewing", "workHoursPerDay", 8],
   ]
   const wording: Record<string, RegExp> = {
     selling: /fetches half its cost/,
     "coin-weight": /fifty coins weigh a pound/,
     barding: /four times the normal cost, and it weighs twice as much/,
     "draft-cargo": /five times its base carrying capacity/,
-    crafting: /half its purchase cost[\s\S]*divide its purchase cost in GP by 10/,
+    crafting: /half its purchase cost[\s\S]*working 8 hours a day[\s\S]*divide its purchase cost in GP by 10[\s\S]*only one other character can assist you/i,
     "potion-brewing": /25 GP of raw material over the course of 1 day \(8 hours of work\)/,
     "ship-repair": /1 Hit Point of damage requires 1 day and costs 20 GP[\s\S]*halved/,
-    "ship-passengers": /one-fifth as many passengers[\s\S]*5 SP per day for a hammock[\s\S]*2 GP per day/,
+    "ship-passengers": /one-fifth as many passengers[\s\S]*5 SP per day for a hammock[\s\S]*small private cabin usually costs 2 GP per day/,
   }
   for (const [kind, field, value] of typedRules) {
     ruleCells++
@@ -1162,6 +1303,7 @@ export default function verify(report: Report) {
     ["tool-proficiency", "addsProficiencyBonusTo", "ability-checks-with-the-tool", /add your Proficiency Bonus to any ability check you make that uses the tool[\s\S]*Advantage on the check too/],
     ["tool-proficiency", "advantageWithProficientSkill", true, /proficiency in a skill that’s used with that check, you have Advantage/],
     ["casting-in-armor", "requiresArmorTraining", true, /must have training with any armor you are wearing to cast spells/],
+    ["potion-brewing", "tool", "herbalism-kit", /proficiency with the Herbalism Kit can create a Potion of Healing/],
     ["poison-harvesting", "timeMinutes", "1d6", /The effort takes 1d6 minutes/],
     ["poison-harvesting", "tool", "poisoners-kit", /using a Poisoner’s Kit/],
     ["poison-harvesting", "check", { ability: "int", skill: "nature", dc: 20 }, /DC 20 Intelligence \(Nature\) check/],
@@ -1231,6 +1373,14 @@ export default function verify(report: Report) {
       if (variant?.saveDc !== entry.spellScroll.saveDc || variant?.attackBonus !== entry.spellScroll.attackBonus)
         magicFailures.push(`${entry.id}: scroll DC and bonus differ from the magic item variant ${JSON.stringify(variant)}`)
     }
+  }
+  for (const entry of [...of("gear"), ...of("group")].filter((item) => item.description || item.id === "spell-scroll")) {
+    const isMagic = entry.id === "spell-scroll" || /is a magic item/.test(entry.description ?? "")
+    magicTotal++
+    if (isMagic !== Boolean(entry.magicItem)) magicFailures.push(`${entry.id}: ${isMagic ? "is a magic item but has no magicItem" : "has a magicItem but is not described as one"}`)
+    const item = magicItems.find((candidate) => candidate.id === entry.magicItem)
+    if (item && !(squash(entry.name).startsWith(squash(item.name)) || (item.variants ?? []).some((variant: Entry) => squash(variant.name) === squash(entry.name))))
+      magicFailures.push(`${entry.id}: magic item ${item.name} does not match the name ${entry.name}`)
   }
   report.check("equipment", "magic item links resolve in magic-items.json and share healing dice, scroll save DC and attack bonus", magicTotal, magicFailures)
   const poisonBasic = byId.get("poison-basic")

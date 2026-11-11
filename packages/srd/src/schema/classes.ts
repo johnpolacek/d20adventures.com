@@ -238,6 +238,7 @@ const mechanicsShape = {
   saveDc: saveDcSchema.optional(),
   /** A pool of points: `perLevel` times the class level, restored by `recharge`. */
   pool: z.strictObject({ perLevel: positiveSchema, recharge: rechargeSchema }).optional(),
+  /** The one distance from you the text names ("within 60 feet of yourself"). Left out where the text names none, or several. */
   range: feetSchema.optional(),
   area: z.strictObject({ shape: z.enum(["emanation", "sphere", "cube"]), size: feetSchema }).optional(),
   /** Attacks per Attack action. */

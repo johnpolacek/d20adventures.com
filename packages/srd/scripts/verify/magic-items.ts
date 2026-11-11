@@ -105,6 +105,7 @@ const flatOf = (block: string[]) =>
   block
     .join("\n")
     .replace(/-\n(?=[a-z])/g, "")
+    .replace(/\/\n/g, "/")
     .replace(/\s+/g, " ")
     .trim()
 
@@ -284,9 +285,9 @@ export default function verify(report: Report) {
   {
     const text = flat(offOf("Spell Scroll"))
     const wanted = [...text.matchAll(new RegExp(String.raw`(Cantrip|\d) (${rarityGroup}) (\d+) \+(\d+)`, "g"))].map(
-      (match) => `${match[1] === "Cantrip" ? "Cantrip" : `Level ${match[1]}`}=${toId(match[2])}/${match[3]}/${match[4]}`
+      (match) => `${match[1] === "Cantrip" ? "Cantrip" : `Level ${match[1]}`}=${toId(match[2])}/${match[3]}/${match[4]}/${match[1] === "Cantrip" ? 0 : match[1]}`
     )
-    compareVariants("spell-scroll", "Spell Scroll", wanted, (variant) => `${variant.name}=${variant.rarity}/${variant.saveDc}/${variant.attackBonus}`)
+    compareVariants("spell-scroll", "Spell Scroll", wanted, (variant) => `${variant.name}=${variant.rarity}/${variant.saveDc}/${variant.attackBonus}/${variant.spellLevel}`)
   }
   for (const [id, name] of [
     ["feather-token", "Feather Token"],
@@ -459,6 +460,19 @@ export default function verify(report: Report) {
   /* ---------- tables ---------- */
 
   const checkTable = (table: ItemTable, label: string, block: string, failures: string[]) => {
+    // The caption, die and column headings are the printed ones, in order.
+    // The headings are followed by the first row, or by the same headings again (a two-up table prints them twice).
+    const first = table.rows[0]
+    const head = squash(table.dice ?? "") + squash(table.columns.join(""))
+    const after = squash(
+      (first.roll
+        ? `${table.dice === "1d100" ? String(first.roll.min % 100).padStart(2, "0") : first.roll.min}${first.roll.max === first.roll.min ? "" : `–${table.dice === "1d100" ? String(first.roll.max % 100).padStart(2, "0") : first.roll.max}`}`
+        : "") + first.cells.join("")
+    )
+    if (!block.includes(squash(table.caption ?? "") + head + after) && !block.includes(squash(table.caption ?? "") + head + head + after))
+      failures.push(`${label}: the headings "${table.caption ?? ""} ${table.dice ?? ""} ${table.columns.join(" / ")}" are not the printed ones, in order, before the first row`)
+    for (const row of table.rows) if (row.cells.length !== table.columns.length) failures.push(`${label}: a row has ${row.cells.length} cells for ${table.columns.length} columns`)
+    if (table.dice && table.rows.some((row, i) => i > 0 && (row.roll?.min ?? 0) <= (table.rows[i - 1].roll?.min ?? 0))) failures.push(`${label}: rows are not in roll order`)
     if (table.dice) {
       const sides = Number(table.dice.slice(2))
       const covered = new Array<number>(sides + 1).fill(0)
@@ -595,6 +609,23 @@ export default function verify(report: Report) {
       const covered = [...plain, ...limited, ...variantBonuses].some((bonus) => bonus.value === value && phrase.includes(squash(bonus.to.replace(/-/g, " "))))
       if (!covered) bonusFailures.push(`${item.name}: "${sentence.slice(0, 70)}" has no bonus`)
     }
+    // The bonuses are the (target, value) pairs the sentences state, read here as a list of targets that still name rolls,
+    // checks, Armor Class or saving throws. Items whose variants carry the bonus state it per variant instead.
+    if (!item.variants) {
+      const wantedPairs = new Set<string>()
+      for (const sentence of sentences) {
+        for (const match of sentence.matchAll(/\+(\d+) bonus to ([^.;]+)/g)) {
+          for (const part of match[2].split(/, and |, | and /)) {
+            const words = part.replace(/ (?:made|while|if|when|against|determined|in addition|that|on|with|but|and can)\b.*$/, "").trim()
+            if (!/(?:rolls|checks|class|throws)$/i.test(words)) break
+            wantedPairs.add(`${toId(words.replace(/^(?:your|the) /, ""))}:${match[1]}`)
+          }
+        }
+      }
+      if (item.id === "demon-armor") for (const to of ["attack-rolls", "damage-rolls"]) wantedPairs.add(`${to}:1`)
+      const gotPairs = new Set([...plain, ...limited].map((bonus) => `${bonus.to}:${bonus.value}`))
+      if (!sameSet([...wantedPairs], [...gotPairs])) bonusFailures.push(`${item.name}: bonuses ${[...gotPairs].join(", ")}, the text states ${[...wantedPairs].join(", ")}`)
+    }
     if (!sentences.length && (plain.length || limited.length)) bonusFailures.push(`${item.name}: lists bonuses, the text states none`)
     for (const variant of item.variants ?? []) {
       for (const bonus of variant.bonuses ?? []) {
@@ -631,6 +662,7 @@ export default function verify(report: Report) {
     if (!charges) continue
     const regain = /\bregains? (all|\d+|\d+d\d+(?: \+ \d+)?) expended charges?/.exec(text)
     const dawn = /expended charges? daily at dawn/.test(text)
+    if (charges.regains && charges.regains.time !== "dawn") chargeFailures.push(`${item.name}: recharge time ${charges.regains.time}, the text says daily at dawn`)
     if (charges.regains) {
       if (!regain || !dawn) chargeFailures.push(`${item.name}: lists a dawn recharge, the text does not`)
       else if (String(charges.regains.amount) !== asDice(regain[1])) chargeFailures.push(`${item.name}: regains ${charges.regains.amount}, official ${regain[1]}`)
@@ -828,8 +860,22 @@ export default function verify(report: Report) {
       const perLevel = /maximum (\d+) for a level/.exec(text)?.[1]
       if (spell.maxCharges !== undefined && String(spell.maxCharges) !== (spell.chargesPerSpellLevel ? perLevel : cap))
         spellFailures.push(`${item.name}: ${name} max charges ${spell.maxCharges}, the text says ${spell.chargesPerSpellLevel ? perLevel : cap}`)
-      if (spell.maxCharges === undefined && (spell.chargesPerSpellLevel ? perLevel : cap) && (item.spells ?? []).length === 1)
+      if (spell.maxCharges === undefined && (spell.chargesPerSpellLevel ? perLevel : cap) && (spell.chargesPerSpellLevel || (item.spells ?? []).length === 1))
         spellFailures.push(`${item.name}: the text caps charges at ${spell.chargesPerSpellLevel ? perLevel : cap} but ${name} has no maxCharges`)
+      // The level the text gives the spell: "Name (level 5 version)", "level 5 version of the Name", "as a level 3 Name", or
+      // the base level of a wand that raises it with charges. It is on the spell wherever the text states it.
+      const baseLevel = /For \d+ charges?, you cast the level (\d) version/.exec(text)?.[1]
+      const levelStated = hits
+        .map((hit) => {
+          const before = text.slice(0, hit.index)
+          return /^ \(level (\d) version\)/.exec(text.slice(hit.index + hit.name.length))?.[1] ?? /level (\d) version of (?:the )?$/.exec(before)?.[1] ?? /as a level (\d) $/.exec(before)?.[1]
+        })
+        .find(Boolean)
+      const wantedLevel = levelStated ?? ((item.spells ?? []).length === 1 ? baseLevel : undefined)
+      if (spell.level !== (wantedLevel === undefined ? undefined : Number(wantedLevel))) spellFailures.push(`${item.name}: ${name} level ${spell.level}, the text says ${wantedLevel}`)
+      // "1 charge per spell level" in the spell's own table row.
+      const perSpellLevel = (item.tables ?? []).some((table) => table.rows.some((row) => spellMentions(row.cells[0] ?? "")[0]?.id === spell.id && /per spell level/.test(row.cells[1] ?? "")))
+      if (Boolean(spell.chargesPerSpellLevel) !== perSpellLevel) spellFailures.push(`${item.name}: ${name} chargesPerSpellLevel is ${spell.chargesPerSpellLevel}, the table says ${perSpellLevel}`)
       const upcast = /increase the spell’s level by (?:1|one) for each additional charge/.test(text)
       if (Boolean(spell.upcastsWithCharges) !== (upcast && (item.spells ?? []).length === 1)) spellFailures.push(`${item.name}: ${name} upcastsWithCharges is ${spell.upcastsWithCharges}`)
       if (spell.upcastsWithCharges) {
@@ -1007,6 +1053,20 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
   const failures: string[] = []
   const text206 = pageText(206, 207).replace(/\s+/g, " ")
 
+  // Each rule has the kind its text calls for.
+  const kindOf = (id: string): string =>
+    ["common", "uncommon", "rare", "very-rare", "legendary", "artifact"].includes(id)
+      ? "rarity"
+      : ["armor", "potion", "ring", "rod", "scroll", "staff", "wand", "weapon", "wondrous-item"].includes(id)
+        ? "category"
+        : ["consumable-value", "spell-scroll-value", "consumable-crafting"].includes(id)
+          ? "value-rule"
+          : id === "attunement"
+            ? "attunement"
+            : id === "sentient-abilities" || id === "sentient-conflict"
+              ? id
+              : "rule"
+  for (const rule of rules) if (rule.kind !== kindOf(rule.id)) failures.push(`${rule.id}: kind ${rule.kind}, expected ${kindOf(rule.id)}`)
   const ids = new Set<string>()
   for (const rule of rules)
     if (ids.has(rule.id)) failures.push(`${rule.id}: duplicate id`)
@@ -1030,6 +1090,16 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
     } else if (!textPage.includes(rule.page) && where !== rule.page) pageFailures.push(`${rule.id}: page ${rule.page}, heading first at ${where}, text on ${textPage.join(",")}`)
   }
   report.check("magic-item-rules", "page is where the rule begins", rules.length, pageFailures)
+
+  // A rule's name is the heading printed directly before its text. The value rules are footnotes with no heading,
+  // so their names are ours. A category's name is checked against the tools table below, since its heading is plural.
+  const nameFailures: string[] = []
+  const headed = withText.filter((rule) => rule.kind !== "value-rule" && rule.kind !== "category")
+  for (const rule of headed) {
+    const opening = sentencesOf(rule.text.split(/\n/)[0])[0]
+    if (!inOfficial(`${rule.name} ${opening}`)) nameFailures.push(`${rule.id}: "${rule.name}" is not the heading printed before "${opening.slice(0, 50)}"`)
+  }
+  report.check("magic-item-rules", "every rule’s name is the heading printed before its text", headed.length, nameFailures)
 
   // Rarity values and crafting, read from the two tables of the chapter.
   const rarityFailures: string[] = []
@@ -1075,6 +1145,16 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
   for (const rule of valueRules) {
     if (rule.factor !== factorOf(rule.text)) valueFailures.push(`${rule.id}: factor ${rule.factor}, the text says ${factorOf(rule.text)}`)
     if (rule.text.startsWith("*")) valueFailures.push(`${rule.id}: the text keeps its footnote mark`)
+    // What the value is a share of, who it applies to, and what it scales, read from the sentence.
+    const basis = /\bscribe\b|\bscribing\b/.test(rule.text) ? "scribing-cost" : "rarity-value"
+    const applies = /^The value of a Spell Scroll/.test(rule.text) ? "spell-scroll" : "consumable"
+    const scope = /crafting time and cost|time and cost/.test(rule.text) ? "crafting" : "value"
+    const except = /other than a Spell Scroll/.test(rule.text)
+    if (rule.basis !== basis) valueFailures.push(`${rule.id}: basis ${rule.basis}, the sentence gives ${basis}`)
+    if (rule.appliesTo !== applies) valueFailures.push(`${rule.id}: appliesTo ${rule.appliesTo}, the sentence gives ${applies}`)
+    if (rule.scope !== scope) valueFailures.push(`${rule.id}: scope ${rule.scope}, the sentence gives ${scope}`)
+    if (JSON.stringify(rule.except ?? []) !== JSON.stringify(except ? ["spell-scroll"] : []))
+      valueFailures.push(`${rule.id}: except is ${JSON.stringify(rule.except)}, the sentence ${except ? "excepts" : "does not except"} Spell Scrolls`)
   }
   for (const [id, scope, appliesTo] of [
     ["consumable-value", "value", "consumable"],
@@ -1138,7 +1218,7 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
   for (const [id, caption] of Object.entries(wantedTables)) {
     const rule = rules.find((entry) => entry.id === id)
     const table = rule && "tables" in rule ? rule.tables?.[0] : undefined
-    if (!table || ((table.caption ?? "Potion Miscibility") !== caption && !(id === "potion" && table.dice === "1d100"))) tableFailures.push(`${id}: table "${caption}" is missing`)
+    if (!table || table.caption !== caption) tableFailures.push(`${id}: table "${caption}" is missing`)
     else if (table.dice !== wantedDice[id]) tableFailures.push(`${id}: the table is ${table.dice}, the text prints ${wantedDice[id]}`)
     if (id === "sentient-alignment" && table && table.rows.length !== 9) tableFailures.push(`${id}: ${table.rows.length} alignments, the text prints 9`)
     if (id === "sentient-special-purpose" && table && table.rows.length !== 10) tableFailures.push(`${id}: ${table.rows.length} purposes, the text prints 10`)
@@ -1154,6 +1234,7 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
   const ruleFailures: string[] = []
   const attunement = rules.find((rule): rule is Rule<"attunement"> => rule.kind === "attunement")
   const equipmentText = pageText(102, 103).replace(/-\n/g, "").replace(/\s+/g, " ")
+  if (attunement && attunement.restsToAttune !== "short-rest") ruleFailures.push(`attuning takes ${attunement.restsToAttune}, the text says a Short Rest`)
   if (!attunement) ruleFailures.push("attunement rule is missing")
   else {
     const wantedFeet = /more than (\d+) feet away/.exec(equipmentText)?.[1]
@@ -1189,6 +1270,7 @@ function verifyRules(report: Report, equipment: Map<string, Gear> | null, checkT
     const bullets = pageText(208)
       .split("\n")
       .filter((line) => line.startsWith("•")).length
+    for (const refusal of conflict.refusals) if (!inOfficial(refusal)) ruleFailures.push(`refusal "${refusal.slice(0, 40)}" is not official text`)
     if (conflict.refusals.length !== bullets) ruleFailures.push(`conflict lists ${conflict.refusals.length} refusals, the text has ${bullets} bullets`)
     for (const demand of conflict.demands) if (!inOfficial(`${demand.name}. ${demand.text}`)) ruleFailures.push(`demand ${demand.name} is not official text`)
   }

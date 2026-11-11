@@ -343,7 +343,7 @@ const mechanics: Record<string, Mechanics> = {
   "barbarian-epic-boon": boon("boon-of-irresistible-offense"),
   "barbarian-primal-champion": { abilityIncrease: { abilities: ["str", "con"], amount: 4, maximum: 25 } },
   "path-of-the-berserker-mindless-rage": { conditionImmunities: { conditions: ["charmed", "frightened"], while: "raging" } },
-  "path-of-the-berserker-retaliation": { activation: ["reaction"] },
+  "path-of-the-berserker-retaliation": { activation: ["reaction"], range: 5 },
   "path-of-the-berserker-intimidating-presence": {
     activation: ["bonus-action", "no-action"],
     area: { shape: "emanation", size: 30 },
@@ -437,6 +437,7 @@ const mechanics: Record<string, Mechanics> = {
   "monk-uncanny-metabolism": { uses: longRest(1) },
   "monk-deflect-attacks": { activation: ["reaction"], dice: "1d10", rollAdds: ["dex", "class-level"], save: { ability: "dex" } },
   "monk-slow-fall": { activation: ["reaction"] },
+  "monk-heightened-focus": { range: 5 },
   "monk-ability-score-improvement": asi,
   "monk-extra-attack": { attacks: 2 },
   "monk-stunning-strike": { spend: { resource: "focus-points", amount: 1 }, save: { ability: "con" } },
@@ -516,6 +517,7 @@ const mechanics: Record<string, Mechanics> = {
     ],
   },
   "warlock-epic-boon": boon("boon-of-fate"),
+  "fiend-patron-dark-ones-blessing": { range: 10 },
   "fiend-patron-dark-ones-own-luck": { dice: "1d10", uses: { count: { ability: "cha", minimum: 1 }, recharge: "long-rest" } },
   "fiend-patron-hurl-through-hell": { activation: ["no-action"], save: { ability: "cha", dc: "spell-save-dc" }, dice: "8d10", damageTypes: ["psychic"], damageNotTo: ["fiend"], uses: longRest(1) },
 
@@ -564,6 +566,7 @@ const optionMechanics: Record<string, OptionMechanics> = {
   "sorcerer-font-of-magic/creating-spell-slots": { activation: ["bonus-action"] },
   "warlock-eldritch-invocations/armor-of-shadows": { freeCast: ["mage-armor"] },
   "warlock-eldritch-invocations/ascendant-step": { freeCast: ["levitate"] },
+  "warlock-eldritch-invocations/devils-sight": { range: 120 },
   "warlock-eldritch-invocations/devouring-blade": { attacks: 3 },
   "warlock-eldritch-invocations/eldritch-smite": { dice: "1d8", dicePerSlotLevel: "1d8", damageTypes: ["force"] },
   "warlock-eldritch-invocations/fiendish-vigor": { freeCast: ["false-life"] },

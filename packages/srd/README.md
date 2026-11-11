@@ -90,6 +90,7 @@ Run from the repo root.
 - `pnpm --filter @d20/srd sources`: download the pinned upstream files.
 - `pnpm --filter @d20/srd build [name…]`: regenerate data.
 - `pnpm --filter @d20/srd fresh`: rebuild without writing, and fail if the committed data differs.
+- `pnpm --filter @d20/srd mutate [file…]`: test the checks themselves. It takes about ten minutes for every file.
 
 ## How the checks work
 
@@ -108,6 +109,14 @@ The package checks:
 - every id that points at another entry resolves, and no reference field goes unlisted
 - every word in the data is a word the official text prints, which catches words broken or fused at a PDF line end
 - no stray marks from PDF extraction
+
+### Testing the checks
+
+A check that passes proves little unless it can fail. `mutate` takes the first value at every distinct typed field of every data file, changes it, runs the checks, then deletes it and runs them again. It works on copies in a temp folder. A mutation that no check catches is printed as `MISSED` and fails the run.
+
+It reports three counts: mutations caught by a content check, mutations caught only because the schema requires the field, and misses. Run it after changing a schema, a builder or a check. A new typed field with no check shows up as a miss.
+
+It takes one sample per field, so it shows that a field is guarded, not that every entry is right. The category checks do that by comparing every entry.
 
 A check line reads `(passed/total, N waived, M upstream errors)`.
 

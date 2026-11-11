@@ -625,6 +625,31 @@ function verifySpecies(report: Report) {
   report.check("species", "breath weapon shapes, save, DC and damage by level", 1, breathFailures)
   report.check("species", "choice options: dragon ancestries, lineage tables, gnome and giant options", optionTotal, [...dragonFailures, ...optionFailures])
   report.check("species", "granted spells, levels and uses", spellTotal, spellFailures)
+  // Choice and option ids are toId of the official names verified above (trait names, and option names from the tables and lists).
+  const idFailures: string[] = []
+  let idTotal = 0
+  for (const entry of species) {
+    const names = entry.traits.map((trait: any) => trait.name)
+    if (new Set(names).size !== names.length) idFailures.push(`${entry.name}: duplicate trait names`)
+    const referenced = new Set(entry.traits.map((trait: any) => trait.damageTypeFromChoice).filter(Boolean))
+    for (const trait of entry.traits) {
+      idTotal++
+      const says = /\bChoose (?:the kind of dragon|a lineage|a legacy|one of the following)/.test(flat(trait.text))
+      if (says !== Boolean(trait.choice)) idFailures.push(`${entry.name} ${trait.name}: the text ${says ? "asks for" : "does not ask for"} a choice, the data ${trait.choice ? "has" : "has no"} one`)
+      if (!trait.choice) continue
+      if (trait.choice.id !== toId(trait.name)) idFailures.push(`${entry.name} ${trait.name}: choice id ${trait.choice.id}, expected ${toId(trait.name)}`)
+      const optionIds = trait.choice.options.map((option: any) => option.id)
+      if (new Set(optionIds).size !== optionIds.length) idFailures.push(`${entry.name} ${trait.name}: option ids are not unique`)
+      for (const option of trait.choice.options) {
+        idTotal++
+        if (option.id !== toId(option.name)) idFailures.push(`${entry.name} ${trait.name}: option id ${option.id}, expected ${toId(option.name)}`)
+        if (Boolean(option.damageType) !== referenced.has(trait.choice.id))
+          idFailures.push(`${entry.name} ${trait.name}/${option.name}: damageType ${show(option.damageType)} does not fit how traits use this choice`)
+      }
+    }
+    for (const id of referenced) if (!entry.traits.some((trait: any) => trait.choice?.id === id)) idFailures.push(`${entry.name}: damageTypeFromChoice names ${id}, which is not a choice here`)
+  }
+  report.check("species", "choice ids and option ids are toId of the official names, unique, and referenced choices exist", idTotal, idFailures)
   report.check(
     "species",
     "references inside species",

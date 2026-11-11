@@ -12,7 +12,8 @@
     "sources": "tsx scripts/fetch.ts",
     "build": "tsx scripts/build.ts",
     "fresh": "SRD_FRESH=1 tsx scripts/build.ts",
-    "verify": "tsx scripts/verify.ts"
+    "verify": "tsx scripts/verify.ts",
+    "mutate": "tsx scripts/mutate.ts"
   },
   "dependencies": {
     "zod": "4.3.6"
