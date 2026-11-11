@@ -1,5 +1,7 @@
+import { srdAttribution } from "@d20/srd/attribution"
 import { Trash2 } from "lucide-react"
 import { type ReactNode, useState } from "react"
+import { ModuleCover } from "@/components/adventure/module-cover"
 import { textShadow, textShadowSpread } from "@/components/typography/styles"
 import { Button } from "@/components/ui/button"
 import ImageHeader from "@/components/ui/image-header"
@@ -10,7 +12,6 @@ import type { AdventureInfo } from "../runtime/game"
 import type { Hero } from "../runtime/heroes"
 import type { SaveSummary } from "../runtime/store"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
-import { ModuleCover } from "@/components/adventure/module-cover"
 import { type Locked, LockIcon, price } from "./new-game"
 import type { Realm } from "./realm"
 
@@ -432,6 +433,10 @@ export function SettingsPage(props: { realm: Realm | null; onRealm: () => void }
           </li>
         </ul>
       )}
+      <section>
+        <SectionPlate>Licenses</SectionPlate>
+        <p className="mx-auto mt-6 max-w-3xl text-sm text-gray-300">{srdAttribution}</p>
+      </section>
     </PageShell>
   )
 }
