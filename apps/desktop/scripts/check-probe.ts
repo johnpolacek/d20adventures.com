@@ -70,6 +70,9 @@ type Probe = {
   surge?: boolean
   // The Cunning Strike effect the attack adds, where the scene names one.
   cunning?: string
+  // A class's choices beside the action, by the choice's key, on the turn or on the attack: `{ "reckless": true }`.
+  // False is for one the scene must not take.
+  choices?: Record<string, string | boolean>
   // A class feature used as the action with no roll (Channel Divinity): its effect, who it is used on, and whether it heals.
   feature?: { id: string; targets?: string[]; heal?: boolean }
 }
@@ -174,6 +177,10 @@ async function run(probe: Probe): Promise<Graded> {
     if (probe.surge !== undefined && surged !== probe.surge) faults.push(`Action Surge ${surged ? "used" : "not used"}, wanted ${probe.surge ? "used" : "not used"}`)
     const cunning = got && isAttackRoll(got) ? got.attack.choices?.cunning : undefined
     if (probe.cunning && cunning !== probe.cunning) faults.push(`Cunning Strike ${cunning || "none"}, wanted ${probe.cunning}`)
+    for (const [key, wanted] of Object.entries(probe.choices ?? {})) {
+      const chosen = reading.choices?.[key] ?? (got && isAttackRoll(got) ? got.attack.choices?.[key] : undefined) ?? false
+      if (chosen !== wanted) faults.push(`choice ${key} ${JSON.stringify(chosen)}, wanted ${JSON.stringify(wanted)}`)
+    }
     if (probe.feature) {
       const used = reading.feature?.feature
       const told = (f?: { id: string; targets?: string[]; heal?: boolean }) => (f ? `${f.id}${f.heal ? " to heal" : ""} on ${[...(f.targets ?? [])].sort().join(" and ") || "no one"}` : "nothing")
