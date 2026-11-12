@@ -32,19 +32,10 @@ export default function DiceRollResult({ result, animate }: { result: number; an
     }
   }, [result, animate])
 
-  const isNat20 = result === 20
-  const isNat1 = result === 1
-
-  const diceBorderColor = isNat20 ? "border-yellow-400/50" : isNat1 ? "border-red-500/50" : "border-blue-300/30"
-
-  const diceTextColor = isNat20 ? "text-yellow-300" : isNat1 ? "text-red-400" : "text-white"
-
-  const diceGlow = isNat20 ? "shadow-[0_0_12px_3px_rgba(250,204,21,0.4)]" : isNat1 ? "shadow-[0_0_12px_3px_rgba(220,38,38,0.4)]" : ""
-
   return (
     <div className="relative flex flex-col items-center justify-center">
-      <div className={`w-20 h-20 flex items-center justify-center text-4xl bg-black/70 border-2 ring-8 ring-white/5 rounded-full ${diceBorderColor} ${diceGlow}`}>
-        {typeof animatedResult === "number" ? <span className={`font-mono ${diceTextColor}`}>{animatedResult}</span> : <span className="font-display">~</span>}
+      <div className={`w-20 h-20 flex items-center justify-center text-4xl bg-black/70 border-2 ring-8 ring-white/5 rounded-full border-blue-300/30`}>
+        {typeof animatedResult === "number" ? <span className="font-mono text-white">{animatedResult}</span> : <span className="font-display">~</span>}
       </div>
       <div className="-mt-2 flex justify-center w-48">
         {result && (

@@ -14,16 +14,19 @@ export default function DiceRoll({
   icon = "/images/app/dice/d20.svg",
   iconSize = 42,
   id,
+  dice = 1,
   onRoll,
 }: {
   className?: string
   icon?: string
   iconSize?: number
   id?: string
-  onRoll?: (result: number) => void
+  // Two d20s for a roll with Advantage or Disadvantage.
+  dice?: 1 | 2
+  onRoll?: (result: number, second?: number) => void
 }) {
   const [rolling, setRolling] = useState(false)
-  const [result, setResult] = useState<number | null>(null)
+  const [result, setResult] = useState<number[] | null>(null)
   const [display, setDisplay] = useState<number | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -37,12 +40,12 @@ export default function DiceRoll({
       elapsed += ROLL_ANIMATION_INTERVAL
       if (elapsed >= ROLL_ANIMATION_DURATION) {
         if (intervalRef.current) clearInterval(intervalRef.current)
-        const final = rollD20()
-        setDisplay(final)
+        const final = dice === 2 ? [rollD20(), rollD20()] : [rollD20()]
+        setDisplay(final[0])
         setResult(final)
         setRolling(false)
         if (onRoll) {
-          onRoll(final)
+          onRoll(final[0], final[1])
         }
       }
     }, ROLL_ANIMATION_INTERVAL)
@@ -56,7 +59,13 @@ export default function DiceRoll({
   }, [])
 
   if (result !== null) {
-    return <DiceRollResult result={result} />
+    return (
+      <div className={cn("flex", result.length > 1 && "scale-75 -mx-8")}>
+        {result.map((die, i) => (
+          <DiceRollResult key={i} result={die} />
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -82,7 +91,7 @@ export default function DiceRoll({
         alt=""
       />
       <span style={textShadow} className="pt-[2px] w-16 text-center">
-        {rolling ? (display ?? "") : "D20"}
+        {rolling ? (display ?? "") : dice === 2 ? "2D20" : "D20"}
       </span>
     </Button>
   )

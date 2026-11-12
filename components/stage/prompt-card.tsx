@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { rattle } from "./dice-sound"
 import { Chevron, eyebrow, Pill, panel } from "./hud"
-import { RollResult } from "./roll-result"
+import { keptDie, modeName, type RollMode, RollResult } from "./roll-result"
 
 export interface CardCharacter {
   id: string
@@ -20,9 +20,11 @@ export interface CardCharacter {
 }
 export interface CardRoll {
   skill: string
-  ability: string
   dc: number
   modifier: number
+  // Advantage or Disadvantage: two d20s, the higher or the lower kept, and what gives it.
+  mode?: RollMode
+  reasons?: string[]
   // A contest: the opposing roll, made by the GM on the card first; the player has to meet or beat its total (dc).
   versus?: { name: string; skill: string; natural: number; modifier: number }
 }
@@ -33,11 +35,12 @@ export interface CardSuggestion {
 }
 // `suggestions` are chips over the reply box that fill it in, blank while they are being written. `suggestion` is
 // the demo's one scripted reply, behind its Suggest button.
-// A roll's `made` is the natural roll once it is made, and `resolving` says the GM is still answering it.
+// A roll's `made` is its d20s once it is made (two with Advantage or Disadvantage), and `resolving` says the GM is still
+// answering it.
 // A thinking card's `who` is the NPC or AI hero the GM is playing, shown with their portrait, by the name to call them.
 export type CardMode =
   | { kind: "hold"; prompt: string; suggestion?: string; suggestions?: CardSuggestion[] | "loading" }
-  | { kind: "roll"; roll: CardRoll; prompt?: string; made?: number; resolving?: boolean }
+  | { kind: "roll"; roll: CardRoll; prompt?: string; made?: number[]; resolving?: boolean }
   | { kind: "thinking"; note?: string; who?: CardCharacter }
   | { kind: "done"; next: string }
 
@@ -82,7 +85,27 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
 
 // A d20 in the stage's colours: a real 3D die that tumbles while the number over its face stays upright and flips in
 // place, slowing as it settles; it lands on `land` when given and reports the natural roll. The GM's die rolls itself.
-function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll: (n: number) => void; compact: boolean; land?: number; auto?: boolean; disabled?: boolean }) {
+// The second die of a pair rolls with the first: `onStart` says one was thrown and `go` throws the other. A `dropped`
+// die, the one not kept, dims once it lands.
+function D20({
+  onRoll,
+  compact,
+  land,
+  auto = false,
+  disabled = false,
+  go = false,
+  onStart,
+  dropped = false,
+}: {
+  onRoll: (n: number) => void
+  compact: boolean
+  land?: number
+  auto?: boolean
+  disabled?: boolean
+  go?: boolean
+  onStart?: () => void
+  dropped?: boolean
+}) {
   const [shown, setShown] = useState<number | null>(null)
   const [rolling, setRolling] = useState(false)
   const [tumble, setTumble] = useState(0)
@@ -99,6 +122,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
   const roll = () => {
     if (started.current) return
     started.current = true
+    onStart?.()
     setRolling(true)
     setTumble((k) => k + 1)
     hush.current = rattle()
@@ -126,6 +150,9 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
     const t = setTimeout(roll, 500)
     return () => clearTimeout(t)
   }, [auto])
+  useEffect(() => {
+    if (go) roll()
+  }, [go])
   const done = shown !== null && !rolling
   return (
     <button
@@ -136,6 +163,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
       className={cn(
         "relative grid place-items-center [filter:drop-shadow(0_0_12px_#e3b67c40)_drop-shadow(0_3px_5px_#000b)] transition-[transform,opacity] enabled:hover:scale-105 disabled:cursor-default",
         disabled && !done && "opacity-40",
+        done && dropped && "opacity-35 grayscale",
         compact ? "h-16 w-16" : "h-[92px] w-[92px]"
       )}
     >
@@ -145,6 +173,7 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
         className={cn(
           "relative font-serif leading-none text-stage-parchment [text-shadow:0_1px_3px_#000d]",
           rolling ? "d20-flip" : done && "d20-land",
+          done && dropped && "line-through decoration-2",
           shown === null ? cn("font-sans tracking-[0.2em]", compact ? "text-[8px]" : "text-[10px]") : compact ? "text-base" : "text-[24px]"
         )}
       >
@@ -154,8 +183,14 @@ function D20({ onRoll, compact, land, auto = false, disabled = false }: { onRoll
   )
 }
 
+const signed = (n: number) => (n < 0 ? `\u2212${-n}` : `+${n}`)
+
 function Total({ natural, modifier }: { natural: number | null; modifier: number }) {
-  return <div className="mt-2 font-serif text-[13px] text-stage-parchment tabular-nums">{natural === null ? "\u00a0" : `${natural} + ${modifier} = ${natural + modifier}`}</div>
+  return (
+    <div className="mt-2 font-serif text-[13px] text-stage-parchment tabular-nums">
+      {natural === null ? "\u00a0" : `${natural} ${modifier < 0 ? "\u2212" : "+"} ${Math.abs(modifier)} = ${natural + modifier}`}
+    </div>
+  )
 }
 
 // The roll, start to finish on one card: the player's d20, how it came out, the GM answering it, and Continue once
@@ -175,16 +210,17 @@ function SingleRoll({
   prompt?: string
   actor: CardCharacter
   compact: boolean
-  forced?: number
-  made?: number
+  forced?: number[]
+  made?: number[]
   resolving?: boolean
-  onRoll: (n: number) => void
+  onRoll: (dice: number[]) => void
   onContinue?: () => void
 }) {
-  const [mine, setMine] = useState<number | null>(null)
+  const [mine, setMine] = useState<number[] | null>(null)
   const [verdict, setVerdict] = useState(false)
-  const natural = made ?? mine
-  const ask = { character: actor.name, check: roll.skill, modifier: roll.modifier, dc: roll.dc, portrait: actor.portrait }
+  const dice = made ?? mine
+  const natural = dice === null ? null : keptDie(roll.mode, dice)
+  const ask = { character: actor.name, check: roll.skill, modifier: roll.modifier, dc: roll.dc, portrait: actor.portrait, mode: roll.mode, reasons: roll.reasons }
   const total = natural === null ? 0 : natural + roll.modifier
   return (
     <div>
@@ -193,11 +229,11 @@ function SingleRoll({
       <div className={cn("mx-auto max-w-[440px] text-left", compact ? "mt-1.5" : "mt-3")}>
         <RollResult
           compact={compact}
-          roll={natural === null ? ask : { ...ask, natural, total, success: total >= roll.dc }}
+          roll={dice === null || natural === null ? ask : { ...ask, natural, dice: dice.length > 1 ? dice : undefined, total, success: total >= roll.dc }}
           onRoll={() => {
-            const n = forced ?? 1 + Math.floor(Math.random() * 20)
-            setMine(n)
-            onRoll(n)
+            const thrown = Array.from({ length: roll.mode ? 2 : 1 }, (_, i) => forced?.[i] ?? 1 + Math.floor(Math.random() * 20))
+            setMine(thrown)
+            onRoll(thrown)
           }}
           onVerdict={() => setVerdict(true)}
         />
@@ -222,10 +258,36 @@ function SingleRoll({
 }
 
 // A contest: the GM's roll for the other side first, then the player's d20, then how it came out.
-function ContestRoll({ roll, prompt, actor, compact, forced, onRoll }: { roll: CardRoll; prompt?: string; actor: CardCharacter; compact: boolean; forced?: number; onRoll: (n: number) => void }) {
+function ContestRoll({
+  roll,
+  prompt,
+  actor,
+  compact,
+  forced,
+  onRoll,
+}: {
+  roll: CardRoll
+  prompt?: string
+  actor: CardCharacter
+  compact: boolean
+  forced?: number[]
+  onRoll: (dice: number[]) => void
+}) {
   const [theirs, setTheirs] = useState<number | null>(null)
-  const [mine, setMine] = useState<number | null>(null)
-  const total = mine === null ? null : mine + roll.modifier
+  const [mine, setMine] = useState<number[] | null>(null)
+  const [thrown, setThrown] = useState(false)
+  const landed = useRef<number[]>([])
+  const count = roll.mode ? 2 : 1
+  const natural = mine === null ? null : keptDie(roll.mode, mine)
+  const keep = mine === null ? -1 : mine.indexOf(natural ?? 0)
+  const total = natural === null ? null : natural + roll.modifier
+  const land = (i: number, n: number) => {
+    landed.current[i] = n
+    const dice = Array.from({ length: count }, (_, j) => landed.current[j])
+    if (!dice.every((d) => d !== undefined)) return
+    setMine(dice)
+    onRoll(dice)
+  }
   const side = (name: string, skill: string, detail: string) => (
     <>
       <div className="text-[9px] tracking-[0.2em] text-stage-gold uppercase">{name}</div>
@@ -241,7 +303,7 @@ function ContestRoll({ roll, prompt, actor, compact, forced, onRoll }: { roll: C
         {roll.versus && (
           <>
             <div className="flex flex-col items-center">
-              {side(roll.versus.name, roll.versus.skill, `the GM rolls · +${roll.versus.modifier}`)}
+              {side(roll.versus.name, roll.versus.skill, `the GM rolls · ${signed(roll.versus.modifier)}`)}
               <D20 auto land={roll.versus.natural} compact={compact} onRoll={setTheirs} />
               <Total natural={theirs} modifier={roll.versus.modifier} />
             </div>
@@ -249,17 +311,28 @@ function ContestRoll({ roll, prompt, actor, compact, forced, onRoll }: { roll: C
           </>
         )}
         <div className="flex flex-col items-center">
-          {side(actor.name.split(" ")[0], roll.skill, `${roll.ability} · +${roll.modifier}`)}
-          <D20
-            land={forced}
-            compact={compact}
-            disabled={theirs === null}
-            onRoll={(n) => {
-              setMine(n)
-              onRoll(n)
-            }}
-          />
-          <Total natural={mine} modifier={roll.modifier} />
+          {side(actor.name.split(" ")[0], roll.skill, signed(roll.modifier))}
+          {roll.mode && (
+            <div className="-mt-1.5 mb-2 max-w-[200px] truncate font-serif text-[12px] text-stage-muted italic">
+              <span className="font-semibold text-stage-gold not-italic">{modeName(roll.mode)}</span>
+              {roll.reasons?.length ? ` · ${roll.reasons.join(", ")}` : ""}
+            </div>
+          )}
+          <div className="flex gap-2">
+            {Array.from({ length: count }, (_, i) => (
+              <D20
+                key={i}
+                land={forced?.[i]}
+                compact={compact}
+                disabled={theirs === null}
+                go={thrown}
+                onStart={() => setThrown(true)}
+                dropped={count > 1 && keep !== -1 && i !== keep}
+                onRoll={(n) => land(i, n)}
+              />
+            ))}
+          </div>
+          <Total natural={natural} modifier={roll.modifier} />
         </div>
       </div>
       <div className={cn("mt-1 h-4 text-[11px] tracking-[0.18em] uppercase", total === null ? "opacity-0" : total >= roll.dc ? "text-[#b7d38a]" : "text-[#e39a7c]")}>
@@ -292,7 +365,8 @@ export function PromptCard({
   onReply: (text: string) => void
   // Ends the hero's turn with no reply. Without it there is no Skip button.
   onSkip?: () => void
-  onRoll: (n: number) => void
+  // The d20s thrown: one, or two with Advantage or Disadvantage.
+  onRoll: (dice: number[]) => void
   onPick: (id: string) => void
   // Leaves a roll once the GM has answered it. Without it the roll's card has no Continue button.
   onContinue?: () => void
@@ -301,8 +375,8 @@ export function PromptCard({
   // The reply can be held by the caller (so it survives the card closing while the turn is replayed).
   draft?: string
   onDraft?: (text: string) => void
-  // Stageview checks: the player's natural roll, fixed.
-  forcedRoll?: number
+  // The player's d20s, fixed: a roll already made and kept, shown again, or a Stageview check's.
+  forcedRoll?: number[]
   // A scripted demo: the reply can't be typed. The box stays disabled, with a note over it, until Suggest fills it in,
   // and the suggestion then can't be edited.
   demo?: boolean

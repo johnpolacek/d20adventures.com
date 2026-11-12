@@ -14,7 +14,6 @@ import type { StagingShot } from "@d20/stage/spec/staging"
 
 export interface MockRoll {
   skill: string
-  ability: string
   dc: number
   modifier: number
   // A contest: the opposing roll, shown first; the player has to meet or beat its total.
@@ -223,7 +222,7 @@ export const TURNS: MockTurn[] = [
       stay: true,
       prompt: "Oskar is busy talking maps with Cassia, waving both hands. The purse at his belt swings, heavy and unattended. Yeva, what do you do?",
       suggestion: "Yeva hums a festival tune and drifts toward the merchant, admiring the embroidery on his purse. While he's busy with Cassia, her fingers find the strings.",
-      roll: { key: "pickpocket", skill: "Sleight of Hand", ability: "DEX", dc: 13, modifier: 5, versus: { name: "Oskar", skill: "Perception", natural: 12, modifier: 1 } },
+      roll: { key: "pickpocket", skill: "Sleight of Hand", dc: 13, modifier: 5, versus: { name: "Oskar", skill: "Perception", natural: 12, modifier: 1 } },
       rollPrompt: "Oskar's eyes are on Cassia's charts. Yeva, roll Sleight of Hand to beat his Perception.",
     },
   },
@@ -384,7 +383,7 @@ export const TURNS: MockTurn[] = [
             shot: onYeva,
             prompt: "“The merchant says you had your hand in his purse,” Garlan says. Yeva, what do you tell him?",
             suggestion: "Yeva spreads her empty hands and looks wounded. “A misunderstanding, sergeant! I was only admiring the embroidery.”",
-            roll: { key: "talkedOut", skill: "Deception", ability: "CHA", dc: 14, modifier: 4, versus: { name: "Garlan", skill: "Insight", natural: 11, modifier: 3 } },
+            roll: { key: "talkedOut", skill: "Deception", dc: 14, modifier: 4, versus: { name: "Garlan", skill: "Insight", natural: 11, modifier: 3 } },
             rollPrompt: "Garlan studies her face. Yeva, roll Deception to beat his Insight.",
           },
   },

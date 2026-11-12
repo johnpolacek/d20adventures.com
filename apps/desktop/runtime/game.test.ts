@@ -193,8 +193,9 @@ test("reply storage and real roll services keep dice across failures and reject 
   try {
     const run = game(store, packs, failLlm)
     await run({ kind: "start", provider: "claude" })
+    // The roll is Branka's, whatever the turn order: her bonus is worked out by hand below.
     const turn = store.current(),
-      pc = turn.characters.find((c) => c.type === "pc")!
+      pc = turn.characters.find((c) => c.name === "Branka Stoneveil")!
     turn.characters.forEach((c) => {
       c.isComplete = c.id !== pc.id
       c.initiative = c.id === pc.id ? 20 : 0
@@ -229,7 +230,6 @@ test("reply storage and real roll services keep dice across failures and reject 
     reloaded.db.close()
     await game(store, packs, good)({ kind: "roll", turnId: turn._id, characterId: pc.id, result: 1 })
     // The kept 14, not the new 1. Branka has Cha 8 (-1) and no Persuasion proficiency: 14 - 1 = 13.
-    assert.equal(pc.name, "Branka Stoneveil")
     assert.equal(store.current().characters.find((c) => c.id === pc.id)!.rollResult, 13)
     assert.equal(store.current().characters.find((c) => c.id === pc.id)!.isComplete, true)
     await assert.rejects(() => run({ kind: "reply", turnId: "stale", characterId: pc.id, text: "another action" }), /already advanced/)

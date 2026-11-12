@@ -59,7 +59,8 @@ export const hostCommandSchema = z.discriminatedUnion("kind", [
     turnId: id,
     action: z.discriminatedUnion("kind", [
       z.object({ kind: z.literal("reply"), characterId: id, text: z.string().trim().min(1).max(4000) }),
-      z.object({ kind: z.literal("roll"), characterId: id, result: z.number().int().min(1).max(20) }),
+      // `second` is the other d20 of a roll with Advantage or Disadvantage.
+      z.object({ kind: z.literal("roll"), characterId: id, result: z.number().int().min(1).max(20), second: z.number().int().min(1).max(20).optional() }),
       z.object({ kind: z.literal("skip"), characterId: id }),
       z.object({ kind: z.literal("continue") }),
       // Replies the host's GM offers for the hero's turn. They come back on the job, by the id returned here.

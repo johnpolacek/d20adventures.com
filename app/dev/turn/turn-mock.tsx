@@ -337,7 +337,8 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
       setPhase("roll")
     } else advance(text, null, undefined, 700)
   }
-  const onRoll = (base: number) => {
+  const onRoll = (dice: number[]) => {
+    const base = dice[0]
     if (contestRoll.current) {
       const resolve = contestRoll.current
       contestRoll.current = null
@@ -528,7 +529,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
           onRoll={onRoll}
           onPick={focus}
           onTop={mode.kind === "hold" || mode.kind === "roll" ? onCardTop : undefined}
-          forcedRoll={FORCED_ROLL ?? undefined}
+          forcedRoll={FORCED_ROLL === null ? undefined : [FORCED_ROLL]}
           demo
           draft={drafts[turnIndex] ?? ""}
           onDraft={(text) => setDrafts((d) => ({ ...d, [turnIndex]: text }))}

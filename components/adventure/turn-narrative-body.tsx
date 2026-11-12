@@ -76,7 +76,17 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
         }
         return (
           <div className="pb-6" key={`${part.character}-${part.check}-${part.total}-${part.dc}-${idx}`}>
-            <CharacterDiceRollResultDisplay character={part.name} rollType={part.check} difficulty={part.dc} result={part.total} image={part.image} modifier={part.modifier} baseRoll={part.natural} />
+            <CharacterDiceRollResultDisplay
+              character={part.name}
+              rollType={part.check}
+              difficulty={part.dc}
+              result={part.total}
+              image={part.image}
+              modifier={part.modifier}
+              baseRoll={part.natural}
+              dice={part.dice}
+              mode={part.mode}
+            />
           </div>
         )
       })}

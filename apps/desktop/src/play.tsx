@@ -374,9 +374,9 @@ export function DesktopGame() {
         return Boolean(res && !res.error)
       }}
       onSuggest={hosting ? suggestHosted : async (turnId, characterId) => (await suggest(turnId, characterId)).suggestions ?? []}
-      onRoll={async (turnId, characterId, result) => {
-        if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result } }))
-        const res = await invoke({ kind: "roll", turnId, characterId, result })
+      onRoll={async (turnId, characterId, result, second) => {
+        if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "roll", characterId, result, second } }))
+        const res = await invoke({ kind: "roll", turnId, characterId, result, second })
         return Boolean(res && !res.error)
       }}
       autoContinue={!hosting}

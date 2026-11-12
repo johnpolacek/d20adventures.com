@@ -15,7 +15,17 @@ export default function StoryviewSlideView({ slide, segmentIndex, getSpeaker }: 
     const part = slide.part
     return (
       <div className="fade-in w-full max-w-2xl">
-        <CharacterDiceRollResultDisplay character={part.name} rollType={part.check} difficulty={part.dc} result={part.total} image={part.image} modifier={part.modifier} baseRoll={part.natural} />
+        <CharacterDiceRollResultDisplay
+          character={part.name}
+          rollType={part.check}
+          difficulty={part.dc}
+          result={part.total}
+          image={part.image}
+          modifier={part.modifier}
+          baseRoll={part.natural}
+          dice={part.dice}
+          mode={part.mode}
+        />
       </div>
     )
   }

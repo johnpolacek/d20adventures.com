@@ -162,6 +162,8 @@ export default defineSchema({
     characterId: v.optional(v.string()),
     text: v.optional(v.string()),
     result: v.optional(v.number()),
+    // The other d20 of a roll with Advantage or Disadvantage.
+    second: v.optional(v.number()),
     // The guest's stage context for a reply, so the host can read movement from it.
     movement: v.optional(v.any()),
     suggestions: v.optional(v.array(v.object({ label: v.string(), text: v.string() }))),

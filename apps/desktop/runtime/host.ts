@@ -27,6 +27,8 @@ export type HostJob = {
   // A reply's text, or the hook a created hero's player chose for an arrival job.
   text?: string
   result?: number
+  // The other d20 of a roll with Advantage or Disadvantage.
+  second?: number
   // An arrival or paint job's hero, as the website sends it.
   sheet?: PCTemplate | null
 }
@@ -154,8 +156,9 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
     return
   }
   if (!actor.rollRequired || actor.rollResult !== undefined) throw new Error("There is no pending roll.")
-  if (!Number.isInteger(job.result) || job.result! < 1 || job.result! > 20) throw new Error("A roll is a whole number from 1 to 20.")
-  await core.resolvePlayerRollResult({ turnId: turn._id, characterId: actor.id, result: job.result! })
+  const d20 = (n: number | undefined) => Number.isInteger(n) && n! >= 1 && n! <= 20
+  if (!d20(job.result) || (job.second !== undefined && !d20(job.second))) throw new Error("A roll is a whole number from 1 to 20.")
+  await core.resolvePlayerRollResult({ turnId: turn._id, characterId: actor.id, result: job.result!, second: job.second })
 }
 
 /** Writes a created hero's arrival in the adventure's opening scene, before the game starts. */

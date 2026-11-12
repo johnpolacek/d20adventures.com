@@ -14,12 +14,12 @@ export default function CharacterDiceRoll({
 }: {
   rollRequired: NonNullable<RollRequirement>
   rollResult: number | null
-  onRoll: (result: number) => void
+  onRoll: (result: number, second?: number) => void
   className?: string
   inputKey?: string | number
   character: TurnCharacter
 }) {
-  const { rollType, difficulty, modifier = 0 } = rollRequired
+  const { rollType, difficulty, modifier, mode, reasons } = rollRequired
 
   return (
     <div className={cn("relative aspect-[2/3] sm:aspect-auto md:min-h-[300px] font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
@@ -32,9 +32,15 @@ export default function CharacterDiceRoll({
         <h3 className="text-2xl text-amber-300">{rollType}</h3>
         <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wider">
           Target {difficulty}
-          {modifier !== 0 && <span className={modifier > 0 ? "text-green-400" : "text-red-400"}>{modifier > 0 ? `  +${modifier} bonus` : `  ${modifier} penalty`}</span>}
+          <span className={modifier < 0 ? "text-red-400" : "text-green-400"}>{modifier < 0 ? `  ${modifier}` : `  +${modifier}`}</span>
         </div>
-        <DiceRoll key={inputKey} className="my-2 scale-90 sm:scale-100" iconSize={48} id="d20-roll" {...(rollResult === null ? { onRoll } : {})} />
+        {mode !== "normal" && (
+          <div className="font-mono text-xs text-amber-200 -mt-3 uppercase tracking-wider">
+            {mode === "advantage" ? "Advantage" : "Disadvantage"}
+            {reasons?.length ? <span className="block normal-case tracking-normal text-primary-300">{reasons.join(", ")}</span> : null}
+          </div>
+        )}
+        <DiceRoll key={inputKey} className="my-2 scale-90 sm:scale-100" iconSize={48} id="d20-roll" dice={mode === "normal" ? 1 : 2} {...(rollResult === null ? { onRoll } : {})} />
       </div>
     </div>
   )

@@ -185,7 +185,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
     }
   }
 
-  const handleRollResult = async (result: number) => {
+  const handleRollResult = async (result: number, second?: number) => {
     let turnId: Id<"turns"> | undefined
     if (currentTurn && typeof currentTurn.id === "string") {
       turnId = currentTurn.id as Id<"turns">
@@ -201,6 +201,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
         turnId,
         characterId: character.id,
         result,
+        second,
       })
     } catch (err) {
       console.error("[handleRollResult] Error in resolvePlayerRollResult:", err)

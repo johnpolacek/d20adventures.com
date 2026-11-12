@@ -10,8 +10,10 @@ export default function CharacterDiceRollResultDisplay({
   difficulty,
   result,
   image,
-  modifier,
+  modifier = 0,
   baseRoll,
+  dice,
+  mode,
 }: {
   character: string
   rollType: string
@@ -19,8 +21,14 @@ export default function CharacterDiceRollResultDisplay({
   result: number
   image?: string
   modifier?: number
-  baseRoll?: number
+  // The die that counts.
+  baseRoll: number
+  // Both d20s of a roll with Advantage or Disadvantage.
+  dice?: number[]
+  mode?: "advantage" | "disadvantage"
 }) {
+  // The die that did not count, shown struck through beside the one that did.
+  const dropped = dice && dice.length > 1 ? dice[dice.indexOf(baseRoll) === 0 ? 1 : 0] : undefined
   const imageUrl = image || "/images/app/characters/default.png"
   return (
     <div className="relative aspect-[2/3] sm:aspect-auto font-display font-bold border border-primary-700 rounded-xl overflow-hidden">
@@ -36,22 +44,16 @@ export default function CharacterDiceRollResultDisplay({
         <h3 className="text-2xl text-amber-300">{rollType}</h3>
         <div className="font-mono text-xs text-primary-300 -mt-2 uppercase tracking-wider">
           <span className="scale-90">Target {difficulty}</span>
-          {typeof baseRoll === "number" && modifier !== 0 && (
-            <>
-              <span className="font-bold text-white">
-                {" "}
-                <span className="text-white/50">|</span> {baseRoll}
-              </span>
-              {typeof modifier === "number" && modifier !== 0 && (
-                <span className={modifier > 0 ? "text-green-500" : "text-red-500"}>
-                  {" "}
-                  {modifier > 0 ? " + " : " - "}
-                  {Math.abs(modifier)}
-                </span>
-              )}
-              {typeof modifier === "number" && modifier !== 0 ? <> </> : null}
-            </>
-          )}
+          <span className="font-bold text-white">
+            {" "}
+            <span className="text-white/50">|</span> {baseRoll}
+          </span>
+          {dropped !== undefined && <span className="text-white/40 line-through"> {dropped}</span>}
+          <span className={modifier < 0 ? "text-red-500" : "text-green-500"}>
+            {modifier < 0 ? " - " : " + "}
+            {Math.abs(modifier)}
+          </span>
+          {mode && <span className="block text-amber-200">{mode === "advantage" ? "Advantage" : "Disadvantage"}</span>}
         </div>
         <div className="flex flex-col items-center gap-1">
           <DiceRollResult result={result} />

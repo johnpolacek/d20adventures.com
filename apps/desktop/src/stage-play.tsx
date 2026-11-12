@@ -83,7 +83,7 @@ function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string
   const near = Object.entries(stage.shots).sort(([, p], [, q]) => Math.hypot(p.target[0] - mx, p.target[2] - mz) - Math.hypot(q.target[0] - mx, q.target[2] - mz))[0]
   return near?.[0] ?? null
 }
-const journalRoll = (r: RollBeat): JournalRoll => ({ name: r.name, skill: r.check, dc: r.dc, base: r.natural, total: r.total, success: r.success })
+const journalRoll = (r: RollBeat): JournalRoll => ({ name: r.name, skill: r.check, dc: r.dc, base: r.natural, total: r.total, success: r.success, dice: r.dice, mode: r.mode })
 
 type Character = Save["turns"][number]["characters"][number]
 type Positions = Record<string, { x: number; z: number; ry: number }>
@@ -182,7 +182,8 @@ export function StagePlay(props: {
   onReply: (turnId: string, characterId: string, text: string, movement: ReturnType<typeof context> | undefined) => Promise<boolean>
   // Ends a hero's turn with no reply. Without it the card has no Skip button.
   onSkip?: (turnId: string, characterId: string) => Promise<boolean>
-  onRoll: (turnId: string, characterId: string, result: number) => Promise<boolean>
+  // `result` is the first d20, and `second` the other of a roll with Advantage or Disadvantage.
+  onRoll: (turnId: string, characterId: string, result: number, second?: number) => Promise<boolean>
   // Replies offered on a hero's turn, which fill the reply box. Without it none are offered.
   onSuggest?: (turnId: string, characterId: string) => Promise<CardSuggestion[]>
   onContinue: (turnId: string) => void
@@ -238,7 +239,7 @@ export function StagePlay(props: {
   const [reading, setReading] = useState(true)
   // The roll a hero has just made. It stays on the card, with how it came out, while the GM answers it, and the story
   // after it is read once the player continues. `tries` renews the card for a roll that was not taken.
-  const [held, setHeld] = useState<{ turn: string; actor: CardCharacter; roll: CardRoll; natural: number; at: number } | null>(null)
+  const [held, setHeld] = useState<{ turn: string; actor: CardCharacter; roll: CardRoll; dice: number[]; at: number } | null>(null)
   const heldRef = useRef(held)
   heldRef.current = held
   const [tries, setTries] = useState(0)
@@ -319,6 +320,8 @@ export function StagePlay(props: {
         dc: rolled.dc,
         success: rolled.success,
         portrait: rollerPortrait,
+        dice: rolled.dice,
+        mode: rolled.mode,
       },
     [rolled, rollerPortrait]
   )
@@ -797,14 +800,18 @@ export function StagePlay(props: {
     }
   }, [holdKey, holdTurn, holdActor])
   let mode: CardMode | null = null
-  if (held) mode = { kind: "roll", roll: held.roll, made: held.natural, resolving: props.busy }
+  if (held) mode = { kind: "roll", roll: held.roll, made: held.dice, resolving: props.busy }
   // A walk holds the card back without a word about the GM.
   else if (busy) mode = props.busy ? playing(turn?._id, actor, aiActor, portrait) : null
   else if (props.writing) mode = reading ? null : playing(turn?._id, actor, aiActor, portrait)
   // Movement is read against the scene on screen, so wait for the next scene before taking an action.
   else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
   else if (ended) mode = null
-  else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier } }
+  else if (cardActor && rr)
+    mode = {
+      kind: "roll",
+      roll: { skill: rr.rollType, dc: rr.difficulty, modifier: rr.modifier, ...(rr.mode === "advantage" || rr.mode === "disadvantage" ? { mode: rr.mode, reasons: rr.reasons } : {}) },
+    }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?`, suggestions: holdKey ? (offered?.key === holdKey ? offered.list : "loading") : undefined }
   // What Continue would run: an NPC's or AI hero's turn, or the end of the round, in the turn the game is on, which
   // may be a round ahead of the screen. Each is tried once on its own. Played on its own, the next one is written while
@@ -831,10 +838,10 @@ export function StagePlay(props: {
   const skip = async () => {
     if (turn && actor && (await props.onSkip?.(turn._id, actor.id))) setDraft("")
   }
-  const makeRoll = async (natural: number) => {
+  const makeRoll = async (dice: number[]) => {
     if (!turn || !actor || !cardActor || mode?.kind !== "roll") return
-    setHeld({ turn: turn._id, actor: cardActor, roll: mode.roll, natural, at: Date.now() })
-    if (await props.onRoll(turn._id, actor.id, natural)) return
+    setHeld({ turn: turn._id, actor: cardActor, roll: mode.roll, dice, at: Date.now() })
+    if (await props.onRoll(turn._id, actor.id, dice[0], dice[1])) return
     setHeld(null)
     setTries((n) => n + 1)
   }
@@ -971,13 +978,13 @@ export function StagePlay(props: {
               compact={compact}
               onReply={reply}
               onSkip={props.onSkip ? skip : undefined}
-              onRoll={(natural) => void makeRoll(natural)}
+              onRoll={(dice) => void makeRoll(dice)}
               onPick={focus}
               onContinue={held && !props.busy ? leaveRoll : undefined}
               onTop={onTop}
               draft={draft}
               onDraft={setDraft}
-              forcedRoll={turn && actor ? save.rolls?.[`${turn._id}:${actor.id}`]?.[0] : undefined}
+              forcedRoll={turn && actor ? save.rolls?.[`${turn._id}:${actor.id}`] : undefined}
             />
           )}
           {ended && !busy && !reading && (
