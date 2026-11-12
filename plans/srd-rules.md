@@ -342,6 +342,31 @@ Levels to 20. The other six classes. The full spell, monster and magic item list
 
 Started 2026-11-13. It opens with a survey of what the SRD data holds and what the engine runs of it, for classes and levels, spells, monsters and magic items. The substages are written from it.
 
+What the survey found of monsters: 330 stat blocks, 19 of them used by the four adventures. The engine reads Armor Class, hit points, Initiative, walking Speed, size, reach, bonuses, immunities, resistances, vulnerabilities and attacks with their damage. Multiattack is read only where it is worded "two Rend attacks", so 42 blocks make one attack where they should make more, five of them in use: Bandit Captain, Priest, Druid, Guard Captain and Scout. Every trait is ignored (Pack Tactics, Magic Resistance, Regeneration), and so are conditions and saves that ride on a hit, recharge and breath weapons, Legendary Actions, an NPC's Bonus Actions, and speeds other than walking. A hit's gated damage is added without its gate on 27 blocks, none in use.
+
+What it found of magic items: 258 items, 140 of them needing attunement, 88 fully typed, 85 typed in part and 85 text only. A hero's gear is a list of names that no rule reads. A Potion of Healing is read as a check that can fail, with dice that are not the potion's, and nothing checks the hero has one.
+
+Substages, monsters:
+
+- M1. Multiattack in full, each attack with its own weapon and target, and a hit's gated damage only when its gate holds.
+- M2. Traits that change a roll: Pack Tactics, Magic Resistance, Sunlight Sensitivity, and Regeneration as a turn begins.
+- M3. An NPC's Bonus Actions: Cunning Action, Nimble Escape, and the spells a stat block casts as one.
+- M4. Monster actions with a save, an area, a Recharge or uses a day: breath weapons and the like. The NPC is told what its stat block can do.
+- M5. What rides on a hit: a condition, a save, a grapple with its escape DC, damage that comes later.
+- M6. Legendary Actions after another's turn, and Legendary Resistance.
+- M7. Retune the fights by their truer strength, and prompt checks.
+
+Substages, magic items:
+
+- I1. Items a hero owns, kept on the sheet, with attunement and its limit of three, and shown on both hosts.
+- I2. A bonus weapon, armor or shield, and items of protection, reaching attacks, Armor Class and saves.
+- I3. A potion drunk from the read's menu, with the potion's own dice, and used up.
+- I4. Charges and their return, and an item that casts a spell.
+- I5. Loot an adventure authors, given by the engine and kept between adventures. The game master invents no magic item.
+- I6. The item effects the data has no field for yet: resistances, a set ability score, speed, conditions.
+
+Substages for classes and levels, and for spells, follow their surveys.
+
 ## Unknowns
 
 - No machine-readable SRD 5.2 source is verified yet. A third-party JSON API exists, unchecked.
