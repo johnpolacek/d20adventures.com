@@ -85,7 +85,7 @@ Substages:
 4. NPCs get hit points and Armor Class. Done, and by the owner's choice each of the 61 NPCs names an SRD stat block now (`statBlock`: Guard, Bandit, Priest, Owlbear), picked to suit a level 1 party. An NPC that names none is a Commoner. Stage 4 uses the rest of the stat block and retunes the picks. The premade heroes also wear their class's usual starting armor where they carried none.
 5. Storage on both hosts. Convex and the desktop database carry the sheet. Old saves are wiped.
 6. Level 1 features listed on the sheet, with their uses. They do nothing yet. Done: `sheetView` in `packages/gm-core/src/sheet/view.ts` lists class features, species traits and feats, with uses worked out (Second Wind, 2 per Long Rest).
-7. The sheet on screen: class, hit points, Armor Class, saves and skills on the character card. Done on the site's hero sheet window (`components/adventure/character-sheet-modal.tsx`), which loads the rules data only when it opens. The desktop app has no hero sheet window of its own yet: to do, with the stage HUD.
+7. The sheet on screen: class, hit points, Armor Class, saves and skills on the character card. Done on the site's hero sheet window (`components/adventure/character-sheet-modal.tsx`), which loads the rules data only when it opens. The desktop app shows it on the hero's card in the stage HUD (`apps/desktop/src/character-info.ts`). NPC cards keep their numbers hidden.
 8. Close: The Midnight Summons plays end to end on the site and the desktop app.
 
 ### 3. Checks

@@ -5,6 +5,7 @@ import type { Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useSheetView } from "@/components/adventure/use-sheet-view"
 import { CharacterCard } from "@/components/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@/components/stage/city-map"
 import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
@@ -293,7 +294,9 @@ export function StagePlay(props: {
   }, [authored, partyKey])
   const figures = save?.figures
   const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures, painted)
-  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter)) : null
+  // A hero's rules sheet for the card. NPCs keep their numbers to themselves.
+  const cardSheet = useSheetView(cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined, cardCharacter?.healthPercent)
+  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet) : null
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
