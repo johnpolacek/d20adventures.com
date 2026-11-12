@@ -80,6 +80,14 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
       }
     }
 
+    // A hero of the player's own, neither the adventure's nor a seat held for them, must be one its lists allow.
+    if (!seat) {
+      const plan = await loadAdventurePlanForRuntime(settingId, adventurePlanId).catch(() => null)
+      const own = plan?.premadePlayerCharacters?.some((pc) => pc.id === sheetId(characterId)) ? null : toPCTemplate(await readJsonFromS3(userCharKey).catch(() => null))
+      const misfit = own && (await heroMisfit(adventurePlanId, own))
+      if (misfit) throw new Error(misfit)
+    }
+
     await convex.mutation(api.adventure.joinAdventure, {
       adventureId: adventureId as Id<"adventures">,
       userId,

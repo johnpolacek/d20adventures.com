@@ -10,6 +10,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { markAiControlled } from "@/lib/ai-companions"
 import { canManageResource } from "@/lib/content-permissions"
 import { convex } from "@/lib/convex/server"
+import { heroMisfit } from "@/lib/heroes/creation"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
@@ -74,6 +75,14 @@ export async function createAdventure(input: CreateAdventureInput) {
   }
   if (1 + aiChoices.length > maxParty) {
     throw new Error(`The party cannot exceed ${maxParty} characters`)
+  }
+
+  // A hero of the player's own must be one the adventure's lists allow.
+  for (const choice of playerChoices) {
+    if (findPremadeSheet(choice.characterId)) continue
+    const own = toPCTemplate(await readJsonFromS3(normalizePlayerCharacterKey(userId, choice.characterId)).catch(() => null))
+    const misfit = own && (await heroMisfit(adventurePlanId, own))
+    if (misfit) throw new Error(misfit)
   }
 
   const players = [

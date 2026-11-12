@@ -74,7 +74,7 @@ export function heroStoryPrompt(hero: HeroIdea, rules: HeroRules, adventure?: He
     // Without an arrival in the same call, the player's reason still shapes the past.
     adventure && hook && !draftsArrival(adventure) ? `Why they are going there: ${hook.replace(/\.?$/, ".")} Their background leads to it.` : "",
     WORLD,
-    "Keep the given name, race and class. Write appearance, personality, background and motivation as two or three vivid sentences each, plus a short behavior note on how they act in play. Give no numbers. Name no weapon, armor, spell or skill beyond those listed above.",
+    "Keep the given name, race and class. Write appearance, personality, background and motivation as two or three vivid sentences each, plus a short behavior note on how they act in play. Give no numbers. Name no weapon, armor, spell or skill beyond those listed above. Show what the rules settled through how they look, live and act: do not open by restating their race and class, and do not list their abilities or skills as such.",
     adventure?.hooks?.length && adventure.opening ? arrivalPrompt(adventure.hooks, adventure.opening, hook) : "",
   ]
     .filter(Boolean)

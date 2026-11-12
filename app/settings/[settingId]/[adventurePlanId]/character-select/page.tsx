@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { playableHero } from "@d20/gm-core/character/hero-draft"
+import { allowsHero } from "@d20/gm-core/character/hero-make"
 import { redirect } from "next/navigation"
 import CharacterSelection from "@/components/adventure/character-selection"
 import FullPageImage from "@/components/layout/fullpage-image"
@@ -53,7 +54,8 @@ export default async function CharacterSelectPage({ params }: PageProps) {
   let characterFiles: string[] = []
   try {
     const results = await listAndReadJsonFilesInS3Directory(`characters/${user.id}/`)
-    const playable = results.filter((r) => playableHero(r.data as PCTemplate))
+    // The player's heroes who have a rules sheet and are of a race and class the adventure allows.
+    const playable = results.filter((r) => playableHero(r.data as PCTemplate) && allowsHero(adventurePlan.availableCharacterOptions, r.data as PCTemplate))
     characters = playable.map((r) => r.data as PCTemplate)
     characterFiles = playable.map((r) => (r.key.split("/").pop() ?? "").replace(".json", ""))
   } catch {
