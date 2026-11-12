@@ -135,7 +135,7 @@ export default function TurnCharacterList() {
           onOrders={
             currentTurn && !disableSSE && controlsHero(selectedCharacter, user?.id)
               ? (orders) =>
-                  void setStandingOrders({ turnId: currentTurn.id as Id<"turns">, characterId: selectedCharacter.id, orders }).catch((error) =>
+                  void setStandingOrders({ turnId: currentTurn.id as Id<"turns">, characterId: selectedCharacter.id, orders: orders as Record<string, string> }).catch((error) =>
                     console.error("[TurnCharacterList] The standing orders were not saved:", error)
                   )
               : undefined

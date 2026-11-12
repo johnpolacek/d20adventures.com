@@ -68,8 +68,8 @@ export function criticalFrom(character: { sheet?: Sheet }): number {
   return Math.min(20, ...features.flatMap((feature) => (feature?.criticalHit?.minRoll !== undefined && feature.attacksWith?.length ? [feature.criticalHit.minRoll] : [])))
 }
 
-/** The features and feats a hero uses at most once a turn, as the turn effects that mark them used. */
-export type OncePerTurn = "sneak-attack" | "savage-attacker" | "colossus-slayer"
+/** A feature or feat a hero uses at most once a turn, by the turn effect that marks it used: "savage-attacker", or a class's own mark (./class-rules). */
+export type OncePerTurn = string
 
 /** Whether a hero has used a once-a-turn feature on this turn, `turnOf` being whose turn it is. */
 export const usedThisTurn = (character: { turnEffects?: readonly TurnEffect[] }, id: OncePerTurn, turnOf: string | undefined): boolean =>

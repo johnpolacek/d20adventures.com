@@ -1,8 +1,9 @@
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { RequiredAttack, RequiredRoll } from "../validations/roll-requirement-schema"
 import { type Acting, attackModesFromActions, hideRoll } from "./actions"
-import { type Attack, attacksOf, averageDamage, type CunningStrike, cunningStrikesOf } from "./attack"
+import { type Attack, attacksOf, averageDamage } from "./attack"
 import { combineModes, type RollMode } from "./check"
+import { type FollowRule, followRules } from "./class-rules"
 import { attackModesFrom, cannotAttack, hasCondition, type ModeSource } from "./conditions"
 import { deriveSheet } from "./derive"
 import { attacksPerAction as attacksPerActionOf } from "./feature-rules"
@@ -20,7 +21,7 @@ import { combatStatsOf } from "./stat-block"
 /** One in the scene, as the attack reads them. */
 export type InScene = Acting & Standing & { hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; isComplete?: boolean; statBlock?: string }
 
-/** What a turn still holds after the roll it is making: the rest of an Attack action, Horde Breaker, and a Hide. */
+/** What a turn still holds after the roll it is making: the rest of an Attack action, a class's follow-ups (Horde Breaker), and a Hide. */
 export type After = NonNullable<RequiredRoll["after"]>
 
 export type AttackAsk = {
@@ -39,7 +40,8 @@ export type AttackAsk = {
   modes?: readonly ModeSource[]
   /** Feet the roller moved before the attack, for the words of a ruling. */
   moved?: number
-  cunning?: CunningStrike
+  /** What class features the attacker chose for this attack, kept on it until the blow lands: a Cunning Strike's `cunning`. */
+  choices?: Record<string, string>
   after?: After
 }
 
@@ -103,7 +105,7 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
   const counted = cover === "half" || cover === "three-quarters" ? cover : undefined
   return {
     roll: {
-      attack: { weapon: attack.id, target: target.id, ...(counted ? { cover: counted } : {}), ...(ask.cunning ? { cunning: ask.cunning } : {}) },
+      attack: { weapon: attack.id, target: target.id, ...(counted ? { cover: counted } : {}), ...(ask.choices && Object.keys(ask.choices).length ? { choices: ask.choices } : {}) },
       rollType: attack.name,
       difficulty: armorClass + coverBonus(cover),
       modifier: attack.bonus,
@@ -121,8 +123,9 @@ function featModes(attacker: InScene, target: InScene): ModeSource[] {
   return held && hasCondition(target, "grappled") ? [{ mode: "advantage", from: "Grappler" }] : []
 }
 
-// Whether one is an enemy the attacker can still attack: of the other side, up, here, and not one they are Charmed by.
-const attackable = (attacker: InScene, other: InScene): boolean => other.id !== attacker.id && other.type !== attacker.type && !isDown(other) && !hasFled(other) && !cannotAttack(attacker, other)
+/** Whether one is an enemy the attacker can still attack: of the other side, up, here, and not one they are Charmed by. */
+export const attackable = (attacker: InScene, other: InScene): boolean =>
+  other.id !== attacker.id && other.type !== attacker.type && !isDown(other) && !hasFled(other) && !cannotAttack(attacker, other)
 
 /**
  * The roll a turn asks for after one is resolved, or none when the turn is done. What it still holds is on the roll
@@ -133,9 +136,8 @@ const attackable = (attacker: InScene, other: InScene): boolean => other.id !== 
  * - The rest of an NPC's Multiattack: each attack with one of the attacks the Multiattack allows for it. Where it
  *   allows several ("in any combination"), the engine takes the best at the target: one with no Disadvantage over one
  *   with it, then the most average damage, then the longest reach.
- * - Horde Breaker, once a turn: another attack with the same weapon at a creature within 5 feet of the one just
- *   attacked, within the weapon's reach or range, that the hero has not attacked this turn.
- * - A Hide taken with Cunning Action: the Stealth check, after the rest.
+ * - A class's follow-ups that come with the action's attacks, after the rest of them (./classes): Horde Breaker.
+ * - A Hide taken with Cunning Action, and any other follow-up of a class's: the roll, after the rest.
  *
  * An attack of the action or the Multiattack goes at the same target, or once that one is down or out of the weapon's
  * reach or range, at the nearest enemy the weapon reaches from where the attacker stands, with no move. With none, the
@@ -191,56 +193,67 @@ export function followingRoll(args: { character: InScene; made: RequiredRoll; pr
       if (roll) return roll
       next.multiattack = undefined
     }
-    // Horde Breaker: a creature beside the one just attacked, not yet attacked this turn.
-    if (attack && then.horde) {
-      const original = args.present.find((other) => other.id === made.attack.target)
-      const at = original && placedOf(original)
-      const beside = args.present.filter((other) => {
-        const there = placedOf(other)
-        return attackable(character, other) && !struck.includes(other.id) && (!at || (!!there && within(there, at, 5))) && asked(attack, other, {}) !== undefined
-      })
-      const choice = at ? nearestEnemy(character, beside) : undefined
-      const roll = choice && asked(attack, choice, tidy({ ...next, attacks: 0, multiattack: undefined, horde: undefined, struck: [...struck, choice.id] }))
+    // A class's follow-ups that come with the attacks: each once, after the rest of them.
+    for (const rule of follows().filter((entry) => entry.attack)) {
+      if (!attack || !then[rule.key]) continue
+      const rest = (extra: After = {}) => tidy({ ...next, attacks: 0, multiattack: undefined, [rule.key]: undefined, ...extra })
+      const roll = rule.next({ character, made, attack, struck, present: args.present, floor: args.floor, ask: asked, rest })
       if (roll) return roll
     }
     next.attacks = 0
     next.multiattack = undefined
-    next.horde = undefined
+    for (const rule of follows().filter((entry) => entry.attack)) next[rule.key] = undefined
   }
-  if (then.hide) return hideRoll(character)
-  return undefined
+  // What follows everything else: a Hide.
+  const rule = follows().find((entry) => !entry.attack && then[entry.key])
+  return rule?.next({
+    character,
+    made,
+    struck: then.struck ?? [],
+    present: args.present,
+    floor: args.floor,
+    ask: () => undefined,
+    rest: (extra = {}) => tidy({ ...next, [rule.key]: undefined, ...extra }),
+  })
 }
+
+/** The Hide action's Stealth check, taken with Cunning Action, after the turn's own roll or as it. */
+const HIDE: FollowRule = { key: "hide", first: hideRoll, next: ({ character }) => hideRoll(character) }
+
+// Every follow-up: the classes', then Hide, which follows everything else.
+const follows = (): FollowRule[] => [...followRules(), HIDE]
+
+/** A follow-up by its key on `after`: "hide", "horde". */
+export const followRule = (key: string | undefined): FollowRule | undefined => follows().find((rule) => rule.key === key)
 
 // How a roll's mode ranks when the engine picks a weapon: Advantage over none, none over Disadvantage.
 const MODE_RANK: Record<RollMode, number> = { advantage: 2, normal: 1, disadvantage: 0 }
 
-// An `after` with nothing left in it left out.
+// An `after` with nothing left in it left out. A follow-up's key is kept while it is still to come.
 function tidy(then: After): After {
   const kept: After = {}
   if (then.attacks) kept.attacks = then.attacks
   if (then.multiattack?.length) kept.multiattack = then.multiattack
-  if (then.horde) kept.horde = true
+  for (const rule of follows()) if (rule.attack && then[rule.key]) kept[rule.key] = true
   if (then.struck?.length) kept.struck = then.struck
-  if (then.hide) kept.hide = true
+  for (const rule of follows()) if (!rule.attack && then[rule.key]) kept[rule.key] = true
   return kept
 }
 
 /** The nearest of some, from where a character stands. With no floor, the first. */
-function nearestEnemy(character: InScene, from: readonly InScene[]): InScene | undefined {
+export function nearestEnemy(character: InScene, from: readonly InScene[]): InScene | undefined {
   const feet = (other: InScene) => feetBetween(character, other) ?? 0
   return [...from].sort((a, b) => feet(a) - feet(b))[0]
 }
 
 /**
- * What a turn holds after its first attack: a hero's other attacks of the Attack action and Horde Breaker, from their
- * features, or the rest of an NPC's Multiattack once its first attack is made with `weapon` (./multiattack).
+ * What a turn holds after its first attack: a hero's other attacks of the Attack action, as many actions' worth as the
+ * turn has (`actions`, 2 with Action Surge), and the follow-ups their class gives (Horde Breaker), or the rest of an
+ * NPC's Multiattack once its first attack is made with `weapon` (./multiattack).
  */
-export function attackAfter(character: InScene, options: { surge?: boolean; weapon?: string } = {}): After {
+export function attackAfter(character: InScene, options: { actions?: number; weapon?: string } = {}): After {
   if (!character.sheet) return tidy({ multiattack: options.weapon ? multiattackAfter(character, options.weapon) : [] })
-  const perAction = attacksPerActionOf(character)
-  const attacks = perAction - 1 + (options.surge ? perAction : 0)
-  const horde = character.sheet.featureChoices?.["hunter-hunters-prey"] === "horde-breaker" && deriveSheet(character.sheet).classFeatures.includes("hunter-hunters-prey")
-  return tidy({ attacks, ...(horde ? { horde: true } : {}) })
+  const attacks = attacksPerActionOf(character) * (options.actions ?? 1) - 1
+  const flags = Object.fromEntries(follows().flatMap((rule) => (rule.attack && rule.offer?.(character) ? [[rule.key, true]] : [])))
+  return tidy({ attacks, ...flags })
 }
-
-export { cunningStrikesOf }

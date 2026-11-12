@@ -5,6 +5,7 @@ import { spellById } from "@d20/srd/spells"
 import { isDead } from "../utils/turn-actors"
 import { turnEffectsAtEncounterEnd } from "./actions"
 import type { Roller } from "./check"
+import { shortRestRules } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtEncounterEnd, exhaustionOf, withoutCondition } from "./conditions"
 import { type DeathSaves, withHealing } from "./death"
@@ -65,37 +66,6 @@ export function featureRecharge(featureId: string, level: number): Recharge | un
 }
 
 const SHORT: readonly Recharge[] = ["short-rest", "short-or-long-rest", "initiative-or-short-or-long-rest"]
-
-/**
- * The spell slots a Wizard's Arcane Recovery takes back, by level, the first for level 1: expended slots with a
- * combined level of at most half the Wizard level rounded up, none of level 6 or higher. The engine takes the most
- * levels it can, and of equal totals the higher slots. A level 4 Wizard with one level 2 and two level 1 slots spent
- * may recover 2 levels: the level 2 slot, [0, 1].
- */
-export function arcaneRecoveryOf(character: Rester): number[] {
-  const sheet = character.sheet
-  if (!sheet || !deriveSheet(sheet).classFeatures.includes("wizard-arcane-recovery")) return []
-  const budget = Math.ceil(sheet.level / 2)
-  const spent = (character.spellSlots ?? []).slice(0, 5)
-  let best: number[] = []
-  let bestTotal = 0
-  // Every way to take back some of the spent slots of each level, few enough to try them all.
-  const tryFrom = (level: number, taken: number[], total: number) => {
-    if (level < 1) {
-      if (total > bestTotal) {
-        best = [...taken]
-        bestTotal = total
-      }
-      return
-    }
-    for (let count = Math.min(spent[level - 1] ?? 0, Math.floor((budget - total) / level)); count >= 0; count--) {
-      taken[level - 1] = count
-      tryFrom(level - 1, taken, total + count * level)
-    }
-  }
-  tryFrom(spent.length, [], 0)
-  return bestTotal > 0 ? best.map((count) => count ?? 0) : []
-}
 
 const MAGICAL_CUNNING = "warlock-magical-cunning"
 
@@ -216,7 +186,6 @@ export function shortRest<T extends Rester>(character: T, options: { roll: (side
     if (feature && regain > 0 && used > 0) facts.push(`${name} regains ${regain === used && regain > 1 ? "all expended uses" : regain === 1 ? "one use" : `${regain} uses`} of ${feature.name}.`)
   }
 
-  const recovered = (rested.featureUses?.["wizard-arcane-recovery"] ?? 0) > 0 ? [] : arcaneRecoveryOf(rested)
   let spellSlots = rested.spellSlots
   // A class whose slots come back on a Short Rest (a Warlock's Pact Magic) regains them all.
   const casting = rested.sheet && classById.get(rested.sheet.class)?.spellcasting
@@ -224,15 +193,15 @@ export function shortRest<T extends Rester>(character: T, options: { roll: (side
     spellSlots = undefined
     facts.push(`${name} regains all expended ${classFeatureById.get(casting.feature)?.name ?? "spell"} spell slots.`)
   }
-  if (recovered.length) {
-    spellSlots = (rested.spellSlots ?? []).map((used, index) => used - (recovered[index] ?? 0))
-    uses["wizard-arcane-recovery"] = 1
-    const words = recovered.flatMap((count, index) => (count ? [`${count} level ${index + 1}`] : [])).join(" and ")
-    facts.push(`${name} uses Arcane Recovery and recovers ${words} spell ${recovered.reduce((sum, count) => sum + count, 0) === 1 ? "slot" : "slots"}.`)
-  }
 
   const { featureUses: _, spellSlots: __, ...rest } = rested
   rested = { ...rest, ...(Object.keys(uses).length ? { featureUses: uses } : {}), ...(spellSlots?.some((used) => used > 0) ? { spellSlots } : {}) } as T
+  // What a class gives as a Short Rest ends, beyond its features' uses: a Wizard's Arcane Recovery (./classes).
+  for (const rule of shortRestRules()) {
+    const given = rule(rested)
+    rested = given.character
+    facts.push(...given.facts)
+  }
   if (!facts.length) facts.push(`${name} rests for an hour, and nothing spent comes back.`)
   return { character: rested, facts }
 }

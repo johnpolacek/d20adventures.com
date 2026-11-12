@@ -8,7 +8,7 @@ import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, killed } from "../sheet/death"
 import { d20sOf, replaying } from "../sheet/dice"
 import { applyStakes } from "../sheet/harm"
-import { type Ask, attackWithReactions, checkWithCuttingWords, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
+import { type Ask, attackWithReactions, checkWithReactions, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import { castAgain, castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
@@ -323,8 +323,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         fails: !!failedBy,
         adds: checkAdds(args.npc, rollRequirement.check, dice.roll),
       })
-      // A Bard of the heroes' may take a die off a check that succeeds, with Cutting Words.
-      const cut = checkWithCuttingWords({ characters: updatedCharacters, rollerId: args.npc.id, result: thrown, roll: dice.roll, ask, save: rollRequirement.check.kind === "save" })
+      // The heroes' reactions to a check that succeeds: a Bard may take a die off it with Cutting Words.
+      const cut = checkWithReactions({ characters: updatedCharacters, rollerId: args.npc.id, result: thrown, roll: dice.roll, ask, save: rollRequirement.check.kind === "save" })
       updatedCharacters = cut.characters
       const rolled = cut.result
       const { natural: baseRoll, bonus: modifier, total: result, success } = rolled

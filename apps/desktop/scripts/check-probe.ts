@@ -170,9 +170,10 @@ async function run(probe: Probe): Promise<Graded> {
       if (probe.takes.skills && !probe.takes.skills.includes(reading.action.skill ?? "none")) faults.push(`help with ${reading.action.skill ?? "no skill"}, wanted ${probe.takes.skills.join(" or ")}`)
     }
     if (!probe.checks.includes(picked)) faults.push(`check ${picked}, wanted ${probe.checks.join(" or ")}`)
-    if (probe.surge !== undefined && !!reading.surge !== probe.surge) faults.push(`Action Surge ${reading.surge ? "used" : "not used"}, wanted ${probe.surge ? "used" : "not used"}`)
-    if (probe.cunning && !(got && isAttackRoll(got) && got.attack.cunning === probe.cunning))
-      faults.push(`Cunning Strike ${(got && isAttackRoll(got) && got.attack.cunning) || "none"}, wanted ${probe.cunning}`)
+    const surged = !!reading.choices?.surge
+    if (probe.surge !== undefined && surged !== probe.surge) faults.push(`Action Surge ${surged ? "used" : "not used"}, wanted ${probe.surge ? "used" : "not used"}`)
+    const cunning = got && isAttackRoll(got) ? got.attack.choices?.cunning : undefined
+    if (probe.cunning && cunning !== probe.cunning) faults.push(`Cunning Strike ${cunning || "none"}, wanted ${probe.cunning}`)
     if (probe.feature) {
       const used = reading.feature?.feature
       const told = (f?: { id: string; targets?: string[]; heal?: boolean }) => (f ? `${f.id}${f.heal ? " to heal" : ""} on ${[...(f.targets ?? [])].sort().join(" and ") || "no one"}` : "nothing")

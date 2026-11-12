@@ -7,6 +7,7 @@ import { spellById } from "@d20/srd/spells"
 import { attackModesFromActions, checkModesFromActions } from "./actions"
 import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defensesOf, resolveAttack, rollDamage } from "./attack"
 import { type Check, checkBonus, combineModes, type Roller, type RollMode } from "./check"
+import { classCheckModes } from "./class-rules"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, revived, withDamage, withHealing } from "./death"
@@ -957,6 +958,7 @@ export function rollSave(args: {
     ...saveModesFromSpells(target, ability),
     ...speciesSaveModes(target, ability, args.against),
     ...magicSaveModes(target),
+    ...classCheckModes(target, check),
     ...(args.also ?? []),
   ]
   const mode = combineModes(sources.map((source) => source.mode))

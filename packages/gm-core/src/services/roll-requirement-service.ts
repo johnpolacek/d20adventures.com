@@ -3,13 +3,12 @@ import { abilityById } from "@d20/srd/abilities"
 import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../sheet/actions"
-import { attacksOf, cunningStrikesOf, defensesOf } from "../sheet/attack"
-import { attackAfter, attackRequirement, type InScene } from "../sheet/attack-roll"
-import { type DivinityEffect, divinityPicksOf, isUndead } from "../sheet/channel-divinity"
+import { attacksOf } from "../sheet/attack"
+import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
 import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
+import { bonusActionRule, type ChoiceRule, choiceRules, classCheckModes, seesRules } from "../sheet/class-rules"
 import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
-import { hasFeature, usesLeft } from "../sheet/feature-rules"
 import { bonusActionsOf, usable } from "../sheet/features"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
@@ -18,7 +17,7 @@ import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet
 import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spell-effects"
 import { endsThings } from "../sheet/spell-ends"
 import { castInSpace } from "../sheet/spell-space"
-import { againOf, castableOnTurn, castCost, isEngineSpell, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
+import { againOf, castableOnTurn, castCost, isEngineSpell, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import { actionIds } from "../sheet/turn-effect"
@@ -96,8 +95,11 @@ export type TurnReading = {
   cast?: RequiredCast
   /** A class feature used as the action that asks for no throw (Channel Divinity), resolved as a cast is. */
   feature?: RequiredFeature
-  /** Action Surge is used: one more action this turn, which the attack's `after` already counts. Its use is spent as the reading is applied. */
-  surge?: true
+  /**
+   * The choices of a class's taken with the turn, by key (../sheet/class-rules `ChoiceRule`): Action Surge's `surge`,
+   * one more action, which the attack's `after` already counts. Each is applied as the reading is.
+   */
+  choices?: Record<string, true>
   /** One of the roller's own Bonus Actions, used beside the action. A spell that takes several creatures names each in `targets`. */
   bonus?: { feature: string; target?: string; targets?: string[] }
   /** Where the move took the roller before they acted, and the feet it used. */
@@ -129,24 +131,28 @@ export function createRollRequirementService(ports: GmPorts) {
   const getRollRequirementForAction = async (action: string, character: Character, options?: Options): Promise<ChosenRoll | null> => (await readAction(action, character, options)).roll
 
   /**
-   * The read of a move, with what a Bonus Action taken beside it adds once the rest is settled. Cunning Action's Hide
-   * is the Stealth check of the Hide action, made after the turn's own roll, or as the roll when the turn has none.
-   * Steady Aim cannot be taken with a move.
+   * The read of a move, with what a Bonus Action taken beside it adds once the rest is settled. One that leaves a roll
+   * to follow (Cunning Action's Hide, the Stealth check of the Hide action) has it made after the turn's own roll, or as
+   * the roll when the turn has none. One that is taken holding still (Steady Aim) cannot be taken with a move.
    */
   async function readAction(action: string, character: Character, options?: Options): Promise<TurnReading> {
     const reading = await readPicked(action, character, options)
     const self = "id" in character ? character.id : undefined
-    if (reading.bonus?.feature === "rogue-steady-aim" && reading.move) {
+    const rule = bonusActionRule(reading.bonus?.feature)
+    if (rule?.still && reading.move) {
       const { bonus: _, ...rest } = reading
       return rest
     }
-    if (reading.bonus?.feature !== "cunning-action-hide" || !self) return reading
-    if (reading.roll && "check" in reading.roll && reading.roll.rollType === hideRoll({ ...character, id: self }).rollType) return reading
-    if (reading.roll) return { ...reading, roll: { ...reading.roll, after: { ...reading.roll.after, hide: true } } }
-    if (reading.cast) return { ...reading, cast: { ...reading.cast, after: { ...reading.cast.after, hide: true } } }
-    if (reading.feature) return { ...reading, feature: { ...reading.feature, after: { ...reading.feature.after, hide: true } } }
+    const follow = followRule(rule?.follow)
+    const first = follow?.first && self ? follow.first({ ...character, id: self } as InScene) : undefined
+    if (!follow || !first) return reading
+    const key = follow.key
+    if (reading.roll && "check" in reading.roll && reading.roll.rollType === first.rollType) return reading
+    if (reading.roll) return { ...reading, roll: { ...reading.roll, after: { ...reading.roll.after, [key]: true } } }
+    if (reading.cast) return { ...reading, cast: { ...reading.cast, after: { ...reading.cast.after, [key]: true } } }
+    if (reading.feature) return { ...reading, feature: { ...reading.feature, after: { ...reading.feature.after, [key]: true } } }
     if (reading.rest) return reading
-    return { ...reading, roll: hideRoll({ ...character, id: self }) }
+    return { ...reading, roll: first as ChosenRoll }
   }
 
   async function readPicked(action: string, character: Character, options?: Options): Promise<TurnReading> {
@@ -167,22 +173,16 @@ export function createRollRequirementService(ports: GmPorts) {
     const conditions = conditionWords(character)
     const attacks = attacksOf(character)
     const bonusActions = bonusActionsOf(character).filter(usable)
-    // The features of a hero's own the player chooses in the moment, each only while it can be used.
+    // The choices of a hero's class the player makes in the moment, each only while it can be used (../sheet/classes).
     const hero = "type" in character && character.type === "pc"
-    const surges = hero && usesLeft(character, "fighter-action-surge") > 0
-    const cunnings = hero ? cunningStrikesOf(character) : []
-    const divinity = hero ? divinityPicksOf(character) : []
-    // Hunter's Lore: a Hunter knows the defenses of the one their Hunter's Mark is on.
-    const lore = (other: Present) => {
-      if (!self || !hasFeature(character, "hunter-hunters-lore") || !other.spellEffects?.some((effect) => effect.spell === "hunters-mark" && effect.by === self)) return undefined
-      const { immunities = [], resistances = [], vulnerabilities = [] } = defensesOf({ ...other, type: other.type ?? "npc" })
-      const words = [
-        immunities.length ? `immune to ${immunities.join(", ")}` : "",
-        resistances.length ? `resists ${resistances.join(", ")}` : "",
-        vulnerabilities.length ? `vulnerable to ${vulnerabilities.join(", ")}` : "",
-      ].filter(Boolean)
-      return words.length ? words.join(", ") : "no immunities, resistances or vulnerabilities"
-    }
+    const choices = hero
+      ? choiceRules().flatMap((rule): { rule: ChoiceRule; values: readonly string[] | true }[] => {
+          const values = rule.offer(character)
+          return values === undefined ? [] : [{ rule, values }]
+        })
+      : []
+    // What the roller's class tells them of another, beside them in Who Is Here: a Hunter's Lore.
+    const sees = (other: Present) => (self ? seesRules().map((rule) => rule({ ...character, id: self }, other)) : [])
     // A spell cast as a Reaction (Shield, Counterspell) is cast only when its trigger is offered, never on a turn.
     const knownSpells = spellsOf(character).filter((known) => castableOnTurn(known.spell))
     // The spells the caster holds and may use again this turn with no cost: Spiritual Weapon's attack, Heat Metal's burn, Vampiric Touch.
@@ -286,7 +286,7 @@ ${MENU("save")}
    - Picking a lock or disarming a trap is "dexterity".
    - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check. An attack always gives both "weapon" and "target".
      Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
-     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), lore(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
+     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), ...sees(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
 ${
   "type" in character && character.type === "pc"
@@ -318,40 +318,15 @@ ${
          ...heldBonus.map((entry) => `${entry.spell.id} (${entry.spell.name}, held: used again with no slot, "bonusTarget" is who it is used on)`),
        ].join(", ") || "none"
      }.
-     A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.${
-       bonusActions.some((entry) => entry.id.startsWith("cunning-action"))
-         ? `
-     Cunning Action is a Dash, Disengage or Hide taken as a Bonus Action, beside the action: a dash before a strike, slipping away after it, ducking out of sight after a shot.`
-         : ""
-     }${
-       bonusActions.some((entry) => entry.id === "rogue-steady-aim")
-         ? `
-     rogue-steady-aim is for a character who holds still to aim before an attack this turn. It cannot be taken with a move.`
-         : ""
-     }
-${
-  surges
-    ? `   - ACTION SURGE: "surge" is true when the player's words plainly push for one more action this turn, such as attacking again in a flurry, and the action is an attack. Leave it out otherwise.
-`
-    : ""
-}${
-  cunnings.length
-    ? `   - CUNNING STRIKE: with an attack that may land a Sneak Attack, "cunning" is ${cunnings.map((id) => `"${id}"`).join(" or ")} when the player's words try to knock the target down. Leave it out otherwise.
-`
-    : ""
-}${
-  divinity.length
-    ? `   - CHANNEL DIVINITY: when the character channels their god's power as the action, "check" is "channel-divinity" and "divinity" is one of: ${[
-        divinity.includes("divine-spark-heal") ? '"divine-spark-heal" (heals one other creature, "targets" is who)' : "",
-        divinity.includes("divine-spark-harm") ? '"divine-spark-harm" (radiant or necrotic harm on one creature, "targets" is who, "damageType" is "necrotic" or "radiant")' : "",
-        divinity.includes("turn-undead") ? '"turn-undead" (turns the Undead nearby, "targets" are the Undead chosen)' : "",
-        divinity.includes("preserve-life") ? '"preserve-life" (heals the badly hurt nearby, "targets" are who)' : "",
-      ]
-        .filter(Boolean)
-        .join(", ")}. The game rolls it and spends a use. A spell is a "cast", not this.
-`
-    : ""
-}   - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
+     A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.${[
+       ...new Set(bonusActions.flatMap((entry) => bonusActionRule(entry.id)?.note ?? [])),
+     ]
+       .map(
+         (note) => `
+     ${note}`
+       )
+       .join("")}
+${choices.map(({ rule, values }) => rule.prompt(values)).join("")}   - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
      Their Spells: ${spellLines.join(", ") || "none"}.${slots.length ? ` Spell slots left: ${slotWords(character)}.` : ""}${
        held.length
          ? `
@@ -421,26 +396,13 @@ Action: "${action}"
               .optional()
               .describe(rollPickSchema.shape[key].description ?? "")
           : rollPickSchema.shape[key]
+      // The choices of the hero's class are on the menu only while the hero has them and can use them. One used as the
+      // whole action is a check of the menu's own.
+      const checks = choices.flatMap(({ rule }) => (rule.check ? [rule.check] : []))
+      const chosen: Record<string, z.ZodType> = checks.length ? { check: z.enum([...rollPickSchema.shape.check.options, ...checks]).describe(rollPickSchema.shape.check.description ?? "") } : {}
+      for (const { rule, values } of choices) chosen[rule.key] = rule.field(values)
       const schema = rollPickSchema.extend({
-        // The features chosen in the moment are on the menu only while the hero has them and can use them.
-        ...(divinity.length
-          ? {
-              check: z.enum([...rollPickSchema.shape.check.options, "channel-divinity"]).describe(rollPickSchema.shape.check.description ?? ""),
-              divinity: z
-                .enum(divinity as [string, ...string[]])
-                .optional()
-                .describe('For "channel-divinity": the Channel Divinity effect used'),
-            }
-          : {}),
-        ...(surges ? { surge: z.boolean().optional().describe("True when the player's words use Action Surge for one more action this turn") } : {}),
-        ...(cunnings.length
-          ? {
-              cunning: z
-                .enum(cunnings as [string, ...string[]])
-                .optional()
-                .describe("For an attack: the Cunning Strike effect added to a Sneak Attack"),
-            }
-          : {}),
+        ...chosen,
         spell: menu("spell", [...new Set([...knownSpells.map((known) => known.spell.id), ...held.map((entry) => entry.spell.id)])]),
         weapon: menu(
           "weapon",
@@ -462,7 +424,12 @@ Action: "${action}"
       const asked = (mover && floor ? schema : schema.omit({ moveTo: true, moveAway: true, moveFeet: true, cover: true })) as unknown as typeof rollPickSchema
       const { object: read } = await generateObject({ schema: asked, prompt })
       // What the menus built for this read add to the pick.
-      const pick = read as typeof read & { check: string; divinity?: string; surge?: boolean; cunning?: string }
+      const pick = read as typeof read & { check: string } & Record<string, unknown>
+      // A choice of the class's, as picked: one of its values, or true. One the game master makes up is dropped.
+      const choiceValue = (rule: ChoiceRule, values: readonly string[] | true) => {
+        const given = pick[rule.key]
+        return values === true ? (given === true ? true : undefined) : values.find((value) => value === given)
+      }
       // A Bonus Action is the roller's own, with a use left. One the game master makes up is dropped.
       const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
       // A spell cast with a Bonus Action, beside the action. Only one spell a turn takes a slot, so beside a cast it is dropped.
@@ -471,7 +438,7 @@ Action: "${action}"
       const quick = (pick.check === "cast" ? undefined : bonusSpells.find((known) => isPicked(known.spell))) ?? heldBonus.find((entry) => isPicked(entry.spell))
       const quickTargets = [...(pick.bonusTargets ?? []), ...(pick.bonusTarget ? [pick.bonusTarget] : [])]
       // What the reading carries beside its roll: a Bonus Action, the move, and a ruling of space.
-      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "surge"> = used
+      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "choices"> = used
         ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
         : quick
           ? { bonus: { feature: quick.spell.id, ...(quickTargets[0] ? { target: quickTargets[0] } : {}), ...(quickTargets.length > 1 ? { targets: [...new Set(quickTargets)] } : {}) } }
@@ -479,8 +446,9 @@ Action: "${action}"
       // The move, made before the action: to the place or the one named, or away from one. With Dash the whole turn is
       // movement. An attack in melee may close with its target instead, which is settled where the attack is.
       const ask: MoveAsk = { to: pick.moveTo?.trim() || undefined, away: pick.moveAway?.trim() || undefined, feet: pick.moveFeet }
-      // Dash, as the action or with Cunning Action.
-      const dash = pick.check === "dash" || used?.id === "cunning-action-dash"
+      // Dash, as the action or with a Bonus Action that moves as one (Cunning Action).
+      const usedRule = bonusActionRule(used?.id)
+      const dash = pick.check === "dash" || !!usedRule?.dash
       const moveFor = (close?: { target: string; reach: number }) => (mover && floor ? takeMove({ floor, mover, others, ask, dash, close }) : undefined)
       const moved = (move: Moved | undefined) => {
         if (move) also.move = move
@@ -618,12 +586,21 @@ Action: "${action}"
           attackReach({ distance: apart, range: attack.range }) !== "out" &&
           attackReach({ distance: apart, reach: attack.reach }) === "out"
         const stood = withMove(character, moved(moveFor(attack.reach !== undefined && !throws ? { target: target.id, reach: attack.reach } : undefined)))
-        // Steady Aim: Advantage on this attack for one who has not moved this turn. With a move it cannot be taken.
-        const aiming = used?.id === "rogue-steady-aim" && !also.move
-        // Action Surge: the Attack action again, with all its attacks.
-        const surge = surges && pick.surge === true
-        if (surge) also.surge = true
-        const cunning = cunnings.find((id) => id === pick.cunning)
+        // A Bonus Action's Advantage on this attack (Steady Aim), for one who has not moved this turn when it is taken holding still.
+        const aiming = !!usedRule?.attackModes && !(usedRule.still && also.move)
+        // The class's choices with the attack: kept on the attack (a Cunning Strike), or on the turn with the actions
+        // they give (Action Surge: the Attack action again, with all its attacks).
+        const onAttack: Record<string, string> = {}
+        let actions = 1
+        for (const { rule, values } of choices) {
+          const value = rule.rides ? choiceValue(rule, values) : undefined
+          if (value === undefined) continue
+          if (rule.rides === "attack" && typeof value === "string") onAttack[rule.key] = value
+          if (rule.rides === "turn") {
+            also.choices = { ...also.choices, [rule.key]: true }
+            actions += rule.actions ?? 0
+          }
+        }
         const made = attackRequirement({
           character: { ...stood, id: self ?? character.name, name: character.name, type: character.type ?? "pc" } as InScene,
           target: target as InScene,
@@ -633,44 +610,26 @@ Action: "${action}"
           mode: pick.mode,
           reason: pick.reason,
           cover: pick.cover,
-          modes: aiming ? [{ mode: "advantage", from: "Steady Aim" }] : [],
+          modes: aiming ? (usedRule?.attackModes ?? []) : [],
           moved: also.move?.feet,
-          cunning,
-          after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { surge, weapon: attack.id }) : undefined,
+          choices: onAttack,
+          after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { actions, weapon: attack.id }) : undefined,
         })
         if ("ruling" in made) {
           also.ruling = made.ruling
-          delete also.surge
+          delete also.choices
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
           return { roll: null, ...also }
         }
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...made.roll })
         return { roll: made.roll, ...also }
       }
-      // Channel Divinity, used as the action: resolved with no throw of the hero's, as a spell that asks for none.
-      if (pick.check === "channel-divinity" && divinity.length) {
-        const chosen = divinity.find((id) => id === pick.divinity)
-        if (!chosen) return { roll: null, ...also }
-        const effect: DivinityEffect = chosen.startsWith("divine-spark") ? "divine-spark" : (chosen as DivinityEffect)
+      // A class feature used as the whole action (Channel Divinity): its class file makes the reading.
+      const acting = choices.find(({ rule }) => rule.check && rule.act && pick.check === rule.check)
+      if (acting?.rule.act) {
+        const value = pick[acting.rule.key]
         const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
-        const given: string[] = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])].flatMap((asked) => everyone.find((other) => named(asked, other.name, other.id))?.id ?? [])
-        // Turn Undead takes the Undead named, or every Undead near when none is.
-        const targets = effect === "turn-undead" ? given.filter((id) => isUndead(everyone.find((other) => other.id === id) ?? {})) : given
-        const damageType = pick.damageType?.trim().toLowerCase()
-        const feature: RequiredFeature = {
-          feature: {
-            id: effect,
-            targets,
-            ...(chosen === "divine-spark-heal" ? { heal: true as const } : {}),
-            ...(chosen === "divine-spark-harm" && (damageType === "necrotic" || damageType === "radiant") ? { damageType } : {}),
-          },
-          rollType: chosen === "divine-spark-heal" || chosen === "divine-spark-harm" ? "Divine Spark" : effect === "turn-undead" ? "Turn Undead" : "Preserve Life",
-          difficulty: spellcastingOf(character)?.saveDc ?? 0,
-          modifier: 0,
-          mode: "normal",
-        }
-        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, feature: feature.feature })
-        return { roll: null, feature, ...also }
+        return acting.rule.act(typeof value === "string" ? value : undefined, { character, self, everyone, pick, named, also })
       }
       // A rest, which only a hero asks for: the engine gives it to the whole party as the reading is applied.
       if ((pick.check === "short-rest" || pick.check === "long-rest") && "type" in character && character.type === "pc") {
@@ -726,6 +685,7 @@ Action: "${action}"
       // Every source is kept as a reason, so a roll that Advantage and Disadvantage cancel can still say why.
       const typed = [
         ...sheetModes(character, check),
+        ...classCheckModes(character, check),
         ...checkModesFrom(character, check, options?.present),
         ...(self ? checkModesFromActions({ ...character, id: self }, check, options?.present) : []),
         ...saveModesFor(character, check, against),

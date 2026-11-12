@@ -2,8 +2,9 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { hitPointsOf } from "../../src/sheet/hit-points"
+import { rollInitiative } from "../../src/sheet/initiative"
 import type { Sheet } from "../../src/sheet/sheet"
-import { combatStatsOf, initiativeBonusOf, isStatBlock, rollInitiative } from "../../src/sheet/stat-block"
+import { combatStatsOf, initiativeBonusOf, isStatBlock } from "../../src/sheet/stat-block"
 
 // The numbers are the ones the SRD 5.2.1 stat blocks print.
 

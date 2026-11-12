@@ -12,14 +12,15 @@ export type ActionId = (typeof actionIds)[number]
  * has: their next attack on it has Advantage. "slowed" is on a creature hit with a weapon whose Slow mastery the
  * attacker has: its Speed is 10 feet less. "stood" is on one who rose from Prone as their turn began, which costs half
  * their Speed. "reacted" is on one who has taken their Reaction this round, by themselves: they take no other until the
- * next round begins. The rest mark a feature used once a turn, with `by` the one whose turn it was: "sneak-attack",
- * "savage-attacker" and "colossus-slayer" are on the attacker who dealt that damage. "regeneration-stopped" is on a
- * creature with Regeneration that took damage of a type that stops it (a Troll's Acid or Fire), by itself: the trait
- * does not work as its next turn begins (./monster-traits). All of them end as the next round begins. Only the engine
- * writes it, through ./actions, ./death, ./reactions and ./attack.
+ * next round begins. "savage-attacker" marks the feat used once a turn, on the attacker, with `by` the one whose turn
+ * it was. "regeneration-stopped" is on a creature with Regeneration that took damage of a type that stops it (a
+ * Troll's Acid or Fire), by itself: the trait does not work as its next turn begins (./monster-traits). All of them end
+ * as the next round begins. A class's own, its once-a-turn marks among them ("sneak-attack"), are named in its class
+ * file (./classes), which this file does not read: the browser loads it, and the class files read the SRD. Only the
+ * engine writes it, through ./actions, ./death, ./reactions, ./attack and the class files.
  */
 export const turnEffectSchema = z.strictObject({
-  id: z.enum(["dodging", "helped", "distracted", "vexed", "slowed", "stood", "reacted", "sneak-attack", "savage-attacker", "colossus-slayer", "regeneration-stopped"]),
+  id: z.string(),
   /** The id of who took the action. */
   by: z.string(),
   /** For "helped": the skill the help is for. */
@@ -61,9 +62,12 @@ export type Concentration = z.infer<typeof concentrationSchema>
 /** Where a character stands on its encounter's floor, in feet. Only the engine writes it, through ./placement and ./space. */
 export const positionSchema = z.strictObject({ x: z.number(), y: z.number() })
 
-/** The reactions the engine knows. */
-export const reactionIds = ["opportunity-attack", "shield", "parry", "uncanny-dodge", "counterspell", "cutting-words"] as const
-export const reactionIdSchema = z.enum(reactionIds)
+/**
+ * The reactions every character may have, beside a class's own, which its class file names (./classes): "uncanny-dodge",
+ * "cutting-words".
+ */
+export const reactionIds = ["opportunity-attack", "shield", "parry", "counterspell"] as const
+export const reactionIdSchema = z.string()
 export type ReactionId = z.infer<typeof reactionIdSchema>
 
 /** How a hero takes a reaction when no one answers the offer: always, only when it matters, or never. */

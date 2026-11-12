@@ -12,15 +12,16 @@ const asked = {
   reasons: z.array(z.string()).optional().describe("What gives the roll Advantage or Disadvantage, each in a few words"),
   // What the turn still holds once this roll is resolved, which the engine asks for next (../sheet/attack-roll.ts
   // `followingRoll`): the rest of an Attack action with Extra Attack or Action Surge, the rest of an NPC's Multiattack,
-  // Horde Breaker, and a Hide taken with Cunning Action.
+  // a Hide taken with Cunning Action, and a class's follow-ups, each true under its key (../sheet/class-rules.ts
+  // `FollowRule`): Horde Breaker's "horde".
   after: z
-    .strictObject({
+    .object({
       attacks: z.number().int().min(1).optional().describe("Attacks of the Attack action still to make after this one, with the same weapon"),
       multiattack: z.array(z.array(z.string()).min(1)).min(1).optional().describe("The attacks of an NPC's Multiattack still to make after this one, each the ids of the attacks it may be made with"),
-      horde: z.literal(true).optional().describe("Horde Breaker's attack is still to come this turn"),
       struck: z.array(z.string()).optional().describe("Who has been attacked this turn, by id"),
       hide: z.literal(true).optional().describe("A Hide taken with Cunning Action is still to roll"),
     })
+    .catchall(z.unknown())
     .optional(),
 }
 
@@ -40,7 +41,10 @@ export const rollRequirementSchema = z.union([
       weapon: z.string().describe("The id of one of the roller's own attacks"),
       target: z.string().describe("The id of the character attacked"),
       cover: z.enum(["half", "three-quarters"]).optional().describe("The cover the target has from the attacker. The difficulty already counts it"),
-      cunning: z.enum(["trip"]).optional().describe("A Cunning Strike effect the Rogue adds, should the hit deal Sneak Attack damage"),
+      choices: z
+        .record(z.string(), z.string())
+        .optional()
+        .describe("What class features the attacker chose for this attack, by the key of each choice (../sheet/class-rules.ts): a Cunning Strike's cunning"),
     }),
     ...asked,
   }),
@@ -65,10 +69,10 @@ export const rollRequirementSchema = z.union([
     ...asked,
   }),
   // A class feature used as the turn's action that the engine resolves with no throw of the hero's, as it resolves a
-  // spell that asks for none: a Cleric's Channel Divinity (../sheet/channel-divinity.ts). `difficulty` is the save DC.
+  // spell that asks for none: a Cleric's Channel Divinity (../sheet/classes/cleric.ts). `difficulty` is the save DC.
   z.object({
     feature: z.object({
-      id: z.enum(["divine-spark", "turn-undead", "preserve-life"]).describe("The Channel Divinity effect"),
+      id: z.string().describe("The effect, by the id its class feature resolves it under: Channel Divinity's turn-undead"),
       targets: z.array(z.string()).describe("The ids of who it is used on"),
       heal: z.literal(true).optional().describe("Divine Spark restores hit points in place of harming"),
       damageType: z.enum(["necrotic", "radiant"]).optional().describe("Divine Spark's damage type"),

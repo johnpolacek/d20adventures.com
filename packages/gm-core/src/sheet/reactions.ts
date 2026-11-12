@@ -1,4 +1,3 @@
-import { classById } from "@d20/srd/classes"
 import { monsterById } from "@d20/srd/monsters"
 import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
@@ -8,7 +7,6 @@ import {
   againstArmorClass,
   attacksOf,
   averageDamage,
-  type CunningStrike,
   hitsAnyway,
   landBlow,
   meleeReachOf,
@@ -21,15 +19,15 @@ import {
   UNARMED_STRIKE,
 } from "./attack"
 import { type CheckResult, type RollMode, rollModes } from "./check"
+import { type Featured, type Reacted, reactionRules } from "./class-rules"
 import { cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
-import { hasFeature, withUsedThisTurn } from "./feature-rules"
-import { inspirationUse, withInspirationSpent } from "./features"
-import { type Cover, distance, opportunityAttackers, type Point, placedOf, type Standing, sizeOf, type Watcher, within } from "./space"
+import { withUsedThisTurn } from "./feature-rules"
+import { type Cover, opportunityAttackers, type Point, placedOf, type Standing, sizeOf, type Watcher, within } from "./space"
 import { cannotReactBySpell, spellEffectsAfterMove, withSpellEffect } from "./spell-effects"
 import { type CastCost, castCost, spellsOf, withCastSpent } from "./spells"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
-import { type Order, orderSchema, type ReactionId, reactionIdSchema, reactionIds, type SpellEffect, type StandingOrders, standingOrdersSchema, type TurnEffect } from "./turn-effect"
+import { type Order, orderSchema, type ReactionId, reactionIds, type SpellEffect, type StandingOrders, type TurnEffect } from "./turn-effect"
 
 /**
  * Reactions by the SRD 5.2.1 rules, as pure functions. A Reaction is an instant response to a trigger, on anyone's
@@ -244,30 +242,37 @@ export function parryOffer(target: Caster, rolled: RolledAttack, attacker?: Stan
   return { bonus: parry.bonus, armorClass, matters: !hitsAnyway(rolled.roll) && rolled.roll.total < armorClass }
 }
 
-export { type Order, orderSchema, type ReactionId, reactionIdSchema, reactionIds, type StandingOrders, standingOrdersSchema }
+export { type Order, orderSchema, type ReactionId, reactionIds, type StandingOrders }
+
+/** Whether a reaction is one the engine knows: everyone's, or a class's own (./classes). */
+export const isReactionId = (id: string): boolean => (reactionIds as readonly string[]).includes(id) || reactionRules().some((rule) => rule.id === id)
+
+/** A reaction's id, of those the engine knows. ./turn-effect's takes any id, since the browser does not read the class files. */
+export const reactionIdSchema = z.string().refine(isReactionId, { message: "No such reaction" })
+
+/** A hero's standing orders, for the reactions the engine knows. The engine parses them with this as they are set. */
+export const standingOrdersSchema = z.partialRecord(reactionIdSchema, orderSchema)
 
 /**
  * The reactions a hero can take, for the sheet and their standing orders: every hero's Opportunity Attack, Shield when
- * it is prepared, a Rogue's Uncanny Dodge, a College of Lore Bard's Cutting Words. An NPC's are its stat block's.
+ * it is prepared, and their class's own (./classes): a Rogue's Uncanny Dodge, a College of Lore Bard's Cutting Words.
+ * An NPC's are its stat block's.
  */
 export function reactionsOf(character: Caster): ReactionId[] {
   if (!character.sheet) return ["opportunity-attack", ...monsterReactions(character).map((reaction) => reaction.id)]
   return [
     "opportunity-attack",
     ...(spellsOf(character).some((known) => known.spell.id === "shield" && known.prepared) ? (["shield"] as const) : []),
-    ...(hasFeature(character, "rogue-uncanny-dodge") ? (["uncanny-dodge"] as const) : []),
-    ...(hasFeature(character, "college-of-lore-cutting-words") ? (["cutting-words"] as const) : []),
+    ...reactionRules().flatMap((rule) => (rule.has(character) ? [rule.id] : [])),
   ]
 }
 
-/** The default orders: take every Opportunity Attack, and the rest only when they matter. */
-export const DEFAULT_ORDERS: Record<ReactionId, Order> = {
+/** The default orders: take every Opportunity Attack, and the rest only when they matter. A class's reactions are taken when they matter. */
+export const DEFAULT_ORDERS: Record<(typeof reactionIds)[number], Order> = {
   "opportunity-attack": "always",
   shield: "when-it-matters",
   parry: "when-it-matters",
-  "uncanny-dodge": "when-it-matters",
   counterspell: "when-it-matters",
-  "cutting-words": "when-it-matters",
 }
 
 /**
@@ -275,19 +280,8 @@ export const DEFAULT_ORDERS: Record<ReactionId, Order> = {
  * An Opportunity Attack always matters. With no orders, Shield is cast on a 14 against Armor Class 12 and not on a 17.
  */
 export function ordered(orders: StandingOrders | undefined, id: ReactionId, matters: boolean): boolean {
-  const order = orders?.[id] ?? DEFAULT_ORDERS[id]
+  const order = orders?.[id] ?? DEFAULT_ORDERS[id as keyof typeof DEFAULT_ORDERS] ?? "when-it-matters"
   return order === "always" || (order === "when-it-matters" && (id === "opportunity-attack" || matters))
-}
-
-/**
- * Whether Uncanny Dodge matters against a hit: the damage the target would take is a quarter of their hit point
- * maximum or more, or would drop them. A hero with 12 hit points of 12 minds 3 and not 2, and with 2 left minds 2.
- */
-export function uncannyDodgeMatters(target: { type?: string; sheet?: Target["sheet"]; statBlock?: string; hitPoints?: number; tempHitPoints?: number }, damage: number): boolean {
-  const maximum = combatStatsOf(target)?.hitPointMaximum
-  if (!maximum) return false
-  const left = Math.min(maximum, target.hitPoints ?? maximum) + (target.tempHitPoints ?? 0)
-  return damage * 4 >= maximum || damage >= left
 }
 
 /** An attack roll kept as plain data, as ./attack `resolveAttack` makes it. */
@@ -305,9 +299,9 @@ const attackRollSchema = z.strictObject({
 
 /**
  * A reaction offered and not yet answered, as the turn flow keeps it while it waits on a player. `to` is who may react
- * and `from` whose act set it off: the mover for an Opportunity Attack, the attacker for Shield, Parry or Uncanny
- * Dodge. `weapon` is the reactor's attack for an Opportunity Attack, and the attacker's for the others, whose rolled
- * attack is `roll`. `inspired` is a Bardic Inspiration die already in the roll's total.
+ * and `from` whose act set it off: the mover for an Opportunity Attack, the attacker for Shield, Parry or a class's
+ * reaction to a hit (Uncanny Dodge). `weapon` is the reactor's attack for an Opportunity Attack, and the attacker's for
+ * the others, whose rolled attack is `roll`. `inspired` is a Bardic Inspiration die already in the roll's total.
  */
 export const reactionOfferSchema = z.strictObject({
   id: reactionIdSchema,
@@ -336,58 +330,16 @@ export function offeredAttack(offer: ReactionOffer, attacker: Standing): RolledA
 export type Ask = (offer: ReactionOffer, text: string) => boolean
 
 /** A reaction taken, for the story: who took it, which, and what it did in words. */
-export type ReactionTaken = { by: string; id: ReactionId; name: string; text: string }
+export type ReactionTaken = Reacted
 
 type InPlay = Target & Caster & { name: string; hasReplied?: boolean; isComplete?: boolean }
 
 /**
- * Whether a hero may halve a hit's damage with Uncanny Dodge: a Rogue of level 5 who can react and can see the
- * attacker. `matters` is the standing order's test (`uncannyDodgeMatters`).
+ * A creature's check that succeeds, answered by the reactions of the classes when `ask` says so (./classes): a Bard's
+ * Cutting Words may take its die off it, which may turn it into a failure. Saving throws are not answered. Everyone
+ * comes back as it left them, with the check as it now stands.
  */
-export function uncannyDodgeOffer(target: Reactor & { conditions?: Target["conditions"] }, attacker: Standing & { conditions?: Target["conditions"] }): boolean {
-  return hasFeature(target, "rogue-uncanny-dodge") && canReact(target) && !hasCondition(target, "blinded") && !hasCondition(attacker, "invisible")
-}
-
-/** A Bard who may answer with Cutting Words, and the Bardic Inspiration die they would roll. */
-export type CuttingWords = { bard: string; die: number }
-
-/**
- * The Bards who may answer a creature's roll with Cutting Words: a College of Lore Bard of the other side from the
- * roller, who can react, can see them, stands within 60 feet of them where both stand on a floor, and has a Bardic
- * Inspiration use left or a spell slot to buy one with (Font of Inspiration). Each comes with their die: a d6 to level
- * 4, a d8 from 5.
- */
-export function cuttingWordsFrom<T extends Reactor & { featureUses?: Record<string, number>; spellSlots?: readonly number[] }>(
-  characters: readonly T[],
-  roller: Standing & { id: string }
-): (CuttingWords & { reactor: T })[] {
-  return characters.flatMap((bard) => {
-    if (bard.id === roller.id || bard.type === roller.type || !bard.sheet || !hasFeature(bard, "college-of-lore-cutting-words")) return []
-    if (!canReact(bard) || hasCondition(bard, "blinded") || hasCondition(roller, "invisible") || !inspirationUse(bard)) return []
-    const from = placedOf(bard)
-    const at = placedOf(roller)
-    if (from && at && distance(from, at) > CUTTING_WORDS_RANGE + 0.5) return []
-    const die = (classById.get(bard.sheet.class)?.levels[bard.sheet.level - 1] as { bardicDie?: number } | undefined)?.bardicDie
-    return die ? [{ bard: bard.id, die, reactor: bard }] : []
-  })
-}
-
-/** How far Cutting Words reaches, from its data: 60 feet. */
-const CUTTING_WORDS_RANGE = 60
-
-/**
- * Whether Cutting Words matters against a roll that succeeded: the most the die can take off would turn it into a
- * failure. A 16 against Armor Class 13 matters with a d6, and a 20 against 13 does not. A Critical Hit's die hits
- * whatever is taken off.
- */
-export const cuttingWordsMatters = (total: number, target: number, die: number, anyway = false): boolean => !anyway && total - die < target
-
-/**
- * A successful ability check of a creature's, answered by a Bard's Cutting Words when `ask` says so: the Bard spends a
- * use of Bardic Inspiration (or a spell slot for one), and the die rolled comes off the check, which may turn it into
- * a failure. Saving throws are not answered. Everyone comes back as it left them, with the check as it now stands.
- */
-export function checkWithCuttingWords<T extends Reactor & { name: string; featureUses?: Record<string, number>; spellSlots?: readonly number[] }>(args: {
+export function checkWithReactions<T extends Reactor & { name: string; featureUses?: Record<string, number>; spellSlots?: readonly number[] }>(args: {
   characters: readonly T[]
   rollerId: string
   result: CheckResult
@@ -397,21 +349,15 @@ export function checkWithCuttingWords<T extends Reactor & { name: string; featur
 }): { characters: T[]; result: CheckResult; reactions: ReactionTaken[] } {
   const roller = args.characters.find((character) => character.id === args.rollerId)
   if (!roller || args.save || !args.result.success) return { characters: [...args.characters], result: args.result, reactions: [] }
-  for (const { bard, die, reactor } of cuttingWordsFrom(args.characters, roller)) {
-    const matters = cuttingWordsMatters(args.result.total, args.result.dc, die)
-    const text = `${roller.name}'s check succeeds: ${args.result.total} against ${args.result.dc}. Cutting Words would take a d${die} off it.`
-    if (!args.ask({ id: "cutting-words", to: bard, from: roller.id, matters }, text)) continue
-    const cut = args.roll(die)
-    const total = args.result.total - cut
-    const result = { ...args.result, total, success: total >= args.result.dc, adds: [...(args.result.adds ?? []), { from: "Cutting Words", amount: -cut }] }
-    const characters = args.characters.map((character) => (character.id === bard ? withReaction(withInspirationSpent(character)) : character))
-    return {
-      characters,
-      result,
-      reactions: [
-        { by: bard, id: "cutting-words", name: "Cutting Words", text: `${reactor.name} uses Cutting Words and takes ${cut} off ${roller.name}'s check, ${total} against ${args.result.dc}.` },
-      ],
-    }
+  for (const rule of reactionRules()) {
+    const answered = rule.onCheck?.({
+      characters: args.characters as unknown as Featured[],
+      roller: roller as unknown as Featured,
+      result: args.result,
+      roll: args.roll,
+      ask: (to, matters, text) => args.ask({ id: rule.id, to, from: roller.id, matters }, text),
+    })
+    if (answered) return { characters: answered.characters as unknown as T[], result: answered.result, reactions: [answered.reaction] }
   }
   return { characters: [...args.characters], result: args.result, reactions: [] }
 }
@@ -421,11 +367,11 @@ const turnOfIn = (characters: readonly unknown[]): string | undefined => findCur
 
 /**
  * One attack with the reactions that may answer it. The roll is made, the one hit may cast Shield or Parry when they
- * have it and `ask` says so, and a Bard of the other side may take a die off it with Cutting Words. The roll is read
- * again against what that makes, and then the blow lands or does not: a Rogue hit may halve its damage with Uncanny
- * Dodge once it is known. Everyone comes back as it left them, the attacker marked with the once-a-turn features the
- * blow used. A Bandit Captain hit by a 16 against Armor Class 15 parries it into a miss against 17, and has no Reaction
- * left this round.
+ * have it and `ask` says so, and the classes' reactions to an attack roll may answer it (a Bard's Cutting Words). The
+ * roll is read again against what that makes, and then the blow lands or does not: the one hit may cut its damage once
+ * it is known (a Rogue's Uncanny Dodge). Everyone comes back as it left them, the attacker marked with the once-a-turn
+ * features the blow used. A Bandit Captain hit by a 16 against Armor Class 15 parries it into a miss against 17, and
+ * has no Reaction left this round.
  */
 export function attackWithReactions<T extends InPlay>(args: {
   characters: readonly T[]
@@ -438,7 +384,8 @@ export function attackWithReactions<T extends InPlay>(args: {
   rules?: DeathRules
   cover?: Cover
   inspiration?: { die: number }
-  cunning?: CunningStrike
+  /** What class features the attacker chose for this attack: a Cunning Strike's `cunning`. */
+  choices?: Record<string, string>
   ask: Ask
 }): { characters: T[]; blow: Strike; target: T; reactions: ReactionTaken[] } {
   let characters = [...args.characters]
@@ -473,37 +420,41 @@ export function attackWithReactions<T extends InPlay>(args: {
     reactions.push({ by: target.id, id: "parry", name: "Parry", text: `${target.name} parries: Armor Class ${parry.armorClass} against this attack.` })
   }
   put(target)
-  // Cutting Words: a Bard of the target's side may take their die off a roll that hits.
-  if (rolled.roll.hit) {
-    for (const { bard, die, reactor } of cuttingWordsFrom(characters, attacker)) {
-      const matters = cuttingWordsMatters(rolled.roll.total, rolled.roll.armorClass, die, hitsAnyway(rolled.roll))
-      if (!args.ask(offer("cutting-words", matters, bard), `${hit} Cutting Words would take a d${die} off the roll.`)) continue
-      const cut = args.roll(die)
-      const total = rolled.roll.total - cut
-      const still = hitsAnyway(rolled.roll) || total >= rolled.roll.armorClass
-      rolled = { ...rolled, roll: { ...rolled.roll, total, hit: still, critical: still && rolled.roll.critical, adds: [...(rolled.roll.adds ?? []), { from: "Cutting Words", amount: -cut }] } }
-      put(withReaction(withInspirationSpent(reactor)))
-      reactions.push({
-        by: bard,
-        id: "cutting-words",
-        name: "Cutting Words",
-        text: `${reactor.name} uses Cutting Words and takes ${cut} off the roll: ${total} against Armor Class ${rolled.roll.armorClass}.`,
-      })
-      break
-    }
+  // The classes' reactions to the roll: a Bard of the target's side may take their die off a roll that hits.
+  for (const rule of reactionRules()) {
+    const answered = rule.onAttackRoll?.({
+      characters: characters as unknown as Featured[],
+      attacker: attacker as unknown as Featured,
+      rolled,
+      hit,
+      roll: args.roll,
+      ask: (to, matters, text) => args.ask(offer(rule.id, matters, to), text),
+    })
+    if (!answered) continue
+    characters = answered.characters as unknown as T[]
+    rolled = answered.rolled
+    reactions.push(answered.reaction)
   }
   target = characters.find((character) => character.id === args.targetId) as T
-  // Uncanny Dodge, once the damage is known: half of it, rounded down.
-  const dodging = target
-  const halve = uncannyDodgeOffer(dodging, attacker)
-    ? (taken: number) => {
-        if (!args.ask(offer("uncanny-dodge", uncannyDodgeMatters(dodging, taken)), `${hit} It deals ${taken} damage. Uncanny Dodge would halve it to ${Math.floor(taken / 2)}.`)) return false
-        reactions.push({ by: dodging.id, id: "uncanny-dodge", name: "Uncanny Dodge", text: `${dodging.name} uses Uncanny Dodge and takes ${Math.floor(taken / 2)} of ${taken}.` })
-        return true
-      }
-    : undefined
-  const { target: struck, ...blow } = landBlow({ attacker, target, roll: args.roll, rules: args.rules, present: characters, turnOf, cunning: args.cunning, halve }, rolled)
-  put(blow.halved ? withReaction(struck) : struck)
+  // The classes' reactions once the damage is known: a Rogue's Uncanny Dodge halves it.
+  const struckBy = target
+  const reduce = (taken: number) => {
+    for (const rule of reactionRules()) {
+      const answered = rule.onDamage?.({
+        target: struckBy as unknown as Featured,
+        attacker: attacker as unknown as Featured,
+        taken,
+        hit,
+        ask: (matters, text) => args.ask(offer(rule.id, matters), text),
+      })
+      if (!answered) continue
+      reactions.push(answered.reaction)
+      return { id: rule.id, taken: answered.taken }
+    }
+    return undefined
+  }
+  const { target: struck, ...blow } = landBlow({ attacker, target, roll: args.roll, rules: args.rules, present: characters, turnOf, choices: args.choices, reduce }, rolled)
+  put(blow.reduced ? withReaction(struck) : struck)
   // The once-a-turn features the blow used are marked on the attacker.
   for (const id of blow.used ?? []) put(withUsedThisTurn(characters.find((character) => character.id === args.attackerId) as T, id, turnOf))
   const after = characters.find((character) => character.id === args.targetId) as T

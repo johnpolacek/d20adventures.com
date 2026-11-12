@@ -8,11 +8,6 @@ import { z } from "zod"
 import type { ConditionEntry } from "./condition-entry"
 import { d20Penalty } from "./conditions"
 import { deriveSheet } from "./derive"
-import { hasFeature } from "./feature-rules"
-
-/** A Champion's Remarkable Athlete: Advantage on Initiative and on Strength (Athletics) checks. */
-export const REMARKABLE_ATHLETE = "champion-remarkable-athlete"
-
 import type { Sheet } from "./sheet"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect } from "./turn-effect"
@@ -90,8 +85,9 @@ export const spellcastingAbilityOf = (character: Roller): AbilityId | undefined 
 
 /**
  * Advantage and Disadvantage the sheet itself settles, each with what it comes from. No model is asked: armor that
- * hinders Stealth gives Disadvantage on Dexterity (Stealth) checks, and a Champion's Remarkable Athlete gives Advantage
- * on Strength (Athletics) checks. Other typed sources join here as they are needed.
+ * hinders Stealth gives Disadvantage on Dexterity (Stealth) checks. A class's own follow them (./class-rules
+ * `classCheckModes`): a Champion's Remarkable Athlete gives Advantage on Strength (Athletics) checks. Other typed
+ * sources join here as they are needed.
  */
 export function sheetModes(character: Roller, check: Check): { mode: "advantage" | "disadvantage"; from: string }[] {
   const sheet = character.sheet
@@ -100,7 +96,6 @@ export function sheetModes(character: Roller, check: Check): { mode: "advantage"
   if (check.kind === "skill" && check.skill === "stealth" && sheet.armor && deriveSheet(sheet).stealthDisadvantage) {
     found.push({ mode: "disadvantage", from: equipmentById.get(sheet.armor)?.name ?? "Armor" })
   }
-  if (check.kind === "skill" && check.skill === "athletics" && hasFeature(character, REMARKABLE_ATHLETE)) found.push({ mode: "advantage", from: "Remarkable Athlete" })
   return found
 }
 

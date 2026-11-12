@@ -4,6 +4,7 @@ import { spellById } from "@d20/srd/spells"
 import { isDown } from "../utils/turn-actors"
 import { damageTaken, defensesOf, rollDamage } from "./attack"
 import { checkBonus } from "./check"
+import { roundStartRules } from "./class-rules"
 import { conditionName, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, regenerate, withDamage } from "./death"
 import type { ConditionChange, Harm } from "./harm"
@@ -180,10 +181,11 @@ export type RoundFact = { character: string; spell: string; text: string }
 /**
  * The turn of a round within an encounter, before the next begins (./death `atRoundStart`): what lasting spells do
  * (`spellsAtRoundEnd`), then Concentration settled for anyone they hurt or dropped, then Regeneration as each turn
- * begins (./death `regenerate`). Regeneration belongs to the start of the creature's turn, and the engine starts every
- * turn of a round at once, right after this: it runs here so its fact reaches the story with the round's others.
- * Everyone comes back as it left them, with each fact about the one it is about, for the story: a Concentration save's
- * too, under Concentration, and Regeneration's under the trait's name.
+ * begins (./death `regenerate`), then what a class does as a round begins (./classes). Regeneration belongs to the
+ * start of the creature's turn, and the engine starts every turn of a round at once, right after this: it runs here so
+ * its fact reaches the story with the round's others. Everyone comes back as it left them, with each fact about the
+ * one it is about, for the story: a Concentration save's too, under Concentration, Regeneration's under the trait's
+ * name, and a class's under the name it gives.
  */
 export function roundTurns<T extends Castee & { position?: Point }>(args: {
   characters: readonly T[]
@@ -196,7 +198,15 @@ export function roundTurns<T extends Castee & { position?: Point }>(args: {
   const lost = kept.facts.map((text) => ({ character: args.characters.find((character) => character.name && text.startsWith(character.name))?.id ?? "", spell: "Concentration", text }))
   const regenerated = kept.characters.map((character) => regenerate(character))
   const regrown = regenerated.flatMap(({ character, fact, trait }) => (fact && trait ? [{ character: character.id, spell: trait, text: fact }] : []))
-  return { characters: regenerated.map(({ character }) => character), told: [...ended.told, ...lost.filter((fact) => fact.character), ...regrown], saves: kept.saves }
+  const classed: RoundFact[] = []
+  const characters = regenerated.map(({ character }) =>
+    roundStartRules().reduce((now, rule) => {
+      const begun = rule(now)
+      if (begun.told) classed.push({ character: now.id, spell: begun.told.name, text: begun.told.text })
+      return begun.character
+    }, character)
+  )
+  return { characters, told: [...ended.told, ...lost.filter((fact) => fact.character), ...regrown, ...classed], saves: kept.saves }
 }
 
 // Fear's repeated save is made only "If the creature ends its turn in a space where it doesn't have line of sight to

@@ -4,14 +4,17 @@ import { test } from "node:test"
 import { rollAttack, strike, weaponAttack } from "../../src/sheet/attack"
 import { attackAfter, attackRequirement, followingRoll, type InScene } from "../../src/sheet/attack-roll"
 import { channelDivinity, divinityPicksOf } from "../../src/sheet/channel-divinity"
-import { resolveCheck, sheetModes } from "../../src/sheet/check"
+import { resolveCheck } from "../../src/sheet/check"
+import { classCheckModes } from "../../src/sheet/class-rules"
+import { inspirationUse, withInspirationSpent } from "../../src/sheet/classes/bard"
+import { tacticalMind } from "../../src/sheet/classes/fighter"
 import { deriveSheet, sheetProblems } from "../../src/sheet/derive"
 import { attacksPerAction, criticalFrom, usesLeft, withFeatureUsed } from "../../src/sheet/feature-rules"
-import { bonusActionsOf, inspirationUse, tacticalMind, useBonusAction, withInspirationSpent } from "../../src/sheet/features"
-import { attackWithReactions, checkWithCuttingWords, ordered, reactionsOf } from "../../src/sheet/reactions"
+import { bonusActionsOf, useBonusAction } from "../../src/sheet/features"
+import { rollInitiative } from "../../src/sheet/initiative"
+import { attackWithReactions, checkWithReactions, ordered, reactionsOf } from "../../src/sheet/reactions"
 import { memorizeSpell, shortRest } from "../../src/sheet/rest"
 import type { Sheet } from "../../src/sheet/sheet"
-import { rollInitiative } from "../../src/sheet/stat-block"
 import { sheetView } from "../../src/sheet/view"
 import type { RequiredRoll } from "../../src/validations/roll-requirement-schema"
 
@@ -98,7 +101,7 @@ test("the level 5 sheets of the tests are legal", () => {
 test("Extra Attack: a level 5 Fighter attacks twice, and Action Surge gives another action's two", () => {
   assert.deepEqual([attacksPerAction({ sheet: fighter5 }), attacksPerAction({ sheet: fighter2 }), attacksPerAction({ sheet: rogue5 })], [2, 1, 1])
   const her = pc("branka", "Branka", fighter5)
-  assert.deepEqual([attackAfter(her), attackAfter(her, { surge: true }), attackAfter(pc("branka", "Branka", fighter2), { surge: true })], [{ attacks: 1 }, { attacks: 3 }, { attacks: 1 }])
+  assert.deepEqual([attackAfter(her), attackAfter(her, { actions: 2 }), attackAfter(pc("branka", "Branka", fighter2), { actions: 2 })], [{ attacks: 1 }, { attacks: 3 }, { attacks: 1 }])
   // Action Surge has one use at level 2, and a Short Rest gives it back.
   const surged = withFeatureUsed(pc("branka", "Branka", fighter2, { hitPoints: 24 }), "fighter-action-surge")
   assert.deepEqual([usesLeft(pc("b", "B", fighter2), "fighter-action-surge"), usesLeft(surged, "fighter-action-surge")], [1, 0])
@@ -144,8 +147,8 @@ test("Improved Critical: a Champion's 19 is a Critical Hit, and hits whatever th
 
 test("Remarkable Athlete: Advantage on Athletics and on Initiative", () => {
   const her = { type: "pc", sheet: fighter5 }
-  assert.deepEqual(sheetModes(her, { kind: "skill", skill: "athletics" }), [{ mode: "advantage", from: "Remarkable Athlete" }])
-  assert.deepEqual(sheetModes({ type: "pc", sheet: fighter2 }, { kind: "skill", skill: "athletics" }), [])
+  assert.deepEqual(classCheckModes(her, { kind: "skill", skill: "athletics" }), [{ mode: "advantage", from: "Remarkable Athlete" }])
+  assert.deepEqual(classCheckModes({ type: "pc", sheet: fighter2 }, { kind: "skill", skill: "athletics" }), [])
   // Dexterity 10 adds nothing: of a 4 and a 15 she keeps the 15. At level 2 the first die is all she has.
   assert.deepEqual([rollInitiative(her, 4, 15), rollInitiative({ type: "pc", sheet: fighter2 }, 4, 15)], [15, 4])
 })
@@ -250,18 +253,19 @@ test("Cunning Strike's Trip takes a Sneak Attack die, and the target saves with 
   // less one: 4 and 5. 16 in all, from 59 to 43. The Owlbear is Large: its Dexterity save, a 6 and +1, is 7 against
   // 8 + 4 + 3, 15. It falls Prone.
   const owlbear: Body = { id: "owlbear", name: "Owlbear", type: "npc", statBlock: "owlbear" }
-  const blow = strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [4, 15], mode: "advantage", roll: falls(3, 4, 5, 6), cunning: "trip" })
+  const blow = strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [4, 15], mode: "advantage", roll: falls(3, 4, 5, 6), choices: { cunning: "trip" } })
   assert.deepEqual([blow.taken, blow.hitPoints.after, blow.damage?.parts.map((part) => part.dice)], [16, 43, [[3], [4, 5]]])
-  assert.deepEqual([blow.cunning?.save.total, blow.cunning?.save.dc, blow.cunning?.took, blow.conditions], [7, 15, true, [{ target: "owlbear", condition: "prone" }]])
+  assert.deepEqual([blow.riders?.[0]?.save?.total, blow.riders?.[0]?.save?.dc, blow.riders?.[0]?.took, blow.conditions], [7, 15, true, [{ target: "owlbear", condition: "prone" }]])
   // Prone lasts until its bearer's own turn begins.
   assert.deepEqual(blow.target.conditions, [{ id: "prone", turns: 1 }])
   // A 14 on the save makes 15: it stays standing.
   assert.equal(
-    strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [4, 15], mode: "advantage", roll: falls(3, 4, 5, 14), cunning: "trip" }).cunning?.took,
+    strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [4, 15], mode: "advantage", roll: falls(3, 4, 5, 14), choices: { cunning: "trip" } }).riders?.[0]
+      ?.took,
     false
   )
   // With no Sneak Attack there is no Cunning Strike.
-  assert.equal(strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [15], roll: falls(3), cunning: "trip" }).cunning, undefined)
+  assert.equal(strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [15], roll: falls(3), choices: { cunning: "trip" } }).riders, undefined)
 })
 
 test("Uncanny Dodge halves a hit's damage, by default when it matters", () => {
@@ -274,7 +278,10 @@ test("Uncanny Dodge halves a hit's damage, by default when it matters", () => {
   assert.deepEqual([whole.blow.taken, whole.reactions], [6, []])
   // At 5 hit points the 6 would drop him: he halves it to 3, and his Reaction is spent.
   const dodged = attackWithReactions({ characters: [{ ...rogue, hitPoints: 5 }, bandit], attackerId: "bandit", targetId: "poppen", weapon: "scimitar", dice: [14], roll: falls(5), ask: asked([]) })
-  assert.deepEqual([dodged.blow.taken, dodged.blow.halved, dodged.target.hitPoints, dodged.reactions.map((taken) => taken.text)], [3, true, 2, ["Poppen uses Uncanny Dodge and takes 3 of 6."]])
+  assert.deepEqual(
+    [dodged.blow.taken, dodged.blow.reduced, dodged.target.hitPoints, dodged.reactions.map((taken) => taken.text)],
+    [3, { id: "uncanny-dodge", from: 6 }, 2, ["Poppen uses Uncanny Dodge and takes 3 of 6."]]
+  )
   assert.deepEqual(dodged.target.turnEffects, [{ id: "reacted", by: "poppen", turns: 1 }])
   // A level 4 Rogue has no Uncanny Dodge.
   const four = attackWithReactions({
@@ -286,7 +293,7 @@ test("Uncanny Dodge halves a hit's damage, by default when it matters", () => {
     roll: falls(5),
     ask: always,
   })
-  assert.equal(four.blow.halved, undefined)
+  assert.equal(four.blow.reduced, undefined)
 })
 
 test("Cutting Words takes the Bard's die off an enemy's attack roll or check, and Font of Inspiration buys a use with a slot", () => {
@@ -318,11 +325,11 @@ test("Cutting Words takes the Bard's die off an enemy's attack roll or check, an
   })
   assert.deepEqual([sure.blow.roll.hit, sure.reactions], [true, []])
   // A check: 16 against 15, and a 3 off it is 13.
-  const check = checkWithCuttingWords({ characters: [bard, bandit], rollerId: "bandit", result: resolveCheck({ dice: [14], bonus: 2, dc: 15 }), roll: falls(3), ask: always })
+  const check = checkWithReactions({ characters: [bard, bandit], rollerId: "bandit", result: resolveCheck({ dice: [14], bonus: 2, dc: 15 }), roll: falls(3), ask: always })
   assert.deepEqual([check.result.total, check.result.success], [13, false])
   // Not on a save.
   assert.equal(
-    checkWithCuttingWords({ characters: [bard, bandit], rollerId: "bandit", result: resolveCheck({ dice: [14], bonus: 2, dc: 15 }), roll: falls(3), ask: always, save: true }).result.success,
+    checkWithReactions({ characters: [bard, bandit], rollerId: "bandit", result: resolveCheck({ dice: [14], bonus: 2, dc: 15 }), roll: falls(3), ask: always, save: true }).result.success,
     true
   )
   // Font of Inspiration: with all four uses spent, a level 1 slot buys one.

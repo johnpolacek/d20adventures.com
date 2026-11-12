@@ -40,13 +40,3 @@ export function initiativeBonusOf(character: { name?: string; type?: string; she
   if (!monster) throw new Error(`${character.name ?? "This character"} has no rules sheet, so no Initiative can be rolled for them.`)
   return monster.initiative.modifier
 }
-
-/**
- * A character's Initiative for an encounter: the d20 it rolled as the encounter began, plus its bonus. It is kept
- * until the encounter ends. A Champion's Remarkable Athlete rolls it with Advantage: the higher of `die` and `second`.
- */
-export const rollInitiative = (character: Parameters<typeof initiativeBonusOf>[0], die: number, second?: number): number =>
-  (second !== undefined && initiativeAdvantage(character) ? Math.max(die, second) : die) + initiativeBonusOf(character)
-
-/** Whether a character rolls Initiative with Advantage: a Champion's Remarkable Athlete. */
-export const initiativeAdvantage = (character: { sheet?: Sheet }): boolean => !!character.sheet && deriveSheet(character.sheet).classFeatures.includes("champion-remarkable-athlete")

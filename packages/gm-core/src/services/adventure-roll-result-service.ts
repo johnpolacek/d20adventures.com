@@ -2,13 +2,12 @@ import type { GmPorts } from "../ports"
 import { afterRoll } from "../sheet/actions"
 import { type Strike, strikeFacts } from "../sheet/attack"
 import { followingRoll, type InScene } from "../sheet/attack-roll"
-import { channelDivinity, divinityName } from "../sheet/channel-divinity"
 import { checkBonus, resolveCheck } from "../sheet/check"
+import { effectChoice, type Featured, rescuedCheck } from "../sheet/class-rules"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, deathSave } from "../sheet/death"
-import { withFeatureUsed } from "../sheet/feature-rules"
-import { inspirationHelps, inspiredCheck, tacticalMind, withoutInspiration } from "../sheet/features"
+import { inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
 import { attackWithReactions, ordered } from "../sheet/reactions"
 import { checkAdds, saveBonusFor, settleConcentration } from "../sheet/spell-effects"
@@ -196,22 +195,13 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // Whether the roller's Bardic Inspiration die was rolled, and so is spent.
     let inspired = false
     if (isFeatureRoll(required)) {
-      // Channel Divinity: the engine rolls it and every target's save, and spends the use, as it does a spell that asks
-      // for no throw. It is told by the same path as a cast.
-      const effect = required.feature.id
-      const used = channelDivinity({
-        characters: turnCharacters,
-        clericId: args.characterId,
-        effect,
-        targets: required.feature.targets,
-        heal: required.feature.heal,
-        damageType: required.feature.damageType,
-        d20: rollD20,
-        roll: rollDie,
-        rules,
-      })
-      turnCharacters = used.characters
-      const name = `Channel Divinity: ${divinityName(effect)}`
+      // A class feature used as the action (Channel Divinity): the engine rolls it and every target's save, and spends
+      // the use, as it does a spell that asks for no throw. It is told by the same path as a cast.
+      const resolve = effectChoice(required.feature.id)?.resolve
+      if (!resolve) throw new Error(`"${required.feature.id}" is no class feature's effect.`)
+      const used = resolve({ characters: turnCharacters as Featured[], actorId: args.characterId, feature: required.feature, d20: rollD20, roll: rollDie, rules })
+      turnCharacters = used.characters as typeof turnCharacters
+      const { name } = used
       rolls = castBeats(by, args.character, { name }, used, storyNames(args.turn.characters), "uses")
       spellCast = { name, facts: used.problem ? [used.problem] : used.facts, verb: "uses" }
       struckIds = used.targets
@@ -292,7 +282,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         rules,
         inspiration: args.character.inspiration,
         cover: required.attack.cover,
-        cunning: required.attack.cunning,
+        choices: required.attack.choices,
         ask: (offer) => ordered(standing.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
       })
       blow = made.blow
@@ -318,10 +308,13 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const held = args.character.inspiration
       const lifted = !failedBy && !thrown.success && inspirationHelps(held, thrown.dc - thrown.total) ? inspiredCheck(thrown, held, rollDie) : thrown
       inspired = lifted.inspired !== undefined
-      // Tactical Mind: a Fighter's failed ability check may take a d10, paid for with Second Wind only when it then succeeds.
-      const minded = failedBy ? undefined : tacticalMind(args.character, required.check, lifted, rollDie)
+      // What the roller's class may still do for a failed check: a Fighter's Tactical Mind takes a d10, paid for with
+      // Second Wind only when it then succeeds.
+      const check = required.check
+      const minded = failedBy ? undefined : rescuedCheck({ character: args.character, check, result: lifted, roll: rollDie })
       const result = minded?.result ?? lifted
-      if (minded?.spent) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withFeatureUsed(character, "fighter-second-wind") : character))
+      const after = minded?.after
+      if (after) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? after(character) : character))
       // What the roll put at stake is settled here, by the engine: who it hurts or heals, and how they stand after.
       const settled = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
       turnCharacters = settled.characters

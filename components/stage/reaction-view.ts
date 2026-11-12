@@ -18,7 +18,10 @@ export const REACTION_NAMES: Record<ReactionId, string> = {
   "cutting-words": "Cutting Words",
 }
 
-export const reactionName = (id: string): string => REACTION_NAMES[id as ReactionId] ?? "Reaction"
+// A class's reaction the list above does not name, by its id: "deflect-attacks" is "Deflect Attacks".
+const titled = (id: string): string => id.replace(/(^|-)(\w)/g, (_, dash: string, letter: string) => `${dash ? " " : ""}${letter.toUpperCase()}`)
+
+export const reactionName = (id: string): string => REACTION_NAMES[id] ?? (id ? titled(id) : "Reaction")
 
 export const ORDERS: { id: Order; name: string }[] = [
   { id: "always", name: "Always" },
@@ -26,7 +29,7 @@ export const ORDERS: { id: Order; name: string }[] = [
   { id: "never", name: "Never" },
 ]
 
-/** The engine's default orders: every Opportunity Attack, and the rest only when they matter. */
+/** The engine's default orders: every Opportunity Attack, and the rest only when they matter, a class's own among them. */
 export const DEFAULT_ORDER: Record<ReactionId, Order> = {
   "opportunity-attack": "always",
   shield: "when-it-matters",
@@ -44,5 +47,5 @@ export type OrderRow = { id: ReactionId; name: string; order: Order }
  * (`reactionsOf`): every hero has the Opportunity Attack, and the rest come with a spell or a feature.
  */
 export function heroReactions(reactions: readonly ReactionId[] | undefined, orders: StandingOrders | undefined): OrderRow[] {
-  return (reactions ?? ["opportunity-attack"]).map((id) => ({ id, name: REACTION_NAMES[id], order: orders?.[id] ?? DEFAULT_ORDER[id] }))
+  return (reactions ?? ["opportunity-attack"]).map((id) => ({ id, name: reactionName(id), order: orders?.[id] ?? DEFAULT_ORDER[id] ?? "when-it-matters" }))
 }

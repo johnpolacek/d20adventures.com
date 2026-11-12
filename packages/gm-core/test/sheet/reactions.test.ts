@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { turnEffectWords } from "../../src/sheet/actions"
 import { againstArmorClass, landBlow, rollAttack, strike } from "../../src/sheet/attack"
+import { uncannyDodgeMatters } from "../../src/sheet/classes/rogue"
 import type { ConditionEntry } from "../../src/sheet/condition-entry"
 import { atRoundStart } from "../../src/sheet/death"
 import {
@@ -22,7 +23,6 @@ import {
   resolveOpportunityAttack,
   shieldOffer,
   standingOrdersSchema,
-  uncannyDodgeMatters,
   withReaction,
   withShield,
 } from "../../src/sheet/reactions"
@@ -242,10 +242,10 @@ test("each standing order's answer, and the defaults", () => {
     "opportunity-attack": "always",
     shield: "when-it-matters",
     parry: "when-it-matters",
-    "uncanny-dodge": "when-it-matters",
     counterspell: "when-it-matters",
-    "cutting-words": "when-it-matters",
   })
+  // A class's reactions are taken when they matter.
+  assert.deepEqual([ordered(undefined, "uncanny-dodge", true), ordered(undefined, "cutting-words", false)], [true, false])
   assert.deepEqual([ordered(undefined, "shield", true), ordered(undefined, "shield", false)], [true, false])
   assert.deepEqual([ordered({ shield: "always" }, "shield", false), ordered({ shield: "never" }, "shield", true)], [true, false])
   // An Opportunity Attack always matters, so when-it-matters takes it. Never refuses it.

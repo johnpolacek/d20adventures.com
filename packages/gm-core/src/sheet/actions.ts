@@ -5,6 +5,7 @@ import { spellById } from "@d20/srd/spells"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { masteryOf } from "./attack"
 import { type Check, checkBonus, type Roller } from "./check"
+import { turnEffectRule } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
@@ -88,7 +89,10 @@ function holds(effect: TurnEffect, present: readonly Acting[] | undefined): bool
   return effect.turns > 1 || !present?.find((character) => character.id === effect.by)?.isComplete
 }
 
-/** Advantage and Disadvantage that actions taken put on an attack roll: the target is Dodging, or an ally of the attacker has Helped against them. */
+/**
+ * Advantage and Disadvantage that actions taken put on an attack roll: the target is Dodging, or an ally of the
+ * attacker has Helped against them. A class's turn effects on either of the two add their own (./classes).
+ */
 export function attackModesFromActions(attacker: Acting, target: Acting, present?: readonly Acting[]): ModeSource[] {
   const found: ModeSource[] = []
   const all = present ?? [attacker, target]
@@ -98,7 +102,9 @@ export function attackModesFromActions(attacker: Acting, target: Acting, present
     const helper = all.find((character) => character.id === effect.by)
     if (effect.id === "distracted" && helper && helper.id !== attacker.id && helper.type === attacker.type) found.push({ mode: "advantage", from: `Help from ${helper.name}` })
     if (effect.id === "vexed" && effect.by === attacker.id) found.push({ mode: "advantage", from: "Vex" })
+    found.push(...(turnEffectRule(effect.id)?.against?.(effect, attacker, target) ?? []))
   }
+  for (const effect of attacker.turnEffects ?? []) if (holds(effect, all)) found.push(...(turnEffectRule(effect.id)?.attacking?.(effect, attacker, target) ?? []))
   return found
 }
 
@@ -111,6 +117,7 @@ export function checkModesFromActions(character: Acting, check: Check, present?:
     if (effect.id === "helped" && check.kind === "skill" && check.skill === effect.skill)
       found.push({ mode: "advantage", from: `Help from ${all.find((other) => other.id === effect.by)?.name ?? "an ally"}` })
     if (effect.id === "dodging" && check.kind === "save" && check.ability === "dex" && !cannotMove(character)) found.push({ mode: "advantage", from: "Dodging" })
+    found.push(...(turnEffectRule(effect.id)?.checking?.(effect, character, check) ?? []))
   }
   return found
 }
@@ -195,20 +202,18 @@ export const turnEffectsAtEncounterEnd = <T extends { turnEffects?: readonly Tur
   return rest as T
 }
 
-/** What actions have left on a character, in words for the screen and the game master: "Dodging". */
+/** What actions have left on a character, in words for the screen and the game master: "Dodging". A class's turn effects give their own. */
 export function turnEffectWords(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): string {
   return (character.turnEffects ?? [])
-    .filter((effect) => ["dodging", "helped", "distracted", "vexed", "slowed"].includes(effect.id) && holds(effect, present))
-    .map((effect) =>
-      effect.id === "dodging"
-        ? "Dodging"
-        : effect.id === "helped"
-          ? `Helped with ${skillById.get(effect.skill ?? "stealth")?.name}`
-          : effect.id === "vexed"
-            ? "Vexed"
-            : effect.id === "slowed"
-              ? "Slowed"
-              : "Distracted"
-    )
+    .flatMap((effect) => {
+      if (!holds(effect, present)) return []
+      if (effect.id === "dodging") return ["Dodging"]
+      if (effect.id === "helped") return [`Helped with ${skillById.get(effect.skill ?? "stealth")?.name}`]
+      if (effect.id === "vexed") return ["Vexed"]
+      if (effect.id === "slowed") return ["Slowed"]
+      if (effect.id === "distracted") return ["Distracted"]
+      const words = turnEffectRule(effect.id)?.words?.(effect)
+      return words ? [words] : []
+    })
     .join(", ")
 }
