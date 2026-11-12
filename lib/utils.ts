@@ -30,15 +30,6 @@ export function getImageUrl(imagePath: string): string {
 }
 
 /**
- * Returns a same-origin URL suitable for WebGL texture loading.
- * This avoids browser CORS failures when the backing asset host does not
- * send texture-friendly CORS headers.
- */
-export function getTextureImageUrl(imagePath: string): string {
-  return getImageUrl(imagePath)
-}
-
-/**
  * Strips the IMAGE_HOST from a URL to get the relative path for storage
  * @param url - The full URL or relative path
  * @returns The relative path without IMAGE_HOST

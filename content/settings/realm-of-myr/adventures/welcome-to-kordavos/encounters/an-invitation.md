@@ -12,7 +12,6 @@ roundBudget: 1
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Gracious but calculating. Gives the invitation and asks the party to learn what the Lower Districts whisper about the Covenant."
-    startNear: "party"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726361535587"
 ---
 

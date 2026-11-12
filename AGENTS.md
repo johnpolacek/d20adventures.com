@@ -16,7 +16,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 - `packages/gm-core` is the game master: turn flow, NPC turns, rolls, narrative. Game logic goes here. It imports nothing from Next, Clerk or Convex and reaches the outside only through the ports in `src/ports.ts`.
 - `lib/gm-server` binds that core to the website. Most of `lib/services` is one-line wrappers that call it, so logic does not go there. `turn-audio-service.ts` and `mailing-list.ts` are the exceptions.
 - `apps/desktop` is the Tauri app. `apps/desktop/runtime` is its bundled Node game runtime: the same core over SQLite. `apps/desktop-spike` is a throwaway phase 0 spike, not the app.
-- `packages/stage` is Stageview, the painted 3D encounter stage. `components/stage` is the React UI around it (HUD, dice, journal), shared by the site and the desktop app. `components/mapview` and `lib/mapview` are the 2D encounter map.
+- `packages/stage` is Stageview, the painted 3D encounter stage. `components/stage` is the React UI around it (HUD, dice, journal), shared by the site and the desktop app. `components/floorplan` is the site's top-down floor plan, drawn from the plans under `packages/stage/src/plans`, which `pnpm stage:plans` generates from the sets and stagings.
 - Adventures are authored as markdown under `content/settings/<setting>/adventures/<adventure>/`. `lib/wiki-adventures` compiles and validates them. `data/adventure-plans/*.json` is the old format, referenced only by the `scripts/migrate-*` scripts.
 - `app/` is the Next.js site. Server actions live in `app/_actions`, and `proxy.ts` is the Clerk middleware.
 - `convex/` is the database and its functions. `convex/_generated` is written by `npx convex codegen`, so never edit it.
@@ -25,7 +25,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 
 ### Encounter Authoring
 
-- Initial NPC map placement must match the intro's implied distance: an NPC whose intro reads as a close ambush should set `startNear: "party"` on its ref in the encounter frontmatter ("distant"/absent keeps the default far placement; a zone/label name targets that spot). After changing staging hints, re-place tokens on stored maps with `scripts/mapview-replace-tokens.ts`.
+- Where everyone starts is the encounter's 3D staging (`packages/stage/src/stagings`): an NPC whose intro reads as a close ambush is staged close to the party's spots. The rules read each encounter's floor from its generated plan, so run `pnpm stage:plans` after changing a set or a staging. `pnpm stage:plans:check` fails on a stale one.
 - Run `pnpm stage:sync` before pushing new or changed files in `public/stage`, `public/stage-lab` or `public/images/app/backgrounds`. Vercel deploys leave them out and the site serves them from the public bucket.
 
 ### Automation Policy

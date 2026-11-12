@@ -11,10 +11,8 @@ landmark: "kordavos/sealed-door"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Grim and ready, sword in hand. Guards the party while the seal is broken."
-    startNear: "party"
   - id: "eamon"
     behavior: "Strains to break the seal with the party's help, and falters under its weight unless they steady him."
-    startNear: "party"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726951147257"
 ---
 

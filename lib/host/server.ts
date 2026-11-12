@@ -333,7 +333,7 @@ export async function guestHero(adventure: Doc<"adventures">, userId: string, ch
 export type GuestHero = Awaited<ReturnType<typeof guestHero>>
 
 export type HostedAction =
-  | { turnId: string; kind: "reply"; characterId: string; text: string; movement?: unknown }
+  | { turnId: string; kind: "reply"; characterId: string; text: string }
   // `second` is the other d20 of a roll with Advantage or Disadvantage.
   | { turnId: string; kind: "roll"; characterId: string; result: number; second?: number }
   | { turnId: string; kind: "skip"; characterId: string }
@@ -354,7 +354,7 @@ export async function queueAction(adventure: Doc<"adventures">, userId: string, 
   if (action.kind === "reply") {
     const text = typeof action.text === "string" ? action.text.trim() : ""
     if (!text || text.length > 4000) throw new HostError(400, "Write an action of up to 4000 characters.")
-    return convex.mutation(api.hosting.queueJob, { ...base, kind: "reply", characterId: action.characterId, text, movement: action.movement })
+    return convex.mutation(api.hosting.queueJob, { ...base, kind: "reply", characterId: action.characterId, text })
   }
   const d20 = (n: unknown): n is number => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 20
   if (!d20(action.result) || (action.second !== undefined && !d20(action.second))) throw new HostError(400, "A roll is a whole number from 1 to 20.")

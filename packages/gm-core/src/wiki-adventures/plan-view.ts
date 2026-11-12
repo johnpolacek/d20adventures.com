@@ -23,7 +23,6 @@ function toAdventureEncounter(encounter: RuntimeEncounter, locations: RuntimeArt
       id: ref.id,
       behavior: ref.behavior ?? "",
       initialInitiative: ref.initialInitiative,
-      startNear: ref.startNear,
     })),
   }
 }

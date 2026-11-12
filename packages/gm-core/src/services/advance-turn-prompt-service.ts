@@ -138,7 +138,7 @@ export function buildEncounterProgressionPrompt(args: {
   encounterTurnDisplay: string
   currentEncounterTurnNumber: number
   playerCharacterNames: string
-  /** Battle-map staging summary (lib/mapview/spatial-summary.ts); omitted when the encounter has no stored map. */
+  /** Where everyone stands, in the engine's words (standingWords), with the host's city context. None when the encounter has no floor. */
   spatialContext?: string
   /** How to write beats, with the scene's cast and places. */
   storyRules?: string

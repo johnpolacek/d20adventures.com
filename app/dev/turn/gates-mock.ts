@@ -43,8 +43,6 @@ export interface MockHold {
   // The GM asks for this roll after the actor's reply, before the next turn resolves.
   roll?: MockRoll
   rollPrompt?: string
-  // Waiting in line, nobody walks: the reply isn't turned into movement.
-  stay?: boolean
 }
 export interface MockTurn {
   title: string
@@ -159,7 +157,6 @@ export const TURNS: MockTurn[] = [
     hold: {
       actor: "branka",
       shot: brankaInLine,
-      stay: true,
       prompt: "Up at the barrier, Garlan is taking his time over a carter's papers, and the line has stopped. Around you stand three strangers who look to be going your way. Branka, what do you do?",
       suggestion:
         "Branka looks the three of them over and nods at the gate. “Looks like we'll be standing together a while. Branka Stoneveil.” She glances down at the halfling. “And keep your hands where I can see them, little one.”",
@@ -188,7 +185,6 @@ export const TURNS: MockTurn[] = [
     hold: {
       actor: "cassia",
       shot: cassiaInLine,
-      stay: true,
       prompt: "The line still hasn't moved. The dwarf has introduced herself, and the merchant behind you is listening in. Cassia, what do you do?",
       suggestion:
         "Cassia tucks her folio of charts tighter under her arm and inclines her head. “Cassia Verane, cartographer.” She glances at the dwarf's breastplate. “That's the old gate-ward sigil. I've only ever seen it on maps.”",
@@ -219,7 +215,6 @@ export const TURNS: MockTurn[] = [
     hold: {
       actor: "yeva",
       shot: oskarInLine,
-      stay: true,
       prompt: "Oskar is busy talking maps with Cassia, waving both hands. The purse at his belt swings, heavy and unattended. Yeva, what do you do?",
       suggestion: "Yeva hums a festival tune and drifts toward the merchant, admiring the embroidery on his purse. While he's busy with Cassia, her fingers find the strings.",
       roll: { key: "pickpocket", skill: "Sleight of Hand", dc: 13, modifier: 5, versus: { name: "Oskar", skill: "Perception", natural: 12, modifier: 1 } },
@@ -275,7 +270,6 @@ export const TURNS: MockTurn[] = [
     hold: (story) => ({
       actor: "milos",
       shot: milosInLine,
-      stay: true,
       prompt: story.pickpocket
         ? "Nobody saw a thing, or nobody is saying so. Milos, you're the last of the four still to speak. What do you do?"
         : "Oskar has Yeva by the wrist, and half the line is staring. Milos, what do you do?",

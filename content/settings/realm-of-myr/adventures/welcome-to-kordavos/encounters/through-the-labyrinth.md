@@ -11,10 +11,8 @@ landmark: "kordavos/labyrinth"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Driven and impatient. Sends her soldiers down the side spurs and presses on with the party."
-    startNear: "party"
   - id: "eamon"
     behavior: "Reads the crystal runes and tracks the core of the Covenant's power. Needs the party to guard him while he works."
-    startNear: "party"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726950403113"
 ---
 

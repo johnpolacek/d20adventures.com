@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 }
 
 export default function KordavosDemoPage() {
-  return <TurnMock demo />
+  return <TurnMock />
 }

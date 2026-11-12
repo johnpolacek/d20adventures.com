@@ -11,10 +11,8 @@ landmark: "kordavos/forgotten-temple"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Awed and wary, blade still drawn. Wants whoever killed her brother."
-    startNear: "party"
   - id: "eamon"
     behavior: "Fascinated by the silver runes. Reads the story of the Key of Ilmarin if asked."
-    startNear: "party"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726955916736"
 ---
 

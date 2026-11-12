@@ -222,7 +222,6 @@ export const queueJob = mutation({
     text: v.optional(v.string()),
     result: v.optional(v.number()),
     second: v.optional(v.number()),
-    movement: v.optional(v.any()),
   },
   handler: async (ctx, { secret, ...job }) => {
     requireServer(secret)

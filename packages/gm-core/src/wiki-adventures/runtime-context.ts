@@ -100,7 +100,7 @@ export type LlmGameplayContextPacket = {
     responseShape: "nextEncounterId+beats+adventurePatch"
     playerCharacterNames: string[]
   }
-  /** Battle-map staging summary (lib/mapview/spatial-summary.ts); absent when the encounter has no stored map. */
+  /** Where everyone stands, from the content port's spatialContext; absent when the encounter has no floor plan. */
   spatialContext?: string
 }
 

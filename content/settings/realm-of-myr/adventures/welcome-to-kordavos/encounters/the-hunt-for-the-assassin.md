@@ -11,7 +11,6 @@ landmark: "kordavos/drain-grate"
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Cold fury. Leads the hunt and pushes the party on. Offers 500 gold each and a Blackthorn favor if they bargain."
-    startNear: "party"
   - id: "eamon"
     behavior: "Focused and quiet. Unravels the ward on the grate and warns that the Cowl will feel it break."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726868134486"

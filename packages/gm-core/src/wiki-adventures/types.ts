@@ -127,7 +127,7 @@ export type RuntimeEncounter = {
   locationId?: string
   // City map place, "map/place", resolved against content/settings/{settingId}/maps/{map}.json. See scripts/city-map-check.ts.
   landmarkId?: string
-  npcRefs: Array<{ id: string; behavior?: string; initialInitiative?: number; startNear?: string }>
+  npcRefs: Array<{ id: string; behavior?: string; initialInitiative?: number }>
   sections: Record<string, string>
   summary?: string
   typedLinks: RuntimeLink[]

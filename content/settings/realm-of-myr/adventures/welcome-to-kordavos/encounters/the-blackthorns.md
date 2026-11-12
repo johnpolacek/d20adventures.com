@@ -12,7 +12,6 @@ roundBudget: 3
 npcs:
   - id: "astrid-blackthorn"
     behavior: "Thaddeus's younger sister, never his daughter. Gracious hostess with a calculating eye. Draws the party toward her brother and the Blackthorns' favor."
-    startNear: "party"
   - id: "thaddeus-blackthorn"
     behavior: "Holds court in the rotunda until Astrid brings the party to him. Smooth and measured. Recruits them for the Blackthorns and scorns those who cling to the old ways. Admits nothing of the Key, the crate, Mikhail Antonov or his house's past, and turns any such question aside with a smile."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726591063592"
