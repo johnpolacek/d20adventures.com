@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { takeAction } from "../../src/sheet/actions"
 import type { ConditionEntry } from "../../src/sheet/condition-entry"
+import { deriveSheet, sheetProblems } from "../../src/sheet/derive"
 import type { Sheet } from "../../src/sheet/sheet"
 import { castSpell, classSpells, isEngineSpell, spellById, spellcastingOf, targetLimit } from "../../src/sheet/spells"
 import type { TurnEffect } from "../../src/sheet/turn-effect"
@@ -148,4 +149,28 @@ test("healing adds the caster's ability modifier, and a failed save gives the sp
   assert.deepEqual([mocked.harm[0].type, find(mocked.characters, "bandit").hitPoints], ["psychic", 7])
   // A Fighter cannot cast.
   assert.throws(() => castSpell({ characters: [branka, owlbear], casterId: "branka", spell: spell("ray-of-frost"), targets: ["owlbear"], d20: falls(), roll: falls() }), /cannot cast spells/)
+})
+
+test("a sheet's spells follow its class: the counts its table gives, from its own list, and a Wizard's from the spellbook", () => {
+  const wizard = lyra.sheet as Sheet
+  const cleric = milos.sheet as Sheet
+  for (const hero of [lyra, milos, ilya, thalbern, branka]) assert.deepEqual(sheetProblems(hero.sheet as Sheet), [], hero.name)
+  // A Wizard knows three cantrips and prepares four spells at level 1.
+  assert.deepEqual(sheetProblems({ ...wizard, cantrips: ["light", "mage-hand"] }), ["Wizard knows 3 cantrips at level 1, and the sheet has 2"])
+  assert.deepEqual(sheetProblems({ ...wizard, spells: ["detect-magic", "fog-cloud", "charm-person"] }), ["Wizard prepares 4 spells at level 1, and the sheet has 3"])
+  // Sleep is a Wizard spell that is not in Lyra's book. Misty Step is level 2, and she has no slot for it. Sacred Flame is a Cleric's.
+  assert.deepEqual(sheetProblems({ ...wizard, spells: ["detect-magic", "fog-cloud", "charm-person", "sleep"] }), ['"sleep" is prepared and is not in the spellbook'])
+  assert.deepEqual(sheetProblems({ ...wizard, spells: ["detect-magic", "fog-cloud", "charm-person", "misty-step"] }), [
+    '"misty-step" is not a Wizard spell of a level the sheet has slots for',
+    '"misty-step" is prepared and is not in the spellbook',
+  ])
+  assert.deepEqual(sheetProblems({ ...wizard, cantrips: ["light", "mage-hand", "sacred-flame"] }), ['"sacred-flame" is not a Wizard cantrip'])
+  // A Thaumaturge Cleric knows one cantrip more than the three of the table. A Protector does not.
+  assert.equal(cleric.cantrips?.length, 4)
+  assert.deepEqual(sheetProblems({ ...cleric, featureChoices: { "cleric-divine-order": "protector" } }), ["Cleric knows 3 cantrips at level 1, and the sheet has 4"])
+  // A Fighter has no Spellcasting.
+  assert.deepEqual(sheetProblems({ ...(branka.sheet as Sheet), cantrips: ["light"] }), ["Fighter has no Spellcasting at level 1, and the sheet lists spells"])
+  // A Ranger's Favored Enemy keeps Hunter's Mark always prepared, beside the two he prepares. A High Elf knows Prestidigitation.
+  assert.deepEqual(deriveSheet(thalbern.sheet as Sheet).preparedSpells, ["cure-wounds", "speak-with-animals", "hunters-mark"])
+  assert.deepEqual(deriveSheet(ilya.sheet as Sheet).cantrips, ["vicious-mockery", "minor-illusion", "prestidigitation"])
 })

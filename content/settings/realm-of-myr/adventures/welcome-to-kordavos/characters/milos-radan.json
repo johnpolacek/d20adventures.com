@@ -83,6 +83,8 @@
     "feats": ["skilled"],
     "armor": "chain-shirt",
     "shield": true,
-    "weapons": ["quarterstaff"]
+    "weapons": ["quarterstaff"],
+    "cantrips": ["sacred-flame", "guidance", "light", "thaumaturgy"],
+    "spells": ["healing-word", "bless", "guiding-bolt", "shield-of-faith"]
   }
 }

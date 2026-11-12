@@ -47,6 +47,12 @@ export const sheetSchema = z.strictObject({
   shield: z.boolean().optional(),
   /** The weapons carried, by equipment id: "longbow". Every character can also make an Unarmed Strike. */
   weapons: z.array(idSchema).optional(),
+  /** The cantrips known, by spell id, from the class's list: "ray-of-frost". */
+  cantrips: z.array(idSchema).optional(),
+  /** The spells prepared, by spell id, from the class's list. A feature's always-prepared spells are not listed here. */
+  spells: z.array(idSchema).optional(),
+  /** A Wizard's spellbook, by spell id. The prepared spells are chosen from it, and its Ritual spells need no preparing. */
+  spellbook: z.array(idSchema).optional(),
   /** The kinds of weapons whose mastery property the hero can use, by equipment id, from their Weapon Mastery feature. */
   weaponMasteries: z.array(idSchema).optional(),
 })

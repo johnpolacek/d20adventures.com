@@ -40,6 +40,12 @@ export type DerivedSheet = {
   feats: string[]
   /** Class feature ids the character has at its level, in class table order. */
   classFeatures: string[]
+  /** Cantrips known, by spell id: the sheet's, and any the species gives at this level. */
+  cantrips: string[]
+  /** Spells prepared, by spell id: the sheet's, and any a class feature keeps always prepared (a Ranger's Hunter's Mark). */
+  preparedSpells: string[]
+  /** A Wizard's spellbook, by spell id. */
+  spellbook: string[]
 }
 
 type Parts = { class: Class; species: Species; background: Background; armor?: Armor; features: ClassFeature[]; feats: Feat[] }
@@ -163,6 +169,49 @@ function resistancesOf(sheet: Sheet, parts: Parts): DamageTypeId[] {
   return [...found].sort()
 }
 
+/**
+ * Faults in a sheet's spells. A class with the Spellcasting feature knows as many cantrips as its table gives, and any
+ * a chosen option adds, and prepares as many spells as its table gives, each from its own list and of a level it has
+ * slots for. A Wizard prepares from the spellbook, which holds six level 1 spells and two more for each level after
+ * the first. A class with no Spellcasting has none of the three.
+ */
+function spellProblems(sheet: Sheet, parts: Parts): string[] {
+  const problems: string[] = []
+  const cls = parts.class
+  const cantrips = sheet.cantrips ?? []
+  const prepared = sheet.spells ?? []
+  const book = sheet.spellbook ?? []
+  if (!cls.spellcasting) return cantrips.length || prepared.length || book.length ? [`${cls.name} has no Spellcasting at level ${sheet.level}, and the sheet lists spells`] : []
+  const row = cls.levels[sheet.level - 1]
+  const list = cls.spellcasting.spellList
+  // The highest spell level the class has a slot for: the last filled column, or a Warlock's one Pact Magic slot level.
+  const highest = Math.max(
+    row?.slotLevel ?? 0,
+    (row?.spellSlots ?? []).reduce((top, count, index) => (count > 0 ? index + 1 : top), 0)
+  )
+  const onList = (id: string, from: number, to: number) => list.some((entry) => entry.level >= from && entry.level <= to && entry.spells.includes(id))
+  const extra = chosenOptions(sheet, parts).features.reduce((sum, option) => sum + (option.extraCantrips?.count ?? 0), 0)
+  const cantripsAllowed = (row?.cantrips ?? 0) + extra
+  if (cantrips.length !== cantripsAllowed) problems.push(`${cls.name} knows ${cantripsAllowed} cantrips at level ${sheet.level}, and the sheet has ${cantrips.length}`)
+  for (const id of cantrips) if (!onList(id, 0, 0)) problems.push(`"${id}" is not a ${cls.name} cantrip`)
+  const preparedAllowed = row?.preparedSpells ?? 0
+  if (prepared.length !== preparedAllowed) problems.push(`${cls.name} prepares ${preparedAllowed} spells at level ${sheet.level}, and the sheet has ${prepared.length}`)
+  for (const id of prepared) if (!onList(id, 1, highest)) problems.push(`"${id}" is not a ${cls.name} spell of a level the sheet has slots for`)
+  for (const [name, ids] of [
+    ["cantrip", cantrips],
+    ["prepared spell", prepared],
+    ["spellbook spell", book],
+  ] as const)
+    if (new Set(ids).size !== ids.length) problems.push(`a ${name} is listed twice`)
+  if (cls.spellcasting.ritualFromSpellbook) {
+    const pages = 4 + 2 * sheet.level
+    if (book.length !== pages) problems.push(`a ${cls.name}'s spellbook holds ${pages} spells at level ${sheet.level}, and the sheet has ${book.length}`)
+    for (const id of book) if (!onList(id, 1, highest)) problems.push(`"${id}" is not a ${cls.name} spell of a level the sheet has slots for`)
+    for (const id of prepared) if (!book.includes(id)) problems.push(`"${id}" is prepared and is not in the spellbook`)
+  } else if (book.length) problems.push(`${cls.name} keeps no spellbook`)
+  return problems
+}
+
 /** Whether weapon training covers a weapon: its category, and any property the training is limited to. */
 export function trainedWith(training: Class["weapons"], weapon: { category: string; properties?: readonly string[] }): boolean {
   return training.some((entry) => entry.category === weapon.category && (!entry.withProperty || entry.withProperty.some((property) => (weapon.properties ?? []).includes(property))))
@@ -197,6 +246,8 @@ export function sheetProblems(sheet: Sheet): string[] {
     if (weapon?.kind !== "weapon") problems.push(`"${id}" is not a weapon to master`)
     else if (!trainedWith(cls.weapons, weapon)) problems.push(`${cls.name} is not trained with the ${weapon.name}, so cannot master it`)
   }
+
+  problems.push(...spellProblems(sheet, parts))
 
   const training = armorTrainingOf(sheet, parts)
   if (parts.armor && !training.some((kind) => kind === parts.armor?.category)) problems.push(`${cls.name} has no training with ${parts.armor.category} armor`)
@@ -276,5 +327,13 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
     stealthDisadvantage: parts.armor?.stealthDisadvantage === true,
     feats: parts.feats.map((feat) => feat.id),
     classFeatures: parts.features.map((feature) => feature.id),
+    cantrips: [
+      ...new Set([
+        ...(sheet.cantrips ?? []),
+        ...chosenOptions(sheet, parts).species.flatMap((option) => (option.spells ?? []).filter((spell) => spell.cantrip && spell.level <= sheet.level).map((spell) => spell.spell)),
+      ]),
+    ],
+    preparedSpells: [...new Set([...(sheet.spells ?? []), ...parts.features.flatMap((feature) => feature.alwaysPrepared ?? [])])],
+    spellbook: [...(sheet.spellbook ?? [])],
   }
 }

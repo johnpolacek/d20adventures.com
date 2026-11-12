@@ -228,6 +228,24 @@ const heroes: { name: string; sheet: Sheet; hp: number; ac: number; from: string
     },
   ]
 
+// Each caster's spells at level 1: the cantrips and prepared spells its table gives, from its own list. A Wizard's are
+// four of the six in the spellbook.
+const spells: Partial<Record<Sheet["class"], Pick<Sheet, "cantrips" | "spells" | "spellbook">>> = {
+  bard: { cantrips: ["light", "vicious-mockery"], spells: ["charm-person", "healing-word", "sleep", "heroism"] },
+  cleric: { cantrips: ["guidance", "light", "sacred-flame"], spells: ["bless", "cure-wounds", "guiding-bolt", "healing-word"] },
+  druid: { cantrips: ["druidcraft", "guidance"], spells: ["animal-friendship", "charm-person", "cure-wounds", "detect-magic"] },
+  paladin: { spells: ["bless", "cure-wounds"] },
+  ranger: { spells: ["cure-wounds", "entangle"] },
+  sorcerer: { cantrips: ["acid-splash", "chill-touch", "dancing-lights", "fire-bolt"], spells: ["burning-hands", "charm-person"] },
+  warlock: { cantrips: ["chill-touch", "eldritch-blast"], spells: ["charm-person", "detect-magic"] },
+  wizard: {
+    cantrips: ["light", "mage-hand", "ray-of-frost"],
+    spells: ["detect-magic", "fog-cloud", "charm-person", "magic-missile"],
+    spellbook: ["detect-magic", "identify", "comprehend-languages", "fog-cloud", "charm-person", "magic-missile"],
+  },
+}
+for (const hero of heroes) Object.assign(hero.sheet, spells[hero.sheet.class])
+
 for (const hero of heroes) {
   test(hero.name, () => {
     assert.deepEqual(sheetSchema.parse(hero.sheet), hero.sheet)

@@ -50,6 +50,7 @@
     "speciesChoices": {"elven-lineage": "wood-elf"},
     "armor": "leather-armor",
     "weapons": ["longbow", "dagger"],
-    "weaponMasteries": ["longbow", "dagger"]
+    "weaponMasteries": ["longbow", "dagger"],
+    "spells": ["cure-wounds", "entangle"]
   }
 }

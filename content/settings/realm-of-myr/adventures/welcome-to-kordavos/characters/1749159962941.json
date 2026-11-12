@@ -101,6 +101,9 @@
     "classSkills": ["investigation", "religion"],
     "otherSkills": ["insight"],
     "feats": ["skilled"],
-    "weapons": ["quarterstaff"]
+    "weapons": ["quarterstaff"],
+    "cantrips": ["mage-hand", "light", "ray-of-frost"],
+    "spells": ["detect-magic", "fog-cloud", "charm-person", "magic-missile"],
+    "spellbook": ["detect-magic", "identify", "comprehend-languages", "fog-cloud", "charm-person", "magic-missile"]
   }
 }

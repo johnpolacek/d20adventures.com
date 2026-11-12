@@ -81,6 +81,8 @@
     "otherSkills": ["insight"],
     "speciesChoices": {"elven-lineage": "high-elf"},
     "armor": "leather-armor",
-    "weapons": ["rapier"]
+    "weapons": ["rapier"],
+    "cantrips": ["vicious-mockery", "minor-illusion"],
+    "spells": ["charm-person", "healing-word", "sleep", "heroism"]
   }
 }

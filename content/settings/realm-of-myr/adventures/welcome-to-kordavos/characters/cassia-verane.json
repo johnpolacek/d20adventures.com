@@ -85,6 +85,9 @@
     "classSkills": ["investigation", "nature"],
     "otherSkills": ["perception"],
     "feats": ["skilled"],
-    "weapons": ["quarterstaff"]
+    "weapons": ["quarterstaff"],
+    "cantrips": ["fire-bolt", "mage-hand", "prestidigitation"],
+    "spells": ["mage-armor", "magic-missile", "grease", "detect-magic"],
+    "spellbook": ["detect-magic", "identify", "mage-armor", "magic-missile", "grease", "comprehend-languages"]
   }
 }

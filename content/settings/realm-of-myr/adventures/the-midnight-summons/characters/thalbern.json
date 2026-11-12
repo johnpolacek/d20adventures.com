@@ -49,6 +49,7 @@
     "feats": ["alert"],
     "armor": "studded-leather-armor",
     "weapons": ["longbow", "shortsword", "dagger"],
-    "weaponMasteries": ["longbow", "shortsword"]
+    "weaponMasteries": ["longbow", "shortsword"],
+    "spells": ["cure-wounds", "speak-with-animals"]
   }
 }
