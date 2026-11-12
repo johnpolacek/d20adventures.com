@@ -11,7 +11,7 @@
   "behavior": "Arcane knowledge, spellcasting, and a deep understanding of historical and magical lore.",
   "sheet": {
     "class": "wizard",
-    "level": 1,
+    "level": 2,
     "species": "elf",
     "background": "sage",
     "abilityScores": { "str": 8, "dex": 14, "con": 12, "int": 16, "wis": 13, "cha": 10 },
@@ -20,7 +20,8 @@
     "speciesChoices": { "elven-lineage": "high-elf" },
     "weapons": ["dagger"],
     "cantrips": ["fire-bolt", "light", "mage-hand"],
-    "spells": ["magic-missile", "burning-hands", "hideous-laughter", "mage-armor"],
-    "spellbook": ["magic-missile", "burning-hands", "hideous-laughter", "mage-armor", "detect-magic", "identify"]
+    "spells": ["magic-missile", "burning-hands", "hideous-laughter", "mage-armor", "detect-magic"],
+    "spellbook": ["magic-missile", "burning-hands", "hideous-laughter", "mage-armor", "detect-magic", "identify", "chromatic-orb", "false-life"],
+    "expertise": ["arcana"]
   }
 }

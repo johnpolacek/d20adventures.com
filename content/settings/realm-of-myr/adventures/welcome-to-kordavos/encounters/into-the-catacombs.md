@@ -14,9 +14,13 @@ npcs:
   - id: "eamon"
     behavior: "Hangs back and casts Magic Missile at the rogues. Does not touch the fuse until a hero has tried to snuff it. After that, may try once a turn with his own Arcana roll, DC 15."
   - id: "covenant-rogue"
-    behavior: "Two rogues, acting as one. Guard the fuse-lighter from behind the pillars with crossbows and short blades."
+    behavior: "Guards the fuse-lighter from behind the pillars with crossbow and short blade."
+  - id: "covenant-rogue-2"
+    behavior: "Guards the fuse-lighter from behind the pillars with crossbow and short blade."
   - id: "covenant-cultist"
-    behavior: "Two cultists, acting as one. One kneels to light and tend the fuse while the other shields him. They keep it burning at any cost."
+    behavior: "Kneels to light and tend the fuse, and keeps it burning at any cost."
+  - id: "covenant-cultist-2"
+    behavior: "Shields the cultist at the fuse with his own body, and keeps it burning at any cost."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726873268984"
 ---
 

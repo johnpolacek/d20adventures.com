@@ -7,5 +7,5 @@
   "race": "Human",
   "appearance": "Rough dockside mercenaries posing as workers, with short swords hidden beneath their tunics.",
   "behavior": "Follow Alaric's lead. Fight hard while he stands and scatter if he falls or gives up.",
-  "statBlock": "bandit"
+  "statBlock": "tough"
 }
