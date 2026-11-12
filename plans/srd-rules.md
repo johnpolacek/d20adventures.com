@@ -117,6 +117,18 @@ How rolls work before this stage: the model names a roll in free text and any ta
 7. Prompt checks. A small fixed set of scenes shows the model picks sensible skills and targets, run before and after the prompt change. Done: 13 scenes in `apps/desktop/scripts/check-probes.json`, each with the right picks written beside it, run by `pnpm --dir apps/desktop check:probe` and graded by those rules with no second model. Before the change the old prompt picked a fitting skill in 13 of 13 and no target on the ladder. After it, 13 of 13 pass. Both runs were one pass on the local Claude CLI, not on the site's Gemini model.
 8. Close. The Midnight Summons plays on both hosts with rules checks. Old saves are wiped.
 
+Checked 2026-11-11, with the engine at 44 of 44 tests and the desktop runtime at 94 of 94:
+
+- Desktop runtime, on the local Claude CLI: The Midnight Summons played from Broken Silence to its ending in seven rounds. Six hero rolls and four Owlbear rolls, every target on the ladder, Thalbern's bonuses from his sheet (Perception +3, Stealth +5), the Owlbear's Strength +5 from its stat block, and seven rolls with Advantage or Disadvantage that kept both dice and counted the right one.
+- Local site, on Gemini, as a signed-in test user: the hero picker offered the premade and no creator. Thalbern rolled Perception against 10 with +3, then Stealth against 15 with +5 and Advantage, which the card named with its reason and threw as two d20s. The Owlbear rolled Dexterity with +1 from its stat block. The adventure moved into the Owlbear encounter.
+
+Not done, and why the stage is not marked closed:
+
+- The live Convex deploy and the push. `convex/story.ts`, `convex/hosting.ts` and `convex/schema.ts` changed, and the session was not allowed to deploy to production. The last two stage 3 commits wait on `pnpm push`.
+- The wipe of old saves, on the live site and in the desktop app (`pnpm desktop:wipe`). The session was not allowed to delete them. A save made before this stage with a roll still pending cannot resolve it.
+
+Carried forward: The Road to Kordavos needs premade heroes or stage 8. An attack and a spell ride on bare ability checks until stages 4 and 5. Tool proficiency is not typed, so a lock is a bare Dexterity check. On the site, one advance into the Owlbear encounter showed "Action Failed" while the turn advanced and the server logged no error, on a network that was dropping requests: not traced.
+
 ### 4. Combat
 
 Initiative, attack rolls, damage dice and types, critical hits, death saves, conditions. Action, bonus action, reaction and movement on each turn. NPCs take SRD monster stat blocks.
@@ -145,4 +157,4 @@ Levels to 20. The full spell, monster and magic item lists. The hero creator reb
 
 ## Status
 
-Stage 1 in progress since 2026-11-11.
+Stage 1 in progress since 2026-11-11. Stage 2 closed 2026-11-11. Stage 3 built and played on both hosts 2026-11-11: its live deploy and the save wipe wait on the owner.
