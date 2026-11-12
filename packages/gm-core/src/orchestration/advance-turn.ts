@@ -187,7 +187,14 @@ export function createAdvanceTurn(ports: GmPorts) {
       const rescuing = isTransition && artifacts.manifest.rescue?.encounterId === nextEncounter.id
       // A new encounter puts everyone where its floor stages them. Within one, each stays where they stand.
       const floor = isTransition ? await ports.content.floor?.(nextEncounter.id) : undefined
-      const standing = floor ? placeCharacters(nextCharacters, floor) : isTransition ? nextCharacters.map(({ position: _, ...rest }) => rest as TurnCharacter) : nextCharacters
+      // Where the next encounter is on the same set, the scene goes on: those it stages where the last one did stay
+      // where they stood.
+      const positions = (characters: readonly TurnCharacter[]) => new Map(characters.flatMap((character) => (character.position ? [[character.id, character.position] as const] : [])))
+      const stayed =
+        floor?.set && floorNow?.set === floor.set
+          ? { staged: positions(placeCharacters(turn.characters as TurnCharacter[], floorNow)), standing: positions(turn.characters as TurnCharacter[]) }
+          : undefined
+      const standing = floor ? placeCharacters(nextCharacters, floor, stayed) : isTransition ? nextCharacters.map(({ position: _, ...rest }) => rest as TurnCharacter) : nextCharacters
       const characters = (rescuing ? rescuedCharacters(standing) : standing).map(atRoundStart)
       // A new encounter opens on its intro, read as beats for the characters who are in it. One the party has played
       // before does not read it again: they know the place, and the round's own story has brought them back.

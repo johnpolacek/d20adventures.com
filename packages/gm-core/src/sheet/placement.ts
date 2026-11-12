@@ -14,8 +14,11 @@ export type EncounterFloor = Floor & {
   places: readonly Place[]
   cast: readonly Staged[]
   party: readonly Staged[]
-  spare: readonly Point[] /** The place in a sentence or two, for the game master. */
+  spare: readonly Point[]
+  /** The place in a sentence or two, for the game master. */
   where?: string
+  /** The 3D set the floor is drawn from. Encounters on one set share a floor. */
+  set?: string
 }
 
 type Metres = { x: number; z: number }
@@ -32,6 +35,7 @@ export type FloorPlanInMetres = {
   party: readonly ({ id: string } & Metres)[]
   spare: readonly Metres[]
   where?: string
+  set?: string
 }
 
 const inFeet = (point: Metres): Point => ({ x: point.x * FEET_PER_METRE, y: point.z * FEET_PER_METRE })
@@ -52,6 +56,9 @@ export function floorFromMetres(plan: FloorPlanInMetres): EncounterFloor {
     party: plan.party.map((slot) => ({ id: slot.id, at: inFeet(slot) })),
     spare: plan.spare.map(inFeet),
     ...(plan.where ? { where: plan.where } : {}),
+    ...(plan.set ? { set: plan.set } : {}),
+    // A way round may pass by the named places: they are where the set means people to walk.
+    waypoints: plan.places.map(inFeet),
   }
 }
 
@@ -66,8 +73,14 @@ const stagedFor = (cast: readonly Staged[], character: Placeable): Staged | unde
  * A hero the staging names keeps their own spot among the party's. Other heroes take the party's free spots in order,
  * then the spare ones, and one more than those hold stands beside the party. An NPC the staging does not hold has no
  * place, and no position.
+ *
+ * `before` is the encounter just left, when it was on this same set: where it staged each character, and where each
+ * stood as it ended. One whom this encounter stages where the last one did, within a space, stays where they stood:
+ * the scene goes on. One it stages elsewhere takes the new spot: the story has moved them. The heroes are moved
+ * together: when any of them is staged elsewhere, all take their new spots, as a party that waited in line now stands
+ * at the table.
  */
-export function placeCharacters<T extends Placeable>(characters: readonly T[], floor: EncounterFloor): T[] {
+export function placeCharacters<T extends Placeable>(characters: readonly T[], floor: EncounterFloor, before?: { staged: ReadonlyMap<string, Point>; standing: ReadonlyMap<string, Point> }): T[] {
   const free = [...floor.party]
   const placed = new Map<string, Point>()
   const heroes = characters.filter((character) => character.type === "pc")
@@ -89,9 +102,18 @@ export function placeCharacters<T extends Placeable>(characters: readonly T[], f
     const staged = stagedFor(floor.cast, npc)
     if (staged) placed.set(npc.id, staged.at)
   }
+  // Whether this encounter stages someone more than a space from where the last one did.
+  const restaged = (id: string) => {
+    const now = placed.get(id)
+    const was = before?.staged.get(id)
+    return !now || !was || between(now, was) > BASE_REACH
+  }
+  const partyMoved = heroes.some((hero) => restaged(hero.id))
   return characters.map((character) => {
     const { position: _, ...rest } = character
-    const at = placed.get(character.id)
+    const staged = placed.get(character.id)
+    const stood = before?.standing.get(character.id)
+    const at = staged && stood && !restaged(character.id) && !(character.type === "pc" && partyMoved) ? stood : staged
     return (at ? { ...rest, position: { x: at.x, y: at.y } } : rest) as T
   })
 }

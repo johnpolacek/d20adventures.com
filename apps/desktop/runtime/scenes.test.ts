@@ -213,7 +213,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
   }
 })
 
-test("positions are on the turn's characters, set afresh by a new encounter, and kept through its rounds and a reopen", async () => {
+test("positions are on the turn's characters, staged afresh where a new encounter moves the party, and kept through its rounds and a reopen", async () => {
   const run = await setup()
   try {
     const at = (id: string) => run.store.current().characters.find((c) => c.id === id)?.position

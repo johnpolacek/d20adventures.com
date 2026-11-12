@@ -78,7 +78,27 @@ test("an encounter places its characters from the floor", () => {
   assert.ok(yeva)
   close(Math.hypot(yeva.x, yeva.y), 5)
   for (const other of crowd.slice(0, 3)) assert.ok(Math.hypot(yeva.x - (other.position?.x ?? 0), yeva.y - (other.position?.y ?? 0)) >= 5 - 1e-6)
-  // A position from the encounter before is not kept.
+  // Going on into an encounter on the same set. The last one staged Lyra at (0, 2) and Poppen at (0, 12), and this
+  // one at (0, 0) and (0, 10), each within a space: the scene goes on, and both stay where they stood, Lyra at the
+  // door she walked to. Reinhard was staged at (40, 0) and is now at (20, 0): the story has moved him.
+  const went = {
+    staged: new Map([
+      ["1", at(0, 2)],
+      ["2", at(0, 12)],
+      ["npcs-1", at(40, 0)],
+    ]),
+    standing: new Map([
+      ["1", at(12, 3)],
+      ["2", at(-8, 30)],
+      ["npcs-1", at(44, 6)],
+    ]),
+  }
+  const cast = [hero("1", "Lyra Silvanus"), hero("2", "Poppen Quickfoot"), npc("npcs-1", "Reinhard")]
+  assert.deepEqual(where(placeCharacters(cast, floor, went)), { "1": at(12, 3), "2": at(-8, 30), "npcs-1": at(20, 0) })
+  // Had the last one staged Poppen at (30, 30), the party has been moved, and both heroes take their new spots.
+  const moved = { ...went, staged: new Map([...went.staged, ["2", at(30, 30)]]) }
+  assert.deepEqual(where(placeCharacters(cast, floor, moved)), { "1": at(0, 0), "2": at(0, 10), "npcs-1": at(20, 0) })
+  // On another set no one's old position is kept.
   assert.equal(placeCharacters([{ ...npc("npcs-2", "Silas"), position: at(3, 3) }], floor)[0].position, undefined)
 })
 

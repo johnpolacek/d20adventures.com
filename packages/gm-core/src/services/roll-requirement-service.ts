@@ -49,7 +49,7 @@ const rollPickSchema = z.object({
   bonusTarget: z.string().max(80).optional().describe("For a Bonus Action given to someone else: their id"),
   moveTo: z.string().max(80).optional().describe("Where the character goes before they act: the id of a place or of someone here, from Where Things Are"),
   moveAway: z.string().max(80).optional().describe("Instead of moveTo: the id of someone here they back straight away from"),
-  moveFeet: z.number().min(0).max(240).optional().describe("How far they go, only when they mean to stop short of where they are headed: a step back is 5"),
+  moveFeet: z.number().min(0).max(240).optional().describe("How far they go, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10"),
   cover: z
     .enum(["half", "three-quarters", "total"])
     .optional()
@@ -268,7 +268,7 @@ ${MENU("save")}
 
 ${
   mover && floor
-    ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, only when they mean to stop short: a step back is 5.
+    ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10.
    - They can move ${moveBudget(mover, others)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
    - Never refuse or change an action because of distance. The game settles reach and range itself.

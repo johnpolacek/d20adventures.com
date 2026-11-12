@@ -273,7 +273,22 @@ test("a walk stops at the first solid thing, and goes round by a doorway", () =>
   // The way round: to the inside of the doorway, through it, and on.
   assert.deepEqual(routeThrough(room, o, at(30, 10)), [at(15, 25), at(25, 25), at(30, 10)])
   assert.deepEqual(routeThrough(room, o, at(10, 10)), [at(10, 10)])
-  // No doorway clears a wall with none.
+  // A wall thinner than any step is still a wall: one 0.2 feet thick, turned 45°, across the way from the origin to
+  // (10, 10), stops the walk at its face, √50 less 0.1 along, and is total cover.
+  const thin: Solid = { kind: "rect", x: 5, y: 5, halfWidth: 10, halfDepth: 0.1, turn: Math.PI / 4 }
+  const crossed = walkOver([thin], o, at(10, 10), 60)
+  assert.equal(crossed.blocked, true)
+  close(crossed.used, Math.sqrt(50) - 0.1)
+  assert.equal(coverBetween([thin], { at: o }, { at: at(10, 10) }), "total")
+  // It runs from the north-east to the south-west of (5, 5). Walking along beside it, 1.4 feet off, touches nothing.
+  assert.equal(walkOver([thin], at(0, 8), at(8, 0), 60).blocked, false)
+  // A way round may take several legs. A second wall, from x = 10 to 40 at y = 30, closes the doorway's far side:
+  // the way goes on east by the waypoint at (45, 25) and back by the one at (45, 35), then west to the goal. The
+  // doorway's far point lies on the straight leg east, so it is not a stop of its own.
+  const shut: Solid = { kind: "rect", x: 25, y: 30, halfWidth: 15, halfDepth: 0.5, turn: 0 }
+  const maze: Floor = { solids: [wall, shut], doors: [[at(15, 25), at(25, 25)]], waypoints: [at(45, 25), at(45, 35)] }
+  assert.deepEqual(routeThrough(maze, o, at(30, 40)), [at(15, 25), at(45, 25), at(45, 35), at(30, 40)])
+  assert.equal(routeThrough({ ...maze, waypoints: [] }, o, at(30, 40)), undefined)
   assert.equal(routeThrough({ solids: [wall], doors: [] }, o, at(30, 0)), undefined)
   // 30 feet of that way: √(15² + 25²) = 29.155 to the doorway, and the 0.845 left over of the 10 through it.
   const round = walk(room, o, at(30, 10), 30)

@@ -268,8 +268,11 @@ export const caughtIn = <T extends { at: Point }>(area: AreaOfEffect, origin: Po
  */
 export type Solid = { kind: "rect"; x: number; y: number; halfWidth: number; halfDepth: number; turn: number; top?: number } | { kind: "circle"; x: number; y: number; radius: number; top?: number }
 
-/** An encounter's floor: its solid things, and its doorways as a point just inside and one just outside. */
-export type Floor = { solids: readonly Solid[]; doors: readonly (readonly [Point, Point])[] }
+/**
+ * An encounter's floor: its solid things, its doorways as a point just inside and one just outside, and other points a
+ * way round may pass through, such as its named places.
+ */
+export type Floor = { solids: readonly Solid[]; doors: readonly (readonly [Point, Point])[]; waypoints?: readonly Point[] }
 
 const onSolid = (solid: Solid, point: Point): boolean => {
   if (solid.kind === "circle") return between(solid, point) < solid.radius
@@ -283,46 +286,103 @@ const onSolid = (solid: Solid, point: Point): boolean => {
 /** The solid thing a point is on, if any: where no one can stand or walk. */
 export const solidAt = (solids: readonly Solid[], point: Point): Solid | undefined => solids.find((solid) => onSolid(solid, point))
 
-// A walk and a line of sight are read every half foot.
-const STEP = 0.5
+/**
+ * Where a straight path from one point to another first comes into a solid thing, as a share of the path from 0 to 1.
+ * None when it misses, or only touches its edge. The geometry is exact: a wall thinner than a step is still a wall.
+ */
+function entersAt(solid: Solid, from: Point, to: Point): number | undefined {
+  const EDGE = 1e-9
+  if (solid.kind === "circle") {
+    const dx = to.x - from.x
+    const dy = to.y - from.y
+    const fx = from.x - solid.x
+    const fy = from.y - solid.y
+    const a = dx * dx + dy * dy
+    if (a === 0) return undefined
+    const b = 2 * (fx * dx + fy * dy)
+    const c = fx * fx + fy * fy - solid.radius * solid.radius
+    const root = b * b - 4 * a * c
+    if (root <= 0) return undefined
+    const first = (-b - Math.sqrt(root)) / (2 * a)
+    const last = (-b + Math.sqrt(root)) / (2 * a)
+    const enter = Math.max(first, 0)
+    return Math.min(last, 1) - enter > EDGE ? enter : undefined
+  }
+  // In the rectangle's own frame it is a box about the origin, and the path is clipped to it side by side.
+  const cos = Math.cos(solid.turn)
+  const sin = Math.sin(solid.turn)
+  const local = (point: Point) => ({ u: (point.x - solid.x) * cos - (point.y - solid.y) * sin, v: (point.x - solid.x) * sin + (point.y - solid.y) * cos })
+  const a = local(from)
+  const b = local(to)
+  let enter = 0
+  let leave = 1
+  for (const [start, run, half] of [
+    [a.u, b.u - a.u, solid.halfWidth],
+    [a.v, b.v - a.v, solid.halfDepth],
+  ] as const) {
+    if (run === 0) {
+      if (Math.abs(start) >= half) return undefined
+      continue
+    }
+    const one = (-half - start) / run
+    const other = (half - start) / run
+    enter = Math.max(enter, Math.min(one, other))
+    leave = Math.min(leave, Math.max(one, other))
+  }
+  return leave - enter > EDGE ? enter : undefined
+}
 
 /**
  * Walk straight toward a point over a floor: no farther than the feet given, and no farther than the first solid thing
- * in the way. With a crate 10 feet ahead, a walk of 30 feet toward a point 20 feet off stops at the crate, having used 10.
+ * in the way. With a crate 10 feet ahead, a walk of 30 feet toward a point 20 feet off stops at the crate, having used
+ * 10. One who starts on something solid, as on a roof, walks off it freely.
  */
 export function walkOver(solids: readonly Solid[], from: Point, to: Point, feet: number): { at: Point; used: number; blocked: boolean } {
   const gap = between(from, to)
   const limit = Math.max(0, Math.min(gap, feet))
   const along = (d: number): Point => (gap === 0 ? { ...from } : { x: from.x + ((to.x - from.x) * d) / gap, y: from.y + ((to.y - from.y) * d) / gap })
-  let used = 0
-  while (used < limit) {
-    const next = Math.min(limit, used + STEP)
-    if (solidAt(solids, along(next))) return { at: along(used), used, blocked: true }
-    used = next
+  let first = Number.POSITIVE_INFINITY
+  for (const solid of solids) {
+    if (onSolid(solid, from)) continue
+    const enter = entersAt(solid, from, to)
+    if (enter !== undefined) first = Math.min(first, enter * gap)
   }
-  return { at: along(used), used, blocked: false }
+  return first < limit ? { at: along(first), used: first, blocked: true } : { at: along(limit), used: limit, blocked: false }
 }
 
 /**
- * The way from one point to another: straight when nothing solid is between them, else through the doorway that makes
- * the shortest way round, in at one side and out at the other. The points to walk through, ending at the goal. None
- * when no doorway clears it.
+ * The way from one point to another: straight when nothing solid is between them, else the shortest way round by the
+ * floor's doorways and waypoints, each leg of it clear. The points to walk through, ending at the goal. None when no
+ * way is clear. From the bank to the boat's saloon it goes by the gangway and the saloon door.
  */
 export function routeThrough(floor: Floor, from: Point, to: Point): Point[] | undefined {
   const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY).blocked
   if (clear(from, to)) return [to]
-  const length = (points: Point[]) => points.reduce((sum, point, index) => sum + between(index ? points[index - 1] : from, point), 0)
-  let best: Point[] | undefined
-  for (const [a, b] of floor.doors)
-    for (const [first, second] of [
-      [a, b],
-      [b, a],
-    ]) {
-      if (!clear(from, first) || !clear(first, second) || !clear(second, to)) continue
-      const way = [first, second, to]
-      if (!best || length(way) < length(best)) best = way
+  // The shortest path over the points a way may pass through, tried nearest first, reading a leg only when it is reached.
+  const nodes: Point[] = [from, ...floor.doors.flat(), ...(floor.waypoints ?? []), to]
+  const goal = nodes.length - 1
+  const reached = nodes.map(() => Number.POSITIVE_INFINITY)
+  const came = nodes.map(() => -1)
+  const done = nodes.map(() => false)
+  reached[0] = 0
+  for (;;) {
+    let at = -1
+    for (let index = 0; index < nodes.length; index++) if (!done[index] && reached[index] < Number.POSITIVE_INFINITY && (at < 0 || reached[index] < reached[at])) at = index
+    if (at < 0) return undefined
+    if (at === goal) break
+    done[at] = true
+    for (let next = 1; next < nodes.length; next++) {
+      if (done[next]) continue
+      const far = reached[at] + between(nodes[at], nodes[next])
+      if (far < reached[next] && clear(nodes[at], nodes[next])) {
+        reached[next] = far
+        came[next] = at
+      }
     }
-  return best
+  }
+  const way: Point[] = []
+  for (let at = goal; at > 0; at = came[at]) way.unshift(nodes[at])
+  return way
 }
 
 /**
@@ -350,13 +410,34 @@ export function standingRoom(solids: readonly Solid[], others: readonly Point[],
 export function walk(floor: Floor, from: Point, to: Point, feet: number, options: { stopShort?: number; others?: readonly Point[] } = {}): { at: Point; used: number; path: Point[] } {
   const short = options.stopShort ?? 0
   const gap = between(from, to)
-  if (gap <= short) return { at: { ...from }, used: 0, path: [] }
-  const near = short ? moveToward(to, from, short).at : to
-  const goal = standingRoom(floor.solids, options.others ?? [], from, near)
+  const others = options.others ?? []
+  const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY).blocked
+  const length = (way: readonly Point[]) => way.reduce((sum, point, index) => sum + between(index ? way[index - 1] : from, point), 0)
+  // Already within the distance asked, with nothing solid between: no step is taken.
+  if (short && gap <= short && clear(from, to)) return { at: { ...from }, used: 0, path: [] }
+  // Closing with a creature ends at a spot that far from them with a clear line to them, on nothing solid and on no
+  // one: the straight approach where it will do, else the spot round them that is the shortest way to reach. One who
+  // stands behind a wall is closed with from their own side of it.
+  let goal = standingRoom(floor.solids, others, from, to)
+  let way = routeThrough(floor, from, goal)
+  if (short) {
+    const free = (point: Point) => !solidAt(floor.solids, point) && clear(point, to) && others.every((other) => between(other, to) < 1e-6 || between(other, point) >= BASE_REACH - 1e-6)
+    const spots = [
+      moveToward(to, from, short).at,
+      ...Array.from({ length: 12 }, (_, index) => ({ x: to.x + Math.sin((index * Math.PI) / 6) * short, y: to.y + Math.cos((index * Math.PI) / 6) * short })),
+    ].filter(free)
+    const ways = spots.flatMap((spot) => {
+      const found = routeThrough(floor, from, spot)
+      return found ? [{ spot, found }] : []
+    })
+    const best = ways.sort((a, b) => length(a.found) - length(b.found))[0]
+    goal = best?.spot ?? moveToward(to, from, short).at
+    way = best?.found
+  }
   let at = { ...from }
   let left = Math.max(0, feet)
   const path: Point[] = []
-  for (const point of routeThrough(floor, from, goal) ?? [goal]) {
+  for (const point of way ?? [goal]) {
     const leg = walkOver(floor.solids, at, point, left)
     if (leg.used > 0) path.push(leg.at)
     left -= leg.used
@@ -391,18 +472,15 @@ export function coverBetween(solids: readonly Solid[], attacker: Placed, target:
   const gap = between(attacker.at, target.at)
   if (gap === 0) return "none"
   const height = HEIGHT[target.size ?? "Medium"]
-  const along = (d: number): Point => ({ x: attacker.at.x + ((target.at.x - attacker.at.x) * d) / gap, y: attacker.at.y + ((target.at.y - attacker.at.y) * d) / gap })
-  const own = new Set(solids.filter((solid) => onSolid(solid, attacker.at) || onSolid(solid, target.at)))
   let cover: Cover = "none"
-  for (let d = STEP; d < gap; d += STEP) {
-    const point = along(d)
-    for (const solid of solids) {
-      if (own.has(solid) || !onSolid(solid, point)) continue
-      if (solid.top === undefined || solid.top >= height) return "total"
-      if (d < gap / 2) continue
-      const share = solid.top / height
-      cover = greaterCover(cover, share >= 0.75 ? "three-quarters" : share >= 0.5 ? "half" : "none")
-    }
+  for (const solid of solids) {
+    if (onSolid(solid, attacker.at) || onSolid(solid, target.at)) continue
+    const enter = entersAt(solid, attacker.at, target.at)
+    if (enter === undefined) continue
+    if (solid.top === undefined || solid.top >= height) return "total"
+    if (enter * gap < gap / 2) continue
+    const share = solid.top / height
+    cover = greaterCover(cover, share >= 0.75 ? "three-quarters" : share >= 0.5 ? "half" : "none")
   }
   const blocking = others.some((other) => {
     const nearest = nearestOnSegment(attacker.at, target.at, other.at)
