@@ -340,7 +340,9 @@ Substages:
 
 Levels to 20. The other six classes. The full spell, monster and magic item lists.
 
-Started 2026-11-13. It opens with a survey of what the SRD data holds and what the engine runs of it, for classes and levels, spells, monsters and magic items. The substages are written from it.
+Owner decision, 2026-11-13: the order is the six other classes at levels 1 to 5, then monsters, then magic items, then levels 6 to 20 with the spells of levels 4 to 9, one after another.
+
+Started 2026-11-13. Two monster substages, M1 and M2, were begun before that decision came, since they mend fights in the adventures as they stand: they finish first, and the classes follow. It opens with a survey of what the SRD data holds and what the engine runs of it, for classes and levels, spells, monsters and magic items. The substages are written from it.
 
 What the survey found of monsters: 330 stat blocks, 19 of them used by the four adventures. The engine reads Armor Class, hit points, Initiative, walking Speed, size, reach, bonuses, immunities, resistances, vulnerabilities and attacks with their damage. Multiattack is read only where it is worded "two Rend attacks", so 42 blocks make one attack where they should make more, five of them in use: Bandit Captain, Priest, Druid, Guard Captain and Scout. Every trait is ignored (Pack Tactics, Magic Resistance, Regeneration), and so are conditions and saves that ride on a hit, recharge and breath weapons, Legendary Actions, an NPC's Bonus Actions, and speeds other than walking. A hit's gated damage is added without its gate on 27 blocks, none in use.
 
