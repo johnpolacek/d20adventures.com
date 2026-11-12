@@ -26,11 +26,11 @@ const who = (h: Pick<HeroIdea, "name" | "race" | "archetype" | "gender">) =>
 const about = (adventure: HeroAdventure) => `They are about to set out on ${adventure.title}${adventure.teaser ? `: ${adventure.teaser}` : "."}`
 
 // Keeps the hero inside the world: the adventure's teaser is all they know of it.
-const FIT = [
+const WORLD = [
   "Everything about them belongs in a medieval fantasy world: no modern objects, words or ideas, and no firearms.",
   "Name no real gods, places, factions or people beyond those given here. Invent small ones of their own if needed, such as a home village or a mentor.",
-  "Their gear is what a traveler of their class could carry and afford, with at most one minor magic item.",
 ].join(" ")
+const FIT = `${WORLD} Their gear is what a traveler of their class could carry and afford, with at most one minor magic item.`
 
 /** The prompt that drafts a whole hero in one call. With an adventure that has hooks and an opening, the same call writes their arrival. */
 export function heroDraftPrompt(hero: HeroIdea, adventure?: HeroAdventure, hook?: string) {
@@ -47,6 +47,65 @@ export function heroDraftPrompt(hero: HeroIdea, adventure?: HeroAdventure, hook?
   ]
     .filter(Boolean)
     .join("\n")
+}
+
+/**
+ * What the rules make of a hero, in words: the story is written to fit it. The scores, skills, gear and spells
+ * themselves come from the hero's sheet (../sheet/create), never from the model.
+ */
+export type HeroRules = {
+  /** The SRD background by name: "Soldier". */
+  background: string
+  /** The abilities the hero is strongest and weakest in, by name: "Dexterity". */
+  strongest: string[]
+  weakest: string
+  /** The skills they are proficient in, by name. */
+  skills: string[]
+  /** What they carry, by name. */
+  gear: string[]
+  /** The cantrips and spells they can cast, by name. None for one who casts nothing. */
+  spells: string[]
+}
+
+/** The story of a hero, which the game master writes and the player may edit. */
+export const heroStorySchema = z.object({
+  appearance: z.string().trim().min(1),
+  personality: z.string().trim().min(1),
+  background: z.string().trim().min(1),
+  motivation: z.string().trim().min(1),
+  behavior: z.string().trim().min(1),
+})
+export type HeroStory = z.infer<typeof heroStorySchema>
+
+const listed = (items: string[]) => items.join(", ")
+
+/** The prompt that writes a hero's story in one call. With an adventure that has hooks and an opening, the same call writes their arrival. */
+export function heroStoryPrompt(hero: HeroIdea, rules: HeroRules, adventure?: HeroAdventure, hook?: string) {
+  return [
+    who(hero),
+    hero.idea ? `The player's idea for them: ${hero.idea}` : "",
+    "The rules of the game have already settled what they can do. Write a story that fits all of it and contradicts none of it:",
+    `- The life behind them: ${rules.background}.`,
+    `- Strongest in ${listed(rules.strongest)}, and weakest in ${rules.weakest}.`,
+    rules.skills.length ? `- Skilled in ${listed(rules.skills)}.` : "",
+    rules.gear.length ? `- They carry ${listed(rules.gear)}.` : "",
+    rules.spells.length ? `- They can cast ${listed(rules.spells)}.` : "- They cast no spells.",
+    adventure ? about(adventure) : "",
+    adventure ? "Give them a past that could bring them there: they may be from that land or from elsewhere." : "",
+    // Without an arrival in the same call, the player's reason still shapes the past.
+    adventure && hook && !draftsArrival(adventure) ? `Why they are going there: ${hook.replace(/\.?$/, ".")} Their background leads to it.` : "",
+    WORLD,
+    "Keep the given name, race and class. Write appearance, personality, background and motivation as two or three vivid sentences each, plus a short behavior note on how they act in play. Give no numbers. Name no weapon, armor, spell or skill beyond those listed above.",
+    adventure?.hooks?.length && adventure.opening ? arrivalPrompt(adventure.hooks, adventure.opening, hook) : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+/** Writes a hero's story to fit what the rules made of them, and their arrival where the adventure has hooks and an opening. */
+export async function draftHeroStory(llm: Llm, hero: HeroIdea, rules: HeroRules, adventure?: HeroAdventure, hook?: string): Promise<HeroStory & { arrival?: Arrival }> {
+  const schema = draftsArrival(adventure) ? heroStorySchema.extend({ arrival: arrivalSchema }) : heroStorySchema
+  return (await llm.generateObject({ prompt: heroStoryPrompt(hero, rules, adventure, hook), schema })).object
 }
 
 /** The fields to add to the hero schema when heroDraftPrompt asks for an arrival. */

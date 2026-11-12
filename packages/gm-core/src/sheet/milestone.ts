@@ -34,8 +34,8 @@ export const levelUpChoicesSchema = z.strictObject({
   weaponMasteries: z.array(idSchema).optional(),
 }) satisfies z.ZodType<LevelUpChoices>
 
-// Spells the engine resolves before those it only tells, then the highest level, then those that harm or heal.
-const spellOrder = (a: { id: string; level?: number }, b: { id: string; level?: number }) => {
+/** Spells the engine resolves before those it only tells, then the highest level, then those that harm or heal. */
+export const spellOrder = (a: { id: string; level?: number }, b: { id: string; level?: number }) => {
   const runs = (id: string) => (spellById.get(id) && isEngineSpell(spellById.get(id) as Parameters<typeof isEngineSpell>[0]) ? 0 : 1)
   const strikes = (id: string) => (spellById.get(id)?.damage || spellById.get(id)?.healing ? 0 : 1)
   return runs(a.id) - runs(b.id) || (b.level ?? 0) - (a.level ?? 0) || strikes(a.id) - strikes(b.id)

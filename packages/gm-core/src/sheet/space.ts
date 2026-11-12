@@ -38,10 +38,10 @@ export const spaceOf = (size: Size = "Medium"): number => SPACE[size]
 
 /**
  * The size a character takes up. An NPC's is the first its stat block prints: a Guard's "Medium or Small" is Medium.
- * A hero's is its species' first: both choices a species gives are 5 feet wide, so the space is the same.
+ * A hero's is the one their sheet names, or else their species' first.
  */
 export function sizeOf(character: Roller): Size {
-  if (character.sheet) return speciesById.get(character.sheet.species)?.sizes[0]?.size ?? "Medium"
+  if (character.sheet) return character.sheet.size ?? speciesById.get(character.sheet.species)?.sizes[0]?.size ?? "Medium"
   if (character.type !== "npc") return "Medium"
   return (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK))?.size[0] ?? "Medium"
 }

@@ -4,6 +4,7 @@ import { classFeatureById } from "@d20/srd/class-features"
 import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
 import { featById } from "@d20/srd/feats"
+import { languageById } from "@d20/srd/languages"
 import type { Class, ClassFeature, FeatureOption, Subclass } from "@d20/srd/schema/classes"
 import type { Armor } from "@d20/srd/schema/equipment"
 import type { Background, Feat, Species } from "@d20/srd/schema/origins"
@@ -44,6 +45,8 @@ export type DerivedSheet = {
   classFeatures: string[]
   /** Cantrips known, by spell id: the sheet's, and any the species gives at this level. */
   cantrips: string[]
+  /** The cantrips the species gives at this level, by spell id: a lineage's, a Tiefling's Thaumaturgy. They are cast with `speciesSpellAbility`. */
+  speciesCantrips: string[]
   /** Spells prepared, by spell id: the sheet's, and any a class feature or the subclass keeps always prepared (a Ranger's Hunter's Mark). */
   preparedSpells: string[]
   /** Those of the prepared spells a feature or the subclass keeps always prepared, which do not count against the class's number. */
@@ -160,6 +163,12 @@ function lookup(sheet: Sheet): { parts?: Parts; problems: string[] } {
 /** The levels, up to the sheet's, at which a feature grants a feat kept in `advancements`. */
 function featLevels(sheet: Sheet, features: readonly ClassFeature[]): number[] {
   return features.filter(grantsFeatByLevel).flatMap((feature) => feature.levels.filter((level) => level <= sheet.level))
+}
+
+/** The cantrips a sheet's species gives at its level: its traits' own (Otherworldly Presence) and its chosen options' (a lineage's). */
+function speciesCantripsOf(sheet: Sheet, parts: Parts): string[] {
+  const given = [...parts.species.traits, ...chosenOptions(sheet, parts).species].flatMap((source) => source.spells ?? [])
+  return [...new Set(given.filter((spell) => spell.cantrip && spell.level <= sheet.level).map((spell) => spell.spell))]
 }
 
 /** The options a sheet has taken, from species traits and class features, as plain records of their mechanics. */
@@ -504,11 +513,44 @@ function advancementProblems(sheet: Sheet, parts: Parts): string[] {
   return problems
 }
 
+/** A Rogue's Thieves' Cant gives that language and one more, by its text. The SRD data names it and does not type it. */
+const THIEVES_CANT = "rogue-thieves-cant"
+
+/**
+ * Faults in the origin choices a sheet names: a size its species does not offer, a species spell ability no trait
+ * lets it pick, and languages that are not two from the Standard Languages table, with a Rogue's one more from
+ * either. Common is known by every hero and Thieves' Cant by every Rogue, so neither is listed. Each is checked only
+ * when the sheet names it.
+ */
+function originProblems(sheet: Sheet, parts: Parts): string[] {
+  const problems: string[] = []
+  const species = parts.species
+  if (sheet.size && !species.sizes.some((entry) => entry.size === sheet.size)) problems.push(`a ${species.name} is not ${sheet.size}`)
+  if (sheet.speciesSpellAbility && !species.traits.some((trait) => trait.spellcastingAbility?.includes(sheet.speciesSpellAbility as AbilityId)))
+    problems.push(`no ${species.name} trait casts its spells with ${sheet.speciesSpellAbility}`)
+  if (sheet.languages) {
+    const known = ["common", ...(parts.features.some((feature) => feature.id === THIEVES_CANT) ? ["thieves-cant"] : [])]
+    const extra = known.length - 1
+    const wanted = 2 + extra
+    const named = sheet.languages
+    if (named.length !== wanted) problems.push(`the hero chooses ${wanted} languages beside ${known.map((id) => languageById.get(id)?.name ?? id).join(" and ")}, and the sheet has ${named.length}`)
+    if (new Set(named).size !== named.length) problems.push("a language is listed twice")
+    for (const id of named) {
+      if (!languageById.get(id)) problems.push(`"${id}" is not a language`)
+      else if (known.includes(id)) problems.push(`${languageById.get(id)?.name} is already known, so it is not chosen`)
+    }
+    const standard = named.filter((id) => languageById.get(id)?.rarity === "standard" && !known.includes(id)).length
+    if (standard < 2) problems.push(`two of the hero's languages come from the Standard Languages table, and the sheet has ${standard}`)
+  }
+  return problems
+}
+
 /**
  * Faults in a sheet's choices, at any level: an id the SRD data lacks, a skill outside the class's list, armor the class
  * is not trained in, a subclass missing from the level the class grants one or present before it, Expertise in more or
  * fewer skills than the features give or off a feature's list, a feature's choice left out, a feat or ability raise a
- * level does not allow, and spells against the class table. Pure and cheap, so any host can run it as a sheet loads or saves.
+ * level does not allow, spells against the class table, and a size, species spell ability or languages the origin does
+ * not allow. Pure and cheap, so any host can run it as a sheet loads or saves.
  */
 export function sheetProblems(sheet: Sheet): string[] {
   const { parts, problems } = lookup(sheet)
@@ -559,6 +601,8 @@ export function sheetProblems(sheet: Sheet): string[] {
   const training = armorTrainingOf(sheet, parts)
   if (parts.armor && !training.some((kind) => kind === parts.armor?.category)) problems.push(`${cls.name} has no training with ${parts.armor.category} armor`)
   if (sheet.shield && !training.includes("shields")) problems.push(`${cls.name} has no training with Shields`)
+
+  problems.push(...originProblems(sheet, parts))
 
   for (const trait of parts.species.traits) {
     if (!trait.choice) continue
@@ -643,12 +687,8 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
     stealthDisadvantage: parts.armor?.stealthDisadvantage === true,
     feats: parts.feats.map((feat) => feat.id),
     classFeatures: parts.features.map((feature) => feature.id),
-    cantrips: [
-      ...new Set([
-        ...(sheet.cantrips ?? []),
-        ...chosenOptions(sheet, parts).species.flatMap((option) => (option.spells ?? []).filter((spell) => spell.cantrip && spell.level <= sheet.level).map((spell) => spell.spell)),
-      ]),
-    ],
+    cantrips: [...new Set([...(sheet.cantrips ?? []), ...speciesCantripsOf(sheet, parts)])],
+    speciesCantrips: speciesCantripsOf(sheet, parts),
     preparedSpells: [...new Set([...(sheet.spells ?? []), ...alwaysPreparedOf(sheet, parts)])],
     alwaysPrepared: alwaysPreparedOf(sheet, parts),
     spellbook: [...(sheet.spellbook ?? [])],

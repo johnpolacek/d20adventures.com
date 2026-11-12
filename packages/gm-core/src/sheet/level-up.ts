@@ -3,6 +3,7 @@ import { classById } from "@d20/srd/classes"
 import { equipment } from "@d20/srd/equipment"
 import { feats } from "@d20/srd/feats"
 import type { ClassFeature } from "@d20/srd/schema/classes"
+import type { Feat } from "@d20/srd/schema/origins"
 import { skillById } from "@d20/srd/skills"
 import { spellById } from "@d20/srd/spells"
 import { subclassById } from "@d20/srd/subclasses"
@@ -96,24 +97,48 @@ export type LevelUpChoices = {
   weaponMasteries?: string[]
 }
 
-const named = (entry: { id: string; name: string }): Named => ({ id: entry.id, name: entry.name })
-const skillNamed = (id: SkillId): Named => ({ id, name: skillById.get(id)?.name ?? id })
-const spellNamed = (id: string): Named => ({ id, name: spellById.get(id)?.name ?? id })
+export const named = (entry: { id: string; name: string }): Named => ({ id: entry.id, name: entry.name })
+export const skillNamed = (id: SkillId): Named => ({ id, name: skillById.get(id)?.name ?? id })
+export const spellNamed = (id: string): Named => ({ id, name: spellById.get(id)?.name ?? id })
 
-// The spells of a class's list from one spell level to another.
-function listSpells(classId: string, from: number, to: number): string[] {
+/** A feat as an offer, with what taking it asks for. Skilled's skills come from `unskilled`, those the hero lacks. */
+export function featOffer(feat: Feat, unskilled: readonly SkillId[]): FeatOffer {
+  const increase = feat.abilityScoreIncrease
+  const picks = feat.benefits?.find((benefit) => benefit.cantrips && benefit.spellLists)
+  const proficiencies = feat.proficiencyChoice
+  return {
+    ...named(feat),
+    ...(proficiencies ? { skillPicks: { count: proficiencies.count, from: unskilled.map(skillNamed) } } : {}),
+    ...(increase
+      ? { abilityScoreIncrease: { from: increase.from === "any" ? [...abilityIds] : [...increase.from], choices: increase.choices.map((choice) => ({ ...choice })), maximum: increase.maximum } }
+      : {}),
+    ...(picks
+      ? {
+          spellPicks: {
+            spellLists: [...(picks.spellLists ?? [])],
+            spellAbility: [...(picks.spellcastingAbility ?? [])],
+            cantrips: picks.cantrips ?? 0,
+            spellLevel: feat.benefits?.find((benefit) => benefit.spellLevel)?.spellLevel ?? 1,
+          },
+        }
+      : {}),
+  }
+}
+
+/** The spells of a class's list from one spell level to another. */
+export function listSpells(classId: string, from: number, to: number): string[] {
   return (classById.get(classId)?.spellcasting?.spellList ?? []).filter((entry) => entry.level >= from && entry.level <= to).flatMap((entry) => entry.spells)
 }
 
-// The Wizard's spellbook size at a level: six, two more each level after the first, and Evocation Savant's.
-function bookSize(sheet: Sheet): number {
+/** The Wizard's spellbook size at a level: six, two more each level after the first, and Evocation Savant's. */
+export function bookSize(sheet: Sheet): number {
   const cls = classById.get(sheet.class)
   if (!cls?.spellcasting?.ritualFromSpellbook) return 0
   return 4 + 2 * sheet.level + evocationSavantSpells(cls, featuresOf(sheet), sheet.level)
 }
 
-// The kinds of weapons a sheet may master at its level.
-function masteriesAllowed(sheet: Sheet): number {
+/** The kinds of weapons a sheet may master at its level. */
+export function masteriesAllowed(sheet: Sheet): number {
   const cls = classById.get(sheet.class)
   return cls?.levels[sheet.level - 1]?.weaponMastery ?? featuresOf(sheet).reduce((most, feature) => Math.max(most, feature.weaponMasteries ?? 0), 0)
 }
@@ -152,28 +177,12 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
     offered.sort((a, b) => (a.id === granting.feat?.id ? -1 : b.id === granting.feat?.id ? 1 : 0))
     options.feat = {
       feature: named(granting),
-      feats: offered.map((feat): FeatOffer => {
-        const increase = feat.abilityScoreIncrease
-        const picks = feat.benefits?.find((benefit) => benefit.cantrips && benefit.spellLists)
-        const proficiencies = feat.proficiencyChoice
-        return {
-          ...named(feat),
-          ...(proficiencies ? { skillPicks: { count: proficiencies.count, from: skillIds.filter((skill) => !derived.skills[skill].proficient).map(skillNamed) } } : {}),
-          ...(increase
-            ? { abilityScoreIncrease: { from: increase.from === "any" ? [...abilityIds] : [...increase.from], choices: increase.choices.map((choice) => ({ ...choice })), maximum: increase.maximum } }
-            : {}),
-          ...(picks
-            ? {
-                spellPicks: {
-                  spellLists: [...(picks.spellLists ?? [])],
-                  spellAbility: [...(picks.spellcastingAbility ?? [])],
-                  cantrips: picks.cantrips ?? 0,
-                  spellLevel: feat.benefits?.find((benefit) => benefit.spellLevel)?.spellLevel ?? 1,
-                },
-              }
-            : {}),
-        }
-      }),
+      feats: offered.map((feat) =>
+        featOffer(
+          feat,
+          skillIds.filter((skill) => !derived.skills[skill].proficient)
+        )
+      ),
     }
   }
 
@@ -245,9 +254,11 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
   return options
 }
 
-// The options of a feature's kept choice: its own options, with the cantrips any of them brings, and the feats of the
-// category it grants that the hero does not hold.
-function choiceOffers(feature: ClassFeature, held: readonly string[], cantrips: readonly string[]): ChoiceOffer[] {
+/**
+ * The options of a feature's kept choice: its own options, with the cantrips any of them brings, and the feats of the
+ * category it grants that the hero does not hold.
+ */
+export function choiceOffers(feature: ClassFeature, held: readonly string[], cantrips: readonly string[]): ChoiceOffer[] {
   const own = (feature.options ?? []).map((option): ChoiceOffer => {
     const extra = optionCantrips(option)
     return {

@@ -236,7 +236,8 @@ type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<s
 /**
  * The spells a hero can cast, from the sheet: the cantrips known, the spells prepared, for a Wizard the Ritual spells
  * of the spellbook, and each Magic Initiate's two cantrips and its level 1 spell, always prepared, with one cast a Long
- * Rest that takes no slot (counted under `magic-initiate-<list>`), all cast with the ability the feat names. A hero
+ * Rest that takes no slot (counted under `magic-initiate-<list>`), all cast with the ability the feat names. A cantrip
+ * the species gives is cast with the sheet's `speciesSpellAbility` where it names one. A hero
  * with no sheet has none. An NPC's are its stat block's.
  */
 export function spellsOf(character: Slotted): KnownSpell[] {
@@ -256,12 +257,14 @@ export function spellsOf(character: Slotted): KnownSpell[] {
     for (const cast of feature?.freeCast ?? []) free.set(cast.spell, { left: Math.max(0, uses - (character.featureUses?.[id] ?? 0)), key: id })
   }
   const found: KnownSpell[] = []
-  const add = (id: string, how: Pick<KnownSpell, "cantrip" | "prepared">) => {
+  const add = (id: string, how: Pick<KnownSpell, "cantrip" | "prepared" | "ability">) => {
     const spell = spellById.get(id)
     const given = free.get(id)
     if (spell && !found.some((known) => known.spell.id === id)) found.push({ spell, ...how, ritual: spell.ritual, free: given?.left ?? 0, ...(given ? { useKey: given.key } : {}) })
   }
-  for (const id of derived.cantrips) add(id, { cantrip: true, prepared: true })
+  // A cantrip the species gives, and the class does not, is cast with the ability its trait had the player pick.
+  const speciesAbility = (id: string) => (sheet.speciesSpellAbility && derived.speciesCantrips.includes(id) && !(sheet.cantrips ?? []).includes(id) ? { ability: sheet.speciesSpellAbility } : {})
+  for (const id of derived.cantrips) add(id, { cantrip: true, prepared: true, ...speciesAbility(id) })
   for (const id of derived.preparedSpells) add(id, { cantrip: false, prepared: true })
   if (cls?.spellcasting?.ritualFromSpellbook) for (const id of derived.spellbook) if (spellById.get(id)?.ritual) add(id, { cantrip: false, prepared: false })
   // Magic Initiate, from an Origin feat or one taken at a level: "You can cast it once without a spell slot, and you

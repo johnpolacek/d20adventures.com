@@ -1,4 +1,4 @@
-import { abilityIdSchema, abilityIds, classIdSchema, idSchema, skillIdSchema } from "@d20/srd"
+import { abilityIdSchema, abilityIds, classIdSchema, idSchema, sizeSchema, skillIdSchema } from "@d20/srd"
 import { z } from "zod"
 
 const scoreSchema = z.number().int().min(1).max(30)
@@ -51,10 +51,22 @@ export const sheetSchema = z.strictObject({
   species: idSchema,
   /** A background id from the SRD data: "soldier". It brings its two skills, its tool and its Origin feat. */
   background: idSchema,
+  /** The size chosen, for a species that offers two (a Human is Medium or Small). Absent means the species' first. */
+  size: sizeSchema.optional(),
+  /**
+   * The ability a species trait's spells are cast with, where the trait lets the player pick it: Elven Lineage, Gnomish
+   * Lineage, Fiendish Legacy, and the Thaumaturgy of a Tiefling's Otherworldly Presence. Absent, they use the class's.
+   */
+  speciesSpellAbility: abilityIdSchema.optional(),
+  /**
+   * The languages chosen, by SRD id, beside Common, which every hero knows, and a Rogue's Thieves' Cant: two from the
+   * Standard Languages table, and a Rogue's one more from either table.
+   */
+  languages: z.array(idSchema).optional(),
   abilityScores: abilityScoresSchema,
   /** The skills chosen from the class's list. The background's two skills are not repeated here. */
   classSkills: z.array(skillIdSchema),
-  /** Skills from anywhere else: a Human's Skillful, an Elf's Keen Senses, the Skilled feat. */
+  /** Skills from anywhere else: a Human's Skillful, an Elf's Keen Senses, the Skilled feat taken as an Origin feat. */
   otherSkills: z.array(skillIdSchema).optional(),
   /** Skills with Expertise (a Rogue's two at level 1). */
   expertise: z.array(skillIdSchema).optional(),
