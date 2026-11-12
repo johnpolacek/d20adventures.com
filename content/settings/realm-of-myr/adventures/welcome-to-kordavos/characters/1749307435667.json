@@ -70,6 +70,7 @@
     "abilityScores": {"str": 10, "dex": 16, "con": 14, "int": 12, "wis": 10, "cha": 14},
     "classSkills": ["acrobatics", "deception", "perception", "persuasion"],
     "expertise": ["stealth", "sleight-of-hand"],
-    "armor": "leather-armor"
+    "armor": "leather-armor",
+    "weapons": ["dagger", "shortbow"]
   }
 }

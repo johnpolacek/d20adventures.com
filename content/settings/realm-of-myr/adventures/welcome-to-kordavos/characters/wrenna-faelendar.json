@@ -50,6 +50,7 @@
     "classSkills": ["survival", "stealth", "perception"],
     "otherSkills": ["insight"],
     "speciesChoices": {"elven-lineage": "wood-elf"},
-    "armor": "leather-armor"
+    "armor": "leather-armor",
+    "weapons": ["longbow", "dagger"]
   }
 }

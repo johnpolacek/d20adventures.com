@@ -82,6 +82,7 @@
     "classSkills": ["performance", "persuasion", "deception"],
     "otherSkills": ["insight"],
     "speciesChoices": {"elven-lineage": "high-elf"},
-    "armor": "leather-armor"
+    "armor": "leather-armor",
+    "weapons": ["rapier"]
   }
 }

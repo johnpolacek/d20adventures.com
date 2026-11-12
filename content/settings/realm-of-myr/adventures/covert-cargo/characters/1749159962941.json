@@ -94,6 +94,7 @@
     "abilityScores": {"str": 8, "dex": 10, "con": 10, "int": 16, "wis": 14, "cha": 12},
     "classSkills": ["investigation", "religion"],
     "otherSkills": ["insight"],
-    "feats": ["skilled"]
+    "feats": ["skilled"],
+    "weapons": ["quarterstaff"]
   }
 }

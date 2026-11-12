@@ -50,6 +50,7 @@
     "classSkills": ["perception", "insight"],
     "featureChoices": {"fighter-fighting-style": "defense"},
     "armor": "breastplate",
-    "shield": true
+    "shield": true,
+    "weapons": ["warhammer"]
   }
 }

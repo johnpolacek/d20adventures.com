@@ -45,6 +45,8 @@ export const sheetSchema = z.strictObject({
   armor: idSchema.optional(),
   /** Carrying a Shield. */
   shield: z.boolean().optional(),
+  /** The weapons carried, by equipment id: "longbow". Every character can also make an Unarmed Strike. */
+  weapons: z.array(idSchema).optional(),
 })
 export type Sheet = z.infer<typeof sheetSchema>
 

@@ -84,6 +84,7 @@
     "featureChoices": {"cleric-divine-order": "thaumaturge"},
     "feats": ["skilled"],
     "armor": "chain-shirt",
-    "shield": true
+    "shield": true,
+    "weapons": ["quarterstaff"]
   }
 }

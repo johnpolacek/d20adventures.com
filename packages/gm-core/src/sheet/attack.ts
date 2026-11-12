@@ -64,7 +64,7 @@ const actionId = (name: string) =>
  * The attacks a character can make. A hero's are the weapons on its sheet and an Unarmed Strike. An NPC's are the
  * attack actions its SRD stat block prints, with the damage each deals on a hit. A hero with no sheet has none.
  */
-export function attacksOf(character: Roller & { sheet?: Sheet & { weapons?: string[] } }): Attack[] {
+export function attacksOf(character: Roller): Attack[] {
   if (character.sheet) {
     const sheet = character.sheet
     return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => weaponAttack(sheet, weapon))

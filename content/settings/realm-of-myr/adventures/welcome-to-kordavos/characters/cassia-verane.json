@@ -86,6 +86,7 @@
     "abilityScores": {"str": 8, "dex": 12, "con": 10, "int": 16, "wis": 14, "cha": 10},
     "classSkills": ["investigation", "nature"],
     "otherSkills": ["perception"],
-    "feats": ["skilled"]
+    "feats": ["skilled"],
+    "weapons": ["quarterstaff"]
   }
 }

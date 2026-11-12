@@ -59,6 +59,8 @@ function lookup(sheet: Sheet): { parts?: Parts; problems: string[] } {
     if (entry?.kind === "armor" && entry.category !== "shield") armor = entry
     else problems.push(`"${sheet.armor}" is not armor`)
   }
+  for (const weapon of sheet.weapons ?? []) if (equipmentById.get(weapon)?.kind !== "weapon") problems.push(`"${weapon}" is not a weapon`)
+  if (new Set(sheet.weapons).size !== (sheet.weapons ?? []).length) problems.push("a weapon is listed twice")
   if (!cls || !species || !background) return { problems }
 
   const features: ClassFeature[] = []

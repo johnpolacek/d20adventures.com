@@ -54,6 +54,7 @@
     "classSkills": ["stealth", "survival", "nature"],
     "otherSkills": ["perception"],
     "feats": ["alert"],
-    "armor": "studded-leather-armor"
+    "armor": "studded-leather-armor",
+    "weapons": ["longbow", "shortsword", "dagger"]
   }
 }

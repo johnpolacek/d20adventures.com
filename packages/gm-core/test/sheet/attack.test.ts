@@ -105,3 +105,15 @@ test("Immunity, Resistance and Vulnerability change the damage taken", () => {
   // A Dwarf resists Poison.
   assert.deepEqual(defensesOf({ type: "pc", sheet: hero("welcome-to-kordavos/characters/branka-stoneveil.json").sheet }).resistances, ["poison"])
 })
+
+test("the premade heroes' weapons are on their sheets", () => {
+  // Thalbern's own attacks: Longbow +5, Shortsword +5 (Finesse, 3 Dex + 2) for 1d6 + 3, Dagger +5, and his fists.
+  assert.deepEqual(
+    attacksOf({ type: "pc", sheet: thalbern }).map((attack) => `${attack.name} ${attack.bonus} ${attack.damage[0].dice ?? attack.damage[0].amount}`),
+    ["Longbow 5 1d8 + 3", "Shortsword 5 1d6 + 3", "Dagger 5 1d4 + 3", "Unarmed Strike 3 2"]
+  )
+  // Ilya, a Bard with Dex 14 (+2), carries a Rapier. A Bard is trained in Simple weapons only, so it is 2 Dex and no more.
+  const ilya = hero("welcome-to-kordavos/characters/ilya-veles.json").sheet
+  assert.equal(ilya.abilityScores.dex, 14)
+  assert.equal(weaponAttack(ilya, "rapier").bonus, 2)
+})
