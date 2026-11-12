@@ -38,28 +38,23 @@
   "spells": [
     {
       "name": "Cure Wounds",
-      "description": "A touch heals a creature of its wounds.",
-      "isUsed": false
+      "description": "A touch heals a creature of its wounds."
     },
     {
       "name": "Healing Word",
-      "description": "A creature you choose within range regains hit points.",
-      "isUsed": false
+      "description": "A creature you choose within range regains hit points."
     },
     {
       "name": "Bless",
-      "description": "Up to three creatures gain a bonus to attack rolls and saving throws.",
-      "isUsed": false
+      "description": "Up to three creatures gain a bonus to attack rolls and saving throws."
     },
     {
       "name": "Guiding Bolt",
-      "description": "A flash of light strikes a creature, dealing radiant damage and granting advantage on the next attack roll against it.",
-      "isUsed": false
+      "description": "A flash of light strikes a creature, dealing radiant damage and granting advantage on the next attack roll against it."
     },
     {
       "name": "Shield of Faith",
-      "description": "A shimmering field of force appears and surrounds a creature, granting it a bonus to AC.",
-      "isUsed": false
+      "description": "A shimmering field of force appears and surrounds a creature, granting it a bonus to AC."
     }
   ],
   "specialAbilities": [

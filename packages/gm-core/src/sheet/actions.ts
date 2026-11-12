@@ -142,6 +142,8 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
       return vexes ? give(spent, { id: "vexed", by: rollerId, turns: 2 }) : spent
     })
   }
+  // Casting a spell gives a hidden caster away, as an attack does.
+  if ("cast" in roll) return characters.map((character) => (character.id === rollerId ? withoutCondition(character, "invisible").character : character))
   if (!("check" in roll) || roll.check.kind !== "skill") return [...characters]
   const { skill } = roll.check
   return characters.map((character) => (character.id === rollerId ? drop(character, (effect) => effect.id === "helped" && effect.skill === skill) : character))

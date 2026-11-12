@@ -237,6 +237,44 @@ test("reply storage and real roll services keep dice across failures and reject 
     cleanup()
   }
 })
+test("a spell with nothing to throw is resolved as the reply is read: healed, told in the story, and its slot spent", async () => {
+  const { store, cleanup } = setup()
+  try {
+    await game(store, packs, failLlm)({ kind: "start", provider: "claude" })
+    const turn = store.current()
+    const milos = turn.characters.find((c) => c.name.startsWith("Milos"))!
+    const branka = turn.characters.find((c) => c.name.startsWith("Branka"))!
+    turn.characters.forEach((c) => {
+      c.isComplete = c.id !== milos.id
+      c.initiative = c.id === milos.id ? 20 : 0
+    })
+    // Branka, a Fighter with 14 hit points, is down to 3.
+    Object.assign(branka, { hitPoints: 3, healthPercent: 21 })
+    store.save()
+    const llm: Llm = {
+      generateText: async () => ({ text: "Milos calls a word of healing to Branka." }),
+      generateObject: async ({ schema }) => ({
+        object: firstFit(schema, { check: "cast", spell: "healing-word", targets: [branka.id] }, { beats: [{ kind: "narration", text: "Warmth closes the cut on Branka's arm." }] }),
+      }),
+    }
+    await game(store, packs, llm)({ kind: "reply", turnId: turn._id, characterId: milos.id, text: "I call out a Healing Word to Branka." })
+    const after = store.current()
+    const caster = after.characters.find((c) => c.id === milos.id)!
+    // Healing Word is 2d4 and Milos's Wisdom modifier of 3: 5 to 11, on her 3, held to her 14.
+    const healed = after.characters.find((c) => c.id === branka.id)!.hitPoints!
+    assert.ok(healed >= 8 && healed <= 14, `healed to ${healed}`)
+    // One of his two level 1 slots is spent, and his turn is over with nothing left to throw.
+    assert.deepEqual([caster.spellSlots, caster.isComplete, caster.rollRequired], [[1], true, undefined])
+    const cast = after.story.find((beat) => beat.kind === "feature")
+    assert.ok(cast?.kind === "feature")
+    assert.deepEqual([cast.name, cast.character, cast.target, cast.harm?.[0].kind, cast.harm?.[0].bonus], ["Healing Word", milos.id, branka.id, "healing", 3])
+    assert.ok((cast.harm?.[0].amount ?? 0) >= 5 && (cast.harm?.[0].amount ?? 0) <= 11)
+    // The game master told it after the engine settled it.
+    assert.ok(after.story.some((beat) => beat.kind === "narration" && beat.text.includes("Warmth closes the cut")))
+  } finally {
+    cleanup()
+  }
+})
 test("skip ends the hero's turn with nothing written and no AI, and only for the hero whose turn it is", async () => {
   const { store, path, cleanup } = setup()
   try {

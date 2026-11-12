@@ -44,12 +44,12 @@ export function useCharacterDetails(charId: string, getCharacter: (charId: strin
   }
 
   // Spells management
-  const updateSpells = (spells: Array<{ name: string; description?: string; isUsed?: boolean }>) => {
+  const updateSpells = (spells: Array<{ name: string; description?: string }>) => {
     updateCharacter(charId, { spells })
   }
 
   const addSpell = () => {
-    const newSpells = [...(char.spells || []), { name: "", description: "", isUsed: false }]
+    const newSpells = [...(char.spells || []), { name: "", description: "" }]
     updateSpells(newSpells)
   }
 
@@ -58,7 +58,7 @@ export function useCharacterDetails(charId: string, getCharacter: (charId: strin
     updateSpells(newSpells)
   }
 
-  const updateSpell = (index: number, updates: { name?: string; description?: string; isUsed?: boolean }) => {
+  const updateSpell = (index: number, updates: { name?: string; description?: string }) => {
     const newSpells = (char.spells || []).map((spell, i) => (i === index ? { ...spell, ...updates } : spell))
     updateSpells(newSpells)
   }

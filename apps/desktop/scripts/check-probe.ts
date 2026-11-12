@@ -10,7 +10,7 @@ import type { Stake } from "@d20/gm-core/sheet/stakes"
 import { authoredText } from "@d20/gm-core/story/authored"
 import { storyNames } from "@d20/gm-core/story/render"
 import type { Character } from "@d20/gm-core/types/character"
-import { isAttackRoll } from "@d20/gm-core/validations/roll-requirement-schema"
+import { isAttackRoll, isCastRoll } from "@d20/gm-core/validations/roll-requirement-schema"
 import { localLlm } from "../runtime/llm"
 import { loadPack } from "./scene-judge"
 
@@ -30,7 +30,11 @@ type Probe = {
   checks: string[]
   dcs?: number[]
   mode?: string
-  spell?: string
+  // A spell cast: its SRD id, everyone it is cast on, and whether as a Ritual.
+  // `ritual: "either"` is for a Ritual spell cast with time to spare and no word of how: slowly or with a slot are both right.
+  cast?: { spell: string; targets?: string[]; ritual?: boolean | "either" }
+  // Spell slots a character has already used, by character id.
+  slotsUsed?: Record<string, number[]>
   attack?: { weapon: string; target: string }
   // Other premade heroes in the scene, by file id.
   allies?: string[]
@@ -66,7 +70,11 @@ const menuId = (check: { kind: string; skill?: string; ability?: string }) => {
 
 async function run(probe: Probe): Promise<Graded> {
   const pack = loadPack(probe.adventure)
-  const bears = <T extends { id: string }>(character: T): T => (probe.conditionsOn?.[character.id] ? { ...character, conditions: probe.conditionsOn[character.id] } : character)
+  const bears = <T extends { id: string }>(character: T): T => ({
+    ...character,
+    ...(probe.conditionsOn?.[character.id] ? { conditions: probe.conditionsOn[character.id] } : {}),
+    ...(probe.slotsUsed?.[character.id] ? { spellSlots: probe.slotsUsed[character.id] } : {}),
+  })
   const hero: Character = bears({ ...JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8")), type: "pc" })
   const encounter = pack.artifacts.encounters[probe.encounter]
   if (!encounter) throw new Error(`${probe.id}: no encounter ${probe.encounter}`)
@@ -87,10 +95,28 @@ async function run(probe: Probe): Promise<Graded> {
         ...encounter.npcRefs.map((ref) => bears({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const })),
       ],
     })
+    // A spell with a spell attack is a roll to throw. Any other cast is read with no roll.
     const got = reading.roll
+    const cast = got && isCastRoll(got) ? got.cast : reading.cast?.cast
     const faults: string[] = []
     // Hide is a roll the engine sets, named for the action. An action with no roll is read by its own name.
-    const picked = !got ? (reading.action?.action ?? "none") : isAttackRoll(got) ? "attack" : got.rollType.startsWith("Hide") ? "hide" : (menuId(got.check) ?? "?")
+    const picked = cast
+      ? "cast"
+      : !got
+        ? (reading.action?.action ?? "none")
+        : isAttackRoll(got)
+          ? "attack"
+          : !("check" in got)
+            ? "?"
+            : got.rollType.startsWith("Hide")
+              ? "hide"
+              : (menuId(got.check) ?? "?")
+    if (cast || probe.cast) {
+      const told = (c?: { spell: string; targets?: string[]; ritual?: boolean }) =>
+        c ? `${c.spell}${c.ritual ? " as a ritual" : ""} on ${[...(c.targets ?? [])].sort().join(" and ") || "no one"}` : "nothing"
+      const wanted = probe.cast?.ritual === "either" ? { ...probe.cast, ritual: cast?.ritual } : (probe.cast as { spell: string; targets?: string[]; ritual?: boolean } | undefined)
+      if (told(cast) !== told(wanted)) faults.push(`cast ${told(cast)}, wanted ${told(wanted)}`)
+    }
     const said = (bonus?: { feature: string; target?: string }) => (bonus ? `${bonus.feature}${bonus.target ? ` for ${bonus.target}` : ""}` : "none")
     if (said(reading.bonus) !== said(probe.bonus)) faults.push(`bonus action ${said(reading.bonus)}, wanted ${said(probe.bonus)}`)
     if (probe.takes && reading.action?.action === "help") {
@@ -103,10 +129,9 @@ async function run(probe: Probe): Promise<Graded> {
       // An attack is graded on the weapon and on who it lands on. Its target number is the Armor Class, not a pick.
       if (probe.attack && got.attack.weapon !== probe.attack.weapon) faults.push(`weapon ${got.attack.weapon}, wanted ${probe.attack.weapon}`)
       if (probe.attack && got.attack.target !== probe.attack.target) faults.push(`target ${got.attack.target}, wanted ${probe.attack.target}`)
-    } else if (got) {
+    } else if (got && "check" in got) {
       if (!Object.values(DIFFICULTY_CLASSES).includes(got.difficulty as 5)) faults.push(`target ${got.difficulty} is off the ladder`)
       if (probe.dcs && !probe.dcs.includes(got.difficulty)) faults.push(`target ${got.difficulty}, wanted ${probe.dcs.join(" or ")}`)
-      if ((probe.spell ?? undefined) !== got.spell) faults.push(`spell ${got.spell ?? "none"}, wanted ${probe.spell ?? "none"}`)
       // What the roll puts at stake: who, on which outcome, hurt or healed or given or freed of a condition. The dice
       // are the ladder's or the notes'.
       const wants = (stake: Wanted) => `${stake.condition ? `${stake.kind === "end-condition" ? "end " : ""}${stake.condition}` : stake.kind} to ${stake.target} on ${stake.on}`
@@ -117,7 +142,7 @@ async function run(probe: Probe): Promise<Graded> {
       }
       for (const stake of probe.gives ?? []) if (!picked.includes(wants(stake))) faults.push(`stakes ${picked.join(", ") || "none"}, wanted ${wants(stake)} among them`)
     }
-    return { id: probe.id, pass: faults.length === 0, faults, got: got ?? reading.action ?? null, bonus: said(reading.bonus) }
+    return { id: probe.id, pass: faults.length === 0, faults, got: got ?? (cast ? { cast } : null) ?? reading.action ?? null, bonus: said(reading.bonus) }
   } catch (error) {
     return { id: probe.id, pass: false, faults: [String(error)], got: null }
   } finally {
@@ -148,12 +173,15 @@ for (const g of graded) {
     action?: string
     target?: string
     skill?: string
+    cast?: { spell: string; targets: string[]; ritual?: boolean }
   } | null
-  const pick = got?.action
-    ? `${got.action}${got.target ? ` for ${got.target}` : ""}${got.skill ? ` with ${got.skill}` : ""}, no roll`
-    : got
-      ? `${got.rollType} ${got.attack ? `on ${got.attack.target}, AC` : "DC"} ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}${got.stakes?.length ? `, stakes: ${got.stakes.map((stake) => `${"dice" in stake ? `${stake.dice} ` : ""}${staked(stake)}`).join("; ")}` : ""}`
-      : "no roll"
+  const pick = got?.cast
+    ? `cast ${got.cast.spell}${got.cast.ritual ? " as a ritual" : ""} on ${got.cast.targets.join(", ") || "no one"}${got.rollType ? `, spell attack against AC ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}` : ", no roll"}`
+    : got?.action
+      ? `${got.action}${got.target ? ` for ${got.target}` : ""}${got.skill ? ` with ${got.skill}` : ""}, no roll`
+      : got
+        ? `${got.rollType} ${got.attack ? `on ${got.attack.target}, AC` : "DC"} ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}${got.stakes?.length ? `, stakes: ${got.stakes.map((stake) => `${"dice" in stake ? `${stake.dice} ` : ""}${staked(stake)}`).join("; ")}` : ""}`
+        : "no roll"
   log(`${g.pass ? "pass" : "FAIL"}  ${g.id.padEnd(18)} ${pick}${g.bonus && g.bonus !== "none" ? `, bonus action: ${g.bonus}` : ""}${g.faults.length ? `\n      ${g.faults.join("; ")}` : ""}`)
 }
 log(`\n${graded.filter((g) => g.pass).length} of ${graded.length} pass`)

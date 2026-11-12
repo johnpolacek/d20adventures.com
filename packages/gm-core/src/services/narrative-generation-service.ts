@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import { spellWords } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
 import { storyRules } from "../story/prompt"
@@ -19,12 +20,7 @@ export function createNarrativeGenerationService(ports: GmPorts) {
       character.archetype ? `Archetype: ${character.archetype}` : "",
       character.race ? `Race: ${character.race}` : "",
       character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}` : "",
-      (character.spells ?? []).some((s) => !s.isUsed)
-        ? `Spells: ${(character.spells ?? [])
-            .filter((s) => !s.isUsed)
-            .map((s) => s.name)
-            .join(", ")}`
-        : "",
+      spellWords(character) ? `Spells: ${spellWords(character)}` : "",
     ]
       .filter(Boolean)
       .join("\n")

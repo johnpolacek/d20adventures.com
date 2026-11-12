@@ -27,38 +27,6 @@
     }
   ],
   "skills": ["Medicine", "Insight", "Religion", "Persuasion", "History (Valkaran)"],
-  "spells": [
-    {
-      "name": "Healing Word",
-      "description": "A prayer that knits wounds and restores vigor to an injured ally.",
-      "isUsed": false
-    },
-    {
-      "name": "Bless",
-      "description": "Invokes Valkara's favor, steadying the hands and hearts of nearby allies.",
-      "isUsed": false
-    },
-    {
-      "name": "Shield of Faith",
-      "description": "A shimmering ward of divine light that protects a chosen ally from harm.",
-      "isUsed": false
-    },
-    {
-      "name": "Guiding Bolt",
-      "description": "A lance of radiant light that sears a foe and marks them for allies to strike.",
-      "isUsed": false
-    },
-    {
-      "name": "Detect Evil and Good",
-      "description": "Reveals the presence of unholy or celestial influence nearby.",
-      "isUsed": false
-    },
-    {
-      "name": "Sanctuary",
-      "description": "Wards a creature so that attackers must resist the urge to do it harm.",
-      "isUsed": false
-    }
-  ],
   "specialAbilities": ["Wayfinder's Welcome: common folk of the March trust a Wayfinder's robes and speak freely to Milos", "Steady Hands: Milos can stabilize the dying and ease pain even without magic"],
   "type": "pc",
   "attributes": {

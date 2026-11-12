@@ -38,28 +38,23 @@
   "spells": [
     {
       "name": "Vicious Mockery",
-      "description": "Unleashes a string of insults laced with subtle enchantments, causing psychic damage and disadvantage on the next attack roll.",
-      "isUsed": false
+      "description": "Unleashes a string of insults laced with subtle enchantments, causing psychic damage and disadvantage on the next attack roll."
     },
     {
       "name": "Minor Illusion",
-      "description": "Creates a sound or an image of an object within range.",
-      "isUsed": false
+      "description": "Creates a sound or an image of an object within range."
     },
     {
       "name": "Charm Person",
-      "description": "Attempts to magically charm a humanoid, making them friendly towards him.",
-      "isUsed": false
+      "description": "Attempts to magically charm a humanoid, making them friendly towards him."
     },
     {
       "name": "Healing Word",
-      "description": "A word of power that can heal a creature from a distance.",
-      "isUsed": false
+      "description": "A word of power that can heal a creature from a distance."
     },
     {
       "name": "Faerie Fire",
-      "description": "Outlines creatures and objects in a colorful light, making them visible and granting advantage on attack rolls against them.",
-      "isUsed": false
+      "description": "Outlines creatures and objects in a colorful light, making them visible and granting advantage on attack rolls against them."
     }
   ],
   "specialAbilities": [

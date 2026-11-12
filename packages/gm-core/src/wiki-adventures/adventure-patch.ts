@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { characterUpdateSchema, effectChangeSchema, inventoryChangeSchema, spellUseChangeSchema } from "./character-updates"
+import { characterUpdateSchema, effectChangeSchema, inventoryChangeSchema } from "./character-updates"
 import type { TransitionValidationResult } from "./transition-validator"
 
 // The model intermittently malforms the structured world-state fields below — most often
@@ -44,7 +44,6 @@ export const adventurePatchSchema = z.object({
           // Hosts that apply updates must require the explicit operation contract.
           effectChanges: z.array(z.union([z.string(), ...effectChangeSchema.options])).optional(),
           inventoryChanges: z.array(z.union([z.string(), ...inventoryChangeSchema.options])).optional(),
-          spellUseChanges: z.array(z.union([z.string(), spellUseChangeSchema])).optional(),
         })
         .strip()
     )

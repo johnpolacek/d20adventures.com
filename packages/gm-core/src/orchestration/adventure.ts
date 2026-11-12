@@ -8,7 +8,7 @@ import { createNpcTurnService } from "../services/npc-turn-service"
 import type { StoryBeat } from "../story/beats"
 import { storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
-import type { RequiredRoll, RollRequirement } from "../validations/roll-requirement-schema"
+import type { RequiredCast, RequiredRoll, RollRequirement } from "../validations/roll-requirement-schema"
 
 export function createAdventure(ports: GmPorts) {
   const { assertAdventureAccessByTurn } = createAdventureAccess(ports)
@@ -63,6 +63,8 @@ export function createAdventure(ports: GmPorts) {
     })
     // An action with no roll (Dodge, Help) is the hero's whole turn: what it leaves is written before anyone else acts.
     await applyReading({ turnId, characterId, reading })
+    // A spell that asks for no throw is resolved now: the engine rolls it, and the GM tells it.
+    if (reading.cast) await resolveCast({ turnId, characterId, cast: reading.cast })
     if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
     ports.narration.afterTurn(turnId)
     return { rollRequired: null }
@@ -130,6 +132,37 @@ export function createAdventure(ports: GmPorts) {
     })
     ports.narration.afterTurn(result.turnId)
     return result
+  }
+
+  // A spell cast that takes no d20 of the caster's: resolved as the reply is read, with the turn as it then stands.
+  async function resolveCast({ turnId, characterId, cast }: { turnId: string; characterId: string; cast: RequiredCast }) {
+    const turn = await ports.store.getTurn({ turnId })
+    if (!turn) throw new Error("Turn not found")
+    const adventure = await ports.store.getAdventure({ adventureId: turn.adventureId })
+    if (!adventure) throw new Error("Adventure not found")
+    const character = (turn.characters as TurnCharacter[]).find((entry) => entry.id === characterId)
+    if (!character) throw new Error("Character not found")
+    const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
+    if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid")
+    const resolution = await resolvePlayerRollNarrativeAndCharacters({
+      turn: {
+        _id: turn._id,
+        encounterId: turn.encounterId,
+        title: turn.title,
+        story: turn.story,
+        characters: turn.characters as TurnCharacter[],
+        adventureId: turn.adventureId,
+        isFinalEncounter: turn.isFinalEncounter,
+      },
+      character: { ...character, rollRequired: cast },
+      characterId,
+      encounterInstructions: getEncounterInstructionsFromPlan(plan, turn.encounterId),
+      playerDeath: plan.playerDeath,
+      premise: plan.premise,
+      knowledge: adventure.knowledge,
+      strangers: plan.strangers,
+    })
+    await ports.store.updateTurn({ turnId, patch: { story: resolution.story, characters: resolution.characters, updatedAt: Date.now() } })
   }
 
   // `result` is the d20 the player rolled, and `second` the other one of a roll with Advantage or Disadvantage.

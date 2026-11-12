@@ -1,3 +1,4 @@
+import { damageTypeIdSchema } from "@d20/srd"
 import { z } from "zod"
 import { checkSchema, rollModes } from "../sheet/check"
 import { stakeSchema } from "../sheet/stakes"
@@ -20,11 +21,22 @@ export const rollRequirementSchema = z.union([
   z.object({
     check: checkSchema,
     ...asked,
-    spell: z.string().optional().describe("The roller's own spell this roll casts, as their spell list names it"),
     stakes: z.array(stakeSchema).optional().describe("Who the roll hurts or heals, by which dice, on which outcome"),
   }),
   z.object({
     attack: z.object({ weapon: z.string().describe("The id of one of the roller's own attacks"), target: z.string().describe("The id of the character attacked") }),
+    ...asked,
+  }),
+  // A spell cast, by its SRD id, on the targets named. One with a spell attack is thrown by the caster: `difficulty`
+  // is then the first target's Armor Class and `modifier` the spell attack bonus. Any other asks for no throw and is
+  // resolved as it is read, so it is never left waiting on a character.
+  z.object({
+    cast: z.object({
+      spell: z.string().describe("The spell's SRD id"),
+      targets: z.array(z.string()).describe("The ids of who it is cast on"),
+      ritual: z.literal(true).optional().describe("Cast slowly as a Ritual, which spends no slot"),
+      damageType: damageTypeIdSchema.optional().describe("For a spell that deals one of several damage types, the one chosen"),
+    }),
     ...asked,
   }),
   // A dying hero's Death Saving Throw, which the engine asks for itself as the round begins (../sheet/death.ts).
@@ -39,9 +51,11 @@ export type RollRequirement = z.infer<typeof rollRequirementSchema>
 export type RequiredRoll = NonNullable<RollRequirement>
 export type RequiredAttack = Extract<RequiredRoll, { attack: unknown }>
 export type RequiredDeathSave = Extract<RequiredRoll, { deathSave: true }>
+export type RequiredCast = Extract<RequiredRoll, { cast: unknown }>
 /** A roll the game master picks from its menus: a check or an attack, never a Death Saving Throw. */
 export type ChosenRoll = Exclude<RequiredRoll, RequiredDeathSave>
 export const isAttackRoll = (roll: RequiredRoll): roll is RequiredAttack => "attack" in roll
+export const isCastRoll = (roll: RequiredRoll | null | undefined): roll is RequiredCast => !!roll && "cast" in roll
 export const isDeathSaveRoll = (roll: RequiredRoll | null | undefined): roll is RequiredDeathSave => !!roll && "deathSave" in roll
 
 /** The Death Saving Throw a dying hero makes on their turn: a d20 with no bonus against 10. */

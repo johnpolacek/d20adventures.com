@@ -77,11 +77,15 @@ export type RollBeat = {
   conditions?: { target: string; condition: string; ends?: true }[]
   // A Bardic Inspiration die rolled and added to a roll that had failed. `total` includes it.
   inspired?: number
+  // The spell this roll belongs to, by name: the caster's spell attack, or a target's saving throw against it.
+  spell?: string
   // A Death Saving Throw: the hero's successes and failures once it was made, and how it ended their dying, if it did.
   deathSave?: { successes: number; failures: number; fate?: "revived" | "stable" | "dead" }
 }
-// A class feature a character used with their Bonus Action, which the engine applied: Second Wind, Bardic Inspiration.
-// `text` says it in a sentence, for every reader that knows no more of it. `harm` is what it healed, with the dice.
+// Something a character used that the engine applied with no d20 of theirs: a class feature spent with a Bonus
+// Action (Second Wind, Bardic Inspiration), or a spell cast that asks for no spell attack (Magic Missile, Healing
+// Word, a spell its targets save against, a utility spell). `text` says it in a sentence, for every reader that knows
+// no more of it. `harm` is what it hurt or healed, with the dice.
 export type FeatureBeat = { kind: "feature"; by: StoryBy; character: string; name: string; text: string; target?: string; harm?: RollBeat["harm"] }
 // The player's own words, before the GM wrote them into the story.
 export type ReplyBeat = { kind: "reply"; by: StoryBy; character: string; text: string }
@@ -132,6 +136,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     harm: harmSchema.optional(),
     conditions: z.array(z.object({ target: id, condition: z.string(), ends: z.literal(true).optional() })).optional(),
     inspired: z.number().optional(),
+    spell: z.string().optional(),
     deathSave: z.object({ successes: z.number(), failures: z.number(), fate: z.enum(["revived", "stable", "dead"]).optional() }).optional(),
   }),
   z.object({ kind: z.literal("reply"), by, character: id, text: z.string() }),

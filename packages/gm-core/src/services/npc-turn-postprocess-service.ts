@@ -3,12 +3,6 @@ import type { StoryBeat } from "../story/beats"
 import type { TurnCharacter } from "../types/adventure"
 import type { NpcRollInfo } from "./npc-turn-branch-service"
 import type { NpcTurnEffect } from "./npc-turn-resolution-service"
-import { markSpellAsUsed } from "./spell-tracking-service"
-
-export function applyNpcSpellPostProcessing(args: { updatedCharacters: TurnCharacter[]; rollInfo?: NpcRollInfo; npcId: string }): TurnCharacter[] {
-  const spell = args.rollInfo?.spell
-  return spell ? markSpellAsUsed(args.updatedCharacters, args.npcId, spell) : args.updatedCharacters
-}
 
 export function finalizeNpcTurnResponse(args: {
   actionSummary: string

@@ -5,7 +5,7 @@ import { takeAction } from "../../src/sheet/actions"
 import type { ConditionEntry } from "../../src/sheet/condition-entry"
 import { deriveSheet, sheetProblems } from "../../src/sheet/derive"
 import type { Sheet } from "../../src/sheet/sheet"
-import { castSpell, classSpells, isEngineSpell, spellById, spellcastingOf, targetLimit } from "../../src/sheet/spells"
+import { castCost, castSpell, classSpells, isEngineSpell, slotsAtEncounterEnd, slotsLeft, spellById, spellcastingOf, spellsOf, spellWords, targetLimit, withCastSpent } from "../../src/sheet/spells"
 import type { TurnEffect } from "../../src/sheet/turn-effect"
 
 // Every expected value below was worked out by hand from the SRD 5.2.1 spell rules, not copied from the function's output.
@@ -22,6 +22,8 @@ type Character = {
   turnEffects?: TurnEffect[]
   dead?: true
   isComplete?: boolean
+  spellSlots?: number[]
+  featureUses?: Record<string, number>
 }
 // Lyra, a level 1 Wizard with Intelligence 16: spell save DC 8 + 2 + 3, spell attack +5.
 const lyra: Character = { id: "lyra", name: "Lyra", type: "pc", sheet: sheet("covert-cargo/characters/1749159962941.json"), hitPoints: 6 }
@@ -173,4 +175,62 @@ test("a sheet's spells follow its class: the counts its table gives, from its ow
   // A Ranger's Favored Enemy keeps Hunter's Mark always prepared, beside the two he prepares. A High Elf knows Prestidigitation.
   assert.deepEqual(deriveSheet(thalbern.sheet as Sheet).preparedSpells, ["cure-wounds", "speak-with-animals", "hunters-mark"])
   assert.deepEqual(deriveSheet(ilya.sheet as Sheet).cantrips, ["vicious-mockery", "minor-illusion", "prestidigitation"])
+})
+
+test("a caster's spells are the sheet's: cantrips at will, prepared spells for a slot, and a Wizard's book for rituals", () => {
+  const known = spellsOf({ ...lyra, name: "Lyra" })
+  // Three cantrips, four prepared, and the two Ritual spells of her book she has not prepared: Identify and Comprehend Languages.
+  assert.deepEqual(
+    known.map((entry) => [entry.spell.id, entry.cantrip, entry.prepared, entry.ritual]),
+    [
+      ["mage-hand", true, true, false],
+      ["light", true, true, false],
+      ["ray-of-frost", true, true, false],
+      ["detect-magic", false, true, true],
+      ["fog-cloud", false, true, false],
+      ["charm-person", false, true, false],
+      ["magic-missile", false, true, false],
+      ["identify", false, false, true],
+      ["comprehend-languages", false, false, true],
+    ]
+  )
+  assert.deepEqual(slotsLeft(lyra), [2, 0, 0, 0, 0, 0, 0, 0, 0])
+  // A cantrip costs nothing, a prepared spell a slot of its level, and a Ritual cast slowly nothing.
+  const cost = (who: Character, id: string, ritual = false) => {
+    const found = castCost(who, id, ritual)
+    return "problem" in found ? found.problem : found.cost
+  }
+  assert.deepEqual(cost(lyra, "ray-of-frost"), { kind: "cantrip" })
+  assert.deepEqual(cost(lyra, "magic-missile"), { kind: "slot", level: 1 })
+  assert.deepEqual(cost(lyra, "detect-magic", true), { kind: "ritual" })
+  assert.deepEqual(cost(lyra, "identify", true), { kind: "ritual" })
+  assert.equal(cost(lyra, "identify"), "Identify is in the spellbook and not prepared, so it can only be cast as a Ritual.")
+  assert.equal(cost(lyra, "fireball"), "Fireball is not a spell Lyra can cast.")
+  // Magic Missile is no Ritual, so asking for one changes nothing: it still takes a slot.
+  assert.deepEqual(cost(lyra, "magic-missile", true), { kind: "slot", level: 1 })
+  // Two casts spend both slots. Then only cantrips and rituals are left.
+  const once = withCastSpent(lyra, { kind: "slot", level: 1 })
+  const spent = withCastSpent(once, { kind: "slot", level: 1 })
+  assert.deepEqual([once.spellSlots, slotsLeft(once)[0], spent.spellSlots, slotsLeft(spent)[0]], [[1], 1, [2], 0])
+  assert.equal(cost(spent, "magic-missile"), "Lyra has no level 1 spell slot left for Magic Missile.")
+  assert.deepEqual([cost(spent, "ray-of-frost"), cost(spent, "detect-magic", true)], [{ kind: "cantrip" }, { kind: "ritual" }])
+  // A new encounter gives the slots back.
+  assert.deepEqual(slotsLeft(slotsAtEncounterEnd(spent)), [2, 0, 0, 0, 0, 0, 0, 0, 0])
+  assert.equal(
+    spellWords(once),
+    "Cantrips, cast at will: Mage Hand, Light, Ray of Frost. Prepared spells: Detect Magic, Fog Cloud, Charm Person, Magic Missile. Rituals from the spellbook, outside a fight: Identify, Comprehend Languages. Level 1 spell slots left: 1"
+  )
+})
+
+test("a Ranger's Favored Enemy casts Hunter's Mark twice with no slot", () => {
+  const mark = (who: Character) => {
+    const found = castCost(who, "hunters-mark")
+    return "problem" in found ? found.problem : found.cost
+  }
+  assert.deepEqual(mark(thalbern), { kind: "free", feature: "ranger-favored-enemy" })
+  const once = withCastSpent(thalbern, { kind: "free", feature: "ranger-favored-enemy" })
+  const twice = withCastSpent(once, { kind: "free", feature: "ranger-favored-enemy" })
+  assert.deepEqual([once.featureUses, mark(once), slotsLeft(once)[0]], [{ "ranger-favored-enemy": 1 }, { kind: "free", feature: "ranger-favored-enemy" }, 2])
+  // The third takes a slot.
+  assert.deepEqual(mark(twice), { kind: "slot", level: 1 })
 })

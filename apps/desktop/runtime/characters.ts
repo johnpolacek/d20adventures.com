@@ -3,6 +3,7 @@ import { turnEffectsAtEncounterEnd } from "@d20/gm-core/sheet/actions"
 import { conditionsAtEncounterEnd, conditionWords, withoutCondition } from "@d20/gm-core/sheet/conditions"
 import { atRoundStart } from "@d20/gm-core/sheet/death"
 import { featuresAtEncounterEnd } from "@d20/gm-core/sheet/features"
+import { slotsAtEncounterEnd } from "@d20/gm-core/sheet/spells"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
@@ -15,7 +16,7 @@ export const desktopPatchSchema = strictModelSchema(adventurePatchSchema.omit({ 
 })
 export type CharacterState = Pick<
   TurnCharacter,
-  "hitPoints" | "healthPercent" | "conditions" | "turnEffects" | "featureUses" | "inspiration" | "dead" | "fled" | "deathSaves" | "equipment" | "effects" | "spells"
+  "hitPoints" | "healthPercent" | "conditions" | "turnEffects" | "featureUses" | "inspiration" | "spellSlots" | "dead" | "fled" | "deathSaves" | "equipment" | "effects" | "spells"
 >
 export type CharacterStates = Record<string, CharacterState>
 const key = (name: string) => name.trim().toLowerCase()
@@ -27,6 +28,7 @@ export function characterState(c: CharacterState): CharacterState {
     conditions: c.conditions,
     turnEffects: c.turnEffects,
     featureUses: c.featureUses,
+    spellSlots: c.spellSlots,
     inspiration: c.inspiration,
     dead: c.dead,
     fled: c.fled,
@@ -84,11 +86,6 @@ export function applyCharacterUpdates(characters: TurnCharacter[], input: unknow
         else c.effects[index] = effect
       }
     }
-    for (const change of update.spellUseChanges ?? []) {
-      const spell = c.spells?.find((spell) => key(spell.name) === key(change.name))
-      if (!spell) throw new Error(`${c.name} does not know ${change.name}.`)
-      spell.isUsed = change.isUsed
-    }
   }
   return result
 }
@@ -121,9 +118,8 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
     const revived = before && isDown(before) && !isDown(next) && isDown(states[next.id] ?? before) ? deathState(next) : {}
     const kept = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
     // A new encounter ends the conditions of a fight's moment and what its actions left, and gives feature uses back. The lasting conditions come along.
-    const c = args.encounterChanged ? featuresAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept))) : kept
+    const c = args.encounterChanged ? slotsAtEncounterEnd(featuresAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept)))) : kept
     if (!c.deathSaves) delete c.deathSaves
-    if (args.encounterChanged) c.spells = (c.spells ?? []).map((s) => ({ ...s, isUsed: false }))
     // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none.
     const ready = hasFled(c) ? { ...c, hasReplied: false, isComplete: true } : atRoundStart(c)
     states[c.id] = characterState(ready)
@@ -151,5 +147,5 @@ export function characterContext(characters: TurnCharacter[], patchInstructions 
 Use exact character IDs and existing item/effect/spell names. State patches describe only additional changes established by resolved actions or your outcome narrative. Do not repeat changes already reflected above. Do not apply attempted actions that failed or still need a roll.
 For each item received, add one inventoryChanges entry {op:"add",name,description?}. For each item spent, lost, or transferred, use {op:"remove",name}. A transfer removes from the giver and adds to the receiver. Each entry is one item, not a quantity or currency balance.
 For effects use {op:"set",name,description,duration} to add or refresh, or {op:"remove",name} to end one. Duration is a positive number of rounds starting with the next round. Existing effects automatically lose one round on advance, so do not emit routine duration decrements. Conditions are the game's: never give one. End one only when the round's events ended it with no roll, by id in conditionsEnded. Hit points and health are the game's: it rolls every wound and every healing, so never give a health value and never tell of harm or healing the state above does not show.
-Spell changes are {name,isUsed} for known spells only. Spells automatically recharge upon entering a different encounter. Do not invent items, conditions, currency accounting, or spells absent from established events. Omit unchanged fields and return characterUpdates:[] when no change is needed.`
+Spells and their slots are the game's: never mark one cast or restored. Do not invent items, conditions, currency accounting, or spells absent from established events. Omit unchanged fields and return characterUpdates:[] when no change is needed.`
 }

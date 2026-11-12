@@ -37,7 +37,8 @@ async function setup() {
     { name: "Fatigue", description: "Tired", duration: 1 },
     { name: "Ward", description: "Protected", duration: 3 },
   ]
-  pc.spells = [{ name: "Light", isUsed: false }]
+  // Milos has cast one of his two level 1 spells.
+  pc.spellSlots = [1]
   pc.rollRequired = { check: { kind: "skill", skill: "persuasion" }, rollType: "Persuasion", difficulty: 10, modifier: 4, mode: "normal" }
   pc.rollResult = 14
   giver.equipment = [{ name: "Rope", description: "Ten metres" }]
@@ -109,7 +110,6 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
             { op: "add", name: "Gate token" },
           ],
           effectChanges: [{ op: "set", name: "Blessing", description: "Steady hands", duration: 2 }],
-          spellUseChanges: [{ name: "Light", isUsed: true }],
         },
         { characterId: t.giver.id, inventoryChanges: [{ op: "remove", name: "Rope" }] },
         { characterId: t.npc.id, inventoryChanges: [{ op: "add", name: "Ribbon" }] },
@@ -134,7 +134,8 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
         ["Blessing", 2],
       ]
     )
-    assert.equal(c.spells![0].isUsed, true)
+    // A slot spent stays spent while the encounter lasts.
+    assert.deepEqual(c.spellSlots, [1])
     assert.equal(c.rollRequired, undefined)
     assert.equal(c.rollResult, undefined)
     const snapshot = JSON.stringify(t.store.state)
@@ -145,7 +146,7 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
 
     const card = characterInfo(byId(t.store, t.pc.id), undefined, null, undefined)
     const cardText = [card.conditions ?? "", ...card.details!.flatMap((section) => section.items)].join("\n")
-    for (const text of ["Restrained", "Gate token", "Rope. Ten metres", "Blessing, 2 rounds left", "Light, used"]) assert.ok(cardText.includes(text), text)
+    for (const text of ["Restrained", "Gate token", "Rope. Ten metres", "Blessing, 2 rounds left"]) assert.ok(cardText.includes(text), text)
 
     await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, conditionsEnded: ["restrained"], effectChanges: [{ op: "remove", name: "Blessing" }] }] }, "the-harvest-festival")
     const festival = byId(t.store, t.pc.id)
@@ -156,7 +157,7 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
       festival.effects!.map((e) => [e.name, e.duration]),
       [["Ward", 1]]
     )
-    assert.equal(festival.spells![0].isUsed, false, "spells recharge on an encounter change")
+    assert.equal(festival.spellSlots, undefined, "spell slots come back on an encounter change")
     assert.equal(
       t.store.current().characters.some((c) => c.id === t.npc.id),
       false
@@ -213,7 +214,7 @@ test("refreshes do not stack effects, fallen PCs stay on the sheet, and later he
     assert.deepEqual(byId(t.store, t.pc.id).effects, [{ name: "Ward", description: "Stronger ward", duration: 3 }])
     // The engine heals him for 4.
     setCharacter(t.store, t.pc.id, (c) => withHealing(c, 4))
-    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, spellUseChanges: [{ name: "Light", isUsed: false }] }] })
+    await advance(t.store, { characterUpdates: [] })
     assert.equal(byId(t.store, t.pc.id).isComplete, false)
     assert.deepEqual([byId(t.store, t.pc.id).dead, conditionWords(byId(t.store, t.pc.id)).includes("Unconscious")], [undefined, false])
     // Healed from 0 by 4, and 4 of Milos's 9 shows as 44%.
@@ -248,7 +249,9 @@ test("invalid character patches cannot partly advance, mutate the save, or fall 
           ],
         },
       ],
-      [{ characterId: t.pc.id, spellUseChanges: [{ name: "Unknown spell", isUsed: true }] }],
+      // Spells and their slots are the engine's: a patch can mark none cast or restored.
+      [{ characterId: t.pc.id, spellUseChanges: [{ name: "Light", isUsed: true }] }],
+      [{ characterId: t.pc.id, spellSlots: [0] }],
       [{ characterId: t.pc.id, effectChanges: [{ op: "remove", name: "Absent" }] }],
       [{ characterId: t.pc.id, effectChanges: [{ op: "set", name: "Ward", description: "Invalid", duration: 0 }] }],
       [{ characterId: t.pc.id, healthPercent: 50 }],
@@ -284,7 +287,6 @@ test("CLI correction retains every typed operation and rejects invented referenc
             { op: "set", name: "Blessing", description: "Calm", duration: 2 },
             { op: "remove", name: "Fatigue" },
           ],
-          spellUseChanges: [{ name: "Light", isUsed: true }],
         },
       ],
     }

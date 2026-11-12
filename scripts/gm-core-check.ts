@@ -397,7 +397,7 @@ async function npcFixedOutcome() {
     prompts.push(args.prompt)
     return { object: answer }
   }
-  const { getRollRequirementForAction } = createRollRequirementService({ llm: { generateObject } } as any)
+  const { getRollRequirementForAction, readAction } = createRollRequirementService({ llm: { generateObject } } as any)
   assert.equal(await getRollRequirementForAction("Mara lifts the scroll case.", { name: "Mara", type: "npc" } as any), null)
   await getRollRequirementForAction("Mira lifts a purse.", { name: "Mira", type: "pc" } as any)
   assert.match(prompts[0], /This character is an NPC\. [^\n]*does not roll against an outcome the notes fix/)
@@ -433,6 +433,43 @@ async function npcFixedOutcome() {
   assert.deepEqual(shot && "attack" in shot ? shot.attack : undefined, { weapon: "longbow", target: "owlbear" })
   answer = { check: "attack", weapon: "longbow" }
   await assert.rejects(getRollRequirementForAction("Thalbern shoots.", hero, { present: [owlbear, wolf, hero] }), /who is not here to attack/)
+  // Casting. Lyra, a Wizard with Intelligence 16: a spell attack is hers to throw, +5 against the Owlbear's Armor Class
+  // 13. A spell its target saves against asks for no throw and comes back to be resolved at once, against her DC 13.
+  const lyra = { ...JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/covert-cargo/characters/1749159962941.json", "utf8")), type: "pc", hitPoints: 6 }
+  const scene = { present: [owlbear, lyra] }
+  answer = { check: "cast", spell: "ray-of-frost", targets: ["owlbear"] }
+  assert.deepEqual(await readAction("Lyra casts Ray of Frost.", lyra, scene), {
+    roll: { cast: { spell: "ray-of-frost", targets: ["owlbear"] }, rollType: "Ray of Frost", difficulty: 13, modifier: 5, mode: "normal" },
+  })
+  // A spell and a target given by name are taken for their ids.
+  answer = { check: "cast", spell: "Charm Person", targets: ["Owlbear"] }
+  assert.deepEqual(await readAction("Lyra charms the owlbear.", lyra, scene), {
+    roll: null,
+    cast: { cast: { spell: "charm-person", targets: ["owlbear"] }, rollType: "Charm Person", difficulty: 13, modifier: 0, mode: "normal" },
+  })
+  // With both slots spent she cannot cast it, and a cantrip still goes. A spell that is not hers is not cast.
+  const spent = { ...lyra, spellSlots: [2] }
+  assert.deepEqual(await readAction("Lyra charms the owlbear.", spent, { present: [owlbear, spent] }), { roll: null })
+  answer = { check: "cast", spell: "ray-of-frost" }
+  assert.deepEqual((await readAction("Lyra casts Ray of Frost.", spent, { present: [owlbear, spent] })).roll?.rollType, "Ray of Frost")
+  answer = { check: "cast", spell: "fireball", targets: ["owlbear"] }
+  assert.deepEqual(await readAction("Lyra casts Fireball.", lyra, scene), { roll: null })
+  // Identify is in her book and not prepared: only as a Ritual, which spends nothing. A utility spell names no one.
+  answer = { check: "cast", spell: "identify" }
+  assert.deepEqual(await readAction("Lyra identifies the ring.", lyra, scene), { roll: null })
+  answer = { check: "cast", spell: "identify", ritual: true }
+  assert.deepEqual((await readAction("Lyra identifies the ring.", spent, { present: [spent] })).cast?.cast, { spell: "identify", targets: [], ritual: true })
+  // A spell that takes a Bonus Action goes beside the turn's action: Milos swings and calls a Healing Word. Beside
+  // another spell it is dropped, since one spell a turn takes a slot.
+  const milos = { ...JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/welcome-to-kordavos/characters/milos-radan.json", "utf8")), type: "pc", hitPoints: 9 }
+  const fight = { present: [owlbear, hero, milos] }
+  answer = { check: "attack", weapon: "quarterstaff", target: "owlbear", bonus: "healing-word", bonusTarget: "thalbern" }
+  assert.deepEqual((await readAction("Milos heals Thalbern and swings.", milos, fight)).bonus, { feature: "healing-word", target: "thalbern" })
+  answer = { check: "cast", spell: "sacred-flame", targets: ["owlbear"], bonus: "healing-word", bonusTarget: "thalbern" }
+  assert.equal((await readAction("Milos heals Thalbern and calls down flame.", milos, fight)).bonus, undefined)
+  // Her Magic Missile takes three darts, so three creatures at most: a fourth named is left out.
+  answer = { check: "cast", spell: "magic-missile", targets: ["owlbear", "wolf", "thalbern", "nobody"] }
+  assert.deepEqual((await readAction("Lyra casts Magic Missile.", lyra, { present: [owlbear, wolf, hero, lyra] })).cast?.cast.targets, ["owlbear", "wolf", "thalbern"])
 }
 
 // A scene's round budget counts the rounds in a row in one encounter. The round-end GM is told where the scene stands,

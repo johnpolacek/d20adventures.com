@@ -8,14 +8,14 @@ import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineM
 import { conditionSpans } from "../sheet/condition-entry"
 import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
 import { bonusActionsOf } from "../sheet/features"
+import { castCost, isEngineSpell, slotsLeft, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import { actionIds } from "../sheet/turn-effect"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
 import { hasFled, isDead, isDown } from "../utils/turn-actors"
-import type { ChosenRoll } from "../validations/roll-requirement-schema"
-import { formatSpellsForPrompt } from "./spell-tracking-service"
+import type { ChosenRoll, RequiredCast } from "../validations/roll-requirement-schema"
 
 // An NPC whose action the notes fix rolls nothing. Mara's lift "always happens" unless a hero spots it, yet she rolled
 // Sleight of Hand, failed, and the theft the scene turns on never happened.
@@ -26,12 +26,17 @@ const NPC_FIXED_OUTCOME =
 // or stat block, the target number from the difficulty's name, and the dice.
 const rollPickSchema = z.object({
   check: z
-    .enum(["none", "attack", "hide", ...actionIds, ...checkMenuIds])
-    .describe('The check\'s id from the menu, "attack" for an attack, an action of a fight ("hide", "dodge", "help", "dash", "disengage"), or "none" when nothing is rolled'),
+    .enum(["none", "attack", "cast", "hide", ...actionIds, ...checkMenuIds])
+    .describe(
+      'The check\'s id from the menu, "attack" for an attack, "cast" for one of the character\'s own spells, an action of a fight ("hide", "dodge", "help", "dash", "disengage"), or "none" when nothing is rolled'
+    ),
   difficulty: z.enum(difficulties).optional().describe("How hard the task is, by name. Needed for every check"),
   mode: z.enum(rollModes).optional().describe('"advantage" or "disadvantage" when this moment\'s circumstances clearly help or hinder, else "normal"'),
   reason: z.string().max(120).optional().describe("What gives the Advantage or Disadvantage, in a few words"),
-  spell: z.string().max(80).optional().describe("The character's own spell this roll casts, exactly as their spell list names it"),
+  spell: z.string().max(80).optional().describe('For "cast": the id of one of the character\'s own spells, from Their Spells'),
+  targets: z.array(z.string().max(80)).max(8).optional().describe('For "cast": the ids of everyone the spell is cast on, from Who Is Here or the character\'s own id'),
+  ritual: z.boolean().optional().describe('For "cast": true when a spell marked ritual is cast slowly, outside a fight, to spare its slot'),
+  damageType: z.string().max(20).optional().describe('For "cast": the damage type chosen, for a spell that offers several'),
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
   target: z.string().max(80).optional().describe('For an attack: the id of who is attacked, from Who Is Here. For "help": the id of the ally helped, or of the enemy an ally will attack'),
   helps: z.string().max(40).optional().describe('For "help" given to an ally\'s check: the id of the skill it is for'),
@@ -61,7 +66,14 @@ type Present = Pick<TurnCharacter, "id" | "name"> &
   Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "isComplete">> & { statBlock?: string }
 
 /** What the game master reads a character's move as: a roll the engine asks for, an action that takes none, or neither. */
-export type TurnReading = { roll: ChosenRoll | null; action?: TakenAction /** One of the roller's own Bonus Actions, used beside the action. */; bonus?: { feature: string; target?: string } }
+export type TurnReading = {
+  roll: ChosenRoll | null
+  action?: TakenAction
+  /** A spell cast that asks for no throw: it is resolved as the move is read, never left waiting on the caster. */
+  cast?: RequiredCast
+  /** One of the roller's own Bonus Actions, used beside the action. */
+  bonus?: { feature: string; target?: string }
+}
 
 const MENU = (kind: "skill" | "ability" | "save") =>
   checkMenu
@@ -89,13 +101,32 @@ export function createRollRequirementService(ports: GmPorts) {
     const conditions = conditionWords(character)
     const attacks = attacksOf(character)
     const bonusActions = bonusActionsOf(character).filter((entry) => entry.left > 0)
+    const knownSpells = spellsOf(character)
+    // The spells of theirs that take a Bonus Action and can be paid for now.
+    const bonusSpells = knownSpells.filter((known) => known.spell.castingTime.unit === "bonus-action" && !("problem" in castCost(character, known.spell.id)))
+    const slots = slotsLeft(character)
+    // What kind of spell each is, so the game master knows who it is cast on.
+    const spellKind = (spell: (typeof knownSpells)[number]["spell"]) =>
+      spell.attack ? "a spell attack" : spell.saves ? "its targets save" : spell.healing ? "heals" : spell.damage ? "strikes with no roll" : isEngineSpell(spell) ? "lasts on its target" : "utility"
+    const spellLines = knownSpells.map((known) => {
+      const limit = targetLimit(known.spell)
+      const notes = [
+        known.cantrip ? "cantrip" : `level ${known.spell.level}`,
+        spellKind(known.spell),
+        ...(limit > 1 ? [`up to ${limit} creatures`] : []),
+        ...(known.spell.ritual ? [known.prepared ? "ritual" : "ritual only"] : []),
+        ...(known.free > 0 ? [`${known.free} free`] : []),
+      ]
+      return `${known.spell.id} (${known.spell.name}, ${notes.join(", ")})`
+    })
     const casts = spellcastingAbilityOf(character)
     const contextLines = [
       `Name: ${character.name}`,
       `Archetype: ${character.archetype}`,
       `Race: ${character.race}`,
       conditions ? `Conditions: ${conditions}` : undefined,
-      character.spells && character.spells.length > 0 ? `Spells: ${formatSpellsForPrompt(character as unknown as TurnCharacter)}` : undefined,
+      // An NPC's magic is named in words until the game knows its spells. A hero's are on the menu below.
+      !character.sheet && character.spells && character.spells.length > 0 ? `Magic: ${character.spells.map((entry) => entry.name).join(", ")}` : undefined,
       casts ? `Spellcasting ability: ${abilityById.get(casts)?.name}` : undefined,
       character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
       character.equipment && character.equipment.length > 0 ? `Equipment: ${character.equipment.map((e) => `${e.name}${e.description ? ` (${e.description})` : ""}`).join(", ")}` : undefined,
@@ -162,15 +193,29 @@ ${MENU("save")}
      "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
      Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
    - BONUS ACTIONS: beside the action above, the character may use one of their own Bonus Actions in the same turn. Set "bonus" to its id only when their words plainly use it, and leave it out otherwise. One given to someone else takes "bonusTarget", that ally's id.
-     Their Bonus Actions: ${bonusActions.map((entry) => `${entry.id} (${entry.name}, ${entry.left} left${entry.targeted ? ", given to an ally" : ""})`).join(", ") || "none"}.
-   - SPELLS: casting one of the character's own spells is a bare check of their spellcasting ability (see Character Context. For an NPC, the ability its magic comes from: intelligence, wisdom or charisma), and "spell" names the spell exactly as their list has it. Magic that is not a spell on their list is "arcana" with no "spell".
-   - SPELL AVAILABILITY: Spells marked as "Used (unavailable this encounter)" CANNOT be cast again until the next encounter. If the character tries to cast one, "check" is "none": the spell simply fails to activate.
+     Their Bonus Actions: ${
+       [
+         ...bonusActions.map((entry) => `${entry.id} (${entry.name}, ${entry.left} left${entry.targeted ? ", given to an ally" : ""})`),
+         ...bonusSpells.map((known) => `${known.spell.id} (${known.spell.name}, a spell cast with a Bonus Action${known.spell.range.kind === "self" ? "" : ', "bonusTarget" is who it is cast on'})`),
+       ].join(", ") || "none"
+     }.
+     A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.
+   - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
+     Their Spells: ${spellLines.join(", ") || "none"}.${
+       slots.length
+         ? ` Spell slots left: ${slots
+             .map((left, index) => (left || index === 0 ? `${left} of level ${index + 1}` : ""))
+             .filter(Boolean)
+             .join(", ")}.`
+         : ""
+     }
+     A cantrip spends nothing. Any other spell spends a slot of its level, and with none left it cannot be cast. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
+     A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all, and all of an NPC's magic, is "arcana".
 
 8) Set "difficulty" by name. It is the task's own difficulty, the same for anyone who tries it. The character's talent is already in the bonus the game adds, so never lower or raise it for who is trying.
    - very-easy (target 5), easy (10), medium (15), hard (20), very-hard (25), nearly-impossible (30).
    - Most checks are easy or medium. Hard is a task that tests an expert. Very-hard and nearly-impossible are rare.
    - Encounter instructions that set a difficulty come first. A DC they give is its rung (DC 15 is medium). "Low" is easy, "medium" or "moderate" is medium, "high" is hard.
-   - A spell on the character's own list that no creature resists (it makes fog, light or sound, moves an object, or senses or reads something: Fog Cloud, Light, Mage Hand, Detect Magic, Comprehend Languages) is very-easy. A spell that works against a creature's mind or body (Charm Person, Ray of Frost) is easy, medium or hard by how strong the creature is.
 
 9) Set "mode" for the circumstances of this moment. Circumstances never change the difficulty.
    - "advantage" when something in the scene clearly helps: the target is distracted or unaware, darkness or noise covers a sneak, an ally is helping, the right tool is at hand.
@@ -179,10 +224,10 @@ ${MENU("save")}
    - Not for what the character is good or bad at, and not for their armor or anyone's conditions: the game already counts those.
 
 10) Set what the roll puts at stake for hit points, in "harm". Most rolls put none, so leave it empty. Use it only when this roll's own outcome would wound or heal someone:
-   - A spell or an act that hurts someone when it works: on "success", target them, kind "damage".
+   - An act, or an NPC's magic, that hurts someone when it works: on "success", target them, kind "damage".
    - A save or a check against a hazard that hurts when it fails (a trap, a fall, poison, fire): on "failure", target the character's own id, kind "damage".
-   - A spell, a potion or a skill that heals: on "success", target who is healed, kind "healing".
-   - "size" is light, moderate, heavy or severe, and the game rolls its dice. A scratch or a cantrip is light, a solid blow or a level 1 spell is moderate, a bad fall or a strong blast is heavy, and severe is rare. When the encounter instructions print dice for it (4d6), put them in "dice" as printed and leave "size" out.
+   - A potion, a skill or an NPC's magic that heals: on "success", target who is healed, kind "healing".
+   - "size" is light, moderate, heavy or severe, and the game rolls its dice. A scratch is light, a solid blow is moderate, a bad fall or a strong blast is heavy, and severe is rare. When the encounter instructions print dice for it (4d6), put them in "dice" as printed and leave "size" out.
    - "target" is an id from Who Is Here, or the character's own id${self ? `, ${self}` : ""}. Damage takes a "type": fire, cold, poison, psychic, bludgeoning and so on.
    - An attack takes no "harm": its weapon sets the damage. Never use damage for fear, shame, a threat, or a fight not yet joined.
 
@@ -205,11 +250,71 @@ Action: "${action}"
       const { object: pick } = await generateObject({ schema: rollPickSchema, prompt })
       // A Bonus Action is the roller's own, with a use left. One the game master makes up is dropped.
       const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
-      const bonus = used ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } } : {}
+      // A spell cast with a Bonus Action, beside the action. Only one spell a turn takes a slot, so beside a cast it is dropped.
+      const quick = pick.check === "cast" ? undefined : bonusSpells.find((known) => known.spell.id === pick.bonus?.trim() || known.spell.name.toLowerCase() === pick.bonus?.trim().toLowerCase())
+      const bonus = used
+        ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
+        : quick
+          ? { bonus: { feature: quick.spell.id, ...(pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
+          : {}
+      // A name is taken for its id, in a weapon, a spell or a target.
+      const named = (given: string | undefined, name: string, id: string) => !!given?.trim() && [id.toLowerCase(), name.toLowerCase()].includes(given.trim().toLowerCase())
+      if (pick.check === "cast") {
+        // A spell is one of the caster's own, with a slot for it. One the caster lacks, or cannot pay for, is not cast.
+        const known = knownSpells.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
+        const cost = known && castCost(character, known.spell.id, pick.ritual === true)
+        if (!known || !cost || "problem" in cost) {
+          console.log("[LLM] Roll requirement decision:", {
+            character: character.name,
+            requiresRoll: false,
+            cast: pick.spell,
+            refused: cost && "problem" in cost ? cost.problem : "not one of their spells",
+          })
+          return { roll: null, ...bonus }
+        }
+        const { spell } = known
+        const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
+        const asked = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])]
+        let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(0, targetLimit(spell))
+        // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
+        if (!chosen.length) {
+          if (spell.attack && targets.length === 1) chosen = [targets[0].id]
+          else if (self && ((spell.range.kind === "self" && !spell.range.area) || spell.healing)) chosen = [self]
+        }
+        const falls = !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
+        if (falls && !chosen.length) {
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast: spell.id, refused: "no one here to cast it on" })
+          return { roll: null, ...bonus }
+        }
+        const type = damageTypeIdSchema.safeParse(pick.damageType?.trim().toLowerCase())
+        const cast = { spell: spell.id, targets: chosen, ...(cost.cost.kind === "ritual" ? { ritual: true as const } : {}), ...(type.success ? { damageType: type.data } : {}) }
+        const casting = spellcastingOf(character)
+        if (spell.attack) {
+          // A spell attack is the caster's to throw, against the first target's Armor Class.
+          const target = everyone.find((other) => other.id === chosen[0])
+          const armorClass = target && combatStatsOf(target)?.armorClass
+          if (!target || armorClass === undefined || !casting) throw new Error(`${spell.name} has no one with an Armor Class to be cast at.`)
+          const picked = pick.mode ?? "normal"
+          const typed = self ? spellAttackModes({ ...character, id: self, type: "pc" }, { ...target, type: target.type ?? "npc" }, spell) : []
+          const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
+          const rollRequirement: ChosenRoll = {
+            cast,
+            rollType: spell.name,
+            difficulty: armorClass,
+            modifier: casting.attackBonus,
+            mode: combineModes([picked, ...typed.map((source) => source.mode)]),
+            ...(reasons.length ? { reasons } : {}),
+          }
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
+          return { roll: rollRequirement, ...bonus }
+        }
+        const resolved: RequiredCast = { cast, rollType: spell.name, difficulty: casting?.saveDc ?? 0, modifier: 0, mode: "normal" }
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast })
+        return { roll: null, cast: resolved, ...bonus }
+      }
       if (pick.check === "attack") {
-        // The pick names a weapon and a target off the two lists, by id. A name is taken for its id. One left out is
-        // settled where only one could be meant: the roller's only attack, the only one here to attack.
-        const named = (given: string | undefined, name: string, id: string) => !!given?.trim() && [id.toLowerCase(), name.toLowerCase()].includes(given.trim().toLowerCase())
+        // The pick names a weapon and a target off the two lists, by id. One left out is settled where only one could
+        // be meant: the roller's only attack, the only one here to attack.
         const attack = attacks.find((entry) => named(pick.weapon, entry.name, entry.id)) ?? (!pick.weapon?.trim() && attacks.length === 1 ? attacks[0] : undefined)
         const target = targets.find((other) => named(pick.target, other.name, other.id)) ?? (!pick.target?.trim() && targets.length === 1 ? targets[0] : undefined)
         if (!attack) throw new Error(`The game master asked for an attack with "${pick.weapon ?? ""}", which ${character.name} does not have.`)
@@ -251,8 +356,6 @@ Action: "${action}"
       const difficulty = hiding ? HIDE_DC : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
       if (!difficulty) throw new Error(`The game master asked for a ${checkName(check)} check with no difficulty.`)
 
-      // A spell is named only when it is one of the roller's own.
-      const spell = pick.spell?.trim() ? character.spells?.find((entry) => entry.name.toLowerCase() === pick.spell?.trim().toLowerCase())?.name : undefined
       // The game master's read of the moment, then what the sheet and the roller's conditions settle with no model.
       // Every source is kept as a reason, so a roll that Advantage and Disadvantage cancel can still say why.
       const typed = [
@@ -287,12 +390,11 @@ Action: "${action}"
       const stakes = hiding?.stakes ?? picks
       const rollRequirement: ChosenRoll = {
         check,
-        rollType: hiding ? hiding.rollType : spell ? `${spell} (${checkName(check)})` : checkName(check),
+        rollType: hiding ? hiding.rollType : checkName(check),
         difficulty,
         modifier: checkBonus(character, check),
         mode,
         ...(reasons.length ? { reasons } : {}),
-        ...(spell ? { spell } : {}),
         ...(stakes.length ? { stakes } : {}),
       }
       console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })

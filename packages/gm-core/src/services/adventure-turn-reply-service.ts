@@ -3,15 +3,16 @@ import { takeAction } from "../sheet/actions"
 import type { ConditionEntry } from "../sheet/condition-entry"
 import { useBonusAction } from "../sheet/features"
 import type { Sheet } from "../sheet/sheet"
+import { castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { TurnEffect } from "../sheet/turn-effect"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames } from "../story/render"
-import { turnScript } from "../story/turn"
+import { castBeats, turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
-import { rollDie } from "../utils/game-utils"
+import { rollD20, rollDie } from "../utils/game-utils"
 import { createRollRequirementService, type TurnReading } from "./roll-requirement-service"
 
 export function createAdventureTurnReplyService(ports: GmPorts) {
@@ -123,25 +124,38 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     const turn = await ports.store.getTurn({ turnId: args.turnId })
     if (!turn) throw new Error("Turn not found")
     let characters = turn.characters as TurnCharacter[]
-    const used = bonus ? useBonusAction({ characters, actorId: args.characterId, feature: bonus.feature, target: bonus.target, roll: rollDie }) : undefined
+    // A Bonus Action is a class feature of the hero's, or one of their spells that takes one. The spell is cast by
+    // the same rules as any other, and the story keeps it with no telling of its own: the turn's action is told after.
+    const actor = characters.find((character) => character.id === args.characterId)
+    const spell = bonus ? spellById.get(bonus.feature) : undefined
+    const cost = spell && actor ? castCost(actor, spell.id) : undefined
+    let spellBeats: StoryBeat[] = []
+    if (spell && actor && cost && !("problem" in cost)) {
+      const cast = castSpell({ characters, casterId: actor.id, spell, targets: [bonus?.target ?? actor.id], d20: rollD20, roll: rollDie })
+      characters = cast.characters.map((character) => (character.id === actor.id ? withCastSpent(character, cost.cost) : character))
+      spellBeats = castBeats({ step: "reply", character: actor.id }, actor, spell, cast, storyNames(turn.characters))
+    }
+    const used = bonus && !spell ? useBonusAction({ characters, actorId: args.characterId, feature: bonus.feature, target: bonus.target, roll: rollDie }) : undefined
     if (used) characters = used.characters
     const taken = action ? takeAction(characters, args.characterId, action) : undefined
     if (taken) characters = taken.characters
     console.log("[LLM] Reading applied:", { bonus: used?.use?.fact ?? "none", action: taken?.fact ?? "none" })
-    if (!used?.use && !taken?.fact) return
-    const told: StoryBeat[] = used?.use
-      ? [
-          {
-            kind: "feature",
-            by: { step: "reply", character: args.characterId },
-            character: args.characterId,
-            name: used.use.name,
-            text: used.use.fact,
-            ...(used.use.target ? { target: used.use.target } : {}),
-            ...(used.use.harm ? { harm: used.use.harm } : {}),
-          },
-        ]
-      : []
+    if (!used?.use && !taken?.fact && !spellBeats.length) return
+    const told: StoryBeat[] = spellBeats.length
+      ? spellBeats
+      : used?.use
+        ? [
+            {
+              kind: "feature",
+              by: { step: "reply", character: args.characterId },
+              character: args.characterId,
+              name: used.use.name,
+              text: used.use.fact,
+              ...(used.use.target ? { target: used.use.target } : {}),
+              ...(used.use.harm ? { harm: used.use.harm } : {}),
+            },
+          ]
+        : []
     await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, ...(told.length ? { story: [...turn.story, ...told] } : {}), updatedAt: Date.now() } })
   }
   return { readTurnReply, applyReading }

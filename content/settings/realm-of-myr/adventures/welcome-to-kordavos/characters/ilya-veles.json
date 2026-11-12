@@ -27,38 +27,6 @@
     }
   ],
   "skills": ["Performance", "Persuasion", "Deception", "Insight", "History (Kordavos)", "Etiquette"],
-  "spells": [
-    {
-      "name": "Vicious Mockery",
-      "description": "A cutting verse laced with magic that wounds a foe's resolve and spoils their next attack.",
-      "isUsed": false
-    },
-    {
-      "name": "Charm Person",
-      "description": "Magically charms a humanoid, causing them to regard you as a friendly acquaintance.",
-      "isUsed": false
-    },
-    {
-      "name": "Inspire Courage",
-      "description": "A rousing melody that steels the hearts of allies and sharpens their strikes.",
-      "isUsed": false
-    },
-    {
-      "name": "Minor Illusion",
-      "description": "Conjures a fleeting sound or image to distract, deceive, or delight.",
-      "isUsed": false
-    },
-    {
-      "name": "Healing Word",
-      "description": "A verse of mending that closes an ally's wounds from across the room.",
-      "isUsed": false
-    },
-    {
-      "name": "Sleep",
-      "description": "A lullaby of old Valkara that drags weak-willed foes into slumber.",
-      "isUsed": false
-    }
-  ],
   "specialAbilities": ["A Face in Every Hall: Ilya knows someone useful in nearly every tavern, salon, and feast-hall in Kordavos", "Skald's Memory: Ilya can recall any song, name, or conversation he has heard, word for word"],
   "type": "pc",
   "attributes": {

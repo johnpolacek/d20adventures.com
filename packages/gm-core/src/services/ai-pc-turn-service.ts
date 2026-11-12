@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { GmPorts, Llm } from "../ports"
+import { spellWords } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, knowledgeNote } from "../story/knowledge"
@@ -17,9 +18,9 @@ import { createAdventureTurnReplyService } from "./adventure-turn-reply-service"
 
 // The character as a player knows them. Each line ends with a newline.
 function characterSheet(character: TurnCharacter): string {
-  const availableSpells = (character.spells || []).filter((spell) => !spell.isUsed)
+  const spells = spellWords(character)
   return `Name: ${character.name}
-${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${availableSpells.length ? `Spells: ${availableSpells.map((s) => s.name).join(", ")}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}`
+${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${spells ? `Spells: ${spells}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}`
 }
 
 function buildAiPcIntentPrompt(
@@ -238,7 +239,8 @@ export function createAiPcTurnService(ports: GmPorts) {
         characterPerformingAction: character,
         narrativeAction: intent,
       })
-      const rollRequirement = reading.roll
+      // A spell with nothing to throw goes the same way as a roll: the companion's turn resolves it just below.
+      const rollRequirement = reading.roll ?? reading.cast ?? null
 
       await ports.store.submitReply({
         turnId,

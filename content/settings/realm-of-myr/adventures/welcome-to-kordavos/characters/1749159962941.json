@@ -49,48 +49,6 @@
   },
   "id": "1749159962941",
   "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/pcs/dc23c6a6-6247-4384-bccc-2eeed66a7b0c.png?t=1749161969365",
-  "spells": [
-    {
-      "name": "Detect Magic",
-      "description": "Reveals the presence and general nature of magical auras within range",
-      "isUsed": false
-    },
-    {
-      "name": "Mage Hand",
-      "description": "Creates a spectral, floating hand that can manipulate an object from a distance.",
-      "isUsed": false
-    },
-    {
-      "name": "Light",
-      "description": "Causes an object to shed bright light, illuminating the surrounding area.",
-      "isUsed": false
-    },
-    {
-      "name": "Ray of Frost",
-      "description": "Hurls a beam of frigid cold at a creature, dealing damage and reducing its speed.",
-      "isUsed": false
-    },
-    {
-      "name": "Identify",
-      "description": "Determines the specific magical properties of an item.",
-      "isUsed": false
-    },
-    {
-      "name": "Comprehend Languages",
-      "description": "Allows you to understand the literal meaning of any spoken language you hear.",
-      "isUsed": false
-    },
-    {
-      "name": "Fog Cloud",
-      "description": "Creates a dense sphere of fog, heavily obscuring the area and providing cover.",
-      "isUsed": false
-    },
-    {
-      "name": "Charm Person",
-      "description": "Magically charms a humanoid, causing them to regard you as a friendly acquaintance.",
-      "isUsed": false
-    }
-  ],
   "specialAbilities": [],
   "sheet": {
     "class": "wizard",

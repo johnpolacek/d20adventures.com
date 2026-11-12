@@ -27,43 +27,6 @@
     }
   ],
   "skills": ["Arcana", "Investigation", "Cartography", "History", "Perception"],
-  "spells": [
-    {
-      "name": "Detect Magic",
-      "description": "Reveals the presence and general nature of magical auras within range.",
-      "isUsed": false
-    },
-    {
-      "name": "Identify",
-      "description": "Determines the specific magical properties of an item.",
-      "isUsed": false
-    },
-    {
-      "name": "Mage Armor",
-      "description": "Wraps the caster in an invisible ward of protective force.",
-      "isUsed": false
-    },
-    {
-      "name": "Magic Missile",
-      "description": "Darts of arcane force that unerringly strike their target.",
-      "isUsed": false
-    },
-    {
-      "name": "Grease",
-      "description": "Slicks the ground with conjured grease, sending foes sprawling.",
-      "isUsed": false
-    },
-    {
-      "name": "Comprehend Languages",
-      "description": "Allows the caster to understand the literal meaning of any spoken or written language.",
-      "isUsed": false
-    },
-    {
-      "name": "Misty Step",
-      "description": "The caster vanishes in silvery mist and reappears a short distance away.",
-      "isUsed": false
-    }
-  ],
   "specialAbilities": ["Cartographer's Memory: Cassia can accurately recall and sketch any place she has seen", "Ward Sense: Cassia recognizes the structure of Valkaran wards and sealing magic on sight"],
   "type": "pc",
   "attributes": {

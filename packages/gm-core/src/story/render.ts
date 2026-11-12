@@ -97,8 +97,11 @@ export function scriptLine(beat: StoryBeat, names: StoryNames, marked = true): s
     }
     case "reply":
       return `[The player wrote for ${nameOf(names, beat.character)}: ${beat.text}]`
-    case "feature":
-      return `[${beat.text}]`
+    case "feature": {
+      // What it hurt or healed, in words, so a later prompt knows it without the dice.
+      const did = (beat.harm ?? []).map((harm) => `${nameOf(names, harm.target)} ${harm.kind === "healing" ? "regains" : "loses"} ${harm.amount} hit points`)
+      return `[${beat.text}${did.length ? ` ${did.join(". ")}.` : ""}]`
+    }
     default:
       return beat.text
   }

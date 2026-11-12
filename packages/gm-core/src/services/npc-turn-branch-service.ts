@@ -24,8 +24,6 @@ export type NpcRollInfo = {
   modifier: number
   result: number
   success: boolean
-  // The NPC's own spell the roll cast.
-  spell?: string
 }
 
 export type NpcTurnBranchResult = {
@@ -152,7 +150,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       // The harm is the engine's. The outcome may still hand over an item.
       effects = outcomeResult.effects
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
-    } else if (rollRequirement && !("deathSave" in rollRequirement)) {
+    } else if (rollRequirement && "check" in rollRequirement) {
       // A check or a save: the NPC rolls with its stat block's bonus, which the requirement already carries, and the
       // engine settles what the roll put at stake before anyone tells it.
       const failedBy = saveFailedBy(args.npc, rollRequirement.check)
@@ -165,7 +163,6 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         modifier,
         result,
         success,
-        ...(rollRequirement.spell ? { spell: rollRequirement.spell } : {}),
       }
       const settled = applyStakes({ characters: updatedCharacters, stakes: rollRequirement.stakes, outcome: success ? "success" : "failure", roll: rollDie, rules: args.rules })
       updatedCharacters = afterRoll(settled.characters, args.npc.id, rollRequirement)

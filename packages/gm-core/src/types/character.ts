@@ -11,10 +11,10 @@ export const equipmentItemSchema = z.object({
 
 export type EquipmentItem = z.infer<typeof equipmentItemSchema>
 
+// A spell an NPC is written with, by name. A hero's spells are on the sheet, by SRD id (../sheet/sheet).
 export const spellSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
-  isUsed: z.boolean().optional(),
 })
 
 export const specialAbilitySchema = z.object({
@@ -75,6 +75,8 @@ export const baseCharacterSchema = z.object({
   // the engine writes them, through ../sheet/features.
   featureUses: featureUsesSchema.optional(),
   inspiration: inspirationSchema.optional(),
+  // Spell slots used, by spell level, the first for level 1. Only the engine writes them, through ../sheet/spells.
+  spellSlots: z.array(z.number().int().min(0)).optional(),
   // Dead, or gone from the encounter for good. Neither is a condition, and only the engine sets them.
   dead: z.literal(true).optional(),
   fled: z.literal(true).optional(),
@@ -134,6 +136,7 @@ export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
   turnEffects: true,
   featureUses: true,
   inspiration: true,
+  spellSlots: true,
   dead: true,
   fled: true,
 })

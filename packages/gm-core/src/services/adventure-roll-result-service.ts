@@ -6,6 +6,7 @@ import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { afterHarm, deathSave } from "../sheet/death"
 import { inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
+import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -13,15 +14,14 @@ import { castRulesNote } from "../story/limits"
 import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
-import { attackBeat, rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
+import { attackBeat, castBeats, rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
-import { d20sFor, rollDie } from "../utils/game-utils"
+import { d20sFor, rollD20, rollDie } from "../utils/game-utils"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { hasFled, isDead, isDown } from "../utils/turn-actors"
-import { DEATH_SAVE, isAttackRoll, isDeathSaveRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
+import { DEATH_SAVE, isAttackRoll, isCastRoll, isDeathSaveRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules } from "../wiki-adventures/player-safety"
-import { markSpellAsUsed } from "./spell-tracking-service"
 
 export function getEncounterInstructionsFromPlan(plan: AdventurePlan, encounterId: string): string {
   for (const section of plan.sections) {
@@ -54,6 +54,9 @@ function buildRollOutcomePrompt(args: {
   attack?: string
   // What the roll did to hit points and conditions, already settled by the engine, in plain words.
   harm?: string[]
+  // A spell cast, already resolved by the engine: its name, what it did in plain words, and for a utility spell the
+  // spell's own text, which binds what it can do.
+  spell?: { name: string; facts: string[]; text?: string }
 }): string {
   return `
 Context:
@@ -72,13 +75,23 @@ IMPORTANT: Only reference NPCs listed above. Do NOT reference characters mention
 Player action (verbatim): """${args.playerActionText}"""
   
 ${
-  args.attack
-    ? `${args.attack}\nThe game has already rolled this attack and its damage. Tell the blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
-    : `A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args.totalResult}, Difficulty: ${args.difficulty}, Margin: ${args.margin}).${
-        args.harm?.length
-          ? `\nThe game has already settled what this did to hit points and conditions:\n${args.harm.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated. Add no other harm, healing or condition and undo none of it. Give no number.`
-          : "\nThis roll changes no one's hit points or conditions. No one is wounded, healed, knocked down, knocked out or killed by it."
+  args.spell
+    ? `${args.characterName} casts ${args.spell.name}.${
+        args.spell.facts.length
+          ? `\nThe game has already rolled this spell:\n${args.spell.facts.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated: each hit, miss and save, and how each one stands after it. Add no other harm, healing or condition and undo none of it. Give no number.`
+          : ""
+      }${
+        args.spell.text
+          ? `\nThe spell does what its own text says and no more:\n"""${args.spell.text}"""\nIt changes no one's hit points or conditions. Tell what it shows or does here, from the encounter instructions and the story so far, and invent nothing it would reveal.`
+          : ""
       }`
+    : args.attack
+      ? `${args.attack}\nThe game has already rolled this attack and its damage. Tell the blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
+      : `A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args.totalResult}, Difficulty: ${args.difficulty}, Margin: ${args.margin}).${
+          args.harm?.length
+            ? `\nThe game has already settled what this did to hit points and conditions:\n${args.harm.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated. Add no other harm, healing or condition and undo none of it. Give no number.`
+            : "\nThis roll changes no one's hit points or conditions. No one is wounded, healed, knocked down, knocked out or killed by it."
+        }`
 }
 
   Guidelines:
@@ -164,11 +177,42 @@ export function createAdventureRollResultService(ports: GmPorts) {
     let blow: Strike | undefined
     let stakeFacts: string[] = []
     let target: TurnCharacter | undefined
-    let roll: StoryBeat
+    let rolls: StoryBeat[]
+    // A spell cast, for the outcome's prompt.
+    let spellCast: { name: string; facts: string[]; text?: string } | undefined
+    // Everyone the roll fell on, who stay named among those present so the outcome can tell them falling.
+    let struckIds: string[] = []
     let numbers: { natural: number; bonus: number; total: number; against: number; success: boolean }
     // Whether the roller's Bardic Inspiration die was rolled, and so is spent.
     let inspired = false
-    if (isAttackRoll(required)) {
+    if (isCastRoll(required)) {
+      // A spell: the engine resolves it by its typed data, and spends what it costs. A spell attack takes the caster's
+      // d20. Any other takes none, and each target's saving throw is rolled here.
+      const spell = spellById.get(required.cast.spell)
+      if (!spell) throw new Error(`"${required.cast.spell}" is not a spell.`)
+      const cost = castCost(args.character, spell.id, required.cast.ritual === true)
+      if ("problem" in cost) throw new Error(cost.problem)
+      const cast = castSpell({
+        characters: turnCharacters,
+        casterId: args.characterId,
+        spell,
+        targets: required.cast.targets,
+        ...(spell.attack ? { attackDice: d20sFor(mode, args.dice) } : {}),
+        mode,
+        d20: rollD20,
+        roll: rollDie,
+        rules,
+        damageType: required.cast.damageType,
+      })
+      turnCharacters = cast.characters.map((character) => (character.id === args.characterId ? withCastSpent(character, cost.cost) : character))
+      rolls = castBeats(by, args.character, spell, cast, storyNames(args.turn.characters))
+      spellCast = { name: spell.name, facts: cast.facts, ...(isEngineSpell(spell) ? {} : { text: spell.description }) }
+      struckIds = required.cast.targets
+      const thrown = cast.attack?.roll
+      numbers = thrown
+        ? { natural: thrown.natural, bonus: thrown.bonus, total: thrown.total, against: thrown.armorClass, success: thrown.hit }
+        : { natural: 0, bonus: 0, total: 0, against: 0, success: true }
+    } else if (isAttackRoll(required)) {
       // An attack: the engine rolls to hit against the target's Armor Class and, on a hit, the damage. The target's
       // hit points change here and nowhere else.
       target = turnCharacters.find((character) => character.id === required.attack.target)
@@ -177,7 +221,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
       blow = struck
       inspired = struck.inspired !== undefined
       turnCharacters = turnCharacters.map((character) => (character.id === required.attack.target ? afterHarm(struck.target) : character))
-      roll = attackBeat(by, args.character, target.id, blow)
+      rolls = [attackBeat(by, args.character, target.id, blow)]
+      struckIds = [target.id]
       numbers = { natural: blow.roll.natural, bonus: blow.roll.bonus, total: blow.roll.total, against: blow.roll.armorClass, success: blow.roll.hit }
     } else {
       // The bonus is read from the sheet as the die lands, so the sheet is always the one source of it.
@@ -192,13 +237,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const settled = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
       turnCharacters = settled.characters
       stakeFacts = [...(failedBy ? [`${args.character.name} is ${failedBy} and fails this saving throw outright.`] : []), ...settled.facts]
-      roll = rollBeat(by, args.character, rollType, result, settled.harm, settled.conditions)
+      rolls = [rollBeat(by, args.character, rollType, result, settled.harm, settled.conditions)]
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
     // What the roll used up: an ally's Help, and the roller's own hiding when they attacked.
     turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken)
     if (inspired) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withoutInspiration(character) : character))
-    const spell = isAttackRoll(required) ? undefined : required.spell
     const { total: totalResult, against: difficulty } = numbers
     const margin = totalResult - difficulty
     const story = args.turn.story
@@ -206,14 +250,14 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const playerActionText = storyText(lastStep(story), names)
     const narrativeContext = storyText(story, names).split(/\n\n+/).slice(-2).join("\n\n")
     const scene = await sceneFor(ports, args.turn)
-    let added: StoryBeat[] = [roll]
+    let added: StoryBeat[] = rolls
     // The dead are named apart, so an outcome does not have one gasp or stand again.
     // The one just struck down is still named among those present, so the outcome can tell them falling.
     const presentNpcs = turnCharacters
-      .filter((character) => character.type === "npc" && (!isDown(character) || character.id === target?.id) && !hasFled(character))
+      .filter((character) => character.type === "npc" && (!isDown(character) || struckIds.includes(character.id)) && !hasFled(character))
       .map((character) => character.name)
       .join(", ")
-    const deadNames = turnCharacters.filter((character) => isDead(character) && character.id !== target?.id).map((character) => character.name)
+    const deadNames = turnCharacters.filter((character) => isDead(character) && !struckIds.includes(character.id)).map((character) => character.name)
 
     const rollOutcomePrompt = buildRollOutcomePrompt({
       narrativeContext,
@@ -230,13 +274,14 @@ export function createAdventureRollResultService(ports: GmPorts) {
       scene,
       attack: blow && target ? strikeFacts(args.character.name, target.name, blow) : undefined,
       harm: stakeFacts,
+      spell: spellCast,
       ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
 
     try {
       const { object } = await generateObject({ prompt: rollOutcomePrompt, schema: storyOutputObject })
       const outcome = cleanStory(object.beats, scene, by).filter((b) => !("text" in b) || sanitizeRollOutcome(b.text))
-      added = [roll, ...outcome]
+      added = [...rolls, ...outcome]
     } catch (error) {
       console.error("[resolvePlayerRollResult] Error generating roll outcome:", error)
     }
@@ -245,7 +290,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
     await wait(500)
 
     // Anyone the outcome left down with no Death Saving Throw to make this round is done with it.
-    let updatedCharacters = turnCharacters.map((character) =>
+    const updatedCharacters = turnCharacters.map((character) =>
       character.id === args.characterId
         ? {
             ...character,
@@ -256,8 +301,6 @@ export function createAdventureRollResultService(ports: GmPorts) {
           }
         : afterHarm(character)
     )
-
-    if (spell) updatedCharacters = markSpellAsUsed(updatedCharacters, args.characterId, spell)
 
     return {
       story: newStory,

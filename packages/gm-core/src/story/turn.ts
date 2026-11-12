@@ -2,11 +2,12 @@ import { z } from "zod"
 import type { GmPorts } from "../ports"
 import type { Strike } from "../sheet/attack"
 import type { CheckResult } from "../sheet/check"
+import type { Cast } from "../sheet/spells"
 import { isDown } from "../utils/turn-actors"
 import { authoredStory } from "./authored"
 import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "./beats"
 import { cleanStory, type StoryScene } from "./clean"
-import { characterStory, storyNames, storyParagraphs, storyText } from "./render"
+import { characterStory, nameOf, type StoryNames, storyNames, storyParagraphs, storyText } from "./render"
 
 type StoryTurn = {
   encounterId: string
@@ -92,4 +93,80 @@ export function attackBeat(by: StoryBy, roller: { id: string; name: string; imag
     attack: { target, ...(roll.critical ? { critical: true as const } : {}), ...(blow.damage ? { damage: blow.damage.parts, taken: blow.taken } : {}) },
     ...(blow.inspired !== undefined ? { inspired: blow.inspired } : {}),
   }
+}
+
+const ABILITY_NAMES = { str: "Strength", dex: "Dexterity", con: "Constitution", int: "Intelligence", wis: "Wisdom", cha: "Charisma" } as const
+
+/**
+ * A spell cast as the story keeps it. A spell attack is the caster's roll against Armor Class, with its damage. Each
+ * target's saving throw is a roll of the target's own, with what it then lost or was given. A spell with no spell
+ * attack opens on an entry of its own that names it, with what it dealt or healed with no roll.
+ */
+export function castBeats(
+  by: StoryBy,
+  caster: { id: string; name: string; image?: string },
+  spell: { name: string },
+  cast: Cast<{ id: string; name: string; image?: string }>,
+  names: StoryNames
+): StoryBeat[] {
+  const beats: StoryBeat[] = []
+  const struck = cast.attack
+  // What the attack itself dealt is on its own beat. The rest belongs to the saves, or to the spell with no roll.
+  const rest = struck?.damage ? cast.harm.slice(1) : cast.harm
+  const saved = new Set(cast.saves.map((save) => save.target))
+  if (struck) {
+    const { roll } = struck
+    beats.push({
+      kind: "roll",
+      by,
+      character: caster.id,
+      name: caster.name,
+      check: spell.name,
+      natural: roll.natural,
+      ...(roll.mode !== "normal" ? { dice: roll.dice, mode: roll.mode } : {}),
+      modifier: roll.bonus,
+      total: roll.total,
+      dc: roll.armorClass,
+      success: roll.hit,
+      ...(caster.image ? { image: caster.image } : {}),
+      attack: { target: struck.target, ...(roll.critical ? { critical: true as const } : {}), ...(struck.damage ? { damage: struck.damage.parts, taken: struck.taken } : {}) },
+      spell: spell.name,
+      ...(cast.conditions.some((change) => change.target === struck.target && !saved.has(change.target)) ? { conditions: cast.conditions.filter((change) => change.target === struck.target) } : {}),
+    })
+  } else {
+    const on = [...new Set([...cast.saves.map((save) => save.target), ...cast.harm.map((harm) => harm.target), ...cast.conditions.map((change) => change.target)])]
+    const direct = rest.filter((harm) => !saved.has(harm.target))
+    beats.push({
+      kind: "feature",
+      by,
+      character: caster.id,
+      name: spell.name,
+      text: `${caster.name} casts ${spell.name}${on.length ? ` on ${on.map((id) => nameOf(names, id)).join(" and ")}` : ""}.`,
+      ...(on.length === 1 ? { target: on[0] } : {}),
+      ...(direct.length ? { harm: direct } : {}),
+    })
+  }
+  for (const save of cast.saves) {
+    const harm = rest.filter((entry) => entry.target === save.target)
+    const conditions = cast.conditions.filter((change) => change.target === save.target)
+    const target = cast.characters.find((character) => character.id === save.target)
+    beats.push({
+      kind: "roll",
+      by,
+      character: save.target,
+      name: target?.name ?? nameOf(names, save.target),
+      check: `${ABILITY_NAMES[save.ability]} Saving Throw`,
+      natural: save.natural,
+      ...(save.mode !== "normal" ? { dice: save.dice, mode: save.mode } : {}),
+      modifier: save.bonus,
+      total: save.total,
+      dc: save.dc,
+      success: save.success,
+      ...(target?.image ? { image: target.image } : {}),
+      spell: spell.name,
+      ...(harm.length ? { harm } : {}),
+      ...(conditions.length ? { conditions } : {}),
+    })
+  }
+  return beats
 }

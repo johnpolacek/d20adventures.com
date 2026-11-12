@@ -49,7 +49,7 @@ export function characterInfo(character: TurnCharacter, portrait: string | undef
       ...(sheet ? sheetDetails(sheet) : []),
       { label: "Equipment", items: character.equipment?.length ? character.equipment.map((e) => `${e.name}${e.description ? `. ${e.description}` : ""}`) : ["None"] },
       { label: "Effects", items: character.effects?.length ? character.effects.map((e) => `${e.name}, ${e.duration} ${e.duration === 1 ? "round" : "rounds"} left. ${e.description}`) : ["None"] },
-      ...(character.spells?.length ? [{ label: "Spells", items: character.spells.map((s) => `${s.name}, ${s.isUsed ? "used" : "available"}${s.description ? `. ${s.description}` : ""}`) }] : []),
+      ...(character.spells?.length ? [{ label: "Spells", items: character.spells.map((s) => `${s.name}${s.description ? `. ${s.description}` : ""}`) }] : []),
     ],
   }
 }

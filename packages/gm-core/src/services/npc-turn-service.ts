@@ -15,7 +15,7 @@ import { createNpcTurnBranchService, handleSkipPassNpcTurn, type NpcRollInfo, ty
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "./npc-turn-effects-service"
 import { buildNpcActionContext, buildNpcActionPrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "./npc-turn-intent-service"
-import { applyNpcSpellPostProcessing, finalizeNpcTurnResponse } from "./npc-turn-postprocess-service"
+import { finalizeNpcTurnResponse } from "./npc-turn-postprocess-service"
 
 // The encounter's intro as the GM reads it, private paragraphs marked, and its authored source, which each NPC reads as
 // it knows it.
@@ -208,16 +208,10 @@ export function createNpcTurnService(ports: GmPorts) {
       rules,
     })
 
-    let updatedCharacters = branchResult.updatedCharacters
+    const updatedCharacters = branchResult.updatedCharacters
     const rollInfo = branchResult.rollInfo
     const effects = branchResult.effects
     const beatsToAppend = branchResult.beatsToAppend
-
-    updatedCharacters = applyNpcSpellPostProcessing({
-      updatedCharacters,
-      rollInfo,
-      npcId: npc.id,
-    })
 
     return finalizeNpcTurnResponse({
       actionSummary: actionResult.actionSummary,

@@ -253,7 +253,6 @@ export default defineSchema({
             v.object({
               name: v.string(),
               description: v.optional(v.string()),
-              isUsed: v.optional(v.boolean()),
             })
           )
         ),
@@ -261,6 +260,7 @@ export default defineSchema({
         conditions: v.optional(v.array(v.object({ id: v.string(), source: v.optional(v.string()), turns: v.optional(v.number()), level: v.optional(v.number()) }))),
         turnEffects: v.optional(v.array(v.object({ id: v.string(), by: v.string(), skill: v.optional(v.string()), turns: v.number() }))),
         featureUses: v.optional(v.record(v.string(), v.number())),
+        spellSlots: v.optional(v.array(v.number())),
         inspiration: v.optional(v.object({ die: v.number(), by: v.string() })),
         dead: v.optional(v.literal(true)),
         fled: v.optional(v.literal(true)),

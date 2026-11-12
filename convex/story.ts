@@ -60,6 +60,8 @@ export const storyValidator = v.array(
       conditions: v.optional(v.array(v.object({ target: v.string(), condition: v.string(), ends: v.optional(v.literal(true)) }))),
       // A Bardic Inspiration die rolled and added to a roll that had failed.
       inspired: v.optional(v.number()),
+      // The spell this roll belongs to: the caster's spell attack, or a target's saving throw against it.
+      spell: v.optional(v.string()),
       // A Death Saving Throw: the saves once it was made, and how it ended the hero's dying.
       deathSave: v.optional(v.object({ successes: v.number(), failures: v.number(), fate: v.optional(v.union(v.literal("revived"), v.literal("stable"), v.literal("dead"))) })),
     }),

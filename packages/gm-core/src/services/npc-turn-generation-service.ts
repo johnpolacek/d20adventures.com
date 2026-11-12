@@ -2,6 +2,7 @@ import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { hitPointWords } from "../sheet/hit-points"
+import { spellWords } from "../sheet/spells"
 import { authoredText } from "../story/authored"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, knowledgeNote } from "../story/knowledge"
@@ -13,7 +14,6 @@ import { beatsField, characterScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { isDead, isDown } from "../utils/turn-actors"
-import { formatSpellsForPrompt } from "./spell-tracking-service"
 
 const npcActionSchema = z.object({
   actionSummary: z.string(),
@@ -101,7 +101,7 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
     .join("\n\n")
 
   const npcEquipmentList = npc.equipment?.map((equipment) => equipment.name).join(", ") || "None"
-  const npcSpellsList = npc.spells && npc.spells.length > 0 ? formatSpellsForPrompt(npc) : "None"
+  const npcSpellsList = spellWords(npc) || "None"
   const npcDetails = `
 NPC Details:
 - Name: ${npc.name}

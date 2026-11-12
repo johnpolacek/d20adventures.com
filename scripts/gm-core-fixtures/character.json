@@ -303,9 +303,6 @@
                 },
                 "description": {
                   "type": "string"
-                },
-                "isUsed": {
-                  "type": "boolean"
                 }
               },
               "required": ["name"],
@@ -395,9 +392,6 @@
                 },
                 "description": {
                   "type": "string"
-                },
-                "isUsed": {
-                  "type": "boolean"
                 }
               },
               "required": ["name"],
@@ -552,9 +546,6 @@
                 },
                 "description": {
                   "type": "string"
-                },
-                "isUsed": {
-                  "type": "boolean"
                 }
               },
               "required": ["name"],

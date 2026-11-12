@@ -34,28 +34,23 @@
   "spells": [
     {
       "name": "Detect Magic",
-      "description": "Borina can sense the presence of magic within 30 feet.",
-      "isUsed": false
+      "description": "Borina can sense the presence of magic within 30 feet."
     },
     {
       "name": "Augury",
-      "description": "Borina can cast a spell to receive an omen from an otherworldly entity regarding the outcome of a specific course of action that she plans to take within the next 30 minutes.",
-      "isUsed": false
+      "description": "Borina can cast a spell to receive an omen from an otherworldly entity regarding the outcome of a specific course of action that she plans to take within the next 30 minutes."
     },
     {
       "name": "Clairvoyance",
-      "description": "Borina can create an invisible sensor at a chosen location within range, allowing her to see or hear through it.",
-      "isUsed": false
+      "description": "Borina can create an invisible sensor at a chosen location within range, allowing her to see or hear through it."
     },
     {
       "name": "Scrying",
-      "description": "Borina can use a crystal ball to magically spy on a creature or location.",
-      "isUsed": false
+      "description": "Borina can use a crystal ball to magically spy on a creature or location."
     },
     {
       "name": "Guidance",
-      "description": "Borina can touch one willing creature to grant them a d4 bonus to one ability check of their choice.",
-      "isUsed": false
+      "description": "Borina can touch one willing creature to grant them a d4 bonus to one ability check of their choice."
     }
   ],
   "specialAbilities": [

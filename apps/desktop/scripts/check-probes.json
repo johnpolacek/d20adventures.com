@@ -86,11 +86,12 @@
     "encounter": "the-crate",
     "hero": "1749159962941",
     "action": "I cast Detect Magic on the crate.",
-    "checks": ["intelligence"],
-    "spell": "Detect Magic",
-    "dcs": [5],
-    "mode": "normal",
-    "stakes": []
+    "checks": ["cast"],
+    "cast": {
+      "spell": "detect-magic",
+      "targets": ["1749159962941"],
+      "ritual": "either"
+    }
   },
   {
     "id": "charm-person",
@@ -98,18 +99,11 @@
     "encounter": "the-transaction",
     "hero": "1749159962941",
     "action": "I cast Charm Person on Reinhard so he lowers his blade and hears me out.",
-    "checks": ["intelligence"],
-    "spell": "Charm Person",
-    "dcs": [10, 15],
-    "mode": "normal",
-    "stakes": [
-      {
-        "on": "success",
-        "target": "npcs-1749163978757",
-        "kind": "condition",
-        "condition": "charmed"
-      }
-    ]
+    "checks": ["cast"],
+    "cast": {
+      "spell": "charm-person",
+      "targets": ["npcs-1749163978757"]
+    }
   },
   {
     "id": "sneak-with-help",
@@ -199,17 +193,12 @@
     "hero": "1749159962941",
     "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
     "action": "I cast Ray of Frost at Reinhard.",
-    "checks": ["intelligence"],
-    "spell": "Ray of Frost",
-    "dcs": [10, 15],
-    "mode": "normal",
-    "stakes": [
-      {
-        "on": "success",
-        "target": "npcs-1749163978757",
-        "kind": "damage"
-      }
-    ]
+    "checks": ["cast"],
+    "cast": {
+      "spell": "ray-of-frost",
+      "targets": ["npcs-1749163978757"]
+    },
+    "mode": "normal"
   },
   {
     "id": "healing-word",
@@ -219,17 +208,11 @@
     "allies": ["branka-stoneveil"],
     "narrative": "Branka staggers back from the blades, bleeding from a deep cut along her arm.",
     "action": "I call out a Healing Word to close Branka's wound.",
-    "checks": ["wisdom"],
-    "spell": "Healing Word",
-    "dcs": [5, 10],
-    "mode": "normal",
-    "stakes": [
-      {
-        "on": "success",
-        "target": "branka-stoneveil",
-        "kind": "healing"
-      }
-    ]
+    "checks": ["cast"],
+    "cast": {
+      "spell": "healing-word",
+      "targets": ["branka-stoneveil"]
+    }
   },
   {
     "id": "flame-jet",
@@ -477,6 +460,116 @@
     },
     "bonus": {
       "feature": "bard-bardic-inspiration",
+      "target": "branka-stoneveil"
+    }
+  },
+  {
+    "id": "magic-missile",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
+    "action": "I cast Magic Missile and send every dart into Reinhard.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "magic-missile",
+      "targets": ["npcs-1749163978757"]
+    }
+  },
+  {
+    "id": "out-of-slots",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck. She has already spent the last of her power on two spells.",
+    "action": "I cast Charm Person on Reinhard.",
+    "slotsUsed": {
+      "1749159962941": [2]
+    },
+    "checks": ["none"]
+  },
+  {
+    "id": "cantrip-with-no-slots",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck. She has already spent the last of her power on two spells.",
+    "action": "I cast Ray of Frost at Reinhard.",
+    "slotsUsed": {
+      "1749159962941": [2]
+    },
+    "checks": ["cast"],
+    "cast": {
+      "spell": "ray-of-frost",
+      "targets": ["npcs-1749163978757"]
+    }
+  },
+  {
+    "id": "ritual-detect",
+    "adventure": "covert-cargo",
+    "encounter": "the-crate",
+    "hero": "1749159962941",
+    "narrative": "The deck is quiet and the crate sits before Lyra, unguarded. She has already spent the last of her power on two spells.",
+    "action": "I sit down by the crate and take ten slow minutes to cast Detect Magic over it as a ritual.",
+    "slotsUsed": {
+      "1749159962941": [2]
+    },
+    "checks": ["cast"],
+    "cast": {
+      "spell": "detect-magic",
+      "targets": ["1749159962941"],
+      "ritual": true
+    }
+  },
+  {
+    "id": "not-her-spell",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
+    "action": "I cast Fireball at Reinhard.",
+    "checks": ["none"]
+  },
+  {
+    "id": "sacred-flame",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I call down Sacred Flame on the thug.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "sacred-flame",
+      "targets": ["warehouse-thug"]
+    }
+  },
+  {
+    "id": "light-the-way",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "action": "I cast Light on the tip of my staff so we can see the deck.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "light"
+    }
+  },
+  {
+    "id": "heal-and-strike",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "narrative": "Steel rings in the warehouse. Branka staggers back from the thug's cudgel, bleeding from a cut along her arm.",
+    "action": "I call out a Healing Word to Branka, then bring my quarterstaff down on the thug.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "quarterstaff",
+      "target": "warehouse-thug"
+    },
+    "bonus": {
+      "feature": "healing-word",
       "target": "branka-stoneveil"
     }
   }
