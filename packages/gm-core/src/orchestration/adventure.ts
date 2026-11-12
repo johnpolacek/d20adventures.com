@@ -9,7 +9,7 @@ import { type StandingOrders, standingOrdersSchema } from "../sheet/turn-effect"
 import type { StoryBeat } from "../story/beats"
 import { storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
-import type { RequiredCast, RequiredRoll, RollRequirement } from "../validations/roll-requirement-schema"
+import type { RequiredCast, RequiredFeature, RequiredRoll, RollRequirement } from "../validations/roll-requirement-schema"
 
 export function createAdventure(ports: GmPorts) {
   const { assertAdventureAccessByTurn } = createAdventureAccess(ports)
@@ -66,8 +66,9 @@ export function createAdventure(ports: GmPorts) {
     })
     // An action with no roll (Dodge, Help) is the hero's whole turn: what it leaves is written before anyone else acts.
     const { fell } = await applyReading({ turnId, characterId, reading })
-    // A spell that asks for no throw is resolved now: the engine rolls it, and the GM tells it.
-    if (reading.cast && !fell) await resolveCast({ turnId, characterId, cast: reading.cast })
+    // A spell or a feature that asks for no throw is resolved now: the engine rolls it, and the GM tells it.
+    const quiet = reading.cast ?? reading.feature
+    if (quiet && !fell) await resolveCast({ turnId, characterId, cast: quiet })
     if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
     ports.narration.afterTurn(turnId)
     return { rollRequired: null }
@@ -138,7 +139,7 @@ export function createAdventure(ports: GmPorts) {
   }
 
   // A spell cast that takes no d20 of the caster's: resolved as the reply is read, with the turn as it then stands.
-  async function resolveCast({ turnId, characterId, cast }: { turnId: string; characterId: string; cast: RequiredCast }) {
+  async function resolveCast({ turnId, characterId, cast }: { turnId: string; characterId: string; cast: RequiredCast | RequiredFeature }) {
     const turn = await ports.store.getTurn({ turnId })
     if (!turn) throw new Error("Turn not found")
     const adventure = await ports.store.getAdventure({ adventureId: turn.adventureId })

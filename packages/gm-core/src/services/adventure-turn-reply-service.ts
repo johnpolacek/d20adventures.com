@@ -3,10 +3,12 @@ import { takeAction } from "../sheet/actions"
 import { checkBonus } from "../sheet/check"
 import type { ConditionEntry } from "../sheet/condition-entry"
 import { afterHarm } from "../sheet/death"
+import { hasFeature, withFeatureUsed } from "../sheet/feature-rules"
 import { useBonusAction } from "../sheet/features"
 import { moveWithReactions, ordered } from "../sheet/reactions"
 import { partyRest, restName } from "../sheet/rest"
 import type { Sheet } from "../sheet/sheet"
+import { speedOf } from "../sheet/space"
 import { settleConcentration } from "../sheet/spell-effects"
 import { castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { TurnEffect } from "../sheet/turn-effect"
@@ -19,6 +21,15 @@ import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
 import { rollD20, rollDie } from "../utils/game-utils"
 import { createRollRequirementService, type TurnReading } from "./roll-requirement-service"
+
+/**
+ * Whether a move draws no Opportunity Attacks by Tactical Shift: a Fighter of level 5 who uses Second Wind as their
+ * Bonus Action may move up to half their Speed without drawing them.
+ */
+function tacticalShift(character: TurnCharacter | undefined, bonus: string | undefined, feet: number): boolean {
+  if (!character || bonus !== "fighter-second-wind" || !hasFeature(character, "fighter-tactical-shift")) return false
+  return feet <= Math.floor((speedOf(character) ?? 0) / 2)
+}
 
 export function createAdventureTurnReplyService(ports: GmPorts) {
   const { readAction } = createRollRequirementService(ports)
@@ -127,8 +138,8 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
    * turn is lost.
    */
   async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading }): Promise<{ fell?: true }> {
-    const { action, bonus, move, ruling, rest } = args.reading
-    if (!action && !bonus && !move && !ruling && !rest) return {}
+    const { action, bonus, move, ruling, rest, surge } = args.reading
+    if (!action && !bonus && !move && !ruling && !rest && !surge) return {}
     const turn = await ports.store.getTurn({ turnId: args.turnId })
     if (!turn) throw new Error("Turn not found")
     // The move comes first: the hero stands where it took them before anything else of the turn is resolved. Those
@@ -136,13 +147,23 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     // them. One who took the Disengage action draws no such attack.
     let characters = turn.characters as TurnCharacter[]
     const leaving: StoryBeat[] = []
+    // Action Surge's use is spent as the turn is taken: the attack the reading asked for already counts its action.
+    if (surge) characters = characters.map((character) => (character.id === args.characterId ? withFeatureUsed(character, "fighter-action-surge") : character))
     if (move) {
       const by = { step: "reply" as const, character: args.characterId }
       const went = moveWithReactions({
         characters,
         moverId: args.characterId,
         path: move.path,
-        disengaged: action?.action === "disengage",
+        // The Disengage action, Cunning Action's, or Tactical Shift's half Speed taken with Second Wind.
+        disengaged:
+          action?.action === "disengage" ||
+          bonus?.feature === "cunning-action-disengage" ||
+          tacticalShift(
+            characters.find((character) => character.id === args.characterId),
+            bonus?.feature,
+            move.feet
+          ),
         ask: (offer) => ordered(characters.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
         d20: rollD20,
         roll: rollDie,
@@ -195,7 +216,18 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       name: restName(rest ?? "short"),
       text: facts.join(" "),
     }))
-    if (!used?.use && !taken?.fact && !spellBeats.length && !move && !ruling && !resting) return {}
+    const surged: StoryBeat[] = surge
+      ? [
+          {
+            kind: "feature",
+            by: { step: "reply", character: args.characterId },
+            character: args.characterId,
+            name: "Action Surge",
+            text: `${actor?.name ?? "The Fighter"} pushes past their limits with Action Surge: one more action this turn.`,
+          },
+        ]
+      : []
+    if (!used?.use && !taken?.fact && !spellBeats.length && !move && !ruling && !resting && !surge) return {}
     // What the rules of space would not allow is told as an entry of its own, so the story does not keep an attack that was never made.
     const ruled: StoryBeat[] = ruling ? [{ kind: "feature", by: { step: "reply", character: args.characterId }, character: args.characterId, name: ruling.name, text: ruling.text }] : []
     const feature: StoryBeat[] = spellBeats.length
@@ -213,7 +245,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
             },
           ]
         : []
-    const told = [...leaving, ...feature, ...ruled, ...restBeats]
+    const told = [...leaving, ...surged, ...feature, ...ruled, ...restBeats]
     await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, ...(told.length ? { story: [...turn.story, ...told] } : {}), updatedAt: Date.now() } })
     return {}
   }

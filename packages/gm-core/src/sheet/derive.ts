@@ -97,6 +97,9 @@ const UNTYPED_EXTRA_CANTRIPS: Record<string, { count: number; spellList: string 
 /** Evocation Savant adds Evocation spells to the book for free. Its text says so, and the SRD data does not type it. */
 const EVOCATION_SAVANT = "evoker-evocation-savant"
 
+/** A Bard's Jack of All Trades, which the SRD data names and does not type. */
+const JACK_OF_ALL_TRADES = "bard-jack-of-all-trades"
+
 function lookup(sheet: Sheet): { parts?: Parts; problems: string[] } {
   const problems: string[] = []
   const cls = classById.get(sheet.class)
@@ -587,12 +590,14 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
 
   const proficient = proficientSkills(sheet, parts)
   const expertSkills = new Set<SkillId>(sheet.expertise ?? [])
+  // Jack of All Trades: half the Proficiency Bonus, rounded down, on a check with a skill the Bard lacks.
+  const jack = parts.features.some((feature) => feature.id === JACK_OF_ALL_TRADES) ? Math.floor(proficiencyBonus / 2) : 0
   const skills = Object.fromEntries(
     skillIds.map((skill) => {
       const ability = skillById.get(skill)?.ability as AbilityId
       const has = proficient.has(skill)
       const expertise = has && expertSkills.has(skill)
-      return [skill, { bonus: abilityModifiers[ability] + (has ? proficiencyBonus : 0) + (expertise ? proficiencyBonus : 0), proficient: has, expertise }]
+      return [skill, { bonus: abilityModifiers[ability] + (has ? proficiencyBonus : jack) + (expertise ? proficiencyBonus : 0), proficient: has, expertise }]
     })
   ) as DerivedSheet["skills"]
 

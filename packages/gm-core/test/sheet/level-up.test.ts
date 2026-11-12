@@ -227,12 +227,12 @@ test("a level 4 hero's options: Ability Score Improvement first, and the feats t
 })
 
 test("Cure Wounds with a level 2 slot heals 4d8 and the modifier", () => {
-  // 2d8, and 2d8 more for the slot level above 1. Dice of 1, 2, 3 and 4 are 10, and Milos's Wisdom 16 adds 3: 13.
-  // The Owlbear at 30 of 59 comes to 43.
+  // 2d8, and 2d8 more for the slot level above 1. Dice of 1, 2, 3 and 4 are 10, Milos's Wisdom 16 adds 3, and his
+  // Disciple of Life 2 and the slot's level, 4: 17.
   const caster = { id: "milos", name: "Milos", type: "pc", sheet: milos3, hitPoints: 24 }
   const owlbear = { id: "owlbear", name: "Owlbear", type: "npc", statBlock: "owlbear", hitPoints: 30 }
   const cast = castSpell({ characters: [caster, owlbear], casterId: "milos", spell: spell("cure-wounds"), targets: ["owlbear"], d20: falls(), roll: falls(1, 2, 3, 4), level: 2 })
-  assert.deepEqual(cast.harm, [{ target: "owlbear", kind: "healing", dice: [1, 2, 3, 4], sides: 8, bonus: 3, amount: 13 }])
+  assert.deepEqual(cast.harm, [{ target: "owlbear", kind: "healing", dice: [1, 2, 3, 4], sides: 8, bonus: 7, amount: 17 }])
 })
 
 test("Magic Missile with a level 2 slot throws a fourth dart", () => {

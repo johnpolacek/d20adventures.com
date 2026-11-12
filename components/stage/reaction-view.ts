@@ -15,6 +15,7 @@ export const REACTION_NAMES: Record<ReactionId, string> = {
   parry: "Parry",
   "uncanny-dodge": "Uncanny Dodge",
   counterspell: "Counterspell",
+  "cutting-words": "Cutting Words",
 }
 
 export const reactionName = (id: string): string => REACTION_NAMES[id as ReactionId] ?? "Reaction"
@@ -32,16 +33,16 @@ export const DEFAULT_ORDER: Record<ReactionId, Order> = {
   parry: "when-it-matters",
   "uncanny-dodge": "when-it-matters",
   counterspell: "when-it-matters",
+  "cutting-words": "when-it-matters",
 }
 
 /** One reaction a hero has, with the order they follow for it, the default where none is set. */
 export type OrderRow = { id: ReactionId; name: string; order: Order }
 
 /**
- * The reactions a hero can have, each with its order. Every hero has the Opportunity Attack, and one with the Shield
- * spell prepared has Shield. `prepared` is the sheet's prepared spells by name.
+ * The reactions a hero has, each with its order. `reactions` is the sheet view's list, the engine's own
+ * (`reactionsOf`): every hero has the Opportunity Attack, and the rest come with a spell or a feature.
  */
-export function heroReactions(prepared: readonly string[] | undefined, orders: StandingOrders | undefined): OrderRow[] {
-  const ids: ReactionId[] = ["opportunity-attack", ...(prepared?.some((name) => name.toLowerCase() === "shield") ? (["shield"] as const) : [])]
-  return ids.map((id) => ({ id, name: REACTION_NAMES[id], order: orders?.[id] ?? DEFAULT_ORDER[id] }))
+export function heroReactions(reactions: readonly ReactionId[] | undefined, orders: StandingOrders | undefined): OrderRow[] {
+  return (reactions ?? ["opportunity-attack"]).map((id) => ({ id, name: REACTION_NAMES[id], order: orders?.[id] ?? DEFAULT_ORDER[id] }))
 }

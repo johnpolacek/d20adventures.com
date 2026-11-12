@@ -382,10 +382,14 @@ function ReactionLooks({ compact }: { compact: boolean }) {
           />
         </Box>
         <Box title="11 · Standing Orders · Fighter, Defaults" className={`${panel} px-5 py-4`}>
-          <StandingOrders rows={heroReactions([], undefined)} compact={compact} onChange={(changed) => setSaid(JSON.stringify(changed))} />
+          <StandingOrders rows={heroReactions(undefined, undefined)} compact={compact} onChange={(changed) => setSaid(JSON.stringify(changed))} />
         </Box>
         <Box title="11 · Standing Orders · Wizard with Shield, Set" className={`${panel} px-5 py-4`}>
-          <StandingOrders rows={heroReactions([...LYRA_CASTING.prepared, "Shield"], { "opportunity-attack": "never" })} compact={compact} onChange={(changed) => setSaid(JSON.stringify(changed))} />
+          <StandingOrders
+            rows={heroReactions(["opportunity-attack", "shield", "counterspell"], { "opportunity-attack": "never" })}
+            compact={compact}
+            onChange={(changed) => setSaid(JSON.stringify(changed))}
+          />
         </Box>
         <Box title="11 · Card · Lyra, Standing Orders" className="relative h-[720px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
           <CharacterCard
@@ -395,7 +399,7 @@ function ReactionLooks({ compact }: { compact: boolean }) {
               role: "Human Wizard",
               standing: SPELLS_ORDER[0].standing,
               spellcasting: { ...LYRA_CASTING, prepared: [...LYRA_CASTING.prepared, "Shield"] },
-              reactions: heroReactions([...LYRA_CASTING.prepared, "Shield"], { shield: "always" }),
+              reactions: heroReactions(["opportunity-attack", "shield"], { shield: "always" }),
             }}
             compact={compact}
             onClose={() => {}}

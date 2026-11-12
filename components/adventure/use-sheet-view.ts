@@ -9,11 +9,18 @@ import { useEffect, useState } from "react"
  * A hero's rules sheet, worked out for display at its stored hit points and the spell slots used. The rules data loads on first use, in its own
  * chunk, so pages that never open a sheet do not carry it. Null while loading, and for a character with no sheet.
  */
-export function useSheetView(sheet: Sheet | undefined, hitPoints: number | undefined, spellSlots: readonly number[] | undefined, spellEffects?: readonly SpellEffect[]): SheetView | null {
+export function useSheetView(
+  sheet: Sheet | undefined,
+  hitPoints: number | undefined,
+  spellSlots: readonly number[] | undefined,
+  spellEffects?: readonly SpellEffect[],
+  featureUses?: Record<string, number>
+): SheetView | null {
   const [view, setView] = useState<SheetView | null>(null)
   const key = sheet ? JSON.stringify(sheet) : ""
   const slots = JSON.stringify(spellSlots ?? [])
   const effects = JSON.stringify(spellEffects ?? [])
+  const uses = JSON.stringify(featureUses ?? {})
   useEffect(() => {
     let live = true
     if (!key) {
@@ -22,7 +29,7 @@ export function useSheetView(sheet: Sheet | undefined, hitPoints: number | undef
     }
     import("@d20/gm-core/sheet/view")
       .then(({ sheetView }) => {
-        if (live) setView(sheetView(JSON.parse(key) as Sheet, hitPoints, JSON.parse(slots) as number[], JSON.parse(effects) as SpellEffect[]))
+        if (live) setView(sheetView(JSON.parse(key) as Sheet, hitPoints, JSON.parse(slots) as number[], JSON.parse(effects) as SpellEffect[], JSON.parse(uses) as Record<string, number>))
       })
       .catch(() => {
         if (live) setView(null)
@@ -30,7 +37,7 @@ export function useSheetView(sheet: Sheet | undefined, hitPoints: number | undef
     return () => {
       live = false
     }
-  }, [key, hitPoints, slots, effects])
+  }, [key, hitPoints, slots, effects, uses])
   return view
 }
 
@@ -39,13 +46,13 @@ export function useSheetView(sheet: Sheet | undefined, hitPoints: number | undef
  * every hero's numbers. A hero with no sheet, or before the rules data loads, has none.
  */
 export function useSheetViews(
-  characters: readonly { id: string; type?: string; sheet?: Sheet; hitPoints?: number; spellSlots?: readonly number[]; spellEffects?: readonly SpellEffect[] }[]
+  characters: readonly { id: string; type?: string; sheet?: Sheet; hitPoints?: number; spellSlots?: readonly number[]; spellEffects?: readonly SpellEffect[]; featureUses?: Record<string, number> }[]
 ): Record<string, SheetView> {
   const [views, setViews] = useState<Record<string, SheetView>>({})
-  const key = JSON.stringify(characters.flatMap((c) => (c.type === "pc" && c.sheet ? [[c.id, c.sheet, c.hitPoints ?? null, c.spellSlots ?? [], c.spellEffects ?? []]] : [])))
+  const key = JSON.stringify(characters.flatMap((c) => (c.type === "pc" && c.sheet ? [[c.id, c.sheet, c.hitPoints ?? null, c.spellSlots ?? [], c.spellEffects ?? [], c.featureUses ?? {}]] : [])))
   useEffect(() => {
     let live = true
-    const heroes = JSON.parse(key) as [string, Sheet, number | null, number[], SpellEffect[]][]
+    const heroes = JSON.parse(key) as [string, Sheet, number | null, number[], SpellEffect[], Record<string, number>][]
     if (!heroes.length) {
       setViews({})
       return
@@ -54,9 +61,9 @@ export function useSheetViews(
       .then(({ sheetView }) => {
         if (!live) return
         const out: Record<string, SheetView> = {}
-        for (const [id, sheet, hitPoints, spellSlots, spellEffects] of heroes) {
+        for (const [id, sheet, hitPoints, spellSlots, spellEffects, featureUses] of heroes) {
           try {
-            out[id] = sheetView(sheet, hitPoints ?? undefined, spellSlots, spellEffects)
+            out[id] = sheetView(sheet, hitPoints ?? undefined, spellSlots, spellEffects, featureUses)
           } catch {
             // A sheet the rules cannot read shows no numbers.
           }

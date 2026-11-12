@@ -12,10 +12,12 @@ export type ActionId = (typeof actionIds)[number]
  * has: their next attack on it has Advantage. "slowed" is on a creature hit with a weapon whose Slow mastery the
  * attacker has: its Speed is 10 feet less. "stood" is on one who rose from Prone as their turn began, which costs half
  * their Speed. "reacted" is on one who has taken their Reaction this round, by themselves: they take no other until the
- * next round begins. Only the engine writes it, through ./actions, ./death and ./reactions.
+ * next round begins. The rest mark a feature used once a turn, with `by` the one whose turn it was: "sneak-attack",
+ * "savage-attacker" and "colossus-slayer" are on the attacker who dealt that damage. All of them end as the next round
+ * begins. Only the engine writes it, through ./actions, ./death, ./reactions and ./attack.
  */
 export const turnEffectSchema = z.strictObject({
-  id: z.enum(["dodging", "helped", "distracted", "vexed", "slowed", "stood", "reacted"]),
+  id: z.enum(["dodging", "helped", "distracted", "vexed", "slowed", "stood", "reacted", "sneak-attack", "savage-attacker", "colossus-slayer"]),
   /** The id of who took the action. */
   by: z.string(),
   /** For "helped": the skill the help is for. */
@@ -58,7 +60,7 @@ export type Concentration = z.infer<typeof concentrationSchema>
 export const positionSchema = z.strictObject({ x: z.number(), y: z.number() })
 
 /** The reactions the engine knows. */
-export const reactionIds = ["opportunity-attack", "shield", "parry", "uncanny-dodge", "counterspell"] as const
+export const reactionIds = ["opportunity-attack", "shield", "parry", "uncanny-dodge", "counterspell", "cutting-words"] as const
 export const reactionIdSchema = z.enum(reactionIds)
 export type ReactionId = z.infer<typeof reactionIdSchema>
 

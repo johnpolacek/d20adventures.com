@@ -74,15 +74,16 @@ test("a held die is rolled on a failure it could save, and is spent whether it s
 
 test("an attack that misses by no more than the die rolls it, and never on a 1", () => {
   const inspired = { ...branka, inspiration: { die: 6, by: "ilya" } }
-  // Warhammer +5: a 6 makes 11 against the Owlbear's Armor Class 13. A 3 on the d6 makes 14 and hits, for 1d8 + 3 rolling 5: 8.
-  const saved = strike({ attacker: inspired, target: owlbear, weapon: "warhammer", dice: [6], roll: falls(3, 5), inspiration: inspired.inspiration })
+  // Warhammer +5: a 6 makes 11 against the Owlbear's Armor Class 13. A 3 on the d6 makes 14 and hits, for 1d8 + 3 rolling
+  // 5, and 1 on her Savage Attacker's second d8: 8.
+  const saved = strike({ attacker: inspired, target: owlbear, weapon: "warhammer", dice: [6], roll: falls(3, 5, 1), inspiration: inspired.inspiration })
   assert.deepEqual([saved.roll.total, saved.roll.hit, saved.inspired, saved.taken], [14, true, 3, 8])
   // A 1 on the d6 makes 12: still a miss, and the die is spent.
   const wasted = strike({ attacker: inspired, target: owlbear, weapon: "warhammer", dice: [6], roll: falls(1), inspiration: inspired.inspiration })
   assert.deepEqual([wasted.roll.total, wasted.roll.hit, wasted.inspired, wasted.taken], [12, false, 1, 0])
   // A 1 on the d20 always misses, so the die is kept. A hit needs none.
   assert.equal(strike({ attacker: inspired, target: owlbear, weapon: "warhammer", dice: [1], roll: falls(6), inspiration: inspired.inspiration }).inspired, undefined)
-  assert.equal(strike({ attacker: inspired, target: owlbear, weapon: "warhammer", dice: [10], roll: falls(5), inspiration: inspired.inspiration }).inspired, undefined)
+  assert.equal(strike({ attacker: inspired, target: owlbear, weapon: "warhammer", dice: [10], roll: falls(5, 1), inspiration: inspired.inspiration }).inspired, undefined)
 })
 
 test("a new encounter ends an unspent die and gives no feature use back: a rest does", () => {

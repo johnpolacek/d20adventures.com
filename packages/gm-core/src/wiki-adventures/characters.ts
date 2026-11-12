@@ -50,7 +50,7 @@ export function buildLocalWikiTurnCharacters(args: {
     // A hero enters play at its maximum. One carried from the encounter before keeps the hit points it has, and one
     // carried at 0 stays down as they were: dead, Stable, or dying with their Death Saving Throws so far.
     // Initiative is rolled as the encounter begins and kept until it ends.
-    hero.initiative = rollInitiative(hero, rollD20())
+    hero.initiative = rollInitiative(hero, rollD20(), rollD20())
     // The conditions of the fight they left are over, and the lasting ones come with them.
     const was = carried as Partial<TurnCharacter> | undefined
     const kept = was ? conditionsAtEncounterEnd({ conditions: was.conditions }).conditions : undefined

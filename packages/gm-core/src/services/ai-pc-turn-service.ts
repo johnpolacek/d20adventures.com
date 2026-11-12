@@ -151,6 +151,9 @@ export async function suggestActions(
   return (await llm.generateObject({ prompt, schema: actionSuggestionsSchema, viewer: character.id })).object.suggestions.slice(0, 3)
 }
 
+// The most rolls a companion makes in one turn: two Attack actions of two attacks, Horde Breaker, and a Hide.
+const MAX_ROLLS_A_TURN = 6
+
 export function createAiPcTurnService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
@@ -240,7 +243,7 @@ export function createAiPcTurnService(ports: GmPorts) {
         narrativeAction: intent,
       })
       // A spell with nothing to throw goes the same way as a roll: the companion's turn resolves it just below.
-      const rollRequirement = reading.roll ?? reading.cast ?? null
+      const rollRequirement = reading.roll ?? reading.cast ?? reading.feature ?? null
 
       await ports.store.submitReply({
         turnId,
@@ -265,35 +268,39 @@ export function createAiPcTurnService(ports: GmPorts) {
     if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid")
     const encounterInstructions = getEncounterInstructionsFromPlan(plan, turn.encounterId)
 
-    console.log("[AI PC]", character.name, "rolls for", character.rollRequired.rollType)
+    // A roll may leave another to make in the same turn: an Extra Attack, a Hide. The companion throws each in turn.
+    for (let rolls = 0; character?.rollRequired && !character.isComplete && rolls < MAX_ROLLS_A_TURN; rolls++) {
+      console.log("[AI PC]", character.name, "rolls for", character.rollRequired.rollType)
+      const rollResolution = await resolvePlayerRollNarrativeAndCharacters({
+        turn: {
+          _id: turn._id,
+          encounterId: turn.encounterId,
+          title: turn.title,
+          story: turn.story,
+          characters: turn.characters as TurnCharacter[],
+          adventureId: turn.adventureId,
+          isFinalEncounter: turn.isFinalEncounter,
+        },
+        character: character as TurnCharacter & { rollRequired: RequiredRoll },
+        characterId,
+        encounterInstructions,
+        playerDeath: plan.playerDeath,
+        premise: plan.premise,
+        knowledge: adventure.knowledge,
+        strangers: plan.strangers,
+      })
 
-    const rollResolution = await resolvePlayerRollNarrativeAndCharacters({
-      turn: {
-        _id: turn._id,
-        encounterId: turn.encounterId,
-        title: turn.title,
-        story: turn.story,
-        characters: turn.characters as TurnCharacter[],
-        adventureId: turn.adventureId,
-        isFinalEncounter: turn.isFinalEncounter,
-      },
-      character: character as TurnCharacter & { rollRequired: RequiredRoll },
-      characterId,
-      encounterInstructions,
-      playerDeath: plan.playerDeath,
-      premise: plan.premise,
-      knowledge: adventure.knowledge,
-      strangers: plan.strangers,
-    })
-
-    await ports.store.updateTurn({
-      turnId,
-      patch: {
-        story: rollResolution.story,
-        characters: rollResolution.characters,
-        updatedAt: Date.now(),
-      },
-    })
+      await ports.store.updateTurn({
+        turnId,
+        patch: {
+          story: rollResolution.story,
+          characters: rollResolution.characters,
+          updatedAt: Date.now(),
+        },
+      })
+      turn = { ...turn, story: rollResolution.story, characters: rollResolution.characters }
+      character = rollResolution.characters.find((c) => c.id === characterId)
+    }
   }
   return { generateAiPcIntent, processAiPcTurn }
 }

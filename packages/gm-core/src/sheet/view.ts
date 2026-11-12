@@ -10,13 +10,14 @@ import { speciesById } from "@d20/srd/species"
 import { subclassById } from "@d20/srd/subclasses"
 import { deriveSheet, grantsFeatByLevel } from "./derive"
 import type { HitPoints } from "./hit-points"
+import { reactionsOf } from "./reactions"
 import type { Sheet } from "./sheet"
 import { slotsLeft, spellcastingOf, spellsOf } from "./spells"
 import { combatStatsOf } from "./stat-block"
-import type { SpellEffect } from "./turn-effect"
+import type { ReactionId, SpellEffect } from "./turn-effect"
 
-/** A feature as the sheet lists it. `uses` is how many times it can be used, and the rest that restores them. */
-export type SheetFeature = { name: string; from: string; uses?: { count: number; recharge: string } }
+/** A feature as the sheet lists it. `uses` is how many times it can be used, how many are left, and the rest that restores them. */
+export type SheetFeature = { name: string; from: string; uses?: { count: number; left: number; recharge: string } }
 
 /**
  * A caster's spellcasting as the sheet shows it: the spell save DC, the spell attack bonus, the spell slots of each
@@ -52,6 +53,8 @@ export type SheetView = {
   senses: { name: string; range: number }[]
   resistances: string[]
   features: SheetFeature[]
+  /** The reactions the hero can take, by id: "opportunity-attack", "shield", "uncanny-dodge", "cutting-words". */
+  reactions: ReactionId[]
   // Left out for a class with no Spellcasting.
   spellcasting?: SheetSpellcasting
 }
@@ -73,7 +76,7 @@ type Count = number | "proficiency-bonus" | { ability: AbilityId; minimum: 1 } |
  * spell slots they have used, by spell level (none when none are given). Throws when the class, species or background
  * is unknown, as `deriveSheet` does.
  */
-export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonly number[], spellEffects?: readonly SpellEffect[]): SheetView {
+export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonly number[], spellEffects?: readonly SpellEffect[], featureUses?: Record<string, number>): SheetView {
   const derived = deriveSheet(sheet)
   const cls = classById.get(sheet.class)
   const species = speciesById.get(sheet.species)
@@ -88,11 +91,12 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     if ("column" in count) return typeof row[count.column] === "number" ? (row[count.column] as number) : undefined
     return count.byLevel.filter((step) => step.level <= sheet.level).at(-1)?.count
   }
-  const usesOf = (uses: { count: Count; recharge: string; rechargeByLevel?: { level: number; recharge: string }[] } | undefined) => {
+  // `used` is how many of them the hero has spent, by the feature's id.
+  const usesOf = (uses: { count: Count; recharge: string; rechargeByLevel?: { level: number; recharge: string }[] } | undefined, used = 0) => {
     if (!uses) return undefined
     const count = countOf(uses.count)
     const recharge = uses.rechargeByLevel?.filter((step) => step.level <= sheet.level).at(-1)?.recharge ?? uses.recharge
-    return count === undefined ? undefined : { count, recharge: RECHARGE[recharge] ?? titled(recharge) }
+    return count === undefined ? undefined : { count, left: Math.max(0, count - used), recharge: RECHARGE[recharge] ?? titled(recharge) }
   }
 
   const subclass = sheet.subclass ? subclassById.get(sheet.subclass) : undefined
@@ -112,7 +116,7 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     const chosen = sheet.featureChoices?.[id]
     const choice = grantsFeatByLevel(feature) ? advanced(feature) : chosen ? (feature.options?.find((option) => option.id === chosen)?.name ?? featById.get(chosen)?.name) : undefined
     const from = feature.subclass && subclass ? subclass.name : cls.name
-    features.push({ name: choice ? `${feature.name}: ${choice}` : feature.name, from, uses: usesOf(feature.uses as Parameters<typeof usesOf>[0]) })
+    features.push({ name: choice ? `${feature.name}: ${choice}` : feature.name, from, uses: usesOf(feature.uses as Parameters<typeof usesOf>[0], featureUses?.[id]) })
   }
   for (const trait of species.traits) {
     if ((trait.level ?? 1) > sheet.level) continue
@@ -166,6 +170,7 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     senses: derived.senses.map((sense) => ({ name: titled(sense.type), range: sense.range })),
     resistances: derived.resistances.map(titled),
     features,
+    reactions: reactionsOf({ id: "", type: "pc", sheet }),
     ...(spellcasting ? { spellcasting } : {}),
   }
 }

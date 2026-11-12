@@ -2,16 +2,19 @@ import { conditionIdSchema, conditionIds, damageTypeIdSchema, skillIdSchema } fr
 import { abilityById } from "@d20/srd/abilities"
 import { z } from "zod"
 import type { GmPorts } from "../ports"
-import { attackModesFromActions, checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../sheet/actions"
-import { attacksOf } from "../sheet/attack"
+import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../sheet/actions"
+import { attacksOf, cunningStrikesOf, defensesOf } from "../sheet/attack"
+import { attackAfter, attackRequirement, type InScene } from "../sheet/attack-roll"
+import { type DivinityEffect, divinityPicksOf, isUndead } from "../sheet/channel-divinity"
 import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
 import { conditionSpans } from "../sheet/condition-entry"
-import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
-import { bonusActionsOf } from "../sheet/features"
+import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
+import { hasFeature, usesLeft } from "../sheet/feature-rules"
+import { bonusActionsOf, usable } from "../sheet/features"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
-import { attackReach, coverBetween, coverBonus, feetBetween, greaterCover, isNear, placedOf, within } from "../sheet/space"
+import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells } from "../sheet/spell-effects"
 import { castInSpace } from "../sheet/spell-space"
 import { castCost, isEngineSpell, slotsLeft, slotWords, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
@@ -21,7 +24,7 @@ import { actionIds } from "../sheet/turn-effect"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
-import type { ChosenRoll, RequiredCast } from "../validations/roll-requirement-schema"
+import type { ChosenRoll, RequiredCast, RequiredFeature } from "../validations/roll-requirement-schema"
 
 // An NPC whose action the notes fix rolls nothing. Mara's lift "always happens" unless a hero spots it, yet she rolled
 // Sleight of Hand, failed, and the theft the scene turns on never happened.
@@ -85,6 +88,10 @@ export type TurnReading = {
   action?: TakenAction
   /** A spell cast that asks for no throw: it is resolved as the move is read, never left waiting on the caster. */
   cast?: RequiredCast
+  /** A class feature used as the action that asks for no throw (Channel Divinity), resolved as a cast is. */
+  feature?: RequiredFeature
+  /** Action Surge is used: one more action this turn, which the attack's `after` already counts. Its use is spent as the reading is applied. */
+  surge?: true
   /** One of the roller's own Bonus Actions, used beside the action. */
   bonus?: { feature: string; target?: string }
   /** Where the move took the roller before they acted, and the feet it used. */
@@ -115,7 +122,28 @@ export function createRollRequirementService(ports: GmPorts) {
   /** The roll a move asks for, where only the roll is wanted: an action that takes none is read as no roll. */
   const getRollRequirementForAction = async (action: string, character: Character, options?: Options): Promise<ChosenRoll | null> => (await readAction(action, character, options)).roll
 
+  /**
+   * The read of a move, with what a Bonus Action taken beside it adds once the rest is settled. Cunning Action's Hide
+   * is the Stealth check of the Hide action, made after the turn's own roll, or as the roll when the turn has none.
+   * Steady Aim cannot be taken with a move.
+   */
   async function readAction(action: string, character: Character, options?: Options): Promise<TurnReading> {
+    const reading = await readPicked(action, character, options)
+    const self = "id" in character ? character.id : undefined
+    if (reading.bonus?.feature === "rogue-steady-aim" && reading.move) {
+      const { bonus: _, ...rest } = reading
+      return rest
+    }
+    if (reading.bonus?.feature !== "cunning-action-hide" || !self) return reading
+    if (reading.roll && "check" in reading.roll && reading.roll.rollType === hideRoll({ ...character, id: self }).rollType) return reading
+    if (reading.roll) return { ...reading, roll: { ...reading.roll, after: { ...reading.roll.after, hide: true } } }
+    if (reading.cast) return { ...reading, cast: { ...reading.cast, after: { ...reading.cast.after, hide: true } } }
+    if (reading.feature) return { ...reading, feature: { ...reading.feature, after: { ...reading.feature.after, hide: true } } }
+    if (reading.rest) return reading
+    return { ...reading, roll: hideRoll({ ...character, id: self }) }
+  }
+
+  async function readPicked(action: string, character: Character, options?: Options): Promise<TurnReading> {
     const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {}
     const self = "id" in character ? character.id : undefined
     // One who is Charmed cannot attack the charmer.
@@ -130,7 +158,23 @@ export function createRollRequirementService(ports: GmPorts) {
     }
     const conditions = conditionWords(character)
     const attacks = attacksOf(character)
-    const bonusActions = bonusActionsOf(character).filter((entry) => entry.left > 0)
+    const bonusActions = bonusActionsOf(character).filter(usable)
+    // The features of a hero's own the player chooses in the moment, each only while it can be used.
+    const hero = "type" in character && character.type === "pc"
+    const surges = hero && usesLeft(character, "fighter-action-surge") > 0
+    const cunnings = hero ? cunningStrikesOf(character) : []
+    const divinity = hero ? divinityPicksOf(character) : []
+    // Hunter's Lore: a Hunter knows the defenses of the one their Hunter's Mark is on.
+    const lore = (other: Present) => {
+      if (!self || !hasFeature(character, "hunter-hunters-lore") || !other.spellEffects?.some((effect) => effect.spell === "hunters-mark" && effect.by === self)) return undefined
+      const { immunities = [], resistances = [], vulnerabilities = [] } = defensesOf({ ...other, type: other.type ?? "npc" })
+      const words = [
+        immunities.length ? `immune to ${immunities.join(", ")}` : "",
+        resistances.length ? `resists ${resistances.join(", ")}` : "",
+        vulnerabilities.length ? `vulnerable to ${vulnerabilities.join(", ")}` : "",
+      ].filter(Boolean)
+      return words.length ? words.join(", ") : "no immunities, resistances or vulnerabilities"
+    }
     const knownSpells = spellsOf(character)
     // The spells of theirs that take a Bonus Action and can be paid for now.
     const bonusSpells = knownSpells.filter((known) => known.spell.castingTime.unit === "bonus-action" && !("problem" in castCost(character, known.spell.id)))
@@ -216,7 +260,7 @@ ${MENU("save")}
    - Picking a lock or disarming a trap is "dexterity".
    - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check. An attack always gives both "weapon" and "target".
      Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
-     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other), feetAway(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
+     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other), feetAway(other), lore(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
 ${
   "type" in character && character.type === "pc"
@@ -231,12 +275,47 @@ ${
    - BONUS ACTIONS: beside the action above, the character may use one of their own Bonus Actions in the same turn. Set "bonus" to its id only when their words plainly use it, and leave it out otherwise. One given to someone else takes "bonusTarget", that ally's id.
      Their Bonus Actions: ${
        [
-         ...bonusActions.map((entry) => `${entry.id} (${entry.name}, ${entry.left} left${entry.targeted ? ", given to an ally" : ""})`),
+         ...bonusActions.map(
+           (entry) =>
+             `${entry.id} (${[entry.name, entry.left === undefined ? "" : entry.left > 0 ? `${entry.left} left` : `a level ${entry.slot} spell slot buys one`, entry.targeted ? "given to an ally" : ""].filter(Boolean).join(", ")})`
+         ),
          ...bonusSpells.map((known) => `${known.spell.id} (${known.spell.name}, a spell cast with a Bonus Action${known.spell.range.kind === "self" ? "" : ', "bonusTarget" is who it is cast on'})`),
        ].join(", ") || "none"
      }.
-     A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.
-   - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
+     A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.${
+       bonusActions.some((entry) => entry.id.startsWith("cunning-action"))
+         ? `
+     Cunning Action is a Dash, Disengage or Hide taken as a Bonus Action, beside the action: a dash before a strike, slipping away after it, ducking out of sight after a shot.`
+         : ""
+     }${
+       bonusActions.some((entry) => entry.id === "rogue-steady-aim")
+         ? `
+     rogue-steady-aim is for a character who holds still to aim before an attack this turn. It cannot be taken with a move.`
+         : ""
+     }
+${
+  surges
+    ? `   - ACTION SURGE: "surge" is true when the player's words plainly push for one more action this turn, such as attacking again in a flurry, and the action is an attack. Leave it out otherwise.
+`
+    : ""
+}${
+  cunnings.length
+    ? `   - CUNNING STRIKE: with an attack that may land a Sneak Attack, "cunning" is ${cunnings.map((id) => `"${id}"`).join(" or ")} when the player's words try to knock the target down. Leave it out otherwise.
+`
+    : ""
+}${
+  divinity.length
+    ? `   - CHANNEL DIVINITY: when the character channels their god's power as the action, "check" is "channel-divinity" and "divinity" is one of: ${[
+        divinity.includes("divine-spark-heal") ? '"divine-spark-heal" (heals one other creature, "targets" is who)' : "",
+        divinity.includes("divine-spark-harm") ? '"divine-spark-harm" (radiant or necrotic harm on one creature, "targets" is who, "damageType" is "necrotic" or "radiant")' : "",
+        divinity.includes("turn-undead") ? '"turn-undead" (turns the Undead nearby, "targets" are the Undead chosen)' : "",
+        divinity.includes("preserve-life") ? '"preserve-life" (heals the badly hurt nearby, "targets" are who)' : "",
+      ]
+        .filter(Boolean)
+        .join(", ")}. The game rolls it and spends a use. A spell is a "cast", not this.
+`
+    : ""
+}   - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
      Their Spells: ${spellLines.join(", ") || "none"}.${slots.length ? ` Spell slots left: ${slotWords(character)}.` : ""}
      A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
      A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all is "arcana".
@@ -300,6 +379,25 @@ Action: "${action}"
               .describe(rollPickSchema.shape[key].description ?? "")
           : rollPickSchema.shape[key]
       const schema = rollPickSchema.extend({
+        // The features chosen in the moment are on the menu only while the hero has them and can use them.
+        ...(divinity.length
+          ? {
+              check: z.enum([...rollPickSchema.shape.check.options, "channel-divinity"]).describe(rollPickSchema.shape.check.description ?? ""),
+              divinity: z
+                .enum(divinity as [string, ...string[]])
+                .optional()
+                .describe('For "channel-divinity": the Channel Divinity effect used'),
+            }
+          : {}),
+        ...(surges ? { surge: z.boolean().optional().describe("True when the player's words use Action Surge for one more action this turn") } : {}),
+        ...(cunnings.length
+          ? {
+              cunning: z
+                .enum(cunnings as [string, ...string[]])
+                .optional()
+                .describe("For an attack: the Cunning Strike effect added to a Sneak Attack"),
+            }
+          : {}),
         spell: menu(
           "spell",
           knownSpells.map((known) => known.spell.id)
@@ -322,13 +420,15 @@ Action: "${action}"
       })
       // Where there is no floor to move on, the game master is not asked where anyone goes.
       const asked = (mover && floor ? schema : schema.omit({ moveTo: true, moveAway: true, moveFeet: true, cover: true })) as unknown as typeof rollPickSchema
-      const { object: pick } = await generateObject({ schema: asked, prompt })
+      const { object: read } = await generateObject({ schema: asked, prompt })
+      // What the menus built for this read add to the pick.
+      const pick = read as typeof read & { check: string; divinity?: string; surge?: boolean; cunning?: string }
       // A Bonus Action is the roller's own, with a use left. One the game master makes up is dropped.
       const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
       // A spell cast with a Bonus Action, beside the action. Only one spell a turn takes a slot, so beside a cast it is dropped.
       const quick = pick.check === "cast" ? undefined : bonusSpells.find((known) => known.spell.id === pick.bonus?.trim() || known.spell.name.toLowerCase() === pick.bonus?.trim().toLowerCase())
       // What the reading carries beside its roll: a Bonus Action, the move, and a ruling of space.
-      const also: Pick<TurnReading, "bonus" | "move" | "ruling"> = used
+      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "surge"> = used
         ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
         : quick
           ? { bonus: { feature: quick.spell.id, ...(pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
@@ -336,7 +436,9 @@ Action: "${action}"
       // The move, made before the action: to the place or the one named, or away from one. With Dash the whole turn is
       // movement. An attack in melee may close with its target instead, which is settled where the attack is.
       const ask: MoveAsk = { to: pick.moveTo?.trim() || undefined, away: pick.moveAway?.trim() || undefined, feet: pick.moveFeet }
-      const moveFor = (close?: { target: string; reach: number }) => (mover && floor ? takeMove({ floor, mover, others, ask, dash: pick.check === "dash", close }) : undefined)
+      // Dash, as the action or with Cunning Action.
+      const dash = pick.check === "dash" || used?.id === "cunning-action-dash"
+      const moveFor = (close?: { target: string; reach: number }) => (mover && floor ? takeMove({ floor, mover, others, ask, dash, close }) : undefined)
       const moved = (move: Moved | undefined) => {
         if (move) also.move = move
         else delete also.move
@@ -451,8 +553,7 @@ Action: "${action}"
         const target = targets.find((other) => named(pick.target, other.name, other.id)) ?? (pick.target?.trim() ? undefined : meant)
         if (!attack) throw new Error(`The game master asked for an attack with "${pick.weapon ?? ""}", which ${character.name} does not have.`)
         if (!target) throw new Error(`The game master asked for an attack on "${pick.target ?? ""}", who is not here to attack.`)
-        const armorClass = combatStatsOf(target)?.armorClass
-        if (armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
+        if (combatStatsOf(target)?.armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
         // Space, where the encounter has a floor and the two stand on it. A melee attack on one out of reach closes with them first, as far as the
         // move goes. A weapon that can be thrown is thrown from where they stand when the target is in its range and no
         // move was named. Then the distance is measured: out of reach and range, the attack is not made.
@@ -465,57 +566,59 @@ Action: "${action}"
           attackReach({ distance: apart, range: attack.range }) !== "out" &&
           attackReach({ distance: apart, reach: attack.reach }) === "out"
         const stood = withMove(character, moved(moveFor(attack.reach !== undefined && !throws ? { target: target.id, reach: attack.reach } : undefined)))
-        const feet = floor ? feetBetween(stood, target) : undefined
-        const band = feet === undefined ? undefined : attackReach({ distance: feet, reach: attack.reach, range: attack.range })
-        if (band === "out" && feet !== undefined) {
-          const what = attack.range && attack.reach === undefined ? "Range" : "Reach"
-          also.ruling = {
-            name: `Out Of ${what}`,
-            text: `${character.name}${also.move ? ` moves ${also.move.feet} feet and` : ""} is ${Math.round(feet)} feet from ${target.name}, out of ${what.toLowerCase()} with ${attack.name}. The attack is not made.`,
-          }
-          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
-          return { roll: null, ...also }
-        }
-        // Cover, from the solid things and the creatures on the line between the two, by their height. The game master
-        // may name cover the place does not hold, and the greater stands. Through total cover no attack is made.
-        const from = placedOf(stood)
-        const aimed = placedOf(target)
-        const between = others.flatMap((other) => {
-          const at = other.id === target.id || isDown(other) ? undefined : placedOf(other)
-          return at ? [at] : []
+        // Steady Aim: Advantage on this attack for one who has not moved this turn. With a move it cannot be taken.
+        const aiming = used?.id === "rogue-steady-aim" && !also.move
+        // Action Surge: the Attack action again, with all its attacks.
+        const surge = surges && pick.surge === true
+        if (surge) also.surge = true
+        const cunning = cunnings.find((id) => id === pick.cunning)
+        const made = attackRequirement({
+          character: { ...stood, id: self ?? character.name, name: character.name, type: character.type ?? "pc" } as InScene,
+          target: target as InScene,
+          attack,
+          present: (options?.present ?? []) as InScene[],
+          floor: floor && mover ? floor : undefined,
+          mode: pick.mode,
+          reason: pick.reason,
+          cover: pick.cover,
+          modes: aiming ? [{ mode: "advantage", from: "Steady Aim" }] : [],
+          moved: also.move?.feet,
+          cunning,
+          after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { surge }) : undefined,
         })
-        const cover = floor && from && aimed ? greaterCover(coverBetween(floor.solids, from, aimed, between), pick.cover ?? "none") : "none"
-        if (cover === "total") {
-          also.ruling = {
-            name: "Total Cover",
-            text: `${character.name}${also.move ? ` moves ${also.move.feet} feet and` : ""} has no clear line to ${target.name}: something solid stands between them. The attack is not made.`,
-          }
+        if ("ruling" in made) {
+          also.ruling = made.ruling
+          delete also.surge
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
           return { roll: null, ...also }
         }
-        // A ranged attack has Disadvantage at long range, and with an enemy within 5 feet who is up and able to act.
-        const ranged = band === "normal" || band === "long"
-        const crowded = ranged && pressed(stood)
-        const spaced = [...(band === "long" ? [{ mode: "disadvantage" as const, from: "Long Range" }] : []), ...(crowded ? [{ mode: "disadvantage" as const, from: "Enemy Within 5 Feet" }] : [])]
-        // The game master's read of the moment, then what the conditions of the two settle with no model.
-        const picked = pick.mode ?? "normal"
-        const typed = [
-          ...attackModesFrom(character, target, feet === undefined ? attack.kind !== "ranged" : isNear(stood, target, attack.kind), options?.present),
-          ...(self ? attackModesFromActions({ ...character, id: self }, target, options?.present) : []),
-          ...attackModesFromSpells(character, target),
-          ...spaced,
-        ]
-        const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
-        const rollRequirement: ChosenRoll = {
-          attack: { weapon: attack.id, target: target.id, ...(cover !== "none" ? { cover } : {}) },
-          rollType: attack.name,
-          difficulty: armorClass + coverBonus(cover),
-          modifier: attack.bonus,
-          mode: combineModes([picked, ...typed.map((source) => source.mode)]),
-          ...(reasons.length ? { reasons } : {}),
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...made.roll })
+        return { roll: made.roll, ...also }
+      }
+      // Channel Divinity, used as the action: resolved with no throw of the hero's, as a spell that asks for none.
+      if (pick.check === "channel-divinity" && divinity.length) {
+        const chosen = divinity.find((id) => id === pick.divinity)
+        if (!chosen) return { roll: null, ...also }
+        const effect: DivinityEffect = chosen.startsWith("divine-spark") ? "divine-spark" : (chosen as DivinityEffect)
+        const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
+        const given: string[] = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])].flatMap((asked) => everyone.find((other) => named(asked, other.name, other.id))?.id ?? [])
+        // Turn Undead takes the Undead named, or every Undead near when none is.
+        const targets = effect === "turn-undead" ? given.filter((id) => isUndead(everyone.find((other) => other.id === id) ?? {})) : given
+        const damageType = pick.damageType?.trim().toLowerCase()
+        const feature: RequiredFeature = {
+          feature: {
+            id: effect,
+            targets,
+            ...(chosen === "divine-spark-heal" ? { heal: true as const } : {}),
+            ...(chosen === "divine-spark-harm" && (damageType === "necrotic" || damageType === "radiant") ? { damageType } : {}),
+          },
+          rollType: chosen === "divine-spark-heal" || chosen === "divine-spark-harm" ? "Divine Spark" : effect === "turn-undead" ? "Turn Undead" : "Preserve Life",
+          difficulty: spellcastingOf(character)?.saveDc ?? 0,
+          modifier: 0,
+          mode: "normal",
         }
-        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
-        return { roll: rollRequirement, ...also }
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, feature: feature.feature })
+        return { roll: null, feature, ...also }
       }
       // A rest, which only a hero asks for: the engine gives it to the whole party as the reading is applied.
       if ((pick.check === "short-rest" || pick.check === "long-rest") && "type" in character && character.type === "pc") {

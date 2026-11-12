@@ -10,6 +10,17 @@ const asked = {
   modifier: z.number().int().describe("The bonus from the roller's sheet or stat block"),
   mode: z.enum(rollModes),
   reasons: z.array(z.string()).optional().describe("What gives the roll Advantage or Disadvantage, each in a few words"),
+  // What the turn still holds once this roll is resolved, which the engine asks for next (../sheet/attack-roll.ts
+  // `followingRoll`): the rest of an Attack action with Extra Attack or Action Surge, Horde Breaker, and a Hide taken
+  // with Cunning Action.
+  after: z
+    .strictObject({
+      attacks: z.number().int().min(1).optional().describe("Attacks of the Attack action still to make after this one, with the same weapon"),
+      horde: z.literal(true).optional().describe("Horde Breaker's attack is still to come this turn"),
+      struck: z.array(z.string()).optional().describe("Who has been attacked this turn, by id"),
+      hide: z.literal(true).optional().describe("A Hide taken with Cunning Action is still to roll"),
+    })
+    .optional(),
 }
 
 /**
@@ -28,6 +39,7 @@ export const rollRequirementSchema = z.union([
       weapon: z.string().describe("The id of one of the roller's own attacks"),
       target: z.string().describe("The id of the character attacked"),
       cover: z.enum(["half", "three-quarters"]).optional().describe("The cover the target has from the attacker. The difficulty already counts it"),
+      cunning: z.enum(["trip"]).optional().describe("A Cunning Strike effect the Rogue adds, should the hit deal Sneak Attack damage"),
     }),
     ...asked,
   }),
@@ -50,6 +62,17 @@ export const rollRequirementSchema = z.union([
     }),
     ...asked,
   }),
+  // A class feature used as the turn's action that the engine resolves with no throw of the hero's, as it resolves a
+  // spell that asks for none: a Cleric's Channel Divinity (../sheet/channel-divinity.ts). `difficulty` is the save DC.
+  z.object({
+    feature: z.object({
+      id: z.enum(["divine-spark", "turn-undead", "preserve-life"]).describe("The Channel Divinity effect"),
+      targets: z.array(z.string()).describe("The ids of who it is used on"),
+      heal: z.literal(true).optional().describe("Divine Spark restores hit points in place of harming"),
+      damageType: z.enum(["necrotic", "radiant"]).optional().describe("Divine Spark's damage type"),
+    }),
+    ...asked,
+  }),
   // A dying hero's Death Saving Throw, which the engine asks for itself as the round begins (../sheet/death.ts).
   z.object({
     deathSave: z.literal(true),
@@ -63,10 +86,12 @@ export type RequiredRoll = NonNullable<RollRequirement>
 export type RequiredAttack = Extract<RequiredRoll, { attack: unknown }>
 export type RequiredDeathSave = Extract<RequiredRoll, { deathSave: true }>
 export type RequiredCast = Extract<RequiredRoll, { cast: unknown }>
+export type RequiredFeature = Extract<RequiredRoll, { feature: unknown }>
 /** A roll the game master picks from its menus: a check or an attack, never a Death Saving Throw. */
-export type ChosenRoll = Exclude<RequiredRoll, RequiredDeathSave>
+export type ChosenRoll = Exclude<RequiredRoll, RequiredDeathSave | RequiredFeature>
 export const isAttackRoll = (roll: RequiredRoll): roll is RequiredAttack => "attack" in roll
 export const isCastRoll = (roll: RequiredRoll | null | undefined): roll is RequiredCast => !!roll && "cast" in roll
+export const isFeatureRoll = (roll: RequiredRoll | null | undefined): roll is RequiredFeature => !!roll && "feature" in roll
 export const isDeathSaveRoll = (roll: RequiredRoll | null | undefined): roll is RequiredDeathSave => !!roll && "deathSave" in roll
 
 /** The Death Saving Throw a dying hero makes on their turn: a d20 with no bonus against 10. */

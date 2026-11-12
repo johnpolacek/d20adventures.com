@@ -63,6 +63,12 @@ type Probe = {
   ruling?: string
   // Reasons the roll's Advantage or Disadvantage must name, such as "Long Range".
   reasons?: string[]
+  // Whether the read uses Action Surge, where the scene says.
+  surge?: boolean
+  // The Cunning Strike effect the attack adds, where the scene names one.
+  cunning?: string
+  // A class feature used as the action with no roll (Channel Divinity): its effect, who it is used on, and whether it heals.
+  feature?: { id: string; targets?: string[]; heal?: boolean }
 }
 // A stake as a scene writes it: damage or healing, or a condition given ("condition") or ended ("end-condition").
 type Wanted = { on: string; target: string; kind: string; condition?: string }
@@ -129,17 +135,19 @@ async function run(probe: Probe): Promise<Graded> {
     // Hide is a roll the engine sets, named for the action. An action with no roll is read by its own name.
     const picked = cast
       ? "cast"
-      : !got
-        ? reading.rest
-          ? `${reading.rest}-rest`
-          : (reading.action?.action ?? "none")
-        : isAttackRoll(got)
-          ? "attack"
-          : !("check" in got)
-            ? "?"
-            : got.rollType.startsWith("Hide")
-              ? "hide"
-              : (menuId(got.check) ?? "?")
+      : reading.feature
+        ? "channel-divinity"
+        : !got
+          ? reading.rest
+            ? `${reading.rest}-rest`
+            : (reading.action?.action ?? "none")
+          : isAttackRoll(got)
+            ? "attack"
+            : !("check" in got)
+              ? "?"
+              : got.rollType.startsWith("Hide")
+                ? "hide"
+                : (menuId(got.check) ?? "?")
     if (cast || probe.cast) {
       const told = (c?: { spell: string; targets?: string[]; ritual?: boolean }) =>
         c ? `${c.spell}${c.ritual ? " as a ritual" : ""} on ${[...(c.targets ?? [])].sort().join(" and ") || "no one"}` : "nothing"
@@ -155,6 +163,14 @@ async function run(probe: Probe): Promise<Graded> {
       if (probe.takes.skills && !probe.takes.skills.includes(reading.action.skill ?? "none")) faults.push(`help with ${reading.action.skill ?? "no skill"}, wanted ${probe.takes.skills.join(" or ")}`)
     }
     if (!probe.checks.includes(picked)) faults.push(`check ${picked}, wanted ${probe.checks.join(" or ")}`)
+    if (probe.surge !== undefined && !!reading.surge !== probe.surge) faults.push(`Action Surge ${reading.surge ? "used" : "not used"}, wanted ${probe.surge ? "used" : "not used"}`)
+    if (probe.cunning && !(got && isAttackRoll(got) && got.attack.cunning === probe.cunning))
+      faults.push(`Cunning Strike ${(got && isAttackRoll(got) && got.attack.cunning) || "none"}, wanted ${probe.cunning}`)
+    if (probe.feature) {
+      const used = reading.feature?.feature
+      const told = (f?: { id: string; targets?: string[]; heal?: boolean }) => (f ? `${f.id}${f.heal ? " to heal" : ""} on ${[...(f.targets ?? [])].sort().join(" and ") || "no one"}` : "nothing")
+      if (told(used) !== told(probe.feature)) faults.push(`feature ${told(used)}, wanted ${told(probe.feature)}`)
+    }
     // Space: where the move left the hero, and what the rules of space said of it.
     if (probe.floor) {
       const ended = reading.move?.at ?? standing.position
@@ -192,7 +208,12 @@ async function run(probe: Probe): Promise<Graded> {
       id: probe.id,
       pass: faults.length === 0,
       faults,
-      got: got ?? (cast ? { cast } : null) ?? reading.action ?? null,
+      got:
+        got ??
+        (cast ? { cast } : null) ??
+        (reading.feature ? { rollType: reading.feature.rollType, difficulty: reading.feature.difficulty, modifier: 0, mode: "normal" } : null) ??
+        reading.action ??
+        null,
       bonus: said(reading.bonus),
       space: probe.floor ? `${reading.move ? `moved ${reading.move.feet} feet` : "no move"}${reading.ruling ? `, ${reading.ruling.name}` : ""}` : undefined,
     }

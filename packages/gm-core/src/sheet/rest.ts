@@ -7,8 +7,9 @@ import type { Roller } from "./check"
 import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtEncounterEnd, exhaustionOf, withoutCondition } from "./conditions"
 import { type DeathSaves, withHealing } from "./death"
-import { deriveSheet } from "./derive"
+import { deriveSheet, sheetProblems } from "./derive"
 import { hitPointsOf, withHitPoints } from "./hit-points"
+import type { Sheet } from "./sheet"
 import { spellcastingOf } from "./spells"
 import type { Concentration, Inspiration, SpellEffect, TurnEffect } from "./turn-effect"
 
@@ -238,3 +239,20 @@ export function partyRest<T extends Rester & { id: string }>(
 
 /** A rest's name for the story: "Short Rest". */
 export const restName = (kind: RestKind): string => (kind === "long" ? "Long Rest" : "Short Rest")
+
+/**
+ * Memorize Spell (Wizard, level 5): when a Short Rest ends, the Wizard may swap one prepared spell of level 1 or higher
+ * for another of level 1 or higher from the spellbook. The sheet with the swap, or the reason it cannot be made. The
+ * player chooses it as the rest ends: Lyra at level 5 may put Magic Missile away for Shield, when Shield is in her book.
+ */
+export function memorizeSpell(sheet: Sheet, out: string, into: string): { sheet: Sheet } | { problem: string } {
+  if (!deriveSheet(sheet).classFeatures.includes("wizard-memorize-spell")) return { problem: "Only a Wizard of level 5 or higher has Memorize Spell." }
+  const prepared = sheet.spells ?? []
+  const name = (id: string) => spellById.get(id)?.name ?? id
+  if (!prepared.includes(out) || (spellById.get(out)?.level ?? 0) < 1) return { problem: `${name(out)} is not a prepared spell of level 1 or higher.` }
+  if (!(sheet.spellbook ?? []).includes(into) || (spellById.get(into)?.level ?? 0) < 1) return { problem: `${name(into)} is not a spell of level 1 or higher in the spellbook.` }
+  if (prepared.includes(into)) return { problem: `${name(into)} is already prepared.` }
+  const swapped: Sheet = { ...sheet, spells: prepared.map((id) => (id === out ? into : id)) }
+  const faults = sheetProblems(swapped)
+  return faults.length ? { problem: faults.join("; ") } : { sheet: swapped }
+}

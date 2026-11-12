@@ -43,7 +43,7 @@ export function hideRoll(character: Roller & { id: string }): Extract<RequiredRo
   }
 }
 
-type Acting = Afflicted & Roller & { id: string; name: string; turnEffects?: readonly TurnEffect[]; spellEffects?: readonly SpellEffect[] }
+export type Acting = Afflicted & Roller & { id: string; name: string; turnEffects?: readonly TurnEffect[]; spellEffects?: readonly SpellEffect[] }
 
 // Whether a character is proficient in a skill: a hero by its sheet, an NPC when its stat block prints the skill.
 function proficientIn(character: Acting, skill: SkillId): boolean {
@@ -198,7 +198,7 @@ export const turnEffectsAtEncounterEnd = <T extends { turnEffects?: readonly Tur
 /** What actions have left on a character, in words for the screen and the game master: "Dodging". */
 export function turnEffectWords(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): string {
   return (character.turnEffects ?? [])
-    .filter((effect) => effect.id !== "stood" && effect.id !== "reacted" && holds(effect, present))
+    .filter((effect) => ["dodging", "helped", "distracted", "vexed", "slowed"].includes(effect.id) && holds(effect, present))
     .map((effect) =>
       effect.id === "dodging"
         ? "Dodging"

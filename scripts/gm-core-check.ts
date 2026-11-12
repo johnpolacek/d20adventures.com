@@ -618,6 +618,36 @@ function rollsEndWithTheRound() {
 }
 
 async function main() {
+// Extra Attack: a level 5 Fighter's first attack leaves the second for the player to throw, at the same target, and
+// her turn ends only with it.
+async function extraAttack() {
+  const game = memoryGame()
+  game.ports.llm = { generateObject: (async () => ({ object: { beats: [] } })) as never, generateText: unavailable }
+  game.ports.npcTurnsPerCall = 0
+  const branka = JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/welcome-to-kordavos/characters/branka-stoneveil.json", "utf8")).sheet
+  const sheet = {
+    ...branka,
+    level: 5,
+    subclass: "champion",
+    abilityScores: { ...branka.abilityScores, str: 18 },
+    advancements: [{ level: 4, feat: "ability-score-improvement", abilities: { str: 2 } }],
+  }
+  const swing = { attack: { weapon: "warhammer", target: "owlbear" }, rollType: "Warhammer", difficulty: 13, modifier: 7, mode: "normal", after: { attacks: 1 } }
+  const turn = game.records.get("turn-1")
+  turn.characters = [
+    { id: "branka", name: "Branka", type: "pc", userId: "fixture-player", sheet, initiative: 20, isComplete: false, hasReplied: true, rollRequired: swing },
+    { id: "owlbear", name: "Owlbear", type: "npc", statBlock: "owlbear", hitPoints: 59, initiative: 5, isComplete: false, hasReplied: false },
+  ]
+  const core = createGmCore(game.ports)
+  await core.resolvePlayerRollResult({ turnId: "turn-1", characterId: "branka", result: 15 })
+  const after = game.records.get("turn-1").characters[0]
+  assert.deepEqual([after.isComplete, after.rollResult, after.rollRequired?.attack], [false, undefined, { weapon: "warhammer", target: "owlbear" }])
+  await core.resolvePlayerRollResult({ turnId: "turn-1", characterId: "branka", result: 15 })
+  const done = game.records.get("turn-1").characters[0]
+  assert.deepEqual([done.isComplete, done.rollRequired], [true, undefined])
+  assert.equal(game.records.get("turn-1").story.filter((beat: { kind: string; attack?: unknown }) => beat.kind === "roll" && beat.attack).length, 2)
+}
+
   const originalRandom = Math.random
   const originalConsole = { ...console }
   Math.random = () => 0.8
@@ -633,11 +663,12 @@ async function main() {
     await characterPrompts()
     await accessAndInstanceIsolation()
   } finally {
+    await extraAttack()
     Math.random = originalRandom
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, rolls ending with the round, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {

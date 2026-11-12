@@ -95,6 +95,7 @@ export function attackBeat(by: StoryBy, roller: { id: string; name: string; imag
     attack: { target, ...(roll.critical ? { critical: true as const } : {}), ...(blow.damage ? { damage: blow.damage.parts, taken: blow.taken } : {}) },
     ...(blow.inspired !== undefined ? { inspired: blow.inspired } : {}),
     ...(roll.adds?.length ? { adds: roll.adds } : {}),
+    ...(blow.conditions?.length ? { conditions: blow.conditions } : {}),
   }
 }
 
@@ -113,7 +114,8 @@ export function castBeats(
   caster: { id: string; name: string; image?: string },
   spell: { name: string },
   cast: Cast<{ id: string; name: string; image?: string }>,
-  names: StoryNames
+  names: StoryNames,
+  verb = "casts"
 ): StoryBeat[] {
   const beats: StoryBeat[] = []
   const struck = cast.attack
@@ -149,7 +151,7 @@ export function castBeats(
       by,
       character: caster.id,
       name: spell.name,
-      text: `${caster.name} casts ${spell.name}${on.length ? ` on ${listed(on.map((id) => nameOf(names, id)))}` : ""}.`,
+      text: `${caster.name} ${verb} ${spell.name}${on.length ? ` on ${listed(on.map((id) => nameOf(names, id)))}` : ""}.`,
       ...(on.length === 1 ? { target: on[0] } : {}),
       ...(direct.length ? { harm: direct } : {}),
     })

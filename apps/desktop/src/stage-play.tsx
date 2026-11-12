@@ -302,13 +302,17 @@ export function StagePlay(props: {
   const figures = save?.figures
   const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures, painted)
   // A hero's rules sheet for the card. NPCs keep their numbers to themselves.
-  const cardSheet = useSheetView(cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined, cardCharacter?.hitPoints, cardCharacter?.spellSlots, cardCharacter?.spellEffects)
+  const cardSheet = useSheetView(
+    cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined,
+    cardCharacter?.hitPoints,
+    cardCharacter?.spellSlots,
+    cardCharacter?.spellEffects,
+    cardCharacter?.featureUses
+  )
   // A hero this player plays shows their standing orders on the card, as the current turn keeps them.
   const cardOrders = latest?.characters.find((c) => c.id === cardCharacter?.id)?.standingOrders
   const ordersFor =
-    props.onOrders && cardCharacter?.type === "pc" && cardCharacter.controlledBy !== "ai" && props.controls(cardCharacter) && cardSheet
-      ? heroReactions(cardSheet.spellcasting?.prepared, cardOrders)
-      : undefined
+    props.onOrders && cardCharacter?.type === "pc" && cardCharacter.controlledBy !== "ai" && props.controls(cardCharacter) && cardSheet ? heroReactions(cardSheet.reactions, cardOrders) : undefined
   const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet, standingOf(cardCharacter, cardSheet), ordersFor) : null
   // Every hero's sheet, for their hit points and Armor Class in the turn order and the party row.
   const sheets = useSheetViews(shown?.characters ?? [])

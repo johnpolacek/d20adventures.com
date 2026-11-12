@@ -66,7 +66,8 @@ test("Bless is on up to three creatures for a minute, adds a d4 to their attack 
   const [entry] = castBeats({ step: "reply", character: "milos" }, milos, spell("bless"), blessed, { milos: "Milos", branka: "Branka", thalbern: "Thalbern" })
   assert.deepEqual([entry.kind, "text" in entry && entry.text, blessed.targets], ["feature", "Milos casts Bless on Milos, Branka and Thalbern.", ["milos", "branka", "thalbern"]])
   // Branka's Warhammer, +5: a 6 makes 11 against the Owlbear's 13. The d4 falls on 3: 14, a hit, for 1d8 + 3 rolling 5.
-  const hit = strike({ attacker: find(blessed.characters, "branka"), target: owlbear, weapon: "warhammer", dice: [6], roll: falls(3, 5) })
+  // A Soldier's Savage Attacker rolls the weapon's die twice and keeps the higher: the 5, over a 1.
+  const hit = strike({ attacker: find(blessed.characters, "branka"), target: owlbear, weapon: "warhammer", dice: [6], roll: falls(3, 5, 1) })
   assert.deepEqual([hit.roll.total, hit.roll.adds, hit.roll.hit, hit.taken], [14, [{ from: "Bless", amount: 3 }], true, 8])
   // Without it the same 6 misses.
   assert.equal(strike({ attacker: branka, target: owlbear, weapon: "warhammer", dice: [6], roll: falls(5) }).roll.hit, false)
@@ -108,8 +109,8 @@ test("Hunter's Mark adds a d6 of Force to its caster's hits on the one marked", 
   const marked = cast(thalbern, "hunters-mark", ["owlbear"], [owlbear, branka])
   const quarry = find(marked.characters, "owlbear")
   assert.deepEqual([quarry.spellEffects, find(marked.characters, "thalbern").concentration], [[{ spell: "hunters-mark", by: "thalbern" }], { spell: "hunters-mark" }])
-  // Longbow, +5: a 14 makes 19 and hits. 1d8 + 3 rolling 5 is 8, and the mark's d6 rolling 4 makes 12.
-  const shot = strike({ attacker: find(marked.characters, "thalbern"), target: quarry, weapon: "longbow", dice: [14], roll: falls(5, 4) })
+  // Longbow, +5: a 14 makes 19 and hits. 1d8 + 3 rolling 5, kept over Savage Attacker's 1, is 8, and the mark's d6 rolling 4 makes 12.
+  const shot = strike({ attacker: find(marked.characters, "thalbern"), target: quarry, weapon: "longbow", dice: [14], roll: falls(5, 1, 4) })
   assert.deepEqual(
     [shot.taken, shot.damage?.parts.map((part) => [part.type, part.total])],
     [
@@ -121,7 +122,7 @@ test("Hunter's Mark adds a d6 of Force to its caster's hits on the one marked", 
     ]
   )
   // Branka's hit on the same Owlbear gets nothing from his mark.
-  assert.equal(strike({ attacker: branka, target: quarry, weapon: "warhammer", dice: [14], roll: falls(5) }).taken, 8)
+  assert.equal(strike({ attacker: branka, target: quarry, weapon: "warhammer", dice: [14], roll: falls(5, 1) }).taken, 8)
 })
 
 test("Guiding Bolt, Faerie Fire and Vicious Mockery change the attack rolls that follow", () => {

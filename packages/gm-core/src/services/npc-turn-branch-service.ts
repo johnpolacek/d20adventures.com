@@ -5,8 +5,9 @@ import { checkBonus, resolveCheck } from "../sheet/check"
 import { saveFailedBy } from "../sheet/conditions"
 import { afterHarm, killed } from "../sheet/death"
 import { d20sOf, replaying } from "../sheet/dice"
+import { attacksPerAction } from "../sheet/feature-rules"
 import { applyStakes } from "../sheet/harm"
-import { type Ask, attackWithReactions, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
+import { type Ask, attackWithReactions, checkWithCuttingWords, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
@@ -235,7 +236,10 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       // has a Multiattack makes all of it against the one it attacks, and stops when that one goes down.
       const { weapon, target: targetId } = rollRequirement.attack
       const multiattack = multiattackOf(args.npc)
-      const weapons = multiattack.some((entry) => entry.attack === weapon) ? multiattack.flatMap((entry) => Array.from({ length: entry.times }, () => entry.attack)) : [weapon]
+      // An NPC with a rules sheet attacks as a hero does: twice with Extra Attack.
+      const weapons = multiattack.some((entry) => entry.attack === weapon)
+        ? multiattack.flatMap((entry) => Array.from({ length: entry.times }, () => entry.attack))
+        : Array.from({ length: attacksPerAction(args.npc) }, () => weapon)
       const rolls: StoryBeat[] = []
       const facts: string[] = [...leavingFacts]
       for (const each of weapons) {
@@ -296,7 +300,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       // A check or a save: the NPC rolls with its stat block's bonus, which the requirement already carries, and the
       // engine settles what the roll put at stake before anyone tells it.
       const failedBy = saveFailedBy(args.npc, rollRequirement.check)
-      const rolled = resolveCheck({
+      const thrown = resolveCheck({
         dice: d20sOf(dice, rollRequirement.mode),
         bonus: rollRequirement.modifier,
         dc: rollRequirement.difficulty,
@@ -304,6 +308,10 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         fails: !!failedBy,
         adds: checkAdds(args.npc, rollRequirement.check, dice.roll),
       })
+      // A Bard of the heroes' may take a die off a check that succeeds, with Cutting Words.
+      const cut = checkWithCuttingWords({ characters: updatedCharacters, rollerId: args.npc.id, result: thrown, roll: dice.roll, ask, save: rollRequirement.check.kind === "save" })
+      updatedCharacters = cut.characters
+      const rolled = cut.result
       const { natural: baseRoll, bonus: modifier, total: result, success } = rolled
       rollInfo = {
         rollType: rollRequirement.rollType,
@@ -335,11 +343,12 @@ export function createNpcTurnBranchService(ports: GmPorts) {
           difficulty: rollRequirement.difficulty,
           success,
           scene: args.scene,
-          harm: [...(failedBy ? [`${args.npc.name} is ${failedBy} and fails this saving throw outright.`] : []), ...settled.facts, ...stayed.facts],
+          harm: [...cut.reactions.map((taken) => taken.text), ...(failedBy ? [`${args.npc.name} is ${failedBy} and fails this saving throw outright.`] : []), ...settled.facts, ...stayed.facts],
         }),
         args.npc.id
       )
       beatsToAppend = [
+        ...cut.reactions.map(told),
         rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled, settled.harm, settled.conditions),
         ...stayed.saves.map((save) => concentrationBeat(npcStep(args.npc), save, storyNames(args.turn.characters))),
         ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc)),

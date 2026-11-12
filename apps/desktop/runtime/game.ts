@@ -325,3 +325,6 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     return store.state
   }
 }
+        // Resolved: a second roll in the same turn (an Extra Attack) throws its own dice.
+        delete store.state!.rolls[key]
+        store.save()

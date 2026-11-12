@@ -2,20 +2,24 @@ import type { AbilityId, DamageTypeId } from "@d20/srd"
 import { damageTypeIds } from "@d20/srd"
 import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
+import { featById } from "@d20/srd/feats"
 import { monsterById } from "@d20/srd/monsters"
 import { weaponPropertyById } from "@d20/srd/weapon-properties"
-import { isIncapacitated } from "../utils/turn-actors"
-import type { Roller, RollMode } from "./check"
-import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
+import { isDown, isIncapacitated } from "../utils/turn-actors"
+import { type CheckResult, checkBonus, combineModes, type Roller, type RollMode, resolveCheck } from "./check"
+import { checkModesFrom, criticalWhenHit, d20Penalty, resistsAllDamage, saveFailedBy, withCondition } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
+import { criticalFrom, featureChoice, hasFeature, type OncePerTurn, usedThisTurn } from "./feature-rules"
+import type { ConditionChange } from "./harm"
 import type { Sheet } from "./sheet"
-import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, within } from "./space"
+import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, sizeOf, within } from "./space"
 import { markDamage, rollAdds } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
+import type { TurnEffect } from "./turn-effect"
 
 /** Damage one attack deals of one type: dice as the SRD writes them ("1d8 + 3"), or a flat amount with no dice. */
-export type DamagePart = { dice?: string; amount?: number; type: DamageTypeId }
+export type DamagePart = { dice?: string; amount?: number; type: DamageTypeId /** The least each die counts as: Great Weapon Fighting's 3. */; floor?: number }
 
 /** One way a character can attack: a hero's weapon, or an attack action of an NPC's stat block. */
 export type Attack = {
@@ -61,14 +65,21 @@ export function weaponAttack(sheet: Sheet, weaponId: string): Attack {
   const natural: AbilityId = weapon.attackType === "ranged" ? "dex" : "str"
   const ability: AbilityId = properties.includes("finesse") ? (mods.dex > mods.str ? "dex" : "str") : natural
   const trained = trainedWith(derived.weaponProficiencies, weapon)
+  // Fighting Style feats. Archery: +2 to attack rolls with Ranged weapons. Great Weapon Fighting: a 1 or 2 on a damage
+  // die of a Melee weapon held in two hands counts as 3. The engine holds no hands, so it takes a Two-Handed weapon,
+  // whose damage it rolls, and leaves a Versatile one, whose one-handed damage it rolls.
+  const feats = derived.feats.map((id) => featById.get(id))
+  const archery = weapon.attackType === "ranged" ? feats.reduce((sum, feat) => sum + (feat?.attackBonus?.weapon === "ranged" ? feat.attackBonus.bonus : 0), 0) : 0
+  const floor =
+    weapon.attackType === "melee" && properties.includes("two-handed") ? feats.find((feat) => feat?.damageDieMinimum && feat.damageDieMinimum.weapon === "melee")?.damageDieMinimum?.minimum : undefined
   const damage: DamagePart = weapon.damage.dice
-    ? { dice: signed(weapon.damage.dice, mods[ability]), type: weapon.damage.type }
+    ? { dice: signed(weapon.damage.dice, mods[ability]), type: weapon.damage.type, ...(floor ? { floor } : {}) }
     : { amount: Math.max(0, (weapon.damage.amount ?? 0) + mods[ability]), type: weapon.damage.type }
   return {
     id: weapon.id,
     name: weapon.name,
     kind: weapon.attackType === "ranged" ? "ranged" : properties.includes("thrown") ? "melee-or-ranged" : "melee",
-    bonus: mods[ability] + (trained ? derived.proficiencyBonus : 0),
+    bonus: mods[ability] + (trained ? derived.proficiencyBonus : 0) + archery,
     damage: [damage],
     // A melee weapon reaches 5 feet, and the Reach property adds 5: a Glaive reaches 10. A Ranged or Thrown one has its range.
     ...(weapon.attackType === "melee" ? { reach: BASE_REACH + properties.reduce((sum, id) => sum + (weaponPropertyById.get(id)?.reachBonusFeet ?? 0), 0) } : {}),
@@ -160,6 +171,8 @@ export type AttackResult = {
   hit: boolean
   /** A 20 on the die: the attack hits whatever the Armor Class, and its damage dice are rolled twice. */
   critical: boolean
+  /** The lowest die that scores a Critical Hit, when it is below 20: 19 for a Champion's Improved Critical. */
+  criticalFrom?: number
   mode: RollMode
   /** Dice that lasting spells added or took away, each as it fell. `total` includes them. */
   adds?: { from: string; amount: number }[]
@@ -167,9 +180,17 @@ export type AttackResult = {
 
 /**
  * Resolve an attack roll: the d20 plus the attack bonus against the target's Armor Class. A 20 on the die always hits
- * and is a Critical Hit. A 1 on the die always misses. Advantage keeps the higher of two dice and Disadvantage the lower.
+ * and is a Critical Hit, and so is a 19 for one whose Critical Hits start there (`criticalFrom`). A 1 on the die always
+ * misses. Advantage keeps the higher of two dice and Disadvantage the lower.
  */
-export function resolveAttack(args: { dice: readonly number[]; bonus: number; armorClass: number; mode?: RollMode; adds?: readonly { from: string; amount: number }[] }): AttackResult {
+export function resolveAttack(args: {
+  dice: readonly number[]
+  bonus: number
+  armorClass: number
+  mode?: RollMode
+  adds?: readonly { from: string; amount: number }[]
+  criticalFrom?: number
+}): AttackResult {
   const mode = args.mode ?? "normal"
   const needed = mode === "normal" ? 1 : 2
   const dice = args.dice.slice(0, needed)
@@ -177,7 +198,8 @@ export function resolveAttack(args: { dice: readonly number[]; bonus: number; ar
   for (const die of dice) if (!Number.isInteger(die) || die < 1 || die > 20) throw new Error(`${die} is not a d20 roll.`)
   const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
   const total = natural + args.bonus + (args.adds ?? []).reduce((sum, add) => sum + add.amount, 0)
-  const critical = natural === 20
+  const from = Math.min(20, args.criticalFrom ?? 20)
+  const critical = natural >= from
   return {
     dice,
     natural,
@@ -186,6 +208,7 @@ export function resolveAttack(args: { dice: readonly number[]; bonus: number; ar
     armorClass: args.armorClass,
     hit: critical || (natural !== 1 && total >= args.armorClass),
     critical,
+    ...(from < 20 ? { criticalFrom: from } : {}),
     mode,
     ...(args.adds?.length ? { adds: [...args.adds] } : {}),
   }
@@ -212,8 +235,10 @@ export function rollDamage(damage: readonly DamagePart[], roll: (sides: number) 
   const parts = damage.map((part) => {
     if (!part.dice) return { type: part.type, dice: [], bonus: part.amount ?? 0, total: Math.max(0, part.amount ?? 0) }
     const { count, sides, bonus } = parseDice(part.dice)
-    const dice = Array.from({ length: critical ? count * 2 : count }, () => roll(sides))
-    for (const die of dice) if (!Number.isInteger(die) || die < 1 || die > sides) throw new Error(`${die} is not a d${sides} roll.`)
+    const thrown = Array.from({ length: critical ? count * 2 : count }, () => roll(sides))
+    for (const die of thrown) if (!Number.isInteger(die) || die < 1 || die > sides) throw new Error(`${die} is not a d${sides} roll.`)
+    // Each die as it counts: a 1 or 2 counts as 3 with Great Weapon Fighting.
+    const dice = thrown.map((die) => Math.max(die, part.floor ?? 0))
     return { type: part.type, dice, sides, bonus, total: Math.max(0, dice.reduce((sum, die) => sum + die, 0) + bonus) }
   })
   return { parts, total: parts.reduce((sum, part) => sum + part.total, 0) }
@@ -251,23 +276,59 @@ export function damageTaken(damage: DamageRoll, defenses: Defenses = {}): number
   }, 0)
 }
 
+/** A Cunning Strike effect a Rogue adds to their Sneak Attack. Trip is the one the engine runs (./feature-rules). */
+export const cunningStrikes = ["trip"] as const
+export type CunningStrike = (typeof cunningStrikes)[number]
+
+/** The Cunning Strike effects a hero can add now: Trip, from Rogue level 5. Poison needs a Poisoner's Kit the sheet does not carry, and Withdraw a move after the attack the turn does not have. */
+export const cunningStrikesOf = (character: Roller): CunningStrike[] => (hasFeature(character, "rogue-cunning-strike") ? [...cunningStrikes] : [])
+
+type Extra = { name: string; damage: DamagePart; once?: OncePerTurn }
+
 /**
  * Extra damage a hero's class features add to a hit. A Rogue's Sneak Attack adds its dice, of the weapon's damage type,
- * to a hit made with a Finesse or Ranged weapon and Advantage, or with an ally beside the target and no Disadvantage.
+ * to a hit made with a Finesse or Ranged weapon and Advantage, or with an ally beside the target and no Disadvantage,
+ * once a turn. A Cunning Strike takes one of its dice. A Hunter's Colossus Slayer adds 1d8 to a weapon's hit on a
+ * creature missing any of its hit points, once a turn. `turnOf` is whose turn it is.
  */
-function featureDamage(attacker: Roller, attack: Attack, roll: AttackResult, allyBeside: boolean): { name: string; damage: DamagePart }[] {
+function featureDamage(args: {
+  attacker: Roller & { turnEffects?: readonly TurnEffect[] }
+  attack: Attack
+  roll: AttackResult
+  allyBeside: boolean
+  hurt: boolean
+  turnOf?: string
+  cunning?: CunningStrike
+}): Extra[] {
+  const { attacker, attack, roll } = args
   const sheet = attacker.sheet
   const weapon = equipmentById.get(attack.id)
-  if (!sheet || weapon?.kind !== "weapon" || !(roll.mode === "advantage" || (allyBeside && roll.mode !== "disadvantage"))) return []
+  if (!sheet || weapon?.kind !== "weapon") return []
+  const found: Extra[] = []
+  const sneaking = roll.mode === "advantage" || (args.allyBeside && roll.mode !== "disadvantage")
   const fits = weapon.attackType === "ranged" || (weapon.properties ?? []).some((property) => property === "finesse")
-  if (!fits || !deriveSheet(sheet).classFeatures.includes("rogue-sneak-attack")) return []
-  const dice = classById.get(sheet.class)?.levels[sheet.level - 1]?.sneakAttack
-  return dice ? [{ name: "Sneak Attack", damage: { dice, type: weapon.damage.type } }] : []
+  const sneak =
+    sneaking && fits && hasFeature(attacker, "rogue-sneak-attack") && !usedThisTurn(attacker, "sneak-attack", args.turnOf)
+      ? classById.get(sheet.class)?.levels[sheet.level - 1]?.sneakAttack
+      : undefined
+  if (sneak) {
+    // A Cunning Strike takes one die before the roll: 3d6 is rolled as 2d6.
+    const { count, sides } = parseDice(sneak)
+    const dice = args.cunning ? count - 1 : count
+    if (dice > 0) found.push({ name: "Sneak Attack", damage: { dice: `${dice}d${sides}`, type: weapon.damage.type }, once: "sneak-attack" })
+    else found.push({ name: "Sneak Attack", damage: { amount: 0, type: weapon.damage.type }, once: "sneak-attack" })
+  }
+  if (args.hurt && featureChoice(attacker, "hunter-hunters-prey") === "colossus-slayer" && !usedThisTurn(attacker, "colossus-slayer", args.turnOf))
+    found.push({ name: "Colossus Slayer", damage: { dice: "1d8", type: weapon.damage.type }, once: "colossus-slayer" })
+  return found
 }
+
+/** A Cunning Strike as it fell: the effect, the target's save against it, and whether it took hold. */
+export type CunningResult = { effect: CunningStrike; save: CheckResult; took: boolean }
 
 export type Strike = {
   attack: Attack
-  /** Class features that added damage to this hit: "Sneak Attack". */
+  /** Class features and feats that added to this hit: "Sneak Attack", "Savage Attacker". */
   features?: string[]
   roll: AttackResult
   /** The damage dice as they fell, on a hit. */
@@ -280,14 +341,31 @@ export type Strike = {
   fate?: Fate
   /** A Bardic Inspiration die rolled and added to an attack roll that had missed. The roll's total includes it. */
   inspired?: number
+  /** The once-a-turn features this blow used, for the attacker to be marked with (./feature-rules). */
+  used?: OncePerTurn[]
+  /** The target halved the damage with a Reaction (Uncanny Dodge). `taken` is already halved. */
+  halved?: true
+  /** A Rogue's Cunning Strike on this hit. */
+  cunning?: CunningResult
+  /** Conditions the blow gave: Prone from a Cunning Strike's Trip. */
+  conditions?: ConditionChange[]
 }
 
 /** Whom an attack is made at: one who stands somewhere, with hit points to lose. */
-export type Target = Standing & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves; tempHitPoints?: number }
+export type Target = Standing & {
+  type: string
+  hitPoints?: number
+  healthPercent?: number
+  dead?: true
+  fled?: true
+  deathSaves?: DeathSaves
+  tempHitPoints?: number
+  turnEffects?: readonly TurnEffect[]
+}
 
 /** What one attack is made with and against: who, at whom, with which attack, and the dice. */
 export type StrikeArgs<T extends Target> = {
-  attacker: Standing
+  attacker: Standing & { turnEffects?: readonly TurnEffect[] }
   target: T
   weapon: string
   dice: readonly number[]
@@ -300,6 +378,12 @@ export type StrikeArgs<T extends Target> = {
   present?: readonly (Standing & { hitPoints?: number; dead?: true; fled?: true })[]
   /** A Bardic Inspiration die the attacker holds. It is rolled on a miss it could turn into a hit, and never on a 1. */
   inspiration?: { die: number }
+  /** Whose turn it is, for the features a hero uses once a turn. */
+  turnOf?: string
+  /** A Cunning Strike effect the Rogue adds, should the hit deal Sneak Attack damage. */
+  cunning?: CunningStrike
+  /** Asked once the damage is known, before it is dealt: true halves it, as Uncanny Dodge does. */
+  halve?: (taken: number) => boolean
 }
 
 /** An attack rolled and not yet landed: everything decided before the damage, where a reaction to the hit may fall. */
@@ -313,7 +397,8 @@ export type RolledAttack = {
 /**
  * The first half of an attack: the attacker's own weapon or stat block action rolled against the target's Armor Class
  * with its cover. Lasting spells add their dice (Bless). A held Bardic Inspiration die is rolled on a near miss. A hit
- * from within 5 feet on a target who is Paralyzed or Unconscious is a Critical Hit. Nothing is dealt yet.
+ * from within 5 feet on a target who is Paralyzed or Unconscious is a Critical Hit, and a Champion scores one on a 19.
+ * Nothing is dealt yet.
  */
 export function rollAttack(args: Omit<StrikeArgs<Target>, "rules" | "present">): RolledAttack {
   const attack = attacksOf(args.attacker).find((entry) => entry.id === args.weapon)
@@ -322,7 +407,14 @@ export function rollAttack(args: Omit<StrikeArgs<Target>, "rules" | "present">):
   if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
   // Lasting spells add their dice to the roll (Bless), or take them away (Bane).
   const armorClass = stats.armorClass + coverBonus(args.cover ?? "none")
-  const rolled = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass, mode: args.mode, adds: rollAdds(args.attacker, "attack-rolls", args.roll) })
+  const rolled = resolveAttack({
+    dice: args.dice,
+    bonus: attack.bonus,
+    armorClass,
+    mode: args.mode,
+    adds: rollAdds(args.attacker, "attack-rolls", args.roll),
+    criticalFrom: criticalFrom(args.attacker),
+  })
   // A miss by no more than the die could add, and not on a 1, rolls a held Bardic Inspiration die.
   const short = armorClass - rolled.total
   const inspired = !rolled.hit && rolled.natural !== 1 && args.inspiration && short <= args.inspiration.die ? args.roll(args.inspiration.die) : undefined
@@ -331,6 +423,9 @@ export function rollAttack(args: Omit<StrikeArgs<Target>, "rules" | "present">):
   return { attack, roll, ...(inspired === undefined ? {} : { inspired }) }
 }
 
+/** Whether an attack roll hits whatever the Armor Class: its die scored a Critical Hit, a 20 or a Champion's 19. */
+export const hitsAnyway = (roll: AttackResult): boolean => roll.natural >= (roll.criticalFrom ?? 20)
+
 /**
  * A rolled attack read again against a new Armor Class, as a reaction that raises it does (Shield, Parry). A hit whose
  * total is now below it misses. A 20 on the die still hits. A miss stays a miss. A 15 that hit Armor Class 12 misses
@@ -338,16 +433,30 @@ export function rollAttack(args: Omit<StrikeArgs<Target>, "rules" | "present">):
  */
 export function againstArmorClass(rolled: RolledAttack, armorClass: number): RolledAttack {
   const { roll } = rolled
-  const hit = roll.hit && (roll.natural === 20 || roll.total >= armorClass)
+  const hit = roll.hit && (hitsAnyway(roll) || roll.total >= armorClass)
   return { ...rolled, roll: { ...roll, armorClass, hit, critical: hit && roll.critical } }
 }
 
+/** The Difficulty Class of a Rogue's Cunning Strike save: 8, the Dexterity modifier and the Proficiency Bonus. */
+export function cunningStrikeDc(sheet: Sheet): number {
+  const derived = deriveSheet(sheet)
+  return 8 + derived.abilityModifiers.dex + derived.proficiencyBonus
+}
+
+// The sizes a Trip can knock Prone.
+const TRIPPED_SIZES: readonly string[] = ["Tiny", "Small", "Medium", "Large"]
+
 /**
- * The second half of an attack: on a hit the damage dice, with the attacker's features (Sneak Attack) and their own
- * spell on this target (Hunter's Mark), against the target's defenses and hit points, by the rules of 0 hit points.
- * `target` comes back as the blow left them.
+ * The second half of an attack: on a hit the damage dice, with the attacker's features (Sneak Attack, Colossus Slayer)
+ * and their own spell on this target (Hunter's Mark), against the target's defenses and hit points, by the rules of 0
+ * hit points. Savage Attacker rolls the weapon's dice twice, once a turn, and keeps the higher. `halve` may halve what
+ * the target takes (Uncanny Dodge). A Cunning Strike's Trip then has the target save or fall Prone. `target` comes back
+ * as the blow left them.
  */
-export function landBlow<T extends Target>(args: Pick<StrikeArgs<T>, "attacker" | "target" | "roll" | "rules" | "present">, rolled: RolledAttack): Strike & { target: T } {
+export function landBlow<T extends Target>(
+  args: Pick<StrikeArgs<T>, "attacker" | "target" | "roll" | "rules" | "present" | "turnOf" | "cunning" | "halve">,
+  rolled: RolledAttack
+): Strike & { target: T } {
   const { attack, roll } = rolled
   const stats = combatStatsOf(args.target)
   if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
@@ -374,19 +483,61 @@ export function landBlow<T extends Target>(args: Pick<StrikeArgs<T>, "attacker" 
         within(at, beside, 5)
       )
     })
-  const extra = [...featureDamage(args.attacker, attack, roll, allyBeside), ...markDamage(args.attacker.id, args.target)]
-  const damage = rollDamage([...attack.damage, ...extra.map((feature) => feature.damage)], args.roll, roll.critical)
-  const taken = damageTaken(damage, defensesOf(args.target))
-  const struck = withDamage({ ...args.target, hitPoints: before }, taken, { critical: roll.critical, rules: args.rules })
+  const features = featureDamage({ attacker: args.attacker, attack, roll, allyBeside, hurt: before < stats.hitPointMaximum, turnOf: args.turnOf, cunning: args.cunning })
+  const extra = [...features, ...markDamage(args.attacker.id, args.target)]
+  // Savage Attacker: once a turn, a weapon's damage dice are rolled twice, and the higher is kept.
+  const weapon = equipmentById.get(attack.id)?.kind === "weapon"
+  const savage = weapon && !!args.attacker.sheet && deriveSheet(args.attacker.sheet).feats.includes("savage-attacker") && !usedThisTurn(args.attacker, "savage-attacker", args.turnOf)
+  const first = rollDamage(attack.damage, args.roll, roll.critical)
+  const second = savage ? rollDamage(attack.damage, args.roll, roll.critical) : undefined
+  const kept = second && second.total > first.total ? second : first
+  const added = rollDamage(
+    extra.map((feature) => feature.damage),
+    args.roll,
+    roll.critical
+  )
+  const damage: DamageRoll = { parts: [...kept.parts, ...added.parts], total: kept.total + added.total }
+  const full = damageTaken(damage, defensesOf(args.target))
+  const halved = full > 0 && !!args.halve?.(full)
+  const taken = halved ? Math.floor(full / 2) : full
+  let struck = withDamage({ ...args.target, hitPoints: before }, taken, { critical: roll.critical, rules: args.rules })
+  const used = [...extra.flatMap((feature) => ("once" in feature && feature.once ? [feature.once] : [])), ...(savage ? (["savage-attacker"] as const) : [])]
+  const names = [...extra.map((feature) => feature.name), ...(savage ? ["Savage Attacker"] : [])]
+  // A Cunning Strike's Trip falls after the damage: a target no bigger than Large saves with Dexterity or falls Prone.
+  let cunning: CunningResult | undefined
+  const conditions: ConditionChange[] = []
+  if (args.cunning === "trip" && features.some((feature) => feature.name === "Sneak Attack") && args.attacker.sheet && !isDown(struck.character)) {
+    const check = { kind: "save" as const, ability: "dex" as const }
+    const target = struck.character
+    const mode = combineModes(checkModesFrom(target, check).map((source) => source.mode))
+    const save = resolveCheck({
+      dice: mode === "normal" ? [args.roll(20)] : [args.roll(20), args.roll(20)],
+      bonus: checkBonus(target, check),
+      dc: cunningStrikeDc(args.attacker.sheet),
+      mode,
+      fails: !!saveFailedBy(target, check),
+    })
+    const small = TRIPPED_SIZES.includes(sizeOf(target))
+    const given = small && !save.success ? withCondition(target, { id: "prone" }) : undefined
+    if (given?.given) {
+      struck = { ...struck, character: given.character }
+      conditions.push({ target: target.id ?? "", condition: "prone" })
+    }
+    cunning = { effect: "trip", save, took: !!given?.given }
+  }
   return {
     attack,
-    ...(extra.length ? { features: extra.map((feature) => feature.name) } : {}),
+    ...(names.length ? { features: names } : {}),
     roll,
     damage,
     taken,
     hitPoints: { before, after: struck.character.hitPoints ?? 0, maximum: stats.hitPointMaximum },
     ...(struck.fate ? { fate: struck.fate } : {}),
     ...spent,
+    ...(used.length ? { used } : {}),
+    ...(halved ? { halved: true as const } : {}),
+    ...(cunning ? { cunning } : {}),
+    ...(conditions.length ? { conditions } : {}),
     target: struck.character,
   }
 }
@@ -425,5 +576,7 @@ export function strikeFacts(attacker: string, target: string, blow: Strike): str
   const types = [...new Set(blow.damage?.parts.map((part) => part.type) ?? [])].join(" and ")
   const stands =
     hitPoints.after === 0 ? fallen(target, blow) : `${target} has ${hitPoints.after} of ${hitPoints.maximum} hit points left${hitPoints.after * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
-  return `${attacker}'s ${attack.name} attack on ${target} ${roll.critical ? "is a CRITICAL HIT" : "HITS"}${blow.features?.length ? ` with a ${blow.features.join(" and ")}` : ""} (${roll.total} against Armor Class ${roll.armorClass}) for ${blow.taken} ${types} damage. ${stands}`
+  const halved = blow.halved ? ` ${target} halves it with Uncanny Dodge.` : ""
+  const trip = blow.cunning ? ` ${attacker}'s Cunning Strike tries to Trip ${target}: ${blow.cunning.took ? `${target} fails the Dexterity save and falls Prone.` : `${target} stays standing.`}` : ""
+  return `${attacker}'s ${attack.name} attack on ${target} ${roll.critical ? "is a CRITICAL HIT" : "HITS"}${blow.features?.length ? ` with a ${blow.features.join(" and ")}` : ""} (${roll.total} against Armor Class ${roll.armorClass}) for ${blow.taken} ${types} damage.${halved} ${stands}${trip}`
 }

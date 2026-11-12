@@ -128,20 +128,25 @@ test("the premade heroes' weapons are on their sheets", () => {
 
 test("a strike rolls to hit, then damage, and takes it from the target's hit points", () => {
   const ranger = { name: "Thalbern", type: "pc", sheet: thalbern }
-  // Owlbear: Armor Class 13, 59 hit points. Thalbern's Longbow is +5, so an 8 makes 13 and hits. A 5 on the d8 and 3 is 8.
+  // Owlbear: Armor Class 13, 59 hit points. Thalbern's Longbow is +5, so an 8 makes 13 and hits. A Soldier, he has
+  // Savage Attacker: the d8 is rolled twice, 5 and 2, and the 5 kept. 5 and 3 is 8.
   const owlbear = { name: "Owlbear", type: "npc", statBlock: "owlbear" }
-  const hit = strike({ attacker: ranger, target: owlbear, weapon: "longbow", dice: [8], roll: falls(5) })
+  const hit = strike({ attacker: ranger, target: owlbear, weapon: "longbow", dice: [8], roll: falls(5, 2) })
   assert.equal(hit.roll.hit, true)
   assert.equal(hit.taken, 8)
   assert.deepEqual(hit.hitPoints, { before: 59, after: 51, maximum: 59 })
-  assert.equal(strikeFacts("Thalbern", "Owlbear", hit), "Thalbern's Longbow attack on Owlbear HITS (13 against Armor Class 13) for 8 piercing damage. Owlbear has 51 of 59 hit points left.")
+  assert.equal(
+    strikeFacts("Thalbern", "Owlbear", hit),
+    "Thalbern's Longbow attack on Owlbear HITS with a Savage Attacker (13 against Armor Class 13) for 8 piercing damage. Owlbear has 51 of 59 hit points left."
+  )
   // A 7 makes 12 and misses: no damage dice are thrown.
   const miss = strike({ attacker: ranger, target: owlbear, weapon: "longbow", dice: [7], roll: falls() })
   assert.equal(miss.damage, undefined)
   assert.deepEqual(miss.hitPoints, { before: 59, after: 59, maximum: 59 })
   assert.equal(strikeFacts("Thalbern", "Owlbear", miss), "Thalbern's Longbow attack on Owlbear MISSES (12 against Armor Class 13). Owlbear takes no damage.")
-  // A 20 is a Critical Hit: two d8 (4 and 6) and the 3 once, 13 from an Owlbear already at 30.
-  const crit = strike({ attacker: ranger, target: { ...owlbear, hitPoints: 30 }, weapon: "longbow", dice: [20], roll: falls(4, 6) })
+  // A 20 is a Critical Hit: two d8 (4 and 6) and the 3 once, 13 from an Owlbear already at 30. Savage Attacker's
+  // second two, 1 and 1, make 5, and the 13 is kept.
+  const crit = strike({ attacker: ranger, target: { ...owlbear, hitPoints: 30 }, weapon: "longbow", dice: [20], roll: falls(4, 6, 1, 1) })
   assert.equal(crit.roll.critical, true)
   assert.deepEqual(crit.hitPoints, { before: 30, after: 17, maximum: 59 })
   assert.match(strikeFacts("Thalbern", "Owlbear", crit), /is a CRITICAL HIT .* for 13 piercing damage\. Owlbear has 17 of 59 hit points left and is Bloodied\./)
@@ -171,9 +176,10 @@ test("an Owlbear's Rend can drop Thalbern, and hit points stop at 0", () => {
 
 test("a strike meets the target's Vulnerability", () => {
   // Branka: Str 16 (+3), a Fighter. Her Warhammer is +5 for 1d8 + 3 Bludgeoning. A Skeleton has Armor Class 14 and 13 hit
-  // points, and is Vulnerable to Bludgeoning: a 9 makes 14 and hits, a 4 on the d8 makes 7, doubled to 14.
+  // points, and is Vulnerable to Bludgeoning: a 9 makes 14 and hits, a 4 on the d8 makes 7, doubled to 14. Her
+  // Savage Attacker's second d8 is a 1, so the 4 is kept.
   const branka = { name: "Branka", type: "pc", sheet: hero("welcome-to-kordavos/characters/branka-stoneveil.json").sheet }
-  const blow = strike({ attacker: branka, target: { name: "Skeleton", type: "npc", statBlock: "skeleton" }, weapon: "warhammer", dice: [9], roll: falls(4) })
+  const blow = strike({ attacker: branka, target: { name: "Skeleton", type: "npc", statBlock: "skeleton" }, weapon: "warhammer", dice: [9], roll: falls(4, 1) })
   assert.equal(blow.attack.bonus, 5)
   assert.equal(blow.taken, 14)
   assert.equal(blow.hitPoints.after, 0)
@@ -214,6 +220,6 @@ test("a Rogue's Sneak Attack adds its dice to a hit made with Advantage and a Fi
   assert.equal(strike({ attacker: { ...here, position: { x: 26, y: 0 } }, target: held, weapon: "shortbow", dice: [9], roll: falls(2, 2) }).roll.critical, true)
   // A Critical Hit doubles the Sneak Attack's dice too: 2 and 5 on the bow, 3, then 4 and 6: 20, more than the Bandit has.
   assert.equal(strike({ attacker: poppen, target: bandit, weapon: "shortbow", dice: [20, 3], mode: "advantage", roll: falls(2, 5, 4, 6) }).taken, 20)
-  // Thalbern is no Rogue: Advantage adds nothing to his Longbow.
-  assert.equal(strike({ attacker: { type: "pc", sheet: thalbern }, target: bandit, weapon: "longbow", dice: [4, 9], mode: "advantage", roll: falls(5) }).features, undefined)
+  // Thalbern is no Rogue: Advantage adds no Sneak Attack to his Longbow, only his Savage Attacker's second d8.
+  assert.deepEqual(strike({ attacker: { type: "pc", sheet: thalbern }, target: bandit, weapon: "longbow", dice: [4, 9], mode: "advantage", roll: falls(5, 1) }).features, ["Savage Attacker"])
 })

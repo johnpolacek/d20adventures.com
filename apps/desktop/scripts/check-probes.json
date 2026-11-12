@@ -4,10 +4,10 @@
     "adventure": "the-midnight-summons",
     "encounter": "owlbear-confrontation",
     "hero": "thalbern",
+    "narrative": "Thalbern is quicker than the beast. Before its eyes find him he has dropped behind a bank of brambles, hidden from it.",
     "action": "I duck low behind the brambles and creep around the owlbear, keeping downwind and out of its sight.",
     "checks": ["stealth"],
     "dcs": [15],
-    "mode": "normal",
     "stakes": []
   },
   {
@@ -792,6 +792,189 @@
       "spell": "healing-word",
       "targets": ["branka-stoneveil"],
       "level": 2
+    }
+  },
+  {
+    "id": "action-surge",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "level": 5,
+      "subclass": "champion",
+      "abilityScores": {
+        "str": 18,
+        "dex": 10,
+        "con": 16,
+        "int": 10,
+        "wis": 12,
+        "cha": 8
+      },
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I dig deep, push past every limit with a surge of fury, and rain blow after blow on the thug with my warhammer.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "warhammer",
+      "target": "warehouse-thug"
+    },
+    "surge": true
+  },
+  {
+    "id": "no-surge",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "level": 5,
+      "subclass": "champion",
+      "abilityScores": {
+        "str": 18,
+        "dex": 10,
+        "con": 16,
+        "int": 10,
+        "wis": 12,
+        "cha": 8
+      },
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I bring my warhammer down on the thug.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "warhammer",
+      "target": "warehouse-thug"
+    },
+    "surge": false
+  },
+  {
+    "id": "cunning-trip",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "sheet": {
+      "level": 5,
+      "subclass": "thief",
+      "abilityScores": {
+        "str": 10,
+        "dex": 18,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 14
+      },
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Reinhard draws his blade and comes at them across the bank. He has not seen Poppen in the bushes.",
+    "action": "I shoot Reinhard low in the leg from the bushes to knock him off his feet.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortbow",
+      "target": "npcs-1749163978757"
+    },
+    "cunning": "trip"
+  },
+  {
+    "id": "shoot-and-hide",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "sheet": {
+      "level": 2
+    },
+    "narrative": "Reinhard draws his blade and comes at them across the bank. The fight is on.",
+    "action": "I loose an arrow at Reinhard, then duck straight back down behind the crates out of his sight.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortbow",
+      "target": "npcs-1749163978757"
+    },
+    "bonus": {
+      "feature": "cunning-action-hide"
+    }
+  },
+  {
+    "id": "steady-aim",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "sheet": {
+      "level": 3,
+      "subclass": "thief"
+    },
+    "narrative": "Reinhard draws his blade and comes at them across the bank. The fight is on.",
+    "action": "I stay perfectly still in the bushes, steady my bow and take careful aim before I shoot Reinhard.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortbow",
+      "target": "npcs-1749163978757"
+    },
+    "bonus": {
+      "feature": "rogue-steady-aim"
+    }
+  },
+  {
+    "id": "divine-spark-heal",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "level": 2,
+      "spells": ["healing-word", "bless", "guiding-bolt", "shield-of-faith", "sanctuary"]
+    },
+    "narrative": "Branka staggers back from the blades, bleeding badly from a deep cut along her arm.",
+    "action": "I lift my holy symbol toward Branka and channel my god's power straight into her wounds.",
+    "checks": ["channel-divinity"],
+    "feature": {
+      "id": "divine-spark",
+      "targets": ["branka-stoneveil"],
+      "heal": true
+    }
+  },
+  {
+    "id": "turn-undead",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "big-empty",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "level": 2,
+      "spells": ["healing-word", "bless", "guiding-bolt", "shield-of-faith", "sanctuary"]
+    },
+    "narrative": "The chill deepens. Skeletal warriors claw up out of the grey dust and lurch toward the party.",
+    "action": "I raise my holy symbol high and command the dead to flee in the name of my god!",
+    "checks": ["channel-divinity"],
+    "feature": {
+      "id": "turn-undead",
+      "targets": ["ancient-undead"]
     }
   }
 ]

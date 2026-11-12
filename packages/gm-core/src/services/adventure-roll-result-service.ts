@@ -1,10 +1,13 @@
 import type { GmPorts } from "../ports"
 import { afterRoll } from "../sheet/actions"
 import { type Strike, strikeFacts } from "../sheet/attack"
+import { followingRoll, type InScene } from "../sheet/attack-roll"
+import { channelDivinity, divinityName } from "../sheet/channel-divinity"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { afterHarm, deathSave } from "../sheet/death"
-import { inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
+import { withFeatureUsed } from "../sheet/feature-rules"
+import { inspirationHelps, inspiredCheck, tacticalMind, withoutInspiration } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
 import { attackWithReactions, ordered } from "../sheet/reactions"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
@@ -22,7 +25,7 @@ import type { AdventurePlan } from "../types/adventure-plan"
 import { d20sFor, rollD20, rollDie } from "../utils/game-utils"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { hasFled, isDead, isDown } from "../utils/turn-actors"
-import { DEATH_SAVE, isAttackRoll, isCastRoll, isDeathSaveRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
+import { DEATH_SAVE, isAttackRoll, isCastRoll, isDeathSaveRoll, isFeatureRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules } from "../wiki-adventures/player-safety"
 
 export function getEncounterInstructionsFromPlan(plan: AdventurePlan, encounterId: string): string {
@@ -58,7 +61,7 @@ function buildRollOutcomePrompt(args: {
   harm?: string[]
   // A spell cast, already resolved by the engine: its name, what it did in plain words, and for a utility spell the
   // spell's own text, which binds what it can do.
-  spell?: { name: string; facts: string[]; text?: string }
+  spell?: { name: string; facts: string[]; text?: string; verb?: string }
   // What else the game settled as this happened: a caster losing Concentration.
   also?: string[]
 }): string {
@@ -80,9 +83,9 @@ Player action (verbatim): """${args.playerActionText}"""
   
 ${
   args.spell
-    ? `${args.characterName} casts ${args.spell.name}.${
+    ? `${args.characterName} ${args.spell.verb ?? "casts"} ${args.spell.name}.${
         args.spell.facts.length
-          ? `\nThe game has already rolled this spell:\n${args.spell.facts.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated: each hit, miss and save, and how each one stands after it. Add no other harm, healing or condition and undo none of it. Give no number.`
+          ? `\nThe game has already rolled ${args.spell.verb ? "it" : "this spell"}:\n${args.spell.facts.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated: each hit, miss and save, and how each one stands after it. Add no other harm, healing or condition and undo none of it. Give no number.`
           : ""
       }${
         args.spell.text
@@ -183,13 +186,34 @@ export function createAdventureRollResultService(ports: GmPorts) {
     let target: TurnCharacter | undefined
     let rolls: StoryBeat[]
     // A spell cast, for the outcome's prompt.
-    let spellCast: { name: string; facts: string[]; text?: string } | undefined
+    let spellCast: { name: string; facts: string[]; text?: string; verb?: string } | undefined
     // Everyone the roll fell on, who stay named among those present so the outcome can tell them falling.
     let struckIds: string[] = []
     let numbers: { natural: number; bonus: number; total: number; against: number; success: boolean }
     // Whether the roller's Bardic Inspiration die was rolled, and so is spent.
     let inspired = false
-    if (isCastRoll(required)) {
+    if (isFeatureRoll(required)) {
+      // Channel Divinity: the engine rolls it and every target's save, and spends the use, as it does a spell that asks
+      // for no throw. It is told by the same path as a cast.
+      const effect = required.feature.id
+      const used = channelDivinity({
+        characters: turnCharacters,
+        clericId: args.characterId,
+        effect,
+        targets: required.feature.targets,
+        heal: required.feature.heal,
+        damageType: required.feature.damageType,
+        d20: rollD20,
+        roll: rollDie,
+        rules,
+      })
+      turnCharacters = used.characters
+      const name = `Channel Divinity: ${divinityName(effect)}`
+      rolls = castBeats(by, args.character, { name }, used, storyNames(args.turn.characters), "uses")
+      spellCast = { name, facts: used.problem ? [used.problem] : used.facts, verb: "uses" }
+      struckIds = used.targets
+      numbers = { natural: 0, bonus: 0, total: 0, against: 0, success: !used.problem }
+    } else if (isCastRoll(required)) {
       // A spell: the engine resolves it by its typed data, and spends what it costs. A spell attack takes the caster's
       // d20. Any other takes none, and each target's saving throw is rolled here.
       const spell = spellById.get(required.cast.spell)
@@ -239,6 +263,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         rules,
         inspiration: args.character.inspiration,
         cover: required.attack.cover,
+        cunning: required.attack.cunning,
         ask: (offer) => ordered(standing.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
       })
       blow = made.blow
@@ -261,8 +286,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
       })
       // A held Bardic Inspiration die is rolled on a failure it could turn into a success.
       const held = args.character.inspiration
-      const result = !failedBy && !thrown.success && inspirationHelps(held, thrown.dc - thrown.total) ? inspiredCheck(thrown, held, rollDie) : thrown
-      inspired = result.inspired !== undefined
+      const lifted = !failedBy && !thrown.success && inspirationHelps(held, thrown.dc - thrown.total) ? inspiredCheck(thrown, held, rollDie) : thrown
+      inspired = lifted.inspired !== undefined
+      // Tactical Mind: a Fighter's failed ability check may take a d10, paid for with Second Wind only when it then succeeds.
+      const minded = failedBy ? undefined : tacticalMind(args.character, required.check, lifted, rollDie)
+      const result = minded?.result ?? lifted
+      if (minded?.spent) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withFeatureUsed(character, "fighter-second-wind") : character))
       // What the roll put at stake is settled here, by the engine: who it hurts or heals, and how they stand after.
       const settled = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
       turnCharacters = settled.characters
@@ -271,7 +300,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
     // What the roll used up: an ally's Help, and the roller's own hiding when they attacked.
-    turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken, await ports.content.floor?.(args.turn.encounterId))
+    const floor = await ports.content.floor?.(args.turn.encounterId)
+    turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken, floor)
     // Concentration: a caster who lost hit points saves to keep their spell, and one now down or unable to act loses it.
     const held = settleConcentration({ before: args.turn.characters, after: turnCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
     turnCharacters = held.characters
@@ -324,16 +354,22 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const { story: newStory } = withStory(args.turn, added)
     await wait(500)
 
+    // What the turn still holds after this roll: the rest of an Attack action, Horde Breaker, a Hide. The hero throws
+    // the next d20 as they threw this one, and their turn is not over until it is.
+    const roller = turnCharacters.find((character) => character.id === args.characterId)
+    const next = roller && !isFeatureRoll(required) ? followingRoll({ character: roller as InScene, made: required, present: turnCharacters as InScene[], floor }) : undefined
     // Anyone the outcome left down with no Death Saving Throw to make this round is done with it.
     const updatedCharacters = turnCharacters.map((character) =>
       character.id === args.characterId
-        ? {
-            ...character,
-            rollRequired: undefined,
-            rollResult: totalResult,
-            isComplete: true,
-            hasReplied: true,
-          }
+        ? next
+          ? { ...character, rollRequired: next, rollResult: undefined, isComplete: false, hasReplied: true }
+          : {
+              ...character,
+              rollRequired: undefined,
+              rollResult: totalResult,
+              isComplete: true,
+              hasReplied: true,
+            }
         : afterHarm(character)
     )
 

@@ -53,7 +53,7 @@ function ExpandableText({ title, text }: ExpandableTextProps) {
 
 export function CharacterSheetModal({ character, open, onOpenChange, onOrders }: CharacterSheetModalProps) {
   // The rules sheet, where the hero has one. It loads only while the window is open.
-  const sheet = useSheetView(open ? character?.sheet : undefined, character?.hitPoints, character?.spellSlots, character?.spellEffects)
+  const sheet = useSheetView(open ? character?.sheet : undefined, character?.hitPoints, character?.spellSlots, character?.spellEffects, character?.featureUses)
   if (!character) return null
   // How the hero stands: their hit points from the sheet, or dying, Stable or dead. And their conditions in words.
   const standing = standingOf({ ...character, type: "pc" }, sheet)
@@ -188,11 +188,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
             )}
 
             {sheet && onOrders && (
-              <StandingOrders
-                key={character.name}
-                rows={heroReactions(sheet.spellcasting?.prepared, character.standingOrders)}
-                onChange={(changed) => onOrders({ ...character.standingOrders, ...changed })}
-              />
+              <StandingOrders key={character.name} rows={heroReactions(sheet.reactions, character.standingOrders)} onChange={(changed) => onOrders({ ...character.standingOrders, ...changed })} />
             )}
 
             {sheet && (

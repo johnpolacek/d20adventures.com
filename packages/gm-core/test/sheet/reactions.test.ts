@@ -108,15 +108,16 @@ test("a rolled attack is read again against a raised Armor Class: a hit turns to
 })
 
 test("strike is rollAttack and then landBlow on the same dice", () => {
-  // Thalbern's Shortsword on the Bandit: 10 + 5 is 15 against 12, a hit for 4 + 3, 7. The Bandit is left with 4.
+  // Thalbern's Shortsword on the Bandit: 10 + 5 is 15 against 12, a hit for 4 + 3, 7, his Savage Attacker's second d6
+  // a 1. The Bandit is left with 4.
   const args = { attacker: thalbern, target: bandit, weapon: "shortsword", dice: [10] }
-  const whole = strike({ ...args, roll: falls(4) })
-  const halves = landBlow({ ...args, roll: falls(4) }, rollAttack({ ...args, roll: falls(4) }))
+  const whole = strike({ ...args, roll: falls(4, 1) })
+  const halves = landBlow({ ...args, roll: falls(4, 1) }, rollAttack({ ...args, roll: falls() }))
   assert.deepEqual(halves, whole)
   assert.deepEqual([whole.taken, whole.hitPoints.after, whole.target.hitPoints], [7, 4, 4])
-  // A Critical Hit on a 20 rolls the d6 twice: 4 + 2 + 3 is 9.
-  const critical = strike({ ...args, dice: [20], roll: falls(4, 2) })
-  assert.deepEqual(landBlow({ ...args, roll: falls(4, 2) }, rollAttack({ ...args, dice: [20], roll: falls() })), critical)
+  // A Critical Hit on a 20 rolls the d6 twice: 4 + 2 + 3 is 9, and the second pair, 1 and 1, is less.
+  const critical = strike({ ...args, dice: [20], roll: falls(4, 2, 1, 1) })
+  assert.deepEqual(landBlow({ ...args, roll: falls(4, 2, 1, 1) }, rollAttack({ ...args, dice: [20], roll: falls() })), critical)
   assert.equal(critical.taken, 9)
   // A miss turned by a reaction lands nothing.
   const turned = landBlow({ ...args, roll: falls(4) }, againstArmorClass(rollAttack({ ...args, roll: falls() }), 16))
@@ -237,7 +238,14 @@ test("Parry: a Bandit Captain adds 2 against a melee hit", () => {
 })
 
 test("each standing order's answer, and the defaults", () => {
-  assert.deepEqual(DEFAULT_ORDERS, { "opportunity-attack": "always", shield: "when-it-matters", parry: "when-it-matters", "uncanny-dodge": "when-it-matters", counterspell: "when-it-matters" })
+  assert.deepEqual(DEFAULT_ORDERS, {
+    "opportunity-attack": "always",
+    shield: "when-it-matters",
+    parry: "when-it-matters",
+    "uncanny-dodge": "when-it-matters",
+    counterspell: "when-it-matters",
+    "cutting-words": "when-it-matters",
+  })
   assert.deepEqual([ordered(undefined, "shield", true), ordered(undefined, "shield", false)], [true, false])
   assert.deepEqual([ordered({ shield: "always" }, "shield", false), ordered({ shield: "never" }, "shield", true)], [true, false])
   // An Opportunity Attack always matters, so when-it-matters takes it. Never refuses it.
