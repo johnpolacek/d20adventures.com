@@ -39,6 +39,14 @@ export const advancementSchema = z.strictObject({
 export type Advancement = z.infer<typeof advancementSchema>
 
 /**
+ * One option picked for a feature that takes several from its list: an Eldritch Invocation, a Metamagic option. An
+ * option that names one of the hero's cantrips (Agonizing Blast) keeps it in `cantrip`, and one that grants a feat
+ * (Lessons of the First Ones) keeps it in `feat`. A repeatable option is picked again with another of those.
+ */
+export const featurePickSchema = z.strictObject({ option: idSchema, cantrip: idSchema.optional(), feat: idSchema.optional() })
+export type FeaturePick = z.infer<typeof featurePickSchema>
+
+/**
  * What a player chooses for a character. Everything else on a character sheet (hit points, Armor Class, saves, skill
  * bonuses) is worked out from this and the SRD data by `deriveSheet`, so no bonus is ever stored.
  */
@@ -77,6 +85,11 @@ export const sheetSchema = z.strictObject({
    * feat id (`{ "fighter-fighting-style": "defense" }`).
    */
   featureChoices: z.record(idSchema, idSchema).optional(),
+  /**
+   * A class feature's id and the options picked for it, where it takes several from its list:
+   * `{ "warlock-eldritch-invocations": [{ option: "pact-of-the-tome" }] }`. Each pick is checked by `sheetProblems`.
+   */
+  featurePicks: z.record(idSchema, z.array(featurePickSchema)).optional(),
   /** Feats beyond the background's Origin feat (a Human's Versatile). */
   feats: z.array(idSchema).optional(),
   /** The armor worn, by equipment id: "chain-mail". Absent means no armor. */

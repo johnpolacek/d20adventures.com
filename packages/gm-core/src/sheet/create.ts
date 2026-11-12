@@ -1,4 +1,4 @@
-import { type AbilityId, abilityIdSchema, abilityIds, classIdSchema, type EquipmentOption, idSchema, type Size, type SkillId, sizeSchema, skillIdSchema, skillIds } from "@d20/srd"
+import { type AbilityId, abilityIdSchema, abilityIds, type ClassId, classIdSchema, type EquipmentOption, idSchema, type Size, type SkillId, sizeSchema, skillIdSchema, skillIds } from "@d20/srd"
 import { abilityById } from "@d20/srd/abilities"
 import { backgroundById, backgrounds } from "@d20/srd/backgrounds"
 import { classById } from "@d20/srd/classes"
@@ -11,11 +11,11 @@ import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
 import type { HeroRules } from "../character/hero-draft"
 import type { PCTemplate } from "../types/character"
-import { alwaysPrepared, deriveSheet, expertiseSlots, featuresOf, needsFeatureChoice, sheetProblems, trainedWith } from "./derive"
+import { alwaysPrepared, deriveSheet, expertiseSlots, featuresOf, needsFeatureChoice, sheetProblems, takesPicks, trainedWith } from "./derive"
 import { allSpecies, grantedSkills, picksSkills, type SpeciesEntry, speciesById } from "./house-species"
-import { type ChoiceOffer, choiceOffers, type FeatOffer, featOffer, listSpells, masteriesAllowed, type Named, named, skillNamed, spellNamed } from "./level-up"
-import { spellOrder } from "./milestone"
-import { type AbilityScores, type Advancement, abilityScoresSchema, type Sheet } from "./sheet"
+import { type ChoiceOffer, choiceOffers, type FeatOffer, featOffer, listSpells, masteriesAllowed, type Named, named, type PicksOffer, picksOffer, skillNamed, spellNamed } from "./level-up"
+import { autoPicks, spellOrder } from "./milestone"
+import { type AbilityScores, type Advancement, abilityScoresSchema, featurePickSchema, type Sheet } from "./sheet"
 import { spellsOf } from "./spells"
 
 /** The fields of a hero's record that the sheet settles, typed as `PCTemplate` has them. */
@@ -27,20 +27,30 @@ export type HeroRecord = Required<Pick<PCTemplate, "race" | "archetype" | "attri
  * player (`autoCreate`). Ability scores are the Standard Array, placed by the player, with the background's increase.
  */
 
-/** The classes a hero can be made in: the six the rules engine runs. */
+/**
+ * The classes a hero can be made in: the six whose play the rules engine runs. A class is added as its play is built.
+ * The menu, the pick a host receives (`creationPickSchema`) and its type hold to it. The creation maths below work for
+ * every SRD class, so a test may hand them another to check its sheet before the class is opened.
+ */
 export const CREATION_CLASSES = ["bard", "cleric", "fighter", "ranger", "rogue", "wizard"] as const
 export type CreationClassId = (typeof CREATION_CLASSES)[number]
 
 /** The Standard Array: "Use the following six scores for your abilities: 15, 14, 13, 12, 10, 8." (SRD 5.2.1, p. 21) */
 export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8] as const
 
-/** The Standard Array by Class table (SRD 5.2.1, p. 21), for the classes a hero can be made in. The SRD data does not hold it. */
-export const SUGGESTED_SCORES: Record<CreationClassId, AbilityScores> = {
+/** The Standard Array by Class table (SRD 5.2.1, p. 21), for every class. The SRD data does not hold it. */
+export const SUGGESTED_SCORES: Record<ClassId, AbilityScores> = {
+  barbarian: { str: 15, dex: 13, con: 14, int: 10, wis: 12, cha: 8 },
   bard: { str: 8, dex: 14, con: 12, int: 13, wis: 10, cha: 15 },
   cleric: { str: 14, dex: 8, con: 13, int: 10, wis: 15, cha: 12 },
+  druid: { str: 8, dex: 12, con: 14, int: 13, wis: 15, cha: 10 },
   fighter: { str: 15, dex: 14, con: 13, int: 8, wis: 10, cha: 12 },
+  monk: { str: 12, dex: 15, con: 13, int: 10, wis: 14, cha: 8 },
+  paladin: { str: 15, dex: 10, con: 13, int: 8, wis: 12, cha: 14 },
   ranger: { str: 12, dex: 15, con: 13, int: 8, wis: 14, cha: 10 },
   rogue: { str: 12, dex: 15, con: 13, int: 14, wis: 10, cha: 8 },
+  sorcerer: { str: 10, dex: 13, con: 14, int: 8, wis: 12, cha: 15 },
+  warlock: { str: 8, dex: 14, con: 13, int: 12, wis: 10, cha: 15 },
   wizard: { str: 8, dex: 12, con: 13, int: 15, wis: 14, cha: 10 },
 }
 
@@ -111,6 +121,8 @@ export type CreationOptions = {
   expertise?: { feature: Named; count: number; from: Named[] }[]
   /** A choice a class feature keeps (Fighting Style, Divine Order), with the option the SRD recommends. */
   featureChoices?: { feature: Named; options: ChoiceOffer[]; recommended?: string }[]
+  /** A class feature that takes several options from its list (a Warlock's Eldritch Invocations): how many, and from what. */
+  featurePicks?: PicksOffer[]
   /** The class's cantrips. An option that adds cantrips (Thaumaturge) says so on the option, and they are sent with these. */
   cantrips?: { count: number; from: Named[] }
   /** Spells to prepare, from the class's level 1 spells less those always prepared. A Wizard prepares from the spellbook. */
@@ -149,6 +161,8 @@ export const creationChoicesSchema = z.strictObject({
   expertise: z.array(skillIdSchema).optional(),
   /** A feature's id and the option or feat taken: `{ "fighter-fighting-style": "defense" }`. */
   featureChoices: z.record(idSchema, idSchema).optional(),
+  /** A feature's id and the options picked for it: `{ "warlock-eldritch-invocations": [{ option: "armor-of-shadows" }] }`. */
+  featurePicks: z.record(idSchema, z.array(featurePickSchema)).optional(),
   /** The class's cantrips, with any an option adds. */
   cantrips: z.array(idSchema).optional(),
   spells: z.array(idSchema).optional(),
@@ -179,10 +193,10 @@ type Parts = { cls: NonNullable<ReturnType<typeof classById.get>>; species: Spec
 
 function partsOf(pick: CreationPick): { parts?: Parts; problems: string[] } {
   const problems: string[] = []
-  const cls = (CREATION_CLASSES as readonly string[]).includes(pick.class) ? classById.get(pick.class) : undefined
+  const cls = classById.get(pick.class)
   const species = speciesById.get(pick.species)
   const background = backgroundById.get(pick.background)
-  if (!cls) problems.push(`"${pick.class}" is not a class a hero can be made in`)
+  if (!cls) problems.push(`"${pick.class}" is not a class`)
   if (!species) problems.push(`"${pick.species}" is not a species`)
   if (!background) problems.push(`"${pick.background}" is not a background`)
   return cls && species && background ? { parts: { cls, species, background }, problems } : { problems }
@@ -362,6 +376,9 @@ export function creationOptions(pick: CreationPick): CreationOptions {
       ...(feature.feat?.recommended ? { recommended: feature.feat.recommended } : {}),
     }))
 
+  const picking = features.filter(takesPicks)
+  if (picking.length) options.featurePicks = picking.map((feature) => picksOffer(feature, sheet, [], false))
+
   if (cls.spellcasting) {
     if (row.cantrips) options.cantrips = { count: row.cantrips, from: listSpells(cls.id, 0, 0).map(spellNamed) }
     const always = alwaysPrepared(sheet)
@@ -521,6 +538,7 @@ export function createSheet(pick: CreationPick, choices: CreationChoices): { she
     })
   )
   for (const id of choices.cantrips ?? []) if (lineage.has(id)) problems.push(`the ${species.name} already knows ${spellById.get(id)?.name ?? id}`)
+  for (const id of Object.keys(choices.featurePicks ?? {})) if (!options.featurePicks?.some((entry) => entry.feature.id === id)) problems.push(`"${id}" takes no picks at level 1`)
   if (options.weaponMasteries && (choices.weaponMasteries ?? []).length !== options.weaponMasteries.count)
     problems.push(`${cls.name} masters ${options.weaponMasteries.count} kinds of weapons, and the choices name ${(choices.weaponMasteries ?? []).length}`)
 
@@ -564,6 +582,7 @@ export function createSheet(pick: CreationPick, choices: CreationChoices): { she
     ...(choices.expertise?.length ? { expertise: [...choices.expertise] } : {}),
     ...(choices.speciesChoices && Object.keys(choices.speciesChoices).length ? { speciesChoices: { ...choices.speciesChoices } } : {}),
     ...(choices.featureChoices && Object.keys(choices.featureChoices).length ? { featureChoices: { ...choices.featureChoices } } : {}),
+    ...(choices.featurePicks && Object.keys(choices.featurePicks).length ? { featurePicks: structuredClone(choices.featurePicks) } : {}),
     ...(choices.speciesFeat ? { feats: [choices.speciesFeat] } : {}),
     ...(armor ? { armor: armor.id } : {}),
     ...(classGear?.shield || backgroundGear?.shield ? { shield: true } : {}),
@@ -662,6 +681,10 @@ export function autoCreate(pick: CreationPick): CreationChoices {
   const chosenOption = options.featureChoices?.flatMap((entry) => entry.options.filter((option) => option.id === choices.featureChoices?.[entry.feature.id] && option.cantrips))[0]
   if (chosenOption?.cantrips) choices.cantrips = [...(choices.cantrips ?? []), ...firstSpells(chosenOption.cantrips.from, chosenOption.cantrips.count)]
   if (options.spellbook) choices.spellbook = firstSpells(options.spellbook.from, options.spellbook.count)
+  if (options.featurePicks) {
+    const feats = [background.feat.id ?? "", ...(choices.speciesFeat ? [choices.speciesFeat] : [])]
+    choices.featurePicks = Object.fromEntries(options.featurePicks.map((offer) => [offer.feature.id, autoPicks(offer, 1, choices.cantrips ?? [], feats)]))
+  }
   if (options.spells) {
     const from = choices.spellbook ? options.spells.from.filter((entry) => choices.spellbook?.includes(entry.id)) : options.spells.from
     choices.spells = bySpellOrder(from)

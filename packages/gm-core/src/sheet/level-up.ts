@@ -9,21 +9,28 @@ import { spellById } from "@d20/srd/spells"
 import { subclassById } from "@d20/srd/subclasses"
 import {
   alwaysPrepared,
+  cantripFits,
+  cantripNeed,
   cantripsAllowed,
   deriveSheet,
   evocationSavantSpells,
   expertiseSlots,
+  featOfferable,
   featPrerequisiteProblem,
   featuresOf,
   grantsFeatByLevel,
   highestSlotLevel,
+  keptOptions,
+  LAND_CHOICE,
   needsFeatureChoice,
   optionCantrips,
+  picksAt,
   sheetProblems,
   subclassLevelOf,
+  takesPicks,
   trainedWith,
 } from "./derive"
-import type { Advancement, Sheet } from "./sheet"
+import type { Advancement, FeaturePick, Sheet } from "./sheet"
 
 /**
  * Levelling a hero up by one level, as pure functions: what the next level asks the player to choose, and the sheet
@@ -43,8 +50,31 @@ export type FeatOffer = Named & {
   skillPicks?: { count: number; from: Named[] }
 }
 
-/** An option of a feature's choice. One that brings cantrips (Druidic Warrior) says how many and from which spells. */
-export type ChoiceOffer = Named & { cantrips?: { count: number; from: Named[] } }
+/**
+ * An option of a feature's choice. One that brings cantrips (Druidic Warrior) says how many and from which spells. A
+ * Circle of the Land's land names the spells it keeps prepared up to the level (`prepares`): one already prepared
+ * leaves the list and is replaced.
+ */
+export type ChoiceOffer = Named & { cantrips?: { count: number; from: Named[] }; prepares?: Named[] }
+
+/**
+ * An option of a feature that takes several (an Eldritch Invocation, a Metamagic option), with its prerequisite as
+ * printed and what the engine checks of it: a class level, another option of the feature picked, and a cantrip of the
+ * kind it names, from `cantrips`, which the hero must know. An option that gives a feat offers `feats`. A repeatable
+ * option is picked again with another cantrip or feat.
+ */
+export type PickOffer = Named & {
+  prerequisite?: { text: string; level?: number; option?: string }
+  repeatable?: true
+  cantrips?: Named[]
+  feats?: Named[]
+}
+
+/**
+ * A feature that takes several options from its list: how many it holds in all at the level, the options picked so
+ * far, and whether one of those may be replaced at this level (Eldritch Invocations, Metamagic).
+ */
+export type PicksOffer = { feature: Named; count: number; picked: FeaturePick[]; replace: boolean; options: PickOffer[] }
 
 /** What the next level asks of a hero, and from what. A key is present only when the level asks for it. */
 export type LevelUpOptions = {
@@ -64,6 +94,8 @@ export type LevelUpOptions = {
   skills?: { feature: Named; count: number; from: Named[] }
   /** A choice a new feature keeps on the sheet (Fighting Style, Hunter's Prey): its options, and for a Fighting Style its feats. */
   featureChoices?: { feature: Named; options: ChoiceOffer[] }[]
+  /** A feature that takes several options from its list, as it stands at the level: the picks to add, and one to replace. */
+  featurePicks?: PicksOffer[]
   /** Cantrips to learn: how many more, from the class's list. Cantrips an option brings are on the option. */
   cantrips?: { count: number; from: Named[] }
   /**
@@ -91,6 +123,8 @@ export type LevelUpChoices = {
   skills?: SkillId[]
   /** A feature's id and the option or feat taken: `{ "ranger-fighting-style": "archery" }`. */
   featureChoices?: Record<string, string>
+  /** A feature's id and all its picks at the new level: those kept, those added, and the one in place of one replaced. */
+  featurePicks?: Record<string, FeaturePick[]>
   cantrips?: string[]
   spells?: string[]
   spellbook?: string[]
@@ -205,7 +239,12 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
 
   // A choice a new feature keeps: its options, and for a feature that grants a feat of a category, those feats.
   const choosing = gained.filter((feature) => needsFeatureChoice(feature) && !sheet.featureChoices?.[feature.id])
-  if (choosing.length) options.featureChoices = choosing.map((feature) => ({ feature: named(feature), options: choiceOffers(feature, derived.feats, derived.cantrips) }))
+  if (choosing.length) options.featureChoices = choosing.map((feature) => ({ feature: named(feature), options: choiceOffers(feature, derived.feats, derived.cantrips, next) }))
+
+  // A feature that takes several options: offered at every level it is held, for the picks a level adds and the one
+  // it may replace.
+  const picking = featuresOf(next).filter(takesPicks)
+  if (picking.length) options.featurePicks = picking.map((feature) => picksOffer(feature, next, before.has(feature.id) ? (sheet.featurePicks?.[feature.id] ?? []) : [], before.has(feature.id)))
 
   if (cls.spellcasting) {
     const highest = highestSlotLevel(cls, level)
@@ -255,14 +294,59 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
 }
 
 /**
- * The options of a feature's kept choice: its own options, with the cantrips any of them brings, and the feats of the
- * category it grants that the hero does not hold.
+ * What a feature that takes several options offers on a sheet at its level: the count it holds there, the picks kept
+ * from before, whether one may be replaced, and each option with its prerequisite, the cantrips of its class's list
+ * that meet one that names a cantrip, and the feats one that gives a feat may give.
  */
-export function choiceOffers(feature: ClassFeature, held: readonly string[], cantrips: readonly string[]): ChoiceOffer[] {
-  const own = (feature.options ?? []).map((option): ChoiceOffer => {
-    const extra = optionCantrips(option)
+export function picksOffer(feature: ClassFeature, sheet: Sheet, picked: readonly FeaturePick[], replace: boolean): PicksOffer {
+  const cls = classById.get(sheet.class)
+  return {
+    feature: named(feature),
+    count: cls ? picksAt(cls, sheet.level, feature) : 0,
+    picked: picked.map((pick) => ({ ...pick })),
+    replace,
+    options: (feature.options ?? []).map((option): PickOffer => {
+      const need = cantripNeed(option)
+      const grant = option.feat
+      return {
+        ...named(option),
+        ...(option.prerequisite
+          ? {
+              prerequisite: {
+                text: option.prerequisite.text,
+                ...(option.prerequisite.level ? { level: option.prerequisite.level } : {}),
+                ...(option.prerequisite.invocation ? { option: option.prerequisite.invocation } : {}),
+              },
+            }
+          : {}),
+        ...(option.repeatable ? { repeatable: true as const } : {}),
+        ...(need
+          ? {
+              cantrips: listSpells(need.spellList, 0, 0)
+                .filter((id) => cantripFits(need, id))
+                .map(spellNamed),
+            }
+          : {}),
+        ...(grant ? { feats: feats.filter((feat) => featOfferable(feat, grant.category)).map(named) } : {}),
+      }
+    }),
+  }
+}
+
+/**
+ * The options of a feature's kept choice: its own options, or those its text names (a Circle of the Land's lands),
+ * with the cantrips any of them brings and the spells a land keeps prepared on `sheet`, and the feats of the category
+ * it grants that the hero does not hold.
+ */
+export function choiceOffers(feature: ClassFeature, held: readonly string[], cantrips: readonly string[], sheet?: Sheet): ChoiceOffer[] {
+  const own = keptOptions(feature).map((entry): ChoiceOffer => {
+    const option = feature.options?.find((each) => each.id === entry.id)
+    const extra = option && optionCantrips(option)
+    const prepares =
+      feature.id === LAND_CHOICE && sheet ? alwaysPrepared({ ...sheet, featureChoices: { ...sheet.featureChoices, [LAND_CHOICE]: entry.id } }).filter((id) => !alwaysPrepared(sheet).includes(id)) : []
     return {
-      ...named(option),
+      ...named(entry),
+      ...(prepares.length ? { prepares: prepares.map(spellNamed) } : {}),
       ...(extra
         ? {
             cantrips: {
@@ -281,6 +365,9 @@ export function choiceOffers(feature: ClassFeature, held: readonly string[], can
   return [...offered, ...own]
 }
 
+/** Whether two picks are the same option with the same cantrip and feat. */
+export const samePick = (a: FeaturePick, b: FeaturePick) => a.option === b.option && a.cantrip === b.cantrip && a.feat === b.feat
+
 /**
  * The sheet one level on, with the player's choices for it, or the problems that keep it from being legal: a choice
  * the level does not ask for, and every fault `sheetProblems` finds in the sheet it would make. Hit points are the
@@ -296,13 +383,31 @@ export function levelUp(sheet: Sheet, choices: LevelUpChoices): { sheet: Sheet }
   if (choices.skills?.length && !options.skills) problems.push(`level ${level} gives no skill proficiencies`)
   if (choices.expertise?.length && !options.expertise) problems.push(`level ${level} gives no Expertise`)
   for (const id of Object.keys(choices.featureChoices ?? {})) if (!options.featureChoices?.some((entry) => entry.feature.id === id)) problems.push(`"${id}" asks for no choice at level ${level}`)
+  // Picks: those kept from before stay, but for one a level may replace.
+  for (const [id, picks] of Object.entries(choices.featurePicks ?? {})) {
+    const offer = options.featurePicks?.find((entry) => entry.feature.id === id)
+    if (!offer) {
+      problems.push(`"${id}" takes no picks at level ${level}`)
+      continue
+    }
+    const left = [...picks]
+    const dropped = offer.picked.filter((pick) => {
+      const index = left.findIndex((each) => samePick(each, pick))
+      if (index < 0) return true
+      left.splice(index, 1)
+      return false
+    })
+    if (dropped.length > (offer.replace ? 1 : 0))
+      problems.push(`${offer.feature.name} may replace ${offer.replace ? "one option" : "no option"} at level ${level}, and the choices replace ${dropped.length}`)
+  }
   if (problems.length) return { problems }
 
   const next = nextSheet(sheet, choices.subclass)
   if (options.subclass && !choices.subclass) delete next.subclass
   const abilityScores = { ...sheet.abilityScores }
   for (const [ability, amount] of Object.entries(choices.abilities ?? {}) as [AbilityId, number][]) abilityScores[ability] += amount
-  const always = alwaysPrepared(next)
+  // A choice made now (a Circle of the Land's land) may keep more spells prepared.
+  const always = alwaysPrepared({ ...next, featureChoices: { ...sheet.featureChoices, ...choices.featureChoices } })
   const add = <T>(have: readonly T[] | undefined, more: readonly T[] | undefined): T[] | undefined => {
     const all = [...(have ?? []), ...(more ?? [])]
     return all.length ? all : undefined
@@ -319,6 +424,7 @@ export function levelUp(sheet: Sheet, choices: LevelUpChoices): { sheet: Sheet }
     abilityScores,
     expertise: add(sheet.expertise, choices.expertise),
     featureChoices: choices.featureChoices || sheet.featureChoices ? { ...sheet.featureChoices, ...choices.featureChoices } : undefined,
+    featurePicks: choices.featurePicks || sheet.featurePicks ? { ...sheet.featurePicks, ...choices.featurePicks } : undefined,
     cantrips: add(sheet.cantrips, choices.cantrips),
     spells: add(
       (sheet.spells ?? []).filter((id) => !always.includes(id)),

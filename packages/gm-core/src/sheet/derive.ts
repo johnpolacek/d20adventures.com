@@ -2,6 +2,7 @@ import { type AbilityId, abilityIds, type DamageTypeId, type SkillId, skillIds }
 import { backgroundById } from "@d20/srd/backgrounds"
 import { classFeatureById } from "@d20/srd/class-features"
 import { classById } from "@d20/srd/classes"
+import { damageTypeById, damageTypes } from "@d20/srd/damage-types"
 import { equipmentById } from "@d20/srd/equipment"
 import { featById } from "@d20/srd/feats"
 import { languageById } from "@d20/srd/languages"
@@ -85,17 +86,101 @@ export function onSpellList(classId: string, id: string, from: number, to: numbe
  */
 export const grantsFeatByLevel = (feature: ClassFeature) => feature.feat?.orAnother === true
 
+/** Circle of the Land Spells, whose land the Druid chooses: its always-prepared spells and Nature's Ward follow it. */
+export const LAND_CHOICE = "circle-of-the-land-circle-of-the-land-spells"
+
 /**
- * Features whose option is chosen once and kept on the sheet, for the six classes of the rules so far. Other features'
- * options (Channel Divinity, Cunning Strike, Fast Hands) are chosen each time they are used.
+ * The options of a kept choice that its text names and the SRD data does not type as options, by feature id: Circle
+ * of the Land's four lands (the lands of the subclass's spell table), Elemental Affinity's "Acid, Cold, Fire,
+ * Lightning, or Poison", and Fiendish Resilience's "one damage type, other than Force". The last two are damage types
+ * the hero has Resistance to. Circle of the Land Spells and Fiendish Resilience let the choice change on a rest: the
+ * sheet keeps the one standing.
  */
-const KEPT_OPTIONS = new Set(["cleric-divine-order", "hunter-hunters-prey", "ranger-fighting-style"])
+const UNTYPED_OPTIONS: Record<string, { id: string; name: string }[]> = {
+  [LAND_CHOICE]: [...new Set((subclassById.get("circle-of-the-land")?.alwaysPrepared ?? []).flatMap((entry) => (entry.land ? [entry.land] : [])))].map((id) => ({
+    id,
+    name: id.charAt(0).toUpperCase() + id.slice(1),
+  })),
+  "draconic-sorcery-elemental-affinity": ["acid", "cold", "fire", "lightning", "poison"].map((id) => ({ id, name: damageTypeById.get(id)?.name ?? id })),
+  "fiend-patron-fiendish-resilience": damageTypes.filter((type) => type.id !== "force").map((type) => ({ id: type.id, name: type.name })),
+}
+
+/** Kept choices whose option is a damage type the hero has Resistance to. */
+const RESISTANCE_CHOICES = ["draconic-sorcery-elemental-affinity", "fiend-patron-fiendish-resilience"]
+
+/**
+ * A later feature that strengthens the option chosen for an earlier one and takes no choice of its own: "The option
+ * you chose for Blessed Strikes grows more powerful." Its option is the earlier feature's.
+ */
+const FOLLOWS: Record<string, string> = { "cleric-improved-blessed-strikes": "cleric-blessed-strikes", "druid-improved-elemental-fury": "druid-elemental-fury" }
+
+/**
+ * Features whose option is chosen once and kept on the sheet. Other features' options (Channel Divinity, Cunning
+ * Strike, Fast Hands, Monk's Focus) are chosen each time they are used.
+ */
+const KEPT_OPTIONS = new Set([
+  "cleric-divine-order",
+  "cleric-blessed-strikes",
+  "hunter-hunters-prey",
+  "hunter-defensive-tactics",
+  "ranger-fighting-style",
+  "druid-primal-order",
+  "druid-elemental-fury",
+  ...Object.keys(UNTYPED_OPTIONS),
+])
 
 /** Whether the sheet must name a choice for a feature in `featureChoices`. */
 export const needsFeatureChoice = (feature: ClassFeature) => KEPT_OPTIONS.has(feature.id) || (!!feature.feat && !grantsFeatByLevel(feature))
 
-/** Druidic Warrior's two Druid cantrips are in its text and not typed in the SRD data. */
-const UNTYPED_EXTRA_CANTRIPS: Record<string, { count: number; spellList: string }> = { "druidic-warrior": { count: 2, spellList: "druid" } }
+/** The options of a feature's kept choice, by id and name: its own, or those its text names (a Circle of the Land's lands). */
+export const keptOptions = (feature: ClassFeature): { id: string; name: string }[] => feature.options ?? UNTYPED_OPTIONS[feature.id] ?? []
+
+/** The option a sheet keeps for a feature: its own choice, or for a feature that follows another, that one's. */
+export const keptChoiceOf = (sheet: Sheet, id: string): string | undefined => sheet.featureChoices?.[FOLLOWS[id] ?? id]
+
+/**
+ * Features that take several options from their list, and how many at a level: Eldritch Invocations by the Warlock
+ * table's Invocations column, and Metamagic two at each level it is gained ("two Metamagic options ... two more at
+ * Sorcerer level 10 and two more at Sorcerer level 17"), which the SRD data does not type as a count.
+ */
+const PICKED: Record<string, (cls: Class, level: number, feature: ClassFeature) => number> = {
+  "warlock-eldritch-invocations": (cls, level) => cls.levels[level - 1]?.invocations ?? 0,
+  "sorcerer-metamagic": (_, level, feature) => 2 * feature.levels.filter((at) => at <= level).length,
+}
+
+/** Whether a feature takes several options from its list, kept in `featurePicks`. */
+export const takesPicks = (feature: ClassFeature) => feature.id in PICKED
+
+/** How many options a feature takes at a level. */
+export const picksAt = (cls: Class, level: number, feature: ClassFeature): number => PICKED[feature.id]?.(cls, level, feature) ?? 0
+
+/**
+ * The cantrip an option's prerequisite asks for, read from its printed words, which the SRD data does not type: "a
+ * Warlock Cantrip That Deals Damage", and with "via an Attack Roll" one that makes an attack. The cantrip is the one the
+ * option works with, kept on its pick.
+ */
+export function cantripNeed(option: FeatureOption): { spellList: string; attack: boolean } | undefined {
+  const found = /an? (\w+) Cantrip That Deals Damage( via an Attack Roll)?/.exec(option.prerequisite?.text ?? "")
+  return found ? { spellList: found[1].toLowerCase(), attack: !!found[2] } : undefined
+}
+
+/** Whether a cantrip fits an option's need: on its list and dealing damage, by an attack roll where it asks. */
+export function cantripFits(need: { spellList: string; attack: boolean }, id: string): boolean {
+  const spell = spellById.get(id)
+  return !!spell && onSpellList(need.spellList, id, 0, 0) && !!spell.damage && (!need.attack || !!spell.attack)
+}
+
+/**
+ * The Origin feats Lessons of the First Ones may give. Magic Initiate and Skilled are left out: the picks they ask for
+ * have no home on a feat an invocation gives.
+ */
+export const featOfferable = (feat: Feat, category: string | undefined) => feat.category === category && !feat.proficiencyChoice && !feat.benefits?.some((benefit) => benefit.cantrips)
+
+/** Druidic Warrior's two Druid cantrips and Blessed Warrior's two Cleric cantrips are in their text and not typed in the SRD data. */
+const UNTYPED_EXTRA_CANTRIPS: Record<string, { count: number; spellList: string }> = {
+  "druidic-warrior": { count: 2, spellList: "druid" },
+  "blessed-warrior": { count: 2, spellList: "cleric" },
+}
 
 /** Evocation Savant adds Evocation spells to the book for free. Its text says so, and the SRD data does not type it. */
 const EVOCATION_SAVANT = "evoker-evocation-savant"
@@ -151,6 +236,9 @@ function lookup(sheet: Sheet): { parts?: Parts; problems: string[] } {
     const taken = sheet.advancements?.find((entry) => entry.level === level && entry.feat)?.feat
     if (taken) featIds.push(taken)
   }
+  // The feat a picked option gives: Lessons of the First Ones' Origin feat.
+  for (const feature of features)
+    for (const pick of sheet.featurePicks?.[feature.id] ?? []) if (pick.feat && feature.options?.find((option) => option.id === pick.option)?.feat) featIds.push(pick.feat)
   const feats: Feat[] = []
   for (const id of featIds) {
     const feat = featById.get(id)
@@ -171,15 +259,57 @@ function speciesCantripsOf(sheet: Sheet, parts: Parts): string[] {
   return [...new Set(given.filter((spell) => spell.cantrip && spell.level <= sheet.level).map((spell) => spell.spell))]
 }
 
-/** The options a sheet has taken, from species traits and class features, as plain records of their mechanics. */
+/**
+ * The options a sheet has taken, as plain records of their mechanics: from species traits, from class features' kept
+ * choices (a following feature's being its leader's), and from the picks of a feature that takes several, one for each.
+ */
 function chosenOptions(sheet: Sheet, parts: Parts) {
   const species = parts.species.traits.flatMap((trait) => {
     if (!trait.choice) return []
     const taken = sheet.speciesChoices?.[trait.choice.id]
     return trait.choice.options.filter((option) => option.id === taken)
   })
-  const features = parts.features.flatMap((feature) => (feature.options ?? []).filter((option) => option.id === sheet.featureChoices?.[feature.id]))
-  return { species, features }
+  const features = parts.features.flatMap((feature) => (feature.options ?? []).filter((option) => option.id === keptChoiceOf(sheet, feature.id)))
+  const picked = parts.features.flatMap((feature) => (sheet.featurePicks?.[feature.id] ?? []).flatMap((pick) => feature.options?.filter((option) => option.id === pick.option) ?? []))
+  return { species, features, picked }
+}
+
+/** The standing mechanics a sheet's class features and its options give: each feature, kept option and picked option. */
+const standingOf = (sheet: Sheet, parts: Parts) => {
+  const chosen = chosenOptions(sheet, parts)
+  return [...parts.features, ...chosen.features, ...chosen.picked]
+}
+
+/**
+ * The standing conditions a sheet can judge, in the SRD data's words. A value under any other condition (raging, in
+ * an aura, in Dim Light) holds only in play, so the sheet leaves it out.
+ */
+const JUDGED_WHILE: Record<string, (sheet: Sheet, parts: Parts) => boolean> = { "no-heavy-armor": (_, parts) => parts.armor?.category !== "heavy" }
+const JUDGED_WHEN: Record<string, (sheet: Sheet, parts: Parts) => boolean> = {
+  "while you aren’t wearing armor or wielding a Shield": (sheet, parts) => !parts.armor && !sheet.shield,
+}
+
+/** Whether a standing value holds on the sheet as it stands: no condition, or one the sheet can judge and that holds. */
+function holdsOnSheet(value: { while?: string; appliesWhen?: string; unless?: string }, sheet: Sheet, parts: Parts): boolean {
+  if (value.unless) return false
+  if (value.while && !JUDGED_WHILE[value.while]?.(sheet, parts)) return false
+  if (value.appliesWhen && !JUDGED_WHEN[value.appliesWhen]?.(sheet, parts)) return false
+  return true
+}
+
+/** The words of every condition the sheet can judge, for a check that the data names no other on a Speed bonus. */
+export const JUDGED_CONDITIONS = [...Object.keys(JUDGED_WHILE), ...Object.keys(JUDGED_WHEN)]
+
+/**
+ * Feet a sheet's features and options add to Speed while their condition holds: Fast Movement's 10 out of Heavy
+ * armor, Unarmored Movement's 10 to 30 by the Monk table out of armor and with no Shield.
+ */
+function speedBonusOf(sheet: Sheet, parts: Parts): number {
+  return standingOf(sheet, parts).reduce((sum, source) => {
+    const bonus = source.speedBonus
+    if (!bonus || !holdsOnSheet(bonus, sheet, parts)) return sum
+    return sum + (source.speedBonusByLevel?.filter((step) => step.level <= sheet.level).at(-1)?.feet ?? bonus.feet)
+  }, 0)
 }
 
 function armorTrainingOf(sheet: Sheet, parts: Parts): ArmorTraining[] {
@@ -213,6 +343,11 @@ function hitPointMaximumOf(sheet: Sheet, parts: Parts, con: number): number {
   for (const trait of parts.species.traits) {
     if (trait.hitPointMaximum) total += trait.hitPointMaximum.increase + trait.hitPointMaximum.perLevel * (sheet.level - 1)
   }
+  // A feature's rise counts from the level it is gained: Draconic Resilience's 3 at Sorcerer level 3, and 1 more at each
+  // Sorcerer level after. A hero has one class, so their class level is their level.
+  for (const feature of parts.features) {
+    if (feature.hitPointMaximum) total += feature.hitPointMaximum.increase + feature.hitPointMaximum.perLevel * (sheet.level - feature.level)
+  }
   return total
 }
 
@@ -221,8 +356,13 @@ function sensesOf(sheet: Sheet, parts: Parts): Sense[] {
   const take = (senses: readonly Sense[] | undefined) => {
     for (const sense of senses ?? []) best.set(sense.type, Math.max(best.get(sense.type) ?? 0, sense.range))
   }
-  for (const trait of parts.species.traits) if ((trait.level ?? 1) <= sheet.level) take(trait.senses)
-  for (const option of chosenOptions(sheet, parts).species) take(option.senses)
+  const standing = (senses: readonly (Sense & { appliesWhen?: string; unless?: string })[] | undefined) => take(senses?.filter((sense) => holdsOnSheet(sense, sheet, parts)))
+  // A sense a trait gives for a time after it is used (a Dwarf's Stonecunning) is not standing.
+  for (const trait of parts.species.traits) if ((trait.level ?? 1) <= sheet.level && !trait.durationMinutes) standing(trait.senses)
+  for (const option of chosenOptions(sheet, parts).species) standing(option.senses)
+  // A class feature's, an option's (Witch Sight) and a feat's (Boon of Truesight).
+  for (const source of standingOf(sheet, parts)) standing(source.senses)
+  for (const feat of parts.feats) for (const benefit of feat.benefits ?? []) standing(benefit.senses)
   return [...best].map(([type, range]) => ({ type, range }))
 }
 
@@ -245,6 +385,19 @@ function resistancesOf(sheet: Sheet, parts: Parts): DamageTypeId[] {
     }
   }
   for (const option of options) take(option.resistances)
+  for (const source of standingOf(sheet, parts)) take(source.resistances)
+  for (const feat of parts.feats) for (const benefit of feat.benefits ?? []) take(benefit.resistances)
+  // A kept choice of a damage type (Elemental Affinity, Fiendish Resilience), and Nature's Ward's by the land chosen.
+  const held = new Set(parts.features.map((feature) => feature.id))
+  for (const id of RESISTANCE_CHOICES) {
+    const type = held.has(id) ? sheet.featureChoices?.[id] : undefined
+    if (type && damageTypeById.get(type)) found.add(type as DamageTypeId)
+  }
+  const land = sheet.featureChoices?.[LAND_CHOICE]
+  for (const feature of parts.features) {
+    const type = feature.landResistances?.find((entry) => entry.land === land)?.damageType
+    if (type) found.add(type)
+  }
   return [...found].sort()
 }
 
@@ -266,10 +419,14 @@ export function cantripsAllowed(sheet: Sheet): number {
   return (parts.class.levels[sheet.level - 1]?.cantrips ?? 0) + extraCantripsOf(sheet, parts).reduce((sum, extra) => sum + extra.count, 0)
 }
 
-/** The spells a subclass keeps always prepared up to a level. Circle of the Land's sets by land wait for its choice. */
-function subclassPrepared(subclass: Subclass | undefined, level: number): string[] {
-  return (subclass?.alwaysPrepared ?? []).filter((entry) => entry.level <= level && !entry.land).flatMap((entry) => entry.spells)
+/** The spells a subclass keeps always prepared up to a level: Circle of the Land's, those of the land the sheet keeps. */
+function subclassPrepared(sheet: Sheet, subclass: Subclass | undefined): string[] {
+  const land = sheet.featureChoices?.[LAND_CHOICE]
+  return (subclass?.alwaysPrepared ?? []).filter((entry) => entry.level <= sheet.level && (!entry.land || entry.land === land)).flatMap((entry) => entry.spells)
 }
+
+/** Whether a spell id is a cantrip. A land's set holds one (Arid's Fire Bolt): it is known, not prepared. */
+const isCantrip = (id: string) => spellById.get(id)?.level === 0
 
 /** Every spell a feature or the subclass keeps always prepared at the sheet's level. They are not listed on the sheet. */
 export function alwaysPrepared(sheet: Sheet): string[] {
@@ -277,14 +434,42 @@ export function alwaysPrepared(sheet: Sheet): string[] {
   return parts ? alwaysPreparedOf(sheet, parts) : []
 }
 
+/**
+ * The spells the options a sheet has picked let the hero cast with no spell slot, each with the option it comes from:
+ * Armor of Shadows' Mage Armor on themselves, at will, and Gift of the Depths' Water Breathing once a Long Rest, by its
+ * `uses`. Pact of the Chain's Find Familiar is one.
+ */
+export function pickedFreeCasts(sheet: Sheet): { spell: string; option: string; feature: string; selfOnly?: true; usableWhen?: string; uses?: FeatureOption["uses"] }[] {
+  const { parts } = lookup(sheet)
+  if (!parts) return []
+  return parts.features.flatMap((feature) =>
+    (sheet.featurePicks?.[feature.id] ?? []).flatMap((pick) => {
+      const option = feature.options?.find((entry) => entry.id === pick.option)
+      return (option?.freeCast ?? []).map((cast) => ({
+        spell: cast.spell,
+        option: option?.id ?? pick.option,
+        feature: feature.id,
+        ...(cast.selfOnly ? { selfOnly: true as const } : {}),
+        ...(cast.usableWhen ? { usableWhen: cast.usableWhen } : {}),
+        ...(option?.uses ? { uses: option.uses } : {}),
+      }))
+    })
+  )
+}
+
 /** The class and subclass features a sheet has at its level, in table order. */
 export function featuresOf(sheet: Sheet): ClassFeature[] {
   return lookup(sheet).parts?.features ?? []
 }
 
-/** As `alwaysPrepared`, from parts already looked up. */
+/** As `alwaysPrepared`, from parts already looked up. A cantrip among them is known, so it is in `alwaysKnownOf`. */
 function alwaysPreparedOf(sheet: Sheet, parts: Parts): string[] {
-  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(parts.subclass, sheet.level)])]
+  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass)])].filter((id) => !isCantrip(id))
+}
+
+/** The cantrips a feature or the subclass gives with its always-prepared spells: a land's. They are not listed on the sheet. */
+function alwaysKnownOf(sheet: Sheet, parts: Parts): string[] {
+  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass)])].filter(isCantrip)
 }
 
 /**
@@ -326,6 +511,7 @@ function spellProblems(sheet: Sheet, parts: Parts): string[] {
   for (const id of prepared) if (!onList(id, 1, highest)) problems.push(`"${id}" is not a ${cls.name} spell of a level the sheet has slots for`)
   const always = alwaysPreparedOf(sheet, parts)
   for (const id of prepared) if (always.includes(id)) problems.push(`"${id}" is always prepared, so it is not listed among the prepared spells`)
+  for (const id of cantrips) if (alwaysKnownOf(sheet, parts).includes(id)) problems.push(`"${id}" is always known, so it is not listed among the cantrips`)
   for (const [name, ids] of [
     ["cantrip", cantrips],
     ["prepared spell", prepared],
@@ -552,6 +738,62 @@ function originProblems(sheet: Sheet, parts: Parts): string[] {
 }
 
 /**
+ * Faults in the options picked for features that take several (`featurePicks`): as many as the feature takes at the
+ * level, each an option of the feature whose prerequisite the hero meets (the class level, another option picked, a
+ * cantrip of the kind it names, which the pick keeps and the hero knows), none taken twice unless it is repeatable and
+ * then with another cantrip or feat each time, and a feat an option gives of its category (Lessons of the First Ones'
+ * Origin feat). A feature the hero lacks, or one that takes no picks, has none.
+ */
+function pickProblems(sheet: Sheet, parts: Parts): string[] {
+  const problems: string[] = []
+  for (const [featureId, picks] of Object.entries(sheet.featurePicks ?? {})) {
+    const feature = parts.features.find((entry) => entry.id === featureId)
+    if (!feature) problems.push(`"${featureId}" is not a ${parts.class.name} feature at level ${sheet.level}`)
+    else if (!takesPicks(feature)) problems.push(`${feature.name} takes no picks`)
+    else if (!picks.length) problems.push(`${feature.name} lists no picks`)
+  }
+  for (const feature of parts.features.filter(takesPicks)) {
+    const picks = sheet.featurePicks?.[feature.id] ?? []
+    const wanted = picksAt(parts.class, sheet.level, feature)
+    if (picks.length !== wanted) problems.push(`${feature.name} takes ${wanted} options at level ${sheet.level}, and the sheet has ${picks.length}`)
+    const taken = new Set(picks.map((pick) => pick.option))
+    const seen = new Map<string, string[]>()
+    for (const pick of picks) {
+      const option = feature.options?.find((entry) => entry.id === pick.option)
+      if (!option) {
+        problems.push(`"${pick.option}" is not an option of ${feature.name}`)
+        continue
+      }
+      const need = option.prerequisite
+      if (need?.level && sheet.level < need.level) problems.push(`${option.name} needs level ${need.level}, and the sheet is level ${sheet.level}`)
+      if (need?.invocation && !taken.has(need.invocation))
+        problems.push(`${option.name} needs ${feature.options?.find((entry) => entry.id === need.invocation)?.name ?? need.invocation}, and the sheet has not picked it`)
+      const cantrip = cantripNeed(option)
+      if (cantrip && !pick.cantrip) problems.push(`${option.name} works with one of the hero's cantrips, and the pick names none`)
+      if (!cantrip && pick.cantrip) problems.push(`${option.name} takes no cantrip`)
+      if (cantrip && pick.cantrip) {
+        if (!(sheet.cantrips ?? []).includes(pick.cantrip)) problems.push(`${option.name} works with ${spellById.get(pick.cantrip)?.name ?? pick.cantrip}, which the hero does not know`)
+        else if (!cantripFits(cantrip, pick.cantrip)) problems.push(`${spellById.get(pick.cantrip)?.name ?? pick.cantrip} does not meet ${option.name}'s prerequisite: ${need?.text}`)
+      }
+      const grant = option.feat
+      if (grant && !pick.feat) problems.push(`${option.name} gives a feat, and the pick names none`)
+      if (!grant && pick.feat) problems.push(`${option.name} gives no feat`)
+      if (grant && pick.feat) {
+        const feat = featById.get(pick.feat)
+        if (!feat || feat.category !== grant.category) problems.push(`${option.name} gives ${grant.category ?? "a"} feat, and "${pick.feat}" is not one`)
+        else if (!featOfferable(feat, grant.category)) problems.push(`${feat.name} asks for picks that have no home when ${option.name} gives it`)
+      }
+      const again = seen.get(option.id)
+      const mark = pick.cantrip ?? pick.feat ?? ""
+      if (again && !option.repeatable) problems.push(`${option.name} is picked twice, and it is not repeatable`)
+      else if (again?.includes(mark)) problems.push(`${option.name} is picked twice with the same ${pick.feat ? "feat" : "cantrip"}`)
+      seen.set(option.id, [...(again ?? []), mark])
+    }
+  }
+  return problems
+}
+
+/**
  * Faults in a sheet's choices, at any level: an id the SRD data lacks, a skill outside the class's list, armor the class
  * is not trained in, a subclass missing from the level the class grants one or present before it, Expertise in more or
  * fewer skills than the features give or off a feature's list, a feature's choice left out, a feat or ability raise a
@@ -616,6 +858,7 @@ export function sheetProblems(sheet: Sheet): string[] {
     if (taken && !trait.choice.options.some((option) => option.id === taken)) problems.push(`"${taken}" is not an option of ${trait.name}`)
   }
   for (const feature of parts.features) if (needsFeatureChoice(feature) && !sheet.featureChoices?.[feature.id]) problems.push(`${feature.name} needs a choice, and the sheet has none`)
+  problems.push(...pickProblems(sheet, parts))
   for (const [featureId, chosen] of Object.entries(sheet.featureChoices ?? {})) {
     const feature = parts.features.find((entry) => entry.id === featureId)
     if (!feature) {
@@ -626,8 +869,13 @@ export function sheetProblems(sheet: Sheet): string[] {
       problems.push(`${feature.name}'s feat is kept in the sheet's advancements, by level`)
       continue
     }
-    const option = feature.options?.some((entry) => entry.id === chosen)
-    if (!option && !feature.feat) problems.push(feature.options ? `"${chosen}" is not an option of ${feature.name}` : `${feature.name} takes no choice`)
+    if (FOLLOWS[feature.id]) {
+      problems.push(`${feature.name} keeps the option chosen for ${classFeatureById.get(FOLLOWS[feature.id])?.name}, and takes none of its own`)
+      continue
+    }
+    const offered = keptOptions(feature)
+    const option = offered.some((entry) => entry.id === chosen)
+    if (!option && !feature.feat) problems.push(offered.length ? `"${chosen}" is not an option of ${feature.name}` : `${feature.name} takes no choice`)
     if (!option && feature.feat) {
       const feat = featById.get(chosen)
       if (feat && "category" in feature.feat && feature.feat.category && feat.category !== feature.feat.category)
@@ -645,10 +893,11 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
   const proficiencyBonus = row.proficiencyBonus
 
   const abilityModifiers = Object.fromEntries(abilityIds.map((ability) => [ability, modifier(sheet.abilityScores[ability])])) as Record<AbilityId, number>
+  const standing = standingOf(sheet, parts)
 
   const savingThrows = Object.fromEntries(
     abilityIds.map((ability) => {
-      const proficient = parts.class.savingThrows.includes(ability)
+      const proficient = parts.class.savingThrows.includes(ability) || standing.some((source) => source.savingThrowProficiencies?.includes(ability))
       return [ability, { bonus: abilityModifiers[ability] + (proficient ? proficiencyBonus : 0), proficient }]
     })
   ) as DerivedSheet["savingThrows"]
@@ -685,7 +934,7 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
     skills,
     passivePerception: 10 + skills.perception.bonus,
     initiative: abilityModifiers.dex + (initiativeFeat ? proficiencyBonus : 0),
-    speed: baseSpeed - (tooHeavy ? 10 : 0),
+    speed: baseSpeed + speedBonusOf(sheet, parts) - (tooHeavy ? 10 : 0),
     senses: sensesOf(sheet, parts),
     resistances: resistancesOf(sheet, parts),
     armorTraining: armorTrainingOf(sheet, parts),
@@ -693,7 +942,7 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
     stealthDisadvantage: parts.armor?.stealthDisadvantage === true,
     feats: parts.feats.map((feat) => feat.id),
     classFeatures: parts.features.map((feature) => feature.id),
-    cantrips: [...new Set([...(sheet.cantrips ?? []), ...speciesCantripsOf(sheet, parts)])],
+    cantrips: [...new Set([...(sheet.cantrips ?? []), ...speciesCantripsOf(sheet, parts), ...alwaysKnownOf(sheet, parts)])],
     speciesCantrips: speciesCantripsOf(sheet, parts),
     preparedSpells: [...new Set([...(sheet.spells ?? []), ...alwaysPreparedOf(sheet, parts)])],
     alwaysPrepared: alwaysPreparedOf(sheet, parts),

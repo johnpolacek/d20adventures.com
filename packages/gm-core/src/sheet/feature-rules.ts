@@ -24,12 +24,16 @@ type Count = number | "proficiency-bonus" | { ability: "str" | "dex" | "con" | "
 /**
  * How many uses a feature has at a hero's level, by its data: a number, the Proficiency Bonus, an ability modifier with
  * its minimum, a column of the class table, or a count by level. Action Surge is 1 at level 2, Channel Divinity 2, and
- * Bardic Inspiration the Charisma modifier. 0 for a feature the hero lacks or one with no uses.
+ * Bardic Inspiration the Charisma modifier. A pool's points count as uses: Lay on Hands has 25 at level 5. 0 for a
+ * feature the hero lacks or one with no uses.
  */
 export function featureUseCount(sheet: Sheet, id: string): number {
   const feature = classFeatureById.get(id)
   const derived = deriveSheet(sheet)
-  if (!feature?.uses || !derived.classFeatures.includes(id)) return 0
+  if (!feature || !derived.classFeatures.includes(id)) return 0
+  // A pool counts points, not uses: Lay on Hands holds five times the Paladin level, which is the hero's level.
+  if (feature.pool) return feature.pool.perLevel * sheet.level
+  if (!feature.uses) return 0
   const count = feature.uses.count as Count
   if (typeof count === "number") return count
   if (count === "proficiency-bonus") return derived.proficiencyBonus

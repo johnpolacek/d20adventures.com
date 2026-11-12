@@ -1,7 +1,8 @@
 // What the level-up screen keeps while a player chooses, and how it becomes the choices the engine checks. Only types
 // come from the engine here, so the screen's own code carries none of the rules data: that loads with `useLevelUp`.
 
-import type { FeatOffer, LevelUpChoices, LevelUpOptions, Named } from "@d20/gm-core/sheet/level-up"
+import type { FeatOffer, LevelUpChoices, LevelUpOptions, Named, PickOffer, PicksOffer } from "@d20/gm-core/sheet/level-up"
+import type { FeaturePick } from "@d20/gm-core/sheet/sheet"
 
 export type AbilityId = "str" | "dex" | "con" | "int" | "wis" | "cha"
 export const ABILITY_NAMES: Record<AbilityId, string> = { str: "Strength", dex: "Dexterity", con: "Constitution", int: "Intelligence", wis: "Wisdom", cha: "Charisma" }
@@ -20,6 +21,8 @@ export type Picks = {
   skills: string[]
   featureChoices: Record<string, string>
   optionCantrips: Record<string, string[]>
+  /** All the picks of a feature that takes several, by the feature's id: those kept, and those added. */
+  featurePicks: Record<string, FeaturePick[]>
   cantrips: string[]
   spellbook: string[]
   spells: string[]
@@ -37,6 +40,7 @@ export function emptyPicks(options: LevelUpOptions): Picks {
     skills: [],
     featureChoices: {},
     optionCantrips: {},
+    featurePicks: Object.fromEntries((options.featurePicks ?? []).map((offer) => [offer.feature.id, offer.picked.map((pick) => ({ ...pick }))])),
     cantrips: [],
     spellbook: [],
     spells: [],
@@ -63,8 +67,47 @@ export function preparable(options: LevelUpOptions, book: readonly string[] | un
   return from.filter((spell) => pages.has(spell.id))
 }
 
-/** What is still to choose, in the screen's own words. Empty when the level can be taken. */
-export function missing(options: LevelUpOptions, picks: Picks): string[] {
+/**
+ * Prepared spells at this level, with a land chosen now: the land's spells are not picked, and one of them already
+ * prepared leaves the list, so one more is picked.
+ */
+export function spellsToPick(options: LevelUpOptions, picks: Picks, prepared: readonly string[] | undefined): { count: number; kept: Set<string> } {
+  const kept = new Set((options.featureChoices ?? []).flatMap((entry) => optionOf(options, picks, entry.feature.id)?.prepares ?? []).map((spell) => spell.id))
+  return { count: (options.spells?.count ?? 0) + (prepared ?? []).filter((id) => kept.has(id)).length, kept }
+}
+
+/**
+ * Why an option of a feature that takes several cannot be picked now, in its printed words, or nothing when it can: a
+ * class level not reached, another option not picked, or no cantrip the hero knows of the kind it names. `known` is the
+ * hero's cantrips with those chosen now.
+ */
+export function unmet(option: PickOffer, picked: readonly FeaturePick[], level: number, known: readonly string[]): string | undefined {
+  const need = option.prerequisite
+  if (!need) return undefined
+  const short = (need.level ?? 0) > level || (need.option && !picked.some((pick) => pick.option === need.option)) || (option.cantrips && !option.cantrips.some((cantrip) => known.includes(cantrip.id)))
+  return short ? need.text : undefined
+}
+
+/**
+ * Picks with one switched in or out. A plain option is one pick. An option that works with a cantrip or gives a feat is
+ * one pick for each cantrip or feat (`with`), so a repeatable option is picked again by picking another. Nothing is
+ * added past the feature's count.
+ */
+export function togglePick(offer: PicksOffer, picked: readonly FeaturePick[], option: string, withId?: string): FeaturePick[] {
+  const entry = offer.options.find((each) => each.id === option)
+  const pick: FeaturePick = { option, ...(withId && entry?.cantrips ? { cantrip: withId } : {}), ...(withId && entry?.feats ? { feat: withId } : {}) }
+  const same = (each: FeaturePick) => each.option === pick.option && each.cantrip === pick.cantrip && each.feat === pick.feat
+  if (picked.some(same)) return picked.filter((each) => !same(each))
+  return picked.length < offer.count ? [...picked, pick] : [...picked]
+}
+
+/** How many of the picks kept from before a feature's picks have dropped. */
+export function replacedCount(offer: PicksOffer, picked: readonly FeaturePick[]): number {
+  return offer.picked.filter((old) => !picked.some((each) => each.option === old.option && each.cantrip === old.cantrip && each.feat === old.feat)).length
+}
+
+/** What is still to choose, in the screen's own words. Empty when the level can be taken. `prepared` is the sheet's prepared spells. */
+export function missing(options: LevelUpOptions, picks: Picks, prepared?: readonly string[]): string[] {
   const left: string[] = []
   const short = (have: number, need: number, one: string, many: string) => {
     if (have < need) left.push(`${need - have} more ${need - have === 1 ? one : many}`)
@@ -96,13 +139,18 @@ export function missing(options: LevelUpOptions, picks: Picks): string[] {
     if (!option) left.push(entry.feature.name)
     else if (option.cantrips) short(picks.optionCantrips[entry.feature.id]?.length ?? 0, option.cantrips.count, "cantrip", "cantrips")
   }
+  for (const offer of options.featurePicks ?? []) {
+    const picked = picks.featurePicks[offer.feature.id] ?? []
+    short(picked.length, offer.count, offer.feature.name.replace(/s$/, ""), offer.feature.name)
+    if (replacedCount(offer, picked) > (offer.replace ? 1 : 0)) left.push(`${offer.feature.name}: ${offer.replace ? "only one" : "none"} of those held may be replaced`)
+  }
   if (options.cantrips) short(picks.cantrips.length, options.cantrips.count, "cantrip", "cantrips")
   if (options.spellbook) {
     short(picks.spellbook.length, options.spellbook.count, "spellbook spell", "spellbook spells")
     const evocations = options.spellbook.from.filter((spell) => picks.spellbook.includes(spell.id) && spell.school === "evocation").length
     if (picks.spellbook.length >= options.spellbook.count && evocations < options.spellbook.evocation) left.push(`${options.spellbook.evocation} Evocation spells in the spellbook`)
   }
-  if (options.spells) short(picks.spells.length, options.spells.count, "prepared spell", "prepared spells")
+  if (options.spells) short(picks.spells.length, spellsToPick(options, picks, prepared).count, "prepared spell", "prepared spells")
   if (options.weaponMasteries) short(picks.weaponMasteries.length, Math.min(options.weaponMasteries.count, options.weaponMasteries.from.length), "weapon mastery", "weapon masteries")
   return left
 }
@@ -123,6 +171,7 @@ export function toChoices(options: LevelUpOptions, picks: Picks): LevelUpChoices
     ...(expertise.length ? { expertise } : {}),
     ...(options.skills && picks.skills.length ? { skills: picks.skills } : {}),
     ...(Object.keys(picks.featureChoices).length ? { featureChoices: picks.featureChoices } : {}),
+    ...(options.featurePicks?.length ? { featurePicks: picks.featurePicks } : {}),
     ...(cantrips.length ? { cantrips } : {}),
     ...(picks.spells.length ? { spells: picks.spells } : {}),
     ...(picks.spellbook.length ? { spellbook: picks.spellbook } : {}),
@@ -151,6 +200,7 @@ export function fromChoices(options: LevelUpOptions, choices: LevelUpChoices): P
     featSkills: [...(choices.featPicks?.skills ?? [])],
     skills: [...(choices.skills ?? [])],
     featureChoices: { ...choices.featureChoices },
+    featurePicks: { ...picks.featurePicks, ...choices.featurePicks },
     cantrips: [...(choices.cantrips ?? [])],
     spellbook: [...(choices.spellbook ?? [])],
     spells: [...(choices.spells ?? [])],

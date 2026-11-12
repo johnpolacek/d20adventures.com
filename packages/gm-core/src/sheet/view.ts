@@ -6,8 +6,10 @@ import { classById } from "@d20/srd/classes"
 import { featById } from "@d20/srd/feats"
 import type { ClassFeature } from "@d20/srd/schema/classes"
 import { skillById } from "@d20/srd/skills"
+import { spellById } from "@d20/srd/spells"
 import { subclassById } from "@d20/srd/subclasses"
-import { deriveSheet, grantsFeatByLevel } from "./derive"
+import { deriveSheet, grantsFeatByLevel, keptChoiceOf, keptOptions } from "./derive"
+import { featureUseCount } from "./feature-rules"
 import type { HitPoints } from "./hit-points"
 import { speciesById } from "./house-species"
 import { reactionsOf } from "./reactions"
@@ -17,8 +19,11 @@ import { slotsLeft, spellcastingOf, spellsOf } from "./spells"
 import { combatStatsOf } from "./stat-block"
 import type { ReactionId, SpellEffect } from "./turn-effect"
 
-/** A feature as the sheet lists it. `uses` is how many times it can be used, how many are left, and the rest that restores them. */
-export type SheetFeature = { name: string; from: string; uses?: { count: number; left: number; recharge: string } }
+/**
+ * A feature as the sheet lists it. `uses` is how many times it can be used, how many are left, and the rest that
+ * restores them. For a pool (Lay on Hands) they are points, and `points` is set.
+ */
+export type SheetFeature = { name: string; from: string; uses?: { count: number; left: number; recharge: string; points?: true } }
 
 /**
  * A caster's spellcasting as the sheet shows it: the spell save DC, the spell attack bonus, the spell slots of each
@@ -113,14 +118,29 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
         return entry.feat === "ability-score-improvement" && raises.length ? raises.join(", ") : [featById.get(entry.feat ?? "")?.name ?? entry.feat, ...raises].join(", ")
       })
       .join("; ")
+  // The options picked for a feature that takes several, by name, with the cantrip or feat each works with.
+  const picked = (feature: ClassFeature) =>
+    (sheet.featurePicks?.[feature.id] ?? [])
+      .map((pick) => {
+        const name = feature.options?.find((option) => option.id === pick.option)?.name ?? pick.option
+        const with_ = pick.cantrip ? spellById.get(pick.cantrip)?.name : pick.feat ? featById.get(pick.feat)?.name : undefined
+        return with_ ? `${name} (${with_})` : name
+      })
+      .join(", ")
   const features: SheetFeature[] = []
   for (const id of derived.classFeatures) {
     const feature = classFeatureById.get(id)
     if (!feature) continue
-    const chosen = sheet.featureChoices?.[id]
-    const choice = grantsFeatByLevel(feature) ? advanced(feature) : chosen ? (feature.options?.find((option) => option.id === chosen)?.name ?? featById.get(chosen)?.name) : undefined
+    // A later feature that strengthens an earlier one's option (Improved Blessed Strikes) shows the option it keeps.
+    const chosen = keptChoiceOf(sheet, id)
+    const optionName = (taken: string) => keptOptions(feature).find((option) => option.id === taken)?.name ?? featById.get(taken)?.name
+    const choice = grantsFeatByLevel(feature) ? advanced(feature) : sheet.featurePicks?.[id] ? picked(feature) : chosen ? optionName(chosen) : undefined
     const from = feature.subclass && subclass ? subclass.name : cls.name
-    features.push({ name: choice ? `${feature.name}: ${choice}` : feature.name, from, uses: usesOf(feature.uses as Parameters<typeof usesOf>[0], featureUses?.[id]) })
+    const pool = feature.pool && featureUseCount(sheet, id)
+    const uses = pool
+      ? { count: pool, left: Math.max(0, pool - (featureUses?.[id] ?? 0)), recharge: RECHARGE[feature.pool?.recharge ?? ""] ?? titled(feature.pool?.recharge ?? ""), points: true as const }
+      : usesOf(feature.uses as Parameters<typeof usesOf>[0], featureUses?.[id])
+    features.push({ name: choice ? `${feature.name}: ${choice}` : feature.name, from, uses })
   }
   for (const trait of species.traits) {
     if ((trait.level ?? 1) > sheet.level) continue

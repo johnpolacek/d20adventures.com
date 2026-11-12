@@ -3,12 +3,12 @@
 // The level a finished adventure gives a hero: what the level brings, and each choice it asks of the player. The
 // engine says what is asked and checks what is chosen. Both hosts use it.
 
-import type { LevelUpChoices, LevelUpOptions, Named } from "@d20/gm-core/sheet/level-up"
-import type { Sheet } from "@d20/gm-core/sheet/sheet"
+import type { LevelUpChoices, LevelUpOptions, Named, PicksOffer } from "@d20/gm-core/sheet/level-up"
+import type { FeaturePick, Sheet } from "@d20/gm-core/sheet/sheet"
 import { useEffect, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
-import { ABILITY_NAMES, type AbilityId, emptyPicks, fromChoices, missing, type Picks, preparable, raiseOf, toChoices, toggled } from "./level-up-view"
+import { ABILITY_NAMES, type AbilityId, emptyPicks, fromChoices, missing, type Picks, preparable, raiseOf, spellsToPick, toChoices, toggled, togglePick, unmet } from "./level-up-view"
 
 type Rules = {
   options: LevelUpOptions
@@ -144,6 +144,64 @@ function SpellOptions({
   )
 }
 
+// A feature's picks of several from its list. An option whose prerequisite is not met shows it and cannot be picked.
+// One that works with a cantrip or gives a feat is picked once for each cantrip or feat taken under it.
+function FeaturePicks({ offer, picked, level, known, onPick }: { offer: PicksOffer; picked: readonly FeaturePick[]; level: number; known: readonly string[]; onPick: (picks: FeaturePick[]) => void }) {
+  return (
+    <div className="space-y-2">
+      <fieldset className="m-0 flex min-w-0 flex-wrap gap-1.5 border-0 p-0">
+        <legend className="sr-only">{offer.feature.name}</legend>
+        {offer.options.map((option) => {
+          const on = picked.some((pick) => pick.option === option.id)
+          const blocked = on ? undefined : unmet(option, picked, level, known)
+          const nested = !!(option.cantrips || option.feats)
+          return (
+            <Pill
+              key={option.id}
+              aria-pressed={on}
+              active={on}
+              disabled={!!blocked}
+              className="px-2 py-1 text-[11px]"
+              onClick={() => {
+                if (on) onPick(picked.filter((pick) => pick.option !== option.id))
+                else if (!nested) onPick(togglePick(offer, picked, option.id))
+                else {
+                  const first = option.cantrips ? option.cantrips.find((cantrip) => known.includes(cantrip.id)) : option.feats?.[0]
+                  if (first) onPick(togglePick(offer, picked, option.id, first.id))
+                }
+              }}
+            >
+              {option.name}
+              {blocked && <span className="ml-1 text-stage-cream/50">· {blocked}</span>}
+            </Pill>
+          )
+        })}
+      </fieldset>
+      {offer.options
+        .filter((option) => (option.cantrips || option.feats) && picked.some((pick) => pick.option === option.id))
+        .map((option) => {
+          const under = (option.cantrips ?? []).filter((cantrip) => known.includes(cantrip.id)).concat(option.feats ?? [])
+          const mine = picked.filter((pick) => pick.option === option.id).map((pick) => pick.cantrip ?? pick.feat ?? "")
+          return (
+            <Labeled key={option.id} label={option.name}>
+              <Options
+                label={option.name}
+                from={under}
+                picked={mine}
+                most={option.repeatable ? under.length : 1}
+                onPick={(ids) => {
+                  const others = picked.filter((pick) => pick.option !== option.id)
+                  const room = Math.max(0, offer.count - others.length)
+                  onPick([...others, ...ids.slice(0, room).map((id) => (option.cantrips ? { option: option.id, cantrip: id } : { option: option.id, feat: id }))])
+                }}
+              />
+            </Labeled>
+          )
+        })}
+    </div>
+  )
+}
+
 /**
  * The level-up screen for one hero. `onTake` sends the choices to the host, and answers with what stopped the level,
  * or nothing when it was taken.
@@ -174,7 +232,7 @@ export function LevelUp({
     setPicks(options ? emptyPicks(options) : null)
     setStopped(null)
   }, [options])
-  const left = useMemo(() => (options && picks ? missing(options, picks) : []), [options, picks])
+  const left = useMemo(() => (options && picks ? missing(options, picks, sheet.spells) : []), [options, picks, sheet.spells])
 
   if (!rules || !options || !picks) {
     return (
@@ -200,7 +258,9 @@ export function LevelUp({
     set({ abilities: { ...picks.abilities, [ability]: next } })
   }
   const book = sheet.spellbook
-  const toPrepare = preparable(options, book, picks)
+  const toPick = spellsToPick(options, picks, sheet.spells)
+  const toPrepare = preparable(options, book, picks).filter((spell) => !toPick.kept.has(spell.id))
+  const known = [...(sheet.cantrips ?? []), ...picks.cantrips]
   const take = async () => {
     const choices = toChoices(options, picks)
     const faults = rules.problems(choices)
@@ -360,6 +420,15 @@ export function LevelUp({
           )
         })}
 
+        {options.featurePicks?.map((offer) => {
+          const picked = picks.featurePicks[offer.feature.id] ?? []
+          return (
+            <Section key={offer.feature.id} title={offer.feature.name} count={`${picked.length} of ${offer.count}`}>
+              <FeaturePicks offer={offer} picked={picked} level={options.level} known={known} onPick={(ids) => set({ featurePicks: { ...picks.featurePicks, [offer.feature.id]: ids } })} />
+            </Section>
+          )
+        })}
+
         {options.cantrips && (
           <Section title="Cantrips" count={`${picks.cantrips.length} of ${options.cantrips.count}`}>
             <Options label="Cantrips" from={options.cantrips.from} picked={picks.cantrips} most={options.cantrips.count} onPick={(ids) => set({ cantrips: ids })} />
@@ -379,9 +448,19 @@ export function LevelUp({
         )}
 
         {options.spells && (
-          <Section title="Prepared Spells" count={`${picks.spells.length} of ${options.spells.count}`}>
-            {options.spells.dropped && <p className="mb-2 font-serif text-[12px] text-stage-cream/70">Now always prepared: {options.spells.dropped.map((spell) => spell.name).join(", ")}</p>}
-            <SpellOptions label="Prepared Spells" from={toPrepare} picked={picks.spells} most={options.spells.count} onPick={(ids) => set({ spells: ids })} />
+          <Section title="Prepared Spells" count={`${picks.spells.length} of ${toPick.count}`}>
+            {(options.spells.dropped || toPick.kept.size > 0) && (
+              <p className="mb-2 font-serif text-[12px] text-stage-cream/70">
+                Now always prepared:{" "}
+                {[
+                  ...(options.spells.dropped ?? []).map((spell) => spell.name),
+                  ...(options.featureChoices ?? []).flatMap(
+                    (entry) => entry.options.find((option) => option.id === picks.featureChoices[entry.feature.id])?.prepares?.map((spell) => spell.name) ?? []
+                  ),
+                ].join(", ")}
+              </p>
+            )}
+            <SpellOptions label="Prepared Spells" from={toPrepare} picked={picks.spells} most={toPick.count} onPick={(ids) => set({ spells: ids })} />
           </Section>
         )}
 

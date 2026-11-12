@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { classIds } from "@d20/srd"
 import { speciesSchema } from "@d20/srd/schema/origins"
 import { autoCreate, CREATION_CLASSES, type CreationChoices, type CreationPick, createSheet, creationChoicesSchema, creationMenu, creationOptions, heroRecord, heroRules } from "../../src/sheet/create"
 import { enduredWords, withDamage } from "../../src/sheet/death"
@@ -132,14 +133,16 @@ test("Choose For Me makes a legal hero of every class with every species and bac
     menu.classes.map((entry) => entry.id),
     [...CREATION_CLASSES]
   )
+  // The creator offers six classes. The sweep lifts that list to all twelve of the SRD, so a class's level 1 sheet is
+  // known to be legal before the class is opened.
   // The SRD's nine, then the game's own Half-Elf and Half-Orc.
   assert.equal(menu.species.length, 11)
   assert.equal(menu.backgrounds.length, 4)
   const faults: string[] = []
-  for (const cls of CREATION_CLASSES)
+  for (const cls of classIds)
     for (const species of menu.species)
       for (const background of menu.backgrounds) {
-        const each = { class: cls, species: species.id, background: background.id }
+        const each = { class: cls, species: species.id, background: background.id } as unknown as CreationPick
         const result = createSheet(each, creationChoicesSchema.parse(autoCreate(each)))
         if ("problems" in result) faults.push(`${cls} ${species.id} ${background.id}: ${result.problems.join("; ")}`)
         else if (sheetProblems(result.sheet).length) faults.push(`${cls} ${species.id} ${background.id}: ${sheetProblems(result.sheet).join("; ")}`)

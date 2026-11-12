@@ -5,9 +5,10 @@
 // The engine says what is asked and checks what is chosen. Both hosts use it.
 
 import type { CreationChoices, CreationOptions, CreationPick, EquipmentOffer } from "@d20/gm-core/sheet/create"
-import type { FeatOffer, Named } from "@d20/gm-core/sheet/level-up"
+import type { FeatOffer, Named, PicksOffer } from "@d20/gm-core/sheet/level-up"
+import type { FeaturePick } from "@d20/gm-core/sheet/sheet"
 import { useMemo } from "react"
-import { ABILITY_NAMES, type AbilityId, toggled } from "@/components/stage/level-up-view"
+import { ABILITY_NAMES, type AbilityId, toggled, togglePick, unmet } from "@/components/stage/level-up-view"
 import { Option, siteField, siteLabel } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
 import type { HeroRulesKit } from "./use-hero-rules"
@@ -128,6 +129,62 @@ function FeatChoices({ feat, picks, kit, onChange }: { feat: FeatOffer; picks: F
           <Picks label="Skills" from={feat.skillPicks.from} picked={picks.skills ?? []} most={feat.skillPicks.count} onPick={(ids) => onChange({ ...picks, skills: ids as FeatPicks["skills"] })} />
         </Sub>
       )}
+    </>
+  )
+}
+
+// A feature's picks of several from its list. An option whose prerequisite is not met shows it and cannot be picked.
+// One that works with a cantrip or gives a feat is picked once for each cantrip or feat taken under it.
+function FeaturePicks({ offer, picked, known, onPick }: { offer: PicksOffer; picked: readonly FeaturePick[]; known: readonly string[]; onPick: (picks: FeaturePick[]) => void }) {
+  return (
+    <>
+      <fieldset className="m-0 flex min-w-0 flex-wrap gap-2 border-0 p-0">
+        <legend className="sr-only">{offer.feature.name}</legend>
+        {offer.options.map((option) => {
+          const on = picked.some((pick) => pick.option === option.id)
+          const blocked = on ? undefined : unmet(option, picked, 1, known)
+          const nested = !!(option.cantrips || option.feats)
+          return (
+            <Option
+              key={option.id}
+              aria-pressed={on}
+              active={on}
+              disabled={!!blocked}
+              className={cn(blocked && "opacity-60")}
+              onClick={() => {
+                if (on) onPick(picked.filter((pick) => pick.option !== option.id))
+                else if (!nested) onPick(togglePick(offer, picked, option.id))
+                else {
+                  const first = option.cantrips ? option.cantrips.find((cantrip) => known.includes(cantrip.id)) : option.feats?.[0]
+                  if (first) onPick(togglePick(offer, picked, option.id, first.id))
+                }
+              }}
+            >
+              {option.name}
+              {blocked && <span className="ml-1 text-white/40">· {blocked}</span>}
+            </Option>
+          )
+        })}
+      </fieldset>
+      {offer.options
+        .filter((option) => (option.cantrips || option.feats) && picked.some((pick) => pick.option === option.id))
+        .map((option) => {
+          const under = (option.cantrips ?? []).filter((cantrip) => known.includes(cantrip.id)).concat(option.feats ?? [])
+          const others = picked.filter((pick) => pick.option !== option.id)
+          return (
+            <Sub key={option.id} label={option.name}>
+              <Picks
+                label={option.name}
+                from={under}
+                picked={picked.filter((pick) => pick.option === option.id).map((pick) => pick.cantrip ?? pick.feat ?? "")}
+                most={option.repeatable ? under.length : 1}
+                onPick={(ids) =>
+                  onPick([...others, ...ids.slice(0, Math.max(0, offer.count - others.length)).map((id) => (option.cantrips ? { option: option.id, cantrip: id } : { option: option.id, feat: id }))])
+                }
+              />
+            </Sub>
+          )
+        })}
     </>
   )
 }
@@ -338,6 +395,14 @@ export function HeroRules({ kit, pick, choices, onChange }: { kit: HeroRulesKit;
           />
         </Section>
       ))}
+      {options.featurePicks?.map((offer) => {
+        const picked = choices.featurePicks?.[offer.feature.id] ?? []
+        return (
+          <Section key={offer.feature.id} title={offer.feature.name} count={`${picked.length} of ${offer.count}`}>
+            <FeaturePicks offer={offer} picked={picked} known={choices.cantrips ?? []} onPick={(ids) => set({ featurePicks: { ...choices.featurePicks, [offer.feature.id]: ids } })} />
+          </Section>
+        )
+      })}
       {options.expertise?.map((entry) => (
         <Section key={entry.feature.id} title="Expertise" count={`${choices.expertise?.length ?? 0} of ${entry.count}`}>
           <Picks

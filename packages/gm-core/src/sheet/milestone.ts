@@ -1,11 +1,12 @@
 import { type AbilityId, abilityIds, classIdSchema, idSchema, type SkillId, skillIdSchema } from "@d20/srd"
+import { classFeatureById } from "@d20/srd/class-features"
 import { classById } from "@d20/srd/classes"
 import { z } from "zod"
 import { deriveSheet } from "./derive"
 import { hitPointsOf, withHitPoints } from "./hit-points"
 import { type Levelling, levelOwed, withLevelDue } from "./level-owed"
-import { type LevelUpChoices, levelUp, levelUpOptions } from "./level-up"
-import type { Sheet } from "./sheet"
+import { type LevelUpChoices, levelUp, levelUpOptions, type PicksOffer } from "./level-up"
+import { type FeaturePick, featurePickSchema, type Sheet } from "./sheet"
 import { isEngineSpell, spellById } from "./spells"
 
 /**
@@ -28,6 +29,7 @@ export const levelUpChoicesSchema = z.strictObject({
   expertise: z.array(skillIdSchema).optional(),
   skills: z.array(skillIdSchema).optional(),
   featureChoices: z.record(idSchema, idSchema).optional(),
+  featurePicks: z.record(idSchema, z.array(featurePickSchema)).optional(),
   cantrips: z.array(idSchema).optional(),
   spells: z.array(idSchema).optional(),
   spellbook: z.array(idSchema).optional(),
@@ -39,6 +41,70 @@ export const spellOrder = (a: { id: string; level?: number }, b: { id: string; l
   const runs = (id: string) => (spellById.get(id) && isEngineSpell(spellById.get(id) as Parameters<typeof isEngineSpell>[0]) ? 0 : 1)
   const strikes = (id: string) => (spellById.get(id)?.damage || spellById.get(id)?.healing ? 0 : 1)
   return runs(a.id) - runs(b.id) || (b.level ?? 0) - (a.level ?? 0) || strikes(a.id) - strikes(b.id)
+}
+
+/**
+ * Metamagic in the order a pick that needs no player takes it. The engine runs no Metamagic option yet, so the order is
+ * by how often each changes a fight: an action's spell as a Bonus Action, a second target, better damage.
+ */
+const METAMAGIC_ORDER = [
+  "quickened-spell",
+  "twinned-spell",
+  "empowered-spell",
+  "careful-spell",
+  "extended-spell",
+  "heightened-spell",
+  "distant-spell",
+  "seeking-spell",
+  "subtle-spell",
+  "transmuted-spell",
+]
+
+/**
+ * The picks of a feature that takes several, filled to its count with picks that need no player: those kept, then the
+ * options whose prerequisite the hero meets, an option that casts a spell the engine runs with no slot first, then one
+ * that works with a cantrip the hero knows (with the first such cantrip), then the rest in the data's order (Metamagic
+ * by `METAMAGIC_ORDER`). An option that gives a feat gives the first the hero lacks. `known` is the hero's cantrips,
+ * `held` their feats, and `level` the class level.
+ */
+export function autoPicks(offer: PicksOffer, level: number, known: readonly string[], held: readonly string[]): FeaturePick[] {
+  const picks = [...offer.picked]
+  const runs = (id: string) => {
+    const spell = spellById.get(id)
+    return !!spell && isEngineSpell(spell)
+  }
+  const casts = (id: string) => (classFeatureById.get(offer.feature.id)?.options?.find((option) => option.id === id)?.freeCast ?? []).some((cast) => runs(cast.spell))
+  const rank = (id: string) => {
+    const option = offer.options.find((each) => each.id === id)
+    if (casts(id)) return 0
+    if (option?.cantrips) return 1
+    if (option?.feats) return 3
+    const order = METAMAGIC_ORDER.indexOf(id)
+    return 2 + (order < 0 ? 0 : order / 100)
+  }
+  const ranked = [...offer.options].sort((a, b) => rank(a.id) - rank(b.id))
+  while (picks.length < offer.count) {
+    const next = ranked.flatMap((option): FeaturePick[] => {
+      const need = option.prerequisite
+      if ((need?.level ?? 0) > level || (need?.option && !picks.some((pick) => pick.option === need.option))) return []
+      const again = picks.filter((pick) => pick.option === option.id)
+      if (again.length && !option.repeatable) return []
+      if (option.cantrips) {
+        // A cantrip cast from range first: the hero need not stand in reach to use it.
+        const ranged = [...option.cantrips].sort((a, b) => Number(spellById.get(b.id)?.attack === "ranged") - Number(spellById.get(a.id)?.attack === "ranged"))
+        const cantrip = ranged.find((each) => known.includes(each.id) && !again.some((pick) => pick.cantrip === each.id))
+        return cantrip ? [{ option: option.id, cantrip: cantrip.id }] : []
+      }
+      if (option.feats) {
+        const feat = option.feats.find((each) => !held.includes(each.id) && !picks.some((pick) => pick.feat === each.id))
+        return feat ? [{ option: option.id, feat: feat.id }] : []
+      }
+      return [{ option: option.id }]
+    })[0]
+    if (!next) break
+    picks.push(next)
+  }
+  return picks
 }
 
 /**
@@ -85,6 +151,11 @@ export function autoChoices(sheet: Sheet): LevelUpChoices {
       options.featureChoices.flatMap((entry) => (entry.options.find((option) => !option.cantrips) ? [[entry.feature.id, (entry.options.find((option) => !option.cantrips) as { id: string }).id]] : []))
     )
   if (options.cantrips) choices.cantrips = first([...options.cantrips.from].sort(spellOrder), options.cantrips.count)
+  if (options.featurePicks) {
+    const known = [...(sheet.cantrips ?? []), ...(choices.cantrips ?? [])]
+    const held = deriveSheet(sheet).feats
+    choices.featurePicks = Object.fromEntries(options.featurePicks.map((offer) => [offer.feature.id, autoPicks(offer, options.level, known, held)]))
+  }
   if (options.spellbook) {
     const from = [...options.spellbook.from].sort(spellOrder)
     const evocation = first(
@@ -94,10 +165,15 @@ export function autoChoices(sheet: Sheet): LevelUpChoices {
     choices.spellbook = [...evocation, ...first(from, options.spellbook.count - evocation.length)]
   }
   if (options.spells) {
-    // A Wizard prepares from the spellbook, with what this level writes into it.
+    // A Wizard prepares from the spellbook, with what this level writes into it. A land chosen now keeps its spells
+    // prepared: they are not picked, and one already prepared is replaced.
     const book = sheet.spellbook ? new Set([...sheet.spellbook, ...(choices.spellbook ?? [])]) : undefined
-    const from = options.spells.from.filter((entry) => !book || book.has(entry.id)).sort(spellOrder)
-    choices.spells = from.slice(0, options.spells.count).map((entry) => entry.id)
+    const prepares = (options.featureChoices ?? [])
+      .flatMap((entry) => entry.options.find((option) => option.id === choices.featureChoices?.[entry.feature.id])?.prepares ?? [])
+      .map((spell) => spell.id)
+    const replaced = (sheet.spells ?? []).filter((id) => prepares.includes(id)).length
+    const from = options.spells.from.filter((entry) => (!book || book.has(entry.id)) && !prepares.includes(entry.id)).sort(spellOrder)
+    choices.spells = from.slice(0, options.spells.count + replaced).map((entry) => entry.id)
   }
   if (options.weaponMasteries) {
     const carried = new Set(sheet.weapons ?? [])
