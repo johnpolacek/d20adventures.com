@@ -152,7 +152,7 @@ ${MENU("save")}
    - acrobatics ONLY for agility and precision stunts (balancing across a narrow beam, tumbling through hostile space, leaping a gap, vaulting obstacles, slipping bonds). Not for normal movement like walking, jogging, or threading through an ordinary crowd.
    - perception to notice something specific and hidden, investigation to search or analyze evidence, insight to read motives.
    - Picking a lock or disarming a trap is "dexterity".
-   - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check.
+   - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check. An attack always gives both "weapon" and "target".
      Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
      Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
@@ -207,8 +207,11 @@ Action: "${action}"
       const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
       const bonus = used ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } } : {}
       if (pick.check === "attack") {
-        const attack = attacks.find((entry) => entry.id === pick.weapon)
-        const target = targets.find((other) => other.id === pick.target)
+        // The pick names a weapon and a target off the two lists, by id. A name is taken for its id. One left out is
+        // settled where only one could be meant: the roller's only attack, the only one here to attack.
+        const named = (given: string | undefined, name: string, id: string) => !!given?.trim() && [id.toLowerCase(), name.toLowerCase()].includes(given.trim().toLowerCase())
+        const attack = attacks.find((entry) => named(pick.weapon, entry.name, entry.id)) ?? (!pick.weapon?.trim() && attacks.length === 1 ? attacks[0] : undefined)
+        const target = targets.find((other) => named(pick.target, other.name, other.id)) ?? (!pick.target?.trim() && targets.length === 1 ? targets[0] : undefined)
         if (!attack) throw new Error(`The game master asked for an attack with "${pick.weapon ?? ""}", which ${character.name} does not have.`)
         if (!target) throw new Error(`The game master asked for an attack on "${pick.target ?? ""}", who is not here to attack.`)
         const armorClass = combatStatsOf(target)?.armorClass

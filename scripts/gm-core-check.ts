@@ -420,6 +420,19 @@ async function npcFixedOutcome() {
   }
   const save = await getRollRequirementForAction("Thalbern drinks from the well.", thalbern, { present: [thalbern] })
   assert.deepEqual(save && "stakes" in save ? save.stakes : undefined, [{ ...poison, dice: "2d6" }])
+  // An attack that names no target lands on the only one here, and one named by name is taken for its id. With two
+  // to choose from and none named, nothing is rolled. The site's model once left an Owlbear's target out.
+  const owlbear = { id: "owlbear", name: "Owlbear", type: "npc", statBlock: "owlbear", hitPoints: 59 }
+  const wolf = { id: "wolf", name: "Wolf", type: "npc", statBlock: "wolf", hitPoints: 11 }
+  const hero = { ...thalbern, type: "pc", hitPoints: 11 }
+  answer = { check: "attack" }
+  const rend = await getRollRequirementForAction("The owlbear charges at Thalbern.", owlbear as any, { present: [owlbear, hero] })
+  assert.deepEqual(rend && "attack" in rend ? [rend.attack, rend.difficulty, rend.modifier] : undefined, [{ weapon: "rend", target: "thalbern" }, 15, 7])
+  answer = { check: "attack", weapon: "Longbow", target: "Owlbear" }
+  const shot = await getRollRequirementForAction("Thalbern shoots the owlbear.", hero, { present: [owlbear, wolf, hero] })
+  assert.deepEqual(shot && "attack" in shot ? shot.attack : undefined, { weapon: "longbow", target: "owlbear" })
+  answer = { check: "attack", weapon: "longbow" }
+  await assert.rejects(getRollRequirementForAction("Thalbern shoots.", hero, { present: [owlbear, wolf, hero] }), /who is not here to attack/)
 }
 
 // A scene's round budget counts the rounds in a row in one encounter. The round-end GM is told where the scene stands,

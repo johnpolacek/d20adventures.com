@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils"
 import { eyebrow } from "./hud"
 import { conditionSentence, type DamageView, type DeathSavesView, type FeatureView, featureSpeech, type HarmView, harmSentence, type RollView, takenDiffers } from "./roll-view"
 
+// A damage type as the engine keeps it, "piercing", in title case for the screen.
+const titled = (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
+
 const SUCCESS = "#b7d38a"
 const FAILURE = "#e39a7c"
 
@@ -46,7 +49,7 @@ function DamageLines({ damage, compact }: { damage: DamageView[]; compact: boole
     <>
       {damage.map((d, i) => (
         <div key={i} className={line(compact)}>
-          <DiceSum dice={d.dice} bonus={d.bonus} type={`${d.type} Damage`} total={d.total} compact={compact} />
+          <DiceSum dice={d.dice} bonus={d.bonus} type={`${titled(d.type)} Damage`} total={d.total} compact={compact} />
         </div>
       ))}
     </>
@@ -58,7 +61,7 @@ export function HarmLines({ harm, compact }: { harm: HarmView[]; compact: boolea
     <>
       {harm.map((h, i) => (
         <div key={i} className={line(compact)}>
-          {h.dice.length > 0 && <DiceSum dice={h.dice} bonus={h.bonus} type={h.type} total={h.dice.reduce((n, d) => n + d, 0) + h.bonus} compact={compact} />}
+          {h.dice.length > 0 && <DiceSum dice={h.dice} bonus={h.bonus} type={h.type && titled(h.type)} total={h.dice.reduce((n, d) => n + d, 0) + h.bonus} compact={compact} />}
           <span style={{ color: h.kind === "healing" ? SUCCESS : FAILURE }}>{harmSentence(h)}</span>
         </div>
       ))}
