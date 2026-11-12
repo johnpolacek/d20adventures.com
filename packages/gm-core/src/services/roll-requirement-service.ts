@@ -10,6 +10,7 @@ import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditi
 import { bonusActionsOf } from "../sheet/features"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
+import type { RestKind } from "../sheet/rest"
 import { attackReach, coverBetween, coverBonus, feetBetween, greaterCover, isNear, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells } from "../sheet/spell-effects"
 import { castInSpace } from "../sheet/spell-space"
@@ -31,7 +32,7 @@ const NPC_FIXED_OUTCOME =
 // or stat block, the target number from the difficulty's name, and the dice.
 const rollPickSchema = z.object({
   check: z
-    .enum(["none", "attack", "cast", "hide", ...actionIds, ...checkMenuIds])
+    .enum(["none", "attack", "cast", "hide", "short-rest", "long-rest", ...actionIds, ...checkMenuIds])
     .describe(
       'The check\'s id from the menu, "attack" for an attack, "cast" for one of the character\'s own spells, an action of a fight ("hide", "dodge", "help", "dash", "disengage"), or "none" when nothing is rolled'
     ),
@@ -87,6 +88,8 @@ export type TurnReading = {
   bonus?: { feature: string; target?: string }
   /** Where the move took the roller before they acted, and the feet it used. */
   move?: Moved
+  /** A rest the party takes, which the hero's turn is given to. */
+  rest?: RestKind
   /** Something the move asked for that the rules of space do not allow, to be told in the story: an attack out of reach. */
   ruling?: { name: string; text: string }
 }
@@ -214,7 +217,12 @@ ${MENU("save")}
      Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
      Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other), feetAway(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
-   - ACTIONS OF A FIGHT, only while a fight is on and only when it is the whole of what the character does this turn:
+${
+  "type" in character && character.type === "pc"
+    ? `   - RESTS: when the party stops to rest and the scene is safe for it, "check" is "short-rest" (about an hour: binding wounds, catching breath) or "long-rest" (a night's sleep, in a safe place, when the story has the night to spare). The whole party rests, and the game gives back what a rest gives. Never during a fight or a chase, with danger at hand, or with something pressing that will not wait: then "check" is "none".
+`
+    : ""
+}   - ACTIONS OF A FIGHT, only while a fight is on and only when it is the whole of what the character does this turn:
      "hide": they get out of sight to strike or slip away unseen. The game rolls stealth for it and sets its difficulty, so give none.
      "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
      "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
@@ -509,6 +517,12 @@ Action: "${action}"
         }
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
         return { roll: rollRequirement, ...also }
+      }
+      // A rest, which only a hero asks for: the engine gives it to the whole party as the reading is applied.
+      if ((pick.check === "short-rest" || pick.check === "long-rest") && "type" in character && character.type === "pc") {
+        const rest: RestKind = pick.check === "long-rest" ? "long" : "short"
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, rest })
+        return { roll: null, rest, ...also }
       }
       const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other)).map((other) => other.id))
       // An action that takes no roll. Help names who it is for, and for a check the skill.

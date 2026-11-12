@@ -725,5 +725,30 @@
     "moved": {
       "near": "branka-stoneveil"
     }
+  },
+  {
+    "id": "sleep-at-home",
+    "adventure": "the-midnight-summons",
+    "encounter": "back-home",
+    "hero": "thalbern",
+    "action": "I bar the door, eat a little, and sleep until morning.",
+    "checks": ["long-rest"]
+  },
+  {
+    "id": "catch-my-breath",
+    "adventure": "the-midnight-summons",
+    "encounter": "preparing-for-the-city",
+    "hero": "thalbern",
+    "action": "I sit by the hearth for an hour, bind my cuts and catch my breath before I pack.",
+    "checks": ["short-rest"]
+  },
+  {
+    "id": "no-rest-in-a-fight",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The owlbear roars and charges across the clearing at Thalbern.",
+    "action": "I lie down in the ferns and sleep for the night.",
+    "checks": ["none"]
   }
 ]

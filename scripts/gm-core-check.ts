@@ -440,6 +440,12 @@ async function npcFixedOutcome() {
   answer = { check: "attack", weapon: "longbow", bonus: "hunters-mark", bonusTarget: "owlbear" }
   const marked = await getRollRequirementForAction("Thalbern marks his quarry and shoots.", hero, { present: [owlbear, wolf, hero] })
   assert.deepEqual(marked && "attack" in marked ? marked.attack : undefined, { weapon: "longbow", target: "owlbear" })
+  // A rest is read off the menu for a hero, and is no NPC's to take.
+  answer = { check: "short-rest" }
+  assert.deepEqual(await readAction("Thalbern sits an hour and binds his cuts.", hero, { present: [hero] }), { roll: null, rest: "short" })
+  answer = { check: "long-rest" }
+  assert.deepEqual(await readAction("Thalbern sleeps until dawn.", hero, { present: [hero] }), { roll: null, rest: "long" })
+  assert.deepEqual(await readAction("The owlbear sleeps.", owlbear as any, { present: [owlbear, hero] }), { roll: null })
   // Space. On a floor the roller moves before they act and the game measures. Thalbern, Speed 30, stands at the
   // origin. The Owlbear is Large, so it is 2.5 feet nearer than its centre, and closing to reach of it stops 7.5 feet
   // from its centre.

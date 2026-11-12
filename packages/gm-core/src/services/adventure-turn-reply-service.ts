@@ -3,6 +3,7 @@ import { takeAction } from "../sheet/actions"
 import type { ConditionEntry } from "../sheet/condition-entry"
 import { useBonusAction } from "../sheet/features"
 import { withMove } from "../sheet/moves"
+import { partyRest, restName } from "../sheet/rest"
 import type { Sheet } from "../sheet/sheet"
 import { castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { TurnEffect } from "../sheet/turn-effect"
@@ -122,8 +123,8 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
    * story as a beat of its own.
    */
   async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading }): Promise<void> {
-    const { action, bonus, move, ruling } = args.reading
-    if (!action && !bonus && !move && !ruling) return
+    const { action, bonus, move, ruling, rest } = args.reading
+    if (!action && !bonus && !move && !ruling && !rest) return
     const turn = await ports.store.getTurn({ turnId: args.turnId })
     if (!turn) throw new Error("Turn not found")
     // The move comes first: the hero stands where it took them before anything else of the turn is resolved.
@@ -144,7 +145,17 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     const taken = action ? takeAction(characters, args.characterId, action) : undefined
     if (taken) characters = taken.characters
     console.log("[LLM] Reading applied:", { bonus: used?.use?.fact ?? "none", action: taken?.fact ?? "none", move: move ?? "none", ruling: ruling?.text ?? "none" })
-    if (!used?.use && !taken?.fact && !spellBeats.length && !move && !ruling) return
+    // A rest is the whole party's: every hero takes it, and each one's gains are told as an entry of their own.
+    const resting = rest ? partyRest(characters, rest, rollDie) : undefined
+    if (resting) characters = resting.characters
+    const restBeats: StoryBeat[] = (resting?.rested ?? []).map(({ id, facts }) => ({
+      kind: "feature",
+      by: { step: "reply", character: args.characterId },
+      character: id,
+      name: restName(rest ?? "short"),
+      text: facts.join(" "),
+    }))
+    if (!used?.use && !taken?.fact && !spellBeats.length && !move && !ruling && !resting) return
     // What the rules of space would not allow is told as an entry of its own, so the story does not keep an attack that was never made.
     const ruled: StoryBeat[] = ruling ? [{ kind: "feature", by: { step: "reply", character: args.characterId }, character: args.characterId, name: ruling.name, text: ruling.text }] : []
     const feature: StoryBeat[] = spellBeats.length
@@ -162,7 +173,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
             },
           ]
         : []
-    const told = [...feature, ...ruled]
+    const told = [...feature, ...ruled, ...restBeats]
     await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, ...(told.length ? { story: [...turn.story, ...told] } : {}), updatedAt: Date.now() } })
   }
   return { readTurnReply, applyReading }

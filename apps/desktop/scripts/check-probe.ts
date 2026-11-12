@@ -126,7 +126,9 @@ async function run(probe: Probe): Promise<Graded> {
     const picked = cast
       ? "cast"
       : !got
-        ? (reading.action?.action ?? "none")
+        ? reading.rest
+          ? `${reading.rest}-rest`
+          : (reading.action?.action ?? "none")
         : isAttackRoll(got)
           ? "attack"
           : !("check" in got)

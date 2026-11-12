@@ -56,6 +56,8 @@ const commonFrontmatterSchema = z.object({
     .optional(),
   assets: z.array(z.string()).optional(),
   roundBudget: z.number().int().positive().optional(),
+  // The party takes this rest as the encounter opens: the night before the ball, an hour at the inn.
+  rest: z.enum(["short", "long"]).optional(),
 })
 
 export type CompileOptions = {
@@ -167,6 +169,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
       typedLinks: file.typedLinks,
       transitions: extractedTransitions,
       roundBudget: frontmatter.roundBudget,
+      rest: frontmatter.rest,
       validationStatus: extractedTransitions.every((entry) => entry.publishResolved) ? "valid" : options.mode === "publish" ? "blocked" : "draftOnly",
     }
   }

@@ -134,6 +134,8 @@ export type RuntimeEncounter = {
   transitions: RuntimeTransition[]
   // Rounds the scene should take before the round-end GM is pressed toward a way out. See wiki-adventures/runtime-context.ts.
   roundBudget?: number
+  // A rest the party takes as the encounter opens, the first time they come to it.
+  rest?: "short" | "long"
   validationStatus: "valid" | "draftOnly" | "blocked"
 }
 

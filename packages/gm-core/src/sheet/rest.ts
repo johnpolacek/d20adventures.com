@@ -212,3 +212,29 @@ export function longRest<T extends Rester>(character: T): RestResult<T> {
   }
   return { character: rested, facts }
 }
+
+/** The kinds of rest. */
+export const restKinds = ["short", "long"] as const
+export type RestKind = (typeof restKinds)[number]
+
+/**
+ * A party's rest: every hero takes it, and no one else. Everyone comes back as the rest left them, with what each
+ * regained in words, by the hero's id. The dead and those at 0 hit points gain nothing, and are told so.
+ */
+export function partyRest<T extends Rester & { id: string }>(
+  characters: readonly T[],
+  kind: RestKind,
+  roll: (sides: number) => number
+): { characters: T[]; rested: { id: string; facts: string[] }[] } {
+  const rested: { id: string; facts: string[] }[] = []
+  const after = characters.map((character) => {
+    if (character.type !== "pc") return character
+    const result = kind === "long" ? longRest(character) : shortRest(character, { roll })
+    rested.push({ id: character.id, facts: result.facts })
+    return result.character
+  })
+  return { characters: after, rested }
+}
+
+/** A rest's name for the story: "Short Rest". */
+export const restName = (kind: RestKind): string => (kind === "long" ? "Long Rest" : "Short Rest")
