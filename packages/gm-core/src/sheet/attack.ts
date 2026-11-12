@@ -1,4 +1,5 @@
 import type { AbilityId, DamageTypeId } from "@d20/srd"
+import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
 import { monsterById } from "@d20/srd/monsters"
 import type { Roller, RollMode } from "./check"
@@ -178,8 +179,25 @@ export function damageTaken(damage: DamageRoll, defenses: Defenses = {}): number
   }, 0)
 }
 
+/**
+ * Extra damage a hero's class features add to a hit. A Rogue's Sneak Attack adds its dice, of the weapon's damage type,
+ * to a hit made with Advantage and a Finesse or Ranged weapon. Its other way in, an ally beside the target, waits for
+ * positions in stage 6 of plans/srd-rules.md.
+ */
+function featureDamage(attacker: Roller, attack: Attack, roll: AttackResult): { name: string; damage: DamagePart }[] {
+  const sheet = attacker.sheet
+  const weapon = equipmentById.get(attack.id)
+  if (!sheet || roll.mode !== "advantage" || weapon?.kind !== "weapon") return []
+  const fits = weapon.attackType === "ranged" || (weapon.properties ?? []).some((property) => property === "finesse")
+  if (!fits || !deriveSheet(sheet).classFeatures.includes("rogue-sneak-attack")) return []
+  const dice = classById.get(sheet.class)?.levels[sheet.level - 1]?.sneakAttack
+  return dice ? [{ name: "Sneak Attack", damage: { dice, type: weapon.damage.type } }] : []
+}
+
 export type Strike = {
   attack: Attack
+  /** Class features that added damage to this hit: "Sneak Attack". */
+  features?: string[]
   roll: AttackResult
   /** The damage dice as they fell, on a hit. */
   damage?: DamageRoll
@@ -214,11 +232,13 @@ export function strike<T extends Target>(args: {
   const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
   const roll = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass: stats.armorClass, mode: args.mode })
   if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target }
-  const damage = rollDamage(attack.damage, args.roll, roll.critical)
+  const extra = featureDamage(args.attacker, attack, roll)
+  const damage = rollDamage([...attack.damage, ...extra.map((feature) => feature.damage)], args.roll, roll.critical)
   const taken = damageTaken(damage, defensesOf(args.target))
   const struck = withDamage({ ...args.target, hitPoints: before }, taken, { critical: roll.critical, rules: args.rules })
   return {
     attack,
+    ...(extra.length ? { features: extra.map((feature) => feature.name) } : {}),
     roll,
     damage,
     taken,
@@ -249,8 +269,8 @@ function fallen(target: string, blow: Strike): string {
 export function strikeFacts(attacker: string, target: string, blow: Strike): string {
   const { roll, attack, hitPoints } = blow
   if (!roll.hit) return `${attacker}'s ${attack.name} attack on ${target} MISSES (${roll.total} against Armor Class ${roll.armorClass}). ${target} takes no damage.`
-  const types = blow.damage?.parts.map((part) => part.type).join(" and ") ?? ""
+  const types = [...new Set(blow.damage?.parts.map((part) => part.type) ?? [])].join(" and ")
   const stands =
     hitPoints.after === 0 ? fallen(target, blow) : `${target} has ${hitPoints.after} of ${hitPoints.maximum} hit points left${hitPoints.after * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
-  return `${attacker}'s ${attack.name} attack on ${target} ${roll.critical ? "is a CRITICAL HIT" : "HITS"} (${roll.total} against Armor Class ${roll.armorClass}) for ${blow.taken} ${types} damage. ${stands}`
+  return `${attacker}'s ${attack.name} attack on ${target} ${roll.critical ? "is a CRITICAL HIT" : "HITS"}${blow.features?.length ? ` with a ${blow.features.join(" and ")}` : ""} (${roll.total} against Armor Class ${roll.armorClass}) for ${blow.taken} ${types} damage. ${stands}`
 }

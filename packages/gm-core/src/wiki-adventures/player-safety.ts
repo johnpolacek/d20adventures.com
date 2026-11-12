@@ -9,8 +9,7 @@ import type { RuntimeArtifacts, RuntimeManifest, RuntimeTransition } from "./typ
 export type SafetyRules = Pick<RuntimeManifest, "playerDeath" | "premise">
 type Health = { type: string; name?: string; sheet?: Sheet; hitPoints?: number; healthPercent?: number; status?: string; deathSaves?: { successes: number; failures: number; stable?: true } }
 
-const NO_DEATH_NOTE =
-  "Player characters cannot die in this adventure. One who falls to 0 hit points is unconscious and out of the fight, and lives. Never describe a player character as dead."
+const NO_DEATH_NOTE = "Player characters cannot die in this adventure. One who falls to 0 hit points is unconscious and out of the fight, and lives. Never describe a player character as dead."
 
 // A trinket seller gave the Black Market's location in a scene whose notes make it atmosphere only, and Thaddeus
 // confessed to a murder no note let him confess.
