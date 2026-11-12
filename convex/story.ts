@@ -64,6 +64,8 @@ export const storyValidator = v.array(
       adds: v.optional(v.array(v.object({ from: v.string(), amount: v.number() }))),
       // The spell this roll belongs to: the caster's spell attack, or a target's saving throw against it.
       spell: v.optional(v.string()),
+      // A caster's own save to keep Concentration on that spell.
+      concentration: v.optional(v.literal(true)),
       // A Death Saving Throw: the saves once it was made, and how it ended the hero's dying.
       deathSave: v.optional(v.object({ successes: v.number(), failures: v.number(), fate: v.optional(v.union(v.literal("revived"), v.literal("stable"), v.literal("dead"))) })),
     }),

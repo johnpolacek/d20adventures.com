@@ -79,8 +79,10 @@ export type RollBeat = {
   inspired?: number
   // Dice that lasting spells added to the roll or took from it, each as it fell: Bless's d4. `total` includes them.
   adds?: { from: string; amount: number }[]
-  // The spell this roll belongs to, by name: the caster's spell attack, or a target's saving throw against it.
+  // The spell this roll belongs to, by name: the caster's spell attack, a target's saving throw against it, or with
+  // `concentration` a caster's own Constitution save to keep Concentration on it.
   spell?: string
+  concentration?: true
   // A Death Saving Throw: the hero's successes and failures once it was made, and how it ended their dying, if it did.
   deathSave?: { successes: number; failures: number; fate?: "revived" | "stable" | "dead" }
 }
@@ -140,6 +142,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     inspired: z.number().optional(),
     adds: z.array(z.object({ from: z.string(), amount: z.number() })).optional(),
     spell: z.string().optional(),
+    concentration: z.literal(true).optional(),
     deathSave: z.object({ successes: z.number(), failures: z.number(), fate: z.enum(["revived", "stable", "dead"]).optional() }).optional(),
   }),
   z.object({ kind: z.literal("reply"), by, character: id, text: z.string() }),

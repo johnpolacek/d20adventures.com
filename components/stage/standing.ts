@@ -1,5 +1,5 @@
-// How a character stands, as the screens show it to players. A hero shows their hit points as numbers and their Armor
-// Class. An NPC never shows a number: one wound word instead. A hero who is down shows as dying with their Death
+// How a character stands, as the screens show it to players. A hero shows their hit points as numbers, any Temporary
+// Hit Points beside them, and their Armor Class. An NPC never shows a number: one wound word instead. A hero who is down shows as dying with their Death
 // Saving Throws, Stable, or Dead. It reads no rules data, so the browser does not load it.
 
 import { conditionWord } from "@d20/gm-core/utils/condition-label"
@@ -7,13 +7,20 @@ import { type ActorLike, isDead, isDown, isDying, isIncapacitated } from "@d20/g
 
 export type Wound = "Unhurt" | "Hurt" | "Bloodied"
 export type Standing =
-  | { kind: "hero"; hitPoints: number; maximum: number; armorClass: number }
+  | { kind: "hero"; hitPoints: number; maximum: number; armorClass: number; temporary?: number }
   | { kind: "dying"; successes: number; failures: number }
   | { kind: "stable" }
   | { kind: "dead" }
   | { kind: "wound"; word: Wound }
 
-type Bearer = { type?: string; hitPoints?: number; healthPercent?: number; dead?: true; deathSaves?: { successes: number; failures: number; stable?: true } }
+type Bearer = {
+  type?: string
+  hitPoints?: number
+  healthPercent?: number
+  tempHitPoints?: number
+  dead?: true
+  deathSaves?: { successes: number; failures: number; stable?: true }
+}
 // What a hero's sheet says, at their stored hit points.
 type SheetNumbers = { hitPoints: { current: number; maximum: number }; armorClass: number }
 
@@ -26,14 +33,19 @@ export function standingOf(character: Bearer, sheet: SheetNumbers | null | undef
   if (character.type !== "pc") return { kind: "wound", word: woundOf(character.healthPercent) }
   if (isDying(character)) return { kind: "dying", successes: character.deathSaves?.successes ?? 0, failures: character.deathSaves?.failures ?? 0 }
   if (isDown(character)) return { kind: "stable" }
-  return sheet ? { kind: "hero", hitPoints: sheet.hitPoints.current, maximum: sheet.hitPoints.maximum, armorClass: sheet.armorClass } : undefined
+  if (!sheet) return undefined
+  const temporary = character.tempHitPoints ?? 0
+  return { kind: "hero", hitPoints: sheet.hitPoints.current, maximum: sheet.hitPoints.maximum, armorClass: sheet.armorClass, ...(temporary > 0 ? { temporary } : {}) }
 }
+
+/** A hero's hit points in short, with any Temporary Hit Points beside them: "9/13", "9/13 +5". */
+export const hitPointsShort = (hero: { hitPoints: number; maximum: number; temporary?: number }) => `${hero.hitPoints}/${hero.maximum}${hero.temporary ? ` +${hero.temporary}` : ""}`
 
 /** A standing in words, for screen readers and text. */
 export function standingWords(standing: Standing): string {
   switch (standing.kind) {
     case "hero":
-      return `${standing.hitPoints} of ${standing.maximum} Hit Points, Armor Class ${standing.armorClass}`
+      return `${standing.hitPoints} of ${standing.maximum} Hit Points, ${standing.temporary ? `${standing.temporary} Temporary Hit Points, ` : ""}Armor Class ${standing.armorClass}`
     case "dying":
       return `Dying, ${standing.successes} ${standing.successes === 1 ? "success" : "successes"} and ${standing.failures} ${standing.failures === 1 ? "failure" : "failures"}`
     case "stable":

@@ -98,6 +98,9 @@ export function attackBeat(by: StoryBy, roller: { id: string; name: string; imag
   }
 }
 
+// Names as a sentence lists them: "Branka", "Branka and Milos", "Branka, Milos and Thalbern".
+const listed = (names: string[]) => (names.length < 3 ? names.join(" and ") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`)
+
 const ABILITY_NAMES = { str: "Strength", dex: "Dexterity", con: "Constitution", int: "Intelligence", wis: "Wisdom", cha: "Charisma" } as const
 
 /**
@@ -138,14 +141,15 @@ export function castBeats(
       ...(cast.conditions.some((change) => change.target === struck.target && !saved.has(change.target)) ? { conditions: cast.conditions.filter((change) => change.target === struck.target) } : {}),
     })
   } else {
-    const on = [...new Set([...cast.saves.map((save) => save.target), ...cast.harm.map((harm) => harm.target), ...cast.conditions.map((change) => change.target)])]
+    // Everyone the spell took. A spell on its caster alone names no one.
+    const on = cast.targets.length === 1 && cast.targets[0] === caster.id ? [] : cast.targets
     const direct = rest.filter((harm) => !saved.has(harm.target))
     beats.push({
       kind: "feature",
       by,
       character: caster.id,
       name: spell.name,
-      text: `${caster.name} casts ${spell.name}${on.length ? ` on ${on.map((id) => nameOf(names, id)).join(" and ")}` : ""}.`,
+      text: `${caster.name} casts ${spell.name}${on.length ? ` on ${listed(on.map((id) => nameOf(names, id)))}` : ""}.`,
       ...(on.length === 1 ? { target: on[0] } : {}),
       ...(direct.length ? { harm: direct } : {}),
     })
@@ -190,5 +194,6 @@ export function concentrationBeat(by: StoryBy, save: ConcentrationSave, names: S
     dc: save.dc,
     success: save.success,
     spell: save.spell,
+    concentration: true,
   }
 }

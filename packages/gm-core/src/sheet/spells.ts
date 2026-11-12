@@ -306,7 +306,16 @@ type Castee = Roller & {
   isComplete?: boolean
 }
 
-export type Cast<T> = { characters: T[]; attack?: SpellAttack; saves: SaveRoll[]; harm: Harm[]; conditions: ConditionChange[]; facts: string[] }
+export type Cast<T> = {
+  characters: T[]
+  /** Everyone the spell took, of those named: as many as it takes, and only those who are here. */
+  targets: string[]
+  attack?: SpellAttack
+  saves: SaveRoll[]
+  harm: Harm[]
+  conditions: ConditionChange[]
+  facts: string[]
+}
 
 // A cantrip's damage dice at the caster's level: the printed step at levels 5, 11 and 17.
 function cantripDice(part: { dice?: string; cantrip?: Record<"5" | "11" | "17", string> }, level: number): string | undefined {
@@ -551,7 +560,7 @@ export function castSpell<T extends Castee>(args: {
     }
   }
 
-  return { characters, ...(attack ? { attack } : {}), saves, harm, conditions, facts }
+  return { characters, targets, ...(attack ? { attack } : {}), saves, harm, conditions, facts }
 }
 
 /** The modes that fall on a spell attack from the conditions and actions of the caster and the target. */

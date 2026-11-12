@@ -78,3 +78,31 @@ test("every class lists its level 1 features", () => {
   // The count of level 1 features in each class table of SRD 5.2.1.
   assert.deepEqual(counts, [3, 2, 2, 3, 3, 2, 3, 3, 4, 2, 2, 3])
 })
+
+test("a caster's sheet shows the spell save DC, the spell attack bonus, the slots left and the spells by kind", () => {
+  const wizard: Sheet = {
+    class: "wizard",
+    level: 1,
+    species: "human",
+    background: "sage",
+    abilityScores: scores(8, 10, 10, 16, 14, 12),
+    classSkills: ["investigation", "religion"],
+    cantrips: ["mage-hand", "light", "ray-of-frost"],
+    spells: ["detect-magic", "fog-cloud", "charm-person", "magic-missile"],
+    spellbook: ["detect-magic", "identify", "comprehend-languages", "fog-cloud", "charm-person", "magic-missile"],
+  }
+  // Intelligence 16 is +3 and the Proficiency Bonus +2: DC 8 + 2 + 3 = 13, spell attack +5. A level 1 Wizard has two
+  // level 1 slots, and one is used. Identify and Comprehend Languages are Ritual spells of the book, not prepared.
+  assert.deepEqual(sheetView(wizard, undefined, [1]).spellcasting, {
+    saveDc: 13,
+    attackBonus: 5,
+    slots: [{ level: 1, total: 2, left: 1 }],
+    cantrips: ["Mage Hand", "Light", "Ray of Frost"],
+    prepared: ["Detect Magic", "Fog Cloud", "Charm Person", "Magic Missile"],
+    rituals: ["Identify", "Comprehend Languages"],
+  })
+  // With no slots used, both are left.
+  assert.deepEqual(sheetView(wizard).spellcasting?.slots, [{ level: 1, total: 2, left: 2 }])
+  // A Fighter has no Spellcasting.
+  assert.equal(sheetView(fighter).spellcasting, undefined)
+})

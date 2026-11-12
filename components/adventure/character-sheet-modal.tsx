@@ -49,7 +49,7 @@ function ExpandableText({ title, text }: ExpandableTextProps) {
 
 export function CharacterSheetModal({ character, open, onOpenChange }: CharacterSheetModalProps) {
   // The rules sheet, where the hero has one. It loads only while the window is open.
-  const sheet = useSheetView(open ? character?.sheet : undefined, character?.hitPoints)
+  const sheet = useSheetView(open ? character?.sheet : undefined, character?.hitPoints, character?.spellSlots, character?.spellEffects)
   if (!character) return null
   // How the hero stands: their hit points from the sheet, or dying, Stable or dead. And their conditions in words.
   const standing = standingOf({ ...character, type: "pc" }, sheet)
@@ -92,6 +92,7 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
                     <div className="flex items-center gap-2">
                       <div className="">
                         {standing.hitPoints} / {standing.maximum}
+                        {standing.temporary ? <span className="text-primary-200"> +{standing.temporary} Temporary</span> : null}
                       </div>
                       <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
                         <div
@@ -145,6 +146,40 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
                     <div className="text-lg font-bold">{value}</div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {sheet?.spellcasting && (
+              <div>
+                <h3 className="text-lg font-display mb-3">Spellcasting</h3>
+                <div className="grid grid-cols-5 gap-2">
+                  {[
+                    ["Spell Save DC", String(sheet.spellcasting.saveDc)],
+                    ["Spell Attack", formatModifier(sheet.spellcasting.attackBonus)],
+                    ...sheet.spellcasting.slots.map((slot) => [`Level ${slot.level} Slots`, `${slot.left} / ${slot.total}`]),
+                  ].map(([label, value]) => (
+                    <div key={label} className="text-center p-2 bg-black/30 rounded border border-primary-700">
+                      <div className="text-[10px] font-mono text-primary-200 uppercase leading-tight">{label}</div>
+                      <div className="text-lg font-bold">{value}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 space-y-1 text-sm">
+                  {(
+                    [
+                      ["Cantrips", sheet.spellcasting.cantrips],
+                      ["Prepared", sheet.spellcasting.prepared],
+                      ["Rituals", sheet.spellcasting.rituals],
+                    ] as const
+                  )
+                    .filter(([, names]) => names.length > 0)
+                    .map(([label, names]) => (
+                      <div key={label}>
+                        <span className="text-xs font-mono text-primary-200 uppercase tracking-wider mr-2">{label}</span>
+                        {names.join(", ")}
+                      </div>
+                    ))}
+                </div>
               </div>
             )}
 

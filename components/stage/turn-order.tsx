@@ -3,14 +3,16 @@
 // Turn order across the top of the stage, as in Baldur's Gate 3: everyone in initiative order, whoever the story is
 // about larger and framed in gold. Whoever's turn the game waits on is lit in gold and carries a small brass marker,
 // also while the story of an earlier turn is still read. Clicking a portrait takes the camera to that character. A
-// hero's portrait carries their hit points as numbers, a bar under it, and their Armor Class on a shield. An NPC shows
+// hero's portrait carries their hit points as numbers with any Temporary Hit Points, a bar under it, and their Armor
+// Class on a shield. An NPC shows
 // one wound word instead, never a number. A dying hero shows their Death Saving Throws, and the Stable and the dead say
-// so. The name under the strip carries that character's conditions, and who the turn passed over to reach its actor.
+// so. The name under the strip carries that character's conditions and lasting spells, and who the turn passed over to
+// reach its actor.
 
 import { useLayoutEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { DeathSaveMarks } from "./roll-parts"
-import { type Standing, standingWords, WOUND_TONE } from "./standing"
+import { hitPointsShort, type Standing, standingWords, WOUND_TONE } from "./standing"
 
 export interface OrderEntry {
   id: string
@@ -19,7 +21,7 @@ export interface OrderEntry {
   npc?: boolean
   // Left out for a hero whose sheet is not read yet.
   standing?: Standing
-  // In words: "Prone, Poisoned, Dodging".
+  // In words: "Prone, Poisoned, Dodging, Bless, Concentrating On Bless".
   conditions?: string
 }
 
@@ -67,7 +69,7 @@ export function TurnOrder({
           const s = c.standing
           const hero = s?.kind === "hero" ? s : undefined
           const health = hero ? Math.max(0, Math.min(100, Math.round((hero.hitPoints / Math.max(1, hero.maximum)) * 100))) : undefined
-          const band = hero ? `${hero.hitPoints}/${hero.maximum}` : s && s.kind !== "wound" ? standingWords(s).split(",")[0] : undefined
+          const band = hero ? hitPointsShort(hero) : s && s.kind !== "wound" ? standingWords(s).split(",")[0] : undefined
           const name = `${c.name}${s ? `, ${standingWords(s)}` : ""}${c.conditions ? `, ${c.conditions}` : ""}${turn ? ", their turn" : ""}`
           return (
             <div key={c.id} className="relative flex flex-col items-center">

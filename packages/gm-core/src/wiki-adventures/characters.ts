@@ -51,11 +51,11 @@ export function buildLocalWikiTurnCharacters(args: {
     // The conditions of the fight they left are over, and the lasting ones come with them.
     const was = carried as Partial<TurnCharacter> | undefined
     const kept = was ? conditionsAtEncounterEnd({ conditions: was.conditions }).conditions : undefined
-    // A spell that lasts hours with no Concentration comes along (Mage Armor). The rest end with the encounter.
-    const spells = was ? spellEffectsAtEncounterEnd({ spellEffects: was.spellEffects }).spellEffects : undefined
+    // A spell that lasts longer than a minute comes along, with its caster's Concentration. The rest end with the encounter.
+    const lasting = was ? spellEffectsAtEncounterEnd({ spellEffects: was.spellEffects, concentration: was.concentration }) : undefined
     const state = {
-      spellEffects: spells,
-      concentration: undefined,
+      spellEffects: lasting?.spellEffects,
+      concentration: lasting?.concentration,
       tempHitPoints: undefined,
       conditions: kept,
       turnEffects: undefined,

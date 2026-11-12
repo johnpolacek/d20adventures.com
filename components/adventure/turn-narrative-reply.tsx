@@ -265,9 +265,10 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
   }
 
   const showDiceRoll = characterState?.rollRequired && rollResult == null
-  // An attack's target, by name, for the roll card.
+  // An attack's target, by name, for the roll card. A spell attack is thrown at the spell's first target.
   const asked = characterState?.rollRequired
-  const attackTarget = asked && "attack" in asked ? currentTurn.characters.find((c: { id: string }) => c.id === asked.attack.target)?.name : undefined
+  const attackTargetId = asked && "attack" in asked ? asked.attack.target : asked && "cast" in asked ? asked.cast.targets[0] : undefined
+  const attackTarget = attackTargetId ? currentTurn.characters.find((c: { id: string }) => c.id === attackTargetId)?.name : undefined
 
   return (
     <form onSubmit={handleReply} className="flex flex-col gap-4 min-h-[100px]">

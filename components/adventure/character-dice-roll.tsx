@@ -21,11 +21,12 @@ export default function CharacterDiceRoll({
   className?: string
   inputKey?: string | number
   character: TurnCharacter
-  // An attack's target, by name.
+  // An attack's or a spell attack's target, by name.
   target: string | undefined
 }) {
   const { rollType, difficulty, modifier, mode, reasons } = rollRequired
-  const kind = "attack" in rollRequired ? "attack" : "deathSave" in rollRequired ? "death" : "check"
+  const kind = "attack" in rollRequired || "cast" in rollRequired ? "attack" : "deathSave" in rollRequired ? "death" : "check"
+  const title = "cast" in rollRequired ? "Spell Attack" : "Dice Roll"
   // A Death Saving Throw shows no modifier unless it has one.
   const shownModifier = kind === "death" && modifier === 0 ? null : modifier
 
@@ -36,7 +37,9 @@ export default function CharacterDiceRoll({
         <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent" />
       </div>
       <div className="px-4 py-6 flex flex-col gap-4 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">
-        <h4 className="text-sm">Dice Roll {rollResult === null ? "Needed" : ""}</h4>
+        <h4 className="text-sm">
+          {title} {rollResult === null ? "Needed" : ""}
+        </h4>
         <h3 className="text-2xl text-amber-300">{rollType}</h3>
         {kind === "attack" && target && <div className="font-mono text-xs text-primary-100 -mt-3 uppercase tracking-wider">→ {target}</div>}
         <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wider">

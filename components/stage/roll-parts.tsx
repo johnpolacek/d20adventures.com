@@ -116,7 +116,11 @@ export function RollDetails({ roll, compact = false, className }: { roll: RollVi
   )
 }
 
-/** A class feature used: its name, who used it and on whom, and the dice it rolled. */
+/**
+ * A class feature used or a spell cast with no roll of the user's: its name, who used it and on whom, and the dice it
+ * rolled. One that names no single target and rolled nothing shows the engine's sentence under its name, so a spell
+ * on several or a utility spell still reads whole.
+ */
 export function FeatureEntry({ feature, compact = false, className }: { feature: FeatureView; compact?: boolean; className?: string }) {
   return (
     <div className={cn("rounded-[3px] border border-l-2 border-stage-line/15 border-l-stage-gold bg-black/30", compact ? "px-2 py-1.5" : "px-3 py-2", className)}>
@@ -126,10 +130,12 @@ export function FeatureEntry({ feature, compact = false, className }: { feature:
           {feature.character} · {feature.name}
           {feature.target ? ` → ${feature.target}` : ""}
         </div>
-        {feature.harm && feature.harm.length > 0 && (
+        {feature.harm && feature.harm.length > 0 ? (
           <div className={cn("flex flex-col", compact ? "mt-0.5 gap-0.5" : "mt-1 gap-1")}>
             <HarmLines harm={feature.harm} compact={compact} />
           </div>
+        ) : (
+          !feature.target && <div className={cn(line(compact), "italic", compact ? "mt-0.5" : "mt-1")}>{feature.text}</div>
         )}
       </div>
     </div>

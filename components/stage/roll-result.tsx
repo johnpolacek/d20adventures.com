@@ -4,16 +4,17 @@
 // tumbles and lands on the natural roll, the modifier and the total follow against the DC, or an attack's Armor Class,
 // and the verdict stamps in, with what the roll did under it. A roll with Advantage or Disadvantage throws two dice: the
 // one kept glows and the other dims, struck through. A Critical Hit turns the kept die gold, with rays behind it. A
-// natural 20 or 1 has no special look on a check or a save. A Death Saving Throw shows the hero's saves as marks.
+// natural 20 or 1 has no special look on a check or a save. A Death Saving Throw shows the hero's saves as marks. A die
+// a lasting spell adds or takes away is a term of its own, named for the spell: + 3 Bless, − 2 Bane.
 // Reduced motion shows the result at once. A roll still to make shows the dice as a button that makes it.
 
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { rattle, verdict as sound, type Verdict } from "./dice-sound"
 import { eyebrow } from "./hud"
 import { DeathSaveMarks, RollDetails } from "./roll-parts"
-import { againstLabel, askSpeech, isCritical, marginText, modeName, type RollAsk, type RollView, rollSpeech, verdictOf } from "./roll-view"
+import { againstLabel, askSpeech, isCritical, marginText, modeName, type RollAsk, type RollView, rollHeading, rollSpeech, verdictOf } from "./roll-view"
 
 // When each part arrives, in ms from the start: the die lands, the total follows, then the verdict.
 const LAND = 1250
@@ -85,6 +86,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
   const size = two ? (compact ? 56 : 84) : compact ? 72 : 112
   const mod = roll.modifier ?? 0
   const inspired = made?.inspired
+  const adds = made?.adds ?? []
   // A Death Saving Throw's marks: the saves so far before the roll, and after it once the verdict is in.
   const saves = roll.kind === "death" ? (made ? (step >= 3 ? made.deathSaves : undefined) : roll.deathSaves) : undefined
   const term = (sign: string, n: number, label?: string, show = true) => (
@@ -154,10 +156,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
             // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
             <img src={roll.portrait} alt="" className="h-6 w-6 shrink-0 rounded-full border border-stage-gold/60 object-cover object-top" />
           )}
-          <span className="line-clamp-2 leading-[1.5]">
-            {roll.character.split(" ")[0]} · {roll.check}
-            {roll.target ? ` → ${roll.target}` : ""}
-          </span>
+          <span className="line-clamp-2 leading-[1.5]">{rollHeading(roll, roll.character.split(" ")[0])}</span>
         </div>
         {roll.mode && (
           <div className={cn("truncate font-serif text-stage-muted italic", compact ? "text-[11px]" : "mt-1 text-[13px]")}>
@@ -165,11 +164,14 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
             {roll.reasons?.length ? ` · ${roll.reasons.join(", ")}` : ""}
           </div>
         )}
-        {/* natural + modifier + an Inspiration die = total, against the DC or the Armor Class. */}
+        {/* natural + modifier + an Inspiration die + the dice of lasting spells = total, against the DC or the Armor Class. */}
         <div className={cn("flex items-baseline gap-2 font-serif font-semibold tabular-nums text-stage-cream", compact ? "mt-0.5" : "mt-1.5")}>
           <span className={cn(compact ? "text-[18px]" : "text-[24px]", !landed && "opacity-30")}>{landed ? natural : "?"}</span>
           {roll.modifier !== undefined && term(mod < 0 ? "−" : "+", Math.abs(mod), undefined, step >= 2 || asked)}
           {inspired !== undefined && term("+", inspired, "Inspiration", step >= 2)}
+          {adds.map((a, i) => (
+            <Fragment key={i}>{term(a.amount < 0 ? "−" : "+", Math.abs(a.amount), a.from, step >= 2)}</Fragment>
+          ))}
           <span className={cn("transition-opacity duration-300", step >= 2 ? "opacity-100" : "opacity-0")}>
             <span className={cn("text-stage-muted", compact ? "text-[14px]" : "text-[18px]")}>=</span>
             <span className={cn("ml-2 font-bold text-stage-gold", compact ? "text-[26px]" : "text-[38px]", step >= 2 && "roll-rise")}>{made?.total}</span>

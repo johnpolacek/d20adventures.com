@@ -12,6 +12,7 @@ import { attackModesFromSpells, settleConcentration, spellEffectsAtEncounterEnd,
 import { castSpell, spellById, targetLimit } from "../../src/sheet/spells"
 import { combatStatsOf } from "../../src/sheet/stat-block"
 import type { Concentration, SpellEffect } from "../../src/sheet/turn-effect"
+import { castBeats, concentrationBeat } from "../../src/story/turn"
 
 // Every expected value below was worked out by hand from the SRD 5.2.1 spell texts, not copied from the function's output.
 
@@ -60,6 +61,9 @@ test("Bless is on up to three creatures for a minute, adds a d4 to their attack 
     [[{ spell: "bless", by: "milos", turns: 10 }], [{ spell: "bless", by: "milos", turns: 10 }], [{ spell: "bless", by: "milos", turns: 10 }], undefined]
   )
   assert.deepEqual([find(blessed.characters, "milos").concentration, spellEffectWords(find(blessed.characters, "branka"))], [{ spell: "bless" }, "Bless"])
+  // The story names everyone it took, and it asks for no roll.
+  const [entry] = castBeats({ step: "reply", character: "milos" }, milos, spell("bless"), blessed, { milos: "Milos", branka: "Branka", thalbern: "Thalbern" })
+  assert.deepEqual([entry.kind, "text" in entry && entry.text, blessed.targets], ["feature", "Milos casts Bless on Milos, Branka and Thalbern.", ["milos", "branka", "thalbern"]])
   // Branka's Warhammer, +5: a 6 makes 11 against the Owlbear's 13. The d4 falls on 3: 14, a hit, for 1d8 + 3 rolling 5.
   const hit = strike({ attacker: find(blessed.characters, "branka"), target: owlbear, weapon: "warhammer", dice: [6], roll: falls(3, 5) })
   assert.deepEqual([hit.roll.total, hit.roll.adds, hit.roll.hit, hit.taken], [14, [{ from: "Bless", amount: 3 }], true, 8])
@@ -93,9 +97,10 @@ test("Shield of Faith adds 2 to Armor Class, and Mage Armor sets 13 and Dexterit
   )
   // On Thalbern, who wears Studded Leather, it changes nothing.
   assert.equal(combatStatsOf({ ...thalbern, spellEffects: [{ spell: "mage-armor", by: "lyra" }] })?.armorClass, 15)
-  // It outlasts the encounter. Shield of Faith does not.
+  // Both outlast the encounter: eight hours, and ten minutes with Milos's Concentration on it.
   assert.deepEqual(spellEffectsAtEncounterEnd(armored.characters[0]).spellEffects, [{ spell: "mage-armor", by: "lyra" }])
-  assert.equal(spellEffectsAtEncounterEnd(find(warded.characters, "branka")).spellEffects, undefined)
+  assert.deepEqual(spellEffectsAtEncounterEnd(find(warded.characters, "branka")).spellEffects, [{ spell: "shield-of-faith", by: "milos" }])
+  assert.deepEqual(spellEffectsAtEncounterEnd(find(warded.characters, "milos")).concentration, { spell: "shield-of-faith" })
 })
 
 test("Hunter's Mark adds a d6 of Force to its caster's hits on the one marked", () => {
@@ -171,6 +176,9 @@ test("Concentration: one spell at a time, a Constitution save when hurt, and non
   const struck = blessed.characters.map((character) => (character.id === "milos" ? withDamage(character, 4).character : character))
   const kept = settleConcentration({ before: blessed.characters, after: struck, bonus: con, d20: falls(9) })
   assert.deepEqual(kept.saves, [{ character: "milos", spell: "Bless", natural: 9, bonus: 1, total: 10, dc: 10, success: true }])
+  // The story keeps the save as his own, to keep Concentration, and not as a target's against a spell.
+  const told = concentrationBeat({ step: "npc", character: "owlbear" }, kept.saves[0], { milos: "Milos" })
+  assert.deepEqual([told.character, told.check, told.spell, told.concentration, told.success], ["milos", "Constitution Saving Throw", "Bless", true, true])
   assert.deepEqual([find(kept.characters, "milos").concentration, kept.facts], [{ spell: "bless" }, []])
   // An 8 makes 9: it breaks, and Bless leaves them both.
   const broken = settleConcentration({ before: blessed.characters, after: struck, bonus: con, d20: falls(8) })

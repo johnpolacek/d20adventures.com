@@ -12,7 +12,7 @@ import { rattle } from "./dice-sound"
 import { Chevron, eyebrow, Pill, panel } from "./hud"
 import { RollResult } from "./roll-result"
 import { type DeathSavesView, keptDie, modeName, type RollAsk, type RollKind, type RollMode, type RollView, thrownView } from "./roll-view"
-import { type Standing, standingWords } from "./standing"
+import { hitPointsShort, type Standing, standingWords } from "./standing"
 
 export interface CardCharacter {
   id: string
@@ -31,6 +31,8 @@ export interface CardRoll {
   modifier: number
   // An attack: who is attacked, by name.
   target?: string
+  // A spell attack: the spell's name, which is also its `skill`.
+  spell?: string
   // A Death Saving Throw: the hero's saves so far.
   deathSaves?: DeathSavesView
   // Advantage or Disadvantage: two d20s, the higher or the lower kept, and what gives it.
@@ -91,7 +93,7 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
           )}
           {!compact && c.standing && (
             <div aria-hidden="true" className="mt-1 truncate font-sans text-[9px] tabular-nums tracking-wide text-stage-cream">
-              {c.standing.kind === "hero" ? `${c.standing.hitPoints}/${c.standing.maximum} · AC ${c.standing.armorClass}` : standingWords(c.standing).split(",")[0]}
+              {c.standing.kind === "hero" ? `${hitPointsShort(c.standing)} · AC ${c.standing.armorClass}` : standingWords(c.standing).split(",")[0]}
             </div>
           )}
         </button>
@@ -250,10 +252,11 @@ function SingleRoll({
     reasons: roll.reasons,
     target: roll.target,
     deathSaves: roll.deathSaves,
+    ...(roll.spell ? { spell: roll.spell } : {}),
   }
   // The verdict as the dice read until the engine's answer is in.
   const shown: RollAsk | RollView = dice === null ? ask : result ? { ...result, portrait: actor.portrait, reasons: roll.reasons } : thrownView(ask, dice)
-  const title = roll.kind === "attack" ? "Attack Roll" : roll.kind === "death" ? "Death Saving Throw" : "Dice Roll"
+  const title = roll.kind === "attack" ? (roll.spell ? "Spell Attack" : "Attack Roll") : roll.kind === "death" ? "Death Saving Throw" : "Dice Roll"
   return (
     <div>
       <div className={eyebrow}>{dice === null ? `${title} Needed` : title}</div>

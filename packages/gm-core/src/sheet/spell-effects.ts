@@ -139,14 +139,25 @@ export function spellEffectsAtRoundStart<T extends Bearer>(character: T): T {
   return refresh > (next.tempHitPoints ?? 0) ? { ...next, tempHitPoints: refresh } : next
 }
 
+// Whether a spell outlasts a fight: it runs longer than a minute, so it is not counted in turns.
+const outlasts = (spell: Spell | undefined): boolean => {
+  const duration = spell?.duration
+  if (!duration || duration.kind === "instantaneous") return false
+  if (duration.kind !== "timed") return true
+  return duration.unit !== "round" && !(duration.unit === "minute" && (duration.amount ?? 1) <= 1)
+}
+
 /**
- * A character as the story moves on to another encounter: spells counted in turns are over, with Concentration and
- * Temporary Hit Points. A spell that lasts hours and takes no Concentration stays (Mage Armor).
+ * A character as the story moves on to another encounter: spells counted in turns are over, with Concentration on
+ * them and Temporary Hit Points. A spell that lasts longer than a minute stays, and so does its caster's
+ * Concentration on it: Mage Armor, Hunter's Mark, Shield of Faith. A fight that moves from one scene to the next
+ * keeps the mark on its quarry.
  */
 export function spellEffectsAtEncounterEnd<T extends Bearer>(character: T): T {
-  const kept = (character.spellEffects ?? []).filter((effect) => effect.turns === undefined && !spellById.get(effect.spell)?.duration.concentration)
+  const kept = (character.spellEffects ?? []).filter((effect) => effect.turns === undefined)
+  const held = character.concentration && outlasts(spellById.get(character.concentration.spell)) ? character.concentration : undefined
   const { spellEffects: _, concentration: __, tempHitPoints: ___, ...rest } = character
-  return (kept.length ? { ...rest, spellEffects: kept } : rest) as T
+  return { ...rest, ...(kept.length ? { spellEffects: kept } : {}), ...(held ? { concentration: held } : {}) } as T
 }
 
 /** A character's lasting spells in words, for the screen and the game master: "Bless, Mage Armor". */

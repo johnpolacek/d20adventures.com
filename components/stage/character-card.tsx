@@ -1,9 +1,11 @@
 "use client"
 
 // A character's card, opened by clicking them on the stage or in the party row (the prototype's cards). Under the name,
-// how they stand: a hero's hit points and Armor Class, an NPC's wound word, Dying with the saves, Stable or Dead. Then
-// their conditions and turn effects in words.
+// how they stand: a hero's hit points with any Temporary Hit Points and Armor Class, an NPC's wound word, Dying with the
+// saves, Stable or Dead. Then their conditions, turn effects and lasting spells in words, and a caster's spellcasting:
+// spell save DC, spell attack bonus, the slots of each level left as marks, and the spells they can cast.
 
+import type { SheetSpellcasting } from "@d20/gm-core/sheet/view"
 import { cn } from "@/lib/utils"
 import { eyebrow, panel } from "./hud"
 import { DeathSaveMarks } from "./roll-parts"
@@ -17,8 +19,10 @@ export interface CardInfo {
   about?: string
   // Left out where the game has none, as in the scripted demo, and for a hero whose sheet is not read yet.
   standing?: Standing
-  // In words: "Prone, Poisoned, Dodging".
+  // In words: "Prone, Poisoned, Dodging, Bless, Concentrating On Bless".
   conditions?: string
+  // A hero's, from their sheet. An NPC shows none.
+  spellcasting?: SheetSpellcasting
   lines?: string[]
   details?: Array<{ label: string; items: string[] }>
 }
@@ -39,6 +43,7 @@ export function CharacterCard({ info, compact = false, onClose }: { info: CardIn
       <h2 className="mt-1.5 mb-2.5 font-display text-[24px] font-normal leading-tight">{info.name}</h2>
       {info.standing && <StandingRow standing={info.standing} />}
       {info.conditions && <p className="mb-2.5 font-serif text-[13px] text-stage-cream italic">{info.conditions}</p>}
+      {info.spellcasting && <Spellcasting casting={info.spellcasting} />}
       {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
       {info.details?.map((section) => (
         <div key={section.label}>
@@ -66,13 +71,68 @@ export function CharacterCard({ info, compact = false, onClose }: { info: CardIn
   )
 }
 
-function StandingRow({ standing: s }: { standing: Standing }) {
-  const stat = (label: string, value: string) => (
-    <span className="flex items-baseline gap-1.5 rounded-[3px] border border-stage-line/25 bg-black/30 px-2 py-1">
-      <span className={cn(eyebrow, "text-stage-muted")}>{label}</span>
-      <span className="font-serif text-[15px] font-semibold tabular-nums text-stage-cream">{value}</span>
-    </span>
+const stat = (label: string, value: string) => (
+  <span className="flex items-baseline gap-1.5 rounded-[3px] border border-stage-line/25 bg-black/30 px-2 py-1">
+    <span className={cn(eyebrow, "text-stage-muted")}>{label}</span>
+    <span className="font-serif text-[15px] font-semibold tabular-nums text-stage-cream">{value}</span>
+  </span>
+)
+const signed = (n: number) => (n < 0 ? `\u2212${-n}` : `+${n}`)
+
+// The numbers a caster's spells use, each level's slots as marks, filled for those left, and the spells by kind.
+function Spellcasting({ casting }: { casting: SheetSpellcasting }) {
+  const lists: [string, string[]][] = [
+    ["Cantrips", casting.cantrips],
+    ["Prepared", casting.prepared],
+    ["Rituals", casting.rituals],
+  ]
+  const speech = [
+    `Spell Save DC ${casting.saveDc}, Spell Attack ${signed(casting.attackBonus)}`,
+    ...casting.slots.map((s) => `Level ${s.level} Spell Slots, ${s.left} of ${s.total} left`),
+    ...lists.filter(([, names]) => names.length).map(([label, names]) => `${label}: ${names.join(", ")}`),
+  ].join(". ")
+  return (
+    <div className="mb-2.5">
+      <h3 className={cn(eyebrow, "mt-4 mb-2")}>Spellcasting</h3>
+      <span className="sr-only">{speech}.</span>
+      <div aria-hidden="true">
+        <div className="flex flex-wrap items-center gap-2">
+          {stat("Spell Save DC", String(casting.saveDc))}
+          {stat("Spell Attack", signed(casting.attackBonus))}
+        </div>
+        {casting.slots.map((s) => (
+          <div key={s.level} className="mt-2 flex items-center gap-2">
+            <span className={cn(eyebrow, "text-stage-muted")}>Level {s.level} Slots</span>
+            <span className="inline-flex items-center gap-1.5">
+              {Array.from({ length: s.total }, (_, i) => (
+                <span
+                  key={i}
+                  className="inline-block h-2 w-2 rotate-45 border border-stage-gold"
+                  style={{ backgroundColor: i < s.left ? "var(--color-stage-gold)" : "transparent", boxShadow: i < s.left ? "0 0 6px #fcd34d66" : undefined }}
+                />
+              ))}
+            </span>
+            <span className="font-serif text-[13px] tabular-nums text-stage-cream">
+              {s.left} / {s.total}
+            </span>
+          </div>
+        ))}
+        <ul className="mt-2 space-y-1 text-xs leading-relaxed text-stage-cream">
+          {lists
+            .filter(([, names]) => names.length)
+            .map(([label, names]) => (
+              <li key={label}>
+                <span className={cn(eyebrow, "mr-2 text-stage-muted")}>{label}</span>
+                {names.join(", ")}
+              </li>
+            ))}
+        </ul>
+      </div>
+    </div>
   )
+}
+
+function StandingRow({ standing: s }: { standing: Standing }) {
   return (
     <div className="mb-2.5 flex flex-wrap items-center gap-2">
       <span className="sr-only">{standingWords(s)}</span>
@@ -80,6 +140,7 @@ function StandingRow({ standing: s }: { standing: Standing }) {
         {s.kind === "hero" ? (
           <>
             {stat("Hit Points", `${s.hitPoints} / ${s.maximum}`)}
+            {s.temporary ? stat("Temporary Hit Points", String(s.temporary)) : null}
             {stat("Armor Class", String(s.armorClass))}
           </>
         ) : (

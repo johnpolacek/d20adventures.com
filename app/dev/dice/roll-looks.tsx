@@ -3,7 +3,10 @@
 // Every look a roll and a character can have on the stage, from mock data, to check by eye: the attack on the card
 // before and after the engine answers it, Hit, Miss and Critical Hit with their damage, a save that hurts and gives a
 // condition, a Bardic Inspiration die, the Death Saving Throw, a class feature used, and how heroes and NPCs stand.
+// And spells: a spell attack, a target's save against a spell, the dice of Bless and Bane, a spell cast with no roll,
+// a Concentration save, a caster's card, and the spells that last on a character with their Temporary Hit Points.
 
+import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { type ReactNode, useState } from "react"
 import { CharacterCard } from "@/components/stage/character-card"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
@@ -16,6 +19,7 @@ import type { FeatureView, RollAsk, RollView } from "@/components/stage/roll-vie
 import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
 
 const THALBERN = "/images/app/characters/default.png"
+const LYRA = "Lyra Ashgrove"
 
 const ATTACK_ASK: RollAsk = { kind: "attack", character: "Thalbern Ironfist", check: "Longsword", modifier: 5, dc: 13, target: "Owlbear", portrait: THALBERN }
 const HIT: RollView = {
@@ -84,6 +88,78 @@ const SECOND_WIND: FeatureView = {
   text: "Thalbern uses Second Wind and regains 10 hit points.",
 }
 const BARDIC: FeatureView = { character: "Wrenna Faelendar", name: "Bardic Inspiration", target: "Thalbern Ironfist", text: "Wrenna gives Thalbern a d6 of Bardic Inspiration." }
+// Spells cast with no roll of the caster's: three darts on one target, a heal, a spell on two who then save, and a utility spell.
+const dart = (die: number) => ({ target: "Reinhard Voss", kind: "damage" as const, dice: [die], sides: 4, bonus: 1, type: "force", amount: die + 1 })
+const MAGIC_MISSILE: FeatureView = { character: LYRA, name: "Magic Missile", target: "Reinhard Voss", harm: [dart(3), dart(1), dart(4)], text: "Lyra Ashgrove casts Magic Missile on Reinhard Voss." }
+const HEALING_WORD: FeatureView = {
+  character: "Branka Stoneveil",
+  name: "Healing Word",
+  target: "Thalbern Ironfist",
+  harm: [{ target: "Thalbern Ironfist", kind: "healing", dice: [3], sides: 4, bonus: 3, amount: 6 }],
+  text: "Branka Stoneveil casts Healing Word on Thalbern Ironfist.",
+}
+const BURNING_HANDS: FeatureView = { character: LYRA, name: "Burning Hands", text: "Lyra Ashgrove casts Burning Hands on Owlbear and Dire Wolf." }
+const LIGHT: FeatureView = { character: LYRA, name: "Light", text: "Lyra Ashgrove casts Light." }
+
+// Spells. Lyra is a level 1 Wizard: spell attack +5, spell save DC 13.
+const SPELL_ASK: RollAsk = { kind: "attack", character: LYRA, check: "Fire Bolt", spell: "Fire Bolt", modifier: 5, dc: 13, target: "Owlbear", portrait: THALBERN }
+const SPELL_HIT: RollView = { ...SPELL_ASK, natural: 12, total: 17, success: true, damage: [{ type: "fire", dice: [7], sides: 10, bonus: 0, total: 7 }] }
+const SPELL_CRITICAL: RollView = { ...SPELL_ASK, natural: 20, total: 25, success: true, critical: true, damage: [{ type: "fire", dice: [9, 4], sides: 10, bonus: 0, total: 13 }] }
+const SPELL_MISS: RollView = { ...SPELL_ASK, natural: 4, total: 9, success: false }
+// Blessed: 9 + 5 + 3 Bless = 17 against Armor Class 15.
+const SPELL_BLESSED: RollView = {
+  ...SPELL_ASK,
+  check: "Ray of Frost",
+  spell: "Ray of Frost",
+  target: "Reinhard Voss",
+  dc: 15,
+  natural: 9,
+  adds: [{ from: "Bless", amount: 3 }],
+  total: 17,
+  success: true,
+  damage: [{ type: "cold", dice: [5], sides: 8, bonus: 0, total: 5 }],
+}
+// A target's saves against Lyra's spells: Charm Person with Bane on Reinhard, 11 + 1 − 2 = 10 against DC 13, and
+// Burning Hands saved for half of 7.
+const SAVE_CHARM: RollView = {
+  kind: "check",
+  character: "Reinhard Voss",
+  check: "Wisdom Saving Throw",
+  spell: "Charm Person",
+  natural: 11,
+  modifier: 1,
+  adds: [{ from: "Bane", amount: -2 }],
+  total: 10,
+  dc: 13,
+  success: false,
+  conditions: [{ target: "Reinhard Voss", condition: "Charmed" }],
+}
+const SAVE_BURNING: RollView = {
+  kind: "check",
+  character: "Owlbear",
+  check: "Dexterity Saving Throw",
+  spell: "Burning Hands",
+  natural: 14,
+  modifier: 1,
+  total: 15,
+  dc: 13,
+  success: true,
+  harm: [{ target: "Owlbear", kind: "damage", dice: [4, 3], sides: 6, bonus: 0, type: "fire", amount: 3 }],
+}
+// Lyra's Constitution Saving Throws to hold Bless after a hit, against 10.
+const CONCENTRATION_KEPT: RollView = {
+  kind: "check",
+  character: LYRA,
+  check: "Constitution Saving Throw",
+  spell: "Bless",
+  concentration: true,
+  natural: 13,
+  modifier: 0,
+  total: 13,
+  dc: 10,
+  success: true,
+}
+const CONCENTRATION_LOST: RollView = { ...CONCENTRATION_KEPT, natural: 6, total: 6, success: false }
 
 const ROLLS: [string, RollView][] = [
   ["Hit", HIT],
@@ -97,6 +173,14 @@ const ROLLS: [string, RollView][] = [
   ["Death Save · Natural 20", DEATH_20],
   ["Death Save · Natural 1", DEATH_1],
   ["Death Save · Exhaustion Modifier", DEATH_EXHAUSTED],
+  ["1 · Spell Attack · Hit", SPELL_HIT],
+  ["1 · Spell Attack · Critical Hit", SPELL_CRITICAL],
+  ["1 · Spell Attack · Miss", SPELL_MISS],
+  ["2 · Save Against a Spell · Charmed", SAVE_CHARM],
+  ["2 · Save Against a Spell · Half Damage", SAVE_BURNING],
+  ["3 · Spell Attack · Bless", SPELL_BLESSED],
+  ["5 · Concentration · Kept", CONCENTRATION_KEPT],
+  ["5 · Concentration · Lost", CONCENTRATION_LOST],
 ]
 
 const JOURNAL: JournalTurn[] = [
@@ -106,6 +190,22 @@ const JOURNAL: JournalTurn[] = [
     paragraphs: ["The owlbear crashes through the hedge.", { feature: SECOND_WIND }, { roll: HIT }, { roll: CRITICAL }, { roll: MISS }, { roll: SAVE_HARM }, { feature: BARDIC }, { roll: INSPIRED }],
   },
   { number: 2, title: "The Owlbear", paragraphs: [{ roll: DEATH_SAVED }, { roll: DEATH_20 }, { roll: DEATH_1 }, { roll: HIT_RESISTED }] },
+  {
+    number: 3,
+    title: "The Warehouse",
+    paragraphs: [
+      { roll: SPELL_HIT },
+      { roll: SPELL_BLESSED },
+      { feature: BURNING_HANDS },
+      { roll: SAVE_BURNING },
+      { roll: SAVE_CHARM },
+      { feature: MAGIC_MISSILE },
+      { feature: HEALING_WORD },
+      { feature: LIGHT },
+      { roll: CONCENTRATION_KEPT },
+      { roll: CONCENTRATION_LOST },
+    ],
+  },
 ]
 
 const ORDER: OrderEntry[] = [
@@ -118,11 +218,50 @@ const ORDER: OrderEntry[] = [
   { id: "bandit", name: "Bandit", npc: true, standing: { kind: "wound", word: "Unhurt" } },
   { id: "thug", name: "Warehouse Thug", npc: true, standing: { kind: "dead" } },
 ]
+// Lasting spells and Temporary Hit Points, in the words conditionLabel gives them.
+const SPELLS_ORDER: OrderEntry[] = [
+  {
+    id: "lyra",
+    name: LYRA,
+    portrait: THALBERN,
+    standing: { kind: "hero", hitPoints: 5, maximum: 6, armorClass: 13, temporary: 4 },
+    conditions: conditionLabel({ spellEffects: [{ spell: "mage-armor" }, { spell: "bless" }], concentration: { spell: "bless" } }),
+  },
+  { id: "thalbern", name: "Thalbern Ironfist", standing: { kind: "hero", hitPoints: 13, maximum: 13, armorClass: 16 }, conditions: conditionLabel({ spellEffects: [{ spell: "bless" }] }) },
+  {
+    id: "reinhard",
+    name: "Reinhard Voss",
+    npc: true,
+    standing: { kind: "wound", word: "Hurt" },
+    conditions: conditionLabel({ conditions: [{ id: "charmed" }], spellEffects: [{ spell: "hunters-mark" }, { spell: "bane" }] }),
+  },
+]
+const LYRA_CASTING = {
+  saveDc: 13,
+  attackBonus: 5,
+  slots: [{ level: 1, total: 2, left: 1 }],
+  cantrips: ["Mage Hand", "Light", "Ray of Frost"],
+  prepared: ["Detect Magic", "Fog Cloud", "Charm Person", "Magic Missile"],
+  rituals: ["Identify", "Comprehend Languages"],
+}
+// A level 3 Cleric, for slots of two levels.
+const MILOS_CASTING = {
+  saveDc: 13,
+  attackBonus: 5,
+  slots: [
+    { level: 1, total: 4, left: 1 },
+    { level: 2, total: 2, left: 2 },
+  ],
+  cantrips: ["Guidance", "Sacred Flame", "Thaumaturgy"],
+  prepared: ["Bless", "Cure Wounds", "Healing Word", "Shield of Faith", "Aid", "Spiritual Weapon"],
+  rituals: [],
+}
 
 const PARTY: CardCharacter[] = [
   { id: "thalbern", name: "Thalbern Ironfist", role: "Dwarf Fighter", portrait: THALBERN, standing: { kind: "hero", hitPoints: 9, maximum: 13, armorClass: 16 } },
   { id: "branka", name: "Branka Stoneveil", role: "Dwarf Cleric", standing: { kind: "dying", successes: 1, failures: 2 } },
   { id: "yeva", name: "Yeva Softstep", role: "Halfling Rogue", standing: { kind: "stable" } },
+  { id: "lyra", name: LYRA, role: "Human Wizard", standing: { kind: "hero", hitPoints: 5, maximum: 6, armorClass: 13, temporary: 4 } },
 ]
 
 function Box({ title, className, children }: { title: string; className?: string; children: ReactNode }) {
@@ -178,6 +317,7 @@ export function RollLooks() {
     { text: "The owlbear crashes through the hedge." },
     { text: SECOND_WIND.text, feature: SECOND_WIND },
     ...ROLLS.map(([, roll]) => ({ text: roll.check, roll })),
+    ...[MAGIC_MISSILE, HEALING_WORD, BURNING_HANDS, LIGHT].map((feature) => ({ text: feature.text, feature })),
   ]
   const actor = PARTY[0]
   return (
@@ -215,6 +355,21 @@ export function RollLooks() {
         <Box title="Feature · Bardic Inspiration" className={`${panel} px-5 py-4`}>
           <FeatureEntry feature={BARDIC} compact={compact} />
         </Box>
+        <Box title="1 · Spell Attack · Ask" className={`${panel} px-5 py-4`}>
+          <RollResult roll={SPELL_ASK} compact={compact} onRoll={() => {}} />
+        </Box>
+        {(
+          [
+            ["4 · Spell · Magic Missile", MAGIC_MISSILE],
+            ["4 · Spell · Healing Word", HEALING_WORD],
+            ["4 · Spell · Burning Hands, Before the Saves", BURNING_HANDS],
+            ["4 · Spell · Light, No Target or Dice", LIGHT],
+          ] as const
+        ).map(([title, feature]) => (
+          <Box key={title} title={title} className={`${panel} px-5 py-4`}>
+            <FeatureEntry feature={feature} compact={compact} />
+          </Box>
+        ))}
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(560px,1fr))] gap-6">
@@ -243,6 +398,24 @@ export function RollLooks() {
             answer={(dice) => ({ ...ATTACK_ASK, dc: 15, mode: "disadvantage", dice, reasons: ["Poisoned"], ...hitOrMiss(Math.min(...dice), 15) })}
           />
         </Box>
+        <Box title="1 · Card · Spell Attack, Answered with Damage">
+          <CardFlow
+            actor={PARTY[3]}
+            roll={{ kind: "attack", skill: "Fire Bolt", spell: "Fire Bolt", dc: 13, modifier: 5, target: "Owlbear" }}
+            answer={(dice) => ({
+              ...SPELL_ASK,
+              ...hitOrMiss(dice[0]),
+              ...(dice[0] === 20
+                ? { damage: [{ type: "fire", dice: [8, 3], sides: 10, bonus: 0, total: 11 }] }
+                : dice[0] + 5 >= 13 && dice[0] !== 1
+                  ? { damage: [{ type: "fire", dice: [6], sides: 10, bonus: 0, total: 6 }] }
+                  : {}),
+            })}
+          />
+        </Box>
+        <Box title="7 · Card · Party Row, Temporary Hit Points" className="relative h-[380px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+          <PromptCard mode={{ kind: "hold", prompt: "What does Lyra do?" }} actor={PARTY[3]} party={PARTY} compact={compact} onReply={() => {}} onRoll={() => {}} onPick={() => {}} />
+        </Box>
         <Box title="Narration">
           <div className="relative w-[460px]">
             <Narration
@@ -267,6 +440,9 @@ export function RollLooks() {
       <Box title="Turn Order · Wrenna Stunned and Passed Over" className="relative h-[230px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
         <TurnOrder order={ORDER} activeId="owlbear" turnId="owlbear" label="Owlbear" passed="Wrenna Faelendar, Stunned" compact={compact} onPick={() => {}} />
       </Box>
+      <Box title="7 · Turn Order · Lasting Spells and Temporary Hit Points" className="relative h-[230px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <TurnOrder order={SPELLS_ORDER} activeId="lyra" turnId="lyra" label={LYRA} compact={compact} onPick={() => {}} />
+      </Box>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(420px,1fr))] gap-6">
         <Box title="Journal" className="relative h-[760px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
@@ -282,6 +458,27 @@ export function RollLooks() {
             <CharacterCard info={{ ...info, standing: ORDER[at].standing, conditions: ORDER[at].conditions }} compact={compact} onClose={() => {}} />
           </Box>
         ))}
+        <Box title="6 and 7 · Card · Lyra, Wizard 1" className="relative h-[720px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+          <CharacterCard
+            info={{ id: "lyra", name: LYRA, role: "Human Wizard", standing: SPELLS_ORDER[0].standing, conditions: SPELLS_ORDER[0].conditions, spellcasting: LYRA_CASTING }}
+            compact={compact}
+            onClose={() => {}}
+          />
+        </Box>
+        <Box title="6 · Card · Milos, Cleric 3" className="relative h-[720px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+          <CharacterCard
+            info={{ id: "milos", name: "Milos Radan", role: "Human Cleric", standing: { kind: "hero", hitPoints: 21, maximum: 24, armorClass: 18 }, spellcasting: MILOS_CASTING }}
+            compact={compact}
+            onClose={() => {}}
+          />
+        </Box>
+        <Box title="7 · Card · Reinhard, NPC" className="relative h-[520px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+          <CharacterCard
+            info={{ id: "reinhard", name: "Reinhard Voss", role: "Human Mage", standing: SPELLS_ORDER[2].standing, conditions: SPELLS_ORDER[2].conditions }}
+            compact={compact}
+            onClose={() => {}}
+          />
+        </Box>
       </div>
     </div>
   )

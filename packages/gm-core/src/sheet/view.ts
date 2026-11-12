@@ -9,9 +9,26 @@ import { speciesById } from "@d20/srd/species"
 import { deriveSheet } from "./derive"
 import type { HitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
+import { slotsLeft, spellcastingOf, spellsOf } from "./spells"
+import { combatStatsOf } from "./stat-block"
+import type { SpellEffect } from "./turn-effect"
 
 /** A feature as the sheet lists it. `uses` is how many times it can be used, and the rest that restores them. */
 export type SheetFeature = { name: string; from: string; uses?: { count: number; recharge: string } }
+
+/**
+ * A caster's spellcasting as the sheet shows it: the spell save DC, the spell attack bonus, the spell slots of each
+ * level the class gives with how many are left, and the spells by name: cantrips, prepared spells, and a Wizard's
+ * Ritual spells of the spellbook that are not prepared.
+ */
+export type SheetSpellcasting = {
+  saveDc: number
+  attackBonus: number
+  slots: { level: number; total: number; left: number }[]
+  cantrips: string[]
+  prepared: string[]
+  rituals: string[]
+}
 
 /** A sheet ready to show: every name spelled out and every number worked out. It holds plain values only. */
 export type SheetView = {
@@ -31,6 +48,8 @@ export type SheetView = {
   senses: { name: string; range: number }[]
   resistances: string[]
   features: SheetFeature[]
+  // Left out for a class with no Spellcasting.
+  spellcasting?: SheetSpellcasting
 }
 
 const RECHARGE: Record<string, string> = {
@@ -46,10 +65,11 @@ const titled = (id: string) => id.replace(/(^|-)([a-z])/g, (_, dash: string, let
 type Count = number | "proficiency-bonus" | { ability: AbilityId; minimum: 1 } | { column: string } | { byLevel: { level: number; count: number }[] }
 
 /**
- * The sheet as a screen shows it, at the character's stored hit points (its maximum when none are given). Throws when
- * the class, species or background is unknown, as `deriveSheet` does.
+ * The sheet as a screen shows it, at the character's stored hit points (its maximum when none are given) and with the
+ * spell slots they have used, by spell level (none when none are given). Throws when the class, species or background
+ * is unknown, as `deriveSheet` does.
  */
-export function sheetView(sheet: Sheet, hitPoints?: number): SheetView {
+export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonly number[], spellEffects?: readonly SpellEffect[]): SheetView {
   const derived = deriveSheet(sheet)
   const cls = classById.get(sheet.class)
   const species = speciesById.get(sheet.species)
@@ -91,6 +111,20 @@ export function sheetView(sheet: Sheet, hitPoints?: number): SheetView {
     if (feat && feat.category === "origin") features.push({ name: feat.name, from: index === 0 ? background.name : "Feat" })
   })
 
+  const caster = { type: "pc", sheet, spellSlots }
+  const casting = spellcastingOf(caster)
+  const left = slotsLeft(caster)
+  const known = spellsOf(caster)
+  const names = (keep: (entry: (typeof known)[number]) => boolean) => known.filter(keep).map((entry) => entry.spell.name)
+  const spellcasting: SheetSpellcasting | undefined = casting && {
+    saveDc: casting.saveDc,
+    attackBonus: casting.attackBonus,
+    slots: casting.slots.flatMap((total, index) => (total > 0 ? [{ level: index + 1, total, left: left[index] ?? total }] : [])),
+    cantrips: names((entry) => entry.cantrip),
+    prepared: names((entry) => !entry.cantrip && entry.prepared),
+    rituals: names((entry) => !entry.prepared),
+  }
+
   return {
     className: cls.name,
     level: sheet.level,
@@ -98,7 +132,8 @@ export function sheetView(sheet: Sheet, hitPoints?: number): SheetView {
     backgroundName: background.name,
     proficiencyBonus: derived.proficiencyBonus,
     hitPoints: { current: Math.min(derived.hitPointMaximum, Math.max(0, hitPoints ?? derived.hitPointMaximum)), maximum: derived.hitPointMaximum },
-    armorClass: derived.armorClass,
+    // With the spells that last on the hero: Shield of Faith's 2, or Mage Armor's 13 and Dexterity.
+    armorClass: combatStatsOf({ sheet, spellEffects })?.armorClass ?? derived.armorClass,
     armorClassFrom: derived.armorClassFrom,
     initiative: derived.initiative,
     speed: derived.speed,
@@ -115,5 +150,6 @@ export function sheetView(sheet: Sheet, hitPoints?: number): SheetView {
     senses: derived.senses.map((sense) => ({ name: titled(sense.type), range: sense.range })),
     resistances: derived.resistances.map(titled),
     features,
+    ...(spellcasting ? { spellcasting } : {}),
   }
 }

@@ -86,7 +86,7 @@ export default function TurnCharacterList() {
                     <div className="text-xxs sm:text-xs font-mono flex items-center gap-2 mt-0.5">
                       {standing.kind === "hero" ? (
                         <span className="text-primary-100">
-                          {standing.hitPoints}/{standing.maximum} HP · AC {standing.armorClass}
+                          {standing.hitPoints}/{standing.maximum} HP{standing.temporary ? ` +${standing.temporary} Temporary` : ""} · AC {standing.armorClass}
                         </span>
                       ) : (
                         <span style={{ color: standing.kind === "wound" ? WOUND_TONE[standing.word] : standing.kind === "stable" ? "#b7d38a" : WOUND_TONE.Dead }}>

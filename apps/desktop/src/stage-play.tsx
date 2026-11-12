@@ -301,7 +301,7 @@ export function StagePlay(props: {
   const figures = save?.figures
   const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures, painted)
   // A hero's rules sheet for the card. NPCs keep their numbers to themselves.
-  const cardSheet = useSheetView(cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined, cardCharacter?.hitPoints)
+  const cardSheet = useSheetView(cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined, cardCharacter?.hitPoints, cardCharacter?.spellSlots, cardCharacter?.spellEffects)
   const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet, standingOf(cardCharacter, cardSheet)) : null
   // Every hero's sheet, for their hit points and Armor Class in the turn order and the party row.
   const sheets = useSheetViews(shown?.characters ?? [])
@@ -815,12 +815,14 @@ export function StagePlay(props: {
     mode = {
       kind: "roll",
       roll: {
-        kind: "attack" in rr ? "attack" : "deathSave" in rr ? "death" : "check",
+        kind: "attack" in rr || "cast" in rr ? "attack" : "deathSave" in rr ? "death" : "check",
         skill: rr.rollType,
         dc: rr.difficulty,
         modifier: rr.modifier,
         ...(rr.mode === "advantage" || rr.mode === "disadvantage" ? { mode: rr.mode, reasons: rr.reasons } : {}),
         ...("attack" in rr ? { target: nameOf(storyNames(turn?.characters ?? []), rr.attack.target) } : {}),
+        // A spell with a spell attack is thrown at its first target, against that target's Armor Class.
+        ...("cast" in rr ? { target: nameOf(storyNames(turn?.characters ?? []), rr.cast.targets[0] ?? ""), spell: rr.rollType } : {}),
         ...("deathSave" in rr ? { deathSaves: { successes: actor?.deathSaves?.successes ?? 0, failures: actor?.deathSaves?.failures ?? 0 } } : {}),
       },
     }

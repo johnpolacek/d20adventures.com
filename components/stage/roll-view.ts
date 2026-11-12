@@ -35,7 +35,9 @@ export interface ConditionView {
 }
 
 // A roll still to make: who rolls what, against which number. An attack names who is attacked, and `dc` is their
-// Armor Class. A Death Saving Throw carries the hero's saves so far.
+// Armor Class. A Death Saving Throw carries the hero's saves so far. `spell` names the spell a roll belongs to: a spell
+// attack's own (its `check` too), the one a target saves against, or, with `concentration`, the one a caster's
+// Constitution Saving Throw keeps.
 export interface RollAsk {
   kind: RollKind
   character: string
@@ -48,9 +50,16 @@ export interface RollAsk {
   reasons?: string[]
   target?: string
   deathSaves?: DeathSavesView
+  spell?: string
+  concentration?: true
+}
+// A die a lasting spell added to a roll, or took from it: Bless's 3, Bane's −2.
+export interface AddView {
+  from: string
+  amount: number
 }
 // A roll made. `natural` is the die that counts, `dice` both d20s with Advantage or Disadvantage. `inspired` is a Bardic
-// Inspiration die, already in `total`. A Death Saving Throw's `deathSaves` are the saves after it, and `fate` how it
+// Inspiration die, and `adds` the dice of lasting spells, already in `total`. A Death Saving Throw's `deathSaves` are the saves after it, and `fate` how it
 // left the hero when it ended their dying.
 export interface RollView extends RollAsk {
   natural: number
@@ -58,6 +67,7 @@ export interface RollView extends RollAsk {
   total: number
   success: boolean
   inspired?: number
+  adds?: AddView[]
   // A contest: the other side's total, in words.
   versus?: string
   critical?: true
@@ -80,7 +90,16 @@ export interface FeatureView {
 export const keptDie = (mode: RollMode | undefined, dice: readonly number[]) => (mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0])
 export const modeName = (mode: RollMode) => (mode === "advantage" ? "Advantage" : "Disadvantage")
 
-type Someone = { id: string; name: string; type?: string; hitPoints?: number; healthPercent?: number; dead?: true; deathSaves?: { successes: number; failures: number; stable?: true } }
+type Someone = {
+  id: string
+  name: string
+  type?: string
+  hitPoints?: number
+  healthPercent?: number
+  dead?: true
+  deathSaves?: { successes: number; failures: number; stable?: true }
+  concentration?: { spell: string }
+}
 
 const harmView = (harm: NonNullable<RollBeat["harm"]>, names: Record<string, string | undefined>): HarmView[] => harm.map((h) => ({ ...h, target: nameOf(names, h.target) }))
 
@@ -97,6 +116,9 @@ export function rollView(beat: RollBeat, characters: readonly Someone[], portrai
     ...(beat.mode ? { mode: beat.mode } : {}),
     ...(beat.modifier !== undefined && !(kind === "death" && beat.modifier === 0) ? { modifier: beat.modifier } : {}),
     ...(beat.inspired !== undefined ? { inspired: beat.inspired } : {}),
+    ...(beat.adds?.length ? { adds: beat.adds } : {}),
+    ...(beat.spell ? { spell: beat.spell } : {}),
+    ...(beat.concentration ? { concentration: true as const } : {}),
     total: beat.total,
     dc: beat.dc,
     success: beat.success,
@@ -180,6 +202,15 @@ export function marginText(roll: RollView): string {
 }
 
 export const signedTerm = (n: number) => `${n < 0 ? "minus" : "plus"} ${Math.abs(n)}`
+
+/**
+ * A roll's heading, after the roller's name as the caller gives it: the check, what spell it is against or keeps, and
+ * who an attack is on. "Fire Bolt → Owlbear", "Wisdom Saving Throw · Charm Person", "Concentration · Bless".
+ */
+export function rollHeading(roll: RollAsk, name: string): string {
+  const what = roll.concentration && roll.spell ? `Concentration · ${roll.spell}` : roll.spell && roll.spell !== roll.check ? `${roll.check} · ${roll.spell}` : roll.check
+  return `${name} · ${what}${roll.target ? ` → ${roll.target}` : ""}`
+}
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 const diceWords = (dice: number[], sides?: number) => (dice.length ? `${sides ? `d${sides} ` : ""}${dice.join(" and ")}` : "")
 const sum = (dice: number[], bonus: number) => dice.reduce((n, d) => n + d, 0) + bonus
@@ -197,9 +228,16 @@ export const deathSavesSpeech = (s: DeathSavesView) => `${plural(s.successes, "s
 
 /** Everything the roll shows, as one sentence for screen readers. */
 export function rollSpeech(roll: RollView): string {
-  const first = roll.kind === "attack" ? `${roll.character} attacks ${roll.target} with ${roll.check}` : `${roll.character} rolled ${roll.check}`
+  const first =
+    roll.kind === "attack"
+      ? roll.spell
+        ? `${roll.character} casts ${roll.spell} at ${roll.target}, a spell attack`
+        : `${roll.character} attacks ${roll.target} with ${roll.check}`
+      : roll.concentration
+        ? `${roll.character} rolled ${roll.check} to keep Concentration on ${roll.spell}`
+        : `${roll.character} rolled ${roll.check}${roll.spell ? ` against ${roll.spell}` : ""}`
   const dice = roll.dice && roll.dice.length > 1 ? ` with ${modeName(roll.mode ?? "advantage")}: ${roll.dice.join(" and ")}, keeping ${roll.natural}` : `: ${roll.natural}`
-  const terms = `${roll.modifier !== undefined ? ` ${signedTerm(roll.modifier)}` : ""}${roll.inspired !== undefined ? ` plus a Bardic Inspiration die of ${roll.inspired}` : ""}`
+  const terms = `${roll.modifier !== undefined ? ` ${signedTerm(roll.modifier)}` : ""}${roll.inspired !== undefined ? ` plus a Bardic Inspiration die of ${roll.inspired}` : ""}${(roll.adds ?? []).map((a) => ` ${signedTerm(a.amount)} from ${a.from}`).join("")}`
   const made = terms ? `${terms} makes ${roll.total}` : ""
   const against = roll.versus ?? (roll.kind === "attack" ? `Armor Class ${roll.dc}` : `DC ${roll.dc}`)
   const parts = [`${first}${dice}${made} against ${against}. ${verdictOf(roll)}.`]
@@ -215,7 +253,12 @@ export function rollSpeech(roll: RollView): string {
 
 /** A roll still to make, for screen readers. */
 export function askSpeech(ask: RollAsk): string {
-  const what = ask.kind === "attack" ? `${ask.check} against ${ask.target}, Armor Class ${ask.dc}` : ask.kind === "death" ? ask.check : `${ask.check}, DC ${ask.dc}`
+  const what =
+    ask.kind === "attack"
+      ? `${ask.spell ? "Spell Attack, " : ""}${ask.check} against ${ask.target}, Armor Class ${ask.dc}`
+      : ask.kind === "death"
+        ? ask.check
+        : `${ask.check}${ask.concentration ? `, Concentration on ${ask.spell}` : ask.spell ? ` against ${ask.spell}` : ""}, DC ${ask.dc}`
   return `${what}${ask.kind === "death" && ask.deathSaves ? `, ${deathSavesSpeech(ask.deathSaves)} so far` : ""}`
 }
 

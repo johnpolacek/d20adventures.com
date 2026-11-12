@@ -3,11 +3,11 @@
 // The journal: every word of the story so far, the replies and the rolls, and the table chat. Opened from the top bar,
 // so the stage carries the scene and the text is always one tap away.
 
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { DeathSaveMarks, FeatureEntry, RollDetails } from "./roll-parts"
-import { againstLabel, type FeatureView, isCritical, marginText, modeName, type RollView, rollSpeech, verdictOf } from "./roll-view"
+import { againstLabel, type FeatureView, isCritical, marginText, modeName, type RollView, rollHeading, rollSpeech, verdictOf } from "./roll-view"
 
 // The story in order: its paragraphs, each dice roll where it was called for, and each class feature used.
 export type JournalEntry = string | { roll: RollView } | { feature: FeatureView }
@@ -49,7 +49,7 @@ function Die({ natural, dropped = false, critical = false }: { natural: number; 
 }
 
 // A roll as a small card: the die on its natural roll (both dice with Advantage or Disadvantage, the other dimmed), the
-// sum against the DC or the Armor Class, the verdict stamped at the end, and what the roll did under it. A Critical Hit
+// sum against the DC or the Armor Class with any die of Inspiration or of a lasting spell named, the verdict stamped at the end, and what the roll did under it. A Critical Hit
 // is gold. The site's turn view shows its rolls with it too.
 export function RollLine({ roll, className }: { roll: RollView; className?: string }) {
   const crit = isCritical(roll)
@@ -74,10 +74,7 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
         ))}
       </div>
       <div aria-hidden="true" className="min-w-0 flex-1">
-        <div className={cn(eyebrow, "overflow-hidden text-ellipsis whitespace-nowrap")}>
-          {roll.character} · {roll.check}
-          {roll.target ? ` → ${roll.target}` : ""}
-        </div>
+        <div className={cn(eyebrow, "overflow-hidden text-ellipsis whitespace-nowrap")}>{rollHeading(roll, roll.character)}</div>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <div className="flex items-baseline gap-x-1.5 whitespace-nowrap font-serif tabular-nums text-stage-cream">
             <span className="text-[14px]">{roll.natural}</span>
@@ -88,6 +85,12 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
                 <span className="font-sans text-[8px] tracking-[0.2em] text-stage-muted uppercase">Inspiration</span>
               </>
             )}
+            {(roll.adds ?? []).map((a, i) => (
+              <Fragment key={i}>
+                {term(a.amount < 0 ? "−" : "+", Math.abs(a.amount))}
+                <span className="font-sans text-[8px] tracking-[0.2em] text-stage-muted uppercase">{a.from}</span>
+              </Fragment>
+            ))}
             <span className="text-[12px] text-stage-muted">=</span>
             <span className="text-[19px] font-bold text-stage-gold">{roll.total}</span>
             <span className="ml-1.5 font-sans text-[9px] tracking-[0.2em] text-stage-muted uppercase">{roll.versus ? "vs" : againstLabel(roll.kind)}</span>

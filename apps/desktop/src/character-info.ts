@@ -33,7 +33,7 @@ function sheetDetails(sheet: SheetView): NonNullable<CardInfo["details"]> {
 
 /**
  * A character's card. `standing` is how they stand (components/stage/standing): a hero's hit points and Armor Class
- * from their sheet, an NPC's wound word. The caller works it out, since this file loads under the desktop's tests.
+ * from their sheet, an NPC's wound word. A hero's spellcasting comes from their sheet too. The caller works it out, since this file loads under the desktop's tests.
  */
 export function characterInfo(character: TurnCharacter, portrait: string | undefined, sheet: SheetView | null, standing: Standing | undefined): CardInfo {
   const conditions = conditionLabel(character)
@@ -45,6 +45,7 @@ export function characterInfo(character: TurnCharacter, portrait: string | undef
     about: character.appearance,
     ...(standing ? { standing } : {}),
     ...(conditions ? { conditions } : {}),
+    ...(sheet?.spellcasting ? { spellcasting: sheet.spellcasting } : {}),
     details: [
       ...(sheet ? sheetDetails(sheet) : []),
       { label: "Equipment", items: character.equipment?.length ? character.equipment.map((e) => `${e.name}${e.description ? `. ${e.description}` : ""}`) : ["None"] },
