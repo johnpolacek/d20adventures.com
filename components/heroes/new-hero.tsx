@@ -9,7 +9,7 @@ import { joinAdventure, requestSeat } from "@/app/_actions/join-adventure"
 import { saveCharacterTemplateAction } from "@/app/_actions/save-character-template"
 import type { HeroDraft } from "@/apps/desktop/runtime/heroes"
 import { heroFigure } from "@/apps/desktop/src/figures"
-import { HeroCreator, type HeroIdea } from "@/apps/desktop/src/hero-creator"
+import { HeroCreator, type HeroIdea, type HeroMaking } from "@/apps/desktop/src/hero-creator"
 import type { HeroCreation } from "@/lib/heroes/creation"
 import type { PCTemplate } from "@/types/character"
 
@@ -24,21 +24,22 @@ export function NewHero({ creation, lobby }: { creation: HeroCreation; lobby?: H
   const hook = useRef("")
   const leave = () => (lobby ? router.push(lobby.href) : router.back())
 
-  const onDraft = async (idea: HeroIdea) => {
+  const onDraft = async (idea: HeroIdea, making: HeroMaking) => {
     setBusy(true)
     hook.current = idea.hook.trim()
-    const { draft, error } = await draftHero({ ...idea, planId: creation.adventure?.planId }).catch(() => ({ draft: undefined, error: "The hero could not be created. Retry." }))
+    const { draft, error } = await draftHero({ ...idea, making, planId: creation.adventure?.planId }).catch(() => ({ draft: undefined, error: "The hero could not be created. Retry." }))
     setBusy(false)
     if (error) toast.error(error)
     return draft && { ...draft, gender: draft.gender ?? "" }
   }
 
-  const onSave = async ({ figure: _f, painted: _p, arrivals: _a, ...hero }: HeroDraft & { figure: string; painted?: boolean }) => {
+  const onSave = async ({ figure: _f, painted: _p, arrivals: _a, ...hero }: HeroDraft & { figure: string; painted?: boolean }, making?: HeroMaking) => {
+    if (!making) return false
     setBusy(true)
     try {
       // Until the stage reads a chosen figure, the hero's portrait is the stock figure it stands as.
       const image = heroFigure({ id: hero.name, race: hero.race, gender: hero.gender }).art.portrait
-      const saved = await saveCharacterTemplateAction({ character: { ...hero, id: slugify(hero.name, { lower: true, strict: true }), image } as PCTemplate })
+      const saved = await saveCharacterTemplateAction({ character: { ...hero, id: slugify(hero.name, { lower: true, strict: true }), image } as PCTemplate, making })
       if (!saved.success || !saved.characterId) {
         toast.error(saved.error ?? "The hero could not be saved.")
         return false

@@ -1,7 +1,6 @@
 "use client"
 
 import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs"
-import { HERO_CREATOR } from "@d20/gm-core/character/hero-draft"
 import { Eye } from "lucide-react"
 import Link from "next/link"
 import React, { useState } from "react"
@@ -109,7 +108,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
             {adventurePlan.teaser}
           </p>
         </div>
-        {HERO_CREATOR && adventurePlan.availableCharacterOptions && (
+        {adventurePlan.availableCharacterOptions && (
           <div className="flex flex-col items-center justify-center gap-4">
             {adventurePlan.premadePlayerCharacters && adventurePlan.premadePlayerCharacters.length > 0 && (
               <p className="font-display w-full text-center text-xl text-amber-300 font-bold mb-6" style={textShadow}>

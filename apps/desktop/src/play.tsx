@@ -1,4 +1,4 @@
-import { HERO_CREATOR, playableHero } from "@d20/gm-core/character/hero-draft"
+import { playableHero } from "@d20/gm-core/character/hero-draft"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Pill, panel } from "@/components/stage/hud"
 import { cn } from "@/lib/utils"
@@ -14,7 +14,7 @@ import { partyOf } from "./carry"
 import { sendFeedback } from "./feedback"
 import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
-import { HeroCreator, type HeroIdea } from "./hero-creator"
+import { HeroCreator, type HeroIdea, type HeroMaking } from "./hero-creator"
 import { Home } from "./home"
 import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "./hosted"
 import { HostedLobby } from "./hosted-lobby"
@@ -215,11 +215,11 @@ export function DesktopGame() {
     setPainting(null)
   }
   // A hero made from a party screen is made for that adventure. One made from the Characters page is not.
-  const draftHero = async ({ hook, ...idea }: HeroIdea) =>
-    (await invoke({ kind: "heroDraft", provider: provider as "claude", model: pickedModel, ...idea, ...(screen === "new" ? { adventure, ...(hook.trim() ? { hook } : {}) } : {}) }))?.draft
-  const saveHero = async (hero: Omit<Hero, "id"> & { id?: string }) => {
+  const draftHero = async ({ hook, ...idea }: HeroIdea, making: HeroMaking) =>
+    (await invoke({ kind: "heroDraft", provider: provider as "claude", model: pickedModel, ...idea, making, ...(screen === "new" ? { adventure, ...(hook.trim() ? { hook } : {}) } : {}) }))?.draft
+  const saveHero = async (hero: Omit<Hero, "id"> & { id?: string }, making?: HeroMaking) => {
     const before = new Set(heroes.map((h) => h.id))
-    const res = await invoke({ kind: "saveHero", hero })
+    const res = await invoke({ kind: "saveHero", hero, ...(making ? { making } : {}) })
     if (!res || res.error) return false
     setCreator(null)
     setCreated(res.heroes?.find((h) => !before.has(h.id))?.id ?? null)
@@ -481,8 +481,8 @@ export function DesktopGame() {
                     busy={working}
                     painting={painting}
                     canCreate={providers.length > 0}
-                    onCreate={HERO_CREATOR ? () => setCreator({}) : undefined}
-                    onEdit={HERO_CREATOR ? (hero) => setCreator({ editing: hero }) : undefined}
+                    onCreate={() => setCreator({})}
+                    onEdit={(hero) => setCreator({ editing: hero })}
                     onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                     onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
                   />
@@ -507,8 +507,8 @@ export function DesktopGame() {
                         created={created}
                         carried={carried ?? undefined}
                         onStart={(chosenParty) => void start(chosenParty)}
-                        onCreate={HERO_CREATOR ? () => setCreator({}) : undefined}
-                        onEdit={HERO_CREATOR ? (hero) => setCreator({ editing: hero }) : undefined}
+                        onCreate={() => setCreator({})}
+                        onEdit={(hero) => setCreator({ editing: hero })}
                         art={art}
                         painting={painting}
                         onPaint={painter ? (hero) => void paintHero(hero) : undefined}
@@ -529,7 +529,7 @@ export function DesktopGame() {
           </div>
         </div>
       )}
-      {HERO_CREATOR && creator && (
+      {creator && (
         <HeroCreator
           options={creator.editing || screen !== "new" ? options : (chosen?.options ?? options)}
           adventure={screen === "new" && chosen ? { id: chosen.id, hooks: chosen.hooks } : undefined}

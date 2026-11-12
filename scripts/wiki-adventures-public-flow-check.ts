@@ -8,16 +8,19 @@ const SETTING_ID = "realm-of-myr"
 // The public play-flow pages must resolve registered wiki adventures through the wiki runtime
 // (the plan-view adapter), not the legacy S3 AdventurePlan JSON.
 function assertPagesBranchOnWiki() {
-  const pages = [
-    "app/settings/[settingId]/[adventurePlanId]/page.tsx",
-    "app/settings/[settingId]/[adventurePlanId]/character-select/page.tsx",
-    "app/settings/[settingId]/[adventurePlanId]/character-create/page.tsx",
-  ]
+  const pages = ["app/settings/[settingId]/[adventurePlanId]/page.tsx", "app/settings/[settingId]/[adventurePlanId]/character-select/page.tsx"]
   for (const page of pages) {
     const source = readFileSync(page, "utf8")
     assert.ok(source.includes("isLocalWikiAdventure"), `${page} does not branch on isLocalWikiAdventure`)
     assert.ok(source.includes("loadWikiAdventurePlanView"), `${page} does not load the wiki plan view`)
   }
+  // The hero creator's page reads the adventure's races, classes and hooks through `heroCreation`, which does both.
+  assert.ok(
+    readFileSync("app/settings/[settingId]/[adventurePlanId]/character-create/page.tsx", "utf8").includes("heroCreation("),
+    "the hero creator's page does not read the adventure through heroCreation"
+  )
+  const creation = readFileSync("lib/heroes/creation.ts", "utf8")
+  assert.ok(creation.includes("isLocalWikiAdventure") && creation.includes("loadWikiAdventureRuntime"), "heroCreation does not read the wiki runtime")
 }
 
 // The prototype workbench server actions must be admin-gated.

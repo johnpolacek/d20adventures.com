@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { autoCreate } from "@d20/gm-core/sheet/create"
 import { placeCharacters, standingWords } from "@d20/gm-core/sheet/placement"
 import { metres } from "@d20/gm-core/sheet/space"
 import { storyText } from "@d20/gm-core/story/render"
@@ -54,7 +55,7 @@ const sheet = (name: string, race: string, archetype: string) => ({
   specialAbilities: ["Second Wind"],
   effects: [],
 })
-// A rules sheet of the class, from a premade. The hero creator is off, so roster heroes are put in the store directly.
+// A rules sheet of the class, from a premade, for roster heroes put in the store directly.
 const premades = packs["welcome-to-kordavos"].artifacts.characterSheets.premadeCharacters
 const rulesFor = (archetype: string) => Object.values(premades).find((p) => p.sheet.sheet?.class === archetype.toLowerCase())!.sheet.sheet!
 function addHero(store: LocalStore, name: string, race: string, archetype: string, figure = "human-b"): Hero {
@@ -63,13 +64,64 @@ function addHero(store: LocalStore, name: string, race: string, archetype: strin
   return hero
 }
 
-test("the hero creator is switched off: drafting or saving a hero is refused, and a roster hero without a rules sheet cannot play", async () => {
+test("a hero is made from the player's rules choices: the engine builds the sheet, the GM writes only the story, and the hero plays", async () => {
   const { store, cleanup } = setup()
   try {
-    const idea = { kind: "heroDraft", provider: "claude", race: "Dwarf", archetype: "Cleric", name: "Hilde Ashbrand" } as const
-    await assert.rejects(() => heroCommand(idea, store, packs, offline), /switched off/)
-    await assert.rejects(() => heroCommand({ kind: "saveHero", hero: { ...sheet("Hilde Ashbrand", "Dwarf", "Cleric"), figure: "dwarf-b" } }, store, packs, offline), /switched off/)
+    const pick = { class: "cleric", species: "dwarf", background: "acolyte" } as const
+    const making = { pick, choices: autoCreate(pick) }
+    const story = { appearance: "Broad and soot-marked.", personality: "Steady.", background: "A shrine in the hills.", motivation: "To keep a vow.", behavior: "Stands in front." }
+    let asked = ""
+    const writer: Llm = {
+      ...offline,
+      generateObject: async ({ prompt, schema }) => {
+        asked = prompt
+        return { object: schema.parse(story) }
+      },
+    }
+    const { draft } = await heroCommand({ kind: "heroDraft", provider: "claude", name: "Hilde Ashbrand", gender: "Female", making }, store, packs, writer)
+    assert.ok(draft)
+    // The GM is told what the rules made of her, and asked for the story alone.
+    assert.match(asked, /^Hilde Ashbrand, a Female Dwarf Cleric/)
+    assert.match(asked, /The life behind them: Acolyte\./)
+    assert.match(asked, /They carry [^\n]*Mace/)
+    assert.match(asked, /Give no numbers/)
+    // Her race, class and scores are read off the sheet: the Standard Array as the SRD places it for a Cleric, with
+    // the Acolyte's increase of 2 to Wisdom and 1 to Charisma.
+    assert.deepEqual([draft.race, draft.archetype, draft.sheet?.class, draft.sheet?.level], ["Dwarf", "Cleric", "cleric", 1])
+    assert.deepEqual(draft.attributes, { strength: 14, dexterity: 8, constitution: 13, intelligence: 10, wisdom: 17, charisma: 13 })
+    assert.equal(draft.personality, "Steady.")
     assert.deepEqual(store.heroes(), [])
+
+    // Saved, her rules are built again from the choices: a sheet changed on the screen changes nothing.
+    const forged = { ...draft, figure: "dwarf-b", sheet: draft.sheet && { ...draft.sheet, level: 5 }, attributes: { ...draft.attributes, wisdom: 20 } }
+    await heroCommand({ kind: "saveHero", hero: forged, making }, store, packs, offline)
+    const [saved] = store.heroes()
+    assert.deepEqual([saved.sheet?.level, saved.attributes.wisdom, saved.figure], [1, 17, "dwarf-b"])
+    // A new hero with no rules choices is refused, and so is one no adventure's lists allow.
+    await assert.rejects(() => heroCommand({ kind: "saveHero", hero: { ...draft, figure: "dwarf-b" } }, store, packs, offline), /needs their rules choices/)
+    const tiefling = { class: "wizard", species: "tiefling", background: "sage" } as const
+    await assert.rejects(
+      () => heroCommand({ kind: "heroDraft", provider: "claude", name: "Ash", making: { pick: tiefling, choices: autoCreate(tiefling) } }, store, packs, writer),
+      /listed races and classes/
+    )
+    assert.equal(store.heroes().length, 1)
+
+    // Editing her changes her story, never her rules.
+    await heroCommand({ kind: "saveHero", hero: { ...saved, personality: "Gruff.", race: "Elf", sheet: undefined } }, store, packs, offline)
+    assert.deepEqual([store.heroes()[0].personality, store.heroes()[0].race, store.heroes()[0].sheet?.class], ["Gruff.", "Dwarf", "cleric"])
+
+    // She plays The Road to Kordavos, which has no heroes of its own.
+    await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-road-to-kordavos", party: [{ id: saved.id, ai: false }] })
+    const hilde = store.current().characters.find((c) => c.id === saved.id)
+    assert.deepEqual([hilde?.sheet?.class, hilde?.race, hilde?.personality], ["cleric", "Dwarf", "Gruff."])
+  } finally {
+    cleanup()
+  }
+})
+
+test("a roster hero without a rules sheet cannot play", async () => {
+  const { store, cleanup } = setup()
+  try {
     const { sheet: _rules, ...old } = addHero(store, "Rosa Vell", "Human", "Fighter")
     store.putHero(old)
     await assert.rejects(() => game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-road-to-kordavos", party: [{ id: old.id, ai: false }] }), /no rules sheet/)

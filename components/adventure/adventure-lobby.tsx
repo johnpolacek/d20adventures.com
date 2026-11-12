@@ -1,7 +1,7 @@
 "use client"
 
 import { useUser } from "@clerk/nextjs"
-import { HERO_CREATOR, playableHero } from "@d20/gm-core/character/hero-draft"
+import { playableHero } from "@d20/gm-core/character/hero-draft"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
@@ -379,7 +379,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                     </ul>
                   </section>
                 )}
-                {HERO_CREATOR && (!invite || bringOwn) && (
+                {(!invite || bringOwn) && (
                   <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname + window.location.search)}`} className="mt-6 w-full">
                     {/* At rest an epic button is scaled up. Here it keeps the list's width. */}
                     <Button variant="epic" size="lg" className="w-full scale-100 hover:scale-[1.02]">

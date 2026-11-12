@@ -5,9 +5,6 @@ import { authoredText } from "../story/authored"
 // Making a player's hero for the Realm of Myr, and their arrival in an adventure with hero hooks. Shared by the desktop
 // app, where the player's CLI writes them, and the website, so a hero fits the world wherever it is made.
 
-// The hero creator, on the website and in the app. Off until stage 8 of plans/srd-rules.md rebuilds it on rules sheets.
-export const HERO_CREATOR = false
-export const HERO_CREATOR_OFF = "The hero creator is switched off."
 /** Only a hero with a rules sheet plays. */
 export const playableHero = (hero: { sheet?: unknown }) => Boolean(hero.sheet)
 
@@ -30,24 +27,6 @@ const WORLD = [
   "Everything about them belongs in a medieval fantasy world: no modern objects, words or ideas, and no firearms.",
   "Name no real gods, places, factions or people beyond those given here. Invent small ones of their own if needed, such as a home village or a mentor.",
 ].join(" ")
-const FIT = `${WORLD} Their gear is what a traveler of their class could carry and afford, with at most one minor magic item.`
-
-/** The prompt that drafts a whole hero in one call. With an adventure that has hooks and an opening, the same call writes their arrival. */
-export function heroDraftPrompt(hero: HeroIdea, adventure?: HeroAdventure, hook?: string) {
-  return [
-    who(hero),
-    hero.idea ? `The player's idea for them: ${hero.idea}` : "",
-    adventure ? about(adventure) : "",
-    adventure ? "Give them a past that could bring them there: they may be from that land or from elsewhere." : "",
-    // Without an arrival in the same call, the player's reason still shapes the past.
-    adventure && hook && !draftsArrival(adventure) ? `Why they are going there: ${hook.replace(/\.?$/, ".")} Their background leads to it.` : "",
-    FIT,
-    "Keep the given name, race and class. Write appearance, personality, background and motivation as two or three vivid sentences each, plus a short behavior note on how they act in play. A spellcaster has two to four spells. Others have none. Equipment items have one-sentence descriptions.",
-    adventure?.hooks?.length && adventure.opening ? arrivalPrompt(adventure.hooks, adventure.opening, hook) : "",
-  ]
-    .filter(Boolean)
-    .join("\n")
-}
 
 /**
  * What the rules make of a hero, in words: the story is written to fit it. The scores, skills, gear and spells
@@ -108,7 +87,7 @@ export async function draftHeroStory(llm: Llm, hero: HeroIdea, rules: HeroRules,
   return (await llm.generateObject({ prompt: heroStoryPrompt(hero, rules, adventure, hook), schema })).object
 }
 
-/** The fields to add to the hero schema when heroDraftPrompt asks for an arrival. */
+/** Whether the story's call also writes an arrival: the adventure has hooks and an opening. */
 export const draftsArrival = (adventure?: HeroAdventure) => Boolean(adventure?.hooks?.length && adventure.opening)
 
 type SheetText = HeroIdea & { appearance: string; personality?: string; background?: string; motivation?: string }

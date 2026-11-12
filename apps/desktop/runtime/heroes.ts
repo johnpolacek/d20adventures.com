@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
-import type { GmPorts, Llm } from "@d20/gm-core"
-import { createGenerateCharacterAction } from "@d20/gm-core/character/generate-character-action"
-import { type Arrival, arrivalSchema, draftsArrival, HERO_CREATOR, HERO_CREATOR_OFF, heroDraftPrompt, playableHero, withArrival, writeArrival } from "@d20/gm-core/character/hero-draft"
+import type { Llm } from "@d20/gm-core"
+import { type Arrival, arrivalSchema, playableHero, withArrival, writeArrival } from "@d20/gm-core/character/hero-draft"
+import { allowsHero, buildHero, heroMakingSchema, makeHero, withStoryOf } from "@d20/gm-core/character/hero-make"
 import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import { type PCTemplate, pcTemplateSchema } from "@d20/gm-core/types/character"
 import { z } from "zod"
@@ -33,17 +33,18 @@ export const heroCommandSchema = z.discriminatedUnion("kind", [
     kind: z.literal("heroDraft"),
     provider,
     model: gmModelSchema,
-    race: text(40).min(1),
-    archetype: text(40).min(1),
     name: text(80).min(1),
     gender: text(40).optional(),
     idea: text(600).optional(),
     adventure: text(100).optional(),
     // Why the hero came, from the adventure's hooks or the player's own words.
     hook: text(300).optional(),
+    // The hero's rules as the player chose them.
+    making: heroMakingSchema,
   }),
-  // A new hero arrives without an id.
-  z.object({ kind: z.literal("saveHero"), hero: heroSchema.extend({ id: heroSchema.shape.id.optional() }) }),
+  // A new hero arrives without an id, with the rules choices they were made from: the sheet is built from those
+  // again here, never taken from the screen. A roster hero's story can be edited, and their rules stay as they are.
+  z.object({ kind: z.literal("saveHero"), hero: heroSchema.extend({ id: heroSchema.shape.id.optional() }), making: heroMakingSchema.optional() }),
   z.object({ kind: z.literal("deleteHero"), id: z.string().max(100) }),
   z.object({ kind: z.literal("paintHero"), provider: z.enum(PAINTERS), id: z.string().max(100) }),
   // Painted art for these heroes, as data URLs.
@@ -85,37 +86,33 @@ export async function heroCommand(
     roster.putHero({ ...hero, painted: true })
     return { art: readArt(files.data, [hero.id]) }
   }
-  if (!HERO_CREATOR) throw new Error(HERO_CREATOR_OFF)
-  const { races, archetypes } = creationOptions(packs)
-  const hero = command.kind === "saveHero" ? command.hero : command
-  if (!races.includes(hero.race) || !archetypes.includes(hero.archetype)) throw new Error("Choose one of the listed races and classes.")
   if (command.kind === "saveHero") {
-    const { id, ...rest } = command.hero
-    if (id && !roster.heroes().some((h) => h.id === id)) throw new Error("That hero is no longer in your roster.")
-    roster.putHero({ ...rest, id: id ?? `hero-${randomUUID().slice(0, 8)}`, type: "pc", effects: [] })
+    const { id, ...edited } = command.hero
+    const stored = id ? roster.heroes().find((h) => h.id === id) : undefined
+    if (id && !stored) throw new Error("That hero is no longer in your roster.")
+    if (stored) {
+      // Their story, figure and arrivals change. Their rules, and the words read off them, do not.
+      roster.putHero({ ...withStoryOf(stored, edited), figure: edited.figure, painted: edited.painted, arrivals: edited.arrivals })
+      return {}
+    }
+    if (!command.making) throw new Error("A new hero needs their rules choices.")
+    const built = buildHero(command.making)
+    if ("problems" in built) throw new Error(`These choices do not make a legal hero: ${built.problems.join(". ")}.`)
+    if (!allowsHero(creationOptions(packs), built.record)) throw new Error("Choose one of the listed races and classes.")
+    roster.putHero({ ...edited, ...built.record, sheet: built.sheet, id: `hero-${randomUUID().slice(0, 8)}`, type: "pc", effects: [] })
     return {}
   }
   const pack = command.adventure ? packs[command.adventure] : undefined
-  const adventure = pack && heroAdventure(pack)
-  const { generateCharacterAction } = createGenerateCharacterAction({ llm } as GmPorts)
-  const result = await generateCharacterAction({
-    characterType: "pc",
-    prompt: heroDraftPrompt(command, adventure, command.hook),
-    ...(draftsArrival(adventure) ? { extend: { arrival: arrivalSchema } } : {}),
-  })
-  if (!result.success || !result.character) throw new Error(result.error ?? "The hero could not be created. Retry.")
-  const { arrival, ...c } = result.character as PCTemplate & { arrival?: Arrival }
+  const built = buildHero(command.making)
+  if ("problems" in built) throw new Error(`These choices do not make a legal hero: ${built.problems.join(". ")}.`)
+  if (!allowsHero(pack?.artifacts.manifest.availableCharacterOptions ?? creationOptions(packs), built.record)) throw new Error("Choose one of the listed races and classes.")
+  const { hero, arrival } = await makeHero(llm, command, command.making, pack && heroAdventure(pack), command.hook)
   return {
     draft: {
-      ...c,
-      name: command.name,
-      race: command.race,
-      archetype: command.archetype,
-      gender: command.gender || c.gender,
+      ...hero,
       image: "",
       type: "pc",
       effects: [],
-      spells: (c.spells ?? []).map((s) => ({ name: s.name, description: s.description })),
       ...(arrival && pack ? { arrivals: { [pack.artifacts.manifest.adventureId]: arrival } } : {}),
     },
   }

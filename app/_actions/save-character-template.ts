@@ -1,70 +1,34 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
-import { HERO_CREATOR, HERO_CREATOR_OFF } from "@d20/gm-core/character/hero-draft"
+import { buildHero, heroMakingSchema } from "@d20/gm-core/character/hero-make"
 import slugify from "slugify"
 import { getUserCharacters } from "@/app/_actions/character"
 import { updateJsonOnS3 } from "@/lib/s3-utils"
-import type { PCTemplate } from "@/types/character"
+import { type PCTemplate, pcTemplateSchema } from "@/types/character"
 
-interface SaveCharacterTemplateParams {
-  character: PCTemplate
-}
-
-export async function saveCharacterTemplateAction(params: SaveCharacterTemplateParams): Promise<{ success: boolean; message?: string; error?: string; characterId?: string }> {
-  if (!HERO_CREATOR) throw new Error(HERO_CREATOR_OFF)
-  console.log("[saveCharacterTemplateAction] Starting with params:", JSON.stringify(params, null, 2))
-
+// Saves a new hero to the player's account. The rules sheet is built here from the choices the hero was made from,
+// never taken from the screen, and the race, class, scores, skills and gear are read off it. The story is the
+// player's to have edited.
+export async function saveCharacterTemplateAction(params: { character: PCTemplate; making: unknown }): Promise<{ success: boolean; message?: string; error?: string; characterId?: string }> {
   const { userId } = await auth()
-  console.log("[saveCharacterTemplateAction] Auth result - userId:", userId)
-
-  if (!userId) {
-    console.error("[saveCharacterTemplateAction] No userId found, unauthorized")
-    return { success: false, error: "Unauthorized" }
-  }
-
-  const { character } = params
-  console.log("[saveCharacterTemplateAction] Character data:", JSON.stringify(character, null, 2))
-
+  if (!userId) return { success: false, error: "Unauthorized" }
+  const making = heroMakingSchema.safeParse(params.making)
+  if (!making.success) return { success: false, error: "Those rules choices could not be read. Choose them again." }
+  const built = buildHero(making.data)
+  if ("problems" in built) return { success: false, error: `These choices do not make a legal hero: ${built.problems.join(". ")}.` }
   try {
-    // Create a slug from the character name
-    const slug = slugify(character.name, { lower: true, strict: true })
-    console.log("[saveCharacterTemplateAction] Generated slug:", slug)
-
-    // Check for character name collision
-    console.log("[saveCharacterTemplateAction] Checking for existing characters...")
-    const existingCharacters = await getUserCharacters(userId)
-    console.log("[saveCharacterTemplateAction] Existing characters:", JSON.stringify(existingCharacters, null, 2))
-
-    if (existingCharacters.some((c: PCTemplate) => slugify(c.name, { lower: true, strict: true }) === slug)) {
-      console.log("[saveCharacterTemplateAction] Character name collision detected")
-      return {
-        success: false,
-        error: "You already have a character with that name. Please choose a different name.",
-      }
-    }
-
-    // Save the character template to S3
+    const slug = slugify(params.character.name, { lower: true, strict: true })
+    if (!slug) return { success: false, error: "Give your hero a name." }
+    const existing = await getUserCharacters(userId)
+    if (existing.some((c: PCTemplate) => slugify(c.name, { lower: true, strict: true }) === slug))
+      return { success: false, error: "You already have a character with that name. Please choose a different name." }
+    const hero = pcTemplateSchema.parse({ ...params.character, ...built.record, sheet: built.sheet, id: slug, type: "pc", effects: [] })
     const key = `characters/${userId}/${slug}.json`
-    console.log("[saveCharacterTemplateAction] S3 key:", key)
-
-    console.log("[saveCharacterTemplateAction] Calling updateJsonOnS3...")
-    await updateJsonOnS3(key, character)
-    console.log("[saveCharacterTemplateAction] S3 update completed successfully")
-
-    const result = {
-      success: true,
-      message: "Character template saved successfully",
-      characterId: key,
-    }
-    console.log("[saveCharacterTemplateAction] Returning success result:", JSON.stringify(result, null, 2))
-    return result
+    await updateJsonOnS3(key, hero)
+    return { success: true, message: "Character template saved successfully", characterId: key }
   } catch (error) {
-    console.error("[saveCharacterTemplateAction] Error saving character template:", JSON.stringify(error, null, 2))
-    console.error("[saveCharacterTemplateAction] Error stack:", error instanceof Error ? error.stack : "No stack trace")
-    return {
-      success: false,
-      error: "Failed to save character template",
-    }
+    console.error("[saveCharacterTemplateAction] Error saving character template:", error)
+    return { success: false, error: "Failed to save character template" }
   }
 }
