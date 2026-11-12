@@ -13,6 +13,7 @@ import { convex } from "@/lib/convex/server"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import type { Setting } from "@/types/setting"
@@ -178,8 +179,8 @@ export async function createPracticeAdventure(input: CreatePracticeAdventureInpu
   }
 
   const { settingId, adventurePlanId, lineup } = input
-  const planPath = `settings/${settingId}/${adventurePlanId}.json`
-  const plan = (await readJsonFromS3(planPath)) as AdventurePlan
+  // The plan the practice page showed: an authored adventure's party size and heroes come from its markdown.
+  const plan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
   if (!plan || !plan.title) {
     throw new Error("Adventure plan not found or is invalid")
   }

@@ -200,6 +200,9 @@ test("a new encounter ends the conditions of a fight's moment and keeps the last
   const worn = thalbern({ id: "prone", turns: 1 }, { id: "frightened", turns: 6 }, { id: "poisoned" }, { id: "exhaustion", level: 1 }, { id: "restrained" })
   assert.deepEqual(conditionsAtEncounterEnd(worn).conditions, [{ id: "poisoned" }, { id: "exhaustion", level: 1 }])
   assert.equal(conditionsAtEncounterEnd(thalbern({ id: "prone", turns: 1 })).conditions, undefined)
+  // A condition from a spell that outlasts a minute goes on: Charm Person's hour. One counted in turns ends.
+  const charmed = { id: "charmed" as const, source: "lyra", spell: "charm-person" }
+  assert.deepEqual(conditionsAtEncounterEnd(thalbern(charmed, { id: "charmed", source: "lyra" }, { id: "incapacitated", spell: "sleep", turns: 9 })).conditions, [charmed])
 })
 
 test("a roll's stakes give a condition and end one, and the story is told what happened", () => {

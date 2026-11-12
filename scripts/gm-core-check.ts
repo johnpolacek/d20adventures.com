@@ -421,7 +421,8 @@ async function npcFixedOutcome() {
   const save = await getRollRequirementForAction("Thalbern drinks from the well.", thalbern, { present: [thalbern] })
   assert.deepEqual(save && "stakes" in save ? save.stakes : undefined, [{ ...poison, dice: "2d6" }])
   // An attack that names no target lands on the only one here, and one named by name is taken for its id. With two
-  // to choose from and none named, nothing is rolled. The site's model once left an Owlbear's target out.
+  // to choose from it lands on the one the Bonus Action is aimed at, or the only one the words name. With none of
+  // those, nothing is rolled. The site's model once left an Owlbear's target out.
   const owlbear = { id: "owlbear", name: "Owlbear", type: "npc", statBlock: "owlbear", hitPoints: 59 }
   const wolf = { id: "wolf", name: "Wolf", type: "npc", statBlock: "wolf", hitPoints: 11 }
   const hero = { ...thalbern, type: "pc", hitPoints: 11 }
@@ -433,6 +434,12 @@ async function npcFixedOutcome() {
   assert.deepEqual(shot && "attack" in shot ? shot.attack : undefined, { weapon: "longbow", target: "owlbear" })
   answer = { check: "attack", weapon: "longbow" }
   await assert.rejects(getRollRequirementForAction("Thalbern shoots.", hero, { present: [owlbear, wolf, hero] }), /who is not here to attack/)
+  const worded = await getRollRequirementForAction("Thalbern shoots the wolf.", hero, { present: [owlbear, wolf, hero] })
+  assert.deepEqual(worded && "attack" in worded ? worded.attack : undefined, { weapon: "longbow", target: "wolf" })
+  await assert.rejects(getRollRequirementForAction("Thalbern shoots the wolf, then the owlbear.", hero, { present: [owlbear, wolf, hero] }), /who is not here to attack/)
+  answer = { check: "attack", weapon: "longbow", bonus: "hunters-mark", bonusTarget: "owlbear" }
+  const marked = await getRollRequirementForAction("Thalbern marks his quarry and shoots.", hero, { present: [owlbear, wolf, hero] })
+  assert.deepEqual(marked && "attack" in marked ? marked.attack : undefined, { weapon: "longbow", target: "owlbear" })
   // Casting. Lyra, a Wizard with Intelligence 16: a spell attack is hers to throw, +5 against the Owlbear's Armor Class
   // 13. A spell its target saves against asks for no throw and comes back to be resolved at once, against her DC 13.
   const lyra = { ...JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/covert-cargo/characters/1749159962941.json", "utf8")), type: "pc", hitPoints: 6 }

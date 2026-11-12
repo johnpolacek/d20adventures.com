@@ -13,6 +13,7 @@ import { castSpell, spellById, targetLimit } from "../../src/sheet/spells"
 import { combatStatsOf } from "../../src/sheet/stat-block"
 import type { Concentration, SpellEffect } from "../../src/sheet/turn-effect"
 import { castBeats, concentrationBeat } from "../../src/story/turn"
+import { spellWord } from "../../src/utils/condition-label"
 
 // Every expected value below was worked out by hand from the SRD 5.2.1 spell texts, not copied from the function's output.
 
@@ -204,4 +205,10 @@ test("Concentration: one spell at a time, a Constitution save when hurt, and non
     d20: falls(),
   })
   assert.equal(find(freed.characters, "bandit").conditions, undefined)
+})
+
+test("a spell on a card is worded as the SRD names it", () => {
+  // The card has no spell data, so it words the id. Only the case of the small words may differ: "Shield Of Faith".
+  for (const spell of spellById.values()) assert.equal(spellWord(spell.id).toLowerCase(), spell.name.toLowerCase())
+  assert.equal(spellWord("hunters-mark"), "Hunter’s Mark")
 })

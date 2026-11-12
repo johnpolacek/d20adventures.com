@@ -248,7 +248,27 @@ Action: "${action}"
     console.log("[LLM] Roll requirement prompt:", { promptLength: prompt.length, action, character: character.name })
 
     try {
-      const { object: pick } = await generateObject({ schema: rollPickSchema, prompt })
+      // The roller's own attacks, spells and Bonus Actions are menus for this read: the game master takes an id off
+      // the list. The site's model once made up a weapon id, and once wrote its thinking into one.
+      const menu = (key: "weapon" | "spell" | "bonus", ids: string[]) =>
+        ids.length
+          ? z
+              .enum(ids as [string, ...string[]])
+              .optional()
+              .describe(rollPickSchema.shape[key].description ?? "")
+          : rollPickSchema.shape[key]
+      const schema = rollPickSchema.extend({
+        spell: menu(
+          "spell",
+          knownSpells.map((known) => known.spell.id)
+        ),
+        weapon: menu(
+          "weapon",
+          attacks.map((attack) => attack.id)
+        ),
+        bonus: menu("bonus", [...bonusActions.map((entry) => entry.id), ...bonusSpells.map((known) => known.spell.id)]),
+      }) as unknown as typeof rollPickSchema
+      const { object: pick } = await generateObject({ schema, prompt })
       // A Bonus Action is the roller's own, with a use left. One the game master makes up is dropped.
       const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
       // A spell cast with a Bonus Action, beside the action. Only one spell a turn takes a slot, so beside a cast it is dropped.
@@ -323,9 +343,13 @@ Action: "${action}"
       }
       if (pick.check === "attack") {
         // The pick names a weapon and a target off the two lists, by id. One left out is settled where only one could
-        // be meant: the roller's only attack, the only one here to attack.
+        // be meant: the roller's only attack, and for a target the only one here, the one the Bonus Action is aimed
+        // at, or the only one the action's own words name.
         const attack = attacks.find((entry) => named(pick.weapon, entry.name, entry.id)) ?? (!pick.weapon?.trim() && attacks.length === 1 ? attacks[0] : undefined)
-        const target = targets.find((other) => named(pick.target, other.name, other.id)) ?? (!pick.target?.trim() && targets.length === 1 ? targets[0] : undefined)
+        const said = new Set(action.toLowerCase().match(/[\w'-]+/g) ?? [])
+        const spoken = targets.filter((other) => (other.name.toLowerCase().match(/[\w'-]+/g) ?? []).some((word) => !["the", "a", "an", "of"].includes(word) && said.has(word)))
+        const meant = targets.length === 1 ? targets[0] : (targets.find((other) => named(pick.bonusTarget, other.name, other.id)) ?? (spoken.length === 1 ? spoken[0] : undefined))
+        const target = targets.find((other) => named(pick.target, other.name, other.id)) ?? (pick.target?.trim() ? undefined : meant)
         if (!attack) throw new Error(`The game master asked for an attack with "${pick.weapon ?? ""}", which ${character.name} does not have.`)
         if (!target) throw new Error(`The game master asked for an attack on "${pick.target ?? ""}", who is not here to attack.`)
         const armorClass = combatStatsOf(target)?.armorClass

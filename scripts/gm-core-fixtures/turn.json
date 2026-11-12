@@ -692,7 +692,7 @@
           "spell": {
             "description": "For \"cast\": the id of one of the character's own spells, from Their Spells",
             "type": "string",
-            "maxLength": 80
+            "enum": ["hunters-mark"]
           },
           "targets": {
             "description": "For \"cast\": the ids of everyone the spell is cast on, from Who Is Here or the character's own id",
@@ -715,7 +715,7 @@
           "weapon": {
             "description": "For an attack: the id of one of the character's own attacks",
             "type": "string",
-            "maxLength": 80
+            "enum": ["unarmed-strike"]
           },
           "target": {
             "description": "For an attack: the id of who is attacked, from Who Is Here. For \"help\": the id of the ally helped, or of the enemy an ally will attack",
@@ -730,7 +730,7 @@
           "bonus": {
             "description": "The id of one of the character's own Bonus Actions they also use this turn, from Their Bonus Actions",
             "type": "string",
-            "maxLength": 40
+            "enum": ["hunters-mark"]
           },
           "bonusTarget": {
             "description": "For a Bonus Action given to someone else: their id",
@@ -1079,7 +1079,7 @@
           "weapon": {
             "description": "For an attack: the id of one of the character's own attacks",
             "type": "string",
-            "maxLength": 80
+            "enum": ["club"]
           },
           "target": {
             "description": "For an attack: the id of who is attacked, from Who Is Here. For \"help\": the id of the ally helped, or of the enemy an ally will attack",

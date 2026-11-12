@@ -5,6 +5,7 @@ import { rollInitiative } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
 import type { PCTemplate } from "../types/character"
 import { rollD20 } from "../utils/game-utils"
+import { isDead } from "../utils/turn-actors"
 import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
 
 export function buildLocalWikiTurnCharacters(args: {
@@ -18,6 +19,8 @@ export function buildLocalWikiTurnCharacters(args: {
   // their sheet keeps an unrelated generated id, so matching on the file name
   // alone misses them.
   sheetsByCharacterId?: Record<string, PCTemplate>
+  // The NPCs of the encounter just left. One who is in this encounter too comes as they left it.
+  existingNpcs?: TurnCharacter[]
 }): TurnCharacter[] {
   const characters: TurnCharacter[] = []
 
@@ -71,18 +74,31 @@ export function buildLocalWikiTurnCharacters(args: {
   for (const npcRef of args.encounter.npcRefs) {
     const sheet = args.artifacts.characterSheets.npcs[npcRef.id]?.sheet
     if (!sheet) throw new Error(`Missing NPC sheet for ${npcRef.id}`)
-    characters.push(
-      withStartingHitPoints({
-        ...sheet,
-        id: sheet.id,
-        type: "npc" as const,
-        // An encounter may fix an NPC's place in the order. Otherwise it rolls with its stat block's bonus.
-        initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollInitiative({ type: "npc", statBlock: sheet.statBlock, sheet: sheet.sheet }, rollD20()),
-        hasReplied: false,
-        isComplete: false,
-        behavior: npcRef.behavior ?? sheet.behavior,
-      })
-    )
+    // An NPC who was in the encounter just left comes as they left it. The dead stay out. The hurt stay hurt, with
+    // their lasting conditions and the spells that outlast a minute, as a hero does.
+    const was = args.existingNpcs?.find((npc) => npc.id === sheet.id)
+    if (was && isDead(was)) continue
+    const npc = {
+      ...sheet,
+      id: sheet.id,
+      type: "npc" as const,
+      // An encounter may fix an NPC's place in the order. Otherwise it rolls with its stat block's bonus.
+      initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollInitiative({ type: "npc", statBlock: sheet.statBlock, sheet: sheet.sheet }, rollD20()),
+      hasReplied: false,
+      isComplete: false,
+      behavior: npcRef.behavior ?? sheet.behavior,
+    }
+    if (was?.hitPoints === undefined) {
+      characters.push(withStartingHitPoints(npc))
+      continue
+    }
+    const lasting = spellEffectsAtEncounterEnd({ spellEffects: was.spellEffects, concentration: was.concentration })
+    characters.push({
+      ...withHitPoints(npc, was.hitPoints),
+      conditions: conditionsAtEncounterEnd({ conditions: was.conditions }).conditions,
+      spellEffects: lasting.spellEffects,
+      concentration: lasting.concentration,
+    })
   }
 
   return characters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))

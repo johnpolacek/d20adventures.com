@@ -17,8 +17,20 @@ type Bearer = {
 /** A condition's or a turn effect's id as a word for the screen: "poisoned" is "Poisoned". */
 export const conditionWord = (id: string) => id.charAt(0).toUpperCase() + id.slice(1)
 
-/** A spell's SRD id as a name for the screen, with no spell data: "mage-armor" is "Mage Armor", "hunters-mark" "Hunters Mark". */
+/** The spell names an id cannot spell: a possessive, or two names in one. */
+const SPELL_NAMES: Record<string, string> = {
+  "antipathy-sympathy": "Antipathy/Sympathy",
+  "arcanists-magic-aura": "Arcanist’s Magic Aura",
+  "blindness-deafness": "Blindness/Deafness",
+  "dragons-breath": "Dragon’s Breath",
+  "enlarge-reduce": "Enlarge/Reduce",
+  "heroes-feast": "Heroes’ Feast",
+  "hunters-mark": "Hunter’s Mark",
+}
+
+/** A spell's SRD id as a name for the screen, with no spell data: "mage-armor" is "Mage Armor". */
 export const spellWord = (id: string) =>
+  SPELL_NAMES[id] ??
   id
     .split("-")
     .filter(Boolean)

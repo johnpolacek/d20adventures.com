@@ -272,5 +272,9 @@ export function conditionsAtRoundStart<T extends Afflicted>(character: T): T {
   return (conditions.length ? { ...rest, conditions } : rest) as T
 }
 
-/** A character as the story moves on to another encounter: the conditions of a fight's moment are over, and the lasting ones stay. */
-export const conditionsAtEncounterEnd = <T extends Afflicted>(character: T): T => (character.conditions?.length ? without(character, (entry) => !CONDITION_RULES[entry.id].passes) : character)
+/**
+ * A character as the story moves on to another encounter: the conditions of a fight's moment are over, and the lasting
+ * ones stay. So does one given by a spell that lasts longer than a minute: Charm Person's hour goes on into the next scene.
+ */
+export const conditionsAtEncounterEnd = <T extends Afflicted>(character: T): T =>
+  character.conditions?.length ? without(character, (entry) => !CONDITION_RULES[entry.id].passes || (entry.spell !== undefined && entry.turns === undefined)) : character

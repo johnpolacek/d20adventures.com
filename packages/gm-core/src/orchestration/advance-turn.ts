@@ -176,6 +176,7 @@ export function createAdvanceTurn(ports: GmPorts) {
               .filter((character): character is Extract<TurnCharacter, { type: "pc" }> => character.type === "pc")
               .map((character) => ({ userId: character.userId ?? adventure.ownerId, characterId: character.id, controlledBy: character.controlledBy })),
             existingPlayerCharacters: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc"),
+            existingNpcs: (turn.characters as TurnCharacter[]).filter((character) => character.type === "npc"),
           })
         : (turn.characters as TurnCharacter[])
             .filter((character) => !isDead(character) && !hasFled(character))

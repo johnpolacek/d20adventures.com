@@ -107,6 +107,36 @@ async function main() {
   assert.equal(rescueFrom("battle-on-the-boat", 0, ["the-crate"]), undefined, "the rescue plays once")
   assert.equal(rescueFrom("the-shipment", 0), undefined, "the rescue needs an authored transition")
 
+  // An NPC who goes on into the next encounter comes as they left the last: hurt, marked by a spell that lasts, or
+  // not at all when dead. One who was not there starts whole.
+  const reinhard = characters.find((character) => character.name === "Reinhard")
+  const silas = characters.find((character) => character.name === "Silas")
+  assert.ok(reinhard && silas, "Reinhard and Silas open the-shipment")
+  const onward = buildLocalWikiTurnCharacters({
+    artifacts,
+    encounter: artifacts.encounters["the-disturbance"],
+    players: [{ userId: "user_test", characterId: "1749159962941" }],
+    existingNpcs: [
+      {
+        ...reinhard,
+        hitPoints: 2,
+        spellEffects: [
+          { spell: "hunters-mark", by: "thalbern" },
+          { spell: "guiding-bolt", by: "thalbern", turns: 1 },
+        ],
+      },
+      killed(silas),
+    ],
+  })
+  const still = onward.find((character) => character.id === reinhard.id)
+  assert.deepEqual([still?.hitPoints, still?.spellEffects], [2, [{ spell: "hunters-mark", by: "thalbern" }]])
+  assert.equal(
+    onward.some((character) => character.id === silas.id),
+    false,
+    "a dead NPC came back"
+  )
+  assert.ok(onward.filter((character) => character.type === "npc" && character.id !== reinhard.id).every((character) => character.healthPercent === 100))
+
   const battle = artifacts.encounters["battle-on-the-boat"]
   const battleCharacters = buildLocalWikiTurnCharacters({ artifacts, encounter: battle, players: [{ userId: "user_test", characterId: "1749159962941" }] })
   const packet = assembleGameplayContextPacket({
