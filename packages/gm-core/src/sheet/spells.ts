@@ -13,7 +13,7 @@ import { afterHarm, type DeathRules, type DeathSaves, type Fate, withDamage, wit
 import { deriveSheet } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
-import { isNear } from "./space"
+import { type Cover, coverBonus, isNear } from "./space"
 import { lasts, type RollAdd, rollAdds, withConcentration, withSpellEffect } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
@@ -87,8 +87,8 @@ export const isEngineSpell = (spell: Spell): boolean =>
   !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions || spell.rollModifier || spell.ac || spell.damageReduction || spell.hitPointMaximum)
 
 /**
- * How many creatures a spell takes. An area takes as many as its size allows until stage 6 of plans/srd-rules.md gives
- * positions: a cone one for each 10 feet, a cube one for each 5 feet of its side, a sphere, cylinder or emanation one
+ * How many creatures a spell takes. On a floor an area takes whoever stands in it (./spell-space). Where there is no
+ * floor it takes as many as its size allows: a cone one for each 10 feet, a cube one for each 5 feet of its side, a sphere, cylinder or emanation one
  * for each 5 feet of its radius, a line one for each 30 feet, each rounded up. Magic Missile takes one for each dart.
  * Any other spell takes one.
  */
@@ -378,6 +378,10 @@ export function castSpell<T extends Castee>(args: {
   skill?: SkillId
   /** The slot level it is cast at, when above the spell's own: a Mage's "Fireball (level 4 version)". */
   level?: number
+  /** The cover each target has from where the spell comes: it adds to Armor Class against the spell attack and to a Dexterity save. */
+  cover?: Readonly<Record<string, Cover>>
+  /** An area was measured on the floor (./spell-space): the spell takes everyone named, however many. */
+  measured?: boolean
 }): Cast<T> {
   const { spell } = args
   let characters = [...args.characters]
@@ -389,7 +393,8 @@ export function castSpell<T extends Castee>(args: {
   const put = (after: T) => {
     characters = characters.map((character) => (character.id === after.id ? after : character))
   }
-  const targets = [...new Set(args.targets)].filter((id) => find(id)).slice(0, targetLimit(spell))
+  const targets = [...new Set(args.targets)].filter((id) => find(id)).slice(0, args.measured && spell.range.area ? undefined : targetLimit(spell))
+  const covered = (id: string) => coverBonus(args.cover?.[id] ?? "none")
   const saves: SaveRoll[] = []
   const harm: Harm[] = []
   const conditions: ConditionChange[] = []
@@ -442,8 +447,9 @@ export function castSpell<T extends Castee>(args: {
   let attack: SpellAttack | undefined
   if (spell.attack && targets[0]) {
     const target = find(targets[0]) as T
-    const armorClass = combatStatsOf(target)?.armorClass
-    if (armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
+    const bare = combatStatsOf(target)?.armorClass
+    if (bare === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
+    const armorClass = bare + covered(target.id)
     const mode = args.mode ?? "normal"
     const dice = [...(args.attackDice ?? [])]
     while (dice.length < (mode === "normal" ? 1 : 2)) dice.push(args.d20())
@@ -482,7 +488,8 @@ export function castSpell<T extends Castee>(args: {
       const mode = combineModes(sources.map((source) => source.mode))
       const dice = Array.from({ length: mode === "normal" ? 1 : 2 }, () => args.d20())
       const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
-      const bonus = checkBonus(target, check)
+      // Cover adds to a Dexterity save.
+      const bonus = checkBonus(target, check) + (save.ability === "dex" ? covered(id) : 0)
       // A lasting spell on the target adds its dice to the save, or takes them away.
       const adds = rollAdds(target, "saving-throws", args.roll)
       const total = natural + bonus + adds.reduce((sum, add) => sum + add.amount, 0)

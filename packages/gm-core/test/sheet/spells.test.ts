@@ -110,6 +110,40 @@ test("each target saves against the caster's DC: none on a success, or half wher
     ]
   )
   assert.deepEqual([find(cone.characters, "a").dead, find(cone.characters, "b").hitPoints, find(cone.characters, "c").hitPoints], [true, 5, 11])
+  // Measured on a floor, the cone takes all three it caught. Cover adds to a Dexterity save: behind three-quarters
+  // cover an 8 and the Bandit's 1 and 5 make 14 against DC 13, where the 9 of one in the open fails.
+  const measured = castSpell({
+    characters: [lyra, bandit("a"), bandit("b"), bandit("c")],
+    casterId: "lyra",
+    spell: spell("burning-hands"),
+    targets: ["a", "b", "c"],
+    d20: falls(8, 8, 8),
+    roll: falls(1, 1, 1),
+    measured: true,
+    cover: { a: "three-quarters", b: "half" },
+  })
+  assert.deepEqual(
+    measured.saves.map((save) => [save.target, save.bonus, save.total, save.success]),
+    [
+      ["a", 6, 14, true],
+      ["b", 3, 11, false],
+      ["c", 1, 9, false],
+    ]
+  )
+  // Cover adds to Armor Class against a spell attack: Ray of Frost at +5 with an 8 is 13, a hit on the Bandit's 12
+  // and a miss on 14 behind half cover.
+  const ray = (cover?: "half") =>
+    castSpell({
+      characters: [lyra, bandit()],
+      casterId: "lyra",
+      spell: spell("ray-of-frost"),
+      targets: ["bandit"],
+      attackDice: [8],
+      d20: falls(),
+      roll: falls(3),
+      ...(cover ? { cover: { bandit: cover } } : {}),
+    })
+  assert.deepEqual([ray().attack?.roll.hit, ray().attack?.roll.armorClass, ray("half").attack?.roll.hit, ray("half").attack?.roll.armorClass], [true, 12, false, 14])
 })
 
 test("conditions and actions change a target's save: Paralyzed fails Dexterity outright, and Dodge rolls it with Advantage", () => {

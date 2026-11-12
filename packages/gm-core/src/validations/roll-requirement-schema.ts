@@ -42,6 +42,11 @@ export const rollRequirementSchema = z.union([
       damageType: damageTypeIdSchema.optional().describe("For a spell that deals one of several damage types, the one chosen"),
       skill: skillIdSchema.optional().describe("For a spell cast for one skill (Guidance), the skill"),
       level: z.number().int().min(1).max(9).optional().describe("The slot level it is cast at, when above the spell's own"),
+      cover: z
+        .record(z.string(), z.enum(["half", "three-quarters"]))
+        .optional()
+        .describe("The cover each target has from where the spell comes, by id"),
+      measured: z.literal(true).optional().describe("An area was measured on the floor, so the spell takes everyone named, however many"),
     }),
     ...asked,
   }),

@@ -12,6 +12,7 @@ import { type MoveAsk, type Moved, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import { attackReach, coverBetween, coverBonus, feetBetween, greaterCover, isNear, movementBudgetOf, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells } from "../sheet/spell-effects"
+import { castInSpace } from "../sheet/spell-space"
 import { castCost, isEngineSpell, slotsLeft, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
@@ -138,7 +139,8 @@ export function createRollRequirementService(ports: GmPorts) {
       const notes = [
         known.cantrip ? "cantrip" : `level ${known.spell.level}`,
         spellKind(known.spell),
-        ...(limit > 1 ? [`up to ${limit} creatures`] : []),
+        // On a floor an area takes whoever stands in it, so its count is not the game master's to keep.
+        ...(mover && known.spell.range.area ? ["an area"] : limit > 1 ? [`up to ${limit} creatures`] : []),
         ...(known.spell.ritual ? [known.prepared ? "ritual" : "ritual only"] : []),
         ...(known.free > 0 ? [`${known.free} free`] : []),
       ]
@@ -270,6 +272,7 @@ ${
    - They can move ${movementBudgetOf(mover)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
    - Never refuse or change an action because of distance. The game settles reach and range itself.
+   - A spell marked "an area" takes whoever stands in it, friend or foe: in "targets" give the one it is aimed at first, and for a spell that picks its creatures, each one picked.
    - The game reads cover from the walls and furniture of the place. Set "cover" only for something the story put between the two that the place does not hold.
      Where Things Are, from where the character stands:
      Places: ${floor.places.map((place) => `${place.id} (${place.label}, ${Math.round(Math.hypot(place.at.x - (mover.position?.x ?? 0), place.at.y - (mover.position?.y ?? 0)))} feet away)`).join(", ") || "none named"}.
@@ -338,6 +341,17 @@ Action: "${action}"
         return move
       }
       moved(moveFor())
+      // Whether an enemy stands within 5 feet of the roller, up and able to act: a ranged attack then has Disadvantage.
+      const pressed = (who: typeof character) => {
+        const from = floor ? placedOf(who) : undefined
+        return (
+          !!from &&
+          others.some((other) => {
+            const at = placedOf(other)
+            return !!at && other.type !== character.type && !isDown(other) && !isIncapacitated(other) && within(from, at, 5)
+          })
+        )
+      }
       // A name is taken for its id, in a weapon, a spell or a target.
       const named = (given: string | undefined, name: string, id: string) => !!given?.trim() && [id.toLowerCase(), name.toLowerCase()].includes(given.trim().toLowerCase())
       if (pick.check === "cast") {
@@ -356,7 +370,8 @@ Action: "${action}"
         const { spell } = known
         const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
         const asked = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])]
-        let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(0, targetLimit(spell))
+        // On a floor an area is measured, so those named are its aim and not its count.
+        let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(0, mover && spell.range.area ? undefined : targetLimit(spell))
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
           if (spell.attack && targets.length === 1) chosen = [targets[0].id]
@@ -367,11 +382,24 @@ Action: "${action}"
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast: spell.id, refused: "no one here to cast it on" })
           return { roll: null, ...also }
         }
+        // Space, on a floor. A touch closes with the one touched, as a melee attack does. Then the spell falls where
+        // everyone stands: within its range, past no total cover, and on whoever is in its area.
+        const touched = spell.range.kind === "touch" && chosen[0] !== self ? chosen[0] : undefined
+        const stood = withMove(character, moved(moveFor(touched ? { target: touched, reach: 5 } : undefined)))
+        const spaced = mover && floor ? castInSpace({ spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
+        if (spaced?.problem) {
+          also.ruling = spaced.problem
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
+          return { roll: null, ...also }
+        }
+        if (spaced) chosen = spaced.targets
         const type = damageTypeIdSchema.safeParse(pick.damageType?.trim().toLowerCase())
         const forSkill = skillIdSchema.safeParse(pick.helps?.trim().toLowerCase())
         const cast = {
           spell: spell.id,
           targets: chosen,
+          ...(spaced && Object.keys(spaced.cover).length ? { cover: spaced.cover } : {}),
+          ...(spaced?.measured ? { measured: true as const } : {}),
           ...(cost.cost.kind === "ritual" ? { ritual: true as const } : {}),
           ...(type.success ? { damageType: type.data } : {}),
           ...(forSkill.success ? { skill: forSkill.data } : {}),
@@ -384,12 +412,16 @@ Action: "${action}"
           const armorClass = target && combatStatsOf(target)?.armorClass
           if (!target || armorClass === undefined || !casting) throw new Error(`${spell.name} has no one with an Armor Class to be cast at.`)
           const picked = pick.mode ?? "normal"
-          const typed = self ? [...spellAttackModes({ ...character, id: self }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []
+          const typed = [
+            ...(self ? [...spellAttackModes({ ...stood, id: self }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []),
+            // A ranged spell attack has Disadvantage with an enemy within 5 feet who is up and able to act.
+            ...(spell.attack === "ranged" && pressed(stood) ? [{ mode: "disadvantage" as const, from: "Enemy Within 5 Feet" }] : []),
+          ]
           const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
           const rollRequirement: ChosenRoll = {
             cast,
             rollType: spell.name,
-            difficulty: armorClass,
+            difficulty: armorClass + coverBonus(spaced?.cover[target.id] ?? "none"),
             modifier: casting.attackBonus,
             mode: combineModes([picked, ...typed.map((source) => source.mode)]),
             ...(reasons.length ? { reasons } : {}),
@@ -456,13 +488,7 @@ Action: "${action}"
         }
         // A ranged attack has Disadvantage at long range, and with an enemy within 5 feet who is up and able to act.
         const ranged = band === "normal" || band === "long"
-        const crowded =
-          ranged &&
-          !!from &&
-          others.some((other) => {
-            const at = placedOf(other)
-            return !!at && other.type !== character.type && !isDown(other) && !isIncapacitated(other) && within(from, at, 5)
-          })
+        const crowded = ranged && pressed(stood)
         const spaced = [...(band === "long" ? [{ mode: "disadvantage" as const, from: "Long Range" }] : []), ...(crowded ? [{ mode: "disadvantage" as const, from: "Enemy Within 5 Feet" }] : [])]
         // The game master's read of the moment, then what the conditions of the two settle with no model.
         const picked = pick.mode ?? "normal"

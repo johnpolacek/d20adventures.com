@@ -208,6 +208,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
         damageType: required.cast.damageType,
         skill: required.cast.skill,
         level: required.cast.level,
+        cover: required.cast.cover,
+        measured: required.cast.measured,
       })
       turnCharacters = cast.characters.map((character) => (character.id === args.characterId ? withCastSpent(character, cost.cost) : character))
       rolls = castBeats(by, args.character, spell, cast, storyNames(args.turn.characters))

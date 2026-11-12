@@ -137,6 +137,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         damageType: casting.cast.damageType,
         skill: casting.cast.skill,
         level: casting.cast.level,
+        cover: casting.cast.cover,
+        measured: casting.cast.measured,
       })
       const spent = cast.characters.map((character) => (character.id === args.npc.id ? withCastSpent(character, cost.cost) : character))
       const kept = settleConcentration({

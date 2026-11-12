@@ -496,6 +496,17 @@ async function npcFixedOutcome() {
   assert.deepEqual(await shotAt(6), [15, "half", undefined])
   assert.deepEqual(await shotAt(4, { cover: "three-quarters" }), [18, "three-quarters", undefined])
   assert.deepEqual(await shotAt(undefined), [undefined, undefined, "Total Cover"])
+  // A spell on a floor. Ray of Frost reaches 60 feet: at 70 it is not cast, and the story is told so. Behind the
+  // 6-foot crate the Owlbear has half cover from it too: Armor Class 13 is 15.
+  const caster = { ...JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/covert-cargo/characters/1749159962941.json", "utf8")), type: "pc", hitPoints: 6, position: { x: 0, y: 0 } }
+  const aimed = (bearX: number, solids: object[] = []) => ({ floor: { ...floor, solids } as any, present: [{ ...owlbear, ...stand(bearX) }, caster] as any })
+  answer = { check: "cast", spell: "ray-of-frost", targets: ["owlbear"] }
+  assert.deepEqual(await readAction("Lyra casts Ray of Frost.", caster, aimed(70)), {
+    roll: null,
+    ruling: { name: "Out Of Range", text: "Lyra Silvanus is 68 feet from Owlbear, out of Ray of Frost's range of 60 feet. The spell is not cast." },
+  })
+  const frost = await readAction("Lyra casts Ray of Frost.", caster, aimed(30, [{ kind: "rect", x: 20, y: 0, halfWidth: 2, halfDepth: 2, turn: 0, top: 6 }]))
+  assert.deepEqual([frost.roll?.difficulty, frost.roll && "cast" in frost.roll ? frost.roll.cast.cover : undefined], [15, { owlbear: "half" }])
   // With no floor nothing is moved or measured, and the game master is not asked where anyone goes.
   answer = { check: "attack", weapon: "shortsword", target: "owlbear" }
   const unplaced = await readAction("Thalbern charges the owlbear.", ranger, { present: [{ ...owlbear, ...stand(45) }, ranger] as any })
