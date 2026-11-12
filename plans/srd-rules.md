@@ -267,6 +267,15 @@ Substages:
 
 Opens with reactions, held over from stage 6 by the owner's call of 2026-11-12: the round stops to ask a hero whether to take one. Opportunity Attacks, Shield and Feather Fall, for heroes and NPCs together.
 
+Started 2026-11-12.
+
+Owner decisions, 2026-11-12:
+
+- Rests: both. A rest the adventure marks always happens, and a rest the players ask for happens when the game master judges the scene safe.
+- Levelling is by milestone: the end of each adventure gives a level. No experience points.
+- A player makes their own level-up choices on a level-up screen, built in this stage.
+- A reaction is offered to the player, the round waits a short time, and then the hero's standing order is followed. Every standing order has a sensible default, so nothing ever blocks.
+
 Short and long rests, hit dice, experience, levels 2 to 5. Class features, the SRD subclass for each class, and feats.
 
 ### 8. Breadth
