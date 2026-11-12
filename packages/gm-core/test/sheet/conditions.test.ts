@@ -62,13 +62,13 @@ test("Poisoned: Disadvantage on attack rolls and ability checks, and not on save
   const poisoned = thalbern({ id: "poisoned" })
   assert.deepEqual(checkModesFrom(poisoned, stealth), [{ mode: "disadvantage", from: "Poisoned" }])
   assert.deepEqual(checkModesFrom(poisoned, save("con")), [])
-  assert.deepEqual(attackModesFrom(poisoned, owlbear(), "ranged"), [{ mode: "disadvantage", from: "Poisoned" }])
+  assert.deepEqual(attackModesFrom(poisoned, owlbear(), false), [{ mode: "disadvantage", from: "Poisoned" }])
 })
 
 test("Restrained: its own attacks at Disadvantage, attacks against it at Advantage, Disadvantage on Dexterity saves", () => {
   const held = thalbern({ id: "restrained" })
-  assert.deepEqual(modes(attackModesFrom(held, owlbear(), "melee")), ["disadvantage"])
-  assert.deepEqual(attackModesFrom(owlbear(), held, "melee"), [{ mode: "advantage", from: "Thalbern Restrained" }])
+  assert.deepEqual(modes(attackModesFrom(held, owlbear(), true)), ["disadvantage"])
+  assert.deepEqual(attackModesFrom(owlbear(), held, true), [{ mode: "advantage", from: "Thalbern Restrained" }])
   assert.deepEqual(modes(checkModesFrom(held, save("dex"))), ["disadvantage"])
   assert.deepEqual(checkModesFrom(held, save("str")), [])
   assert.deepEqual(checkModesFrom(held, stealth), [])
@@ -78,34 +78,34 @@ test("Prone: Advantage for an attacker within 5 feet, Disadvantage from farther,
   // Knocked down before his turn this round: Prone until he acts.
   const down = withCondition(thalbern(), { id: "prone" }).character
   assert.deepEqual(down.conditions, [{ id: "prone", turns: 1 }])
-  assert.deepEqual(modes(attackModesFrom(owlbear(), down, "melee")), ["advantage"])
-  assert.deepEqual(modes(attackModesFrom(owlbear(), down, "ranged")), ["disadvantage"])
+  assert.deepEqual(modes(attackModesFrom(owlbear(), down, true)), ["advantage"])
+  assert.deepEqual(modes(attackModesFrom(owlbear(), down, false)), ["disadvantage"])
   // On his own turn he stands, which costs movement and no action, so his own attack is a plain roll.
-  assert.deepEqual(attackModesFrom(down, owlbear(), "ranged"), [])
+  assert.deepEqual(attackModesFrom(down, owlbear(), false), [])
   // His turn taken, he is up: later attackers get nothing from it.
-  assert.deepEqual(attackModesFrom(owlbear(), { ...down, isComplete: true }, "melee"), [])
+  assert.deepEqual(attackModesFrom(owlbear(), { ...down, isComplete: true }, true), [])
   // Knocked down after his turn, he is Prone for the rest of this round and until his turn in the next.
   const after = withCondition({ ...thalbern(), isComplete: true }, { id: "prone" }, { acted: true }).character
-  assert.deepEqual(modes(attackModesFrom(owlbear(), after, "melee")), ["advantage"])
+  assert.deepEqual(modes(attackModesFrom(owlbear(), after, true)), ["advantage"])
   const next = conditionsAtRoundStart({ ...after, isComplete: false })
-  assert.deepEqual(modes(attackModesFrom(owlbear(), next, "melee")), ["advantage"])
-  assert.deepEqual(attackModesFrom(owlbear(), { ...next, isComplete: true }, "melee"), [])
+  assert.deepEqual(modes(attackModesFrom(owlbear(), next, true)), ["advantage"])
+  assert.deepEqual(attackModesFrom(owlbear(), { ...next, isComplete: true }, true), [])
   assert.equal(conditionsAtRoundStart(next).conditions, undefined)
   // Grappled, his Speed is 0 and he cannot stand: Prone stays, and both put Disadvantage on his attack.
   const pinned = { ...down, conditions: [...(down.conditions ?? []), { id: "grappled" as const, source: "owlbear" }], isComplete: true }
-  assert.deepEqual(modes(attackModesFrom(owlbear(), pinned, "melee")), ["advantage"])
+  assert.deepEqual(modes(attackModesFrom(owlbear(), pinned, true)), ["advantage"])
   assert.deepEqual(
     conditionsAtRoundStart(pinned).conditions?.map((entry) => entry.id),
     ["prone", "grappled"]
   )
-  assert.deepEqual(modes(attackModesFrom(pinned, skeleton, "melee")), ["disadvantage", "disadvantage"])
+  assert.deepEqual(modes(attackModesFrom(pinned, skeleton, true)), ["disadvantage", "disadvantage"])
 })
 
 test("Unconscious at 0 hit points: attacks against have Advantage, and a hit from within 5 feet is a Critical Hit", () => {
   const out = { ...thalbern(), hitPoints: 0, deathSaves: { successes: 0, failures: 0 } }
-  assert.deepEqual(modes(attackModesFrom(owlbear(), out, "melee")), ["advantage", "advantage"])
+  assert.deepEqual(modes(attackModesFrom(owlbear(), out, true)), ["advantage", "advantage"])
   // From range, Unconscious gives Advantage and the Prone it carries gives Disadvantage: a plain roll.
-  assert.equal(combineModes(modes(attackModesFrom(owlbear(), out, "ranged")) as ("advantage" | "disadvantage")[]), "normal")
+  assert.equal(combineModes(modes(attackModesFrom(owlbear(), out, false)) as ("advantage" | "disadvantage")[]), "normal")
   // Rend, +7: an 8 makes 15 against Armor Class 15 and hits. No 20, yet it is a Critical Hit: the dice are doubled,
   // 1 + 1 + 1 + 1 + 5 is 9, less than his 11, and a Critical Hit at 0 is two failed Death Saving Throws.
   const dice = [1, 1, 1, 1]
@@ -123,22 +123,22 @@ test("Paralyzed and Stunned fail Strength and Dexterity saves outright, whatever
   assert.equal(saveFailedBy(frozen, stealth), undefined)
   // A 20 and +5 against 10 would pass. It fails.
   assert.equal(resolveCheck({ dice: [20], bonus: 5, dc: 10, fails: true }).success, false)
-  assert.deepEqual(modes(attackModesFrom(owlbear(), frozen, "ranged")), ["advantage"])
+  assert.deepEqual(modes(attackModesFrom(owlbear(), frozen, false)), ["advantage"])
 })
 
 test("Frightened, Grappled and Charmed turn on who they come from", () => {
   const afraid = thalbern({ id: "frightened", source: "owlbear" })
   // Disadvantage on ability checks and attack rolls while the source of fear is in sight.
   assert.deepEqual(modes(checkModesFrom(afraid, perception, [afraid, owlbear()])), ["disadvantage"])
-  assert.deepEqual(modes(attackModesFrom(afraid, skeleton, "ranged", [afraid, owlbear(), skeleton])), ["disadvantage"])
+  assert.deepEqual(modes(attackModesFrom(afraid, skeleton, false, [afraid, owlbear(), skeleton])), ["disadvantage"])
   // The Owlbear gone, or dead, nothing is in sight to fear.
   assert.deepEqual(checkModesFrom(afraid, perception, [afraid, skeleton]), [])
   assert.deepEqual(checkModesFrom(afraid, perception, [afraid, { ...owlbear(), hitPoints: 0, dead: true }]), [])
   assert.deepEqual(checkModesFrom(afraid, save("wis"), [afraid, owlbear()]), [])
   // Grappled: Disadvantage on attacks against anyone but the grappler.
   const grabbed = thalbern({ id: "grappled", source: "owlbear" })
-  assert.deepEqual(attackModesFrom(grabbed, owlbear(), "melee"), [])
-  assert.deepEqual(modes(attackModesFrom(grabbed, skeleton, "melee")), ["disadvantage"])
+  assert.deepEqual(attackModesFrom(grabbed, owlbear(), true), [])
+  assert.deepEqual(modes(attackModesFrom(grabbed, skeleton, true)), ["disadvantage"])
   // Charmed: the charmer cannot be attacked.
   const charmed = owlbear({ id: "charmed", source: "thalbern" })
   assert.deepEqual([cannotAttack(charmed, thalbern()), cannotAttack(charmed, skeleton)], [true, false])

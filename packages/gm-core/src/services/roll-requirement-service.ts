@@ -8,6 +8,9 @@ import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineM
 import { conditionSpans } from "../sheet/condition-entry"
 import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
 import { bonusActionsOf } from "../sheet/features"
+import { type MoveAsk, type Moved, takeMove, withMove } from "../sheet/moves"
+import type { EncounterFloor } from "../sheet/placement"
+import { attackReach, feetBetween, isNear, movementBudgetOf, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells } from "../sheet/spell-effects"
 import { castCost, isEngineSpell, slotsLeft, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
@@ -15,7 +18,7 @@ import { combatStatsOf } from "../sheet/stat-block"
 import { actionIds } from "../sheet/turn-effect"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
-import { hasFled, isDead, isDown } from "../utils/turn-actors"
+import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { ChosenRoll, RequiredCast } from "../validations/roll-requirement-schema"
 
 // An NPC whose action the notes fix rolls nothing. Mara's lift "always happens" unless a hero spots it, yet she rolled
@@ -43,6 +46,9 @@ const rollPickSchema = z.object({
   helps: z.string().max(40).optional().describe('For "help" given to an ally\'s check, or a spell cast for one skill such as Guidance: the id of the skill it is for'),
   bonus: z.string().max(40).optional().describe("The id of one of the character's own Bonus Actions they also use this turn, from Their Bonus Actions"),
   bonusTarget: z.string().max(80).optional().describe("For a Bonus Action given to someone else: their id"),
+  moveTo: z.string().max(80).optional().describe("Where the character goes before they act: the id of a place or of someone here, from Where Things Are"),
+  moveAway: z.string().max(80).optional().describe("Instead of moveTo: the id of someone here they back straight away from"),
+  moveFeet: z.number().min(0).max(240).optional().describe("How far they go, only when they mean to stop short of where they are headed: a step back is 5"),
   harm: z
     .array(
       z.object({
@@ -64,7 +70,7 @@ const rollPickSchema = z.object({
 
 // Someone the roller could attack: anyone else in the scene who is still up.
 type Present = Pick<TurnCharacter, "id" | "name"> &
-  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "spellEffects" | "isComplete">> & { statBlock?: string }
+  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "spellEffects" | "isComplete" | "position">> & { statBlock?: string }
 
 /** What the game master reads a character's move as: a roll the engine asks for, an action that takes none, or neither. */
 export type TurnReading = {
@@ -74,6 +80,10 @@ export type TurnReading = {
   cast?: RequiredCast
   /** One of the roller's own Bonus Actions, used beside the action. */
   bonus?: { feature: string; target?: string }
+  /** Where the move took the roller before they acted, and the feet it used. */
+  move?: Moved
+  /** Something the move asked for that the rules of space do not allow, to be told in the story: an attack out of reach. */
+  ruling?: { name: string; text: string }
 }
 
 const MENU = (kind: "skill" | "ability" | "save") =>
@@ -90,6 +100,8 @@ export function createRollRequirementService(ports: GmPorts) {
     narrativeContext?: string
     // Everyone in the scene. The roller can attack any of the others who is still up.
     present?: readonly Present[]
+    // The encounter's floor. With it and a position, the roller moves before they act, and reach and range are measured.
+    floor?: EncounterFloor
   }
   /** The roll a move asks for, where only the roll is wanted: an action that takes none is read as no roll. */
   const getRollRequirementForAction = async (action: string, character: Character, options?: Options): Promise<ChosenRoll | null> => (await readAction(action, character, options)).roll
@@ -99,6 +111,14 @@ export function createRollRequirementService(ports: GmPorts) {
     const self = "id" in character ? character.id : undefined
     // One who is Charmed cannot attack the charmer.
     const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDown(other) && !hasFled(other) && !cannotAttack(character, other))
+    // Where the roller stands, when the encounter has a floor: who else is on it, and how far each is.
+    const floor = options?.floor
+    const mover = self && floor && character.position ? { ...character, id: self } : undefined
+    const others = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && !hasFled(other))
+    const feetAway = (other: Present) => {
+      const feet = mover ? feetBetween(mover, other) : undefined
+      return feet === undefined ? undefined : `${Math.round(feet)} feet away`
+    }
     const conditions = conditionWords(character)
     const attacks = attacksOf(character)
     const bonusActions = bonusActionsOf(character).filter((entry) => entry.left > 0)
@@ -186,7 +206,7 @@ ${MENU("save")}
    - Picking a lock or disarming a trap is "dexterity".
    - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check. An attack always gives both "weapon" and "target".
      Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
-     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
+     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other), feetAway(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
    - ACTIONS OF A FIGHT, only while a fight is on and only when it is the whole of what the character does this turn:
      "hide": they get out of sight to strike or slip away unseen. The game rolls stealth for it and sets its difficulty, so give none.
@@ -240,7 +260,19 @@ ${MENU("save")}
    - "source" is the id of who it comes from, for charmed, frightened and grappled.
    - Only what the rules call by one of those names. Never for being hurt, tired, surprised, hidden, distracted or off balance, and never because a roll simply fails.
 
-If NO roll is required and no action of a fight is taken, "check" is "none".
+${
+  mover && floor
+    ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, only when they mean to stop short: a step back is 5.
+   - They can move ${movementBudgetOf(mover)} feet this turn, and twice that when the whole turn is "dash".
+   - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
+   - Never refuse or change an action because of distance. The game settles reach and range itself.
+     Where Things Are, from where the character stands:
+     Places: ${floor.places.map((place) => `${place.id} (${place.label}, ${Math.round(Math.hypot(place.at.x - (mover.position?.x ?? 0), place.at.y - (mover.position?.y ?? 0)))} feet away)`).join(", ") || "none named"}.
+     Everyone here: ${others.flatMap((other) => (other.position ? [`${other.id} (${other.name}, ${feetAway(other)})`] : [])).join(", ") || "no one"}.
+
+`
+    : ""
+}If NO roll is required and no action of a fight is taken, "check" is "none".
 
 Action: "${action}"
 `
@@ -250,7 +282,7 @@ Action: "${action}"
     try {
       // The roller's own attacks, spells and Bonus Actions are menus for this read: the game master takes an id off
       // the list. The site's model once made up a weapon id, and once wrote its thinking into one.
-      const menu = (key: "weapon" | "spell" | "bonus", ids: string[]) =>
+      const menu = (key: "weapon" | "spell" | "bonus" | "moveTo" | "moveAway", ids: string[]) =>
         ids.length
           ? z
               .enum(ids as [string, ...string[]])
@@ -267,17 +299,40 @@ Action: "${action}"
           attacks.map((attack) => attack.id)
         ),
         bonus: menu("bonus", [...bonusActions.map((entry) => entry.id), ...bonusSpells.map((known) => known.spell.id)]),
-      }) as unknown as typeof rollPickSchema
-      const { object: pick } = await generateObject({ schema, prompt })
+        // Where they may go: the floor's named places and the others on it.
+        ...(mover && floor
+          ? {
+              moveTo: menu("moveTo", [...floor.places.map((place) => place.id), ...others.flatMap((other) => (other.position ? [other.id] : []))]),
+              moveAway: menu(
+                "moveAway",
+                others.flatMap((other) => (other.position ? [other.id] : []))
+              ),
+            }
+          : {}),
+      })
+      // Where there is no floor to move on, the game master is not asked where anyone goes.
+      const asked = (mover && floor ? schema : schema.omit({ moveTo: true, moveAway: true, moveFeet: true })) as unknown as typeof rollPickSchema
+      const { object: pick } = await generateObject({ schema: asked, prompt })
       // A Bonus Action is the roller's own, with a use left. One the game master makes up is dropped.
       const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
       // A spell cast with a Bonus Action, beside the action. Only one spell a turn takes a slot, so beside a cast it is dropped.
       const quick = pick.check === "cast" ? undefined : bonusSpells.find((known) => known.spell.id === pick.bonus?.trim() || known.spell.name.toLowerCase() === pick.bonus?.trim().toLowerCase())
-      const bonus = used
+      // What the reading carries beside its roll: a Bonus Action, the move, and a ruling of space.
+      const also: Pick<TurnReading, "bonus" | "move" | "ruling"> = used
         ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
         : quick
           ? { bonus: { feature: quick.spell.id, ...(pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
           : {}
+      // The move, made before the action: to the place or the one named, or away from one. With Dash the whole turn is
+      // movement. An attack in melee may close with its target instead, which is settled where the attack is.
+      const ask: MoveAsk = { to: pick.moveTo?.trim() || undefined, away: pick.moveAway?.trim() || undefined, feet: pick.moveFeet }
+      const moveFor = (close?: { target: string; reach: number }) => (mover && floor ? takeMove({ floor, mover, others, ask, dash: pick.check === "dash", close }) : undefined)
+      const moved = (move: Moved | undefined) => {
+        if (move) also.move = move
+        else delete also.move
+        return move
+      }
+      moved(moveFor())
       // A name is taken for its id, in a weapon, a spell or a target.
       const named = (given: string | undefined, name: string, id: string) => !!given?.trim() && [id.toLowerCase(), name.toLowerCase()].includes(given.trim().toLowerCase())
       if (pick.check === "cast") {
@@ -291,7 +346,7 @@ Action: "${action}"
             cast: pick.spell,
             refused: cost && "problem" in cost ? cost.problem : "not one of their spells",
           })
-          return { roll: null, ...bonus }
+          return { roll: null, ...also }
         }
         const { spell } = known
         const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
@@ -305,7 +360,7 @@ Action: "${action}"
         const falls = !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
         if (falls && !chosen.length) {
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast: spell.id, refused: "no one here to cast it on" })
-          return { roll: null, ...bonus }
+          return { roll: null, ...also }
         }
         const type = damageTypeIdSchema.safeParse(pick.damageType?.trim().toLowerCase())
         const forSkill = skillIdSchema.safeParse(pick.helps?.trim().toLowerCase())
@@ -335,11 +390,11 @@ Action: "${action}"
             ...(reasons.length ? { reasons } : {}),
           }
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
-          return { roll: rollRequirement, ...bonus }
+          return { roll: rollRequirement, ...also }
         }
         const resolved: RequiredCast = { cast, rollType: spell.name, difficulty: casting?.saveDc ?? 0, modifier: 0, mode: "normal" }
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast })
-        return { roll: null, cast: resolved, ...bonus }
+        return { roll: null, cast: resolved, ...also }
       }
       if (pick.check === "attack") {
         // The pick names a weapon and a target off the two lists, by id. One left out is settled where only one could
@@ -354,12 +409,47 @@ Action: "${action}"
         if (!target) throw new Error(`The game master asked for an attack on "${pick.target ?? ""}", who is not here to attack.`)
         const armorClass = combatStatsOf(target)?.armorClass
         if (armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
+        // Space, where the encounter has a floor and the two stand on it. A melee attack on one out of reach closes with them first, as far as the
+        // move goes. A weapon that can be thrown is thrown from where they stand when the target is in its range and no
+        // move was named. Then the distance is measured: out of reach and range, the attack is not made.
+        const apart = floor ? feetBetween(character, target) : undefined
+        const throws =
+          attack.range &&
+          apart !== undefined &&
+          !ask.to &&
+          !ask.away &&
+          attackReach({ distance: apart, range: attack.range }) !== "out" &&
+          attackReach({ distance: apart, reach: attack.reach }) === "out"
+        const stood = withMove(character, moved(moveFor(attack.reach !== undefined && !throws ? { target: target.id, reach: attack.reach } : undefined)))
+        const feet = floor ? feetBetween(stood, target) : undefined
+        const band = feet === undefined ? undefined : attackReach({ distance: feet, reach: attack.reach, range: attack.range })
+        if (band === "out" && feet !== undefined) {
+          const what = attack.range && attack.reach === undefined ? "Range" : "Reach"
+          also.ruling = {
+            name: `Out Of ${what}`,
+            text: `${character.name}${also.move ? ` moves ${also.move.feet} feet and` : ""} is ${Math.round(feet)} feet from ${target.name}, out of ${what.toLowerCase()} with ${attack.name}. The attack is not made.`,
+          }
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
+          return { roll: null, ...also }
+        }
+        // A ranged attack has Disadvantage at long range, and with an enemy within 5 feet who is up and able to act.
+        const from = placedOf(stood)
+        const ranged = band === "normal" || band === "long"
+        const crowded =
+          ranged &&
+          !!from &&
+          others.some((other) => {
+            const at = placedOf(other)
+            return !!at && other.type !== character.type && !isDown(other) && !isIncapacitated(other) && within(from, at, 5)
+          })
+        const spaced = [...(band === "long" ? [{ mode: "disadvantage" as const, from: "Long Range" }] : []), ...(crowded ? [{ mode: "disadvantage" as const, from: "Enemy Within 5 Feet" }] : [])]
         // The game master's read of the moment, then what the conditions of the two settle with no model.
         const picked = pick.mode ?? "normal"
         const typed = [
-          ...attackModesFrom(character, target, attack.kind, options?.present),
+          ...attackModesFrom(character, target, feet === undefined ? attack.kind !== "ranged" : isNear(stood, target, attack.kind), options?.present),
           ...(self ? attackModesFromActions({ ...character, id: self }, target, options?.present) : []),
           ...attackModesFromSpells(character, target),
+          ...spaced,
         ]
         const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
         const rollRequirement: ChosenRoll = {
@@ -371,7 +461,7 @@ Action: "${action}"
           ...(reasons.length ? { reasons } : {}),
         }
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
-        return { roll: rollRequirement, ...bonus }
+        return { roll: rollRequirement, ...also }
       }
       const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other)).map((other) => other.id))
       // An action that takes no roll. Help names who it is for, and for a check the skill.
@@ -381,14 +471,14 @@ Action: "${action}"
         const helped = pick.target && pick.target !== self && here.has(pick.target) ? pick.target : undefined
         const read: TakenAction | undefined = taken !== "help" ? { action: taken } : helped ? { action: taken, target: helped, ...(skill.success ? { skill: skill.data } : {}) } : undefined
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, action: read })
-        return { roll: null, ...(read ? { action: read } : {}), ...bonus }
+        return { roll: null, ...(read ? { action: read } : {}), ...also }
       }
       // Hide is a Stealth check the rules set: its target and what a success gives are the engine's.
       const hiding = pick.check === "hide" && self ? hideRoll({ ...character, id: self }) : undefined
       const check = hiding ? hiding.check : pick.check === "none" || pick.check === "hide" ? undefined : checkFromMenu(pick.check)
       if (!check) {
-        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...bonus })
-        return { roll: null, ...bonus }
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
+        return { roll: null, ...also }
       }
       const difficulty = hiding ? HIDE_DC : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
       if (!difficulty) throw new Error(`The game master asked for a ${checkName(check)} check with no difficulty.`)
@@ -435,7 +525,7 @@ Action: "${action}"
         ...(stakes.length ? { stakes } : {}),
       }
       console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
-      return { roll: rollRequirement, ...bonus }
+      return { roll: rollRequirement, ...also }
     } catch (error) {
       console.error("[LLM] Roll requirement error:", {
         character: character.name,

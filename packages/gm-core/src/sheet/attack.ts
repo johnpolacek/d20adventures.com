@@ -4,11 +4,13 @@ import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
 import { monsterById } from "@d20/srd/monsters"
 import { weaponPropertyById } from "@d20/srd/weapon-properties"
+import { isIncapacitated } from "../utils/turn-actors"
 import type { Roller, RollMode } from "./check"
 import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
 import type { Sheet } from "./sheet"
+import { BASE_REACH, isNear, placedOf, type Standing, within } from "./space"
 import { markDamage, rollAdds } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 
@@ -29,9 +31,6 @@ export type Attack = {
   /** A ranged or thrown attack's normal and long range, in feet. A range with no long range ends at the normal one. */
   range?: { normal: number; long?: number }
 }
-
-/** A creature's reach unless a rule says otherwise. */
-export const BASE_REACH = 5
 
 /** The id every character's Unarmed Strike goes by. */
 export const UNARMED_STRIKE = "unarmed-strike"
@@ -127,6 +126,12 @@ function baseAttacks(character: Roller): Attack[] {
     ]
   })
 }
+
+/**
+ * A character's reach for Opportunity Attacks: the longest of its melee attacks, which is at least 5. A hero holding a
+ * Glaive reaches 10. A Hill Giant reaches 10 with its Tree Club.
+ */
+export const meleeReachOf = (character: Roller): number => Math.max(BASE_REACH, ...attacksOf(character).map((attack) => attack.reach ?? 0))
 
 /** How many attacks an NPC's Multiattack makes with each of its attack actions: an Owlbear's is two Rends. Unknown wording gives none. */
 export function multiattackOf(character: Roller): { attack: string; times: number }[] {
@@ -248,13 +253,12 @@ export function damageTaken(damage: DamageRoll, defenses: Defenses = {}): number
 
 /**
  * Extra damage a hero's class features add to a hit. A Rogue's Sneak Attack adds its dice, of the weapon's damage type,
- * to a hit made with Advantage and a Finesse or Ranged weapon. Its other way in, an ally beside the target, waits for
- * positions in stage 6 of plans/srd-rules.md.
+ * to a hit made with a Finesse or Ranged weapon and Advantage, or with an ally beside the target and no Disadvantage.
  */
-function featureDamage(attacker: Roller, attack: Attack, roll: AttackResult): { name: string; damage: DamagePart }[] {
+function featureDamage(attacker: Roller, attack: Attack, roll: AttackResult, allyBeside: boolean): { name: string; damage: DamagePart }[] {
   const sheet = attacker.sheet
   const weapon = equipmentById.get(attack.id)
-  if (!sheet || roll.mode !== "advantage" || weapon?.kind !== "weapon") return []
+  if (!sheet || weapon?.kind !== "weapon" || !(roll.mode === "advantage" || (allyBeside && roll.mode !== "disadvantage"))) return []
   const fits = weapon.attackType === "ranged" || (weapon.properties ?? []).some((property) => property === "finesse")
   if (!fits || !deriveSheet(sheet).classFeatures.includes("rogue-sneak-attack")) return []
   const dice = classById.get(sheet.class)?.levels[sheet.level - 1]?.sneakAttack
@@ -278,7 +282,7 @@ export type Strike = {
   inspired?: number
 }
 
-type Target = Roller & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves; tempHitPoints?: number }
+type Target = Standing & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves; tempHitPoints?: number }
 
 /**
  * One attack, start to finish: the attacker's own weapon or stat block action against the target's Armor Class, and on
@@ -287,13 +291,15 @@ type Target = Roller & { type: string; hitPoints?: number; healthPercent?: numbe
  * `target` comes back as the blow left them.
  */
 export function strike<T extends Target>(args: {
-  attacker: Roller
+  attacker: Standing
   target: T
   weapon: string
   dice: readonly number[]
   mode?: RollMode
   roll: (sides: number) => number
   rules?: DeathRules
+  /** Everyone in the scene, for the rules that read who stands where: Sneak Attack's ally beside the target. */
+  present?: readonly (Standing & { hitPoints?: number; dead?: true; fled?: true })[]
   /** A Bardic Inspiration die the attacker holds. It is rolled on a miss it could turn into a hit, and never on a 1. */
   inspiration?: { die: number }
 }): Strike & { target: T } {
@@ -308,11 +314,30 @@ export function strike<T extends Target>(args: {
   const short = stats.armorClass - rolled.total
   const inspired = !rolled.hit && rolled.natural !== 1 && args.inspiration && short <= args.inspiration.die ? args.roll(args.inspiration.die) : undefined
   const lifted = inspired === undefined ? rolled : { ...rolled, total: rolled.total + inspired, hit: rolled.total + inspired >= stats.armorClass }
-  const roll = lifted.hit && !lifted.critical && criticalWhenHit(args.target, attack.kind) ? { ...lifted, critical: true } : lifted
+  const roll = lifted.hit && !lifted.critical && criticalWhenHit(args.target, isNear(args.attacker, args.target, attack.kind)) ? { ...lifted, critical: true } : lifted
   const spent = inspired === undefined ? {} : { inspired }
   if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target, ...spent }
   // A feature's dice (Sneak Attack), and the attacker's own spell on this target (Hunter's Mark).
-  const extra = [...featureDamage(args.attacker, attack, roll), ...markDamage(args.attacker.id, args.target)]
+  // An ally of the attacker's stands within 5 feet of the target, on their feet and able to act. An ally is one of the
+  // attacker's own kind, a hero for a hero.
+  const beside = placedOf(args.target)
+  const allyBeside =
+    !!beside &&
+    (args.present ?? []).some((other) => {
+      const at = placedOf(other)
+      return (
+        !!at &&
+        other.id !== args.attacker.id &&
+        other.id !== args.target.id &&
+        other.type === args.attacker.type &&
+        (other.hitPoints ?? 1) > 0 &&
+        !other.dead &&
+        !other.fled &&
+        !isIncapacitated(other) &&
+        within(at, beside, 5)
+      )
+    })
+  const extra = [...featureDamage(args.attacker, attack, roll, allyBeside), ...markDamage(args.attacker.id, args.target)]
   const damage = rollDamage([...attack.damage, ...extra.map((feature) => feature.damage)], args.roll, roll.critical)
   const taken = damageTaken(damage, defensesOf(args.target))
   const struck = withDamage({ ...args.target, hitPoints: before }, taken, { critical: roll.critical, rules: args.rules })

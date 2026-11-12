@@ -8,10 +8,10 @@ import { FEET_PER_METRE } from "../../src/sheet/space"
 const close = (actual: number | undefined, expected: number) => assert.ok(actual !== undefined && Math.abs(actual - expected) < 1e-6, `${actual} is not ${expected}`)
 
 test("a stage's floor plan is read in feet", () => {
-  // 2 metres is 6.56168 feet. The stage's z is the floor's y. A solid with no top stays a wall to the ceiling.
+  // 2 metres is 6.56168 feet. The stage's z is the floor's y. A solid with no height stays a wall to the ceiling.
   const floor = floorFromMetres({
     solids: [
-      { kind: "rect", x: 2, z: -1, hw: 1, hd: 0.5, ry: 0.3, top: 1 },
+      { kind: "rect", x: 2, z: -1, hw: 1, hd: 0.5, ry: 0.3, height: 1 },
       { kind: "circle", x: 0, z: 4, r: 0.5 },
     ],
     doors: [

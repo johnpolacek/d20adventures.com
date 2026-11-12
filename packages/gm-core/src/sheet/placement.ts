@@ -19,7 +19,7 @@ type Metres = { x: number; z: number }
  * nothing of the stage.
  */
 export type FloorPlanInMetres = {
-  solids: readonly (({ kind: "rect"; hw: number; hd: number; ry: number; top?: number } | { kind: "circle"; r: number; top?: number }) & Metres)[]
+  solids: readonly (({ kind: "rect"; hw: number; hd: number; ry: number } | { kind: "circle"; r: number }) & Metres & { height?: number })[]
   doors: readonly (readonly [Metres, Metres])[]
   places: readonly ({ id: string; label: string } & Metres)[]
   cast: readonly ({ id: string; name?: string } & Metres)[]
@@ -31,7 +31,7 @@ const inFeet = (point: Metres): Point => ({ x: point.x * FEET_PER_METRE, y: poin
 
 /** A stage's floor plan in the engine's feet: a metre is 3.28084 feet, and the stage's z is the floor's y. */
 export function floorFromMetres(plan: FloorPlanInMetres): EncounterFloor {
-  const top = (solid: { top?: number }) => (solid.top === undefined ? {} : { top: solid.top * FEET_PER_METRE })
+  const top = (solid: { height?: number }) => (solid.height === undefined ? {} : { top: solid.height * FEET_PER_METRE })
   return {
     solids: plan.solids.map(
       (solid): Solid =>

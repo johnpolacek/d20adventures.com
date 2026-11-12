@@ -5,6 +5,7 @@ import { checkBonus, resolveCheck } from "../sheet/check"
 import { saveFailedBy } from "../sheet/conditions"
 import { afterHarm, killed } from "../sheet/death"
 import { applyStakes } from "../sheet/harm"
+import { withMove } from "../sheet/moves"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
@@ -103,8 +104,11 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       encounterIntro: args.encounterContext?.intro || "",
       narrativeContext: script,
       present: args.turn.characters,
+      floor: await ports.content.floor?.(args.turn.encounterId),
     })
     const rollRequirement = reading.roll
+    // The move comes first: the NPC stands where it took them before the rest of the turn is resolved.
+    if (reading.move) updatedCharacters = updatedCharacters.map((character) => (character.id === args.npc.id ? withMove(character, reading.move) : character))
 
     console.log("[LLM] NPC roll requirement:", {
       requiresRoll: !!rollRequirement,
@@ -181,7 +185,16 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       for (const each of weapons) {
         const target = updatedCharacters.find((character) => character.id === targetId)
         if (!target || isDown(target)) break
-        const blow = strike({ attacker: args.npc, target, weapon: each, dice: d20sFor(rollRequirement.mode), mode: rollRequirement.mode, roll: rollDie, rules: args.rules })
+        const blow = strike({
+          attacker: updatedCharacters.find((character) => character.id === args.npc.id) ?? args.npc,
+          target,
+          weapon: each,
+          dice: d20sFor(rollRequirement.mode),
+          mode: rollRequirement.mode,
+          roll: rollDie,
+          rules: args.rules,
+          present: updatedCharacters,
+        })
         updatedCharacters = updatedCharacters.map((character) => (character.id === targetId ? afterHarm(blow.target) : character))
         rolls.push(attackBeat(npcStep(args.npc), args.npc, targetId, blow))
         facts.push(strikeFacts(args.npc.name, target.name, blow))
@@ -274,7 +287,9 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       effects = outcomeResult.effects
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     } else {
-      beatsToAppend = cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc))
+      // What the rules of space would not allow is told as an entry of its own, after the NPC's own telling of the move.
+      const ruled: StoryBeat[] = reading.ruling ? [{ kind: "feature", by: npcStep(args.npc), character: args.npc.id, name: reading.ruling.name, text: reading.ruling.text }] : []
+      beatsToAppend = [...cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc)), ...ruled]
       effects = args.actionResult.effects
       // An action with no roll (Dodge, Help) is the NPC's whole turn, and leaves its mark.
       if (reading.action) updatedCharacters = takeAction(updatedCharacters, args.npc.id, reading.action).characters

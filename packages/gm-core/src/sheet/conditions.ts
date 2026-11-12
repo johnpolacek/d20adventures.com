@@ -11,8 +11,8 @@ import type { SpellEffect } from "./turn-effect"
 type Side = "advantage" | "disadvantage"
 
 /**
- * What a condition does to rolls, typed from the SRD's text. Rules that turn on distance read a melee attack as made
- * from within 5 feet and a ranged one as made from farther, until stage 6 of plans/srd-rules.md gives positions.
+ * What a condition does to rolls, typed from the SRD's text. Rules that turn on distance are told whether the attacker
+ * is within 5 feet (`isNear` in ./space).
  */
 type ConditionRules = {
   /** Conditions the bearer has with it: Paralyzed carries Incapacitated. */
@@ -175,14 +175,12 @@ export function saveFailedBy(character: Afflicted, check: Check): string | undef
   return found && conditionName(found.id)
 }
 
-type AttackKind = "melee" | "ranged" | "melee-or-ranged"
-const near = (kind: AttackKind) => kind !== "ranged"
-
 /**
  * Advantage and Disadvantage the conditions of the attacker and of the one attacked put on an attack roll, each with
- * where it comes from. The attacker is on their own turn, so one who was Prone has stood.
+ * where it comes from. `near` is whether the attacker is within 5 feet of the target (`isNear` in ./space). The attacker
+ * is on their own turn, so one who was Prone has stood.
  */
-export function attackModesFrom(attacker: Afflicted, target: Afflicted, kind: AttackKind, present?: readonly Afflicted[]): ModeSource[] {
+export function attackModesFrom(attacker: Afflicted, target: Afflicted, near: boolean, present?: readonly Afflicted[]): ModeSource[] {
   const found: ModeSource[] = []
   for (const entry of borne(attacker, true)) {
     const rules = CONDITION_RULES[entry.id]
@@ -194,7 +192,7 @@ export function attackModesFrom(attacker: Afflicted, target: Afflicted, kind: At
   for (const entry of borne(target)) {
     const side = CONDITION_RULES[entry.id].attacked
     if (!side) continue
-    found.push({ mode: typeof side === "string" ? side : near(kind) ? side.near : side.far, from: `${target.name ?? "Target"} ${conditionName(entry.id)}` })
+    found.push({ mode: typeof side === "string" ? side : near ? side.near : side.far, from: `${target.name ?? "Target"} ${conditionName(entry.id)}` })
   }
   return found
 }
@@ -205,7 +203,7 @@ export function cannotAttack(attacker: Afflicted, target: Afflicted): boolean {
 }
 
 /** Whether a hit on this target is a Critical Hit whatever the die shows: the target is Paralyzed or Unconscious and the attacker is within 5 feet. */
-export const criticalWhenHit = (target: Afflicted, kind: AttackKind): boolean => near(kind) && borne(target).some((entry) => CONDITION_RULES[entry.id].criticalWhenHitNear)
+export const criticalWhenHit = (target: Afflicted, near: boolean): boolean => near && borne(target).some((entry) => CONDITION_RULES[entry.id].criticalWhenHitNear)
 
 /** Whether a target's conditions give it Resistance to all damage. */
 export const resistsAllDamage = (target: Afflicted): boolean => borne(target).some((entry) => CONDITION_RULES[entry.id].resistsAllDamage)

@@ -1,7 +1,7 @@
 import type { Size } from "@d20/srd"
 import { monsterById } from "@d20/srd/monsters"
 import { speciesById } from "@d20/srd/species"
-import { type Attack, attacksOf, BASE_REACH } from "./attack"
+import type { Attack } from "./attack"
 import type { Roller } from "./check"
 import { type Afflicted, cannotMove, exhaustionOf } from "./conditions"
 import { deriveSheet } from "./derive"
@@ -65,6 +65,32 @@ export function distance(a: Placed, b: Placed): number {
 /** Whether two creatures are within some feet of each other, half a foot either way: Medium ones 5.4 feet apart are within 5 feet. */
 export const within = (a: Placed, b: Placed, feet: number): boolean => distance(a, b) <= feet + TOLERANCE
 
+/** A character who may stand somewhere on the floor. */
+export type Standing = Roller & { position?: Point }
+
+/** A character as the maths of space reads it: where it stands and its size. None for one with no position. */
+export const placedOf = (character: Standing): Placed | undefined => (character.position ? { at: character.position, size: sizeOf(character) } : undefined)
+
+/** How far two characters are from each other, in feet. Unknown when either has no position. */
+export function feetBetween(a: Standing, b: Standing): number | undefined {
+  const from = placedOf(a)
+  const to = placedOf(b)
+  return from && to ? distance(from, to) : undefined
+}
+
+/**
+ * Whether an attacker is within 5 feet of its target, for the rules that turn on it: Prone, Paralyzed, Unconscious.
+ * Where either has no position, a melee attack is read as made from within 5 feet and a ranged one from farther.
+ */
+export function isNear(attacker: Standing, target: Standing, kind: Attack["kind"]): boolean {
+  const from = placedOf(attacker)
+  const to = placedOf(target)
+  return from && to ? within(from, to, 5) : kind !== "ranged"
+}
+
+/** A creature's reach unless a rule says otherwise. */
+export const BASE_REACH = 5
+
 /** How far an attack reaches: a melee attack's reach, and a ranged or thrown attack's normal and long range. A single range has no long range. */
 export type AttackDistances = Pick<Attack, "reach" | "range">
 
@@ -96,14 +122,6 @@ export type Bystander = Placed & { hostile: boolean; seesAttacker: boolean; inca
  */
 export const rangedInCloseCombat = (attacker: Placed, others: readonly Bystander[]): boolean =>
   others.some((other) => other.hostile && other.seesAttacker && !other.incapacitated && within(attacker, other, 5))
-
-/**
- * A character's reach for Opportunity Attacks: the longest of its melee attacks, which is at least 5. A hero holding a
- * Glaive reaches 10. A Hill Giant reaches 10 with its Tree Club.
- */
-export function meleeReachOf(character: Roller): number {
-  return Math.max(BASE_REACH, ...attacksOf(character).map((attack) => attack.reach ?? 0))
-}
 
 /** A character's Speed in feet: a hero's from its sheet, an NPC's walking Speed from its stat block. A hero with no sheet has none. */
 export function speedOf(character: Roller): number | undefined {

@@ -13,6 +13,7 @@ import { afterHarm, type DeathRules, type DeathSaves, type Fate, withDamage, wit
 import { deriveSheet } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { isNear } from "./space"
 import { lasts, type RollAdd, rollAdds, withConcentration, withSpellEffect } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
@@ -566,7 +567,7 @@ export function castSpell<T extends Castee>(args: {
 /** The modes that fall on a spell attack from the conditions and actions of the caster and the target. */
 type Bearer = Parameters<typeof attackModesFrom>[0] & Parameters<typeof attackModesFromActions>[0]
 export function spellAttackModes(caster: Bearer, target: Bearer, spell: Spell, present?: readonly Bearer[]) {
-  return [...attackModesFrom(caster, target, spell.attack ?? "ranged", present), ...attackModesFromActions(caster, target, present)]
+  return [...attackModesFrom(caster, target, isNear(caster, target, spell.attack ?? "ranged"), present), ...attackModesFromActions(caster, target, present)]
 }
 
 export { spellById }

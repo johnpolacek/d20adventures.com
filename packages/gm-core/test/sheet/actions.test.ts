@@ -59,7 +59,7 @@ test("Dodge: attacks against have Disadvantage and Dexterity saves Advantage, un
   // Restrained, his Speed is 0 and the Dodge gives nothing. The condition's own Advantage for the attacker stands.
   const held = { ...dodging, conditions: [{ id: "restrained" as const }] }
   assert.deepEqual(attackModesFromActions(owlbear, held, [held, owlbear]), [])
-  assert.deepEqual(modes(attackModesFrom(owlbear, held, "melee")), ["advantage"])
+  assert.deepEqual(modes(attackModesFrom(owlbear, held, true)), ["advantage"])
 })
 
 test("Help against an enemy gives the next attack by an ally Advantage, once", () => {
@@ -110,8 +110,8 @@ test("Hide: Stealth against 15 for Invisible, which gives the next attack Advant
   assert.deepEqual([hidden.characters[0].conditions, hidden.facts], [[{ id: "invisible" }], ["Poppen is now Invisible."]])
   const unseen = hidden.characters[0]
   // Unseen, her attack has Advantage and one against her Disadvantage.
-  assert.deepEqual(attackModesFrom(unseen, bandit, "ranged"), [{ mode: "advantage", from: "Invisible" }])
-  assert.deepEqual(modes(attackModesFrom(bandit, unseen, "melee")), ["disadvantage"])
+  assert.deepEqual(attackModesFrom(unseen, bandit, false), [{ mode: "advantage", from: "Invisible" }])
+  assert.deepEqual(modes(attackModesFrom(bandit, unseen, true)), ["disadvantage"])
   // Shortbow +5 with Advantage: a 4 and a 12 keep the 12, 17 against Armor Class 12. With Advantage and a Ranged
   // weapon it is a Sneak Attack: 1d6 + 3 rolling 4 is 7, and 1d6 more rolling 5 makes 12. The Bandit's 11 are gone.
   const dice = [4, 5]

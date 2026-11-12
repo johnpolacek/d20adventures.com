@@ -222,7 +222,17 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // hit points change here and nowhere else.
       target = turnCharacters.find((character) => character.id === required.attack.target)
       if (!target) throw new Error("The one attacked is no longer here.")
-      const struck = strike({ attacker: args.character, target, weapon: required.attack.weapon, dice: d20sFor(mode, args.dice), mode, roll: rollDie, rules, inspiration: args.character.inspiration })
+      const struck = strike({
+        attacker: args.character,
+        target,
+        weapon: required.attack.weapon,
+        dice: d20sFor(mode, args.dice),
+        mode,
+        roll: rollDie,
+        rules,
+        inspiration: args.character.inspiration,
+        present: turnCharacters,
+      })
       blow = struck
       inspired = struck.inspired !== undefined
       turnCharacters = turnCharacters.map((character) => (character.id === required.attack.target ? afterHarm(struck.target) : character))

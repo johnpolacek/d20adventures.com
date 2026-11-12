@@ -2,6 +2,7 @@ import type { GmPorts } from "../ports"
 import { takeAction } from "../sheet/actions"
 import type { ConditionEntry } from "../sheet/condition-entry"
 import { useBonusAction } from "../sheet/features"
+import { withMove } from "../sheet/moves"
 import type { Sheet } from "../sheet/sheet"
 import { castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { TurnEffect } from "../sheet/turn-effect"
@@ -70,6 +71,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         conditions?: ConditionEntry[]
         turnEffects?: TurnEffect[]
         isComplete?: boolean
+        position?: { x: number; y: number }
       }[]
     }
     adventure: {
@@ -110,6 +112,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       narrativeContext: recentTurnNarratives || turnScript(args.turn),
       encounterIntro,
       present: args.turn.characters,
+      floor: await ports.content.floor?.(args.turn.encounterId),
     })
   }
 
@@ -119,11 +122,12 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
    * story as a beat of its own.
    */
   async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading }): Promise<void> {
-    const { action, bonus } = args.reading
-    if (!action && !bonus) return
+    const { action, bonus, move, ruling } = args.reading
+    if (!action && !bonus && !move && !ruling) return
     const turn = await ports.store.getTurn({ turnId: args.turnId })
     if (!turn) throw new Error("Turn not found")
-    let characters = turn.characters as TurnCharacter[]
+    // The move comes first: the hero stands where it took them before anything else of the turn is resolved.
+    let characters = (turn.characters as TurnCharacter[]).map((character) => (character.id === args.characterId ? withMove(character, move) : character))
     // A Bonus Action is a class feature of the hero's, or one of their spells that takes one. The spell is cast by
     // the same rules as any other, and the story keeps it with no telling of its own: the turn's action is told after.
     const actor = characters.find((character) => character.id === args.characterId)
@@ -139,9 +143,11 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     if (used) characters = used.characters
     const taken = action ? takeAction(characters, args.characterId, action) : undefined
     if (taken) characters = taken.characters
-    console.log("[LLM] Reading applied:", { bonus: used?.use?.fact ?? "none", action: taken?.fact ?? "none" })
-    if (!used?.use && !taken?.fact && !spellBeats.length) return
-    const told: StoryBeat[] = spellBeats.length
+    console.log("[LLM] Reading applied:", { bonus: used?.use?.fact ?? "none", action: taken?.fact ?? "none", move: move ?? "none", ruling: ruling?.text ?? "none" })
+    if (!used?.use && !taken?.fact && !spellBeats.length && !move && !ruling) return
+    // What the rules of space would not allow is told as an entry of its own, so the story does not keep an attack that was never made.
+    const ruled: StoryBeat[] = ruling ? [{ kind: "feature", by: { step: "reply", character: args.characterId }, character: args.characterId, name: ruling.name, text: ruling.text }] : []
+    const feature: StoryBeat[] = spellBeats.length
       ? spellBeats
       : used?.use
         ? [
@@ -156,6 +162,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
             },
           ]
         : []
+    const told = [...feature, ...ruled]
     await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, ...(told.length ? { story: [...turn.story, ...told] } : {}), updatedAt: Date.now() } })
   }
   return { readTurnReply, applyReading }

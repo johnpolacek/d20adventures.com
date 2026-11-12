@@ -440,6 +440,51 @@ async function npcFixedOutcome() {
   answer = { check: "attack", weapon: "longbow", bonus: "hunters-mark", bonusTarget: "owlbear" }
   const marked = await getRollRequirementForAction("Thalbern marks his quarry and shoots.", hero, { present: [owlbear, wolf, hero] })
   assert.deepEqual(marked && "attack" in marked ? marked.attack : undefined, { weapon: "longbow", target: "owlbear" })
+  // Space. On a floor the roller moves before they act and the game measures. Thalbern, Speed 30, stands at the
+  // origin. The Owlbear is Large, so it is 2.5 feet nearer than its centre, and closing to reach of it stops 7.5 feet
+  // from its centre.
+  const floor = { solids: [], doors: [], places: [{ id: "gangway", label: "the gangway", at: { x: 0, y: 50 } }], cast: [], party: [], spare: [] }
+  const stand = (x: number, y = 0) => ({ position: { x, y } })
+  const at = (bearX: number, extra: object[] = []) => ({ floor, present: [{ ...owlbear, ...stand(bearX) }, { ...hero, ...stand(0) }, ...extra] as any })
+  const ranger = { ...hero, ...stand(0) }
+  // A melee attack on one 45 feet off closes 30 feet and is still 12.5 short: the attack is not made, and the story is told so.
+  answer = { check: "attack", weapon: "shortsword", target: "owlbear" }
+  assert.deepEqual(await readAction("Thalbern charges the owlbear.", ranger, at(45)), {
+    roll: null,
+    move: { at: { x: 30, y: 0 }, feet: 30 },
+    ruling: { name: "Out Of Reach", text: "Thalbern moves 30 feet and is 13 feet from Owlbear, out of reach with Shortsword. The attack is not made." },
+  })
+  // From 30 feet he walks 22.5 and strikes. The model named no move: the attack closed by itself.
+  const charge = await readAction("Thalbern charges the owlbear.", ranger, at(30))
+  assert.deepEqual(
+    [charge.move, charge.roll && "attack" in charge.roll ? charge.roll.attack : undefined, charge.ruling],
+    [{ at: { x: 22.5, y: 0 }, feet: 23 }, { weapon: "shortsword", target: "owlbear" }, undefined]
+  )
+  // A Longbow is 150/600: at 200 feet it is long range, with Disadvantage, and no one moves. With a Wolf beside him
+  // a shot at 60 feet has Disadvantage too. At 700 feet it is out of range.
+  answer = { check: "attack", weapon: "longbow", target: "owlbear" }
+  const far = await readAction("Thalbern shoots the owlbear.", ranger, at(200))
+  assert.deepEqual([far.move, far.roll?.mode, far.roll?.reasons], [undefined, "disadvantage", ["Long Range"]])
+  const pressed = await readAction("Thalbern shoots the owlbear.", ranger, at(60, [{ ...wolf, ...stand(0, 5) }]))
+  assert.deepEqual([pressed.roll?.mode, pressed.roll?.reasons], ["disadvantage", ["Enemy Within 5 Feet"]])
+  assert.equal((await readAction("Thalbern shoots the owlbear.", ranger, at(700))).ruling?.name, "Out Of Range")
+  // A Dagger thrown at one 15 feet off is thrown from where he stands, and a move named is made first.
+  answer = { check: "attack", weapon: "dagger", target: "owlbear" }
+  assert.equal((await readAction("Thalbern throws his dagger.", ranger, at(15))).move, undefined)
+  answer = { check: "attack", weapon: "dagger", target: "owlbear", moveTo: "owlbear" }
+  assert.deepEqual((await readAction("Thalbern runs in and stabs.", ranger, at(15))).move, { at: { x: 7.5, y: 0 }, feet: 8 })
+  // A move with no roll: to a place as far as his Speed goes, all the way with Dash, and a step back from the Owlbear.
+  answer = { check: "none", moveTo: "gangway" }
+  assert.deepEqual(await readAction("Thalbern heads for the gangway.", ranger, at(45)), { roll: null, move: { at: { x: 0, y: 30 }, feet: 30 } })
+  answer = { check: "dash", moveTo: "gangway" }
+  assert.deepEqual(await readAction("Thalbern sprints for the gangway.", ranger, at(45)), { roll: null, action: { action: "dash" }, move: { at: { x: 0, y: 50 }, feet: 50 } })
+  answer = { check: "none", moveAway: "owlbear", moveFeet: 10 }
+  assert.deepEqual((await readAction("Thalbern backs off.", ranger, at(8))).move, { at: { x: -10, y: 0 }, feet: 10 })
+  // With no floor nothing is moved or measured, and the game master is not asked where anyone goes.
+  answer = { check: "attack", weapon: "shortsword", target: "owlbear" }
+  const unplaced = await readAction("Thalbern charges the owlbear.", ranger, { present: [{ ...owlbear, ...stand(45) }, ranger] as any })
+  assert.deepEqual([unplaced.move, unplaced.ruling, !!unplaced.roll], [undefined, undefined, true])
+
   // Casting. Lyra, a Wizard with Intelligence 16: a spell attack is hers to throw, +5 against the Owlbear's Armor Class
   // 13. A spell its target saves against asks for no throw and comes back to be resolved at once, against her DC 13.
   const lyra = { ...JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/covert-cargo/characters/1749159962941.json", "utf8")), type: "pc", hitPoints: 6 }

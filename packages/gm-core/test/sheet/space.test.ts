@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
-import { attacksOf } from "../../src/sheet/attack"
+import { attacksOf, meleeReachOf } from "../../src/sheet/attack"
 import type { Sheet } from "../../src/sheet/sheet"
 import {
   attackReach,
@@ -14,7 +14,6 @@ import {
   feet,
   greaterCover,
   inArea,
-  meleeReachOf,
   metres,
   movementBudget,
   movementBudgetOf,
