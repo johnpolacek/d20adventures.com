@@ -1,11 +1,13 @@
 import type { GmPorts } from "../ports"
+import { multiattackOf, strike, strikeFacts } from "../sheet/attack"
 import { resolveCheck } from "../sheet/check"
 import { withHitPoints } from "../sheet/hit-points"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
-import { rollBeat, turnScript } from "../story/turn"
+import { attackBeat, rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
-import { d20sFor } from "../utils/game-utils"
+import { d20sFor, rollDie } from "../utils/game-utils"
+import { isAttackRoll } from "../validations/roll-requirement-schema"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { applyNpcEffectsToCharacters, createNpcTurnResolutionService, type NpcTurnEffect } from "./npc-turn-resolution-service"
 import { createRollRequirementService } from "./roll-requirement-service"
@@ -93,6 +95,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       encounterInstructions: args.encounterContext?.instructions || "",
       encounterIntro: args.encounterContext?.intro || "",
       narrativeContext: script,
+      present: args.turn.characters,
     })
 
     console.log("[LLM] NPC roll requirement:", {
@@ -101,7 +104,46 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       difficulty: rollRequirement?.difficulty,
     })
 
-    if (rollRequirement) {
+    if (rollRequirement && isAttackRoll(rollRequirement)) {
+      // An attack: the engine rolls to hit and for damage, and changes the target's hit points. An NPC whose stat block
+      // has a Multiattack makes all of it against the one it attacks, and stops when that one goes down.
+      const { weapon, target: targetId } = rollRequirement.attack
+      const multiattack = multiattackOf(args.npc)
+      const weapons = multiattack.some((entry) => entry.attack === weapon) ? multiattack.flatMap((entry) => Array.from({ length: entry.times }, () => entry.attack)) : [weapon]
+      const rolls: StoryBeat[] = []
+      const facts: string[] = []
+      for (const each of weapons) {
+        const target = updatedCharacters.find((character) => character.id === targetId)
+        if (!target || target.hitPoints === 0) break
+        const blow = strike({ attacker: args.npc, target, weapon: each, dice: d20sFor(rollRequirement.mode), mode: rollRequirement.mode, roll: rollDie })
+        updatedCharacters = updatedCharacters.map((character) => (character.id === targetId ? withHitPoints(character, blow.hitPoints.after) : character))
+        rolls.push(attackBeat(npcStep(args.npc), args.npc, targetId, blow))
+        facts.push(strikeFacts(args.npc.name, target.name, blow))
+        rollInfo = { rollType: blow.attack.name, difficulty: blow.roll.armorClass, baseRoll: blow.roll.natural, modifier: blow.roll.bonus, result: blow.roll.total, success: blow.roll.hit }
+      }
+      console.log("[LLM] NPC attacks:", facts)
+
+      const outcomeResult = await generateNpcOutcome(
+        buildNpcOutcomePrompt({
+          contextString: args.npcActionContext.contextString,
+          npcDetails: args.npcActionContext.npcDetails,
+          playerCharacters: args.npcActionContext.playerCharacters,
+          npcName: args.npc.name,
+          actionSummary: args.actionResult.actionSummary,
+          rollType: rollRequirement.rollType,
+          result: rollInfo?.result ?? 0,
+          difficulty: rollRequirement.difficulty,
+          success: rolls.some((beat) => beat.kind === "roll" && beat.success),
+          scene: args.scene,
+          attacks: facts,
+        }),
+        args.npc.id
+      )
+      beatsToAppend = [...rolls, ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
+      // The harm is the engine's. The outcome may still name a status or hand over an item.
+      effects = outcomeResult.effects.map(({ healthPercentDelta: _harm, ...effect }) => effect)
+      updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects, applyHealthAndStatus: true })
+    } else if (rollRequirement) {
       // The NPC rolls with its stat block's bonus, which the requirement already carries.
       const rolled = resolveCheck({ dice: d20sFor(rollRequirement.mode), bonus: rollRequirement.modifier, dc: rollRequirement.difficulty, mode: rollRequirement.mode })
       const { natural: baseRoll, bonus: modifier, total: result, success } = rolled

@@ -4,7 +4,7 @@ import { monsterById } from "@d20/srd/monsters"
 import type { Roller, RollMode } from "./check"
 import { deriveSheet } from "./derive"
 import type { Sheet } from "./sheet"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
+import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /** Damage one attack deals of one type: dice as the SRD writes them ("1d8 + 3"), or a flat amount with no dice. */
 export type DamagePart = { dice?: string; amount?: number; type: DamageTypeId }
@@ -175,4 +175,44 @@ export function damageTaken(damage: DamageRoll, defenses: Defenses = {}): number
     if (defenses.vulnerabilities?.includes(part.type)) amount *= 2
     return sum + amount
   }, 0)
+}
+
+export type Strike = {
+  attack: Attack
+  roll: AttackResult
+  /** The damage dice as they fell, on a hit. */
+  damage?: DamageRoll
+  /** What the target lost, after its Immunities, Resistances and Vulnerabilities. 0 on a miss. */
+  taken: number
+  /** The target's hit points before and after the blow. */
+  hitPoints: { before: number; after: number; maximum: number }
+}
+
+/**
+ * One attack, start to finish: the attacker's own weapon or stat block action against the target's Armor Class, and on
+ * a hit the damage dice against the target's defenses and hit points. `roll` throws one damage die of the given size.
+ */
+export function strike(args: { attacker: Roller; target: Roller & { hitPoints?: number }; weapon: string; dice: readonly number[]; mode?: RollMode; roll: (sides: number) => number }): Strike {
+  const attack = attacksOf(args.attacker).find((entry) => entry.id === args.weapon)
+  if (!attack) throw new Error(`${args.attacker.name ?? "The attacker"} has no attack "${args.weapon}".`)
+  const stats = combatStatsOf(args.target)
+  if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
+  const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
+  const roll = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass: stats.armorClass, mode: args.mode })
+  if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum } }
+  const damage = rollDamage(attack.damage, args.roll, roll.critical)
+  const taken = damageTaken(damage, defensesOf(args.target))
+  return { attack, roll, damage, taken, hitPoints: { before, after: Math.max(0, before - taken), maximum: stats.hitPointMaximum } }
+}
+
+/** A strike in plain words for the game master, who tells it and never changes it: who was hit, how hard, and how they stand. */
+export function strikeFacts(attacker: string, target: string, blow: Strike): string {
+  const { roll, attack, hitPoints } = blow
+  if (!roll.hit) return `${attacker}'s ${attack.name} attack on ${target} MISSES (${roll.total} against Armor Class ${roll.armorClass}). ${target} takes no damage.`
+  const types = blow.damage?.parts.map((part) => part.type).join(" and ") ?? ""
+  const stands =
+    hitPoints.after === 0
+      ? `${target} is at 0 hit points and goes down.`
+      : `${target} has ${hitPoints.after} of ${hitPoints.maximum} hit points left${hitPoints.after * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
+  return `${attacker}'s ${attack.name} attack on ${target} ${roll.critical ? "is a CRITICAL HIT" : "HITS"} (${roll.total} against Armor Class ${roll.armorClass}) for ${blow.taken} ${types} damage. ${stands}`
 }

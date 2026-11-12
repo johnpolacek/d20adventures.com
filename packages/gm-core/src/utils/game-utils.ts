@@ -32,3 +32,6 @@ export function d20sFor(mode: RollMode, sent: readonly number[] = []): number[] 
   while (dice.length < (mode === "normal" ? 1 : 2)) dice.push(rollD20())
   return dice
 }
+
+/** One die of the given size, for damage. */
+export const rollDie = (sides: number): number => Math.floor(Math.random() * sides) + 1

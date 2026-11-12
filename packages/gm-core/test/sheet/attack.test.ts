@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
-import { attacksOf, damageTaken, defensesOf, multiattackOf, parseDice, resolveAttack, rollDamage, weaponAttack } from "../../src/sheet/attack"
+import { attacksOf, damageTaken, defensesOf, multiattackOf, parseDice, resolveAttack, rollDamage, strike, strikeFacts, weaponAttack } from "../../src/sheet/attack"
 import type { Sheet } from "../../src/sheet/sheet"
 
 // Every expected number below was worked out by hand from the SRD 5.2.1 rules, not copied from the function's output.
@@ -116,4 +116,55 @@ test("the premade heroes' weapons are on their sheets", () => {
   const ilya = hero("welcome-to-kordavos/characters/ilya-veles.json").sheet
   assert.equal(ilya.abilityScores.dex, 14)
   assert.equal(weaponAttack(ilya, "rapier").bonus, 2)
+})
+
+test("a strike rolls to hit, then damage, and takes it from the target's hit points", () => {
+  const ranger = { name: "Thalbern", type: "pc", sheet: thalbern }
+  // Owlbear: Armor Class 13, 59 hit points. Thalbern's Longbow is +5, so an 8 makes 13 and hits. A 5 on the d8 and 3 is 8.
+  const owlbear = { name: "Owlbear", type: "npc", statBlock: "owlbear" }
+  const hit = strike({ attacker: ranger, target: owlbear, weapon: "longbow", dice: [8], roll: falls(5) })
+  assert.equal(hit.roll.hit, true)
+  assert.equal(hit.taken, 8)
+  assert.deepEqual(hit.hitPoints, { before: 59, after: 51, maximum: 59 })
+  assert.equal(strikeFacts("Thalbern", "Owlbear", hit), "Thalbern's Longbow attack on Owlbear HITS (13 against Armor Class 13) for 8 piercing damage. Owlbear has 51 of 59 hit points left.")
+  // A 7 makes 12 and misses: no damage dice are thrown.
+  const miss = strike({ attacker: ranger, target: owlbear, weapon: "longbow", dice: [7], roll: falls() })
+  assert.equal(miss.damage, undefined)
+  assert.deepEqual(miss.hitPoints, { before: 59, after: 59, maximum: 59 })
+  assert.equal(strikeFacts("Thalbern", "Owlbear", miss), "Thalbern's Longbow attack on Owlbear MISSES (12 against Armor Class 13). Owlbear takes no damage.")
+  // A 20 is a Critical Hit: two d8 (4 and 6) and the 3 once, 13 from an Owlbear already at 30.
+  const crit = strike({ attacker: ranger, target: { ...owlbear, hitPoints: 30 }, weapon: "longbow", dice: [20], roll: falls(4, 6) })
+  assert.equal(crit.roll.critical, true)
+  assert.deepEqual(crit.hitPoints, { before: 30, after: 17, maximum: 59 })
+  assert.match(strikeFacts("Thalbern", "Owlbear", crit), /is a CRITICAL HIT .* for 13 piercing damage\. Owlbear has 17 of 59 hit points left and is Bloodied\./)
+})
+
+test("an Owlbear's Rend can drop Thalbern, and hit points stop at 0", () => {
+  // Thalbern: Studded Leather Armor 12 + 3 Dex is Armor Class 15, and 11 hit points. Rend is +7: an 8 makes 15 and hits
+  // for 2d8 + 5. A 3 and a 6 make 14, more than he has.
+  const blow = strike({
+    attacker: { name: "Owlbear", type: "npc", statBlock: "owlbear" },
+    target: { name: "Thalbern", type: "pc", sheet: thalbern, hitPoints: 11 },
+    weapon: "rend",
+    dice: [8],
+    roll: falls(3, 6),
+  })
+  assert.equal(blow.roll.armorClass, 15)
+  assert.equal(blow.taken, 14)
+  assert.deepEqual(blow.hitPoints, { before: 11, after: 0, maximum: 11 })
+  assert.match(strikeFacts("Owlbear", "Thalbern", blow), /Thalbern is at 0 hit points and goes down\./)
+  assert.throws(
+    () => strike({ attacker: { name: "Owlbear", type: "npc", statBlock: "owlbear" }, target: { type: "pc", sheet: thalbern }, weapon: "longbow", dice: [8], roll: falls() }),
+    /Owlbear has no attack "longbow"/
+  )
+})
+
+test("a strike meets the target's Vulnerability", () => {
+  // Branka: Str 16 (+3), a Fighter. Her Warhammer is +5 for 1d8 + 3 Bludgeoning. A Skeleton has Armor Class 14 and 13 hit
+  // points, and is Vulnerable to Bludgeoning: a 9 makes 14 and hits, a 4 on the d8 makes 7, doubled to 14.
+  const branka = { name: "Branka", type: "pc", sheet: hero("welcome-to-kordavos/characters/branka-stoneveil.json").sheet }
+  const blow = strike({ attacker: branka, target: { name: "Skeleton", type: "npc", statBlock: "skeleton" }, weapon: "warhammer", dice: [9], roll: falls(4) })
+  assert.equal(blow.attack.bonus, 5)
+  assert.equal(blow.taken, 14)
+  assert.equal(blow.hitPoints.after, 0)
 })

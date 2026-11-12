@@ -218,6 +218,8 @@ export function buildNpcOutcomePrompt(args: {
   difficulty: number
   success: boolean
   scene: StoryScene
+  // Attacks the engine has already resolved, in plain words: each hit or miss, its damage and how the target stands.
+  attacks?: string[]
 }): string {
   const playerCharacterNames = args.playerCharacters.map((character) => character.name)
   const playerCharacterDetails = args.playerCharacters
@@ -270,8 +272,11 @@ ${args.success ? "" : `${FAILED_ROLL_RULE}\n\n`}Then, output a JSON array of eff
 NPC: ${args.npcName}
 Player Characters: ${playerCharacterNames.join(", ")}
 Action: ${args.actionSummary}
-Roll Type: ${args.rollType}
-Roll Result: ${args.result} (difficulty: ${args.difficulty}, success: ${args.success})
+${
+  args.attacks?.length
+    ? `The game has already rolled this turn's attacks and their damage:\n${args.attacks.map((line) => `- ${line}`).join("\n")}\nTell each blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number, and leave "healthPercentDelta" out of the effects.`
+    : `Roll Type: ${args.rollType}\nRoll Result: ${args.result} (difficulty: ${args.difficulty}, success: ${args.success})`
+}
 
 ${storyRules(args.scene)}
 

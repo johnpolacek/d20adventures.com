@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import type { Strike } from "../sheet/attack"
 import type { CheckResult } from "../sheet/check"
 import { authoredStory } from "./authored"
 import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "./beats"
@@ -56,3 +57,23 @@ export function rollBeat(by: StoryBy, roller: { id: string; name: string; image?
 
 // A turn that opens on an authored intro: its beats for the characters in it.
 export const introTurn = (intro: string, scene: StoryScene): { story: StoryBeat[] } => ({ story: cleanStory(authoredStory(intro, scene), scene, { step: "intro" }) })
+
+// A resolved attack as the story keeps it: the roll against Armor Class, and on a hit the damage dice and what was lost.
+export function attackBeat(by: StoryBy, roller: { id: string; name: string; image?: string }, target: string, blow: Strike): RollBeat {
+  const { roll } = blow
+  return {
+    kind: "roll",
+    by,
+    character: roller.id,
+    name: roller.name,
+    check: blow.attack.name,
+    natural: roll.natural,
+    ...(roll.mode !== "normal" ? { dice: roll.dice, mode: roll.mode } : {}),
+    modifier: roll.bonus,
+    total: roll.total,
+    dc: roll.armorClass,
+    success: roll.hit,
+    ...(roller.image ? { image: roller.image } : {}),
+    attack: { target, ...(roll.critical ? { critical: true as const } : {}), ...(blow.damage ? { damage: blow.damage.parts, taken: blow.taken } : {}) },
+  }
+}

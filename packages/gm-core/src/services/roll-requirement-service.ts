@@ -1,7 +1,9 @@
 import { abilityById } from "@d20/srd/abilities"
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import { attacksOf } from "../sheet/attack"
 import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
+import { combatStatsOf } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
@@ -15,12 +17,17 @@ const NPC_FIXED_OUTCOME =
 // What the game master picks, each from a fixed menu. The engine works out the rest: the bonus from the roller's sheet
 // or stat block, the target number from the difficulty's name, and the dice.
 const rollPickSchema = z.object({
-  check: z.enum(["none", ...checkMenuIds]).describe('The check\'s id from the menu, or "none" when nothing is rolled'),
+  check: z.enum(["none", "attack", ...checkMenuIds]).describe('The check\'s id from the menu, "attack" for an attack, or "none" when nothing is rolled'),
   difficulty: z.enum(difficulties).optional().describe("How hard the task is, by name. Needed for every check"),
   mode: z.enum(rollModes).optional().describe('"advantage" or "disadvantage" when this moment\'s circumstances clearly help or hinder, else "normal"'),
   reason: z.string().max(120).optional().describe("What gives the Advantage or Disadvantage, in a few words"),
   spell: z.string().max(80).optional().describe("The character's own spell this roll casts, exactly as their spell list names it"),
+  weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
+  target: z.string().max(80).optional().describe("For an attack: the id of who is attacked, from Who Is Here"),
 })
+
+// Someone the roller could attack: anyone else in the scene who is still up.
+type Present = { id: string; name: string; type?: string; sheet?: TurnCharacter["sheet"]; statBlock?: string; healthPercent?: number; status?: string }
 
 const MENU = (kind: "skill" | "ability" | "save") =>
   checkMenu
@@ -37,9 +44,14 @@ export function createRollRequirementService(ports: GmPorts) {
       encounterInstructions?: string
       encounterIntro?: string
       narrativeContext?: string
+      // Everyone in the scene. The roller can attack any of the others who is still up.
+      present?: readonly Present[]
     }
   ): Promise<RollRequirement> {
     const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {}
+    const self = "id" in character ? character.id : undefined
+    const targets = (options?.present ?? []).filter((other) => other.id !== self && other.healthPercent !== 0 && other.status !== "dead" && other.status !== "fled")
+    const attacks = attacksOf(character)
     const casts = spellcastingAbilityOf(character)
     const contextLines = [
       `Name: ${character.name}`,
@@ -102,7 +114,10 @@ ${MENU("save")}
    - acrobatics ONLY for agility and precision stunts (balancing across a narrow beam, tumbling through hostile space, leaping a gap, vaulting obstacles, slipping bonds). Not for normal movement like walking, jogging, or threading through an ordinary crowd.
    - perception to notice something specific and hidden, investigation to search or analyze evidence, insight to read motives.
    - Picking a lock or disarming a trap is "dexterity".
-   - ATTACKS are not on the menu yet. Until they are, a melee attack is "strength", or "dexterity" with a light or finesse weapon, and a ranged attack is "dexterity".
+   - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check.
+     Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
+     Who Is Here: ${targets.map((other) => `${other.id} (${other.name})`).join(", ") || "no one they could attack"}.
+     If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
    - SPELLS: casting one of the character's own spells is a bare check of their spellcasting ability (see Character Context. For an NPC, the ability its magic comes from: intelligence, wisdom or charisma), and "spell" names the spell exactly as their list has it. Magic that is not a spell on their list is "arcana" with no "spell".
    - SPELL AVAILABILITY: Spells marked as "Used (unavailable this encounter)" CANNOT be cast again until the next encounter. If the character tries to cast one, "check" is "none": the spell simply fails to activate.
 
@@ -127,6 +142,25 @@ Action: "${action}"
 
     try {
       const { object: pick } = await generateObject({ schema: rollPickSchema, prompt })
+      if (pick.check === "attack") {
+        const attack = attacks.find((entry) => entry.id === pick.weapon)
+        const target = targets.find((other) => other.id === pick.target)
+        if (!attack) throw new Error(`The game master asked for an attack with "${pick.weapon ?? ""}", which ${character.name} does not have.`)
+        if (!target) throw new Error(`The game master asked for an attack on "${pick.target ?? ""}", who is not here to attack.`)
+        const armorClass = combatStatsOf(target)?.armorClass
+        if (armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
+        const picked = pick.mode ?? "normal"
+        const rollRequirement: RollRequirement = {
+          attack: { weapon: attack.id, target: target.id },
+          rollType: attack.name,
+          difficulty: armorClass,
+          modifier: attack.bonus,
+          mode: picked,
+          ...(picked !== "normal" && pick.reason?.trim() ? { reasons: [pick.reason.trim()] } : {}),
+        }
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
+        return rollRequirement
+      }
       const check = pick.check === "none" ? undefined : checkFromMenu(pick.check)
       if (!check) {
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false })

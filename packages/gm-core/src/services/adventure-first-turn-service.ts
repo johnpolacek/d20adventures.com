@@ -32,7 +32,7 @@ export function createAdventureFirstTurnService(ports: GmPorts) {
 
     // The stores give an opening roll to the first character in the turn's order, so the check is read for them.
     const actor = args.characters[0]
-    const rollFor = async (actionText: string): Promise<RollRequirement> => (actor ? getRollRequirementForAction(actionText, actor, { narrativeContext }) : null)
+    const rollFor = async (actionText: string): Promise<RollRequirement> => (actor ? getRollRequirementForAction(actionText, actor, { narrativeContext, present: args.characters }) : null)
 
     let rollRequirement: RollRequirement = null
     if (args.playerInput && args.playerInput.trim().length > 0) {

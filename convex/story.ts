@@ -34,6 +34,15 @@ export const storyValidator = v.array(
       dc: v.number(),
       success: v.boolean(),
       image: v.optional(v.string()),
+      // An attack roll: who was attacked, a Critical Hit, the damage dice as they fell and what the target lost.
+      attack: v.optional(
+        v.object({
+          target: v.string(),
+          critical: v.optional(v.literal(true)),
+          damage: v.optional(v.array(v.object({ type: v.string(), dice: v.array(v.number()), sides: v.optional(v.number()), bonus: v.number(), total: v.number() }))),
+          taken: v.optional(v.number()),
+        })
+      ),
     }),
     v.object({ kind: v.literal("reply"), by, character: v.string(), text: v.string() })
   )

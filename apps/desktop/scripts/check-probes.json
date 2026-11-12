@@ -25,9 +25,12 @@
     "encounter": "owlbear-confrontation",
     "hero": "thalbern",
     "action": "I loose an arrow at the owlbear's chest.",
-    "checks": ["dexterity"],
-    "dcs": [10, 15],
-    "mode": "normal"
+    "checks": ["attack"],
+    "mode": "normal",
+    "attack": {
+      "weapon": "longbow",
+      "target": "owlbear"
+    }
   },
   {
     "id": "home-tea",
@@ -129,5 +132,53 @@
     "checks": ["constitution-save"],
     "dcs": [10, 15],
     "mode": "normal"
+  },
+  {
+    "id": "owlbear-blade",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "action": "I draw my shortsword and slash at the owlbear's flank.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortsword",
+      "target": "owlbear"
+    },
+    "mode": "normal"
+  },
+  {
+    "id": "owlbear-punch",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "action": "I drop my bow and punch the owlbear square in the beak.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "unarmed-strike",
+      "target": "owlbear"
+    },
+    "mode": "normal"
+  },
+  {
+    "id": "owlbear-shoot-feeding",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The owlbear has its head down in a deer carcass, tearing at it, its back to Thalbern. It has not noticed him.",
+    "action": "I put an arrow between its shoulders before it knows I am here.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longbow",
+      "target": "owlbear"
+    },
+    "mode": "advantage"
+  },
+  {
+    "id": "stones-no-fight",
+    "adventure": "the-midnight-summons",
+    "encounter": "meeting-at-the-stones",
+    "hero": "thalbern",
+    "action": "I rest a hand on my sword hilt and tell Wollandora I am listening.",
+    "checks": ["none"]
   }
 ]

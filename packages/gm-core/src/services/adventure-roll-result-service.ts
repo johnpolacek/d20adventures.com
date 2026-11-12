@@ -1,5 +1,7 @@
 import type { GmPorts } from "../ports"
+import { type Strike, strike, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
+import { withHitPoints } from "../sheet/hit-points"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -7,12 +9,12 @@ import { castRulesNote } from "../story/limits"
 import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
-import { rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
+import { attackBeat, rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
-import { d20sFor } from "../utils/game-utils"
+import { d20sFor, rollDie } from "../utils/game-utils"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
-import type { RequiredRoll } from "../validations/roll-requirement-schema"
+import { isAttackRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules, keepPlayersAlive } from "../wiki-adventures/player-safety"
 import { markSpellAsUsed } from "./spell-tracking-service"
 import { createTurnUpdateService } from "./turn-update-service"
@@ -52,6 +54,8 @@ function buildRollOutcomePrompt(args: {
   margin: number
   scene: StoryScene
   ledger?: string
+  // An attack the engine has already resolved, in plain words: the hit or miss, the damage and how the target stands.
+  attack?: string
 }): string {
   return `
 Context:
@@ -69,7 +73,11 @@ IMPORTANT: Only reference NPCs listed above. Do NOT reference characters mention
 
 Player action (verbatim): """${args.playerActionText}"""
   
-A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args.totalResult}, Difficulty: ${args.difficulty}, Margin: ${args.margin}).
+${
+  args.attack
+    ? `${args.attack}\nThe game has already rolled this attack and its damage. Tell the blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
+    : `A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args.totalResult}, Difficulty: ${args.difficulty}, Margin: ${args.margin}).`
+}
 
   Guidelines:
   - ALWAYS generate narrative if NPCs are present and the action relates to them (attacking, hiding from, avoiding, reacting to, interacting with, etc.). Actions that respond to NPC threats or presence should be narrated.
@@ -129,13 +137,33 @@ export function createAdventureRollResultService(ports: GmPorts) {
     story: StoryBeat[]
     characters: TurnCharacter[]
   }> {
-    const { check, rollType, difficulty, mode, spell } = args.character.rollRequired
-    // The bonus is read from the sheet as the die lands, so the sheet is always the one source of it.
-    const result = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, check), dc: difficulty, mode })
-    const { natural: baseRoll, bonus: modifier, total: totalResult, success } = result
-    const margin = totalResult - difficulty
+    const required = args.character.rollRequired
+    const { rollType, mode } = required
     const by = { step: "roll" as const, character: args.character.id }
-    const roll = rollBeat(by, args.character, rollType, result)
+    let turnCharacters = args.turn.characters
+    let blow: Strike | undefined
+    let target: TurnCharacter | undefined
+    let roll: StoryBeat
+    let numbers: { natural: number; bonus: number; total: number; against: number; success: boolean }
+    if (isAttackRoll(required)) {
+      // An attack: the engine rolls to hit against the target's Armor Class and, on a hit, the damage. The target's
+      // hit points change here and nowhere else.
+      target = turnCharacters.find((character) => character.id === required.attack.target)
+      if (!target) throw new Error("The one attacked is no longer here.")
+      blow = strike({ attacker: args.character, target, weapon: required.attack.weapon, dice: d20sFor(mode, args.dice), mode, roll: rollDie })
+      const struck = blow
+      turnCharacters = turnCharacters.map((character) => (character.id === required.attack.target ? withHitPoints(character, struck.hitPoints.after) : character))
+      roll = attackBeat(by, args.character, target.id, blow)
+      numbers = { natural: blow.roll.natural, bonus: blow.roll.bonus, total: blow.roll.total, against: blow.roll.armorClass, success: blow.roll.hit }
+    } else {
+      // The bonus is read from the sheet as the die lands, so the sheet is always the one source of it.
+      const result = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, required.check), dc: required.difficulty, mode })
+      roll = rollBeat(by, args.character, rollType, result)
+      numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
+    }
+    const spell = isAttackRoll(required) ? undefined : required.spell
+    const { natural: baseRoll, bonus: modifier, total: totalResult, against: difficulty, success } = numbers
+    const margin = totalResult - difficulty
     const story = args.turn.story
     const names = storyNames(args.turn.characters)
     const playerActionText = storyText(lastStep(story), names)
@@ -144,11 +172,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
     let added: StoryBeat[] = [roll]
     // The dead are named apart, so an outcome does not have one gasp or stand again.
     const isDead = (c: TurnCharacter) => c.healthPercent === 0 || c.status === "dead"
-    const presentNpcs = args.turn.characters
-      .filter((character) => character.type === "npc" && !isDead(character) && character.status !== "fled")
+    // The one just struck down is still named among those present, so the outcome can tell them falling.
+    const presentNpcs = turnCharacters
+      .filter((character) => character.type === "npc" && (!isDead(character) || character.id === target?.id) && character.status !== "fled")
       .map((character) => character.name)
       .join(", ")
-    const deadNames = args.turn.characters.filter(isDead).map((character) => character.name)
+    const deadNames = turnCharacters.filter((character) => isDead(character) && character.id !== target?.id).map((character) => character.name)
 
     const rollOutcomePrompt = buildRollOutcomePrompt({
       narrativeContext,
@@ -163,6 +192,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       difficulty,
       margin,
       scene,
+      attack: blow && target ? strikeFacts(args.character.name, target.name, blow) : undefined,
       ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
 
@@ -193,7 +223,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // into the drake's flank" left it unhurt, and a ward's lightning that flung Cassia into the casks after a failed
     // Misty Step left her untouched.
     // A roll that heals is read the same way, so the health it restores is kept.
-    const shouldAnalyzeHealth = !!rollOutcome && (BODILY_CHECK.test(rollType) || HARM.test(rollOutcome) || HEALING.test(rollType) || HEALING.test(rollOutcome))
+    // An attack's harm is the engine's, so no one reads the outcome for it.
+    const shouldAnalyzeHealth = !blow && !!rollOutcome && (BODILY_CHECK.test(rollType) || HARM.test(rollOutcome) || HEALING.test(rollType) || HEALING.test(rollOutcome))
     console.log(`[resolvePlayerRollResult] Roll analysis: rollType=${rollType}, hasOutcome=${!!rollOutcome}, shouldAnalyzeHealth=${shouldAnalyzeHealth}`)
 
     const turnForAnalysis: Turn = {
@@ -201,7 +232,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       encounterId: args.turn.encounterId,
       title: args.turn.title,
       story: args.turn.story,
-      characters: args.turn.characters,
+      characters: turnCharacters,
       adventureId: args.turn.adventureId,
       isFinalEncounter: args.turn.isFinalEncounter,
     }

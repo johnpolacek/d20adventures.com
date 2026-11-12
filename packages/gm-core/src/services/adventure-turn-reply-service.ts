@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import type { Sheet } from "../sheet/sheet"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames } from "../story/render"
@@ -49,7 +50,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       order?: number
       story: StoryBeat[]
       adventureId: string
-      characters?: readonly { id: string; name: string }[]
+      characters?: readonly { id: string; name: string; type?: string; sheet?: Sheet; statBlock?: string; healthPercent?: number; status?: string }[]
     }
     adventure: {
       settingId: string
@@ -88,6 +89,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       encounterInstructions,
       narrativeContext: recentTurnNarratives || turnScript(args.turn),
       encounterIntro,
+      present: args.turn.characters,
     })
 
     return rollRequirement

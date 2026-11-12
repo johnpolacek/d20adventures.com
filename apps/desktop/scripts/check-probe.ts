@@ -8,6 +8,7 @@ import { DIFFICULTY_CLASSES } from "@d20/gm-core/sheet/check"
 import { authoredText } from "@d20/gm-core/story/authored"
 import { storyNames } from "@d20/gm-core/story/render"
 import type { Character } from "@d20/gm-core/types/character"
+import { isAttackRoll } from "@d20/gm-core/validations/roll-requirement-schema"
 import { localLlm } from "../runtime/llm"
 import { loadPack } from "./scene-judge"
 
@@ -17,7 +18,19 @@ import { loadPack } from "./scene-judge"
 // with no second model. In process, on the current prompt and content.
 // pnpm --dir apps/desktop check:probe [--only id] [--out file.json]
 
-type Probe = { id: string; adventure: string; encounter: string; hero: string; narrative?: string; action: string; checks: string[]; dcs?: number[]; mode?: string; spell?: string }
+type Probe = {
+  id: string
+  adventure: string
+  encounter: string
+  hero: string
+  narrative?: string
+  action: string
+  checks: string[]
+  dcs?: number[]
+  mode?: string
+  spell?: string
+  attack?: { weapon: string; target: string }
+}
 type Graded = { id: string; pass: boolean; faults: string[]; got: unknown }
 
 const here = fileURLToPath(new URL(".", import.meta.url))
@@ -44,14 +57,20 @@ async function run(probe: Probe): Promise<Graded> {
       encounterIntro: authoredText(encounter.sections.intro ?? "", storyNames([hero])),
       encounterInstructions: encounter.sections.gmNotes ?? "",
       narrativeContext: probe.narrative ?? "",
+      // The hero and the encounter's NPCs, so an attack has someone to land on.
+      present: [hero, ...encounter.npcRefs.map((ref) => ({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const }))],
     })
     const faults: string[] = []
-    const picked = got ? (menuId(got.check) ?? "?") : "none"
+    const picked = !got ? "none" : isAttackRoll(got) ? "attack" : (menuId(got.check) ?? "?")
     if (!probe.checks.includes(picked)) faults.push(`check ${picked}, wanted ${probe.checks.join(" or ")}`)
-    if (got) {
+    if (got && probe.mode && got.mode !== probe.mode) faults.push(`${got.mode}, wanted ${probe.mode}`)
+    if (got && isAttackRoll(got)) {
+      // An attack is graded on the weapon and on who it lands on. Its target number is the Armor Class, not a pick.
+      if (probe.attack && got.attack.weapon !== probe.attack.weapon) faults.push(`weapon ${got.attack.weapon}, wanted ${probe.attack.weapon}`)
+      if (probe.attack && got.attack.target !== probe.attack.target) faults.push(`target ${got.attack.target}, wanted ${probe.attack.target}`)
+    } else if (got) {
       if (!Object.values(DIFFICULTY_CLASSES).includes(got.difficulty as 5)) faults.push(`target ${got.difficulty} is off the ladder`)
       if (probe.dcs && !probe.dcs.includes(got.difficulty)) faults.push(`target ${got.difficulty}, wanted ${probe.dcs.join(" or ")}`)
-      if (probe.mode && got.mode !== probe.mode) faults.push(`${got.mode}, wanted ${probe.mode}`)
       if ((probe.spell ?? undefined) !== got.spell) faults.push(`spell ${got.spell ?? "none"}, wanted ${probe.spell ?? "none"}`)
     }
     return { id: probe.id, pass: faults.length === 0, faults, got }
@@ -74,8 +93,10 @@ await Promise.all(
 )
 graded.sort((a, b) => all.findIndex((p) => p.id === a.id) - all.findIndex((p) => p.id === b.id))
 for (const g of graded) {
-  const got = g.got as { rollType: string; difficulty: number; modifier: number; mode: string; reasons?: string[] } | null
-  const pick = got ? `${got.rollType} DC ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}` : "no roll"
+  const got = g.got as { rollType: string; difficulty: number; modifier: number; mode: string; reasons?: string[]; attack?: { target: string } } | null
+  const pick = got
+    ? `${got.rollType} ${got.attack ? `on ${got.attack.target}, AC` : "DC"} ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}`
+    : "no roll"
   log(`${g.pass ? "pass" : "FAIL"}  ${g.id.padEnd(18)} ${pick}${g.faults.length ? `\n      ${g.faults.join("; ")}` : ""}`)
 }
 log(`\n${graded.filter((g) => g.pass).length} of ${graded.length} pass`)
