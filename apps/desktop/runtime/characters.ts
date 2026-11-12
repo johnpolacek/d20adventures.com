@@ -1,6 +1,7 @@
 import type { TurnRecord } from "@d20/gm-core"
-import { withHealthPercent } from "@d20/gm-core/sheet/hit-points"
+import { atRoundStart, withHealthPercent, withStatusWord } from "@d20/gm-core/sheet/death"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
+import { isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { type CharacterUpdate, characterUpdateSchema } from "@d20/gm-core/wiki-adventures/character-updates"
 import { z } from "zod"
@@ -9,12 +10,21 @@ import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
 export const desktopPatchSchema = strictModelSchema(adventurePatchSchema.omit({ characterUpdates: true })).extend({
   characterUpdates: z.array(characterUpdateSchema).max(100).optional(),
 })
-export type CharacterState = Pick<TurnCharacter, "hitPoints" | "healthPercent" | "status" | "equipment" | "effects" | "spells">
+export type CharacterState = Pick<TurnCharacter, "hitPoints" | "healthPercent" | "status" | "deathSaves" | "equipment" | "effects" | "spells">
 export type CharacterStates = Record<string, CharacterState>
 const key = (name: string) => name.trim().toLowerCase()
 
 export function characterState(c: CharacterState): CharacterState {
-  return structuredClone({ hitPoints: c.hitPoints, healthPercent: c.healthPercent, status: c.status, equipment: c.equipment ?? [], effects: c.effects ?? [], spells: c.spells ?? [] })
+  return structuredClone({
+    hitPoints: c.hitPoints,
+    healthPercent: c.healthPercent,
+    status: c.status,
+    // Always set, so a hero brought back clears the saves a later spread would otherwise keep.
+    deathSaves: c.deathSaves,
+    equipment: c.equipment ?? [],
+    effects: c.effects ?? [],
+    spells: c.spells ?? [],
+  })
 }
 
 /** Old saves bootstrap from their latest snapshots, never by replaying descriptive patches. */
@@ -39,9 +49,10 @@ export function applyCharacterUpdates(characters: TurnCharacter[], input: unknow
     seen.add(update.characterId)
     const index = result.findIndex((c) => c.id === update.characterId)
     if (index < 0) throw new Error(`Unknown character in state update: ${update.characterId}`)
+    // Health and status go by the rules of 0 hit points.
     if (update.healthPercent !== undefined) result[index] = withHealthPercent(result[index], update.healthPercent)
+    if (update.status !== undefined) result[index] = withStatusWord(result[index], update.status)
     const c = result[index]
-    if (update.status !== undefined) c.status = update.status.trim() || undefined
     for (const change of update.inventoryChanges ?? []) {
       c.equipment ??= []
       if (change.op === "add") c.equipment.push({ name: change.name, ...(change.description !== undefined ? { description: change.description } : {}) })
@@ -72,6 +83,8 @@ export function applyCharacterUpdates(characters: TurnCharacter[], input: unknow
   return result
 }
 
+const deathState = (c: TurnCharacter) => ({ hitPoints: c.hitPoints, healthPercent: c.healthPercent, status: c.status, deathSaves: c.deathSaves })
+
 export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnCharacter[]; remembered: CharacterStates; updates: unknown; encounterChanged: boolean }): {
   characters: TurnCharacter[]
   characterStates: CharacterStates
@@ -93,18 +106,23 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
   // Keep fallen PCs in the party sheet, even though the shared turn builder omits them.
   const roster = [...args.next, ...args.current.filter((c) => c.type === "pc" && !args.next.some((n) => n.id === c.id))]
   const characters = roster.map((next) => {
-    const c = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), hasReplied: false, isComplete: false, rollRequired: undefined, rollResult: undefined }
+    // The rescue brings a hero at 0 back as the round turns, unless the round's patch already did.
+    const before = args.current.find((c) => c.id === next.id)
+    const revived = before && isDown(before) && !isDown(next) && isDown(states[next.id] ?? before) ? deathState(next) : {}
+    const c = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
+    if (!c.deathSaves) delete c.deathSaves
     if (args.encounterChanged) c.spells = (c.spells ?? []).map((s) => ({ ...s, isUsed: false }))
-    if (c.healthPercent === 0 || c.status === "dead" || c.status === "fled") c.isComplete = true
-    states[c.id] = characterState(c)
-    return c
+    // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none.
+    const ready = c.status === "fled" ? { ...c, hasReplied: false, isComplete: true } : atRoundStart(c)
+    states[c.id] = characterState(ready)
+    return ready
   })
   return { characters, characterStates: states }
 }
 
 // Who is dead, said outright: a poisoned Thaddeus died on his own turn, then gasped on one knee in the next outcome.
 const dead = (characters: TurnCharacter[]) => {
-  const names = characters.filter((c) => c.healthPercent === 0 || c.status === "dead").map((c) => c.name)
+  const names = characters.filter(isDead).map((c) => c.name)
   return names.length ? `\nDead: ${names.join(", ")}. The dead stay dead: they do not act, speak or move, and no one describes them alive.` : ""
 }
 

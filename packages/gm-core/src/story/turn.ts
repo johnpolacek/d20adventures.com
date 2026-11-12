@@ -2,12 +2,17 @@ import { z } from "zod"
 import type { GmPorts } from "../ports"
 import type { Strike } from "../sheet/attack"
 import type { CheckResult } from "../sheet/check"
+import { isDown } from "../utils/turn-actors"
 import { authoredStory } from "./authored"
 import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "./beats"
 import { cleanStory, type StoryScene } from "./clean"
 import { characterStory, storyNames, storyParagraphs, storyText } from "./render"
 
-type StoryTurn = { encounterId: string; story: StoryBeat[]; characters: readonly { id: string; name: string; type?: string; gender?: string; healthPercent?: number; status?: string }[] }
+type StoryTurn = {
+  encounterId: string
+  story: StoryBeat[]
+  characters: readonly { id: string; name: string; type?: string; gender?: string; hitPoints?: number; healthPercent?: number; status?: string }[]
+}
 
 // What a GM step returns when it writes story: its beats, alongside whatever else its schema asks for.
 export const beatsField = { beats: storyOutputSchema }
@@ -17,7 +22,7 @@ export const storyOutputObject = z.object(beatsField)
 export async function sceneFor(ports: GmPorts, turn: Omit<StoryTurn, "story">): Promise<StoryScene> {
   const places = (await ports.content.places?.(turn.encounterId).catch(() => undefined)) ?? undefined
   return {
-    cast: turn.characters.map((c) => ({ id: c.id, name: c.name, type: c.type, ...(c.gender ? { gender: c.gender } : {}), ...(c.healthPercent === 0 || c.status === "dead" ? { silent: true } : {}) })),
+    cast: turn.characters.map((c) => ({ id: c.id, name: c.name, type: c.type, ...(c.gender ? { gender: c.gender } : {}), ...(isDown(c) ? { silent: true } : {}) })),
     ...(places?.length ? { places } : {}),
   }
 }

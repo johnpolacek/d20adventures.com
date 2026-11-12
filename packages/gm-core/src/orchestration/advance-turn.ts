@@ -13,6 +13,7 @@ import {
   getRecentTurnsForContext,
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
+import { atRoundStart } from "../sheet/death"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
@@ -25,9 +26,10 @@ import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn } from "../utils/game-utils"
 import { dropPlayerPrompt } from "../utils/narrative-utils"
+import { isDead } from "../utils/turn-actors"
 import { validateAdventurePatch } from "../wiki-adventures/adventure-patch"
 import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter } from "../wiki-adventures/characters"
-import { keepPatchedPlayersAlive, keepPlayersAlive, pendingRescue } from "../wiki-adventures/player-safety"
+import { pendingRescue, rescuedCharacters } from "../wiki-adventures/player-safety"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "../wiki-adventures/runtime-context"
 import { validatePacketTransition } from "../wiki-adventures/transition-validator"
 
@@ -135,7 +137,7 @@ export function createAdvanceTurn(ports: GmPorts) {
       if (!transition.allowed) {
         throw new Error(`Wiki transition rejected: ${transition.rejectedReason} (${turn.encounterId} -> ${transition.nextEncounterId})`)
       }
-      // A badly hurt party is rescued only when the encounter would otherwise go on. A fight already won or fled
+      // A party with a hero down is rescued only when the encounter would otherwise go on. A fight already won or fled
       // follows its own transition.
       const rescue = pendingRescue({ artifacts, encounterId: turn.encounterId, characters: turn.characters as TurnCharacter[], playedEncounterIds: allTurns.map((row) => row.encounterId) })
       if (transition.kind === "continue" && rescue) {
@@ -154,7 +156,6 @@ export function createAdvanceTurn(ports: GmPorts) {
           transition
         )
       }
-      if (adventurePatch.characterUpdates) adventurePatch.characterUpdates = keepPatchedPlayersAlive(artifacts.manifest, adventurePatch.characterUpdates, turn.characters as TurnCharacter[])
       // What the round taught: its private beats for those in them, then what the GM recorded. Where the heroes start
       // as strangers, every hero's name said aloud so far, for those who heard it.
       const knowledge = [
@@ -177,15 +178,13 @@ export function createAdvanceTurn(ports: GmPorts) {
             existingPlayerCharacters: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc"),
           })
         : (turn.characters as TurnCharacter[])
-            .filter((character) => character.status !== "dead" && character.status !== "fled")
-            .map((character) => ({
-              ...character,
-              // Initiative was rolled as the encounter began. Every round keeps that order.
-              hasReplied: false,
-              isComplete: false,
-            }))
+            .filter((character) => !isDead(character) && character.status !== "fled")
+            // Initiative was rolled as the encounter began. Every round keeps that order.
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-      const characters = keepPlayersAlive(artifacts.manifest, nextCharacters)
+      // Entering the rescue encounter brings every hero who is down but not dead back to 1 hit point. Then a dying
+      // hero's turn is their Death Saving Throw.
+      const rescuing = isTransition && artifacts.manifest.rescue?.encounterId === nextEncounter.id
+      const characters = (rescuing ? rescuedCharacters(nextCharacters) : nextCharacters).map(atRoundStart)
       // A new encounter opens on its intro, read as beats for the characters who are in it. One the party has played
       // before does not read it again: they know the place, and the round's own story has brought them back.
       const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters }) : scene

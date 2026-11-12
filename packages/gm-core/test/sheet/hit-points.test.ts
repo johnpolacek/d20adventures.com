@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { healthPercentOf, hitPointsOf, withHealthPercent, withHitPoints, withStartingHitPoints } from "../../src/sheet/hit-points"
+import { withHealthPercent } from "../../src/sheet/death"
+import { healthPercentOf, hitPointsOf, withHitPoints, withStartingHitPoints } from "../../src/sheet/hit-points"
 import type { Sheet } from "../../src/sheet/sheet"
 
 // A Fighter with Constitution 15 has 12 hit points at level 1: d10 + 2.

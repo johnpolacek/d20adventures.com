@@ -1,53 +1,21 @@
-import { withHitPoints } from "../sheet/hit-points"
+import { revived } from "../sheet/death"
 import type { Sheet } from "../sheet/sheet"
+import { isDead, isDown } from "../utils/turn-actors"
 import type { RuntimeArtifacts, RuntimeManifest, RuntimeTransition } from "./types"
 
 // Authored adventure rules the core enforces itself, because the model cannot be trusted to judge them:
-// `playerDeath: false` keeps player characters alive, and `rescue` moves a badly hurt party to a rescue encounter.
+// `playerDeath: false` leaves a hero who would die Stable at 0 hit points instead (../sheet/death), and `rescue`
+// moves a party with a hero down to a rescue encounter.
 export type SafetyRules = Pick<RuntimeManifest, "playerDeath" | "premise">
-type Health = { type: string; sheet?: Sheet; hitPoints?: number; healthPercent?: number; status?: string }
+type Health = { type: string; name?: string; sheet?: Sheet; hitPoints?: number; healthPercent?: number; status?: string; deathSaves?: { successes: number; failures: number; stable?: true } }
 
-/** The floor `playerDeath: false` keeps a player character at: 1 hit point. */
-export const MIN_PLAYER_HIT_POINTS = 1
-// The same floor for a patch, which speaks in percent: withHealthPercent turns any percent above 0 into at least 1 hit point.
-const MIN_PATCHED_HEALTH_PERCENT = 1
 const NO_DEATH_NOTE =
-  "Player characters cannot die in this adventure. A blow that would kill instead leaves a player character badly hurt, disarmed, pinned or reeling. Never describe a player character as dead or dying."
+  "Player characters cannot die in this adventure. One who falls to 0 hit points is unconscious and out of the fight, and lives. Never describe a player character as dead."
 
 // A trinket seller gave the Black Market's location in a scene whose notes make it atmosphere only, and Thaddeus
 // confessed to a murder no note let him confess.
 const NOTES_BIND =
   "These GM notes bind every outcome. What they say does not happen, or that no one knows, says or gives, holds. No one gives a clue, location, secret, confession or reveal the notes and the story so far do not provide."
-
-const isDead = (status?: string) => status?.trim().toLowerCase() === "dead"
-
-/** With `playerDeath: false`, a player character keeps at least 1 hit point and never takes the status "dead". */
-export function keepPlayersAlive<T extends Health>(rules: SafetyRules | undefined, characters: T[]): T[] {
-  if (rules?.playerDeath !== false) return characters
-  return characters.map((c) => {
-    if (c.type !== "pc") return c
-    const low = typeof c.hitPoints === "number" && c.hitPoints < MIN_PLAYER_HIT_POINTS
-    if (!low && !isDead(c.status)) return c
-    return { ...(low ? withHitPoints(c, MIN_PLAYER_HIT_POINTS) : c), status: isDead(c.status) ? undefined : c.status }
-  })
-}
-
-/** The same floor for the character updates a host applies from the model's advance patch. */
-export function keepPatchedPlayersAlive<U extends { characterId: string; healthPercent?: number; status?: string }>(
-  rules: SafetyRules | undefined,
-  updates: U[],
-  characters: Array<{ id: string; type: string }>
-): U[] {
-  if (rules?.playerDeath !== false) return updates
-  const players = new Set(characters.filter((c) => c.type === "pc").map((c) => c.id))
-  return updates.map((update) => {
-    if (!players.has(update.characterId)) return update
-    const safe = { ...update }
-    if (typeof safe.healthPercent === "number" && safe.healthPercent < MIN_PATCHED_HEALTH_PERCENT) safe.healthPercent = MIN_PATCHED_HEALTH_PERCENT
-    if (isDead(safe.status)) delete safe.status
-    return safe
-  })
-}
 
 /**
  * The adventure's premise as a prompt block, or nothing. The story's own text cannot be trusted to carry it: the
@@ -58,8 +26,8 @@ export function premiseNote(premise?: string): string {
 }
 
 /**
- * Adds the adventure's standing rules to an encounter's GM notes: that the notes bind, the premise, and what the floor
- * above enforces, so the GM's prose does not kill a character the state keeps alive.
+ * Adds the adventure's standing rules to an encounter's GM notes: that the notes bind, the premise, and that player
+ * death is off, so the GM's prose does not kill a character the rules keep alive.
  */
 export function gmNotesWithRules(rules: SafetyRules | undefined, gmNotes?: string): string | undefined {
   const added = [gmNotes?.trim() ? NOTES_BIND : "", rules?.playerDeath === false ? NO_DEATH_NOTE : "", premiseNote(rules?.premise)].filter(Boolean)
@@ -68,7 +36,7 @@ export function gmNotesWithRules(rules: SafetyRules | undefined, gmNotes?: strin
 
 /**
  * The rescue transition to take now: the adventure has a rescue it has not played yet, the current encounter authors
- * a transition to it, and a player character is at or below the threshold. The model never sees this transition.
+ * a transition to it, and a hero is at 0 hit points and not dead. The model never sees this transition.
  */
 export function pendingRescue(args: {
   artifacts: Pick<RuntimeArtifacts, "manifest" | "graph">
@@ -78,6 +46,11 @@ export function pendingRescue(args: {
 }): RuntimeTransition | undefined {
   const rescue = args.artifacts.manifest.rescue
   if (!rescue || args.encounterId === rescue.encounterId || args.playedEncounterIds.includes(rescue.encounterId)) return undefined
-  if (!args.characters.some((c) => c.type === "pc" && c.status !== "fled" && (c.healthPercent ?? 100) <= rescue.atHealthPercent)) return undefined
+  if (!args.characters.some((c) => c.type === "pc" && isDown(c) && !isDead(c))) return undefined
   return args.artifacts.graph.encounterTransitions.find((t) => t.fromEncounterId === args.encounterId && t.toEncounterId === rescue.encounterId && t.publishResolved)
+}
+
+/** The party as the rescue reaches it: every hero at 0 hit points and not dead is back at 1 hit point, conscious. */
+export function rescuedCharacters<T extends Health>(characters: T[]): T[] {
+  return characters.map((c) => (c.type === "pc" && isDown(c) && !isDead(c) ? revived(c, 1) : c))
 }

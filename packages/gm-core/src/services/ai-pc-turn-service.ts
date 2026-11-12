@@ -9,7 +9,7 @@ import { characterStory, scriptLine, storyNames } from "../story/render"
 import { characterScript, sceneFor, storyOutputObject, storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import { PLAYER_KNOWLEDGE_RULE } from "../utils/narrative-utils"
-import { isAiControlledPc, isDeadActor } from "../utils/turn-actors"
+import { isAiControlledPc, isDown, takesTurn } from "../utils/turn-actors"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { premiseNote } from "../wiki-adventures/player-safety"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "./adventure-roll-result-service"
@@ -84,7 +84,7 @@ function buildSceneRoster(characters: TurnCharacter[], selfId: string, heard?: N
   return characters
     .filter((c) => c.id !== selfId)
     .map((c) => {
-      if (isDeadActor(c)) return `${c.name} (down)`
+      if (isDown(c)) return `${c.name} (down)`
       const hurt = typeof c.healthPercent === "number" && c.healthPercent < 50 ? ", badly wounded" : ""
       const led = c.type === "pc" && c.controlledBy !== "ai" ? " (a hero played by a person)" : ""
       const unheard = heard && c.type === "pc" && !heard(selfId, c.id) ? " (a stranger, name not yet heard)" : ""
@@ -208,11 +208,12 @@ export function createAiPcTurnService(ports: GmPorts) {
     let turn = await ports.store.getTurn({ turnId })
     if (!turn) throw new Error("Turn not found")
     let character = (turn.characters as TurnCharacter[]).find((c) => c.id === characterId)
-    if (!character || !isAiControlledPc(character) || character.isComplete) {
-      console.log("[AI PC] Skipping — character missing, not AI-controlled, or already complete:", characterId)
+    if (!character || !isAiControlledPc(character) || character.isComplete || !takesTurn(character)) {
+      console.log("[AI PC] Skipping — character missing, not AI-controlled, already complete, or down:", characterId)
       return
     }
 
+    // A dying companion's turn is its Death Saving Throw, asked for as the round began: the engine rolls it below.
     const needsRollResolution = character.hasReplied && character.rollRequired && typeof character.rollResult !== "number"
     const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
 

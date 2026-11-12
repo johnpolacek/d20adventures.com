@@ -6,7 +6,7 @@
 
 import { useUser } from "@clerk/nextjs"
 import { useTurnContext } from "@/lib/context/TurnContext"
-import { findCurrentActor, hasPendingAutonomousAction, isAiControlledPc } from "@/lib/utils/turn-actors"
+import { findCurrentActor, hasPendingAutonomousAction, isAiControlledPc, isDead, takesTurn } from "@/lib/utils/turn-actors"
 import type { TurnCharacter } from "@/types/adventure"
 
 export function useTurnActor() {
@@ -34,7 +34,8 @@ export function useTurnActor() {
       !isAiControlledPc(currentCharacter) &&
       !isNpcProcessing &&
       !disableSSE &&
-      currentCharacter.healthPercent !== 0
+      // A dying hero's turn is their Death Saving Throw, which the roll card shows.
+      takesTurn(currentCharacter)
   )
 
   // Find the player's character and check if their turn is complete.
@@ -42,9 +43,9 @@ export function useTurnActor() {
   const playerCharacter = currentTurn?.characters.find((c: TurnCharacter) => c.type === "pc" && c.userId === user?.id && !isAiControlledPc(c))
   const isPlayerTurnComplete = playerCharacter?.isComplete
 
-  // Check if all PCs are dead
+  // Check if all PCs are dead. A hero who is dying or Stable is not.
   const pcs = currentTurn?.characters.filter((c: TurnCharacter) => c.type === "pc") || []
-  const allPCsDead = pcs.length > 0 && pcs.every((c) => c.healthPercent === 0)
+  const allPCsDead = pcs.length > 0 && pcs.every(isDead)
 
   return {
     currentTurn,

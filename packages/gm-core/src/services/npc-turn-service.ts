@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import { afterHarm } from "../sheet/death"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { KnownFact } from "../story/knowledge"
@@ -6,8 +7,8 @@ import { type StoryNames, storyNames, storyText } from "../story/render"
 import { sceneFor } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
-import { isAiControlledPc } from "../utils/turn-actors"
-import { gmNotesWithRules, keepPlayersAlive, type SafetyRules } from "../wiki-adventures/player-safety"
+import { isAiControlledPc, isDown, isDying } from "../utils/turn-actors"
+import { gmNotesWithRules, type SafetyRules } from "../wiki-adventures/player-safety"
 import { createAiPcTurnService } from "./ai-pc-turn-service"
 import { createNpcTurnBranchService, handleSkipPassNpcTurn, type NpcRollInfo, type NpcTurnBranchResult } from "./npc-turn-branch-service"
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "./npc-turn-effects-service"
@@ -102,6 +103,7 @@ export function createNpcTurnService(ports: GmPorts) {
     knowledge,
     strangers,
     earlier,
+    rules,
   }: {
     turn: Turn
     npcId: string
@@ -115,6 +117,8 @@ export function createNpcTurnService(ports: GmPorts) {
     strangers?: boolean
     // The NPC's own turns in the scene's earlier rounds.
     earlier?: string
+    // The adventure's rules: with `playerDeath: false` a hero the NPC would kill is left Stable instead.
+    rules?: SafetyRules
   }): Promise<{
     updatedCharacters: TurnCharacter[]
     beatsToAppend: StoryBeat[]
@@ -200,6 +204,7 @@ export function createNpcTurnService(ports: GmPorts) {
         playerCharacters: npcActionContext.playerCharacters,
       },
       scene,
+      rules,
     })
 
     let updatedCharacters = branchResult.updatedCharacters
@@ -321,10 +326,11 @@ export function createNpcTurnService(ports: GmPorts) {
 
     let processedNpcCount = 0
     for (const char of initiativeOrder) {
-      // Skip dead PCs and continue processing NPCs
-      if (char.type === "pc" && (char.healthPercent === 0 || char.status === "dead")) {
-        console.log("[LLM] Skipping dead player character:", char.name)
-        continue // Skip dead PCs and continue with NPCs
+      // Skip a hero who is dead or Stable and continue processing NPCs. A dying hero's turn is their Death Saving
+      // Throw: an AI companion's is rolled below, and the loop stops on a player's.
+      if (char.type === "pc" && isDown(char) && !isDying(char)) {
+        console.log("[LLM] Skipping fallen player character:", char.name)
+        continue
       }
       if (isAiControlledPc(char)) {
         // AI companion: play their turn automatically, then keep walking the
@@ -442,6 +448,7 @@ export function createNpcTurnService(ports: GmPorts) {
           knowledge: adventure.knowledge,
           strangers,
           earlier: npcEarlierTurns(allTurns, turn, npc.id),
+          rules,
         })
       } catch (error) {
         console.error("[LLM] NPC turn failed, stopping loop for retry:", npc.name, error)
@@ -466,7 +473,7 @@ export function createNpcTurnService(ports: GmPorts) {
       const turnPatch = buildNpcTurnUpdatePatch({
         turn,
         beatsToAppend: result.beatsToAppend,
-        updatedCharacters: keepPlayersAlive(rules, result.updatedCharacters),
+        updatedCharacters: result.updatedCharacters.map(afterHarm),
       })
 
       console.log(
@@ -502,7 +509,7 @@ export function createNpcTurnService(ports: GmPorts) {
         )
       )
       // A fallen NPC's turn only tells its fall, so it does not use up the call.
-      if (!(npc.healthPercent === 0 || npc.status === "dead") && ++played >= limit) break
+      if (!isDown(npc) && ++played >= limit) break
     }
 
     // After processing NPCs, mark all dead characters as complete

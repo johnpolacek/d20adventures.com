@@ -10,6 +10,7 @@ import { storyNames } from "../story/render"
 import { beatsField, characterScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
+import { isDown } from "../utils/turn-actors"
 import { formatSpellsForPrompt } from "./spell-tracking-service"
 
 const npcActionSchema = z.object({
@@ -81,8 +82,8 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
   const narrativeContext = characterScript(turn, npc.id).split(/\n\n+/).slice(-6).join("\n\n")
   const intro = encounterContext?.introSource !== undefined ? authoredText(encounterContext.introSource, storyNames(turn.characters), npc.id) : encounterContext?.intro
   const playerCharacters = turn.characters.filter((character) => character.type === "pc")
-  const alivePlayerCharacters = playerCharacters.filter((character) => character.healthPercent !== 0 && character.status !== "dead")
-  const deadPlayerCharacters = playerCharacters.filter((character) => character.healthPercent === 0 || character.status === "dead")
+  const alivePlayerCharacters = playerCharacters.filter((character) => !isDown(character))
+  const deadPlayerCharacters = playerCharacters.filter(isDown)
 
   const contextString = [
     adventureOverview ? `Adventure Overview: ${adventureOverview}` : "",
@@ -224,8 +225,7 @@ export function buildNpcOutcomePrompt(args: {
   const playerCharacterNames = args.playerCharacters.map((character) => character.name)
   const playerCharacterDetails = args.playerCharacters
     .map((character) => {
-      const isDead = character.healthPercent === 0 || character.status === "dead"
-      const status = isDead
+      const status = isDown(character)
         ? `DEAD/UNCONSCIOUS (HP ${character.healthPercent}%, Status: ${character.status || "Dead"})`
         : `HP ${character.healthPercent ?? 100}%${character.status ? `, Status: ${character.status}` : ""}`
       return `- ${character.name}: ${character.archetype || "Unknown"}, ${status}, Equipment: ${character.equipment?.map((equipment) => equipment.name).join(", ") || "None"}`

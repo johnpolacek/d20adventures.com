@@ -1,5 +1,6 @@
 import type { GmPorts } from "../ports"
-import { withHealthPercent, withHitPoints } from "../sheet/hit-points"
+import { withHealthPercent, withStatusWord } from "../sheet/death"
+import { withHitPoints } from "../sheet/hit-points"
 import type { StoryBeat } from "../story/beats"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { createTurnUpdateService } from "./turn-update-service"
@@ -14,12 +15,10 @@ export type NpcTurnEffect = {
 export function applyNpcEffectsToCharacters(args: { characters: TurnCharacter[]; npcId: string; effects?: NpcTurnEffect[]; applyHealthAndStatus: boolean }): TurnCharacter[] {
   return args.characters.map((character) => {
     const effect = args.effects?.find((entry) => entry.targetId === character.id)
-    const updated = args.applyHealthAndStatus && effect?.healthPercentDelta !== undefined ? withHealthPercent(character, character.healthPercent + effect.healthPercentDelta) : { ...character }
+    let updated = args.applyHealthAndStatus && effect?.healthPercentDelta !== undefined ? withHealthPercent(character, character.healthPercent + effect.healthPercentDelta) : { ...character }
 
     if (effect) {
-      if (args.applyHealthAndStatus) {
-        updated.status = effect.status || character.status
-      }
+      if (args.applyHealthAndStatus && effect.status) updated = withStatusWord(updated, effect.status)
 
       if (effect.equipmentToAdd && effect.equipmentToAdd.length > 0) {
         const existingEquipment = Array.isArray(character.equipment) ? character.equipment : []

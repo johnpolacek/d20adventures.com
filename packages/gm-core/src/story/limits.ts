@@ -1,11 +1,12 @@
 import type { TurnCharacter } from "../types/adventure"
+import { isDown } from "../utils/turn-actors"
 
 // Words that make an authored line an absolute rule. The model breaks these first: given a gruff foreman, it had him
 // tell the heroes to move along, though the notes said he never sends them away.
 const ABSOLUTE = /\b(?:never|nothing|no one|silent|wordless)\b/i
 
 const literal = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-const isOut = (c: TurnCharacter) => c.healthPercent === 0 || c.status === "dead" || c.status === "fled"
+const isOut = (c: TurnCharacter) => isDown(c) || c.status === "fled"
 
 // The sentences of a block of notes, without markdown.
 function sentences(text: string): string[] {

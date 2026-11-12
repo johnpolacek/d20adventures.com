@@ -42,10 +42,13 @@ export function buildLocalWikiTurnCharacters(args: {
       hasReplied: false,
       isComplete: false,
     }
-    // A hero enters play at its maximum. One carried from the encounter before keeps the hit points it has.
+    // A hero enters play at its maximum. One carried from the encounter before keeps the hit points it has, and one
+    // carried at 0 stays down as they were: dead, Stable, or dying with their Death Saving Throws so far.
     // Initiative is rolled as the encounter begins and kept until it ends.
     hero.initiative = rollInitiative(hero, rollD20())
-    characters.push(carried?.hitPoints === undefined ? withStartingHitPoints(hero) : withHitPoints(hero, carried.hitPoints))
+    const was = carried as Partial<TurnCharacter> | undefined
+    const down = was?.hitPoints === 0 ? { status: was.status, deathSaves: was.deathSaves } : undefined
+    characters.push(carried?.hitPoints === undefined ? withStartingHitPoints(hero) : { ...withHitPoints(hero, carried.hitPoints), ...down })
   }
 
   for (const npcRef of args.encounter.npcRefs) {

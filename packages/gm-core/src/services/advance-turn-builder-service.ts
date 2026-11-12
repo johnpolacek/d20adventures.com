@@ -1,3 +1,4 @@
+import { atRoundStart, revived } from "../sheet/death"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
@@ -5,6 +6,7 @@ import { cleanStory } from "../story/clean"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { rollD20 } from "../utils/game-utils"
+import { isDead } from "../utils/turn-actors"
 import { findEncounterInPlan } from "./advance-turn-prompt-service"
 import { resetAllSpells } from "./spell-tracking-service"
 
@@ -43,14 +45,11 @@ export type BuildNextTurnResult =
     }
 
 function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; story: StoryBeat[] }): Turn {
-  let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => c.status !== "dead" && c.status !== "fled")
+  let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => !isDead(c) && c.status !== "fled")
 
-  // Last round's rolls are over. Initiative was rolled as the encounter began, and every round keeps that order.
-  newCharacters = newCharacters.map(({ rollResult: _rollResult, ...c }) => ({
-    ...c,
-    hasReplied: false,
-    isComplete: false,
-  }))
+  // Last round's rolls are over. Initiative was rolled as the encounter began, and every round keeps that order. A
+  // dying hero's turn is their Death Saving Throw.
+  newCharacters = newCharacters.map(({ rollResult: _rollResult, ...c }) => atRoundStart(c))
 
   newCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 
@@ -78,7 +77,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
   }
 
   let pcs: TurnCharacter[] = (args.turn.characters as TurnCharacter[])
-    .filter((c) => c.type === "pc" && c.status !== "dead" && c.status !== "fled")
+    .filter((c) => c.type === "pc" && !isDead(c) && c.status !== "fled")
     .map(({ rollResult: _rollResult, ...pc }) => ({
       ...pc,
       initiative: rollD20(),
@@ -94,11 +93,8 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
 
   if (nextEncounter.resetHealth) {
     console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`)
-    pcs = pcs.map((pc) => ({
-      // Back to its maximum: withHitPoints clamps to it.
-      ...withHitPoints(pc, Number.POSITIVE_INFINITY),
-      status: pc.status === "dead" ? "" : pc.status,
-    }))
+    // Back to its maximum: withHitPoints clamps to it. A hero at 0 wakes.
+    pcs = pcs.map((pc) => (pc.hitPoints === 0 ? revived(pc, Number.POSITIVE_INFINITY) : withHitPoints(pc, Number.POSITIVE_INFINITY)))
   }
 
   const isFirstTurnForEncounter = !args.allTurns.some((previousTurn) => previousTurn.encounterId === nextEncounter.id)
@@ -129,11 +125,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
   })
 
   let allCharacters: TurnCharacter[] = [...pcs, ...npcs]
-  allCharacters = allCharacters.map((c) => ({
-    ...c,
-    hasReplied: false,
-    isComplete: false,
-  }))
+  allCharacters = allCharacters.map(atRoundStart)
   allCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 
   const intro = cleanStory(authoredStory(nextEncounter.intro || "", { cast: allCharacters }), { cast: allCharacters }, { step: "intro" })

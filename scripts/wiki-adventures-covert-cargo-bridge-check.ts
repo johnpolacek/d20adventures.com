@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
-import { withHitPoints } from "@d20/gm-core/sheet/hit-points"
-import { keepPatchedPlayersAlive, keepPlayersAlive, MIN_PLAYER_HIT_POINTS, pendingRescue } from "@d20/gm-core/wiki-adventures/player-safety"
+import { killed, withDamage } from "@d20/gm-core/sheet/death"
+import { pendingRescue } from "@d20/gm-core/wiki-adventures/player-safety"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "@d20/gm-core/wiki-adventures/runtime-context"
 import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, isLocalWikiFinalEncounter, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 
@@ -89,21 +89,22 @@ async function main() {
   for (const id of ["the-shipment", "the-transaction", "the-fake", "the-disturbance", "battle-on-the-boat"])
     assert.match(artifacts.encounters[id].sections.gmNotes ?? "", /Perception check, DC 15/, id)
   assert.match(artifacts.encounters["the-shipment"].sections.intro ?? "", /Neither knows of the third watcher/)
-  const hurt = (healthPercent: number) => [
-    { type: "pc", healthPercent },
-    { type: "pc", healthPercent: 100 },
-    { type: "npc", healthPercent: 10 },
+  const hurt = (hitPoints: number, status?: string) => [
+    { type: "pc", hitPoints, status },
+    { type: "pc", hitPoints: 6 },
+    { type: "npc", hitPoints: 0, status: "dead" },
   ]
-  assert.equal(pendingRescue({ artifacts, encounterId: "battle-on-the-boat", characters: hurt(20), playedEncounterIds: [] }), undefined, "no rescue is authored")
-  // The rescue rule itself, on a copy that authors one: the fight leads to the crate when a hero is at half health.
+  assert.equal(pendingRescue({ artifacts, encounterId: "battle-on-the-boat", characters: hurt(0, "Unconscious"), playedEncounterIds: [] }), undefined, "no rescue is authored")
+  // The rescue rule itself, on a copy that authors one: the fight leads to the crate when a hero is at 0 and not dead.
   const rescued = structuredClone(artifacts)
-  rescued.manifest.rescue = { encounterId: "the-crate", atHealthPercent: 50 }
-  const rescueFrom = (encounterId: string, healthPercent: number, playedEncounterIds: string[] = []) =>
-    pendingRescue({ artifacts: rescued, encounterId, characters: hurt(healthPercent), playedEncounterIds })
-  assert.equal(rescueFrom("battle-on-the-boat", 50)?.toEncounterId, "the-crate")
-  assert.equal(rescueFrom("battle-on-the-boat", 51), undefined, "the rescue waits for half health")
-  assert.equal(rescueFrom("battle-on-the-boat", 20, ["the-crate"]), undefined, "the rescue plays once")
-  assert.equal(rescueFrom("the-shipment", 20), undefined, "the rescue needs an authored transition")
+  rescued.manifest.rescue = { encounterId: "the-crate" }
+  const rescueFrom = (encounterId: string, hitPoints: number, playedEncounterIds: string[] = [], status = "Unconscious") =>
+    pendingRescue({ artifacts: rescued, encounterId, characters: hurt(hitPoints, status), playedEncounterIds })
+  assert.equal(rescueFrom("battle-on-the-boat", 0)?.toEncounterId, "the-crate")
+  assert.equal(rescueFrom("battle-on-the-boat", 1), undefined, "the rescue waits for a hero at 0")
+  assert.equal(rescueFrom("battle-on-the-boat", 0, [], "dead"), undefined, "the dead are not rescued")
+  assert.equal(rescueFrom("battle-on-the-boat", 0, ["the-crate"]), undefined, "the rescue plays once")
+  assert.equal(rescueFrom("the-shipment", 0), undefined, "the rescue needs an authored transition")
 
   const battle = artifacts.encounters["battle-on-the-boat"]
   const battleCharacters = buildLocalWikiTurnCharacters({ artifacts, encounter: battle, players: [{ userId: "user_test", characterId: "1749159962941" }] })
@@ -140,26 +141,14 @@ async function main() {
   assert.match(buildWikiEncounterProgressionPrompt(packet), /Perception check, DC 15/)
   assert.match(packet.currentEncounter.gmNotes ?? "", /cannot die/)
 
-  // Lyra has 6 hit points: 1 of them shows as 17%, and 3 as 50%.
+  // Lyra has 6 hit points. Player death is off here, so a blow that would kill her outright, 12 or more with 6 left
+  // over, leaves her Stable at 0 instead. Where it is on, the same blow kills.
   const lyra = battleCharacters.find((c) => c.id === "1749159962941")
   assert.ok(lyra)
-  const fallen = keepPlayersAlive(artifacts.manifest, [
-    { ...withHitPoints(lyra, 0), status: "Bleeding" },
-    { ...withHitPoints(lyra, 3), status: "Dead" },
-    { type: "npc", hitPoints: 0, healthPercent: 0, status: "dead" },
-  ])
-  assert.deepEqual(
-    fallen.map((c) => [c.hitPoints, c.healthPercent, c.status]),
-    [
-      [MIN_PLAYER_HIT_POINTS, 17, "Bleeding"],
-      [3, 50, undefined],
-      [0, 0, "dead"],
-    ]
-  )
-  assert.deepEqual(keepPatchedPlayersAlive(artifacts.manifest, [{ characterId: "1749159962941", healthPercent: 0, status: "dead" }], battleCharacters), [
-    { characterId: "1749159962941", healthPercent: 1 },
-  ])
-  assert.equal(keepPlayersAlive({}, [{ type: "pc", hitPoints: 0, healthPercent: 0 }])[0].hitPoints, 0, "other adventures keep their deaths")
+  const outright = withDamage(lyra, 12, { rules: artifacts.manifest })
+  assert.deepEqual([outright.character.hitPoints, outright.character.status, outright.character.deathSaves?.stable, outright.fate], [0, "Unconscious", true, "stable"])
+  assert.equal(killed(lyra, artifacts.manifest).status, "Unconscious")
+  assert.equal(killed(lyra, {}).status, "dead", "other adventures keep their deaths")
 
   console.log("Covert Cargo playthrough bridge checks passed")
 }

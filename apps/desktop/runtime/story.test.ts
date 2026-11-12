@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { withHealthPercent } from "@d20/gm-core/sheet/death"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { game, type Packs, suggest, transitionsOf } from "./game"
 import { LocalStore } from "./store"
@@ -48,7 +49,11 @@ async function playing(run: (store: LocalStore, step: (next: string, patch?: Rec
 async function midnight(store: LocalStore, step: (next: string, patch?: Record<string, unknown>) => Promise<void>) {
   await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
   await step("owlbear-confrontation")
-  await step("timely-rescue", {
+  // The Owlbear drops Thalbern to 0, and the round's end takes him to the rescue.
+  const thalbern = store.current().characters.find((c) => c.id === THALBERN)!
+  Object.assign(thalbern, withHealthPercent(thalbern, 0))
+  store.save()
+  await step("owlbear-confrontation", {
     summaryDelta: "Thalbern drove off the owlbear with fire and took a feather from its nest.",
     characterUpdates: [{ characterId: THALBERN, healthPercent: 40, status: "Clawed", inventoryChanges: [{ op: "add", name: "Owlbear Feather", description: "Long, barred and grey." }] }],
   })

@@ -5,7 +5,7 @@ import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-
 import { characterScript } from "@d20/gm-core/story/turn"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import type { PCTemplate } from "@d20/gm-core/types/character"
-import { findCurrentActor, isDeadActor } from "@d20/gm-core/utils/turn-actors"
+import { findCurrentActor, isDown, isDying } from "@d20/gm-core/utils/turn-actors"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { scenePlaces, spatialContext } from "../src/scenes"
 import type { Packs } from "./game"
@@ -78,12 +78,12 @@ type Actor = TurnCharacter & { controlledBy?: "ai"; userId?: string }
 
 /**
  * What the GM carries on with by itself: the NPC or AI hero whose turn it is, or "round" once everyone has acted.
- * Null while a player's hero is up, or when no player has a living hero left, so a game never plays itself.
+ * Null while a player's hero is up, or when no player has a hero left who can act or is dying, so a game never plays itself.
  */
 export function selfRunning(characters: Actor[]): string | null {
   const actor = findCurrentActor(characters)
   if (actor?.type === "pc" && actor.controlledBy !== "ai") return null
-  if (!characters.some((c) => c.type === "pc" && c.controlledBy !== "ai" && !isDeadActor(c))) return null
+  if (!characters.some((c) => c.type === "pc" && c.controlledBy !== "ai" && (!isDown(c) || isDying(c)))) return null
   return actor?.id ?? "round"
 }
 

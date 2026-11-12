@@ -61,6 +61,9 @@ export const baseCharacterSchema = z.object({
   hitPoints: z.number().int().min(0).optional(),
   // 0-100, a copy of the hit points that withHitPoints writes, for the screens and prompts that read it.
   healthPercent: z.number().min(0).max(100).optional(),
+  // A hero at 0 hit points who is not dead: their Death Saving Throws so far, and whether they are Stable. Only the
+  // engine writes them, through ../sheet/death.
+  deathSaves: z.object({ successes: z.number().int().min(0).max(3), failures: z.number().int().min(0).max(3), stable: z.literal(true).optional() }).optional(),
   equipment: z.array(equipmentItemSchema).optional(),
   skills: z.array(z.string()).optional(),
   spells: z.array(spellSchema).optional(),
@@ -109,7 +112,7 @@ export const characterSchema = z.union([pcSchema, npcSchema])
 export type Character = z.infer<typeof characterSchema>
 
 // Generation schemas (without id and image for AI generation)
-export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true, sheet: true, hitPoints: true })
+export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true, sheet: true, hitPoints: true, deathSaves: true })
 
 export const npcGenerationSchema = baseCharacterGenerationSchema.extend({
   type: z.literal("npc"),

@@ -50,12 +50,3 @@ export function withHitPoints<T extends Wounded>(character: T, current: number):
 export function withStartingHitPoints<T extends Wounded>(character: T): T & { hitPoints: number; healthPercent: number } {
   return withHitPoints(character, character.hitPoints ?? maximumOf(character))
 }
-
-/**
- * The character at a health percent, for the model's percent writes. It sets hit points from the percent and health
- * percent from those hit points, so the two always agree. It goes when substages 5 and 6 of stage 4 in
- * plans/srd-rules.md land and the engine subtracts rolled damage.
- */
-export function withHealthPercent<T extends Wounded>(character: T, percent: number): T & { hitPoints: number; healthPercent: number } {
-  return withHitPoints(character, hitPointsAt(maximumOf(character), percent).current)
-}

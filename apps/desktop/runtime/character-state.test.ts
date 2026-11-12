@@ -169,7 +169,8 @@ test("refreshes do not stack effects, fallen PCs stay on the sheet, and later he
   const t = await setup()
   try {
     await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, healthPercent: 0, status: "dead", effectChanges: [{ op: "set", name: "Ward", description: "Stronger ward", duration: 4 }] }] })
-    assert.equal(byId(t.store, t.pc.id).isComplete, true)
+    // The patch's word does not kill a hero: Milos drops to 0 and is dying, and his next turn is a Death Saving Throw.
+    assert.deepEqual([byId(t.store, t.pc.id).status, byId(t.store, t.pc.id).isComplete, byId(t.store, t.pc.id).rollRequired?.rollType], ["Unconscious", false, "Death Saving Throw"])
     await advance(t.store, {})
     assert.deepEqual([byId(t.store, t.pc.id).hitPoints, byId(t.store, t.pc.id).healthPercent], [0, 0])
     assert.deepEqual(byId(t.store, t.pc.id).effects, [{ name: "Ward", description: "Stronger ward", duration: 3 }])

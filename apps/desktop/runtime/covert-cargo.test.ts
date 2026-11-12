@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import { storyText } from "@d20/gm-core/story/render"
-import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
+import { findCurrentActor, isDying } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { castIdFor, partyScene, portraitFor, sceneFor, spatialContext } from "../src/scenes"
 import { game, type Packs, suggest, transitionsOf } from "./game"
@@ -169,9 +169,9 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", beats: [{ kind: "narration", text: "Reinhard raises his sword again." }], adventurePatch: {} })
     await play(stubLlm(fightGoesOn, lyra(store).id))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
-    // Lyra keeps 1 of her 6 hit points, shown as 17%.
-    assert.deepEqual([lyra(store).hitPoints, lyra(store).healthPercent], [1, 17])
-    assert.notEqual(lyra(store).status, "dead")
+    // The blow takes Lyra to 0 and the model's word "dead" does not kill her: she is Unconscious and dying.
+    assert.deepEqual([lyra(store).hitPoints, lyra(store).healthPercent, lyra(store).status], [0, 0, "Unconscious"])
+    assert.equal(isDying(lyra(store)), true)
     assert.deepEqual(
       store
         .current()
@@ -181,7 +181,7 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
       ["Reinhard", "Silas"]
     )
 
-    // A patch that kills is floored too.
+    // Nor does a patch's.
     for (const c of store.current().characters) c.hasReplied = c.isComplete = true
     store.save()
     const dying = () => ({
@@ -191,8 +191,8 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     })
     await play(stubLlm(dying))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
-    assert.deepEqual([lyra(store).hitPoints, lyra(store).healthPercent], [1, 17])
-    assert.notEqual(lyra(store).status, "dead")
+    assert.deepEqual([lyra(store).hitPoints, lyra(store).status], [0, "Unconscious"])
+    assert.equal(isDying(lyra(store)), true)
 
     // Silas runs on his turn and is out of the encounter, and the fight ends at the crate.
     for (const c of store.current().characters) if (c.name !== "Silas") c.hasReplied = c.isComplete = true

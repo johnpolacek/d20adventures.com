@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
-import { withHealthPercent } from "../sheet/hit-points"
+import { withHealthPercent, withStatusWord } from "../sheet/death"
 import type { StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames, storyText } from "../story/render"
 import type { DiceRoll, Turn } from "../types/adventure"
@@ -254,23 +254,20 @@ Analyze the narrative and determine if health or status should change.`
         return c
       }
 
-      const updates: { status?: string | undefined } = {}
       let updated = c
 
+      // Both go by the rules of 0 hit points (../sheet/death).
       if (update.newHealthPercent !== undefined) {
         updated = withHealthPercent(c, update.newHealthPercent)
         console.log(`[analyzeAndApplyDiceRoll] Applying health change to ${c.name}: ${currentHealth}% -> ${updated.healthPercent}%`)
       }
 
       if (update.newStatus !== undefined) {
-        updates.status = update.newStatus === "" ? undefined : update.newStatus
+        updated = withStatusWord(updated, update.newStatus)
         console.log(`[analyzeAndApplyDiceRoll] Applying status change to ${c.name}: "${currentStatus || "(none)"}" -> "${update.newStatus || "(clearing)"}"`)
       }
 
-      return {
-        ...updated,
-        ...updates,
-      }
+      return updated
     })
 
     const updatedTurn = {

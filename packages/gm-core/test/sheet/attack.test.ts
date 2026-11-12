@@ -152,7 +152,9 @@ test("an Owlbear's Rend can drop Thalbern, and hit points stop at 0", () => {
   assert.equal(blow.roll.armorClass, 15)
   assert.equal(blow.taken, 14)
   assert.deepEqual(blow.hitPoints, { before: 11, after: 0, maximum: 11 })
-  assert.match(strikeFacts("Owlbear", "Thalbern", blow), /Thalbern is at 0 hit points and goes down\./)
+  // 3 left over is less than his 11, so he is dying, not killed outright.
+  assert.equal(blow.fate, "dying")
+  assert.match(strikeFacts("Owlbear", "Thalbern", blow), /Thalbern drops to 0 hit points, falls Unconscious and is dying\./)
   assert.throws(
     () => strike({ attacker: { name: "Owlbear", type: "npc", statBlock: "owlbear" }, target: { type: "pc", sheet: thalbern }, weapon: "longbow", dice: [8], roll: falls() }),
     /Owlbear has no attack "longbow"/

@@ -4,7 +4,7 @@ import { useState } from "react"
 import Image from "@/components/ui/native-image"
 import { useTurn } from "@/lib/context/TurnContext"
 import { cn, getImageUrl } from "@/lib/utils"
-import { isAiControlledPc } from "@/lib/utils/turn-actors"
+import { isAiControlledPc, isDown } from "@/lib/utils/turn-actors"
 import type { TurnCharacter } from "@/types/adventure"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import { NPCCharacterSheetModal } from "./npc-character-sheet-modal"
@@ -48,7 +48,8 @@ export default function TurnCharacterList() {
       <div className="rounded-xl p-1">
         <ul className="flex flex-col gap-4">
           {characters.map((character) => {
-            const isDead = character.healthPercent === 0
+            // Down: dead, dying or Stable.
+            const isDead = isDown(character)
             const isPlayerCharacter = character.id === playerCharacter?.id
             return (
               <li

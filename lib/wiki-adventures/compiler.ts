@@ -28,7 +28,7 @@ const adventureFrontmatterSchema = z.object({
   nextAdventure: z.string().optional(),
   playerDeath: z.boolean().optional(),
   strangers: z.boolean().optional(),
-  rescue: z.object({ encounter: z.string().min(1), atHealthPercent: z.number().min(1).max(100) }).optional(),
+  rescue: z.object({ encounter: z.string().min(1) }).optional(),
 })
 
 const commonFrontmatterSchema = z.object({
@@ -196,7 +196,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
     nextAdventureId: adventure?.nextAdventure,
     playerDeath: adventure?.playerDeath,
     strangers: adventure?.strangers,
-    rescue: adventure?.rescue && { encounterId: adventure.rescue.encounter, atHealthPercent: adventure.rescue.atHealthPercent },
+    rescue: adventure?.rescue && { encounterId: adventure.rescue.encounter },
     sourcePath: adventureFile?.path ?? "",
     contentHash: hashJson(files.map((file) => ({ path: file.path, hash: file.hash }))),
     validation: {

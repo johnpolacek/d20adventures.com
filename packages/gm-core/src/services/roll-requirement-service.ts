@@ -6,7 +6,8 @@ import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineM
 import { combatStatsOf } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
-import type { RollRequirement } from "../validations/roll-requirement-schema"
+import { isDown } from "../utils/turn-actors"
+import type { ChosenRoll } from "../validations/roll-requirement-schema"
 import { formatSpellsForPrompt } from "./spell-tracking-service"
 
 // An NPC whose action the notes fix rolls nothing. Mara's lift "always happens" unless a hero spots it, yet she rolled
@@ -47,10 +48,10 @@ export function createRollRequirementService(ports: GmPorts) {
       // Everyone in the scene. The roller can attack any of the others who is still up.
       present?: readonly Present[]
     }
-  ): Promise<RollRequirement> {
+  ): Promise<ChosenRoll | null> {
     const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {}
     const self = "id" in character ? character.id : undefined
-    const targets = (options?.present ?? []).filter((other) => other.id !== self && other.healthPercent !== 0 && other.status !== "dead" && other.status !== "fled")
+    const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDown(other) && other.status !== "fled")
     const attacks = attacksOf(character)
     const casts = spellcastingAbilityOf(character)
     const contextLines = [
@@ -150,7 +151,7 @@ Action: "${action}"
         const armorClass = combatStatsOf(target)?.armorClass
         if (armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
         const picked = pick.mode ?? "normal"
-        const rollRequirement: RollRequirement = {
+        const rollRequirement: ChosenRoll = {
           attack: { weapon: attack.id, target: target.id },
           rollType: attack.name,
           difficulty: armorClass,
@@ -176,7 +177,7 @@ Action: "${action}"
       const picked = pick.mode ?? "normal"
       const mode = combineModes([picked, ...typed.map((source) => source.mode)])
       const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
-      const rollRequirement: RollRequirement = {
+      const rollRequirement: ChosenRoll = {
         check,
         rollType: spell ? `${spell} (${checkName(check)})` : checkName(check),
         difficulty: DIFFICULTY_CLASSES[pick.difficulty],

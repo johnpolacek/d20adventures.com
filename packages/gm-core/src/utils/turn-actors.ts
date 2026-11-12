@@ -2,15 +2,24 @@
 // autonomous turn loop. Keep these pure (no "use server", no React) so both
 // sides derive the current actor identically.
 
+// Types only: these run in the browser, and the roll schema pulls in the rules data.
+import type { RollRequirement } from "../validations/roll-requirement-schema"
+
 export type ActorLike = {
   type: string
   controlledBy?: "ai"
   hasReplied?: boolean
   isComplete?: boolean
+  hitPoints?: number
   healthPercent?: number
   status?: string
+  deathSaves?: { successes?: number; failures?: number; stable?: true }
   initiative?: number
+  rollRequired?: RollRequirement
 }
+
+// What the three tests below read. Dead, down and dying are three things.
+type Standing = { type?: string; hitPoints?: number; healthPercent?: number; status?: string; deathSaves?: { successes?: number; failures?: number; stable?: true } }
 
 // An AI-controlled companion: a PC the server plays automatically. Its userId
 // is the adventure owner's, so ownership checks must use this predicate too.
@@ -18,16 +27,32 @@ export function isAiControlledPc(character: ActorLike): boolean {
   return character.type === "pc" && character.controlledBy === "ai"
 }
 
-export function isDeadActor(character: ActorLike): boolean {
-  return character.healthPercent === 0 || character.status === "dead"
+/** Dead: the status "dead", in any case. */
+export function isDead(character: Standing): boolean {
+  return character.status?.trim().toLowerCase() === "dead"
 }
 
-// Highest initiative, not complete, not dead.
+/** Down: at 0 hit points, so dead, dying or Stable. A character who is down cannot act or speak, and no one attacks them by choice. */
+export function isDown(character: Standing): boolean {
+  return isDead(character) || character.hitPoints === 0 || character.healthPercent === 0
+}
+
+/** Dying: a hero at 0 hit points who is neither dead nor Stable, and makes a Death Saving Throw on their turn. */
+export function isDying(character: Standing): boolean {
+  return character.type === "pc" && isDown(character) && !isDead(character) && !character.deathSaves?.stable
+}
+
+/** Takes a turn this round: anyone up, and a dying hero whose Death Saving Throw is asked for. A hero who drops mid-round makes theirs next round. */
+export function takesTurn(character: ActorLike): boolean {
+  return !isDown(character) || (isDying(character) && !!character.rollRequired && "deathSave" in character.rollRequired)
+}
+
+// Highest initiative, not complete, and taking a turn: a dying hero stops on their save, and the Stable and the dead are skipped.
 export function findCurrentActor<T extends ActorLike>(characters: T[]): T | undefined {
   return characters
     .slice()
     .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-    .find((c) => !c.isComplete && !isDeadActor(c))
+    .find((c) => !c.isComplete && takesTurn(c))
 }
 
 // True when the server should act for this character without human input.

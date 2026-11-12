@@ -106,8 +106,8 @@ export type RuntimeManifest = {
   playerDeath?: boolean
   // true: the heroes start as strangers, and the core keeps who has heard each hero's name. See story/names.ts.
   strangers?: boolean
-  // An encounter the core enters itself when a player character's health falls to the threshold.
-  rescue?: { encounterId: string; atHealthPercent: number }
+  // An encounter the core enters itself when a hero is at 0 hit points and not dead. Entering it brings them back to 1.
+  rescue?: { encounterId: string }
   sourcePath: string
   contentHash: string
   validation: Pick<ValidationReport, "mode" | "status"> & ValidationReport["summary"]

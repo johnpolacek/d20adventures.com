@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { castIdFor, portraitFor, sceneFor } from "../src/scenes"
 import { adventureList, game, type Packs, transitionsOf } from "./game"
 import { LocalStore } from "./store"
@@ -54,39 +55,64 @@ test("all four Myr adventures are bundled, share no encounter ids, and start wit
   }
 })
 
-test("the real core plays The Midnight Summons through the owlbear to its ending", async () => {
+test("the real core plays The Midnight Summons through the owlbear to its ending, and Wollandora's rescue", async () => {
   const dir = mkdtempSync(join(tmpdir(), "d20-midnight-"))
   const path = join(dir, "save.sqlite")
   const store = new LocalStore(path, transitionsOf(packs))
+  const thalbern = () => store.current().characters.find((c) => c.id === "thalbern")!
+  // The GM's answer at the round's end: the encounter to go on to, and the round's patch.
+  const gm = (next: string, adventurePatch: Record<string, unknown> = {}): Llm => ({
+    generateText: unused,
+    generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: next, beats: [{ kind: "narration", text: `Thalbern goes on to ${next}.` }], adventurePatch }) }),
+  })
+  const everyoneDone = () => {
+    for (const c of store.current().characters) c.hasReplied = c.isComplete = true
+    store.save()
+  }
+  const staged = (encounterId: string) => {
+    // Every Midnight Summons encounter has a scene with a figure for every character in the turn.
+    const scene = sceneFor(encounterId)
+    assert.ok(scene, encounterId)
+    for (const c of store.current().characters) {
+      if (scene) assert.equal(castIdFor(scene.staging.cast, c), c.id)
+      assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/the-midnight-summons\/.+-portrait\.jpg$/)
+    }
+  }
   try {
     await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
-    const route = ["owlbear-confrontation", "timely-rescue", "meeting-at-the-stones", "preparing-for-the-city"]
-    for (const next of route) {
-      store.current().characters.forEach((c) => {
-        c.hasReplied = true
-        c.isComplete = true
-      })
-      store.save()
-      const llm: Llm = {
-        generateText: unused,
-        generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: next, beats: [{ kind: "narration", text: `Thalbern goes on to ${next}.` }], adventurePatch: {} }) }),
-      }
-      await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })
+    // The round ends with the Owlbear upon him and Thalbern at 0 hit points: Unconscious and dying.
+    everyoneDone()
+    await game(store, packs, gm("owlbear-confrontation", { characterUpdates: [{ characterId: "thalbern", healthPercent: 0 }] }))({ kind: "continue", turnId: store.current()._id })
+    assert.equal(store.current().encounterId, "owlbear-confrontation")
+    assert.ok(store.current().characters.some((c) => c.type === "npc" && /owlbear/i.test(c.name)))
+    staged("owlbear-confrontation")
+    assert.deepEqual([thalbern().hitPoints, thalbern().status, thalbern().deathSaves], [0, "Unconscious", { successes: 0, failures: 0 }])
+    // His turn is a Death Saving Throw against 10, with no bonus, which the player throws. The Owlbear has acted.
+    for (const c of store.current().characters) if (c.type === "npc") c.hasReplied = c.isComplete = true
+    store.save()
+    assert.equal(findCurrentActor(store.current().characters)?.id, "thalbern")
+    assert.deepEqual(thalbern().rollRequired, { deathSave: true, rollType: "Death Saving Throw", difficulty: 10, modifier: 0, mode: "normal" })
+    // A 12 is a success. No model is asked.
+    await game(store, packs, offline)({ kind: "roll", turnId: store.current()._id, characterId: "thalbern", result: 12 })
+    const save = store.current().story.at(-1)
+    assert.deepEqual(save?.kind === "roll" && [save.check, save.natural, save.modifier, save.total, save.dc, save.success], ["Death Saving Throw", 12, 0, 12, 10, true])
+    assert.deepEqual([thalbern().deathSaves, thalbern().isComplete, thalbern().rollRequired], [{ successes: 1, failures: 0 }, true, undefined])
+    // The fight would go on, so Wollandora comes, and Thalbern is back at 1 hit point, conscious.
+    await game(store, packs, gm("owlbear-confrontation"))({ kind: "continue", turnId: store.current()._id })
+    assert.equal(store.current().encounterId, "timely-rescue")
+    staged("timely-rescue")
+    assert.deepEqual([thalbern().hitPoints, thalbern().status, thalbern().deathSaves, thalbern().rollRequired], [1, undefined, undefined, undefined])
+    for (const next of ["meeting-at-the-stones", "preparing-for-the-city"]) {
+      everyoneDone()
+      await game(store, packs, gm(next))({ kind: "continue", turnId: store.current()._id })
       assert.equal(store.current().encounterId, next)
-      if (next === "owlbear-confrontation") assert.ok(store.current().characters.some((c) => c.type === "npc" && /owlbear/i.test(c.name)))
-      // Every Midnight Summons encounter has a scene with a figure for every character in the turn.
-      const scene = sceneFor(next)
-      assert.ok(scene, next)
-      for (const c of store.current().characters) {
-        if (scene) assert.equal(castIdFor(scene.staging.cast, c), c.id)
-        assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/the-midnight-summons\/.+-portrait\.jpg$/)
-      }
+      staged(next)
     }
     assert.equal(store.state!.adventure.status, "completed")
     assert.equal(store.current().isFinalEncounter, true)
     assert.deepEqual(
       store.state!.turns.map((t) => t.encounterId),
-      ["broken-silence", ...route]
+      ["broken-silence", "owlbear-confrontation", "timely-rescue", "meeting-at-the-stones", "preparing-for-the-city"]
     )
     await assert.rejects(() => game(store, packs, offline)({ kind: "continue", turnId: store.current()._id }), /complete/)
     const reopened = new LocalStore(path)

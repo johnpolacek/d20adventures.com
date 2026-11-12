@@ -1,7 +1,7 @@
 import type { GmPorts } from "../ports"
 import { type Strike, strike, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
-import { withHitPoints } from "../sheet/hit-points"
+import { afterHarm, deathSave } from "../sheet/death"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -14,8 +14,9 @@ import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { d20sFor, rollDie } from "../utils/game-utils"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
-import { isAttackRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
-import { gmNotesWithRules, keepPlayersAlive } from "../wiki-adventures/player-safety"
+import { isDead, isDown } from "../utils/turn-actors"
+import { DEATH_SAVE, isAttackRoll, isDeathSaveRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
+import { gmNotesWithRules } from "../wiki-adventures/player-safety"
 import { markSpellAsUsed } from "./spell-tracking-service"
 import { createTurnUpdateService } from "./turn-update-service"
 
@@ -125,7 +126,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // The d20s the roller threw. Any the roll still needs are rolled here: two with Advantage or Disadvantage.
     dice?: number[]
     encounterInstructions: string
-    // The adventure's `playerDeath` rule. False keeps player characters alive through the roll's outcome.
+    // The adventure's `playerDeath` rule. False leaves a hero who would die Stable at 0 hit points instead.
     playerDeath?: boolean
     // The adventure's premise, added to the GM's notes.
     premise?: string
@@ -140,6 +141,19 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const required = args.character.rollRequired
     const { rollType, mode } = required
     const by = { step: "roll" as const, character: args.character.id }
+    const rules = { playerDeath: args.playerDeath }
+    if (isDeathSaveRoll(required)) {
+      // A dying hero's Death Saving Throw: the rules decide it, and the roll beat tells it. No model is asked.
+      const [natural] = d20sFor("normal", args.dice)
+      const saved = deathSave(args.character, natural, rules)
+      const beat = rollBeat(by, args.character, DEATH_SAVE.rollType, { dice: [natural], natural, bonus: 0, total: natural, dc: DEATH_SAVE.difficulty, success: saved.success, mode: "normal" })
+      return {
+        ...withStory(args.turn, [beat]),
+        characters: args.turn.characters.map((character) =>
+          character.id === args.characterId ? { ...saved.character, rollRequired: undefined, rollResult: natural, isComplete: true, hasReplied: true } : character
+        ),
+      }
+    }
     let turnCharacters = args.turn.characters
     let blow: Strike | undefined
     let target: TurnCharacter | undefined
@@ -150,9 +164,9 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // hit points change here and nowhere else.
       target = turnCharacters.find((character) => character.id === required.attack.target)
       if (!target) throw new Error("The one attacked is no longer here.")
-      blow = strike({ attacker: args.character, target, weapon: required.attack.weapon, dice: d20sFor(mode, args.dice), mode, roll: rollDie })
-      const struck = blow
-      turnCharacters = turnCharacters.map((character) => (character.id === required.attack.target ? withHitPoints(character, struck.hitPoints.after) : character))
+      const struck = strike({ attacker: args.character, target, weapon: required.attack.weapon, dice: d20sFor(mode, args.dice), mode, roll: rollDie, rules })
+      blow = struck
+      turnCharacters = turnCharacters.map((character) => (character.id === required.attack.target ? afterHarm(struck.target) : character))
       roll = attackBeat(by, args.character, target.id, blow)
       numbers = { natural: blow.roll.natural, bonus: blow.roll.bonus, total: blow.roll.total, against: blow.roll.armorClass, success: blow.roll.hit }
     } else {
@@ -171,10 +185,9 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const scene = await sceneFor(ports, args.turn)
     let added: StoryBeat[] = [roll]
     // The dead are named apart, so an outcome does not have one gasp or stand again.
-    const isDead = (c: TurnCharacter) => c.healthPercent === 0 || c.status === "dead"
     // The one just struck down is still named among those present, so the outcome can tell them falling.
     const presentNpcs = turnCharacters
-      .filter((character) => character.type === "npc" && (!isDead(character) || character.id === target?.id) && character.status !== "fled")
+      .filter((character) => character.type === "npc" && (!isDown(character) || character.id === target?.id) && character.status !== "fled")
       .map((character) => character.name)
       .join(", ")
     const deadNames = turnCharacters.filter((character) => isDead(character) && character.id !== target?.id).map((character) => character.name)
@@ -245,6 +258,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         })
       : turnForAnalysis
 
+    // Anyone the outcome left down with no Death Saving Throw to make this round is done with it.
     let updatedCharacters = analyzedTurn.characters.map((character) =>
       character.id === args.characterId
         ? {
@@ -254,14 +268,14 @@ export function createAdventureRollResultService(ports: GmPorts) {
             isComplete: true,
             hasReplied: true,
           }
-        : character
+        : afterHarm(character)
     )
 
     if (spell) updatedCharacters = markSpellAsUsed(updatedCharacters, args.characterId, spell)
 
     return {
       story: newStory,
-      characters: keepPlayersAlive(args, updatedCharacters),
+      characters: updatedCharacters,
     }
   }
   return { resolvePlayerRollNarrativeAndCharacters }

@@ -212,6 +212,8 @@ export default defineSchema({
         // Current hit points, the stored value. healthPercent is the engine's copy of them.
         hitPoints: v.optional(v.number()),
         healthPercent: v.optional(v.number()),
+        // A hero at 0 hit points who is not dead: their Death Saving Throws, and whether they are Stable.
+        deathSaves: v.optional(v.object({ successes: v.number(), failures: v.number(), stable: v.optional(v.literal(true)) })),
         // The rules sheet (class, species, background, scores). packages/gm-core/src/sheet validates it.
         sheet: v.optional(v.any()),
         // An NPC's SRD stat block id: "guard".

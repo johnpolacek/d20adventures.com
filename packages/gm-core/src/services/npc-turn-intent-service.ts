@@ -1,6 +1,6 @@
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventureEncounter, AdventurePlan } from "../types/adventure-plan"
-import { isAiControlledPc } from "../utils/turn-actors"
+import { isAiControlledPc, isDying, takesTurn } from "../utils/turn-actors"
 
 export function findEncounterInPlan(plan: AdventurePlan, encounterId: string): AdventureEncounter | null {
   return (
@@ -47,5 +47,8 @@ export function resolvePlanContextForEncounter(
 export function buildNpcInitiativeOrder(characters: TurnCharacter[]): TurnCharacter[] {
   // AI companions stay eligible after hasReplied so a turn that crashed between
   // submitReply and roll resolution can resume; mid-roll humans stay excluded.
-  return characters.filter((character) => !character.isComplete && (!character.hasReplied || isAiControlledPc(character))).sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+  // A dying hero has their Death Saving Throw asked for, so the loop stops on it.
+  return characters
+    .filter((character) => !character.isComplete && (!character.hasReplied || isAiControlledPc(character) || (isDying(character) && takesTurn(character))))
+    .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 }

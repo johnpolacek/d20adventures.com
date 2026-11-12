@@ -1,13 +1,15 @@
 import type { GmPorts } from "../ports"
 import { multiattackOf, strike, strikeFacts } from "../sheet/attack"
 import { resolveCheck } from "../sheet/check"
-import { withHitPoints } from "../sheet/hit-points"
+import { afterHarm, killed } from "../sheet/death"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { attackBeat, rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { d20sFor, rollDie } from "../utils/game-utils"
+import { isDown } from "../utils/turn-actors"
 import { isAttackRoll } from "../validations/roll-requirement-schema"
+import type { SafetyRules } from "../wiki-adventures/player-safety"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { applyNpcEffectsToCharacters, createNpcTurnResolutionService, type NpcTurnEffect } from "./npc-turn-resolution-service"
 import { createRollRequirementService } from "./roll-requirement-service"
@@ -47,7 +49,7 @@ export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; ac
       // encounter: the next round is built without them. One who dies is dead for good. Thaddeus died of poison on his
       // own turn at 65% health, then sagged to one knee, gasping, in the next roll's outcome.
       const done = { ...character, hasReplied: true, isComplete: true }
-      if (args.actionResult.actionType === "die") return { ...withHitPoints(done, 0), status: "dead" }
+      if (args.actionResult.actionType === "die") return killed(done)
       return args.actionResult.actionType === "flee" ? { ...done, status: "fled" } : done
     }
     return character
@@ -84,6 +86,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       playerCharacters: TurnCharacter[]
     }
     scene: StoryScene
+    // The adventure's rules: with `playerDeath: false` a hero this NPC would kill is left Stable instead.
+    rules?: SafetyRules
   }): Promise<Omit<NpcTurnBranchResult, "actionSummary">> {
     let beatsToAppend: StoryBeat[] = []
     const script = turnScript(args.turn)
@@ -114,9 +118,9 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       const facts: string[] = []
       for (const each of weapons) {
         const target = updatedCharacters.find((character) => character.id === targetId)
-        if (!target || target.hitPoints === 0) break
-        const blow = strike({ attacker: args.npc, target, weapon: each, dice: d20sFor(rollRequirement.mode), mode: rollRequirement.mode, roll: rollDie })
-        updatedCharacters = updatedCharacters.map((character) => (character.id === targetId ? withHitPoints(character, blow.hitPoints.after) : character))
+        if (!target || isDown(target)) break
+        const blow = strike({ attacker: args.npc, target, weapon: each, dice: d20sFor(rollRequirement.mode), mode: rollRequirement.mode, roll: rollDie, rules: args.rules })
+        updatedCharacters = updatedCharacters.map((character) => (character.id === targetId ? afterHarm(blow.target) : character))
         rolls.push(attackBeat(npcStep(args.npc), args.npc, targetId, blow))
         facts.push(strikeFacts(args.npc.name, target.name, blow))
         rollInfo = { rollType: blow.attack.name, difficulty: blow.roll.armorClass, baseRoll: blow.roll.natural, modifier: blow.roll.bonus, result: blow.roll.total, success: blow.roll.hit }
