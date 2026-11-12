@@ -25,13 +25,14 @@ export function bonusActionsOf(character: Pick<Featured, "sheet" | "featureUses"
   const derived = deriveSheet(sheet)
   return bonusActionRules().flatMap((rule): BonusAction[] => {
     const feature = classFeatureById.get(rule.feature)
-    if (!feature || !derived.classFeatures.includes(feature.id)) return []
+    if (!feature || !derived.classFeatures.includes(feature.id) || (rule.offer && !rule.offer(character))) return []
     const targeted = !!rule.targeted
-    if (rule.name || !feature.uses) return [{ id: rule.id, name: rule.name ?? feature.name, targeted }]
+    // A pool's points count as uses: Lay on Hands' 25 at level 5 (./feature-rules `featureUseCount`).
+    if ((rule.name && !rule.spends) || (!feature.uses && !feature.pool)) return [{ id: rule.id, name: rule.name ?? feature.name, targeted }]
     const uses = featureUseCount(sheet, feature.id)
     const left = Math.max(0, uses - (character.featureUses?.[feature.id] ?? 0))
     const bought = left === 0 ? rule.buys?.(character) : undefined
-    return [{ id: rule.id, name: feature.name, uses, left, targeted, ...(bought ? { slot: bought } : {}) }]
+    return [{ id: rule.id, name: rule.name ?? feature.name, uses, left, targeted, ...(bought ? { slot: bought } : {}) }]
   })
 }
 

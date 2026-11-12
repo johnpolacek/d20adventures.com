@@ -22,6 +22,9 @@ const RIDERS: Record<string, { attacked?: "advantage" | "disadvantage"; attacks?
   "guiding-bolt": { attacked: "advantage", once: true },
   // "Attack rolls against an affected creature or object have Advantage if the attacker can see it."
   "faerie-fire": { attacked: "advantage" },
+  // Shining Smite: "Until the spell ends, ... attack rolls against it have Advantage". Its light and its bar on the
+  // Invisible condition are not read.
+  "shining-smite": { attacked: "advantage" },
   // "It has Disadvantage on the next attack roll it makes before the end of its next turn."
   "vicious-mockery": { attacks: "disadvantage", once: true },
   // Blur: "any creature has Disadvantage on attack rolls against you." Blindsight and Truesight are not read.
@@ -64,8 +67,8 @@ export function lasts(spell: Spell): boolean {
 }
 
 // Damage a spell adds to its caster's later hits on the one it marks: Hunter's Mark. A spell with a spell attack deals
-// its hit damage at the cast, so it is not a mark.
-const markOf = (spell: Spell) => (spell.attack ? undefined : spell.damage?.find((entry) => entry.trigger === "hit" && !entry.timing && !entry.appliesWhen && entry.dice))
+// its hit damage at the cast, so it is not a mark, and so does a spell cast right after a hit (a smite, ./classes/paladin).
+const markOf = (spell: Spell) => (spell.attack || spell.castingTime.trigger ? undefined : spell.damage?.find((entry) => entry.trigger === "hit" && !entry.timing && !entry.appliesWhen && entry.dice))
 
 type Bearer = {
   id?: string
@@ -362,8 +365,9 @@ export function settleConcentration<T extends Bearer>(args: {
 }
 
 // Spells that end on a creature when it takes damage: "The spell ends for an affected creature if it takes any damage"
-// (Hypnotic Pattern), and Suggestion's Charmed "until you or your allies deal damage to the target", whoever deals it here.
-const ENDS_ON_DAMAGE = new Set(["hypnotic-pattern", "suggestion"])
+// (Hypnotic Pattern), Sleep's "The spell ends on a target if it takes damage", and the Charmed of Suggestion, Charm Person
+// and Animal Friendship, "until you or your allies damage it", whoever deals it here.
+const ENDS_ON_DAMAGE = new Set(["hypnotic-pattern", "suggestion", "sleep", "charm-person", "animal-friendship"])
 
 /** A character with the effects and the conditions of the spells `gone` names taken off them, whoever cast them. */
 export function spellEnded<T extends Bearer>(character: T, gone: (spellId: string) => boolean): T {

@@ -1,3 +1,4 @@
+import type { DamageTypeId } from "@d20/srd"
 import { monsterById } from "@d20/srd/monsters"
 import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
@@ -19,10 +20,10 @@ import {
   UNARMED_STRIKE,
 } from "./attack"
 import { type CheckResult, type RollMode, rollModes } from "./check"
-import { type Featured, type Reacted, reactionRules } from "./class-rules"
+import { type Featured, hitRules, type Landed, type Reacted, reactionRules, turnEffectRule } from "./class-rules"
 import { cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
-import { withUsedThisTurn } from "./feature-rules"
+import { withFeatureUsed, withUsedThisTurn } from "./feature-rules"
 import { type Cover, opportunityAttackers, type Point, placedOf, type Standing, sizeOf, type Watcher, within } from "./space"
 import { cannotReactBySpell, spellEffectsAfterMove, withSpellEffect } from "./spell-effects"
 import { type CastCost, castCost, spellsOf, withCastSpent } from "./spells"
@@ -95,7 +96,8 @@ export function opportunityAttacks<T extends Reactor>(args: {
         weapon: weapon.id,
         reach: meleeReachOf(other),
         hostile: other.type !== mover.type,
-        canReact: canReact(other) && !cannotAttack(other, mover),
+        // A class's turn effect may bar them (Open Hand Technique's Addle).
+        canReact: canReact(other) && !cannotAttack(other, mover) && !(other.turnEffects ?? []).some((effect) => turnEffectRule(effect.id)?.barsOpportunityAttacks),
         seesMover: !hasCondition(other, "blinded") && !hasCondition(mover, "invisible"),
       },
     ]
@@ -438,7 +440,7 @@ export function attackWithReactions<T extends InPlay>(args: {
   target = characters.find((character) => character.id === args.targetId) as T
   // The classes' reactions once the damage is known: a Rogue's Uncanny Dodge halves it.
   const struckBy = target
-  const reduce = (taken: number) => {
+  const reduce = (taken: number, types: readonly DamageTypeId[]) => {
     for (const rule of reactionRules()) {
       const answered = rule.onDamage?.({
         target: struckBy as unknown as Featured,
@@ -446,6 +448,8 @@ export function attackWithReactions<T extends InPlay>(args: {
         taken,
         hit,
         ask: (matters, text) => args.ask(offer(rule.id, matters), text),
+        types,
+        roll: args.roll,
       })
       if (!answered) continue
       reactions.push(answered.reaction)
@@ -457,6 +461,13 @@ export function attackWithReactions<T extends InPlay>(args: {
   put(blow.reduced ? withReaction(struck) : struck)
   // The once-a-turn features the blow used are marked on the attacker.
   for (const id of blow.used ?? []) put(withUsedThisTurn(characters.find((character) => character.id === args.attackerId) as T, id, turnOf))
+  // And what rode on the hit spent of theirs: a Stunning Strike's Focus Point.
+  for (const id of blow.spent ?? []) put(withFeatureUsed(characters.find((character) => character.id === args.attackerId) as T & { featureUses?: Record<string, number> }, id))
+  // What the hit leaves on everyone once it has landed: a smite's spell slot, and the spell it leaves on the target.
+  for (const rule of hitRules()) {
+    if (!rule.landed || !blow.features?.length) continue
+    characters = rule.landed({ characters: characters as unknown as Landed[], attackerId: args.attackerId, targetId: args.targetId, added: blow.features, choices: args.choices }) as unknown as T[]
+  }
   const after = characters.find((character) => character.id === args.targetId) as T
   return { characters, blow, target: after, reactions }
 }

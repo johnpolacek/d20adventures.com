@@ -3,7 +3,7 @@ import { afterRoll } from "../sheet/actions"
 import { type Strike, strikeFacts } from "../sheet/attack"
 import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { checkBonus, resolveCheck } from "../sheet/check"
-import { effectChoice, type Featured, rescuedCheck } from "../sheet/class-rules"
+import { classCheckBonus, effectChoice, type Featured, rescuedCheck } from "../sheet/class-rules"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, deathSave } from "../sheet/death"
@@ -298,7 +298,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const thrown = resolveCheck({
         dice: d20sFor(mode, args.dice),
         // Slow's −2 on a Dexterity save.
-        bonus: checkBonus(args.character, required.check) + saveBonusFor(args.character, required.check),
+        bonus: classCheckBonus(args.character, required.check) + saveBonusFor(args.character, required.check),
         dc: required.difficulty,
         mode,
         fails: !!failedBy,

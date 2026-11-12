@@ -6,7 +6,7 @@ import { monsterById } from "@d20/srd/monsters"
 import { weaponPropertyById } from "@d20/srd/weapon-properties"
 import { isIncapacitated } from "../utils/turn-actors"
 import type { Roller, RollMode } from "./check"
-import { type Extra, type HitArgs, type HitRider, hitRule, hitRules, reactionRule } from "./class-rules"
+import { type Bearing, classAttack, classResistances, type Extra, type HitArgs, type HitRider, hitRule, hitRules, reactionRule } from "./class-rules"
 import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
@@ -124,7 +124,8 @@ export function attacksOf(character: Roller): Attack[] {
 function baseAttacks(character: Roller): Attack[] {
   if (character.sheet) {
     const sheet = character.sheet
-    return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => weaponAttack(sheet, weapon))
+    // A class feature may change the attack: Martial Arts' die and Dexterity (./classes).
+    return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => classAttack(character, weaponAttack(sheet, weapon)))
   }
   if (character.type !== "npc") return []
   const monster = monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)
@@ -302,16 +303,16 @@ export function rollDamage(damage: readonly DamagePart[], roll: (sides: number) 
 export type Defenses = { immunities?: readonly DamageTypeId[]; resistances?: readonly DamageTypeId[]; vulnerabilities?: readonly DamageTypeId[] }
 
 /**
- * A character's standing defenses: a hero's Resistances from its sheet, an NPC's from its stat block. A condition
- * that gives Resistance to all damage, as Petrified does, gives it for every type.
+ * A character's defenses: a hero's Resistances from its sheet and from a class feature while it lasts (Rage), an NPC's
+ * from its stat block. A condition that gives Resistance to all damage, as Petrified does, gives it for every type.
  */
-export function defensesOf(character: Roller): Defenses {
+export function defensesOf(character: Bearing): Defenses {
   const own = ownDefenses(character)
   return resistsAllDamage(character) ? { ...own, resistances: damageTypeIds } : own
 }
 
-function ownDefenses(character: Roller): Defenses {
-  if (character.sheet) return { resistances: deriveSheet(character.sheet).resistances }
+function ownDefenses(character: Bearing): Defenses {
+  if (character.sheet) return { resistances: [...new Set([...deriveSheet(character.sheet).resistances, ...classResistances(character)])] }
   const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
   return monster ? { immunities: monster.immunities, resistances: monster.resistances, vulnerabilities: monster.vulnerabilities } : {}
 }
@@ -339,6 +340,12 @@ function featureDamage(args: Omit<HitArgs, "weapon">): Extra[] {
   return hitRules().flatMap((rule) => rule.damage?.({ ...args, weapon: weapon?.kind === "weapon" ? weapon : undefined }) ?? [])
 }
 
+/** The damage type a class feature has a hit's own damage dealt as, in place of its own (Sacred Weapon's Radiant), or none. */
+function featureDamageType(args: Omit<HitArgs, "weapon">): DamageTypeId | undefined {
+  const weapon = equipmentById.get(args.attack.id)
+  return hitRules().reduce<DamageTypeId | undefined>((found, rule) => found ?? rule.retype?.({ ...args, weapon: weapon?.kind === "weapon" ? weapon : undefined }), undefined)
+}
+
 export type Strike = {
   attack: Attack
   /** Class features and feats that added to this hit: "Sneak Attack", "Savage Attacker". */
@@ -358,6 +365,8 @@ export type Strike = {
   inspired?: number
   /** The once-a-turn features this blow used, for the attacker to be marked with (./feature-rules). */
   used?: OncePerTurn[]
+  /** Uses of the attacker's features that what rode on the hit spent, by feature id, for the attacker to be charged: a Stunning Strike's Focus Point. */
+  spent?: string[]
   /** The target cut the damage with a Reaction, by its id (Uncanny Dodge), and what it would have taken. `taken` is already cut. */
   reduced?: { id: string; from: number }
   /** What rode on the hit once its damage was dealt: a Cunning Strike's Trip and its save. */
@@ -400,7 +409,7 @@ export type StrikeArgs<T extends Target> = {
   /** What class features the attacker chose for this attack: a Cunning Strike's `cunning`. */
   choices?: Record<string, string>
   /** Asked once the damage is known, before it is dealt: a Reaction that cuts it, by its id, and what is taken instead (Uncanny Dodge). */
-  reduce?: (taken: number) => { id: string; taken: number } | undefined
+  reduce?: (taken: number, types: readonly DamageTypeId[]) => { id: string; taken: number } | undefined
 }
 
 /** An attack rolled and not yet landed: everything decided before the damage, where a reaction to the hit may fall. */
@@ -496,14 +505,17 @@ export function landBlow<T extends Target>(
         within(at, beside, 5)
       )
     })
-  const features = featureDamage({ attacker: args.attacker, attack, roll, allyBeside, hurt: before < stats.hitPointMaximum, turnOf: args.turnOf, choices: args.choices })
+  const hitArgs = { attacker: args.attacker, attack, roll, allyBeside, hurt: before < stats.hitPointMaximum, turnOf: args.turnOf, choices: args.choices, target: args.target }
+  const features = featureDamage(hitArgs)
+  const retyped = featureDamageType(hitArgs)
   // Savage Attacker: once a turn, a weapon's damage dice are rolled twice, and the higher is kept.
   const weapon = equipmentById.get(attack.id)?.kind === "weapon"
   // Magic Weapon's bonus to the damage rolls of the weapon it is on, taken to be the one its bearer attacks with.
   const enchanted = weapon ? weaponDamageFromSpells(args.attacker).map(({ name, damage }) => ({ name, damage: { amount: damage.amount, type: damage.type ?? attack.damage[0]?.type ?? "force" } })) : []
   const extra = [...features, ...markDamage(args.attacker.id, args.target), ...enchanted]
   const savage = weapon && !!args.attacker.sheet && deriveSheet(args.attacker.sheet).feats.includes("savage-attacker") && !usedThisTurn(args.attacker, "savage-attacker", args.turnOf)
-  const dealt = damageOnHit(attack, { mode: roll.mode, attacker: args.attacker, target: args.target, before, maximum: stats.hitPointMaximum })
+  const own = damageOnHit(attack, { mode: roll.mode, attacker: args.attacker, target: args.target, before, maximum: stats.hitPointMaximum })
+  const dealt = retyped ? own.map((part) => ({ ...part, type: retyped })) : own
   const first = rollDamage(dealt, args.roll, roll.critical)
   const second = savage ? rollDamage(dealt, args.roll, roll.critical) : undefined
   const kept = second && second.total > first.total ? second : first
@@ -515,22 +527,26 @@ export function landBlow<T extends Target>(
   const damage: DamageRoll = { parts: [...kept.parts, ...added.parts], total: kept.total + added.total }
   const defenses = defensesOf(args.target)
   const full = damageTaken(damage, defenses)
-  const reduced = full > 0 ? args.reduce?.(full) : undefined
+  const reduced = full > 0 ? args.reduce?.(full, [...new Set(damage.parts.map((part) => part.type))]) : undefined
   const taken = reduced ? reduced.taken : full
   // Acid or Fire taken stops a Troll's Regeneration (./monster-traits).
   let struck = withDamage({ ...args.target, hitPoints: before }, taken, { critical: roll.critical, rules: args.rules, types: typesTaken(damage, defenses) })
-  const used = [...extra.flatMap((feature) => ("once" in feature && feature.once ? [feature.once] : [])), ...(savage ? (["savage-attacker"] as const) : [])]
+  const used: OncePerTurn[] = [...extra.flatMap((feature) => ("once" in feature && feature.once ? [feature.once] : [])), ...(savage ? (["savage-attacker"] as const) : [])]
   const names = [...extra.map((feature) => feature.name), ...(savage ? ["Savage Attacker"] : [])]
-  // What rides on the hit falls after the damage: a Cunning Strike's Trip, on a target still up.
+  // What rides on the hit falls after the damage: a Cunning Strike's Trip, on a target still up. What it spends of
+  // the attacker's (a Stunning Strike's Focus Point) and the once-a-turn mark it leaves are charged to them.
   const riders: HitRider[] = []
   const conditions: ConditionChange[] = []
+  const charged: string[] = []
   for (const rule of hitRules()) {
     if (!rule.after) continue
-    const rode = rule.after({ attacker: args.attacker, target: struck.character, added: features.map((feature) => feature.name), choices: args.choices, roll: args.roll })
+    const rode = rule.after({ attacker: args.attacker, target: struck.character, added: features.map((feature) => feature.name), choices: args.choices, roll: args.roll, attack })
     if (!rode) continue
     struck = { ...struck, character: rode.target }
     riders.push(rode.rider)
     conditions.push(...rode.conditions)
+    if (rode.spends) charged.push(rode.spends)
+    if (rode.once) used.push(rode.once)
   }
   return {
     attack,
@@ -543,6 +559,7 @@ export function landBlow<T extends Target>(
     ...(struck.fate === "endures" ? { endured: enduringTraitOf(struck.character)?.name ?? "endurance" } : {}),
     ...spent,
     ...(used.length ? { used } : {}),
+    ...(charged.length ? { spent: charged } : {}),
     ...(reduced ? { reduced: { id: reduced.id, from: full } } : {}),
     ...(riders.length ? { riders } : {}),
     ...(conditions.length ? { conditions } : {}),

@@ -1,17 +1,18 @@
+import type { AbilityId, DamageTypeId } from "@d20/srd"
 import type { z } from "zod"
 import type { TurnReading } from "../services/roll-requirement-service"
 import type { Character } from "../types/character"
 import type { RequiredFeature, RequiredRoll } from "../validations/roll-requirement-schema"
 import type { Attack, AttackResult, DamagePart, RolledAttack, Target } from "./attack"
 import type { InScene } from "./attack-roll"
-import type { Check, CheckResult, Roller } from "./check"
+import { type Check, type CheckResult, checkBonus, type Roller } from "./check"
 import { classes } from "./classes"
 import type { ModeSource } from "./conditions"
 import type { DeathRules } from "./death"
 import type { ConditionChange, Harm } from "./harm"
 import type { Floor } from "./space"
 import type { Cast } from "./spells"
-import type { TurnEffect } from "./turn-effect"
+import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
 
 /**
  * What a class's features hand the engine, at each seam of play. A class file under ./classes fills one of these, and
@@ -43,13 +44,28 @@ export type ClassRules = {
   checks?: CheckRule[]
   /** Rolls a turn asks for after the one just made (Horde Breaker). */
   follows?: FollowRule[]
+  /** One of a hero's own attacks as a class feature changes it (Martial Arts' die and Dexterity). Read in ./attack `attacksOf`. */
+  attack?: (character: Roller, attack: Attack) => Attack
+  /** What a class does for its hero as Initiative is rolled at an encounter's start (Uncanny Metabolism). */
+  initiative?: <T extends Rested & { hitPoints?: number }>(character: T, roll: (sides: number) => number) => T
   /** What the hero knows of another, told beside them in the read's Who Is Here (Hunter's Lore). */
   sees?: (character: Roller & { id: string }, other: Roller & { id: string }) => string | undefined
   /** What a Short Rest gives beyond the uses each feature's data brings back (Arcane Recovery). */
   shortRest?: <T extends Rested>(character: T) => { character: T; facts: string[] }
   /** What happens to a character as a round within an encounter gives way to the next, told under `name`. */
   roundStart?: <T extends Roller & { id: string }>(character: T) => { character: T; told?: { name: string; text: string } }
+  /** Damage types a hero resists while a feature lasts, beside the sheet's standing ones (Rage). Read where damage is taken (./attack `defensesOf`). */
+  resistances?: (character: Bearing) => readonly DamageTypeId[]
+  /** The ability a hero makes a check with in place of its own, where a feature lets them (Primal Knowledge). Read for the check's bonus (./check `checkBonus`). */
+  checkAbility?: (character: Bearing, check: Check) => AbilityId | undefined
+  /** Why a hero cannot cast a spell now, where a feature bars it (Rage). Read before any cast is paid for (./spells `castCost`). */
+  castingBarred?: (character: Bearing) => string | undefined
+  /** What a hero's own attack roll against an enemy does to them, on any roll of their turn (Rage is extended). Applied after the roll (./actions `afterRoll`). */
+  attackRolled?: <T extends Bearing>(attacker: T, target: Bearing) => T
 }
+
+/** One a feature may be lasting on: a character with the turn effects it bears, and whether their turn this round is over. */
+export type Bearing = Roller & { id?: string; turnEffects?: readonly TurnEffect[]; isComplete?: boolean; hitPoints?: number; healthPercent?: number }
 
 /** One who uses a class feature: a hero with uses spent and spell slots, as the engine keeps them. */
 export type Featured = Roller & {
@@ -86,8 +102,12 @@ export type BonusActionRule = {
   id: string
   /** The class feature it comes from, by SRD id. Its uses are that feature's. */
   feature: string
-  /** Its name on the menu, where it is not the feature's own: "Cunning Action: Dash". It then counts no uses. */
+  /** Its name on the menu, where it is not the feature's own: "Cunning Action: Dash". It then counts no uses, unless it `spends` one. */
   name?: string
+  /** A use of the feature is spent on it though it has a name of its own: the menu counts the uses left, and offers it only while one is (Flurry of Blows' Focus Point). */
+  spends?: true
+  /** Whether the hero may take it now, beside having the feature: Martial Arts' Bonus Unarmed Strike only in no armor and with no Shield. */
+  offer?: (character: Roller) => boolean
   /** Given to someone else, who the game master names. */
   targeted?: true
   /** The level of the spell slot that buys a use when none is left. */
@@ -156,6 +176,15 @@ export type ChoiceRule = {
   }) => Cast<Featured> & { problem?: string; name: string }
   /** As a reading that took it is applied: what it spends, and its beat for the story. */
   apply?: (characters: Featured[], actorId: string) => { characters: Featured[]; told?: { name: string; text: string } }
+  /**
+   * Advantage or Disadvantage it gives the attack the read asks for, made before `apply` has run (Reckless Attack). The
+   * attacks that follow read what `apply` left.
+   */
+  attackModes?: (character: Roller, attack: Attack) => readonly ModeSource[]
+  /** What it adds to the attack roll the read asks for, made before `apply` has run (Sacred Weapon). The attacks that follow read what `apply` left. */
+  attackBonus?: (character: Roller, attack: Attack) => number
+  /** It takes the turn's Bonus Action (a smite): the read leaves it out when the reading uses another. */
+  bonusAction?: true
 }
 
 /** What a reaction to an attack roll is asked with: `hit` is the roll in words, and `ask` offers it to `to`. */
@@ -179,8 +208,19 @@ export type ReactionRule = {
   has: (character: Roller) => boolean
   /** An answer to another's attack roll, before the blow lands (Cutting Words). Everyone comes back as it left them. */
   onAttackRoll?: (args: AttackRollAnswer) => { characters: Featured[]; rolled: RolledAttack; reaction: Reacted } | undefined
-  /** The one hit answers once the damage is known, and takes `taken` in its place (Uncanny Dodge). */
-  onDamage?: (args: { target: Featured; attacker: Featured; taken: number; hit: string; ask: (matters: boolean, text: string) => boolean }) => { taken: number; reaction: Reacted } | undefined
+  /**
+   * The one hit answers once the damage is known, and takes `taken` in its place (Uncanny Dodge). `types` are the hit's
+   * damage types, and `roll` throws a die the answer rolls (Deflect Attacks).
+   */
+  onDamage?: (args: {
+    target: Featured
+    attacker: Featured
+    taken: number
+    hit: string
+    ask: (matters: boolean, text: string) => boolean
+    types: readonly DamageTypeId[]
+    roll: (sides: number) => number
+  }) => { taken: number; reaction: Reacted } | undefined
   /** How the story tells damage this reaction cut, after the blow's damage: " Poppen halves it with Uncanny Dodge." */
   damageWords?: (target: string) => string
   /** An answer to another's check that succeeds (Cutting Words). Saving throws are not answered. */
@@ -209,6 +249,8 @@ export type HitArgs = {
   hurt: boolean
   turnOf?: string
   choices?: Record<string, string>
+  /** The one hit, as the blow finds them: a smite's more dice on a Fiend or an Undead. */
+  target?: Target
 }
 
 /** What rode on a hit once its damage was dealt, kept on the blow: a Cunning Strike's Trip and its save. */
@@ -227,10 +269,32 @@ export type HitRule = {
     added: readonly string[]
     choices?: Record<string, string>
     roll: (sides: number) => number
-  }) => { target: T; rider: HitRider; conditions: ConditionChange[] } | undefined
+    /** The attack that hit. */
+    attack: Attack
+  }) =>
+    | {
+        target: T
+        rider: HitRider
+        conditions: ConditionChange[]
+        /** A use of the attacker's feature it spent, by the feature's id: a Stunning Strike's Focus Point. */
+        spends?: string
+        /** The once-a-turn mark it leaves on the attacker (`TurnEffectRule`). */
+        once?: string
+      }
+    | undefined
   /** How the story tells the rider, at the end of the hit's facts. */
   words?: (attacker: string, target: string, rider: HitRider) => string
+  /** The damage type the hit's own damage is dealt as, in place of its own (Sacred Weapon's Radiant). Read in ./attack `landBlow`. */
+  retype?: (args: HitArgs) => DamageTypeId | undefined
+  /**
+   * What the hit leaves on everyone once it has landed and its damage is dealt, by what `added` names: a smite's spell
+   * slot spent, the Concentration it begins and the spell it leaves on the target. Read in ./reactions `attackWithReactions`.
+   */
+  landed?: <T extends Landed>(args: { characters: T[]; attackerId: string; targetId: string; added: readonly string[]; choices?: Record<string, string> }) => T[]
 }
+
+/** One a hit's landing may change: a hero with uses, slots, lasting spells and Concentration, and whether their turn this round is over. */
+export type Landed = Featured & { spellEffects?: readonly SpellEffect[]; concentration?: Concentration; isComplete?: boolean }
 
 /**
  * A turn effect a class leaves. `span` 1 ends as the next round begins: a once-a-turn mark, with `by` whose turn it
@@ -243,10 +307,16 @@ export type TurnEffectRule = {
   words?: (effect: TurnEffect) => string
   /** Advantage or Disadvantage on an attack roll against its bearer. */
   against?: (effect: TurnEffect, attacker: Roller & { id: string }, bearer: Roller & { id: string; name: string }) => ModeSource[]
-  /** Advantage or Disadvantage on an attack roll its bearer makes. */
-  attacking?: (effect: TurnEffect, bearer: Roller & { id: string }, target: Roller & { id: string; name: string }) => ModeSource[]
+  /** Advantage or Disadvantage on an attack roll its bearer makes, with the attack where it is a weapon's or a strike's. */
+  attacking?: (effect: TurnEffect, bearer: Roller & { id: string }, target: Roller & { id: string; name: string }, attack?: Attack) => ModeSource[]
   /** Advantage or Disadvantage on its bearer's check or save. */
   checking?: (effect: TurnEffect, bearer: Roller & { id: string }, check: Check) => ModeSource[]
+  /** Its bearer's Speed is halved while it holds (./actions `movementEffects`). */
+  halvesSpeed?: true
+  /** It ends once an attack roll is made against its bearer: it is for the next attack only (./actions `afterRoll`). */
+  endsWhenAttacked?: true
+  /** Its bearer makes no Opportunity Attacks while they bear it (./reactions `opportunityAttacks`). */
+  barsOpportunityAttacks?: true
 }
 
 /** A check of the hero's own that failed, and what may still save it. `after` is what saving it spends. */
@@ -327,6 +397,24 @@ export const classInitiativeAdvantage = (character: Roller): boolean => !!charac
 export const seesRules = (): NonNullable<ClassRules["sees"]>[] => classes().flatMap((rules) => (rules.sees ? [rules.sees] : []))
 export const shortRestRules = (): NonNullable<ClassRules["shortRest"]>[] => classes().flatMap((rules) => (rules.shortRest ? [rules.shortRest] : []))
 export const roundStartRules = (): NonNullable<ClassRules["roundStart"]>[] => classes().flatMap((rules) => (rules.roundStart ? [rules.roundStart] : []))
+/** One of a hero's own attacks as their class features change it. */
+export const classAttack = (character: Roller, attack: Attack): Attack => (character.sheet ? classes().reduce((now, rules) => rules.attack?.(character, now) ?? now, attack) : attack)
+/** A hero as their class features leave them once Initiative is rolled. */
+export const atInitiative = <T extends Rested & { hitPoints?: number }>(character: T, roll: (sides: number) => number): T =>
+  character.sheet ? classes().reduce((now, rules) => rules.initiative?.(now, roll) ?? now, character) : character
+/** Damage types a hero's class features make them resist for now, beside the sheet's standing ones. */
+export const classResistances = (character: Bearing): DamageTypeId[] => (character.sheet ? [...new Set(classes().flatMap((rules) => rules.resistances?.(character) ?? []))] : [])
+/** The ability a hero's class has them make a check with in place of its own, or none. */
+export const classCheckAbility = (character: Bearing, check: Check): AbilityId | undefined =>
+  character.sheet ? classes().reduce<AbilityId | undefined>((found, rules) => found ?? rules.checkAbility?.(character, check), undefined) : undefined
+/** The bonus a character adds to a check, made with the ability their class has them use in place of its own (Primal Knowledge). */
+export const classCheckBonus = (character: Bearing, check: Check): number => checkBonus(character, check, classCheckAbility(character, check))
+/** Why a hero's class bars them from casting now, or none. */
+export const classCastingBar = (character: Bearing): string | undefined =>
+  character.sheet ? classes().reduce<string | undefined>((found, rules) => found ?? rules.castingBarred?.(character), undefined) : undefined
+/** An attacker after their own attack roll against an enemy, as each class's features take it. */
+export const afterClassAttackRoll = <T extends Bearing>(attacker: T, target: Bearing): T =>
+  attacker.sheet ? classes().reduce((now, rules) => rules.attackRolled?.(now, target) ?? now, attacker) : attacker
 
 /** A character with a class's turn effect given, for its span, by `by`. One of the same id and giver is replaced. */
 export function withTurnEffect<T extends { turnEffects?: readonly TurnEffect[] }>(character: T, id: string, by: string): T {

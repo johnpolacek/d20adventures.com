@@ -54,11 +54,12 @@ test("a caster's save DC is 8 plus the Proficiency Bonus and the ability modifie
   assert.equal(spellcastingOf(owlbear), undefined)
 })
 
-test("the six classes have 74 cantrips and level 1 spells, and the engine resolves the 42 with typed effects", () => {
+test("the six classes have 74 cantrips and level 1 spells, and the engine runs 22 of them in full", () => {
   const ids = new Set(["bard", "cleric", "wizard", "ranger", "fighter", "rogue"].flatMap((id) => classSpells(id, 1)))
   assert.equal(ids.size, 74)
-  assert.equal([...ids].filter((id) => isEngineSpell(spell(id))).length, 42)
-  assert.deepEqual([isEngineSpell(spell("ray-of-frost")), isEngineSpell(spell("bless")), isEngineSpell(spell("detect-magic")), isEngineSpell(spell("light"))], [true, true, false, false])
+  assert.equal([...ids].filter((id) => isEngineSpell(spell(id))).length, 22)
+  // Ray of Frost's lost Speed is told, so it runs only in part.
+  assert.deepEqual([isEngineSpell(spell("ray-of-frost")), isEngineSpell(spell("bless")), isEngineSpell(spell("detect-magic")), isEngineSpell(spell("light"))], [false, true, false, false])
   // A 15-foot cone takes two creatures, a 15-foot cube three, a 20-foot cube four, a 5-foot sphere one, Magic Missile one for each dart.
   assert.deepEqual(
     ["burning-hands", "thunderwave", "faerie-fire", "sleep", "magic-missile", "ray-of-frost"].map((id) => targetLimit(spell(id))),

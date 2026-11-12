@@ -64,11 +64,14 @@ export const checkFromMenu = (id: string): Check | undefined => checkByMenuId.ge
  * block it names, or the Commoner's when it names none: the skill bonus the block prints, or the ability's modifier.
  * Exhaustion takes 2 off for each level. Nothing is rolled for a hero with no sheet.
  */
-export const checkBonus = (character: Roller, check: Check): number => baseBonus(character, check) - d20Penalty(character)
+export const checkBonus = (character: Roller, check: Check, instead?: AbilityId): number => baseBonus(character, check, instead) - d20Penalty(character)
 
-function baseBonus(character: Roller, check: Check): number {
+function baseBonus(character: Roller, check: Check, instead?: AbilityId): number {
   if (character.sheet) {
     const derived = deriveSheet(character.sheet)
+    // A skill made with another ability, where a class feature allows it (`instead`, ./class-rules `classCheckBonus`):
+    // the skill's training stays, and that ability's modifier takes the place of its own.
+    if (check.kind === "skill" && instead) return derived.skills[check.skill].bonus - derived.abilityModifiers[checkAbility(check)] + derived.abilityModifiers[instead]
     if (check.kind === "skill") return derived.skills[check.skill].bonus
     if (check.kind === "save") return derived.savingThrows[check.ability].bonus
     return derived.abilityModifiers[check.ability]

@@ -2,7 +2,7 @@ import type { AbilityId, ConditionId, DamageTypeId } from "@d20/srd"
 import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { isDown } from "../utils/turn-actors"
-import { damageTaken, defensesOf, rollDamage } from "./attack"
+import { damageTaken, defensesOf, parseDice, rollDamage } from "./attack"
 import { checkBonus } from "./check"
 import { roundStartRules } from "./class-rules"
 import { conditionName, withCondition } from "./conditions"
@@ -22,6 +22,7 @@ import { type Castee, rollSave, type SaveRoll, spellcastingFor } from "./spells"
  * - A save a spell's target repeats at the end of each of its turns, ending the spell on itself on a success: Hold
  *   Person, Blindness/Deafness, Ray of Enfeeblement, Slow, Hideous Laughter. Fear's, made only out of its caster's
  *   sight, is not.
+ * - Searing Smite's 1d6 Fire as each of its target's turns begins, then a Constitution save that ends it on a success.
  * - Acid Arrow's 2d4 Acid at the end of its target's next turn, and 1d4 more for each slot level above 2.
  * - Spirit Guardians: each creature not of its caster's side within 15 feet of them makes a Wisdom save, taking 3d8
  *   Radiant damage, and 1d8 more for each slot level above 3, or half on a success. Its Speed is not halved.
@@ -113,6 +114,43 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
       const ending = (find(was.id) as T).conditions?.filter((entry) => entry.spell === id).map((entry) => entry.id) ?? []
       put(spellEnded(find(was.id) as T, (spellId) => spellId === id))
       for (const condition of ending) conditions.push({ target: was.id, condition, ends: true })
+    }
+  }
+
+  // Sleep's second save at the end of the target's next turn, as its Incapacitated runs out: on a failure the target is
+  // Unconscious for as long as the spell lasts, and on a success the spell ends on it.
+  for (const was of args.characters) {
+    const entry = was.conditions?.find((held) => held.spell === "sleep" && held.id === "incapacitated" && held.turns === 1)
+    const target = find(was.id)
+    const spell = spellById.get("sleep")
+    const caster = spell && entry ? holds(spell, entry.source) : undefined
+    if (!spell || !caster || !target || target.dead) continue
+    const thrown = save(target, "wis", caster, spell, ["unconscious"])
+    tell(target.id, spell.name, `${verdict(target, thrown, spell, caster)}${thrown.success ? `, and ${spell.name} ends on them` : ""}.`)
+    if (thrown.success) {
+      put(spellEnded(target, (id) => id === spell.id))
+      conditions.push({ target: was.id, condition: "incapacitated", ends: true })
+    } else give(target, "unconscious", spell, caster, "lasting")
+  }
+
+  // A burn at the start of each of the target's turns, then a save that ends the spell on a success: Searing Smite's
+  // 1d6 Fire, and 1d6 more for each slot level above 1, held as the effect's `amount`.
+  for (const was of args.characters) {
+    for (const effect of was.spellEffects ?? []) {
+      const spell = spellById.get(effect.spell)
+      const repeat = spell?.saves?.find((entry) => entry.when === "start-of-turn" && entry.onSuccess === "ends" && !entry.appliesWhen)
+      const burn = spell?.damage?.find((entry) => entry.dice && entry.timing === "At the start of each of its turns" && !entry.trigger)
+      const caster = spell && repeat && burn ? holds(spell, effect.by) : undefined
+      if (!spell || !repeat || !burn?.dice || !caster || find(was.id)?.dead) continue
+      const base = parseDice(burn.dice)
+      const above = Math.max(0, (effect.amount ?? spell.level) - spell.level)
+      const amount = hurt(was.id, `${base.count + (burn.perSlot ? parseDice(burn.perSlot).count * above : 0)}d${base.sides}`, burn.types[0] as DamageTypeId)
+      tell(was.id, spell.name, `${caster.name}'s ${spell.name} burns ${was.name} for ${amount} ${burn.types[0]} damage.${standing(was.id)}`)
+      const target = find(was.id)
+      if (!target || target.dead || isDown(target)) continue
+      const thrown = save(target, repeat.ability, caster, spell)
+      tell(was.id, spell.name, `${verdict(target, thrown, spell, caster)}${thrown.success ? `, and ${spell.name} ends on them` : ""}.`)
+      if (thrown.success) put(spellEnded(find(was.id) as T, (id) => id === spell.id))
     }
   }
 

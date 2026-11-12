@@ -7,7 +7,7 @@ import { hitPointsOf, withHitPoints } from "./hit-points"
 import { type Levelling, levelOwed, withLevelDue } from "./level-owed"
 import { type LevelUpChoices, levelUp, levelUpOptions, type PicksOffer } from "./level-up"
 import { type FeaturePick, featurePickSchema, type Sheet } from "./sheet"
-import { isEngineSpell, spellById } from "./spells"
+import { spellById, spellLabel } from "./spells"
 
 /**
  * Levelling by milestone. Each adventure is played at a level (its manifest's `level`, 1 where it gives none), and a
@@ -36,11 +36,15 @@ export const levelUpChoicesSchema = z.strictObject({
   weaponMasteries: z.array(idSchema).optional(),
 }) satisfies z.ZodType<LevelUpChoices>
 
-/** Spells the engine resolves before those it only tells, then the highest level, then those that harm or heal. */
+/**
+ * Spells the engine runs, in full or in part, before those it only tells, then the highest level, then those that harm
+ * or heal, then those cast in a fight before those that take a minute or more.
+ */
 export const spellOrder = (a: { id: string; level?: number }, b: { id: string; level?: number }) => {
-  const runs = (id: string) => (spellById.get(id) && isEngineSpell(spellById.get(id) as Parameters<typeof isEngineSpell>[0]) ? 0 : 1)
+  const runs = (id: string) => (spellById.get(id) && spellLabel({ id }) !== "told" ? 0 : 1)
   const strikes = (id: string) => (spellById.get(id)?.damage || spellById.get(id)?.healing ? 0 : 1)
-  return runs(a.id) - runs(b.id) || (b.level ?? 0) - (a.level ?? 0) || strikes(a.id) - strikes(b.id)
+  const slow = (id: string) => (["minute", "hour"].includes(spellById.get(id)?.castingTime.unit ?? "") ? 1 : 0)
+  return runs(a.id) - runs(b.id) || (b.level ?? 0) - (a.level ?? 0) || strikes(a.id) - strikes(b.id) || slow(a.id) - slow(b.id)
 }
 
 /**
@@ -62,7 +66,7 @@ const METAMAGIC_ORDER = [
 
 /**
  * The picks of a feature that takes several, filled to its count with picks that need no player: those kept, then the
- * options whose prerequisite the hero meets, an option that casts a spell the engine runs with no slot first, then one
+ * options whose prerequisite the hero meets, an option that casts a spell the engine runs, in full or in part, with no slot first, then one
  * that works with a cantrip the hero knows (with the first such cantrip), then the rest in the data's order (Metamagic
  * by `METAMAGIC_ORDER`). An option that gives a feat gives the first the hero lacks. `known` is the hero's cantrips,
  * `held` their feats, and `level` the class level.
@@ -71,7 +75,7 @@ export function autoPicks(offer: PicksOffer, level: number, known: readonly stri
   const picks = [...offer.picked]
   const runs = (id: string) => {
     const spell = spellById.get(id)
-    return !!spell && isEngineSpell(spell)
+    return !!spell && spellLabel(spell) !== "told"
   }
   const casts = (id: string) => (classFeatureById.get(offer.feature.id)?.options?.find((option) => option.id === id)?.freeCast ?? []).some((cast) => runs(cast.spell))
   const rank = (id: string) => {

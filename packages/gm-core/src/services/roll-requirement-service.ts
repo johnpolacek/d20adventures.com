@@ -5,10 +5,10 @@ import type { GmPorts } from "../ports"
 import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../sheet/actions"
 import { attacksOf } from "../sheet/attack"
 import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
-import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
-import { bonusActionRule, type ChoiceRule, choiceRules, classCheckModes, seesRules } from "../sheet/class-rules"
+import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
+import { bonusActionRule, type ChoiceRule, choiceRules, classCheckBonus, classCheckModes, seesRules } from "../sheet/class-rules"
 import { conditionSpans } from "../sheet/condition-entry"
-import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
+import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, usable } from "../sheet/features"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
@@ -17,7 +17,7 @@ import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet
 import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spell-effects"
 import { endsThings } from "../sheet/spell-ends"
 import { castInSpace } from "../sheet/spell-space"
-import { againOf, castableOnTurn, castCost, isEngineSpell, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellsOf, targetLimit } from "../sheet/spells"
+import { againOf, castableOnTurn, castCost, longCasting, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellLabel, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import { actionIds } from "../sheet/turn-effect"
@@ -45,6 +45,7 @@ const rollPickSchema = z.object({
   spell: z.string().max(80).optional().describe('For "cast": the id of one of the character\'s own spells, from Their Spells'),
   targets: z.array(z.string().max(80)).max(8).optional().describe('For "cast": the ids of everyone the spell is cast on, from Who Is Here or the character\'s own id'),
   ritual: z.boolean().optional().describe('For "cast": true when a spell marked ritual is cast slowly, outside a fight, to spare its slot'),
+  fight: z.boolean().optional().describe('For "cast": true when a fight is on in the scene, false when it is not'),
   slot: z.number().int().min(1).max(9).optional().describe('For "cast": the spell slot level, only when the player says they cast it with a higher slot'),
   damageType: z.string().max(20).optional().describe('For "cast": the damage type chosen, for a spell that offers several'),
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
@@ -144,6 +145,12 @@ export function createRollRequirementService(ports: GmPorts) {
       return rest
     }
     const follow = followRule(rule?.follow)
+    // One that strikes after the action's attacks (Flurry of Blows) goes with an attack, and beside anything else it is dropped.
+    if (follow?.attack) {
+      if (reading.roll && "attack" in reading.roll) return { ...reading, roll: { ...reading.roll, after: { ...reading.roll.after, [follow.key]: true } } }
+      const { bonus: _, ...rest } = reading
+      return rest
+    }
     const first = follow?.first && self ? follow.first({ ...character, id: self } as InScene) : undefined
     if (!follow || !first) return reading
     const key = follow.key
@@ -193,9 +200,12 @@ export function createRollRequirementService(ports: GmPorts) {
       (known) => known.spell.castingTime.unit === "bonus-action" && !held.some((entry) => entry.spell.id === known.spell.id) && !("problem" in castCost(character, known.spell.id))
     )
     const slots = slotsLeft(character)
-    // What kind of spell each is, so the game master knows who it is cast on.
-    const spellKind = (spell: (typeof knownSpells)[number]["spell"]) =>
-      spell.attack
+    // What kind of spell each is, so the game master knows who it is cast on. One the game does not run is told by the
+    // game master from its text, and one it runs in part has the rest told.
+    const spellKind = (spell: (typeof knownSpells)[number]["spell"]) => {
+      const label = spellLabel(spell)
+      if (label === "told") return "told by the game master"
+      const kind = spell.attack
         ? "a spell attack"
         : spell.saves
           ? "its targets save"
@@ -205,14 +215,17 @@ export function createRollRequirementService(ports: GmPorts) {
               ? "strikes with no roll"
               : endsThings(spell.id)
                 ? "ends a condition or a spell on its target"
-                : isEngineSpell(spell)
-                  ? "lasts on its target"
-                  : "utility"
+                : "lasts on its target"
+      return label === "partly" ? `${kind}, the rest told by the game master` : kind
+    }
+    const casterLevel = character.sheet?.level ?? 1
     const spellLines = knownSpells.map((known) => {
-      const limit = targetLimit(known.spell)
+      const limit = targetLimit(known.spell, known.spell.level, casterLevel)
+      const long = longCasting(known.spell)
       const notes = [
         known.cantrip ? "cantrip" : `level ${known.spell.level}`,
         spellKind(known.spell),
+        ...(long ? [`takes ${long} to cast`] : []),
         // On a floor an area takes whoever stands in it, so its count is not the game master's to keep.
         ...(mover && known.spell.range.area ? ["an area"] : limit > 1 ? [`up to ${limit} creatures`] : []),
         ...(known.spell.ritual ? [known.prepared ? "ritual" : "ritual only"] : []),
@@ -336,6 +349,8 @@ ${choices.map(({ rule, values }) => rule.prompt(values)).join("")}   - SPELLS: w
          : ""
      }
      A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
+     A spell marked "told by the game master" is cast all the same: "check" is "cast" with everyone it is cast on, and the game spends what it costs. The game master tells what it does from its text. One marked "the rest told by the game master" is rolled in part by the game, and the rest is told.
+     Every cast sets "fight": true when a fight is on in the scene, false when it is not. A spell marked "takes" a minute or more "to cast" cannot be cast while a fight is on, and the game will say so.
      A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all is "arcana".
 
 8) Set "difficulty" by name. It is the task's own difficulty, the same for anyone who tries it. The character's talent is already in the bonus the game adds, so never lower or raise it for who is trying.
@@ -487,6 +502,15 @@ Action: "${action}"
           })
           return { roll: null, ...also }
         }
+        // A spell that takes a minute or more to cast is not cast while a fight is on. The game master says whether one
+        // is, since every encounter runs in rounds and Initiative, a talk as well as a fight. A Ritual is cast slowly
+        // outside a fight only, as the read is told.
+        const long = !again && longCasting(spell)
+        if (long && pick.fight === true) {
+          also.ruling = { name: "Too Long For A Fight", text: `${spell.name} takes ${long} to cast, and cannot be cast while a fight is on. The spell is not cast.` }
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast: spell.id, refused: "too long to cast in a fight" })
+          return { roll: null, ...also }
+        }
         // The slot the spell is cast at: the one it is held at, the one spent, or a stat block's printed level.
         const slotLevel = again ? again.slot : paid?.cost.kind === "slot" ? paid.cost.level : (known?.castLevel ?? spell.level)
         const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
@@ -494,14 +518,16 @@ Action: "${action}"
         // On a floor an area is measured, so those named are its aim and not its count.
         let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(
           0,
-          mover && spell.range.area ? undefined : targetLimit(spell, slotLevel)
+          mover && spell.range.area ? undefined : targetLimit(spell, slotLevel, casterLevel)
         )
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
           if (spell.attack && standing.length === 1) chosen = [standing[0].id]
           else if (self && ((spell.range.kind === "self" && !spell.range.area) || spell.healing)) chosen = [self]
         }
-        const falls = !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
+        // A spell the game tells needs no one named: the game master rules on whom it reaches.
+        const told = spellLabel(spell) === "told"
+        const falls = !told && !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
         if (falls && !chosen.length) {
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast: spell.id, refused: "no one here to cast it on" })
           return { roll: null, ...also }
@@ -513,7 +539,7 @@ Action: "${action}"
         const touched = (spell.range.kind === "touch" || (spell.range.kind === "self" && spell.attack === "melee")) && chosen[0] !== self ? chosen[0] : undefined
         const stood = withMove(character, moved(moveFor(touched ? { target: touched, reach: 5 } : undefined)))
         const unplaced = again?.spell.id === "spiritual-weapon"
-        const spaced = mover && floor && !unplaced ? castInSpace({ spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
+        const spaced = mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
         if (spaced?.problem) {
           also.ruling = spaced.problem
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
@@ -592,13 +618,20 @@ Action: "${action}"
         // they give (Action Surge: the Attack action again, with all its attacks).
         const onAttack: Record<string, string> = {}
         let actions = 1
+        // What a choice gives this first attack before it is applied to the turn (Reckless Attack's Advantage).
+        const chosenModes: ModeSource[] = []
+        // And what it adds to the roll (Sacred Weapon's Charisma modifier).
+        let chosenBonus = 0
         for (const { rule, values } of choices) {
-          const value = rule.rides ? choiceValue(rule, values) : undefined
+          // One that takes the Bonus Action (a smite) is left out when the reading uses another.
+          const value = rule.rides && !(rule.bonusAction && also.bonus) ? choiceValue(rule, values) : undefined
           if (value === undefined) continue
           if (rule.rides === "attack" && typeof value === "string") onAttack[rule.key] = value
           if (rule.rides === "turn") {
             also.choices = { ...also.choices, [rule.key]: true }
             actions += rule.actions ?? 0
+            chosenModes.push(...(rule.attackModes?.(stood, attack) ?? []))
+            chosenBonus += rule.attackBonus?.(stood, attack) ?? 0
           }
         }
         const made = attackRequirement({
@@ -610,7 +643,7 @@ Action: "${action}"
           mode: pick.mode,
           reason: pick.reason,
           cover: pick.cover,
-          modes: aiming ? (usedRule?.attackModes ?? []) : [],
+          modes: [...(aiming ? (usedRule?.attackModes ?? []) : []), ...chosenModes],
           moved: also.move?.feet,
           choices: onAttack,
           after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { actions, weapon: attack.id }) : undefined,
@@ -621,8 +654,9 @@ Action: "${action}"
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
           return { roll: null, ...also }
         }
-        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...made.roll })
-        return { roll: made.roll, ...also }
+        const roll = chosenBonus ? { ...made.roll, modifier: made.roll.modifier + chosenBonus } : made.roll
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...roll })
+        return { roll, ...also }
       }
       // A class feature used as the whole action (Channel Divinity): its class file makes the reading.
       const acting = choices.find(({ rule }) => rule.check && rule.act && pick.check === rule.check)
@@ -697,7 +731,7 @@ Action: "${action}"
         check,
         rollType: hiding ? hiding.rollType : checkName(check),
         difficulty,
-        modifier: checkBonus(character, check) + saveBonusFor(character, check),
+        modifier: classCheckBonus(character, check) + saveBonusFor(character, check),
         mode,
         ...(reasons.length ? { reasons } : {}),
         ...(stakes.length ? { stakes } : {}),

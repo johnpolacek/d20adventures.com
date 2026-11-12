@@ -3,9 +3,9 @@ import { monsterById } from "@d20/srd/monsters"
 import { skillById } from "@d20/srd/skills"
 import { spellById } from "@d20/srd/spells"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
-import { masteryOf } from "./attack"
-import { type Check, checkBonus, type Roller } from "./check"
-import { turnEffectRule } from "./class-rules"
+import { type Attack, masteryOf } from "./attack"
+import type { Check, Roller } from "./check"
+import { afterClassAttackRoll, classCheckBonus, turnEffectRule } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
@@ -38,7 +38,7 @@ export function hideRoll(character: Roller & { id: string }): Extract<RequiredRo
     check: STEALTH,
     rollType: "Hide (Stealth)",
     difficulty: HIDE_DC,
-    modifier: checkBonus(character, STEALTH),
+    modifier: classCheckBonus(character, STEALTH),
     mode: "normal",
     stakes: [{ on: "success", target: character.id, kind: "condition", condition: "invisible", span: "lasting" }],
   }
@@ -93,7 +93,7 @@ function holds(effect: TurnEffect, present: readonly Acting[] | undefined): bool
  * Advantage and Disadvantage that actions taken put on an attack roll: the target is Dodging, or an ally of the
  * attacker has Helped against them. A class's turn effects on either of the two add their own (./classes).
  */
-export function attackModesFromActions(attacker: Acting, target: Acting, present?: readonly Acting[]): ModeSource[] {
+export function attackModesFromActions(attacker: Acting, target: Acting, present?: readonly Acting[], attack?: Attack): ModeSource[] {
   const found: ModeSource[] = []
   const all = present ?? [attacker, target]
   for (const effect of target.turnEffects ?? []) {
@@ -104,7 +104,7 @@ export function attackModesFromActions(attacker: Acting, target: Acting, present
     if (effect.id === "vexed" && effect.by === attacker.id) found.push({ mode: "advantage", from: "Vex" })
     found.push(...(turnEffectRule(effect.id)?.against?.(effect, attacker, target) ?? []))
   }
-  for (const effect of attacker.turnEffects ?? []) if (holds(effect, all)) found.push(...(turnEffectRule(effect.id)?.attacking?.(effect, attacker, target) ?? []))
+  for (const effect of attacker.turnEffects ?? []) if (holds(effect, all)) found.push(...(turnEffectRule(effect.id)?.attacking?.(effect, attacker, target, attack) ?? []))
   return found
 }
 
@@ -152,13 +152,20 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
     // takes 10 feet from their Speed until the attacker's next turn. Push sends one no bigger than Large 10 feet straight
     // away, as far as the first solid thing.
     const mastery = dealt > 0 ? masteryOf(roller, roll.attack.weapon) : undefined
+    // What a class's features take from an attack roll against an enemy (a Rage is extended).
+    const aimed = characters.find((character) => character.id === roll.attack.target)
     return characters.map((character) => {
-      if (character.id === rollerId) return withoutCondition(character, "invisible").character
+      if (character.id === rollerId) {
+        const seen = withoutCondition(character, "invisible").character
+        return aimed && aimed.type !== character.type ? afterClassAttackRoll(seen, aimed) : seen
+      }
       if (character.id !== roll.attack.target) return character
       const spent = drop(
         character,
         (effect) =>
-          (effect.id === "vexed" && effect.by === rollerId) || (effect.id === "distracted" && effect.by !== rollerId && characters.find((other) => other.id === effect.by)?.type === roller.type)
+          (effect.id === "vexed" && effect.by === rollerId) ||
+          (effect.id === "distracted" && effect.by !== rollerId && characters.find((other) => other.id === effect.by)?.type === roller.type) ||
+          forNextAttack(effect)
       )
       if (mastery === "vex") return give(spent, { id: "vexed", by: rollerId, turns: 2 })
       if (mastery === "slow") return give(spent, { id: "slowed", by: rollerId, turns: 2 })
@@ -170,7 +177,10 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
     })
   }
   // Casting a spell gives a hidden caster away, as an attack does. A spell attack spends what was for the next attack only.
-  if ("cast" in roll && spellById.get(roll.cast.spell)?.attack && roll.cast.targets[0]) characters = afterAttackRoll(characters, rollerId, roll.cast.targets[0])
+  if ("cast" in roll && spellById.get(roll.cast.spell)?.attack && roll.cast.targets[0]) {
+    const aimed = roll.cast.targets[0]
+    characters = afterAttackRoll(characters, rollerId, aimed).map((character) => (character.id === aimed ? drop(character, forNextAttack) : character))
+  }
   if ("cast" in roll) return characters.map((character) => (character.id === rollerId ? withoutCondition(character, "invisible").character : character))
   if (!("check" in roll) || roll.check.kind !== "skill") return [...characters]
   const { skill } = roll.check
@@ -182,10 +192,18 @@ const PUSH_FEET = 10
 const PUSHED_SIZES: readonly string[] = ["Tiny", "Small", "Medium", "Large"]
 
 /** What a turn's effects do to a character's movement this turn: Slowed takes 10 feet from their Speed, and one who stood from Prone spent half of it. */
-export function movementEffects(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): { slowed: boolean; stands: boolean } {
+export function movementEffects(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): { slowed: boolean; stands: boolean; halved: boolean } {
   const held = (character.turnEffects ?? []).filter((effect) => holds(effect, present))
-  return { slowed: held.some((effect) => effect.id === "slowed"), stands: held.some((effect) => effect.id === "stood") }
+  return {
+    slowed: held.some((effect) => effect.id === "slowed"),
+    stands: held.some((effect) => effect.id === "stood"),
+    // A class's turn effect that halves the Speed (a Stunning Strike saved against).
+    halved: held.some((effect) => !!turnEffectRule(effect.id)?.halvesSpeed),
+  }
 }
+
+// A class's turn effect that is for the next attack roll against its bearer only, which that roll spends.
+const forNextAttack = (effect: TurnEffect): boolean => !!turnEffectRule(effect.id)?.endsWhenAttacked
 
 /** What actions left on a character as a round begins: each lasts one round more, and then ends. */
 export function turnEffectsAtRoundStart<T extends { turnEffects?: readonly TurnEffect[] }>(character: T): T {

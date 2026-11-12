@@ -7,7 +7,7 @@ import { spellById } from "@d20/srd/spells"
 import { attackModesFromActions, checkModesFromActions } from "./actions"
 import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defensesOf, resolveAttack, rollDamage } from "./attack"
 import { type Check, checkBonus, combineModes, type Roller, type RollMode } from "./check"
-import { classCheckModes } from "./class-rules"
+import { classCastingBar, classCheckModes } from "./class-rules"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, revived, withDamage, withHealing } from "./death"
@@ -119,35 +119,105 @@ export function classSpells(classId: string, upToLevel: number): string[] {
 }
 
 /**
- * Spells of levels 2 and 3 whose typed effects the engine does not run at all yet: what they do turns on a choice the
- * read does not carry, a creature or a thing the engine does not keep (a wall, a sphere, a pack of spirits, a glyph), a
- * place it cannot measure, or a thing it has no rule for (flight, sight, speech). Cast, the engine spends what they cost
- * and holds their Concentration, and the game master tells them from their text.
+ * How much of a spell the engine runs. "run": it resolves all the spell does, and the game master tells it from the
+ * rolls. "partly": it resolves the part its rules hold, and the game master is given the spell's text for the rest,
+ * which changes no one's hit points or conditions. "told": it checks the spell can be cast, spends what it costs and
+ * holds its Concentration, and the game master tells it from its text. A spell is told unless it is named below.
  */
-const TOLD = new Set([
-  "alter-self",
-  "animal-messenger",
-  "calm-emotions",
-  "detect-thoughts",
-  "dragons-breath",
-  "enlarge-reduce",
-  "flaming-sphere",
-  "gust-of-wind",
-  "levitate",
-  "silence",
-  "spike-growth",
-  "zone-of-truth",
-  "conjure-animals",
-  "glyph-of-warding",
-  "magic-circle",
-  "meld-into-stone",
+export type SpellLabel = "run" | "partly" | "told"
+
+/**
+ * Spells the engine runs in full, each checked against its SRD 5.2.1 text. Light, sound and burning objects that no one
+ * holds are the story's. Divine Smite and Searing Smite are cast with the attack they ride (./classes/paladin).
+ */
+const RUN = new Set([
+  // Cantrips.
+  "acid-splash",
+  "eldritch-blast",
+  "fire-bolt",
+  "guidance",
+  "poison-spray",
+  "sacred-flame",
+  "sorcerous-burst",
+  "vicious-mockery",
+  // Level 1.
+  "animal-friendship",
+  "bane",
+  "bless",
+  "burning-hands",
+  "color-spray",
+  "cure-wounds",
+  "divine-smite",
+  "false-life",
+  "guiding-bolt",
+  "healing-word",
+  "heroism",
+  "inflict-wounds",
+  "mage-armor",
+  "magic-missile",
+  "ray-of-sickness",
+  "searing-smite",
+  "shield",
+  "shield-of-faith",
+  // Level 2.
+  "acid-arrow",
+  "aid",
+  "barkskin",
+  "blur",
+  "hold-person",
+  "invisibility",
+  "lesser-restoration",
+  "mirror-image",
+  "scorching-ray",
+  "shatter",
+  "spiritual-weapon",
+  // Level 3.
+  "counterspell",
+  "fireball",
+  "lightning-bolt",
+  "mass-healing-word",
+  "revivify",
+  "vampiric-touch",
+  // Levels 4 to 9: a save for half or healing, with nothing more.
+  "hold-monster",
+  "cone-of-cold",
+  "flame-strike",
+  "mass-cure-wounds",
+  "circle-of-death",
 ])
 
 /**
  * Spells the engine runs in part. It rolls and applies what its rules hold, and the game master is given the spell's
- * text for the rest, which changes no one's hit points or conditions.
+ * text for the rest, which changes no one's hit points or conditions. What each leaves to the text: Chill Touch's bar
+ * on healing, Shocking Grasp's bar on Opportunity Attacks, Ray of Frost's lost Speed, Starry Wisp's and Faerie Fire's
+ * light against the Invisible, Charm Person's Advantage while it is fought, Chromatic Orb's leap, Command's words,
+ * Dissonant Whispers' flight, Entangle's and Grease's ground, Grease's later falls, Hex's ability and its move, Hunter's
+ * Mark's tracking and its move, Hideous Laughter's save on damage, Ice Knife's burst on those beside its target,
+ * Sleep's shake awake, Thunderwave's push, Blindness/Deafness's Deafened, Mind Spike's tracking, Moonbeam's later
+ * burns and its move, Shining Smite's light and its bar on the Invisible.
  */
 const PARTLY = new Set([
+  "chill-touch",
+  "ray-of-frost",
+  "shocking-grasp",
+  "starry-wisp",
+  "charm-person",
+  "chromatic-orb",
+  "command",
+  "dissonant-whispers",
+  "entangle",
+  "faerie-fire",
+  "grease",
+  "hex",
+  "hideous-laughter",
+  "hunters-mark",
+  "ice-knife",
+  "sleep",
+  "thunderwave",
+  "blindness-deafness",
+  "mind-spike",
+  "moonbeam",
+  "shining-smite",
   "enthrall",
   "heat-metal",
   "magic-weapon",
@@ -172,24 +242,35 @@ const PARTLY = new Set([
   "dispel-magic",
 ])
 
-/** Spells with no typed effect that the engine runs by rules it holds from their text (./spell-effects and below). */
-const BUILT = new Set(["blur", "mirror-image", "lesser-restoration", "remove-curse", "dispel-magic", "beacon-of-hope"])
+// Held as told for a fault the engine has, though their data is typed: Divine Favor would add its die to hits on its
+// caster, Goodberry makes no berries, Call Lightning strikes one creature once, Flame Blade and Produce Flame attack as
+// they are cast and deal nothing, Hellish Rebuke is never offered as a Reaction, Sanctuary has the one warded save,
+// Resistance's die is taken off no damage, and Ensnaring Strike has no hit to ride (./castableOnTurn). Above level 3 every spell
+// not named above, until the owner's fourth step.
 
-/**
- * Whether the engine resolves all a spell does: it has an attack, a save, damage, healing, a condition, a roll modifier
- * or an Armor Class, or a rule held from its text, and none of it is left to the story. Any other is told by the game
- * master from the spell's text: a utility spell, which the engine only checks and spends, or one it runs in part.
- */
-export const isEngineSpell = (spell: Spell): boolean =>
-  !TOLD.has(spell.id) &&
-  !PARTLY.has(spell.id) &&
-  !!(BUILT.has(spell.id) || spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions || spell.rollModifier || spell.ac || spell.damageReduction || spell.hitPointMaximum)
+/** How much of a spell the engine runs (`SpellLabel`). */
+export const spellLabel = (spell: { id: string }): SpellLabel => (RUN.has(spell.id) ? "run" : PARTLY.has(spell.id) ? "partly" : "told")
+
+/** The spells named as run or partly run, by id, for the check that each is a spell of the SRD and named once. */
+export const namedSpellIds = (): string[] => [...RUN, ...PARTLY]
+
+/** Whether the engine resolves all a spell does. Any other is told by the game master from the spell's text, in full or in part. */
+export const isEngineSpell = (spell: { id: string }): boolean => spellLabel(spell) === "run"
+
+/** The time a spell takes to cast when it is a minute or more, in words: "1 minute", "10 minutes", "1 hour". */
+export function longCasting(spell: Spell): string | undefined {
+  const { unit, amount = 1 } = spell.castingTime
+  return unit === "minute" || unit === "hour" ? `${amount} ${unit}${amount === 1 ? "" : "s"}` : undefined
+}
 
 /**
  * Whether a spell is cast on a turn, with an action or a Bonus Action. One cast as a Reaction (Shield, Counterspell,
  * Feather Fall) is only cast when its trigger is offered (./reactions, ./counterspell), so it is left off a turn's menu.
+ * So is a Bonus Action spell cast right after a hit (Divine Smite): it is cast with the attack (./classes/paladin). One
+ * of those the game only tells (Ensnaring Strike) has no hit to ride, so it stays on the menu, cast as a Bonus Action,
+ * and the game master rules on it from its text.
  */
-export const castableOnTurn = (spell: Spell): boolean => spell.castingTime.unit !== "reaction"
+export const castableOnTurn = (spell: Spell): boolean => spell.castingTime.unit !== "reaction" && (!spell.castingTime.trigger || spellLabel(spell) === "told")
 
 /**
  * How many creatures a spell takes. On a floor an area takes whoever stands in it (./spell-space). Where there is no
@@ -199,20 +280,37 @@ export const castableOnTurn = (spell: Spell): boolean => spell.castingTime.unit 
  * each level above (Bless, Charm Person), and Magic Missile its extra darts.
  */
 // Spells whose text takes several creatures with no area: the count is in their words alone. Beacon of Hope takes "any
-// number", a wall of wind as many as stand along its 50 feet, and Slow "up to six" in its cube.
-const SEVERAL: Record<string, number> = { bless: 3, bane: 3, aid: 3, "prayer-of-healing": 5, "mass-healing-word": 6, "beacon-of-hope": 20, "wind-wall": 10, slow: 6 }
+// number", a wall of wind as many as stand along its 50 feet, and Slow "up to six" in its cube. Entangle's 20-foot
+// square, which its data holds no area for, takes four as a 20-foot cube would, and Mass Cure Wounds "up to six".
+const SEVERAL: Record<string, number> = {
+  bless: 3,
+  bane: 3,
+  aid: 3,
+  "prayer-of-healing": 5,
+  "mass-healing-word": 6,
+  "beacon-of-hope": 20,
+  "wind-wall": 10,
+  slow: 6,
+  entangle: 4,
+  "mass-cure-wounds": 6,
+}
 
-export function targetLimit(spell: Spell, slot = spell.level): number {
+export function targetLimit(spell: Spell, slot = spell.level, casterLevel = 1): number {
   const above = Math.max(0, slot - spell.level)
   const area = spell.range.area
   if (area) return Math.min(SEVERAL[spell.id] ?? Number.POSITIVE_INFINITY, Math.max(1, Math.ceil(area.size / (area.shape === "cone" ? 10 : area.shape === "line" ? 30 : 5))))
-  if (spell.projectiles) return dartsOf(spell, slot)
+  if (spell.projectiles) return dartsOf(spell, slot, casterLevel)
   return (SEVERAL[spell.id] ?? 1) + (spell.extraTargetsPerSlot ?? 0) * above
 }
 
-/** How many projectiles a spell makes at a slot level: Magic Missile's three, and one more for each level above 1. */
-function dartsOf(spell: Spell, slot: number): number {
-  return (spell.projectiles?.count ?? 0) + (spell.projectiles?.perSlot ?? 0) * Math.max(0, slot - spell.level)
+/**
+ * How many projectiles a spell makes: Magic Missile's three, and one more for each slot level above 1. A cantrip's
+ * count grows with its caster's level: Eldritch Blast's two beams at level 5, three at 11 and four at 17.
+ */
+function dartsOf(spell: Spell, slot: number, casterLevel = 1): number {
+  const step = spell.projectiles?.cantrip
+  const base = step ? (casterLevel >= 17 ? step[17] : casterLevel >= 11 ? step[11] : casterLevel >= 5 ? step[5] : spell.projectiles?.count) : spell.projectiles?.count
+  return (base ?? 0) + (spell.projectiles?.perSlot ?? 0) * Math.max(0, slot - spell.level)
 }
 
 /** A spell a character can cast, and how. */
@@ -403,6 +501,9 @@ export function castCost(character: Slotted, spellId: string, ritual = false, sl
   const known = spellsOf(character).find((entry) => entry.spell.id === spellId)
   const name = spellById.get(spellId)?.name ?? spellId
   if (!known) return { problem: `${name} is not a spell ${character.name ?? "this character"} can cast.` }
+  // A class feature that bars casting while it lasts (Rage) bars every spell, a cantrip too.
+  const barred = classCastingBar(character)
+  if (barred) return { problem: barred }
   if (known.cantrip) return { cost: { kind: "cantrip" }, known }
   if (ritual && known.ritual) return { cost: { kind: "ritual" }, known }
   if (!known.prepared) return { problem: `${name} is in the spellbook and not prepared, so it can only be cast as a Ritual.` }
@@ -562,8 +663,9 @@ export function castSpell<T extends Castee>(args: {
     characters = characters.map((character) => (character.id === after.id ? after : character))
   }
   const slot = Math.max(spell.level, args.level ?? spell.level)
-  const targets = [...new Set(args.targets)].filter((id) => find(id)).slice(0, args.measured && spell.range.area ? SEVERAL[spell.id] : targetLimit(spell, slot))
-  const covered = (id: string) => coverBonus(args.cover?.[id] ?? "none")
+  const targets = [...new Set(args.targets)].filter((id) => find(id)).slice(0, args.measured && spell.range.area ? SEVERAL[spell.id] : targetLimit(spell, slot, level))
+  // Sacred Flame: "The target gains no benefit from Half Cover or Three-Quarters Cover for this save."
+  const covered = (id: string) => (spell.id === "sacred-flame" ? 0 : coverBonus(args.cover?.[id] ?? "none"))
   const saves: SaveRoll[] = []
   const harm: Harm[] = []
   const conditions: ConditionChange[] = []
@@ -579,7 +681,7 @@ export function castSpell<T extends Castee>(args: {
   // A spell that takes Concentration is the one its caster now holds, and one held before ends.
   if (spell.duration.concentration && !args.again) characters = withConcentration(characters, caster.id, spell.id)
   // A spell the engine only tells does nothing more here.
-  if (TOLD.has(spell.id)) return done()
+  if (spellLabel(spell) === "told") return done()
 
   const typeOf = (types: readonly DamageTypeId[]) => (args.damageType && types.includes(args.damageType) ? args.damageType : types[0])
   // What the spell does as it takes effect, or, used again, what it does on a later turn. What it does under a stated
@@ -623,7 +725,9 @@ export function castSpell<T extends Castee>(args: {
   const give = (id: string, condition: ConditionId) => {
     const target = find(id)
     if (!target) return
-    const given = withCondition(target, { id: condition, source: caster.id, span, spell: spell.id }, { acted: !!target.isComplete })
+    // A condition from a spell that is over at once lasts a turn: Ray of Sickness's Poisoned and Color Spray's Blinded,
+    // "until the end of your next turn".
+    const given = withCondition(target, { id: condition, source: caster.id, span: span ?? "turn", spell: spell.id }, { acted: !!target.isComplete })
     if (!given.given) {
       facts.push(`${target.name} cannot be ${conditionName(condition)} and is not.`)
       return
@@ -635,18 +739,19 @@ export function castSpell<T extends Castee>(args: {
   // Potent Cantrip: a damaging cantrip that misses, or is saved against, still deals half its damage and nothing more.
   const potent = spell.level === 0 && features.has(POTENT_CANTRIP)
 
-  // A creature the spell cannot take: Hold Person takes a Humanoid.
+  // A creature the spell cannot take: Hold Person and Charm Person take a Humanoid, Animal Friendship a Beast.
   const takes = (id: string) => {
     const target = find(id)
-    if (!target || !HUMANOID_ONLY.has(spell.id) || isHumanoid(target)) return true
-    facts.push(`${target.name} is not a Humanoid, so ${spell.name} does not take them.`)
+    const only = ONLY_OF_TYPE[spell.id]
+    if (!target || !only || creatureTypeOf(target) === only) return true
+    facts.push(`${target.name} is not a ${only === "humanoid" ? "Humanoid" : "Beast"}, so ${spell.name} does not take them.`)
     return false
   }
   const taking = targets.filter(takes)
 
   // The spell attacks: one, or Scorching Ray's rays on the targets in turn.
   if (spell.attack && taking.length) {
-    const rays = spell.projectiles ? dartsOf(spell, slot) : 1
+    const rays = spell.projectiles ? dartsOf(spell, slot, level) : 1
     const parts = (spell.damage ?? []).filter((entry) => now(entry) && entry.trigger === "hit").map(partOf)
     for (let ray = 0; ray < rays; ray++) {
       const target = find(taking[ray % taking.length]) as T
@@ -672,7 +777,8 @@ export function castSpell<T extends Castee>(args: {
       }
       if (roll.hit) {
         if (parts.length) {
-          const rolled = rollDamage(parts, args.roll, roll.critical)
+          const thrown = rollDamage(parts, args.roll, roll.critical)
+          const rolled = spell.id === "sorcerous-burst" ? burst(thrown, casting.modifier, args.roll) : thrown
           const dealt = hurt(target.id, rolled, (taken) => taken, roll.critical)
           attack = { ...attack, damage: rolled, taken: dealt?.amount ?? 0, ...(dealt?.fate ? { fate: dealt.fate } : {}) }
         }
@@ -741,6 +847,10 @@ export function castSpell<T extends Castee>(args: {
     for (const id of taking) {
       const target = find(id)
       if (!target || target.dead) continue
+      if (spell.id === "sleep" && sleepless(target)) {
+        facts.push(`${target.name} does not sleep, so ${spell.name} does not take them.`)
+        continue
+      }
       const against = (spell.conditions ?? []).filter((link) => link.trigger === "failed-save" && link.save === index).map((link) => link.condition)
       const thrown = rollSave({ target, ability: save.ability, dc: casting.saveDc, d20: args.d20, roll: args.roll, characters, cover: covered(id), also: modesAgainst(spell, target), against })
       saves.push(thrown)
@@ -902,15 +1012,43 @@ const POTENT_CANTRIP = "evoker-potent-cantrip"
 const DISCIPLE_OF_LIFE = "life-domain-disciple-of-life"
 // "On a miss, the arrow splashes the target with acid for half as much of the initial damage only."
 const HALF_ON_MISS = new Set(["acid-arrow"])
-// "Choose a Humanoid": Hold Person takes no other creature.
-const HUMANOID_ONLY = new Set(["hold-person"])
+// "Choose a Humanoid", "One Humanoid", "Target a Beast": the one creature type each spell takes.
+const ONLY_OF_TYPE: Record<string, "humanoid" | "beast"> = { "hold-person": "humanoid", "charm-person": "humanoid", "animal-friendship": "beast" }
 // Phantasmal Force's save decides at the cast whether the phantasm takes hold, though the damage it guards comes later.
 const SAVE_AT_CAST = new Set(["phantasmal-force"])
 
+/**
+ * Sleep: "Creatures that don't sleep, such as elves, or that have Immunity to the Exhaustion condition automatically
+ * succeed on saves against this spell." A hero is an elf by species, an NPC by the race it is written with.
+ */
+function sleepless(character: Roller & { race?: string }): boolean {
+  if (character.sheet) return character.sheet.species === "elf"
+  if (/\b(elf|elven)\b/i.test(character.race ?? "") && !/half/i.test(character.race ?? "")) return true
+  return !!(character.type === "npc" && monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.conditionImmunities?.includes("exhaustion"))
+}
+
+/**
+ * Sorcerous Burst: "If you roll an 8 on a d8 for this spell, you can roll another d8, and add it to the damage", as many
+ * more d8s as the spellcasting ability modifier, and a d8 added this way that rolls an 8 adds another.
+ */
+function burst(rolled: DamageRoll, modifier: number, roll: (sides: number) => number): DamageRoll {
+  const [first, ...rest] = rolled.parts
+  if (!first) return rolled
+  let owed = first.dice.filter((die) => die === 8).length
+  const more: number[] = []
+  while (owed > 0 && more.length < modifier) {
+    const die = roll(8)
+    more.push(die)
+    owed += die === 8 ? 0 : -1
+  }
+  const added = more.reduce((sum, die) => sum + die, 0)
+  return { parts: [{ ...first, dice: [...first.dice, ...more], total: first.total + added }, ...rest], total: rolled.total + added }
+}
+
 // A hero is of a playable species, every one of them a Humanoid. An NPC is of its stat block's type.
-function isHumanoid(character: Roller): boolean {
-  if (character.sheet || character.type !== "npc") return true
-  return (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.type ?? "humanoid") === "humanoid"
+function creatureTypeOf(character: Roller): string {
+  if (character.sheet || character.type !== "npc") return "humanoid"
+  return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.type ?? "humanoid"
 }
 
 // Advantage and Disadvantage a spell itself puts on a target's save: "A Construct has Disadvantage on the save" (Shatter).

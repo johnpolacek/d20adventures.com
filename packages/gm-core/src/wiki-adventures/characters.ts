@@ -1,3 +1,4 @@
+import { atInitiative } from "../sheet/class-rules"
 import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { rollInitiative } from "../sheet/initiative"
@@ -5,7 +6,7 @@ import { raisedTo } from "../sheet/milestone"
 import { spellEffectsAtEncounterEnd } from "../sheet/spell-effects"
 import type { TurnCharacter } from "../types/adventure"
 import type { PCTemplate } from "../types/character"
-import { rollD20 } from "../utils/game-utils"
+import { rollD20, rollDie } from "../utils/game-utils"
 import { isDead } from "../utils/turn-actors"
 import type { RuntimeArtifacts, RuntimeEncounter } from "./types"
 
@@ -79,7 +80,8 @@ export function buildLocalWikiTurnCharacters(args: {
     const standing = carried?.hitPoints === undefined ? withStartingHitPoints(hero) : { ...withHitPoints(hero, carried.hitPoints), ...state }
     // A hero below the level the adventure is played at is owed the levels up to it. One the AI plays takes them at
     // once, and a player's is marked for the level-up screen (../sheet/milestone).
-    characters.push(raisedTo(standing, Math.max(args.artifacts.manifest.level ?? 1, carried?.levelDue ?? 1)))
+    // Then what their class does as Initiative is rolled: a Monk's Uncanny Metabolism.
+    characters.push(atInitiative(raisedTo(standing, Math.max(args.artifacts.manifest.level ?? 1, carried?.levelDue ?? 1)), rollDie))
   }
 
   for (const npcRef of args.encounter.npcRefs) {

@@ -1,4 +1,5 @@
 import { turnEffectsAtEncounterEnd } from "../sheet/actions"
+import { atInitiative } from "../sheet/class-rules"
 import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { atRoundStart, type DeathRules, revived } from "../sheet/death"
 import { inspirationAtEncounterEnd } from "../sheet/features"
@@ -90,6 +91,9 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
     // Back to its maximum: withHitPoints clamps to it. A hero at 0 wakes.
     pcs = pcs.map((pc) => (pc.hitPoints === 0 ? revived(pc, Number.POSITIVE_INFINITY) : withHitPoints(pc, Number.POSITIVE_INFINITY)))
   }
+
+  // What a hero's class does as Initiative is rolled: a Monk's Uncanny Metabolism.
+  pcs = pcs.map((pc) => atInitiative(pc, rollDie))
 
   const isFirstTurnForEncounter = !args.allTurns.some((previousTurn) => previousTurn.encounterId === nextEncounter.id)
 

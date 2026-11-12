@@ -95,7 +95,7 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
   const picked = ask.mode ?? "normal"
   const typed = [
     ...attackModesFrom(character, target, feet === undefined ? attack.kind !== "ranged" : isNear(character, target, attack.kind), ask.present),
-    ...attackModesFromActions(character, target, ask.present),
+    ...attackModesFromActions(character, target, ask.present, attack),
     ...attackModesFromSpells(character, target),
     ...featModes(character, target),
     ...spaced,
