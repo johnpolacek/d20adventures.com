@@ -572,5 +572,19 @@
       "feature": "healing-word",
       "target": "branka-stoneveil"
     }
+  },
+  {
+    "id": "bless-the-two",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I raise my holy symbol and cast Bless on Branka and on myself.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "bless",
+      "targets": ["branka-stoneveil", "milos-radan"]
+    }
   }
 ]

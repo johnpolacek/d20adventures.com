@@ -1,15 +1,17 @@
 import type { GmPorts } from "../ports"
 import { afterRoll, takeAction } from "../sheet/actions"
 import { multiattackOf, strike, strikeFacts } from "../sheet/attack"
-import { resolveCheck } from "../sheet/check"
+import { checkBonus, resolveCheck } from "../sheet/check"
 import { saveFailedBy } from "../sheet/conditions"
 import { afterHarm, killed } from "../sheet/death"
 import { applyStakes } from "../sheet/harm"
+import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
-import { attackBeat, rollBeat, turnScript } from "../story/turn"
+import { storyNames } from "../story/render"
+import { attackBeat, concentrationBeat, rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
-import { d20sFor, rollDie } from "../utils/game-utils"
+import { d20sFor, rollD20, rollDie } from "../utils/game-utils"
 import { isDown } from "../utils/turn-actors"
 import { isAttackRoll } from "../validations/roll-requirement-schema"
 import type { SafetyRules } from "../wiki-adventures/player-safety"
@@ -126,6 +128,10 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         facts.push(strikeFacts(args.npc.name, target.name, blow))
         rollInfo = { rollType: blow.attack.name, difficulty: blow.roll.armorClass, baseRoll: blow.roll.natural, modifier: blow.roll.bonus, result: blow.roll.total, success: blow.roll.hit }
       }
+      // A caster the blows hurt saves to keep Concentration, and one they dropped loses it.
+      const kept = settleConcentration({ before: args.turn.characters, after: updatedCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
+      updatedCharacters = kept.characters
+      facts.push(...kept.facts)
       console.log("[LLM] NPC attacks:", facts)
 
       const outcomeResult = await generateNpcOutcome(
@@ -146,7 +152,11 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       )
       // What the attack used up: an ally's Help against the target, and the NPC's own hiding.
       updatedCharacters = afterRoll(updatedCharacters, args.npc.id, rollRequirement)
-      beatsToAppend = [...rolls, ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
+      beatsToAppend = [
+        ...rolls,
+        ...kept.saves.map((save) => concentrationBeat(npcStep(args.npc), save, storyNames(args.turn.characters))),
+        ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc)),
+      ]
       // The harm is the engine's. The outcome may still hand over an item.
       effects = outcomeResult.effects
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
@@ -154,7 +164,14 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       // A check or a save: the NPC rolls with its stat block's bonus, which the requirement already carries, and the
       // engine settles what the roll put at stake before anyone tells it.
       const failedBy = saveFailedBy(args.npc, rollRequirement.check)
-      const rolled = resolveCheck({ dice: d20sFor(rollRequirement.mode), bonus: rollRequirement.modifier, dc: rollRequirement.difficulty, mode: rollRequirement.mode, fails: !!failedBy })
+      const rolled = resolveCheck({
+        dice: d20sFor(rollRequirement.mode),
+        bonus: rollRequirement.modifier,
+        dc: rollRequirement.difficulty,
+        mode: rollRequirement.mode,
+        fails: !!failedBy,
+        adds: checkAdds(args.npc, rollRequirement.check, rollDie),
+      })
       const { natural: baseRoll, bonus: modifier, total: result, success } = rolled
       rollInfo = {
         rollType: rollRequirement.rollType,
@@ -165,7 +182,13 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         success,
       }
       const settled = applyStakes({ characters: updatedCharacters, stakes: rollRequirement.stakes, outcome: success ? "success" : "failure", roll: rollDie, rules: args.rules })
-      updatedCharacters = afterRoll(settled.characters, args.npc.id, rollRequirement)
+      const stayed = settleConcentration({
+        before: args.turn.characters,
+        after: afterRoll(settled.characters, args.npc.id, rollRequirement),
+        bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+        d20: rollD20,
+      })
+      updatedCharacters = stayed.characters
       console.log("[LLM] NPC dice roll:", { rollType: rollRequirement.rollType, result, difficulty: rollRequirement.difficulty, success, harm: settled.facts })
 
       const outcomeResult = await generateNpcOutcome(
@@ -180,11 +203,15 @@ export function createNpcTurnBranchService(ports: GmPorts) {
           difficulty: rollRequirement.difficulty,
           success,
           scene: args.scene,
-          harm: [...(failedBy ? [`${args.npc.name} is ${failedBy} and fails this saving throw outright.`] : []), ...settled.facts],
+          harm: [...(failedBy ? [`${args.npc.name} is ${failedBy} and fails this saving throw outright.`] : []), ...settled.facts, ...stayed.facts],
         }),
         args.npc.id
       )
-      beatsToAppend = [rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled, settled.harm, settled.conditions), ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
+      beatsToAppend = [
+        rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled, settled.harm, settled.conditions),
+        ...stayed.saves.map((save) => concentrationBeat(npcStep(args.npc), save, storyNames(args.turn.characters))),
+        ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc)),
+      ]
       effects = outcomeResult.effects
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     } else {

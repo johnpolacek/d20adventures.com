@@ -1,4 +1,4 @@
-import { damageTypeIdSchema } from "@d20/srd"
+import { damageTypeIdSchema, skillIdSchema } from "@d20/srd"
 import { z } from "zod"
 import { checkSchema, rollModes } from "../sheet/check"
 import { stakeSchema } from "../sheet/stakes"
@@ -36,6 +36,7 @@ export const rollRequirementSchema = z.union([
       targets: z.array(z.string()).describe("The ids of who it is cast on"),
       ritual: z.literal(true).optional().describe("Cast slowly as a Ritual, which spends no slot"),
       damageType: damageTypeIdSchema.optional().describe("For a spell that deals one of several damage types, the one chosen"),
+      skill: skillIdSchema.optional().describe("For a spell cast for one skill (Guidance), the skill"),
     }),
     ...asked,
   }),

@@ -1,14 +1,16 @@
 import type { SkillId } from "@d20/srd"
 import { monsterById } from "@d20/srd/monsters"
 import { skillById } from "@d20/srd/skills"
+import { spellById } from "@d20/srd/spells"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { masteryOf } from "./attack"
 import { type Check, checkBonus, type Roller } from "./check"
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
+import { afterAttackRoll } from "./spell-effects"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
-import type { TurnEffect } from "./turn-effect"
+import type { SpellEffect, TurnEffect } from "./turn-effect"
 
 /**
  * The actions of a turn the rules give an effect of their own, beside attacking and making a check. A character takes
@@ -40,7 +42,7 @@ export function hideRoll(character: Roller & { id: string }): Extract<RequiredRo
   }
 }
 
-type Acting = Afflicted & Roller & { id: string; name: string; turnEffects?: readonly TurnEffect[] }
+type Acting = Afflicted & Roller & { id: string; name: string; turnEffects?: readonly TurnEffect[]; spellEffects?: readonly SpellEffect[] }
 
 // Whether a character is proficient in a skill: a hero by its sheet, an NPC when its stat block prints the skill.
 function proficientIn(character: Acting, skill: SkillId): boolean {
@@ -126,10 +128,12 @@ const drop = <T extends Acting>(character: T, gone: (effect: TurnEffect) => bool
  * whose Vex mastery the attacker has gives their next attack on that creature Advantage, and that attack spends it.
  * `dealt` is the damage an attack did, 0 for a miss.
  */
-export function afterRoll<T extends Acting & { conditions?: readonly ConditionEntry[] }>(characters: readonly T[], rollerId: string, roll: RequiredRoll, dealt = 0): T[] {
+export function afterRoll<T extends Acting & { conditions?: readonly ConditionEntry[] }>(everyone: readonly T[], rollerId: string, roll: RequiredRoll, dealt = 0): T[] {
+  let characters: readonly T[] = everyone
   const roller = characters.find((character) => character.id === rollerId)
   if (!roller) return [...characters]
   if ("attack" in roll) {
+    characters = afterAttackRoll(characters, rollerId, roll.attack.target)
     const vexes = dealt > 0 && masteryOf(roller, roll.attack.weapon) === "vex"
     return characters.map((character) => {
       if (character.id === rollerId) return withoutCondition(character, "invisible").character
@@ -142,7 +146,8 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
       return vexes ? give(spent, { id: "vexed", by: rollerId, turns: 2 }) : spent
     })
   }
-  // Casting a spell gives a hidden caster away, as an attack does.
+  // Casting a spell gives a hidden caster away, as an attack does. A spell attack spends what was for the next attack only.
+  if ("cast" in roll && spellById.get(roll.cast.spell)?.attack && roll.cast.targets[0]) characters = afterAttackRoll(characters, rollerId, roll.cast.targets[0])
   if ("cast" in roll) return characters.map((character) => (character.id === rollerId ? withoutCondition(character, "invisible").character : character))
   if (!("check" in roll) || roll.check.kind !== "skill") return [...characters]
   const { skill } = roll.check

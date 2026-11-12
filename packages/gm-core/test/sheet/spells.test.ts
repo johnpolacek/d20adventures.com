@@ -139,7 +139,7 @@ test("healing adds the caster's ability modifier, and a failed save gives the sp
   assert.deepEqual(healed.facts, ["Branka regains 8 hit points. Branka has 13 of 14 hit points."])
   // Charm Person, a Wisdom save against 13. The Bandit adds nothing: a 12 fails, and he is Charmed by Lyra for the hour.
   const charmed = castSpell({ characters: [lyra, bandit()], casterId: "lyra", spell: spell("charm-person"), targets: ["bandit"], d20: falls(12), roll: falls() })
-  assert.deepEqual([find(charmed.characters, "bandit").conditions, charmed.conditions], [[{ id: "charmed", source: "lyra" }], [{ target: "bandit", condition: "charmed" }]])
+  assert.deepEqual([find(charmed.characters, "bandit").conditions, charmed.conditions], [[{ id: "charmed", source: "lyra", spell: "charm-person" }], [{ target: "bandit", condition: "charmed" }]])
   assert.deepEqual(charmed.facts, ["Bandit FAILS the saving throw against Lyra's Charm Person (12 against DC 13).", "Bandit is now Charmed."])
   // A 13 succeeds: nothing.
   assert.equal(

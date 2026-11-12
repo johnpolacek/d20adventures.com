@@ -8,6 +8,7 @@ import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
 import type { Sheet } from "./sheet"
+import { markDamage, rollAdds } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /** Damage one attack deals of one type: dice as the SRD writes them ("1d8 + 3"), or a flat amount with no dice. */
@@ -124,22 +125,34 @@ export type AttackResult = {
   /** A 20 on the die: the attack hits whatever the Armor Class, and its damage dice are rolled twice. */
   critical: boolean
   mode: RollMode
+  /** Dice that lasting spells added or took away, each as it fell. `total` includes them. */
+  adds?: { from: string; amount: number }[]
 }
 
 /**
  * Resolve an attack roll: the d20 plus the attack bonus against the target's Armor Class. A 20 on the die always hits
  * and is a Critical Hit. A 1 on the die always misses. Advantage keeps the higher of two dice and Disadvantage the lower.
  */
-export function resolveAttack(args: { dice: readonly number[]; bonus: number; armorClass: number; mode?: RollMode }): AttackResult {
+export function resolveAttack(args: { dice: readonly number[]; bonus: number; armorClass: number; mode?: RollMode; adds?: readonly { from: string; amount: number }[] }): AttackResult {
   const mode = args.mode ?? "normal"
   const needed = mode === "normal" ? 1 : 2
   const dice = args.dice.slice(0, needed)
   if (dice.length < needed) throw new Error(`An attack roll with ${mode === "normal" ? "no Advantage or Disadvantage" : mode} takes ${needed} d20, and ${dice.length} came.`)
   for (const die of dice) if (!Number.isInteger(die) || die < 1 || die > 20) throw new Error(`${die} is not a d20 roll.`)
   const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
-  const total = natural + args.bonus
+  const total = natural + args.bonus + (args.adds ?? []).reduce((sum, add) => sum + add.amount, 0)
   const critical = natural === 20
-  return { dice, natural, bonus: args.bonus, total, armorClass: args.armorClass, hit: critical || (natural !== 1 && total >= args.armorClass), critical, mode }
+  return {
+    dice,
+    natural,
+    bonus: args.bonus,
+    total,
+    armorClass: args.armorClass,
+    hit: critical || (natural !== 1 && total >= args.armorClass),
+    critical,
+    mode,
+    ...(args.adds?.length ? { adds: [...args.adds] } : {}),
+  }
 }
 
 /** Dice as the SRD writes them: "2d8 + 5" is two eight-sided dice and 5. */
@@ -234,7 +247,7 @@ export type Strike = {
   inspired?: number
 }
 
-type Target = Roller & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves }
+type Target = Roller & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves; tempHitPoints?: number }
 
 /**
  * One attack, start to finish: the attacker's own weapon or stat block action against the target's Armor Class, and on
@@ -258,7 +271,8 @@ export function strike<T extends Target>(args: {
   const stats = combatStatsOf(args.target)
   if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
   const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
-  const rolled = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass: stats.armorClass, mode: args.mode })
+  // Lasting spells add their dice to the roll (Bless), or take them away (Bane).
+  const rolled = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass: stats.armorClass, mode: args.mode, adds: rollAdds(args.attacker, "attack-rolls", args.roll) })
   // A miss by no more than the die could add, and not on a 1, rolls a held Bardic Inspiration die.
   const short = stats.armorClass - rolled.total
   const inspired = !rolled.hit && rolled.natural !== 1 && args.inspiration && short <= args.inspiration.die ? args.roll(args.inspiration.die) : undefined
@@ -266,7 +280,8 @@ export function strike<T extends Target>(args: {
   const roll = lifted.hit && !lifted.critical && criticalWhenHit(args.target, attack.kind) ? { ...lifted, critical: true } : lifted
   const spent = inspired === undefined ? {} : { inspired }
   if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target, ...spent }
-  const extra = featureDamage(args.attacker, attack, roll)
+  // A feature's dice (Sneak Attack), and the attacker's own spell on this target (Hunter's Mark).
+  const extra = [...featureDamage(args.attacker, attack, roll), ...markDamage(args.attacker.id, args.target)]
   const damage = rollDamage([...attack.damage, ...extra.map((feature) => feature.damage)], args.roll, roll.critical)
   const taken = damageTaken(damage, defensesOf(args.target))
   const struck = withDamage({ ...args.target, hitPoints: before }, taken, { critical: roll.critical, rules: args.rules })

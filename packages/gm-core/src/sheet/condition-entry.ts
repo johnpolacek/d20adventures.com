@@ -19,6 +19,8 @@ export const conditionEntrySchema = z.strictObject({
   source: z.string().optional(),
   /** How many of the bearer's own turns it still covers. None lasts until something ends it. */
   turns: z.number().int().min(1).optional(),
+  /** The spell that gave it, by SRD id. It ends with that spell: when its caster's Concentration on it breaks. */
+  spell: z.string().optional(),
   /** An Exhaustion level, 1 to 6. */
   level: z.number().int().min(1).max(6).optional(),
 })

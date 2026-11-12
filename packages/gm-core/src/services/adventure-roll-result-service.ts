@@ -6,6 +6,7 @@ import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { afterHarm, deathSave } from "../sheet/death"
 import { inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
+import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
@@ -14,7 +15,7 @@ import { castRulesNote } from "../story/limits"
 import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
-import { attackBeat, castBeats, rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
+import { attackBeat, castBeats, concentrationBeat, rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { d20sFor, rollD20, rollDie } from "../utils/game-utils"
@@ -57,6 +58,8 @@ function buildRollOutcomePrompt(args: {
   // A spell cast, already resolved by the engine: its name, what it did in plain words, and for a utility spell the
   // spell's own text, which binds what it can do.
   spell?: { name: string; facts: string[]; text?: string }
+  // What else the game settled as this happened: a caster losing Concentration.
+  also?: string[]
 }): string {
   return `
 Context:
@@ -93,7 +96,7 @@ ${
             : "\nThis roll changes no one's hit points or conditions. No one is wounded, healed, knocked down, knocked out or killed by it."
         }`
 }
-
+${args.also?.length ? `\nThe game has also settled this, which holds as stated:\n${args.also.map((line) => `- ${line}`).join("\n")}\n` : ""}
   Guidelines:
   - ALWAYS generate narrative if NPCs are present and the action relates to them (attacking, hiding from, avoiding, reacting to, interacting with, etc.). Actions that respond to NPC threats or presence should be narrated.
   - Generate narrative for successful rolls that affect or respond to NPCs (e.g., successfully hiding from a monster, avoiding an attack, etc.).
@@ -203,6 +206,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         roll: rollDie,
         rules,
         damageType: required.cast.damageType,
+        skill: required.cast.skill,
       })
       turnCharacters = cast.characters.map((character) => (character.id === args.characterId ? withCastSpent(character, cost.cost) : character))
       rolls = castBeats(by, args.character, spell, cast, storyNames(args.turn.characters))
@@ -228,7 +232,14 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // The bonus is read from the sheet as the die lands, so the sheet is always the one source of it.
       // A condition may make the roller fail a saving throw outright, whatever the dice show.
       const failedBy = saveFailedBy(args.character, required.check)
-      const thrown = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, required.check), dc: required.difficulty, mode, fails: !!failedBy })
+      const thrown = resolveCheck({
+        dice: d20sFor(mode, args.dice),
+        bonus: checkBonus(args.character, required.check),
+        dc: required.difficulty,
+        mode,
+        fails: !!failedBy,
+        adds: checkAdds(args.character, required.check, rollDie),
+      })
       // A held Bardic Inspiration die is rolled on a failure it could turn into a success.
       const held = args.character.inspiration
       const result = !failedBy && !thrown.success && inspirationHelps(held, thrown.dc - thrown.total) ? inspiredCheck(thrown, held, rollDie) : thrown
@@ -242,6 +253,10 @@ export function createAdventureRollResultService(ports: GmPorts) {
     }
     // What the roll used up: an ally's Help, and the roller's own hiding when they attacked.
     turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken)
+    // Concentration: a caster who lost hit points saves to keep their spell, and one now down or unable to act loses it.
+    const held = settleConcentration({ before: args.turn.characters, after: turnCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
+    turnCharacters = held.characters
+    rolls = [...rolls, ...held.saves.map((save) => concentrationBeat(by, save, storyNames(args.turn.characters)))]
     if (inspired) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withoutInspiration(character) : character))
     const { total: totalResult, against: difficulty } = numbers
     const margin = totalResult - difficulty
@@ -275,6 +290,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       attack: blow && target ? strikeFacts(args.character.name, target.name, blow) : undefined,
       harm: stakeFacts,
       spell: spellCast,
+      also: held.facts,
       ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
 

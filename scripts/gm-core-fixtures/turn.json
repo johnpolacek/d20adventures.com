@@ -723,7 +723,7 @@
             "maxLength": 80
           },
           "helps": {
-            "description": "For \"help\" given to an ally's check: the id of the skill it is for",
+            "description": "For \"help\" given to an ally's check, or a spell cast for one skill such as Guidance: the id of the skill it is for",
             "type": "string",
             "maxLength": 40
           },
@@ -1087,7 +1087,7 @@
             "maxLength": 80
           },
           "helps": {
-            "description": "For \"help\" given to an ally's check: the id of the skill it is for",
+            "description": "For \"help\" given to an ally's check, or a spell cast for one skill such as Guidance: the id of the skill it is for",
             "type": "string",
             "maxLength": 40
           },

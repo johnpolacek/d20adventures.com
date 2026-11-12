@@ -1,5 +1,6 @@
 import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
+import { spellEffectsAtEncounterEnd } from "../sheet/spell-effects"
 import { rollInitiative } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
 import type { PCTemplate } from "../types/character"
@@ -50,7 +51,12 @@ export function buildLocalWikiTurnCharacters(args: {
     // The conditions of the fight they left are over, and the lasting ones come with them.
     const was = carried as Partial<TurnCharacter> | undefined
     const kept = was ? conditionsAtEncounterEnd({ conditions: was.conditions }).conditions : undefined
+    // A spell that lasts hours with no Concentration comes along (Mage Armor). The rest end with the encounter.
+    const spells = was ? spellEffectsAtEncounterEnd({ spellEffects: was.spellEffects }).spellEffects : undefined
     const state = {
+      spellEffects: spells,
+      concentration: undefined,
+      tempHitPoints: undefined,
       conditions: kept,
       turnEffects: undefined,
       featureUses: undefined,

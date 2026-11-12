@@ -8,6 +8,7 @@ import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineM
 import { conditionSpans } from "../sheet/condition-entry"
 import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
 import { bonusActionsOf } from "../sheet/features"
+import { attackModesFromSpells } from "../sheet/spell-effects"
 import { castCost, isEngineSpell, slotsLeft, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
@@ -39,7 +40,7 @@ const rollPickSchema = z.object({
   damageType: z.string().max(20).optional().describe('For "cast": the damage type chosen, for a spell that offers several'),
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
   target: z.string().max(80).optional().describe('For an attack: the id of who is attacked, from Who Is Here. For "help": the id of the ally helped, or of the enemy an ally will attack'),
-  helps: z.string().max(40).optional().describe('For "help" given to an ally\'s check: the id of the skill it is for'),
+  helps: z.string().max(40).optional().describe('For "help" given to an ally\'s check, or a spell cast for one skill such as Guidance: the id of the skill it is for'),
   bonus: z.string().max(40).optional().describe("The id of one of the character's own Bonus Actions they also use this turn, from Their Bonus Actions"),
   bonusTarget: z.string().max(80).optional().describe("For a Bonus Action given to someone else: their id"),
   harm: z
@@ -63,7 +64,7 @@ const rollPickSchema = z.object({
 
 // Someone the roller could attack: anyone else in the scene who is still up.
 type Present = Pick<TurnCharacter, "id" | "name"> &
-  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "isComplete">> & { statBlock?: string }
+  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "spellEffects" | "isComplete">> & { statBlock?: string }
 
 /** What the game master reads a character's move as: a roll the engine asks for, an action that takes none, or neither. */
 export type TurnReading = {
@@ -287,7 +288,14 @@ Action: "${action}"
           return { roll: null, ...bonus }
         }
         const type = damageTypeIdSchema.safeParse(pick.damageType?.trim().toLowerCase())
-        const cast = { spell: spell.id, targets: chosen, ...(cost.cost.kind === "ritual" ? { ritual: true as const } : {}), ...(type.success ? { damageType: type.data } : {}) }
+        const forSkill = skillIdSchema.safeParse(pick.helps?.trim().toLowerCase())
+        const cast = {
+          spell: spell.id,
+          targets: chosen,
+          ...(cost.cost.kind === "ritual" ? { ritual: true as const } : {}),
+          ...(type.success ? { damageType: type.data } : {}),
+          ...(forSkill.success ? { skill: forSkill.data } : {}),
+        }
         const casting = spellcastingOf(character)
         if (spell.attack) {
           // A spell attack is the caster's to throw, against the first target's Armor Class.
@@ -295,7 +303,7 @@ Action: "${action}"
           const armorClass = target && combatStatsOf(target)?.armorClass
           if (!target || armorClass === undefined || !casting) throw new Error(`${spell.name} has no one with an Armor Class to be cast at.`)
           const picked = pick.mode ?? "normal"
-          const typed = self ? spellAttackModes({ ...character, id: self, type: "pc" }, { ...target, type: target.type ?? "npc" }, spell) : []
+          const typed = self ? [...spellAttackModes({ ...character, id: self, type: "pc" }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []
           const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
           const rollRequirement: ChosenRoll = {
             cast,
@@ -323,7 +331,11 @@ Action: "${action}"
         if (armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
         // The game master's read of the moment, then what the conditions of the two settle with no model.
         const picked = pick.mode ?? "normal"
-        const typed = [...attackModesFrom(character, target, attack.kind, options?.present), ...(self ? attackModesFromActions({ ...character, id: self }, target, options?.present) : [])]
+        const typed = [
+          ...attackModesFrom(character, target, attack.kind, options?.present),
+          ...(self ? attackModesFromActions({ ...character, id: self }, target, options?.present) : []),
+          ...attackModesFromSpells(character, target),
+        ]
         const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
         const rollRequirement: ChosenRoll = {
           attack: { weapon: attack.id, target: target.id },

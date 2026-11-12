@@ -1,4 +1,4 @@
-import type { AbilityId, ConditionId, DamageTypeId } from "@d20/srd"
+import type { AbilityId, ConditionId, DamageTypeId, SkillId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { classById } from "@d20/srd/classes"
 import type { Spell } from "@d20/srd/schema/spells"
@@ -6,14 +6,15 @@ import { spellById } from "@d20/srd/spells"
 import { attackModesFromActions, checkModesFromActions } from "./actions"
 import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defensesOf, resolveAttack, rollDamage } from "./attack"
 import { type Check, checkBonus, combineModes, type Roller, type RollMode } from "./check"
-import type { ConditionEntry, ConditionSpan } from "./condition-entry"
+import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, type DeathSaves, type Fate, withDamage, withHealing } from "./death"
 import { deriveSheet } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { lasts, type RollAdd, rollAdds, withConcentration, withSpellEffect } from "./spell-effects"
 import { combatStatsOf } from "./stat-block"
-import type { TurnEffect } from "./turn-effect"
+import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
 
 /**
  * Spellcasting by the SRD 5.2.1 rules, as pure functions. A spell's typed data decides what it does: a spell attack
@@ -72,10 +73,13 @@ export const isEngineSpell = (spell: Spell): boolean =>
  * for each 5 feet of its radius, a line one for each 30 feet, each rounded up. Magic Missile takes one for each dart.
  * Any other spell takes one.
  */
+// Spells whose text takes "up to three creatures" with no area: the count is in their words alone.
+const SEVERAL: Record<string, number> = { bless: 3, bane: 3 }
+
 export function targetLimit(spell: Spell): number {
   const area = spell.range.area
   if (area) return Math.max(1, Math.ceil(area.size / (area.shape === "cone" ? 10 : area.shape === "line" ? 30 : 5)))
-  return spell.projectiles?.count ?? 1
+  return spell.projectiles?.count ?? SEVERAL[spell.id] ?? 1
 }
 
 /** A spell a character can cast, and how. */
@@ -190,7 +194,19 @@ export function slotsAtEncounterEnd<T extends { spellSlots?: readonly number[] }
 }
 
 /** A saving throw a target made against a spell, as it fell. */
-export type SaveRoll = { target: string; ability: AbilityId; dice: number[]; natural: number; bonus: number; total: number; dc: number; success: boolean; mode: RollMode; failedBy?: string }
+export type SaveRoll = {
+  target: string
+  ability: AbilityId
+  dice: number[]
+  natural: number
+  bonus: number
+  total: number
+  dc: number
+  success: boolean
+  mode: RollMode
+  failedBy?: string
+  adds?: RollAdd[]
+}
 /** A spell attack as it fell: the roll, and on a hit the damage dice and what the target lost. */
 export type SpellAttack = { target: string; roll: AttackResult; damage?: DamageRoll; taken: number; fate?: Fate }
 
@@ -205,6 +221,9 @@ type Castee = Roller & {
   deathSaves?: DeathSaves
   conditions?: readonly ConditionEntry[]
   turnEffects?: readonly TurnEffect[]
+  spellEffects?: readonly SpellEffect[]
+  concentration?: Concentration
+  tempHitPoints?: number
   isComplete?: boolean
 }
 
@@ -258,6 +277,8 @@ export function castSpell<T extends Castee>(args: {
   rules?: DeathRules
   /** For a spell that deals one of several damage types, the one chosen. The first printed, when none is. */
   damageType?: DamageTypeId
+  /** For a spell cast for one skill (Guidance), the skill. */
+  skill?: SkillId
 }): Cast<T> {
   const { spell } = args
   let characters = [...args.characters]
@@ -275,7 +296,11 @@ export function castSpell<T extends Castee>(args: {
   const conditions: ConditionChange[] = []
   const facts: string[] = []
   const typeOf = (types: readonly DamageTypeId[]) => (args.damageType && types.includes(args.damageType) ? args.damageType : types[0])
-  const now = (part: { timing?: string; appliesWhen?: string; unless?: string }) => !part.timing && !part.appliesWhen
+  // What the spell does as it takes effect. What it does later, under a stated condition, or as one option of several
+  // (Command's Grovel) is not dealt here.
+  const now = (part: { timing?: string; appliesWhen?: string; unless?: string; label?: string }) => !part.timing && !part.appliesWhen && !part.label
+  // A spell with a second save to come holds its first condition only until that save: the bearer's next turn (Sleep).
+  const span = spell.saves?.some((save) => save.when === "later") ? "turn" : spanOf(spell)
   const partOf = (entry: NonNullable<Spell["damage"]>[number]): DamagePart => {
     const dice = cantripDice(entry, level)
     return { ...(dice ? { dice } : { amount: entry.amount }), type: typeOf(entry.types) }
@@ -302,7 +327,7 @@ export function castSpell<T extends Castee>(args: {
   const give = (id: string, condition: ConditionId) => {
     const target = find(id)
     if (!target) return
-    const given = withCondition(target, { id: condition, source: caster.id, span: spanOf(spell) }, { acted: !!target.isComplete })
+    const given = withCondition(target, { id: condition, source: caster.id, span, spell: spell.id }, { acted: !!target.isComplete })
     if (!given.given) {
       facts.push(`${target.name} cannot be ${conditionName(condition)} and is not.`)
       return
@@ -321,7 +346,7 @@ export function castSpell<T extends Castee>(args: {
     const mode = args.mode ?? "normal"
     const dice = [...(args.attackDice ?? [])]
     while (dice.length < (mode === "normal" ? 1 : 2)) dice.push(args.d20())
-    const roll = resolveAttack({ dice, bonus: casting.attackBonus - d20Penalty(caster), armorClass, mode })
+    const roll = resolveAttack({ dice, bonus: casting.attackBonus - d20Penalty(caster), armorClass, mode, adds: rollAdds(caster, "attack-rolls", args.roll) })
     attack = { target: target.id, roll, taken: 0 }
     if (roll.hit) {
       const parts = (spell.damage ?? []).filter((entry) => now(entry) && entry.trigger === "hit").map(partOf)
@@ -357,9 +382,11 @@ export function castSpell<T extends Castee>(args: {
       const dice = Array.from({ length: mode === "normal" ? 1 : 2 }, () => args.d20())
       const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
       const bonus = checkBonus(target, check)
-      const total = natural + bonus
+      // A lasting spell on the target adds its dice to the save, or takes them away.
+      const adds = rollAdds(target, "saving-throws", args.roll)
+      const total = natural + bonus + adds.reduce((sum, add) => sum + add.amount, 0)
       const success = !failedBy && total >= casting.saveDc
-      saves.push({ target: id, ability: save.ability, dice, natural, bonus, total, dc: casting.saveDc, success, mode, ...(failedBy ? { failedBy } : {}) })
+      saves.push({ target: id, ability: save.ability, dice, natural, bonus, total, dc: casting.saveDc, success, mode, ...(failedBy ? { failedBy } : {}), ...(adds.length ? { adds } : {}) })
       const verdict = `${target.name} ${success ? "SUCCEEDS on" : "FAILS"} the saving throw against ${caster.name}'s ${spell.name} (${total} against DC ${casting.saveDc})`
       if (rolled && (!success || half)) {
         const done = hurt(id, rolled, (taken) => (success ? Math.floor(taken / 2) : taken))
@@ -402,6 +429,35 @@ export function castSpell<T extends Castee>(args: {
   for (const link of spell.conditions ?? []) {
     if (!now(link) || link.trigger) continue
     for (const id of link.target === "caster" ? [caster.id] : targets) give(id, link.condition)
+  }
+
+  // Temporary Hit Points as the spell takes effect (False Life). They do not stack: the higher stands.
+  if (healing?.temporary && !healing.timing) {
+    for (const id of targets.length ? targets : [caster.id]) {
+      const target = find(id)
+      if (!target || target.dead) continue
+      const rolled = healing.dice ? rollDamage([{ dice: healing.dice, type: "force" }], args.roll).total : (healing.amount ?? 0)
+      const amount = rolled + (healing.modifier ? casting.modifier : 0)
+      if (amount > (target.tempHitPoints ?? 0)) put({ ...target, tempHitPoints: amount })
+      facts.push(`${target.name} gains ${amount} Temporary Hit Points.`)
+    }
+  }
+
+  // A spell that lasts stays on those it took: everyone named, or only those who failed its save, or the one its
+  // spell attack hit. A spell that takes Concentration is the one its caster now holds, and one held before ends.
+  if (spell.duration.concentration) characters = withConcentration(characters, caster.id, spell.id)
+  if (lasts(spell)) {
+    const saved = spell.saves?.some((save) => save.when === "initial")
+    const taken = saved ? saves.filter((save) => !save.success).map((save) => save.target) : spell.attack ? (attack?.roll.hit ? [attack.target] : []) : targets.length ? targets : [caster.id]
+    const turns = span ? CONDITION_SPANS[span] : undefined
+    for (const id of taken) {
+      const target = find(id)
+      if (!target || target.dead) continue
+      // Heroism's Temporary Hit Points are the caster's spellcasting ability modifier, at the start of each of the target's turns.
+      const each = healing?.temporary && healing.timing ? { amount: casting.modifier } : {}
+      put(withSpellEffect(target, { spell: spell.id, by: caster.id, ...(turns ? { turns: turns + (target.isComplete ? 1 : 0) } : {}), ...each, ...(args.skill ? { skill: args.skill } : {}) }))
+      facts.push(`${spell.name} is now on ${target.name}.`)
+    }
   }
 
   return { characters, ...(attack ? { attack } : {}), saves, harm, conditions, facts }

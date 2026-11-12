@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { conditionEntrySchema } from "../sheet/condition-entry"
 import { sheetSchema } from "../sheet/sheet"
-import { featureUsesSchema, inspirationSchema, turnEffectSchema } from "../sheet/turn-effect"
+import { concentrationSchema, featureUsesSchema, inspirationSchema, spellEffectSchema, turnEffectSchema } from "../sheet/turn-effect"
 
 // Equipment item schema and type
 export const equipmentItemSchema = z.object({
@@ -77,6 +77,11 @@ export const baseCharacterSchema = z.object({
   inspiration: inspirationSchema.optional(),
   // Spell slots used, by spell level, the first for level 1. Only the engine writes them, through ../sheet/spells.
   spellSlots: z.array(z.number().int().min(0)).optional(),
+  // Spells that last on the character, the one spell they concentrate on, and Temporary Hit Points, which are lost
+  // before hit points are. Only the engine writes them, through ../sheet/spell-effects.
+  spellEffects: z.array(spellEffectSchema).optional(),
+  concentration: concentrationSchema.optional(),
+  tempHitPoints: z.number().int().min(1).optional(),
   // Dead, or gone from the encounter for good. Neither is a condition, and only the engine sets them.
   dead: z.literal(true).optional(),
   fled: z.literal(true).optional(),
@@ -137,6 +142,9 @@ export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
   featureUses: true,
   inspiration: true,
   spellSlots: true,
+  spellEffects: true,
+  concentration: true,
+  tempHitPoints: true,
   dead: true,
   fled: true,
 })

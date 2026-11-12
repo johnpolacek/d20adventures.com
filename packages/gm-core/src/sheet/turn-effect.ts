@@ -28,3 +28,25 @@ export type Inspiration = z.infer<typeof inspirationSchema>
 
 /** How many times a character has used each feature that has a number of uses, by the feature's id. */
 export const featureUsesSchema = z.record(z.string(), z.number().int().min(0))
+
+/**
+ * A spell that lasts on a character, by SRD id, with who cast it. The engine reads what it does from the spell's own
+ * typed data each time a roll is made: Bless adds a d4, Shield of Faith 2 to Armor Class, Hunter's Mark a d6 to its
+ * caster's hits. Only the engine writes it, through ./spell-effects.
+ */
+export const spellEffectSchema = z.strictObject({
+  spell: z.string(),
+  /** The id of who cast it. */
+  by: z.string(),
+  /** How many of the bearer's own turns it still covers. None lasts until something ends it. */
+  turns: z.number().int().min(1).optional(),
+  /** A number the caster's own sheet sets: Heroism's Temporary Hit Points each turn. */
+  amount: z.number().int().optional(),
+  /** Guidance: the skill it is for. */
+  skill: skillIdSchema.optional(),
+})
+export type SpellEffect = z.infer<typeof spellEffectSchema>
+
+/** The spell a caster concentrates on, by SRD id. A caster concentrates on one at a time. */
+export const concentrationSchema = z.strictObject({ spell: z.string() })
+export type Concentration = z.infer<typeof concentrationSchema>

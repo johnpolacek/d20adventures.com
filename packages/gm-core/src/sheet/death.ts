@@ -5,7 +5,8 @@ import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtRoundStart, d20Penalty, withCondition } from "./conditions"
 import { hitPointsOf, withHitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
-import type { TurnEffect } from "./turn-effect"
+import { spellEffectsAtRoundStart } from "./spell-effects"
+import type { SpellEffect, TurnEffect } from "./turn-effect"
 
 /** A hero's Death Saving Throws while at 0 hit points: three successes make them Stable, three failures kill. */
 export type DeathSaves = { successes: number; failures: number; stable?: true }
@@ -24,6 +25,8 @@ type Mortal = {
   fled?: true
   conditions?: readonly ConditionEntry[]
   turnEffects?: readonly TurnEffect[]
+  spellEffects?: readonly SpellEffect[]
+  tempHitPoints?: number
   deathSaves?: DeathSaves
 }
 
@@ -46,7 +49,7 @@ export function revived<T extends Mortal>(character: T, current: number): T {
 /** Dead at 0 hit points. Where player death is off, a hero who would die is left Stable at 0 instead, out of the fight. */
 export function killed<T extends Mortal>(character: T, rules?: DeathRules): T {
   if (character.type === "pc" && rules?.playerDeath === false) return stable(character)
-  const { deathSaves: _, conditions: __, turnEffects: ___, ...rest } = at(character, 0)
+  const { deathSaves: _, conditions: __, turnEffects: ___, spellEffects: ____, tempHitPoints: _____, ...rest } = at(character, 0)
   return { ...rest, dead: true } as T
 }
 
@@ -62,8 +65,16 @@ export type Fate = "dies" | "dying" | "killed" | "stable" | "revived"
 export function withDamage<T extends Mortal>(character: T, amount: number, options: { critical?: boolean; rules?: DeathRules } = {}): { character: T; fate?: Fate } {
   const hitPoints = hitPointsOf(character)
   if (!hitPoints) throw new Error(`${character.name ?? "A character"} has no sheet or stat block, so no hit points`)
-  const damage = Math.max(0, Math.round(amount))
-  if (isDead(character) || damage === 0) return { character }
+  const dealt = Math.max(0, Math.round(amount))
+  if (isDead(character) || dealt === 0) return { character }
+  // Temporary Hit Points are lost first, and what is left over comes off the hit points.
+  const shield = Math.min(character.tempHitPoints ?? 0, dealt)
+  if (shield > 0) {
+    const { tempHitPoints: _, ...rest } = character
+    const left = (character.tempHitPoints ?? 0) - shield
+    return withDamage((left > 0 ? { ...rest, tempHitPoints: left } : rest) as T, dealt - shield, options)
+  }
+  const damage = dealt
   const { current, maximum } = hitPoints
   if (current > damage) return { character: at(character, current - damage) }
   if (character.type !== "pc") return { character: killed(character), fate: "dies" }
@@ -135,7 +146,7 @@ type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: Ro
  * Incapacitated, takes no turn. Everyone else has yet to act.
  */
 export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
-  const character = turnEffectsAtRoundStart(conditionsAtRoundStart(before))
+  const character = spellEffectsAtRoundStart(turnEffectsAtRoundStart(conditionsAtRoundStart(before)))
   if (isDying(character)) return { ...character, rollRequired: { ...DEATH_SAVE, modifier: 0 - d20Penalty(character) }, rollResult: undefined, hasReplied: true, isComplete: false }
   if (isDown(character) || isIncapacitated(character)) return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
   return { ...character, hasReplied: false, isComplete: false }

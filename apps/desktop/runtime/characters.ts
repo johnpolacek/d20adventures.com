@@ -3,6 +3,7 @@ import { turnEffectsAtEncounterEnd } from "@d20/gm-core/sheet/actions"
 import { conditionsAtEncounterEnd, conditionWords, withoutCondition } from "@d20/gm-core/sheet/conditions"
 import { atRoundStart } from "@d20/gm-core/sheet/death"
 import { featuresAtEncounterEnd } from "@d20/gm-core/sheet/features"
+import { spellEffectsAtEncounterEnd } from "@d20/gm-core/sheet/spell-effects"
 import { slotsAtEncounterEnd } from "@d20/gm-core/sheet/spells"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
@@ -16,7 +17,22 @@ export const desktopPatchSchema = strictModelSchema(adventurePatchSchema.omit({ 
 })
 export type CharacterState = Pick<
   TurnCharacter,
-  "hitPoints" | "healthPercent" | "conditions" | "turnEffects" | "featureUses" | "inspiration" | "spellSlots" | "dead" | "fled" | "deathSaves" | "equipment" | "effects" | "spells"
+  | "hitPoints"
+  | "healthPercent"
+  | "conditions"
+  | "turnEffects"
+  | "featureUses"
+  | "inspiration"
+  | "spellSlots"
+  | "spellEffects"
+  | "concentration"
+  | "tempHitPoints"
+  | "dead"
+  | "fled"
+  | "deathSaves"
+  | "equipment"
+  | "effects"
+  | "spells"
 >
 export type CharacterStates = Record<string, CharacterState>
 const key = (name: string) => name.trim().toLowerCase()
@@ -29,6 +45,9 @@ export function characterState(c: CharacterState): CharacterState {
     turnEffects: c.turnEffects,
     featureUses: c.featureUses,
     spellSlots: c.spellSlots,
+    spellEffects: c.spellEffects,
+    concentration: c.concentration,
+    tempHitPoints: c.tempHitPoints,
     inspiration: c.inspiration,
     dead: c.dead,
     fled: c.fled,
@@ -118,7 +137,7 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
     const revived = before && isDown(before) && !isDown(next) && isDown(states[next.id] ?? before) ? deathState(next) : {}
     const kept = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
     // A new encounter ends the conditions of a fight's moment and what its actions left, and gives feature uses back. The lasting conditions come along.
-    const c = args.encounterChanged ? slotsAtEncounterEnd(featuresAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept)))) : kept
+    const c = args.encounterChanged ? spellEffectsAtEncounterEnd(slotsAtEncounterEnd(featuresAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept))))) : kept
     if (!c.deathSaves) delete c.deathSaves
     // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none.
     const ready = hasFled(c) ? { ...c, hasReplied: false, isComplete: true } : atRoundStart(c)

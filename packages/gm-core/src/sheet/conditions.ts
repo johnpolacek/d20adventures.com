@@ -4,7 +4,9 @@ import { monsterById } from "@d20/srd/monsters"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Check } from "./check"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
+import { spellImmunities } from "./spell-effects"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
+import type { SpellEffect } from "./turn-effect"
 
 type Side = "advantage" | "disadvantage"
 
@@ -92,6 +94,7 @@ export type Afflicted = {
   dead?: true
   fled?: true
   conditions?: readonly ConditionEntry[]
+  spellEffects?: readonly SpellEffect[]
   /** Whether they have taken their turn this round. */
   isComplete?: boolean
 }
@@ -210,7 +213,7 @@ export const resistsAllDamage = (target: Afflicted): boolean => borne(target).so
 /** Whether a character cannot be given a condition: its stat block is immune to it, or a condition it bears shuts it out. */
 export function immuneTo(character: Afflicted, id: ConditionId): boolean {
   const monster = character.type === "npc" ? monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
-  return !!monster?.conditionImmunities?.includes(id) || borne(character).some((entry) => CONDITION_RULES[entry.id].immuneTo?.includes(id))
+  return !!monster?.conditionImmunities?.includes(id) || borne(character).some((entry) => CONDITION_RULES[entry.id].immuneTo?.includes(id)) || spellImmunities(character).includes(id)
 }
 
 const without = <T extends Afflicted>(character: T, keep: (entry: ConditionEntry) => boolean): T => {
@@ -228,7 +231,7 @@ const without = <T extends Afflicted>(character: T, keep: (entry: ConditionEntry
  */
 export function withCondition<T extends Afflicted>(
   character: T,
-  give: { id: ConditionId; source?: string; span?: ConditionSpan },
+  give: { id: ConditionId; source?: string; span?: ConditionSpan; spell?: string },
   options: { acted?: boolean } = {}
 ): { character: T; given: boolean; level?: number } {
   if (isDead(character) || immuneTo(character, give.id)) return { character, given: false }
@@ -240,7 +243,7 @@ export function withCondition<T extends Afflicted>(
   }
   const span = CONDITION_SPANS[rules.stands ? rules.span : (give.span ?? rules.span)]
   const turns = span === undefined ? undefined : span + (options.acted ? 1 : 0)
-  const entry: ConditionEntry = { id: give.id, ...(give.source ? { source: give.source } : {}), ...(turns ? { turns } : {}) }
+  const entry: ConditionEntry = { id: give.id, ...(give.source ? { source: give.source } : {}), ...(turns ? { turns } : {}), ...(give.spell ? { spell: give.spell } : {}) }
   return { character: { ...character, conditions: [...others, entry] }, given: true }
 }
 

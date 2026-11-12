@@ -77,6 +77,8 @@ export type RollBeat = {
   conditions?: { target: string; condition: string; ends?: true }[]
   // A Bardic Inspiration die rolled and added to a roll that had failed. `total` includes it.
   inspired?: number
+  // Dice that lasting spells added to the roll or took from it, each as it fell: Bless's d4. `total` includes them.
+  adds?: { from: string; amount: number }[]
   // The spell this roll belongs to, by name: the caster's spell attack, or a target's saving throw against it.
   spell?: string
   // A Death Saving Throw: the hero's successes and failures once it was made, and how it ended their dying, if it did.
@@ -136,6 +138,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     harm: harmSchema.optional(),
     conditions: z.array(z.object({ target: id, condition: z.string(), ends: z.literal(true).optional() })).optional(),
     inspired: z.number().optional(),
+    adds: z.array(z.object({ from: z.string(), amount: z.number() })).optional(),
     spell: z.string().optional(),
     deathSave: z.object({ successes: z.number(), failures: z.number(), fate: z.enum(["revived", "stable", "dead"]).optional() }).optional(),
   }),

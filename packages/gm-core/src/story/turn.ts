@@ -2,6 +2,7 @@ import { z } from "zod"
 import type { GmPorts } from "../ports"
 import type { Strike } from "../sheet/attack"
 import type { CheckResult } from "../sheet/check"
+import type { ConcentrationSave } from "../sheet/spell-effects"
 import type { Cast } from "../sheet/spells"
 import { isDown } from "../utils/turn-actors"
 import { authoredStory } from "./authored"
@@ -68,6 +69,7 @@ export function rollBeat(
     ...(harm?.length ? { harm } : {}),
     ...(conditions?.length ? { conditions } : {}),
     ...(result.inspired !== undefined ? { inspired: result.inspired } : {}),
+    ...(result.adds?.length ? { adds: result.adds } : {}),
   }
 }
 
@@ -92,6 +94,7 @@ export function attackBeat(by: StoryBy, roller: { id: string; name: string; imag
     ...(roller.image ? { image: roller.image } : {}),
     attack: { target, ...(roll.critical ? { critical: true as const } : {}), ...(blow.damage ? { damage: blow.damage.parts, taken: blow.taken } : {}) },
     ...(blow.inspired !== undefined ? { inspired: blow.inspired } : {}),
+    ...(roll.adds?.length ? { adds: roll.adds } : {}),
   }
 }
 
@@ -130,6 +133,7 @@ export function castBeats(
       success: roll.hit,
       ...(caster.image ? { image: caster.image } : {}),
       attack: { target: struck.target, ...(roll.critical ? { critical: true as const } : {}), ...(struck.damage ? { damage: struck.damage.parts, taken: struck.taken } : {}) },
+      ...(roll.adds?.length ? { adds: roll.adds } : {}),
       spell: spell.name,
       ...(cast.conditions.some((change) => change.target === struck.target && !saved.has(change.target)) ? { conditions: cast.conditions.filter((change) => change.target === struck.target) } : {}),
     })
@@ -163,10 +167,28 @@ export function castBeats(
       dc: save.dc,
       success: save.success,
       ...(target?.image ? { image: target.image } : {}),
+      ...(save.adds?.length ? { adds: save.adds } : {}),
       spell: spell.name,
       ...(harm.length ? { harm } : {}),
       ...(conditions.length ? { conditions } : {}),
     })
   }
   return beats
+}
+
+/** A caster's saving throw to keep Concentration after taking damage, as the story keeps it. */
+export function concentrationBeat(by: StoryBy, save: ConcentrationSave, names: StoryNames): RollBeat {
+  return {
+    kind: "roll",
+    by,
+    character: save.character,
+    name: nameOf(names, save.character),
+    check: "Constitution Saving Throw",
+    natural: save.natural,
+    modifier: save.bonus,
+    total: save.total,
+    dc: save.dc,
+    success: save.success,
+    spell: save.spell,
+  }
 }
