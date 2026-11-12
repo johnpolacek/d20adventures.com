@@ -28,7 +28,8 @@ export type Save = {
   model?: string
   adventure: SavedAdventure
   turns: Array<TurnRecord & { adventurePatch?: AdventurePatch }>
-  rolls: Record<string, number>
+  // The d20s of each roll made: one, or two with Advantage or Disadvantage.
+  rolls: Record<string, number[]>
   rollChecks?: Record<string, { name: string; skill: string; dc: number; modifier: number }>
   appliedMovement?: string[]
   movement: Record<string, { actorId: string; intent: MovementIntent }>
@@ -246,7 +247,7 @@ export class LocalStore implements Store, Roster {
     if (!c || c.hasReplied || c.isComplete) throw new Error("This character already acted or is unavailable.")
     if (args.rollRequirement) {
       this.state!.rollChecks ??= {}
-      this.state!.rollChecks[`${turn._id}:${c.id}`] = { name: c.name, skill: args.rollRequirement.rollType, dc: args.rollRequirement.difficulty, modifier: args.rollRequirement.modifier ?? 0 }
+      this.state!.rollChecks[`${turn._id}:${c.id}`] = { name: c.name, skill: args.rollRequirement.rollType, dc: args.rollRequirement.difficulty, modifier: args.rollRequirement.modifier }
     }
     Object.assign(turn, withStory(turn, args.story))
     Object.assign(c, { hasReplied: true, isComplete: !args.rollRequirement, rollRequired: args.rollRequirement, rollResult: undefined })

@@ -45,8 +45,8 @@ Once, unprompted, Eamon says that the oldest line of stones runs north, toward t
 Eamon can track the "core center of power" with his magic, but he needs the party's protection as the tunnel walls themselves begin to shift slightly, an illusory defense mechanism.
 
 - The shifting walls are illusion. They do no harm and pass through shields and hands like smoke, but they hide the true tunnel and pull Eamon off his trail.
-- Each round, a hero can keep him on it with a roll: Investigation or Arcana DC 13 to see through the illusion, or Perception DC 13 to follow the true wall by touch or chalk. Two successes bring the party to the seamless wall.
-- The seamless wall is the gateway. Force does not move it. Arcana or Investigation DC 13 finds its seam. If no one does, Eamon finds it the round after.
+- Each round, a hero can keep him on it with a roll: Investigation or Arcana DC 15 to see through the illusion, or Perception DC 15 to follow the true wall by touch or chalk. Two successes bring the party to the seamless wall.
+- The seamless wall is the gateway. Force does not move it. Arcana or Investigation DC 15 finds its seam. If no one does, Eamon finds it the round after.
 
 ## Transitions
 

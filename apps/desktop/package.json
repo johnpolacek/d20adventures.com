@@ -11,6 +11,7 @@
     "test": "tsx --test runtime/*.test.ts",
     "scene:judge": "tsx scripts/scene-judge.ts",
     "scene:probe": "tsx scripts/scene-probe.ts",
+    "check:probe": "tsx scripts/check-probe.ts",
     "tauri": "tauri"
   },
   "dependencies": {

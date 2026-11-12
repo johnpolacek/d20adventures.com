@@ -1,0 +1,133 @@
+[
+  {
+    "id": "owlbear-sneak",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "action": "I duck low behind the brambles and creep around the owlbear, keeping downwind and out of its sight.",
+    "checks": ["stealth"],
+    "dcs": [15],
+    "mode": "normal"
+  },
+  {
+    "id": "owlbear-calm",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "action": "I lower my bow, hold out an open hand and speak low and steady to calm the beast so it lets me pass.",
+    "checks": ["animal-handling"],
+    "dcs": [20],
+    "mode": "normal"
+  },
+  {
+    "id": "owlbear-shoot",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "action": "I loose an arrow at the owlbear's chest.",
+    "checks": ["dexterity"],
+    "dcs": [10, 15],
+    "mode": "normal"
+  },
+  {
+    "id": "home-tea",
+    "adventure": "the-midnight-summons",
+    "encounter": "back-home",
+    "hero": "thalbern",
+    "action": "I put the kettle on and sit by the hearth, thinking it over.",
+    "checks": ["none"]
+  },
+  {
+    "id": "stones-greet",
+    "adventure": "the-midnight-summons",
+    "encounter": "meeting-at-the-stones",
+    "hero": "thalbern",
+    "action": "I nod to Wollandora and ask her why she called me here.",
+    "checks": ["none"]
+  },
+  {
+    "id": "silence-listen",
+    "adventure": "the-midnight-summons",
+    "encounter": "broken-silence",
+    "hero": "thalbern",
+    "action": "I stop, hold my breath and listen hard to work out what is coming through the trees.",
+    "checks": ["perception"],
+    "dcs": [5, 10],
+    "mode": "normal"
+  },
+  {
+    "id": "relics-lore",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-missing-relics",
+    "hero": "thalbern",
+    "action": "I think back on the elven tales I grew up with, trying to recall what the old songs say of these relics.",
+    "checks": ["history", "arcana", "religion"],
+    "dcs": [10, 15],
+    "mode": "normal"
+  },
+  {
+    "id": "bank-watch",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "action": "I stay flat in the bushes and search the bank and the woods for anyone else lurking out there.",
+    "checks": ["perception"],
+    "dcs": [15],
+    "mode": "normal"
+  },
+  {
+    "id": "detect-magic",
+    "adventure": "covert-cargo",
+    "encounter": "the-crate",
+    "hero": "1749159962941",
+    "action": "I cast Detect Magic on the crate.",
+    "checks": ["intelligence"],
+    "spell": "Detect Magic",
+    "dcs": [5],
+    "mode": "normal"
+  },
+  {
+    "id": "charm-person",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "action": "I cast Charm Person on Reinhard so he lowers his blade and hears me out.",
+    "checks": ["intelligence"],
+    "spell": "Charm Person",
+    "dcs": [10, 15],
+    "mode": "normal"
+  },
+  {
+    "id": "sneak-with-help",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The owlbear has its head down in a deer carcass, tearing at it, its back to Thalbern. Rain hammers the leaves and drowns every other sound.",
+    "action": "I creep past behind it while it feeds.",
+    "checks": ["stealth"],
+    "dcs": [10, 15],
+    "mode": "advantage"
+  },
+  {
+    "id": "listen-in-storm",
+    "adventure": "the-midnight-summons",
+    "encounter": "broken-silence",
+    "hero": "thalbern",
+    "narrative": "A storm breaks over the forest. Thunder rolls without a pause and rain hammers the canopy so hard that Thalbern can barely hear his own steps.",
+    "action": "I listen for what is moving out there in the dark.",
+    "checks": ["perception"],
+    "dcs": [5, 10, 15],
+    "mode": "disadvantage"
+  },
+  {
+    "id": "fight-the-poison",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "A dart stings Thalbern's neck. A cold numbness spreads from it and his knees start to give.",
+    "action": "I clamp my jaw and fight to stay on my feet as the poison takes hold.",
+    "checks": ["constitution-save"],
+    "dcs": [10, 15],
+    "mode": "normal"
+  }
+]

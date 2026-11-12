@@ -9,7 +9,6 @@ import { npcEarlierTurns, waitsUnaddressed } from "@d20/gm-core/services/npc-tur
 import { createRollRequirementService } from "@d20/gm-core/services/roll-requirement-service"
 import { ledgerNote } from "@d20/gm-core/story/knowledge"
 import { castRulesNote, npcNoteRules } from "@d20/gm-core/story/limits"
-import { calculateAttributeModifier } from "@d20/gm-core/utils/modifier-utils"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { gmNotesWithRules, premiseNote } from "@d20/gm-core/wiki-adventures/player-safety"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt, paceNote, sceneRound } from "@d20/gm-core/wiki-adventures/runtime-context"
@@ -144,7 +143,7 @@ async function replayTurn() {
   await core.resolvePlayerRollResult({ turnId: "turn-1", characterId: player.id, result: 20 })
   assert.ok(game.records.get("turn-1").characters.every((actor: any) => actor.isComplete))
   await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "welcome-to-kordavos" })
-  assert.equal(index, 7)
+  assert.equal(index, 6)
   if (UPDATE) fixture.writes = game.writes
   assert.deepEqual(game.writes, fixture.writes)
   assert.deepEqual(game.narrations, ["turn-1", "turn-1", "turn-2"])
@@ -161,7 +160,7 @@ async function replayTurn() {
   if (UPDATE) save("scripts/gm-core-fixtures/turn.json", fixture)
   assert.ok(game.records.get("turn-2").adventurePatch)
   assert.equal((await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "welcome-to-kordavos" })).status, "already_advanced")
-  assert.equal(index, 7, "duplicate advance must not call the model")
+  assert.equal(index, 6, "duplicate advance must not call the model")
   await assert.rejects(
     game.ports.store.commitWikiTurnAdvance({
       adventureId: "fixture-adventure",
@@ -247,7 +246,7 @@ async function accessAndInstanceIsolation() {
       this.calls++
       // The companion's move as beats, then the roll check.
       if (this.calls === 1) return { object: args.schema.parse({ beats: [{ kind: "action", who: "mira", text: "Mira waits by the gate." }] }) }
-      return { object: { rollType: "none", difficulty: 0 } as any }
+      return { object: { check: "none" } as any }
     },
   }
   c.ports.llm = statefulModel
@@ -341,16 +340,6 @@ async function packageBoundary() {
   assert.ok(bundle.outputFiles[0].text.includes("createGmCore"))
 }
 
-// A check for a spell the character knows is cast with Intelligence, whatever the spell is called.
-function spellModifiers() {
-  const lyra = { attributes: { strength: 8, dexterity: 10, constitution: 10, intelligence: 16, wisdom: 14, charisma: 12 }, spells: [{ name: "Fog Cloud" }, { name: "Charm Person" }] }
-  assert.equal(calculateAttributeModifier(lyra, "Fog Cloud Check"), 3)
-  assert.equal(calculateAttributeModifier(lyra, "Charm Person Check"), 3)
-  assert.equal(calculateAttributeModifier(lyra, "Stealth"), 0)
-  assert.equal(calculateAttributeModifier(lyra, "Lockpicking Check"), 0)
-  assert.equal(calculateAttributeModifier({ ...lyra, spells: [] }, "Fog Cloud Check"), 0)
-}
-
 // An adventure's standing rules join every encounter's GM notes, and notes are marked binding.
 function adventureRules() {
   assert.match(gmNotesWithRules(undefined, "Notes.") ?? "", /^Notes\.\n\nThese GM notes bind every outcome\./)
@@ -403,15 +392,21 @@ function npcTurnRules() {
 // An NPC's roll requirement is told not to roll against an outcome the notes fix. A hero's is not.
 async function npcFixedOutcome() {
   const prompts: string[] = []
+  let answer: unknown = { check: "none" }
   const generateObject = async (args: { prompt: string }) => {
     prompts.push(args.prompt)
-    return { object: { rollType: "none", difficulty: 0 } }
+    return { object: answer }
   }
   const { getRollRequirementForAction } = createRollRequirementService({ llm: { generateObject } } as any)
-  await getRollRequirementForAction("Mara lifts the scroll case.", { name: "Mara", type: "npc" } as any)
+  assert.equal(await getRollRequirementForAction("Mara lifts the scroll case.", { name: "Mara", type: "npc" } as any), null)
   await getRollRequirementForAction("Mira lifts a purse.", { name: "Mira", type: "pc" } as any)
   assert.match(prompts[0], /This character is an NPC\. [^\n]*does not roll against an outcome the notes fix/)
   assert.doesNotMatch(prompts[1], /This character is an NPC/)
+  // The model picks from the menu, the engine fills in the numbers. Thalbern: Dex 17 (+3), proficient in Stealth (+2).
+  answer = { check: "stealth", difficulty: "medium" }
+  const thalbern = JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/the-midnight-summons/characters/thalbern.json", "utf8"))
+  const { rollType, difficulty, modifier, mode } = (await getRollRequirementForAction("Thalbern slips past the guard.", thalbern)) ?? {}
+  assert.deepEqual({ rollType, difficulty, modifier, mode }, { rollType: "Stealth", difficulty: 15, modifier: 5, mode: "normal" })
 }
 
 // A scene's round budget counts the rounds in a row in one encounter. The round-end GM is told where the scene stands,
@@ -468,7 +463,6 @@ async function main() {
   console.log = console.warn = console.error = () => {}
   try {
     await packageBoundary()
-    spellModifiers()
     adventureRules()
     npcTurnRules()
     await npcFixedOutcome()
@@ -482,7 +476,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, spell modifiers, NPC death, waiting, memory, rules and fixed outcomes, ledger ranking, round budget, rolls ending with the round, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu, ledger ranking, round budget, rolls ending with the round, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {

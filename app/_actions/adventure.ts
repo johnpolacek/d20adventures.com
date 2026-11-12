@@ -24,7 +24,7 @@ export async function createAdventureWithFirstTurn(
   return (await createServerCore().createAdventureWithFirstTurn(payload)) as { adventureId: Id<"adventures">; turnId: Id<"turns"> }
 }
 
-export async function resolvePlayerRollResult(args: { turnId: Id<"turns">; characterId: string; result: number }): Promise<Doc<"turns"> | null> {
+export async function resolvePlayerRollResult(args: { turnId: Id<"turns">; characterId: string; result: number; second?: number }): Promise<Doc<"turns"> | null> {
   await refuseHostedTurn(args.turnId)
   return (await createServerCore().resolvePlayerRollResult(args)) as Doc<"turns"> | null
 }

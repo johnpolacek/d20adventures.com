@@ -36,7 +36,7 @@ async function setup() {
     { name: "Ward", description: "Protected", duration: 3 },
   ]
   pc.spells = [{ name: "Light", isUsed: false }]
-  pc.rollRequired = { rollType: "Persuasion", difficulty: 10 }
+  pc.rollRequired = { check: { kind: "skill", skill: "persuasion" }, rollType: "Persuasion", difficulty: 10, modifier: 4, mode: "normal" }
   pc.rollResult = 14
   giver.equipment = [{ name: "Rope", description: "Ten metres" }]
   store.save()

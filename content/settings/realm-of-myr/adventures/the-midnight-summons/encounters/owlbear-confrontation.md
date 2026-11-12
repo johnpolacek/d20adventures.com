@@ -27,7 +27,7 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## GM Notes
 
-The Owlbear attacks. A high difficulty Animal Handling check lets Thalbern move past it. If he wins initiative and hides, a medium difficulty Stealth check lets him move past it. If he is badly wounded, below 25% health, Wollandora appears and drives off the Owlbear: transition to 'timely-rescue'. If he defeats the Owlbear, describe his victory in a sentence or two and transition to 'meeting-at-the-stones'.
+The Owlbear attacks. A hard Animal Handling check, DC 20, lets Thalbern move past it. If he wins initiative and hides, a medium Stealth check, DC 15, lets him move past it. If he is badly wounded, below 25% health, Wollandora appears and drives off the Owlbear: transition to 'timely-rescue'. If he defeats the Owlbear, describe his victory in a sentence or two and transition to 'meeting-at-the-stones'.
 
 ## Transitions
 

@@ -1,12 +1,12 @@
 import type { GmPorts } from "../ports"
+import { resolveCheck } from "../sheet/check"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
-import { rollD20 } from "../utils/game-utils"
+import { d20sFor } from "../utils/game-utils"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { applyNpcEffectsToCharacters, createNpcTurnResolutionService, type NpcTurnEffect } from "./npc-turn-resolution-service"
-import { createRollModifierService } from "./roll-modifier-service"
 import { createRollRequirementService } from "./roll-requirement-service"
 
 export type NpcRollInfo = {
@@ -16,6 +16,8 @@ export type NpcRollInfo = {
   modifier: number
   result: number
   success: boolean
+  // The NPC's own spell the roll cast.
+  spell?: string
 }
 
 export type NpcTurnBranchResult = {
@@ -66,7 +68,6 @@ const npcStep = (npc: TurnCharacter): StoryBy => ({ step: "npc", character: npc.
 export function createNpcTurnBranchService(ports: GmPorts) {
   const { generateNpcOutcome } = createNpcTurnGenerationService(ports)
   const { reconcileNpcRollWithAi } = createNpcTurnResolutionService(ports)
-  const { getRollModifier } = createRollModifierService(ports)
   const { getRollRequirementForAction } = createRollRequirementService(ports)
   async function resolveNpcTurnRollOrDirectBranch(args: {
     turn: Turn
@@ -98,20 +99,10 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       difficulty: rollRequirement?.difficulty,
     })
 
-    if (rollRequirement?.rollType && rollRequirement.difficulty) {
-      const modifier = await getRollModifier({
-        scenario: {
-          encounterIntro: args.encounterContext?.intro || "",
-          encounterInstructions: args.encounterContext?.instructions || "",
-          narrativeContext: script,
-        },
-        rollRequirement,
-        character: args.npc,
-      })
-
-      const baseRoll = rollD20()
-      const result = baseRoll + (modifier || 0)
-      const success = result >= rollRequirement.difficulty
+    if (rollRequirement) {
+      // The NPC rolls with its stat block's bonus, which the requirement already carries.
+      const rolled = resolveCheck({ dice: d20sFor(rollRequirement.mode), bonus: rollRequirement.modifier, dc: rollRequirement.difficulty, mode: rollRequirement.mode })
+      const { natural: baseRoll, bonus: modifier, total: result, success } = rolled
       rollInfo = {
         rollType: rollRequirement.rollType,
         difficulty: rollRequirement.difficulty,
@@ -119,6 +110,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         modifier,
         result,
         success,
+        ...(rollRequirement.spell ? { spell: rollRequirement.spell } : {}),
       }
 
       console.log("[LLM] NPC dice roll:", {
@@ -171,17 +163,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         )
       )
 
-      const roll = rollBeat(npcStep(args.npc), {
-        id: args.npc.id,
-        name: args.npc.name,
-        image: args.npc.image,
-        check: rollRequirement.rollType,
-        natural: baseRoll,
-        modifier,
-        total: result,
-        dc: rollRequirement.difficulty,
-        success,
-      })
+      const roll = rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled)
       beatsToAppend = [roll, ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
       effects = outcomeResult.effects
 

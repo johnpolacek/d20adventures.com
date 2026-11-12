@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import type { CheckResult } from "../sheet/check"
 import { authoredStory } from "./authored"
 import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "./beats"
 import { cleanStory, type StoryScene } from "./clean"
@@ -35,19 +36,21 @@ export const storyProse = (beats: readonly StoryBeat[]) =>
     .map((p) => p.text)
     .join("\n\n")
 
-export function rollBeat(by: StoryBy, args: { id: string; name: string; image?: string; check: string; natural: number; modifier?: number; total: number; dc: number; success: boolean }): RollBeat {
+// A resolved check as the story keeps it. Both dice are kept only when two were rolled.
+export function rollBeat(by: StoryBy, roller: { id: string; name: string; image?: string }, check: string, result: CheckResult): RollBeat {
   return {
     kind: "roll",
     by,
-    character: args.id,
-    name: args.name,
-    check: args.check,
-    natural: args.natural,
-    ...(args.modifier !== undefined ? { modifier: args.modifier } : {}),
-    total: args.total,
-    dc: args.dc,
-    success: args.success,
-    ...(args.image ? { image: args.image } : {}),
+    character: roller.id,
+    name: roller.name,
+    check,
+    natural: result.natural,
+    ...(result.mode !== "normal" ? { dice: result.dice, mode: result.mode } : {}),
+    modifier: result.bonus,
+    total: result.total,
+    dc: result.dc,
+    success: result.success,
+    ...(roller.image ? { image: roller.image } : {}),
   }
 }
 

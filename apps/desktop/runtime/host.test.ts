@@ -88,10 +88,14 @@ test("a guest's reply and roll run through the host's GM and finish their jobs",
   try {
     const model: Llm = {
       generateText: async () => ({ text: `${pc.name} argues for a lower gate fee.` }),
-      generateObject: async ({ schema, prompt }) => ({
-        object: firstFit(schema, prompt.includes("situational") ? { modifier: 0 } : { rollRequired: true, rollType: "Persuasion", difficulty: 12 }, {
-          beats: [{ kind: "action", who: pc.id, text: `${pc.name} argues for a lower gate fee.` }],
-        }),
+      generateObject: async ({ schema }) => ({
+        object: firstFit(
+          schema,
+          { check: "persuasion", difficulty: "medium" },
+          {
+            beats: [{ kind: "action", who: pc.id, text: `${pc.name} argues for a lower gate fee.` }],
+          }
+        ),
       }),
     }
     const reply = job({ adventureId, turnId: turn._id, kind: "reply", userId: "guest", characterId: pc.id, text: "I bargain with the guard." })
@@ -303,7 +307,7 @@ test("the worker continues on its own with an AI hero's turn and the round's end
       generateObject: async ({ schema }) => {
         // The roll check, the AI hero's move, then the round's end: the first each schema takes.
         const answers = [
-          { rollType: "none", difficulty: 0 },
+          { check: "none" },
           { beats: [{ kind: "action", who: friend.id, text: `${friend.name} keeps an eye on the gate.` }] },
           { nextEncounterId: "the-front-of-the-line", beats: [{ kind: "narration", text: "The line moves up to the sergeant's table." }], adventurePatch: { summaryDelta: "Waited in the line." } },
         ]

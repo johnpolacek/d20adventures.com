@@ -39,7 +39,7 @@ The balcony overlooks the walled Blackthorn garden, not the street. The assassin
 
 Nothing in this scene catches, slows or wounds him. A spell or blow aimed after him finds only the swinging rope and dark hedges. A hero who climbs down lands in an empty garden, and the chase begins there.
 
-Thaddeus's key hangs at his belt: black iron with an onyx head, faintly enchanted. It opens his desk and the basement vault. A hero at his side in the first round may take it unseen with a DC 12 Sleight of Hand check. Otherwise Astrid takes it from his belt when she reaches him and keeps it in her closed hand. No one takes it from her.
+Thaddeus's key hangs at his belt: black iron with an onyx head, faintly enchanted. It opens his desk and the basement vault. A hero at his side in the first round may take it unseen with a DC 10 Sleight of Hand check. Otherwise Astrid takes it from his belt when she reaches him and keeps it in her closed hand. No one takes it from her.
 
 The blade was coated with a fast grey poison: the wound blackens at its edges and grey threads spread under the skin. A hero who studies it learns no more than that, and no name or maker.
 

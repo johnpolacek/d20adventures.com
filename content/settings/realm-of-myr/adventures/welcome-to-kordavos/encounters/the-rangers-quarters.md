@@ -20,7 +20,7 @@ At the end of a long corridor lined with Blackthorn family portraits is a heavy 
 
 ## GM Notes
 
-The door is locked. Thieves' tools open it with a DC 13 Dexterity check, or a DC 15 Strength check forces it, the crack lost under the music from below. A failed attempt costs time and nothing more. No one else is in this wing during the ball, and no guard comes up while the party works the door. The quarters are empty: no one hides there, and no one flees.
+The door is locked. Thieves' tools open it with a DC 15 Dexterity check, or a DC 15 Strength check forces it, the crack lost under the music from below. A failed attempt costs time and nothing more. No one else is in this wing during the ball, and no guard comes up while the party works the door. The quarters are empty: no one hides there, and no one flees.
 
 **One party.** The heroes move as one group, and each room is played for all of them. If a hero goes off alone, a passing servant or a locked door turns them back, and they rejoin the others before the next room, having found nothing alone.
 
@@ -36,7 +36,7 @@ Inside, the room exudes a rustic elegance, a blend of Blackthorn wealth and her 
 
 A smaller door in the back leads to a private study, where the faint scent of old leather and ink lingers in the air. On the desk, a few open books rest alongside a locked chest. A hunting bow is propped against the wall, and on the shelves, there are tomes and scrolls detailing elven lore and forest creatures.
 
-A DC 14 Investigation or Perception check in the study finds the hidden compartment. The locked chest opens with thieves' tools at DC 12 and holds spare bowstrings, a whetstone and a purse of 20 gold, nothing of the Key.
+A DC 15 Investigation or Perception check in the study finds the hidden compartment. The locked chest opens with thieves' tools at DC 10 and holds spare bowstrings, a whetstone and a purse of 20 gold, nothing of the Key.
 
 ### The Hidden Compartment
 

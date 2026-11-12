@@ -41,7 +41,7 @@ Beyond lies a vast, cavernous chamber, its ceiling lost in darkness the torches 
 **Environmental Cues:**
 As Eamon speaks, the temperature drops further. The air grows thick with a supernatural chill, signaling a presence far older than the ruins themselves. Shadows seem to flicker at the edge of vision, suggesting the room is not as empty as it first appeared.
 
-Detect Magic, a divine sense or a DC 13 Religion check shows a cold, old death under the dust before anything rises. It changes nothing. Then the Ancient Undead rise from the dust and attack. If the seal was broken badly at the sealed door, they have surprise. Astrid and Eamon each take a turn every round of the fight and roll their attacks. Astrid fights with her sword. Eamon casts Fire Bolt, Burning Hands or Shield. Once the undead fall, the way to the archway is clear. The archway holds no trap or ward.
+Detect Magic, a divine sense or a DC 15 Religion check shows a cold, old death under the dust before anything rises. It changes nothing. Then the Ancient Undead rise from the dust and attack. If the seal was broken badly at the sealed door, they have surprise. Astrid and Eamon each take a turn every round of the fight and roll their attacks. Astrid fights with her sword. Eamon casts Fire Bolt, Burning Hands or Shield. Once the undead fall, the way to the archway is clear. The archway holds no trap or ward.
 
 ## Transitions
 

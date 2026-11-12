@@ -28,10 +28,10 @@ Amid it all, a group of halfling urchins weaves unnoticed through the crowd with
 ## GM Notes
 
 **The lift always happens.** In the first round, whatever the heroes say or do, Mara bumps into one hero and tries to lift Joran's scroll case. If no hero carries it, she goes for a purse or the best-looking trinket on the richest-looking hero. Talk, charm or a good Persuasion roll does not stop the attempt. It only changes whom she picks.
-- A hero who said they were watching the children, or who passes a Perception check against DC 14, sees the hand and may grab it. Otherwise the item is gone, and a hero notices it missing at the end of that round.
+- A hero who said they were watching the children, or who passes a Perception check against DC 15, sees the hand and may grab it. Otherwise the item is gone, and a hero notices it missing at the end of that round.
 - Finn Swiftfoot draws the eye with a tumble and a joke while Mara works.
 
-**The chase.** The halflings dash into a narrow alley, laughing, and knock over crates and barrels behind them. They split up into different side streets. A hero who keeps up, by an Athletics or Acrobatics check against DC 13 or a spell, corners one of them.
+**The chase.** The halflings dash into a narrow alley, laughing, and knock over crates and barrels behind them. They split up into different side streets. A hero who keeps up, by an Athletics or Acrobatics check against DC 15 or a spell, corners one of them.
 
 **How it ends.** The scene settles it here. Nothing stolen reaches anyone later.
 - A cornered urchin hands the item back and begs off. They know nothing of the Black Market's whereabouts and say so. Bystanders asked the way shrug and hurry off.

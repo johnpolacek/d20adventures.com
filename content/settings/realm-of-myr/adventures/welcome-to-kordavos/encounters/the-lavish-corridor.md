@@ -35,7 +35,7 @@ Unlike the highly alert soldiers in the main hall, these guards appear more comp
 
 **Caught.** If the house guard has the adventurers in hand, the guards do not march them about the house or search it with them. They take them straight down to the ballroom to answer to Lady Astrid, and arrive just as Thaddeus takes the stage. Every eye turns to him, and the guards hold the adventurers at the edge of the crowd while he speaks.
 
-**Getting past.** One check for the party: Persuasion or Deception, DC 12, or a bribe of 5 gold or more to each guard, which they take with no roll. On a failure they send the party back to the ball with a laugh and no alarm, and one more try is allowed. Attacking them raises the alarm and the Caught rule follows. Thaddeus's door is locked: thieves' tools at DC 14, or a DC 16 Strength check that the guards hear if they are still there.
+**Getting past.** One check for the party: Persuasion or Deception, DC 10, or a bribe of 5 gold or more to each guard, which they take with no roll. On a failure they send the party back to the ball with a laugh and no alarm, and one more try is allowed. Attacking them raises the alarm and the Caught rule follows. Thaddeus's door is locked: thieves' tools at DC 15, or a DC 15 Strength check that the guards hear if they are still there.
 
 Friendly Conversation: A well-timed conversation or compliment about the Masquerade could distract them further, offering the party a chance to slip by unnoticed.
 

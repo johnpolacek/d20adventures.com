@@ -39,11 +39,11 @@ If Alaric is reduced to 5 HP or less, he may try to flee or surrender in exchang
 
 ### The Discovery
 
-Once the thugs are dealt with, the players can search the warehouse. Among crates of elven wine and silk, they find a small, reinforced lockbox with its key left in the lock. Inside is a **Manifest and Map**. Any hero who searches the shed finds the lockbox, and it opens with that key, no roll. The chained crate's padlock opens to thieves' tools at DC 14, or Athletics DC 16 breaks the chain.
+Once the thugs are dealt with, the players can search the warehouse. Among crates of elven wine and silk, they find a small, reinforced lockbox with its key left in the lock. Inside is a **Manifest and Map**. Any hero who searches the shed finds the lockbox, and it opens with that key, no roll. The chained crate's padlock opens to thieves' tools at DC 15, or Athletics DC 15 breaks the chain.
 
 - **The Manifest:** Lists several artifacts from Old Valkara, including the "Key of Ilmarin" and the Oath Stone of the First Clans. However, the Key is missing from the crate.
 - **The Chained Crate:** Against the back wall stands an iron-banded oak crate hung with chain, far too heavy to shift. Inside is a great seat of carved stone. The manifest names it the Oath Stone of the First Clans, "brought by river, proven by an arcanist." If the story so far says the crate never reached Kordavos, it is not here, and the manifest lists the Oath Stone as due by river and not delivered.
-- **The Oath Stone's aura:** Detect Magic shows a strong, old enchantment on the seat and nothing else in the warehouse. An Arcana check of DC 18, or 18 or higher on the spell's check, tells its purpose: binding promises, loyalty and solemn vows. It does nothing when touched or sat in. Detect Evil and Good finds it neither hallowed nor desecrated.
+- **The Oath Stone's aura:** Detect Magic shows a strong, old enchantment on the seat and nothing else in the warehouse. An Arcana check of DC 20, or 20 or higher on the spell's check, tells its purpose: binding promises, loyalty and solemn vows. It does nothing when touched or sat in. Detect Evil and Good finds it neither hallowed nor desecrated.
 - **The Map:** Shows a route through the Valkarr Forest with a mark on a ship currently docked at the far end of the harbor: *The Star of Faelendar*.
 
 **Reaching the lockbox mid-fight.** A hero who pushes past the blades to the lockbox while they still fight does so on Athletics or Acrobatics DC 15.

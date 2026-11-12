@@ -16,12 +16,10 @@ import { createAdventureRollResultService } from "./services/adventure-roll-resu
 import { createAdventureTurnReplyService } from "./services/adventure-turn-reply-service"
 import { createAiPcTurnService } from "./services/ai-pc-turn-service"
 import { createNarrativeGenerationService } from "./services/narrative-generation-service"
-import { createNarrativeService } from "./services/narrative-service"
 import { createNpcTurnBranchService } from "./services/npc-turn-branch-service"
 import { createNpcTurnGenerationService } from "./services/npc-turn-generation-service"
 import { createNpcTurnResolutionService } from "./services/npc-turn-resolution-service"
 import { createNpcTurnService } from "./services/npc-turn-service"
-import { createRollModifierService } from "./services/roll-modifier-service"
 import { createRollRequirementService } from "./services/roll-requirement-service"
 import { createTurnUpdateService } from "./services/turn-update-service"
 
@@ -35,12 +33,10 @@ export function createGmCore(ports: GmPorts) {
     ...createAdventureTurnReplyService(ports),
     ...createAiPcTurnService(ports),
     ...createNarrativeGenerationService(ports),
-    ...createNarrativeService(ports),
     ...createNpcTurnBranchService(ports),
     ...createNpcTurnGenerationService(ports),
     ...createNpcTurnResolutionService(ports),
     ...createNpcTurnService(ports),
-    ...createRollModifierService(ports),
     ...createRollRequirementService(ports),
     ...createTurnUpdateService(ports),
     ...createGenerateAppearanceBackgroundAction(ports),

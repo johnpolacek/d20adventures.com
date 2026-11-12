@@ -40,7 +40,7 @@ function table(prompts: string[], encounter: string, learned: unknown[] = []): L
         { nextEncounterId: encounter, beats: [{ kind: "narration", text: "The line shuffles forward." }], knowledge: learned, adventurePatch: {} },
         { actionSummary: "Waits.", beats: [{ kind: "action", who, text: "Waits and watches." }], actionType: "skip" },
         { beats: [{ kind: "action", who, text: "Waits and watches." }] },
-        { rollType: "none", difficulty: 0 },
+        { check: "none" },
       ]) {
         const parsed = schema.safeParse(answer)
         if (parsed.success) return { object: parsed.data }

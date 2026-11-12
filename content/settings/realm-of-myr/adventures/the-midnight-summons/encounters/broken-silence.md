@@ -24,7 +24,7 @@ Tonight a red squirrel came to his hidden home with a note in the hand of Wollan
 
 ## GM Notes
 
-If Thalbern investigates, call for a Perception check, low difficulty with a plus 3 modifier. On a success he knows a large creature is approaching quickly. On 18 or higher he knows it is an Owlbear.
+If Thalbern investigates, call for an easy Perception check, DC 10. On a success he knows a large creature is approaching quickly. On 18 or higher he knows it is an Owlbear.
 
 A successful Perception roll reveals the threat, but it does not complete the encounter. If Thalbern investigates, advances, stands his ground, readies a weapon, or otherwise does not successfully hide or evade after detecting the creature, transition to owlbear-confrontation so the Owlbear enters the active encounter as an NPC.
 

@@ -201,10 +201,14 @@ test("reply storage and real roll services keep dice across failures and reject 
     })
     const good: Llm = {
       generateText: async () => ({ text: `${pc.name} argues for a lower gate fee.` }),
-      generateObject: async ({ schema, prompt }) => ({
-        object: firstFit(schema, prompt.includes("situational") ? { modifier: 0 } : { rollType: "Persuasion", difficulty: 12 }, {
-          beats: [{ kind: "narration", text: `${pc.name} argues for a lower gate fee.` }],
-        }),
+      generateObject: async ({ schema }) => ({
+        object: firstFit(
+          schema,
+          { check: "persuasion", difficulty: "easy" },
+          {
+            beats: [{ kind: "narration", text: `${pc.name} argues for a lower gate fee.` }],
+          }
+        ),
       }),
     }
     // Use the storage port for the roll fixture, then the real resolution pipeline.
@@ -215,15 +219,18 @@ test("reply storage and real roll services keep dice across failures and reject 
         { kind: "reply", by: { step: "reply", character: pc.id }, character: pc.id, text: "I bargain." },
         { kind: "action", by: { step: "reply", character: pc.id }, actor: pc.id, text: "She bargains for entry." },
       ],
-      rollRequirement: { rollType: "Persuasion", difficulty: 12, modifier: 2 },
+      // A stale modifier: the bonus is read from the sheet again when the roll resolves.
+      rollRequirement: { check: { kind: "skill", skill: "persuasion" }, rollType: "Persuasion", difficulty: 10, modifier: 2, mode: "normal" },
     })
     await assert.rejects(() => store.submitReply({ turnId: turn._id, characterId: pc.id, story: [] }), /already acted/)
     await assert.rejects(() => run({ kind: "roll", turnId: turn._id, characterId: pc.id, result: 14 }), /offline/)
     const reloaded = new LocalStore(path)
-    assert.equal(reloaded.state!.rolls[`${turn._id}:${pc.id}`], 14)
+    assert.deepEqual(reloaded.state!.rolls[`${turn._id}:${pc.id}`], [14])
     reloaded.db.close()
     await game(store, packs, good)({ kind: "roll", turnId: turn._id, characterId: pc.id, result: 1 })
-    assert.equal(store.current().characters.find((c) => c.id === pc.id)!.rollResult, 16)
+    // The kept 14, not the new 1. Branka has Cha 8 (-1) and no Persuasion proficiency: 14 - 1 = 13.
+    assert.equal(pc.name, "Branka Stoneveil")
+    assert.equal(store.current().characters.find((c) => c.id === pc.id)!.rollResult, 13)
     assert.equal(store.current().characters.find((c) => c.id === pc.id)!.isComplete, true)
     await assert.rejects(() => run({ kind: "reply", turnId: "stale", characterId: pc.id, text: "another action" }), /already advanced/)
   } finally {

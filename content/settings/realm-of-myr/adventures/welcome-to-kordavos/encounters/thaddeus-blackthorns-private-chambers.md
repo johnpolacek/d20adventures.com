@@ -42,7 +42,7 @@ The imposing desk in the center of the room is immaculately organized, with a fe
 
 Upon closer inspection, it’s clear that the lock has been custom-designed, crafted by a master locksmith—perhaps even with arcane assistance. The keyhole is lined with faint engravings, barely visible to the untrained eye, and small runes subtly glow when tampered with. This mechanism is a blend of mechanical precision and magical security.
 
-The lock on Thaddeus's desk is no ordinary mechanism. Detect Magic, or an Arcana check of DC 12, shows the ward. Disarming it takes thieves' tools or Dispel Magic, with a DC 15 check. Forcing or picking the drawer without disarming the ward triggers it, and so does a failed disarm. If the trap is triggered, everyone at the lock makes a DC 13 Dexterity saving throw:
+The lock on Thaddeus's desk is no ordinary mechanism. Detect Magic, or an Arcana check of DC 10, shows the ward. Disarming it takes thieves' tools or Dispel Magic, with a DC 15 check. Forcing or picking the drawer without disarming the ward triggers it, and so does a failed disarm. If the trap is triggered, everyone at the lock makes a DC 15 Dexterity saving throw:
 
 Without warning, an arc of blue lightning crackles and surges from the metal components, leaping out toward anyone standing near. The room is briefly illuminated by an arcane electrical discharge, casting long, jagged shadows on the walls.
 

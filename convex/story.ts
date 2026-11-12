@@ -27,6 +27,8 @@ export const storyValidator = v.array(
       name: v.string(),
       check: v.string(),
       natural: v.number(),
+      dice: v.optional(v.array(v.number())),
+      mode: v.optional(v.union(v.literal("advantage"), v.literal("disadvantage"))),
       modifier: v.optional(v.number()),
       total: v.number(),
       dc: v.number(),

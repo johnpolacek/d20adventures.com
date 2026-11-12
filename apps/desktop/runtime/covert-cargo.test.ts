@@ -120,8 +120,8 @@ function stubLlm(
         advance(),
         npcAction,
         { beats: [{ kind: "narration", text: "The blade bites deep." }], effects: lethalTo ? [{ targetId: lethalTo, healthPercentDelta: -100, status: "dead" }] : [] },
-        { rollType: "Attack", difficulty: 5 },
-        { modifier: 0 },
+        // An attack is a Strength check until attacks join the menu.
+        { check: "strength", difficulty: "very-easy" },
         { hasPhysicalEffect: false, reasoning: "Already applied.", update: null },
       ]
       for (const answer of answers) {

@@ -13,7 +13,7 @@ npcs:
     behavior: "Attacks the nearest saboteur with her sword each turn, with a roll. Leaves the fuse to others."
     startNear: "party"
   - id: "eamon"
-    behavior: "Hangs back and casts Magic Missile at the rogues. Does not touch the fuse until a hero has tried to snuff it. After that, may try once a turn with his own Arcana roll, DC 14."
+    behavior: "Hangs back and casts Magic Missile at the rogues. Does not touch the fuse until a hero has tried to snuff it. After that, may try once a turn with his own Arcana roll, DC 15."
     startNear: "party"
   - id: "covenant-rogue"
     behavior: "Two rogues, acting as one. Guard the fuse-lighter from behind the pillars with crossbows and short blades."
@@ -38,7 +38,7 @@ This is a "Ticking Clock" encounter. The primary goal is to stop the explosion.
 
 - **The Fuse:** The fuse will detonate at the end of the 3rd round. 
 - **The Saboteurs:** 2 Covenant Rogues and 2 Cultists. They will prioritize defending the fuse-lighter.
-- **Disarming:** A character can use an action to make a **DC 14 Sleight of Hand** or **Arcana** check to snuff the fuse. Using water or *Mage Hand* can also work creatively.
+- **Disarming:** A character can use an action to make a **DC 15 Sleight of Hand** or **Arcana** check to snuff the fuse. Using water or *Mage Hand* can also work creatively.
 
 **Holding the clock:**
 - The fuse burns for 3 full rounds. Only a successful check or a clear creative answer snuffs it. Killing or driving off the cultist who tends it does not.
@@ -46,7 +46,7 @@ This is a "Ticking Clock" encounter. The primary goal is to stop the explosion.
 - Eamon helps only after a hero has tried the fuse. He never snuffs it first.
 - Astrid's soldiers hold the stair behind the party and do not join the fight. Once it is over, two may come down to guard a prisoner.
 - A saboteur taken alive carries no poison and will not talk. Pinning or gagging him takes a roll like any other blow.
-- No saboteur is bound, disarmed or taken without a roll. Each one still standing keeps fighting or tries to flee down the tunnel, and fleeing takes a Dexterity roll against the hero nearest him, DC 12. A saboteur is down only when an attack or a check puts him down. Once the fuse is out, a saboteur who is disarmed and wounded, or who failed to flee, may yield instead. Then the fight is over.
+- No saboteur is bound, disarmed or taken without a roll. Each one still standing keeps fighting or tries to flee down the tunnel, and fleeing takes a Dexterity roll against the hero nearest him, DC 10. A saboteur is down only when an attack or a check puts him down. Once the fuse is out, a saboteur who is disarmed and wounded, or who failed to flee, may yield instead. Then the fight is over.
 
 **Failure Scenarios:**
 - If the barrels detonate, characters take 4d6 bludgeoning damage and must succeed on a **DC 15 Dexterity Save** to avoid being buried. The tunnel collapses behind the party and buries several of Astrid's soldiers. The survivors dig through and catch up.

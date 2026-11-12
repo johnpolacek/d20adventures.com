@@ -1,9 +1,13 @@
 import { type AbilityId, abilityIdSchema, type SkillId, skillIdSchema } from "@d20/srd"
-import { abilityById } from "@d20/srd/abilities"
-import { skillById } from "@d20/srd/skills"
+import { abilities, abilityById } from "@d20/srd/abilities"
+import { classById } from "@d20/srd/classes"
+import { equipmentById } from "@d20/srd/equipment"
+import { monsterById } from "@d20/srd/monsters"
+import { skillById, skills } from "@d20/srd/skills"
 import { z } from "zod"
 import { deriveSheet } from "./derive"
 import type { Sheet } from "./sheet"
+import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /** What is rolled: one of the eighteen skills, a bare ability, or a saving throw. */
 export const checkSchema = z.discriminatedUnion("kind", [
@@ -35,15 +39,57 @@ export function checkName(check: Check): string {
 }
 
 /**
- * The bonus a character adds to the d20 for a check, from its sheet. Nothing is rolled for a character with no sheet:
- * every hero has one.
+ * The fixed menu the game master picks a check from, by id: a skill ("stealth"), a bare ability ("strength") or a
+ * saving throw ("strength-save"). Nothing off it can be rolled.
+ */
+export const checkMenu: readonly { id: string; check: Check; name: string; uses: string }[] = [
+  ...skills.map((skill) => ({ id: skill.id, check: { kind: "skill" as const, skill: skill.id }, name: `${skill.name} (${abilityById.get(skill.ability)?.name})`, uses: skill.exampleUses })),
+  ...abilities.map((ability) => ({ id: ability.name.toLowerCase(), check: { kind: "ability" as const, ability: ability.id }, name: ability.name, uses: ability.checkExamples })),
+  ...abilities.map((ability) => ({
+    id: `${ability.name.toLowerCase()}-save`,
+    check: { kind: "save" as const, ability: ability.id },
+    name: `${ability.name} Saving Throw`,
+    uses: ability.saveExamples,
+  })),
+]
+const checkByMenuId = new Map(checkMenu.map((entry) => [entry.id, entry.check]))
+export const checkMenuIds = checkMenu.map((entry) => entry.id) as [string, ...string[]]
+export const checkFromMenu = (id: string): Check | undefined => checkByMenuId.get(id)
+
+/**
+ * The bonus a character adds to the d20 for a check. A hero's comes from its sheet. An NPC's comes from the SRD stat
+ * block it names, or the Commoner's when it names none: the skill bonus the block prints, or the ability's modifier.
+ * Nothing is rolled for a hero with no sheet.
  */
 export function checkBonus(character: Roller, check: Check): number {
-  if (!character.sheet) throw new Error(`${character.name ?? "This character"} has no rules sheet, so nothing can be rolled for them.`)
-  const derived = deriveSheet(character.sheet)
-  if (check.kind === "skill") return derived.skills[check.skill].bonus
-  if (check.kind === "save") return derived.savingThrows[check.ability].bonus
-  return derived.abilityModifiers[check.ability]
+  if (character.sheet) {
+    const derived = deriveSheet(character.sheet)
+    if (check.kind === "skill") return derived.skills[check.skill].bonus
+    if (check.kind === "save") return derived.savingThrows[check.ability].bonus
+    return derived.abilityModifiers[check.ability]
+  }
+  const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
+  if (!monster) throw new Error(`${character.name ?? "This character"} has no rules sheet, so nothing can be rolled for them.`)
+  const line = monster.abilities[checkAbility(check)]
+  if (check.kind === "skill") return monster.skills?.[check.skill] ?? line.mod
+  return check.kind === "save" ? line.save : line.mod
+}
+
+/** The ability a hero casts spells with, from its class. A class with no spellcasting has none. */
+export const spellcastingAbilityOf = (character: Roller): AbilityId | undefined => (character.sheet ? classById.get(character.sheet.class)?.spellcasting?.ability : undefined)
+
+/**
+ * Advantage and Disadvantage the sheet itself settles, each with what it comes from. No model is asked: armor that
+ * hinders Stealth gives Disadvantage on Dexterity (Stealth) checks. Other typed sources join here as they are needed.
+ */
+export function sheetModes(character: Roller, check: Check): { mode: "advantage" | "disadvantage"; from: string }[] {
+  const sheet = character.sheet
+  if (!sheet) return []
+  const found: { mode: "advantage" | "disadvantage"; from: string }[] = []
+  if (check.kind === "skill" && check.skill === "stealth" && sheet.armor && deriveSheet(sheet).stealthDisadvantage) {
+    found.push({ mode: "disadvantage", from: equipmentById.get(sheet.armor)?.name ?? "Armor" })
+  }
+  return found
 }
 
 /** Advantage and Disadvantage together make a plain roll, however many of each there are. */

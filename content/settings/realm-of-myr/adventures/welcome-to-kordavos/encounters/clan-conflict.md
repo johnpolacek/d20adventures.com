@@ -53,13 +53,13 @@ Barok and his group have embraced the Asterian way of life and the Blackthorns p
 - **A compromise both accept:** the banner moves from the altar to the parade stand across the square, Barok's crew leaves the altar to the Valtors, and neither leader apologizes. Other fair offers can work at the same DCs.
 
 **Checks.** One leader at a time. Each needs one success to stand down.
-- Persuasion with the compromise or another fair offer: DC 13. Without one: DC 16.
-- Intimidation: DC 14 for Barok, who fears losing face before his crew. DC 16 for Larya, who keeps a cold head.
-- A bluff that the watch is near: Deception DC 14 for Barok, DC 16 for Larya. It works like Intimidation.
-- Insight DC 12 shows what each fears: Barok, looking weak before his crew. Larya, the Valtors shamed at their own Festival.
+- Persuasion with the compromise or another fair offer: DC 15. Without one: DC 20.
+- Intimidation: DC 15 for Barok, who fears losing face before his crew. DC 20 for Larya, who keeps a cold head.
+- A bluff that the watch is near: Deception DC 15 for Barok, DC 20 for Larya. It works like Intimidation.
+- Insight DC 10 shows what each fears: Barok, looking weak before his crew. Larya, the Valtors shamed at their own Festival.
 - A check that fails by 5 or more pushes that side a step toward blows. Swords are drawn, then the first blow falls.
 - A spell or trick that holds the two sides apart counts as a success against the side it stops, with no check.
-- Once blows fall, a hero may pull or trip one brawler out of the fight: Athletics or Acrobatics DC 13. It stops that one brawler and no more. Only the watch or both leaders standing down ends a brawl.
+- Once blows fall, a hero may pull or trip one brawler out of the fight: Athletics or Acrobatics DC 15. It stops that one brawler and no more. Only the watch or both leaders standing down ends a brawl.
 - A success stands down only the leader it was aimed at. The other stands down with it only if the winning offer already gives them all they asked for.
 - Both leaders standing down ends the quarrel. They lead their people off into the crowd in a sentence or two.
 

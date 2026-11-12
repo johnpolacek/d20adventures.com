@@ -107,9 +107,6 @@ export function hasBooleanProp(obj: unknown, prop: string): obj is { [key: strin
 export function hasNumberProp(obj: unknown, prop: string): obj is { [key: string]: number } {
   return !!obj && typeof obj === "object" && prop in obj && typeof (obj as { [key: string]: unknown })[prop] === "number"
 }
-export function isRollRequired(obj: unknown): obj is { rollType: string; difficulty?: number; modifier?: number } {
-  return !!obj && typeof obj === "object" && "rollType" in obj
-}
 
 /**
  * Map a Convex turn document to the frontend Turn type

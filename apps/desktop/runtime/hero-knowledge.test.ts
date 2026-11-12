@@ -25,7 +25,7 @@ function heroModel(id: string, moves: string[]): Llm {
     generateText: unused,
     generateObject: async ({ schema, prompt }) => {
       if (prompt.includes("You are the PLAYER (not the GM) roleplaying")) moves.push(prompt)
-      for (const answer of [{ beats: [{ kind: "action", who: id, text: "Waits and watches." }] }, { rollType: "none", difficulty: 0 }]) {
+      for (const answer of [{ beats: [{ kind: "action", who: id, text: "Waits and watches." }] }, { check: "none" }]) {
         const parsed = schema.safeParse(answer)
         if (parsed.success) return { object: parsed.data }
       }

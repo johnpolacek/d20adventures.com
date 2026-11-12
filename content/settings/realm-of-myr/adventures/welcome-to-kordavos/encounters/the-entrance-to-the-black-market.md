@@ -35,7 +35,7 @@ For a stealthier approach, they could attempt to sneak past using Dexterity (Ste
 
 If they simply attack, the guard will call for reinforcements, a group of six henchmen. The henchmen beat the party down with clubs and do not kill. Downed heroes come to in the alley outside, bruised, with the curtain still guarded.
 
-**Fixed facts.** Today's passphrase is "The moon keeps no ledger." Garrick lets in anyone who gives it. A bribe of 10 gold or more, or a Persuasion, Deception or Intimidation check against DC 14, also works. A failed check costs a round of haggling or a second try with another approach, not the market.
+**Fixed facts.** Today's passphrase is "The moon keeps no ledger." Garrick lets in anyone who gives it. A bribe of 10 gold or more, or a Persuasion, Deception or Intimidation check against DC 15, also works. A failed check costs a round of haggling or a second try with another approach, not the market.
 
 **No one forces the door.** A hero who shoves past Garrick finds two henchmen stepping out through the curtain to block it, and Garrick whistles them back only for the passphrase, a bribe or a passed check. Garrick never waves the party in for nothing, not even to end a fight. A brawl ends when the party stands down and pays, or is beaten down. Garrick knows nothing of Joran and says nothing of Silverhand. He only keeps the door.
 

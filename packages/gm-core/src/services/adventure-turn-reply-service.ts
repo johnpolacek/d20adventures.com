@@ -6,11 +6,9 @@ import { turnScript } from "../story/turn"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
-import { createRollModifierService } from "./roll-modifier-service"
 import { createRollRequirementService } from "./roll-requirement-service"
 
 export function createAdventureTurnReplyService(ports: GmPorts) {
-  const { getRollModifier } = createRollModifierService(ports)
   const { getRollRequirementForAction } = createRollRequirementService(ports)
   const isLocalWikiAdventure = ports.content.isWikiAdventure.bind(ports.content)
   const loadWikiAdventureRuntime = ports.content.loadWikiRuntime.bind(ports.content)
@@ -86,37 +84,11 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       recentTurnsCount: allTurns.filter((entry) => entry.order <= currentTurnOrder).length,
     })
 
-    const assessment = await getRollRequirementForAction(actionToAnalyze, args.characterPerformingAction as Character, {
+    const rollRequirement = await getRollRequirementForAction(actionToAnalyze, args.characterPerformingAction as Character, {
       encounterInstructions,
       narrativeContext: recentTurnNarratives || turnScript(args.turn),
       encounterIntro,
     })
-
-    const rollRequirement: RollRequirement = assessment
-    console.log("[LLM] Roll requirement analysis result:", {
-      requiresRoll: !!rollRequirement,
-      rollType: rollRequirement?.rollType,
-      difficulty: rollRequirement?.difficulty,
-    })
-
-    if (rollRequirement?.rollType && typeof rollRequirement.difficulty === "number") {
-      console.log("[LLM] Calculating roll modifier for:", rollRequirement.rollType)
-      const calculatedModifier = await getRollModifier({
-        scenario: {
-          encounterIntro: encounterInstructions,
-          encounterInstructions,
-          narrativeContext: turnScript(args.turn),
-        },
-        rollRequirement,
-        character: args.characterPerformingAction as Character,
-      })
-      rollRequirement.modifier = calculatedModifier
-      console.log("[LLM] Roll configuration:", {
-        rollType: rollRequirement.rollType,
-        difficulty: rollRequirement.difficulty,
-        modifier: calculatedModifier,
-      })
-    }
 
     return rollRequirement
   }

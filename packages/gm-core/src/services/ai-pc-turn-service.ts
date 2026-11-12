@@ -8,9 +8,9 @@ import { storyRules } from "../story/prompt"
 import { characterStory, scriptLine, storyNames } from "../story/render"
 import { characterScript, sceneFor, storyOutputObject, storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
-import { rollD20 } from "../utils/game-utils"
 import { PLAYER_KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { isAiControlledPc, isDeadActor } from "../utils/turn-actors"
+import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { premiseNote } from "../wiki-adventures/player-safety"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "./adventure-roll-result-service"
 import { createAdventureTurnReplyService } from "./adventure-turn-reply-service"
@@ -238,21 +238,20 @@ export function createAiPcTurnService(ports: GmPorts) {
         narrativeAction: intent,
       })
 
-      const hasRoll = Boolean(rollRequirement?.rollType && typeof rollRequirement?.difficulty === "number")
       await ports.store.submitReply({
         turnId,
         characterId,
         story: beats,
-        rollRequirement: hasRoll ? rollRequirement : undefined,
+        rollRequirement: rollRequirement ?? undefined,
       })
-      if (!hasRoll) return // submitReply marked the character complete
+      if (!rollRequirement) return // submitReply marked the character complete
 
       turn = await ports.store.getTurn({ turnId })
       if (!turn) throw new Error("Turn disappeared while processing AI companion roll")
       character = (turn.characters as TurnCharacter[]).find((c) => c.id === characterId)
     }
 
-    if (!character?.rollRequired || typeof character.rollRequired.difficulty !== "number") {
+    if (!character?.rollRequired) {
       console.warn("[AI PC] Expected a pending roll but found none for", characterId)
       return
     }
@@ -260,8 +259,7 @@ export function createAiPcTurnService(ports: GmPorts) {
     if (!plan || !Array.isArray(plan.sections)) throw new Error("Adventure plan not found or invalid")
     const encounterInstructions = getEncounterInstructionsFromPlan(plan, turn.encounterId)
 
-    const baseRoll = rollD20()
-    console.log("[AI PC]", character.name, "rolls", baseRoll, "for", character.rollRequired.rollType)
+    console.log("[AI PC]", character.name, "rolls for", character.rollRequired.rollType)
 
     const rollResolution = await resolvePlayerRollNarrativeAndCharacters({
       turn: {
@@ -273,9 +271,8 @@ export function createAiPcTurnService(ports: GmPorts) {
         adventureId: turn.adventureId,
         isFinalEncounter: turn.isFinalEncounter,
       },
-      character: character as TurnCharacter & { rollRequired: { rollType: string; difficulty: number; modifier?: number } },
+      character: character as TurnCharacter & { rollRequired: RequiredRoll },
       characterId,
-      baseRollResult: baseRoll,
       encounterInstructions,
       playerDeath: plan.playerDeath,
       premise: plan.premise,

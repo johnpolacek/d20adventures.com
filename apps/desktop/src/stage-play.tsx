@@ -804,7 +804,7 @@ export function StagePlay(props: {
   // Movement is read against the scene on screen, so wait for the next scene before taking an action.
   else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
   else if (ended) mode = null
-  else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier ?? 0 } }
+  else if (cardActor && rr) mode = { kind: "roll", roll: { skill: rr.rollType, ability: "", dc: rr.difficulty, modifier: rr.modifier } }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?`, suggestions: holdKey ? (offered?.key === holdKey ? offered.list : "loading") : undefined }
   // What Continue would run: an NPC's or AI hero's turn, or the end of the round, in the turn the game is on, which
   // may be a round ahead of the screen. Each is tried once on its own. Played on its own, the next one is written while
@@ -977,7 +977,7 @@ export function StagePlay(props: {
               onTop={onTop}
               draft={draft}
               onDraft={setDraft}
-              forcedRoll={turn && actor ? save.rolls?.[`${turn._id}:${actor.id}`] : undefined}
+              forcedRoll={turn && actor ? save.rolls?.[`${turn._id}:${actor.id}`]?.[0] : undefined}
             />
           )}
           {ended && !busy && !reading && (

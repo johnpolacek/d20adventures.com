@@ -8,7 +8,7 @@ import { createNpcTurnService } from "../services/npc-turn-service"
 import type { StoryBeat } from "../story/beats"
 import { storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
-import type { RollRequirement } from "../validations/roll-requirement-schema"
+import type { RequiredRoll, RollRequirement } from "../validations/roll-requirement-schema"
 
 export function createAdventure(ports: GmPorts) {
   const { assertAdventureAccessByTurn } = createAdventureAccess(ports)
@@ -42,7 +42,7 @@ export function createAdventure(ports: GmPorts) {
       originalPlayerInput,
     })
 
-    if (rollRequirementDetails?.rollType && typeof rollRequirementDetails.difficulty === "number") {
+    if (rollRequirementDetails) {
       await ports.store.submitReply({
         turnId,
         characterId,
@@ -127,7 +127,8 @@ export function createAdventure(ports: GmPorts) {
     return result
   }
 
-  async function resolvePlayerRollResult({ turnId, characterId, result }: { turnId: string; characterId: string; result: number }) {
+  // `result` is the d20 the player rolled, and `second` the other one of a roll with Advantage or Disadvantage.
+  async function resolvePlayerRollResult({ turnId, characterId, result, second }: { turnId: string; characterId: string; result: number; second?: number }) {
     const userId = await ports.identity()
     if (!userId) throw new Error("Unauthorized")
 
@@ -155,15 +156,9 @@ export function createAdventure(ports: GmPorts) {
         adventureId: turn.adventureId,
         isFinalEncounter: turn.isFinalEncounter,
       },
-      character: character as TurnCharacter & {
-        rollRequired: {
-          rollType: string
-          difficulty: number
-          modifier?: number
-        }
-      },
+      character: character as TurnCharacter & { rollRequired: RequiredRoll },
       characterId,
-      baseRollResult: result,
+      dice: second === undefined ? [result] : [result, second],
       encounterInstructions,
       playerDeath: plan.playerDeath,
       premise: plan.premise,

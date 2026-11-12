@@ -5,6 +5,7 @@ import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-
 import { withArrivals } from "@d20/gm-core/story/authored"
 import { namesMetBefore } from "@d20/gm-core/story/names"
 import { characterScript, introTurn } from "@d20/gm-core/story/turn"
+import { d20sFor } from "@d20/gm-core/utils/game-utils"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
@@ -93,7 +94,8 @@ export const commandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("resume"), archiveId: z.number().int().positive() }),
   // Removes a saved adventure for good: an archived one by id, or the current one without an id.
   z.object({ kind: z.literal("remove"), archiveId: z.number().int().positive().optional() }),
-  z.object({ kind: z.literal("roll"), turnId: z.string(), characterId: z.string(), result: z.number().int().min(1).max(20) }),
+  // `result` is the d20 the player rolled, and `second` the other one of a roll with Advantage or Disadvantage.
+  z.object({ kind: z.literal("roll"), turnId: z.string(), characterId: z.string(), result: z.number().int().min(1).max(20), second: z.number().int().min(1).max(20).optional() }),
   // Ends a hero's turn with no reply. Nothing is written into the story and the GM is not asked.
   z.object({ kind: z.literal("skip"), turnId: z.string(), characterId: z.string() }),
   z.object({ kind: z.literal("continue"), turnId: z.string() }),
@@ -326,9 +328,11 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       } else {
         if (!actor.rollRequired || actor.rollResult !== undefined) throw new Error("There is no pending roll.")
         const key = `${turn._id}:${actor.id}`
-        store.state!.rolls[key] ??= command.result
+        // The dice are kept before the GM is asked, so a retry resolves the same roll.
+        store.state!.rolls[key] ??= d20sFor(actor.rollRequired.mode, command.second === undefined ? [command.result] : [command.result, command.second])
         store.save()
-        await core.resolvePlayerRollResult({ turnId: turn._id, characterId: actor.id, result: store.state!.rolls[key] })
+        const [result, second] = store.state!.rolls[key]
+        await core.resolvePlayerRollResult({ turnId: turn._id, characterId: actor.id, result, second })
       }
     }
     return store.state

@@ -40,7 +40,7 @@ Instead of Eamon doing it alone, have the party assist him.
 
 The doorway holds no trap.
 
-Each check is DC 13. One check per hero per round. Eamon makes no check of his own.
+Each check is DC 15. One check per hero per round. Eamon makes no check of his own.
 
 Requires 3 successes before 2 failures. On a failure, the door opens but the party is *Surprised* in the next room by the first wave of undead.
 

@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import { checkBonus, resolveCheck } from "../sheet/check"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -9,9 +10,11 @@ import { lastStep, storyNames, storyText } from "../story/render"
 import { rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
+import { d20sFor } from "../utils/game-utils"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
+import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules, keepPlayersAlive } from "../wiki-adventures/player-safety"
-import { detectSpellFromRollType, markSpellAsUsed } from "./spell-tracking-service"
+import { markSpellAsUsed } from "./spell-tracking-service"
 import { createTurnUpdateService } from "./turn-update-service"
 
 // Rolls that can hurt by their kind: attacks, saving throws, and checks of the body.
@@ -119,15 +122,10 @@ export function createAdventureRollResultService(ports: GmPorts) {
       adventureId: string
       isFinalEncounter?: boolean
     }
-    character: TurnCharacter & {
-      rollRequired: {
-        rollType: string
-        difficulty: number
-        modifier?: number
-      }
-    }
+    character: TurnCharacter & { rollRequired: RequiredRoll }
     characterId: string
-    baseRollResult: number
+    // The d20s the roller threw. Any the roll still needs are rolled here: two with Advantage or Disadvantage.
+    dice?: number[]
     encounterInstructions: string
     // The adventure's `playerDeath` rule. False keeps player characters alive through the roll's outcome.
     playerDeath?: boolean
@@ -141,23 +139,13 @@ export function createAdventureRollResultService(ports: GmPorts) {
     story: StoryBeat[]
     characters: TurnCharacter[]
   }> {
-    const { rollType, difficulty, modifier = 0 } = args.character.rollRequired
-    const baseRoll = args.baseRollResult
-    const totalResult = baseRoll + modifier
-    const success = totalResult >= difficulty
+    const { check, rollType, difficulty, mode, spell } = args.character.rollRequired
+    // The bonus is read from the sheet as the die lands, so the sheet is always the one source of it.
+    const result = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, check), dc: difficulty, mode })
+    const { natural: baseRoll, bonus: modifier, total: totalResult, success } = result
     const margin = totalResult - difficulty
     const by = { step: "roll" as const, character: args.character.id }
-    const roll = rollBeat(by, {
-      id: args.character.id,
-      name: args.character.name,
-      image: args.character.image,
-      check: rollType,
-      natural: baseRoll,
-      modifier,
-      total: totalResult,
-      dc: difficulty,
-      success,
-    })
+    const roll = rollBeat(by, args.character, rollType, result)
     const story = args.turn.story
     const names = storyNames(args.turn.characters)
     const playerActionText = storyText(lastStep(story), names)
@@ -249,11 +237,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         : character
     )
 
-    const spellName = detectSpellFromRollType(rollType)
-    if (spellName) {
-      console.log(`[resolvePlayerRollResult] Spell detected: "${spellName}" - marking as used for character ${args.characterId}`)
-      updatedCharacters = markSpellAsUsed(updatedCharacters, args.characterId, spellName)
-    }
+    if (spell) updatedCharacters = markSpellAsUsed(updatedCharacters, args.characterId, spell)
 
     return {
       story: newStory,

@@ -25,7 +25,7 @@ At the bottom, a dimly lit corridor leads to the wine cellar. Old oak barrels ar
 
 ## GM Notes
 
-Allow the characters to plot out their action, then call for a DC 12 Perception check to hear footsteps on the stairway. Success gives the party one action to hide, bluff or prepare before Clive and Mira reach the bottom.
+Allow the characters to plot out their action, then call for a DC 10 Perception check to hear footsteps on the stairway. Success gives the party one action to hide, bluff or prepare before Clive and Mira reach the bottom.
 
 **One party.** The heroes move as one group, and each room is played for all of them. If a hero goes off alone, a passing servant or a locked door turns them back, and they rejoin the others before the next room, having found nothing alone.
 
@@ -47,7 +47,7 @@ Behind him, a younger servant, shorter but stockier, hurries down the stairs car
 
 There is limited time to make a decision: remain hidden among the barrels, attempt a distraction, or perhaps even bluff their way through the encounter by pretending to be servants or patrons inspecting the cellar.
 
-If the players manage to have time to properly search the cellar, a DC 14 Investigation or Perception check finds the Hidden Alcove.
+If the players manage to have time to properly search the cellar, a DC 15 Investigation or Perception check finds the Hidden Alcove.
 
 **Something amiss.** If Clive sees the vault open, papers taken, or guests where no guest should be, he swears he saw nothing and hurries up the stair with his bottle, and Mira runs ahead for the house guard. The guard reaches the cellar at the end of the next round, and the Caught rule follows, unless the song ends first.
 
@@ -65,9 +65,9 @@ Slowly, the rack slides away from the wall on hidden tracks, revealing a narrow 
 
 It’s clear that the lock has been custom-designed, crafted by a master locksmith—perhaps even with arcane assistance. The keyhole is lined with faint engravings, barely visible to the untrained eye, and small runes subtly glow when tampered with. This mechanism is a blend of mechanical precision and magical security.
 
-Detect Magic, or an Arcana check of DC 12, shows a ward on the vault lock behind the far rack, newer than the house and set to strike whoever tampers with the lock. Disarming it takes thieves' tools or Dispel Magic, with a DC 15 check.
+Detect Magic, or an Arcana check of DC 10, shows a ward on the vault lock behind the far rack, newer than the house and set to strike whoever tampers with the lock. Disarming it takes thieves' tools or Dispel Magic, with a DC 15 check.
 
-A failed disarm, or tampering with the lock unwarded, triggers it. If the trap is triggered, everyone at the lock makes a DC 13 Dexterity saving throw:
+A failed disarm, or tampering with the lock unwarded, triggers it. If the trap is triggered, everyone at the lock makes a DC 15 Dexterity saving throw:
 
 Without warning, an arc of blue lightning crackles and surges from the metal components, leaping out toward anyone standing near. The room is briefly illuminated by an arcane electrical discharge, casting long, jagged shadows on the walls.
 

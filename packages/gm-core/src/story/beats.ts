@@ -59,7 +59,10 @@ export type RollBeat = {
   character: string
   name: string
   check: string
+  // The die that counts. With Advantage or Disadvantage `dice` holds both d20s and `mode` says which was kept.
   natural: number
+  dice?: number[]
+  mode?: "advantage" | "disadvantage"
   modifier?: number
   total: number
   dc: number
@@ -94,6 +97,8 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     name: z.string(),
     check: z.string(),
     natural: z.number(),
+    dice: z.array(z.number()).optional(),
+    mode: z.enum(["advantage", "disadvantage"]).optional(),
     modifier: z.number().optional(),
     total: z.number(),
     dc: z.number(),

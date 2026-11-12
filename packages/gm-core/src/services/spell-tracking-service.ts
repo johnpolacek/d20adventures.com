@@ -6,45 +6,6 @@ interface Spell {
   isUsed?: boolean
 }
 
-export function detectSpellFromRollType(rollType: string): string | null {
-  if (!rollType) return null
-
-  // Spell rolls are formatted as "SpellName Check" (e.g., "Fireball Check", "Detect Magic Check")
-  const checkMatch = rollType.match(/^(.+?)\s+Check$/i)
-  if (!checkMatch) return null
-
-  const potentialSpellName = checkMatch[1].trim()
-
-  // Exclude common non-spell checks
-  const nonSpellChecks = [
-    "Attack",
-    "Perception",
-    "Investigation",
-    "Insight",
-    "Stealth",
-    "Sleight of Hand",
-    "Athletics",
-    "Acrobatics",
-    "Persuasion",
-    "Deception",
-    "Intimidation",
-    "Performance",
-    "Survival",
-    "Animal Handling",
-    "Medicine",
-    "History",
-    "Arcana",
-    "Nature",
-    "Religion",
-  ]
-
-  if (nonSpellChecks.some((check) => check.toLowerCase() === potentialSpellName.toLowerCase())) {
-    return null
-  }
-
-  return potentialSpellName
-}
-
 export function markSpellAsUsed(characters: TurnCharacter[], characterId: string, spellName: string): TurnCharacter[] {
   return characters.map((char) => {
     if (char.id !== characterId) return char

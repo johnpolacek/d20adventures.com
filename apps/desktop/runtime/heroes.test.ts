@@ -250,7 +250,7 @@ test("created heroes and AI companions start, take turns, and carry through an e
       generateText: unused,
       generateObject: async ({ schema }) => {
         // The AI hero's move as beats, then its roll check.
-        const roll = schema.safeParse({ rollType: "none", difficulty: 0 })
+        const roll = schema.safeParse({ check: "none" })
         calls.push(roll.success ? "roll" : "intent")
         return { object: roll.success ? roll.data : schema.parse({ beats: [{ kind: "action", who: bram.id, text: "Bram scans the treeline, one hand on his dagger." }] }) }
       },
@@ -312,7 +312,7 @@ test("an AI hero last in the round is read before the round ends, on a Continue 
       generateText: unused,
       generateObject: async ({ schema }) => {
         for (const answer of [
-          { rollType: "none", difficulty: 0 },
+          { check: "none" },
           { beats: [{ kind: "action", who: bram.id, text: "Bram falls in at the back." }] },
           { nextEncounterId: next, beats: [{ kind: "narration", text: "The road goes on." }], adventurePatch: {} },
         ]) {

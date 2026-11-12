@@ -42,7 +42,7 @@ function table(prompts: string[], answers: { beats?: unknown[]; encounter?: stri
         { actionSummary: "Waits.", beats: [{ kind: "action", who, text: "Waits and watches." }], actionType: "skip" },
         { beats: [{ kind: "action", who, text: "Waits and watches." }] },
         { suggestions: [{ label: "Wait", text: "Waits." }] },
-        { rollType: "none", difficulty: 0 },
+        { check: "none" },
       ]) {
         const parsed = schema.safeParse(answer)
         if (parsed.success) return { object: parsed.data }

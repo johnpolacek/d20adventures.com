@@ -34,9 +34,9 @@ The goal here is to find information about the missing shipment or Joran. The do
 The grizzled veteran is **Loric Windrider**. He is the foreman of this section of the docks. If approached respectfully, or if the players mention Elara, he may open up.
 
 **Checks:**
-- **DC 12 Insight:** Players notice Loric is glancing nervously toward a smaller, guarded warehouse down the pier.
+- **DC 10 Insight:** Players notice Loric is glancing nervously toward a smaller, guarded warehouse down the pier.
 - **DC 15 Persuasion:** Loric admits he saw a strange shipment from Faelendar (the elven settlement) being diverted to a private shed rather than the main Blackthorn warehouse.
-- **DC 12 Persuasion, or a few coins:** Loric mentions a river tug that came down the Mordava at first light a day or two back, low in the water for a single chained crate. Two Blackthorn men brought it in, a big soldier and a lean, quiet one the others called Silas. That crate went to Warehouse 14 as well. If the story so far says the tug never left the pier or lost its crate there, Loric has seen no such tug, and Blackthorn men have been asking the docks after one that never came.
+- **DC 10 Persuasion, or a few coins:** Loric mentions a river tug that came down the Mordava at first light a day or two back, low in the water for a single chained crate. Two Blackthorn men brought it in, a big soldier and a lean, quiet one the others called Silas. That crate went to Warehouse 14 as well. If the story so far says the tug never left the pier or lost its crate there, Loric has seen no such tug, and Blackthorn men have been asking the docks after one that never came.
 
 ### Loric's Tale
 

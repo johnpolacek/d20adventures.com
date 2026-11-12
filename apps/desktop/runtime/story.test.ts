@@ -128,7 +128,7 @@ test("continuing carries the story and a hero's gear into the next adventure, an
       generateText: unused,
       generateObject: async ({ schema, prompt }) => {
         if (prompt.includes("You are the PLAYER (not the GM) roleplaying")) moves.push(prompt)
-        for (const answer of [{ beats: [{ kind: "action", who: LYRA, text: "Waits." }] }, { rollType: "none", difficulty: 0 }]) {
+        for (const answer of [{ beats: [{ kind: "action", who: LYRA, text: "Waits." }] }, { check: "none" }]) {
           const parsed = schema.safeParse(answer)
           if (parsed.success) return { object: parsed.data }
         }

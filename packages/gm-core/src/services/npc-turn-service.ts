@@ -9,7 +9,7 @@ import type { AdventurePlan } from "../types/adventure-plan"
 import { isAiControlledPc } from "../utils/turn-actors"
 import { gmNotesWithRules, keepPlayersAlive, type SafetyRules } from "../wiki-adventures/player-safety"
 import { createAiPcTurnService } from "./ai-pc-turn-service"
-import { createNpcTurnBranchService, handleSkipPassNpcTurn, type NpcTurnBranchResult } from "./npc-turn-branch-service"
+import { createNpcTurnBranchService, handleSkipPassNpcTurn, type NpcRollInfo, type NpcTurnBranchResult } from "./npc-turn-branch-service"
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "./npc-turn-effects-service"
 import { buildNpcActionContext, buildNpcActionPrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "./npc-turn-intent-service"
@@ -119,7 +119,7 @@ export function createNpcTurnService(ports: GmPorts) {
     updatedCharacters: TurnCharacter[]
     beatsToAppend: StoryBeat[]
     actionSummary: string
-    rollInfo?: { rollType: string; difficulty: number; baseRoll: number; modifier: number; result: number; success: boolean }
+    rollInfo?: NpcRollInfo
     effects?: Array<{ targetId: string; healthPercentDelta?: number; status?: string; equipmentToAdd?: Array<{ name: string; description?: string }> }>
   }> {
     console.log("[LLM] Starting NPC turn:", {

@@ -4,6 +4,7 @@ import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn } from "../utils/game-utils"
 import { KNOWLEDGE_RULE } from "../utils/narrative-utils"
+import type { RequiredRoll } from "../validations/roll-requirement-schema"
 
 type TurnHistoryRow = {
   order?: number
@@ -18,7 +19,7 @@ type RecentTurnContext = {
 }
 
 function hasRollFields(c: TurnCharacter): c is TurnCharacter & {
-  rollRequired: { rollType: string; difficulty: number; modifier?: number }
+  rollRequired: RequiredRoll
   rollResult: number
 } {
   return "rollResult" in c && typeof c.rollResult === "number" && "rollRequired" in c && typeof c.rollRequired === "object" && c.rollRequired !== null
@@ -72,7 +73,7 @@ export function buildRollInfo(turn: Turn): string {
     const lastRollingCharacter = (turn.characters as TurnCharacter[]).find(hasRollFields)
     if (lastRollingCharacter) {
       const { name, rollRequired, rollResult: charRollResult } = lastRollingCharacter
-      const { rollType: charRollType, difficulty: charDifficulty, modifier: charModifier = 0 } = rollRequired
+      const { rollType: charRollType, difficulty: charDifficulty, modifier: charModifier } = rollRequired
       const charSuccess = charRollResult >= charDifficulty
       rollInfo = `Regarding the most recent dice roll (from character data): Character '${name}' attempted a '${charRollType}'. The result was ${charRollResult} (difficulty: ${charDifficulty}, modifier: ${charModifier}). This roll was a ${charSuccess ? "SUCCESS" : "FAILURE"}.`
     }

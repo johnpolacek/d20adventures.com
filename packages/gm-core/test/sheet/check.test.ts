@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
-import { checkBonus, checkName, combineModes, resolveCheck } from "../../src/sheet/check"
+import { checkBonus, checkFromMenu, checkMenuIds, checkName, combineModes, resolveCheck, sheetModes, spellcastingAbilityOf } from "../../src/sheet/check"
 import type { Sheet } from "../../src/sheet/sheet"
 
 // Every expected number below was worked out by hand from the SRD 5.2.1 rules, not copied from the function's output.
@@ -56,4 +56,58 @@ test("a check is named as the rules name it", () => {
   assert.equal(checkName({ kind: "skill", skill: "sleight-of-hand" }), "Sleight of Hand")
   assert.equal(checkName({ kind: "ability", ability: "str" }), "Strength")
   assert.equal(checkName({ kind: "save", ability: "wis" }), "Wisdom Saving Throw")
+})
+
+test("an NPC's bonus comes from its stat block", () => {
+  // Owlbear: Str 20 (+5), Wis 12 (+1), Int 3 (-4), and the block prints Perception +5.
+  const owlbear = { name: "Owlbear", type: "npc", statBlock: "owlbear" }
+  assert.equal(checkBonus(owlbear, { kind: "skill", skill: "perception" }), 5)
+  assert.equal(checkBonus(owlbear, { kind: "skill", skill: "athletics" }), 5) // no printed Athletics, so Strength
+  assert.equal(checkBonus(owlbear, { kind: "ability", ability: "int" }), -4)
+  assert.equal(checkBonus(owlbear, { kind: "save", ability: "con" }), 3)
+  // Priest: the block prints Medicine +7, and Wis 16 gives a save of +3.
+  assert.equal(checkBonus({ type: "npc", statBlock: "priest" }, { kind: "skill", skill: "medicine" }), 7)
+  assert.equal(checkBonus({ type: "npc", statBlock: "priest" }, { kind: "save", ability: "wis" }), 3)
+  // An NPC that names no stat block is a Commoner: 10 in every score.
+  assert.equal(checkBonus({ type: "npc" }, { kind: "skill", skill: "stealth" }), 0)
+})
+
+test("the menu is the eighteen skills, six abilities and six saves", () => {
+  assert.equal(checkMenuIds.length, 30)
+  assert.deepEqual(checkFromMenu("sleight-of-hand"), { kind: "skill", skill: "sleight-of-hand" })
+  assert.deepEqual(checkFromMenu("strength"), { kind: "ability", ability: "str" })
+  assert.deepEqual(checkFromMenu("wisdom-save"), { kind: "save", ability: "wis" })
+  assert.equal(checkFromMenu("lockpicking"), undefined)
+  assert.equal(checkFromMenu("attack"), undefined)
+})
+
+test("a hero casts with its class's ability", () => {
+  assert.equal(spellcastingAbilityOf(thalbern), "wis") // Ranger
+  assert.equal(spellcastingAbilityOf(hero("covert-cargo/characters/1749159962941.json")), "int") // Lyra, Wizard
+  assert.equal(spellcastingAbilityOf(hero("covert-cargo/characters/1749307435667.json")), undefined) // Poppen, Rogue
+})
+
+test("armor that hinders Stealth gives Disadvantage with no model", () => {
+  // A Fighter in Chain Mail, which the SRD marks Stealth: Disadvantage. Dex 12, not proficient in Stealth: +1.
+  const sheet: Sheet = {
+    class: "fighter",
+    level: 1,
+    species: "human",
+    background: "soldier",
+    abilityScores: { str: 16, dex: 12, con: 14, int: 10, wis: 12, cha: 8 },
+    classSkills: ["perception", "survival"],
+    armor: "chain-mail",
+  }
+  const fighter = { name: "Fighter", type: "pc", sheet }
+  assert.deepEqual(sheetModes(fighter, { kind: "skill", skill: "stealth" }), [{ mode: "disadvantage", from: "Chain Mail" }])
+  // Only Stealth: a bare Dexterity check or Acrobatics in the same armor rolls plain.
+  assert.deepEqual(sheetModes(fighter, { kind: "ability", ability: "dex" }), [])
+  assert.deepEqual(sheetModes(fighter, { kind: "skill", skill: "acrobatics" }), [])
+  // Thalbern's Studded Leather Armor hinders nothing, and an NPC has no sheet to read.
+  assert.deepEqual(sheetModes(thalbern, { kind: "skill", skill: "stealth" }), [])
+  assert.deepEqual(sheetModes({ type: "npc", statBlock: "guard" }, { kind: "skill", skill: "stealth" }), [])
+  // The armor's Disadvantage and the moment's Advantage cancel: 8 and 15 rolled, and only the first die counts, for 9.
+  const mode = combineModes(["advantage", ...sheetModes(fighter, { kind: "skill", skill: "stealth" }).map((source) => source.mode)])
+  assert.equal(mode, "normal")
+  assert.equal(resolveCheck({ dice: [8, 15], bonus: checkBonus(fighter, { kind: "skill", skill: "stealth" }), dc: 10, mode }).total, 9)
 })
