@@ -174,7 +174,9 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     const cost = spell && actor ? castCost(actor, spell.id) : undefined
     let spellBeats: StoryBeat[] = []
     if (spell && actor && cost && !("problem" in cost)) {
-      const cast = castSpell({ characters, casterId: actor.id, spell, targets: [bonus?.target ?? actor.id], d20: rollD20, roll: rollDie })
+      // Cast at the slot it spends: a Healing Word from a level 2 slot heals as a level 2 casting.
+      const level = cost.cost.kind === "slot" ? cost.cost.level : undefined
+      const cast = castSpell({ characters, casterId: actor.id, spell, targets: [bonus?.target ?? actor.id], d20: rollD20, roll: rollDie, level })
       characters = cast.characters.map((character) => (character.id === actor.id ? withCastSpent(character, cost.cost) : character))
       spellBeats = castBeats({ step: "reply", character: actor.id }, actor, spell, cast, storyNames(turn.characters))
     }

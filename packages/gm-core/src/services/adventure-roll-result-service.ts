@@ -194,7 +194,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // d20. Any other takes none, and each target's saving throw is rolled here.
       const spell = spellById.get(required.cast.spell)
       if (!spell) throw new Error(`"${required.cast.spell}" is not a spell.`)
-      const cost = castCost(args.character, spell.id, required.cast.ritual === true)
+      const cost = castCost(args.character, spell.id, required.cast.ritual === true, required.cast.level)
       if ("problem" in cost) throw new Error(cost.problem)
       const cast = castSpell({
         characters: turnCharacters,

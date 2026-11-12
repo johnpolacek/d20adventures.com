@@ -530,8 +530,11 @@ async function npcFixedOutcome() {
   answer = { check: "cast", spell: "Charm Person", targets: ["Owlbear"] }
   assert.deepEqual(await readAction("Lyra charms the owlbear.", lyra, scene), {
     roll: null,
-    cast: { cast: { spell: "charm-person", targets: ["owlbear"] }, rollType: "Charm Person", difficulty: 13, modifier: 0, mode: "normal" },
+    cast: { cast: { spell: "charm-person", targets: ["owlbear"], level: 1 }, rollType: "Charm Person", difficulty: 13, modifier: 0, mode: "normal" },
   })
+  // A level 2 slot named that a level 1 Wizard does not have falls to the lowest slot that can pay.
+  answer = { check: "cast", spell: "charm-person", targets: ["owlbear"], slot: 2 }
+  assert.equal((await readAction("Lyra charms the owlbear with a level 2 slot.", lyra, scene)).cast?.cast.level, 1)
   // With both slots spent she cannot cast it, and a cantrip still goes. A spell that is not hers is not cast.
   const spent = { ...lyra, spellSlots: [2] }
   assert.deepEqual(await readAction("Lyra charms the owlbear.", spent, { present: [owlbear, spent] }), { roll: null })

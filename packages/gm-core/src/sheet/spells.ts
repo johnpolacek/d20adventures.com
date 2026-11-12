@@ -90,15 +90,23 @@ export const isEngineSpell = (spell: Spell): boolean =>
  * How many creatures a spell takes. On a floor an area takes whoever stands in it (./spell-space). Where there is no
  * floor it takes as many as its size allows: a cone one for each 10 feet, a cube one for each 5 feet of its side, a sphere, cylinder or emanation one
  * for each 5 feet of its radius, a line one for each 30 feet, each rounded up. Magic Missile takes one for each dart.
- * Any other spell takes one.
+ * Any other spell takes one. Cast with a slot above its level (`slot`), a spell takes the creatures its text adds for
+ * each level above (Bless, Charm Person), and Magic Missile its extra darts.
  */
 // Spells whose text takes "up to three creatures" with no area: the count is in their words alone.
 const SEVERAL: Record<string, number> = { bless: 3, bane: 3 }
 
-export function targetLimit(spell: Spell): number {
+export function targetLimit(spell: Spell, slot = spell.level): number {
+  const above = Math.max(0, slot - spell.level)
   const area = spell.range.area
   if (area) return Math.max(1, Math.ceil(area.size / (area.shape === "cone" ? 10 : area.shape === "line" ? 30 : 5)))
-  return spell.projectiles?.count ?? SEVERAL[spell.id] ?? 1
+  if (spell.projectiles) return dartsOf(spell, slot)
+  return (SEVERAL[spell.id] ?? 1) + (spell.extraTargetsPerSlot ?? 0) * above
+}
+
+/** How many projectiles a spell makes at a slot level: Magic Missile's three, and one more for each level above 1. */
+function dartsOf(spell: Spell, slot: number): number {
+  return (spell.projectiles?.count ?? 0) + (spell.projectiles?.perSlot ?? 0) * Math.max(0, slot - spell.level)
 }
 
 /** A spell a character can cast, and how. */
@@ -221,7 +229,7 @@ export function spellWords(character: Slotted & { spells?: readonly { name: stri
     known.some((entry) => entry.cantrip) ? `Cantrips, cast at will: ${names(known.filter((entry) => entry.cantrip))}` : "",
     known.some((entry) => !entry.cantrip && entry.prepared) ? `Prepared spells: ${names(known.filter((entry) => !entry.cantrip && entry.prepared))}` : "",
     known.some((entry) => !entry.prepared) ? `Rituals from the spellbook, outside a fight: ${names(known.filter((entry) => !entry.prepared))}` : "",
-    left.length ? `Level 1 spell slots left: ${left[0]}` : "",
+    left.length ? `Spell slots left: ${slotWords(character)}` : "",
   ]
   return parts.filter(Boolean).join(". ")
 }
@@ -231,26 +239,48 @@ export function slotsLeft(character: Slotted): number[] {
   return (spellcastingOf(character)?.slots ?? []).map((slots, index) => Math.max(0, slots - (character.spellSlots?.[index] ?? 0)))
 }
 
+/** A hero's slots left in words, for each spell level they have slots of: "3 of level 1, 0 of level 2". */
+export function slotWords(character: Slotted): string {
+  const total = spellcastingOf(character)?.slots ?? []
+  return slotsLeft(character)
+    .flatMap((left, index) => ((total[index] ?? 0) > 0 ? [`${left} of level ${index + 1}`] : []))
+    .join(", ")
+}
+
+/**
+ * The slot level a hero's casting of a spell spends: the one named, when they have it left and it is not below the
+ * spell's level, and otherwise the lowest that can pay, the spell's own level first and then higher. None when no slot
+ * of the spell's level or higher is left.
+ */
+export function slotFor(character: Slotted, spellLevel: number, slot?: number): number | undefined {
+  const left = slotsLeft(character)
+  if (slot !== undefined && slot >= spellLevel && (left[slot - 1] ?? 0) > 0) return slot
+  const index = left.findIndex((count, at) => at + 1 >= spellLevel && count > 0)
+  return index < 0 ? undefined : index + 1
+}
+
 /** What casting a spell spends: nothing for a cantrip or a Ritual, a feature's free cast, or a slot of the spell's level. */
 export type CastCost = { kind: "cantrip" } | { kind: "ritual" } | { kind: "free"; feature: string } | { kind: "slot"; level: number }
 
 /**
  * Whether a hero can cast a spell now, and what it spends. A cantrip is free. A Ritual cast slowly (`ritual`) spends
- * nothing. A feature's free cast is used before a slot. Any other casting needs the spell prepared and a slot of its
- * level left. `problem` says why not, for the game master.
+ * nothing. A feature's free cast is used before a slot, unless a higher slot is named. Any other casting needs the
+ * spell prepared and a slot: the level named in `slot` (upcasting), or the lowest left that can pay, its own level
+ * first and then higher (./slotFor). `problem` says why not, for the game master.
  */
-export function castCost(character: Slotted, spellId: string, ritual = false): { cost: CastCost; known: KnownSpell } | { problem: string } {
+export function castCost(character: Slotted, spellId: string, ritual = false, slot?: number): { cost: CastCost; known: KnownSpell } | { problem: string } {
   const known = spellsOf(character).find((entry) => entry.spell.id === spellId)
   const name = spellById.get(spellId)?.name ?? spellId
   if (!known) return { problem: `${name} is not a spell ${character.name ?? "this character"} can cast.` }
   if (known.cantrip) return { cost: { kind: "cantrip" }, known }
   if (ritual && known.ritual) return { cost: { kind: "ritual" }, known }
   if (!known.prepared) return { problem: `${name} is in the spellbook and not prepared, so it can only be cast as a Ritual.` }
-  if (known.free > 0 && known.useKey) return { cost: { kind: "free", feature: known.useKey }, known }
+  const upcast = character.sheet && slot !== undefined && slot > known.spell.level && slotFor(character, known.spell.level, slot) === slot
+  if (known.free > 0 && known.useKey && !upcast) return { cost: { kind: "free", feature: known.useKey }, known }
   // An NPC casts by its stat block's counts, and has no slots to fall back on.
   if (!character.sheet) return { problem: `${character.name ?? "This character"} has no casting of ${name} left.` }
-  const level = known.spell.level
-  if ((slotsLeft(character)[level - 1] ?? 0) < 1) return { problem: `${character.name ?? "This character"} has no level ${level} spell slot left for ${name}.` }
+  const level = slotFor(character, known.spell.level, slot)
+  if (level === undefined) return { problem: `${character.name ?? "This character"} has no spell slot of level ${known.spell.level} or higher left for ${name}.` }
   return { cost: { kind: "slot", level }, known }
 }
 
@@ -369,7 +399,7 @@ export function castSpell<T extends Castee>(args: {
   damageType?: DamageTypeId
   /** For a spell cast for one skill (Guidance), the skill. */
   skill?: SkillId
-  /** The slot level it is cast at, when above the spell's own: a Mage's "Fireball (level 4 version)". */
+  /** The slot level it is cast at, when above the spell's own: a hero's higher slot, or a Mage's "Fireball (level 4 version)". */
   level?: number
   /** The cover each target has from where the spell comes: it adds to Armor Class against the spell attack and to a Dexterity save. */
   cover?: Readonly<Record<string, Cover>>
@@ -386,7 +416,8 @@ export function castSpell<T extends Castee>(args: {
   const put = (after: T) => {
     characters = characters.map((character) => (character.id === after.id ? after : character))
   }
-  const targets = [...new Set(args.targets)].filter((id) => find(id)).slice(0, args.measured && spell.range.area ? undefined : targetLimit(spell))
+  const slot = Math.max(spell.level, args.level ?? spell.level)
+  const targets = [...new Set(args.targets)].filter((id) => find(id)).slice(0, args.measured && spell.range.area ? undefined : targetLimit(spell, slot))
   const covered = (id: string) => coverBonus(args.cover?.[id] ?? "none")
   const saves: SaveRoll[] = []
   const harm: Harm[] = []
@@ -398,8 +429,9 @@ export function castSpell<T extends Castee>(args: {
   const now = (part: { timing?: string; appliesWhen?: string; unless?: string; label?: string }) => !part.timing && !part.appliesWhen && !part.label
   // A spell with a second save to come holds its first condition only until that save: the bearer's next turn (Sleep).
   const span = spell.saves?.some((save) => save.when === "later") ? "turn" : spanOf(spell)
-  // A spell cast with a slot above its own level adds the dice its text gives for each level above.
-  const above = Math.max(0, (args.level ?? spell.level) - spell.level)
+  // A spell cast with a slot above its own level adds what its text gives for each level above: damage and healing
+  // dice, fixed healing, creatures (in `targets` above) and darts.
+  const above = slot - spell.level
   const partOf = (entry: NonNullable<Spell["damage"]>[number]): DamagePart => {
     const dice = raised(cantripDice(entry, level), entry.perSlot, above)
     return { ...(dice ? { dice } : { amount: entry.amount }), type: typeOf(entry.types) }
@@ -500,7 +532,7 @@ export function castSpell<T extends Castee>(args: {
   // Damage that needs no roll to land. Magic Missile's darts each roll their own dice and fall on the targets in turn.
   const sure = spell.attack ? [] : (spell.damage ?? []).filter((entry) => now(entry) && !entry.trigger)
   if (sure.length && targets.length) {
-    const darts = spell.projectiles?.count
+    const darts = spell.projectiles ? dartsOf(spell, slot) : undefined
     const falls = darts ? Array.from({ length: darts }, (_, index) => targets[index % targets.length]) : targets
     const lost = new Map<string, { amount: number; fate?: Fate; type: string }>()
     for (const id of falls) {
@@ -516,8 +548,9 @@ export function castSpell<T extends Castee>(args: {
     for (const id of targets) {
       const target = find(id)
       if (!target || target.dead) continue
-      const rolled = healing.dice ? rollDamage([{ dice: healing.dice, type: "force" }], args.roll) : undefined
-      const bonus = (rolled?.parts[0]?.bonus ?? 0) + (healing.modifier ? casting.modifier : 0)
+      const dice = raised(healing.dice, healing.perSlot, above)
+      const rolled = dice ? rollDamage([{ dice, type: "force" }], args.roll) : undefined
+      const bonus = (rolled?.parts[0]?.bonus ?? 0) + (healing.modifier ? casting.modifier : 0) + (healing.perSlotAmount ?? 0) * above
       const amount = Math.max(0, (rolled?.parts[0]?.dice.reduce((sum, die) => sum + die, 0) ?? healing.amount ?? 0) + bonus)
       const healed = withHealing(target, amount)
       put(healed)
@@ -537,8 +570,9 @@ export function castSpell<T extends Castee>(args: {
     for (const id of targets.length ? targets : [caster.id]) {
       const target = find(id)
       if (!target || target.dead) continue
-      const rolled = healing.dice ? rollDamage([{ dice: healing.dice, type: "force" }], args.roll).total : (healing.amount ?? 0)
-      const amount = rolled + (healing.modifier ? casting.modifier : 0)
+      const dice = raised(healing.dice, healing.perSlot, above)
+      const rolled = dice ? rollDamage([{ dice, type: "force" }], args.roll).total : (healing.amount ?? 0)
+      const amount = rolled + (healing.modifier ? casting.modifier : 0) + (healing.perSlotAmount ?? 0) * above
       if (amount > (target.tempHitPoints ?? 0)) put({ ...target, tempHitPoints: amount })
       facts.push(`${target.name} gains ${amount} Temporary Hit Points.`)
     }

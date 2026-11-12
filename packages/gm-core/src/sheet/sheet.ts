@@ -1,4 +1,4 @@
-import { abilityIds, classIdSchema, idSchema, skillIdSchema } from "@d20/srd"
+import { abilityIdSchema, abilityIds, classIdSchema, idSchema, skillIdSchema } from "@d20/srd"
 import { z } from "zod"
 
 const scoreSchema = z.number().int().min(1).max(30)
@@ -14,6 +14,30 @@ export const abilityScoresSchema = z.strictObject({
 })
 export type AbilityScores = z.infer<typeof abilityScoresSchema>
 
+const raiseSchema = z.number().int().min(1).max(2)
+
+/**
+ * A choice made at a level that has no other home on the sheet. Each is checked by `sheetProblems`.
+ *
+ * - The feat an Ability Score Improvement feature grants at `level`, and the ability scores it raised. The raises are
+ *   already counted in `abilityScores`: `{ level: 4, feat: "ability-score-improvement", abilities: { str: 1, con: 1 } }`.
+ * - The skills a feature of `level` gives proficiency in: College of Lore's three at level 3, `{ level: 3, skills: [...] }`.
+ * - Magic Initiate's picks, for a Magic Initiate the hero has, at the level it was taken (1 for an Origin feat):
+ *   `{ level: 1, feat: "magic-initiate", spellList: "wizard", spellAbility: "int", cantrips: [...], spell: "..." }`.
+ */
+export const advancementSchema = z.strictObject({
+  /** The character level the choice was made at. */
+  level: z.number().int().min(1).max(20),
+  feat: idSchema.optional(),
+  abilities: z.strictObject({ str: raiseSchema, dex: raiseSchema, con: raiseSchema, int: raiseSchema, wis: raiseSchema, cha: raiseSchema }).partial().optional(),
+  skills: z.array(skillIdSchema).optional(),
+  spellList: classIdSchema.optional(),
+  spellAbility: abilityIdSchema.optional(),
+  cantrips: z.array(idSchema).optional(),
+  spell: idSchema.optional(),
+})
+export type Advancement = z.infer<typeof advancementSchema>
+
 /**
  * What a player chooses for a character. Everything else on a character sheet (hit points, Armor Class, saves, skill
  * bonuses) is worked out from this and the SRD data by `deriveSheet`, so no bonus is ever stored.
@@ -21,6 +45,8 @@ export type AbilityScores = z.infer<typeof abilityScoresSchema>
 export const sheetSchema = z.strictObject({
   class: classIdSchema,
   level: z.number().int().min(1).max(20),
+  /** The SRD subclass id, from the level the class grants one (3 for every class): "life-domain". */
+  subclass: idSchema.optional(),
   /** A species id from the SRD data: "elf". */
   species: idSchema,
   /** A background id from the SRD data: "soldier". It brings its two skills, its tool and its Origin feat. */
@@ -55,6 +81,8 @@ export const sheetSchema = z.strictObject({
   spellbook: z.array(idSchema).optional(),
   /** The kinds of weapons whose mastery property the hero can use, by equipment id, from their Weapon Mastery feature. */
   weaponMasteries: z.array(idSchema).optional(),
+  /** The choices of each level that have no other home: an Ability Score Improvement's feat and raises, and the like. */
+  advancements: z.array(advancementSchema).optional(),
 })
 export type Sheet = z.infer<typeof sheetSchema>
 

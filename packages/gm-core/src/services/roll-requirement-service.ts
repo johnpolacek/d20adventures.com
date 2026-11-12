@@ -14,7 +14,7 @@ import type { RestKind } from "../sheet/rest"
 import { attackReach, coverBetween, coverBonus, feetBetween, greaterCover, isNear, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells } from "../sheet/spell-effects"
 import { castInSpace } from "../sheet/spell-space"
-import { castCost, isEngineSpell, slotsLeft, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
+import { castCost, isEngineSpell, slotsLeft, slotWords, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import { actionIds } from "../sheet/turn-effect"
@@ -42,6 +42,7 @@ const rollPickSchema = z.object({
   spell: z.string().max(80).optional().describe('For "cast": the id of one of the character\'s own spells, from Their Spells'),
   targets: z.array(z.string().max(80)).max(8).optional().describe('For "cast": the ids of everyone the spell is cast on, from Who Is Here or the character\'s own id'),
   ritual: z.boolean().optional().describe('For "cast": true when a spell marked ritual is cast slowly, outside a fight, to spare its slot'),
+  slot: z.number().int().min(1).max(9).optional().describe('For "cast": the spell slot level, only when the player says they cast it with a higher slot'),
   damageType: z.string().max(20).optional().describe('For "cast": the damage type chosen, for a spell that offers several'),
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
   target: z.string().max(80).optional().describe('For an attack: the id of who is attacked, from Who Is Here. For "help": the id of the ally helped, or of the enemy an ally will attack'),
@@ -236,15 +237,8 @@ ${
      }.
      A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.
    - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
-     Their Spells: ${spellLines.join(", ") || "none"}.${
-       slots.length
-         ? ` Spell slots left: ${slots
-             .map((left, index) => (left || index === 0 ? `${left} of level ${index + 1}` : ""))
-             .filter(Boolean)
-             .join(", ")}.`
-         : ""
-     }
-     A cantrip spends nothing. Any other spell spends a slot of its level, and with none left it cannot be cast. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
+     Their Spells: ${spellLines.join(", ") || "none"}.${slots.length ? ` Spell slots left: ${slotWords(character)}.` : ""}
+     A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
      A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all is "arcana".
 
 8) Set "difficulty" by name. It is the task's own difficulty, the same for anyone who tries it. The character's talent is already in the bonus the game adds, so never lower or raise it for who is trying.
@@ -365,7 +359,8 @@ Action: "${action}"
       if (pick.check === "cast") {
         // A spell is one of the caster's own, with a slot for it. One the caster lacks, or cannot pay for, is not cast.
         const known = knownSpells.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
-        const cost = known && castCost(character, known.spell.id, pick.ritual === true)
+        // A slot named that the caster lacks, or below the spell's level, falls to the lowest that can pay.
+        const cost = known && castCost(character, known.spell.id, pick.ritual === true, pick.slot)
         if (!known || !cost || "problem" in cost) {
           console.log("[LLM] Roll requirement decision:", {
             character: character.name,
@@ -379,7 +374,10 @@ Action: "${action}"
         const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
         const asked = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])]
         // On a floor an area is measured, so those named are its aim and not its count.
-        let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(0, mover && spell.range.area ? undefined : targetLimit(spell))
+        let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(
+          0,
+          mover && spell.range.area ? undefined : targetLimit(spell, cost.cost.kind === "slot" ? cost.cost.level : spell.level)
+        )
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
           if (spell.attack && targets.length === 1) chosen = [targets[0].id]
@@ -411,7 +409,8 @@ Action: "${action}"
           ...(cost.cost.kind === "ritual" ? { ritual: true as const } : {}),
           ...(type.success ? { damageType: type.data } : {}),
           ...(forSkill.success ? { skill: forSkill.data } : {}),
-          ...(known.castLevel ? { level: known.castLevel } : {}),
+          // The slot level spent, for a hero. An NPC's stat block may print the level it casts at.
+          ...(cost.cost.kind === "slot" ? { level: cost.cost.level } : known.castLevel ? { level: known.castLevel } : {}),
         }
         const casting = spellcastingOf(character)
         if (spell.attack) {

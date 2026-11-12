@@ -7,6 +7,7 @@ import { createRollRequirementService } from "@d20/gm-core/services/roll-require
 import { DIFFICULTY_CLASSES } from "@d20/gm-core/sheet/check"
 import type { ConditionEntry } from "@d20/gm-core/sheet/condition-entry"
 import { placeCharacters } from "@d20/gm-core/sheet/placement"
+import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import type { Stake } from "@d20/gm-core/sheet/stakes"
 import { authoredText } from "@d20/gm-core/story/authored"
 import { storyNames } from "@d20/gm-core/story/render"
@@ -34,9 +35,11 @@ type Probe = {
   mode?: string
   // A spell cast: its SRD id, everyone it is cast on, and whether as a Ritual.
   // `ritual: "either"` is for a Ritual spell cast with time to spare and no word of how: slowly or with a slot are both right.
-  cast?: { spell: string; targets?: string[]; ritual?: boolean | "either" }
+  cast?: { spell: string; targets?: string[]; ritual?: boolean | "either"; level?: number }
   // Spell slots a character has already used, by character id.
   slotsUsed?: Record<string, number[]>
+  // The hero's sheet for this scene only, laid over the premade's: a level 3 caster with a level 2 slot to spend.
+  sheet?: Partial<Sheet>
   attack?: { weapon: string; target: string }
   // Other premade heroes in the scene, by file id.
   allies?: string[]
@@ -88,7 +91,8 @@ async function run(probe: Probe): Promise<Graded> {
     ...(probe.conditionsOn?.[character.id] ? { conditions: probe.conditionsOn[character.id] } : {}),
     ...(probe.slotsUsed?.[character.id] ? { spellSlots: probe.slotsUsed[character.id] } : {}),
   })
-  const hero: Character = bears({ ...JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8")), type: "pc" })
+  const premade = JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8"))
+  const hero: Character = bears({ ...premade, ...(probe.sheet ? { sheet: { ...premade.sheet, ...probe.sheet } } : {}), type: "pc" })
   const encounter = pack.artifacts.encounters[probe.encounter]
   if (!encounter) throw new Error(`${probe.id}: no encounter ${probe.encounter}`)
   const model = localLlm("claude", mkdtempSync(join(tmpdir(), "check-probe-")))
@@ -141,6 +145,8 @@ async function run(probe: Probe): Promise<Graded> {
         c ? `${c.spell}${c.ritual ? " as a ritual" : ""} on ${[...(c.targets ?? [])].sort().join(" and ") || "no one"}` : "nothing"
       const wanted = probe.cast?.ritual === "either" ? { ...probe.cast, ritual: cast?.ritual } : (probe.cast as { spell: string; targets?: string[]; ritual?: boolean } | undefined)
       if (told(cast) !== told(wanted)) faults.push(`cast ${told(cast)}, wanted ${told(wanted)}`)
+      // The slot level the cast spends, where the scene names one.
+      if (probe.cast?.level && cast?.level !== probe.cast.level) faults.push(`cast with a level ${cast?.level ?? "no"} slot, wanted level ${probe.cast.level}`)
     }
     const said = (bonus?: { feature: string; target?: string }) => (bonus ? `${bonus.feature}${bonus.target ? ` for ${bonus.target}` : ""}` : "none")
     if (said(reading.bonus) !== said(probe.bonus)) faults.push(`bonus action ${said(reading.bonus)}, wanted ${said(probe.bonus)}`)
@@ -220,10 +226,10 @@ for (const g of graded) {
     action?: string
     target?: string
     skill?: string
-    cast?: { spell: string; targets: string[]; ritual?: boolean }
+    cast?: { spell: string; targets: string[]; ritual?: boolean; level?: number }
   } | null
   const pick = got?.cast
-    ? `cast ${got.cast.spell}${got.cast.ritual ? " as a ritual" : ""} on ${got.cast.targets.join(", ") || "no one"}${got.rollType ? `, spell attack against AC ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}` : ", no roll"}`
+    ? `cast ${got.cast.spell}${got.cast.ritual ? " as a ritual" : ""}${got.cast.level ? ` with a level ${got.cast.level} slot` : ""} on ${got.cast.targets.join(", ") || "no one"}${got.rollType ? `, spell attack against AC ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}` : ", no roll"}`
     : got?.action
       ? `${got.action}${got.target ? ` for ${got.target}` : ""}${got.skill ? ` with ${got.skill}` : ""}, no roll`
       : got

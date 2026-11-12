@@ -4,9 +4,11 @@ import { backgroundById } from "@d20/srd/backgrounds"
 import { classFeatureById } from "@d20/srd/class-features"
 import { classById } from "@d20/srd/classes"
 import { featById } from "@d20/srd/feats"
+import type { ClassFeature } from "@d20/srd/schema/classes"
 import { skillById } from "@d20/srd/skills"
 import { speciesById } from "@d20/srd/species"
-import { deriveSheet } from "./derive"
+import { subclassById } from "@d20/srd/subclasses"
+import { deriveSheet, grantsFeatByLevel } from "./derive"
 import type { HitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
 import { slotsLeft, spellcastingOf, spellsOf } from "./spells"
@@ -33,6 +35,8 @@ export type SheetSpellcasting = {
 /** A sheet ready to show: every name spelled out and every number worked out. It holds plain values only. */
 export type SheetView = {
   className: string
+  /** Left out before the level the class chooses one. */
+  subclassName?: string
   level: number
   speciesName: string
   backgroundName: string
@@ -91,13 +95,24 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     return count === undefined ? undefined : { count, recharge: RECHARGE[recharge] ?? titled(recharge) }
   }
 
+  const subclass = sheet.subclass ? subclassById.get(sheet.subclass) : undefined
+  // What an Ability Score Improvement gave at each level: the scores it raised, or the feat taken in its place.
+  const advanced = (feature: ClassFeature) =>
+    (sheet.advancements ?? [])
+      .filter((entry) => entry.feat && feature.levels.includes(entry.level) && entry.level <= sheet.level)
+      .map((entry) => {
+        const raises = Object.entries(entry.abilities ?? {}).map(([ability, amount]) => `${abilityById.get(ability)?.name ?? ability} +${amount}`)
+        return entry.feat === "ability-score-improvement" && raises.length ? raises.join(", ") : [featById.get(entry.feat ?? "")?.name ?? entry.feat, ...raises].join(", ")
+      })
+      .join("; ")
   const features: SheetFeature[] = []
   for (const id of derived.classFeatures) {
     const feature = classFeatureById.get(id)
     if (!feature) continue
     const chosen = sheet.featureChoices?.[id]
-    const choice = chosen ? (feature.options?.find((option) => option.id === chosen)?.name ?? featById.get(chosen)?.name) : undefined
-    features.push({ name: choice ? `${feature.name}: ${choice}` : feature.name, from: cls.name, uses: usesOf(feature.uses as Parameters<typeof usesOf>[0]) })
+    const choice = grantsFeatByLevel(feature) ? advanced(feature) : chosen ? (feature.options?.find((option) => option.id === chosen)?.name ?? featById.get(chosen)?.name) : undefined
+    const from = feature.subclass && subclass ? subclass.name : cls.name
+    features.push({ name: choice ? `${feature.name}: ${choice}` : feature.name, from, uses: usesOf(feature.uses as Parameters<typeof usesOf>[0]) })
   }
   for (const trait of species.traits) {
     if ((trait.level ?? 1) > sheet.level) continue
@@ -127,6 +142,7 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
 
   return {
     className: cls.name,
+    ...(subclass ? { subclassName: subclass.name } : {}),
     level: sheet.level,
     speciesName: species.name,
     backgroundName: background.name,

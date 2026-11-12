@@ -750,5 +750,48 @@
     "narrative": "The owlbear roars and charges across the clearing at Thalbern.",
     "action": "I lie down in the ferns and sleep for the night.",
     "checks": ["none"]
+  },
+  {
+    "id": "upcast-healing-word",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "level": 3,
+      "subclass": "life-domain",
+      "spells": ["healing-word", "guiding-bolt", "shield-of-faith", "sanctuary", "command", "spiritual-weapon"]
+    },
+    "narrative": "Branka staggers back from the blades, bleeding badly from a deep cut along her arm.",
+    "action": "I pour more of my power into it and call out a Healing Word on Branka with a level 2 slot.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "healing-word",
+      "targets": ["branka-stoneveil"],
+      "level": 2
+    }
+  },
+  {
+    "id": "level-2-slot-left",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "level": 3,
+      "subclass": "life-domain",
+      "spells": ["healing-word", "guiding-bolt", "shield-of-faith", "sanctuary", "command", "spiritual-weapon"]
+    },
+    "slotsUsed": {
+      "milos-radan": [4]
+    },
+    "narrative": "Branka staggers back from the blades, bleeding from a deep cut along her arm. Milos has spent all four of his lesser blessings today.",
+    "action": "I call out a Healing Word to close Branka's wound.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "healing-word",
+      "targets": ["branka-stoneveil"],
+      "level": 2
+    }
   }
 ]

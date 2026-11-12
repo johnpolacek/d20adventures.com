@@ -247,13 +247,13 @@ test("a caster's spells are the sheet's: cantrips at will, prepared spells for a
   const once = withCastSpent(lyra, { kind: "slot", level: 1 })
   const spent = withCastSpent(once, { kind: "slot", level: 1 })
   assert.deepEqual([once.spellSlots, slotsLeft(once)[0], spent.spellSlots, slotsLeft(spent)[0]], [[1], 1, [2], 0])
-  assert.equal(cost(spent, "magic-missile"), "Lyra has no level 1 spell slot left for Magic Missile.")
+  assert.equal(cost(spent, "magic-missile"), "Lyra has no spell slot of level 1 or higher left for Magic Missile.")
   assert.deepEqual([cost(spent, "ray-of-frost"), cost(spent, "detect-magic", true)], [{ kind: "cantrip" }, { kind: "ritual" }])
   // A new encounter gives nothing back: the slots stay spent until a Long Rest gives both back.
   assert.deepEqual(slotsLeft(longRest(spent).character), [2, 0, 0, 0, 0, 0, 0, 0, 0])
   assert.equal(
     spellWords(once),
-    "Cantrips, cast at will: Mage Hand, Light, Ray of Frost. Prepared spells: Detect Magic, Fog Cloud, Charm Person, Magic Missile. Rituals from the spellbook, outside a fight: Identify, Comprehend Languages. Level 1 spell slots left: 1"
+    "Cantrips, cast at will: Mage Hand, Light, Ray of Frost. Prepared spells: Detect Magic, Fog Cloud, Charm Person, Magic Missile. Rituals from the spellbook, outside a fight: Identify, Comprehend Languages. Spell slots left: 1 of level 1"
   )
 })
 

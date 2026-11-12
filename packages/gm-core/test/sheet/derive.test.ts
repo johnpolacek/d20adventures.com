@@ -322,7 +322,7 @@ test("levels: proficiency bonus and fixed hit points", () => {
 
 test("problems are named", () => {
   const cleric = by("cleric")
-  assert.deepEqual(sheetProblems({ ...cleric, featureChoices: undefined }), ["Cleric has no training with heavy armor"])
+  assert.deepEqual(sheetProblems({ ...cleric, featureChoices: undefined }), ["Cleric has no training with heavy armor", "Divine Order needs a choice, and the sheet has none"])
   assert.deepEqual(sheetProblems({ ...by("monk"), shield: true }), ["Monk has no training with Shields"])
   assert.deepEqual(sheetProblems({ ...cleric, classSkills: ["history", "stealth"] }), ["stealth is not on the Cleric skill list"])
   assert.deepEqual(sheetProblems({ ...cleric, classSkills: ["history", "insight"] }), ["insight already comes from the Acolyte background"])
