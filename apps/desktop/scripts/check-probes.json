@@ -586,5 +586,144 @@
       "spell": "bless",
       "targets": ["branka-stoneveil", "milos-radan"]
     }
+  },
+  {
+    "id": "charge-the-owlbear",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "floor": true,
+    "action": "I draw my shortsword, charge the owlbear and slash at it.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortsword",
+      "target": "owlbear"
+    },
+    "moved": {
+      "near": "owlbear"
+    }
+  },
+  {
+    "id": "shoot-from-here",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "floor": true,
+    "action": "I stay where I am and loose an arrow at the owlbear's chest.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longbow",
+      "target": "owlbear"
+    },
+    "moved": {
+      "none": true
+    }
+  },
+  {
+    "id": "back-off-and-shoot",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "floor": true,
+    "at": {
+      "thalbern": [0, 0],
+      "owlbear": [7.5, 0]
+    },
+    "narrative": "The owlbear is on top of Thalbern, close enough to rake him.",
+    "action": "I back well away from the owlbear, out of its reach, and put an arrow in it.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longbow",
+      "target": "owlbear"
+    },
+    "moved": {
+      "clearOf": "owlbear"
+    },
+    "mode": "normal"
+  },
+  {
+    "id": "sprint-for-home",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "floor": true,
+    "action": "I turn and sprint down the trail back toward home as fast as I can run.",
+    "checks": ["dash"],
+    "moved": {
+      "feet": [31, 60]
+    }
+  },
+  {
+    "id": "shoot-point-blank",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "floor": true,
+    "at": {
+      "thalbern": [0, 0],
+      "owlbear": [7.5, 0]
+    },
+    "narrative": "The owlbear is on top of Thalbern, close enough to rake him.",
+    "action": "I hold my ground and loose an arrow straight into the owlbear's face.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longbow",
+      "target": "owlbear"
+    },
+    "moved": {
+      "none": true
+    },
+    "mode": "disadvantage",
+    "reasons": ["Enemy Within 5 Feet"]
+  },
+  {
+    "id": "creep-to-the-reeds",
+    "adventure": "covert-cargo",
+    "encounter": "the-shipment",
+    "hero": "1749307435667",
+    "floor": true,
+    "action": "Poppen slips out of the bushes and creeps down to the reeds by the gangway, keeping low and quiet.",
+    "checks": ["stealth", "hide"],
+    "moved": {
+      "feet": [5, 30]
+    }
+  },
+  {
+    "id": "ray-out-of-range",
+    "adventure": "covert-cargo",
+    "encounter": "battle-on-the-boat",
+    "hero": "1749159962941",
+    "floor": true,
+    "at": {
+      "1749159962941": [0, 0],
+      "npcs-1749163978757": [100, 0],
+      "npcs-1749181492795": [100, 10]
+    },
+    "narrative": "Reinhard and Silas have backed off to the far end of the pier, a hundred feet from Lyra, in plain sight under the lantern.",
+    "action": "Lyra casts Ray of Frost at Reinhard.",
+    "checks": ["none"],
+    "ruling": "Out Of Range"
+  },
+  {
+    "id": "hurry-to-heal",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "wrenna-faelendar",
+    "allies": ["branka-stoneveil"],
+    "floor": true,
+    "at": {
+      "wrenna-faelendar": [0, 0],
+      "branka-stoneveil": [20, 0]
+    },
+    "narrative": "Branka is bleeding from a deep cut across her arm.",
+    "action": "Wrenna hurries over to Branka and lays a hand on her arm, casting Cure Wounds.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "cure-wounds",
+      "targets": ["branka-stoneveil"]
+    },
+    "moved": {
+      "near": "branka-stoneveil"
+    }
   }
 ]
