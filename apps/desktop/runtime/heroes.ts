@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import type { GmPorts, Llm } from "@d20/gm-core"
 import { createGenerateCharacterAction } from "@d20/gm-core/character/generate-character-action"
-import { type Arrival, arrivalSchema, draftsArrival, heroDraftPrompt, withArrival, writeArrival } from "@d20/gm-core/character/hero-draft"
+import { type Arrival, arrivalSchema, draftsArrival, HERO_CREATOR, HERO_CREATOR_OFF, heroDraftPrompt, playableHero, withArrival, writeArrival } from "@d20/gm-core/character/hero-draft"
 import { type PCTemplate, pcTemplateSchema } from "@d20/gm-core/types/character"
 import { z } from "zod"
 import { STOCK_FIGURES } from "../src/figures"
@@ -84,6 +84,7 @@ export async function heroCommand(
     roster.putHero({ ...hero, painted: true })
     return { art: readArt(files.data, [hero.id]) }
   }
+  if (!HERO_CREATOR) throw new Error(HERO_CREATOR_OFF)
   const { races, archetypes } = creationOptions(packs)
   const hero = command.kind === "saveHero" ? command.hero : command
   if (!races.includes(hero.race) || !archetypes.includes(hero.archetype)) throw new Error("Choose one of the listed races and classes.")
@@ -164,6 +165,7 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
     if (m.premadeCharacterIds.includes(choice.id)) continue
     const hero = roster.find((h) => h.id === choice.id)
     if (!hero) throw new Error("That hero is not in your roster.")
+    if (!playableHero(hero)) throw new Error(`${hero.name} has no rules sheet.`)
     const options = m.availableCharacterOptions
     if (!options) throw new Error(`${m.title} is played with its own heroes.`)
     if (!options.races.includes(hero.race) || !options.archetypes.includes(hero.archetype))

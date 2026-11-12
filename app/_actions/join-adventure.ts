@@ -1,6 +1,7 @@
 "use server"
 
 import { auth, currentUser } from "@clerk/nextjs/server"
+import { playableHero } from "@d20/gm-core/character/hero-draft"
 import { redirect } from "next/navigation"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -71,6 +72,7 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
           const customChar = await readJsonFromS3(characterId)
           characterData = customChar
         } catch {}
+        if (characterData && !playableHero(characterData as PCTemplate)) throw new Error("That hero has no rules sheet.")
       }
       const pc = toPCTemplate(characterData)
       if (pc) {
@@ -113,6 +115,7 @@ export async function requestSeat({ adventureId, characterId, hook }: { adventur
   const key = `characters/${user.id}/${sheetId(characterId)}.json`
   const hero = toPCTemplate(await readJsonFromS3(key).catch(() => null))
   if (!hero) return { error: "That hero is not in your account." }
+  if (!playableHero(hero)) return { error: "That hero has no rules sheet." }
   const misfit = await heroMisfit(adventure.planId, hero)
   if (misfit) return { error: misfit }
   const why = hook?.trim().slice(0, 300) || undefined

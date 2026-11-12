@@ -1,6 +1,7 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { HERO_CREATOR, HERO_CREATOR_OFF } from "@d20/gm-core/character/hero-draft"
 import slugify from "slugify"
 import { getUserCharacters } from "@/app/_actions/character"
 import { updateJsonOnS3 } from "@/lib/s3-utils"
@@ -11,6 +12,7 @@ interface SaveCharacterTemplateParams {
 }
 
 export async function saveCharacterTemplateAction(params: SaveCharacterTemplateParams): Promise<{ success: boolean; message?: string; error?: string; characterId?: string }> {
+  if (!HERO_CREATOR) throw new Error(HERO_CREATOR_OFF)
   console.log("[saveCharacterTemplateAction] Starting with params:", JSON.stringify(params, null, 2))
 
   const { userId } = await auth()

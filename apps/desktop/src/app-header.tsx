@@ -1,14 +1,18 @@
+import { HERO_CREATOR } from "@d20/gm-core/character/hero-draft"
 import type { ReactNode } from "react"
 import Parchment from "@/components/graphics/background/Parchment"
 import { paper } from "@/components/graphics/styles"
 import { cn } from "@/lib/utils"
 import type { Page } from "./pages"
 
-const PAGES = [
-  ["adventures", "Adventures"],
-  ["characters", "Characters"],
-  ["settings", "Settings"],
-] as const
+// The Characters page holds the heroes the hero creator makes.
+const PAGES = (
+  [
+    ["adventures", "Adventures"],
+    ["characters", "Characters"],
+    ["settings", "Settings"],
+  ] as const
+).filter(([page]) => HERO_CREATOR || page !== "characters")
 
 // The website's parchment header, on every screen outside play: the logo goes home, then the pages, the account and
 // fullscreen. The title screen uses the large form. Without onNavigate (before the app has loaded, or at the link

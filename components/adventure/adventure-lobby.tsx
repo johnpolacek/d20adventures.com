@@ -1,6 +1,7 @@
 "use client"
 
 import { useUser } from "@clerk/nextjs"
+import { HERO_CREATOR, playableHero } from "@d20/gm-core/character/hero-draft"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
@@ -253,7 +254,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   }
   const bringOwn = Boolean(invite) && seat.open > 0 && (!namedSeat || seat.removed) && (bringLeft > 0 || changingHero)
   // Their heroes not already at the table, nor a copy of a hero offered beside them.
-  const ownHeroes = userCharacters.filter((c) => !party?.some((p) => p.id === c.id || p.name === c.name))
+  const ownHeroes = userCharacters.filter((c) => playableHero(c) && !party?.some((p) => p.id === c.id || p.name === c.name))
   const isOwner = user?.id === adventure.ownerId
   // In a hosted game the host invites and starts, from their app.
   const guestOfHost = Boolean(hosted && !isOwner)
@@ -378,7 +379,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                     </ul>
                   </section>
                 )}
-                {(!invite || bringOwn) && (
+                {HERO_CREATOR && (!invite || bringOwn) && (
                   <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname + window.location.search)}`} className="mt-6 w-full">
                     {/* At rest an epic button is scaled up. Here it keeps the list's width. */}
                     <Button variant="epic" size="lg" className="w-full scale-100 hover:scale-[1.02]">

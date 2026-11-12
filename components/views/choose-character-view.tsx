@@ -1,4 +1,5 @@
 "use client"
+import { HERO_CREATOR } from "@d20/gm-core/character/hero-draft"
 import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -125,23 +126,24 @@ export default function ChooseCharacterView({
             />
           </div>
         ))}
-        {/* Create New Character Card */}
-        <div className="w-full md:w-1/2 lg:w-1/3 cursor-pointer transition-all ease-in-out duration-500 hover:scale-[1.01] hover:ring-primary-400">
-          <Link href={`/player/${username}/characters/new`}>
-            <Card className="bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full transition-all ease-in-out duration-500 hover:scale-105 hover:ring-primary-400/80">
-              <div className="w-full aspect-video relative">
-                <Image src="/images/app/characters/default.png" alt="Create New Character" fill={true} className="object-cover w-full h-full" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-              </div>
-              <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center">
-                <div className="font-bold text-3xl text-amber-400 -mt-8 mb-4 truncate w-full text-center">Create New Character</div>
-                <Button variant="epic" className="text-sm" size="sm">
-                  Create
-                </Button>
-              </div>
-            </Card>
-          </Link>
-        </div>
+        {HERO_CREATOR && (
+          <div className="w-full md:w-1/2 lg:w-1/3 cursor-pointer transition-all ease-in-out duration-500 hover:scale-[1.01] hover:ring-primary-400">
+            <Link href={`/player/${username}/characters/new`}>
+              <Card className="bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full transition-all ease-in-out duration-500 hover:scale-105 hover:ring-primary-400/80">
+                <div className="w-full aspect-video relative">
+                  <Image src="/images/app/characters/default.png" alt="Create New Character" fill={true} className="object-cover w-full h-full" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                </div>
+                <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center">
+                  <div className="font-bold text-3xl text-amber-400 -mt-8 mb-4 truncate w-full text-center">Create New Character</div>
+                  <Button variant="epic" className="text-sm" size="sm">
+                    Create
+                  </Button>
+                </div>
+              </Card>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )

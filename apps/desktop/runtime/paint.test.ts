@@ -73,8 +73,10 @@ test("painted art is stored by hero, read back as data URLs, and carried into a 
       type: "pc" as const,
       attributes: { strength: 12, dexterity: 12, constitution: 12, intelligence: 12, wisdom: 12, charisma: 12 },
       figure: "human-b",
+      id: "hero-rosa-vell",
+      sheet: packs["welcome-to-kordavos"].artifacts.characterSheets.premadeCharacters["branka-stoneveil"].sheet.sheet,
     })
-    await heroCommand({ kind: "saveHero", hero: sheetFor("Rosa Vell") }, store, packs, offline)
+    store.putHero(sheetFor("Rosa Vell"))
     const [rosa] = store.heroes()
     storeArt(dir, rosa.id, cutStandee(sheet(), "Human"))
     store.putHero({ ...rosa, painted: true })

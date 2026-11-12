@@ -1,3 +1,4 @@
+import { HERO_CREATOR, playableHero } from "@d20/gm-core/character/hero-draft"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Pill, panel } from "@/components/stage/hud"
 import { cn } from "@/lib/utils"
@@ -138,7 +139,7 @@ export function DesktopGame() {
           if (!pickedAdventure.current && playable.length) setAdventure((cur) => (playable.some((a) => a.id === cur) ? cur : playable[0].id))
         }
         if (res.catalog) setCatalog(res.catalog)
-        if (res.heroes) setHeroes(res.heroes)
+        if (res.heroes) setHeroes(res.heroes.filter(playableHero))
         if (res.saves) setSaves(res.saves)
         if (res.art && Object.keys(res.art).length) keepArt(res.art)
         if (res.options) setOptions(res.options)
@@ -464,8 +465,8 @@ export function DesktopGame() {
                     busy={working}
                     painting={painting}
                     canCreate={providers.length > 0}
-                    onCreate={() => setCreator({})}
-                    onEdit={(hero) => setCreator({ editing: hero })}
+                    onCreate={HERO_CREATOR ? () => setCreator({}) : undefined}
+                    onEdit={HERO_CREATOR ? (hero) => setCreator({ editing: hero }) : undefined}
                     onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                     onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
                   />
@@ -490,8 +491,8 @@ export function DesktopGame() {
                         created={created}
                         carried={carried ?? undefined}
                         onStart={(chosenParty) => void start(chosenParty)}
-                        onCreate={() => setCreator({})}
-                        onEdit={(hero) => setCreator({ editing: hero })}
+                        onCreate={HERO_CREATOR ? () => setCreator({}) : undefined}
+                        onEdit={HERO_CREATOR ? (hero) => setCreator({ editing: hero }) : undefined}
                         art={art}
                         painting={painting}
                         onPaint={painter ? (hero) => void paintHero(hero) : undefined}
@@ -512,7 +513,7 @@ export function DesktopGame() {
           </div>
         </div>
       )}
-      {creator && (
+      {HERO_CREATOR && creator && (
         <HeroCreator
           options={creator.editing || screen !== "new" ? options : (chosen?.options ?? options)}
           adventure={screen === "new" && chosen ? { id: chosen.id, hooks: chosen.hooks } : undefined}

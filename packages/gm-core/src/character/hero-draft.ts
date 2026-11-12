@@ -5,6 +5,12 @@ import { authoredText } from "../story/authored"
 // Making a player's hero for the Realm of Myr, and their arrival in an adventure with hero hooks. Shared by the desktop
 // app, where the player's CLI writes them, and the website, so a hero fits the world wherever it is made.
 
+// The hero creator, on the website and in the app. Off until stage 8 of plans/srd-rules.md rebuilds it on rules sheets.
+export const HERO_CREATOR = false
+export const HERO_CREATOR_OFF = "The hero creator is switched off."
+/** Only a hero with a rules sheet plays. */
+export const playableHero = (hero: { sheet?: unknown }) => Boolean(hero.sheet)
+
 const text = (max: number) => z.string().trim().max(max)
 // How a hero comes into one adventure: why they came, for their sheet, the paragraph that shows them in its opening
 // scene, and the one thing others there can see and ask about.

@@ -1,4 +1,4 @@
-import { withArrival } from "@d20/gm-core/character/hero-draft"
+import { playableHero, withArrival } from "@d20/gm-core/character/hero-draft"
 import { withArrivals } from "@d20/gm-core/story/authored"
 import { introTurn } from "@d20/gm-core/story/turn"
 import { after } from "next/server"
@@ -25,6 +25,9 @@ export async function startWikiAdventure(adventure: Pick<Doc<"adventures">, "_id
     existingPlayerCharacters,
     sheetsByCharacterId,
   })
+  // Nothing plays without a rules sheet. Premade heroes take theirs from the adventure.
+  const unready = characters.find((c) => c.type === "pc" && !playableHero(c))
+  if (unready) throw new Error(`${unready.name} has no rules sheet.`)
   const turnId = await convex.mutation(api.adventure.createTurn, {
     adventureId: adventure._id,
     encounterId: firstEncounter.id,

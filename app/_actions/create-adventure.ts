@@ -1,6 +1,7 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { playableHero } from "@d20/gm-core/character/hero-draft"
 import { redirect } from "next/navigation"
 import { startAdventure } from "@/app/_actions/start-adventure"
 import type { CharacterChoiceMode } from "@/components/adventure/character-selection"
@@ -105,6 +106,7 @@ export async function createAdventure(input: CreateAdventureInput) {
           const customChar = await readJsonFromS3(choice.characterId)
           characterData = customChar
         } catch {}
+        if (characterData && !playableHero(characterData as PCTemplate)) throw new Error("That hero has no rules sheet.")
       }
       const pc = toPCTemplate(characterData)
       if (pc) {

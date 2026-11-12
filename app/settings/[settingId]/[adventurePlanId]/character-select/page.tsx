@@ -1,4 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server"
+import { HERO_CREATOR, playableHero } from "@d20/gm-core/character/hero-draft"
 import { redirect } from "next/navigation"
 import CharacterSelection from "@/components/adventure/character-selection"
 import FullPageImage from "@/components/layout/fullpage-image"
@@ -30,8 +31,8 @@ export default async function CharacterSelectPage({ params }: PageProps) {
   }
   const adventureImage = getImageUrl(adventurePlan.image)
 
-  // If premadeOnly, show premade character selection
-  if (!adventurePlan.availableCharacterOptions) {
+  // Premade heroes only, unless the adventure takes the player's own and the hero creator is on.
+  if (!HERO_CREATOR || !adventurePlan.availableCharacterOptions) {
     return <CharacterSelection adventurePlan={adventurePlan} settingId={settingId} adventurePlanId={adventurePlanId} />
   }
 
@@ -52,8 +53,9 @@ export default async function CharacterSelectPage({ params }: PageProps) {
   let characterFiles: string[] = []
   try {
     const results = await listAndReadJsonFilesInS3Directory(`characters/${user.id}/`)
-    characters = results.map((r) => r.data as PCTemplate)
-    characterFiles = results.map((r) => (r.key.split("/").pop() ?? "").replace(".json", ""))
+    const playable = results.filter((r) => playableHero(r.data as PCTemplate))
+    characters = playable.map((r) => r.data as PCTemplate)
+    characterFiles = playable.map((r) => (r.key.split("/").pop() ?? "").replace(".json", ""))
   } catch {
     characters = []
     characterFiles = []

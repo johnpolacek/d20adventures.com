@@ -51,142 +51,25 @@ const sheet = (name: string, race: string, archetype: string) => ({
   specialAbilities: ["Second Wind"],
   effects: [],
 })
-async function addHero(store: LocalStore, name: string, race: string, archetype: string, figure = "human-b") {
-  await heroCommand({ kind: "saveHero", hero: { ...sheet(name, race, archetype), figure } }, store, packs, offline)
-  return store.heroes().find((h) => h.name === name)!
+// A rules sheet of the class, from a premade. The hero creator is off, so roster heroes are put in the store directly.
+const premades = packs["welcome-to-kordavos"].artifacts.characterSheets.premadeCharacters
+const rulesFor = (archetype: string) => Object.values(premades).find((p) => p.sheet.sheet?.class === archetype.toLowerCase())!.sheet.sheet!
+function addHero(store: LocalStore, name: string, race: string, archetype: string, figure = "human-b"): Hero {
+  const hero = { ...sheet(name, race, archetype), sheet: rulesFor(archetype), figure, id: `hero-${name.toLowerCase().replace(/[^a-z]+/g, "-")}` }
+  store.putHero(hero)
+  return hero
 }
 
-test("one model call drafts a hero from race, class, name and idea, and the roster saves, edits and deletes heroes", async () => {
+test("the hero creator is switched off: drafting or saving a hero is refused, and a roster hero without a rules sheet cannot play", async () => {
   const { store, cleanup } = setup()
   try {
-    const prompts: string[] = []
-    const llm: Llm = {
-      generateText: unused,
-      generateObject: async ({ schema, prompt }) => {
-        prompts.push(prompt)
-        return { object: schema.parse({ ...sheet("Someone Else", "Elf", "Bard"), spells: [{ name: "Light", description: "A glow.", isUsed: true }] }) }
-      },
-    }
-    const { draft } = await heroCommand(
-      {
-        kind: "heroDraft",
-        provider: "claude",
-        race: "Dwarf",
-        archetype: "Cleric",
-        name: "Hilde Ashbrand",
-        gender: "Female",
-        idea: "A smith who found faith in the forge",
-        adventure: "the-road-to-kordavos",
-      },
-      store,
-      packs,
-      llm
-    )
-    assert.equal(prompts.length, 1)
-    assert.match(prompts[0], /Hilde Ashbrand, a Female Dwarf Cleric/)
-    assert.match(prompts[0], /found faith in the forge/)
-    assert.match(prompts[0], /The Road to Kordavos/)
-    // The player's choices win over the model's, and spells start unused.
-    assert.deepEqual([draft!.name, draft!.race, draft!.archetype], ["Hilde Ashbrand", "Dwarf", "Cleric"])
-    assert.deepEqual(draft!.spells, [{ name: "Light", description: "A glow." }])
-    // The Road has no hooks, so the hero arrives as before.
-    assert.equal(draft!.arrivals, undefined)
-    assert.doesNotMatch(prompts[0], /arrival/)
+    const idea = { kind: "heroDraft", provider: "claude", race: "Dwarf", archetype: "Cleric", name: "Hilde Ashbrand" } as const
+    await assert.rejects(() => heroCommand(idea, store, packs, offline), /switched off/)
+    await assert.rejects(() => heroCommand({ kind: "saveHero", hero: { ...sheet("Hilde Ashbrand", "Dwarf", "Cleric"), figure: "dwarf-b" } }, store, packs, offline), /switched off/)
     assert.deepEqual(store.heroes(), [])
-
-    await heroCommand({ kind: "saveHero", hero: { ...draft!, figure: "dwarf-b" } }, store, packs, offline)
-    const [hero] = store.heroes()
-    assert.match(hero.id, /^hero-[a-z0-9]{8}$/)
-    assert.equal(hero.figure, "dwarf-b")
-    await heroCommand({ kind: "saveHero", hero: { ...hero, appearance: "Soot on her hands." } }, store, packs, offline)
-    assert.equal(store.heroes().length, 1)
-    assert.equal(store.heroes()[0].appearance, "Soot on her hands.")
-
-    await assert.rejects(() => heroCommand({ kind: "saveHero", hero: { ...hero, race: "Dragon" } }, store, packs, offline), /listed races/)
-    await assert.rejects(() => heroCommand({ kind: "saveHero", hero: { ...hero, id: "hero-missing" } }, store, packs, offline), /no longer/)
-    await assert.rejects(() => heroCommand({ kind: "saveHero", hero: { ...hero, figure: "dragon-a" } }, store, packs, offline))
-    await heroCommand({ kind: "deleteHero", id: hero.id }, store, packs, offline)
-    assert.deepEqual(store.heroes(), [])
-  } finally {
-    cleanup()
-  }
-})
-
-test("a hero made for Welcome to Kordavos says why they came, and arrives at the gate with it", async () => {
-  const { store, cleanup } = setup()
-  try {
-    const prompts: string[] = []
-    const arrival = {
-      reason: "She has come to deliver a sealed letter.",
-      intro: "A half-orc in a ranger's cloak turns a wax-sealed letter over in her hands.",
-      tell: "A letter sealed in black wax hangs at her belt.",
-    }
-    const llm: Llm = {
-      generateText: unused,
-      generateObject: async ({ schema, prompt }) => {
-        prompts.push(prompt)
-        return { object: schema.parse({ ...sheet("Dusha", "Half-Orc", "Ranger"), arrival }) }
-      },
-    }
-    const hook = "Carrying a sealed letter for someone in the city, and told not to read it."
-    const idea = { kind: "heroDraft", provider: "claude", race: "Half-Orc", archetype: "Ranger", name: "Dusha", adventure: "welcome-to-kordavos" } as const
-    const { draft } = await heroCommand({ ...idea, hook }, store, packs, llm)
-    assert.equal(prompts.length, 1)
-    assert.match(prompts[0], /The player's reason for them: Carrying a sealed letter/)
-    // The opening scene, with its labels taken off, shows how the premades arrive.
-    assert.match(prompts[0], /A broad dwarf with copper braids/)
-    assert.doesNotMatch(prompts[0], /\{hero:/)
-    assert.deepEqual(draft!.arrivals, { "welcome-to-kordavos": arrival })
-    // Without a reason, the GM picks one of the adventure's hooks.
-    await heroCommand(idea, store, packs, llm)
-    assert.match(prompts[1], /Pick the reason that suits them best: Bringing an offering/)
-
-    await heroCommand({ kind: "saveHero", hero: { ...draft!, figure: "half-orc-b" } }, store, packs, offline)
-    const [hero] = store.heroes()
-    assert.deepEqual(hero.arrivals, { "welcome-to-kordavos": arrival })
-    await game(
-      store,
-      packs,
-      offline
-    )({
-      kind: "start",
-      provider: "claude",
-      adventure: "welcome-to-kordavos",
-      party: [
-        { id: hero.id, ai: false },
-        { id: "branka-stoneveil", ai: true },
-        { id: "milos-radan", ai: true },
-      ],
-    })
-    // The running adventure's sheet carries the arrival. The roster hero's own sheet does not.
-    const pc = store.current().characters.find((c) => c.id === hero.id)!
-    assert.equal(pc.background, `A farm near the road. ${arrival.reason}`)
-    assert.equal(pc.appearance, `Dusha wears a travel-stained cloak. ${arrival.tell}`)
-    assert.equal("arrivals" in pc, false)
-    assert.equal(store.heroes()[0].background, "A farm near the road.")
-
-    // She arrives in the gate line after the premades who came, before the line moves on.
-    const opening = store.current().story.map((b) => (b.kind === "action" ? b.actor : b.kind === "narration" && b.place) || "")
-    assert.deepEqual(opening.slice(4, 8), ["branka-stoneveil", "milos-radan", hero.id, "ledger"])
-    assert.match(storyText(store.current().story), /A half-orc in a ranger's cloak turns a wax-sealed letter over in her hands\./)
-    assert.deepEqual(store.state!.adventure.arrivals, { [hero.id]: arrival.intro })
-
-    // The GM reads it in the scene's intro too.
-    store.current().characters.forEach((c) => {
-      c.isComplete = true
-      c.hasReplied = true
-    })
-    store.save()
-    const gm: string[] = []
-    const advance: Llm = {
-      generateText: unused,
-      generateObject: async ({ schema, prompt }) => {
-        gm.push(prompt)
-        return { object: schema.parse({ nextEncounterId: "the-gates-of-kordavos", beats: [{ kind: "narration", text: "The line shuffles forward." }], adventurePatch: {} }) }
-      },
-    }
-    await game(store, packs, advance)({ kind: "continue", turnId: store.current()._id })
-    assert.match(gm.at(-1) ?? "", /A broad dwarf with copper braids[\s\S]*A half-orc in a ranger's cloak turns a wax-sealed letter[\s\S]*Up at the table/)
+    const { sheet: _rules, ...old } = addHero(store, "Rosa Vell", "Human", "Fighter")
+    store.putHero(old)
+    await assert.rejects(() => game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-road-to-kordavos", party: [{ id: old.id, ai: false }] }), /no rules sheet/)
   } finally {
     cleanup()
   }
@@ -195,7 +78,7 @@ test("a hero made for Welcome to Kordavos says why they came, and arrives at the
 test("a roster hero with no arrival for Welcome to Kordavos gets one at the start, kept for the next game", async () => {
   const { store, cleanup } = setup()
   try {
-    const hero = await addHero(store, "Dusha", "Half-Orc", "Ranger", "half-orc-b")
+    const hero = addHero(store, "Dusha", "Half-Orc", "Ranger", "half-orc-b")
     const arrival = {
       reason: "She has come to sell furs at the Festival market.",
       intro: "A half-orc shoulders a bundle of wolf pelts, counting the guards at the arch.",
@@ -239,7 +122,7 @@ test("a roster hero with no arrival for Welcome to Kordavos gets one at the star
 test("a failed arrival call still starts the game, with the hero left out of the opening paragraphs", async () => {
   const { store, cleanup } = setup()
   try {
-    const hero = await addHero(store, "Dusha", "Half-Orc", "Ranger", "half-orc-b")
+    const hero = addHero(store, "Dusha", "Half-Orc", "Ranger", "half-orc-b")
     await game(
       store,
       packs,
@@ -265,8 +148,8 @@ test("a new game checks the party against the adventure's player range, premades
   const { store, cleanup } = setup()
   try {
     const run = game(store, packs, offline)
-    const gnome = await addHero(store, "Tibble Fernwhistle", "Gnome", "Bard", "gnome-a")
-    const fighter = await addHero(store, "Rosa Vell", "Human", "Fighter")
+    const gnome = addHero(store, "Tibble Fernwhistle", "Gnome", "Bard", "gnome-a")
+    const fighter = addHero(store, "Rosa Vell", "Human", "Fighter")
     const start = (adventure: string, party: { id: string; ai: boolean }[]) => run({ kind: "start", provider: "claude", adventure, party, replace: true })
     await assert.rejects(() => start("the-road-to-kordavos", []), /Too small|>=1|too_small/i)
     await assert.rejects(() => start("the-road-to-kordavos", [{ id: gnome.id, ai: false }]), /cannot join The Road to Kordavos/)
@@ -329,8 +212,8 @@ test("a new game checks the party against the adventure's player range, premades
 test("created heroes and AI companions start, take turns, and carry through an encounter change and a reopen", async () => {
   const { store, path, cleanup } = setup()
   try {
-    const rosa = await addHero(store, "Rosa Vell", "Human", "Fighter", "human-b")
-    const bram = await addHero(store, "Bram Underhill", "Halfling", "Rogue", "halfling-a")
+    const rosa = addHero(store, "Rosa Vell", "Human", "Fighter", "human-b")
+    const bram = addHero(store, "Bram Underhill", "Halfling", "Rogue", "halfling-a")
     await game(
       store,
       packs,
@@ -411,8 +294,8 @@ test("created heroes and AI companions start, take turns, and carry through an e
 test("an AI hero last in the round is read before the round ends, on a Continue of its own", async () => {
   const { store, cleanup } = setup()
   try {
-    const rosa = await addHero(store, "Rosa Vell", "Human", "Fighter", "human-b")
-    const bram = await addHero(store, "Bram Underhill", "Halfling", "Rogue", "halfling-a")
+    const rosa = addHero(store, "Rosa Vell", "Human", "Fighter", "human-b")
+    const bram = addHero(store, "Bram Underhill", "Halfling", "Rogue", "halfling-a")
     const party = [
       { id: rosa.id, ai: false },
       { id: bram.id, ai: true },

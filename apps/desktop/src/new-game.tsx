@@ -60,8 +60,8 @@ export function NewGame(props: {
   // The party of the adventure just finished, when the player continues the story from its ending.
   carried?: PartyChoice[]
   onStart: (party: PartyChoice[]) => void
-  onCreate: () => void
-  onEdit: (hero: Hero) => void
+  onCreate?: () => void
+  onEdit?: (hero: Hero) => void
   // Painting a hero's art, when an image-capable CLI is installed.
   art: Record<string, FigureArt>
   painting: string | null
@@ -338,9 +338,11 @@ export function NewGame(props: {
                       {choice && <Unseat label={`Remove ${p.name} from the party`} onClick={() => toggle(p.id)} />}
                       {p.hero && (
                         <div className="absolute top-3 left-3 flex gap-1">
-                          <button type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit(p.hero!)} aria-label={`Edit ${p.name}`}>
-                            Edit
-                          </button>
+                          {props.onEdit && (
+                            <button type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit!(p.hero!)} aria-label={`Edit ${p.name}`}>
+                              Edit
+                            </button>
+                          )}
                           {props.onPaint && (
                             <button type="button" className={mini} disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
                               {props.painting === p.id ? "Painting…" : "Paint"}
@@ -384,7 +386,7 @@ export function NewGame(props: {
                       <Unseat label="Remove the open seat" onClick={() => toggle(c.id)} />
                     </li>
                   ))}
-                {info.options && <AddCard mark="+" title="New Hero" action="Create New Character" disabled={props.busy || !props.providers.length} onClick={props.onCreate} />}
+                {info.options && props.onCreate && <AddCard mark="+" title="New Hero" action="Create New Character" disabled={props.busy || !props.providers.length} onClick={props.onCreate} />}
                 {info.options && canInvite && (
                   <AddCard
                     mark="?"

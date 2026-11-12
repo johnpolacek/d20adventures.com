@@ -221,37 +221,30 @@ test("chapters add up along the chain, whoever the heroes are, and only through 
   })
 })
 
-// A roster hero the Road and Welcome to Kordavos both accept.
+// A roster hero the Road and Welcome to Kordavos both accept, with a wizard's rules sheet.
 async function hero(store: LocalStore) {
-  const { heroCommand } = await import("./heroes")
-  await heroCommand(
-    {
-      kind: "saveHero",
-      hero: {
-        name: "Sera Vale",
-        race: "Elf",
-        archetype: "Wizard",
-        gender: "Female",
-        image: "",
-        appearance: "A tall elf in a grey cloak.",
-        personality: "Curious.",
-        background: "A scholar from the coast.",
-        motivation: "Old lore.",
-        behavior: "Asks questions.",
-        healthPercent: 100,
-        type: "pc" as const,
-        attributes: { strength: 9, dexterity: 13, constitution: 11, intelligence: 16, wisdom: 12, charisma: 11 },
-        equipment: [{ name: "Staff", description: "Ash." }],
-        skills: ["Arcana"],
-        spells: [],
-        specialAbilities: [],
-        effects: [],
-        figure: "elf-b",
-      },
-    },
-    store,
-    packs,
-    offline
-  )
+  store.putHero({
+    id: "hero-sera-vale",
+    sheet: packs["welcome-to-kordavos"].artifacts.characterSheets.premadeCharacters["cassia-verane"].sheet.sheet,
+    name: "Sera Vale",
+    race: "Elf",
+    archetype: "Wizard",
+    gender: "Female",
+    image: "",
+    appearance: "A tall elf in a grey cloak.",
+    personality: "Curious.",
+    background: "A scholar from the coast.",
+    motivation: "Old lore.",
+    behavior: "Asks questions.",
+    healthPercent: 100,
+    type: "pc" as const,
+    attributes: { strength: 9, dexterity: 13, constitution: 11, intelligence: 16, wisdom: 12, charisma: 11 },
+    equipment: [{ name: "Staff", description: "Ash." }],
+    skills: ["Arcana"],
+    spells: [],
+    specialAbilities: [],
+    effects: [],
+    figure: "elf-b",
+  })
   return store.heroes()[0].id
 }

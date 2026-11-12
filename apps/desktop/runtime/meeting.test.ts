@@ -297,10 +297,11 @@ test("heroes who come on together from The Road to Kordavos already know each ot
   }
 })
 
-// A hero the player made, saved to the roster. Its id.
+// A hero the player made, in the roster with a wizard's rules sheet. Its id.
 async function made(store: LocalStore, name: string) {
-  const { heroCommand } = await import("./heroes")
   const hero = {
+    id: `hero-${name.toLowerCase().replace(/[^a-z]+/g, "-")}`,
+    sheet: packs["welcome-to-kordavos"].artifacts.characterSheets.premadeCharacters["cassia-verane"].sheet.sheet,
     name,
     race: "Elf",
     archetype: "Wizard",
@@ -321,8 +322,8 @@ async function made(store: LocalStore, name: string) {
     effects: [],
     figure: "elf-b",
   }
-  await heroCommand({ kind: "saveHero", hero }, store, packs, offline)
-  return store.heroes().find((h) => h.name === name)!.id
+  store.putHero(hero)
+  return hero.id
 }
 
 // The prompt the replies offered to a player's hero were written from.

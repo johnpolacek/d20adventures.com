@@ -327,19 +327,21 @@ export function CharactersPage(props: {
   busy: boolean
   painting: string | null
   canCreate: boolean
-  onCreate: () => void
-  onEdit: (hero: Hero) => void
+  onCreate?: () => void
+  onEdit?: (hero: Hero) => void
   onPaint?: (hero: Hero) => void
   onDelete: (hero: Hero) => void
 }) {
   const [deleting, setDeleting] = useState<string | null>(null)
   return (
     <PageShell title="Characters">
-      <div className="flex justify-center">
-        <Button variant="epic" disabled={props.busy || !props.canCreate} onClick={props.onCreate}>
-          Create New Character
-        </Button>
-      </div>
+      {props.onCreate && (
+        <div className="flex justify-center">
+          <Button variant="epic" disabled={props.busy || !props.canCreate} onClick={props.onCreate}>
+            Create New Character
+          </Button>
+        </div>
+      )}
       {props.heroes.length > 0 && (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-8">
           {props.heroes.map((h) => {
@@ -348,8 +350,8 @@ export function CharactersPage(props: {
               <li key={h.id} className="group relative">
                 <button
                   type="button"
-                  disabled={props.busy}
-                  onClick={() => props.onEdit(h)}
+                  disabled={props.busy || !props.onEdit}
+                  onClick={() => props.onEdit?.(h)}
                   aria-label={`Edit ${h.name}`}
                   className="flex h-full w-full flex-col items-center overflow-hidden rounded-lg border border-white/10 bg-black font-display ring-8 ring-black/30 transition-all duration-500 ease-in-out hover:scale-105 hover:ring-primary-400/80"
                 >
@@ -368,9 +370,11 @@ export function CharactersPage(props: {
                     <div className="mb-4 text-center text-sm">
                       {h.race} {h.archetype}
                     </div>
-                    <Button asChild variant="epic" className="text-sm">
-                      <span>Edit</span>
-                    </Button>
+                    {props.onEdit && (
+                      <Button asChild variant="epic" className="text-sm">
+                        <span>Edit</span>
+                      </Button>
+                    )}
                   </div>
                 </button>
                 {props.onPaint && (

@@ -300,9 +300,9 @@ function compileCharacterSheets(jsonFiles: SourceFile[], markdownFiles: ParsedMa
 
     const pcResult = pcTemplateSchema.safeParse(parsed)
     if (pcResult.success) {
-      // The rules sheet. A hero without one still plays on health percent alone until every premade hero has moved.
+      // The rules sheet. Every hero must have one: nothing rolls for a hero without a sheet.
       if (!pcResult.data.sheet) {
-        findings.push({ code: "character.rules.missing", severity: "warning", sourcePath: file.path, message: "This hero has no rules sheet (class, species, background, scores).", aiFixable: false })
+        findings.push({ code: "character.rules.missing", severity: "error", sourcePath: file.path, message: "This hero has no rules sheet (class, species, background, scores).", aiFixable: false })
       } else {
         for (const problem of sheetProblems(pcResult.data.sheet)) {
           findings.push({ code: "character.rules.invalid", severity: "error", sourcePath: file.path, message: `The rules sheet is not legal: ${problem}.`, aiFixable: false })
