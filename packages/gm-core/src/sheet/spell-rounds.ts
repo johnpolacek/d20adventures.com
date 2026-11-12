@@ -5,9 +5,10 @@ import { isDown } from "../utils/turn-actors"
 import { damageTaken, defensesOf, rollDamage } from "./attack"
 import { checkBonus } from "./check"
 import { conditionName, withCondition } from "./conditions"
-import { afterHarm, type DeathRules, withDamage } from "./death"
+import { afterHarm, type DeathRules, regenerate, withDamage } from "./death"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { typesTaken } from "./monster-traits"
 import { type Point, placedOf, within } from "./space"
 import { AREA_SPELLS, type ConcentrationSave, endConcentration, settleConcentration, spellEnded } from "./spell-effects"
 import { type Castee, rollSave, type SaveRoll, spellcastingFor } from "./spells"
@@ -62,8 +63,9 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     const target = find(id)
     if (!target) return 0
     const rolled = rollDamage([{ dice, type }], args.roll)
-    const amount = amountOf(damageTaken(rolled, defensesOf(target)))
-    put(afterHarm(withDamage(target, amount, { rules: args.rules }).character))
+    const defenses = defensesOf(target)
+    const amount = amountOf(damageTaken(rolled, defenses))
+    put(afterHarm(withDamage(target, amount, { rules: args.rules, types: typesTaken(rolled, defenses) }).character))
     const [part] = rolled.parts
     harm.push({ target: id, kind: "damage", dice: part?.dice ?? [], sides: part?.sides, bonus: part?.bonus ?? 0, type, amount })
     return amount
@@ -177,8 +179,11 @@ export type RoundFact = { character: string; spell: string; text: string }
 
 /**
  * The turn of a round within an encounter, before the next begins (./death `atRoundStart`): what lasting spells do
- * (`spellsAtRoundEnd`), then Concentration settled for anyone they hurt or dropped. Everyone comes back as it left them,
- * with each fact about the one it is about, for the story: a Concentration save's too, under Concentration.
+ * (`spellsAtRoundEnd`), then Concentration settled for anyone they hurt or dropped, then Regeneration as each turn
+ * begins (./death `regenerate`). Regeneration belongs to the start of the creature's turn, and the engine starts every
+ * turn of a round at once, right after this: it runs here so its fact reaches the story with the round's others.
+ * Everyone comes back as it left them, with each fact about the one it is about, for the story: a Concentration save's
+ * too, under Concentration, and Regeneration's under the trait's name.
  */
 export function roundTurns<T extends Castee & { position?: Point }>(args: {
   characters: readonly T[]
@@ -189,7 +194,9 @@ export function roundTurns<T extends Castee & { position?: Point }>(args: {
   const ended = spellsAtRoundEnd(args)
   const kept = settleConcentration({ before: args.characters, after: ended.characters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: args.d20 })
   const lost = kept.facts.map((text) => ({ character: args.characters.find((character) => character.name && text.startsWith(character.name))?.id ?? "", spell: "Concentration", text }))
-  return { characters: kept.characters, told: [...ended.told, ...lost.filter((fact) => fact.character)], saves: kept.saves }
+  const regenerated = kept.characters.map((character) => regenerate(character))
+  const regrown = regenerated.flatMap(({ character, fact, trait }) => (fact && trait ? [{ character: character.id, spell: trait, text: fact }] : []))
+  return { characters: regenerated.map(({ character }) => character), told: [...ended.told, ...lost.filter((fact) => fact.character), ...regrown], saves: kept.saves }
 }
 
 // Fear's repeated save is made only "If the creature ends its turn in a space where it doesn't have line of sight to

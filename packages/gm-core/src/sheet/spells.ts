@@ -13,6 +13,7 @@ import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, r
 import { deriveSheet, featuresOf } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { magicSaveModes, typesTaken } from "./monster-traits"
 import { type Cover, coverBonus, isNear } from "./space"
 import { speciesSaveModes } from "./species-traits"
 import {
@@ -503,6 +504,8 @@ function standing(character: Castee, fate: Fate | undefined): string {
   if (fate === "endures") return enduredWords(character.name, character)
   if (fate === "dying") return `${character.name} is at 0 hit points, Unconscious and dying.`
   const hitPoints = hitPointsOf(character)
+  // Down at 0 and not dead: a Troll, whose Regeneration settles it as its turn begins.
+  if (hitPoints?.current === 0) return `${character.name} is at 0 hit points and down, not dead.`
   return hitPoints ? `${character.name} has ${hitPoints.current} of ${hitPoints.maximum} hit points${hitPoints.current * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.` : ""
 }
 
@@ -600,8 +603,9 @@ export function castSpell<T extends Castee>(args: {
   const hurt = (id: string, rolled: DamageRoll, amountOf: (taken: number) => number, critical = false) => {
     const target = find(id)
     if (!target) return undefined
-    const amount = amountOf(damageTaken(rolled, defensesOf(target)))
-    const struck = withDamage(target, amount, { critical, rules: args.rules })
+    const defenses = defensesOf(target)
+    const amount = amountOf(damageTaken(rolled, defenses))
+    const struck = withDamage(target, amount, { critical, rules: args.rules, types: typesTaken(rolled, defenses) })
     put(afterHarm(struck.character))
     const [part] = rolled.parts
     harm.push({
@@ -925,7 +929,9 @@ function effectAmount(spell: Spell, slot: number): number | undefined {
 }
 
 /**
- * A saving throw a creature makes against a spell: the d20 or two, the save bonus, cover on a Dexterity save, the dice
+ * A saving throw a creature makes against a spell or another magical effect: every caller's is one (a spell's save, a
+ * save a lasting spell has repeated, the caster's save against Counterspell, a Channel Divinity's). So Magic
+ * Resistance gives it Advantage. The d20 or two, the save bonus, cover on a Dexterity save, the dice
  * of spells on them (Bless, Bane), Slow's −2 on Dexterity, and the Advantage and Disadvantage of their conditions,
  * actions and spells (Haste, Beacon of Hope), of their species against the conditions at stake (`against`: Fey
  * Ancestry on Charmed), and of the spell itself (`also`). A condition may fail it outright.
@@ -950,6 +956,7 @@ export function rollSave(args: {
     ...checkModesFromActions(target, check, args.characters),
     ...saveModesFromSpells(target, ability),
     ...speciesSaveModes(target, ability, args.against),
+    ...magicSaveModes(target),
     ...(args.also ?? []),
   ]
   const mode = combineModes(sources.map((source) => source.mode))

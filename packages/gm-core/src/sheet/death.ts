@@ -1,9 +1,11 @@
+import type { DamageTypeId } from "@d20/srd"
 import { isDead, isDown, isDying, isIncapacitated } from "../utils/turn-actors"
 import { DEATH_SAVE, type RollRequirement } from "../validations/roll-requirement-schema"
 import { turnEffectsAtRoundStart } from "./actions"
 import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtRoundStart, d20Penalty, withCondition } from "./conditions"
 import { hitPointsOf, withHitPoints } from "./hit-points"
+import { isRegenerationStopped, regenerationOf, regenerationStopped, stopsRegeneration } from "./monster-traits"
 import type { Sheet } from "./sheet"
 import { enduringTraitLeft, enduringTraitOf } from "./species-traits"
 import { saveModesFromSpells, spellEffectsAtRoundStart } from "./spell-effects"
@@ -68,16 +70,24 @@ export function enduredWords(name: string, character: Parameters<typeof enduring
 }
 
 /**
- * Damage by the rules of 0 hit points. A character who still has hit points loses them. An NPC who reaches 0 dies. A
+ * Damage by the rules of 0 hit points. A character who still has hit points loses them. An NPC who reaches 0 dies,
+ * unless its Regeneration says it dies only when it starts its turn at 0 and does not regenerate (a Troll): then it is
+ * down at 0, and `regenerate` settles it. A
  * hero who reaches 0 falls Unconscious and is dying, unless the damage left over is at least their hit point maximum,
  * which kills them outright, or a species trait holds them at 1 (`enduringTraitLeft`). Damage to a hero already at 0 is a failed Death Saving Throw, two from a Critical Hit, and
  * kills outright when it is at least their maximum. A Stable hero who takes damage is dying again, their saves from zero.
+ * `types` are the damage types the blow dealt: one that stops the target's Regeneration (a Troll's Acid or Fire) is
+ * marked on it until its next turn has begun.
  */
-export function withDamage<T extends Mortal>(character: T, amount: number, options: { critical?: boolean; rules?: DeathRules } = {}): { character: T; fate?: Fate } {
+export function withDamage<T extends Mortal>(character: T, amount: number, options: { critical?: boolean; rules?: DeathRules; types?: readonly DamageTypeId[] } = {}): { character: T; fate?: Fate } {
   const hitPoints = hitPointsOf(character)
   if (!hitPoints) throw new Error(`${character.name ?? "A character"} has no sheet or stat block, so no hit points`)
   const dealt = Math.max(0, Math.round(amount))
   if (isDead(character) || dealt === 0) return { character }
+  if (options.types && !isRegenerationStopped(character) && stopsRegeneration(character, options.types)) {
+    const { types: _, ...rest } = options
+    return withDamage({ ...character, turnEffects: [...(character.turnEffects ?? []), regenerationStopped(character)] }, dealt, rest)
+  }
   // Temporary Hit Points are lost first, and what is left over comes off the hit points.
   const shield = Math.min(character.tempHitPoints ?? 0, dealt)
   if (shield > 0) {
@@ -88,7 +98,7 @@ export function withDamage<T extends Mortal>(character: T, amount: number, optio
   const damage = dealt
   const { current, maximum } = hitPoints
   if (current > damage) return { character: at(character, current - damage) }
-  if (character.type !== "pc") return { character: killed(character), fate: "dies" }
+  if (character.type !== "pc") return regenerationOf(character)?.diesAtTurnStart ? { character: at(character, 0) } : { character: killed(character), fate: "dies" }
   if (current > 0) {
     if (damage - current >= maximum) return withFate(killed(character, options.rules), "killed")
     // Relentless Endurance and its like: 1 hit point in place of 0, once until a Long Rest gives the use back.
@@ -151,6 +161,37 @@ export function deathSave<T extends Mortal>(character: T, die: number, rules?: D
   return { character: dying(character, saves), natural: die, success, saves }
 }
 
+/**
+ * Regeneration as a creature's turn begins (./monster-traits): it regains the hit points its text gives, up to its
+ * maximum. Damage of a type that stops it, taken since its last turn, keeps it from working this turn. One that works
+ * only with at least 1 hit point does nothing at 0. One that "dies only if it starts its turn with 0 Hit Points and
+ * doesn't regenerate" (a Troll) comes back from 0 when it regenerates, Prone as one does when Unconscious ends, and
+ * dies when it does not. `fact` says what happened, in words for the game master, and is absent when nothing did.
+ */
+export function regenerate<T extends Mortal>(character: T): { character: T; fact?: string; trait?: string } {
+  const trait = regenerationOf(character)
+  const hitPoints = hitPointsOf(character)
+  if (!trait || !hitPoints || isDead(character) || character.fled) return { character }
+  const name = character.name ?? "The creature"
+  const stoppedBy = trait.stoppedBy.join(" or ")
+  if (isRegenerationStopped(character)) {
+    if (hitPoints.current === 0 && trait.diesAtTurnStart)
+      return {
+        character: killed(character),
+        trait: trait.name,
+        fact: `${name} starts its turn at 0 hit points and does not regenerate, having taken ${stoppedBy} damage since its last turn. ${name} dies.`,
+      }
+    return { character, trait: trait.name, fact: `${name}'s ${trait.name} does not work this turn: it took ${stoppedBy} damage since its last turn.` }
+  }
+  if (hitPoints.current === 0 && trait.needsHitPoint) return { character }
+  const gained = Math.min(trait.amount, hitPoints.maximum - hitPoints.current)
+  if (gained <= 0) return { character }
+  const healed = withHealing(character, gained)
+  const after = hitPointsOf(healed)
+  const rose = hitPoints.current === 0 ? ` ${name} is up again from 0 hit points, Prone.` : ""
+  return { character: healed, trait: trait.name, fact: `${name} regains ${gained} hit points by ${trait.name}.${rose} ${name} has ${after?.current} of ${after?.maximum} hit points.` }
+}
+
 type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: RollRequirement; rollResult?: number }
 
 /**
@@ -176,6 +217,8 @@ export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
       hasReplied: true,
       isComplete: false,
     }
+  // A creature down at 0 by its Regeneration (a Troll) has had its turn's start settled as the round turned (./spell-rounds
+  // `roundTurns`): one still here at 0 takes no turn.
   if (isDown(character) || isIncapacitated(character)) return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
   return { ...character, hasReplied: false, isComplete: false }
 }

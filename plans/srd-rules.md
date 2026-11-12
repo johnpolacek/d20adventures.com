@@ -351,7 +351,7 @@ What it found of magic items: 258 items, 140 of them needing attunement, 88 full
 Substages, monsters:
 
 - M1. Multiattack in full, each attack with its own weapon and target, and a hit's gated damage only when its gate holds.
-- M2. Traits that change a roll: Pack Tactics, Magic Resistance, Sunlight Sensitivity, and Regeneration as a turn begins.
+- M2. Traits that change a roll: Pack Tactics, Magic Resistance, Sunlight Sensitivity, and Regeneration as a turn begins. Done: `sheet/monster-traits.ts`, 9 tests. None of the four is typed in the data, so each is found by its name on the character's own stat block. Pack Tactics gives Advantage on an attack when an ally who can act stands within 5 feet of the target. Magic Resistance gives Advantage on a save against a spell, Counterspell's and Channel Divinity's among them. Regeneration heals a Troll, a Troll Limb, an Oni and a Shield Guardian as the round begins, told in the story, and Acid or Fire damage stops a Troll's for a round. A Troll at 0 hit points is down and not dead: it rises as its turn begins, or dies if its Regeneration was stopped. Left unrun: Sunlight Sensitivity, since nothing true about daylight reaches the engine. One field, sunlight on an encounter, would run it.
 - M3. An NPC's Bonus Actions: Cunning Action, Nimble Escape, and the spells a stat block casts as one.
 - M4. Monster actions with a save, an area, a Recharge or uses a day: breath weapons and the like. The NPC is told what its stat block can do.
 - M5. What rides on a hit: a condition, a save, a grapple with its escape DC, damage that comes later.

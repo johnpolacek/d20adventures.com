@@ -4,6 +4,7 @@ import type { Roller } from "./check"
 import { conditionName, exhaustionOf, withCondition, withoutCondition } from "./conditions"
 import { afterHarm, type DeathRules, enduredWords, type Fate, killed, withDamage, withHealing } from "./death"
 import { hitPointsOf } from "./hit-points"
+import { typesTaken } from "./monster-traits"
 import type { Stake } from "./stakes"
 
 /** One stake as it fell, as the story keeps it: the dice rolled and what the target lost or regained. */
@@ -23,6 +24,8 @@ function standing(character: Harmed, fate: Fate | undefined): string {
   if (fate === "dying") return `${character.name} is at 0 hit points, Unconscious and dying.`
   const hitPoints = hitPointsOf(character)
   if (!hitPoints) return ""
+  // Down at 0 and not dead: a Troll, whose Regeneration settles it as its turn begins.
+  if (hitPoints.current === 0) return `${character.name} is at 0 hit points and down, not dead.`
   return `${character.name} has ${hitPoints.current} of ${hitPoints.maximum} hit points${hitPoints.current * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
 }
 
@@ -86,8 +89,9 @@ export function applyStakes<T extends Harmed>(args: {
       after = withHealing(target, amount)
       facts.push(`${target.name} regains ${amount} hit points. ${standing(after, undefined)}`)
     } else {
-      amount = damageTaken(rolled, defensesOf(target))
-      const struck = withDamage(target, amount, { rules: args.rules })
+      const defenses = defensesOf(target)
+      amount = damageTaken(rolled, defenses)
+      const struck = withDamage(target, amount, { rules: args.rules, types: typesTaken(rolled, defenses) })
       after = afterHarm(struck.character)
       fate = struck.fate
       facts.push(`${target.name} takes ${amount} ${stake.type ?? ""} damage. ${standing(after, fate)}`.replace("  ", " "))

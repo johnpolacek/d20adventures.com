@@ -4,6 +4,9 @@ import { monsterById } from "@d20/srd/monsters"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Check } from "./check"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
+import { packTacticsModes } from "./monster-traits"
+import type { Sheet } from "./sheet"
+import type { Point } from "./space"
 import { spellImmunities } from "./spell-effects"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect } from "./turn-effect"
@@ -97,6 +100,10 @@ export type Afflicted = {
   spellEffects?: readonly SpellEffect[]
   /** Whether they have taken their turn this round. */
   isComplete?: boolean
+  /** A hero's rules sheet: one who has it carries no stat block's traits (./monster-traits). */
+  sheet?: Sheet
+  /** Where they stand, for the rules that read who is beside whom: Pack Tactics. */
+  position?: Point
 }
 
 export const conditionName = (id: ConditionId): string => conditionById.get(id)?.name ?? id
@@ -177,8 +184,9 @@ export function saveFailedBy(character: Afflicted, check: Check): string | undef
 
 /**
  * Advantage and Disadvantage the conditions of the attacker and of the one attacked put on an attack roll, each with
- * where it comes from. `near` is whether the attacker is within 5 feet of the target (`isNear` in ./space). The attacker
- * is on their own turn, so one who was Prone has stood.
+ * where it comes from, and the attacker's Pack Tactics (./monster-traits), which reads `present` for an ally beside the
+ * target. `near` is whether the attacker is within 5 feet of the target (`isNear` in ./space). The attacker is on their
+ * own turn, so one who was Prone has stood.
  */
 export function attackModesFrom(attacker: Afflicted, target: Afflicted, near: boolean, present?: readonly Afflicted[]): ModeSource[] {
   const found: ModeSource[] = []
@@ -194,6 +202,7 @@ export function attackModesFrom(attacker: Afflicted, target: Afflicted, near: bo
     if (!side) continue
     found.push({ mode: typeof side === "string" ? side : near ? side.near : side.far, from: `${target.name ?? "Target"} ${conditionName(entry.id)}` })
   }
+  found.push(...packTacticsModes(attacker, target, present))
   return found
 }
 

@@ -13,11 +13,13 @@ export type ActionId = (typeof actionIds)[number]
  * attacker has: its Speed is 10 feet less. "stood" is on one who rose from Prone as their turn began, which costs half
  * their Speed. "reacted" is on one who has taken their Reaction this round, by themselves: they take no other until the
  * next round begins. The rest mark a feature used once a turn, with `by` the one whose turn it was: "sneak-attack",
- * "savage-attacker" and "colossus-slayer" are on the attacker who dealt that damage. All of them end as the next round
- * begins. Only the engine writes it, through ./actions, ./death, ./reactions and ./attack.
+ * "savage-attacker" and "colossus-slayer" are on the attacker who dealt that damage. "regeneration-stopped" is on a
+ * creature with Regeneration that took damage of a type that stops it (a Troll's Acid or Fire), by itself: the trait
+ * does not work as its next turn begins (./monster-traits). All of them end as the next round begins. Only the engine
+ * writes it, through ./actions, ./death, ./reactions and ./attack.
  */
 export const turnEffectSchema = z.strictObject({
-  id: z.enum(["dodging", "helped", "distracted", "vexed", "slowed", "stood", "reacted", "sneak-attack", "savage-attacker", "colossus-slayer"]),
+  id: z.enum(["dodging", "helped", "distracted", "vexed", "slowed", "stood", "reacted", "sneak-attack", "savage-attacker", "colossus-slayer", "regeneration-stopped"]),
   /** The id of who took the action. */
   by: z.string(),
   /** For "helped": the skill the help is for. */
