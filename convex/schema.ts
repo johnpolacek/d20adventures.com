@@ -264,6 +264,7 @@ export default defineSchema({
         spellEffects: v.optional(v.array(v.object({ spell: v.string(), by: v.string(), turns: v.optional(v.number()), amount: v.optional(v.number()), skill: v.optional(v.string()) }))),
         concentration: v.optional(v.object({ spell: v.string() })),
         tempHitPoints: v.optional(v.number()),
+        position: v.optional(v.object({ x: v.number(), y: v.number() })),
         inspiration: v.optional(v.object({ die: v.number(), by: v.string() })),
         dead: v.optional(v.literal(true)),
         fled: v.optional(v.literal(true)),

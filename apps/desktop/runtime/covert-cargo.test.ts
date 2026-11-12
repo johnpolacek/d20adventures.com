@@ -44,6 +44,16 @@ test("the real core walks Covert Cargo from the pier into the cabin and back to 
   try {
     await game(store, packs, { generateText: unused, generateObject: unused })({ kind: "start", provider: "claude", adventure: "covert-cargo" })
     assert.equal(store.current().encounterId, "the-shipment")
+    // Everyone starts where the pier's floor stages them, in feet: Poppen's bushes are at (-5, 4.3) metres.
+    const feet = (name: string) => {
+      const at = store.current().characters.find((c) => c.name === name)?.position
+      return at && [Math.round(at.x * 10) / 10, Math.round(at.y * 10) / 10]
+    }
+    assert.deepEqual(feet("Poppen Quickfoot"), [-16.4, 14.1])
+    assert.ok(
+      store.current().characters.every((c) => c.position),
+      "someone on the pier has no position"
+    )
     const prompts: string[] = []
     for (const next of ["the-fake", "battle-on-the-boat", "the-crate", "return-to-the-city"]) {
       store.current().characters.forEach((c) => {
@@ -60,6 +70,12 @@ test("the real core walks Covert Cargo from the pier into the cabin and back to 
       }
       await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })
       assert.equal(store.current().encounterId, next)
+      // A new encounter stages everyone afresh: in the cabin fight Thalbern's thicket is at (-1.4, -6.4) metres.
+      assert.ok(
+        store.current().characters.every((c) => c.position),
+        `${next}: someone has no position`
+      )
+      if (next === "battle-on-the-boat") assert.deepEqual(feet("Thalbern"), [-4.6, -21])
       const where = spatialContext(next, store.current().characters, {})
       assert.match(where ?? "", /Lyra Silvanus \(/)
       assert.match(where ?? "", /Poppen Quickfoot \(/)

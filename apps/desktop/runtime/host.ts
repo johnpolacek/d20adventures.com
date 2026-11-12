@@ -8,6 +8,7 @@ import type { PCTemplate } from "@d20/gm-core/types/character"
 import { findCurrentActor, isDown, isDying } from "@d20/gm-core/utils/turn-actors"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { scenePlaces, spatialContext } from "../src/scenes"
+import { encounterFloor } from "./floor"
 import type { Packs } from "./game"
 import { heroAdventure } from "./heroes"
 import type { Art } from "./paint"
@@ -70,6 +71,7 @@ function hostContent(packs: Packs): Content {
     // Hosted games keep no stage positions yet, so places are read from the staging alone.
     spatialContext: async (_setting, plan, encounter, characters) => withCityContext(spatialContext(encounter, characters, {}), packFor(plan).cityMap, packFor(plan).artifacts.encounters, encounter),
     places: async (encounter) => scenePlaces(encounter),
+    floor: encounterFloor,
   }
 }
 

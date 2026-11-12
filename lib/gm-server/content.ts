@@ -1,5 +1,7 @@
 import type { Content } from "@d20/gm-core"
 import { withCityContext } from "@d20/gm-core/citymap"
+import { floorFromMetres } from "@d20/gm-core/sheet/placement"
+import { floorPlanFor } from "@d20/stage/plans/index"
 import { cityMapFor } from "@/lib/citymap"
 import { loadEncounterMap2D } from "@/lib/mapview/load"
 import { buildMapSpatialContext } from "@/lib/mapview/spatial-summary"
@@ -8,11 +10,18 @@ import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adven
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
+// An encounter's floor in the engine's feet, from the plan generated from its 3D set.
+export const encounterFloor = async (encounterId: string) => {
+  const plan = await floorPlanFor(encounterId)
+  return plan && floorFromMetres(plan)
+}
+
 export const serverContent: Content = {
   isWikiAdventure: isLocalWikiAdventure,
   loadWikiRuntime: loadWikiAdventureRuntime,
   loadPlan: loadAdventurePlanForRuntime,
   loadLegacyPlan: (settingId, planId) => readJsonFromS3(`settings/${settingId}/${planId}.json`) as Promise<AdventurePlan | null>,
+  floor: encounterFloor,
   async spatialContext(settingId, planId, encounterId, characters) {
     const map = await loadEncounterMap2D(settingId, planId, encounterId)
     const staging = map

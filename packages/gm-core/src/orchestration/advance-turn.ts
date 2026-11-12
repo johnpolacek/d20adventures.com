@@ -14,6 +14,7 @@ import {
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
 import { atRoundStart } from "../sheet/death"
+import { placeCharacters } from "../sheet/placement"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
@@ -185,7 +186,10 @@ export function createAdvanceTurn(ports: GmPorts) {
       // Entering the rescue encounter brings every hero who is down but not dead back to 1 hit point. Then a dying
       // hero's turn is their Death Saving Throw.
       const rescuing = isTransition && artifacts.manifest.rescue?.encounterId === nextEncounter.id
-      const characters = (rescuing ? rescuedCharacters(nextCharacters) : nextCharacters).map(atRoundStart)
+      // A new encounter puts everyone where its floor stages them. Within one, each stays where they stand.
+      const floor = isTransition ? await ports.content.floor?.(nextEncounter.id) : undefined
+      const standing = floor ? placeCharacters(nextCharacters, floor) : isTransition ? nextCharacters.map(({ position: _, ...rest }) => rest as TurnCharacter) : nextCharacters
+      const characters = (rescuing ? rescuedCharacters(standing) : standing).map(atRoundStart)
       // A new encounter opens on its intro, read as beats for the characters who are in it. One the party has played
       // before does not read it again: they know the place, and the round's own story has brought them back.
       const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters }) : scene

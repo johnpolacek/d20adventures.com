@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type CityMap, withCityContext } from "@d20/gm-core/citymap"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
+import { placeCharacters } from "@d20/gm-core/sheet/placement"
 import { withArrivals } from "@d20/gm-core/story/authored"
 import { namesMetBefore } from "@d20/gm-core/story/names"
 import { characterScript, introTurn } from "@d20/gm-core/story/turn"
@@ -14,6 +15,7 @@ import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stag
 import { z } from "zod"
 import { scenePlaces, spatialContext } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
+import { encounterFloor } from "./floor"
 import { gmModelSchema, partyFor, writeArrivals } from "./heroes"
 import type { LocalStore, Save } from "./store"
 import { carryGear, premiseWithStory, storyInto, withStory } from "./story"
@@ -143,6 +145,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     spatialContext: async (_setting, plan, encounter, characters) =>
       withCityContext(spatialContext(encounter, characters, store.state?.positions ?? {}, store.state?.figures), packFor(plan).cityMap, packFor(plan).artifacts.encounters, encounter),
     places: async (encounter) => scenePlaces(encounter),
+    floor: encounterFloor,
     // Of the story so far, only the chapters this hero lived.
     heroPremise: async (_setting, plan, hero) => premiseWithStory(packFor(plan).artifacts.manifest.premise, store.state?.adventure.planId === plan ? store.state.story : undefined, hero),
   }
@@ -231,7 +234,10 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
         llm
       )
       const party = partyFor(packFor(plan), choices, store.heroes())
-      const characters = buildLocalWikiTurnCharacters({ artifacts, encounter, players: party.players, sheetsByCharacterId: party.sheets })
+      // Everyone starts where the encounter's floor stages them.
+      const floor = await encounterFloor(encounter.id)
+      const built = buildLocalWikiTurnCharacters({ artifacts, encounter, players: party.players, sheetsByCharacterId: party.sheets })
+      const characters = floor ? placeCharacters(built, floor) : built
       const before = command.continues ? store.state : null
       const story = storyInto(plan, before, before ? packs[before.adventure.planId]?.artifacts.manifest.nextAdventureId : undefined)
       if (before && story) carryGear(characters, before)

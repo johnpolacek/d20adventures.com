@@ -1,10 +1,12 @@
 import { playableHero, withArrival } from "@d20/gm-core/character/hero-draft"
+import { placeCharacters } from "@d20/gm-core/sheet/placement"
 import { withArrivals } from "@d20/gm-core/story/authored"
 import { introTurn } from "@d20/gm-core/story/turn"
 import { after } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
+import { encounterFloor } from "@/lib/gm-server/content"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
 import { buildLocalWikiTurnCharacters, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
@@ -18,13 +20,16 @@ export async function startWikiAdventure(adventure: Pick<Doc<"adventures">, "_id
   const firstEncounter = artifacts.encounters[artifacts.manifest.startEncounterId]
   if (!firstEncounter) throw new Error(`${adventure.planId} start encounter is missing from compiled wiki artifacts`)
   const { characters: existingPlayerCharacters, sheetsByCharacterId, arrivals } = await loadExistingPlayerCharacters(adventure.players ?? [], adventure.host?.arrivals)
-  const characters = buildLocalWikiTurnCharacters({
+  const built = buildLocalWikiTurnCharacters({
     artifacts,
     encounter: firstEncounter,
     players: adventure.players ?? [],
     existingPlayerCharacters,
     sheetsByCharacterId,
   })
+  // Everyone starts where the encounter's floor stages them.
+  const floor = await encounterFloor(firstEncounter.id)
+  const characters = floor ? placeCharacters(built, floor) : built
   // Nothing plays without a rules sheet. Premade heroes take theirs from the adventure.
   const unready = characters.find((c) => c.type === "pc" && !playableHero(c))
   if (unready) throw new Error(`${unready.name} has no rules sheet.`)

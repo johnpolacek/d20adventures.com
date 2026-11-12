@@ -1,4 +1,5 @@
 import type { z } from "zod"
+import type { EncounterFloor } from "./sheet/placement"
 import type { StoryBeat } from "./story/beats"
 import type { StoryPlace } from "./story/clean"
 import type { KnownFact } from "./story/knowledge"
@@ -115,6 +116,9 @@ export interface Content {
   loadPlan(settingId: string, planId: string): Promise<AdventurePlan>
   loadLegacyPlan(settingId: string, planId: string): Promise<AdventurePlan | null>
   spatialContext(settingId: string, planId: string, encounterId: string, characters: TurnCharacter[]): Promise<string | undefined>
+  // The encounter's floor, in feet: its solid things, doorways and named places, and where its staging puts the cast.
+  // An encounter with no floor plan has none, and its characters have no positions.
+  floor?(encounterId: string): Promise<EncounterFloor | undefined>
   // The named places of the encounter's 3D set, which the GM may point the camera at and walk characters to.
   places?(encounterId: string): Promise<StoryPlace[] | undefined>
   // The premise as one hero knows it, when the plan's own holds more than that hero should, such as the story so far.
