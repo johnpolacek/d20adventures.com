@@ -467,6 +467,16 @@ async function npcFixedOutcome() {
   assert.deepEqual((await readAction("Milos heals Thalbern and swings.", milos, fight)).bonus, { feature: "healing-word", target: "thalbern" })
   answer = { check: "cast", spell: "sacred-flame", targets: ["owlbear"], bonus: "healing-word", bonusTarget: "thalbern" }
   assert.equal((await readAction("Milos heals Thalbern and calls down flame.", milos, fight)).bonus, undefined)
+  // An NPC casts the spells of its stat block. A Druid's Thunderwave is saved against her DC 13, and takes no throw.
+  const druid = { id: "wollandora", name: "Wollandora", type: "npc", statBlock: "druid", hitPoints: 44 }
+  answer = { check: "cast", spell: "thunderwave", targets: ["thalbern"] }
+  assert.deepEqual(await readAction("Wollandora claps her hands.", druid as any, { present: [druid, hero] }), {
+    roll: null,
+    cast: { cast: { spell: "thunderwave", targets: ["thalbern"] }, rollType: "Thunderwave", difficulty: 13, modifier: 0, mode: "normal" },
+  })
+  // A spell her stat block does not list is not cast.
+  answer = { check: "cast", spell: "fireball", targets: ["thalbern"] }
+  assert.deepEqual(await readAction("Wollandora hurls fire.", druid as any, { present: [druid, hero] }), { roll: null })
   // Her Magic Missile takes three darts, so three creatures at most: a fourth named is left out.
   answer = { check: "cast", spell: "magic-missile", targets: ["owlbear", "wolf", "thalbern", "nobody"] }
   assert.deepEqual((await readAction("Lyra casts Magic Missile.", lyra, { present: [owlbear, wolf, hero, lyra] })).cast?.cast.targets, ["owlbear", "wolf", "thalbern"])

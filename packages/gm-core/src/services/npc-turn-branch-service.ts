@@ -6,14 +6,15 @@ import { saveFailedBy } from "../sheet/conditions"
 import { afterHarm, killed } from "../sheet/death"
 import { applyStakes } from "../sheet/harm"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
+import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { storyNames } from "../story/render"
-import { attackBeat, concentrationBeat, rollBeat, turnScript } from "../story/turn"
+import { attackBeat, castBeats, concentrationBeat, rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { d20sFor, rollD20, rollDie } from "../utils/game-utils"
 import { isDown } from "../utils/turn-actors"
-import { isAttackRoll } from "../validations/roll-requirement-schema"
+import { isAttackRoll, isCastRoll } from "../validations/roll-requirement-schema"
 import type { SafetyRules } from "../wiki-adventures/player-safety"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { applyNpcEffectsToCharacters, type NpcTurnEffect } from "./npc-turn-resolution-service"
@@ -111,7 +112,65 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       difficulty: rollRequirement?.difficulty,
     })
 
-    if (rollRequirement && isAttackRoll(rollRequirement)) {
+    // A spell of the NPC's stat block: one with a spell attack came back as a roll, and any other as a cast to resolve.
+    const casting = reading.cast ?? (isCastRoll(rollRequirement) ? rollRequirement : undefined)
+    if (casting) {
+      // The engine resolves it by the spell's typed data and spends the stat block's count for it. The NPC's spell
+      // attack and every target's saving throw are rolled here, a hero's too.
+      const spell = spellById.get(casting.cast.spell)
+      const cost = spell && castCost(args.npc, spell.id)
+      if (!spell || !cost || "problem" in cost) throw new Error(cost && "problem" in cost ? cost.problem : `"${casting.cast.spell}" is not a spell.`)
+      const cast = castSpell({
+        characters: updatedCharacters,
+        casterId: args.npc.id,
+        spell,
+        targets: casting.cast.targets,
+        ...(spell.attack ? { attackDice: d20sFor(casting.mode) } : {}),
+        mode: casting.mode,
+        d20: rollD20,
+        roll: rollDie,
+        rules: args.rules,
+        damageType: casting.cast.damageType,
+        skill: casting.cast.skill,
+        level: casting.cast.level,
+      })
+      const spent = cast.characters.map((character) => (character.id === args.npc.id ? withCastSpent(character, cost.cost) : character))
+      const kept = settleConcentration({
+        before: args.turn.characters,
+        after: afterRoll(spent, args.npc.id, casting),
+        bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+        d20: rollD20,
+      })
+      updatedCharacters = kept.characters.map((character) => afterHarm(character))
+      const thrown = cast.attack?.roll
+      if (thrown) rollInfo = { rollType: spell.name, difficulty: thrown.armorClass, baseRoll: thrown.natural, modifier: thrown.bonus, result: thrown.total, success: thrown.hit }
+      const facts = [...cast.facts, ...kept.facts]
+      console.log("[LLM] NPC casts:", { spell: spell.id, targets: casting.cast.targets, facts })
+      const outcomeResult = await generateNpcOutcome(
+        buildNpcOutcomePrompt({
+          contextString: args.npcActionContext.contextString,
+          npcDetails: args.npcActionContext.npcDetails,
+          playerCharacters: args.npcActionContext.playerCharacters,
+          npcName: args.npc.name,
+          actionSummary: args.actionResult.actionSummary,
+          rollType: spell.name,
+          result: thrown?.total ?? 0,
+          difficulty: casting.difficulty,
+          success: thrown ? thrown.hit : true,
+          scene: args.scene,
+          spell: { name: spell.name, facts, ...(isEngineSpell(spell) ? {} : { text: spell.description }) },
+        }),
+        args.npc.id
+      )
+      const names = storyNames(args.turn.characters)
+      beatsToAppend = [
+        ...castBeats(npcStep(args.npc), args.npc, spell, cast, names),
+        ...kept.saves.map((save) => concentrationBeat(npcStep(args.npc), save, names)),
+        ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc)),
+      ]
+      effects = outcomeResult.effects
+      updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
+    } else if (rollRequirement && isAttackRoll(rollRequirement)) {
       // An attack: the engine rolls to hit and for damage, and changes the target's hit points. An NPC whose stat block
       // has a Multiattack makes all of it against the one it attacks, and stops when that one goes down.
       const { weapon, target: targetId } = rollRequirement.attack

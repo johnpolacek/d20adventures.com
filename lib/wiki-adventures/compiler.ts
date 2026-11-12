@@ -324,6 +324,10 @@ function compileCharacterSheets(jsonFiles: SourceFile[], markdownFiles: ParsedMa
       if (npcResult.data.statBlock && !isStatBlock(npcResult.data.statBlock)) {
         findings.push({ code: "character.rules.invalid", severity: "error", sourcePath: file.path, message: `"${npcResult.data.statBlock}" is not an SRD stat block.`, aiFixable: false })
       }
+      // An NPC may carry a rules sheet in place of a stat block: a wizard who casts as a hero does. It is checked as a hero's is.
+      for (const problem of npcResult.data.sheet ? sheetProblems(npcResult.data.sheet) : []) {
+        findings.push({ code: "character.rules.invalid", severity: "error", sourcePath: file.path, message: problem, aiFixable: false })
+      }
       const profile = profilesById.get(npcResult.data.id)
       npcs[npcResult.data.id] = {
         sheet: npcResult.data,

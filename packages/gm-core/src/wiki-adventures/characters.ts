@@ -77,7 +77,7 @@ export function buildLocalWikiTurnCharacters(args: {
         id: sheet.id,
         type: "npc" as const,
         // An encounter may fix an NPC's place in the order. Otherwise it rolls with its stat block's bonus.
-        initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollInitiative({ type: "npc", statBlock: sheet.statBlock }, rollD20()),
+        initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollInitiative({ type: "npc", statBlock: sheet.statBlock, sheet: sheet.sheet }, rollD20()),
         hasReplied: false,
         isComplete: false,
         behavior: npcRef.behavior ?? sheet.behavior,

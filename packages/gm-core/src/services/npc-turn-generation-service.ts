@@ -223,6 +223,9 @@ export function buildNpcOutcomePrompt(args: {
   attacks?: string[]
   // What a check or save did to hit points and conditions, already settled by the engine, in plain words.
   harm?: string[]
+  // A spell the NPC cast, already resolved by the engine: its name, what it did in plain words, and for a utility
+  // spell its own text, which binds what it can do.
+  spell?: { name: string; facts: string[]; text?: string }
 }): string {
   const playerCharacterNames = args.playerCharacters.map((character) => character.name)
   const playerCharacterDetails = args.playerCharacters
@@ -275,13 +278,19 @@ NPC: ${args.npcName}
 Player Characters: ${playerCharacterNames.join(", ")}
 Action: ${args.actionSummary}
 ${
-  args.attacks?.length
-    ? `The game has already rolled this turn's attacks and their damage:\n${args.attacks.map((line) => `- ${line}`).join("\n")}\nTell each blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
-    : `Roll Type: ${args.rollType}\nRoll Result: ${args.result} (difficulty: ${args.difficulty}, success: ${args.success})\n${
-        args.harm?.length
-          ? `The game has already settled what this did to hit points and conditions:\n${args.harm.map((entry) => `- ${entry}`).join("\n")}\nTell it exactly as stated. Add no other harm, healing or condition and undo none of it. Give no number.`
-          : "This roll changes no one's hit points or conditions. No one is wounded, healed, knocked down, knocked out or killed by it."
-      }`
+  args.spell
+    ? `${args.npcName} casts ${args.spell.name}.${
+        args.spell.facts.length
+          ? `\nThe game has already rolled this spell:\n${args.spell.facts.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated: each hit, miss and save, and how each one stands after it. Add no other harm, healing or condition and undo none of it. Give no number.`
+          : ""
+      }${args.spell.text ? `\nThe spell does what its own text says and no more:\n"""${args.spell.text}"""\nIt changes no one's hit points or conditions.` : ""}`
+    : args.attacks?.length
+      ? `The game has already rolled this turn's attacks and their damage:\n${args.attacks.map((line) => `- ${line}`).join("\n")}\nTell each blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
+      : `Roll Type: ${args.rollType}\nRoll Result: ${args.result} (difficulty: ${args.difficulty}, success: ${args.success})\n${
+          args.harm?.length
+            ? `The game has already settled what this did to hit points and conditions:\n${args.harm.map((entry) => `- ${entry}`).join("\n")}\nTell it exactly as stated. Add no other harm, healing or condition and undo none of it. Give no number.`
+            : "This roll changes no one's hit points or conditions. No one is wounded, healed, knocked down, knocked out or killed by it."
+        }`
 }
 
 ${storyRules(args.scene)}

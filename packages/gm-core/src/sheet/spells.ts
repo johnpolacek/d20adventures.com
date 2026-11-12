@@ -1,6 +1,7 @@
 import type { AbilityId, ConditionId, DamageTypeId, SkillId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { classById } from "@d20/srd/classes"
+import { monsterById } from "@d20/srd/monsters"
 import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { attackModesFromActions, checkModesFromActions } from "./actions"
@@ -13,7 +14,7 @@ import { deriveSheet } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { lasts, type RollAdd, rollAdds, withConcentration, withSpellEffect } from "./spell-effects"
-import { combatStatsOf } from "./stat-block"
+import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
 
 /**
@@ -36,8 +37,25 @@ export type Spellcasting = {
   prepared: number
 }
 
-/** A hero's spellcasting, from its class and level. A class with no Spellcasting feature, and a hero with no sheet, has none. */
+// An NPC's stat block, and its Spellcasting action if it has one.
+function statBlockCasting(character: Roller) {
+  const monster = !character.sheet && character.type === "npc" ? monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
+  const casting = monster?.actions?.find((action) => action.spellcasting?.ability)?.spellcasting
+  return monster && casting?.ability ? { monster, casting, ability: casting.ability } : undefined
+}
+
+/**
+ * A character's spellcasting. A hero's comes from its class and level. An NPC's comes from the Spellcasting action of
+ * its stat block: the save DC and attack bonus it prints, or 8 and its Proficiency Bonus with the ability's modifier.
+ * A class or a stat block with no Spellcasting, and a hero with no sheet, has none.
+ */
 export function spellcastingOf(character: Roller): Spellcasting | undefined {
+  const block = statBlockCasting(character)
+  if (block) {
+    const modifier = block.monster.abilities[block.ability].mod
+    const saveDc = block.casting.saveDc ?? 8 + block.monster.pb + modifier
+    return { ability: block.ability, saveDc, attackBonus: block.casting.attackBonus ?? saveDc - 8, modifier, slots: [], cantrips: 0, prepared: 0 }
+  }
   const sheet = character.sheet
   const cls = sheet && classById.get(sheet.class)
   if (!sheet || !cls?.spellcasting) return undefined
@@ -91,8 +109,12 @@ export type KnownSpell = {
   prepared: boolean
   /** Castable as a Ritual, with no slot, when there is time for it. */
   ritual: boolean
-  /** Casts left that a feature gives with no slot: a Ranger's Hunter's Mark from Favored Enemy. */
+  /** Casts left that take no slot: a Ranger's Hunter's Mark from Favored Enemy, or an NPC's "2/Day" on its stat block. */
   free: number
+  /** What those casts are counted under, in the character's `featureUses`. */
+  useKey?: string
+  /** The slot level an NPC's stat block casts it at, where it prints one: "Fireball (level 4 version)". */
+  castLevel?: number
 }
 
 type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<string, number> }
@@ -102,23 +124,26 @@ type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<s
  * spells of the spellbook. A hero with no sheet, and an NPC, has none here.
  */
 export function spellsOf(character: Slotted): KnownSpell[] {
+  const block = statBlockCasting(character)
+  if (block) return statBlockSpells(character, block.monster)
   const sheet = character.sheet
   if (!sheet) return []
   const derived = deriveSheet(sheet)
   const cls = classById.get(sheet.class)
   const row = cls?.levels[sheet.level - 1] as Record<string, unknown> | undefined
   // Casts a feature gives with no slot, by spell: as many as the feature's own count, less those used.
-  const free = new Map<string, number>()
+  const free = new Map<string, { left: number; key: string }>()
   for (const id of derived.classFeatures) {
     const feature = classFeatureById.get(id)
     const count = feature?.uses?.count as { column?: string } | number | undefined
     const uses = typeof count === "number" ? count : count?.column ? Number(row?.[count.column] ?? 0) : 0
-    for (const cast of feature?.freeCast ?? []) free.set(cast.spell, Math.max(0, uses - (character.featureUses?.[id] ?? 0)))
+    for (const cast of feature?.freeCast ?? []) free.set(cast.spell, { left: Math.max(0, uses - (character.featureUses?.[id] ?? 0)), key: id })
   }
   const found: KnownSpell[] = []
   const add = (id: string, how: Pick<KnownSpell, "cantrip" | "prepared">) => {
     const spell = spellById.get(id)
-    if (spell && !found.some((known) => known.spell.id === id)) found.push({ spell, ...how, ritual: spell.ritual, free: free.get(id) ?? 0 })
+    const given = free.get(id)
+    if (spell && !found.some((known) => known.spell.id === id)) found.push({ spell, ...how, ritual: spell.ritual, free: given?.left ?? 0, ...(given ? { useKey: given.key } : {}) })
   }
   for (const id of derived.cantrips) add(id, { cantrip: true, prepared: true })
   for (const id of derived.preparedSpells) add(id, { cantrip: false, prepared: true })
@@ -127,12 +152,68 @@ export function spellsOf(character: Slotted): KnownSpell[] {
 }
 
 /**
+ * The spells an NPC's stat block casts: those of its Spellcasting action, At Will or so many a day, and those a Bonus
+ * Action of the block casts. A day's casts are counted through the encounter, as a hero's slots are, until stage 7 of
+ * plans/srd-rules.md gives rests. A spell cast as a Reaction waits for stage 6.
+ */
+function statBlockSpells(character: Slotted, monster: NonNullable<ReturnType<typeof monsterById.get>>): KnownSpell[] {
+  const found: KnownSpell[] = []
+  const used = (key: string) => character.featureUses?.[key] ?? 0
+  const add = (entry: { id: string; note?: string }, how: { atWill: boolean; uses: number; key: string }) => {
+    const spell = spellById.get(entry.id)
+    if (!spell || found.some((known) => known.spell.id === entry.id)) return
+    const level = /level (\d) version/.exec(entry.note ?? "")
+    found.push({
+      spell,
+      cantrip: how.atWill,
+      prepared: true,
+      ritual: false,
+      free: how.atWill ? 0 : Math.max(0, how.uses - used(how.key)),
+      ...(how.atWill ? {} : { useKey: how.key }),
+      ...(level ? { castLevel: Number(level[1]) } : {}),
+    })
+  }
+  for (const action of monster.actions ?? []) {
+    for (const [index, list] of (action.spellcasting?.lists ?? []).entries()) {
+      for (const entry of list.spells) {
+        const atWill = list.frequency === "at-will"
+        // "2/Day Each" counts each spell alone. "1/Day" with no "Each" is one cast shared by the spells on the line.
+        add(entry, { atWill, uses: atWill ? 0 : Number(list.frequency), key: list.each ? `${action.name}: ${entry.id}` : `${action.name}: line ${index}` })
+      }
+    }
+  }
+  for (const feature of monster.bonusActions ?? []) {
+    const count = feature.uses?.count
+    for (const entry of feature.spellcasting?.spells ?? []) add(entry, { atWill: count === undefined, uses: typeof count === "number" ? count : 1, key: feature.name })
+  }
+  return found
+}
+
+/**
  * A character's spells in words, for a prompt that plays or writes them: a hero's cantrips and prepared spells with the
- * slots left, from the sheet. An NPC's magic is the names it is written with, until the game knows its spells.
+ * slots left, from the sheet. An NPC's are those its stat block casts, with the casts left, and then any magic it is
+ * written with in words.
  */
 export function spellWords(character: Slotted & { spells?: readonly { name: string }[] }): string {
   const known = spellsOf(character)
-  if (!known.length) return character.sheet ? "" : (character.spells ?? []).map((spell) => spell.name).join(", ")
+  const written = character.sheet ? [] : (character.spells ?? []).map((spell) => spell.name)
+  if (!known.length) return written.join(", ")
+  if (!character.sheet) {
+    // An NPC casts by its stat block: some spells at will, and the rest so many times.
+    const counted = known.filter((entry) => !entry.cantrip && entry.free > 0)
+    return [
+      known.some((entry) => entry.cantrip)
+        ? `At will: ${known
+            .filter((entry) => entry.cantrip)
+            .map((entry) => entry.spell.name)
+            .join(", ")}`
+        : "",
+      counted.length ? `With casts left: ${counted.map((entry) => `${entry.spell.name} (${entry.free})`).join(", ")}` : "",
+      written.length ? `Other magic, in the story's words: ${written.join(", ")}` : "",
+    ]
+      .filter(Boolean)
+      .join(". ")
+  }
   const names = (list: KnownSpell[]) => list.map((entry) => entry.spell.name).join(", ")
   const left = slotsLeft(character)
   const parts = [
@@ -164,11 +245,9 @@ export function castCost(character: Slotted, spellId: string, ritual = false): {
   if (known.cantrip) return { cost: { kind: "cantrip" }, known }
   if (ritual && known.ritual) return { cost: { kind: "ritual" }, known }
   if (!known.prepared) return { problem: `${name} is in the spellbook and not prepared, so it can only be cast as a Ritual.` }
-  if (known.free > 0) {
-    const sheet = character.sheet
-    const feature = sheet && deriveSheet(sheet).classFeatures.find((id) => classFeatureById.get(id)?.freeCast?.some((cast) => cast.spell === spellId))
-    if (feature) return { cost: { kind: "free", feature }, known }
-  }
+  if (known.free > 0 && known.useKey) return { cost: { kind: "free", feature: known.useKey }, known }
+  // An NPC casts by its stat block's counts, and has no slots to fall back on.
+  if (!character.sheet) return { problem: `${character.name ?? "This character"} has no casting of ${name} left.` }
   const level = known.spell.level
   if ((slotsLeft(character)[level - 1] ?? 0) < 1) return { problem: `${character.name ?? "This character"} has no level ${level} spell slot left for ${name}.` }
   return { cost: { kind: "slot", level }, known }
@@ -235,6 +314,14 @@ function cantripDice(part: { dice?: string; cantrip?: Record<"5" | "11" | "17", 
   return level >= 17 ? part.cantrip[17] : level >= 11 ? part.cantrip[11] : level >= 5 ? part.cantrip[5] : part.dice
 }
 
+// Dice with those a higher slot adds: "8d6" and "1d6" for one level above make "9d6". Dice of another size are left as they are.
+function raised(dice: string | undefined, perSlot: string | undefined, above: number): string | undefined {
+  const base = /^(\d+)d(\d+)(.*)$/.exec(dice ?? "")
+  const more = /^(\d+)d(\d+)$/.exec(perSlot ?? "")
+  if (!base || !more || above < 1 || base[2] !== more[2]) return dice
+  return `${Number(base[1]) + Number(more[1]) * above}d${base[2]}${base[3]}`
+}
+
 // How long a spell's condition lasts, by name: a round is the bearer's next turn, a minute the rest of a fight.
 function spanOf(spell: Spell): ConditionSpan | undefined {
   const { duration } = spell
@@ -279,6 +366,8 @@ export function castSpell<T extends Castee>(args: {
   damageType?: DamageTypeId
   /** For a spell cast for one skill (Guidance), the skill. */
   skill?: SkillId
+  /** The slot level it is cast at, when above the spell's own: a Mage's "Fireball (level 4 version)". */
+  level?: number
 }): Cast<T> {
   const { spell } = args
   let characters = [...args.characters]
@@ -301,8 +390,10 @@ export function castSpell<T extends Castee>(args: {
   const now = (part: { timing?: string; appliesWhen?: string; unless?: string; label?: string }) => !part.timing && !part.appliesWhen && !part.label
   // A spell with a second save to come holds its first condition only until that save: the bearer's next turn (Sleep).
   const span = spell.saves?.some((save) => save.when === "later") ? "turn" : spanOf(spell)
+  // A spell cast with a slot above its own level adds the dice its text gives for each level above.
+  const above = Math.max(0, (args.level ?? spell.level) - spell.level)
   const partOf = (entry: NonNullable<Spell["damage"]>[number]): DamagePart => {
-    const dice = cantripDice(entry, level)
+    const dice = raised(cantripDice(entry, level), entry.perSlot, above)
     return { ...(dice ? { dice } : { amount: entry.amount }), type: typeOf(entry.types) }
   }
   // Damage to one target, through its defenses and the rules of 0 hit points.

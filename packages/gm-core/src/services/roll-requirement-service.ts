@@ -126,8 +126,8 @@ export function createRollRequirementService(ports: GmPorts) {
       `Archetype: ${character.archetype}`,
       `Race: ${character.race}`,
       conditions ? `Conditions: ${conditions}` : undefined,
-      // An NPC's magic is named in words until the game knows its spells. A hero's are on the menu below.
-      !character.sheet && character.spells && character.spells.length > 0 ? `Magic: ${character.spells.map((entry) => entry.name).join(", ")}` : undefined,
+      // What an NPC is written to be able to do beyond its stat block's spells, in words. It is no spell the game rolls.
+      !character.sheet && character.spells && character.spells.length > 0 ? `Other magic, in the story's words: ${character.spells.map((entry) => entry.name).join(", ")}` : undefined,
       casts ? `Spellcasting ability: ${abilityById.get(casts)?.name}` : undefined,
       character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
       character.equipment && character.equipment.length > 0 ? `Equipment: ${character.equipment.map((e) => `${e.name}${e.description ? ` (${e.description})` : ""}`).join(", ")}` : undefined,
@@ -211,7 +211,7 @@ ${MENU("save")}
          : ""
      }
      A cantrip spends nothing. Any other spell spends a slot of its level, and with none left it cannot be cast. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
-     A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all, and all of an NPC's magic, is "arcana".
+     A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all is "arcana".
 
 8) Set "difficulty" by name. It is the task's own difficulty, the same for anyone who tries it. The character's talent is already in the bonus the game adds, so never lower or raise it for who is trying.
    - very-easy (target 5), easy (10), medium (15), hard (20), very-hard (25), nearly-impossible (30).
@@ -225,9 +225,9 @@ ${MENU("save")}
    - Not for what the character is good or bad at, and not for their armor or anyone's conditions: the game already counts those.
 
 10) Set what the roll puts at stake for hit points, in "harm". Most rolls put none, so leave it empty. Use it only when this roll's own outcome would wound or heal someone:
-   - An act, or an NPC's magic, that hurts someone when it works: on "success", target them, kind "damage".
+   - An act that hurts someone when it works: on "success", target them, kind "damage".
    - A save or a check against a hazard that hurts when it fails (a trap, a fall, poison, fire): on "failure", target the character's own id, kind "damage".
-   - A potion, a skill or an NPC's magic that heals: on "success", target who is healed, kind "healing".
+   - A potion or a skill that heals: on "success", target who is healed, kind "healing".
    - "size" is light, moderate, heavy or severe, and the game rolls its dice. A scratch is light, a solid blow is moderate, a bad fall or a strong blast is heavy, and severe is rare. When the encounter instructions print dice for it (4d6), put them in "dice" as printed and leave "size" out.
    - "target" is an id from Who Is Here, or the character's own id${self ? `, ${self}` : ""}. Damage takes a "type": fire, cold, poison, psychic, bludgeoning and so on.
    - An attack takes no "harm": its weapon sets the damage. Never use damage for fear, shame, a threat, or a fight not yet joined.
@@ -295,6 +295,7 @@ Action: "${action}"
           ...(cost.cost.kind === "ritual" ? { ritual: true as const } : {}),
           ...(type.success ? { damageType: type.data } : {}),
           ...(forSkill.success ? { skill: forSkill.data } : {}),
+          ...(known.castLevel ? { level: known.castLevel } : {}),
         }
         const casting = spellcastingOf(character)
         if (spell.attack) {
@@ -303,7 +304,7 @@ Action: "${action}"
           const armorClass = target && combatStatsOf(target)?.armorClass
           if (!target || armorClass === undefined || !casting) throw new Error(`${spell.name} has no one with an Armor Class to be cast at.`)
           const picked = pick.mode ?? "normal"
-          const typed = self ? [...spellAttackModes({ ...character, id: self, type: "pc" }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []
+          const typed = self ? [...spellAttackModes({ ...character, id: self }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []
           const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
           const rollRequirement: ChosenRoll = {
             cast,

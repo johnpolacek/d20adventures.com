@@ -234,3 +234,61 @@ test("a Ranger's Favored Enemy casts Hunter's Mark twice with no slot", () => {
   // The third takes a slot.
   assert.deepEqual(mark(twice), { kind: "slot", level: 1 })
 })
+
+test("an NPC casts the spells of its stat block, by the block's own numbers and counts", () => {
+  const npc = (statBlock: string, featureUses?: Record<string, number>): Character => ({
+    id: statBlock,
+    name: statBlock,
+    type: "npc",
+    statBlock,
+    hitPoints: 20,
+    ...(featureUses ? { featureUses } : {}),
+  })
+  // A Priest prints DC 13 and no attack bonus: 13 less 8 is +5. A Priest Acolyte prints neither: 8 + 2 + its Wisdom modifier of 2.
+  assert.deepEqual([spellcastingOf(npc("priest"))?.saveDc, spellcastingOf(npc("priest"))?.attackBonus], [13, 5])
+  assert.deepEqual([spellcastingOf(npc("priest-acolyte"))?.saveDc, spellcastingOf(npc("priest-acolyte"))?.attackBonus, spellcastingOf(npc("priest-acolyte"))?.ability], [12, 4, "wis"])
+  // A Cultist Fanatic prints both: DC 12 and +4. An Owlbear casts nothing.
+  assert.deepEqual([spellcastingOf(npc("cultist-fanatic"))?.saveDc, spellcastingOf(npc("cultist-fanatic"))?.attackBonus, spellcastingOf(npc("owlbear"))], [12, 4, undefined])
+  // The Acolyte: Light and Thaumaturgy at will, and Divine Aid once a day for one of Bless, Healing Word or Sanctuary.
+  const listed = (who: Character) => spellsOf(who).map((entry) => [entry.spell.id, entry.cantrip, entry.free])
+  assert.deepEqual(listed(npc("priest-acolyte")), [
+    ["light", true, 0],
+    ["thaumaturgy", true, 0],
+    ["bless", false, 1],
+    ["healing-word", false, 1],
+    ["sanctuary", false, 1],
+  ])
+  const cost = (who: Character, id: string) => {
+    const found = castCost(who, id)
+    return "problem" in found ? found.problem : found.cost
+  }
+  assert.deepEqual([cost(npc("priest-acolyte"), "light"), cost(npc("priest-acolyte"), "bless")], [{ kind: "cantrip" }, { kind: "free", feature: "Divine Aid" }])
+  // One Divine Aid spent, none of the three is left, and the Acolyte has no slots to fall back on.
+  const spent = withCastSpent(npc("priest-acolyte"), { kind: "free", feature: "Divine Aid" })
+  assert.deepEqual([spent.featureUses, cost(spent, "healing-word")], [{ "Divine Aid": 1 }, "priest-acolyte has no casting of Healing Word left."])
+  // A Druid has Entangle and Thunderwave twice a day each: one cast of Entangle leaves both Thunderwaves.
+  const druid = withCastSpent(npc("druid"), { kind: "free", feature: "Spellcasting: entangle" })
+  assert.deepEqual(
+    spellsOf(druid)
+      .filter((entry) => ["entangle", "thunderwave"].includes(entry.spell.id))
+      .map((entry) => [entry.spell.id, entry.free]),
+    [
+      ["entangle", 1],
+      ["thunderwave", 2],
+    ]
+  )
+  assert.equal(spellWords(npc("priest-acolyte")), "At will: Light, Thaumaturgy. With casts left: Bless (1), Healing Word (1), Sanctuary (1)")
+})
+
+test("an NPC's spell falls on a hero by the same rules, and a slot above the spell's level adds its dice", () => {
+  // A Druid's Thunderwave, DC 13, a Constitution save. Thalbern's Constitution 13 gives +1 and no proficiency: a 10
+  // makes 11 and fails. 2d8 Thunder rolling 3 and 4 takes 7 of his 11.
+  const druid: Character = { id: "druid", name: "Wollandora", type: "npc", statBlock: "druid", hitPoints: 44 }
+  const wave = castSpell({ characters: [druid, thalbern], casterId: "druid", spell: spell("thunderwave"), targets: ["thalbern"], d20: falls(10), roll: falls(3, 4) })
+  assert.deepEqual([wave.saves[0].total, wave.saves[0].dc, wave.saves[0].success, find(wave.characters, "thalbern").hitPoints], [11, 13, false, 4])
+  // A Mage's Fireball is the level 4 version: 8d6 and one d6 more. Nine dice of 2 are 18, and the Owlbear, failing on a 3, takes them all.
+  const mage: Character = { id: "mage", name: "Kaeleth", type: "npc", statBlock: "mage", hitPoints: 81 }
+  assert.equal(spellsOf(mage).find((entry) => entry.spell.id === "fireball")?.castLevel, 4)
+  const ball = castSpell({ characters: [mage, owlbear], casterId: "mage", spell: spell("fireball"), targets: ["owlbear"], level: 4, d20: falls(3), roll: () => 2 })
+  assert.deepEqual([ball.harm[0].dice.length, ball.harm[0].amount, ball.saves[0].dc], [9, 18, 14])
+})

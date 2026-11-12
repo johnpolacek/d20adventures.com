@@ -46,7 +46,7 @@ The lock on Thaddeus's desk is no ordinary mechanism. Detect Magic, or an Arcana
 
 Without warning, an arc of blue lightning crackles and surges from the metal components, leaping out toward anyone standing near. The room is briefly illuminated by an arcane electrical discharge, casting long, jagged shadows on the walls.
 
-A failed save is a painful burn, a success only a singe. A protective spell cast before the lock is touched, such as Shield of Faith, gives the warded hero +2 on the save. No one is knocked out or carried off. The crack of the discharge carries, and the house guard from the corridor comes at the end of the next round unless the party has gone.
+A failed save is a painful burn, 1d4 lightning damage, and a success only a singe, with none. A protective spell cast before the lock is touched, such as Shield of Faith, gives the warded hero Advantage on the save. No one is carried off. The crack of the discharge carries, and the house guard from the corridor comes at the end of the next round unless the party has gone.
 
 If they manage to bypass the lock and trap, either through skilled hands or magic, the drawer slides open to reveal a single, finely bound ledger. The ledger’s cover is made of black leather, and inside, the entries are written in neat, flowing script, detailing secretive transactions between the Blackthorn family and the elves of the Valkarr Forest.
 
