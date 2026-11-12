@@ -3,11 +3,14 @@
 // A character's card, opened by clicking them on the stage or in the party row (the prototype's cards). Under the name,
 // how they stand: a hero's hit points with any Temporary Hit Points and Armor Class, an NPC's wound word, Dying with the
 // saves, Stable or Dead. Then their conditions, turn effects and lasting spells in words, and a caster's spellcasting:
-// spell save DC, spell attack bonus, the slots of each level left as marks, and the spells they can cast.
+// spell save DC, spell attack bonus, the slots of each level left as marks, and the spells they can cast. A hero the
+// player plays shows their standing orders for reactions.
 
 import type { SheetSpellcasting } from "@d20/gm-core/sheet/view"
 import { cn } from "@/lib/utils"
 import { eyebrow, panel } from "./hud"
+import { StandingOrders } from "./reaction-card"
+import type { Order, OrderRow, ReactionId } from "./reaction-view"
 import { DeathSaveMarks } from "./roll-parts"
 import { type Standing, standingWords, WOUND_TONE } from "./standing"
 
@@ -23,11 +26,24 @@ export interface CardInfo {
   conditions?: string
   // A hero's, from their sheet. An NPC shows none.
   spellcasting?: SheetSpellcasting
+  // A hero the player plays: each reaction they have and the order they follow for it.
+  reactions?: OrderRow[]
   lines?: string[]
   details?: Array<{ label: string; items: string[] }>
 }
 
-export function CharacterCard({ info, compact = false, onClose }: { info: CardInfo; compact?: boolean; onClose: () => void }) {
+export function CharacterCard({
+  info,
+  compact = false,
+  onClose,
+  onOrders,
+}: {
+  info: CardInfo
+  compact?: boolean
+  onClose: () => void
+  // Hears the orders changed on the card, for the caller to save.
+  onOrders?: (changed: Partial<Record<ReactionId, Order>>) => void
+}) {
   return (
     <section
       className={cn(panel, "fade-in absolute z-40 overflow-y-auto px-6 pt-6 pb-5", compact ? "top-12 right-3 bottom-12 w-[min(330px,55vw)]" : "top-24 right-10 max-h-[calc(100%-230px)] w-[330px]")}
@@ -44,6 +60,7 @@ export function CharacterCard({ info, compact = false, onClose }: { info: CardIn
       {info.standing && <StandingRow standing={info.standing} />}
       {info.conditions && <p className="mb-2.5 font-serif text-[13px] text-stage-cream italic">{info.conditions}</p>}
       {info.spellcasting && <Spellcasting casting={info.spellcasting} />}
+      {info.reactions && onOrders && <StandingOrders key={info.id} rows={info.reactions} compact={compact} className="mt-4 mb-2.5" onChange={onOrders} />}
       {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
       {info.details?.map((section) => (
         <div key={section.label}>

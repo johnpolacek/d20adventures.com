@@ -16,6 +16,8 @@ import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stag
 import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
+import { ReactionCard, useExpired } from "@/components/stage/reaction-card"
+import { heroReactions, type StandingOrders } from "@/components/stage/reaction-view"
 import { ROLL_SECONDS } from "@/components/stage/roll-result"
 import { featureView, type RollView, rollView } from "@/components/stage/roll-view"
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
@@ -191,6 +193,11 @@ export function StagePlay(props: {
   // Replies offered on a hero's turn, which fill the reply box. Without it none are offered.
   onSuggest?: (turnId: string, characterId: string) => Promise<CardSuggestion[]>
   onContinue: (turnId: string) => void
+  // A player's answer to a reaction offered to their hero in the middle of an NPC's turn. Without it the offer shows
+  // who is deciding, with no buttons. Resolves to whether it was taken.
+  onReact?: (turnId: string, characterId: string, take: boolean) => Promise<boolean>
+  // A hero's standing orders for their reactions, the whole set. Without it the hero's card shows none.
+  onOrders?: (turnId: string, characterId: string, orders: StandingOrders) => Promise<boolean>
   // NPC turns, AI heroes' turns and the end of a round run on their own. An NPC's or AI hero's turn is written while
   // the story before it is read, and the end of a round once the round has been read. One that fails leaves the
   // Continue button, to retry. Without it Continue always waits for a click.
@@ -296,7 +303,13 @@ export function StagePlay(props: {
   const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures, painted)
   // A hero's rules sheet for the card. NPCs keep their numbers to themselves.
   const cardSheet = useSheetView(cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined, cardCharacter?.hitPoints, cardCharacter?.spellSlots, cardCharacter?.spellEffects)
-  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet, standingOf(cardCharacter, cardSheet)) : null
+  // A hero this player plays shows their standing orders on the card, as the current turn keeps them.
+  const cardOrders = latest?.characters.find((c) => c.id === cardCharacter?.id)?.standingOrders
+  const ordersFor =
+    props.onOrders && cardCharacter?.type === "pc" && cardCharacter.controlledBy !== "ai" && props.controls(cardCharacter) && cardSheet
+      ? heroReactions(cardSheet.spellcasting?.prepared, cardOrders)
+      : undefined
+  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet, standingOf(cardCharacter, cardSheet), ordersFor) : null
   // Every hero's sheet, for their hit points and Armor Class in the turn order and the party row.
   const sheets = useSheetViews(shown?.characters ?? [])
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
@@ -823,18 +836,34 @@ export function StagePlay(props: {
   // the story before it is read, or while a roll's answer waits on the card. The end of a round is written ahead only
   // for the round on screen, so the game is never more than a round ahead of the reader. Narration that has just
   // arrived is unread, though `reading` only says so after the effect above has run.
+  // A reaction offered to a hero holds the round: nothing runs on while it waits, an answer plays the turn on itself,
+  // and one that runs out unanswered is played on once, by the hero's standing order.
   const { autoContinue, onContinue } = props
+  const reaction = latest?.reaction
+  const offerExpired = useExpired(reaction?.expiresAt)
+  const offerWaits = Boolean(reaction && reaction.answer === undefined && !offerExpired)
+  const offerHolds = Boolean(reaction && (reaction.answer !== undefined || !offerExpired))
   const next = latest ? findCurrentActor(latest.characters) : undefined
   const nextAi = next?.type === "pc" && next.controlledBy === "ai"
   const unseen = reading || previousText.current.paragraphs !== text
   const ahead = Boolean(autoContinue && !props.writing && (!mode || (held && !props.busy)) && (next || latest === turn))
-  const continueKey = !finished && !busy && (ahead || (!unseen && !mode)) && !props.overlay && latest && !(next?.type === "pc" && !nextAi) ? `${latest._id}:${next?.id ?? "round"}` : null
+  const continueKey =
+    !finished && !busy && !offerHolds && (ahead || (!unseen && !mode)) && !props.overlay && latest && !(next?.type === "pc" && !nextAi)
+      ? `${latest._id}:${next?.id ?? "round"}${reaction ? `:${reaction.expiresAt}` : ""}`
+      : null
   const [continued, setContinued] = useState<string | null>(null)
   useEffect(() => {
     if (!autoContinue || !continueKey || continued === continueKey) return
     setContinued(continueKey)
     onContinue(continueKey.split(":")[0])
   }, [autoContinue, continueKey, continued, onContinue])
+  // The offer shows once the story before it has been read to its last paragraph, so it never cuts into one.
+  const offerHero = reaction && latest?.characters.find((c) => c.id === reaction.offer.to)
+  const offerShown = Boolean(reaction && !offerExpired && !busy && !held && turn === latest && (!reading || paragraph >= text.length - 1))
+  const offerMine = Boolean(offerHero && offerHero.type === "pc" && offerHero.controlledBy !== "ai" && props.controls(offerHero) && props.onReact)
+  const react = (take: boolean) => {
+    if (latest && reaction) void props.onReact?.(latest._id, reaction.offer.to, take)
+  }
   const reply = async (value: string) => {
     if (!turn || !actor) return
     if (await props.onReply(turn._id, actor.id, value)) setDraft("")
@@ -1016,7 +1045,23 @@ export function StagePlay(props: {
               )}
             </div>
           )}
-          {!ended && !busy && !reading && !mode && turn && !(autoContinue && continueKey && continued !== continueKey) && (
+          {reaction && offerShown && (
+            <ReactionCard
+              key={`${reaction.npc}:${reaction.expiresAt}`}
+              reaction={reaction.offer.id}
+              hero={offerHero?.name ?? "A hero"}
+              portrait={offerHero ? portrait(offerHero) : undefined}
+              expiresAt={reaction.expiresAt}
+              text={reaction.text}
+              mine={offerMine}
+              answered={reaction.answer !== undefined}
+              compact={compact}
+              className={`absolute left-1/2 z-30 -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`}
+              onTake={() => react(true)}
+              onPass={() => react(false)}
+            />
+          )}
+          {!ended && !busy && !reading && !mode && turn && !offerWaits && !(autoContinue && continueKey && continued !== continueKey) && (
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
               <p className={`${passed ? "mb-1" : "mb-3"} font-serif text-xl`}>{actor ? `${actor.name}’s Turn` : "The Round Is Complete"}</p>
               {passed && <p className="mb-3 font-serif text-sm text-[#e39a7c]">Passed Over · {passed}</p>}
@@ -1042,7 +1087,16 @@ export function StagePlay(props: {
             />
           )}
           {open === "map" && city && <CityMapPanel map={city.map} trail={city.trail} compact={compact} onClose={() => setOpen(null)} />}
-          {card && <CharacterCard info={card} compact={compact} onClose={() => setCardId(null)} />}
+          {card && (
+            <CharacterCard
+              info={card}
+              compact={compact}
+              onClose={() => setCardId(null)}
+              onOrders={(changed) => {
+                if (latest && cardCharacter) void props.onOrders?.(latest._id, cardCharacter.id, { ...cardOrders, ...changed })
+              }}
+            />
+          )}
           {open === "feedback" && props.onFeedback && (
             <FeedbackPanel
               // A star on the closing panel reopens it as the ending's form.

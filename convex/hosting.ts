@@ -216,12 +216,13 @@ export const queueJob = mutation({
     secret: v.string(),
     adventureId: v.id("adventures"),
     turnId: v.id("turns"),
-    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip")),
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip"), v.literal("react")),
     userId: v.string(),
     characterId: v.optional(v.string()),
     text: v.optional(v.string()),
     result: v.optional(v.number()),
     second: v.optional(v.number()),
+    take: v.optional(v.boolean()),
   },
   handler: async (ctx, { secret, ...job }) => {
     requireServer(secret)

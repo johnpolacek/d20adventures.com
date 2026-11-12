@@ -16,13 +16,14 @@ import type { Art } from "./paint"
 // Host mode: the game lives on the website, and this app runs its GM. Guests' actions and the host's own wait on the
 // website as jobs. The worker claims one at a time, runs it through the host's CLI, and reports it done or failed.
 // A suggest job changes nothing in the game: it writes replies a player could send, which finish the job with it.
+// A react job is a player's answer to a reaction offered to their hero, and plays the turn on as Continue does.
 
 export type HostJob = {
   _id: string
   adventureId: string
   // None for an arrival job, which is written before the first turn.
   turnId?: string
-  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival" | "paint"
+  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival" | "paint" | "react"
   userId: string
   characterId?: string
   // A reply's text, or the hook a created hero's player chose for an arrival job.
@@ -30,6 +31,8 @@ export type HostJob = {
   result?: number
   // The other d20 of a roll with Advantage or Disadvantage.
   second?: number
+  // A react job's answer: take the reaction or let it pass.
+  take?: boolean
   // An arrival or paint job's hero, as the website sends it.
   sheet?: PCTemplate | null
 }
@@ -88,6 +91,10 @@ export function selfRunning(characters: Actor[]): string | null {
   return actor?.id ?? "round"
 }
 
+/** Whether a turn's reaction offer still holds the round: unanswered and not run out by `now`. */
+export const offerWaits = (turn: { reaction?: { answer?: boolean; expiresAt: number } | null } | null | undefined, now: number) =>
+  Boolean(turn?.reaction && turn.reaction.answer === undefined && now < turn.reaction.expiresAt)
+
 /** Runs one job against the hosted game. Throws with a message players can read when it cannot. A suggest job returns its replies. */
 export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: Llm): Promise<ActionSuggestion[] | undefined> {
   // Some inherited web services recover failed inference with default prose or no roll. A hosted game must keep
@@ -124,12 +131,21 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   const turn = await store.getTurn({ turnId: job.turnId })
   if (!turn) throw new Error("The turn is missing.")
   const actor = findCurrentActor(turn.characters) as Actor | undefined
-  if (job.kind === "continue") {
+  // A player's answer to a reaction: kept, and the NPC's turn that waited on it is played on.
+  if (job.kind === "react") {
+    if (typeof job.take !== "boolean" || !job.characterId) throw new Error("An answer is to take the reaction or not.")
+    if (turn.reaction?.offer.to !== job.characterId || turn.reaction.answer !== undefined) throw new Error("No reaction is offered to this character.")
+    await core.answerReaction({ turnId: turn._id, characterId: job.characterId, take: job.take })
+  }
+  if (job.kind === "continue" || job.kind === "react") {
     if (actor?.type === "pc" && actor.controlledBy !== "ai") throw new Error("A player character still needs to act.")
     let next = actor
     if (actor) {
-      await core.processNpcTurnsAfterCurrent(turn._id)
+      // The answer already played the turns on, as the host's GM plays every turn that needs no player at once.
+      if (job.kind === "continue") await core.processNpcTurnsAfterCurrent(turn._id)
       const after = await store.getTurn({ turnId: turn._id })
+      // A turn that stopped to offer a hero a reaction is not a failure: the round waits on the answer.
+      if (after?.reaction) return
       next = after ? (findCurrentActor(after.characters) as Actor | undefined) : undefined
       if (next?.type === "npc" || next?.controlledBy === "ai") throw inferenceFailure ?? new Error("The GM could not finish this character's turn. Continue to retry.")
     }
@@ -222,16 +238,24 @@ export async function hostLoop(opts: {
     }
   }
   // Turns that need no player run on their own: the worker queues a Continue for them. Each is queued once, so one
-  // that fails waits for a player's Continue instead of being retried for ever.
+  // that fails waits for a player's Continue instead of being retried for ever. A reaction offered to a hero holds the
+  // round: nothing is queued while it waits on its answer, and once it runs out unanswered a Continue is queued once,
+  // which plays it by the hero's standing order. `offerUntil` is when the offer runs out, to look again then.
   let followed: string | null = null
+  let offerUntil: number | null = null
   const follow = async () => {
+    offerUntil = null
     try {
       const adventure = (await opts.store.getAdventure({ adventureId: opts.adventureId })) as (AdventureRecord & { currentTurnId?: string; status?: string }) | null
       if (!adventure?.currentTurnId || adventure.status === "completed") return false
       const turn = await opts.store.getTurn({ turnId: adventure.currentTurnId })
+      if (turn?.reaction && offerWaits(turn, Date.now())) offerUntil = turn.reaction.expiresAt
+      // An answered offer is played on by its own job.
+      if (turn?.reaction && (offerUntil !== null || turn.reaction.answer !== undefined)) return false
       const who = turn && selfRunning(turn.characters)
-      if (!turn || !who || followed === `${turn._id}:${who}`) return false
-      followed = `${turn._id}:${who}`
+      const key = turn && who && `${turn._id}:${who}${turn.reaction ? `:${turn.reaction.expiresAt}` : ""}`
+      if (!turn || !key || followed === key) return false
+      followed = key
       await opts.post(jobs, { op: "queue", turnId: turn._id, kind: "continue" })
       return true
     } catch {
@@ -249,8 +273,9 @@ export async function hostLoop(opts: {
       continue
     }
     if (!job) {
-      // Going idle, in case the game was left on such a turn: the app reopened, or a job stopped partway.
-      if (!idle && (await follow())) continue
+      // Going idle, in case the game was left on such a turn: the app reopened, or a job stopped partway. And once a
+      // reaction offer the round waits on runs out.
+      if ((!idle || (offerUntil !== null && Date.now() >= offerUntil)) && (await follow())) continue
       if (!idle) opts.emit({ type: "idle" })
       idle = true
       await opts.wait(1500)

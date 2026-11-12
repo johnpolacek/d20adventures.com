@@ -2,15 +2,18 @@ import { useUser } from "@clerk/nextjs"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { CircleCheckBig } from "lucide-react"
 import { useState } from "react"
+import { setStandingOrders } from "@/app/_actions/adventure"
 import { DeathSaveMarks } from "@/components/stage/roll-parts"
 import { standingOf, standingWords, WOUND_TONE } from "@/components/stage/standing"
 import Image from "@/components/ui/native-image"
-import { useTurn } from "@/lib/context/TurnContext"
+import type { Id } from "@/convex/_generated/dataModel"
+import { useTurnContext } from "@/lib/context/TurnContext"
 import { cn, getImageUrl } from "@/lib/utils"
 import { isAiControlledPc, isDown } from "@/lib/utils/turn-actors"
 import type { TurnCharacter } from "@/types/adventure"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import { NPCCharacterSheetModal } from "./npc-character-sheet-modal"
+import { controlsHero } from "./turn-reaction"
 import { useSheetViews } from "./use-sheet-view"
 
 function CharacterImage({ src, alt }: { src: string; alt: string }) {
@@ -29,7 +32,7 @@ function CharacterImage({ src, alt }: { src: string; alt: string }) {
 }
 
 export default function TurnCharacterList() {
-  const currentTurn = useTurn()
+  const { currentTurn, disableSSE } = useTurnContext()
   const characters = (currentTurn?.characters || []).slice().sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
   const { user } = useUser()
   // Every hero's sheet, for their hit points and Armor Class.
@@ -125,7 +128,19 @@ export default function TurnCharacterList() {
 
       {/* Show appropriate modal based on character type */}
       {selectedCharacter?.type === "pc" ? (
-        <CharacterSheetModal character={selectedCharacter} open={modalOpen} onOpenChange={setModalOpen} />
+        <CharacterSheetModal
+          character={currentTurn?.characters.find((c) => c.id === selectedCharacter.id) ?? selectedCharacter}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          onOrders={
+            currentTurn && !disableSSE && controlsHero(selectedCharacter, user?.id)
+              ? (orders) =>
+                  void setStandingOrders({ turnId: currentTurn.id as Id<"turns">, characterId: selectedCharacter.id, orders }).catch((error) =>
+                    console.error("[TurnCharacterList] The standing orders were not saved:", error)
+                  )
+              : undefined
+          }
+        />
       ) : (
         <NPCCharacterSheetModal character={selectedCharacter} open={modalOpen} onOpenChange={setModalOpen} />
       )}

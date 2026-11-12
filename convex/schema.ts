@@ -156,7 +156,8 @@ export default defineSchema({
     // A suggest job changes nothing in the game. It finishes with replies the player could send for their hero.
     // An arrival job writes a created hero's arrival before the game starts, for their sheet's key, with their hook as text.
     // A paint job paints a guest's hero through the host's image CLI, for their sheet's key. It holds up no other job.
-    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip"), v.literal("arrival"), v.literal("paint")),
+    // A react job is a player's answer to a reaction offered to their hero, `take` or not, and plays the turn on.
+    kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip"), v.literal("arrival"), v.literal("paint"), v.literal("react")),
     // Who asked, and for which character. Continue jobs have no character.
     userId: v.string(),
     characterId: v.optional(v.string()),
@@ -164,6 +165,7 @@ export default defineSchema({
     result: v.optional(v.number()),
     // The other d20 of a roll with Advantage or Disadvantage.
     second: v.optional(v.number()),
+    take: v.optional(v.boolean()),
     suggestions: v.optional(v.array(v.object({ label: v.string(), text: v.string() }))),
     status: v.union(v.literal("queued"), v.literal("running"), v.literal("done"), v.literal("failed")),
     error: v.optional(v.string()),

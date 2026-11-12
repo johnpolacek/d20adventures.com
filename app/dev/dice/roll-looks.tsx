@@ -5,6 +5,7 @@
 // condition, a Bardic Inspiration die, the Death Saving Throw, a class feature used, and how heroes and NPCs stand.
 // And spells: a spell attack, a target's save against a spell, the dice of Bless and Bane, a spell cast with no roll,
 // a Concentration save, a caster's card, and the spells that last on a character with their Temporary Hit Points.
+// And reactions: an offer to the player's hero with its countdown, one for another player's hero, and standing orders.
 
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { type ReactNode, useState } from "react"
@@ -13,6 +14,8 @@ import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import { Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, type CardRoll, PromptCard } from "@/components/stage/prompt-card"
+import { ReactionCard, StandingOrders } from "@/components/stage/reaction-card"
+import { heroReactions } from "@/components/stage/reaction-view"
 import { FeatureEntry } from "@/components/stage/roll-parts"
 import { RollResult } from "@/components/stage/roll-result"
 import type { FeatureView, RollAsk, RollView } from "@/components/stage/roll-view"
@@ -309,6 +312,101 @@ function CardFlow({ roll, answer, actor }: { roll: CardRoll; answer: (dice: numb
   )
 }
 
+// Reaction offers, from now: the player's hero with 20 seconds and with 5, and another player's hero. Again starts
+// the clocks over.
+function ReactionLooks({ compact }: { compact: boolean }) {
+  const [start, setStart] = useState(() => Date.now())
+  const [said, setSaid] = useState("")
+  const text = "Reinhard Voss is leaving Lyra Ashgrove's reach. Lyra Ashgrove may strike with Dagger."
+  const stage = "relative h-[300px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink"
+  const placed = `absolute left-1/2 z-30 -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`
+  const answer = (take: boolean) => setSaid(take ? "Take It" : "Let It Pass")
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-3">
+        <Pill
+          onClick={() => {
+            setStart(Date.now())
+            setSaid("")
+          }}
+        >
+          Again
+        </Pill>
+        {said && <span className={eyebrow}>Answered · {said}</span>}
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(420px,1fr))] gap-6">
+        <Box title="11 · Reaction · Yours, 20 Seconds" className={stage}>
+          <ReactionCard
+            key={`a${start}`}
+            reaction="opportunity-attack"
+            hero={LYRA}
+            expiresAt={start + 20_000}
+            text={text}
+            mine
+            compact={compact}
+            className={placed}
+            onTake={() => answer(true)}
+            onPass={() => answer(false)}
+          />
+        </Box>
+        <Box title="11 · Reaction · Yours, 5 Seconds" className={stage}>
+          <ReactionCard
+            key={`b${start}`}
+            reaction="shield"
+            hero={LYRA}
+            portrait={THALBERN}
+            expiresAt={start + 5000}
+            text="Reinhard Voss's Scimitar hits Lyra Ashgrove: 14 against Armor Class 12. Shield would make it Armor Class 17."
+            mine
+            compact={compact}
+            className={placed}
+            onTake={() => answer(true)}
+            onPass={() => answer(false)}
+          />
+        </Box>
+        <Box title="11 · Reaction · Another Player's Hero" className={stage}>
+          <ReactionCard key={`c${start}`} reaction="opportunity-attack" hero={LYRA} expiresAt={start + 20_000} text={text} mine={false} compact={compact} className={placed} />
+        </Box>
+        <Box title="11 · Reaction · Phone Width" className="relative h-[300px] w-[360px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+          <ReactionCard
+            key={`d${start}`}
+            reaction="opportunity-attack"
+            hero={LYRA}
+            expiresAt={start + 20_000}
+            text={text}
+            mine
+            compact={compact}
+            className="absolute bottom-[50px] left-1/2 z-30 w-[min(430px,calc(100%-24px))] -translate-x-1/2"
+            onTake={() => answer(true)}
+            onPass={() => answer(false)}
+          />
+        </Box>
+        <Box title="11 · Standing Orders · Fighter, Defaults" className={`${panel} px-5 py-4`}>
+          <StandingOrders rows={heroReactions([], undefined)} compact={compact} onChange={(changed) => setSaid(JSON.stringify(changed))} />
+        </Box>
+        <Box title="11 · Standing Orders · Wizard with Shield, Set" className={`${panel} px-5 py-4`}>
+          <StandingOrders rows={heroReactions([...LYRA_CASTING.prepared, "Shield"], { "opportunity-attack": "never" })} compact={compact} onChange={(changed) => setSaid(JSON.stringify(changed))} />
+        </Box>
+        <Box title="11 · Card · Lyra, Standing Orders" className="relative h-[720px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+          <CharacterCard
+            info={{
+              id: "lyra",
+              name: LYRA,
+              role: "Human Wizard",
+              standing: SPELLS_ORDER[0].standing,
+              spellcasting: { ...LYRA_CASTING, prepared: [...LYRA_CASTING.prepared, "Shield"] },
+              reactions: heroReactions([...LYRA_CASTING.prepared, "Shield"], { shield: "always" }),
+            }}
+            compact={compact}
+            onClose={() => {}}
+            onOrders={(changed) => setSaid(JSON.stringify(changed))}
+          />
+        </Box>
+      </div>
+    </div>
+  )
+}
+
 export function RollLooks() {
   const [take, setTake] = useState(0)
   const [compact, setCompact] = useState(false)
@@ -480,6 +578,8 @@ export function RollLooks() {
           />
         </Box>
       </div>
+
+      <ReactionLooks compact={compact} />
     </div>
   )
 }

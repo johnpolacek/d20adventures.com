@@ -10,7 +10,10 @@ export function mapConvexTurnToTurn(raw: unknown): import("../types/adventure").
     characters: import("../types/adventure").TurnCharacter[]
     adventureId: string
     isFinalEncounter?: boolean
+    reaction?: import("../types/adventure").ReactionOffered & { resume?: unknown }
   }
+  // A reaction offer is carried without what the engine keeps to play the turn again. A cleared one is null.
+  const reaction = t.reaction ? (({ resume: _resume, ...offer }) => offer)(t.reaction) : undefined
   return {
     id: t._id,
     encounterId: t.encounterId,
@@ -19,6 +22,7 @@ export function mapConvexTurnToTurn(raw: unknown): import("../types/adventure").
     characters: t.characters,
     adventureId: t.adventureId,
     isFinalEncounter: t.isFinalEncounter,
+    ...(reaction ? { reaction } : {}),
   }
 }
 

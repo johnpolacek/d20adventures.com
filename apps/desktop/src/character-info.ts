@@ -2,6 +2,7 @@ import type { SheetView } from "@d20/gm-core/sheet/view"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import type { CardInfo } from "@/components/stage/character-card"
+import type { OrderRow } from "@/components/stage/reaction-view"
 import type { Standing } from "@/components/stage/standing"
 
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
@@ -34,8 +35,9 @@ function sheetDetails(sheet: SheetView): NonNullable<CardInfo["details"]> {
 /**
  * A character's card. `standing` is how they stand (components/stage/standing): a hero's hit points and Armor Class
  * from their sheet, an NPC's wound word. A hero's spellcasting comes from their sheet too. The caller works it out, since this file loads under the desktop's tests.
+ * `reactions` are the standing orders of a hero this player plays (components/stage/reaction-view `heroReactions`).
  */
-export function characterInfo(character: TurnCharacter, portrait: string | undefined, sheet: SheetView | null, standing: Standing | undefined): CardInfo {
+export function characterInfo(character: TurnCharacter, portrait: string | undefined, sheet: SheetView | null, standing: Standing | undefined, reactions?: OrderRow[]): CardInfo {
   const conditions = conditionLabel(character)
   return {
     id: character.id,
@@ -46,6 +48,7 @@ export function characterInfo(character: TurnCharacter, portrait: string | undef
     ...(standing ? { standing } : {}),
     ...(conditions ? { conditions } : {}),
     ...(sheet?.spellcasting ? { spellcasting: sheet.spellcasting } : {}),
+    ...(reactions?.length ? { reactions } : {}),
     details: [
       ...(sheet ? sheetDetails(sheet) : []),
       { label: "Equipment", items: character.equipment?.length ? character.equipment.map((e) => `${e.name}${e.description ? `. ${e.description}` : ""}`) : ["None"] },

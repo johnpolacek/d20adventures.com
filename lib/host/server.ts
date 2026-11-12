@@ -338,6 +338,8 @@ export type HostedAction =
   | { turnId: string; kind: "roll"; characterId: string; result: number; second?: number }
   | { turnId: string; kind: "skip"; characterId: string }
   | { turnId: string; kind: "continue" }
+  // A player's answer to a reaction offered to their hero in the middle of an NPC's turn.
+  | { turnId: string; kind: "react"; characterId: string; take: boolean }
   // Replies the host's GM offers for the player's hero. It changes nothing in the game.
   | { turnId: string; kind: "suggest"; characterId: string }
 
@@ -351,6 +353,11 @@ export async function queueAction(adventure: Doc<"adventures">, userId: string, 
   assertPlayerCharacterControl(userId, turn, action.characterId)
   if (action.kind === "suggest") return convex.mutation(api.hosting.queueJob, { ...base, kind: "suggest", characterId: action.characterId })
   if (action.kind === "skip") return convex.mutation(api.hosting.queueJob, { ...base, kind: "skip", characterId: action.characterId })
+  if (action.kind === "react") {
+    if (typeof action.take !== "boolean") throw new HostError(400, "An answer is to take the reaction or not.")
+    if ((turn.reaction as { offer?: { to?: string } } | undefined)?.offer?.to !== action.characterId) throw new HostError(409, "No reaction is offered to this character.")
+    return convex.mutation(api.hosting.queueJob, { ...base, kind: "react", characterId: action.characterId, take: action.take })
+  }
   if (action.kind === "reply") {
     const text = typeof action.text === "string" ? action.text.trim() : ""
     if (!text || text.length > 4000) throw new HostError(400, "Write an action of up to 4000 characters.")

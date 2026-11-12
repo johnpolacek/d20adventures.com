@@ -1,3 +1,4 @@
+import type { PendingReaction } from "../sheet/reactions"
 import type { StoryBeat } from "../story/beats"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
 import type { NPC, PC } from "./character"
@@ -54,7 +55,13 @@ export interface Turn {
   characters: TurnCharacter[]
   adventureId: string
   isFinalEncounter?: boolean
+  // A reaction offered to a player's hero in the middle of an NPC's turn, while the round waits for the answer. The
+  // screens show it without what the engine keeps to play the turn again.
+  reaction?: ReactionOffered
 }
+
+/** A reaction offer as the screens see it (../sheet/reactions `PendingReaction`, without `resume`). */
+export type ReactionOffered = Omit<PendingReaction, "resume">
 
 export interface DiceRoll {
   rollType: string

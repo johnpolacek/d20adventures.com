@@ -300,7 +300,7 @@ Substages:
 8. Spells of levels 2 and 3 on the four casters' lists, with Counterspell as a reaction.
 9. Milestones. Finishing an adventure gives a level, and a hero's own sheet is kept on both hosts.
 10. The level-up screen, on both hosts: the player's choices for the level, checked by the engine.
-11. On screen: the reaction offer and its countdown, standing orders, rests and Hit Dice, the subclass and its features.
+11. On screen: the reaction offer and its countdown, standing orders, rests and Hit Dice, the subclass and its features. Done for reactions: one shared card shows the offer in words, the seconds left on a bar, and Take It and Let It Pass. For another player's hero it reads who is deciding. On the site the turn carries the offer over the stream, the card stands where an NPC's roll is shown, and the hero's player calls the turn on when the wait runs out. On the desktop the card sits in the stage's HUD and the app's own continue holds while an offer stands. Hosted play carries the answer as a job. A hero's sheet lists the reactions they can take, each with Always, When It Matters or Never. Checked by eye on `/dev/dice`. Not yet: standing orders in hosted play, and none of it watched in a live game.
 12. Retune and migrate: the premades, the encounters, the Long Rest the notes of The Ambush ask for.
 13. Prompt checks for the rests and the new actions.
 14. Close. An adventure plays on both hosts through a rest and a level.

@@ -2,6 +2,8 @@
 
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { useState } from "react"
+import { StandingOrders } from "@/components/stage/reaction-card"
+import { heroReactions, type StandingOrders as Orders } from "@/components/stage/reaction-view"
 import { DeathSaveMarks } from "@/components/stage/roll-parts"
 import { standingOf, standingWords } from "@/components/stage/standing"
 import { Button } from "@/components/ui/button"
@@ -17,6 +19,8 @@ interface CharacterSheetModalProps {
   character: CharacterSheetModalCharacter
   open: boolean
   onOpenChange: (open: boolean) => void
+  // A hero this player plays, in play: saves their standing orders for reactions, the whole set.
+  onOrders?: (orders: Orders) => void
 }
 // Type guard for TurnCharacter
 function isTurnCharacter(char: CharacterSheetModalCharacter): char is TurnCharacter {
@@ -47,7 +51,7 @@ function ExpandableText({ title, text }: ExpandableTextProps) {
   )
 }
 
-export function CharacterSheetModal({ character, open, onOpenChange }: CharacterSheetModalProps) {
+export function CharacterSheetModal({ character, open, onOpenChange, onOrders }: CharacterSheetModalProps) {
   // The rules sheet, where the hero has one. It loads only while the window is open.
   const sheet = useSheetView(open ? character?.sheet : undefined, character?.hitPoints, character?.spellSlots, character?.spellEffects)
   if (!character) return null
@@ -181,6 +185,14 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
                     ))}
                 </div>
               </div>
+            )}
+
+            {sheet && onOrders && (
+              <StandingOrders
+                key={character.name}
+                rows={heroReactions(sheet.spellcasting?.prepared, character.standingOrders)}
+                onChange={(changed) => onOrders({ ...character.standingOrders, ...changed })}
+              />
             )}
 
             {sheet && (

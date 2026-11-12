@@ -14,6 +14,7 @@ import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/chara
 import { castIdFor, partyScene, portraitFor, sceneFor } from "../src/scenes"
 import { encounterFloor } from "./floor"
 import { game, type Packs, suggest, transitionsOf } from "./game"
+import { type HostJob, type HostPost, hostLoop } from "./host"
 import { LocalStore } from "./store"
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
@@ -360,6 +361,84 @@ test("an offer no one answers follows the hero's standing order when it runs out
         .filter((beat) => beat.kind === "feature").length,
       0
     )
+  })
+})
+
+// The host's worker on a hosted game, with the local save as the website's store. It claims `jobs`, then a Continue it
+// queues itself, the first only. `waits` is how many times it goes idle before it stops, sleeping `sleep` ms each time.
+async function hostRun(store: LocalStore, jobs: HostJob[], llm: Llm, waits = 1, sleep = 0) {
+  const queued: string[] = []
+  const finished: { jobId: string; error?: string }[] = []
+  const post: HostPost = async (_path, body) => {
+    const b = body as { op: string; jobId: string; error?: string; turnId: string; kind: HostJob["kind"] }
+    if (b.op === "claim") return { job: jobs.shift() ?? null }
+    if (b.op === "queue") {
+      queued.push(b.kind)
+      if (queued.length === 1) jobs.push({ _id: "auto", adventureId: store.state!.adventure._id, turnId: b.turnId, kind: b.kind, userId: "local-player" })
+      return { jobId: "auto" }
+    }
+    finished.push({ jobId: b.jobId, error: b.error })
+    return { ok: true }
+  }
+  let left = waits
+  await hostLoop({
+    adventureId: store.state!.adventure._id,
+    post,
+    store,
+    packs,
+    llm,
+    emit: () => {},
+    stopped: () => left <= 0,
+    wait: async () => {
+      left--
+      if (sleep) await new Promise((resolve) => setTimeout(resolve, sleep))
+    },
+  })
+  return { queued, finished }
+}
+
+test("hosted: the worker waits on an offer, a guest's answer plays the turn on, and one that runs out is continued once", async () => {
+  const offerLyra = async (store: LocalStore, play: (llm: Llm) => Promise<unknown>) => {
+    const reinhard = store.current().characters.find((c) => c.name === "Reinhard")!
+    lyra(store).position = { x: reinhard.position!.x, y: reinhard.position!.y + 5 }
+    const silas = store.current().characters.find((c) => c.name === "Silas")!
+    silas.hasReplied = silas.isComplete = true
+    store.save()
+    await play(walksOff())
+    assert.ok(store.current().reaction)
+  }
+  // The round the offer stopped, which the host's GM may have ended since.
+  const round = (store: LocalStore, id: string) => store.state!.turns.find((t) => t._id === id)!
+  const struck = (store: LocalStore, id: string, from: number) =>
+    round(store, id)
+      .story.slice(from)
+      .filter((beat) => beat.kind === "feature" && beat.name === "Opportunity Attack").length
+  // The offer stands: the idle worker queues nothing. Lyra's player lets it pass, and Reinhard walks off unstruck.
+  await inTheBattle(async (store, play) => {
+    await offerLyra(store, play)
+    const id = store.current()._id
+    const was = store.current().story.length
+    assert.deepEqual((await hostRun(store, [], walksOff())).queued, [])
+    const userId = (lyra(store) as { userId?: string }).userId ?? "local-player"
+    const answer: HostJob = { _id: "react", adventureId: store.state!.adventure._id, turnId: store.current()._id, kind: "react", userId, characterId: lyra(store).id, take: false }
+    const { finished } = await hostRun(store, [answer], walksOff())
+    assert.deepEqual(finished[0], { jobId: "react", error: undefined })
+    assert.equal(round(store, id).reaction, undefined)
+    assert.equal(round(store, id).characters.find((c) => c.name === "Reinhard")!.isComplete, true)
+    assert.equal(struck(store, id, was), 0)
+  })
+  // No one answers. Once the wait runs out the idle worker queues one Continue, and her standing order strikes.
+  await inTheBattle(async (store, play) => {
+    await offerLyra(store, play)
+    const id = store.current()._id
+    const was = store.current().story.length
+    store.current().reaction!.expiresAt = Date.now() + 30
+    store.save()
+    const { queued, finished } = await hostRun(store, [], walksOff(), 2, 60)
+    assert.equal(queued[0], "continue")
+    assert.equal(finished[0].error, undefined)
+    assert.equal(round(store, id).reaction, undefined)
+    assert.equal(struck(store, id, was), 1)
   })
 })
 

@@ -24,6 +24,7 @@ import { Button } from "../ui/button"
 import LoadingAnimation from "../ui/loading-animation"
 import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
 import TurnNarrativeReply from "./turn-narrative-reply"
+import { TurnReaction, useStandingOffer } from "./turn-reaction"
 import { useTurnActions } from "./use-turn-actions"
 import { useTurnActor } from "./use-turn-actor"
 
@@ -32,6 +33,8 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
   const { advancing, tokenError, handleAdvanceOrNavigate, submitReply } = useTurnActions()
   const { settingId, adventurePlanId } = useAdventure()
   const { isSignedIn } = useUser()
+  // A reaction offered to a hero stops the NPC's turn until it is answered or runs out. It shows in place of the roll.
+  const offer = useStandingOffer()
 
   // Drawer variant scrolls its own container (the page variant's window scroll
   // lives in TurnNarrative): jump to the latest content + reply form on open,
@@ -83,8 +86,10 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
         return <RollLine key={`${part.character}-${part.check}-${part.total}-${part.dc}-${idx}`} roll={rollView(part, currentTurn.characters)} className="mt-0 mb-6 max-w-xl" />
       })}
 
+      {offer && !currentTurn.isFinalEncounter && <TurnReaction className="mx-auto my-6 w-full max-w-xl" />}
+
       {/* Show loading animation if an NPC is processing their turn */}
-      {isNpcProcessing && !currentTurn?.isFinalEncounter && !disableSSE && (
+      {isNpcProcessing && !offer && !currentTurn?.isFinalEncounter && !disableSSE && (
         <div className="flex flex-col items-center gap-4 py-8">
           <LoadingAnimation />
           <p className="text-indigo-300 font-display">{currentCharacter?.name} is rolling…</p>

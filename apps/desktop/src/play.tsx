@@ -113,9 +113,10 @@ export function DesktopGame() {
   saveRef.current = save
 
   // Every command waits its turn behind the one running. A written turn shows the GM at work only once the story before
-  // it has been read. A shown command asked while another is waiting or running is dropped, as a second click.
+  // it has been read. A shown command asked while another is waiting or running is dropped, as a second click. A quiet
+  // one, such as a hero's standing orders, shows nothing at work.
   const invoke = useCallback(
-    async (command: GameCommand | HeroCommand, how: "shown" | "writing" = "shown") => {
+    async (command: GameCommand | HeroCommand, how: "shown" | "writing" | "quiet" = "shown") => {
       if (how === "shown") {
         if (busyRef.current) return
         busyRef.current = true
@@ -378,6 +379,20 @@ export function DesktopGame() {
         const res = await invoke({ kind: "roll", turnId, characterId, result, second })
         return Boolean(res && !res.error)
       }}
+      onReact={async (turnId, characterId, take) => {
+        if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "react", characterId, take } }))
+        const res = await invoke({ kind: "react", turnId, characterId, take })
+        return Boolean(res && !res.error)
+      }}
+      // A hosted game's heroes keep the default orders: no job carries orders to the host's GM yet.
+      onOrders={
+        hosting
+          ? undefined
+          : async (turnId, characterId, orders) => {
+              const res = await invoke({ kind: "orders", turnId, characterId, orders }, "quiet")
+              return Boolean(res && !res.error)
+            }
+      }
       autoContinue={!hosting}
       onContinue={(turnId) => {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "continue" } }))
