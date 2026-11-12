@@ -81,5 +81,6 @@
   },
   "status": "",
   "id": "npcs-1749870658664",
-  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/09000b84-bff7-4c85-bba3-05e48f32f8ca.png?t=1749872181244"
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-road-to-kordavos/npcs/09000b84-bff7-4c85-bba3-05e48f32f8ca.png?t=1749872181244",
+  "statBlock": "spy"
 }

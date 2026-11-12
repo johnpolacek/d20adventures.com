@@ -9,5 +9,6 @@
   "appearance": "A robed woman with long, dark hair braided intricately. Wears a silver pendant with a symbol of a tree intertwined with the moon, marking her as a follower of Thyra.",
   "personality": "Calm, serene, commanding, understanding.",
   "behavior": "Healing spells, knowledge of ancient texts, spiritual guidance, light manipulation.",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "priest-acolyte"
 }

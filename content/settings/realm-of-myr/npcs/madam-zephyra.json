@@ -9,5 +9,6 @@
   "appearance": "Tall and slender, with piercing green eyes that seem to see through one's soul, dressed in flowing, colorful robes with mystical symbols.",
   "personality": "Mysterious, wise, speaks in riddles.",
   "behavior": "Divination",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "commoner"
 }

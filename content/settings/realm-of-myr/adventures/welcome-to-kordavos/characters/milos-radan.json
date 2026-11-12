@@ -82,6 +82,8 @@
     "classSkills": ["medicine", "persuasion"],
     "otherSkills": ["history"],
     "featureChoices": {"cleric-divine-order": "thaumaturge"},
-    "feats": ["skilled"]
+    "feats": ["skilled"],
+    "armor": "chain-shirt",
+    "shield": true
   }
 }

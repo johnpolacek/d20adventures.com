@@ -85,6 +85,8 @@ export const npcSchema = baseCharacterSchema.extend({
   type: z.literal("npc"),
   attributes: attributesSchema.partial().optional(),
   status: z.string().optional(),
+  // The SRD stat block the NPC uses for hit points and Armor Class: "guard", "owlbear". None means a Commoner.
+  statBlock: z.string().optional(),
 })
 
 export type NPC = z.infer<typeof npcSchema>

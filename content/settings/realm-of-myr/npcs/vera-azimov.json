@@ -7,5 +7,6 @@
   "race": "Dwarf",
   "gender": "Female",
   "appearance": "Wears a tattered cloak",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "commoner"
 }

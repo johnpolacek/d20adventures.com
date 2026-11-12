@@ -20,5 +20,6 @@
     "wisdom": 18,
     "charisma": 14
   },
-  "status": ""
+  "status": "",
+  "statBlock": "druid"
 }

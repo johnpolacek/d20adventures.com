@@ -9,5 +9,6 @@
   "appearance": "Red-haired with dirt-smudged cheeks and a constant skip in her step",
   "personality": "Playful and charismatic, known for her infectious laughter and musical talent",
   "behavior": "Skilled in playing instruments, performing, and charming individuals with her songs",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "commoner"
 }

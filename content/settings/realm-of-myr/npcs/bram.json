@@ -9,5 +9,6 @@
   "appearance": "A burly man with a thick beard and jovial eyes, wearing a simple yet sturdy apron.",
   "personality": "Hearty and welcoming, with a knack for making everyone feel at home.",
   "behavior": "",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "commoner"
 }

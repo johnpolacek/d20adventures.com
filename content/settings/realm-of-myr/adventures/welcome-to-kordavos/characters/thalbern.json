@@ -54,6 +54,7 @@
     "abilityScores": {"str": 13, "dex": 17, "con": 13, "int": 11, "wis": 13, "cha": 10},
     "classSkills": ["stealth", "survival", "nature"],
     "otherSkills": ["perception"],
-    "feats": ["alert"]
+    "feats": ["alert"],
+    "armor": "studded-leather-armor"
   }
 }

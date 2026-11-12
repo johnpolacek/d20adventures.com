@@ -10,5 +10,6 @@
   "personality": "Diligent and fair, Garlan takes his duty seriously but can show kindness to those who need it.",
   "behavior": "",
   "thinking": "Garlan strokes his beard, weighing his duty…",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "guard-captain"
 }

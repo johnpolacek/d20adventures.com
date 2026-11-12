@@ -8,5 +8,6 @@
   "gender": "Female",
   "appearance": "A shorter, stockier young servant with a flushed round face, a notepad, and practical Blackthorn household attire.",
   "behavior": "Nervous and dutiful, following Clive’s instructions under pressure.",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "commoner"
 }

@@ -8,5 +8,6 @@
   "gender": "Male",
   "appearance": "An elderly man with pale features, thin gray hair, simple robes marked with Valkaran symbols, and spectacles hanging loosely around his neck.",
   "behavior": "Cautious and evasive; offers guidance while warning seekers away from dangerous truths.",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "commoner"
 }

@@ -8,5 +8,6 @@
   "gender": "Male",
   "appearance": "An oily man with beady eyes and twitching fingers, sitting behind a cluttered table in a shadowy corner stall.",
   "personality": "Slick, nervous and greedy. Croons over his wares and grows prickly when asked where they came from.",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "commoner"
 }

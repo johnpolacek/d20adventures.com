@@ -9,5 +9,6 @@
   "appearance": "Short and stout with a braided beard and hair, dressed in earthy tones with a belt full of small, exotic spice jars.",
   "personality": "Warm, knowledgeable, always ready to share a story or a cooking tip.",
   "behavior": "Expertise in rare spices and herbs, skilled storyteller.",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "commoner"
 }

@@ -8,5 +8,6 @@
   "gender": "Male",
   "appearance": "A determined Valkaran scholar turned revolutionary, usually seen in dark Covenant robes when revealed in the inner sanctum.",
   "behavior": "Driven by vengeance for Mikhail Antonov and by a radical commitment to restoring Valkaran power.",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "cultist-fanatic"
 }

@@ -1,4 +1,5 @@
 import { sheetProblems } from "@d20/gm-core/sheet/derive"
+import { isStatBlock } from "@d20/gm-core/sheet/stat-block"
 import { z } from "zod"
 import { npcSchema, pcTemplateSchema } from "@/types/character"
 import { hashJson } from "./hash"
@@ -320,6 +321,9 @@ function compileCharacterSheets(jsonFiles: SourceFile[], markdownFiles: ParsedMa
 
     const npcResult = npcSchema.safeParse(parsed)
     if (npcResult.success) {
+      if (npcResult.data.statBlock && !isStatBlock(npcResult.data.statBlock)) {
+        findings.push({ code: "character.rules.invalid", severity: "error", sourcePath: file.path, message: `"${npcResult.data.statBlock}" is not an SRD stat block.`, aiFixable: false })
+      }
       const profile = profilesById.get(npcResult.data.id)
       npcs[npcResult.data.id] = {
         sheet: npcResult.data,

@@ -7,5 +7,6 @@
   "race": "Human",
   "appearance": "Hooded Covenant agents in dark leathers, quick and quiet, with short blades and hand crossbows.",
   "behavior": "Skirmish from cover and protect their own above all.",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "bandit"
 }

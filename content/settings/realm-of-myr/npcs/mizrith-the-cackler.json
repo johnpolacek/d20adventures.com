@@ -9,5 +9,6 @@
   "appearance": "A hunched figure with a bony hand, bushy eyebrows, and an oddly large grin. His garb is a mix of colorful rags.",
   "personality": "Eccentric, mischievous, and always eager to display his peculiar wares.",
   "behavior": "Specialized in illusion and enchantment magic, adept at creating magical trinkets and rare scrolls.",
-  "healthPercent": 100
+  "healthPercent": 100,
+  "statBlock": "mage"
 }

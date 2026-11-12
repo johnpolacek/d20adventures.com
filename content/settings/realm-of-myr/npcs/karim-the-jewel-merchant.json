@@ -10,5 +10,6 @@
   "personality": "Charismatic, shrewd, always looking for the next big deal.",
   "behavior": "Expert in Jewels",
   "healthPercent": 100,
-  "specialAbilities": []
+  "specialAbilities": [],
+  "statBlock": "commoner"
 }
