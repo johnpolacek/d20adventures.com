@@ -39,7 +39,7 @@ function main() {
   assert.equal(artifacts.manifest.heroHooks?.length, 9)
   assert.match(artifacts.manifest.heroHooks?.[0] ?? "", /^Bringing an offering to the Church of Valkara/)
   assert.equal(Object.keys(artifacts.encounters).length, 49)
-  assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 50)
+  assert.equal(Object.keys(artifacts.characterSheets.npcs).length, 54)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).length, 9)
   assert.equal(artifacts.graph.encounterTransitions.length, 62)
   // The heroes wait in the line, then meet Garlan at its front, then enter the festival. Caught anywhere in the

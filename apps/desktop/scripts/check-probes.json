@@ -974,7 +974,7 @@
     "checks": ["channel-divinity"],
     "feature": {
       "id": "turn-undead",
-      "targets": ["ancient-undead"]
+      "targets": ["ancient-undead", "ancient-undead-2", "ancient-undead-3"]
     }
   },
   {

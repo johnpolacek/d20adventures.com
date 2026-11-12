@@ -177,6 +177,19 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
   }
 
   const characterSheets = compileCharacterSheets(jsonFiles, markdownFiles, findings)
+  // An encounter's NPC must have a sheet among the adventure's sources, or the encounter cannot open.
+  for (const encounter of Object.values(runtimeEncounters))
+    for (const ref of encounter.npcRefs)
+      if (!characterSheets.npcs[ref.id])
+        findings.push({
+          code: "link.target.missing",
+          severity: "error",
+          sourcePath: encounter.sourcePath,
+          sourceId: encounter.id,
+          sourceType: "encounter",
+          message: `NPC "${ref.id}" has no sheet among the adventure's sources.`,
+          aiFixable: false,
+        })
   const entities = compileEntities(markdownFiles, jsonFiles)
   const validationReport = createValidationReport(options.mode, findings)
   const manifest = {
