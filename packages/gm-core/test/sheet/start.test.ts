@@ -48,5 +48,5 @@ test("a player's saved copy from before the rules takes the adventure's sheet an
 test("a saved copy with its own sheet keeps it, and a hero with none anywhere cannot start", () => {
   const own: Sheet = { ...rules, level: 2 }
   assert.deepEqual(start(hero({ sheet: rules }), hero({ sheet: own })).sheet, own)
-  assert.throws(() => start(hero(), hero()), /no sheet or stat block/)
+  assert.throws(() => start(hero(), hero()), /has no rules sheet/)
 })

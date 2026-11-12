@@ -24,3 +24,17 @@ export function combatStatsOf(character: { type?: string; sheet?: Sheet; statBlo
 
 /** Whether an id names an SRD stat block. */
 export const isStatBlock = (id: string) => monsterById.has(id)
+
+/**
+ * What a character adds to its Initiative roll: a hero's Dexterity modifier and anything its sheet adds (the Alert
+ * feat's Proficiency Bonus), or the modifier an NPC's stat block prints.
+ */
+export function initiativeBonusOf(character: { name?: string; type?: string; sheet?: Sheet; statBlock?: string }): number {
+  if (character.sheet) return deriveSheet(character.sheet).initiative
+  const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
+  if (!monster) throw new Error(`${character.name ?? "This character"} has no rules sheet, so no Initiative can be rolled for them.`)
+  return monster.initiative.modifier
+}
+
+/** A character's Initiative for an encounter: the d20 it rolled as the encounter began, plus its bonus. It is kept until the encounter ends. */
+export const rollInitiative = (character: Parameters<typeof initiativeBonusOf>[0], die: number): number => die + initiativeBonusOf(character)

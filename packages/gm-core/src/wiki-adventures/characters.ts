@@ -1,4 +1,5 @@
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
+import { rollInitiative } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
 import type { PCTemplate } from "../types/character"
 import { rollD20 } from "../utils/game-utils"
@@ -37,11 +38,13 @@ export function buildLocalWikiTurnCharacters(args: {
       type: "pc" as const,
       userId: player.userId,
       controlledBy: player.controlledBy,
-      initiative: rollD20(),
+      initiative: 0,
       hasReplied: false,
       isComplete: false,
     }
     // A hero enters play at its maximum. One carried from the encounter before keeps the hit points it has.
+    // Initiative is rolled as the encounter begins and kept until it ends.
+    hero.initiative = rollInitiative(hero, rollD20())
     characters.push(carried?.hitPoints === undefined ? withStartingHitPoints(hero) : withHitPoints(hero, carried.hitPoints))
   }
 
@@ -53,7 +56,8 @@ export function buildLocalWikiTurnCharacters(args: {
         ...sheet,
         id: sheet.id,
         type: "npc" as const,
-        initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollD20(),
+        // An encounter may fix an NPC's place in the order. Otherwise it rolls with its stat block's bonus.
+        initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollInitiative({ type: "npc", statBlock: sheet.statBlock }, rollD20()),
         hasReplied: false,
         isComplete: false,
         behavior: npcRef.behavior ?? sheet.behavior,

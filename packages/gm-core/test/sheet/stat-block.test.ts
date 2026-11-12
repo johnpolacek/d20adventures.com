@@ -1,8 +1,9 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { hitPointsOf } from "../../src/sheet/hit-points"
 import type { Sheet } from "../../src/sheet/sheet"
-import { combatStatsOf, isStatBlock } from "../../src/sheet/stat-block"
+import { combatStatsOf, initiativeBonusOf, isStatBlock, rollInitiative } from "../../src/sheet/stat-block"
 
 // The numbers are the ones the SRD 5.2.1 stat blocks print.
 
@@ -37,4 +38,15 @@ test("an NPC's hit points follow its health percent", () => {
   assert.deepEqual(hitPointsOf({ type: "npc", statBlock: "owlbear", healthPercent: 50 }), { current: 30, maximum: 59 })
   assert.deepEqual(hitPointsOf({ type: "npc", healthPercent: 100 }), { current: 4, maximum: 4 })
   assert.deepEqual(hitPointsOf({ type: "npc", statBlock: "guard", healthPercent: 0 }), { current: 0, maximum: 11 })
+})
+
+test("Initiative is the d20 plus the bonus from the sheet or the stat block", () => {
+  // Thalbern: Dex 17 (+3), and his Alert feat adds his Proficiency Bonus (+2). A 10 on the die makes 15.
+  const thalbern = JSON.parse(readFileSync(new URL("../../../../content/settings/realm-of-myr/adventures/the-midnight-summons/characters/thalbern.json", import.meta.url), "utf8"))
+  assert.equal(initiativeBonusOf(thalbern), 5)
+  assert.equal(rollInitiative(thalbern, 10), 15)
+  // An Owlbear's block prints Initiative +1, and a Commoner's +0.
+  assert.equal(rollInitiative({ type: "npc", statBlock: "owlbear" }, 10), 11)
+  assert.equal(rollInitiative({ type: "npc" }, 10), 10)
+  assert.throws(() => initiativeBonusOf({ name: "Nobody", type: "pc" }), /Nobody has no rules sheet/)
 })

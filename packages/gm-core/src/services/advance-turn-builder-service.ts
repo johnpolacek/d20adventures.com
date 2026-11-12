@@ -45,12 +45,11 @@ export type BuildNextTurnResult =
 function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; story: StoryBeat[] }): Turn {
   let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => c.status !== "dead" && c.status !== "fled")
 
-  // Last round's rolls are over.
+  // Last round's rolls are over. Initiative was rolled as the encounter began, and every round keeps that order.
   newCharacters = newCharacters.map(({ rollResult: _rollResult, ...c }) => ({
     ...c,
     hasReplied: false,
     isComplete: false,
-    initiative: rollD20(),
   }))
 
   newCharacters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))

@@ -180,9 +180,9 @@ export function createAdvanceTurn(ports: GmPorts) {
             .filter((character) => character.status !== "dead" && character.status !== "fled")
             .map((character) => ({
               ...character,
+              // Initiative was rolled as the encounter began. Every round keeps that order.
               hasReplied: false,
               isComplete: false,
-              initiative: Math.floor(Math.random() * 20) + 1,
             }))
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
       const characters = keepPlayersAlive(artifacts.manifest, nextCharacters)
