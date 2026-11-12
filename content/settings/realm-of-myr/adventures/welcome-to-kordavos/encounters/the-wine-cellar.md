@@ -71,7 +71,7 @@ A failed disarm, or tampering with the lock unwarded, triggers it. If the trap i
 
 Without warning, an arc of blue lightning crackles and surges from the metal components, leaping out toward anyone standing near. The room is briefly illuminated by an arcane electrical discharge, casting long, jagged shadows on the walls.
 
-A failed save is a painful burn, a success only a singe. A protective spell cast before the lock is touched, such as Shield of Faith, gives the warded hero +2 on the save. No one is knocked out or carried off. The crack of the discharge carries, and the house guard comes at the end of the next round unless the party has gone.
+A failed save is a painful burn, 1d4 lightning damage, and a success only a singe, with none. A protective spell cast before the lock is touched, such as Shield of Faith, gives the warded hero Advantage on the save. No one is carried off. The crack of the discharge carries, and the house guard comes at the end of the next round unless the party has gone.
 
 ### Archives of the Drakovan
 

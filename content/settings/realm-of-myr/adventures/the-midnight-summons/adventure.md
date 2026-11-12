@@ -9,6 +9,7 @@ maxPlayers: 1
 premadeCharacters:
   - "thalbern"
 nextAdventure: "covert-cargo"
+playerDeath: false
 rescue:
   encounter: "timely-rescue"
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png"

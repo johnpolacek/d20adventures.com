@@ -28,7 +28,7 @@ Lyra is out of the water and in no danger of drowning. She is soaked, cold and b
 
 Poppen and Thalbern each saw her go into the river, each from his own hiding place. A watcher who comes out to help her is plainly seen by her and by the other watcher, with no check needed. This is most likely where the three first meet. They are strangers, with no names until they give them, and each knows only what he saw from where he was. A watcher who stays hidden stays unknown: anyone looking for him needs a Perception check, DC 15.
 
-Thalbern carries herbs and clean linen. If he tends a wounded hero, that hero recovers to about three quarters health.
+Thalbern carries herbs and clean linen. If he tends a wounded hero, it is an easy Medicine check, DC 10, and on a success that hero regains 1d8 hit points.
 
 Lyra knows the crate holds something powerfully enchanted, that the two men meant to silence her, and that the boat was bound for Kordavos. Thalbern knows a boat carrying relics from the elven vaults has just gone downriver. Poppen knows only what he saw and overheard.
 
