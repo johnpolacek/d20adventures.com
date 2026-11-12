@@ -1,0 +1,23 @@
+{
+  "encounterId": "mystery-cargo",
+  "set": "realm-of-myr/kordavos-docks",
+  "location": "Warehouse 14",
+  "where": "Warehouse 14, a timber storage shed in the shadowed west corner of the Kordavos quay, its double doors open on stacks of crates, a row of barrels, bales of silk, a small lockbox on a crate, and against the back wall a great iron-banded crate hung with chain. A tall scarred man and three hired blades in work clothes stand at the doors with short swords drawn. The party faces them from the quay.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -12.8, "z": 9.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -12.4, "z": 10.6 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -11.6, "z": 9.8 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -11.4, "z": 11.2 },
+    { "id": "scarface-alaric", "name": "A scarred man", "x": -18.3, "z": 10 },
+    { "id": "warehouse-thug", "name": "A hired blade", "x": -18.9, "z": 8.4 },
+    { "id": "thug-b", "name": "A hired blade", "x": -17.4, "z": 11.5 },
+    { "id": "thug-c", "name": "A hired blade", "x": -19.4, "z": 12 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -12.8, "z": 9.4 },
+    { "id": "cassia-verane", "x": -12.4, "z": 10.6 },
+    { "id": "yeva-softstep", "x": -11.6, "z": 9.8 },
+    { "id": "milos-radan", "x": -11.4, "z": 11.2 }
+  ],
+  "spare": [{ "x": -11, "z": 10.4 }]
+}

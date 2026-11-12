@@ -1,0 +1,29 @@
+{
+  "encounterId": "the-dragonbone-inn",
+  "set": "realm-of-myr/dragonbone-inn",
+  "location": "Dragonbone Inn",
+  "where": "Evening in the common room of the Dragonbone Inn: a great stone hearth with a dragon's skull over the mantel, a bard by the fire, the bar along the back wall, stairs up to the rooms, a dark corner where two hooded strangers sit. Bram has brought the party to the corner table by the street windows. A scarred dockworker and a spectacled scholar watch them from a barrel by the bar.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": 4.2, "z": 3.25 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 4.45, "z": 4.1 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 5.35, "z": 4.05 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 5.95, "z": 2.15 },
+    { "id": "bram", "name": "Bram", "x": 5.3, "z": 2.2 },
+    { "id": "bard", "name": "The bard", "x": -5, "z": 2.3 },
+    { "id": "patron-merchant", "name": "A laughing merchant", "x": -2, "z": -0.42 },
+    { "id": "patron-farmer", "name": "An old farmer", "x": 0.8, "z": 2.62 },
+    { "id": "patron-sailor", "name": "A river sailor", "x": 1.6, "z": 1.42 },
+    { "id": "patron-traveller", "name": "A tired traveller", "x": -3.35, "z": 3.05 },
+    { "id": "patron-hooded", "name": "A hooded stranger", "x": -6.25, "z": -4 },
+    { "id": "patron-hooded-b", "name": "A cloaked woman", "x": -5.25, "z": -4.62 },
+    { "id": "beric", "name": "A scarred dockworker", "x": 3, "z": -0.95 },
+    { "id": "eamon", "name": "A spectacled scholar", "x": 3.85, "z": -0.9 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": 4.2, "z": 3.25 },
+    { "id": "cassia-verane", "x": 4.45, "z": 4.1 },
+    { "id": "yeva-softstep", "x": 5.35, "z": 4.05 },
+    { "id": "milos-radan", "x": 5.95, "z": 2.15 }
+  ],
+  "spare": [{ "x": 3.7, "z": 3.7 }]
+}

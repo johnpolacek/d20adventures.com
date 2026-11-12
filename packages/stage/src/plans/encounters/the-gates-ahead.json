@@ -1,0 +1,13 @@
+{
+  "encounterId": "the-gates-ahead",
+  "set": "realm-of-myr/kordavos-south-gate",
+  "location": "Before the gates of Kordavos",
+  "where": "The Marquis Road at the end of the long line of travellers, merchants and villagers waiting outside the south gate of Kordavos, its towers hung with Asterian and Valkaran banners. Festival music carries from the city.",
+  "cast": [
+    { "id": "hero-1", "name": "Traveller 1", "x": 1.6, "z": 80.6 },
+    { "id": "hero-2", "name": "Traveller 2", "x": 3, "z": 81.2 },
+    { "id": "hero-3", "name": "Traveller 3", "x": 2.3, "z": 79.6 }
+  ],
+  "party": [{ "id": "hero-1", "x": 1.6, "z": 80.6 }, { "id": "hero-2", "x": 3, "z": 81.2 }, { "id": "hero-3", "x": 2.3, "z": 79.6 }],
+  "spare": [{ "x": 3.8, "z": 79.8 }]
+}

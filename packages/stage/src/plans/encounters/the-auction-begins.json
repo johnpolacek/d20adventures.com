@@ -1,0 +1,37 @@
+{
+  "encounterId": "the-auction-begins",
+  "set": "realm-of-myr/black-market-auction",
+  "location": "Black Market",
+  "where": "Deeper in the Black Market, the auction house: a candlelit horseshoe hall of old stone with a gallery of standing buyers round it, rows of velvet chairs facing a stone lectern and a half-round stage. The masked auctioneer stands at the lectern with a jewelled dagger, his assistant beside him; masked bidders fill the seats. Near the back by the side exit a hooded man in a velvet chair watches, a well-dressed man at his shoulder and two guards behind. The party stands at the back of the hall by the entrance.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -2.2, "z": 7 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -1.3, "z": 7.45 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 1.3, "z": 7.45 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 2.2, "z": 7 },
+    { "id": "auctioneer", "name": "The Auctioneer", "x": 0, "z": -2.65 },
+    { "id": "auction-assistant", "name": "The assistant", "x": -1.55, "z": -2.75 },
+    { "id": "bidder-noblewoman", "name": "A masked noblewoman", "x": -1.38, "z": 0.71 },
+    { "id": "bidder-merchant", "name": "A masked merchant", "x": 1.54, "z": 1.83 },
+    { "id": "bidder-collector", "name": "A masked collector", "x": 1.7, "z": 0.54 },
+    { "id": "bidder-veiled", "name": "A veiled lady", "x": -2.97, "z": 2.35 },
+    { "id": "bidder-young-noble", "name": "A masked young noble", "x": -3.34, "z": 0.61 },
+    { "id": "bidder-blue", "name": "A lady in a blue mask", "x": 0.82, "z": 0.9 },
+    { "id": "bidder-hooded", "name": "A hooded buyer", "x": 0.78, "z": 3.15 },
+    { "id": "bidder-beak", "name": "A buyer in a beaked mask", "x": -0.94, "z": 2 },
+    { "id": "bidder-silver", "name": "An elf in a silver mask", "x": 3.6, "z": 1.89 },
+    { "id": "bidder-hooded-b", "name": "Another hooded buyer", "x": -2.07, "z": 3.97 },
+    { "id": "bidder-blue-b", "name": "A masked lady", "x": 2.94, "z": 3.62 },
+    { "id": "bidder-merchant-b", "name": "A stout masked buyer", "x": -4.29, "z": 1.2 },
+    { "id": "silverhand", "name": "A hooded man with a silver gauntlet", "x": 4.8, "z": 3.75 },
+    { "id": "silverhand-representative", "name": "A man in a black coat", "x": 6.44, "z": 3.6 },
+    { "id": "raskov-guard-a", "name": "A silent guard", "x": 4.77, "z": 4.94 },
+    { "id": "raskov-guard-b", "name": "A silent guard", "x": 5.92, "z": 4.18 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -2.2, "z": 7 },
+    { "id": "cassia-verane", "x": -1.3, "z": 7.45 },
+    { "id": "yeva-softstep", "x": 1.3, "z": 7.45 },
+    { "id": "milos-radan", "x": 2.2, "z": 7 }
+  ],
+  "spare": [{ "x": 0, "z": 7.8 }]
+}

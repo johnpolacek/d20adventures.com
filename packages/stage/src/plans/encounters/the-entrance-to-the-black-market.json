@@ -1,0 +1,20 @@
+{
+  "encounterId": "the-entrance-to-the-black-market",
+  "set": "realm-of-myr/kordavos-black-market",
+  "location": "Black Market",
+  "where": "Nightfall in a narrow court between two crumbling buildings. Its north end is an old stone wall with an arched doorway hung with heavy ochre curtains, half drawn, darkness and a glimmer of lamps beyond. Planked-up doors and a lantern either side. The party stands in the court a few paces back. A huge hooded guard stands before the curtain, arms crossed, a long dagger in his belt.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.3, "z": 11.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.4, "z": 12 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.5, "z": 11.7 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.4, "z": 12.1 },
+    { "id": "garrick", "name": "A hooded guard", "x": 0, "z": 7.35 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.3, "z": 11.6 },
+    { "id": "cassia-verane", "x": -0.4, "z": 12 },
+    { "id": "yeva-softstep", "x": 0.5, "z": 11.7 },
+    { "id": "milos-radan", "x": 1.4, "z": 12.1 }
+  ],
+  "spare": [{ "x": 0.4, "z": 12.9 }]
+}

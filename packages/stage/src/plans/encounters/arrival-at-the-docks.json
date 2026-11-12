@@ -1,0 +1,22 @@
+{
+  "encounterId": "arrival-at-the-docks",
+  "set": "realm-of-myr/kordavos-docks",
+  "location": "Kordavos docks",
+  "where": "Golden late afternoon on the Kordavos docks: a broad cobbled quay along the harbour, the tall elven ship Star of Faelendar moored at it with a gangway to her deck, a treadwheel crane and stacks of cargo beside her, stone warehouses with arcades and stalls along the back of the quay, and Warehouse 14, a timber shed, in the shadowed corner at its west end. The party has come along the quay. Ahead by the cargo stacks, a grizzled dockworker in a leather apron has set down a crate and eyes them, a huge tattooed dockworker and a dock hand with a pipe beside him.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -0.6, "z": 9.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.4, "z": 9.9 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 1.4, "z": 9.5 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -1.6, "z": 9.9 },
+    { "id": "loric-windrider", "name": "A grizzled dockworker", "x": 3.6, "z": 5.6 },
+    { "id": "tor-marros", "name": "A huge tattooed dockworker", "x": 5.3, "z": 5.2 },
+    { "id": "petra-velan", "name": "A dock hand with a pipe", "x": 2.2, "z": 5 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -0.6, "z": 9.4 },
+    { "id": "cassia-verane", "x": 0.4, "z": 9.9 },
+    { "id": "yeva-softstep", "x": 1.4, "z": 9.5 },
+    { "id": "milos-radan", "x": -1.6, "z": 9.9 }
+  ],
+  "spare": [{ "x": -2.6, "z": 9.4 }]
+}

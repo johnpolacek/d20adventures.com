@@ -1,0 +1,21 @@
+{
+  "encounterId": "the-ambush",
+  "set": "realm-of-myr/kordavos-ambush-lanes",
+  "location": "Kordavos lanes",
+  "where": "Late night in the narrow lanes on the way back to the Dragonbone Inn. Two flat-roofed stone houses stand over the street, taller than the timber houses round them. A hooded archer stands at the parapet of each, one on the west roof beside the party and one on the east roof further up the street. An arrow is stuck in the door of the west house beside the party, another in the wall ahead. The party is in the street between the two houses, heading back toward the inn.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -0.9, "z": -6.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.3, "z": -5.8 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -1.7, "z": -4.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.2, "z": -4.9 },
+    { "id": "silas", "name": "A hooded archer", "x": 3.5, "z": -12.2, "raised": 12 },
+    { "id": "liora", "name": "A hooded archer", "x": -3.5, "z": -1.4, "raised": 12 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -0.9, "z": -6.4 },
+    { "id": "cassia-verane", "x": 0.3, "z": -5.8 },
+    { "id": "yeva-softstep", "x": -1.7, "z": -4.4 },
+    { "id": "milos-radan", "x": 1.2, "z": -4.9 }
+  ],
+  "spare": [{ "x": 0.2, "z": -3.4 }]
+}

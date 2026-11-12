@@ -1,0 +1,21 @@
+{
+  "encounterId": "finding-the-black-market",
+  "set": "realm-of-myr/kordavos-lower-districts",
+  "location": "Lower Districts",
+  "where": "A narrow side alley off the Lower Districts' street as the light fades: damp stone ground floors, timber storeys leaning close overhead, washing strung across, crates and barrels against the walls, a lantern here and there. The party stands a few paces in from the street. At their feet a paving stone has a small crooked dagger cut into it, and further in a stone over a doorway bears a snake coiled round a crescent moon. A trinket-seller lounges near the end, where a dark archway leads to a shut gate, and a hooded woman comes from it.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -11.2, "z": -7 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -12, "z": -8.1 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -12.7, "z": -7 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -10.4, "z": -7.9 },
+    { "id": "fence", "name": "A trinket-seller", "x": -21.9, "z": -6.75 },
+    { "id": "hooded-local", "name": "A hooded woman", "x": -23.6, "z": -7.9 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -11.2, "z": -7 },
+    { "id": "cassia-verane", "x": -12, "z": -8.1 },
+    { "id": "yeva-softstep", "x": -12.7, "z": -7 },
+    { "id": "milos-radan", "x": -10.4, "z": -7.9 }
+  ],
+  "spare": [{ "x": -11.6, "z": -7.6 }]
+}

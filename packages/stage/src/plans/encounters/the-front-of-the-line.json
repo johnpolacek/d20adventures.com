@@ -1,0 +1,16 @@
+{
+  "encounterId": "the-front-of-the-line",
+  "set": "realm-of-myr/kordavos-south-gate",
+  "location": "Kordavos checkpoint",
+  "where": "The party stands at the front of the line at Garlan's checkpoint outside the gate of Kordavos.",
+  "cast": [
+    { "id": "garlan", "name": "Garlan Ironfist", "x": 2.3, "z": 11.1 },
+    { "id": "branka", "name": "Branka Stoneveil", "x": 1.42, "z": 12.8 },
+    { "id": "cassia", "name": "Cassia Verane", "x": 0.22, "z": 12.8 },
+    { "id": "yeva", "name": "Yeva Softstep", "x": 0.82, "z": 13.65 },
+    { "id": "milos", "name": "Milos Radan", "x": -0.4, "z": 13.65 },
+    { "id": "oskar", "name": "Oskar Venn", "x": 0.8, "z": 16.2 }
+  ],
+  "party": [{ "id": "branka", "x": 1.42, "z": 12.8 }, { "id": "cassia", "x": 0.22, "z": 12.8 }, { "id": "yeva", "x": 0.82, "z": 13.65 }, { "id": "milos", "x": -0.4, "z": 13.65 }],
+  "spare": [{ "x": 0.82, "z": 14.5 }]
+}

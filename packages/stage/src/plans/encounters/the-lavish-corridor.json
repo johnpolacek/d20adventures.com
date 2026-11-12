@@ -1,0 +1,21 @@
+{
+  "encounterId": "the-lavish-corridor",
+  "set": "realm-of-myr/blackthorn-corridor",
+  "location": "The Blackthorn mansion",
+  "where": "The family's upper floor, deep in the house: a long corridor of portraits, tapestries, candelabra and crystal chandeliers. Two Blackthorn guards stand at ease before the great carved door of Thaddeus's chambers in the east wall, chatting. The party is a few paces up the corridor.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -0.9, "z": -12 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.2, "z": -11.6 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -0.4, "z": -10.8 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 0.8, "z": -10.6 },
+    { "id": "blackthorn-guard", "name": "A grey-haired guard", "x": 1.3, "z": -19.1 },
+    { "id": "blackthorn-guard-2", "name": "A young bearded guard", "x": 0.9, "z": -22.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -0.9, "z": -12 },
+    { "id": "cassia-verane", "x": 0.2, "z": -11.6 },
+    { "id": "yeva-softstep", "x": -0.4, "z": -10.8 },
+    { "id": "milos-radan", "x": 0.8, "z": -10.6 }
+  ],
+  "spare": [{ "x": -0.8, "z": -9.8 }]
+}

@@ -1,0 +1,23 @@
+{
+  "encounterId": "the-hunt-for-the-assassin",
+  "set": "realm-of-myr/blackthorn-grounds",
+  "location": "The Blackthorn mansion",
+  "where": "The mansion's walled garden by moonlight: gravel paths, flower beds, ivy thick on the east wall. By the wall an old drain grate is set in the paving, runes faintly glowing on its frame. Lady Astrid, now in ranger's leathers, has led the party here; Eamon kneels at the grate working on its seal; two Blackthorn guards hold lanterns.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": 19.2, "z": -7 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 20, "z": -6.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 19, "z": -5.6 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 20.6, "z": -7.4 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": 21.4, "z": -8.6 },
+    { "id": "eamon", "name": "Eamon", "x": 22.6, "z": -10.6 },
+    { "id": "blackthorn-guard", "name": "A Blackthorn guard", "x": 18, "z": -9.2 },
+    { "id": "blackthorn-guard-2", "name": "A Blackthorn guard", "x": 18.4, "z": -4.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": 19.2, "z": -7 },
+    { "id": "cassia-verane", "x": 20, "z": -6.2 },
+    { "id": "yeva-softstep", "x": 19, "z": -5.6 },
+    { "id": "milos-radan", "x": 20.6, "z": -7.4 }
+  ],
+  "spare": [{ "x": 18.6, "z": -6.4 }]
+}

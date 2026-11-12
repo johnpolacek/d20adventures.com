@@ -1,0 +1,9 @@
+{
+  "encounterId": "broken-silence",
+  "set": "realm-of-myr/valkarr-forest-trail",
+  "location": "Valkarr woods",
+  "where": "Thalbern walks a deer trail through the Valkarr woods at night toward the Old Standing Stones.",
+  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": -1.2, "z": 12.5 }],
+  "party": [{ "id": "thalbern", "x": -1.2, "z": 12.5 }],
+  "spare": []
+}

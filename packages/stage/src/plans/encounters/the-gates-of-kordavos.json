@@ -1,0 +1,16 @@
+{
+  "encounterId": "the-gates-of-kordavos",
+  "set": "realm-of-myr/kordavos-south-gate",
+  "location": "Kordavos checkpoint",
+  "where": "The party waits in the line outside the gate of Kordavos, two groups back from the sergeant's table.",
+  "cast": [
+    { "id": "garlan", "name": "Garlan Ironfist", "x": 2.3, "z": 11.1 },
+    { "id": "branka", "name": "Branka Stoneveil", "x": -0.5, "z": 16.12 },
+    { "id": "cassia", "name": "Cassia Verane", "x": -0.5, "z": 14.92 },
+    { "id": "yeva", "name": "Yeva Softstep", "x": -1.35, "z": 15.52 },
+    { "id": "milos", "name": "Milos Radan", "x": -1.35, "z": 14.3 },
+    { "id": "oskar", "name": "Oskar Venn", "x": 0.8, "z": 16.2 }
+  ],
+  "party": [{ "id": "branka", "x": -0.5, "z": 16.12 }, { "id": "cassia", "x": -0.5, "z": 14.92 }, { "id": "yeva", "x": -1.35, "z": 15.52 }, { "id": "milos", "x": -1.35, "z": 14.3 }],
+  "spare": [{ "x": -2.2, "z": 15.8 }]
+}

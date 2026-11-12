@@ -1,0 +1,24 @@
+{
+  "encounterId": "the-harvest-festival",
+  "set": "realm-of-myr/kordavos-harvest-square",
+  "location": "Harvest Festival",
+  "where": "The party has come up the street from the gate into the festival square.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.6, "z": 17.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.3, "z": 18.1 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.9, "z": 17.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 0.4, "z": 19.1 },
+    { "id": "karim-the-jewel-merchant", "name": "Karim", "x": -12.6, "z": 2.6 },
+    { "id": "madam-zephyra", "name": "Madam Zephyra", "x": -12.43, "z": -6.71 },
+    { "id": "finnian-the-fire-eater", "name": "Finnian", "x": 10.5, "z": -3.5 },
+    { "id": "liora-the-spice-merchant", "name": "Liora", "x": 12.6, "z": 4.4 },
+    { "id": "merrick-the-musician", "name": "Merrick", "x": -3, "z": -13.4 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.6, "z": 17.6 },
+    { "id": "cassia-verane", "x": -0.3, "z": 18.1 },
+    { "id": "yeva-softstep", "x": 0.9, "z": 17.4 },
+    { "id": "milos-radan", "x": 0.4, "z": 19.1 }
+  ],
+  "spare": [{ "x": -1, "z": 19.3 }]
+}

@@ -1,0 +1,13 @@
+{
+  "encounterId": "the-end",
+  "set": "realm-of-myr/old-forest-path",
+  "location": "The old forest",
+  "where": "A mossy path winds between huge old trees in green-gold light.",
+  "cast": [
+    { "id": "lyra", "name": "Lyra Silvanus", "x": -0.25, "z": 4.6 },
+    { "id": "poppen", "name": "Poppen Quickfoot", "x": 0.8, "z": 5.4 },
+    { "id": "thalbern", "name": "Thalbern", "x": -1.2, "z": 5.7 }
+  ],
+  "party": [{ "id": "lyra", "x": -0.25, "z": 4.6 }, { "id": "poppen", "x": 0.8, "z": 5.4 }, { "id": "thalbern", "x": -1.2, "z": 5.7 }],
+  "spare": []
+}

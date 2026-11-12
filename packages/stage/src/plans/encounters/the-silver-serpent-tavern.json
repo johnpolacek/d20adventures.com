@@ -1,0 +1,28 @@
+{
+  "encounterId": "the-silver-serpent-tavern",
+  "set": "realm-of-myr/silver-serpent-tavern",
+  "location": "Silver Serpent Tavern",
+  "where": "Daytime in the Silver Serpent, a long, dim dockside tavern of tarred timber, smoky and crowded with sailors, smugglers and dockhands. Its far end is a great arch open on the foggy quay. A sea map is carved into the west wall, and a silver sea serpent hangs over the bar on the east side, where Harron wipes glasses before shelves of bottles and sea-curios. The party stands just inside the street door. Three dockworkers drink at the table under the sea map, the burly one leaning back to watch them.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -2.9, "z": 4.3 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -2, "z": 4.75 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -1, "z": 4.65 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -0.4, "z": 3.9 },
+    { "id": "harron", "name": "The bartender", "x": 4.75, "z": -2.6 },
+    { "id": "dockworker-boss", "name": "A burly dockworker", "x": -2.55, "z": -2 },
+    { "id": "dockworker-a", "name": "A dockworker", "x": -2.55, "z": -2.95 },
+    { "id": "dockworker-b", "name": "A dockworker", "x": -4.05, "z": -2.5 },
+    { "id": "patron-sailor", "name": "A river sailor", "x": -4.05, "z": -5.6 },
+    { "id": "patron-hooded", "name": "A hooded stranger", "x": -4.05, "z": 1.4 },
+    { "id": "patron-hooded-b", "name": "A cloaked woman", "x": -2.55, "z": -9.1 },
+    { "id": "patron-merchant", "name": "A laughing merchant", "x": 1.35, "z": -5.2 },
+    { "id": "smuggler", "name": "A smuggler in a tricorn", "x": -0.35, "z": -9 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -2.9, "z": 4.3 },
+    { "id": "cassia-verane", "x": -2, "z": 4.75 },
+    { "id": "yeva-softstep", "x": -1, "z": 4.65 },
+    { "id": "milos-radan", "x": -0.4, "z": 3.9 }
+  ],
+  "spare": [{ "x": -1.5, "z": 4 }]
+}

@@ -1,0 +1,24 @@
+{
+  "encounterId": "big-empty",
+  "set": "realm-of-myr/catacombs-hall",
+  "location": "The catacombs",
+  "where": "Beyond the iron door, a vast cavern whose roof is lost in the dark, its floor deep in fine grey dust. A single narrow archway glows blue at the far end. Lady Astrid has stepped out into the middle of the hall; Eamon stays back by the door with the party just inside it. The ancient dead lie hidden under the dust until they rise.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.6, "z": 9.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.4, "z": 9.8 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -2.4, "z": 10.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.4, "z": 9.6 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": 0.4, "z": 4 },
+    { "id": "eamon", "name": "Eamon", "x": -1.2, "z": 14 },
+    { "id": "ancient-undead", "name": "An ancient dead warrior", "x": -4.5, "z": -3 },
+    { "id": "ancient-undead-2", "name": "An ancient dead warrior", "x": 4.2, "z": -5.4 },
+    { "id": "ancient-undead-3", "name": "An ancient dead warrior", "x": -0.8, "z": -9 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.6, "z": 9.4 },
+    { "id": "cassia-verane", "x": -0.4, "z": 9.8 },
+    { "id": "yeva-softstep", "x": -2.4, "z": 10.4 },
+    { "id": "milos-radan", "x": 1.4, "z": 9.6 }
+  ],
+  "spare": [{ "x": 0.4, "z": 10.6 }]
+}

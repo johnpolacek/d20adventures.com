@@ -1,0 +1,22 @@
+{
+  "encounterId": "the-hideout",
+  "set": "realm-of-myr/kordavos-waterfront",
+  "location": "Kordavos waterfront",
+  "where": "Night on the waterfront, thick sea mist: a lane of old stone houses runs down to a quay over the harbour. Near the water on the east side stands the abandoned warehouse, weathered boards over a stone ground storey, its windows boarded, its rusted iron door hanging open under a red lantern. Varchk and Kaeleth keep the door. Silverhand crosses the lane toward it. The party watches from the shadows on the west side, up the lane. Crates and barrels are heaped along the warehouse wall toward the quay.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -2.6, "z": -6.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -1.7, "z": -5.8 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -3.3, "z": -7.8 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -1, "z": -6.9 },
+    { "id": "aldith", "name": "Varchk", "x": 3.1, "z": -22.8 },
+    { "id": "kaelen", "name": "Kaeleth", "x": 2.9, "z": -20.1 },
+    { "id": "silverhand", "name": "Silverhand", "x": 0.6, "z": -18.8 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -2.6, "z": -6.6 },
+    { "id": "cassia-verane", "x": -1.7, "z": -5.8 },
+    { "id": "yeva-softstep", "x": -3.3, "z": -7.8 },
+    { "id": "milos-radan", "x": -1, "z": -6.9 }
+  ],
+  "spare": [{ "x": -2.2, "z": -4.6 }]
+}

@@ -1,0 +1,21 @@
+{
+  "encounterId": "the-sealed-door",
+  "set": "realm-of-myr/catacombs-sealed-door",
+  "location": "The catacombs",
+  "where": "At the end of the left-hand tunnel the seamless wall has become a massive black iron door in a carved stone frame, glowing sigils pulsing on its face, frost on the floor before it. Eamon stands at the door; Lady Astrid is a step behind with her sword drawn. The party stands in the tunnel behind them.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -6.42, "z": -18.72 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -5.77, "z": -17.77 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -6.74, "z": -17.66 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -6.25, "z": -16.99 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": -4.78, "z": -18.88 },
+    { "id": "eamon", "name": "Eamon", "x": -4.93, "z": -20.15 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -6.42, "z": -18.72 },
+    { "id": "cassia-verane", "x": -5.77, "z": -17.77 },
+    { "id": "yeva-softstep", "x": -6.74, "z": -17.66 },
+    { "id": "milos-radan", "x": -6.25, "z": -16.99 }
+  ],
+  "spare": [{ "x": -6.4, "z": -17.4 }]
+}

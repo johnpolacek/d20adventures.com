@@ -1,0 +1,18 @@
+{
+  "encounterId": "the-transaction",
+  "set": "realm-of-myr/mordava-river-pier",
+  "location": "Riverboat saloon",
+  "where": "The riverboat's lamplit saloon at the rickety pier, the crate in the middle and the only door opening forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+  "cast": [
+    { "id": "lyra", "name": "Lyra Silvanus", "x": 5.55, "z": 0.3 },
+    { "id": "npcs-1749163978757", "name": "Reinhard", "x": 6.35, "z": 0.75 },
+    { "id": "npcs-1749181492795", "name": "Silas", "x": 4.65, "z": 0.6 },
+    { "id": "npcs-1749184389465", "name": "Aelar Moonglimmer", "x": 3.95, "z": -0.55 },
+    { "id": "poppen", "name": "Poppen Quickfoot", "x": -5, "z": 4.3 },
+    { "id": "thalbern", "name": "Thalbern", "x": -1.4, "z": -6.4 },
+    { "id": "npcs-1749243735467", "name": "Elven Archer", "x": 4.2, "z": 4.9 },
+    { "id": "npcs-1749243869357", "name": "Elven Fighter", "x": 2.85, "z": 5.6 }
+  ],
+  "party": [{ "id": "lyra", "x": 5.55, "z": 0.3 }, { "id": "poppen", "x": -5, "z": 4.3 }, { "id": "thalbern", "x": -1.4, "z": -6.4 }],
+  "spare": []
+}

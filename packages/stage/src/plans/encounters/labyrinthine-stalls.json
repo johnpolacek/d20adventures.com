@@ -1,0 +1,24 @@
+{
+  "encounterId": "labyrinthine-stalls",
+  "set": "realm-of-myr/kordavos-black-market",
+  "location": "Black Market",
+  "where": "Inside the Black Market at night: a narrow lane of stalls and tents between leaning houses, roofed with patched canvas and strung with lanterns, braziers smoking, cloaked buyers drifting through. The party stands just inside the curtain. At the first stall on the right a grizzled dealer leans over a counter heaped with gold and gems; a dwarf weapon dealer shows a dagger at her rack of blades on the left; a scarred young woman saunters past. A side lane turns east to a peddler's tent of curiosities, another turns west to a shadowy stall of elven goods. At the far end of the lane, a curtained door between braziers leads to the auction house.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.4, "z": 4.9 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.6, "z": 5.5 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -0.6, "z": 4.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 0.25, "z": 5.4 },
+    { "id": "grendel-one-eye", "name": "Grendar", "x": 2.45, "z": 1.2 },
+    { "id": "vera-azimov", "name": "Vera Azimov", "x": -1.35, "z": -2 },
+    { "id": "rae-the-scarred", "name": "A scarred young woman", "x": 0.7, "z": -0.6 },
+    { "id": "mizrith-the-cackler", "name": "A cackling peddler", "x": 5.6, "z": -12.65 },
+    { "id": "vesk-the-fence", "name": "An oily vendor", "x": -9.2, "z": -23.08 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.4, "z": 4.9 },
+    { "id": "cassia-verane", "x": -0.6, "z": 5.5 },
+    { "id": "yeva-softstep", "x": -0.6, "z": 4.4 },
+    { "id": "milos-radan", "x": 0.25, "z": 5.4 }
+  ],
+  "spare": [{ "x": 0.4, "z": 5 }]
+}

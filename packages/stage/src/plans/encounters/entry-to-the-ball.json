@@ -1,0 +1,23 @@
+{
+  "encounterId": "entry-to-the-ball",
+  "set": "realm-of-myr/blackthorn-grounds",
+  "location": "The Blackthorn mansion",
+  "where": "Evening at the Blackthorn mansion in the Asterian Quarter: a long front of dressed stone with lit windows and spired corner towers, a portico at the head of a grand staircase. The party has come in through the wrought-iron gates across the cobbled court and stands at the foot of the stair among masked guests. Barok and another guard in black armour with the Blackthorn crest stand at its foot, checking each guest.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.6, "z": -4.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.6, "z": -4.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.4, "z": -4.6 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.4, "z": -4.2 },
+    { "id": "barok-redbeard", "name": "Barok Redbeard", "x": -1.2, "z": -8.2 },
+    { "id": "door-guard", "name": "The door guard", "x": 1.6, "z": -8.4 },
+    { "id": "guest-crimson", "name": "A lady in a crimson cloak", "x": -3.6, "z": -2.8 },
+    { "id": "guest-raven", "name": "A gentleman in a raven mask", "x": -2.8, "z": -3.4 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.6, "z": -4.6 },
+    { "id": "cassia-verane", "x": -0.6, "z": -4.2 },
+    { "id": "yeva-softstep", "x": 0.4, "z": -4.6 },
+    { "id": "milos-radan", "x": 1.4, "z": -4.2 }
+  ],
+  "spare": [{ "x": 2.4, "z": -4.6 }]
+}

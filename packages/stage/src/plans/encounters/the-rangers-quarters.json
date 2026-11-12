@@ -1,0 +1,19 @@
+{
+  "encounterId": "the-rangers-quarters",
+  "set": "realm-of-myr/blackthorn-corridor",
+  "location": "The Blackthorn mansion",
+  "where": "The family's upper floor: a long corridor of damask over dark panelling, portraits in gilt frames, tapestries of the Asterian eagle, a runner down the middle. At its end a heavy double door carved with branches, twisted boughs framing it, candle sconces either side. No one else is on this floor. The party stands before the door.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -0.8, "z": -26.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.4, "z": -26.3 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -0.2, "z": -25.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1, "z": -25.2 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -0.8, "z": -26.6 },
+    { "id": "cassia-verane", "x": 0.4, "z": -26.3 },
+    { "id": "yeva-softstep", "x": -0.2, "z": -25.4 },
+    { "id": "milos-radan", "x": 1, "z": -25.2 }
+  ],
+  "spare": [{ "x": -0.6, "z": -24.6 }]
+}

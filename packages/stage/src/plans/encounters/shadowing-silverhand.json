@@ -1,0 +1,18 @@
+{
+  "encounterId": "shadowing-silverhand",
+  "set": "realm-of-myr/kordavos-night-lanes",
+  "location": "Kordavos lanes",
+  "where": "Late evening in the old lanes of Kordavos: a narrow cobbled street of leaning timber houses under a low moon, mist between them, lanterns on brackets. The party stands at the near end. Some twenty paces ahead Silverhand walks away up the street with his representative and Varchk a step behind; Kaeleth lingers at the corner of the crossing further on, watching the way they came. A side alley turns off east before the crossing. Beyond the crossing the street runs under an archway in a house built across it.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1, "z": 9.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0, "z": 10 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -1.9, "z": 8.6 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1, "z": 9.7 },
+    { "id": "silverhand", "name": "Silverhand", "x": 0.4, "z": -12.5 },
+    { "id": "silverhand-representative", "name": "Silverhand's representative", "x": -0.6, "z": -11.4 },
+    { "id": "aldith", "name": "Varchk", "x": 1.2, "z": -10.4 },
+    { "id": "kaelen", "name": "Kaeleth", "x": -2.2, "z": -19.6 }
+  ],
+  "party": [{ "id": "branka-stoneveil", "x": -1, "z": 9.4 }, { "id": "cassia-verane", "x": 0, "z": 10 }, { "id": "yeva-softstep", "x": -1.9, "z": 8.6 }, { "id": "milos-radan", "x": 1, "z": 9.7 }],
+  "spare": [{ "x": -0.9, "z": 11.2 }]
+}

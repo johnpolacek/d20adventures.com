@@ -1,0 +1,20 @@
+{
+  "encounterId": "the-chase",
+  "set": "realm-of-myr/blackthorn-grounds",
+  "location": "The Blackthorn mansion",
+  "where": "The ballroom's balcony on the mansion's east wing, high over the walled garden in the moonlight. A rope hangs from the balustrade to the ground. Below, among flower beds and gravel paths, the hooded figure makes for an old drain grate under the ivy on the east wall. The party stands at the balustrade.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": 13.2, "z": -15.9, "raised": 5.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 14.4, "z": -15.7, "raised": 5.4 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 15.6, "z": -15.9, "raised": 5.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 16.6, "z": -15.7, "raised": 5.4 },
+    { "id": "covenant-assassin", "name": "A hooded figure", "x": 20.6, "z": -10.4 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": 13.2, "z": -15.9 },
+    { "id": "cassia-verane", "x": 14.4, "z": -15.7 },
+    { "id": "yeva-softstep", "x": 15.6, "z": -15.9 },
+    { "id": "milos-radan", "x": 16.6, "z": -15.7 }
+  ],
+  "spare": [{ "x": 17.4, "z": -15.9 }]
+}

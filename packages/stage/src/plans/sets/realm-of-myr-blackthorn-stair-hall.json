@@ -1,0 +1,22 @@
+{
+  "id": "realm-of-myr/blackthorn-stair-hall",
+  "title": "The Blackthorn mansion: the stair hall",
+  "solids": [
+    { "kind": "circle", "x": -5.2, "z": -9.4, "r": 0.2 },
+    { "kind": "circle", "x": 5.2, "z": -9.4, "r": 0.2 },
+    { "kind": "rect", "x": -6.3, "z": -9, "hw": 0.3, "hd": 9.6, "ry": 0 },
+    { "kind": "rect", "x": -3.8, "z": -12.8, "hw": 1.18, "hd": 3.2, "ry": 0 },
+    { "kind": "rect", "x": -1.525, "z": 0.3, "hw": 4.775, "hd": 0.33, "ry": 0 },
+    { "kind": "rect", "x": 0, "z": -18.3, "hw": 6.6, "hd": 0.3, "ry": 0 },
+    { "kind": "rect", "x": 3.8, "z": -12.8, "hw": 1.18, "hd": 3.2, "ry": 0 },
+    { "kind": "rect", "x": 5.525, "z": 0.3, "hw": 0.775, "hd": 0.33, "ry": 0 },
+    { "kind": "rect", "x": 6.3, "z": -9, "hw": 0.3, "hd": 9.6, "ry": 0 }
+  ],
+  "doors": [[{ "x": 4, "z": 1.2 }, { "x": 4, "z": -0.6 }]],
+  "places": [
+    { "id": "down", "label": "the steps down to the cellars", "x": 4, "z": -0.9 },
+    { "id": "hall", "label": "the hall", "x": 0, "z": -6 },
+    { "id": "leftStair", "label": "the foot of the stairs up", "x": -3.8, "z": -9.2 },
+    { "id": "rightStair", "label": "the foot of the other flight up", "x": 3.8, "z": -9.2 }
+  ]
+}

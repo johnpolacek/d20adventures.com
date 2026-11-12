@@ -1,0 +1,23 @@
+{
+  "encounterId": "well-met",
+  "set": "realm-of-myr/marquis-road",
+  "location": "The Marquis Road",
+  "where": "Morning on the Marquis Road through wooded hills of firs under pale rock peaks. The party has stopped at a wayside shrine on the west verge, where Sister Mira rests. Dmitri Volkov rides up the road at the head of his caravan: two covered wagons marked with a black wolf's head, a teamster, pack horses at the tail and two guards alongside. Elaraen stands with his lute by the milestone across the road.",
+  "cast": [
+    { "id": "npcs-1749870310278", "name": "Dmitri Volkov", "x": 0.1, "z": 2.2 },
+    { "id": "npcs-1749870658664", "name": "Elaraen Whisperwind", "x": 3, "z": -6.3 },
+    { "id": "npcs-1749870721240", "name": "Sister Mira", "x": -3.9, "z": -2.6 },
+    { "id": "caravan-guard-a", "name": "Caravan guard", "x": 2.3, "z": 7.6 },
+    { "id": "draft-horse-1", "name": "Draft horse", "x": 0.08, "z": 6.5 },
+    { "id": "teamster", "name": "Teamster", "x": -1.12, "z": 6.7 },
+    { "id": "draft-horse-2", "name": "Draft horse", "x": 0.52, "z": 15.3 },
+    { "id": "caravan-guard-b", "name": "Caravan guard", "x": -2, "z": 13.6 },
+    { "id": "pack-horse-1", "name": "Pack horse", "x": 1.08, "z": 22.8 },
+    { "id": "pack-horse-2", "name": "Pack horse", "x": 0.76, "z": 25.6 },
+    { "id": "hero-1", "name": "Traveller 1", "x": -2.1, "z": -1.6 },
+    { "id": "hero-2", "name": "Traveller 2", "x": -1, "z": -2.5 },
+    { "id": "hero-3", "name": "Traveller 3", "x": -3, "z": -0.4 }
+  ],
+  "party": [{ "id": "hero-1", "x": -2.1, "z": -1.6 }, { "id": "hero-2", "x": -1, "z": -2.5 }, { "id": "hero-3", "x": -3, "z": -0.4 }],
+  "spare": [{ "x": -1.2, "z": -0.6 }]
+}

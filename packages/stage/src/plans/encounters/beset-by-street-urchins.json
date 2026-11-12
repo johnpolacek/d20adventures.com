@@ -1,0 +1,24 @@
+{
+  "encounterId": "beset-by-street-urchins",
+  "set": "realm-of-myr/kordavos-lower-districts",
+  "location": "Lower Districts",
+  "where": "The crowded street in the Lower Districts by the mouth of a side alley, the crowd thick around the party. Halfling urchins weave among them: a red-haired girl skips right up to the heroes, a wide-eyed boy slips past behind them, two more giggle a few steps off. A fiddler plays by a cart against the wall. The side alley to the west is the urchins' way out.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.2, "z": -1.2 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.3, "z": -0.8 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.6, "z": -1.3 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.4, "z": -0.7 },
+    { "id": "mara-redleaf", "name": "A red-haired urchin", "x": 0.2, "z": -2.6 },
+    { "id": "finn-swiftfoot", "name": "A wide-eyed urchin", "x": -1.9, "z": 0.3 },
+    { "id": "urchin-a", "name": "A laughing urchin", "x": 0.9, "z": -4.2 },
+    { "id": "urchin-b", "name": "A whispering urchin", "x": -2.3, "z": -3.6 },
+    { "id": "fiddler", "name": "A street fiddler", "x": 2.6, "z": -9.4 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.2, "z": -1.2 },
+    { "id": "cassia-verane", "x": -0.3, "z": -0.8 },
+    { "id": "yeva-softstep", "x": 0.6, "z": -1.3 },
+    { "id": "milos-radan", "x": 1.4, "z": -0.7 }
+  ],
+  "spare": [{ "x": -0.6, "z": 0.2 }]
+}

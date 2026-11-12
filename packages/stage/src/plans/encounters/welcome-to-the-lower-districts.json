@@ -1,0 +1,22 @@
+{
+  "encounterId": "welcome-to-the-lower-districts",
+  "set": "realm-of-myr/kordavos-lower-districts",
+  "location": "Lower Districts",
+  "where": "A narrow street in Kordavos's Lower Districts at the grey end of the day: tall leaning timber tenements jut over wet cobbles, washing strung between them, lanterns lit on brackets, a crowd of hooded folk hurrying both ways. A house is built across the street further up, its archway the way on, and a side alley turns off to the west. The party has come up from the docks and stands near the street's lower end. A fiddler plays by a shop window, a hooded woman hurries past, and a trinket-seller watches from a doorway.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.1, "z": 9.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.2, "z": 9.9 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.7, "z": 9.5 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.2, "z": 9.9 },
+    { "id": "fiddler", "name": "A street fiddler", "x": 2.55, "z": 4.4 },
+    { "id": "hooded-local", "name": "A hooded woman", "x": -1.4, "z": 3 },
+    { "id": "fence", "name": "A trinket-seller", "x": -2.55, "z": -1.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.1, "z": 9.6 },
+    { "id": "cassia-verane", "x": -0.2, "z": 9.9 },
+    { "id": "yeva-softstep", "x": 0.7, "z": 9.5 },
+    { "id": "milos-radan", "x": 1.2, "z": 9.9 }
+  ],
+  "spare": [{ "x": -0.4, "z": 10.8 }]
+}

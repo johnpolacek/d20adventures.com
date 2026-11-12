@@ -1,0 +1,9 @@
+{
+  "encounterId": "meeting-at-the-stones",
+  "set": "realm-of-myr/old-standing-stones",
+  "location": "Old Standing Stones",
+  "where": "Moonlight fills the clearing where a line of ancient standing stones runs beside the river.",
+  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": 0.9, "z": 3.6 }, { "id": "wollandora", "name": "Wollandora", "x": -1.4, "z": -1.4 }],
+  "party": [{ "id": "thalbern", "x": 0.9, "z": 3.6 }],
+  "spare": []
+}

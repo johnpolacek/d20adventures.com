@@ -1,0 +1,20 @@
+{
+  "encounterId": "vengeance-of-the-blackthorn",
+  "set": "realm-of-myr/kordavos-square-funeral",
+  "location": "The great square",
+  "where": "Midday in the great square of Kordavos under black banners. Thaddeus Blackthorn's coffin lies on a draped bier before the great stone house, tall candles at its corners. Asterian soldiers line an aisle from the bier back to the street, knights stand before the house, and the city crowds in behind them. Lady Astrid stands at the coffin's foot facing the square. The party stands in the aisle.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1, "z": -8.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.2, "z": -9.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 1, "z": -8.2 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -0.1, "z": -7.6 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": 0.4, "z": -21 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1, "z": -8.6 },
+    { "id": "cassia-verane", "x": 0.2, "z": -9.2 },
+    { "id": "yeva-softstep", "x": 1, "z": -8.2 },
+    { "id": "milos-radan", "x": -0.1, "z": -7.6 }
+  ],
+  "spare": [{ "x": 1.2, "z": -7.4 }]
+}

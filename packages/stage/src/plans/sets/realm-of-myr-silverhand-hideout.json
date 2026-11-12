@@ -1,0 +1,38 @@
+{
+  "id": "realm-of-myr/silverhand-hideout",
+  "title": "Silverhand's hideout",
+  "solids": [
+    { "kind": "circle", "x": -2.75, "z": -8.5, "r": 0.34 },
+    { "kind": "circle", "x": -2.75, "z": -3.13, "r": 0.34 },
+    { "kind": "circle", "x": 2.75, "z": -8.99, "r": 0.34 },
+    { "kind": "rect", "x": -3.5, "z": -5.5, "hw": 0.3, "hd": 6.1, "ry": 0 },
+    { "kind": "rect", "x": -2.75, "z": -6.61, "hw": 0.395, "hd": 0.395, "ry": 0.121, "top": 1.343 },
+    { "kind": "rect", "x": -2.75, "z": 0.3, "hw": 0.75, "hd": 0.33, "ry": 0 },
+    { "kind": "rect", "x": -2.69, "z": -1.2, "hw": 0.44, "hd": 0.44, "ry": -0.081, "top": 1.496 },
+    { "kind": "rect", "x": -2.67, "z": -7.59, "hw": 0.415, "hd": 0.415, "ry": 0.129, "top": 1.411 },
+    { "kind": "rect", "x": -1.9, "z": -10.45, "hw": 0.425, "hd": 0.425, "ry": 0.07, "top": 1.445 },
+    { "kind": "rect", "x": -1.808, "z": 0, "hw": 0.585, "hd": 0.05, "ry": 1.222 },
+    { "kind": "rect", "x": -1.6, "z": -7.333, "hw": 0.12, "hd": 0.12, "ry": 0 },
+    { "kind": "rect", "x": -1.6, "z": -3.667, "hw": 0.12, "hd": 0.12, "ry": 0 },
+    { "kind": "rect", "x": 0, "z": -11.3, "hw": 3.8, "hd": 0.3, "ry": 0 },
+    { "kind": "rect", "x": 0, "z": -6, "hw": 2.2, "hd": 0.5, "ry": 1.571, "top": 0.78 },
+    { "kind": "rect", "x": 1.35, "z": 0.3, "hw": 2.15, "hd": 0.33, "ry": 0 },
+    { "kind": "rect", "x": 1.6, "z": -7.333, "hw": 0.12, "hd": 0.12, "ry": 0 },
+    { "kind": "rect", "x": 1.6, "z": -3.667, "hw": 0.12, "hd": 0.12, "ry": 0 },
+    { "kind": "rect", "x": 2, "z": -10.5, "hw": 0.4, "hd": 0.4, "ry": -0.105, "top": 1.36 },
+    { "kind": "rect", "x": 2.68, "z": -7.95, "hw": 0.445, "hd": 0.445, "ry": 0.017, "top": 1.513 },
+    { "kind": "rect", "x": 2.71, "z": -5.61, "hw": 0.365, "hd": 0.365, "ry": -0.12, "top": 1.241 },
+    { "kind": "rect", "x": 2.71, "z": -4.44, "hw": 0.41, "hd": 0.41, "ry": -0.106, "top": 1.394 },
+    { "kind": "rect", "x": 2.72, "z": -3.2, "hw": 0.42, "hd": 0.42, "ry": -0.136, "top": 1.428 },
+    { "kind": "rect", "x": 2.74, "z": -6.67, "hw": 0.4, "hd": 0.4, "ry": -0.012, "top": 1.36 },
+    { "kind": "rect", "x": 3.5, "z": -5.5, "hw": 0.3, "hd": 6.1, "ry": 0 }
+  ],
+  "doors": [[{ "x": -1.4, "z": 1.2 }, { "x": -1.4, "z": -0.6 }]],
+  "places": [
+    { "id": "chairs", "label": "the empty chairs", "x": -0.6, "z": -6 },
+    { "id": "crates", "label": "the stacked crates", "x": 2.2, "z": -3 },
+    { "id": "door", "label": "the door", "x": -1.4, "z": -0.8 },
+    { "id": "head", "label": "Silverhand's end of the table", "x": 0.8, "z": -8.4 },
+    { "id": "table", "label": "the near end of the table", "x": 0, "z": -3.2 }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "encounterId": "inside-the-ball",
+  "set": "realm-of-myr/blackthorn-ballroom",
+  "location": "The Blackthorn ballroom",
+  "where": "The masquerade ball: a long hall of marble columns under gilded arches, a painted barrel vault, three great chandeliers, red velvet at the tall windows, banquet tables and a gem display in the west aisle. Masked guests in lavish costumes talk in pairs across the floor. At the far end a stage hung with the house's banners and red drapes, a curtained cage on its west half. Glazed doors in the east wall stand open onto a moonlit balcony. The party has just come in by the grand doors.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.3, "z": 5 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.4, "z": 5.4 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.5, "z": 5 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.4, "z": 5.4 },
+    { "id": "guest-crimson", "name": "A lady in a crimson cloak", "x": -2.6, "z": 1.2 },
+    { "id": "guest-raven", "name": "A gentleman in a raven mask", "x": -1.6, "z": 0.6 },
+    { "id": "guest-ivory", "name": "A lady in ivory", "x": 2.6, "z": -0.8 },
+    { "id": "guest-gold", "name": "A gentleman in a sun mask", "x": 3.4, "z": 0.2 },
+    { "id": "guest-gold-2", "name": "A gentleman in a sun mask", "x": -4.4, "z": -2.6 },
+    { "id": "guest-ivory-3", "name": "A lady in ivory", "x": -3.6, "z": -3.4 },
+    { "id": "guest-raven-4", "name": "A gentleman in a raven mask", "x": 1.2, "z": -4.8 },
+    { "id": "guest-crimson-5", "name": "A lady in a crimson cloak", "x": 0.4, "z": -5.4 },
+    { "id": "guest-ivory-6", "name": "A lady in ivory", "x": 4.6, "z": -6.4 },
+    { "id": "guest-raven-7", "name": "A gentleman in a raven mask", "x": -1.8, "z": -7.6 }
+  ],
+  "party": [{ "id": "branka-stoneveil", "x": -1.3, "z": 5 }, { "id": "cassia-verane", "x": -0.4, "z": 5.4 }, { "id": "yeva-softstep", "x": 0.5, "z": 5 }, { "id": "milos-radan", "x": 1.4, "z": 5.4 }],
+  "spare": [{ "x": 2.3, "z": 5 }]
+}

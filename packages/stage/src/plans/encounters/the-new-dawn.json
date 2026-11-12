@@ -1,0 +1,21 @@
+{
+  "encounterId": "the-new-dawn",
+  "set": "realm-of-myr/kordavos-square-dawn",
+  "location": "The great square",
+  "where": "Dawn in the great square of Kordavos, bells ringing, the old green banners of Valkara hung from every house. At the head of the square stands the great stone house with a balcony over its door: Joran Antonov stands on it with the Key of Ilmarin raised, Seraphina Valtor at his shoulder. The square below is full of Valkarans. The party stands among them in the middle of the square.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1, "z": -11.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.1, "z": -12.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 1, "z": -11.2 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -0.2, "z": -10.6 },
+    { "id": "joran-antonov", "name": "Joran Antonov", "x": -0.8, "z": -35.5, "raised": 4.24 },
+    { "id": "seraphina-valtor", "name": "Seraphina Valtor", "x": 1.1, "z": -35.6, "raised": 4.24 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1, "z": -11.6 },
+    { "id": "cassia-verane", "x": 0.1, "z": -12.2 },
+    { "id": "yeva-softstep", "x": 1, "z": -11.2 },
+    { "id": "milos-radan", "x": -0.2, "z": -10.6 }
+  ],
+  "spare": [{ "x": 1.4, "z": -10.2 }]
+}

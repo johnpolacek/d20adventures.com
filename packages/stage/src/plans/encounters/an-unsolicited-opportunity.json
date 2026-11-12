@@ -1,0 +1,26 @@
+{
+  "encounterId": "an-unsolicited-opportunity",
+  "set": "realm-of-myr/dragonbone-inn",
+  "location": "Dragonbone Inn",
+  "where": "Late evening in the Dragonbone Inn's common room. Beric and Eamon stand at the party's corner table by the street windows. Bram is at the bar. A doorway at the bar's east end leads to a dim backroom with a sturdy table and mismatched chairs.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": 4.2, "z": 3.25 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 4.45, "z": 4.1 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 5.35, "z": 4.05 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 5.95, "z": 2.15 },
+    { "id": "beric", "name": "Beric Sonacus", "x": 4.6, "z": 2.2 },
+    { "id": "eamon", "name": "Eamon Vellis", "x": 5.45, "z": 2.15 },
+    { "id": "bram", "name": "Bram", "x": -1.1, "z": -2.35 },
+    { "id": "patron-merchant", "name": "A laughing merchant", "x": -2, "z": -0.42 },
+    { "id": "patron-farmer", "name": "An old farmer", "x": 0.8, "z": 2.62 },
+    { "id": "patron-hooded", "name": "A hooded stranger", "x": -6.25, "z": -4 },
+    { "id": "patron-hooded-b", "name": "A cloaked woman", "x": -5.25, "z": -4.62 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": 4.2, "z": 3.25 },
+    { "id": "cassia-verane", "x": 4.45, "z": 4.1 },
+    { "id": "yeva-softstep", "x": 5.35, "z": 4.05 },
+    { "id": "milos-radan", "x": 5.95, "z": 2.15 }
+  ],
+  "spare": [{ "x": 3.7, "z": 3.7 }]
+}

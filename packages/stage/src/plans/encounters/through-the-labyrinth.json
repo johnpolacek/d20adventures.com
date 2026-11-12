@@ -1,0 +1,16 @@
+{
+  "encounterId": "through-the-labyrinth",
+  "set": "realm-of-myr/catacombs-labyrinth",
+  "location": "The catacombs",
+  "where": "A rough-hewn cave under the city where the tunnel splits into two forks of dripping stone, a cold mist drifting out of them. Crystal-set runes glow faintly blue in the walls. The party stands in the cave; Eamon studies the runes on the east wall while Lady Astrid looks down the left-hand fork. The right fork runs off into darkness; the left bends twice and ends at a blank, seamless wall.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": 1.2, "z": 2 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 2.2, "z": 2.6 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 1.6, "z": 3.2 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 2.6, "z": 1.4 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": -1.6, "z": -1.6 },
+    { "id": "eamon", "name": "Eamon", "x": 3.3, "z": 1.5 }
+  ],
+  "party": [{ "id": "branka-stoneveil", "x": 1.2, "z": 2 }, { "id": "cassia-verane", "x": 2.2, "z": 2.6 }, { "id": "yeva-softstep", "x": 1.6, "z": 3.2 }, { "id": "milos-radan", "x": 2.6, "z": 1.4 }],
+  "spare": [{ "x": 2.8, "z": 3 }]
+}

@@ -1,0 +1,9 @@
+{
+  "encounterId": "owlbear-confrontation",
+  "set": "realm-of-myr/valkarr-forest-trail",
+  "location": "Valkarr woods",
+  "where": "An owlbear faces Thalbern across a small moonlit clearing on the deer trail.",
+  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": -0.6, "z": 4.6 }, { "id": "owlbear", "name": "Owlbear", "x": 6.2, "z": -3.4 }],
+  "party": [{ "id": "thalbern", "x": -0.6, "z": 4.6 }],
+  "spare": []
+}

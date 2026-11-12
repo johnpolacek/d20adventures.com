@@ -1,0 +1,9 @@
+{
+  "encounterId": "timely-rescue",
+  "set": "realm-of-myr/valkarr-forest-trail",
+  "location": "Valkarr woods",
+  "where": "Thalbern lies wounded by the great oak beside the trail as Wollandora steps out of the trees.",
+  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": -5.3, "z": -0.8 }, { "id": "wollandora", "name": "Wollandora", "x": 2.6, "z": -8.6 }],
+  "party": [{ "id": "thalbern", "x": -5.3, "z": -0.8 }],
+  "spare": []
+}

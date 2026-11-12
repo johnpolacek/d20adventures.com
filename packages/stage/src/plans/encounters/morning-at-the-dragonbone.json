@@ -1,0 +1,22 @@
+{
+  "encounterId": "morning-at-the-dragonbone",
+  "set": "realm-of-myr/dragonbone-inn-morning",
+  "location": "Dragonbone Inn",
+  "where": "Early morning sun falls through the street windows of the Dragonbone Inn's common room. The fire is banked and the room nearly empty, an old farmer at breakfast. The party is at a table under the windows, Bram in front of the bar.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -3.4, "z": 2.85 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -2.75, "z": 2.45 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -2, "z": 2.45 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -1.55, "z": 2.95 },
+    { "id": "bram", "name": "Bram", "x": -0.8, "z": -2.3 },
+    { "id": "elara", "name": "Elara Antonov", "x": 0.3, "z": 3.4 },
+    { "id": "patron-farmer", "name": "An old farmer", "x": -1.65, "z": -0.42 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -3.4, "z": 2.85 },
+    { "id": "cassia-verane", "x": -2.75, "z": 2.45 },
+    { "id": "yeva-softstep", "x": -2, "z": 2.45 },
+    { "id": "milos-radan", "x": -1.55, "z": 2.95 }
+  ],
+  "spare": [{ "x": -3.6, "z": 2.2 }]
+}

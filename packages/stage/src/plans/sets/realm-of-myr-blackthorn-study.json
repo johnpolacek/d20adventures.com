@@ -1,0 +1,28 @@
+{
+  "id": "realm-of-myr/blackthorn-study",
+  "title": "The Blackthorn mansion: Thaddeus's study",
+  "solids": [
+    { "kind": "circle", "x": 2.6, "z": -1.6, "r": 0.312 },
+    { "kind": "rect", "x": -4.8, "z": -4.2, "hw": 0.3, "hd": 4.8, "ry": 0 },
+    { "kind": "rect", "x": -4.27, "z": -4.2, "hw": 2.6, "hd": 0.26, "ry": 1.571, "top": 3.2 },
+    { "kind": "rect", "x": -4, "z": 0.3, "hw": 0.8, "hd": 0.33, "ry": 0 },
+    { "kind": "rect", "x": -3.008, "z": 0, "hw": 0.585, "hd": 0.05, "ry": 1.222 },
+    { "kind": "rect", "x": -1.2, "z": -3.8, "hw": 0.4, "hd": 0.41, "ry": 2.793, "top": 1 },
+    { "kind": "rect", "x": 0, "z": -8.7, "hw": 5.1, "hd": 0.3, "ry": 0 },
+    { "kind": "rect", "x": 0, "z": -6.4, "hw": 0.45, "hd": 0.41, "ry": 0, "top": 1 },
+    { "kind": "rect", "x": 0, "z": -5.3, "hw": 1, "hd": 0.475, "ry": 3.142, "top": 0.8 },
+    { "kind": "rect", "x": 1.4, "z": 0.3, "hw": 3.4, "hd": 0.33, "ry": 0 },
+    { "kind": "rect", "x": 4.8, "z": -4.2, "hw": 0.3, "hd": 4.8, "ry": 0 },
+    { "kind": "rect", "x": 4.83, "z": -3.6, "hw": 1.2, "hd": 0.35, "ry": -1.571 }
+  ],
+  "doors": [[{ "x": -2.6, "z": 1.2 }, { "x": -2.6, "z": -0.6 }]],
+  "places": [
+    { "id": "cabinet", "label": "the glass cabinet", "x": -3, "z": -7 },
+    { "id": "desk", "label": "the desk", "x": 0, "z": -4.2 },
+    { "id": "door", "label": "the door", "x": -2.6, "z": -0.9 },
+    { "id": "hearth", "label": "the hearth and the sword", "x": 3.1, "z": -2.2 },
+    { "id": "shelves", "label": "the shelves of scrolls", "x": -3.5, "z": -4.2 },
+    { "id": "tapestry", "label": "the tapestry", "x": 3.6, "z": -6.6 },
+    { "id": "window", "label": "the window", "x": 1.6, "z": -7.5 }
+  ]
+}

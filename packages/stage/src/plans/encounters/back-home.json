@@ -1,0 +1,9 @@
+{
+  "encounterId": "back-home",
+  "set": "realm-of-myr/thalberns-forest-home",
+  "location": "Thalbern's home",
+  "where": "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods.",
+  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": -2.1, "z": -1.6 }],
+  "party": [{ "id": "thalbern", "x": -2.1, "z": -1.6 }],
+  "spare": []
+}

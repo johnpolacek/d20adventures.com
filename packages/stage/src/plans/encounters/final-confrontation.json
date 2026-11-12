@@ -1,0 +1,22 @@
+{
+  "encounterId": "final-confrontation",
+  "set": "realm-of-myr/forgotten-temple",
+  "location": "The forgotten temple",
+  "where": "The hidden cathedral under its vault of stars, before the empty altar in its ring of silver runes. Joran Antonov, in the robes of the Covenant with the hood thrown back, has stepped out from the shadows behind the altar and stands before it, the Key of Ilmarin raised. The party faces him across the nave, Lady Astrid on their left with her sword, Eamon on their right.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.6, "z": -11.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.5, "z": -11 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.6, "z": -11.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.7, "z": -11 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": -2.6, "z": -12.6 },
+    { "id": "eamon", "name": "Eamon", "x": 2.8, "z": -12.4 },
+    { "id": "joran-antonov", "name": "Joran Antonov", "x": 0.4, "z": -14.4 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.6, "z": -11.4 },
+    { "id": "cassia-verane", "x": -0.5, "z": -11 },
+    { "id": "yeva-softstep", "x": 0.6, "z": -11.4 },
+    { "id": "milos-radan", "x": 1.7, "z": -11 }
+  ],
+  "spare": [{ "x": 0.6, "z": -10 }]
+}

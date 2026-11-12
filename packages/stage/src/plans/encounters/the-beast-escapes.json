@@ -1,0 +1,21 @@
+{
+  "encounterId": "the-beast-escapes",
+  "set": "realm-of-myr/kordavos-docks-wrecked",
+  "location": "Kordavos docks",
+  "where": "The Kordavos quay in chaos: the quay is strewn with smashed crates and loose planks, the Star of Faelendar's main course hangs torn, and her cargo hatch amidships has burst open on the iron cage below, its bars eaten through. The forest drake has come off the ship onto the quay beside the gangway, wings raised, roaring. A tall woman in black leather armour stands at the gangway's end with a curved blade drawn. The party has run out along the quay from Warehouse 14.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -4.6, "z": 8.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -3.4, "z": 9.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -2.6, "z": 7.9 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -5.6, "z": 9.4 },
+    { "id": "forest-drake", "name": "The forest drake", "x": 6.8, "z": 3.6 },
+    { "id": "astrid-blackthorn", "name": "A woman with a curved blade", "x": 4.7, "z": 1.3 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -4.6, "z": 8.4 },
+    { "id": "cassia-verane", "x": -3.4, "z": 9.2 },
+    { "id": "yeva-softstep", "x": -2.6, "z": 7.9 },
+    { "id": "milos-radan", "x": -5.6, "z": 9.4 }
+  ],
+  "spare": [{ "x": -6.4, "z": 8.6 }]
+}

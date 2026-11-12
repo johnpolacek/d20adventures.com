@@ -1,0 +1,21 @@
+{
+  "encounterId": "face-to-face-with-silverhand",
+  "set": "realm-of-myr/silverhand-hideout",
+  "location": "Silverhand's hideout",
+  "where": "A cramped, low back room in the abandoned warehouse: board walls, beams overhead, crates and sacks of smuggled goods stacked along every wall. A long weathered table runs down the middle with empty chairs either side. Silverhand sits in a high-backed chair at its far end behind a single candle and an uncorked bottle of Hammerdeep whiskey, his silver gauntlet on the table. Varchk stands behind him. The party has just come in by the door at the near end.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.1, "z": -2.9 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.2, "z": -2.6 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -1.9, "z": -2.2 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.1, "z": -3 },
+    { "id": "silverhand", "name": "Silverhand", "x": 0, "z": -8.62 },
+    { "id": "aldith", "name": "Varchk", "x": 1.3, "z": -9.8 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.1, "z": -2.9 },
+    { "id": "cassia-verane", "x": -0.2, "z": -2.6 },
+    { "id": "yeva-softstep", "x": -1.9, "z": -2.2 },
+    { "id": "milos-radan", "x": 1.1, "z": -3 }
+  ],
+  "spare": [{ "x": 0.2, "z": -1.6 }]
+}

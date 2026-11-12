@@ -1,0 +1,9 @@
+{
+  "encounterId": "the-missing-relics",
+  "set": "realm-of-myr/old-standing-stones",
+  "location": "Old Standing Stones",
+  "where": "Thalbern and Wollandora talk among the standing stones by the moonlit river.",
+  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": 0.9, "z": 3.6 }, { "id": "wollandora", "name": "Wollandora", "x": -1.4, "z": -1.4 }],
+  "party": [{ "id": "thalbern", "x": 0.9, "z": 3.6 }],
+  "spare": []
+}

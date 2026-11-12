@@ -1,0 +1,23 @@
+{
+  "encounterId": "the-blackthorns",
+  "set": "realm-of-myr/blackthorn-ballroom",
+  "location": "The Blackthorn ballroom",
+  "where": "The middle of the ballroom floor among masked guests, under the chandeliers. Lady Astrid Blackthorn, in a gold mask and a black gown with a golden wrap, has crossed the floor to the party; Lord Thaddeus holds court a few paces off.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.3, "z": 0.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.4, "z": 0.8 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.5, "z": 0.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.4, "z": 0.8 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": 0.2, "z": -1.6 },
+    { "id": "thaddeus-blackthorn", "name": "Lord Thaddeus Blackthorn", "x": 2.8, "z": -4.6 },
+    { "id": "guest-gold", "name": "A gentleman in a sun mask", "x": 3.8, "z": -4 },
+    { "id": "guest-ivory", "name": "A lady in ivory", "x": -3.2, "z": -3 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.3, "z": 0.4 },
+    { "id": "cassia-verane", "x": -0.4, "z": 0.8 },
+    { "id": "yeva-softstep", "x": 0.5, "z": 0.4 },
+    { "id": "milos-radan", "x": 1.4, "z": 0.8 }
+  ],
+  "spare": [{ "x": 2.3, "z": 0.4 }]
+}

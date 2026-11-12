@@ -1,0 +1,19 @@
+{
+  "encounterId": "thaddeus-blackthorns-private-chambers",
+  "set": "realm-of-myr/blackthorn-study",
+  "location": "The Blackthorn mansion",
+  "where": "Thaddeus Blackthorn's study: dark panelling, a mahogany desk heaped with ledgers and maps before a tall window on moonlit Kordavos, velvet curtains half drawn. Shelves of scrolls along the west wall, a glass cabinet of trinkets in the corner, a hearth on the east wall with an ornate sword over it, and a tapestry hiding a second door. The party has just come in by the door.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -2.2, "z": -1.8 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -1.2, "z": -2.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -2.8, "z": -2.6 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -0.6, "z": -1.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -2.2, "z": -1.8 },
+    { "id": "cassia-verane", "x": -1.2, "z": -2.2 },
+    { "id": "yeva-softstep", "x": -2.8, "z": -2.6 },
+    { "id": "milos-radan", "x": -0.6, "z": -1.6 }
+  ],
+  "spare": [{ "x": -1.8, "z": -3 }]
+}

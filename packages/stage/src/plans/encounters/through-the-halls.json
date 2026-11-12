@@ -1,0 +1,19 @@
+{
+  "encounterId": "through-the-halls",
+  "set": "realm-of-myr/blackthorn-stair-hall",
+  "location": "The Blackthorn mansion",
+  "where": "A dim, high stair hall away from the ball. At its far end a grand stair climbs in two flights to a gallery, up to the family's floors, under a tall moonlit window; candle stands burn at the foot of each flight. By the near wall on the right, narrow steps go down through an arch into the dark, toward the cellars. The party stands in the middle of the hall.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -2.6, "z": -5.2 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -1.7, "z": -5.6 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 1.8, "z": -5.2 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 2.7, "z": -5.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -2.6, "z": -5.2 },
+    { "id": "cassia-verane", "x": -1.7, "z": -5.6 },
+    { "id": "yeva-softstep", "x": 1.8, "z": -5.2 },
+    { "id": "milos-radan", "x": 2.7, "z": -5.6 }
+  ],
+  "spare": [{ "x": 0.2, "z": -6.4 }]
+}

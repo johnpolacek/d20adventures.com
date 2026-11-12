@@ -1,0 +1,13 @@
+{
+  "encounterId": "the-escape",
+  "set": "realm-of-myr/mordava-river-pier",
+  "location": "Mordava woods",
+  "where": "A trail runs from the pier along the misty riverbank and into the woods toward Kordavos.",
+  "cast": [
+    { "id": "lyra", "name": "Lyra Silvanus", "x": -4.4, "z": 19.6 },
+    { "id": "poppen", "name": "Poppen Quickfoot", "x": -3.6, "z": 21 },
+    { "id": "thalbern", "name": "Thalbern", "x": -5.6, "z": 18.4 }
+  ],
+  "party": [{ "id": "lyra", "x": -4.4, "z": 19.6 }, { "id": "poppen", "x": -3.6, "z": 21 }, { "id": "thalbern", "x": -5.6, "z": 18.4 }],
+  "spare": []
+}

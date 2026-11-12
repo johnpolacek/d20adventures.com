@@ -1,0 +1,14 @@
+{
+  "encounterId": "the-fortune-teller",
+  "set": "realm-of-myr/marquis-road-fortune",
+  "location": "The Marquis Road",
+  "where": "Afternoon on the Marquis Road nearer Kordavos, between giant old trees, the road busy with travellers going both ways. Borina Runetongue sits at a small carpeted table with a crystal ball and her cards, under a great tree on the west verge. The party stands before her table.",
+  "cast": [
+    { "id": "npcs-1749870598631", "name": "Borina Runetongue", "x": -5.72, "z": -1.6 },
+    { "id": "hero-1", "name": "Traveller 1", "x": -3.6, "z": -3.1 },
+    { "id": "hero-2", "name": "Traveller 2", "x": -3.6, "z": 0 },
+    { "id": "hero-3", "name": "Traveller 3", "x": -2.8, "z": -3.7 }
+  ],
+  "party": [{ "id": "hero-1", "x": -3.6, "z": -3.1 }, { "id": "hero-2", "x": -3.6, "z": 0 }, { "id": "hero-3", "x": -2.8, "z": -3.7 }],
+  "spare": [{ "x": -2.9, "z": 0.6 }]
+}

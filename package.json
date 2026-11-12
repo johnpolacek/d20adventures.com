@@ -53,6 +53,8 @@
     "pw:headless": "playwright test",
     "db:admin": "open https://dashboard.convex.dev",
     "stage:check": "tsx scripts/stage-check.ts",
+    "stage:plans": "tsx scripts/stage-plans.ts",
+    "stage:plans:check": "tsx scripts/stage-plans.ts --check",
     "map:check": "tsx scripts/city-map-check.ts",
     "stage:sync": "node --env-file=.env.local --import tsx scripts/stage-assets-sync.ts",
     "stage:verify": "tsx scripts/stage-verify.ts",

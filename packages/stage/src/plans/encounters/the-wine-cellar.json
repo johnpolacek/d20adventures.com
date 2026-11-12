@@ -1,0 +1,21 @@
+{
+  "encounterId": "the-wine-cellar",
+  "set": "realm-of-myr/blackthorn-wine-cellar",
+  "location": "Blackthorn wine cellar",
+  "where": "Below the Blackthorn mansion: a long stone barrel vault reached by a stair from the halls above. Racks of dusty bottles line both walls, and rows of casks lie before them with their heads to the aisle, some stacked two high, room to hide behind them. Two candle chandeliers hang over the aisle. At the far end, beyond a small tasting table, stands a sturdier rack of newer, paler wood against the wall. The party stands in the middle of the aisle. The sommelier and a servant come down the stair when they arrive.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -0.7, "z": -10.2 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.4, "z": -10.8 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -0.2, "z": -11.6 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 0.9, "z": -9.8 },
+    { "id": "clive-stonebrook", "name": "The sommelier", "x": 0.6, "z": -6.2 },
+    { "id": "mira-hearthstone", "name": "A servant", "x": -0.4, "z": -5.4 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -0.7, "z": -10.2 },
+    { "id": "cassia-verane", "x": 0.4, "z": -10.8 },
+    { "id": "yeva-softstep", "x": -0.2, "z": -11.6 },
+    { "id": "milos-radan", "x": 0.9, "z": -9.8 }
+  ],
+  "spare": [{ "x": -0.9, "z": -12.2 }]
+}

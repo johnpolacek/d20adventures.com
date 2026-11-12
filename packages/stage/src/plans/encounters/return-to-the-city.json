@@ -1,0 +1,13 @@
+{
+  "encounterId": "return-to-the-city",
+  "set": "realm-of-myr/kordavos-riverfront",
+  "location": "Kordavos riverfront",
+  "where": "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city.",
+  "cast": [
+    { "id": "lyra", "name": "Lyra Silvanus", "x": -3.6, "z": 8.5 },
+    { "id": "poppen", "name": "Poppen Quickfoot", "x": -2.7, "z": 9.6 },
+    { "id": "thalbern", "name": "Thalbern", "x": -4.6, "z": 9.7 }
+  ],
+  "party": [{ "id": "lyra", "x": -3.6, "z": 8.5 }, { "id": "poppen", "x": -2.7, "z": 9.6 }, { "id": "thalbern", "x": -4.6, "z": 9.7 }],
+  "spare": []
+}

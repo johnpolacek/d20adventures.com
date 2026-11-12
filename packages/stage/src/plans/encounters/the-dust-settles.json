@@ -1,0 +1,18 @@
+{
+  "encounterId": "the-dust-settles",
+  "set": "realm-of-myr/old-grand-library",
+  "location": "Old Grand Library",
+  "where": "The Old Grand Library, its bookcases two storeys high under the painted vault. At the reading table near the entrance Bishop Nicolai presides over the truce talks; Seraphina Valtor and Lady Astrid Blackthorn sit across the table from each other, and Sister Danica stands by. The party watches from under the dome.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": 0.2, "z": 2.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 1.1, "z": 2.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.6, "z": 3.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.6, "z": 3 },
+    { "id": "bishop-nicolai", "name": "Bishop Nicolai", "x": -1.7, "z": 5.6 },
+    { "id": "seraphina-valtor", "name": "Seraphina Valtor", "x": -3.6, "z": 6.55 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": -3, "z": 4.65 },
+    { "id": "sister-danica", "name": "Sister Danica", "x": -1, "z": 6.6 }
+  ],
+  "party": [{ "id": "branka-stoneveil", "x": 0.2, "z": 2.6 }, { "id": "cassia-verane", "x": 1.1, "z": 2.2 }, { "id": "yeva-softstep", "x": 0.6, "z": 3.4 }, { "id": "milos-radan", "x": 1.6, "z": 3 }],
+  "spare": [{ "x": 2.2, "z": 2.4 }]
+}

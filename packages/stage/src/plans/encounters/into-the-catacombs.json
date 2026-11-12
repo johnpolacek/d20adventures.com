@@ -1,0 +1,25 @@
+{
+  "encounterId": "into-the-catacombs",
+  "set": "realm-of-myr/catacombs-powder",
+  "location": "The catacombs",
+  "where": "Deep under Kordavos: a long tunnel of old laid stone, torches on its walls, runs down into a cave chamber held up by four rough stone pillars. Four hooded Covenant agents are setting powder kegs against the pillars, and a long fuse snakes across the floor from keg to keg to a cultist by the far tunnel mouth. The party stands in the tunnel just before the chamber with Lady Astrid and Eamon at its front; Astrid's soldiers come behind. The tunnel goes on beyond the chamber into the dark.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -0.8, "z": 9.6 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.3, "z": 10.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -0.3, "z": 11.2 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 0.9, "z": 11 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": -0.6, "z": 8.2 },
+    { "id": "eamon", "name": "Eamon", "x": 0.8, "z": 8.6 },
+    { "id": "covenant-rogue", "name": "A Covenant rogue", "x": -1.9, "z": 0.4 },
+    { "id": "covenant-rogue-2", "name": "A Covenant rogue", "x": 2, "z": 0.9 },
+    { "id": "covenant-cultist", "name": "A Covenant cultist", "x": 1.9, "z": -3.4 },
+    { "id": "covenant-cultist-2", "name": "A Covenant cultist", "x": -1.6, "z": -1.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -0.8, "z": 9.6 },
+    { "id": "cassia-verane", "x": 0.3, "z": 10.2 },
+    { "id": "yeva-softstep", "x": -0.3, "z": 11.2 },
+    { "id": "milos-radan", "x": 0.9, "z": 11 }
+  ],
+  "spare": [{ "x": -0.2, "z": 12.4 }]
+}

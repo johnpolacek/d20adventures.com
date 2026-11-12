@@ -1,0 +1,23 @@
+{
+  "encounterId": "the-old-grand-library",
+  "set": "realm-of-myr/old-grand-library",
+  "location": "Old Grand Library",
+  "where": "Midday in the great hall of the Old Grand Library: bookcases two storeys high with a gallery round them, saints in stained glass, a painted vault and a dome over the crossing, a red rug under it, lecterns down the sides. The party stands just inside the entrance. Sister Danica has come to them from beside a reading table where a young acolyte writes. At the far end a red door under a balcony leads to the private archives, where the archivist keeps out of sight by a locked glass cabinet.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.3, "z": 7.7 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.45, "z": 7.95 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 0.45, "z": 7.95 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 1.3, "z": 7.7 },
+    { "id": "sister-danica", "name": "Sister Danica", "x": -0.3, "z": 5.9 },
+    { "id": "eldrin-varokich", "name": "The Archivist", "x": 1.6, "z": -16.6 },
+    { "id": "reader-scholar", "name": "An old scholar", "x": -4.75, "z": -0.4 },
+    { "id": "reader-acolyte", "name": "A young acolyte", "x": -2.75, "z": 4.8 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.3, "z": 7.7 },
+    { "id": "cassia-verane", "x": -0.45, "z": 7.95 },
+    { "id": "yeva-softstep", "x": 0.45, "z": 7.95 },
+    { "id": "milos-radan", "x": 1.3, "z": 7.7 }
+  ],
+  "spare": [{ "x": 0, "z": 7.2 }]
+}

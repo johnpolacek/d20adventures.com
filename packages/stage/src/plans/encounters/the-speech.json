@@ -1,0 +1,24 @@
+{
+  "encounterId": "the-speech",
+  "set": "realm-of-myr/blackthorn-ballroom-drake",
+  "location": "The Blackthorn ballroom",
+  "where": "Lord Thaddeus stands on the stage at the far end of the ballroom, the crowd gathered below. The curtain on the stage's west half is drawn back: the forest drake glares from a great iron cage. Eamon stands in the crowd. The party is among the guests in front of the stage.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -1.8, "z": -13 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -0.9, "z": -13.4 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -1.4, "z": -12.2 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -0.2, "z": -12.8 },
+    { "id": "thaddeus-blackthorn", "name": "Lord Thaddeus Blackthorn", "x": 2.4, "z": -22.6, "raised": 0.9 },
+    { "id": "eamon", "name": "Eamon", "x": 2.2, "z": -11 },
+    { "id": "forest-drake", "name": "The forest drake", "x": -3.4, "z": -23.7, "raised": 0.96 },
+    { "id": "guest-gold", "name": "A gentleman in a sun mask", "x": 3.6, "z": -12.4 },
+    { "id": "guest-ivory", "name": "A lady in ivory", "x": -3.2, "z": -14.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -1.8, "z": -13 },
+    { "id": "cassia-verane", "x": -0.9, "z": -13.4 },
+    { "id": "yeva-softstep", "x": -1.4, "z": -12.2 },
+    { "id": "milos-radan", "x": -0.2, "z": -12.8 }
+  ],
+  "spare": [{ "x": -2.6, "z": -12.4 }]
+}

@@ -1,0 +1,31 @@
+{
+  "encounterId": "a-distraction",
+  "set": "realm-of-myr/blackthorn-ballroom",
+  "location": "The Blackthorn ballroom",
+  "where": "The ballroom with every eye on the floor. Lady Astrid stands at the foot of the stage addressing the guests; the elf bard Aelindor comes in by the grand doors and plays his lyre in the middle of the floor. The party stands in the crowd on the west side, near the colonnade and the way out of the hall.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -3.4, "z": -9.2 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": -2.5, "z": -9.8 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -3, "z": -8.4 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -2, "z": -8.8 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": 0.6, "z": -19.6 },
+    { "id": "aelindor", "name": "Aelindor", "x": 0.4, "z": -12.4 },
+    { "id": "guest-crimson", "name": "A lady in a crimson cloak", "x": -2.6, "z": 1.2 },
+    { "id": "guest-raven", "name": "A gentleman in a raven mask", "x": -1.6, "z": 0.6 },
+    { "id": "guest-ivory", "name": "A lady in ivory", "x": 2.6, "z": -0.8 },
+    { "id": "guest-gold", "name": "A gentleman in a sun mask", "x": 3.4, "z": 0.2 },
+    { "id": "guest-gold-2", "name": "A gentleman in a sun mask", "x": -4.4, "z": -2.6 },
+    { "id": "guest-ivory-3", "name": "A lady in ivory", "x": -3.6, "z": -3.4 },
+    { "id": "guest-raven-4", "name": "A gentleman in a raven mask", "x": 1.2, "z": -4.8 },
+    { "id": "guest-crimson-5", "name": "A lady in a crimson cloak", "x": 0.4, "z": -5.4 },
+    { "id": "guest-ivory-6", "name": "A lady in ivory", "x": 4.6, "z": -6.4 },
+    { "id": "guest-raven-7", "name": "A gentleman in a raven mask", "x": -1.8, "z": -7.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -3.4, "z": -9.2 },
+    { "id": "cassia-verane", "x": -2.5, "z": -9.8 },
+    { "id": "yeva-softstep", "x": -3, "z": -8.4 },
+    { "id": "milos-radan", "x": -2, "z": -8.8 }
+  ],
+  "spare": [{ "x": -3.8, "z": -10 }]
+}

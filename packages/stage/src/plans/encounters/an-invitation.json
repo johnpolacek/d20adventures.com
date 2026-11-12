@@ -1,0 +1,20 @@
+{
+  "encounterId": "an-invitation",
+  "set": "realm-of-myr/kordavos-docks-wrecked",
+  "location": "Kordavos docks",
+  "where": "The Kordavos quay after the drake: the quay is strewn with smashed crates and loose planks, the Star of Faelendar's main course hangs torn, and her cargo hatch amidships has burst open on the iron cage below, its bars eaten through. Lady Astrid faces the party near the gangway with a sealed invitation.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": -0.9, "z": 4.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.2, "z": 5 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 1.2, "z": 4.6 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": -1.8, "z": 5.2 },
+    { "id": "astrid-blackthorn", "name": "Lady Astrid Blackthorn", "x": 1.5, "z": 2.6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": -0.9, "z": 4.4 },
+    { "id": "cassia-verane", "x": 0.2, "z": 5 },
+    { "id": "yeva-softstep", "x": 1.2, "z": 4.6 },
+    { "id": "milos-radan", "x": -1.8, "z": 5.2 }
+  ],
+  "spare": [{ "x": -2.6, "z": 4.8 }]
+}

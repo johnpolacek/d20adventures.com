@@ -1,0 +1,23 @@
+{
+  "encounterId": "the-lady-and-the-bishop",
+  "set": "realm-of-myr/blackthorn-ballroom",
+  "location": "The Blackthorn ballroom",
+  "where": "The ballroom by the east colonnade, near a tall curtained window. Seraphina Valtor, white-haired in ivory and green with a gilt mask, and Bishop Nicolai in a silver full mask and gold headdress have come to the party through the crowd.",
+  "cast": [
+    { "id": "branka-stoneveil", "name": "Branka Stoneveil", "x": 1.4, "z": -3.4 },
+    { "id": "cassia-verane", "name": "Cassia Verane", "x": 2.2, "z": -4.2 },
+    { "id": "yeva-softstep", "name": "Yeva Softstep", "x": 1.6, "z": -2.6 },
+    { "id": "milos-radan", "name": "Milos Radan", "x": 2.6, "z": -3.2 },
+    { "id": "seraphina-valtor", "name": "A masked noblewoman", "x": 3.9, "z": -1.4 },
+    { "id": "bishop-nicolai", "name": "A masked churchman", "x": 4.8, "z": -2.2 },
+    { "id": "guest-raven", "name": "A gentleman in a raven mask", "x": -2.2, "z": -5.2 },
+    { "id": "guest-crimson", "name": "A lady in a crimson cloak", "x": -1.4, "z": -6 }
+  ],
+  "party": [
+    { "id": "branka-stoneveil", "x": 1.4, "z": -3.4 },
+    { "id": "cassia-verane", "x": 2.2, "z": -4.2 },
+    { "id": "yeva-softstep", "x": 1.6, "z": -2.6 },
+    { "id": "milos-radan", "x": 2.6, "z": -3.2 }
+  ],
+  "spare": [{ "x": 3.2, "z": -4 }]
+}

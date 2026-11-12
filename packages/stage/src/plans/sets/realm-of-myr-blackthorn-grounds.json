@@ -1,0 +1,40 @@
+{
+  "id": "realm-of-myr/blackthorn-grounds",
+  "title": "The Blackthorn mansion by night",
+  "solids": [
+    { "kind": "circle", "x": -3.6, "z": -15.6, "r": 0.522 },
+    { "kind": "circle", "x": -1.8, "z": -15.6, "r": 0.522 },
+    { "kind": "circle", "x": 1.8, "z": -15.6, "r": 0.522 },
+    { "kind": "circle", "x": 3.6, "z": -15.6, "r": 0.522 },
+    { "kind": "rect", "x": -34, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": -27.6, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": -25, "z": -24, "hw": 5.5, "hd": 5.5, "ry": 0 },
+    { "kind": "rect", "x": -21.2, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": -17.5, "z": 22, "hw": 8.5, "hd": 0.3, "ry": 0 },
+    { "kind": "rect", "x": -14.8, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": -9.2, "z": 22, "hw": 0.5, "hd": 0.5, "ry": 0 },
+    { "kind": "rect", "x": -8.4, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": -2.8, "z": 22, "hw": 0.5, "hd": 0.5, "ry": 0 },
+    { "kind": "rect", "x": -2, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": 0, "z": -26, "hw": 23, "hd": 8, "ry": 0 },
+    { "kind": "rect", "x": 0, "z": -15.6, "hw": 5, "hd": 1.6, "ry": 0 },
+    { "kind": "rect", "x": 4.4, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": 5.5, "z": 22, "hw": 8.5, "hd": 0.3, "ry": 0 },
+    { "kind": "rect", "x": 10, "z": 6, "hw": 0.3, "hd": 12, "ry": 0 },
+    { "kind": "rect", "x": 10.8, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": 17, "z": 18, "hw": 9, "hd": 0.3, "ry": 0 },
+    { "kind": "rect", "x": 17.2, "z": 33, "hw": 3.15, "hd": 4, "ry": 3.142 },
+    { "kind": "rect", "x": 25, "z": -24, "hw": 5.5, "hd": 5.5, "ry": 0 },
+    { "kind": "rect", "x": 26, "z": 0, "hw": 0.3, "hd": 18, "ry": 0 }
+  ],
+  "doors": [],
+  "places": [
+    { "id": "balconyBelow", "label": "below the balcony", "x": 16.4, "z": -13.6 },
+    { "id": "court", "label": "the courtyard", "x": -6, "z": 10 },
+    { "id": "doors", "label": "the doors at the top of the stair", "x": 0, "z": -13.2 },
+    { "id": "garden", "label": "the garden", "x": 18, "z": 0 },
+    { "id": "gates", "label": "the iron gates", "x": -6, "z": 20.6 },
+    { "id": "grate", "label": "the drain grate under the ivy", "x": 22.4, "z": -9.4 },
+    { "id": "stair", "label": "the foot of the grand staircase", "x": 0, "z": -9.6 }
+  ]
+}
