@@ -48,6 +48,7 @@
     "test": "pnpm build && concurrently \"pnpm kill:ports && pnpm dev:web\" \"pnpm test:wait\" --success first --kill-others --names \"dev,test\" --prefix-colors \"yellow.bold,cyan.bold\"",
     "ship": "pnpm test && pnpm go",
     "push": "pnpm convex:deploy && git push origin main",
+    "push:now": "convex deploy --yes && git push origin main",
     "test:clean": "rm -rf ~/.cache/ms-playwright-tests test-results/ playwright-report/",
     "pw": "playwright test --ui --debug",
     "pw:headless": "playwright test",
