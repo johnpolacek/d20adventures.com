@@ -111,7 +111,6 @@ import { type FigureArt, type FigureOwner, heroFigure, PREMADE_FIGURES } from ".
 import { NPC_PORTRAITS } from "./npc-portraits"
 import photoreal from "./photoreal.json"
 
-type Point = { x: number; z: number }
 type Who = { id: string; name: string; type?: string; race?: string; archetype?: string; gender?: string }
 type CastMember = { id: string; name: string; role?: string; height?: number; at: string | number[]; facing?: string | number | number[]; art: { front?: string; back?: string; portrait?: string } }
 type Shot = { subject?: string; subjects?: string[]; label?: string }
@@ -702,7 +701,7 @@ function road(set: unknown, staging: unknown, spare: [number, number], location:
 export const sceneFor = (encounterId: string | undefined) => (encounterId ? SCENES[encounterId] : undefined)
 
 // The cast member standing for a turn character. Later stagings use content character ids (`madam-zephyra`); the gate's
-// staging predates that and uses first names (`garlan`), which saved gate positions are keyed by.
+// staging predates that and uses first names (`garlan`).
 export function castIdFor(cast: readonly { id: string }[], c: Who) {
   if (cast.some((s) => s.id === c.id)) return c.id
   const first = c.name.split(" ")[0].toLowerCase()
@@ -802,28 +801,7 @@ export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<str
   )
 }
 
-// Map staging for the GM's narration: the place, its named spots, and where each character in the turn stands now
-// (saved positions, else where the staging puts them). Ambient extras such as the gate's merchant are left out.
-export function spatialContext(encounterId: string, characters: readonly Who[], positions: Record<string, Point>, chosen: Record<string, string> = {}) {
-  const authored = SCENES[encounterId]
-  if (!authored) return
-  const { set, staging } = partyScene(authored, characters, chosen)
-  const start = (at: string | number[]): Point => {
-    const [x, z] = typeof at === "string" ? set.marks[at].at : at
-    return { x, z }
-  }
-  const fmt = (p: Point) => `(${p.x.toFixed(1)}, ${p.z.toFixed(1)})`
-  const places = Object.values(set.marks)
-    .filter((m) => m.label)
-    .map((m) => `${m.label} ${fmt({ x: m.at[0], z: m.at[1] })}`)
-  const people = characters.flatMap((c) => {
-    const member = staging.cast.find((m) => m.id === castIdFor(staging.cast, c))
-    return member ? [`${c.name} ${fmt(positions[member.id] ?? start(member.at))}`] : []
-  })
-  return `${authored.where}\nNamed places, x and z in metres: ${places.join("; ")}.\nWhere everyone stands now, x and z in metres: ${people.join("; ")}.`
-}
-
-// The set's named places, which the GM may point the camera at and walk characters to in its beats.
+// The set's named places, which the GM may point the camera at in its beats.
 export function scenePlaces(encounterId: string): { id: string; label: string }[] | undefined {
   const marks = SCENES[encounterId]?.set.marks
   return marks && Object.entries(marks).flatMap(([id, m]) => (m.label ? [{ id, label: m.label }] : []))

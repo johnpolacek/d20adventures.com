@@ -241,8 +241,6 @@ test("a finished adventure's chapter keeps what its heroes learned, and each her
     version: 1,
     provider: "claude",
     rolls: {},
-    movement: {},
-    positions: {},
     adventure: {
       _id: "a",
       title: "Covert Cargo",

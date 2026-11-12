@@ -4,13 +4,16 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { placeCharacters, standingWords } from "@d20/gm-core/sheet/placement"
+import { metres } from "@d20/gm-core/sheet/space"
 import { storyText } from "@d20/gm-core/story/render"
 import { createStubLibrary } from "@d20/stage/materials/library"
 import { buildSetGeometry, parseSet } from "@d20/stage/spec/build"
 import { stagingSpecSchema } from "@d20/stage/spec/staging"
 import { onFootprint, standingRoom } from "@d20/stage/spec/walk"
 import { STOCK_FIGURES } from "../src/figures"
-import { partyScene, portraitFor, SCENES, spatialContext } from "../src/scenes"
+import { castIdFor, partyScene, portraitFor, SCENES } from "../src/scenes"
+import { encounterFloor } from "./floor"
 import { game, type Packs, transitionsOf } from "./game"
 import { type Hero, heroCommand } from "./heroes"
 import { LocalStore } from "./store"
@@ -338,7 +341,7 @@ const premade = (pack: string, id: string) => {
   return who(s.id, s.name, s.race, s.archetype, s.gender)
 }
 
-test("the party fills a scene's slots: premades keep theirs, created heroes take the rest and spare spots", () => {
+test("the party fills a scene's slots: premades keep theirs, created heroes take the rest and spare spots", async () => {
   const gate = SCENES["the-front-of-the-line"]
   const authored = ["branka-stoneveil", "cassia-verane", "yeva-softstep", "milos-radan"].map((id) => premade("welcome-to-kordavos", id))
   assert.deepEqual(partyScene(gate, authored).staging, gate.staging)
@@ -374,13 +377,29 @@ test("the party fills a scene's slots: premades keep theirs, created heroes take
   assert.equal(festival.cast.filter((m) => [milos.id, vex.id, "yeva-softstep"].includes(m.id)).length, 3)
   assert.deepEqual(festival.shots!.party.subjects!.length, 3)
 
-  const context = spatialContext("the-harvest-festival", [milos, vex], {}, chosen)!
-  assert.match(context, /Milos Hardcastle \(-1\.6, 17\.6\); Vex \(-0\.3, 18\.1\)/)
-
-  // In the line, the party waits two groups back from the table, and a spare hero stands at its end.
-  const line = spatialContext("the-gates-of-kordavos", [premade("welcome-to-kordavos", "branka-stoneveil"), milos, vex], {}, chosen)!
-  assert.match(line, /two groups back/)
-  assert.match(line, /Branka Stoneveil \(-0\.5, 16\.1\); Milos Hardcastle \(-0\.5, 14\.9\); Vex \(-1\.4, 15\.5\)/)
+  // The engine stands each hero where the scene's staging puts them, and tells the GM so. In the line, the party waits
+  // two groups back from the table. There the engine seats a created hero by first name in a premade's slot, Milos
+  // Hardcastle in Milos Radan's, where the staging does not, so the two created heroes are left out of the comparison.
+  const tenth = (n: number) => Math.round(n * 10) / 10
+  for (const [encounter, heroes, where, same] of [
+    ["the-harvest-festival", [milos, vex], /festival square/, [milos.id, vex.id]],
+    ["the-gates-of-kordavos", [premade("welcome-to-kordavos", "branka-stoneveil"), milos, vex], /two groups back/, ["branka-stoneveil"]],
+  ] as const) {
+    const floor = await encounterFloor(encounter)
+    assert.ok(floor, encounter)
+    const placed: { id: string; name: string; type: string; position?: { x: number; y: number } }[] = placeCharacters(heroes, floor)
+    const words = standingWords(placed, floor) ?? ""
+    assert.match(words, where)
+    const { set, staging } = partyScene(SCENES[encounter], heroes, chosen)
+    for (const c of placed) {
+      assert.match(words, new RegExp(`- ${c.name}, `))
+      assert.ok(c.position, `${encounter}: ${c.name} is placed`)
+      if (!(same as readonly string[]).includes(c.id)) continue
+      const member = staging.cast.find((m) => m.id === castIdFor(staging.cast, c))!
+      const at = typeof member.at === "string" ? set.marks[member.at].at : member.at
+      assert.deepEqual([metres(c.position!.x), metres(c.position!.y)].map(tenth), at.map(tenth), `${encounter}: ${c.name}`)
+    }
+  }
 })
 
 test("heroes from other adventures with numeric website ids stand in the gate's staging", () => {

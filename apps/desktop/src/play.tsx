@@ -112,11 +112,10 @@ export function DesktopGame() {
   const saveRef = useRef(save)
   saveRef.current = save
 
-  // Every command waits its turn behind the one running. A quiet one, such as saving where the cast stands after a walk,
-  // does not show the GM at work, and a written turn shows it only once the story before it has been read. A shown
-  // command asked while another is waiting or running is dropped, as a second click.
+  // Every command waits its turn behind the one running. A written turn shows the GM at work only once the story before
+  // it has been read. A shown command asked while another is waiting or running is dropped, as a second click.
   const invoke = useCallback(
-    async (command: GameCommand | HeroCommand, how: "shown" | "quiet" | "writing" = "shown") => {
+    async (command: GameCommand | HeroCommand, how: "shown" | "writing" = "shown") => {
       if (how === "shown") {
         if (busyRef.current) return
         busyRef.current = true
@@ -363,9 +362,9 @@ export function DesktopGame() {
           <Pill onClick={goHome}>Home</Pill>
         </>
       }
-      onReply={async (turnId, characterId, text, movement) => {
+      onReply={async (turnId, characterId, text) => {
         if (hosting) return act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "reply", characterId, text } }))
-        const res = await invoke({ kind: "reply", turnId, characterId, text, movement })
+        const res = await invoke({ kind: "reply", turnId, characterId, text })
         return Boolean(res && !res.error)
       }}
       onSkip={async (turnId, characterId) => {
@@ -384,13 +383,6 @@ export function DesktopGame() {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "continue" } }))
         else void invoke({ kind: "continue", turnId }, "writing")
       }}
-      onPositions={
-        hosting
-          ? undefined
-          : async (turnId, positions, appliedMovement) => {
-              await invoke({ kind: "positions", turnId, positions, appliedMovement }, "quiet")
-            }
-      }
       onEscape={onEscape}
       onError={onError}
       onStage={setStageState}

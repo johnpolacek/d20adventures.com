@@ -11,7 +11,6 @@ import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import type { RuntimeArtifacts } from "@d20/gm-core/wiki-adventures/types"
-import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stage/movement"
 import { z } from "zod"
 import { scenePlaces } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
@@ -83,14 +82,6 @@ export const commandSchema = z.discriminatedUnion("kind", [
     turnId: z.string(),
     characterId: z.string(),
     text: z.string().trim().min(1).max(4000),
-    movement: z
-      .object({
-        actor: z.object({ id: z.string().max(100), name: z.string().max(100), speed: z.number().min(0).max(30) }),
-        action: z.string().max(4000),
-        places: z.array(z.object({ id: z.string().max(100), label: z.string().max(200), distance: z.number().finite().min(0), direction: z.string().max(50) })).max(100),
-        characters: z.array(z.object({ id: z.string().max(100), name: z.string().max(100), distance: z.number().finite().min(0), direction: z.string().max(50) })).max(24),
-      })
-      .optional(),
   }),
   // Swaps an archived adventure in as the current save.
   z.object({ kind: z.literal("resume"), archiveId: z.number().int().positive() }),
@@ -101,12 +92,6 @@ export const commandSchema = z.discriminatedUnion("kind", [
   // Ends a hero's turn with no reply. Nothing is written into the story and the GM is not asked.
   z.object({ kind: z.literal("skip"), turnId: z.string(), characterId: z.string() }),
   z.object({ kind: z.literal("continue"), turnId: z.string() }),
-  z.object({
-    kind: z.literal("positions"),
-    turnId: z.string(),
-    appliedMovement: z.string().optional(),
-    positions: z.record(z.string(), z.object({ x: z.number().finite(), z: z.number().finite(), ry: z.number().finite() })),
-  }),
 ])
 export type GameCommand = z.infer<typeof commandSchema>
 export const suggestCommandSchema = z.object({ kind: z.literal("suggest"), turnId: z.string(), characterId: z.string() })
@@ -255,8 +240,6 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
         provider: command.provider,
         ...(command.provider === "claude" && command.model ? { model: command.model } : {}),
         rolls: {},
-        movement: {},
-        positions: {},
         figures: party.figures,
         painted: party.painted,
         ...(story ? { story } : {}),
@@ -292,18 +275,6 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       })
       return store.state
     }
-    if (command.kind === "positions") {
-      // A walk can end on a round the game has already moved past, while the stage still reads it. Where the cast
-      // stands belongs to its encounter, so a walk from an encounter the game has left is not kept.
-      const walked = store.state?.turns.find((t) => t._id === command.turnId)
-      if (!walked) throw new Error("This turn is not in the saved adventure.")
-      if (command.appliedMovement && !store.state!.movement[command.appliedMovement]) throw new Error("Unknown stage movement.")
-      if (walked.encounterId !== store.current().encounterId) return store.state
-      store.state!.positions = command.positions
-      if (command.appliedMovement) store.state!.appliedMovement = [...new Set([...(store.state!.appliedMovement ?? []), command.appliedMovement])]
-      store.save()
-      return store.state
-    }
     const turn = store.turn(command.turnId)
     if (store.state!.adventure.status === "completed") throw new Error("This adventure is complete.")
     if (command.kind === "continue") {
@@ -320,11 +291,6 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       if (command.kind === "reply") {
         if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
         const beats = await core.writeReply({ character: actor, playerInput: command.text, turn })
-        // Movement is interpreted only for a staged encounter. No Next server action is involved.
-        if (command.movement) {
-          const intent = (await llm.generateObject({ prompt: movementPrompt({ ...command.movement, action: command.text }), system: MOVEMENT_SYSTEM, schema: movementIntentSchema })).object
-          store.state!.movement[`${turn._id}:${actor.id}`] = { actorId: actor.id, intent }
-        }
         await core.processTurnReply({ turnId: turn._id, characterId: actor.id, originalPlayerInput: command.text, story: beats })
       } else if (command.kind === "skip") {
         if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")

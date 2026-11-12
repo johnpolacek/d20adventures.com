@@ -1,3 +1,4 @@
+import { metres } from "@d20/gm-core/sheet/space"
 import type { FeatureBeat, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { nameOf, rollSentence, storyNames, storyParagraphs } from "@d20/gm-core/story/render"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
@@ -27,7 +28,6 @@ import type { FeedbackDraft } from "@/lib/feedback/shared"
 import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
-import { applyMovement, context, positions as stagePositions } from "./movement"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
 type Paragraph = { text: string; roll?: RollBeat; feature?: FeatureBeat; beats: StoryBeat[] }
@@ -45,7 +45,6 @@ const story = (turn: { story: StoryBeat[] } | undefined, originals = false): Par
 // Where a labelled paragraph puts the camera: on someone, on two people facing off, or on a place on the set.
 type Aim = { pair: [string, string] } | { place: string } | { subject: string }
 type View = Aim | null
-const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
 // The shot for an aim, framed on where everyone stands now.
 function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string | null {
   if ("subject" in aim) return { subject: aim.subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }
@@ -90,7 +89,6 @@ function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string
 }
 
 type Character = Save["turns"][number]["characters"][number]
-type Positions = Record<string, { x: number; z: number; ry: number }>
 // How long someone stays on their feet after the paragraph that fells them begins, in milliseconds: about the time the
 // camera takes to reach them.
 const FALL_DELAY = 1500
@@ -183,7 +181,8 @@ export function StagePlay(props: {
   actions?: ReactNode
   trailingActions?: ReactNode
   // Each resolves to whether the action was accepted.
-  onReply: (turnId: string, characterId: string, text: string, movement: ReturnType<typeof context> | undefined) => Promise<boolean>
+  // The site's hosted play still names a fourth argument, which is always undefined.
+  onReply: (turnId: string, characterId: string, text: string, movement?: undefined) => Promise<boolean>
   // Ends a hero's turn with no reply. Without it the card has no Skip button.
   onSkip?: (turnId: string, characterId: string) => Promise<boolean>
   // `result` is the first d20, and `second` the other of a roll with Advantage or Disadvantage.
@@ -198,8 +197,6 @@ export function StagePlay(props: {
   // The GM is writing a turn Continue asked for. Unlike `busy`, the story already told reads on, and the card shows
   // the turn being written only once it has been read.
   writing?: boolean
-  // Where the cast stands after a walk. Without it, walks are not saved.
-  onPositions?: (turnId: string, positions: Positions, appliedMovement: string) => Promise<void>
   // The table chat of a game with other players, and how a line is sent. Resolves to whether it was taken.
   chat?: ChatLine[]
   onChat?: (text: string) => Promise<boolean>
@@ -214,12 +211,8 @@ export function StagePlay(props: {
   onStage?: (state: { waiting: boolean; error: string | null }) => void
   children?: ReactNode
 }) {
-  const { save, art } = props
-  const { onPositions, onError, onEscape, onStage } = props
-  const saveRef = useRef(save)
-  saveRef.current = save
-  const [walking, setWalking] = useState(false)
-  const busy = props.busy || walking
+  const { save, art, busy } = props
+  const { onError, onEscape, onStage } = props
 
   const [draft, setDraft] = useState("")
   const [open, setOpen] = useState<"journal" | "chat" | "settings" | "map" | "feedback" | null>(null)
@@ -386,21 +379,20 @@ export function StagePlay(props: {
     const text = beats.flatMap((b) => (b.kind === "line" && b.speaker === line.speaker ? [b.text] : [])).join(" ")
     return { name: c.name, role: c.type === "npc" ? c.archetype || c.race : `${c.race} ${c.archetype}`, portrait: portrait(c), text }
   }, [scene, reading, paragraphs, paragraph, shown])
+  // Where the engine has each character, in the stage's metres, by cast id, with the character it stands for. Ambient
+  // extras, and anyone the engine has not placed, stand where the staging puts them.
+  const spots = useMemo(() => {
+    const out = new Map<string, { character: string; at: [number, number] }>()
+    for (const c of shown?.characters ?? []) {
+      const id = stage && c.position && castIdFor(stage.cast, c)
+      if (id && c.position) out.set(id, { character: c.id, at: [metres(c.position.x), metres(c.position.y)] })
+    }
+    return out
+  }, [stage, shown?.characters])
   // Entrances the scene ties to the narration: offstage until the paragraph that brings them on ("the cabin door
-  // opened"), then they walk on from the door to their place. Narration without the phrase finds them in place.
-  // An action that brings someone on from a place does the same, at its own paragraph.
-  const cues = useMemo(() => {
-    const authored = (stage?.staging?.entrances ?? []).map((e) => ({ ...e, speed: 0.9, at: text.findIndex((p) => p.toLowerCase().includes(e.when.toLowerCase())) }))
-    const told = paragraphs.flatMap((p, at) =>
-      p.beats.flatMap((b) => {
-        const cast = b.kind === "action" && b.move?.from && stage?.set.marks[b.move.from] ? castOf(b.actor) : undefined
-        return cast && b.kind === "action" && b.move?.from
-          ? [{ cast, from: b.move.from as string | [number, number], when: "", shot: undefined as string | undefined, speed: PACE[b.move.pace ?? "walk"], at }]
-          : []
-      })
-    )
-    return [...authored.filter((e) => !told.some((t) => t.cast === e.cast)), ...told]
-  }, [stage, text, paragraphs, castOf])
+  // opened"), then they walk on from the door to where the engine has them. Narration without the phrase finds them
+  // in place.
+  const cues = useMemo(() => (stage?.staging?.entrances ?? []).map((e) => ({ ...e, speed: 0.9, at: text.findIndex((p) => p.toLowerCase().includes(e.when.toLowerCase())) })), [stage, text])
   const arriving = reading ? cues.find((e) => e.at === paragraph) : undefined
   useEffect(() => {
     if (!stage) return
@@ -408,7 +400,7 @@ export function StagePlay(props: {
       const home = stage.staging?.cast.find((c) => c.id === e.cast)
       // A place is read as a mark: a mark can share its name with the one who stands there, as the Owlbear's does.
       const spot = (at: string | number[] | undefined) => (typeof at === "string" ? stage.set.marks[at]?.at : at) as [number, number] | undefined
-      const to = spot(home?.at)
+      const to = spots.get(e.cast)?.at ?? spot(home?.at)
       const from = spot(e.from)
       if (!home || !to || !from) continue
       if (reading && e.at >= 0 && paragraph < e.at) {
@@ -420,7 +412,7 @@ export function StagePlay(props: {
         else stage.placeCast(e.cast, to, home.facing)
       }
     }
-  }, [stage, cues, reading, paragraph])
+  }, [stage, cues, spots, reading, paragraph])
   // Who the game has taken out of this encounter, by cast id: the dead and those who fled. A round is built without
   // them, so each character's last appearance in the encounter says how they left.
   const gone = useMemo(() => {
@@ -485,7 +477,8 @@ export function StagePlay(props: {
       const home = stage.staging?.cast.find((c) => c.id === id)
       if (reading && e.at >= 0 && paragraph < e.at) {
         // Not yet: back on their feet in their place, as when the reader steps back.
-        if ((ran.current.delete(id) || stage.isDown(id)) && home) stage.placeCast(id, home.at, home.facing)
+        const at = spots.get(id)?.at ?? home?.at
+        if ((ran.current.delete(id) || stage.isDown(id)) && at) stage.placeCast(id, at, home?.facing)
         stage.setOnStage(id, true)
         stage.setDown(id, false)
       } else if (!e.run) {
@@ -508,8 +501,8 @@ export function StagePlay(props: {
       }
     }
     return () => falls.forEach(clearTimeout)
-  }, [stage, exits, reading, paragraph])
-  // A new stage: loops held, its opening view, and everyone where the save has them, before the camera frames anyone.
+  }, [stage, exits, spots, reading, paragraph])
+  // A new stage: loops held and its opening view, before the camera frames anyone.
   useEffect(() => {
     if (!stage) return
     for (const loop of stage.loops.values()) loop.paused = true
@@ -517,19 +510,47 @@ export function StagePlay(props: {
     const timer = setInterval(() => redraw((n) => n + 1), 1000)
     return () => clearInterval(timer)
   }, [stage])
-  // Everyone where the save has them, once a stage and an adventure's encounter. A new round in the same encounter
-  // keeps the stage as it stands, since a walk's save may still wait behind a turn being written.
-  const placed = useRef<{ stage: Stage; encounter: string } | null>(null)
+  // Everyone where the engine has them. A new stage, or a new encounter on it, places them at once. After that, someone
+  // the engine moves walks there from where they are drawn, when the reader reaches the paragraphs of their latest
+  // step, or at once when the story is not being read. A newer move takes over a walk under way. Someone offstage
+  // waiting for an entrance is left to it.
+  const drawn = useRef<{ stage: Stage; encounter: string; at: Map<string, string>; walks: Map<string, number> } | null>(null)
   useEffect(() => {
     // A stage being replaced for the next encounter must not take the new encounter's positions.
-    if (!stage || !turn || stageRef.current !== stage) return
-    const encounter = `${turn.adventureId}:${turn.encounterId}`
-    if (placed.current?.stage === stage && placed.current.encounter === encounter) return
-    placed.current = { stage, encounter }
-    for (const [id, p] of Object.entries(saveRef.current?.positions ?? {})) {
-      if (stage.cast.some((c) => c.id === id)) stage.placeCast(id, [p.x, p.z], (p.ry * 180) / Math.PI)
+    if (!stage || !shown || stageRef.current !== stage) return
+    const encounter = `${shown.adventureId}:${shown.encounterId}`
+    const fresh = drawn.current?.stage !== stage || drawn.current.encounter !== encounter
+    if (fresh) drawn.current = { stage, encounter, at: new Map(), walks: new Map() }
+    const d = drawn.current!
+    for (const [id, { character, at: to }] of spots) {
+      const key = to.join()
+      if (d.at.get(id) === key) continue
+      if (fresh || !stage.isOnStage(id)) {
+        d.at.set(id, key)
+        if (stage.isOnStage(id)) stage.placeCast(id, to)
+        continue
+      }
+      // The first paragraph of the character's latest step in the story on screen.
+      let from = paragraphs.findLastIndex((p) => p.beats[0]?.by.character === character)
+      while (from > 0 && paragraphs[from - 1].beats[0]?.by.character === character && paragraphs[from - 1].beats[0]?.by.step === paragraphs[from].beats[0]?.by.step) from--
+      if (reading && paragraph < from) continue
+      d.at.set(id, key)
+      const walk = (d.walks.get(id) ?? 0) + 1
+      d.walks.set(id, walk)
+      const live = () => stageRef.current === stage && drawn.current === d && d.walks.get(id) === walk
+      void (async () => {
+        for (const p of stage.route(id, { x: to[0], z: to[1] }, Number.POSITIVE_INFINITY)) {
+          if (!live()) return
+          const now = stage.castAt(id)
+          if (Math.hypot(p.x - now.x, p.z - now.z) > 0.05) stage.faceCast(id, [p.x, p.z])
+          await stage.moveCast(id, [p.x, p.z])
+        }
+        // The set can stop a walk short of the engine's spot, which is the truth.
+        const now = stage.castAt(id)
+        if (live() && Math.hypot(to[0] - now.x, to[1] - now.z) > 0.05) stage.placeCast(id, to)
+      })().catch((error) => onError(`Could not draw the move: ${String(error)}`))
     }
-  }, [stage, stageRef, turn?._id, turn?.adventureId, turn?.encounterId])
+  }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, onError])
   // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or
   // the place it describes. The first view on a new stage is a cut, not a glide from its opening view.
   const framed = useRef<Stage | null>(null)
@@ -560,16 +581,15 @@ export function StagePlay(props: {
     const shot = shotFor(stage, view, heroes.current)
     if (shot) go(shot)
   }, [stage, speech, departing, arriving, beats, paragraph, reading])
-  // What labelled paragraphs do on stage: walks, effects and objects, each played once when its paragraph is first read.
+  // What labelled paragraphs do on stage: effects and objects, each played once when its paragraph is first read.
   // An attack in a hero's reply waits for the roll that decides it, and plays after the roll as a hit or a miss, unless
   // the roll's outcome shows the attack itself. After a roll in the same step, an effect misses when its actor failed
-  // the roll or its target made it. A hero whose reply the movement model reads walks by that, not by the beats.
+  // the roll or its target made it. No one walks by a beat: where everyone stands is the engine's.
   const staged = useMemo(() => {
     const out = new Map<number, { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }[]>()
     const all = paragraphs.flatMap((p, i) => p.beats.map((beat) => ({ beat, at: i })))
     const same = (a: StoryBeat, b: StoryBeat) => a.by.step === b.by.step && a.by.character === b.by.character
     const add = (at: number, entry: { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }) => out.set(at, [...(out.get(at) ?? []), entry])
-    const walksByModel = (actor: string) => Boolean(turn && saveRef.current?.movement[`${turn._id}:${actor}`])
     // Where a beat's effect plays, and whether it misses: undefined when it does not play yet, or not at all.
     const effectAt = (beat: Extract<StoryBeat, { kind: "action" }>, at: number, i: number): { at: number; miss: boolean } | undefined => {
       let j = i - 1
@@ -595,8 +615,7 @@ export function StagePlay(props: {
     for (const [i, { beat, at }] of all.entries()) {
       if (beat.kind !== "action") continue
       const key = `${turn?._id}:${i}`
-      const walks = Boolean(beat.move?.to) && !walksByModel(beat.actor)
-      if (walks || beat.object) add(at, { key: `${key}:own`, beat: walks ? beat : { ...beat, move: undefined }, effect: false, miss: false })
+      if (beat.object) add(at, { key: `${key}:own`, beat, effect: false, miss: false })
       const fx = beat.effect ? effectAt(beat, at, i) : undefined
       if (fx) add(fx.at, { key: `${key}:fx`, beat, effect: true, miss: fx.miss })
     }
@@ -616,32 +635,13 @@ export function StagePlay(props: {
       played.current.add(key)
       const target = castOf(b.target)
       // Once the camera has arrived, so the effect is seen from where the paragraph frames it.
-      if (effect || b.object)
-        void Promise.race([stage.shotSettled(), new Promise((r) => setTimeout(r, 2600))]).then(() => {
-          if (showing.current !== here) return
-          if (effect && b.effect) void stage.effect(b.effect.kind, actor, target, b.effect.element, { miss })
-          else if (b.object) void stage.prop(b.object.kind, actor, castOf(b.object.to))
-        })
-      const to = effect ? undefined : b.move?.to
-      const character = turn.characters.find((c) => c.id === b.actor)
-      if (!to || !character) continue
-      const onSet = Boolean(stage.set.marks[to])
-      const toward = onSet ? undefined : castOf(to)
-      if (!onSet && !toward) continue
-      // The walk holds the story. Its save waits its turn behind a turn being written, and the story reads on.
-      void (async () => {
-        setWalking(true)
-        const positions = await applyMovement(stage, character, {
-          move: onSet ? "place" : "character",
-          ...(onSet ? { place: to } : { character: toward }),
-          ...(target ? { face: target } : {}),
-          pace: b.move?.pace ?? "walk",
-          summary: "",
-        }).finally(() => setWalking(false))
-        if (stageRef.current === stage) await onPositions?.(turn._id, positions, "")
-      })().catch((error) => onError(`Could not save the movement: ${String(error)}`))
+      void Promise.race([stage.shotSettled(), new Promise((r) => setTimeout(r, 2600))]).then(() => {
+        if (showing.current !== here) return
+        if (effect && b.effect) void stage.effect(b.effect.kind, actor, target, b.effect.element, { miss })
+        else if (b.object) void stage.prop(b.object.kind, actor, castOf(b.object.to))
+      })
     }
-  }, [stage, stageRef, reading, paragraph, staged, turn, castOf, onPositions, onError])
+  }, [stage, stageRef, reading, paragraph, staged, turn, castOf])
   useEffect(() => {
     if (!auto || !reading || busy || !text.length) return
     // A roll stays up until the die has landed and the verdict has had a moment.
@@ -650,7 +650,6 @@ export function StagePlay(props: {
     return () => clearTimeout(timer)
   }, [auto, reading, busy, text, paragraphs, paragraph])
   const focused = useRef<string | null>(null)
-  const moved = useRef(new Set<string>())
   useEffect(() => {
     onStage?.({ waiting: Boolean(scene && !stage && !stageError), error: stageError ?? null })
   }, [onStage, scene, stage, stageError])
@@ -677,25 +676,6 @@ export function StagePlay(props: {
   useEffect(() => {
     setDraft("")
   }, [turn?._id, actor?.id])
-  useEffect(() => {
-    if (!stage || !save || !turn || busy || stageRef.current !== stage) return
-    const pending = Object.entries(save.movement).find(([key]) => key.startsWith(`${turn._id}:`) && !save.appliedMovement?.includes(key) && !moved.current.has(key))
-    if (!pending) return
-    const [key, movement] = pending
-    const c = turn.characters.find((c) => c.id === movement.actorId)
-    if (!c || !c.isComplete || !castIdFor(stage.cast, c)) return
-    const check = save.rollChecks?.[key]
-    if (check && c.rollResult === undefined) return
-    moved.current.add(key)
-    void (async () => {
-      setWalking(true)
-      const walk = check && c.rollResult! < check.dc ? Promise.resolve(stagePositions(stage)) : applyMovement(stage, c, movement.intent)
-      const positions = await walk.finally(() => setWalking(false))
-      // A walk cut off by a scene change belongs to a renderer that no longer exists.
-      if (stageRef.current !== stage) return
-      await onPositions?.(turn._id, positions, key)
-    })().catch((error) => onError(`Could not save the movement: ${String(error)}`))
-  }, [stage, stageRef, save, turn, busy, onPositions, onError])
   const focus = useCallback(
     (id: string) => {
       const characters = turnRef.current?.characters
@@ -805,10 +785,9 @@ export function StagePlay(props: {
   const result = useMemo(() => (answer && heldTurn ? rollView(answer, heldTurn.characters) : undefined), [answer, heldTurn?.characters])
   let mode: CardMode | null = null
   if (held) mode = { kind: "roll", roll: held.roll, made: held.dice, resolving: props.busy, ...(result ? { result } : {}) }
-  // A walk holds the card back without a word about the GM.
-  else if (busy) mode = props.busy ? playing(turn?._id, actor, aiActor, portrait) : null
+  else if (busy) mode = playing(turn?._id, actor, aiActor, portrait)
   else if (props.writing) mode = reading ? null : playing(turn?._id, actor, aiActor, portrait)
-  // Movement is read against the scene on screen, so wait for the next scene before taking an action.
+  // An action waits for the next scene to be on screen.
   else if (scene && !stage && !stageError) mode = { kind: "thinking", note: loading }
   else if (ended) mode = null
   else if (cardActor && rr)
@@ -846,8 +825,7 @@ export function StagePlay(props: {
   }, [autoContinue, continueKey, continued, onContinue])
   const reply = async (value: string) => {
     if (!turn || !actor) return
-    const movement = stage ? context(stage, actor, value) : undefined
-    if (await props.onReply(turn._id, actor.id, value, movement)) setDraft("")
+    if (await props.onReply(turn._id, actor.id, value)) setDraft("")
   }
   const skip = async () => {
     if (turn && actor && (await props.onSkip?.(turn._id, actor.id))) setDraft("")

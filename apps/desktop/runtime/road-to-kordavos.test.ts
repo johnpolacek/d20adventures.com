@@ -1,16 +1,18 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
+import { placeCharacters, standingWords } from "@d20/gm-core/sheet/placement"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { STOCK_FIGURES } from "../src/figures"
-import { castIdFor, partyScene, portraitFor, sceneFor, spatialContext } from "../src/scenes"
+import { castIdFor, partyScene, portraitFor, sceneFor } from "../src/scenes"
+import { encounterFloor } from "./floor"
 import type { Packs } from "./game"
 
 const packs: Packs = JSON.parse(readFileSync(new URL("../src-tauri/resources/packs.json", import.meta.url), "utf8"))
 const pack = packs["the-road-to-kordavos"]
 const who = (id: string, name: string, race: string, archetype: string, gender: string) => ({ id, name, race, archetype, gender, type: "pc" })
 
-test("every Road to Kordavos encounter has a 3D scene, created heroes take the travellers' places, and the GM gets the road's places", () => {
+test("every Road to Kordavos encounter has a 3D scene, created heroes take the travellers' places, and the GM gets the road's places", async () => {
   const heroes = [who("hero-aaaa1111", "Arin Vale", "Elf", "Ranger", "Female"), who("hero-bbbb2222", "Tobb Underbough", "Halfling", "Rogue", "Male")]
   const where: Record<string, RegExp> = {
     "well-met": /wayside shrine[\s\S]*the head of the caravan/,
@@ -35,6 +37,13 @@ test("every Road to Kordavos encounter has a 3D scene, created heroes take the t
       assert.ok(castIdFor(staging.cast, c), `${encounter.id}: ${c.name} has no figure`)
       if (c.type !== "pc") assert.match(portraitFor(sceneFor(encounter.id), c) ?? "", /^\/stage\/fixtures\/the-road-to-kordavos\/[a-z-]+-portrait\.jpg$/, c.name)
     }
-    assert.match(spatialContext(encounter.id, characters, {}) ?? "", where[encounter.id], encounter.id)
+    const floor = await encounterFloor(encounter.id)
+    assert.ok(floor, encounter.id)
+    const placed: { id: string; name: string; position?: { x: number; y: number } }[] = placeCharacters(characters, floor)
+    assert.ok(
+      placed.every((c) => c.position),
+      `${encounter.id}: someone has no position`
+    )
+    assert.match(standingWords(placed, floor) ?? "", where[encounter.id], encounter.id)
   }
 })

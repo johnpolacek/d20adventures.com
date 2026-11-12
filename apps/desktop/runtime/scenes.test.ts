@@ -4,7 +4,9 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
-import { castIdFor, partyScene, portraitFor, SCENES, sceneFor, spatialContext } from "../src/scenes"
+import { placeCharacters, standingWords } from "@d20/gm-core/sheet/placement"
+import { castIdFor, partyScene, portraitFor, SCENES, sceneFor } from "../src/scenes"
+import { encounterFloor } from "./floor"
 import { game, type Packs } from "./game"
 import { LocalStore } from "./store"
 
@@ -51,8 +53,12 @@ async function advance(store: LocalStore, encounter: string) {
   await game(store, packs, llm)({ kind: "continue", turnId: store.current()._id })
   return prompt
 }
-const positions = (store: LocalStore, value: Record<string, { x: number; z: number; ry: number }>, appliedMovement?: string, turnId = store.current()._id) =>
-  game(store, packs, { generateText: unused, generateObject: unused })({ kind: "positions", turnId, positions: value, appliedMovement })
+type Characters = ReturnType<LocalStore["current"]>["characters"]
+// What the engine tells the GM of an encounter's place, with these characters placed on its floor as it opens.
+async function standing(encounter: string, characters: Characters) {
+  const floor = await encounterFloor(encounter)
+  return floor && standingWords(placeCharacters(characters, floor), floor)
+}
 
 test("every authored scene is a real encounter, and every festival character has its own figure and portrait", async () => {
   for (const id of Object.keys(SCENES))
@@ -142,7 +148,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
         assert.equal(castIdFor(scene.staging.cast, c), c.id)
         assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/welcome-to-kordavos\/.+-portrait\.jpg$/)
       }
-      assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
+      assert.match((await standing(here.encounterId, here.characters)) ?? "", where)
     }
     // The auction, then the street kit's scenes. Bram waits at the inn during the ambush, so he has no figure there.
     for (const [encounter, npcs, figures, where] of [
@@ -164,17 +170,17 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       const staged = people.filter((c) => castIdFor(scene.staging.cast, c) === c.id)
       assert.equal(staged.length, figures, encounter)
       for (const c of staged) assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/welcome-to-kordavos\/.+-portrait\.jpg$/)
-      assert.match(spatialContext(here.encounterId, here.characters, {}) ?? "", where)
+      assert.match((await standing(here.encounterId, here.characters)) ?? "", where)
     }
     // An encounter with no scene falls back to story view, which keeps the party's faces from the authored scenes.
     const party = run.store.current().characters
     assert.equal(sceneFor("no-such-encounter"), undefined)
-    assert.equal(spatialContext("no-such-encounter", party, {}), undefined)
+    assert.equal(await standing("no-such-encounter", party), undefined)
     for (const pc of party.filter((c) => c.type === "pc")) assert.ok(portraitFor(undefined, pc))
     // The endings in the great square, reached only through the final choice.
-    assert.match(spatialContext("the-new-dawn", party, {}) ?? "", /Key of Ilmarin[\s\S]*the balcony/)
-    assert.match(spatialContext("vengeance-of-the-blackthorn", party, {}) ?? "", /coffin[\s\S]*the bier/)
-    assert.match(spatialContext("the-dust-settles", party, {}) ?? "", /truce talks[\s\S]*the reading table/)
+    assert.match((await standing("the-new-dawn", party)) ?? "", /Key of Ilmarin[\s\S]*the balcony/)
+    assert.match((await standing("vengeance-of-the-blackthorn", party)) ?? "", /coffin[\s\S]*the bier/)
+    assert.match((await standing("the-dust-settles", party)) ?? "", /truce talks[\s\S]*the reading table/)
     // The Blackthorn mansion.
     for (const [encounter, where] of [
       ["entry-to-the-ball", /grand staircase[\s\S]*the foot of the grand staircase/],
@@ -191,61 +197,60 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       ["the-chase", /rope[\s\S]*the drain grate under the ivy/],
       ["the-hunt-for-the-assassin", /drain grate[\s\S]*the drain grate under the ivy/],
     ] as const)
-      assert.match(spatialContext(encounter, party, {}) ?? "", where, encounter)
+      assert.match((await standing(encounter, party)) ?? "", where, encounter)
     // The wine cellar, below the mansion.
-    assert.match(spatialContext("the-wine-cellar", party, {}) ?? "", /barrel vault[\s\S]*the rack on the far wall/)
+    assert.match((await standing("the-wine-cellar", party)) ?? "", /barrel vault[\s\S]*the rack on the far wall/)
     // The forgotten temple.
-    assert.match(spatialContext("forgotten-temple", party, {}) ?? "", /oaks[\s\S]*the altar/)
-    assert.match(spatialContext("final-confrontation", party, {}) ?? "", /Joran[\s\S]*the shadows behind the altar/)
+    assert.match((await standing("forgotten-temple", party)) ?? "", /oaks[\s\S]*the altar/)
+    assert.match((await standing("final-confrontation", party)) ?? "", /Joran[\s\S]*the shadows behind the altar/)
     // The catacombs, reached from the mansion's grounds.
-    assert.match(spatialContext("into-the-catacombs", party, {}) ?? "", /powder kegs[\s\S]*the end of the fuse/)
-    assert.match(spatialContext("through-the-labyrinth", party, {}) ?? "", /two forks[\s\S]*the crystal runes/)
-    assert.match(spatialContext("the-sealed-door", party, {}) ?? "", /black iron door[\s\S]*the black iron door/)
-    assert.match(spatialContext("big-empty", party, {}) ?? "", /grey dust[\s\S]*the archway at the far end/)
+    assert.match((await standing("into-the-catacombs", party)) ?? "", /powder kegs[\s\S]*the end of the fuse/)
+    assert.match((await standing("through-the-labyrinth", party)) ?? "", /two forks[\s\S]*the crystal runes/)
+    assert.match((await standing("the-sealed-door", party)) ?? "", /black iron door[\s\S]*the black iron door/)
+    assert.match((await standing("big-empty", party)) ?? "", /grey dust[\s\S]*the archway at the far end/)
   } finally {
     run.close()
   }
 })
 
-test("positions reset on a new encounter, persist through rounds and reopening, and a walk from a round already ended is kept only in its encounter", async () => {
+test("positions are on the turn's characters, set afresh by a new encounter, and kept through its rounds and a reopen", async () => {
   const run = await setup()
   try {
-    const gateTurn = run.store.current()._id
-    await positions(run.store, { branka: { x: 1, z: 12, ry: 0 } })
+    const at = (id: string) => run.store.current().characters.find((c) => c.id === id)?.position
+    // The engine places everyone as the adventure opens.
+    for (const c of run.store.current().characters) assert.ok(c.position, `${c.name} is placed`)
+    run.store.current().characters.find((c) => c.id === "branka-stoneveil")!.position = { x: 1, y: 2 }
+    run.store.save()
     await advance(run.store, "the-front-of-the-line")
-    assert.deepEqual(run.store.state!.positions, {})
-    await positions(run.store, { branka: { x: 2, z: 12, ry: 0 } }, undefined, gateTurn)
-    assert.deepEqual(run.store.state!.positions, {})
-    await assert.rejects(() => positions(run.store, { branka: { x: 2, z: 12, ry: 0 } }, undefined, "no-such-turn"), /not in the saved adventure/)
+    const front = run.store.current()
+    const floor = await encounterFloor(front.encounterId)
+    assert.ok(floor)
+    assert.deepEqual(
+      front.characters.map((c) => c.position),
+      placeCharacters(front.characters, floor).map((c) => c.position)
+    )
+    assert.notDeepEqual(at("branka-stoneveil"), { x: 1, y: 2 })
     await advance(run.store, "the-harvest-festival")
 
-    // A walk is saved once with its movement key, so reopening never replays it.
-    const key = `${run.store.current()._id}:milos-radan`
-    await assert.rejects(() => positions(run.store, { "milos-radan": { x: -10, z: 3.9, ry: 1 } }, key), /Unknown stage movement/)
-    run.store.state!.movement[key] = { actorId: "milos-radan", intent: { move: "place", place: "jewelStall", pace: "walk", summary: "to the jewel stall" } }
-    await positions(run.store, { "milos-radan": { x: -10, z: 3.9, ry: 1 } }, key)
+    // Where the engine moved someone is saved on the turn, and survives reopening.
+    run.store.current().characters.find((c) => c.id === "milos-radan")!.position = { x: -30, y: 12 }
+    run.store.save()
     run.reopen()
-    assert.deepEqual(run.store.state!.positions["milos-radan"], { x: -10, z: 3.9, ry: 1 })
-    assert.deepEqual(run.store.state!.appliedMovement, [key])
+    assert.deepEqual(at("milos-radan"), { x: -30, y: 12 })
 
     // The next festival round keeps where everyone stands, and the GM sees it with the square's named places.
     const prompt = await advance(run.store, "the-harvest-festival")
     assert.equal(run.store.current().encounterId, "the-harvest-festival")
     assert.equal(run.store.state!.turns.length, 4)
-    assert.deepEqual(run.store.state!.positions["milos-radan"], { x: -10, z: 3.9, ry: 1 })
+    assert.deepEqual(at("milos-radan"), { x: -30, y: 12 })
     assert.match(prompt, /festival square/)
-    // The GM is told where the engine has everyone, in feet, not where the 3D view last drew them.
     assert.match(prompt, /Named places: [^\n]*Karim's jewel stall/)
     assert.match(prompt, /- Milos Radan, [^\n]*Madam Zephyra \d+/)
     assert.match(prompt, /- Madam Zephyra, /)
 
-    // A walk read after the round's end was written is kept, since the next round is in the same square.
-    const lastRound = run.store.state!.turns.at(-2)!._id
-    await positions(run.store, { "milos-radan": { x: -8, z: 3, ry: 0 } }, undefined, lastRound)
-    assert.deepEqual(run.store.state!.positions["milos-radan"], { x: -8, z: 3, ry: 0 })
-
     await advance(run.store, "clan-conflict")
-    assert.deepEqual(run.store.state!.positions, {})
+    assert.notDeepEqual(at("milos-radan"), { x: -30, y: 12 })
+    assert.ok(at("milos-radan"))
   } finally {
     run.close()
   }

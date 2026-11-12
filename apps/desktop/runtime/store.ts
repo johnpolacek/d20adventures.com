@@ -5,7 +5,6 @@ import { mergeKnowledge } from "@d20/gm-core/story/knowledge"
 import { withStory } from "@d20/gm-core/story/turn"
 import { type AdventurePatch, validateAdventurePatch } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { validateRuntimeTransition } from "@d20/gm-core/wiki-adventures/transition-validator"
-import type { MovementIntent } from "@d20/stage/movement"
 import { type CharacterStates, desktopPatchSchema, nextCharacterState, rememberCharacters } from "./characters"
 import type { Hero, Roster } from "./heroes"
 import type { Chapter } from "./story"
@@ -30,10 +29,6 @@ export type Save = {
   turns: Array<TurnRecord & { adventurePatch?: AdventurePatch }>
   // The d20s of each roll made: one, or two with Advantage or Disadvantage.
   rolls: Record<string, number[]>
-  rollChecks?: Record<string, { name: string; skill: string; dc: number; modifier: number }>
-  appliedMovement?: string[]
-  movement: Record<string, { actorId: string; intent: MovementIntent }>
-  positions: Record<string, { x: number; z: number; ry: number }>
   characterStates?: CharacterStates
   // Each created hero's stock figure, by character id, and the heroes who stand as their painted art instead.
   figures?: Record<string, string>
@@ -245,10 +240,6 @@ export class LocalStore implements Store, Roster {
     const turn = this.turn(args.turnId)
     const c = turn.characters.find((c) => c.id === args.characterId)
     if (!c || c.hasReplied || c.isComplete) throw new Error("This character already acted or is unavailable.")
-    if (args.rollRequirement) {
-      this.state!.rollChecks ??= {}
-      this.state!.rollChecks[`${turn._id}:${c.id}`] = { name: c.name, skill: args.rollRequirement.rollType, dc: args.rollRequirement.difficulty, modifier: args.rollRequirement.modifier }
-    }
     Object.assign(turn, withStory(turn, args.story))
     Object.assign(c, { hasReplied: true, isComplete: !args.rollRequirement, rollRequired: args.rollRequirement, rollResult: undefined })
     this.save()
@@ -316,7 +307,6 @@ export class LocalStore implements Store, Roster {
     a.openThreads = [...new Map([...a.openThreads, ...(patch.openThreads ?? [])].map((t) => [t.id, t])).values()].filter((t) => !a.resolvedThreadIds.includes(t.id))
     a.adventureSummaryMarkdown = [a.adventureSummaryMarkdown, patch.summaryDelta].filter(Boolean).join("\n\n")
     if (args.knowledge?.length) a.knowledge = mergeKnowledge(a.knowledge, args.knowledge)
-    if (old.encounterId !== args.nextEncounterId) next.positions = {}
     this.db.prepare("INSERT OR REPLACE INTO save VALUES(1, ?)").run(JSON.stringify(next))
     this.state = next
     return { turnId, adventureId: args.adventureId }

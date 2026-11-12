@@ -6,10 +6,13 @@ import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import { conditionWords } from "@d20/gm-core/sheet/conditions"
 import { withDamage } from "@d20/gm-core/sheet/death"
+import { placeCharacters, standingWords } from "@d20/gm-core/sheet/placement"
+import { metres } from "@d20/gm-core/sheet/space"
 import { storyText } from "@d20/gm-core/story/render"
 import { findCurrentActor, isDying } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
-import { castIdFor, partyScene, portraitFor, sceneFor, spatialContext } from "../src/scenes"
+import { castIdFor, partyScene, portraitFor, sceneFor } from "../src/scenes"
+import { encounterFloor } from "./floor"
 import { game, type Packs, suggest, transitionsOf } from "./game"
 import { LocalStore } from "./store"
 
@@ -76,10 +79,12 @@ test("the real core walks Covert Cargo from the pier into the cabin and back to 
         `${next}: someone has no position`
       )
       if (next === "battle-on-the-boat") assert.deepEqual(feet("Thalbern"), [-4.6, -21])
-      const where = spatialContext(next, store.current().characters, {})
-      assert.match(where ?? "", /Lyra Silvanus \(/)
-      assert.match(where ?? "", /Poppen Quickfoot \(/)
-      assert.match(where ?? "", /Thalbern \(/)
+      const floor = await encounterFloor(next)
+      assert.ok(floor, next)
+      const where = standingWords(placeCharacters(store.current().characters, floor), floor) ?? ""
+      assert.match(where, /- Lyra Silvanus, /)
+      assert.match(where, /- Poppen Quickfoot, /)
+      assert.match(where, /- Thalbern, /)
     }
     // The GM saw the pier's places while deciding the first move.
     assert.match(prompts[0], /the cabin door/)
@@ -273,9 +278,18 @@ test("the fight is written to end with Lyra in the river, on a pier the tug has 
     const scene = sceneFor("overboard")!
     assert.equal(scene.set.title, "The pier after the tug has gone")
     for (const gone of ["saloon", "crate", "cabinDoor", "bow", "stern"]) assert.equal(gone in scene.set.marks, false, gone)
-    const where = spatialContext("overboard", store.current().characters, {}) ?? ""
-    assert.match(where, /Lyra Silvanus \(-0\.9, 5\.6\)/)
-    assert.match(where, /Thalbern \(-1\.4, -6\.4\)/)
+    // On the pier Lyra stands at (-0.9, 5.6) metres and Thalbern at (-1.4, -6.4).
+    const floor = await encounterFloor("overboard")
+    assert.ok(floor)
+    const placed = placeCharacters(store.current().characters, floor)
+    const metresOf = (name: string) => {
+      const at = placed.find((c) => c.name === name)?.position
+      return at && [Math.round(metres(at.x) * 10) / 10, Math.round(metres(at.y) * 10) / 10]
+    }
+    assert.deepEqual(metresOf("Lyra Silvanus"), [-0.9, 5.6])
+    assert.deepEqual(metresOf("Thalbern"), [-1.4, -6.4])
+    const where = standingWords(placed, floor) ?? ""
+    assert.match(where, /- Lyra Silvanus, /)
     assert.doesNotMatch(where, /the tug's saloon/)
   })
 })

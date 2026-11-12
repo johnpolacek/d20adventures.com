@@ -34,8 +34,6 @@ export function hostedSave(state: Hosted): Save | null {
     },
     turns: [turn],
     rolls: {},
-    movement: {},
-    positions: {},
     painted: Object.keys(hostedArt(state)),
   }
 }

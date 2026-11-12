@@ -345,7 +345,7 @@ test("new game archives the saved adventure, even a finished one, and a plain st
     await run({ kind: "start", provider: "claude" })
     const first = store.state!.adventure._id
     store.state!.adventure.status = "completed"
-    store.state!.positions = { branka: { x: 1, z: 12, ry: 0 } }
+    store.current().characters[0].position = { x: 1, y: 2 }
     store.save()
     await assert.rejects(() => run({ kind: "start", provider: "codex" }), /already saved/)
     assert.equal(store.state!.adventure._id, first)
@@ -357,7 +357,7 @@ test("new game archives the saved adventure, even a finished one, and a plain st
     assert.equal(store.state!.adventure.status, "active")
     assert.equal(store.current().encounterId, "the-gates-of-kordavos")
     assert.equal(store.state!.turns.length, 1)
-    assert.deepEqual(store.state!.positions, {})
+    assert.notDeepEqual(store.current().characters[0].position, { x: 1, y: 2 })
 
     const reopened = new LocalStore(path)
     assert.equal(reopened.state!.adventure._id, second)
@@ -365,7 +365,7 @@ test("new game archives the saved adventure, even a finished one, and a plain st
     assert.equal(archived.length, 1)
     assert.equal(archived[0].adventure._id, first)
     assert.equal(archived[0].adventure.status, "completed")
-    assert.deepEqual(archived[0].positions, { branka: { x: 1, z: 12, ry: 0 } })
+    assert.deepEqual(archived[0].turns[0].characters[0].position, { x: 1, y: 2 })
     reopened.db.close()
 
     await run({ kind: "start", provider: "claude", replace: true })
