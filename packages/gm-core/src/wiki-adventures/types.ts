@@ -18,6 +18,8 @@ export const validationFindingCodes = [
   "adventure.startEncounter.missing",
   "transition.target.missing",
   "character.sheet.invalid",
+  "character.rules.missing",
+  "character.rules.invalid",
   "asset.url.invalid",
   "asset.url.unapproved",
   "link.target.missing",

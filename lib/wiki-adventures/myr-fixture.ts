@@ -39,6 +39,17 @@ export const representativeMyrAdventurePlan: AdventurePlan = {
       spells: [],
       specialAbilities: ["Gatewarden routines"],
       effects: [],
+      sheet: {
+        class: "rogue",
+        level: 1,
+        species: "human",
+        background: "criminal",
+        abilityScores: { str: 8, dex: 15, con: 12, int: 13, wis: 10, cha: 14 },
+        classSkills: ["acrobatics", "deception", "perception", "persuasion"],
+        otherSkills: ["insight"],
+        expertise: ["stealth", "persuasion"],
+        feats: ["skilled"],
+      },
     },
   ],
   npcs: {

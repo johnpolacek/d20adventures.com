@@ -326,7 +326,9 @@ async function packageBoundary() {
       function check(node: ts.Node) {
         if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
           const specifier = node.moduleSpecifier.text
-          assert.ok(specifier === "zod" || (specifier.startsWith(".") && resolve(dir, specifier).startsWith(`${sourceRoot}/`)), `${path}: forbidden dependency ${specifier}`)
+          // The SRD rules data is allowed: it is plain data with no host code, and the rules engine reads it (plans/srd-rules.md).
+          const rulesData = specifier === "@d20/srd" || specifier.startsWith("@d20/srd/")
+          assert.ok(specifier === "zod" || rulesData || (specifier.startsWith(".") && resolve(dir, specifier).startsWith(`${sourceRoot}/`)), `${path}: forbidden dependency ${specifier}`)
         }
         if (ts.isIdentifier(node)) assert.ok(!["process", "Buffer", "require", "__dirname"].includes(node.text), `${path}: forbidden host global ${node.text}`)
         ts.forEachChild(node, check)

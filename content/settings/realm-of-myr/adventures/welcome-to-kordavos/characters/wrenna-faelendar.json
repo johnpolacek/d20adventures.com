@@ -40,5 +40,16 @@
     "charisma": 8
   },
   "id": "wrenna-faelendar",
-  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/wrenna-faelendar.png"
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/wrenna-faelendar.png",
+  "sheet": {
+    "class": "ranger",
+    "level": 1,
+    "species": "elf",
+    "background": "soldier",
+    "abilityScores": {"str": 10, "dex": 16, "con": 12, "int": 10, "wis": 16, "cha": 8},
+    "classSkills": ["survival", "stealth", "perception"],
+    "otherSkills": ["insight"],
+    "speciesChoices": {"elven-lineage": "wood-elf"},
+    "armor": "leather-armor"
+  }
 }

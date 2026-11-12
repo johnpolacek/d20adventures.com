@@ -61,5 +61,15 @@
     "charisma": 14
   },
   "id": "1749307435667",
-  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/pcs/b44179ad-0e8e-4d1e-8b17-8c436dbeb15a.png?t=1749311061893"
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/pcs/b44179ad-0e8e-4d1e-8b17-8c436dbeb15a.png?t=1749311061893",
+  "sheet": {
+    "class": "rogue",
+    "level": 1,
+    "species": "halfling",
+    "background": "criminal",
+    "abilityScores": {"str": 10, "dex": 16, "con": 14, "int": 12, "wis": 10, "cha": 14},
+    "classSkills": ["acrobatics", "deception", "perception", "persuasion"],
+    "expertise": ["stealth", "sleight-of-hand"],
+    "armor": "leather-armor"
+  }
 }

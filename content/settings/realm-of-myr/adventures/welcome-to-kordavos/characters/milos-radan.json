@@ -72,5 +72,16 @@
     "charisma": 14
   },
   "id": "milos-radan",
-  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/milos-radan.png"
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/milos-radan.png",
+  "sheet": {
+    "class": "cleric",
+    "level": 1,
+    "species": "human",
+    "background": "acolyte",
+    "abilityScores": {"str": 10, "dex": 8, "con": 12, "int": 12, "wis": 16, "cha": 14},
+    "classSkills": ["medicine", "persuasion"],
+    "otherSkills": ["history"],
+    "featureChoices": {"cleric-divine-order": "thaumaturge"},
+    "feats": ["skilled"]
+  }
 }

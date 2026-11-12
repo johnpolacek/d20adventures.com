@@ -208,6 +208,8 @@ export default defineSchema({
         rollRequired: v.optional(v.any()),
         rollResult: v.optional(v.number()),
         healthPercent: v.optional(v.number()),
+        // The rules sheet (class, species, background, scores). packages/gm-core/src/sheet validates it.
+        sheet: v.optional(v.any()),
         image: v.optional(v.string()),
         gender: v.optional(v.string()),
         race: v.optional(v.string()),

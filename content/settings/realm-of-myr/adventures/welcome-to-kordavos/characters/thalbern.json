@@ -45,5 +45,15 @@
     "wisdom": 13,
     "charisma": 10
   },
-  "specialAbilities": []
+  "specialAbilities": [],
+  "sheet": {
+    "class": "ranger",
+    "level": 1,
+    "species": "human",
+    "background": "soldier",
+    "abilityScores": {"str": 13, "dex": 17, "con": 13, "int": 11, "wis": 13, "cha": 10},
+    "classSkills": ["stealth", "survival", "nature"],
+    "otherSkills": ["perception"],
+    "feats": ["alert"]
+  }
 }

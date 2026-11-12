@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { deriveSheet, sheetProblems } from "./derive"
-import { type Sheet, sheetSchema } from "./sheet"
+import { deriveSheet, sheetProblems } from "../../src/sheet/derive"
+import { type Sheet, sheetSchema } from "../../src/sheet/sheet"
 
 // Every expected number below was worked out by hand from the SRD 5.2.1 rules, not copied from the function's output.
 

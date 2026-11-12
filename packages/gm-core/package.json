@@ -9,7 +9,7 @@
   },
   "scripts": {
     "check": "tsc -p tsconfig.json",
-    "test": "tsx --test src/sheet/*.test.ts"
+    "test": "tsx --test test/sheet/*.test.ts"
   },
   "dependencies": {
     "@d20/srd": "workspace:*",

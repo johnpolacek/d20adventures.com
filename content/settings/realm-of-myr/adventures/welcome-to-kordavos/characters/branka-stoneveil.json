@@ -40,5 +40,16 @@
     "charisma": 8
   },
   "id": "branka-stoneveil",
-  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/branka-stoneveil.png"
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/branka-stoneveil.png",
+  "sheet": {
+    "class": "fighter",
+    "level": 1,
+    "species": "dwarf",
+    "background": "soldier",
+    "abilityScores": {"str": 16, "dex": 10, "con": 16, "int": 10, "wis": 12, "cha": 8},
+    "classSkills": ["perception", "insight"],
+    "featureChoices": {"fighter-fighting-style": "defense"},
+    "armor": "breastplate",
+    "shield": true
+  }
 }

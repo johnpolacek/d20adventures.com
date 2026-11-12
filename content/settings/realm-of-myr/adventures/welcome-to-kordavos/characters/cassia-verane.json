@@ -77,5 +77,15 @@
     "charisma": 10
   },
   "id": "cassia-verane",
-  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/cassia-verane.png"
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/cassia-verane.png",
+  "sheet": {
+    "class": "wizard",
+    "level": 1,
+    "species": "human",
+    "background": "sage",
+    "abilityScores": {"str": 8, "dex": 12, "con": 10, "int": 16, "wis": 14, "cha": 10},
+    "classSkills": ["investigation", "nature"],
+    "otherSkills": ["perception"],
+    "feats": ["skilled"]
+  }
 }

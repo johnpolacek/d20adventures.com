@@ -1,3 +1,4 @@
+import { sheetProblems } from "@d20/gm-core/sheet/derive"
 import { z } from "zod"
 import { npcSchema, pcTemplateSchema } from "@/types/character"
 import { hashJson } from "./hash"
@@ -298,6 +299,14 @@ function compileCharacterSheets(jsonFiles: SourceFile[], markdownFiles: ParsedMa
 
     const pcResult = pcTemplateSchema.safeParse(parsed)
     if (pcResult.success) {
+      // The rules sheet. A hero without one still plays on health percent alone until every premade hero has moved.
+      if (!pcResult.data.sheet) {
+        findings.push({ code: "character.rules.missing", severity: "warning", sourcePath: file.path, message: "This hero has no rules sheet (class, species, background, scores).", aiFixable: false })
+      } else {
+        for (const problem of sheetProblems(pcResult.data.sheet)) {
+          findings.push({ code: "character.rules.invalid", severity: "error", sourcePath: file.path, message: `The rules sheet is not legal: ${problem}.`, aiFixable: false })
+        }
+      }
       const profile = profilesById.get(pcResult.data.id)
       premadeCharacters[pcResult.data.id] = {
         sheet: pcResult.data,
