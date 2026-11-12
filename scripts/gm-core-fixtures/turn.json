@@ -577,7 +577,7 @@
                   "type": "string"
                 },
                 "place": {
-                  "description": "narration: the id of the place it shows. action: the id of the place the actor goes to, or of a character they close in on",
+                  "description": "narration: the id of the place it shows",
                   "type": "string"
                 },
                 "from": {
@@ -585,7 +585,7 @@
                   "type": "string"
                 },
                 "pace": {
-                  "description": "action with a place: how the actor goes",
+                  "description": "action with a from: how the actor comes",
                   "type": "string",
                   "enum": ["walk", "hurry", "sneak"]
                 },
@@ -828,7 +828,7 @@
                   "type": "string"
                 },
                 "place": {
-                  "description": "narration: the id of the place it shows. action: the id of the place the actor goes to, or of a character they close in on",
+                  "description": "narration: the id of the place it shows",
                   "type": "string"
                 },
                 "from": {
@@ -836,7 +836,7 @@
                   "type": "string"
                 },
                 "pace": {
-                  "description": "action with a place: how the actor goes",
+                  "description": "action with a from: how the actor comes",
                   "type": "string",
                   "enum": ["walk", "hurry", "sneak"]
                 },
@@ -907,7 +907,7 @@
                   "type": "string"
                 },
                 "place": {
-                  "description": "narration: the id of the place it shows. action: the id of the place the actor goes to, or of a character they close in on",
+                  "description": "narration: the id of the place it shows",
                   "type": "string"
                 },
                 "from": {
@@ -915,7 +915,7 @@
                   "type": "string"
                 },
                 "pace": {
-                  "description": "action with a place: how the actor goes",
+                  "description": "action with a from: how the actor comes",
                   "type": "string",
                   "enum": ["walk", "hurry", "sneak"]
                 },
@@ -1195,7 +1195,7 @@
                   "type": "string"
                 },
                 "place": {
-                  "description": "narration: the id of the place it shows. action: the id of the place the actor goes to, or of a character they close in on",
+                  "description": "narration: the id of the place it shows",
                   "type": "string"
                 },
                 "from": {
@@ -1203,7 +1203,7 @@
                   "type": "string"
                 },
                 "pace": {
-                  "description": "action with a place: how the actor goes",
+                  "description": "action with a from: how the actor comes",
                   "type": "string",
                   "enum": ["walk", "hurry", "sneak"]
                 },

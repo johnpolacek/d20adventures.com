@@ -3,15 +3,15 @@ import { z } from "zod"
 // A turn's story: the beats the GM and the authored intros write, in order. Each beat says what it is and whose it
 // is, so a screen never guesses a speaker, a camera or an effect from the wording. Prose is a view of the story.
 
+export const PACES = ["walk", "hurry", "sneak"] as const
 export const EFFECT_KINDS = ["arrow", "bolt", "beam", "burst", "aura", "sparkles", "slash", "impact", "mist"] as const
 export const ELEMENTS = ["fire", "frost", "lightning", "radiant", "nature", "shadow", "arcane"] as const
 export const OBJECT_KINDS = ["scroll", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"] as const
-export const PACES = ["walk", "hurry", "sneak"] as const
 
+export type Pace = (typeof PACES)[number]
 export type EffectKind = (typeof EFFECT_KINDS)[number]
 export type Element = (typeof ELEMENTS)[number]
 export type ObjectKind = (typeof OBJECT_KINDS)[number]
-export type Pace = (typeof PACES)[number]
 
 // Which step of the game wrote a beat, and for whom: an encounter's intro, a hero's reply, a roll and its outcome, an
 // NPC's turn, or the end of a round.
@@ -21,10 +21,9 @@ export interface StoryBy {
   character?: string
 }
 
-// A walk to a place or a person, or an arrival from a place off stage.
-export interface StoryMove {
-  to?: string
-  from?: string
+// An arrival from a place off stage. Where the character then stands is the engine's to say, never the story's.
+export interface StoryEntrance {
+  from: string
   pace?: Pace
 }
 export interface StoryEffect {
@@ -46,7 +45,7 @@ export type ActionBeat = {
   text: string
   actor: string
   target?: string
-  move?: StoryMove
+  enters?: StoryEntrance
   effect?: StoryEffect
   object?: StoryObject
   private?: true
@@ -109,7 +108,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     text: z.string(),
     actor: id,
     target: id.optional(),
-    move: z.object({ to: id.optional(), from: id.optional(), pace: z.enum(PACES).optional() }).optional(),
+    enters: z.object({ from: id, pace: z.enum(PACES).optional() }).optional(),
     effect: z.object({ kind: z.enum(EFFECT_KINDS), element: z.enum(ELEMENTS).optional() }).optional(),
     object: z.object({ kind: z.enum(OBJECT_KINDS), to: id.optional() }).optional(),
     private: z.literal(true).optional(),
@@ -160,9 +159,9 @@ export const storyOutputSchema = z
       text: z.string().describe("narration and action: one or two sentences of prose with no spoken words. line: only the words spoken, with no quote marks"),
       who: z.string().optional().describe("action: the id of the character acting. line: the id of the character speaking"),
       to: z.string().optional().describe("action: the id of the character it is aimed at. line: the id of the character spoken to"),
-      place: z.string().optional().describe("narration: the id of the place it shows. action: the id of the place the actor goes to, or of a character they close in on"),
+      place: z.string().optional().describe("narration: the id of the place it shows"),
       from: z.string().optional().describe("action: the id of the place the actor arrives from, only when they come into the scene"),
-      pace: menu(PACES, "action with a place: how the actor goes"),
+      pace: menu(PACES, "action with a from: how the actor comes"),
       effect: menu(EFFECT_KINDS, "action: the visible effect of an attack or spell, if any"),
       element: menu(ELEMENTS, "action with an effect: its element, if magical"),
       object: menu(OBJECT_KINDS, "action: an object the actor shows or hands over, if any"),

@@ -59,7 +59,7 @@ export function waitsUnaddressed(npc: TurnCharacter, story: readonly StoryBeat[]
   const first = npc.name.split(/\s+/)[0]?.toLowerCase()
   return !story.some((b) => {
     if (b.by.step !== "reply" && b.by.step !== "roll") return false
-    if ((b.kind === "line" && b.to === npc.id) || (b.kind === "action" && (b.target === npc.id || b.move?.to === npc.id))) return true
+    if ((b.kind === "line" && b.to === npc.id) || (b.kind === "action" && b.target === npc.id)) return true
     return !!first && "text" in b && new RegExp(`\\b${first.replace(/[^a-z0-9]/g, "")}\\b`, "i").test(b.text)
   })
 }

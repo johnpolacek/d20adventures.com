@@ -25,7 +25,7 @@ export const storyValidator = v.array(
       text: v.string(),
       actor: v.string(),
       target: v.optional(v.string()),
-      move: v.optional(v.object({ to: v.optional(v.string()), from: v.optional(v.string()), pace: v.optional(oneOf(PACES)) })),
+      enters: v.optional(v.object({ from: v.string(), pace: v.optional(oneOf(PACES)) })),
       effect: v.optional(v.object({ kind: oneOf(EFFECT_KINDS), element: v.optional(oneOf(ELEMENTS)) })),
       object: v.optional(v.object({ kind: oneOf(OBJECT_KINDS), to: v.optional(v.string()) })),
       private: v.optional(v.literal(true)),

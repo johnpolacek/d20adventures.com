@@ -114,9 +114,9 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
       const rest = unspoken(text)
       const action: ActionBeat = { kind: "action", by, text: rest, actor: who.id }
       if (to && to.id !== who.id) action.target = to.id
-      const dest = findPlace(scene, out.place)?.id ?? findCharacter(scene, out.place)?.id
+      // Where they come in from, when they enter. Where they end up is the engine's: the story does not move anyone.
       const from = findPlace(scene, out.from)?.id
-      if ((dest && dest !== who.id) || from) action.move = { ...(dest && dest !== who.id ? { to: dest } : {}), ...(from ? { from } : {}), ...(out.pace ? { pace: out.pace } : {}) }
+      if (from) action.enters = { from, ...(out.pace ? { pace: out.pace } : {}) }
       if (out.effect) action.effect = { kind: out.effect, ...(out.element ? { element: out.element } : {}) }
       if (out.object) action.object = { kind: out.object, ...(action.target ? { to: action.target } : {}) }
       if (out.private) action.private = true

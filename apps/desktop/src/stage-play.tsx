@@ -45,6 +45,8 @@ const story = (turn: { story: StoryBeat[] } | undefined, originals = false): Par
 // Where a labelled paragraph puts the camera: on someone, on two people facing off, or on a place on the set.
 type Aim = { pair: [string, string] } | { place: string } | { subject: string }
 type View = Aim | null
+// How fast someone comes on, in metres a second, by the pace the story gives their entrance.
+const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
 // The shot for an aim, framed on where everyone stands now.
 function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string | null {
   if ("subject" in aim) return { subject: aim.subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }
@@ -181,8 +183,7 @@ export function StagePlay(props: {
   actions?: ReactNode
   trailingActions?: ReactNode
   // Each resolves to whether the action was accepted.
-  // The site's hosted play still names a fourth argument, which is always undefined.
-  onReply: (turnId: string, characterId: string, text: string, movement?: undefined) => Promise<boolean>
+  onReply: (turnId: string, characterId: string, text: string) => Promise<boolean>
   // Ends a hero's turn with no reply. Without it the card has no Skip button.
   onSkip?: (turnId: string, characterId: string) => Promise<boolean>
   // `result` is the first d20, and `second` the other of a roll with Advantage or Disadvantage.
@@ -391,8 +392,19 @@ export function StagePlay(props: {
   }, [stage, shown?.characters])
   // Entrances the scene ties to the narration: offstage until the paragraph that brings them on ("the cabin door
   // opened"), then they walk on from the door to where the engine has them. Narration without the phrase finds them
-  // in place.
-  const cues = useMemo(() => (stage?.staging?.entrances ?? []).map((e) => ({ ...e, speed: 0.9, at: text.findIndex((p) => p.toLowerCase().includes(e.when.toLowerCase())) })), [stage, text])
+  // in place. An action that brings someone on from a place does the same, at its own paragraph.
+  const cues = useMemo(() => {
+    const authored = (stage?.staging?.entrances ?? []).map((e) => ({ ...e, speed: 0.9, at: text.findIndex((p) => p.toLowerCase().includes(e.when.toLowerCase())) }))
+    const told = paragraphs.flatMap((p, at) =>
+      p.beats.flatMap((b) => {
+        const cast = b.kind === "action" && b.enters && stage?.set.marks[b.enters.from] ? castOf(b.actor) : undefined
+        return cast && b.kind === "action" && b.enters
+          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: undefined as string | undefined, speed: PACE[b.enters.pace ?? "walk"], at }]
+          : []
+      })
+    )
+    return [...authored.filter((e) => !told.some((t) => t.cast === e.cast)), ...told]
+  }, [stage, text, paragraphs, castOf])
   const arriving = reading ? cues.find((e) => e.at === paragraph) : undefined
   useEffect(() => {
     if (!stage) return
