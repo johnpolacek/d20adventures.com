@@ -10,6 +10,7 @@ import { AccountBadge, AccountNotice, LinkGate, useAccount } from "./account"
 import { AppHeader } from "./app-header"
 import { type GmModel, gmModel, type HostWorkerState, host, hostRunning, hostStart, hostStop, openSite, send, suggest } from "./bridge"
 import { partyOf } from "./carry"
+import { sendFeedback } from "./feedback"
 import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
 import { HeroCreator, type HeroIdea } from "./hero-creator"
@@ -350,6 +351,7 @@ export function DesktopGame() {
       chat={hosting ? hosted?.chat : undefined}
       onChat={hosting && hosted?.chat ? say : undefined}
       trailingActions={<FullscreenButton />}
+      onFeedback={sendFeedback}
       endActions={
         <>
           {nextUp && (

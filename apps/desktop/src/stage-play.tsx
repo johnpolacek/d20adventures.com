@@ -8,6 +8,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { CharacterCard } from "@/components/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@/components/stage/city-map"
 import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
+import { EndingRating, FeedbackButton, FeedbackPanel, type FeedbackStart } from "@/components/stage/feedback"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
@@ -18,6 +19,7 @@ import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import { Button } from "@/components/ui/button"
 import { cityMapTrail } from "@/lib/citymap"
+import type { FeedbackDraft } from "@/lib/feedback/shared"
 import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
@@ -197,6 +199,9 @@ export function StagePlay(props: {
   onChat?: (text: string) => Promise<boolean>
   // Buttons on the closing panel beside Journal.
   endActions?: ReactNode
+  // Sends a player's feedback, resolving to an error or null. With it the top bar has the feedback button and the
+  // closing panel asks for a rating.
+  onFeedback?: (draft: FeedbackDraft) => Promise<string | null>
   onEscape?: () => void
   onError: (message: string) => void
   // Reports whether the scene is still loading and any stage error, for setup screens and the error panel.
@@ -211,7 +216,10 @@ export function StagePlay(props: {
   const busy = props.busy || walking
 
   const [draft, setDraft] = useState("")
-  const [open, setOpen] = useState<"journal" | "chat" | "settings" | "map" | null>(null)
+  const [open, setOpen] = useState<"journal" | "chat" | "settings" | "map" | "feedback" | null>(null)
+  const [feedbackStart, setFeedbackStart] = useState<FeedbackStart>({ kind: "general" })
+  const [endingSent, setEndingSent] = useState(false)
+  const closePanel = useCallback(() => setOpen(null), [])
   // The Chat button counts the lines said since the chat was last open. Lines already there when it loads are read.
   const chat = props.chat ?? []
   const lastChat = chat[chat.length - 1]?.at ?? 0
@@ -884,6 +892,17 @@ export function StagePlay(props: {
               <path d="M2 8h6M9 16h6M16 9h6" strokeWidth="3" />
             </svg>
           </IconButton>
+          {props.onFeedback && (
+            <FeedbackButton
+              active={open === "feedback"}
+              visible={Boolean(save) && !hidden && !props.overlay}
+              compact={compact}
+              onClick={() => {
+                setFeedbackStart({ kind: "general" })
+                setOpen(open === "feedback" ? null : "feedback")
+              }}
+            />
+          )}
           {props.trailingActions}
         </>
       }
@@ -966,6 +985,15 @@ export function StagePlay(props: {
               <Pill className="ml-2" onClick={() => setOpen("journal")}>
                 Journal
               </Pill>
+              {props.onFeedback && (
+                <EndingRating
+                  sent={endingSent}
+                  onRate={(rating) => {
+                    setFeedbackStart({ kind: "ending", rating })
+                    setOpen("feedback")
+                  }}
+                />
+              )}
             </div>
           )}
           {!ended && !busy && !reading && !mode && turn && !(autoContinue && continueKey && continued !== continueKey) && (
@@ -994,6 +1022,26 @@ export function StagePlay(props: {
           )}
           {open === "map" && city && <CityMapPanel map={city.map} trail={city.trail} compact={compact} onClose={() => setOpen(null)} />}
           {card && <CharacterCard info={card} compact={compact} onClose={() => setCardId(null)} />}
+          {open === "feedback" && props.onFeedback && (
+            <FeedbackPanel
+              // A star on the closing panel reopens it as the ending's form.
+              key={`${feedbackStart.kind}:${feedbackStart.rating ?? 0}`}
+              start={feedbackStart}
+              context={{
+                adventure: save.adventure.title,
+                plan: save.adventure.planId,
+                adventureId: String(save.adventure._id ?? ""),
+                encounter: shown?.encounterId ?? "",
+                turn: shown?._id ?? "",
+                turnOrder: String(shown?.order ?? ""),
+                gm: [save.provider, save.model].filter(Boolean).join(" "),
+              }}
+              compact={compact}
+              onSend={props.onFeedback}
+              onSent={(kind) => kind === "ending" && setEndingSent(true)}
+              onClose={closePanel}
+            />
+          )}
           {open === "settings" && (
             <section className={`${panel} absolute right-10 top-24 z-40 w-72 p-6`}>
               <h2 className="mb-4 font-serif text-2xl">Scene Settings</h2>

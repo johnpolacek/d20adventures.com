@@ -20,6 +20,8 @@
     "@fontsource/cinzel-decorative": "^5.3.0",
     "@fontsource/rethink-sans": "^5.3.0",
     "@fontsource/syne-mono": "^5.3.0",
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
     "@tauri-apps/api": "^2.0.0",
     "lucide-react": "^0.577.0",
     "pngjs": "^7.0.0",

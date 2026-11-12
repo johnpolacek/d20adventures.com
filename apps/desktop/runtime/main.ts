@@ -5,6 +5,7 @@ import { locate } from "../../desktop-spike/harness/cli.mjs"
 import { describeModel } from "../../desktop-spike/harness/sessions.mjs"
 import { accountCommand, accountCommandSchema } from "./account"
 import { applyCharacterUpdates } from "./characters"
+import { feedbackCommand } from "./feedback"
 import { adventureList, type CatalogInfo, commandSchema, type GameCommand, game, type Packs, suggest, suggestCommandSchema, transitionsOf } from "./game"
 import { creationOptions, type HeroCommand, type HeroDraft, heroCommand, heroCommandSchema } from "./heroes"
 import { hostCommand, hostCommandSchema } from "./host-commands"
@@ -60,6 +61,10 @@ async function main() {
       // Account commands talk to the website only. They never open the save, so they can run beside a game action.
       if (typeof input?.kind === "string" && input.kind.startsWith("account")) {
         const site = (process.env.D20_SITE_URL ?? "https://d20adventures.com").replace(/\/$/, "")
+        if (input.kind === "accountFeedback") {
+          process.stdout.write(`${JSON.stringify(await feedbackCommand(input, site))}\n`)
+          return
+        }
         const response = await accountCommand(accountCommandSchema.parse(input), site, fetch, { data: dirname(savePath), bundled })
         process.stdout.write(`${JSON.stringify(response)}\n`)
         return

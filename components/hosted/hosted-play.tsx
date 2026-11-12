@@ -8,6 +8,7 @@ import { eyebrow, Pill, panel } from "@/components/stage/hud"
 import type { ChatLine } from "@/components/stage/journal"
 import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
 import type { Id } from "@/convex/_generated/dataModel"
+import { sendFeedback } from "@/lib/feedback/client"
 import { cn } from "@/lib/utils"
 
 type State = Parameters<typeof hostedSave>[0] & { hostOnline: boolean; userId: string; chat: ChatLine[] }
@@ -95,6 +96,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       onContinue={(turnId) => void act({ turnId: turnId as Id<"turns">, kind: "continue" })}
       chat={state?.chat}
       onChat={say}
+      onFeedback={sendFeedback}
       onError={onError}
     >
       {state && !save && (

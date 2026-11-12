@@ -72,6 +72,17 @@ export default async function AdminPage() {
           </Card>
           <Card>
             <CardHeader>
+              <CardTitle>Feedback</CardTitle>
+              <CardDescription>Playtest feedback</CardDescription>
+            </CardHeader>
+            <CardFooter>
+              <Link href="/admin/feedback" className="w-full">
+                <Button variant="outline">View Feedback</Button>
+              </Link>
+            </CardFooter>
+          </Card>
+          <Card>
+            <CardHeader>
               <CardTitle>Adventures</CardTitle>
               <CardDescription>Manage adventures</CardDescription>
             </CardHeader>

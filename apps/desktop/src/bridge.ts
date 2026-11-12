@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core"
 import type { AccountCommand, AccountResponse } from "../runtime/account"
+import type { FeedbackCommand, FeedbackResponse } from "../runtime/feedback"
 import type { AdventureInfo, CatalogInfo, GameCommand } from "../runtime/game"
 import type { Hero, HeroCommand, HeroDraft } from "../runtime/heroes"
 import type { HostEvent } from "../runtime/host"
@@ -28,6 +29,8 @@ export const gmModel = (provider: string) => invoke<{ model?: GmModel }>("model_
 // Rust adds the Keychain token, so the webview never sends or sees it.
 type AccountRequest = AccountCommand extends infer C ? (C extends { token?: string } ? Omit<C, "token"> : never) : never
 export const account = (command: AccountRequest) => invoke<AccountResponse & { error?: string }>("account_command", { command })
+// Feedback goes to the website through the account command, so Rust adds the token here too.
+export const feedback = (command: Omit<FeedbackCommand, "token">) => invoke<FeedbackResponse | null>("account_command", { command })
 export const openSite = (path: string) => invoke<void>("open_site", { path })
 // Whether play needs a linked account, and whether a token is stored. Answered by Rust without a network call.
 export const accountInfo = () => invoke<{ required: boolean; linked: boolean }>("account_info")

@@ -41,6 +41,42 @@
   animation: plate-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* The feedback button's gold halo breathes, and its callout drops in from the button. */
+@keyframes feedback-glow {
+  50% {
+    box-shadow:
+      inset 0 2px 0 #ffffff66,
+      inset 0 -3px 0 #00000066,
+      inset 0 0 14px #00000059,
+      0 0 0 4px #fcd34d40,
+      0 0 22px #fcd34d99;
+  }
+}
+.feedback-glow {
+  box-shadow:
+    inset 0 2px 0 #ffffff66,
+    inset 0 -3px 0 #00000066,
+    inset 0 0 14px #00000059,
+    0 0 0 2px #fcd34d26,
+    0 0 10px #fcd34d59;
+  animation: feedback-glow 3.2s ease-in-out infinite;
+}
+@keyframes feedback-callout {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+.feedback-callout {
+  animation: feedback-callout 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .feedback-glow,
+  .feedback-callout {
+    animation: none;
+  }
+}
+
 /* Stageview d20: the die tumbles in place (ending upright), the number flips over in place, and lands with a pop. */
 @keyframes d20-tumble {
   0% {
