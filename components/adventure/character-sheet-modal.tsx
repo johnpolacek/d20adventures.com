@@ -7,6 +7,7 @@ import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
+import { useSheetView } from "./use-sheet-view"
 
 type CharacterSheetModalCharacter = TurnCharacter | PC | PCTemplate | null
 interface CharacterSheetModalProps {
@@ -44,6 +45,8 @@ function ExpandableText({ title, text }: ExpandableTextProps) {
 }
 
 export function CharacterSheetModal({ character, open, onOpenChange }: CharacterSheetModalProps) {
+  // The rules sheet, where the hero has one. It loads only while the window is open.
+  const sheet = useSheetView(open ? character?.sheet : undefined, character?.healthPercent)
   if (!character) return null
 
   const getModifier = (score: number) => Math.floor((score - 10) / 2)
@@ -70,11 +73,16 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
               <div className="font-display text-sm">
                 {character.race} {character.gender} {character.archetype}
               </div>
+              {sheet && (
+                <div className="text-xs font-mono text-primary-200 uppercase tracking-wider">
+                  Level {sheet.level} {sheet.speciesName} {sheet.className} · {sheet.backgroundName}
+                </div>
+              )}
 
               <div>
                 <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Health</label>
                 <div className="flex items-center gap-2">
-                  <div className="">{character.healthPercent}%</div>
+                  <div className="">{sheet ? `${sheet.hitPoints.current} / ${sheet.hitPoints.maximum}` : `${character.healthPercent}%`}</div>
                   <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-green-500 to-red-500 transition-all duration-300" style={{ width: `${character.healthPercent}%` }} />
                   </div>
@@ -96,6 +104,37 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
                 <div className="text-sm text-gray-400">No active effects.</div>
               )}
             </div>
+
+            {sheet && (
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  ["Armor Class", String(sheet.armorClass)],
+                  ["Initiative", formatModifier(sheet.initiative)],
+                  ["Speed", `${sheet.speed} ft.`],
+                  ["Proficiency", formatModifier(sheet.proficiencyBonus)],
+                  ["Perception", String(sheet.passivePerception)],
+                ].map(([label, value]) => (
+                  <div key={label} className="text-center p-2 bg-black/30 rounded border border-primary-700">
+                    <div className="text-[10px] font-mono text-primary-200 uppercase leading-tight">{label}</div>
+                    <div className="text-lg font-bold">{value}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {sheet && (
+              <div>
+                <h3 className="text-lg font-display mb-3">Saving Throws</h3>
+                <div className="grid grid-cols-6 gap-2">
+                  {sheet.abilities.map((ability) => (
+                    <div key={ability.id} className={`text-center p-2 rounded border ${ability.saveProficient ? "bg-primary-700/50 border-primary-400" : "bg-black/30 border-primary-700"}`}>
+                      <div className="text-xs font-mono text-primary-200 uppercase">{ability.id}</div>
+                      <div className="text-sm font-bold">{formatModifier(ability.save)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {character.attributes && (
               <div>
@@ -126,6 +165,39 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
           </div>
 
           <div className="col-span-2 space-y-4">
+            {sheet && sheet.features.length > 0 && (
+              <div>
+                <h3 className="text-lg font-display mb-2">Features</h3>
+                <div className="flex flex-wrap gap-1">
+                  {sheet.features.map((feature) => (
+                    <span key={`${feature.from}-${feature.name}`} className="text-xs sm:text-sm text-primary-100 px-3 py-1 bg-primary-700/50 rounded">
+                      {feature.name}
+                      {feature.uses && (
+                        <span className="text-primary-300">
+                          {" "}
+                          · {feature.uses.count} per {feature.uses.recharge}
+                        </span>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {sheet && (
+              <div>
+                <h3 className="text-lg font-display mb-2">Skill Checks</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">
+                  {sheet.skills.map((skill) => (
+                    <div key={skill.id} className={`flex justify-between text-sm ${skill.proficient ? "text-white font-bold" : "text-primary-300"}`}>
+                      <span>{skill.name}</span>
+                      <span className="font-mono">{formatModifier(skill.bonus)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {character.skills && character.skills.length > 0 && (
               <div>
                 <h3 className="text-lg font-display  mb-2">Skills</h3>

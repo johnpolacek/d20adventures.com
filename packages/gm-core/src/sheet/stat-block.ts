@@ -1,5 +1,6 @@
 import { monsterById } from "@d20/srd/monsters"
 import { deriveSheet } from "./derive"
+import { type HitPoints, hitPointsAt } from "./hit-points"
 import type { Sheet } from "./sheet"
 
 /** The stat block an NPC uses when it names none: the SRD's Commoner. */
@@ -24,3 +25,9 @@ export function combatStatsOf(character: { type?: string; sheet?: Sheet; statBlo
 
 /** Whether an id names an SRD stat block. */
 export const isStatBlock = (id: string) => monsterById.has(id)
+
+/** A character's hit points now: its maximum from its sheet or stat block, at its health percent. */
+export function hitPointsOf(character: { type?: string; sheet?: Sheet; statBlock?: string; healthPercent?: number }): HitPoints | undefined {
+  const maximum = combatStatsOf(character)?.hitPointMaximum
+  return maximum === undefined ? undefined : hitPointsAt(maximum, character.healthPercent)
+}

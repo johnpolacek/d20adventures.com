@@ -1,19 +1,12 @@
-import type { Sheet } from "./sheet"
-import { combatStatsOf } from "./stat-block"
-
 export type HitPoints = { current: number; maximum: number }
 
 /**
- * A character's hit points, worked out from its sheet or stat block and its health percent.
- *
- * Until combat runs on the rules (stage 4 of plans/srd-rules.md), the game master still wounds and heals in percent,
- * so health percent stays the stored value and hit points follow it. A character with any health left has at least
- * 1 hit point, and only a character at 0 percent has 0.
+ * Hit points at a health percent. Until combat runs on the rules (stage 4 of plans/srd-rules.md), the game master
+ * still wounds and heals in percent, so health percent stays the stored value and hit points follow it. A character
+ * with any health left has at least 1 hit point, and only a character at 0 percent has 0.
  */
-export function hitPointsOf(character: { type?: string; sheet?: Sheet; statBlock?: string; healthPercent?: number }): HitPoints | undefined {
-  const maximum = combatStatsOf(character)?.hitPointMaximum
-  if (maximum === undefined) return undefined
-  const percent = Math.min(100, Math.max(0, character.healthPercent ?? 100))
+export function hitPointsAt(maximum: number, healthPercent: number | undefined): HitPoints {
+  const percent = Math.min(100, Math.max(0, healthPercent ?? 100))
   const current = percent === 0 ? 0 : Math.max(1, Math.round((maximum * percent) / 100))
   return { current, maximum }
 }
