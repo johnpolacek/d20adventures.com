@@ -20,7 +20,6 @@ const hero = (extra: Partial<PCTemplate> = {}): PCTemplate => ({
   archetype: "Ranger",
   race: "Human",
   appearance: "",
-  healthPercent: 100,
   attributes: { strength: 13, dexterity: 17, constitution: 13, intelligence: 11, wisdom: 13, charisma: 10 },
   ...extra,
 })
@@ -32,19 +31,22 @@ const start = (premade: PCTemplate, saved?: PCTemplate) =>
     sheetsByCharacterId: saved ? { "characters/user-1/thalbern.json": saved } : undefined,
   })[0]
 
-test("a game starts with the hero's rules sheet", () => {
-  assert.deepEqual(start(hero({ sheet: rules })).sheet, rules)
+// Thalbern's 11 hit points are d10 + 1, for Constitution 13.
+test("a game starts with the hero's rules sheet, at its maximum", () => {
+  const started = start(hero({ sheet: rules }))
+  assert.deepEqual(started.sheet, rules)
+  assert.deepEqual([started.hitPoints, started.healthPercent], [11, 100])
 })
 
 test("a player's saved copy from before the rules takes the adventure's sheet and keeps its own state", () => {
-  const started = start(hero({ sheet: rules }), hero({ healthPercent: 60, equipment: [{ name: "Owlbear Feather" }] }))
+  const started = start(hero({ sheet: rules }), hero({ hitPoints: 7, equipment: [{ name: "Owlbear Feather" }] }))
   assert.deepEqual(started.sheet, rules)
-  assert.equal(started.healthPercent, 60)
+  assert.deepEqual([started.hitPoints, started.healthPercent], [7, 64])
   assert.deepEqual(started.equipment, [{ name: "Owlbear Feather" }])
 })
 
-test("a saved copy with its own sheet keeps it, and a hero with none anywhere has none", () => {
+test("a saved copy with its own sheet keeps it, and a hero with none anywhere cannot start", () => {
   const own: Sheet = { ...rules, level: 2 }
   assert.deepEqual(start(hero({ sheet: rules }), hero({ sheet: own })).sheet, own)
-  assert.equal(start(hero(), hero()).sheet, undefined)
+  assert.throws(() => start(hero(), hero()), /no sheet or stat block/)
 })

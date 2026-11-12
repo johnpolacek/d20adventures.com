@@ -8,7 +8,6 @@
   "background": "The Stoneveils guarded the gates of Kordavos for four generations under the old Valkaran marcher lords. When the Asterian Empire restructured the city watch, Branka's family lost their post and their standing overnight. She has worked as a shield-for-hire ever since, escorting caravans through the March. She has returned to Kordavos for the Harvest Festival, where the sight of the gates her family once kept stirs old pride and old grievances alike.",
   "motivation": "Branka wants to restore her family's honor by proving that a Stoneveil shield still means something in Kordavos. She dreams of earning back a formal post at the gates, and she will not stand by while schemers, whether Asterian or Valkaran, endanger the ordinary folk of the city.",
   "behavior": "Branka positions herself between danger and her companions, favors direct action over talk, and speaks in short, practical statements. In a fight she attacks with her warhammer and uses her shield to protect the most vulnerable member of the party. In conversation she is honest to a fault and defers social maneuvering to smoother tongues.",
-  "healthPercent": 100,
   "equipment": [
     {
       "name": "Warhammer",

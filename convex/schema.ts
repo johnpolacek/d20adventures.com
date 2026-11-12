@@ -209,6 +209,8 @@ export default defineSchema({
         hasReplied: v.boolean(),
         rollRequired: v.optional(v.any()),
         rollResult: v.optional(v.number()),
+        // Current hit points, the stored value. healthPercent is the engine's copy of them.
+        hitPoints: v.optional(v.number()),
         healthPercent: v.optional(v.number()),
         // The rules sheet (class, species, background, scores). packages/gm-core/src/sheet validates it.
         sheet: v.optional(v.any()),

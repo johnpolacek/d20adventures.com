@@ -296,7 +296,7 @@ export function StagePlay(props: {
   const figures = save?.figures
   const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures, painted)
   // A hero's rules sheet for the card. NPCs keep their numbers to themselves.
-  const cardSheet = useSheetView(cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined, cardCharacter?.healthPercent)
+  const cardSheet = useSheetView(cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined, cardCharacter?.hitPoints)
   const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet) : null
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)

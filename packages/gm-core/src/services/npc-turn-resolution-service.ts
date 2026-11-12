@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import { withHealthPercent, withHitPoints } from "../sheet/hit-points"
 import type { StoryBeat } from "../story/beats"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { createTurnUpdateService } from "./turn-update-service"
@@ -13,15 +14,9 @@ export type NpcTurnEffect = {
 export function applyNpcEffectsToCharacters(args: { characters: TurnCharacter[]; npcId: string; effects?: NpcTurnEffect[]; applyHealthAndStatus: boolean }): TurnCharacter[] {
   return args.characters.map((character) => {
     const effect = args.effects?.find((entry) => entry.targetId === character.id)
-    const updated = { ...character }
+    const updated = args.applyHealthAndStatus && effect?.healthPercentDelta !== undefined ? withHealthPercent(character, character.healthPercent + effect.healthPercentDelta) : { ...character }
 
     if (effect) {
-      if (args.applyHealthAndStatus && effect.healthPercentDelta !== undefined) {
-        const oldHealth = character.healthPercent ?? 100
-        const newHealth = Math.max(0, oldHealth + effect.healthPercentDelta)
-        updated.healthPercent = newHealth
-      }
-
       if (args.applyHealthAndStatus) {
         updated.status = effect.status || character.status
       }
@@ -99,9 +94,10 @@ export function createNpcTurnResolutionService(ports: GmPorts) {
       }
     })
 
+    // The second call's characters carry hit points and health percent as withHealthPercent wrote them.
     return args.updatedCharacters.map((originalCharacter) => {
       const aiCharacter = aiTurn.characters.find((entry) => entry.id === originalCharacter.id)
-      return aiCharacter ? { ...originalCharacter, ...aiCharacter } : originalCharacter
+      return aiCharacter ? withHitPoints({ ...originalCharacter, ...aiCharacter }, aiCharacter.hitPoints) : originalCharacter
     })
   }
   return { reconcileNpcRollWithAi }

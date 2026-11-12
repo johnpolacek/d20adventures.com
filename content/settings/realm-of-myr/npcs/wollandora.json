@@ -11,7 +11,6 @@
   "motivation": "Recover the stolen relics and restore balance to the forest. Protect the secrets of her people.",
   "behavior": "Generally calm and thoughtful. Will provide information and guidance. Can be firm when necessary.",
   "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/npcs/wollandora.png",
-  "healthPercent": 100,
   "attributes": {
     "strength": 10,
     "dexterity": 12,

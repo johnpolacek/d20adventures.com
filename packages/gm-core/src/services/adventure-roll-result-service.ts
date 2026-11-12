@@ -98,16 +98,6 @@ function sanitizeRollOutcome(text: string): string {
   return isMetaCommentary ? "" : rollOutcome
 }
 
-function normalizeCharactersForHealthAnalysis(characters: TurnCharacter[]): TurnCharacter[] {
-  return characters.map(
-    (character) =>
-      ({
-        ...character,
-        healthPercent: typeof character.healthPercent === "number" ? character.healthPercent : 100,
-      }) as TurnCharacter
-  )
-}
-
 export function createAdventureRollResultService(ports: GmPorts) {
   const wait = ports.sleep?.bind(ports) ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
   const generateObject = ports.llm.generateObject.bind(ports.llm)
@@ -206,13 +196,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const shouldAnalyzeHealth = !!rollOutcome && (BODILY_CHECK.test(rollType) || HARM.test(rollOutcome) || HEALING.test(rollType) || HEALING.test(rollOutcome))
     console.log(`[resolvePlayerRollResult] Roll analysis: rollType=${rollType}, hasOutcome=${!!rollOutcome}, shouldAnalyzeHealth=${shouldAnalyzeHealth}`)
 
-    const normalizedCharacters = normalizeCharactersForHealthAnalysis(args.turn.characters)
     const turnForAnalysis: Turn = {
       id: args.turn._id,
       encounterId: args.turn.encounterId,
       title: args.turn.title,
       story: args.turn.story,
-      characters: normalizedCharacters,
+      characters: args.turn.characters,
       adventureId: args.turn.adventureId,
       isFinalEncounter: args.turn.isFinalEncounter,
     }

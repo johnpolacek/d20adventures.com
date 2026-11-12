@@ -1,5 +1,6 @@
 import type { GmPorts } from "../ports"
 import { resolveCheck } from "../sheet/check"
+import { withHitPoints } from "../sheet/hit-points"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { rollBeat, turnScript } from "../story/turn"
@@ -43,8 +44,9 @@ export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; ac
       // Skipping or passing is not a condition. The NPC keeps whatever status it has. One who flees is out of the
       // encounter: the next round is built without them. One who dies is dead for good. Thaddeus died of poison on his
       // own turn at 65% health, then sagged to one knee, gasping, in the next roll's outcome.
-      const end = { flee: { status: "fled" }, die: { status: "dead", healthPercent: 0 } }[args.actionResult.actionType as "flee" | "die"]
-      return { ...character, hasReplied: true, isComplete: true, ...end }
+      const done = { ...character, hasReplied: true, isComplete: true }
+      if (args.actionResult.actionType === "die") return { ...withHitPoints(done, 0), status: "dead" }
+      return args.actionResult.actionType === "flee" ? { ...done, status: "fled" } : done
     }
     return character
   })

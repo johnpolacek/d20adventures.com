@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
-import { keepPatchedPlayersAlive, keepPlayersAlive, MIN_PLAYER_HEALTH, pendingRescue } from "@d20/gm-core/wiki-adventures/player-safety"
+import { withHitPoints } from "@d20/gm-core/sheet/hit-points"
+import { keepPatchedPlayersAlive, keepPlayersAlive, MIN_PLAYER_HIT_POINTS, pendingRescue } from "@d20/gm-core/wiki-adventures/player-safety"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "@d20/gm-core/wiki-adventures/runtime-context"
 import { buildLocalWikiTurnCharacters, isLocalWikiAdventure, isLocalWikiFinalEncounter, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 
@@ -139,20 +140,26 @@ async function main() {
   assert.match(buildWikiEncounterProgressionPrompt(packet), /Perception check, DC 15/)
   assert.match(packet.currentEncounter.gmNotes ?? "", /cannot die/)
 
+  // Lyra has 6 hit points: 1 of them shows as 17%, and 3 as 50%.
+  const lyra = battleCharacters.find((c) => c.id === "1749159962941")
+  assert.ok(lyra)
   const fallen = keepPlayersAlive(artifacts.manifest, [
-    { type: "pc", healthPercent: 0, status: "Bleeding" },
-    { type: "pc", healthPercent: 40, status: "Dead" },
-    { type: "npc", healthPercent: 0, status: "dead" },
+    { ...withHitPoints(lyra, 0), status: "Bleeding" },
+    { ...withHitPoints(lyra, 3), status: "Dead" },
+    { type: "npc", hitPoints: 0, healthPercent: 0, status: "dead" },
   ])
-  assert.deepEqual(fallen, [
-    { type: "pc", healthPercent: MIN_PLAYER_HEALTH, status: "Bleeding" },
-    { type: "pc", healthPercent: 40, status: undefined },
-    { type: "npc", healthPercent: 0, status: "dead" },
-  ])
+  assert.deepEqual(
+    fallen.map((c) => [c.hitPoints, c.healthPercent, c.status]),
+    [
+      [MIN_PLAYER_HIT_POINTS, 17, "Bleeding"],
+      [3, 50, undefined],
+      [0, 0, "dead"],
+    ]
+  )
   assert.deepEqual(keepPatchedPlayersAlive(artifacts.manifest, [{ characterId: "1749159962941", healthPercent: 0, status: "dead" }], battleCharacters), [
-    { characterId: "1749159962941", healthPercent: MIN_PLAYER_HEALTH },
+    { characterId: "1749159962941", healthPercent: 1 },
   ])
-  assert.equal(keepPlayersAlive({}, [{ type: "pc", healthPercent: 0 }])[0].healthPercent, 0, "other adventures keep their deaths")
+  assert.equal(keepPlayersAlive({}, [{ type: "pc", hitPoints: 0, healthPercent: 0 }])[0].hitPoints, 0, "other adventures keep their deaths")
 
   console.log("Covert Cargo playthrough bridge checks passed")
 }

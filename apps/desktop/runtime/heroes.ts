@@ -91,7 +91,7 @@ export async function heroCommand(
   if (command.kind === "saveHero") {
     const { id, ...rest } = command.hero
     if (id && !roster.heroes().some((h) => h.id === id)) throw new Error("That hero is no longer in your roster.")
-    roster.putHero({ ...rest, id: id ?? `hero-${randomUUID().slice(0, 8)}`, type: "pc", healthPercent: 100, effects: [] })
+    roster.putHero({ ...rest, id: id ?? `hero-${randomUUID().slice(0, 8)}`, type: "pc", effects: [] })
     return {}
   }
   const pack = command.adventure ? packs[command.adventure] : undefined
@@ -113,7 +113,6 @@ export async function heroCommand(
       gender: command.gender || c.gender,
       image: "",
       type: "pc",
-      healthPercent: 100,
       effects: [],
       spells: (c.spells ?? []).map((s) => ({ name: s.name, description: s.description })),
       ...(arrival && pack ? { arrivals: { [pack.artifacts.manifest.adventureId]: arrival } } : {}),

@@ -7,7 +7,7 @@ import { featById } from "@d20/srd/feats"
 import { skillById } from "@d20/srd/skills"
 import { speciesById } from "@d20/srd/species"
 import { deriveSheet } from "./derive"
-import { type HitPoints, hitPointsAt } from "./hit-points"
+import type { HitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
 
 /** A feature as the sheet lists it. `uses` is how many times it can be used, and the rest that restores them. */
@@ -45,8 +45,11 @@ const titled = (id: string) => id.replace(/(^|-)([a-z])/g, (_, dash: string, let
 
 type Count = number | "proficiency-bonus" | { ability: AbilityId; minimum: 1 } | { column: string } | { byLevel: { level: number; count: number }[] }
 
-/** The sheet as a screen shows it. Throws when the class, species or background is unknown, as `deriveSheet` does. */
-export function sheetView(sheet: Sheet, healthPercent?: number): SheetView {
+/**
+ * The sheet as a screen shows it, at the character's stored hit points (its maximum when none are given). Throws when
+ * the class, species or background is unknown, as `deriveSheet` does.
+ */
+export function sheetView(sheet: Sheet, hitPoints?: number): SheetView {
   const derived = deriveSheet(sheet)
   const cls = classById.get(sheet.class)
   const species = speciesById.get(sheet.species)
@@ -94,7 +97,7 @@ export function sheetView(sheet: Sheet, healthPercent?: number): SheetView {
     speciesName: species.name,
     backgroundName: background.name,
     proficiencyBonus: derived.proficiencyBonus,
-    hitPoints: hitPointsAt(derived.hitPointMaximum, healthPercent),
+    hitPoints: { current: Math.min(derived.hitPointMaximum, Math.max(0, hitPoints ?? derived.hitPointMaximum)), maximum: derived.hitPointMaximum },
     armorClass: derived.armorClass,
     armorClassFrom: derived.armorClassFrom,
     initiative: derived.initiative,

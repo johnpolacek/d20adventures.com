@@ -8,6 +8,5 @@
   "gender": "Unknown",
   "appearance": "Cursed skeletal remnants of Old Valkara, clad in rusted ancient armor with hollow eyes glowing faintly in the dark.",
   "behavior": "Rise in numbers from the chamber floor and keep coming until the intruders are overwhelmed or escape.",
-  "healthPercent": 100,
   "statBlock": "skeleton"
 }

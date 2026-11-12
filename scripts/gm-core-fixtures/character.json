@@ -20,12 +20,8 @@
         "personality": "Patient",
         "motivation": "Protect her village",
         "backstory": "Trained on the border",
-        "skills": [
-          "Tracking"
-        ],
-        "equipment": [
-          "Bow"
-        ]
+        "skills": ["Tracking"],
+        "equipment": ["Bow"]
       },
       "prompt": "Generate balanced but generous and thematic D&D-style character attributes (strength, dexterity, constitution, intelligence, wisdom, charisma) for a character with the following details. Each attribute should be a number between 1 and 20.\n\nArchetype: Ranger\nRace: Human\n\nReturn only the six attributes as a JSON object. Do not include any extra fields or text.",
       "schema": {
@@ -63,14 +59,7 @@
             "maximum": 20
           }
         },
-        "required": [
-          "strength",
-          "dexterity",
-          "constitution",
-          "intelligence",
-          "wisdom",
-          "charisma"
-        ],
+        "required": ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"],
         "additionalProperties": false
       }
     },
@@ -93,12 +82,8 @@
         "personality": "Patient",
         "motivation": "Protect her village",
         "backstory": "Trained on the border",
-        "skills": [
-          "Tracking"
-        ],
-        "equipment": [
-          "Bow"
-        ]
+        "skills": ["Tracking"],
+        "equipment": ["Bow"]
       },
       "prompt": "Generate a D&D-style single-sentence character appearance and single-sentence background for a character with the following details. Return only a JSON object with two fields: appearance (required, a vivid description of the character's looks) and background (optional, a brief backstory). Do not include any extra fields or text.\n\nName: Mira\nArchetype: Ranger\nRace: Human\nAttributes: Strength: 12, Dexterity: 15, Constitution: 12, Intelligence: 10, Wisdom: 14, Charisma: 11\n",
       "schema": {
@@ -113,10 +98,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "appearance",
-          "background"
-        ],
+        "required": ["appearance", "background"],
         "additionalProperties": false
       }
     },
@@ -139,12 +121,8 @@
         "personality": "Patient",
         "motivation": "Protect her village",
         "backstory": "Trained on the border",
-        "skills": [
-          "Tracking"
-        ],
-        "equipment": [
-          "Bow"
-        ]
+        "skills": ["Tracking"],
+        "equipment": ["Bow"]
       },
       "prompt": "Generate a D&D-style single-sentence personality, single-sentence motivation, and a brief backstory for a character with the following details. Do not include any place names. Return only a JSON object with three fields: personality (required), motivation (required), and backstory (optional). Do not include any extra fields or text.\n\nArchetype: Ranger\nRace: Human\nAttributes: Strength: 12, Dexterity: 15, Constitution: 12, Intelligence: 10, Wisdom: 14, Charisma: 11\nAppearance: Green cloak\nBackground: Village scout\n",
       "schema": {
@@ -163,11 +141,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "personality",
-          "motivation",
-          "backstory"
-        ],
+        "required": ["personality", "motivation", "backstory"],
         "additionalProperties": false
       }
     },
@@ -190,12 +164,8 @@
         "personality": "Patient",
         "motivation": "Protect her village",
         "backstory": "Trained on the border",
-        "skills": [
-          "Tracking"
-        ],
-        "equipment": [
-          "Bow"
-        ]
+        "skills": ["Tracking"],
+        "equipment": ["Bow"]
       },
       "prompt": "Generate a list of 3-6 D&D-style skills for a character with the following details. Return only a JSON object with a single field: skills (an array of strings). Do not include any extra fields or text.\n\nArchetype: Ranger\nRace: Human\nAttributes: Strength: 12, Dexterity: 15, Constitution: 12, Intelligence: 10, Wisdom: 14, Charisma: 11\nAppearance: Green cloak\nBackground: Village scout\nPersonality: Patient\nMotivation: Protect her village\nBackstory: Trained on the border\n",
       "schema": {
@@ -211,9 +181,7 @@
             }
           }
         },
-        "required": [
-          "skills"
-        ],
+        "required": ["skills"],
         "additionalProperties": false
       }
     },
@@ -236,12 +204,8 @@
         "personality": "Patient",
         "motivation": "Protect her village",
         "backstory": "Trained on the border",
-        "skills": [
-          "Tracking"
-        ],
-        "equipment": [
-          "Bow"
-        ]
+        "skills": ["Tracking"],
+        "equipment": ["Bow"]
       },
       "prompt": "Generate a list of 3-6 D&D-style starting equipment items for a character with the following details. Return only a JSON object with a single field: equipment (an array of strings). Do not include any extra fields or text.\n\nArchetype: Ranger\nRace: Human\nAttributes: Strength: 12, Dexterity: 15, Constitution: 12, Intelligence: 10, Wisdom: 14, Charisma: 11\nAppearance: Green cloak\nBackground: Village scout\nPersonality: Patient\nMotivation: Protect her village\nBackstory: Trained on the border\nSkills: Tracking\n",
       "schema": {
@@ -257,9 +221,7 @@
             }
           }
         },
-        "required": [
-          "equipment"
-        ],
+        "required": ["equipment"],
         "additionalProperties": false
       }
     },
@@ -282,12 +244,8 @@
         "personality": "Patient",
         "motivation": "Protect her village",
         "backstory": "Trained on the border",
-        "skills": [
-          "Tracking"
-        ],
-        "equipment": [
-          "Bow"
-        ]
+        "skills": ["Tracking"],
+        "equipment": ["Bow"]
       },
       "prompt": "Generate a list of 2-4 D&D-style special abilities for a character with the following details. These should be unique abilities that reflect the character's race, class, background, or personal traits. Return only a JSON object with a single field: specialAbilities (an array of strings). Do not include any extra fields or text.\n\nArchetype: Ranger\nRace: Human\nAttributes: Strength: 12, Dexterity: 15, Constitution: 12, Intelligence: 10, Wisdom: 14, Charisma: 11\nAppearance: Green cloak\nBackground: Village scout\nPersonality: Patient\nMotivation: Protect her village\nBackstory: Trained on the border\nSkills: Tracking\nEquipment: Bow\n",
       "schema": {
@@ -303,9 +261,7 @@
             }
           }
         },
-        "required": [
-          "specialAbilities"
-        ],
+        "required": ["specialAbilities"],
         "additionalProperties": false
       }
     },
@@ -328,12 +284,8 @@
         "personality": "Patient",
         "motivation": "Protect her village",
         "backstory": "Trained on the border",
-        "skills": [
-          "Tracking"
-        ],
-        "equipment": [
-          "Bow"
-        ]
+        "skills": ["Tracking"],
+        "equipment": ["Bow"]
       },
       "prompt": "Generate a list of 2-5 D&D-style spells for a character with the following details. Each spell should have a name and a short description. Return only a JSON object with a single field: spells (an array of objects with name and description). Do not include any extra fields or text.\n\nArchetype: Ranger\nRace: Human\nAttributes: Strength: 12, Dexterity: 15, Constitution: 12, Intelligence: 10, Wisdom: 14, Charisma: 11\nAppearance: Green cloak\nBackground: Village scout\nPersonality: Patient\nMotivation: Protect her village\nBackstory: Trained on the border\nSkills: Tracking\nEquipment: Bow\n",
       "schema": {
@@ -356,16 +308,12 @@
                   "type": "boolean"
                 }
               },
-              "required": [
-                "name"
-              ],
+              "required": ["name"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "spells"
-        ],
+        "required": ["spells"],
         "additionalProperties": false
       }
     },
@@ -427,9 +375,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "name"
-              ],
+              "required": ["name"],
               "additionalProperties": false
             }
           },
@@ -454,9 +400,7 @@
                   "type": "boolean"
                 }
               },
-              "required": [
-                "name"
-              ],
+              "required": ["name"],
               "additionalProperties": false
             }
           },
@@ -481,11 +425,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "description",
-                "duration"
-              ],
+              "required": ["name", "description", "duration"],
               "additionalProperties": false
             }
           },
@@ -530,14 +470,7 @@
             "additionalProperties": false
           }
         },
-        "required": [
-          "name",
-          "archetype",
-          "race",
-          "appearance",
-          "healthPercent",
-          "type"
-        ],
+        "required": ["name", "archetype", "race", "appearance", "type"],
         "additionalProperties": false
       }
     },
@@ -599,9 +532,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "name"
-              ],
+              "required": ["name"],
               "additionalProperties": false
             }
           },
@@ -626,9 +557,7 @@
                   "type": "boolean"
                 }
               },
-              "required": [
-                "name"
-              ],
+              "required": ["name"],
               "additionalProperties": false
             }
           },
@@ -653,11 +582,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "description",
-                "duration"
-              ],
+              "required": ["name", "description", "duration"],
               "additionalProperties": false
             }
           },
@@ -699,26 +624,11 @@
                 "maximum": 20
               }
             },
-            "required": [
-              "strength",
-              "dexterity",
-              "constitution",
-              "intelligence",
-              "wisdom",
-              "charisma"
-            ],
+            "required": ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"],
             "additionalProperties": false
           }
         },
-        "required": [
-          "name",
-          "archetype",
-          "race",
-          "appearance",
-          "healthPercent",
-          "type",
-          "attributes"
-        ],
+        "required": ["name", "archetype", "race", "appearance", "type", "attributes"],
         "additionalProperties": false
       }
     }

@@ -8,6 +8,5 @@
   "gender": "Male",
   "appearance": "A house guard in dark leather reinforced with iron plating, a longsword at the hip, and a tabard stitched with the Blackthorn crest, a black tree twisted into a circle.",
   "behavior": "Dutiful enough, but bored by long nights at a door.",
-  "healthPercent": 100,
   "statBlock": "guard"
 }

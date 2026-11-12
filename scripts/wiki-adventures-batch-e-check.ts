@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { withStartingHitPoints } from "@d20/gm-core/sheet/hit-points"
 import {
   assembleGameplayContextPacket,
   buildWikiEncounterProgressionPrompt,
@@ -54,8 +55,8 @@ async function main() {
       { kind: "reply", by: { step: "reply", character: "vala-apprentice" }, character: "vala-apprentice", text: "We ask Captain Vala for passage." },
     ],
     characters: [
-      { ...pc, userId: "user-1", initiative: 15, hasReplied: true, isComplete: true },
-      { ...npc, initiative: 12, hasReplied: false, isComplete: false },
+      withStartingHitPoints({ ...pc, userId: "user-1", initiative: 15, hasReplied: true, isComplete: true }),
+      withStartingHitPoints({ ...npc, initiative: 12, hasReplied: false, isComplete: false }),
     ],
   }
   const session: RuntimeSessionSnapshot = {

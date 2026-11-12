@@ -7,6 +7,5 @@
   "race": "Human",
   "appearance": "Hooded Covenant zealots in rough robes, smelling of lamp oil and alchemical powder.",
   "behavior": "Fanatical and reckless. Will see the tunnel brought down even if they are buried with it.",
-  "healthPercent": 100,
   "statBlock": "cultist"
 }

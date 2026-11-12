@@ -108,7 +108,8 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     assert.match(prompt, /"name":"Potion"/)
     assert.deepEqual(t.store.state!.turns[1], before)
     const c = byId(t.store, t.pc.id)
-    assert.equal(c.healthPercent, 65)
+    // Milos has 9 hit points. 65% of them is 5.85, so 6, and 6 of 9 shows as 67%.
+    assert.deepEqual([c.hitPoints, c.healthPercent], [6, 67])
     assert.equal(c.status, "Wounded")
     assert.deepEqual(
       c.equipment!.map((e) => e.name),
@@ -134,11 +135,11 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     const cardText = characterInfo(byId(t.store, t.pc.id))
       .details!.flatMap((section) => section.items)
       .join("\n")
-    for (const text of ["Health: 65%", "Wounded", "Gate token", "Rope. Ten metres", "Blessing, 2 rounds left", "Light, used"]) assert.ok(cardText.includes(text), text)
+    for (const text of ["Health: 67%", "Wounded", "Gate token", "Rope. Ten metres", "Blessing, 2 rounds left", "Light, used"]) assert.ok(cardText.includes(text), text)
 
     await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, status: "", effectChanges: [{ op: "remove", name: "Blessing" }] }] }, "the-harvest-festival")
     const festival = byId(t.store, t.pc.id)
-    assert.equal(festival.healthPercent, 65, "premade health must not replace live health")
+    assert.equal(festival.hitPoints, 6, "premade health must not replace live health")
     assert.equal(festival.status, undefined)
     assert.deepEqual(festival.equipment, c.equipment, "equipment must survive the encounter change")
     assert.deepEqual(
@@ -150,13 +151,14 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
       t.store.current().characters.some((c) => c.id === t.npc.id),
       false
     )
-    assert.equal(t.store.state!.characterStates![t.npc.id].healthPercent, 20)
+    // Garlan is a Guard Captain with 75 hit points: 20% of them is 15.
+    assert.deepEqual([t.store.state!.characterStates![t.npc.id].hitPoints, t.store.state!.characterStates![t.npc.id].healthPercent], [15, 20])
     t.reopen()
     await advance(t.store, {})
     assert.deepEqual(byId(t.store, t.pc.id).effects, [])
-    assert.equal(byId(t.store, t.pc.id).healthPercent, 65)
+    assert.equal(byId(t.store, t.pc.id).hitPoints, 6)
     const returned = nextCharacterState({ current: t.store.current().characters, next: [t.npc], remembered: t.store.state!.characterStates!, updates: [], encounterChanged: true })
-    assert.equal(returned.characters[0].healthPercent, 20)
+    assert.equal(returned.characters[0].hitPoints, 15)
     assert.ok(returned.characters[0].equipment!.some((e) => e.name === "Ribbon"))
   } finally {
     t.close()
@@ -169,12 +171,13 @@ test("refreshes do not stack effects, fallen PCs stay on the sheet, and later he
     await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, healthPercent: 0, status: "dead", effectChanges: [{ op: "set", name: "Ward", description: "Stronger ward", duration: 4 }] }] })
     assert.equal(byId(t.store, t.pc.id).isComplete, true)
     await advance(t.store, {})
-    assert.equal(byId(t.store, t.pc.id).healthPercent, 0)
+    assert.deepEqual([byId(t.store, t.pc.id).hitPoints, byId(t.store, t.pc.id).healthPercent], [0, 0])
     assert.deepEqual(byId(t.store, t.pc.id).effects, [{ name: "Ward", description: "Stronger ward", duration: 3 }])
     await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, healthPercent: 40, status: "", spellUseChanges: [{ name: "Light", isUsed: false }] }] })
     assert.equal(byId(t.store, t.pc.id).isComplete, false)
     assert.equal(byId(t.store, t.pc.id).status, undefined)
-    assert.equal(byId(t.store, t.pc.id).healthPercent, 40)
+    // 40% of Milos's 9 is 3.6, so 4, and 4 of 9 shows as 44%.
+    assert.deepEqual([byId(t.store, t.pc.id).hitPoints, byId(t.store, t.pc.id).healthPercent], [4, 44])
   } finally {
     t.close()
   }

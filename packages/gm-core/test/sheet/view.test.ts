@@ -17,7 +17,7 @@ const fighter: Sheet = {
 }
 
 test("the view spells out names and numbers", () => {
-  const view = sheetView(fighter, 75)
+  const view = sheetView(fighter, 9)
   assert.equal(`${view.speciesName} ${view.className} ${view.level}, ${view.backgroundName}`, "Orc Fighter 1, Soldier")
   assert.deepEqual(view.hitPoints, { current: 9, maximum: 12 })
   assert.equal(view.armorClass, 17)

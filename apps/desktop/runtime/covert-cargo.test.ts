@@ -169,7 +169,8 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", beats: [{ kind: "narration", text: "Reinhard raises his sword again." }], adventurePatch: {} })
     await play(stubLlm(fightGoesOn, lyra(store).id))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
-    assert.equal(lyra(store).healthPercent, 1)
+    // Lyra keeps 1 of her 6 hit points, shown as 17%.
+    assert.deepEqual([lyra(store).hitPoints, lyra(store).healthPercent], [1, 17])
     assert.notEqual(lyra(store).status, "dead")
     assert.deepEqual(
       store
@@ -190,7 +191,7 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     })
     await play(stubLlm(dying))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
-    assert.equal(lyra(store).healthPercent, 1)
+    assert.deepEqual([lyra(store).hitPoints, lyra(store).healthPercent], [1, 17])
     assert.notEqual(lyra(store).status, "dead")
 
     // Silas runs on his turn and is out of the encounter, and the fight ends at the crate.

@@ -8,7 +8,6 @@
   "background": "Milos has walked the pilgrim roads of the March of Davos for twenty years as a Wayfinder, a wandering priest of the Church of Valkara who tends shrines and travellers alike. Of late he has heard troubling whispers in the villages: shrines stripped of old relics, and a name spoken only in doubt, the Covenant of the Cowl. He has come to Kordavos for the Harvest Festival to seek answers from the Church, and he fears what he may find.",
   "motivation": "Milos wants to protect the soul of Valkaran tradition without letting it curdle into fanaticism. He seeks the truth behind the whispers of the Covenant, and he believes an honest accounting, however painful, is the only way to keep faith and city from tearing each other apart.",
   "behavior": "Milos watches and listens before he acts, tends the wounded without being asked, and steps forward when someone needs defending, whether from blades or from lies. In a fight he shields his companions with prayers of warding and mends their wounds, striking with his staff only when there is no gentler path.",
-  "healthPercent": 100,
   "equipment": [
     {
       "name": "Wayfinder's Staff",

@@ -56,7 +56,11 @@ export const baseCharacterSchema = z.object({
   behavior: z.string().optional(),
   // What the card says while the GM plays this character's turn, such as "Garlan strokes his beard, weighing his duty…".
   thinking: z.string().optional(),
-  healthPercent: z.number().min(0).max(100), // 0-100, percentage
+  // Current hit points, 0 to the maximum from the sheet or stat block. A character enters play at its maximum, and
+  // only the engine changes them, through withHitPoints in ../sheet/hit-points. Authored content has none.
+  hitPoints: z.number().int().min(0).optional(),
+  // 0-100, a copy of the hit points that withHitPoints writes, for the screens and prompts that read it.
+  healthPercent: z.number().min(0).max(100).optional(),
   equipment: z.array(equipmentItemSchema).optional(),
   skills: z.array(z.string()).optional(),
   spells: z.array(spellSchema).optional(),
@@ -105,7 +109,7 @@ export const characterSchema = z.union([pcSchema, npcSchema])
 export type Character = z.infer<typeof characterSchema>
 
 // Generation schemas (without id and image for AI generation)
-export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true, sheet: true })
+export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true, sheet: true, hitPoints: true })
 
 export const npcGenerationSchema = baseCharacterGenerationSchema.extend({
   type: z.literal("npc"),

@@ -41,7 +41,6 @@ export async function draftHero(input: {
       gender: hero.gender || c.gender,
       image: "",
       type: "pc",
-      healthPercent: 100,
       effects: [],
       spells: (c.spells ?? []).map((s) => ({ name: s.name, description: s.description })),
     },

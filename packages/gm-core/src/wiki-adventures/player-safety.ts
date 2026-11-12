@@ -1,11 +1,16 @@
+import { withHitPoints } from "../sheet/hit-points"
+import type { Sheet } from "../sheet/sheet"
 import type { RuntimeArtifacts, RuntimeManifest, RuntimeTransition } from "./types"
 
 // Authored adventure rules the core enforces itself, because the model cannot be trusted to judge them:
 // `playerDeath: false` keeps player characters alive, and `rescue` moves a badly hurt party to a rescue encounter.
 export type SafetyRules = Pick<RuntimeManifest, "playerDeath" | "premise">
-type Health = { type: string; healthPercent?: number; status?: string }
+type Health = { type: string; sheet?: Sheet; hitPoints?: number; healthPercent?: number; status?: string }
 
-export const MIN_PLAYER_HEALTH = 1
+/** The floor `playerDeath: false` keeps a player character at: 1 hit point. */
+export const MIN_PLAYER_HIT_POINTS = 1
+// The same floor for a patch, which speaks in percent: withHealthPercent turns any percent above 0 into at least 1 hit point.
+const MIN_PATCHED_HEALTH_PERCENT = 1
 const NO_DEATH_NOTE =
   "Player characters cannot die in this adventure. A blow that would kill instead leaves a player character badly hurt, disarmed, pinned or reeling. Never describe a player character as dead or dying."
 
@@ -16,14 +21,14 @@ const NOTES_BIND =
 
 const isDead = (status?: string) => status?.trim().toLowerCase() === "dead"
 
-/** With `playerDeath: false`, a player character keeps at least 1% health and never takes the status "dead". */
+/** With `playerDeath: false`, a player character keeps at least 1 hit point and never takes the status "dead". */
 export function keepPlayersAlive<T extends Health>(rules: SafetyRules | undefined, characters: T[]): T[] {
   if (rules?.playerDeath !== false) return characters
   return characters.map((c) => {
     if (c.type !== "pc") return c
-    const low = typeof c.healthPercent === "number" && c.healthPercent < MIN_PLAYER_HEALTH
+    const low = typeof c.hitPoints === "number" && c.hitPoints < MIN_PLAYER_HIT_POINTS
     if (!low && !isDead(c.status)) return c
-    return { ...c, healthPercent: low ? MIN_PLAYER_HEALTH : c.healthPercent, status: isDead(c.status) ? undefined : c.status }
+    return { ...(low ? withHitPoints(c, MIN_PLAYER_HIT_POINTS) : c), status: isDead(c.status) ? undefined : c.status }
   })
 }
 
@@ -38,7 +43,7 @@ export function keepPatchedPlayersAlive<U extends { characterId: string; healthP
   return updates.map((update) => {
     if (!players.has(update.characterId)) return update
     const safe = { ...update }
-    if (typeof safe.healthPercent === "number" && safe.healthPercent < MIN_PLAYER_HEALTH) safe.healthPercent = MIN_PLAYER_HEALTH
+    if (typeof safe.healthPercent === "number" && safe.healthPercent < MIN_PATCHED_HEALTH_PERCENT) safe.healthPercent = MIN_PATCHED_HEALTH_PERCENT
     if (isDead(safe.status)) delete safe.status
     return safe
   })

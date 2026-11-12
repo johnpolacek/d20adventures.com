@@ -5,10 +5,10 @@ import type { SheetView } from "@d20/gm-core/sheet/view"
 import { useEffect, useState } from "react"
 
 /**
- * A hero's rules sheet, worked out for display. The rules data loads on first use, in its own chunk, so pages that
- * never open a sheet do not carry it. Null while loading, and for a character with no sheet.
+ * A hero's rules sheet, worked out for display at its stored hit points. The rules data loads on first use, in its own
+ * chunk, so pages that never open a sheet do not carry it. Null while loading, and for a character with no sheet.
  */
-export function useSheetView(sheet: Sheet | undefined, healthPercent?: number): SheetView | null {
+export function useSheetView(sheet: Sheet | undefined, hitPoints?: number): SheetView | null {
   const [view, setView] = useState<SheetView | null>(null)
   const key = sheet ? JSON.stringify(sheet) : ""
   useEffect(() => {
@@ -19,7 +19,7 @@ export function useSheetView(sheet: Sheet | undefined, healthPercent?: number): 
     }
     import("@d20/gm-core/sheet/view")
       .then(({ sheetView }) => {
-        if (live) setView(sheetView(JSON.parse(key) as Sheet, healthPercent))
+        if (live) setView(sheetView(JSON.parse(key) as Sheet, hitPoints))
       })
       .catch(() => {
         if (live) setView(null)
@@ -27,6 +27,6 @@ export function useSheetView(sheet: Sheet | undefined, healthPercent?: number): 
     return () => {
       live = false
     }
-  }, [key, healthPercent])
+  }, [key, hitPoints])
   return view
 }

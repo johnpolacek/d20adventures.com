@@ -25,7 +25,6 @@ export const representativeMyrAdventurePlan: AdventurePlan = {
       personality: "Practical and guarded.",
       background: "Once trained by the Gatewarden captain.",
       motivation: "Find out why old friends have gone missing near the road.",
-      healthPercent: 100,
       attributes: {
         strength: 8,
         dexterity: 15,
@@ -65,7 +64,6 @@ export const representativeMyrAdventurePlan: AdventurePlan = {
       background: "Gatewarden captain responsible for the old road checkpoint.",
       motivation: "Keep frightened travelers from causing a panic.",
       behavior: "Vala asks direct questions and offers help only after the party proves trustworthy.",
-      healthPercent: 100,
       attributes: { strength: 12, wisdom: 13 },
     },
   },

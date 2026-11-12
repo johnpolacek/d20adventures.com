@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { hitPointsOf } from "../../src/sheet/hit-points"
 import type { Sheet } from "../../src/sheet/sheet"
-import { combatStatsOf, hitPointsOf, isStatBlock } from "../../src/sheet/stat-block"
+import { combatStatsOf, isStatBlock } from "../../src/sheet/stat-block"
 
 // The numbers are the ones the SRD 5.2.1 stat blocks print.
 

@@ -1,4 +1,5 @@
 import type { TurnRecord } from "@d20/gm-core"
+import { withHealthPercent } from "@d20/gm-core/sheet/hit-points"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { type CharacterUpdate, characterUpdateSchema } from "@d20/gm-core/wiki-adventures/character-updates"
@@ -8,12 +9,12 @@ import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
 export const desktopPatchSchema = strictModelSchema(adventurePatchSchema.omit({ characterUpdates: true })).extend({
   characterUpdates: z.array(characterUpdateSchema).max(100).optional(),
 })
-export type CharacterState = Pick<TurnCharacter, "healthPercent" | "status" | "equipment" | "effects" | "spells">
+export type CharacterState = Pick<TurnCharacter, "hitPoints" | "healthPercent" | "status" | "equipment" | "effects" | "spells">
 export type CharacterStates = Record<string, CharacterState>
 const key = (name: string) => name.trim().toLowerCase()
 
 export function characterState(c: CharacterState): CharacterState {
-  return structuredClone({ healthPercent: c.healthPercent, status: c.status, equipment: c.equipment ?? [], effects: c.effects ?? [], spells: c.spells ?? [] })
+  return structuredClone({ hitPoints: c.hitPoints, healthPercent: c.healthPercent, status: c.status, equipment: c.equipment ?? [], effects: c.effects ?? [], spells: c.spells ?? [] })
 }
 
 /** Old saves bootstrap from their latest snapshots, never by replaying descriptive patches. */
@@ -36,9 +37,10 @@ export function applyCharacterUpdates(characters: TurnCharacter[], input: unknow
   for (const update of updates) {
     if (seen.has(update.characterId)) throw new Error(`Duplicate character update: ${update.characterId}`)
     seen.add(update.characterId)
-    const c = result.find((c) => c.id === update.characterId)
-    if (!c) throw new Error(`Unknown character in state update: ${update.characterId}`)
-    if (update.healthPercent !== undefined) c.healthPercent = update.healthPercent
+    const index = result.findIndex((c) => c.id === update.characterId)
+    if (index < 0) throw new Error(`Unknown character in state update: ${update.characterId}`)
+    if (update.healthPercent !== undefined) result[index] = withHealthPercent(result[index], update.healthPercent)
+    const c = result[index]
     if (update.status !== undefined) c.status = update.status.trim() || undefined
     for (const change of update.inventoryChanges ?? []) {
       c.equipment ??= []
@@ -109,7 +111,11 @@ const dead = (characters: TurnCharacter[]) => {
 // The saved state every GM prompt carries. A prompt that plays one character, its `viewer`, reads that character's own
 // gear, effects and spells, and of the others only what shows: how hurt they are and their condition.
 export function characterContext(characters: TurnCharacter[], patchInstructions = false, viewer?: string) {
-  const shown = (c: TurnCharacter) => (viewer === undefined || c.id === viewer ? characterState(c) : { healthPercent: c.healthPercent, status: c.status })
+  const shown = (c: TurnCharacter) => {
+    // Hit points stay out of the prompt while the model still writes health in percent.
+    const { hitPoints: _, ...state } = characterState(c)
+    return viewer === undefined || c.id === viewer ? state : { healthPercent: c.healthPercent, status: c.status }
+  }
   const context = `\n\nCURRENT SAVED CHARACTER STATE (authoritative, after already resolved actions):\n${JSON.stringify(characters.map((c) => ({ id: c.id, name: c.name, ...shown(c) })))}${dead(characters)}`
   if (!patchInstructions) return context
   return `${context}

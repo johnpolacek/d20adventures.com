@@ -1,5 +1,4 @@
 import { sheetSchema } from "@d20/gm-core/sheet/sheet"
-import type { Adventure, TurnCharacter } from "@/types/adventure"
 import type { PCTemplate } from "@/types/character"
 
 export function toPCTemplate(obj: unknown): PCTemplate | null {
@@ -64,28 +63,5 @@ export function toPCTemplate(obj: unknown): PCTemplate | null {
     attributes,
     // The rules sheet rides along when it is well formed. A hero made before the rules has none.
     ...(sheet.success ? { sheet: sheet.data } : {}),
-  }
-}
-
-// Convert PC to TurnCharacter format for the modal
-export function convertPCToTurnCharacter(pc: Adventure["party"][0]): TurnCharacter {
-  return {
-    ...pc,
-    type: "pc" as const,
-    initiative: 0, // Default value
-    hasReplied: false,
-    isComplete: false,
-  }
-}
-
-// Convert PCTemplate to TurnCharacter format for the modal
-export function convertPCTemplateToTurnCharacter(pcTemplate: PCTemplate): TurnCharacter {
-  return {
-    ...pcTemplate,
-    type: "pc" as const,
-    userId: "", // Empty for template
-    initiative: 0, // Default value
-    hasReplied: false,
-    isComplete: false,
   }
 }

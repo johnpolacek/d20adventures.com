@@ -46,7 +46,7 @@ function ExpandableText({ title, text }: ExpandableTextProps) {
 
 export function CharacterSheetModal({ character, open, onOpenChange }: CharacterSheetModalProps) {
   // The rules sheet, where the hero has one. It loads only while the window is open.
-  const sheet = useSheetView(open ? character?.sheet : undefined, character?.healthPercent)
+  const sheet = useSheetView(open ? character?.sheet : undefined, character?.hitPoints)
   if (!character) return null
 
   const getModifier = (score: number) => Math.floor((score - 10) / 2)

@@ -23,10 +23,13 @@ export interface Adventure {
   storyview?: { autoEnabled: boolean }
 }
 
+// A character in play always carries its hit points and their health percent copy (see ../sheet/hit-points).
 export type TurnCharacter =
   | (PC & {
       type: "pc"
       initiative: number
+      hitPoints: number
+      healthPercent: number
       hasReplied?: boolean
       isComplete?: boolean
       rollRequired?: RollRequirement
@@ -35,6 +38,8 @@ export type TurnCharacter =
   | (NPC & {
       type: "npc"
       initiative: number
+      hitPoints: number
+      healthPercent: number
       hasReplied?: boolean
       isComplete?: boolean
       rollRequired?: RollRequirement

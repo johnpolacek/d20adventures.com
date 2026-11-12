@@ -11,7 +11,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "@/components/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
-import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import { CharacterSheetModal } from "./character-sheet-modal"
@@ -28,9 +27,11 @@ export type CharacterChoiceMode = {
   mode: "player" | "invite" | "ai"
 }
 
-function convertToTurnCharacter(pcTemplate: PCTemplate): TurnCharacter {
+// A hero shown before play is at full health. Its hit points come from its sheet in the modal.
+function convertToTurnCharacter(pcTemplate: PCTemplate): PCTemplate & { userId: string; initiative: number; hasReplied: boolean; isComplete: boolean } {
   return {
     ...pcTemplate,
+    healthPercent: 100,
     type: "pc" as const,
     userId: "", // Empty for template
     initiative: 0, // Default value
@@ -43,7 +44,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
   const { isLoaded, isSignedIn } = useUser()
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null)
   const [characterChoices, setCharacterChoices] = useState<CharacterChoiceMode[]>([])
-  const [modalCharacter, setModalCharacter] = useState<TurnCharacter | null>(null)
+  const [modalCharacter, setModalCharacter] = useState<PCTemplate | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSelecting, setIsSelecting] = useState(false)
   const [showSignInPrompt, setShowSignInPrompt] = useState(false)

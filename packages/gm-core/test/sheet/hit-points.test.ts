@@ -1,8 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { healthPercentOf } from "../../src/sheet/hit-points"
+import { healthPercentOf, hitPointsOf, withHealthPercent, withHitPoints, withStartingHitPoints } from "../../src/sheet/hit-points"
 import type { Sheet } from "../../src/sheet/sheet"
-import { hitPointsOf } from "../../src/sheet/stat-block"
 
 // A Fighter with Constitution 15 has 12 hit points at level 1: d10 + 2.
 const fighter: Sheet = {
@@ -41,4 +40,42 @@ test("health percent from hit points", () => {
     const percent = healthPercentOf({ current, maximum: 12 })
     assert.equal(hitPointsOf({ sheet: fighter, healthPercent: percent })?.current, current, `${current} hit points survives the round trip`)
   }
+})
+
+// Thalbern, a level 1 Ranger with Constitution 13, has d10 + 1 = 11 hit points. An Owlbear has 59 and a Commoner 4,
+// as their stat blocks print.
+const thalbern = {
+  type: "pc",
+  sheet: {
+    class: "ranger",
+    level: 1,
+    species: "human",
+    background: "soldier",
+    abilityScores: { str: 13, dex: 17, con: 13, int: 11, wis: 13, cha: 10 },
+    classSkills: ["stealth", "survival", "nature"],
+  } satisfies Sheet,
+}
+const owlbear = { type: "npc", statBlock: "owlbear" }
+const commoner = { type: "npc" }
+
+test("stored hit points are the value, and health percent is their copy", () => {
+  // 7 of 11 is 63.6%, shown as 64. 20 is past the maximum, and -3 below 0.
+  assert.deepEqual([withHitPoints(thalbern, 7).hitPoints, withHitPoints(thalbern, 7).healthPercent], [7, 64])
+  assert.deepEqual([withHitPoints(thalbern, 20).hitPoints, withHitPoints(thalbern, 20).healthPercent], [11, 100])
+  assert.deepEqual([withHitPoints(owlbear, -3).hitPoints, withHitPoints(owlbear, -3).healthPercent], [0, 0])
+  assert.deepEqual(hitPointsOf({ ...thalbern, hitPoints: 7, healthPercent: 100 }), { current: 7, maximum: 11 }, "the stored hit points win")
+})
+
+test("a character enters play at its maximum, or with the hit points it has", () => {
+  assert.deepEqual([withStartingHitPoints(commoner).hitPoints, withStartingHitPoints(commoner).healthPercent], [4, 100])
+  assert.equal(withStartingHitPoints({ ...thalbern, hitPoints: 5 }).hitPoints, 5)
+  assert.throws(() => withStartingHitPoints({ type: "pc" }), /no sheet or stat block/)
+})
+
+test("a percent write sets hit points, and health percent follows them", () => {
+  // Half of the Owlbear's 59 is 29.5, so 30, and 30 of 59 shows as 51%.
+  assert.deepEqual([withHealthPercent(owlbear, 50).hitPoints, withHealthPercent(owlbear, 50).healthPercent], [30, 51])
+  // 10% of a Commoner's 4 is 0.4, but any health left is at least 1 hit point, which shows as 25%.
+  assert.deepEqual([withHealthPercent(commoner, 10).hitPoints, withHealthPercent(commoner, 10).healthPercent], [1, 25])
+  assert.deepEqual([withHealthPercent(thalbern, 0).hitPoints, withHealthPercent(thalbern, 0).healthPercent], [0, 0])
 })

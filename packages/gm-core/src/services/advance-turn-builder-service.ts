@@ -1,3 +1,4 @@
+import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
@@ -95,8 +96,8 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
   if (nextEncounter.resetHealth) {
     console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`)
     pcs = pcs.map((pc) => ({
-      ...pc,
-      healthPercent: 100,
+      // Back to its maximum: withHitPoints clamps to it.
+      ...withHitPoints(pc, Number.POSITIVE_INFINITY),
       status: pc.status === "dead" ? "" : pc.status,
     }))
   }
@@ -117,16 +118,15 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
       npcInitiative = typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollD20()
     }
 
-    return {
+    return withStartingHitPoints({
       ...npc,
       id: npcRef.id,
-      type: "npc",
+      type: "npc" as const,
       isComplete: false,
       hasReplied: false,
       initiative: npcInitiative,
-      healthPercent: 100,
       behavior: npcRef.behavior,
-    }
+    })
   })
 
   let allCharacters: TurnCharacter[] = [...pcs, ...npcs]

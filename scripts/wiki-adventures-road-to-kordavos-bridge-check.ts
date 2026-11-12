@@ -64,7 +64,17 @@ function main() {
     race: "Human",
     archetype: "Fighter",
     appearance: "A road-worn ranger with a green cloak.",
+    // A Fighter with Constitution 12 has 11 hit points: d10 + 1.
+    hitPoints: 11,
     healthPercent: 100,
+    sheet: {
+      class: "fighter",
+      level: 1,
+      species: "human",
+      background: "soldier",
+      abilityScores: { str: 12, dex: 12, con: 12, int: 10, wis: 10, cha: 10 },
+      classSkills: ["acrobatics", "perception"],
+    },
     attributes: {
       strength: 12,
       dexterity: 12,

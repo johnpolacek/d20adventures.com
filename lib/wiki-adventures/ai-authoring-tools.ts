@@ -306,7 +306,6 @@ function characterSheet(input: Extract<AiAuthoringToolInput, { tool: "createChar
     archetype: input.archetype,
     race: input.race,
     appearance: input.appearance,
-    healthPercent: 100,
     attributes: input.characterType === "npc" ? { strength: 10, dexterity: 10, constitution: 10 } : { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     equipment: [],
     skills: [],

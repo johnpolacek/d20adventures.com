@@ -34,13 +34,7 @@ function main() {
   assert.equal(contentRef.planId, PLAN_ID)
   assert.equal(artifacts.validationReport.status, "passed")
   assert.equal(artifacts.manifest.startEncounterId, "the-gates-of-kordavos")
-  assert.deepEqual(artifacts.manifest.premadeCharacterIds, [
-    "branka-stoneveil",
-    "milos-radan",
-    "thalbern",
-    "1749159962941",
-    "1749307435667",
-  ])
+  assert.deepEqual(artifacts.manifest.premadeCharacterIds, ["branka-stoneveil", "milos-radan", "thalbern", "1749159962941", "1749307435667"])
   // Reasons a created hero may have come to Kordavos, offered in the hero creator.
   assert.equal(artifacts.manifest.heroHooks?.length, 9)
   assert.match(artifacts.manifest.heroHooks?.[0] ?? "", /^Bringing an offering to the Church of Valkara/)
@@ -84,7 +78,17 @@ function main() {
     race: "Human",
     archetype: "Fighter",
     appearance: "A traveler ready for the March of Davos.",
+    // A Fighter with Constitution 13 has 11 hit points: d10 + 1.
+    hitPoints: 11,
     healthPercent: 100,
+    sheet: {
+      class: "fighter",
+      level: 1,
+      species: "human",
+      background: "soldier",
+      abilityScores: { str: 14, dex: 12, con: 13, int: 10, wis: 10, cha: 10 },
+      classSkills: ["acrobatics", "perception"],
+    },
     attributes: {
       strength: 14,
       dexterity: 12,
