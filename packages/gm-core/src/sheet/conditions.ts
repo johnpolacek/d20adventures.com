@@ -98,13 +98,13 @@ export type Afflicted = {
 
 export const conditionName = (id: ConditionId): string => conditionById.get(id)?.name ?? id
 
-// One who cannot get up: down, unable to act, or with a Speed of 0.
-const cannotStand = (character: Afflicted): boolean => isDown(character) || isIncapacitated(character) || (character.conditions ?? []).some((entry) => CONDITION_RULES[entry.id].speedZero)
+/** One who cannot move: down, unable to act, or with a Speed of 0. They cannot stand from Prone, and get nothing from the Dodge action. */
+export const cannotMove = (character: Afflicted): boolean => isDown(character) || isIncapacitated(character) || (character.conditions ?? []).some((entry) => CONDITION_RULES[entry.id].speedZero)
 
 // Whether a stored condition still holds. One that ends on standing is over once its bearer's own turn has begun: it
 // has one turn left and they have acted this round, or they are acting now. One who cannot stand keeps it.
 function holds(character: Afflicted, entry: ConditionEntry, acting: boolean): boolean {
-  if (!CONDITION_RULES[entry.id].stands || cannotStand(character)) return true
+  if (!CONDITION_RULES[entry.id].stands || cannotMove(character)) return true
   return !acting && ((entry.turns ?? 1) > 1 || !character.isComplete)
 }
 
@@ -263,7 +263,7 @@ export function conditionsAtRoundStart<T extends Afflicted>(character: T): T {
   const conditions = character.conditions.flatMap((entry): ConditionEntry[] => {
     if (entry.turns === undefined) return [entry]
     if (entry.turns > 1) return [{ ...entry, turns: entry.turns - 1 }]
-    return CONDITION_RULES[entry.id].stands && cannotStand(character) ? [entry] : []
+    return CONDITION_RULES[entry.id].stands && cannotMove(character) ? [entry] : []
   })
   const { conditions: _, ...rest } = character
   return (conditions.length ? { ...rest, conditions } : rest) as T

@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import { afterRoll, takeAction } from "../sheet/actions"
 import { multiattackOf, strike, strikeFacts } from "../sheet/attack"
 import { resolveCheck } from "../sheet/check"
 import { saveFailedBy } from "../sheet/conditions"
@@ -75,7 +76,7 @@ const npcStep = (npc: TurnCharacter): StoryBy => ({ step: "npc", character: npc.
 
 export function createNpcTurnBranchService(ports: GmPorts) {
   const { generateNpcOutcome } = createNpcTurnGenerationService(ports)
-  const { getRollRequirementForAction } = createRollRequirementService(ports)
+  const { readAction } = createRollRequirementService(ports)
   async function resolveNpcTurnRollOrDirectBranch(args: {
     turn: Turn
     npc: TurnCharacter
@@ -96,12 +97,13 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     let rollInfo: NpcRollInfo | undefined
     let effects: NpcTurnEffect[] | undefined
 
-    const rollRequirement = await getRollRequirementForAction(args.actionResult.actionSummary, args.npc, {
+    const reading = await readAction(args.actionResult.actionSummary, args.npc, {
       encounterInstructions: args.encounterContext?.instructions || "",
       encounterIntro: args.encounterContext?.intro || "",
       narrativeContext: script,
       present: args.turn.characters,
     })
+    const rollRequirement = reading.roll
 
     console.log("[LLM] NPC roll requirement:", {
       requiresRoll: !!rollRequirement,
@@ -144,6 +146,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         }),
         args.npc.id
       )
+      // What the attack used up: an ally's Help against the target, and the NPC's own hiding.
+      updatedCharacters = afterRoll(updatedCharacters, args.npc.id, rollRequirement)
       beatsToAppend = [...rolls, ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
       // The harm is the engine's. The outcome may still hand over an item.
       effects = outcomeResult.effects
@@ -164,7 +168,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         ...(rollRequirement.spell ? { spell: rollRequirement.spell } : {}),
       }
       const settled = applyStakes({ characters: updatedCharacters, stakes: rollRequirement.stakes, outcome: success ? "success" : "failure", roll: rollDie, rules: args.rules })
-      updatedCharacters = settled.characters
+      updatedCharacters = afterRoll(settled.characters, args.npc.id, rollRequirement)
       console.log("[LLM] NPC dice roll:", { rollType: rollRequirement.rollType, result, difficulty: rollRequirement.difficulty, success, harm: settled.facts })
 
       const outcomeResult = await generateNpcOutcome(
@@ -189,6 +193,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     } else {
       beatsToAppend = cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc))
       effects = args.actionResult.effects
+      // An action with no roll (Dodge, Help) is the NPC's whole turn, and leaves its mark.
+      if (reading.action) updatedCharacters = takeAction(updatedCharacters, args.npc.id, reading.action).characters
 
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     }

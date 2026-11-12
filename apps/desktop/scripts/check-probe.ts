@@ -38,6 +38,8 @@ type Probe = {
   stakes?: Wanted[]
   // Stakes the roll must put, whatever else it puts with them.
   gives?: Wanted[]
+  // An action that takes no roll, as it should be read: who Help is for, and with which skill.
+  takes?: { target?: string; skills?: string[] }
   // Conditions someone in the scene already bears, by character id.
   conditionsOn?: Record<string, ConditionEntry[]>
 }
@@ -68,8 +70,8 @@ async function run(probe: Probe): Promise<Graded> {
   if (!encounter) throw new Error(`${probe.id}: no encounter ${probe.encounter}`)
   const model = localLlm("claude", mkdtempSync(join(tmpdir(), "check-probe-")))
   try {
-    const { getRollRequirementForAction } = createRollRequirementService({ llm: model.llm } as GmPorts)
-    const got = await getRollRequirementForAction(probe.action, hero, {
+    const { readAction } = createRollRequirementService({ llm: model.llm } as GmPorts)
+    const reading = await readAction(probe.action, hero, {
       encounterIntro: authoredText(encounter.sections.intro ?? "", storyNames([hero])),
       encounterInstructions: encounter.sections.gmNotes ?? "",
       narrativeContext: probe.narrative ?? "",
@@ -83,8 +85,14 @@ async function run(probe: Probe): Promise<Graded> {
         ...encounter.npcRefs.map((ref) => bears({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const })),
       ],
     })
+    const got = reading.roll
     const faults: string[] = []
-    const picked = !got ? "none" : isAttackRoll(got) ? "attack" : (menuId(got.check) ?? "?")
+    // Hide is a roll the engine sets, named for the action. An action with no roll is read by its own name.
+    const picked = !got ? (reading.action?.action ?? "none") : isAttackRoll(got) ? "attack" : got.rollType.startsWith("Hide") ? "hide" : (menuId(got.check) ?? "?")
+    if (probe.takes && reading.action?.action === "help") {
+      if (probe.takes.target && reading.action.target !== probe.takes.target) faults.push(`help for ${reading.action.target}, wanted ${probe.takes.target}`)
+      if (probe.takes.skills && !probe.takes.skills.includes(reading.action.skill ?? "none")) faults.push(`help with ${reading.action.skill ?? "no skill"}, wanted ${probe.takes.skills.join(" or ")}`)
+    }
     if (!probe.checks.includes(picked)) faults.push(`check ${picked}, wanted ${probe.checks.join(" or ")}`)
     if (got && probe.mode && got.mode !== probe.mode) faults.push(`${got.mode}, wanted ${probe.mode}`)
     if (got && isAttackRoll(got)) {
@@ -105,7 +113,7 @@ async function run(probe: Probe): Promise<Graded> {
       }
       for (const stake of probe.gives ?? []) if (!picked.includes(wants(stake))) faults.push(`stakes ${picked.join(", ") || "none"}, wanted ${wants(stake)} among them`)
     }
-    return { id: probe.id, pass: faults.length === 0, faults, got }
+    return { id: probe.id, pass: faults.length === 0, faults, got: got ?? reading.action ?? null }
   } catch (error) {
     return { id: probe.id, pass: false, faults: [String(error)], got: null }
   } finally {
@@ -133,10 +141,15 @@ for (const g of graded) {
     reasons?: string[]
     attack?: { target: string }
     stakes?: Stake[]
+    action?: string
+    target?: string
+    skill?: string
   } | null
-  const pick = got
-    ? `${got.rollType} ${got.attack ? `on ${got.attack.target}, AC` : "DC"} ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}${got.stakes?.length ? `, stakes: ${got.stakes.map((stake) => `${"dice" in stake ? `${stake.dice} ` : ""}${staked(stake)}`).join("; ")}` : ""}`
-    : "no roll"
+  const pick = got?.action
+    ? `${got.action}${got.target ? ` for ${got.target}` : ""}${got.skill ? ` with ${got.skill}` : ""}, no roll`
+    : got
+      ? `${got.rollType} ${got.attack ? `on ${got.attack.target}, AC` : "DC"} ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}${got.stakes?.length ? `, stakes: ${got.stakes.map((stake) => `${"dice" in stake ? `${stake.dice} ` : ""}${staked(stake)}`).join("; ")}` : ""}`
+      : "no roll"
   log(`${g.pass ? "pass" : "FAIL"}  ${g.id.padEnd(18)} ${pick}${g.faults.length ? `\n      ${g.faults.join("; ")}` : ""}`)
 }
 log(`\n${graded.filter((g) => g.pass).length} of ${graded.length} pass`)

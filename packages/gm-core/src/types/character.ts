@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { conditionEntrySchema } from "../sheet/condition-entry"
 import { sheetSchema } from "../sheet/sheet"
+import { turnEffectSchema } from "../sheet/turn-effect"
 
 // Equipment item schema and type
 export const equipmentItemSchema = z.object({
@@ -67,6 +68,9 @@ export const baseCharacterSchema = z.object({
   deathSaves: z.object({ successes: z.number().int().min(0).max(3), failures: z.number().int().min(0).max(3), stable: z.literal(true).optional() }).optional(),
   // The SRD conditions the character bears. Only the engine writes them, through ../sheet/conditions.
   conditions: z.array(conditionEntrySchema).optional(),
+  // What an action of a turn has left on the character: Dodging, or an ally's Help. Only the engine writes it,
+  // through ../sheet/actions.
+  turnEffects: z.array(turnEffectSchema).optional(),
   // Dead, or gone from the encounter for good. Neither is a condition, and only the engine sets them.
   dead: z.literal(true).optional(),
   fled: z.literal(true).optional(),
@@ -116,7 +120,17 @@ export const characterSchema = z.union([pcSchema, npcSchema])
 export type Character = z.infer<typeof characterSchema>
 
 // Generation schemas (without id and image for AI generation, and without what only the engine writes)
-export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true, sheet: true, hitPoints: true, deathSaves: true, conditions: true, dead: true, fled: true })
+export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
+  id: true,
+  image: true,
+  sheet: true,
+  hitPoints: true,
+  deathSaves: true,
+  conditions: true,
+  turnEffects: true,
+  dead: true,
+  fled: true,
+})
 
 export const npcGenerationSchema = baseCharacterGenerationSchema.extend({
   type: z.literal("npc"),

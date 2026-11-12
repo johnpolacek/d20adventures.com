@@ -1,9 +1,11 @@
 import { isDead, isDown, isDying, isIncapacitated } from "../utils/turn-actors"
 import { DEATH_SAVE, type RollRequirement } from "../validations/roll-requirement-schema"
+import { turnEffectsAtRoundStart } from "./actions"
 import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtRoundStart, d20Penalty, withCondition } from "./conditions"
 import { hitPointsOf, withHitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
+import type { TurnEffect } from "./turn-effect"
 
 /** A hero's Death Saving Throws while at 0 hit points: three successes make them Stable, three failures kill. */
 export type DeathSaves = { successes: number; failures: number; stable?: true }
@@ -21,6 +23,7 @@ type Mortal = {
   dead?: true
   fled?: true
   conditions?: readonly ConditionEntry[]
+  turnEffects?: readonly TurnEffect[]
   deathSaves?: DeathSaves
 }
 
@@ -43,7 +46,7 @@ export function revived<T extends Mortal>(character: T, current: number): T {
 /** Dead at 0 hit points. Where player death is off, a hero who would die is left Stable at 0 instead, out of the fight. */
 export function killed<T extends Mortal>(character: T, rules?: DeathRules): T {
   if (character.type === "pc" && rules?.playerDeath === false) return stable(character)
-  const { deathSaves: _, conditions: __, ...rest } = at(character, 0)
+  const { deathSaves: _, conditions: __, turnEffects: ___, ...rest } = at(character, 0)
   return { ...rest, dead: true } as T
 }
 
@@ -128,12 +131,13 @@ export function deathSave<T extends Mortal>(character: T, die: number, rules?: D
 type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: RollRequirement; rollResult?: number }
 
 /**
- * A character as a round begins. Their conditions lose a turn each, and those that run out end. A dying hero's turn is
+ * A character as a round begins. Their conditions lose a turn each, and those that run out end, as does what last
+ * round's actions left on them. A dying hero's turn is
  * their Death Saving Throw, already asked for, so the roll card comes up on it. One who is down otherwise, or
  * Incapacitated, takes no turn. Everyone else has yet to act.
  */
 export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
-  const character = conditionsAtRoundStart(before)
+  const character = turnEffectsAtRoundStart(conditionsAtRoundStart(before))
   if (isDying(character)) return { ...character, rollRequired: { ...DEATH_SAVE, modifier: 0 - d20Penalty(character) }, rollResult: undefined, hasReplied: true, isComplete: false }
   if (isDown(character) || isIncapacitated(character)) return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
   return { ...character, hasReplied: false, isComplete: false }

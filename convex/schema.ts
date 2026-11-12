@@ -259,6 +259,7 @@ export default defineSchema({
         ),
         specialAbilities: v.optional(v.array(v.string())),
         conditions: v.optional(v.array(v.object({ id: v.string(), source: v.optional(v.string()), turns: v.optional(v.number()), level: v.optional(v.number()) }))),
+        turnEffects: v.optional(v.array(v.object({ id: v.string(), by: v.string(), skill: v.optional(v.string()), turns: v.number() }))),
         dead: v.optional(v.literal(true)),
         fled: v.optional(v.literal(true)),
         effects: v.optional(

@@ -1,13 +1,15 @@
-import { conditionIdSchema, conditionIds, damageTypeIdSchema } from "@d20/srd"
+import { conditionIdSchema, conditionIds, damageTypeIdSchema, skillIdSchema } from "@d20/srd"
 import { abilityById } from "@d20/srd/abilities"
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import { attackModesFromActions, checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../sheet/actions"
 import { attacksOf } from "../sheet/attack"
 import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
 import { conditionSpans } from "../sheet/condition-entry"
 import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
+import { actionIds } from "../sheet/turn-effect"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
 import { hasFled, isDead, isDown } from "../utils/turn-actors"
@@ -22,13 +24,16 @@ const NPC_FIXED_OUTCOME =
 // What the game master picks, each from a fixed menu. The engine works out the rest: the bonus from the roller's sheet
 // or stat block, the target number from the difficulty's name, and the dice.
 const rollPickSchema = z.object({
-  check: z.enum(["none", "attack", ...checkMenuIds]).describe('The check\'s id from the menu, "attack" for an attack, or "none" when nothing is rolled'),
+  check: z
+    .enum(["none", "attack", "hide", ...actionIds, ...checkMenuIds])
+    .describe('The check\'s id from the menu, "attack" for an attack, an action of a fight ("hide", "dodge", "help", "dash", "disengage"), or "none" when nothing is rolled'),
   difficulty: z.enum(difficulties).optional().describe("How hard the task is, by name. Needed for every check"),
   mode: z.enum(rollModes).optional().describe('"advantage" or "disadvantage" when this moment\'s circumstances clearly help or hinder, else "normal"'),
   reason: z.string().max(120).optional().describe("What gives the Advantage or Disadvantage, in a few words"),
   spell: z.string().max(80).optional().describe("The character's own spell this roll casts, exactly as their spell list names it"),
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
-  target: z.string().max(80).optional().describe("For an attack: the id of who is attacked, from Who Is Here"),
+  target: z.string().max(80).optional().describe('For an attack: the id of who is attacked, from Who Is Here. For "help": the id of the ally helped, or of the enemy an ally will attack'),
+  helps: z.string().max(40).optional().describe('For "help" given to an ally\'s check: the id of the skill it is for'),
   harm: z
     .array(
       z.object({
@@ -50,7 +55,10 @@ const rollPickSchema = z.object({
 
 // Someone the roller could attack: anyone else in the scene who is still up.
 type Present = Pick<TurnCharacter, "id" | "name"> &
-  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "isComplete">> & { statBlock?: string }
+  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "isComplete">> & { statBlock?: string }
+
+/** What the game master reads a character's move as: a roll the engine asks for, an action that takes none, or neither. */
+export type TurnReading = { roll: ChosenRoll | null; action?: TakenAction }
 
 const MENU = (kind: "skill" | "ability" | "save") =>
   checkMenu
@@ -60,17 +68,17 @@ const MENU = (kind: "skill" | "ability" | "save") =>
 
 export function createRollRequirementService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
-  async function getRollRequirementForAction(
-    action: string,
-    character: Character,
-    options?: {
-      encounterInstructions?: string
-      encounterIntro?: string
-      narrativeContext?: string
-      // Everyone in the scene. The roller can attack any of the others who is still up.
-      present?: readonly Present[]
-    }
-  ): Promise<ChosenRoll | null> {
+  type Options = {
+    encounterInstructions?: string
+    encounterIntro?: string
+    narrativeContext?: string
+    // Everyone in the scene. The roller can attack any of the others who is still up.
+    present?: readonly Present[]
+  }
+  /** The roll a move asks for, where only the roll is wanted: an action that takes none is read as no roll. */
+  const getRollRequirementForAction = async (action: string, character: Character, options?: Options): Promise<ChosenRoll | null> => (await readAction(action, character, options)).roll
+
+  async function readAction(action: string, character: Character, options?: Options): Promise<TurnReading> {
     const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {}
     const self = "id" in character ? character.id : undefined
     // One who is Charmed cannot attack the charmer.
@@ -144,6 +152,11 @@ ${MENU("save")}
      Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
      Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
+   - ACTIONS OF A FIGHT, only while a fight is on and only when it is the whole of what the character does this turn:
+     "hide": they get out of sight to strike or slip away unseen. The game rolls stealth for it and sets its difficulty, so give none.
+     "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
+     "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
+     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
    - SPELLS: casting one of the character's own spells is a bare check of their spellcasting ability (see Character Context. For an NPC, the ability its magic comes from: intelligence, wisdom or charisma), and "spell" names the spell exactly as their list has it. Magic that is not a spell on their list is "arcana" with no "spell".
    - SPELL AVAILABILITY: Spells marked as "Used (unavailable this encounter)" CANNOT be cast again until the next encounter. If the character tries to cast one, "check" is "none": the spell simply fails to activate.
 
@@ -175,7 +188,7 @@ ${MENU("save")}
    - "source" is the id of who it comes from, for charmed, frightened and grappled.
    - Only what the rules call by one of those names. Never for being hurt, tired, surprised, hidden, distracted or off balance, and never because a roll simply fails.
 
-If NO roll is required, "check" is "none".
+If NO roll is required and no action of a fight is taken, "check" is "none".
 
 Action: "${action}"
 `
@@ -193,7 +206,7 @@ Action: "${action}"
         if (armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
         // The game master's read of the moment, then what the conditions of the two settle with no model.
         const picked = pick.mode ?? "normal"
-        const typed = attackModesFrom(character, target, attack.kind, options?.present)
+        const typed = [...attackModesFrom(character, target, attack.kind, options?.present), ...(self ? attackModesFromActions({ ...character, id: self }, target, options?.present) : [])]
         const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
         const rollRequirement: ChosenRoll = {
           attack: { weapon: attack.id, target: target.id },
@@ -204,28 +217,44 @@ Action: "${action}"
           ...(reasons.length ? { reasons } : {}),
         }
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
-        return rollRequirement
+        return { roll: rollRequirement }
       }
-      const check = pick.check === "none" ? undefined : checkFromMenu(pick.check)
+      const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other)).map((other) => other.id))
+      // An action that takes no roll. Help names who it is for, and for a check the skill.
+      const taken = actionIds.find((id) => id === pick.check)
+      if (taken) {
+        const skill = skillIdSchema.safeParse(pick.helps?.trim().toLowerCase())
+        const helped = pick.target && pick.target !== self && here.has(pick.target) ? pick.target : undefined
+        const read: TakenAction | undefined = taken !== "help" ? { action: taken } : helped ? { action: taken, target: helped, ...(skill.success ? { skill: skill.data } : {}) } : undefined
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, action: read })
+        return { roll: null, ...(read ? { action: read } : {}) }
+      }
+      // Hide is a Stealth check the rules set: its target and what a success gives are the engine's.
+      const hiding = pick.check === "hide" && self ? hideRoll({ ...character, id: self }) : undefined
+      const check = hiding ? hiding.check : pick.check === "none" || pick.check === "hide" ? undefined : checkFromMenu(pick.check)
       if (!check) {
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false })
-        return null
+        return { roll: null }
       }
-      if (!pick.difficulty) throw new Error(`The game master asked for a ${checkName(check)} check with no difficulty.`)
+      const difficulty = hiding ? HIDE_DC : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
+      if (!difficulty) throw new Error(`The game master asked for a ${checkName(check)} check with no difficulty.`)
 
       // A spell is named only when it is one of the roller's own.
       const spell = pick.spell?.trim() ? character.spells?.find((entry) => entry.name.toLowerCase() === pick.spell?.trim().toLowerCase())?.name : undefined
       // The game master's read of the moment, then what the sheet and the roller's conditions settle with no model.
       // Every source is kept as a reason, so a roll that Advantage and Disadvantage cancel can still say why.
-      const typed = [...sheetModes(character, check), ...checkModesFrom(character, check, options?.present)]
+      const typed = [
+        ...sheetModes(character, check),
+        ...checkModesFrom(character, check, options?.present),
+        ...(self ? checkModesFromActions({ ...character, id: self }, check, options?.present) : []),
+      ]
       const picked = pick.mode ?? "normal"
       const mode = combineModes([picked, ...typed.map((source) => source.mode)])
       const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
       // The stakes, each off the menus: who, the dice by size or as the notes print them, and the damage type, or a
       // condition by its id. One that names no one here, neither a size nor printed dice, or no condition the rules
       // have, is dropped.
-      const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other)).map((other) => other.id))
-      const stakes: Stake[] = (pick.harm ?? []).flatMap((entry): Stake[] => {
+      const picks: Stake[] = (pick.harm ?? []).flatMap((entry): Stake[] => {
         if (!here.has(entry.target)) return []
         if (entry.kind === "condition" || entry.kind === "end-condition") {
           const condition = conditionIdSchema.safeParse(entry.condition?.trim().toLowerCase())
@@ -243,10 +272,11 @@ Action: "${action}"
         const type = damageTypeIdSchema.safeParse(entry.type?.trim().toLowerCase())
         return [{ on: entry.on, target: entry.target, kind: entry.kind, dice, ...(entry.kind === "damage" && type.success ? { type: type.data } : {}) }]
       })
+      const stakes = hiding?.stakes ?? picks
       const rollRequirement: ChosenRoll = {
         check,
-        rollType: spell ? `${spell} (${checkName(check)})` : checkName(check),
-        difficulty: DIFFICULTY_CLASSES[pick.difficulty],
+        rollType: hiding ? hiding.rollType : spell ? `${spell} (${checkName(check)})` : checkName(check),
+        difficulty,
         modifier: checkBonus(character, check),
         mode,
         ...(reasons.length ? { reasons } : {}),
@@ -254,7 +284,7 @@ Action: "${action}"
         ...(stakes.length ? { stakes } : {}),
       }
       console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
-      return rollRequirement
+      return { roll: rollRequirement }
     } catch (error) {
       console.error("[LLM] Roll requirement error:", {
         character: character.name,
@@ -263,5 +293,5 @@ Action: "${action}"
       throw error
     }
   }
-  return { getRollRequirementForAction }
+  return { getRollRequirementForAction, readAction }
 }

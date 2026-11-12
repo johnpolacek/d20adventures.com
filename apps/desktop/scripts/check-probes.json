@@ -354,5 +354,68 @@
       "target": "owlbear"
     },
     "mode": "advantage"
+  },
+  {
+    "id": "dodge-owlbear",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The owlbear rears over Thalbern with both claws raised and comes down at him.",
+    "action": "I do not strike back. I watch its claws and duck and weave to avoid every blow.",
+    "checks": ["dodge"]
+  },
+  {
+    "id": "back-away",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The owlbear and Thalbern trade blows in the open on the deer trail. It snaps its beak an arm's length from his face.",
+    "action": "I back away from it with my guard up, careful to give it no opening as I get out of its reach.",
+    "checks": ["disengage"]
+  },
+  {
+    "id": "run-for-it",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The owlbear crashes through the brush a stone's throw behind Thalbern, shrieking.",
+    "action": "I put my head down and sprint flat out down the deer trail to open the gap.",
+    "checks": ["dash"]
+  },
+  {
+    "id": "help-the-blow",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel, his back half turned to Milos.",
+    "action": "I wave my staff in the thug's face and shout to pull his eyes off Branka, so her next swing lands.",
+    "checks": ["help"],
+    "takes": {
+      "target": "warehouse-thug"
+    }
+  },
+  {
+    "id": "help-the-search",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "action": "I hold the lantern close and steady for Branka while she searches the crate, pointing out what I notice.",
+    "checks": ["help"],
+    "takes": {
+      "target": "branka-stoneveil",
+      "skills": ["investigation", "perception"]
+    }
+  },
+  {
+    "id": "hide-in-cover",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "narrative": "Reinhard draws his blade and comes at them across the bank. The fight is on.",
+    "action": "I drop behind the stacked crates and go still, out of his sight, so I can strike from cover.",
+    "checks": ["hide"],
+    "dcs": [15]
   }
 ]

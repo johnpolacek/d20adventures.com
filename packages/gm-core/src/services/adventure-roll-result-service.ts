@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import { afterRoll } from "../sheet/actions"
 import { type Strike, strike, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
@@ -181,6 +182,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
       roll = rollBeat(by, args.character, rollType, result, settled.harm, settled.conditions)
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
+    // What the roll used up: an ally's Help, and the roller's own hiding when they attacked.
+    turnCharacters = afterRoll(turnCharacters, args.characterId, required)
     const spell = isAttackRoll(required) ? undefined : required.spell
     const { total: totalResult, against: difficulty } = numbers
     const margin = totalResult - difficulty
