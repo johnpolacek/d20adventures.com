@@ -133,16 +133,21 @@ Carried forward: The Road to Kordavos stays unplayable until stage 8, by the own
 
 Initiative, attack rolls, damage dice and types, critical hits, death saves, conditions. Action, bonus action, reaction and movement on each turn. NPCs take SRD monster stat blocks.
 
-Started 2026-11-11. Substages drafted the same day, not yet settled by the owner.
+Started 2026-11-11. Substages drafted the same day.
 
 How harm works before this stage: a hero's attack is a bare ability check against a ladder target. After a roll a second model call (`analyzeAndApplyDiceRoll` in `turn-update-service.ts`) reads the outcome and sets one character's health percent from a table. An NPC's outcome carries a model-written `healthPercentDelta`, and the same second call then judges it again, so an NPC's hit can count twice. At the end of a round the model may set health, status and effects through `characterUpdates`: the desktop applies them and the site drops them. Initiative is a bare d20, rolled again every round. Status is free text.
 
-Proposed, for the owner to settle:
+Owner decisions, 2026-11-11:
 
 - The player throws only d20s. The engine rolls damage dice and the card shows them.
-- The player sees the Armor Class an attack is rolled against, as a check shows its target.
 - Death saving throws run in every adventure. Where an adventure has player death off, a third failure leaves the hero stable and out of the fight, not dead.
-- Of the level 1 class features, only the ones a premade hero uses in a fight become live here: Sneak Attack, Second Wind, the fighting styles and Weapon Mastery. The rest wait for stage 7.
+- The Owlbear of The Midnight Summons keeps the Owlbear's stat block. The scene is about getting past it, calming it or being rescued, not about beating it.
+
+Open, for the owner: which classes get their fight features in this stage (see substage 10).
+
+The session's calls, which the owner may overrule:
+
+- The player sees the Armor Class an attack is rolled against, as a check shows its target.
 - Initiative is rolled once when an encounter starts and kept until it ends. An encounter's authored `initialInitiative` stays, as that NPC's fixed place.
 - Hit points become the stored value. Health percent stays on the character as a copy the engine alone writes, so the screens and prompts that read it keep working. It goes when the last reader does.
 
