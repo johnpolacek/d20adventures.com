@@ -133,6 +133,36 @@ Carried forward: The Road to Kordavos stays unplayable until stage 8, by the own
 
 Initiative, attack rolls, damage dice and types, critical hits, death saves, conditions. Action, bonus action, reaction and movement on each turn. NPCs take SRD monster stat blocks.
 
+Started 2026-11-11. Substages drafted the same day, not yet settled by the owner.
+
+How harm works before this stage: a hero's attack is a bare ability check against a ladder target. After a roll a second model call (`analyzeAndApplyDiceRoll` in `turn-update-service.ts`) reads the outcome and sets one character's health percent from a table. An NPC's outcome carries a model-written `healthPercentDelta`, and the same second call then judges it again, so an NPC's hit can count twice. At the end of a round the model may set health, status and effects through `characterUpdates`: the desktop applies them and the site drops them. Initiative is a bare d20, rolled again every round. Status is free text.
+
+Proposed, for the owner to settle:
+
+- The player throws only d20s. The engine rolls damage dice and the card shows them.
+- The player sees the Armor Class an attack is rolled against, as a check shows its target.
+- Death saving throws run in every adventure. Where an adventure has player death off, a third failure leaves the hero stable and out of the fight, not dead.
+- Of the level 1 class features, only the ones a premade hero uses in a fight become live here: Sneak Attack, Second Wind, the fighting styles and Weapon Mastery. The rest wait for stage 7.
+- Initiative is rolled once when an encounter starts and kept until it ends. An encounter's authored `initialInitiative` stays, as that NPC's fixed place.
+- Hit points become the stored value. Health percent stays on the character as a copy the engine alone writes, so the screens and prompts that read it keep working. It goes when the last reader does.
+
+Substages:
+
+1. Attack and damage maths. Pure functions in `packages/gm-core/src/sheet`: a hero's attacks from the weapons on the sheet, an NPC's from its stat block's actions, an attack roll against Armor Class (a 20 on the die hits and is a Critical Hit, a 1 misses), damage dice with a Critical Hit's doubled dice, and Resistance, Vulnerability and Immunity. Tested with no model: Thalbern's Longbow is +5 to hit for 1d8 + 3 Piercing.
+2. Weapons on the sheet. The sheet names its weapons by SRD id. The nine premade heroes get theirs from the gear they carry, and the compiler checks them.
+3. Hit points are stored. A character carries its current hit points, an NPC starts at its stat block's, and the engine alone changes them. `healthPercent` leaves the content files.
+4. Initiative from the sheet and the stat block, rolled once per encounter.
+5. Attacks on the menu. The model reads a move as an attack, names who is attacked and picks one of the attacker's own weapons or stat block actions. The engine rolls to hit and for damage. This goes for heroes and NPCs, with a monster's Multiattack. The calls that guess harm are deleted.
+6. Harm and healing outside attacks. A trap, a fall, a potion: the model picks who, a severity and a damage type from a fixed menu, and the engine rolls. The round's end can no longer set health. Both hosts apply the same changes, through the core.
+7. Zero hit points. A hero falls Unconscious and makes death saving throws. A monster dies. Healing brings a hero back. Encounter rules that speak in percent (the Owlbear's rescue) move to hit points.
+8. Conditions. The SRD's fifteen replace free-text status, each with its effect on rolls typed in the engine. Dead and fled stop being conditions.
+9. A turn's budget: one action and one bonus action, with Dodge, Help, Hide, Disengage and Dash as the rules have them. Reactions and movement are counted here and used in stage 6.
+10. The premade heroes' level 1 fight features, as typed sources.
+11. Retune and migrate. Each NPC's stat block is checked against a level 1 party, and encounter notes that give a hit as a DC or a state as a percent are rewritten.
+12. Combat on screen, on both hosts: hit points and Armor Class on a hero's card, a wound word on an NPC's, the attack card with its damage dice, the Critical Hit look, and the death save card.
+13. Prompt checks. A small fixed set of scenes shows the model reads attacks, targets and weapons sensibly.
+14. Close. The Midnight Summons plays on both hosts with rules combat. Old saves are wiped.
+
 ### 5. Spellcasting
 
 Slots, spellcasting ability, spell attacks, save DCs, concentration, rituals. Damage, healing and condition spells resolve in the engine. Utility spells stay with the GM, bound by the spell text.
