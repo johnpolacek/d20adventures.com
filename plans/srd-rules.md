@@ -142,8 +142,7 @@ Owner decisions, 2026-11-11:
 - The player throws only d20s. The engine rolls damage dice and the card shows them.
 - Death saving throws run in every adventure. Where an adventure has player death off, a third failure leaves the hero stable and out of the fight, not dead.
 - The Owlbear of The Midnight Summons keeps the Owlbear's stat block. The scene is about getting past it, calming it or being rescued, not about beating it.
-
-Open, for the owner: which classes get their fight features in this stage (see substage 10).
+- Six classes carry the rules through stages 4 to 7: Fighter, Cleric, Wizard and Rogue, and with them Ranger and Bard, because the premade heroes are of those six. The other six keep the level 1 sheet they have, with their features listed and not live, until stage 8.
 
 The session's calls, which the owner may overrule:
 
@@ -162,7 +161,7 @@ Substages:
 7. Zero hit points. A hero falls Unconscious and makes death saving throws. A monster dies. Healing brings a hero back. Encounter rules that speak in percent (the Owlbear's rescue) move to hit points.
 8. Conditions. The SRD's fifteen replace free-text status, each with its effect on rolls typed in the engine. Dead and fled stop being conditions.
 9. A turn's budget: one action and one bonus action, with Dodge, Help, Hide, Disengage and Dash as the rules have them. Reactions and movement are counted here and used in stage 6.
-10. The premade heroes' level 1 fight features, as typed sources.
+10. The level 1 fight features of the six classes, as typed sources: a Fighter's Fighting Style, Second Wind and Weapon Mastery, a Rogue's Sneak Attack and Weapon Mastery, a Ranger's Weapon Mastery, and a Bard's Bardic Inspiration. A Cleric's and a Wizard's are spells, which is stage 5.
 11. Retune and migrate. Each NPC's stat block is checked against a level 1 party, and encounter notes that give a hit as a DC or a state as a percent are rewritten.
 12. Combat on screen, on both hosts: hit points and Armor Class on a hero's card, a wound word on an NPC's, the attack card with its damage dice, the Critical Hit look, and the death save card.
 13. Prompt checks. A small fixed set of scenes shows the model reads attacks, targets and weapons sensibly.
