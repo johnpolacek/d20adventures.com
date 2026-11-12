@@ -9,11 +9,12 @@ import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defen
 import { type Check, checkBonus, combineModes, type Roller, type RollMode } from "./check"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
-import { afterHarm, type DeathRules, type DeathSaves, type Fate, revived, withDamage, withHealing } from "./death"
+import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, revived, withDamage, withHealing } from "./death"
 import { deriveSheet, featuresOf } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { type Cover, coverBonus, isNear } from "./space"
+import { speciesSaveModes } from "./species-traits"
 import {
   CASTER_HELD,
   healsMost,
@@ -499,6 +500,7 @@ function standing(character: Castee, fate: Fate | undefined): string {
   if (fate === "dies") return `${character.name} dies.`
   if (fate === "killed") return `${character.name} is killed outright.`
   if (fate === "stable") return `${character.name} is Unconscious and Stable, out of the fight.`
+  if (fate === "endures") return enduredWords(character.name, character)
   if (fate === "dying") return `${character.name} is at 0 hit points, Unconscious and dying.`
   const hitPoints = hitPointsOf(character)
   return hitPoints ? `${character.name} has ${hitPoints.current} of ${hitPoints.maximum} hit points${hitPoints.current * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.` : ""
@@ -734,7 +736,8 @@ export function castSpell<T extends Castee>(args: {
     for (const id of taking) {
       const target = find(id)
       if (!target || target.dead) continue
-      const thrown = rollSave({ target, ability: save.ability, dc: casting.saveDc, d20: args.d20, roll: args.roll, characters, cover: covered(id), also: modesAgainst(spell, target) })
+      const against = (spell.conditions ?? []).filter((link) => link.trigger === "failed-save" && link.save === index).map((link) => link.condition)
+      const thrown = rollSave({ target, ability: save.ability, dc: casting.saveDc, d20: args.d20, roll: args.roll, characters, cover: covered(id), also: modesAgainst(spell, target), against })
       saves.push(thrown)
       const { success } = thrown
       const verdict = `${target.name} ${success ? "SUCCEEDS on" : "FAILS"} the saving throw against ${caster.name}'s ${spell.name} (${thrown.total} against DC ${casting.saveDc})`
@@ -924,7 +927,8 @@ function effectAmount(spell: Spell, slot: number): number | undefined {
 /**
  * A saving throw a creature makes against a spell: the d20 or two, the save bonus, cover on a Dexterity save, the dice
  * of spells on them (Bless, Bane), Slow's −2 on Dexterity, and the Advantage and Disadvantage of their conditions,
- * actions and spells (Haste, Beacon of Hope) and of the spell itself (`also`). A condition may fail it outright.
+ * actions and spells (Haste, Beacon of Hope), of their species against the conditions at stake (`against`: Fey
+ * Ancestry on Charmed), and of the spell itself (`also`). A condition may fail it outright.
  */
 export function rollSave(args: {
   target: Castee
@@ -935,11 +939,19 @@ export function rollSave(args: {
   characters: readonly Castee[]
   cover?: number
   also?: readonly { mode: "advantage" | "disadvantage"; from: string }[]
+  /** The conditions the save is made to avoid or end, for a species trait that gives Advantage against them (Fey Ancestry). */
+  against?: readonly ConditionId[]
 }): SaveRoll {
   const { target, ability } = args
   const check: Check = { kind: "save", ability }
   const failedBy = saveFailedBy(target, check)
-  const sources = [...checkModesFrom(target, check, args.characters), ...checkModesFromActions(target, check, args.characters), ...saveModesFromSpells(target, ability), ...(args.also ?? [])]
+  const sources = [
+    ...checkModesFrom(target, check, args.characters),
+    ...checkModesFromActions(target, check, args.characters),
+    ...saveModesFromSpells(target, ability),
+    ...speciesSaveModes(target, ability, args.against),
+    ...(args.also ?? []),
+  ]
   const mode = combineModes(sources.map((source) => source.mode))
   const dice = Array.from({ length: mode === "normal" ? 1 : 2 }, () => args.d20())
   const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]

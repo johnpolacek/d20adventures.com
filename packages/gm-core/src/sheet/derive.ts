@@ -7,11 +7,11 @@ import { featById } from "@d20/srd/feats"
 import { languageById } from "@d20/srd/languages"
 import type { Class, ClassFeature, FeatureOption, Subclass } from "@d20/srd/schema/classes"
 import type { Armor } from "@d20/srd/schema/equipment"
-import type { Background, Feat, Species } from "@d20/srd/schema/origins"
+import type { Background, Feat } from "@d20/srd/schema/origins"
 import { skillById } from "@d20/srd/skills"
-import { speciesById } from "@d20/srd/species"
 import { spellById } from "@d20/srd/spells"
 import { subclassById } from "@d20/srd/subclasses"
+import { grantedSkills, type SpeciesEntry, speciesById } from "./house-species"
 import type { Advancement, Sheet } from "./sheet"
 
 type ArmorTraining = "light" | "medium" | "heavy" | "shields"
@@ -55,7 +55,7 @@ export type DerivedSheet = {
   spellbook: string[]
 }
 
-type Parts = { class: Class; subclass?: Subclass; species: Species; background: Background; armor?: Armor; features: ClassFeature[]; feats: Feat[] }
+type Parts = { class: Class; subclass?: Subclass; species: SpeciesEntry; background: Background; armor?: Armor; features: ClassFeature[]; feats: Feat[] }
 
 const modifier = (score: number) => Math.floor((score - 10) / 2)
 
@@ -350,9 +350,15 @@ export function trainedWith(training: Class["weapons"], weapon: { category: stri
   return training.some((entry) => entry.category === weapon.category && (!entry.withProperty || entry.withProperty.some((property) => (weapon.properties ?? []).includes(property))))
 }
 
-/** The skill proficiencies a sheet has: the background's, the class's, any others, and those a level's choice gave. */
+/** The skill proficiencies a sheet has: the background's, the species' own, the class's, any others, and those a level's choice gave. */
 function proficientSkills(sheet: Sheet, parts: Parts): Set<SkillId> {
-  return new Set<SkillId>([...parts.background.skills, ...sheet.classSkills, ...(sheet.otherSkills ?? []), ...(sheet.advancements ?? []).flatMap((entry) => entry.skills ?? [])])
+  return new Set<SkillId>([
+    ...parts.background.skills,
+    ...grantedSkills(parts.species),
+    ...sheet.classSkills,
+    ...(sheet.otherSkills ?? []),
+    ...(sheet.advancements ?? []).flatMap((entry) => entry.skills ?? []),
+  ])
 }
 
 /** The Expertise a sheet's features give: one entry for each skill, with the skills it must come from where a feature limits them. */
@@ -428,7 +434,7 @@ function advancementProblems(sheet: Sheet, parts: Parts): string[] {
     const named = entries.filter((entry) => entry.level === level && entry.feat).length
     if (named !== 1) problems.push(`${feature.name} gives one feat at level ${level}, and the sheet names ${named}`)
   }
-  const proficient = new Set<SkillId>([...parts.background.skills, ...sheet.classSkills, ...(sheet.otherSkills ?? [])])
+  const proficient = new Set<SkillId>([...parts.background.skills, ...grantedSkills(parts.species), ...sheet.classSkills, ...(sheet.otherSkills ?? [])])
   for (const { level, feature } of skillGrants) {
     const wanted = feature.skillProficiencies?.count ?? 0
     const skills = entries.find((entry) => entry.level === level && entry.skills)?.skills ?? []

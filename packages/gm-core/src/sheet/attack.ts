@@ -14,6 +14,7 @@ import { criticalFrom, featureChoice, hasFeature, type OncePerTurn, usedThisTurn
 import type { ConditionChange } from "./harm"
 import type { Sheet } from "./sheet"
 import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, sizeOf, within } from "./space"
+import { enduringTraitOf } from "./species-traits"
 import { checkAdds, markDamage, mirrorImage, rollAdds, saveBonusFor, saveModesFor, weaponDamageFromSpells } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { TurnEffect } from "./turn-effect"
@@ -339,6 +340,8 @@ export type Strike = {
   hitPoints: { before: number; after: number; maximum: number }
   /** What the rules of 0 hit points made of a target the blow left at 0 (./death). */
   fate?: Fate
+  /** The species trait that held a target the blow would have dropped to 0 at 1 hit point: "Relentless Endurance". */
+  endured?: string
   /** A Bardic Inspiration die rolled and added to an attack roll that had missed. The roll's total includes it. */
   inspired?: number
   /** The once-a-turn features this blow used, for the attacker to be marked with (./feature-rules). */
@@ -517,7 +520,7 @@ export function landBlow<T extends Target>(
   if (args.cunning === "trip" && features.some((feature) => feature.name === "Sneak Attack") && args.attacker.sheet && !isDown(struck.character)) {
     const check = { kind: "save" as const, ability: "dex" as const }
     const target = struck.character
-    const mode = combineModes([...checkModesFrom(target, check), ...saveModesFor(target, check)].map((source) => source.mode))
+    const mode = combineModes([...checkModesFrom(target, check), ...saveModesFor(target, check, ["prone"])].map((source) => source.mode))
     const save = resolveCheck({
       dice: mode === "normal" ? [args.roll(20)] : [args.roll(20), args.roll(20)],
       bonus: checkBonus(target, check) + saveBonusFor(target, check),
@@ -542,6 +545,7 @@ export function landBlow<T extends Target>(
     taken,
     hitPoints: { before, after: struck.character.hitPoints ?? 0, maximum: stats.hitPointMaximum },
     ...(struck.fate ? { fate: struck.fate } : {}),
+    ...(struck.fate === "endures" ? { endured: enduringTraitOf(struck.character)?.name ?? "endurance" } : {}),
     ...spent,
     ...(used.length ? { used } : {}),
     ...(halved ? { halved: true as const } : {}),
@@ -585,8 +589,11 @@ export function strikeFacts(attacker: string, target: string, blow: Strike): str
     return `${attacker}'s ${attack.name} attack HITS (${roll.total} against Armor Class ${roll.armorClass}), but strikes one of ${target}'s illusory duplicates, which is destroyed. ${target} takes no damage.`
   if (!roll.hit) return `${attacker}'s ${attack.name} attack on ${target} MISSES (${roll.total} against Armor Class ${roll.armorClass}). ${target} takes no damage.`
   const types = [...new Set(blow.damage?.parts.map((part) => part.type) ?? [])].join(" and ")
-  const stands =
-    hitPoints.after === 0 ? fallen(target, blow) : `${target} has ${hitPoints.after} of ${hitPoints.maximum} hit points left${hitPoints.after * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
+  const stands = blow.endured
+    ? `${target} would drop to 0 hit points and drops to 1 instead, by ${blow.endured}.`
+    : hitPoints.after === 0
+      ? fallen(target, blow)
+      : `${target} has ${hitPoints.after} of ${hitPoints.maximum} hit points left${hitPoints.after * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
   const halved = blow.halved ? ` ${target} halves it with Uncanny Dodge.` : ""
   const trip = blow.cunning ? ` ${attacker}'s Cunning Strike tries to Trip ${target}: ${blow.cunning.took ? `${target} fails the Dexterity save and falls Prone.` : `${target} stays standing.`}` : ""
   return `${attacker}'s ${attack.name} attack on ${target} ${roll.critical ? "is a CRITICAL HIT" : "HITS"}${blow.features?.length ? ` with a ${blow.features.join(" and ")}` : ""} (${roll.total} against Armor Class ${roll.armorClass}) for ${blow.taken} ${types} damage.${halved} ${stands}${trip}`

@@ -42,12 +42,11 @@
   "sheet": {
     "class": "bard",
     "level": 1,
-    "species": "elf",
+    "species": "half-elf",
     "background": "sage",
     "abilityScores": {"str": 8, "dex": 14, "con": 10, "int": 12, "wis": 10, "cha": 16},
     "classSkills": ["performance", "persuasion", "deception"],
     "otherSkills": ["insight"],
-    "speciesChoices": {"elven-lineage": "high-elf"},
     "armor": "leather-armor",
     "weapons": ["rapier"],
     "cantrips": ["vicious-mockery", "minor-illusion"],

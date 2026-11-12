@@ -6,12 +6,13 @@ import { classById } from "@d20/srd/classes"
 import { featById } from "@d20/srd/feats"
 import type { ClassFeature } from "@d20/srd/schema/classes"
 import { skillById } from "@d20/srd/skills"
-import { speciesById } from "@d20/srd/species"
 import { subclassById } from "@d20/srd/subclasses"
 import { deriveSheet, grantsFeatByLevel } from "./derive"
 import type { HitPoints } from "./hit-points"
+import { speciesById } from "./house-species"
 import { reactionsOf } from "./reactions"
 import type { Sheet } from "./sheet"
+import { speciesUseKey } from "./species-traits"
 import { slotsLeft, spellcastingOf, spellsOf } from "./spells"
 import { combatStatsOf } from "./stat-block"
 import type { ReactionId, SpellEffect } from "./turn-effect"
@@ -125,7 +126,7 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     if ((trait.level ?? 1) > sheet.level) continue
     const taken = trait.choice ? sheet.speciesChoices?.[trait.choice.id] : undefined
     const choice = trait.choice?.options.find((option) => option.id === taken)?.name
-    features.push({ name: choice ? `${trait.name}: ${choice}` : trait.name, from: species.name, uses: usesOf(trait.uses as Parameters<typeof usesOf>[0]) })
+    features.push({ name: choice ? `${trait.name}: ${choice}` : trait.name, from: species.name, uses: usesOf(trait.uses as Parameters<typeof usesOf>[0], featureUses?.[speciesUseKey(trait.name)]) })
   }
   derived.feats.forEach((id, index) => {
     const feat = featById.get(id)

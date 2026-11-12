@@ -4,7 +4,7 @@ import { monsterById } from "@d20/srd/monsters"
 import { isDead } from "../utils/turn-actors"
 import { damageTaken, defensesOf, parseDice, rollDamage } from "./attack"
 import { conditionName, withCondition } from "./conditions"
-import { afterHarm, type Fate, withDamage, withHealing } from "./death"
+import { afterHarm, enduredWords, type Fate, withDamage, withHealing } from "./death"
 import { deriveSheet } from "./derive"
 import { hasFeature, usesLeft, withFeatureUsed } from "./feature-rules"
 import type { ConditionChange, Harm } from "./harm"
@@ -64,6 +64,7 @@ function standing(character: Parameters<typeof hitPointsOf>[0], name: string, fa
   if (fate === "dies") return `${name} dies.`
   if (fate === "killed") return `${name} is killed outright.`
   if (fate === "stable") return `${name} is Unconscious and Stable, out of the fight.`
+  if (fate === "endures") return enduredWords(name, character)
   if (fate === "dying") return `${name} is at 0 hit points, Unconscious and dying.`
   const hitPoints = hitPointsOf(character)
   return hitPoints ? `${name} has ${hitPoints.current} of ${hitPoints.maximum} hit points${hitPoints.current * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.` : ""

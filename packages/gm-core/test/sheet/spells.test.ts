@@ -209,7 +209,9 @@ test("a sheet's spells follow its class: the counts its table gives, from its ow
   assert.deepEqual(sheetProblems({ ...(branka.sheet as Sheet), cantrips: ["light"] }), ["Fighter has no Spellcasting at level 1, and the sheet lists spells"])
   // A Ranger's Favored Enemy keeps Hunter's Mark always prepared, beside the two he prepares. A High Elf knows Prestidigitation.
   assert.deepEqual(deriveSheet(thalbern.sheet as Sheet).preparedSpells, ["cure-wounds", "speak-with-animals", "hunters-mark"])
-  assert.deepEqual(deriveSheet(ilya.sheet as Sheet).cantrips, ["vicious-mockery", "minor-illusion", "prestidigitation"])
+  // Ilya, a Half-Elf, knows only her own two. As a High Elf she would know Prestidigitation beside them.
+  assert.deepEqual(deriveSheet(ilya.sheet as Sheet).cantrips, ["vicious-mockery", "minor-illusion"])
+  assert.deepEqual(deriveSheet({ ...(ilya.sheet as Sheet), species: "elf", speciesChoices: { "elven-lineage": "high-elf" } }).cantrips, ["vicious-mockery", "minor-illusion", "prestidigitation"])
 })
 
 test("a caster's spells are the sheet's: cantrips at will, prepared spells for a slot, and a Wizard's book for rituals", () => {

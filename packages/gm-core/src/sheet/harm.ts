@@ -2,7 +2,7 @@ import type { ConditionId } from "@d20/srd"
 import { damageTaken, defensesOf, rollDamage } from "./attack"
 import type { Roller } from "./check"
 import { conditionName, exhaustionOf, withCondition, withoutCondition } from "./conditions"
-import { afterHarm, type DeathRules, type Fate, killed, withDamage, withHealing } from "./death"
+import { afterHarm, type DeathRules, enduredWords, type Fate, killed, withDamage, withHealing } from "./death"
 import { hitPointsOf } from "./hit-points"
 import type { Stake } from "./stakes"
 
@@ -19,6 +19,7 @@ function standing(character: Harmed, fate: Fate | undefined): string {
   if (fate === "dies") return `${character.name} dies.`
   if (fate === "killed") return `${character.name} is killed outright.`
   if (fate === "stable") return `${character.name} is Unconscious and Stable, out of the fight.`
+  if (fate === "endures") return enduredWords(character.name, character)
   if (fate === "dying") return `${character.name} is at 0 hit points, Unconscious and dying.`
   const hitPoints = hitPointsOf(character)
   if (!hitPoints) return ""

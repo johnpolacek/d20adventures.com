@@ -1,18 +1,25 @@
 import { type AbilityId, abilityIdSchema, abilityIds, classIdSchema, type EquipmentOption, idSchema, type Size, type SkillId, sizeSchema, skillIdSchema, skillIds } from "@d20/srd"
+import { abilityById } from "@d20/srd/abilities"
 import { backgroundById, backgrounds } from "@d20/srd/backgrounds"
 import { classById } from "@d20/srd/classes"
 import { equipment, equipmentById } from "@d20/srd/equipment"
 import { featById, feats } from "@d20/srd/feats"
 import { languageById, languages } from "@d20/srd/languages"
-import type { Background, Species } from "@d20/srd/schema/origins"
+import type { Background } from "@d20/srd/schema/origins"
 import { skillById } from "@d20/srd/skills"
-import { species as allSpecies, speciesById } from "@d20/srd/species"
 import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
+import type { HeroRules } from "../character/hero-draft"
+import type { PCTemplate } from "../types/character"
 import { alwaysPrepared, deriveSheet, expertiseSlots, featuresOf, needsFeatureChoice, sheetProblems, trainedWith } from "./derive"
+import { allSpecies, grantedSkills, picksSkills, type SpeciesEntry, speciesById } from "./house-species"
 import { type ChoiceOffer, choiceOffers, type FeatOffer, featOffer, listSpells, masteriesAllowed, type Named, named, skillNamed, spellNamed } from "./level-up"
 import { spellOrder } from "./milestone"
 import { type AbilityScores, type Advancement, abilityScoresSchema, type Sheet } from "./sheet"
+import { spellsOf } from "./spells"
+
+/** The fields of a hero's record that the sheet settles, typed as `PCTemplate` has them. */
+export type HeroRecord = Required<Pick<PCTemplate, "race" | "archetype" | "attributes" | "skills" | "equipment" | "spells" | "specialAbilities">>
 
 /**
  * Making a level 1 hero, as pure functions: what a class, species and background ask the player to choose, and from
@@ -69,6 +76,8 @@ export type EquipmentOffer = {
   weapons: Named[]
   /** Every item it gives, by name, with its count or note: "Dagger (2)", "Parchment (10 sheets)". A pick's item is named on the pick. */
   gear: string[]
+  /** The same items with their counts and notes apart, as `createSheet` merges them. */
+  items: GearItem[]
   /** A line that has the player choose one item of a group or kind (a Holy Symbol, a Musical Instrument), by the group's id. */
   picks?: { id: string; name: string; from: Named[] }[]
 }
@@ -166,7 +175,7 @@ export function creationMenu(): { classes: Named[]; species: Named[]; background
   }
 }
 
-type Parts = { cls: NonNullable<ReturnType<typeof classById.get>>; species: Species; background: Background }
+type Parts = { cls: NonNullable<ReturnType<typeof classById.get>>; species: SpeciesEntry; background: Background }
 
 function partsOf(pick: CreationPick): { parts?: Parts; problems: string[] } {
   const problems: string[] = []
@@ -189,12 +198,30 @@ const bareSheet = (pick: CreationPick): Sheet => ({
   classSkills: [],
 })
 
-// An item's name, with its count and the note the SRD prints beside it: "Parchment (10 sheets)".
-function gearName(id: string, quantity: number, note?: string): string {
+/** One line of gear: an item's name, how many, and the note the SRD prints beside it ("prayers", "sheets"). */
+type GearItem = { name: string; quantity: number; note?: string }
+
+function gearItem(id: string, quantity: number, note?: string): GearItem {
   const name = id === SPELLBOOK ? "Spellbook" : equipmentById.get(id)?.name
   if (!name) throw new Error(`"${id}" is not equipment`)
-  const extra = [quantity > 1 ? String(quantity) : "", note && note.toLowerCase() !== name.toLowerCase() ? note : ""].filter(Boolean).join(" ")
-  return extra ? `${name} (${extra})` : name
+  return { name, quantity, ...(note && note.toLowerCase() !== name.toLowerCase() ? { note } : {}) }
+}
+
+// An item in words, with its count and note: "Parchment (10 sheets)", "Dagger (4)".
+function gearLine(item: GearItem): string {
+  const extra = [item.quantity > 1 ? String(item.quantity) : "", item.note ?? ""].filter(Boolean).join(" ")
+  return extra ? `${item.name} (${extra})` : item.name
+}
+
+// The same item from two places is one line with both counts: a Rogue's two Daggers and a Criminal's two are four.
+function mergedGear(items: readonly GearItem[]): string[] {
+  const merged: GearItem[] = []
+  for (const item of items) {
+    const same = merged.find((each) => each.name === item.name && each.note === item.note)
+    if (same) same.quantity += item.quantity
+    else merged.push({ ...item })
+  }
+  return merged.map(gearLine)
 }
 
 // The items a "choose one" line may be: a group's members, a tool's variants, or the item itself.
@@ -208,7 +235,7 @@ function pickFrom(ids: readonly string[]): Named[] {
 }
 
 function equipmentOffer(option: EquipmentOption): EquipmentOffer {
-  const offer: EquipmentOffer = { option: option.option, weapons: [], gear: [] }
+  const offer: EquipmentOffer = { option: option.option, weapons: [], gear: [], items: [] }
   for (const line of option.items ?? []) {
     if (line.chooseFrom) {
       const id = line.chooseFrom[0]
@@ -216,7 +243,9 @@ function equipmentOffer(option: EquipmentOption): EquipmentOffer {
       continue
     }
     const id = line.item as string
-    offer.gear.push(gearName(id, line.quantity, line.note))
+    const item = gearItem(id, line.quantity, line.note)
+    offer.items.push(item)
+    offer.gear.push(gearLine(item))
     const entry = equipmentById.get(id)
     if (entry?.kind === "armor" && entry.category === "shield") offer.shield = true
     else if (entry?.kind === "armor") offer.armor = named(entry)
@@ -256,7 +285,7 @@ export function creationOptions(pick: CreationPick): CreationOptions {
     },
     skills: {
       count: cls.skills.count,
-      from: (cls.skills.from ?? skillIds).filter((skill) => !backgroundSkills.has(skill)).map(skillNamed),
+      from: (cls.skills.from ?? skillIds).filter((skill) => !backgroundSkills.has(skill) && !grantedSkills(species).includes(skill)).map(skillNamed),
       background: background.skills.map(skillNamed),
     },
     backgroundFeat: backgroundFeatOffer(background, [...skillIds]),
@@ -277,7 +306,8 @@ export function creationOptions(pick: CreationPick): CreationOptions {
     }))
   const casting = species.traits.filter((trait) => trait.spellcastingAbility)
   if (casting.length) options.speciesSpellAbility = { traits: casting.map((trait) => traitNamed(trait.name)), from: [...new Set(casting.flatMap((trait) => trait.spellcastingAbility ?? []))] }
-  const skilled = species.traits.filter((trait) => trait.skillChoice)
+  const skilled = species.traits.filter(picksSkills)
+  const granted = new Set<SkillId>(grantedSkills(species))
   if (skilled.length)
     options.speciesSkills = skilled.map((trait) => ({
       trait: traitNamed(trait.name),
@@ -308,6 +338,7 @@ export function creationOptions(pick: CreationPick): CreationOptions {
     const any = species.traits.some((trait) => trait.skillChoice?.from === "any" || trait.feat)
     const reachable = new Set<SkillId>([
       ...background.skills,
+      ...granted,
       ...(cls.skills.from ?? skillIds),
       ...skilled.flatMap((trait) => (trait.skillChoice?.from === "any" ? [] : (trait.skillChoice?.from ?? []))),
     ])
@@ -387,15 +418,19 @@ function scoreProblems(choices: CreationChoices, background: Background): string
   for (const [ability] of raises) if (!background.abilityScores.includes(ability)) problems.push(`the ${background.name} background cannot raise ${ability}`)
   const amounts = raises.map(([, amount]) => amount).sort((a, b) => b - a)
   if (!INCREASE.choices.some((choice) => choice.join() === amounts.join()))
-    problems.push(`the ${background.name} background raises one of ${background.abilityScores.join(", ")} by 2 and another by 1, or all three by 1`)
+    problems.push(
+      `the ${background.name} background raises one of ${background.abilityScores.map((ability) => abilityById.get(ability)?.name ?? ability).join(", ")} by 2 and another by 1, or all three by 1`
+    )
   for (const [ability, amount] of raises) if (choices.abilityScores[ability] + amount > INCREASE.maximum) problems.push(`the background's increase cannot raise ${ability} above ${INCREASE.maximum}`)
   return problems
 }
 
 // Each chosen skill matched to a trait that gives one: those with their own list first, then those that take any.
-function speciesSkillProblems(chosen: readonly SkillId[], species: Species): string[] {
+function speciesSkillProblems(chosen: readonly SkillId[], species: SpeciesEntry): string[] {
   const slots = species.traits.flatMap((trait) =>
-    trait.skillChoice ? Array.from({ length: trait.skillChoice.count }, () => ({ trait: trait.name, from: trait.skillChoice?.from === "any" ? undefined : trait.skillChoice?.from })) : []
+    trait.skillChoice && picksSkills(trait)
+      ? Array.from({ length: trait.skillChoice.count }, () => ({ trait: trait.name, from: trait.skillChoice?.from === "any" ? undefined : trait.skillChoice?.from }))
+      : []
   )
   if (chosen.length !== slots.length) return [`the ${species.name}'s traits give ${slots.length} skills, and the choices name ${chosen.length}`]
   const problems: string[] = []
@@ -471,7 +506,8 @@ export function createSheet(pick: CreationPick, choices: CreationChoices): { she
 
   // No skill comes from two places.
   const otherSkills = [...(choices.speciesSkills ?? []), ...background_.skills, ...(species_?.skills ?? [])]
-  const held = new Set<SkillId>([...background.skills, ...choices.classSkills])
+  const held = new Set<SkillId>([...background.skills, ...grantedSkills(species), ...choices.classSkills])
+  for (const skill of choices.classSkills) if (grantedSkills(species).includes(skill)) problems.push(`${skillById.get(skill)?.name ?? skill} already comes from the ${species.name}`)
   for (const skill of otherSkills) {
     if (held.has(skill)) problems.push(`${skillById.get(skill)?.name ?? skill} is chosen twice`)
     held.add(skill)
@@ -489,19 +525,19 @@ export function createSheet(pick: CreationPick, choices: CreationChoices): { she
     problems.push(`${cls.name} masters ${options.weaponMasteries.count} kinds of weapons, and the choices name ${(choices.weaponMasteries ?? []).length}`)
 
   // Starting equipment: one option of each that gives gear, and an item for each of its picks.
-  const gear: string[] = []
+  const gear: GearItem[] = []
   const take = (from: EquipmentOffer[], letter: string, picks: Record<string, string> | undefined, whose: string) => {
     const offer = from.find((each) => each.option === letter)
     if (!offer) {
       problems.push(`${whose} starting equipment has no option ${letter} that gives gear: ${from.map((each) => each.option).join(", ")}`)
       return undefined
     }
-    gear.push(...offer.gear)
+    gear.push(...offer.items)
     for (const line of offer.picks ?? []) {
       const chosen = picks?.[line.id]
       const item = line.from.find((each) => each.id === chosen)
       if (!item) problems.push(`${whose} option ${letter} has a ${line.name} to choose, one of ${line.from.map((each) => each.id).join(", ")}, and the choices name ${chosen ?? "none"}`)
-      else gear.push(item.name)
+      else gear.push({ name: item.name, quantity: 1 })
     }
     for (const id of Object.keys(picks ?? {})) if (!offer.picks?.some((line) => line.id === id)) problems.push(`${whose} option ${letter} has no ${id} to choose`)
     return offer
@@ -539,7 +575,7 @@ export function createSheet(pick: CreationPick, choices: CreationChoices): { she
     ...(advancements.length ? { advancements } : {}),
   }
   const all = [...new Set([...problems, ...sheetProblems(built)])]
-  return all.length ? { problems: all } : { sheet: built, gear }
+  return all.length ? { problems: all } : { sheet: built, gear: mergedGear(gear) }
 }
 
 /** A sheet's skill bonuses, for picking the skills a hero is best at. */
@@ -574,7 +610,8 @@ export function autoCreate(pick: CreationPick): CreationChoices {
 
   // Skills by the bonus the hero would have with them, from the scores alone.
   const bonuses = bonusesOf({ ...bareSheet(pick), abilityScores: scores })
-  const taken = new Set<string>(background.skills)
+  const granted = grantedSkills(speciesById.get(pick.species) as SpeciesEntry)
+  const taken = new Set<string>([...background.skills, ...granted])
   const best = (from: readonly Named[], count: number) => {
     const picked = [...from]
       .filter((entry) => !taken.has(entry.id))
@@ -656,7 +693,14 @@ export function autoCreate(pick: CreationPick): CreationChoices {
 
   // Expertise in the skills the hero is now proficient in and best at.
   if (options.expertise) {
-    const proficient = new Set<string>([...background.skills, ...classSkills, ...speciesSkills, ...(choices.speciesFeatPicks?.skills ?? []), ...(choices.backgroundFeatPicks?.skills ?? [])])
+    const proficient = new Set<string>([
+      ...background.skills,
+      ...granted,
+      ...classSkills,
+      ...speciesSkills,
+      ...(choices.speciesFeatPicks?.skills ?? []),
+      ...(choices.backgroundFeatPicks?.skills ?? []),
+    ])
     const used = new Set<string>()
     choices.expertise = options.expertise.flatMap((entry) => {
       const picked = [...entry.from]
@@ -688,4 +732,54 @@ export function autoCreate(pick: CreationPick): CreationChoices {
   const wanted = [SPECIES_LANGUAGE[pick.species], ...options.languages.standardFrom.map((language) => language.id)].filter((id): id is string => !!id)
   choices.languages = [...new Set(wanted)].slice(0, options.languages.count)
   return choices
+}
+
+const LONG_NAMES: Record<AbilityId, keyof HeroRecord["attributes"]> = { str: "strength", dex: "dexterity", con: "constitution", int: "intelligence", wis: "wisdom", cha: "charisma" }
+
+// The skills a sheet is proficient in, by name, in the SRD's order.
+const proficientSkillNames = (sheet: Sheet) => {
+  const skills = deriveSheet(sheet).skills
+  return skillIds.filter((skill) => skills[skill].proficient).map((skill) => skillById.get(skill)?.name ?? skill)
+}
+
+/**
+ * A hero's record in the words the game's prompts and screens read, taken off their sheet and gear so the two cannot
+ * disagree: the species' and the class's names, the six scores, the skills they are proficient in, and the gear as
+ * items, one line for each kind of item (`createSheet` merges repeats). Their spells are on the sheet, so `spells` is
+ * empty, as are `specialAbilities`.
+ */
+export function heroRecord(sheet: Sheet, gear: readonly string[]): HeroRecord {
+  const species = speciesById.get(sheet.species)
+  const cls = classById.get(sheet.class)
+  if (!species || !cls) throw new Error(`The sheet names a class or species the rules lack: ${sheet.class}, ${sheet.species}`)
+  return {
+    race: species.name,
+    archetype: cls.name,
+    attributes: Object.fromEntries(abilityIds.map((ability) => [LONG_NAMES[ability], sheet.abilityScores[ability]])) as HeroRecord["attributes"],
+    skills: proficientSkillNames(sheet),
+    equipment: gear.map((name) => ({ name })),
+    spells: [],
+    specialAbilities: [],
+  }
+}
+
+/**
+ * What the rules make of a hero, in words, for the prompt that writes their story: the background's name, the two
+ * abilities with the highest scores and the one with the lowest (ties go to the SRD's order), the skills they are
+ * proficient in, their gear, and every cantrip and spell they can cast, by name.
+ */
+export function heroRules(sheet: Sheet, gear: readonly string[]): HeroRules {
+  const background = backgroundById.get(sheet.background)
+  if (!background) throw new Error(`"${sheet.background}" is not a background`)
+  const name = (ability: AbilityId) => abilityById.get(ability)?.name ?? ability
+  const ranked = [...abilityIds].sort((a, b) => sheet.abilityScores[b] - sheet.abilityScores[a])
+  const lowest = [...abilityIds].sort((a, b) => sheet.abilityScores[a] - sheet.abilityScores[b])[0]
+  return {
+    background: background.name,
+    strongest: ranked.slice(0, 2).map(name),
+    weakest: name(lowest),
+    skills: proficientSkillNames(sheet),
+    gear: [...gear],
+    spells: spellsOf({ type: "pc", sheet }).map((known) => known.spell.name),
+  }
 }

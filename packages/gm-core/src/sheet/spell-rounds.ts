@@ -68,9 +68,9 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     harm.push({ target: id, kind: "damage", dice: part?.dice ?? [], sides: part?.sides, bonus: part?.bonus ?? 0, type, amount })
     return amount
   }
-  const save = (target: T, ability: AbilityId, caster: T, spell: Spell) => {
+  const save = (target: T, ability: AbilityId, caster: T, spell: Spell, against: readonly ConditionId[] = []) => {
     const dc = spellcastingFor(caster, spell.id)?.saveDc ?? 10
-    const thrown = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters })
+    const thrown = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters, against })
     saves.push(thrown)
     return thrown
   }
@@ -102,7 +102,9 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
       const target = find(was.id)
       const caster = spell && holds(spell, by)
       if (!spell || !repeat || NOT_REPEATED.has(id) || !target || target.dead || isDown(target) || !caster) continue
-      const thrown = save(target, repeat.ability, caster, spell)
+      // Made to end the conditions the spell holds them in.
+      const held = target.conditions?.filter((entry) => entry.spell === id).map((entry) => entry.id) ?? []
+      const thrown = save(target, repeat.ability, caster, spell, held)
       tell(target.id, spell.name, `${verdict(target, thrown, spell, caster)}${thrown.success ? `, and ${spell.name} ends on them` : ""}.`)
       if (!thrown.success) continue
       const ending = (find(was.id) as T).conditions?.filter((entry) => entry.spell === id).map((entry) => entry.id) ?? []
@@ -148,7 +150,7 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
       if (!spell || !caster || !target || target.dead || isDown(target)) continue
       if (spell.id === "web" && target.conditions?.some((entry) => entry.id === "restrained" && entry.spell === "web")) continue
       const ability = spell.saves?.[0]?.ability ?? "dex"
-      const thrown = save(target, ability, caster, spell)
+      const thrown = save(target, ability, caster, spell, AREA_GIVES[spell.id] ?? [])
       tell(target.id, spell.name, `${verdict(target, thrown, spell, caster)}.`)
       if (thrown.success) continue
       if (spell.id === "web") give(target, "restrained", spell, caster, "lasting")
@@ -193,3 +195,6 @@ export function roundTurns<T extends Castee & { position?: Point }>(args: {
 // Fear's repeated save is made only "If the creature ends its turn in a space where it doesn't have line of sight to
 // you": the engine does not read sight, so it is the game master's to tell.
 const NOT_REPEATED = new Set(["fear"])
+
+// The condition each area spell gives on a failed save as a turn begins in it, below: what the save is made to avoid.
+const AREA_GIVES: Record<string, readonly ConditionId[]> = { web: ["restrained"], "stinking-cloud": ["poisoned"], "sleet-storm": ["prone"] }

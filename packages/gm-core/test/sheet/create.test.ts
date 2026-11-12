@@ -1,8 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { autoCreate, CREATION_CLASSES, type CreationChoices, createSheet, creationChoicesSchema, creationMenu, creationOptions } from "../../src/sheet/create"
+import { speciesSchema } from "@d20/srd/schema/origins"
+import { autoCreate, CREATION_CLASSES, type CreationChoices, type CreationPick, createSheet, creationChoicesSchema, creationMenu, creationOptions, heroRecord, heroRules } from "../../src/sheet/create"
+import { enduredWords, withDamage } from "../../src/sheet/death"
 import { deriveSheet, sheetProblems } from "../../src/sheet/derive"
-import { slotsLeft, spellcastingFor, spellcastingOf } from "../../src/sheet/spells"
+import { HOUSE_SPECIES } from "../../src/sheet/house-species"
+import { longRest } from "../../src/sheet/rest"
+import type { Sheet } from "../../src/sheet/sheet"
+import { saveModesFor } from "../../src/sheet/spell-effects"
+import { rollSave, slotsLeft, spellcastingFor, spellcastingOf } from "../../src/sheet/spells"
 
 // Every expected value below was worked out by hand from the SRD 5.2.1 rules, not copied from the function's output.
 
@@ -108,7 +114,7 @@ test("an illegal score assignment and an illegal pick are refused", () => {
   // The Acolyte cannot raise Constitution, and +2 twice is neither of its ways.
   assert.deepEqual(refused({ abilityIncrease: { wis: 2, con: 2 } }), [
     "the Acolyte background cannot raise con",
-    "the Acolyte background raises one of int, wis, cha by 2 and another by 1, or all three by 1",
+    "the Acolyte background raises one of Intelligence, Wisdom, Charisma by 2 and another by 1, or all three by 1",
   ])
   // Keen Senses gives Insight, Perception or Survival, and Stealth is no Cleric skill.
   assert.deepEqual(refused({ speciesSkills: ["arcana"] }), ["Keen Senses gives one of insight, perception, survival, and the choices name none of them"])
@@ -126,7 +132,8 @@ test("Choose For Me makes a legal hero of every class with every species and bac
     menu.classes.map((entry) => entry.id),
     [...CREATION_CLASSES]
   )
-  assert.equal(menu.species.length, 9)
+  // The SRD's nine, then the game's own Half-Elf and Half-Orc.
+  assert.equal(menu.species.length, 11)
   assert.equal(menu.backgrounds.length, 4)
   const faults: string[] = []
   for (const cls of CREATION_CLASSES)
@@ -138,4 +145,107 @@ test("Choose For Me makes a legal hero of every class with every species and bac
         else if (sheetProblems(result.sheet).length) faults.push(`${cls} ${species.id} ${background.id}: ${sheetProblems(result.sheet).join("; ")}`)
       }
   assert.deepEqual(faults, [])
+})
+
+const made = (each: CreationPick): { sheet: Sheet; gear: string[] } => {
+  const result = createSheet(each, autoCreate(each))
+  if ("problems" in result) assert.fail(result.problems.join("; "))
+  return result
+}
+const falls =
+  (...dice: number[]) =>
+  () =>
+    dice.shift() as number
+
+test("the game's own species take the SRD's shape, and a Half-Orc's Intimidation is given, not chosen", () => {
+  for (const entry of HOUSE_SPECIES) speciesSchema.omit({ page: true }).parse(entry)
+  const options = creationOptions({ class: "fighter", species: "half-orc", background: "criminal" })
+  assert.equal(options.speciesSkills, undefined)
+  assert.equal(
+    options.skills.from.some((skill) => skill.id === "intimidation"),
+    false
+  )
+  const { sheet } = made({ class: "fighter", species: "half-orc", background: "criminal" })
+  assert.equal(sheet.otherSkills, undefined)
+  assert.equal(deriveSheet(sheet).skills.intimidation.proficient, true)
+  // A Half-Elf's one skill of any kind is a pick, kept with the other skills.
+  assert.deepEqual(
+    creationOptions({ class: "fighter", species: "half-elf", background: "criminal" }).speciesSkills?.map((entry) => [entry.trait.name, entry.count, entry.from.length]),
+    [["Two Worlds", 1, 18]]
+  )
+})
+
+test("Advantage on a save to avoid or end Charmed, for a Half-Elf and an Elf, and on no other save", () => {
+  for (const [species, trait] of [
+    ["half-elf", "Fey Blood"],
+    ["elf", "Fey Ancestry"],
+  ] as const) {
+    const { sheet } = made({ class: "bard", species, background: "sage" })
+    const hero = { id: "hero", name: "Hero", type: "pc", sheet }
+    assert.deepEqual(saveModesFor(hero, { kind: "save", ability: "wis" }, ["charmed"]), [{ mode: "advantage", from: trait }])
+    assert.deepEqual(saveModesFor(hero, { kind: "save", ability: "wis" }, ["frightened"]), [])
+    // Charm Person's Wisdom save, DC 13: a 4 and a 15, with Advantage the 15 counts. Wis 10 adds nothing.
+    const charmed = rollSave({ target: hero, ability: "wis", dc: 13, d20: falls(4, 15), roll: falls(), characters: [hero], against: ["charmed"] })
+    assert.deepEqual([charmed.mode, charmed.dice, charmed.natural, charmed.success], ["advantage", [4, 15], 15, true])
+    const plain = rollSave({ target: hero, ability: "wis", dc: 13, d20: falls(4, 15), roll: falls(), characters: [hero] })
+    assert.deepEqual([plain.mode, plain.dice, plain.success], ["normal", [4], false])
+  }
+})
+
+test("1 hit point in place of 0, once a Long Rest, for a Half-Orc and an Orc", () => {
+  for (const [species, trait] of [
+    ["half-orc", "Hard to Fell"],
+    ["orc", "Relentless Endurance"],
+  ] as const) {
+    const { sheet } = made({ class: "fighter", species, background: "soldier" })
+    const maximum = deriveSheet(sheet).hitPointMaximum
+    const hero: { id: string; name: string; type: string; sheet: Sheet; hitPoints: number; featureUses?: Record<string, number> } = { id: "hero", name: "Hero", type: "pc", sheet, hitPoints: 5 }
+    // 8 damage takes 5 to 0, not killed outright since 3 left over is less than the maximum: held at 1.
+    const held = withDamage(hero, 8)
+    assert.equal(held.fate, "endures")
+    assert.equal(held.character.hitPoints, 1)
+    assert.deepEqual(held.character.featureUses, { [`species-${trait.toLowerCase().replace(/ /g, "-")}`]: 1 })
+    assert.equal(enduredWords("Hero", held.character), `Hero would drop to 0 hit points and drops to 1 instead, by ${trait}.`)
+    // Spent: the next blow drops them, dying.
+    assert.equal(withDamage(held.character, 8).fate, "dying")
+    // Damage that leaves the maximum over kills outright, and the trait does not hold.
+    assert.equal(withDamage(hero, 5 + maximum).fate, "killed")
+    // A Long Rest gives the use back.
+    const rested = longRest(held.character).character
+    assert.equal(rested.featureUses, undefined)
+    assert.equal(withDamage({ ...rested, hitPoints: 5 }, 8).fate, "endures")
+  }
+})
+
+test("a repeated item is one line with its count", () => {
+  const { gear } = made({ class: "rogue", species: "halfling", background: "criminal" })
+  // The Rogue's two Daggers and Thieves' Tools, and the Criminal's two Daggers and Thieves' Tools.
+  assert.equal(gear.filter((line) => line.startsWith("Dagger")).join(), "Dagger (4)")
+  assert.equal(gear.filter((line) => line.startsWith("Thieves")).join(), "Thieves’ Tools (2)")
+})
+
+test("a hero's record and rules in words, read off the High Elf Cleric's sheet", () => {
+  const result = createSheet(pick, choices)
+  if ("problems" in result) assert.fail(result.problems.join("; "))
+  const { sheet, gear } = result
+  assert.deepEqual(heroRecord(sheet, gear), {
+    race: "Elf",
+    archetype: "Cleric",
+    attributes: { strength: 14, dexterity: 8, constitution: 13, intelligence: 10, wisdom: 17, charisma: 13 },
+    // The Acolyte's Insight and Religion, Medicine and Persuasion of the Cleric's, Keen Senses' Perception.
+    skills: ["Insight", "Medicine", "Perception", "Persuasion", "Religion"],
+    equipment: gear.map((name) => ({ name })),
+    spells: [],
+    specialAbilities: [],
+  })
+  assert.deepEqual(heroRules(sheet, gear), {
+    background: "Acolyte",
+    // Wisdom 17 and Strength 14 the highest, Dexterity 8 the lowest.
+    strongest: ["Wisdom", "Strength"],
+    weakest: "Dexterity",
+    skills: ["Insight", "Medicine", "Perception", "Persuasion", "Religion"],
+    gear,
+    // The three Cleric cantrips and the High Elf's, the four prepared, then Magic Initiate's two cantrips and its spell.
+    spells: ["Guidance", "Sacred Flame", "Thaumaturgy", "Prestidigitation", "Bless", "Cure Wounds", "Healing Word", "Shield of Faith", "Light", "Spare the Dying", "Command"],
+  })
 })

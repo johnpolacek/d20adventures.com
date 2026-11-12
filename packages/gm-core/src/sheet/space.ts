@@ -1,10 +1,10 @@
 import type { Size } from "@d20/srd"
 import { monsterById } from "@d20/srd/monsters"
-import { speciesById } from "@d20/srd/species"
 import type { Attack } from "./attack"
 import type { Roller } from "./check"
 import { type Afflicted, cannotMove, exhaustionOf } from "./conditions"
 import { deriveSheet } from "./derive"
+import { speciesById } from "./house-species"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /**

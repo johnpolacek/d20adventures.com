@@ -5,6 +5,7 @@ import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtRoundStart, d20Penalty, withCondition } from "./conditions"
 import { hitPointsOf, withHitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
+import { enduringTraitLeft, enduringTraitOf } from "./species-traits"
 import { saveModesFromSpells, spellEffectsAtRoundStart } from "./spell-effects"
 import type { SpellEffect, TurnEffect } from "./turn-effect"
 
@@ -29,6 +30,7 @@ type Mortal = {
   spellEffects?: readonly SpellEffect[]
   tempHitPoints?: number
   deathSaves?: DeathSaves
+  featureUses?: Record<string, number>
 }
 
 const at = <T extends Mortal>(character: T, current: number) => withHitPoints(character, current) as T
@@ -54,13 +56,21 @@ export function killed<T extends Mortal>(character: T, rules?: DeathRules): T {
   return { ...rest, dead: true } as T
 }
 
-/** How the rules left someone who took damage or made a save. */
-export type Fate = "dies" | "dying" | "killed" | "stable" | "revived"
+/**
+ * How the rules left someone who took damage or made a save. "endures": a hero who would have dropped to 0 dropped to
+ * 1 by a species trait (Relentless Endurance, Hard to Fell).
+ */
+export type Fate = "dies" | "dying" | "killed" | "stable" | "revived" | "endures"
+
+/** A hero who endured, in words for the game master: the trait that held them at 1 hit point. */
+export function enduredWords(name: string, character: Parameters<typeof enduringTraitOf>[0]): string {
+  return `${name} would drop to 0 hit points and drops to 1 instead, by ${enduringTraitOf(character)?.name ?? "their endurance"}.`
+}
 
 /**
  * Damage by the rules of 0 hit points. A character who still has hit points loses them. An NPC who reaches 0 dies. A
  * hero who reaches 0 falls Unconscious and is dying, unless the damage left over is at least their hit point maximum,
- * which kills them outright. Damage to a hero already at 0 is a failed Death Saving Throw, two from a Critical Hit, and
+ * which kills them outright, or a species trait holds them at 1 (`enduringTraitLeft`). Damage to a hero already at 0 is a failed Death Saving Throw, two from a Critical Hit, and
  * kills outright when it is at least their maximum. A Stable hero who takes damage is dying again, their saves from zero.
  */
 export function withDamage<T extends Mortal>(character: T, amount: number, options: { critical?: boolean; rules?: DeathRules } = {}): { character: T; fate?: Fate } {
@@ -81,6 +91,9 @@ export function withDamage<T extends Mortal>(character: T, amount: number, optio
   if (character.type !== "pc") return { character: killed(character), fate: "dies" }
   if (current > 0) {
     if (damage - current >= maximum) return withFate(killed(character, options.rules), "killed")
+    // Relentless Endurance and its like: 1 hit point in place of 0, once until a Long Rest gives the use back.
+    const enduring = enduringTraitLeft(character)
+    if (enduring) return { character: { ...at(character, 1), featureUses: { ...character.featureUses, [enduring.key]: (character.featureUses?.[enduring.key] ?? 0) + 1 } }, fate: "endures" }
     return { character: dying(character), fate: "dying" }
   }
   if (damage >= maximum) return withFate(killed(character, options.rules), "killed")

@@ -696,17 +696,6 @@ Action: "${action}"
       const difficulty = hiding ? HIDE_DC : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
       if (!difficulty) throw new Error(`The game master asked for a ${checkName(check)} check with no difficulty.`)
 
-      // The game master's read of the moment, then what the sheet and the roller's conditions settle with no model.
-      // Every source is kept as a reason, so a roll that Advantage and Disadvantage cancel can still say why.
-      const typed = [
-        ...sheetModes(character, check),
-        ...checkModesFrom(character, check, options?.present),
-        ...(self ? checkModesFromActions({ ...character, id: self }, check, options?.present) : []),
-        ...saveModesFor(character, check),
-      ]
-      const picked = pick.mode ?? "normal"
-      const mode = combineModes([picked, ...typed.map((source) => source.mode)])
-      const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
       // The stakes, each off the menus: who, the dice by size or as the notes print them, and the damage type, or a
       // condition by its id. One that names no one here, neither a size nor printed dice, or no condition the rules
       // have, is dropped.
@@ -729,6 +718,19 @@ Action: "${action}"
         return [{ on: entry.on, target: entry.target, kind: entry.kind, dice, ...(entry.kind === "damage" && type.success ? { type: type.data } : {}) }]
       })
       const stakes = hiding?.stakes ?? picks
+      // A save made to avoid or end a condition on the roller, for a species trait against it (Fey Ancestry on Charmed).
+      const against = stakes.flatMap((stake) => (stake.kind === "condition" && stake.target === self && (stake.ends ? stake.on === "success" : stake.on === "failure") ? [stake.condition] : []))
+      // The game master's read of the moment, then what the sheet and the roller's conditions settle with no model.
+      // Every source is kept as a reason, so a roll that Advantage and Disadvantage cancel can still say why.
+      const typed = [
+        ...sheetModes(character, check),
+        ...checkModesFrom(character, check, options?.present),
+        ...(self ? checkModesFromActions({ ...character, id: self }, check, options?.present) : []),
+        ...saveModesFor(character, check, against),
+      ]
+      const picked = pick.mode ?? "normal"
+      const mode = combineModes([picked, ...typed.map((source) => source.mode)])
+      const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
       const rollRequirement: ChosenRoll = {
         check,
         rollType: hiding ? hiding.rollType : checkName(check),

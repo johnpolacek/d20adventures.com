@@ -5,6 +5,8 @@ import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Check } from "./check"
 import type { ConditionEntry } from "./condition-entry"
 import type { ModeSource } from "./conditions"
+import type { Sheet } from "./sheet"
+import { speciesSaveModes } from "./species-traits"
 import type { Concentration, SpellEffect } from "./turn-effect"
 
 /**
@@ -67,6 +69,7 @@ const markOf = (spell: Spell) => (spell.attack ? undefined : spell.damage?.find(
 
 type Bearer = {
   id?: string
+  sheet?: Sheet
   name?: string
   type?: string
   hitPoints?: number
@@ -131,8 +134,12 @@ const SAVE_ADVANTAGE: Record<string, readonly (AbilityId | "death")[]> = { haste
 /** What a character's spells add to or take from a saving throw of one ability: Slow's −2 on Dexterity saves. */
 export const saveBonusFromSpells = (character: Bearer, ability: AbilityId): number => (ability === "dex" && effectsOf(character).some(({ spell }) => spell.id === "slow") ? -2 : 0)
 
-/** The Advantage a character's spells give a check, when it is a saving throw: for a save rolled outside ./spells `rollSave`. */
-export const saveModesFor = (character: Bearer, check: Check): ModeSource[] => (check.kind === "save" ? saveModesFromSpells(character, check.ability) : [])
+/**
+ * The Advantage a character's spells and species give a check, when it is a saving throw: for a save rolled outside
+ * ./spells `rollSave`. `against` names the conditions the save is made to avoid or end (Fey Ancestry on Charmed).
+ */
+export const saveModesFor = (character: Bearer, check: Check, against: readonly ConditionId[] = []): ModeSource[] =>
+  check.kind === "save" ? [...saveModesFromSpells(character, check.ability), ...speciesSaveModes(character, check.ability, against)] : []
 
 /** What a character's spells add to a check, when it is a saving throw: for a save rolled outside ./spells `rollSave`. */
 export const saveBonusFor = (character: Bearer, check: Check): number => (check.kind === "save" ? saveBonusFromSpells(character, check.ability) : 0)
