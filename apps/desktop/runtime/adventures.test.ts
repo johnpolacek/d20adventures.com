@@ -45,7 +45,7 @@ test("all four Myr adventures are bundled, share no encounter ids, and start wit
     )
     await run({ kind: "start", provider: "claude", replace: true })
     assert.equal(store.state!.adventure.planId, "welcome-to-kordavos")
-    assert.equal(store.current().characters.filter((c) => c.type === "pc").length, 4)
+    assert.equal(store.current().characters.filter((c) => c.type === "pc").length, 3)
     await assert.rejects(() => run({ kind: "start", provider: "claude", adventure: "not-installed", replace: true }), /not installed/)
     assert.equal(store.state!.adventure.planId, "welcome-to-kordavos")
   } finally {

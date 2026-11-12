@@ -174,7 +174,7 @@ test("authored start survives reopening, duplicate start and overlapping work ar
     const run = game(store, packs, failLlm)
     await run({ kind: "start", provider: "claude" })
     assert.equal(store.current().encounterId, "the-gates-of-kordavos")
-    assert.equal(store.current().characters.filter((c) => c.type === "pc").length, 4)
+    assert.equal(store.current().characters.filter((c) => c.type === "pc").length, 3)
     const second = new LocalStore(path)
     assert.equal(second.current()._id, store.current()._id)
     assert.throws(() => second.acquire(), /already|still running/)

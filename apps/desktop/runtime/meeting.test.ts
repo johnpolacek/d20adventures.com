@@ -167,9 +167,9 @@ test("the gate's intro shows each hero in the party as the others see them, and 
   assert.match(party, /A broad dwarf with copper braids/)
   assert.match(party, /A grey-bearded priest in undyed robes/)
   assert.match(party, /A lean, weathered man in a cloak of forest hues/)
-  assert.ok(!/surveyor's glass|festival cap|patchwork waistcoat|gusle|swollen pages|strung/.test(party), "no hero who is not in the party")
+  assert.ok(!/patchwork waistcoat|swollen pages/.test(party), "no hero who is not in the party")
   assert.ok(!/Branka|Milos|Thalbern/.test(party), "the intro names no hero")
-  assert.match(authoredText(intro), /surveyor's glass/, "without a party, every paragraph")
+  assert.match(authoredText(intro), /patchwork waistcoat/, "without a party, every paragraph")
 
   await atTheGate(async (store) => {
     const shown = store.current().story.filter((b) => b.kind === "action" && [BRANKA, MILOS, THALBERN].includes(b.actor))

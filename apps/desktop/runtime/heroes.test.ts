@@ -481,9 +481,9 @@ test("the party fills a scene's slots: premades keep theirs, created heroes take
   assert.deepEqual(staging.loops!["gate-line"].party!.members, ["branka", milos.id, vex.id, "wrenna-faelendar", last.id])
   assert.deepEqual(staging.shots!.party.subjects, ["branka", milos.id, vex.id, "wrenna-faelendar", last.id])
   assert.deepEqual(staging.shots!.twoshot.subjects, ["garlan", "branka", milos.id])
-  assert.equal(portraitFor(partyScene(gate, party, chosen), milos, chosen), STOCK_FIGURES["dwarf-a"].art.portrait)
-  // Story view still shows a created hero's own figure, never a premade's.
-  assert.equal(portraitFor(undefined, milos, chosen), STOCK_FIGURES["dwarf-a"].art.portrait)
+  // The portrait is the created hero's own figure, painted or photographed, never a premade's.
+  assert.match(portraitFor(partyScene(gate, party, chosen), milos, chosen) ?? "", /dwarf-a-portrait\.jpg$/)
+  assert.match(portraitFor(undefined, milos, chosen) ?? "", /dwarf-a-portrait\.jpg$/)
 
   // Three heroes at the festival: the unused slot leaves the scene and its shots.
   const festival = partyScene(SCENES["the-harvest-festival"], [milos, vex, premade("welcome-to-kordavos", "yeva-softstep")], chosen).staging

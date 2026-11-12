@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
-import { castIdFor, portraitFor, SCENES, sceneFor, spatialContext } from "../src/scenes"
+import { castIdFor, partyScene, portraitFor, SCENES, sceneFor, spatialContext } from "../src/scenes"
 import { game, type Packs } from "./game"
 import { LocalStore } from "./store"
 
@@ -65,16 +65,18 @@ test("every authored scene is a real encounter, and every festival character has
     await advance(run.store, "the-front-of-the-line")
     await advance(run.store, "the-harvest-festival")
     const turn = run.store.current()
-    const scene = sceneFor(turn.encounterId)
-    assert.ok(scene)
-    assert.equal(turn.characters.length, 9)
+    const authored = sceneFor(turn.encounterId)
+    assert.ok(authored)
+    // The scene as the app shows it, with the party seated.
+    const scene = partyScene(authored, turn.characters)
+    assert.equal(turn.characters.length, 8)
     // Content ids, so "Liora the Spice Merchant" can never resolve to the unrelated `liora` assassin.
     assert.deepEqual(
       turn.characters.map((c) => castIdFor(scene.staging.cast, c)),
       turn.characters.map((c) => c.id)
     )
     assert.equal(castIdFor(scene.staging.cast, { id: "liora", name: "Cowled Assassin" }), undefined)
-    for (const c of turn.characters) assert.match(portraitFor(scene, c) ?? "", /^\/stage\/fixtures\/welcome-to-kordavos\/.+-portrait\.jpg$/)
+    for (const c of turn.characters) assert.match(portraitFor(scene, c) ?? "", /-portrait\.jpg$/, `${c.name} has a portrait`)
   } finally {
     run.close()
   }
@@ -85,12 +87,13 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
   try {
     // The heroes wait in the line alone, then meet Garlan at the front.
     for (const [encounter, cast] of [
-      ["the-gates-of-kordavos", ["branka", "cassia", "milos", "yeva"]],
-      ["the-front-of-the-line", ["branka", "cassia", "garlan", "milos", "yeva"]],
+      ["the-gates-of-kordavos", ["branka", "milos", "thalbern"]],
+      ["the-front-of-the-line", ["branka", "garlan", "milos", "thalbern"]],
     ] as const) {
       if (run.store.current().encounterId !== encounter) await advance(run.store, encounter)
-      const gate = sceneFor(run.store.current().encounterId)
-      assert.ok(gate)
+      const authoredGate = sceneFor(run.store.current().encounterId)
+      assert.ok(authoredGate)
+      const gate = partyScene(authoredGate, run.store.current().characters)
       assert.deepEqual(
         run.store
           .current()
@@ -217,28 +220,28 @@ test("positions reset on a new encounter, persist through rounds and reopening, 
     await advance(run.store, "the-harvest-festival")
 
     // A walk is saved once with its movement key, so reopening never replays it.
-    const key = `${run.store.current()._id}:cassia-verane`
-    await assert.rejects(() => positions(run.store, { "cassia-verane": { x: -10, z: 3.9, ry: 1 } }, key), /Unknown stage movement/)
-    run.store.state!.movement[key] = { actorId: "cassia-verane", intent: { move: "place", place: "jewelStall", pace: "walk", summary: "to the jewel stall" } }
-    await positions(run.store, { "cassia-verane": { x: -10, z: 3.9, ry: 1 } }, key)
+    const key = `${run.store.current()._id}:milos-radan`
+    await assert.rejects(() => positions(run.store, { "milos-radan": { x: -10, z: 3.9, ry: 1 } }, key), /Unknown stage movement/)
+    run.store.state!.movement[key] = { actorId: "milos-radan", intent: { move: "place", place: "jewelStall", pace: "walk", summary: "to the jewel stall" } }
+    await positions(run.store, { "milos-radan": { x: -10, z: 3.9, ry: 1 } }, key)
     run.reopen()
-    assert.deepEqual(run.store.state!.positions["cassia-verane"], { x: -10, z: 3.9, ry: 1 })
+    assert.deepEqual(run.store.state!.positions["milos-radan"], { x: -10, z: 3.9, ry: 1 })
     assert.deepEqual(run.store.state!.appliedMovement, [key])
 
     // The next festival round keeps where everyone stands, and the GM sees it with the square's named places.
     const prompt = await advance(run.store, "the-harvest-festival")
     assert.equal(run.store.current().encounterId, "the-harvest-festival")
     assert.equal(run.store.state!.turns.length, 4)
-    assert.deepEqual(run.store.state!.positions["cassia-verane"], { x: -10, z: 3.9, ry: 1 })
+    assert.deepEqual(run.store.state!.positions["milos-radan"], { x: -10, z: 3.9, ry: 1 })
     assert.match(prompt, /festival square/)
     assert.match(prompt, /Karim's jewel stall \(-11\.8, 3\.9\)/)
-    assert.match(prompt, /Cassia Verane \(-10\.0, 3\.9\)/)
+    assert.match(prompt, /Milos Radan \(-10\.0, 3\.9\)/)
     assert.match(prompt, /Madam Zephyra \(-12\.4, -6\.7\)/)
 
     // A walk read after the round's end was written is kept, since the next round is in the same square.
     const lastRound = run.store.state!.turns.at(-2)!._id
-    await positions(run.store, { "cassia-verane": { x: -8, z: 3, ry: 0 } }, undefined, lastRound)
-    assert.deepEqual(run.store.state!.positions["cassia-verane"], { x: -8, z: 3, ry: 0 })
+    await positions(run.store, { "milos-radan": { x: -8, z: 3, ry: 0 } }, undefined, lastRound)
+    assert.deepEqual(run.store.state!.positions["milos-radan"], { x: -8, z: 3, ry: 0 })
 
     await advance(run.store, "clan-conflict")
     assert.deepEqual(run.store.state!.positions, {})

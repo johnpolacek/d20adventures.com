@@ -27,7 +27,7 @@ async function setup() {
   await game(store, packs, offline)({ kind: "start", provider: "claude" })
   // Past the line, to Garlan's table, so the scene has an NPC.
   await advance(store, {}, "the-front-of-the-line")
-  const pc = store.current().characters.find((c) => c.name.startsWith("Cassia"))!
+  const pc = store.current().characters.find((c) => c.name.startsWith("Milos"))!
   const giver = store.current().characters.find((c) => c.name.startsWith("Branka"))!
   const npc = store.current().characters.find((c) => c.type === "npc")!
   pc.equipment = [{ name: "Potion" }, { name: "Potion" }]
@@ -280,7 +280,7 @@ test("storage validates the whole patch before writing and a duplicate commit ca
       expectedCurrentEncounterId: turn.encounterId,
       nextEncounterId: turn.encounterId,
       title: turn.title,
-      story: [{ kind: "narration" as const, by: { step: "round" as const }, text: "The guard gives Cassia a token." }],
+      story: [{ kind: "narration" as const, by: { step: "round" as const }, text: "The guard gives Milos a token." }],
       characters: turn.characters,
       order: turn.order + 1,
     }
