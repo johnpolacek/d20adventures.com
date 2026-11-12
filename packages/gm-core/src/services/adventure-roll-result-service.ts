@@ -232,6 +232,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         rules,
         inspiration: args.character.inspiration,
         present: turnCharacters,
+        cover: required.attack.cover,
       })
       blow = struck
       inspired = struck.inspired !== undefined

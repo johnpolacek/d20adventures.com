@@ -194,6 +194,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
           roll: rollDie,
           rules: args.rules,
           present: updatedCharacters,
+          cover: rollRequirement.attack.cover,
         })
         updatedCharacters = updatedCharacters.map((character) => (character.id === targetId ? afterHarm(blow.target) : character))
         rolls.push(attackBeat(npcStep(args.npc), args.npc, targetId, blow))

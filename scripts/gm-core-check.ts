@@ -480,6 +480,22 @@ async function npcFixedOutcome() {
   assert.deepEqual(await readAction("Thalbern sprints for the gangway.", ranger, at(45)), { roll: null, action: { action: "dash" }, move: { at: { x: 0, y: 50 }, feet: 50 } })
   answer = { check: "none", moveAway: "owlbear", moveFeet: 10 }
   assert.deepEqual((await readAction("Thalbern backs off.", ranger, at(8))).move, { at: { x: -10, y: 0 }, feet: 10 })
+  // Cover. A 4-foot crate, 4 feet across, 20 feet along the line and nearer the Owlbear, hides 4 of its 10 feet:
+  // none. A 6-foot one hides 6 of 10: half cover, and Armor Class 13 is 15. A wall to the ceiling is total cover: no
+  // shot. Cover the game master names beside what the floor holds is taken when it is the greater.
+  const behind = (top: number | undefined, extra?: object) => {
+    const walled = { ...floor, solids: [{ kind: "rect" as const, x: 20, y: 0, halfWidth: 2, halfDepth: 2, turn: 0, ...(top === undefined ? {} : { top }) }] }
+    answer = { check: "attack", weapon: "longbow", target: "owlbear", ...extra }
+    return readAction("Thalbern shoots the owlbear.", ranger, { ...at(30), floor: walled })
+  }
+  const shotAt = async (top: number | undefined, extra?: object) => {
+    const read = await behind(top, extra)
+    return [read.roll?.difficulty, read.roll && "attack" in read.roll ? read.roll.attack.cover : undefined, read.ruling?.name]
+  }
+  assert.deepEqual(await shotAt(4), [13, undefined, undefined])
+  assert.deepEqual(await shotAt(6), [15, "half", undefined])
+  assert.deepEqual(await shotAt(4, { cover: "three-quarters" }), [18, "three-quarters", undefined])
+  assert.deepEqual(await shotAt(undefined), [undefined, undefined, "Total Cover"])
   // With no floor nothing is moved or measured, and the game master is not asked where anyone goes.
   answer = { check: "attack", weapon: "shortsword", target: "owlbear" }
   const unplaced = await readAction("Thalbern charges the owlbear.", ranger, { present: [{ ...owlbear, ...stand(45) }, ranger] as any })

@@ -24,7 +24,11 @@ export const rollRequirementSchema = z.union([
     stakes: z.array(stakeSchema).optional().describe("Who the roll hurts or heals, by which dice, on which outcome"),
   }),
   z.object({
-    attack: z.object({ weapon: z.string().describe("The id of one of the roller's own attacks"), target: z.string().describe("The id of the character attacked") }),
+    attack: z.object({
+      weapon: z.string().describe("The id of one of the roller's own attacks"),
+      target: z.string().describe("The id of the character attacked"),
+      cover: z.enum(["half", "three-quarters"]).optional().describe("The cover the target has from the attacker. The difficulty already counts it"),
+    }),
     ...asked,
   }),
   // A spell cast, by its SRD id, on the targets named. One with a spell attack is thrown by the caster: `difficulty`

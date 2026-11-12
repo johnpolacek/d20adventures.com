@@ -10,7 +10,7 @@ import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
 import type { Sheet } from "./sheet"
-import { BASE_REACH, isNear, placedOf, type Standing, within } from "./space"
+import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, within } from "./space"
 import { markDamage, rollAdds } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 
@@ -298,6 +298,8 @@ export function strike<T extends Target>(args: {
   mode?: RollMode
   roll: (sides: number) => number
   rules?: DeathRules
+  /** The cover the target has from the attacker, which adds to its Armor Class: 2 for half, 5 for three-quarters. */
+  cover?: Cover
   /** Everyone in the scene, for the rules that read who stands where: Sneak Attack's ally beside the target. */
   present?: readonly (Standing & { hitPoints?: number; dead?: true; fled?: true })[]
   /** A Bardic Inspiration die the attacker holds. It is rolled on a miss it could turn into a hit, and never on a 1. */
@@ -309,11 +311,12 @@ export function strike<T extends Target>(args: {
   if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
   const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
   // Lasting spells add their dice to the roll (Bless), or take them away (Bane).
-  const rolled = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass: stats.armorClass, mode: args.mode, adds: rollAdds(args.attacker, "attack-rolls", args.roll) })
+  const armorClass = stats.armorClass + coverBonus(args.cover ?? "none")
+  const rolled = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass, mode: args.mode, adds: rollAdds(args.attacker, "attack-rolls", args.roll) })
   // A miss by no more than the die could add, and not on a 1, rolls a held Bardic Inspiration die.
-  const short = stats.armorClass - rolled.total
+  const short = armorClass - rolled.total
   const inspired = !rolled.hit && rolled.natural !== 1 && args.inspiration && short <= args.inspiration.die ? args.roll(args.inspiration.die) : undefined
-  const lifted = inspired === undefined ? rolled : { ...rolled, total: rolled.total + inspired, hit: rolled.total + inspired >= stats.armorClass }
+  const lifted = inspired === undefined ? rolled : { ...rolled, total: rolled.total + inspired, hit: rolled.total + inspired >= armorClass }
   const roll = lifted.hit && !lifted.critical && criticalWhenHit(args.target, isNear(args.attacker, args.target, attack.kind)) ? { ...lifted, critical: true } : lifted
   const spent = inspired === undefined ? {} : { inspired }
   if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target, ...spent }

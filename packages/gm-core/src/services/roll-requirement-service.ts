@@ -10,7 +10,7 @@ import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditi
 import { bonusActionsOf } from "../sheet/features"
 import { type MoveAsk, type Moved, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
-import { attackReach, feetBetween, isNear, movementBudgetOf, placedOf, within } from "../sheet/space"
+import { attackReach, coverBetween, coverBonus, feetBetween, greaterCover, isNear, movementBudgetOf, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells } from "../sheet/spell-effects"
 import { castCost, isEngineSpell, slotsLeft, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
@@ -49,6 +49,10 @@ const rollPickSchema = z.object({
   moveTo: z.string().max(80).optional().describe("Where the character goes before they act: the id of a place or of someone here, from Where Things Are"),
   moveAway: z.string().max(80).optional().describe("Instead of moveTo: the id of someone here they back straight away from"),
   moveFeet: z.number().min(0).max(240).optional().describe("How far they go, only when they mean to stop short of where they are headed: a step back is 5"),
+  cover: z
+    .enum(["half", "three-quarters", "total"])
+    .optional()
+    .describe("For an attack: cover the target has that the story put there and the place does not hold, such as a table just overturned. The game reads walls and furniture itself"),
   harm: z
     .array(
       z.object({
@@ -266,6 +270,7 @@ ${
    - They can move ${movementBudgetOf(mover)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
    - Never refuse or change an action because of distance. The game settles reach and range itself.
+   - The game reads cover from the walls and furniture of the place. Set "cover" only for something the story put between the two that the place does not hold.
      Where Things Are, from where the character stands:
      Places: ${floor.places.map((place) => `${place.id} (${place.label}, ${Math.round(Math.hypot(place.at.x - (mover.position?.x ?? 0), place.at.y - (mover.position?.y ?? 0)))} feet away)`).join(", ") || "none named"}.
      Everyone here: ${others.flatMap((other) => (other.position ? [`${other.id} (${other.name}, ${feetAway(other)})`] : [])).join(", ") || "no one"}.
@@ -311,7 +316,7 @@ Action: "${action}"
           : {}),
       })
       // Where there is no floor to move on, the game master is not asked where anyone goes.
-      const asked = (mover && floor ? schema : schema.omit({ moveTo: true, moveAway: true, moveFeet: true })) as unknown as typeof rollPickSchema
+      const asked = (mover && floor ? schema : schema.omit({ moveTo: true, moveAway: true, moveFeet: true, cover: true })) as unknown as typeof rollPickSchema
       const { object: pick } = await generateObject({ schema: asked, prompt })
       // A Bonus Action is the roller's own, with a use left. One the game master makes up is dropped.
       const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
@@ -432,8 +437,24 @@ Action: "${action}"
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
           return { roll: null, ...also }
         }
-        // A ranged attack has Disadvantage at long range, and with an enemy within 5 feet who is up and able to act.
+        // Cover, from the solid things and the creatures on the line between the two, by their height. The game master
+        // may name cover the place does not hold, and the greater stands. Through total cover no attack is made.
         const from = placedOf(stood)
+        const aimed = placedOf(target)
+        const between = others.flatMap((other) => {
+          const at = other.id === target.id || isDown(other) ? undefined : placedOf(other)
+          return at ? [at] : []
+        })
+        const cover = floor && from && aimed ? greaterCover(coverBetween(floor.solids, from, aimed, between), pick.cover ?? "none") : "none"
+        if (cover === "total") {
+          also.ruling = {
+            name: "Total Cover",
+            text: `${character.name}${also.move ? ` moves ${also.move.feet} feet and` : ""} has no clear line to ${target.name}: something solid stands between them. The attack is not made.`,
+          }
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
+          return { roll: null, ...also }
+        }
+        // A ranged attack has Disadvantage at long range, and with an enemy within 5 feet who is up and able to act.
         const ranged = band === "normal" || band === "long"
         const crowded =
           ranged &&
@@ -453,9 +474,9 @@ Action: "${action}"
         ]
         const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
         const rollRequirement: ChosenRoll = {
-          attack: { weapon: attack.id, target: target.id },
+          attack: { weapon: attack.id, target: target.id, ...(cover !== "none" ? { cover } : {}) },
           rollType: attack.name,
-          difficulty: armorClass,
+          difficulty: armorClass + coverBonus(cover),
           modifier: attack.bonus,
           mode: combineModes([picked, ...typed.map((source) => source.mode)]),
           ...(reasons.length ? { reasons } : {}),
