@@ -57,6 +57,11 @@ export function castInSpace(args: { spell: Spell; caster: Here; everyone: readon
       const directed = area.shape === "cone" || area.shape === "cube" || area.shape === "line"
       if (directed && !aim) return none("No One In The Way", `${who} has no one to aim ${spell.name} at.`)
       const caught = caughtIn(area, from.at, aim?.at ?? from.at, others, spaceOf(from.size))
+      // An aura of the caster's own that takes "you and each creature you choose" (Pass without Trace) takes the caster and those named in it.
+      if (area.selective && area.shape === "emanation") {
+        const chosen = caught.filter((other) => args.named.includes(other.id))
+        return { targets: [caster.id, ...reached(from, chosen).map((target) => target.id)], cover, measured: true }
+      }
       return { targets: reached(from, caught).map((target) => target.id), cover, measured: true }
     }
     // An area at a range, centred on the one named.
@@ -75,16 +80,18 @@ export function castInSpace(args: { spell: Spell; caster: Here; everyone: readon
     return { targets: reached(centre, chosen).map((target) => target.id), cover, measured: true }
   }
 
-  // A spell on those named: each within its range, or the caster's touch, and not behind total cover.
-  if (range.kind !== "touch" && range.kind !== "feet") return { targets: [...args.named], cover: {}, measured: false }
-  const limit = range.kind === "touch" ? BASE_REACH : (range.distance ?? 0)
+  // A spell on those named: each within its range, or the caster's touch, and not behind total cover. A melee spell
+  // attack with a range of Self (Vampiric Touch, "one creature within reach") reaches as a touch does.
+  const touch = range.kind === "touch" || (range.kind === "self" && spell.attack === "melee")
+  if (!touch && range.kind !== "feet") return { targets: [...args.named], cover: {}, measured: false }
+  const limit = touch ? BASE_REACH : (range.distance ?? 0)
   const near = named.filter((target) => target.id === caster.id || within(from, target, limit))
   if (named.length && !near.length) {
     const [first] = named
-    const what = range.kind === "touch" ? "Reach" : "Range"
+    const what = touch ? "Reach" : "Range"
     return none(
       `Out Of ${what}`,
-      `${who} is ${Math.round(distance(from, first))} feet from ${first.name}, out of ${spell.name}'s ${range.kind === "touch" ? "touch" : `range of ${limit} feet`}. The spell is not cast.`
+      `${who} is ${Math.round(distance(from, first))} feet from ${first.name}, out of ${spell.name}'s ${touch ? "touch" : `range of ${limit} feet`}. The spell is not cast.`
     )
   }
   const clear = reached(from, near)
