@@ -221,7 +221,18 @@ Started 2026-11-12.
 
 How space works before this stage: the rules engine sees no positions. An attack is near when it is melee and far when it is ranged, range is never checked, an area takes as many creatures as its size allows and the model names them, and Dash and Disengage are recorded and change nothing. The two hosts share nothing. The site keeps no positions in play: each encounter has a generated grid map on S3 with fixed starting tokens, read as 5 feet a cell, and no one on it moves. The desktop keeps live positions in metres on the authored 3D sets, which cover all 69 encounters: a second model call reads a reply's movement, and the 3D view walks it after the turn's dice are resolved, with a Speed taken from the hero's species by name. The game master is told of space in the round-end prompt alone, in different words on each host.
 
-Owner's calls asked 2026-11-12, not yet answered: one map for both hosts or one each, what the site draws, who judges cover, and how reactions fire. The substages after the first are written when they are.
+Owner decisions, 2026-11-12:
+
+- One map for both hosts: the authored 3D sets and their stagings. The site's generated grid maps leave play.
+- The site draws a plain top-down plan with tokens that move, built from the 3D set.
+- The game works cover out from the set's solid things. The game master may add cover the set does not hold.
+- A hero's reaction is asked of the player, never taken for them. That waits for a later stage.
+
+What follows from them, by the session's call:
+
+- Reactions open stage 7: Opportunity Attacks, Shield and Feather Fall, for heroes and NPCs together, so neither side swings where the other cannot. Until then leaving an enemy's reach is free, and Disengage is recorded and changes nothing.
+- A character's position is the engine's to write, as its hit points are. Both hosts store it on the character and draw it. The desktop's own position store, its movement model call and its Speed by species name are deleted.
+- Each encounter's floor plan is generated from its 3D set and staging by a script, and committed: its solid things, its doorways, its named places and where the cast starts. The engine reads it through a port and never imports the stage package.
 
 The session's calls, which the owner may overrule:
 
@@ -233,8 +244,23 @@ The session's calls, which the owner may overrule:
 Substages:
 
 1. Space maths. Pure functions in `packages/gm-core/src/sheet`: a creature's space and the distance between two, an attack's reach and its normal and long range, a ranged attack beside an enemy, Speed and a turn's movement with Dash, Exhaustion, the Slow mastery and standing from Prone, a straight move and a Push, who gets an Opportunity Attack on a move, and who stands in a sphere, cylinder, emanation, cube, cone or line. Tested with no model. Done: `packages/gm-core/src/sheet/space.ts`, 11 tests. Nothing calls it yet. Not in it: Difficult Terrain, crawling, flying and climbing, moving through another's space, cover and elevation.
+2. Floor plans. A script builds each encounter's plan from its 3D set and staging, with no GPU: the solid things with their heights, the doorways, the named places, where each of the cast starts, and where the party stands. The plans are committed and a check fails when one is stale. A pure reader in the stage package hands one out by encounter.
+3. Positions. A character carries its position in feet, written only by the engine and stored on both hosts. An encounter places its characters from the floor plan as it opens: the cast where it is staged, the heroes at the party's spots, anyone else at a spare one. The floor plan reaches the engine through a port, in feet.
+4. Reach and range. An attack carries its reach and its normal and long range. One made at a target out of reach or range is not rolled. Long range and an enemy within 5 feet give a ranged attack Disadvantage. Prone, Paralyzed, Unconscious and Sneak Attack's ally read real distances in place of melee and ranged.
+5. Movement. The read of a move names where the character goes: to a place, to someone, away from someone, or nowhere. The engine walks them there by their Speed, around solid things and through doorways, before the action is resolved. Dash doubles it, standing from Prone costs half, and a Speed of 0 holds. NPCs move the same way. The desktop's separate movement call is deleted.
+6. Cover. Half, three-quarters and total cover from the solid things and creatures between two characters, by their height: a bonus to Armor Class and Dexterity saves, and no targeting through total cover. The game master may name cover the set does not hold, and the greater stands.
+7. Spells in space. A spell's range is checked, a touch needs reach, and an area catches who stands in it where the caster aims it. The area caps of stage 5 are deleted.
+8. What moves others: the Push and Slow masteries, and the spells that change Speed.
+9. The game master is told of space in the same words on both hosts, in the read, the NPC turn and the outcome: who is where, and how far.
+10. The desktop draws the engine's positions: the 3D view walks each character to where the engine put them. Its own positions and movement are deleted, in solo and hosted play.
+11. The site draws the floor plan from above with tokens that move. The generated grid maps, their generator, their admin tools and `startNear` are deleted.
+12. Retune and migrate. Encounter notes that speak of distance, and anyone an encounter holds whom its staging does not. Saves are wiped.
+13. Prompt checks: scenes for moving, range, areas and cover.
+14. Close. Covert Cargo plays on both hosts with rules space.
 
 ### 7. Rest and levelling
+
+Opens with reactions, held over from stage 6 by the owner's call of 2026-11-12: the round stops to ask a hero whether to take one. Opportunity Attacks, Shield and Feather Fall, for heroes and NPCs together.
 
 Short and long rests, hit dice, experience, levels 2 to 5. Class features, the SRD subclass for each class, and feats.
 
@@ -250,4 +276,4 @@ Levels to 20. The full spell, monster and magic item lists. The hero creator reb
 
 ## Status
 
-Stage 1 in progress since 2026-11-11. Stage 2 closed 2026-11-11. Stage 3 built and played on both hosts 2026-11-11: its live deploy and the save wipe wait on the owner. Stage 4 built and played on both hosts 2026-11-12: the live database's saved play is the owner's to clear, and the live deploy follows it. Stage 5 built and played on both hosts 2026-11-12, and goes out with the same deploy. Stage 6 started 2026-11-12: its maths is built, and the rest waits on the owner's calls.
+Stage 1 in progress since 2026-11-11. Stage 2 closed 2026-11-11. Stage 3 built and played on both hosts 2026-11-11: its live deploy and the save wipe wait on the owner. Stage 4 built and played on both hosts 2026-11-12: the live database's saved play is the owner's to clear, and the live deploy follows it. Stage 5 built and played on both hosts 2026-11-12, and goes out with the same deploy. Stage 6 started 2026-11-12.
