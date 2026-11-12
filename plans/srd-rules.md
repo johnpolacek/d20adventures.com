@@ -18,6 +18,16 @@ The engine is pure, tested code in `packages/gm-core`. It reaches nothing outsid
 - All twelve classes at level 1 come before any combat work.
 - Each stage is broken into substages when it starts, and not before.
 
+## Owner decisions, 2026-11-11
+
+- Finish all eight stages as soon as can be, with the least rework. That outranks keeping old things working.
+- Only the premade heroes and the four Myr adventures need to keep working.
+- No fallbacks for old data. Old saves are wiped when a stage needs it, not migrated.
+- One path through the code: where the rules replace a loose mechanic, the loose one is deleted, not kept beside it.
+- Every hero has a sheet. The hero creator is switched off on both hosts until stage 8 rebuilds it on the rules.
+- Tests stay lean: the engine's maths, and one play check on each host per stage. No judge rounds unless the owner asks.
+- A change under `convex/` goes out with `pnpm push`, which deploys Convex before the push.
+
 ## How a stage runs
 
 1. Write its substages in this file, under the stage, on the day it starts.
@@ -93,6 +103,19 @@ Stage 2 is closed, 2026-11-11. Carried forward: a hero made in the hero creator 
 ### 3. Checks
 
 The engine resolves ability checks and saving throws. The model picks only the skill and a DC from the SRD ladder. Advantage and disadvantage replace the model's free situational modifier.
+
+Substages, settled 2026-11-11. Decisions: a natural 20 or 1 has no special effect on a check, as the SRD has it. The player still sees the target number. A stage may change the game master's prompts, so read the evals rules first and keep the prompt checks of substage 7 small.
+
+How rolls work before this stage: the model names a roll in free text and any target number (`roll-requirement-service.ts`), the engine adds the ability modifier, and a second model call invents a situational modifier (`roll-modifier-service.ts`). `adventure-roll-result-service.ts` resolves it.
+
+1. One path. Every hero must have a sheet: the compiler's warning for a hero with none becomes an error, and the hero creator is switched off on the site and the desktop app. Nothing rolls for a hero without a sheet.
+2. Check maths. One pure function in `packages/gm-core/src/sheet` resolves a check: the d20, plus the bonus from the sheet or stat block, against the target. Advantage and disadvantage roll two dice. Tested with no model: Thalbern's Stealth is +5, so a 9 makes 14.
+3. A fixed menu for the model. It picks one of the eighteen skills, a bare ability, or a saving throw, a target from the SRD ladder (5, 10, 15, 20, 25, 30), and advantage, disadvantage or neither with its reason. This replaces the free roll type, target and modifier. The situational modifier call and its service are deleted.
+4. What the sheet already knows. Armor that hinders Stealth gives disadvantage with no model involved. Other typed sources follow the same way as they are needed.
+5. NPC checks. An NPC rolls with its stat block's skill, save and ability bonuses.
+6. The roll on screen, on both hosts: the die, the bonus, the total and the target. Advantage shows both dice.
+7. Prompt checks. A small fixed set of scenes shows the model picks sensible skills and targets, run before and after the prompt change.
+8. Close. The Midnight Summons plays on both hosts with rules checks. Old saves are wiped.
 
 ### 4. Combat
 
