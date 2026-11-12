@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { withHealthPercent } from "../../src/sheet/death"
-import { healthPercentOf, hitPointsOf, withHitPoints, withStartingHitPoints } from "../../src/sheet/hit-points"
+import { healthPercentOf, hitPointsAt, hitPointsOf, withHitPoints, withStartingHitPoints } from "../../src/sheet/hit-points"
 import type { Sheet } from "../../src/sheet/sheet"
 
 // A Fighter with Constitution 15 has 12 hit points at level 1: d10 + 2.
@@ -73,10 +72,12 @@ test("a character enters play at its maximum, or with the hit points it has", ()
   assert.throws(() => withStartingHitPoints({ type: "pc" }), /no sheet or stat block/)
 })
 
-test("a percent write sets hit points, and health percent follows them", () => {
+test("a health percent reads as hit points, and hit points show as a health percent", () => {
   // Half of the Owlbear's 59 is 29.5, so 30, and 30 of 59 shows as 51%.
-  assert.deepEqual([withHealthPercent(owlbear, 50).hitPoints, withHealthPercent(owlbear, 50).healthPercent], [30, 51])
+  assert.deepEqual(hitPointsAt(59, 50), { current: 30, maximum: 59 })
+  assert.equal(healthPercentOf(hitPointsAt(59, 50)), 51)
   // 10% of a Commoner's 4 is 0.4, but any health left is at least 1 hit point, which shows as 25%.
-  assert.deepEqual([withHealthPercent(commoner, 10).hitPoints, withHealthPercent(commoner, 10).healthPercent], [1, 25])
-  assert.deepEqual([withHealthPercent(thalbern, 0).hitPoints, withHealthPercent(thalbern, 0).healthPercent], [0, 0])
+  assert.deepEqual(hitPointsAt(4, 10), { current: 1, maximum: 4 })
+  assert.equal(healthPercentOf(hitPointsAt(4, 10)), 25)
+  assert.deepEqual(hitPointsAt(11, 0), { current: 0, maximum: 11 })
 })

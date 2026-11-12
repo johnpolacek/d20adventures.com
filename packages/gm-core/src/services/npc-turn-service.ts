@@ -124,7 +124,7 @@ export function createNpcTurnService(ports: GmPorts) {
     beatsToAppend: StoryBeat[]
     actionSummary: string
     rollInfo?: NpcRollInfo
-    effects?: Array<{ targetId: string; healthPercentDelta?: number; status?: string; equipmentToAdd?: Array<{ name: string; description?: string }> }>
+    effects?: Array<{ targetId: string; status?: string; equipmentToAdd?: Array<{ name: string; description?: string }> }>
   }> {
     console.log("[LLM] Starting NPC turn:", {
       npc: npcId,

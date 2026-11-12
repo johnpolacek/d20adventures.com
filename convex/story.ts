@@ -43,6 +43,20 @@ export const storyValidator = v.array(
           taken: v.optional(v.number()),
         })
       ),
+      // What a check or save hurt or healed: the dice as they fell and what each target lost or regained.
+      harm: v.optional(
+        v.array(
+          v.object({
+            target: v.string(),
+            kind: v.union(v.literal("damage"), v.literal("healing")),
+            dice: v.array(v.number()),
+            sides: v.optional(v.number()),
+            bonus: v.number(),
+            type: v.optional(v.string()),
+            amount: v.number(),
+          })
+        )
+      ),
     }),
     v.object({ kind: v.literal("reply"), by, character: v.string(), text: v.string() })
   )

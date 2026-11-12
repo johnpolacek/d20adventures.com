@@ -1,12 +1,14 @@
+import { damageTypeIdSchema } from "@d20/srd"
 import { abilityById } from "@d20/srd/abilities"
 import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { attacksOf } from "../sheet/attack"
 import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
+import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
-import { isDown } from "../utils/turn-actors"
+import { isDead, isDown } from "../utils/turn-actors"
 import type { ChosenRoll } from "../validations/roll-requirement-schema"
 import { formatSpellsForPrompt } from "./spell-tracking-service"
 
@@ -25,6 +27,20 @@ const rollPickSchema = z.object({
   spell: z.string().max(80).optional().describe("The character's own spell this roll casts, exactly as their spell list names it"),
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
   target: z.string().max(80).optional().describe("For an attack: the id of who is attacked, from Who Is Here"),
+  harm: z
+    .array(
+      z.object({
+        on: z.enum(["success", "failure", "always"]).describe("The outcome of this roll that hurts or heals"),
+        target: z.string().max(80).describe("The id of who is hurt or healed: someone from Who Is Here, or the character's own id"),
+        kind: z.enum(["damage", "healing"]),
+        size: z.enum(harmSizes).optional().describe("How much, by name. The game rolls its dice"),
+        dice: z.string().max(12).optional().describe('Dice the encounter instructions print for it, as printed: "4d6". They replace the size'),
+        type: z.string().max(20).optional().describe("For damage: its type, such as fire, poison, bludgeoning or psychic"),
+      })
+    )
+    .max(4)
+    .optional()
+    .describe("For a check or a save whose outcome would itself wound or heal someone. Empty for most rolls, and for every attack"),
 })
 
 // Someone the roller could attack: anyone else in the scene who is still up.
@@ -134,6 +150,14 @@ ${MENU("save")}
    - "normal" otherwise, which is most rolls. Say what helps or hinders in "reason", in a few words.
    - Not for what the character is good or bad at, and not for their armor: the game already counts both.
 
+10) Set what the roll puts at stake for hit points, in "harm". Most rolls put none, so leave it empty. Use it only when this roll's own outcome would wound or heal someone:
+   - A spell or an act that hurts someone when it works: on "success", target them, kind "damage".
+   - A save or a check against a hazard that hurts when it fails (a trap, a fall, poison, fire): on "failure", target the character's own id, kind "damage".
+   - A spell, a potion or a skill that heals: on "success", target who is healed, kind "healing".
+   - "size" is light, moderate, heavy or severe, and the game rolls its dice. A scratch or a cantrip is light, a solid blow or a level 1 spell is moderate, a bad fall or a strong blast is heavy, and severe is rare. When the encounter instructions print dice for it (4d6), put them in "dice" as printed and leave "size" out.
+   - "target" is an id from Who Is Here, or the character's own id${self ? `, ${self}` : ""}. Damage takes a "type": fire, cold, poison, psychic, bludgeoning and so on.
+   - An attack takes no "harm": its weapon sets the damage. Never use harm for fear, shame, a threat, or a fight not yet joined.
+
 If NO roll is required, "check" is "none".
 
 Action: "${action}"
@@ -177,6 +201,17 @@ Action: "${action}"
       const picked = pick.mode ?? "normal"
       const mode = combineModes([picked, ...typed.map((source) => source.mode)])
       const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
+      // The stakes, each off the menus: who, the dice by size or as the notes print them, and the damage type. One
+      // that names no one here, or neither a size nor printed dice, is dropped.
+      const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && other.status !== "fled").map((other) => other.id))
+      const stakes: Stake[] = (pick.harm ?? []).flatMap((entry) => {
+        if (!here.has(entry.target)) return []
+        const printed = printedDiceSchema.safeParse(entry.dice?.trim())
+        const dice = printed.success ? printed.data : entry.size ? HARM_DICE[entry.size] : undefined
+        if (!dice) return []
+        const type = damageTypeIdSchema.safeParse(entry.type?.trim().toLowerCase())
+        return [{ on: entry.on, target: entry.target, kind: entry.kind, dice, ...(entry.kind === "damage" && type.success ? { type: type.data } : {}) }]
+      })
       const rollRequirement: ChosenRoll = {
         check,
         rollType: spell ? `${spell} (${checkName(check)})` : checkName(check),
@@ -185,6 +220,7 @@ Action: "${action}"
         mode,
         ...(reasons.length ? { reasons } : {}),
         ...(spell ? { spell } : {}),
+        ...(stakes.length ? { stakes } : {}),
       }
       console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
       return rollRequirement

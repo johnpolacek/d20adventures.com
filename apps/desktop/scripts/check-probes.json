@@ -7,7 +7,8 @@
     "action": "I duck low behind the brambles and creep around the owlbear, keeping downwind and out of its sight.",
     "checks": ["stealth"],
     "dcs": [15],
-    "mode": "normal"
+    "mode": "normal",
+    "stakes": []
   },
   {
     "id": "owlbear-calm",
@@ -56,7 +57,8 @@
     "action": "I stop, hold my breath and listen hard to work out what is coming through the trees.",
     "checks": ["perception"],
     "dcs": [5, 10],
-    "mode": "normal"
+    "mode": "normal",
+    "stakes": []
   },
   {
     "id": "relics-lore",
@@ -87,7 +89,8 @@
     "checks": ["intelligence"],
     "spell": "Detect Magic",
     "dcs": [5],
-    "mode": "normal"
+    "mode": "normal",
+    "stakes": []
   },
   {
     "id": "charm-person",
@@ -98,7 +101,8 @@
     "checks": ["intelligence"],
     "spell": "Charm Person",
     "dcs": [10, 15],
-    "mode": "normal"
+    "mode": "normal",
+    "stakes": []
   },
   {
     "id": "sneak-with-help",
@@ -180,5 +184,62 @@
     "hero": "thalbern",
     "action": "I rest a hand on my sword hilt and tell Wollandora I am listening.",
     "checks": ["none"]
+  },
+  {
+    "id": "ray-of-frost",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
+    "action": "I cast Ray of Frost at Reinhard.",
+    "checks": ["intelligence"],
+    "spell": "Ray of Frost",
+    "dcs": [10, 15],
+    "mode": "normal",
+    "stakes": [
+      {
+        "on": "success",
+        "target": "npcs-1749163978757",
+        "kind": "damage"
+      }
+    ]
+  },
+  {
+    "id": "healing-word",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "narrative": "Branka staggers back from the blades, bleeding from a deep cut along her arm.",
+    "action": "I call out a Healing Word to close Branka's wound.",
+    "checks": ["wisdom"],
+    "spell": "Healing Word",
+    "dcs": [5, 10],
+    "mode": "normal",
+    "stakes": [
+      {
+        "on": "success",
+        "target": "branka-stoneveil",
+        "kind": "healing"
+      }
+    ]
+  },
+  {
+    "id": "flame-jet",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "Thalbern's boot sinks on a hidden plate among the roots. A jet of flame roars out of a carved stone mouth beside the path, straight at him.",
+    "action": "I throw myself clear of the flames.",
+    "checks": ["dexterity-save", "acrobatics"],
+    "dcs": [10, 15],
+    "mode": "normal",
+    "stakes": [
+      {
+        "on": "failure",
+        "target": "thalbern",
+        "kind": "damage"
+      }
+    ]
   }
 ]

@@ -1,6 +1,6 @@
 import { isDead, isDown, isDying } from "../utils/turn-actors"
 import { DEATH_SAVE, type RollRequirement } from "../validations/roll-requirement-schema"
-import { hitPointsAt, hitPointsOf, withHitPoints } from "./hit-points"
+import { hitPointsOf, withHitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
 
 /** A hero's Death Saving Throws while at 0 hit points: three successes make them Stable, three failures kill. */
@@ -74,7 +74,6 @@ export function withHealing<T extends Mortal>(character: T, amount: number): T {
 
 /**
  * A character set to `current` hit points by the rules of 0 hit points: less than now is damage and more is healing.
- * The model's percent writes go through this until substage 6 of stage 4 deletes them.
  */
 export function withHitPointsBy<T extends Mortal>(character: T, current: number, rules?: DeathRules): T {
   const now = hitPointsOf(character)?.current
@@ -83,17 +82,6 @@ export function withHitPointsBy<T extends Mortal>(character: T, current: number,
   if (target < now) return withDamage(character, now - target, { rules }).character
   if (target > now) return withHealing(character, target - now)
   return character
-}
-
-/**
- * The character at a health percent, for the model's percent writes, by the rules of 0 hit points. A percent write is
- * never the damage that kills outright, so it needs no adventure rules. It goes when substage 6 of stage 4 in
- * plans/srd-rules.md lands and the engine rolls all harm.
- */
-export function withHealthPercent<T extends Mortal>(character: T, percent: number): T & { hitPoints: number; healthPercent: number } {
-  const maximum = hitPointsOf(character)?.maximum
-  if (maximum === undefined) throw new Error(`${character.name ?? "A character"} has no sheet or stat block, so no hit points`)
-  return withHitPointsBy(character, hitPointsAt(maximum, percent).current) as T & { hitPoints: number; healthPercent: number }
 }
 
 /**

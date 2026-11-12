@@ -407,6 +407,19 @@ async function npcFixedOutcome() {
   const thalbern = JSON.parse(readFileSync("content/settings/realm-of-myr/adventures/the-midnight-summons/characters/thalbern.json", "utf8"))
   const { rollType, difficulty, modifier, mode } = (await getRollRequirementForAction("Thalbern slips past the guard.", thalbern)) ?? {}
   assert.deepEqual({ rollType, difficulty, modifier, mode }, { rollType: "Stealth", difficulty: 15, modifier: 5, mode: "normal" })
+  // A roll's harm comes off the ladder as dice: heavy is 2d6. One on someone not here, or with no size and no printed dice, is dropped.
+  const poison = { on: "failure", target: "thalbern", kind: "damage", type: "poison" }
+  answer = {
+    check: "constitution-save",
+    difficulty: "medium",
+    harm: [
+      { ...poison, size: "heavy" },
+      { ...poison, target: "owlbear", size: "heavy" },
+      { ...poison, dice: "a lot" },
+    ],
+  }
+  const save = await getRollRequirementForAction("Thalbern drinks from the well.", thalbern, { present: [thalbern] })
+  assert.deepEqual(save && "stakes" in save ? save.stakes : undefined, [{ ...poison, dice: "2d6" }])
 }
 
 // A scene's round budget counts the rounds in a row in one encounter. The round-end GM is told where the scene stands,
@@ -476,7 +489,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu, ledger ranking, round budget, rolls ending with the round, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, rolls ending with the round, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {

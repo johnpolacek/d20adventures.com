@@ -1,5 +1,5 @@
 import type { TurnRecord } from "@d20/gm-core"
-import { atRoundStart, withHealthPercent, withStatusWord } from "@d20/gm-core/sheet/death"
+import { atRoundStart, withStatusWord } from "@d20/gm-core/sheet/death"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
@@ -49,8 +49,7 @@ export function applyCharacterUpdates(characters: TurnCharacter[], input: unknow
     seen.add(update.characterId)
     const index = result.findIndex((c) => c.id === update.characterId)
     if (index < 0) throw new Error(`Unknown character in state update: ${update.characterId}`)
-    // Health and status go by the rules of 0 hit points.
-    if (update.healthPercent !== undefined) result[index] = withHealthPercent(result[index], update.healthPercent)
+    // Hit points are the engine's: a round's patch cannot set them. A status goes by the rules of 0 hit points.
     if (update.status !== undefined) result[index] = withStatusWord(result[index], update.status)
     const c = result[index]
     for (const change of update.inventoryChanges ?? []) {
@@ -130,8 +129,7 @@ const dead = (characters: TurnCharacter[]) => {
 // gear, effects and spells, and of the others only what shows: how hurt they are and their condition.
 export function characterContext(characters: TurnCharacter[], patchInstructions = false, viewer?: string) {
   const shown = (c: TurnCharacter) => {
-    // Hit points stay out of the prompt while the model still writes health in percent.
-    const { hitPoints: _, ...state } = characterState(c)
+    const state = characterState(c)
     return viewer === undefined || c.id === viewer ? state : { healthPercent: c.healthPercent, status: c.status }
   }
   const context = `\n\nCURRENT SAVED CHARACTER STATE (authoritative, after already resolved actions):\n${JSON.stringify(characters.map((c) => ({ id: c.id, name: c.name, ...shown(c) })))}${dead(characters)}`
@@ -139,6 +137,6 @@ export function characterContext(characters: TurnCharacter[], patchInstructions 
   return `${context}
 Use exact character IDs and existing item/effect/spell names. State patches describe only additional changes established by resolved actions or your outcome narrative. Do not repeat changes already reflected above. Do not apply attempted actions that failed or still need a roll.
 For each item received, add one inventoryChanges entry {op:"add",name,description?}. For each item spent, lost, or transferred, use {op:"remove",name}. A transfer removes from the giver and adds to the receiver. Each entry is one item, not a quantity or currency balance.
-For effects use {op:"set",name,description,duration} to add or refresh, or {op:"remove",name} to end one. Duration is a positive number of rounds starting with the next round. Existing effects automatically lose one round on advance, so do not emit routine duration decrements. Empty status clears a status. Health values are absolute percentages, not damage deltas.
+For effects use {op:"set",name,description,duration} to add or refresh, or {op:"remove",name} to end one. Duration is a positive number of rounds starting with the next round. Existing effects automatically lose one round on advance, so do not emit routine duration decrements. Empty status clears a status. Hit points and health are the game's: it rolls every wound and every healing, so never give a health value and never tell of harm or healing the state above does not show.
 Spell changes are {name,isUsed} for known spells only. Spells automatically recharge upon entering a different encounter. Do not invent items, conditions, currency accounting, or spells absent from established events. Omit unchanged fields and return characterUpdates:[] when no change is needed.`
 }

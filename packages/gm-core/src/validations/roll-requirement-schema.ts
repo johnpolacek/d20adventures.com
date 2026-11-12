@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { checkSchema, rollModes } from "../sheet/check"
+import { stakeSchema } from "../sheet/stakes"
 
 // What every asked-for roll carries. The numbers are the engine's.
 const asked = {
@@ -20,6 +21,7 @@ export const rollRequirementSchema = z.union([
     check: checkSchema,
     ...asked,
     spell: z.string().optional().describe("The roller's own spell this roll casts, as their spell list names it"),
+    stakes: z.array(stakeSchema).optional().describe("Who the roll hurts or heals, by which dice, on which outcome"),
   }),
   z.object({
     attack: z.object({ weapon: z.string().describe("The id of one of the roller's own attacks"), target: z.string().describe("The id of the character attacked") }),

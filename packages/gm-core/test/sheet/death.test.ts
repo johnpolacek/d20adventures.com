@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { strike, strikeFacts } from "../../src/sheet/attack"
-import { atRoundStart, type DeathSaves, deathSave, killed, withDamage, withHealing, withHealthPercent, withStatusWord } from "../../src/sheet/death"
+import { atRoundStart, type DeathSaves, deathSave, killed, withDamage, withHealing, withStatusWord } from "../../src/sheet/death"
 import type { Sheet } from "../../src/sheet/sheet"
 import { isDead, isDown, isDying, takesTurn } from "../../src/utils/turn-actors"
 import { DEATH_SAVE, type RollRequirement } from "../../src/validations/roll-requirement-schema"
@@ -92,12 +92,7 @@ test("healing at 0 wakes a hero at the healed hit points, and the dead stay dead
   assert.equal(withHealing(thalbern(9), 5).hitPoints, 11)
 })
 
-test("the model's writes go by the same rules: a percent never kills, and its word 'dead' drops a hero to 0", () => {
-  // 0% of 11 is 0: dying. Then 40% of 11 is 4.4, so 4: awake.
-  const down = withHealthPercent(thalbern(), 0)
-  assert.deepEqual([down.status, down.deathSaves], ["Unconscious", { successes: 0, failures: 0 }])
-  assert.deepEqual([withHealthPercent(down, 40).hitPoints, withHealthPercent(down, 40).status], [4, undefined])
-  assert.equal(withHealthPercent(owlbear(), 0).status, "dead")
+test("the model's word 'dead' drops a hero to 0, and an NPC takes it as written", () => {
   const word = withStatusWord(thalbern(), "dead")
   assert.deepEqual([word.hitPoints, word.status, isDead(word)], [0, "Unconscious", false])
   assert.equal(withStatusWord(owlbear(), "Dead").status, "Dead")

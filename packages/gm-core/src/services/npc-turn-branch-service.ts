@@ -2,6 +2,7 @@ import type { GmPorts } from "../ports"
 import { multiattackOf, strike, strikeFacts } from "../sheet/attack"
 import { resolveCheck } from "../sheet/check"
 import { afterHarm, killed } from "../sheet/death"
+import { applyStakes } from "../sheet/harm"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { attackBeat, rollBeat, turnScript } from "../story/turn"
@@ -11,7 +12,7 @@ import { isDown } from "../utils/turn-actors"
 import { isAttackRoll } from "../validations/roll-requirement-schema"
 import type { SafetyRules } from "../wiki-adventures/player-safety"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
-import { applyNpcEffectsToCharacters, createNpcTurnResolutionService, type NpcTurnEffect } from "./npc-turn-resolution-service"
+import { applyNpcEffectsToCharacters, type NpcTurnEffect } from "./npc-turn-resolution-service"
 import { createRollRequirementService } from "./roll-requirement-service"
 
 export type NpcRollInfo = {
@@ -73,7 +74,6 @@ const npcStep = (npc: TurnCharacter): StoryBy => ({ step: "npc", character: npc.
 
 export function createNpcTurnBranchService(ports: GmPorts) {
   const { generateNpcOutcome } = createNpcTurnGenerationService(ports)
-  const { reconcileNpcRollWithAi } = createNpcTurnResolutionService(ports)
   const { getRollRequirementForAction } = createRollRequirementService(ports)
   async function resolveNpcTurnRollOrDirectBranch(args: {
     turn: Turn
@@ -145,10 +145,11 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       )
       beatsToAppend = [...rolls, ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
       // The harm is the engine's. The outcome may still name a status or hand over an item.
-      effects = outcomeResult.effects.map(({ healthPercentDelta: _harm, ...effect }) => effect)
+      effects = outcomeResult.effects
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects, applyHealthAndStatus: true })
-    } else if (rollRequirement) {
-      // The NPC rolls with its stat block's bonus, which the requirement already carries.
+    } else if (rollRequirement && !("deathSave" in rollRequirement)) {
+      // A check or a save: the NPC rolls with its stat block's bonus, which the requirement already carries, and the
+      // engine settles what the roll put at stake before anyone tells it.
       const rolled = resolveCheck({ dice: d20sFor(rollRequirement.mode), bonus: rollRequirement.modifier, dc: rollRequirement.difficulty, mode: rollRequirement.mode })
       const { natural: baseRoll, bonus: modifier, total: result, success } = rolled
       rollInfo = {
@@ -160,85 +161,29 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         success,
         ...(rollRequirement.spell ? { spell: rollRequirement.spell } : {}),
       }
+      const settled = applyStakes({ characters: updatedCharacters, stakes: rollRequirement.stakes, outcome: success ? "success" : "failure", roll: rollDie, rules: args.rules })
+      updatedCharacters = settled.characters
+      console.log("[LLM] NPC dice roll:", { rollType: rollRequirement.rollType, result, difficulty: rollRequirement.difficulty, success, harm: settled.facts })
 
-      console.log("[LLM] NPC dice roll:", {
-        rollType: rollRequirement.rollType,
-        result,
-        difficulty: rollRequirement.difficulty,
-        success,
-      })
-
-      const prompt2 = buildNpcOutcomePrompt({
-        contextString: args.npcActionContext.contextString,
-        npcDetails: args.npcActionContext.npcDetails,
-        playerCharacters: args.npcActionContext.playerCharacters,
-        npcName: args.npc.name,
-        actionSummary: args.actionResult.actionSummary,
-        rollType: rollRequirement.rollType,
-        result,
-        difficulty: rollRequirement.difficulty,
-        success,
-        scene: args.scene,
-      })
-
-      console.log(
-        "[LLM DM] Sending prompt to LLM for outcome generation",
-        JSON.stringify(
-          {
-            promptLength: prompt2.length,
-            actionSummary: args.actionResult.actionSummary,
-            rollResult: result,
-            success,
-            playerCharacterCount: args.npcActionContext.playerCharacters.length,
-          },
-          null,
-          2
-        )
+      const outcomeResult = await generateNpcOutcome(
+        buildNpcOutcomePrompt({
+          contextString: args.npcActionContext.contextString,
+          npcDetails: args.npcActionContext.npcDetails,
+          playerCharacters: args.npcActionContext.playerCharacters,
+          npcName: args.npc.name,
+          actionSummary: args.actionResult.actionSummary,
+          rollType: rollRequirement.rollType,
+          result,
+          difficulty: rollRequirement.difficulty,
+          success,
+          scene: args.scene,
+          harm: settled.facts,
+        }),
+        args.npc.id
       )
-
-      const outcomeResult = await generateNpcOutcome(prompt2, args.npc.id)
-
-      console.log(
-        "[LLM DM] LLM response for outcome",
-        JSON.stringify(
-          {
-            beats: outcomeResult.beats,
-            effects: outcomeResult.effects,
-            effectCount: outcomeResult.effects.length,
-          },
-          null,
-          2
-        )
-      )
-
-      const roll = rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled)
-      beatsToAppend = [roll, ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
+      beatsToAppend = [rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled, settled.harm), ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
       effects = outcomeResult.effects
-
-      updatedCharacters = applyNpcEffectsToCharacters({
-        characters: updatedCharacters,
-        npcId: args.npc.id,
-        effects,
-        applyHealthAndStatus: true,
-      })
-
-      const diceRoll = {
-        rollType: rollRequirement.rollType,
-        baseRoll,
-        modifier,
-        result,
-        difficulty: rollRequirement.difficulty,
-        character: args.npc.name,
-        target: outcomeResult.effects?.[0] ? outcomeResult.effects[0].targetId : undefined,
-        success,
-      }
-
-      updatedCharacters = await reconcileNpcRollWithAi({
-        turn: args.turn,
-        updatedCharacters,
-        story: [...args.turn.story, ...beatsToAppend],
-        diceRoll,
-      })
+      updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects, applyHealthAndStatus: true })
     } else {
       beatsToAppend = cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc))
       effects = args.actionResult.effects

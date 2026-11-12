@@ -80,9 +80,37 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
   }
   try {
     await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
-    // The round ends with the Owlbear upon him and Thalbern at 0 hit points: Unconscious and dying.
+    // Thalbern fails a Constitution save that puts 1d4 + 10 Bludgeoning at stake. The engine rolls 11 to 14, at
+    // least his 11 hit points and short of 11 more, so he drops to 0, Unconscious and dying, not killed outright.
+    for (const c of store.current().characters) if (c.id !== "thalbern") c.hasReplied = c.isComplete = true
+    Object.assign(thalbern(), {
+      hasReplied: true,
+      rollRequired: {
+        check: { kind: "save", ability: "con" },
+        rollType: "Constitution Saving Throw",
+        difficulty: 30,
+        modifier: 0,
+        mode: "normal",
+        stakes: [{ on: "failure", target: "thalbern", kind: "damage", dice: "1d4 + 10", type: "bludgeoning" }],
+      },
+    })
+    store.save()
+    const told: Llm = {
+      generateText: unused,
+      generateObject: async ({ schema }) => ({ object: schema.parse({ beats: [{ kind: "narration", text: "The Owlbear is upon him." }] }) }),
+    }
+    await game(store, packs, told)({ kind: "roll", turnId: store.current()._id, characterId: "thalbern", result: 2 })
+    const fell = store.current().story.find((beat) => beat.kind === "roll")
+    const harm = fell?.kind === "roll" ? fell.harm : undefined
+    assert.deepEqual(
+      harm?.map((h) => [h.target, h.kind, h.bonus, h.type]),
+      [["thalbern", "damage", 10, "bludgeoning"]]
+    )
+    assert.ok(harm![0].amount >= 11 && harm![0].amount <= 14)
+    assert.deepEqual([thalbern().hitPoints, thalbern().status], [0, "Unconscious"])
+    // The round ends with the Owlbear upon him, and he is still dying.
     everyoneDone()
-    await game(store, packs, gm("owlbear-confrontation", { characterUpdates: [{ characterId: "thalbern", healthPercent: 0 }] }))({ kind: "continue", turnId: store.current()._id })
+    await game(store, packs, gm("owlbear-confrontation"))({ kind: "continue", turnId: store.current()._id })
     assert.equal(store.current().encounterId, "owlbear-confrontation")
     assert.ok(store.current().characters.some((c) => c.type === "npc" && /owlbear/i.test(c.name)))
     staged("owlbear-confrontation")

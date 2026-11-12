@@ -2,6 +2,7 @@ import type { GmPorts } from "../ports"
 import { type Strike, strike, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { afterHarm, deathSave } from "../sheet/death"
+import { applyStakes } from "../sheet/harm"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -10,7 +11,7 @@ import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
 import { attackBeat, rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
-import type { Turn, TurnCharacter } from "../types/adventure"
+import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { d20sFor, rollDie } from "../utils/game-utils"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
@@ -18,15 +19,6 @@ import { isDead, isDown } from "../utils/turn-actors"
 import { DEATH_SAVE, isAttackRoll, isDeathSaveRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules } from "../wiki-adventures/player-safety"
 import { markSpellAsUsed } from "./spell-tracking-service"
-import { createTurnUpdateService } from "./turn-update-service"
-
-// Rolls that can hurt by their kind: attacks, saving throws, and checks of the body.
-const BODILY_CHECK = /attack|sav(e|ing)|constitution|strength|dexterity|athletics|acrobatics/i
-// Words an outcome uses when someone is hurt, so a spell or a trap that strikes is read for health too.
-const HARM =
-  /\b(?:hit|hits|hitting|struck|strikes?|striking|sears?|seared|searing|burn(?:s|ed|ing)?|scorch(?:es|ed|ing)?|wound(?:s|ed|ing)?|damage[sd]?|slam(?:s|med|ming)?|fling(?:s|ing)?|flung|hurl(?:s|ed|ing)?|bites?|biting|claw(?:s|ed|ing)?|cuts?|cutting|slash(?:es|ed|ing)?|stab(?:s|bed|bing)?|pierc(?:es|ed|ing)|crush(?:es|ed|ing)?|shock(?:s|ed)?|bleed(?:s|ing)?|blood(?:ied|y)?)\b/i
-// Rolls and outcomes that heal. Healing Word "knits closed" a wound on Yeva and left her health where it was.
-const HEALING = /\b(?:heal(?:s|ed|ing)?|cure[sd]?|mend(?:s|ed|ing)?|knit(?:s|ted|ting)?|restor(?:es|ed|ing)|revive[sd]?|close[sd]? (?:the|her|his|their) wound)\b/i
 
 export function getEncounterInstructionsFromPlan(plan: AdventurePlan, encounterId: string): string {
   for (const section of plan.sections) {
@@ -57,6 +49,8 @@ function buildRollOutcomePrompt(args: {
   ledger?: string
   // An attack the engine has already resolved, in plain words: the hit or miss, the damage and how the target stands.
   attack?: string
+  // What the roll hurt or healed, already rolled by the engine, in plain words.
+  harm?: string[]
 }): string {
   return `
 Context:
@@ -77,7 +71,11 @@ Player action (verbatim): """${args.playerActionText}"""
 ${
   args.attack
     ? `${args.attack}\nThe game has already rolled this attack and its damage. Tell the blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
-    : `A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args.totalResult}, Difficulty: ${args.difficulty}, Margin: ${args.margin}).`
+    : `A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args.totalResult}, Difficulty: ${args.difficulty}, Margin: ${args.margin}).${
+        args.harm?.length
+          ? `\nThe game has already rolled what this did to hit points:\n${args.harm.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated. Add no other harm or healing and undo none of it. Give no number.`
+          : "\nThis roll changes no one's hit points. No one is wounded, healed, knocked out or killed by it."
+      }`
 }
 
   Guidelines:
@@ -87,7 +85,7 @@ ${
   - Return no beats only if the action is EXCLUSIVELY between player characters with no NPC involvement AND no environmental consequences.
   - Do not invent new objects, people, events, or details. Use only the encounter instructions/intro and established narrative. Someone or something the player's action names that is not established is not there. A position, state or fact the player's action assumes, such as where someone is, holds only if the story shows it. Tell the outcome against the scene as the story shows it.
   - Decide only what this roll decides. Nothing else is resolved here: no one else is killed, captured or beaten.
-  - ${CONTINUITY_RULE}${args.margin < 0 ? `\n  - This roll failed. ${FAILED_ROLL_RULE}` : ""}${HEALING.test(args.rollType) || HEALING.test(args.playerActionText) ? "\n  - Healing mends only the hurt the saved character state shows. On someone at full health it finds no wound to close." : ""}
+  - ${CONTINUITY_RULE}${args.margin < 0 ? `\n  - This roll failed. ${FAILED_ROLL_RULE}` : ""}
   - Only reference NPCs that are actually present (listed above).
   - ${KNOWLEDGE_RULE}
 
@@ -110,7 +108,6 @@ function sanitizeRollOutcome(text: string): string {
 export function createAdventureRollResultService(ports: GmPorts) {
   const wait = ports.sleep?.bind(ports) ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
   const generateObject = ports.llm.generateObject.bind(ports.llm)
-  const { analyzeAndApplyDiceRoll } = createTurnUpdateService(ports)
   async function resolvePlayerRollNarrativeAndCharacters(args: {
     turn: {
       _id: string
@@ -156,6 +153,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
     }
     let turnCharacters = args.turn.characters
     let blow: Strike | undefined
+    let stakeFacts: string[] = []
     let target: TurnCharacter | undefined
     let roll: StoryBeat
     let numbers: { natural: number; bonus: number; total: number; against: number; success: boolean }
@@ -172,11 +170,15 @@ export function createAdventureRollResultService(ports: GmPorts) {
     } else {
       // The bonus is read from the sheet as the die lands, so the sheet is always the one source of it.
       const result = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, required.check), dc: required.difficulty, mode })
-      roll = rollBeat(by, args.character, rollType, result)
+      // What the roll put at stake is settled here, by the engine: who it hurts or heals, and how they stand after.
+      const settled = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
+      turnCharacters = settled.characters
+      stakeFacts = settled.facts
+      roll = rollBeat(by, args.character, rollType, result, settled.harm)
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
     const spell = isAttackRoll(required) ? undefined : required.spell
-    const { natural: baseRoll, bonus: modifier, total: totalResult, against: difficulty, success } = numbers
+    const { total: totalResult, against: difficulty } = numbers
     const margin = totalResult - difficulty
     const story = args.turn.story
     const names = storyNames(args.turn.characters)
@@ -206,60 +208,23 @@ export function createAdventureRollResultService(ports: GmPorts) {
       margin,
       scene,
       attack: blow && target ? strikeFacts(args.character.name, target.name, blow) : undefined,
+      harm: stakeFacts,
       ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
 
-    let rollOutcome = ""
     try {
       const { object } = await generateObject({ prompt: rollOutcomePrompt, schema: storyOutputObject })
       const outcome = cleanStory(object.beats, scene, by).filter((b) => !("text" in b) || sanitizeRollOutcome(b.text))
-      rollOutcome = outcome.map((b) => ("text" in b ? b.text : "")).join(" ")
       added = [roll, ...outcome]
     } catch (error) {
       console.error("[resolvePlayerRollResult] Error generating roll outcome:", error)
     }
 
     const { story: newStory } = withStory(args.turn, added)
-    const diceRoll = {
-      rollType,
-      baseRoll,
-      modifier,
-      result: totalResult,
-      difficulty,
-      character: args.character.name,
-      success,
-    }
     await wait(500)
 
-    // Health is read from the outcome after an attack, a save or a feat of body, and after any roll whose outcome
-    // tells of harm. Only the exact names Attack, Constitution, Strength and Dexterity counted, so Guiding Bolt "sears
-    // into the drake's flank" left it unhurt, and a ward's lightning that flung Cassia into the casks after a failed
-    // Misty Step left her untouched.
-    // A roll that heals is read the same way, so the health it restores is kept.
-    // An attack's harm is the engine's, so no one reads the outcome for it.
-    const shouldAnalyzeHealth = !blow && !!rollOutcome && (BODILY_CHECK.test(rollType) || HARM.test(rollOutcome) || HEALING.test(rollType) || HEALING.test(rollOutcome))
-    console.log(`[resolvePlayerRollResult] Roll analysis: rollType=${rollType}, hasOutcome=${!!rollOutcome}, shouldAnalyzeHealth=${shouldAnalyzeHealth}`)
-
-    const turnForAnalysis: Turn = {
-      id: args.turn._id,
-      encounterId: args.turn.encounterId,
-      title: args.turn.title,
-      story: args.turn.story,
-      characters: turnCharacters,
-      adventureId: args.turn.adventureId,
-      isFinalEncounter: args.turn.isFinalEncounter,
-    }
-
-    const analyzedTurn = shouldAnalyzeHealth
-      ? await analyzeAndApplyDiceRoll({
-          turn: turnForAnalysis,
-          diceRoll,
-          story: newStory,
-        })
-      : turnForAnalysis
-
     // Anyone the outcome left down with no Death Saving Throw to make this round is done with it.
-    let updatedCharacters = analyzedTurn.characters.map((character) =>
+    let updatedCharacters = turnCharacters.map((character) =>
       character.id === args.characterId
         ? {
             ...character,

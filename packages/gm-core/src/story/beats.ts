@@ -71,6 +71,8 @@ export type RollBeat = {
   // An attack roll: who was attacked, whether a 20 made it a Critical Hit, the damage dice as they fell, and what the
   // target lost after its defenses. `dc` is then the target's Armor Class.
   attack?: { target: string; critical?: true; damage?: { type: string; dice: number[]; sides?: number; bonus: number; total: number }[]; taken?: number }
+  // What a check or save hurt or healed: the dice as they fell and what each target lost or regained.
+  harm?: { target: string; kind: "damage" | "healing"; dice: number[]; sides?: number; bonus: number; type?: string; amount: number }[]
 }
 // The player's own words, before the GM wrote them into the story.
 export type ReplyBeat = { kind: "reply"; by: StoryBy; character: string; text: string }
@@ -114,6 +116,9 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
         damage: z.array(z.object({ type: z.string(), dice: z.array(z.number()), sides: z.number().optional(), bonus: z.number(), total: z.number() })).optional(),
         taken: z.number().optional(),
       })
+      .optional(),
+    harm: z
+      .array(z.object({ target: id, kind: z.enum(["damage", "healing"]), dice: z.array(z.number()), sides: z.number().optional(), bonus: z.number(), type: z.string().optional(), amount: z.number() }))
       .optional(),
   }),
   z.object({ kind: z.literal("reply"), by, character: id, text: z.string() }),

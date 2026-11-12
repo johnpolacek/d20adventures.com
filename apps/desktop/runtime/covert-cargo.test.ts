@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { withDamage } from "@d20/gm-core/sheet/death"
 import { storyText } from "@d20/gm-core/story/render"
 import { findCurrentActor, isDying } from "@d20/gm-core/utils/turn-actors"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
@@ -119,10 +120,9 @@ function stubLlm(
       const answers = [
         advance(),
         npcAction,
-        { beats: [{ kind: "narration", text: "The blade bites deep." }], effects: lethalTo ? [{ targetId: lethalTo, healthPercentDelta: -100, status: "dead" }] : [] },
-        // An attack is a Strength check until attacks join the menu.
+        { beats: [{ kind: "narration", text: "The blade bites deep." }], effects: lethalTo ? [{ targetId: lethalTo, status: "dead" }] : [] },
+        // A plain Strength check, with nothing at stake, so only the outcome's word can touch Lyra.
         { check: "strength", difficulty: "very-easy" },
-        { hasPhysicalEffect: false, reasoning: "Already applied.", update: null },
       ]
       for (const answer of answers) {
         const parsed = schema.safeParse(answer)
@@ -169,7 +169,7 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", beats: [{ kind: "narration", text: "Reinhard raises his sword again." }], adventurePatch: {} })
     await play(stubLlm(fightGoesOn, lyra(store).id))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
-    // The blow takes Lyra to 0 and the model's word "dead" does not kill her: she is Unconscious and dying.
+    // The model's word "dead" takes Lyra to 0 and does not kill her: she is Unconscious and dying.
     assert.deepEqual([lyra(store).hitPoints, lyra(store).healthPercent, lyra(store).status], [0, 0, "Unconscious"])
     assert.equal(isDying(lyra(store)), true)
     assert.deepEqual(
@@ -187,7 +187,7 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     const dying = () => ({
       nextEncounterId: "battle-on-the-boat",
       beats: [{ kind: "narration", text: "Lyra goes down on one knee." }],
-      adventurePatch: { characterUpdates: [{ characterId: lyra(store).id, healthPercent: 0, status: "dead" }] },
+      adventurePatch: { characterUpdates: [{ characterId: lyra(store).id, status: "dead" }] },
     })
     await play(stubLlm(dying))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
@@ -261,7 +261,8 @@ test("the fight is written to end with Lyra in the river, on a pier the tug has 
 
 test("a fight the heroes win follows its own transition, however hurt they are", async () => {
   await inTheBattle(async (store, play) => {
-    lyra(store).healthPercent = 30
+    // Lyra takes 3 from the engine, short of 0.
+    Object.assign(lyra(store), withDamage(lyra(store), 3).character)
     for (const c of store.current().characters) c.hasReplied = c.isComplete = true
     store.save()
     await play(stubLlm(() => ({ nextEncounterId: "the-crate", beats: [{ kind: "narration", text: "Reinhard falls." }], adventurePatch: {} })))

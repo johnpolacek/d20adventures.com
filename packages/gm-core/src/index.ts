@@ -18,10 +18,8 @@ import { createAiPcTurnService } from "./services/ai-pc-turn-service"
 import { createNarrativeGenerationService } from "./services/narrative-generation-service"
 import { createNpcTurnBranchService } from "./services/npc-turn-branch-service"
 import { createNpcTurnGenerationService } from "./services/npc-turn-generation-service"
-import { createNpcTurnResolutionService } from "./services/npc-turn-resolution-service"
 import { createNpcTurnService } from "./services/npc-turn-service"
 import { createRollRequirementService } from "./services/roll-requirement-service"
-import { createTurnUpdateService } from "./services/turn-update-service"
 
 export type * from "./ports"
 
@@ -35,10 +33,8 @@ export function createGmCore(ports: GmPorts) {
     ...createNarrativeGenerationService(ports),
     ...createNpcTurnBranchService(ports),
     ...createNpcTurnGenerationService(ports),
-    ...createNpcTurnResolutionService(ports),
     ...createNpcTurnService(ports),
     ...createRollRequirementService(ports),
-    ...createTurnUpdateService(ports),
     ...createGenerateAppearanceBackgroundAction(ports),
     ...createGenerateAttributesAction(ports),
     ...createGenerateCharacterAction(ports),

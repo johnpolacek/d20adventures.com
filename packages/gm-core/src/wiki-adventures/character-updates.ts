@@ -16,7 +16,6 @@ export const spellUseChangeSchema = z.strictObject({ name, isUsed: z.boolean() }
 /** Explicit operations for hosts that apply character patches, rather than prose notes. */
 export const characterUpdateSchema = z.strictObject({
   characterId: name,
-  healthPercent: z.number().min(0).max(100).optional(),
   status: z.string().max(500).optional().describe("New status. An empty string clears it."),
   inventoryChanges: z.array(inventoryChangeSchema).max(100).optional(),
   effectChanges: z.array(effectChangeSchema).max(100).optional(),

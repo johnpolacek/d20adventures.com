@@ -39,7 +39,6 @@ const npcActionOutcomeSchema = z.object({
   effects: z.array(
     z.object({
       targetId: z.string(),
-      healthPercentDelta: z.number().optional(),
       status: z.string().optional(),
       equipmentToAdd: z
         .array(
@@ -221,6 +220,8 @@ export function buildNpcOutcomePrompt(args: {
   scene: StoryScene
   // Attacks the engine has already resolved, in plain words: each hit or miss, its damage and how the target stands.
   attacks?: string[]
+  // What a check or save hurt or healed, already rolled by the engine, in plain words.
+  harm?: string[]
 }): string {
   const playerCharacterNames = args.playerCharacters.map((character) => character.name)
   const playerCharacterDetails = args.playerCharacters
@@ -267,15 +268,19 @@ ${KNOWLEDGE_RULE}
 
 ${CONTINUITY_RULE}
 
-${args.success ? "" : `${FAILED_ROLL_RULE}\n\n`}Then, output a JSON array of effects for any characters affected (targetId, healthPercentDelta, status). If the NPC's action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
+${args.success ? "" : `${FAILED_ROLL_RULE}\n\n`}Then, output a JSON array of effects for any characters affected (targetId, status). Hit points are the game's: never give a number for them. If the NPC's action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
 
 NPC: ${args.npcName}
 Player Characters: ${playerCharacterNames.join(", ")}
 Action: ${args.actionSummary}
 ${
   args.attacks?.length
-    ? `The game has already rolled this turn's attacks and their damage:\n${args.attacks.map((line) => `- ${line}`).join("\n")}\nTell each blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number, and leave "healthPercentDelta" out of the effects.`
-    : `Roll Type: ${args.rollType}\nRoll Result: ${args.result} (difficulty: ${args.difficulty}, success: ${args.success})`
+    ? `The game has already rolled this turn's attacks and their damage:\n${args.attacks.map((line) => `- ${line}`).join("\n")}\nTell each blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
+    : `Roll Type: ${args.rollType}\nRoll Result: ${args.result} (difficulty: ${args.difficulty}, success: ${args.success})\n${
+        args.harm?.length
+          ? `The game has already rolled what this did to hit points:\n${args.harm.map((entry) => `- ${entry}`).join("\n")}\nTell it exactly as stated. Add no other harm or healing and undo none of it. Give no number.`
+          : "This roll changes no one's hit points. No one is wounded, healed, knocked out or killed by it."
+      }`
 }
 
 ${storyRules(args.scene)}
@@ -283,7 +288,7 @@ ${storyRules(args.scene)}
 Respond as JSON:
 {
   beats: [...],
-  effects: [ { targetId: string, healthPercentDelta?: number, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]
+  effects: [ { targetId: string, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`
 }
 

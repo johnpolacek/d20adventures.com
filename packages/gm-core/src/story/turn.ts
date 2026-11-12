@@ -43,7 +43,7 @@ export const storyProse = (beats: readonly StoryBeat[]) =>
     .join("\n\n")
 
 // A resolved check as the story keeps it. Both dice are kept only when two were rolled.
-export function rollBeat(by: StoryBy, roller: { id: string; name: string; image?: string }, check: string, result: CheckResult): RollBeat {
+export function rollBeat(by: StoryBy, roller: { id: string; name: string; image?: string }, check: string, result: CheckResult, harm?: RollBeat["harm"]): RollBeat {
   return {
     kind: "roll",
     by,
@@ -57,6 +57,7 @@ export function rollBeat(by: StoryBy, roller: { id: string; name: string; image?
     dc: result.dc,
     success: result.success,
     ...(roller.image ? { image: roller.image } : {}),
+    ...(harm?.length ? { harm } : {}),
   }
 }
 

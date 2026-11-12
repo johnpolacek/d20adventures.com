@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { withDamage, withHealing, withHitPointsBy } from "@d20/gm-core/sheet/death"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { z } from "zod"
 import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
@@ -80,17 +81,24 @@ async function advance(store: LocalStore, patch: unknown, encounter = store.curr
   return prompt
 }
 const byId = (store: LocalStore, id: string) => store.current().characters.find((c) => c.id === id)!
+// Hit points are the engine's, and a round's patch cannot set them, so a test sets them on the stored character.
+function setCharacter(store: LocalStore, id: string, change: (c: ReturnType<typeof byId>) => ReturnType<typeof byId>) {
+  const c = byId(store, id)
+  Object.assign(c, change(c))
+  store.save()
+}
 
 test("real turns transfer items, apply conditions/spell use, preserve history and resume without duplication", async () => {
   const t = await setup()
   try {
+    setCharacter(t.store, t.pc.id, (c) => withHitPointsBy(c, 6))
+    setCharacter(t.store, t.npc.id, (c) => withHitPointsBy(c, 15))
     complete(t.store)
     const before = structuredClone(t.store.current())
     const prompt = await advance(t.store, {
       characterUpdates: [
         {
           characterId: t.pc.id,
-          healthPercent: 65,
           status: "Wounded",
           inventoryChanges: [
             { op: "remove", name: "potion" },
@@ -101,14 +109,14 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
           spellUseChanges: [{ name: "Light", isUsed: true }],
         },
         { characterId: t.giver.id, inventoryChanges: [{ op: "remove", name: "Rope" }] },
-        { characterId: t.npc.id, healthPercent: 20, status: "Injured", inventoryChanges: [{ op: "add", name: "Ribbon" }] },
+        { characterId: t.npc.id, status: "Injured", inventoryChanges: [{ op: "add", name: "Ribbon" }] },
       ],
     })
     assert.match(prompt, /CURRENT SAVED CHARACTER STATE/)
     assert.match(prompt, /"name":"Potion"/)
     assert.deepEqual(t.store.state!.turns[1], before)
     const c = byId(t.store, t.pc.id)
-    // Milos has 9 hit points. 65% of them is 5.85, so 6, and 6 of 9 shows as 67%.
+    // Milos has 9 hit points, set to 6 above, and 6 of 9 shows as 67%.
     assert.deepEqual([c.hitPoints, c.healthPercent], [6, 67])
     assert.equal(c.status, "Wounded")
     assert.deepEqual(
@@ -151,7 +159,7 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
       t.store.current().characters.some((c) => c.id === t.npc.id),
       false
     )
-    // Garlan is a Guard Captain with 75 hit points: 20% of them is 15.
+    // Garlan is a Guard Captain with 75 hit points, set to 15 above, and 15 of 75 shows as 20%.
     assert.deepEqual([t.store.state!.characterStates![t.npc.id].hitPoints, t.store.state!.characterStates![t.npc.id].healthPercent], [15, 20])
     t.reopen()
     await advance(t.store, {})
@@ -168,16 +176,20 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
 test("refreshes do not stack effects, fallen PCs stay on the sheet, and later healing clears death", async () => {
   const t = await setup()
   try {
-    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, healthPercent: 0, status: "dead", effectChanges: [{ op: "set", name: "Ward", description: "Stronger ward", duration: 4 }] }] })
+    // Milos takes 9, all his hit points, from the engine.
+    setCharacter(t.store, t.pc.id, (c) => withDamage(c, 9).character)
+    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, status: "dead", effectChanges: [{ op: "set", name: "Ward", description: "Stronger ward", duration: 4 }] }] })
     // The patch's word does not kill a hero: Milos drops to 0 and is dying, and his next turn is a Death Saving Throw.
     assert.deepEqual([byId(t.store, t.pc.id).status, byId(t.store, t.pc.id).isComplete, byId(t.store, t.pc.id).rollRequired?.rollType], ["Unconscious", false, "Death Saving Throw"])
     await advance(t.store, {})
     assert.deepEqual([byId(t.store, t.pc.id).hitPoints, byId(t.store, t.pc.id).healthPercent], [0, 0])
     assert.deepEqual(byId(t.store, t.pc.id).effects, [{ name: "Ward", description: "Stronger ward", duration: 3 }])
-    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, healthPercent: 40, status: "", spellUseChanges: [{ name: "Light", isUsed: false }] }] })
+    // The engine heals him for 4.
+    setCharacter(t.store, t.pc.id, (c) => withHealing(c, 4))
+    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, status: "", spellUseChanges: [{ name: "Light", isUsed: false }] }] })
     assert.equal(byId(t.store, t.pc.id).isComplete, false)
     assert.equal(byId(t.store, t.pc.id).status, undefined)
-    // 40% of Milos's 9 is 3.6, so 4, and 4 of 9 shows as 44%.
+    // Healed from 0 by 4, and 4 of Milos's 9 shows as 44%.
     assert.deepEqual([byId(t.store, t.pc.id).hitPoints, byId(t.store, t.pc.id).healthPercent], [4, 44])
   } finally {
     t.close()
@@ -190,7 +202,8 @@ test("invalid character patches cannot partly advance, mutate the save, or fall 
     complete(t.store)
     const before = JSON.stringify(t.store.state)
     const invalid = [
-      [{ characterId: "unknown", healthPercent: 50 }],
+      [{ characterId: "unknown", status: "Fine" }],
+      // Hit points are the engine's: a patch that sets health is refused.
       [{ characterId: t.pc.id, inventoryChanges: ["receives a shield"] }],
       [
         {
@@ -204,7 +217,7 @@ test("invalid character patches cannot partly advance, mutate the save, or fall 
       [{ characterId: t.pc.id, spellUseChanges: [{ name: "Unknown spell", isUsed: true }] }],
       [{ characterId: t.pc.id, effectChanges: [{ op: "remove", name: "Absent" }] }],
       [{ characterId: t.pc.id, effectChanges: [{ op: "set", name: "Ward", description: "Invalid", duration: 0 }] }],
-      [{ characterId: t.pc.id, healthPercent: 101 }],
+      [{ characterId: t.pc.id, healthPercent: 50 }],
       [{ characterId: t.pc.id, status: "Fine", unrecognizedField: true }],
       [
         { characterId: t.pc.id, status: "Fine" },
@@ -295,7 +308,7 @@ test("storage validates the whole patch before writing and a duplicate commit ca
           ...args,
           adventurePatch: {
             characterUpdates: [
-              { characterId: t.pc.id, healthPercent: 45, inventoryChanges: [{ op: "add", name: "Token" }] },
+              { characterId: t.pc.id, inventoryChanges: [{ op: "add", name: "Token" }] },
               { characterId: t.giver.id, inventoryChanges: [{ op: "remove", name: "Absent" }] },
             ],
           },
