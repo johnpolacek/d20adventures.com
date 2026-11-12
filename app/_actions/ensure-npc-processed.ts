@@ -34,7 +34,9 @@ export async function ensureNpcProcessed(turnId: Id<"turns">): Promise<{ status:
       hasReplied: c.hasReplied,
       isComplete: c.isComplete,
       healthPercent: c.healthPercent,
-      status: c.status,
+      conditions: c.conditions,
+      dead: c.dead,
+      fled: c.fled,
     })),
     currentActor: currentActor
       ? {

@@ -28,7 +28,6 @@
   ],
   "skills": ["Athletics", "Intimidation", "Perception", "Endurance", "Shield Wall Tactics"],
   "specialAbilities": ["Stone Resolve: Branka's dwarven constitution lets her shrug off blows and stand her ground where others would falter", "Shield Guard: Branka can interpose her shield to protect an adjacent ally from harm"],
-  "status": "",
   "type": "pc",
   "attributes": {
     "strength": 16,

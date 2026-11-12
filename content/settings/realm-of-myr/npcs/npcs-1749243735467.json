@@ -36,7 +36,6 @@
     "Trance (Does not require sleep, meditates for 4 hours)",
     "Forest Camouflage (Can attempt to hide even when only lightly obscured by natural phenomena)"
   ],
-  "status": "",
   "type": "npc",
   "attributes": {
     "strength": 10,

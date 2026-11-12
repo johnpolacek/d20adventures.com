@@ -1,13 +1,18 @@
+import type { ConditionId } from "@d20/srd"
 import { damageTaken, defensesOf, rollDamage } from "./attack"
 import type { Roller } from "./check"
-import { afterHarm, type DeathRules, type Fate, withDamage, withHealing } from "./death"
+import { conditionName, exhaustionOf, withCondition, withoutCondition } from "./conditions"
+import { afterHarm, type DeathRules, type Fate, killed, withDamage, withHealing } from "./death"
 import { hitPointsOf } from "./hit-points"
 import type { Stake } from "./stakes"
 
 /** One stake as it fell, as the story keeps it: the dice rolled and what the target lost or regained. */
 export type Harm = { target: string; kind: "damage" | "healing"; dice: number[]; sides?: number; bonus: number; type?: string; amount: number }
 
-type Harmed = Roller & { id: string; name: string; type: string; hitPoints?: number; healthPercent?: number; status?: string }
+/** A condition a roll gave someone, or ended for them, as the story keeps it. */
+export type ConditionChange = { target: string; condition: ConditionId; ends?: true }
+
+type Harmed = Roller & { id: string; name: string; type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; isComplete?: boolean }
 
 // How a character stands after harm or healing, in words for the game master.
 function standing(character: Harmed, fate: Fate | undefined): string {
@@ -21,9 +26,10 @@ function standing(character: Harmed, fate: Fate | undefined): string {
 }
 
 /**
- * Settle a roll's stakes once its outcome is known. Each stake that matches is rolled: damage meets the target's
- * Immunities, Resistances and Vulnerabilities and the rules of 0 hit points, and healing brings back one who is down.
- * `roll` throws one die of the given size. A stake on someone who is not here is dropped.
+ * Settle a roll's stakes once its outcome is known. Each stake that matches is applied. Damage is rolled and meets the
+ * target's Immunities, Resistances and Vulnerabilities and the rules of 0 hit points, and healing brings back one who
+ * is down. A condition is given unless the target is immune to it, or ended. `roll` throws one die of the given size.
+ * A stake on someone who is not here is dropped.
  */
 export function applyStakes<T extends Harmed>(args: {
   characters: readonly T[]
@@ -31,14 +37,44 @@ export function applyStakes<T extends Harmed>(args: {
   outcome: "success" | "failure"
   roll: (sides: number) => number
   rules?: DeathRules
-}): { characters: T[]; harm: Harm[]; facts: string[] } {
+}): { characters: T[]; harm: Harm[]; conditions: ConditionChange[]; facts: string[] } {
   let characters = [...args.characters]
   const harm: Harm[] = []
+  const conditions: ConditionChange[] = []
   const facts: string[] = []
+  const put = (after: T) => {
+    characters = characters.map((character) => (character.id === after.id ? after : character))
+  }
   for (const stake of args.stakes ?? []) {
     if (stake.on !== "always" && stake.on !== args.outcome) continue
     const target = characters.find((character) => character.id === stake.target)
     if (!target) continue
+    if (stake.kind === "condition") {
+      const name = conditionName(stake.condition)
+      if (stake.ends) {
+        const freed = withoutCondition(target, stake.condition)
+        if (!freed.ended) continue
+        put(freed.character)
+        conditions.push({ target: target.id, condition: stake.condition, ends: true })
+        facts.push(stake.condition === "exhaustion" && exhaustionOf(freed.character) ? `${target.name} loses a level of Exhaustion.` : `${target.name} is no longer ${name}.`)
+        continue
+      }
+      const given = withCondition(target, { id: stake.condition, source: stake.source, span: stake.span }, { acted: !!target.isComplete })
+      if (!given.given) {
+        facts.push(`${target.name} cannot be ${name} and is not.`)
+        continue
+      }
+      // The sixth level of Exhaustion kills.
+      const dies = given.level === 6
+      put(afterHarm(dies ? killed(given.character, args.rules) : given.character))
+      conditions.push({ target: target.id, condition: stake.condition })
+      facts.push(
+        stake.condition === "exhaustion"
+          ? `${target.name} gains a level of Exhaustion, now ${given.level}.${dies ? ` ${standing(target, args.rules?.playerDeath === false && target.type === "pc" ? "stable" : "dies")}` : ""}`
+          : `${target.name} is now ${name}.`
+      )
+      continue
+    }
     const rolled = rollDamage([{ dice: stake.dice, type: stake.type ?? "bludgeoning" }], args.roll)
     const [part] = rolled.parts
     let after: T
@@ -55,7 +91,7 @@ export function applyStakes<T extends Harmed>(args: {
       fate = struck.fate
       facts.push(`${target.name} takes ${amount} ${stake.type ?? ""} damage. ${standing(after, fate)}`.replace("  ", " "))
     }
-    characters = characters.map((character) => (character.id === target.id ? after : character))
+    put(after)
     harm.push({
       target: target.id,
       kind: stake.kind,
@@ -66,5 +102,5 @@ export function applyStakes<T extends Harmed>(args: {
       amount,
     })
   }
-  return { characters, harm, facts }
+  return { characters, harm, conditions, facts }
 }

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
+import { conditionWords } from "@d20/gm-core/sheet/conditions"
 import { killed, withDamage } from "@d20/gm-core/sheet/death"
 import { pendingRescue } from "@d20/gm-core/wiki-adventures/player-safety"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "@d20/gm-core/wiki-adventures/runtime-context"
@@ -89,20 +90,20 @@ async function main() {
   for (const id of ["the-shipment", "the-transaction", "the-fake", "the-disturbance", "battle-on-the-boat"])
     assert.match(artifacts.encounters[id].sections.gmNotes ?? "", /Perception check, DC 15/, id)
   assert.match(artifacts.encounters["the-shipment"].sections.intro ?? "", /Neither knows of the third watcher/)
-  const hurt = (hitPoints: number, status?: string) => [
-    { type: "pc", hitPoints, status },
+  const hurt = (hitPoints: number, dead?: true) => [
+    { type: "pc", hitPoints, ...(dead ? { dead } : {}) },
     { type: "pc", hitPoints: 6 },
-    { type: "npc", hitPoints: 0, status: "dead" },
+    { type: "npc", hitPoints: 0, dead: true as const },
   ]
-  assert.equal(pendingRescue({ artifacts, encounterId: "battle-on-the-boat", characters: hurt(0, "Unconscious"), playedEncounterIds: [] }), undefined, "no rescue is authored")
+  assert.equal(pendingRescue({ artifacts, encounterId: "battle-on-the-boat", characters: hurt(0), playedEncounterIds: [] }), undefined, "no rescue is authored")
   // The rescue rule itself, on a copy that authors one: the fight leads to the crate when a hero is at 0 and not dead.
   const rescued = structuredClone(artifacts)
   rescued.manifest.rescue = { encounterId: "the-crate" }
-  const rescueFrom = (encounterId: string, hitPoints: number, playedEncounterIds: string[] = [], status = "Unconscious") =>
-    pendingRescue({ artifacts: rescued, encounterId, characters: hurt(hitPoints, status), playedEncounterIds })
+  const rescueFrom = (encounterId: string, hitPoints: number, playedEncounterIds: string[] = [], dead?: true) =>
+    pendingRescue({ artifacts: rescued, encounterId, characters: hurt(hitPoints, dead), playedEncounterIds })
   assert.equal(rescueFrom("battle-on-the-boat", 0)?.toEncounterId, "the-crate")
   assert.equal(rescueFrom("battle-on-the-boat", 1), undefined, "the rescue waits for a hero at 0")
-  assert.equal(rescueFrom("battle-on-the-boat", 0, [], "dead"), undefined, "the dead are not rescued")
+  assert.equal(rescueFrom("battle-on-the-boat", 0, [], true), undefined, "the dead are not rescued")
   assert.equal(rescueFrom("battle-on-the-boat", 0, ["the-crate"]), undefined, "the rescue plays once")
   assert.equal(rescueFrom("the-shipment", 0), undefined, "the rescue needs an authored transition")
 
@@ -146,9 +147,12 @@ async function main() {
   const lyra = battleCharacters.find((c) => c.id === "1749159962941")
   assert.ok(lyra)
   const outright = withDamage(lyra, 12, { rules: artifacts.manifest })
-  assert.deepEqual([outright.character.hitPoints, outright.character.status, outright.character.deathSaves?.stable, outright.fate], [0, "Unconscious", true, "stable"])
-  assert.equal(killed(lyra, artifacts.manifest).status, "Unconscious")
-  assert.equal(killed(lyra, {}).status, "dead", "other adventures keep their deaths")
+  assert.deepEqual(
+    [outright.character.hitPoints, outright.character.dead, conditionWords(outright.character).includes("Unconscious"), outright.character.deathSaves?.stable, outright.fate],
+    [0, undefined, true, true, "stable"]
+  )
+  assert.deepEqual([killed(lyra, artifacts.manifest).dead, conditionWords(killed(lyra, artifacts.manifest)).includes("Unconscious")], [undefined, true])
+  assert.equal(killed(lyra, {}).dead, true, "other adventures keep their deaths")
 
   console.log("Covert Cargo playthrough bridge checks passed")
 }

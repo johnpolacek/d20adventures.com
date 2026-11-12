@@ -60,7 +60,6 @@
     }
   ],
   "specialAbilities": ["Wayfinder's Welcome: common folk of the March trust a Wayfinder's robes and speak freely to Milos", "Steady Hands: Milos can stabilize the dying and ease pain even without magic"],
-  "status": "",
   "type": "pc",
   "attributes": {
     "strength": 10,

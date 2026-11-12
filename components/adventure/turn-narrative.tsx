@@ -139,7 +139,9 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
           hasReplied: c.hasReplied,
           isComplete: c.isComplete,
           healthPercent: c.healthPercent,
-          status: c.status,
+          conditions: c.conditions,
+          dead: c.dead,
+          fled: c.fled,
         })),
         currentCharacter: currentCharacter
           ? {

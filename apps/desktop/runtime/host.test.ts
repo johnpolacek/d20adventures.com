@@ -338,7 +338,7 @@ test("nothing is queued while a player is up, or once no player has a living her
   assert.equal(selfRunning([{ ...hero, isComplete: true }, ai, npc]), "a")
   assert.equal(selfRunning([{ ...hero, isComplete: true }, { ...ai, isComplete: true }, npc]), "n")
   assert.equal(selfRunning([hero, ai, npc].map((c) => ({ ...c, isComplete: true }))), "round")
-  assert.equal(selfRunning([{ ...hero, hitPoints: 0, healthPercent: 0, status: "dead" }, ai, npc]), null)
+  assert.equal(selfRunning([{ ...hero, hitPoints: 0, healthPercent: 0, dead: true as const }, ai, npc]), null)
   assert.equal(selfRunning([ai, npc]), null)
 })
 

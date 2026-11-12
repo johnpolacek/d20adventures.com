@@ -357,7 +357,7 @@ function npcTurnRules() {
   const npc = { id: "karim", name: "Karim the Jewel Merchant", type: "npc", behavior: "Shrewd. Acts only on a turn when a hero has spoken to him." } as any
   const turn = { id: "t", encounterId: "e", title: "", adventureId: "a", story: [], characters: [npc] } as any
   const died = handleSkipPassNpcTurn({ turn, npc, actionResult: { actionSummary: "", beats: [], actionType: "die" }, scene: { cast: [npc], places: [] } as any })
-  assert.deepEqual([died.updatedCharacters[0].healthPercent, died.updatedCharacters[0].status], [0, "dead"])
+  assert.deepEqual([died.updatedCharacters[0].healthPercent, died.updatedCharacters[0].dead], [0, true])
   const reply = (text: string, to?: string) => ({ kind: "line", by: { step: "reply", character: "milos" }, speaker: "milos", text, ...(to ? { to } : {}) }) as any
   assert.ok(waitsUnaddressed(npc, [reply("Lovely day.")]))
   assert.ok(!waitsUnaddressed(npc, [reply("How much?", "karim")]))
@@ -381,7 +381,7 @@ function npcTurnRules() {
   assert.deepEqual(npcNoteRules(notes, cast[2], cast), [])
   assert.match(castRulesNote(cast), /\n- Silverhand: Watches from behind his man\. Says nothing\.$/)
   assert.doesNotMatch(castRulesNote(cast), /Bids calmly/)
-  assert.equal(castRulesNote([{ ...cast[1], status: "dead" }]), "")
+  assert.equal(castRulesNote([{ ...cast[1], dead: true }]), "")
   const facts = [{ id: "clue", text: "The key is below.", knownBy: ["milos"] }, ...Array.from({ length: 30 }, (_, i) => ({ id: `r${i}-private-1`, text: `Chatter ${i}.`, knownBy: ["milos"] }))]
   const ledger = ledgerNote(facts, { milos: "Milos" })
   assert.match(ledger, /The key is below\./)

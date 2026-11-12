@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
+import { conditionWords } from "../sheet/conditions"
 import { authoredText } from "../story/authored"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, knowledgeNote } from "../story/knowledge"
@@ -10,7 +11,7 @@ import { storyNames } from "../story/render"
 import { beatsField, characterScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
-import { isDown } from "../utils/turn-actors"
+import { isDead, isDown } from "../utils/turn-actors"
 import { formatSpellsForPrompt } from "./spell-tracking-service"
 
 const npcActionSchema = z.object({
@@ -39,7 +40,6 @@ const npcActionOutcomeSchema = z.object({
   effects: z.array(
     z.object({
       targetId: z.string(),
-      status: z.string().optional(),
       equipmentToAdd: z
         .array(
           z.object({
@@ -110,7 +110,7 @@ NPC Details:
 - Skills: ${npc.skills?.join(", ") || "None"}
 - Spells: ${npcSpellsList}
 - Health: ${npc.healthPercent ?? 100}%
-- Status: ${npc.status || "Normal"}
+- Conditions: ${conditionWords(npc) || "None"}
 `
 
   return {
@@ -154,7 +154,7 @@ CRITICAL: The NPC Behavior is binding, line by line. If it says the NPC says not
 
 CRITICAL: The Encounter Instructions bind the NPC too. What they say does not happen, or that the NPC does not know, say or give, holds. The NPC gives no clue, location, secret, confession or reveal the instructions do not provide, and states no fact the story has not shown, such as who else is after something. Prices, bids, sums and counts stay as the story has said them, and an item already sold or given away is not offered again.
 ${args.noteRules ? `\n${args.noteRules}\n` : ""}
-**CRITICAL: Dead or unconscious player characters (HP 0% or status "Dead"/"Unconscious") cannot act and should be ignored. Do NOT target them with attacks or actions. Focus only on active, conscious player characters. If a character is dead or unconscious, the NPC should acknowledge this in their beats but not attempt to interact with them.**
+**CRITICAL: Dead or unconscious player characters (at 0 hit points) cannot act and should be ignored. Do NOT target them with attacks or actions. Focus only on active, conscious player characters. If a character is dead or unconscious, the NPC should acknowledge this in their beats but not attempt to interact with them.**
 
 **IMPORTANT: Before deciding the NPC's action, carefully review the 'Recent Narrative' to understand what has ALREADY happened. If a player character has already completed a task (like casting a spell, detecting magic, or performing an action), the NPC should react to that completed action appropriately. Do NOT ask the player to do something they have already done. Instead, the NPC should respond to what has been completed or ask for the next step in the process.**
 
@@ -194,7 +194,7 @@ If the NPC dies this turn of a wound, poison or curse the story has already give
 If the NPC's action involves giving items to a player character, include an "effects" array. Each object in "effects" should have a "targetId" (the ID of the character receiving items) and an "equipmentToAdd" array listing the items ({name: string, description?: string}).
 
 Targetable Player Characters (alive and conscious): ${args.alivePlayerCharacters.map((character) => character.name).join(", ")} (IDs: ${args.alivePlayerCharacters.map((character) => character.id).join(", ")})
-${args.deadPlayerCharacters.length > 0 ? `\n\nIMPORTANT: The following player characters are DEAD or UNCONSCIOUS and should NOT be targeted: ${args.deadPlayerCharacters.map((character) => `${character.name} (HP ${character.healthPercent}%, Status: ${character.status || "Dead"})`).join(", ")}. The NPC should acknowledge their condition but not attempt to interact with them.` : ""}
+${args.deadPlayerCharacters.length > 0 ? `\n\nIMPORTANT: The following player characters are DEAD or UNCONSCIOUS and should NOT be targeted: ${args.deadPlayerCharacters.map((character) => `${character.name} (${isDead(character) ? "Dead" : "Unconscious"})`).join(", ")}. The NPC should acknowledge their condition but not attempt to interact with them.` : ""}
 
 ${storyRules(args.scene)}
 
@@ -220,15 +220,15 @@ export function buildNpcOutcomePrompt(args: {
   scene: StoryScene
   // Attacks the engine has already resolved, in plain words: each hit or miss, its damage and how the target stands.
   attacks?: string[]
-  // What a check or save hurt or healed, already rolled by the engine, in plain words.
+  // What a check or save did to hit points and conditions, already settled by the engine, in plain words.
   harm?: string[]
 }): string {
   const playerCharacterNames = args.playerCharacters.map((character) => character.name)
   const playerCharacterDetails = args.playerCharacters
     .map((character) => {
       const status = isDown(character)
-        ? `DEAD/UNCONSCIOUS (HP ${character.healthPercent}%, Status: ${character.status || "Dead"})`
-        : `HP ${character.healthPercent ?? 100}%${character.status ? `, Status: ${character.status}` : ""}`
+        ? `DEAD/UNCONSCIOUS (${isDead(character) ? "Dead" : "Unconscious"})`
+        : `HP ${character.healthPercent ?? 100}%${conditionWords(character) ? `, Conditions: ${conditionWords(character)}` : ""}`
       return `- ${character.name}: ${character.archetype || "Unknown"}, ${status}, Equipment: ${character.equipment?.map((equipment) => equipment.name).join(", ") || "None"}`
     })
     .join("\n")
@@ -268,7 +268,7 @@ ${KNOWLEDGE_RULE}
 
 ${CONTINUITY_RULE}
 
-${args.success ? "" : `${FAILED_ROLL_RULE}\n\n`}Then, output a JSON array of effects for any characters affected (targetId, status). Hit points are the game's: never give a number for them. If the NPC's action results in any characters receiving items, specify these in an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`) within the corresponding effect object for the target character.
+${args.success ? "" : `${FAILED_ROLL_RULE}\n\n`}Hit points and conditions are the game's: never give a number for them, and tell no wound or condition the game has not stated. If the NPC's action results in any characters receiving items, output an "effects" array: each entry has the "targetId" of who receives them and an \`equipmentToAdd\` array (each item as \`{name: string, description?: string}\`). Otherwise "effects" is empty.
 
 NPC: ${args.npcName}
 Player Characters: ${playerCharacterNames.join(", ")}
@@ -278,8 +278,8 @@ ${
     ? `The game has already rolled this turn's attacks and their damage:\n${args.attacks.map((line) => `- ${line}`).join("\n")}\nTell each blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
     : `Roll Type: ${args.rollType}\nRoll Result: ${args.result} (difficulty: ${args.difficulty}, success: ${args.success})\n${
         args.harm?.length
-          ? `The game has already rolled what this did to hit points:\n${args.harm.map((entry) => `- ${entry}`).join("\n")}\nTell it exactly as stated. Add no other harm or healing and undo none of it. Give no number.`
-          : "This roll changes no one's hit points. No one is wounded, healed, knocked out or killed by it."
+          ? `The game has already settled what this did to hit points and conditions:\n${args.harm.map((entry) => `- ${entry}`).join("\n")}\nTell it exactly as stated. Add no other harm, healing or condition and undo none of it. Give no number.`
+          : "This roll changes no one's hit points or conditions. No one is wounded, healed, knocked down, knocked out or killed by it."
       }`
 }
 
@@ -288,7 +288,7 @@ ${storyRules(args.scene)}
 Respond as JSON:
 {
   beats: [...],
-  effects: [ { targetId: string, status?: string, equipmentToAdd?: [{name: string, description?: string}] } ]
+  effects: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`
 }
 

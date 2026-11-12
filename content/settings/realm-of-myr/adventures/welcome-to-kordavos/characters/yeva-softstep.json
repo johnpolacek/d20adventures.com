@@ -28,7 +28,6 @@
   ],
   "skills": ["Stealth", "Sleight of Hand", "Lockpicking", "Deception", "Acrobatics", "Streetwise (Kordavos)"],
   "specialAbilities": ["Sneak Attack: Yeva strikes with deadly precision when a foe is distracted or unaware", "Festival Ghost: Yeva can vanish into a crowd or shadow almost at will"],
-  "status": "",
   "type": "pc",
   "attributes": {
     "strength": 8,

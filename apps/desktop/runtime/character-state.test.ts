@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { conditionWords, withCondition } from "@d20/gm-core/sheet/conditions"
 import { withDamage, withHealing, withHitPointsBy } from "@d20/gm-core/sheet/death"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { z } from "zod"
@@ -93,13 +94,15 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
   try {
     setCharacter(t.store, t.pc.id, (c) => withHitPointsBy(c, 6))
     setCharacter(t.store, t.npc.id, (c) => withHitPointsBy(c, 15))
+    // Conditions are the engine's too. The round's patch may end one its events ended, and gives none.
+    setCharacter(t.store, t.pc.id, (c) => withCondition(withCondition(c, { id: "poisoned" }).character, { id: "restrained" }).character)
     complete(t.store)
     const before = structuredClone(t.store.current())
     const prompt = await advance(t.store, {
       characterUpdates: [
         {
           characterId: t.pc.id,
-          status: "Wounded",
+          conditionsEnded: ["poisoned"],
           inventoryChanges: [
             { op: "remove", name: "potion" },
             { op: "add", name: "Rope", description: "Ten metres" },
@@ -109,7 +112,7 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
           spellUseChanges: [{ name: "Light", isUsed: true }],
         },
         { characterId: t.giver.id, inventoryChanges: [{ op: "remove", name: "Rope" }] },
-        { characterId: t.npc.id, status: "Injured", inventoryChanges: [{ op: "add", name: "Ribbon" }] },
+        { characterId: t.npc.id, inventoryChanges: [{ op: "add", name: "Ribbon" }] },
       ],
     })
     assert.match(prompt, /CURRENT SAVED CHARACTER STATE/)
@@ -118,7 +121,7 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     const c = byId(t.store, t.pc.id)
     // Milos has 9 hit points, set to 6 above, and 6 of 9 shows as 67%.
     assert.deepEqual([c.hitPoints, c.healthPercent], [6, 67])
-    assert.equal(c.status, "Wounded")
+    assert.deepEqual(c.conditions, [{ id: "restrained" }])
     assert.deepEqual(
       c.equipment!.map((e) => e.name),
       ["Potion", "Rope", "Gate token"]
@@ -143,12 +146,12 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     const cardText = characterInfo(byId(t.store, t.pc.id))
       .details!.flatMap((section) => section.items)
       .join("\n")
-    for (const text of ["Health: 67%", "Wounded", "Gate token", "Rope. Ten metres", "Blessing, 2 rounds left", "Light, used"]) assert.ok(cardText.includes(text), text)
+    for (const text of ["Health: 67%", "Restrained", "Gate token", "Rope. Ten metres", "Blessing, 2 rounds left", "Light, used"]) assert.ok(cardText.includes(text), text)
 
-    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, status: "", effectChanges: [{ op: "remove", name: "Blessing" }] }] }, "the-harvest-festival")
+    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, conditionsEnded: ["restrained"], effectChanges: [{ op: "remove", name: "Blessing" }] }] }, "the-harvest-festival")
     const festival = byId(t.store, t.pc.id)
     assert.equal(festival.hitPoints, 6, "premade health must not replace live health")
-    assert.equal(festival.status, undefined)
+    assert.equal(festival.conditions, undefined)
     assert.deepEqual(festival.equipment, c.equipment, "equipment must survive the encounter change")
     assert.deepEqual(
       festival.effects!.map((e) => [e.name, e.duration]),
@@ -168,6 +171,11 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     const returned = nextCharacterState({ current: t.store.current().characters, next: [t.npc], remembered: t.store.state!.characterStates!, updates: [], encounterChanged: true })
     assert.equal(returned.characters[0].hitPoints, 15)
     assert.ok(returned.characters[0].equipment!.some((e) => e.name === "Ribbon"))
+    // A new encounter ends Prone and keeps Poisoned. A new round of the same encounter keeps both.
+    const worn = { ...byId(t.store, t.pc.id), conditions: [{ id: "prone" as const, turns: 2 }, { id: "poisoned" as const }] }
+    const carry = (encounterChanged: boolean) => nextCharacterState({ current: [worn], next: [worn], remembered: {}, updates: [], encounterChanged }).characters[0].conditions
+    assert.deepEqual(carry(true), [{ id: "poisoned" }])
+    assert.deepEqual(carry(false), [{ id: "prone", turns: 1 }, { id: "poisoned" }])
   } finally {
     t.close()
   }
@@ -178,17 +186,20 @@ test("refreshes do not stack effects, fallen PCs stay on the sheet, and later he
   try {
     // Milos takes 9, all his hit points, from the engine.
     setCharacter(t.store, t.pc.id, (c) => withDamage(c, 9).character)
-    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, status: "dead", effectChanges: [{ op: "set", name: "Ward", description: "Stronger ward", duration: 4 }] }] })
-    // The patch's word does not kill a hero: Milos drops to 0 and is dying, and his next turn is a Death Saving Throw.
-    assert.deepEqual([byId(t.store, t.pc.id).status, byId(t.store, t.pc.id).isComplete, byId(t.store, t.pc.id).rollRequired?.rollType], ["Unconscious", false, "Death Saving Throw"])
+    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, effectChanges: [{ op: "set", name: "Ward", description: "Stronger ward", duration: 4 }] }] })
+    // Milos drops to 0 and is dying, and his next turn is a Death Saving Throw.
+    assert.deepEqual(
+      [byId(t.store, t.pc.id).dead, conditionWords(byId(t.store, t.pc.id)).includes("Unconscious"), byId(t.store, t.pc.id).isComplete, byId(t.store, t.pc.id).rollRequired?.rollType],
+      [undefined, true, false, "Death Saving Throw"]
+    )
     await advance(t.store, {})
     assert.deepEqual([byId(t.store, t.pc.id).hitPoints, byId(t.store, t.pc.id).healthPercent], [0, 0])
     assert.deepEqual(byId(t.store, t.pc.id).effects, [{ name: "Ward", description: "Stronger ward", duration: 3 }])
     // The engine heals him for 4.
     setCharacter(t.store, t.pc.id, (c) => withHealing(c, 4))
-    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, status: "", spellUseChanges: [{ name: "Light", isUsed: false }] }] })
+    await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, spellUseChanges: [{ name: "Light", isUsed: false }] }] })
     assert.equal(byId(t.store, t.pc.id).isComplete, false)
-    assert.equal(byId(t.store, t.pc.id).status, undefined)
+    assert.deepEqual([byId(t.store, t.pc.id).dead, conditionWords(byId(t.store, t.pc.id)).includes("Unconscious")], [undefined, false])
     // Healed from 0 by 4, and 4 of Milos's 9 shows as 44%.
     assert.deepEqual([byId(t.store, t.pc.id).hitPoints, byId(t.store, t.pc.id).healthPercent], [4, 44])
   } finally {
@@ -202,7 +213,14 @@ test("invalid character patches cannot partly advance, mutate the save, or fall 
     complete(t.store)
     const before = JSON.stringify(t.store.state)
     const invalid = [
-      [{ characterId: "unknown", status: "Fine" }],
+      [{ characterId: "unknown", conditionsEnded: ["prone"] }],
+      // Conditions, death and flight are the engine's: a patch cannot give a condition, kill or mark anyone fled.
+      [{ characterId: t.pc.id, status: "Poisoned" }],
+      [{ characterId: t.pc.id, conditions: [{ id: "poisoned" }] }],
+      [{ characterId: t.pc.id, conditionsGiven: ["poisoned"] }],
+      [{ characterId: t.pc.id, dead: true }],
+      [{ characterId: t.pc.id, fled: true }],
+      [{ characterId: t.pc.id, conditionsEnded: ["wounded"] }],
       // Hit points are the engine's: a patch that sets health is refused.
       [{ characterId: t.pc.id, inventoryChanges: ["receives a shield"] }],
       [
@@ -218,10 +236,10 @@ test("invalid character patches cannot partly advance, mutate the save, or fall 
       [{ characterId: t.pc.id, effectChanges: [{ op: "remove", name: "Absent" }] }],
       [{ characterId: t.pc.id, effectChanges: [{ op: "set", name: "Ward", description: "Invalid", duration: 0 }] }],
       [{ characterId: t.pc.id, healthPercent: 50 }],
-      [{ characterId: t.pc.id, status: "Fine", unrecognizedField: true }],
+      [{ characterId: t.pc.id, conditionsEnded: ["prone"], unrecognizedField: true }],
       [
-        { characterId: t.pc.id, status: "Fine" },
-        { characterId: t.pc.id, status: "Wounded" },
+        { characterId: t.pc.id, conditionsEnded: ["prone"] },
+        { characterId: t.pc.id, conditionsEnded: ["poisoned"] },
       ],
     ]
     for (const characterUpdates of invalid) {

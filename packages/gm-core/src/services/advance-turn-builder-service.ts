@@ -1,3 +1,4 @@
+import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { atRoundStart, revived } from "../sheet/death"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { authoredStory } from "../story/authored"
@@ -6,7 +7,7 @@ import { cleanStory } from "../story/clean"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { rollD20 } from "../utils/game-utils"
-import { isDead } from "../utils/turn-actors"
+import { hasFled, isDead } from "../utils/turn-actors"
 import { findEncounterInPlan } from "./advance-turn-prompt-service"
 import { resetAllSpells } from "./spell-tracking-service"
 
@@ -21,18 +22,6 @@ type EncounterProgressionResult = {
   story: StoryBeat[]
 }
 
-// States that last a moment of a fight, cleared when the story moves on to another encounter. A status such as
-// "poisoned" or "exhausted" stays. Statuses are free text, so each part of a list is judged on its own.
-const PASSING = /^(prone|knocked (down|prone)|grappled|restrained|pinned|stunned|dazed|staggered|off[- ]balance|blinded|deafened|frightened|surprised|hidden|invisible|dodging|readied|winded)$/i
-export function lastingStatus(status: string | undefined): string | undefined {
-  if (!status) return status
-  const kept = status
-    .split(/[,;]+/)
-    .map((part) => part.trim())
-    .filter((part) => part && !PASSING.test(part))
-  return kept.length ? kept.join(", ") : undefined
-}
-
 export type BuildNextTurnResult =
   | {
       status: "turn_built"
@@ -45,7 +34,7 @@ export type BuildNextTurnResult =
     }
 
 function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; story: StoryBeat[] }): Turn {
-  let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => !isDead(c) && c.status !== "fled")
+  let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => !isDead(c) && !hasFled(c))
 
   // Last round's rolls are over. Initiative was rolled as the encounter began, and every round keeps that order. A
   // dying hero's turn is their Death Saving Throw.
@@ -77,7 +66,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
   }
 
   let pcs: TurnCharacter[] = (args.turn.characters as TurnCharacter[])
-    .filter((c) => c.type === "pc" && !isDead(c) && c.status !== "fled")
+    .filter((c) => c.type === "pc" && !isDead(c) && !hasFled(c))
     .map(({ rollResult: _rollResult, ...pc }) => ({
       ...pc,
       initiative: rollD20(),
@@ -85,11 +74,8 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
 
   console.log(`[advanceTurn] Resetting spell usage for all PCs on encounter transition to: ${nextEncounter.id}`)
   pcs = resetAllSpells(pcs)
-  // A new encounter comes later: the states of a fight's moment are over, and lasting ones stay.
-  pcs = pcs.map(({ status, ...pc }) => {
-    const kept = lastingStatus(status)
-    return kept ? { ...pc, status: kept } : pc
-  })
+  // A new encounter comes later: the conditions of a fight's moment are over, and lasting ones stay.
+  pcs = pcs.map(conditionsAtEncounterEnd)
 
   if (nextEncounter.resetHealth) {
     console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`)

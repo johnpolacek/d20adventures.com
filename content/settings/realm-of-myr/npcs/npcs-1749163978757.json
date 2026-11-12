@@ -23,7 +23,6 @@
     }
   ],
   "skills": ["Intimidation", "Stealth", "Investigation", "Perception", "Streetwise", "Tactics"],
-  "status": "",
   "type": "npc",
   "attributes": {
     "strength": 16,

@@ -49,7 +49,6 @@
     "Sneak Attack: Deals extra damage when he has advantage on an attack roll or when an enemy is within 5 feet of an ally who isn't incapacitated.",
     "Cunning Action: Can take a bonus action on each of his turns in combat to take the Dash, Disengage, or Hide action."
   ],
-  "status": "",
   "type": "pc",
   "attributes": {
     "strength": 10,

@@ -12,14 +12,24 @@ export type ActorLike = {
   isComplete?: boolean
   hitPoints?: number
   healthPercent?: number
-  status?: string
+  dead?: true
+  fled?: true
+  conditions?: readonly { id: string }[]
   deathSaves?: { successes?: number; failures?: number; stable?: true }
   initiative?: number
   rollRequired?: RollRequirement
 }
 
 // What the three tests below read. Dead, down and dying are three things.
-type Standing = { type?: string; hitPoints?: number; healthPercent?: number; status?: string; deathSaves?: { successes?: number; failures?: number; stable?: true } }
+type Standing = {
+  type?: string
+  hitPoints?: number
+  healthPercent?: number
+  dead?: true
+  fled?: true
+  conditions?: readonly { id: string }[]
+  deathSaves?: { successes?: number; failures?: number; stable?: true }
+}
 
 // An AI-controlled companion: a PC the server plays automatically. Its userId
 // is the adventure owner's, so ownership checks must use this predicate too.
@@ -27,9 +37,14 @@ export function isAiControlledPc(character: ActorLike): boolean {
   return character.type === "pc" && character.controlledBy === "ai"
 }
 
-/** Dead: the status "dead", in any case. */
+/** Dead. It is not a condition: nothing ends it. */
 export function isDead(character: Standing): boolean {
-  return character.status?.trim().toLowerCase() === "dead"
+  return character.dead === true
+}
+
+/** Fled: gone from the encounter for good. It is not a condition either. */
+export function hasFled(character: Standing): boolean {
+  return character.fled === true
 }
 
 /** Down: at 0 hit points, so dead, dying or Stable. A character who is down cannot act or speak, and no one attacks them by choice. */
@@ -42,12 +57,22 @@ export function isDying(character: Standing): boolean {
   return character.type === "pc" && isDown(character) && !isDead(character) && !character.deathSaves?.stable
 }
 
-/** Takes a turn this round: anyone up, and a dying hero whose Death Saving Throw is asked for. A hero who drops mid-round makes theirs next round. */
-export function takesTurn(character: ActorLike): boolean {
-  return !isDown(character) || (isDying(character) && !!character.rollRequired && "deathSave" in character.rollRequired)
+// The conditions that carry Incapacitated, by the SRD (../sheet/conditions has every condition's rules, and a test
+// holds this list to them). Kept here as plain words so the browser needs none of the rules data.
+const INCAPACITATING = new Set(["incapacitated", "paralyzed", "petrified", "stunned", "unconscious"])
+
+/** Incapacitated by a condition they bear: they take no action. One at 0 hit points is down, which is its own test. */
+export function isIncapacitated(character: Standing): boolean {
+  return !!character.conditions?.some((entry) => INCAPACITATING.has(entry.id))
 }
 
-// Highest initiative, not complete, and taking a turn: a dying hero stops on their save, and the Stable and the dead are skipped.
+/** Takes a turn this round: anyone up and able to act, and a dying hero whose Death Saving Throw is asked for. A hero who drops mid-round makes theirs next round. */
+export function takesTurn(character: ActorLike): boolean {
+  if (isDying(character)) return !!character.rollRequired && "deathSave" in character.rollRequired
+  return !isDown(character) && !isIncapacitated(character)
+}
+
+// Highest initiative, not complete, and taking a turn: a dying hero stops on their save, and the Stable, the dead and the Incapacitated are skipped.
 export function findCurrentActor<T extends ActorLike>(characters: T[]): T | undefined {
   return characters
     .slice()

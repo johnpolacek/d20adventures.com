@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url"
 import type { GmPorts } from "@d20/gm-core"
 import { createRollRequirementService } from "@d20/gm-core/services/roll-requirement-service"
 import { DIFFICULTY_CLASSES } from "@d20/gm-core/sheet/check"
+import type { ConditionEntry } from "@d20/gm-core/sheet/condition-entry"
+import type { Stake } from "@d20/gm-core/sheet/stakes"
 import { authoredText } from "@d20/gm-core/story/authored"
 import { storyNames } from "@d20/gm-core/story/render"
 import type { Character } from "@d20/gm-core/types/character"
@@ -32,9 +34,15 @@ type Probe = {
   attack?: { weapon: string; target: string }
   // Other premade heroes in the scene, by file id.
   allies?: string[]
-  // What the roll should put at stake for hit points: none for most.
-  stakes?: { on: string; target: string; kind: string }[]
+  // Everything the roll should put at stake, for hit points and for conditions: none for most.
+  stakes?: Wanted[]
+  // Stakes the roll must put, whatever else it puts with them.
+  gives?: Wanted[]
+  // Conditions someone in the scene already bears, by character id.
+  conditionsOn?: Record<string, ConditionEntry[]>
 }
+// A stake as a scene writes it: damage or healing, or a condition given ("condition") or ended ("end-condition").
+type Wanted = { on: string; target: string; kind: string; condition?: string }
 type Graded = { id: string; pass: boolean; faults: string[]; got: unknown }
 
 const here = fileURLToPath(new URL(".", import.meta.url))
@@ -42,6 +50,9 @@ const argv = process.argv.slice(2)
 const opt = (k: string) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undefined)
 const all: Probe[] = JSON.parse(readFileSync(join(here, "check-probes.json"), "utf8"))
 const probes = opt("--only") ? all.filter((probe) => probe.id === opt("--only")) : all
+
+// A stake the engine made of a pick, in a scene's words.
+const staked = (stake: Stake) => `${stake.kind === "condition" ? `${stake.ends ? "end " : ""}${stake.condition}` : stake.kind} to ${stake.target} on ${stake.on}`
 
 // A pick's menu id, from the check the engine made of it.
 const menuId = (check: { kind: string; skill?: string; ability?: string }) => {
@@ -51,7 +62,8 @@ const menuId = (check: { kind: string; skill?: string; ability?: string }) => {
 
 async function run(probe: Probe): Promise<Graded> {
   const pack = loadPack(probe.adventure)
-  const hero: Character = { ...JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8")), type: "pc" }
+  const bears = <T extends { id: string }>(character: T): T => (probe.conditionsOn?.[character.id] ? { ...character, conditions: probe.conditionsOn[character.id] } : character)
+  const hero: Character = bears({ ...JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8")), type: "pc" })
   const encounter = pack.artifacts.encounters[probe.encounter]
   if (!encounter) throw new Error(`${probe.id}: no encounter ${probe.encounter}`)
   const model = localLlm("claude", mkdtempSync(join(tmpdir(), "check-probe-")))
@@ -68,7 +80,7 @@ async function run(probe: Probe): Promise<Graded> {
           ...JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${ally}.json`), "utf8")),
           type: "pc" as const,
         })),
-        ...encounter.npcRefs.map((ref) => ({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const })),
+        ...encounter.npcRefs.map((ref) => bears({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const })),
       ],
     })
     const faults: string[] = []
@@ -83,13 +95,15 @@ async function run(probe: Probe): Promise<Graded> {
       if (!Object.values(DIFFICULTY_CLASSES).includes(got.difficulty as 5)) faults.push(`target ${got.difficulty} is off the ladder`)
       if (probe.dcs && !probe.dcs.includes(got.difficulty)) faults.push(`target ${got.difficulty}, wanted ${probe.dcs.join(" or ")}`)
       if ((probe.spell ?? undefined) !== got.spell) faults.push(`spell ${got.spell ?? "none"}, wanted ${probe.spell ?? "none"}`)
-      // What the roll puts at stake for hit points: who, on which outcome, hurt or healed. The dice are the ladder's or the notes'.
+      // What the roll puts at stake: who, on which outcome, hurt or healed or given or freed of a condition. The dice
+      // are the ladder's or the notes'.
+      const wants = (stake: Wanted) => `${stake.condition ? `${stake.kind === "end-condition" ? "end " : ""}${stake.condition}` : stake.kind} to ${stake.target} on ${stake.on}`
+      const picked = (got.stakes ?? []).map(staked)
       if (probe.stakes) {
-        const said = (stake: { on: string; target: string; kind: string }) => `${stake.kind} to ${stake.target} on ${stake.on}`
-        const picked = (got.stakes ?? []).map(said).sort().join(", ") || "none"
-        const wanted = probe.stakes.map(said).sort().join(", ") || "none"
-        if (picked !== wanted) faults.push(`stakes ${picked}, wanted ${wanted}`)
+        const wanted = probe.stakes.map(wants).sort().join(", ") || "none"
+        if ((picked.slice().sort().join(", ") || "none") !== wanted) faults.push(`stakes ${picked.join(", ") || "none"}, wanted ${wanted}`)
       }
+      for (const stake of probe.gives ?? []) if (!picked.includes(wants(stake))) faults.push(`stakes ${picked.join(", ") || "none"}, wanted ${wants(stake)} among them`)
     }
     return { id: probe.id, pass: faults.length === 0, faults, got }
   } catch (error) {
@@ -118,10 +132,10 @@ for (const g of graded) {
     mode: string
     reasons?: string[]
     attack?: { target: string }
-    stakes?: { kind: string; dice: string; target: string; on: string }[]
+    stakes?: Stake[]
   } | null
   const pick = got
-    ? `${got.rollType} ${got.attack ? `on ${got.attack.target}, AC` : "DC"} ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}${got.stakes?.length ? `, stakes: ${got.stakes.map((stake) => `${stake.dice} ${stake.kind} to ${stake.target} on ${stake.on}`).join("; ")}` : ""}`
+    ? `${got.rollType} ${got.attack ? `on ${got.attack.target}, AC` : "DC"} ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}${got.stakes?.length ? `, stakes: ${got.stakes.map((stake) => `${"dice" in stake ? `${stake.dice} ` : ""}${staked(stake)}`).join("; ")}` : ""}`
     : "no roll"
   log(`${g.pass ? "pass" : "FAIL"}  ${g.id.padEnd(18)} ${pick}${g.faults.length ? `\n      ${g.faults.join("; ")}` : ""}`)
 }

@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import { multiattackOf, strike, strikeFacts } from "../sheet/attack"
 import { resolveCheck } from "../sheet/check"
+import { saveFailedBy } from "../sheet/conditions"
 import { afterHarm, killed } from "../sheet/death"
 import { applyStakes } from "../sheet/harm"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
@@ -46,12 +47,12 @@ export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; ac
   const beatsToAppend = cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc))
   const updatedCharacters = args.turn.characters.map((character) => {
     if (character.id === args.npc.id) {
-      // Skipping or passing is not a condition. The NPC keeps whatever status it has. One who flees is out of the
+      // Skipping or passing changes nothing about the NPC. One who flees is out of the
       // encounter: the next round is built without them. One who dies is dead for good. Thaddeus died of poison on his
       // own turn at 65% health, then sagged to one knee, gasping, in the next roll's outcome.
       const done = { ...character, hasReplied: true, isComplete: true }
       if (args.actionResult.actionType === "die") return killed(done)
-      return args.actionResult.actionType === "flee" ? { ...done, status: "fled" } : done
+      return args.actionResult.actionType === "flee" ? { ...done, fled: true as const } : done
     }
     return character
   })
@@ -144,13 +145,14 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         args.npc.id
       )
       beatsToAppend = [...rolls, ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
-      // The harm is the engine's. The outcome may still name a status or hand over an item.
+      // The harm is the engine's. The outcome may still hand over an item.
       effects = outcomeResult.effects
-      updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects, applyHealthAndStatus: true })
+      updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     } else if (rollRequirement && !("deathSave" in rollRequirement)) {
       // A check or a save: the NPC rolls with its stat block's bonus, which the requirement already carries, and the
       // engine settles what the roll put at stake before anyone tells it.
-      const rolled = resolveCheck({ dice: d20sFor(rollRequirement.mode), bonus: rollRequirement.modifier, dc: rollRequirement.difficulty, mode: rollRequirement.mode })
+      const failedBy = saveFailedBy(args.npc, rollRequirement.check)
+      const rolled = resolveCheck({ dice: d20sFor(rollRequirement.mode), bonus: rollRequirement.modifier, dc: rollRequirement.difficulty, mode: rollRequirement.mode, fails: !!failedBy })
       const { natural: baseRoll, bonus: modifier, total: result, success } = rolled
       rollInfo = {
         rollType: rollRequirement.rollType,
@@ -177,23 +179,18 @@ export function createNpcTurnBranchService(ports: GmPorts) {
           difficulty: rollRequirement.difficulty,
           success,
           scene: args.scene,
-          harm: settled.facts,
+          harm: [...(failedBy ? [`${args.npc.name} is ${failedBy} and fails this saving throw outright.`] : []), ...settled.facts],
         }),
         args.npc.id
       )
-      beatsToAppend = [rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled, settled.harm), ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
+      beatsToAppend = [rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled, settled.harm, settled.conditions), ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc))]
       effects = outcomeResult.effects
-      updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects, applyHealthAndStatus: true })
+      updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     } else {
       beatsToAppend = cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc))
       effects = args.actionResult.effects
 
-      updatedCharacters = applyNpcEffectsToCharacters({
-        characters: updatedCharacters,
-        npcId: args.npc.id,
-        effects,
-        applyHealthAndStatus: false,
-      })
+      updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     }
 
     return {

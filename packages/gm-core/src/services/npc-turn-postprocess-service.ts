@@ -1,3 +1,4 @@
+import { conditionWords } from "../sheet/conditions"
 import type { StoryBeat } from "../story/beats"
 import type { TurnCharacter } from "../types/adventure"
 import type { NpcRollInfo } from "./npc-turn-branch-service"
@@ -23,7 +24,7 @@ export function finalizeNpcTurnResponse(args: {
       {
         beats: args.beatsToAppend.length,
         characterCount: args.updatedCharacters.length,
-        npcStatus: args.updatedCharacters.find((character) => character.id === args.npcId)?.status,
+        npcConditions: conditionWords(args.updatedCharacters.find((character) => character.id === args.npcId) ?? {}),
         hasRollInfo: !!args.rollInfo,
         effectCount: args.effects?.length || 0,
       },

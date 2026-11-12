@@ -1,8 +1,10 @@
 import type { AbilityId, DamageTypeId } from "@d20/srd"
+import { damageTypeIds } from "@d20/srd"
 import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
 import { monsterById } from "@d20/srd/monsters"
 import type { Roller, RollMode } from "./check"
+import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
 import { deriveSheet } from "./derive"
 import type { Sheet } from "./sheet"
@@ -65,8 +67,14 @@ const actionId = (name: string) =>
 /**
  * The attacks a character can make. A hero's are the weapons on its sheet and an Unarmed Strike. An NPC's are the
  * attack actions its SRD stat block prints, with the damage each deals on a hit. A hero with no sheet has none.
+ * Exhaustion takes 2 off each attack's bonus for each level.
  */
 export function attacksOf(character: Roller): Attack[] {
+  const penalty = d20Penalty(character)
+  return penalty ? baseAttacks(character).map((attack) => ({ ...attack, bonus: attack.bonus - penalty })) : baseAttacks(character)
+}
+
+function baseAttacks(character: Roller): Attack[] {
   if (character.sheet) {
     const sheet = character.sheet
     return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => weaponAttack(sheet, weapon))
@@ -158,8 +166,16 @@ export function rollDamage(damage: readonly DamagePart[], roll: (sides: number) 
 /** The damage types a character shrugs off, takes half of, or takes double of. */
 export type Defenses = { immunities?: readonly DamageTypeId[]; resistances?: readonly DamageTypeId[]; vulnerabilities?: readonly DamageTypeId[] }
 
-/** A character's standing defenses: a hero's Resistances from its sheet, an NPC's from its stat block. */
+/**
+ * A character's standing defenses: a hero's Resistances from its sheet, an NPC's from its stat block. A condition
+ * that gives Resistance to all damage, as Petrified does, gives it for every type.
+ */
 export function defensesOf(character: Roller): Defenses {
+  const own = ownDefenses(character)
+  return resistsAllDamage(character) ? { ...own, resistances: damageTypeIds } : own
+}
+
+function ownDefenses(character: Roller): Defenses {
   if (character.sheet) return { resistances: deriveSheet(character.sheet).resistances }
   const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
   return monster ? { immunities: monster.immunities, resistances: monster.resistances, vulnerabilities: monster.vulnerabilities } : {}
@@ -209,12 +225,13 @@ export type Strike = {
   fate?: Fate
 }
 
-type Target = Roller & { type: string; hitPoints?: number; healthPercent?: number; status?: string; deathSaves?: DeathSaves }
+type Target = Roller & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves }
 
 /**
  * One attack, start to finish: the attacker's own weapon or stat block action against the target's Armor Class, and on
- * a hit the damage dice against the target's defenses and hit points, by the rules of 0 hit points. `roll` throws one
- * damage die of the given size. `target` comes back as the blow left them.
+ * a hit the damage dice against the target's defenses and hit points, by the rules of 0 hit points. A hit from within
+ * 5 feet on a target who is Paralyzed or Unconscious is a Critical Hit. `roll` throws one damage die of the given size.
+ * `target` comes back as the blow left them.
  */
 export function strike<T extends Target>(args: {
   attacker: Roller
@@ -230,7 +247,8 @@ export function strike<T extends Target>(args: {
   const stats = combatStatsOf(args.target)
   if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
   const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
-  const roll = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass: stats.armorClass, mode: args.mode })
+  const rolled = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass: stats.armorClass, mode: args.mode })
+  const roll = rolled.hit && !rolled.critical && criticalWhenHit(args.target, attack.kind) ? { ...rolled, critical: true } : rolled
   if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target }
   const extra = featureDamage(args.attacker, attack, roll)
   const damage = rollDamage([...attack.damage, ...extra.map((feature) => feature.damage)], args.roll, roll.critical)

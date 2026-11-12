@@ -11,7 +11,7 @@ import { characterStory, storyNames, storyParagraphs, storyText } from "./render
 type StoryTurn = {
   encounterId: string
   story: StoryBeat[]
-  characters: readonly { id: string; name: string; type?: string; gender?: string; hitPoints?: number; healthPercent?: number; status?: string }[]
+  characters: readonly { id: string; name: string; type?: string; gender?: string; hitPoints?: number; healthPercent?: number }[]
 }
 
 // What a GM step returns when it writes story: its beats, alongside whatever else its schema asks for.
@@ -43,7 +43,14 @@ export const storyProse = (beats: readonly StoryBeat[]) =>
     .join("\n\n")
 
 // A resolved check as the story keeps it. Both dice are kept only when two were rolled.
-export function rollBeat(by: StoryBy, roller: { id: string; name: string; image?: string }, check: string, result: CheckResult, harm?: RollBeat["harm"]): RollBeat {
+export function rollBeat(
+  by: StoryBy,
+  roller: { id: string; name: string; image?: string },
+  check: string,
+  result: CheckResult,
+  harm?: RollBeat["harm"],
+  conditions?: RollBeat["conditions"]
+): RollBeat {
   return {
     kind: "roll",
     by,
@@ -58,6 +65,7 @@ export function rollBeat(by: StoryBy, roller: { id: string; name: string; image?
     success: result.success,
     ...(roller.image ? { image: roller.image } : {}),
     ...(harm?.length ? { harm } : {}),
+    ...(conditions?.length ? { conditions } : {}),
   }
 }
 

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { conditionWords } from "@d20/gm-core/sheet/conditions"
 import { withDamage } from "@d20/gm-core/sheet/death"
 import { storyText } from "@d20/gm-core/story/render"
 import { findCurrentActor, isDying } from "@d20/gm-core/utils/turn-actors"
@@ -111,7 +112,6 @@ test("the premise that the three heroes are strangers reaches the replies offere
 // A model that answers each of the core's requests by its schema. `advance` is the GM's answer on turn advance.
 function stubLlm(
   advance: () => Record<string, unknown>,
-  lethalTo?: string,
   npcAction: Record<string, unknown> = { actionSummary: "Cuts at the mage.", beats: [{ kind: "narration", text: "The blade comes down." }], actionType: "attack" }
 ): Llm {
   return {
@@ -120,8 +120,8 @@ function stubLlm(
       const answers = [
         advance(),
         npcAction,
-        { beats: [{ kind: "narration", text: "The blade bites deep." }], effects: lethalTo ? [{ targetId: lethalTo, status: "dead" }] : [] },
-        // A plain Strength check, with nothing at stake, so only the outcome's word can touch Lyra.
+        { beats: [{ kind: "narration", text: "The blade bites deep." }], effects: [] },
+        // A plain Strength check, with nothing at stake, so nothing the model says can touch Lyra.
         { check: "strength", difficulty: "very-easy" },
       ]
       for (const answer of answers) {
@@ -167,10 +167,13 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
       ["Lyra Silvanus", "Poppen Quickfoot", "Thalbern"]
     )
     const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", beats: [{ kind: "narration", text: "Reinhard raises his sword again." }], adventurePatch: {} })
-    await play(stubLlm(fightGoesOn, lyra(store).id))
+    // The engine's blow takes Lyra to 0, and nothing the model says that round kills her.
+    Object.assign(lyra(store), withDamage(lyra(store), lyra(store).hitPoints!).character)
+    store.save()
+    await play(stubLlm(fightGoesOn))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
-    // The model's word "dead" takes Lyra to 0 and does not kill her: she is Unconscious and dying.
-    assert.deepEqual([lyra(store).hitPoints, lyra(store).healthPercent, lyra(store).status], [0, 0, "Unconscious"])
+    // She is Unconscious and dying.
+    assert.deepEqual([lyra(store).hitPoints, lyra(store).healthPercent, lyra(store).dead, conditionWords(lyra(store)).includes("Unconscious")], [0, 0, undefined, true])
     assert.equal(isDying(lyra(store)), true)
     assert.deepEqual(
       store
@@ -181,17 +184,17 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
       ["Reinhard", "Silas"]
     )
 
-    // Nor does a patch's.
+    // Nor can a patch end the Unconscious of 0 hit points: only healing does.
     for (const c of store.current().characters) c.hasReplied = c.isComplete = true
     store.save()
     const dying = () => ({
       nextEncounterId: "battle-on-the-boat",
       beats: [{ kind: "narration", text: "Lyra goes down on one knee." }],
-      adventurePatch: { characterUpdates: [{ characterId: lyra(store).id, status: "dead" }] },
+      adventurePatch: { characterUpdates: [{ characterId: lyra(store).id, conditionsEnded: ["unconscious"] }] },
     })
     await play(stubLlm(dying))
     assert.equal(store.current().encounterId, "battle-on-the-boat")
-    assert.deepEqual([lyra(store).hitPoints, lyra(store).status], [0, "Unconscious"])
+    assert.deepEqual([lyra(store).hitPoints, lyra(store).dead, conditionWords(lyra(store)).includes("Unconscious")], [0, undefined, true])
     assert.equal(isDying(lyra(store)), true)
 
     // Silas runs on his turn and is out of the encounter, and the fight ends at the crate.
@@ -199,9 +202,9 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
     store.save()
     const runs = { actionSummary: "Silas runs.", beats: [{ kind: "narration", text: "Silas goes over the bow rail." }], actionType: "flee" }
     const round = store.current()._id
-    const toTheCrate = stubLlm(() => ({ nextEncounterId: "the-crate", beats: [{ kind: "narration", text: "The river takes him." }], adventurePatch: {} }), undefined, runs)
+    const toTheCrate = stubLlm(() => ({ nextEncounterId: "the-crate", beats: [{ kind: "narration", text: "The river takes him." }], adventurePatch: {} }), runs)
     await play(toTheCrate)
-    assert.equal(store.state!.turns.find((t) => t._id === round)!.characters.find((c) => c.name === "Silas")!.status, "fled")
+    assert.equal(store.state!.turns.find((t) => t._id === round)!.characters.find((c) => c.name === "Silas")!.fled, true)
     // His run is read before the round ends, on a Continue of its own.
     assert.equal(store.current()._id, round)
     await play(toTheCrate)

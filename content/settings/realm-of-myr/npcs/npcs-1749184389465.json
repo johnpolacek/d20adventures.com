@@ -31,7 +31,6 @@
     }
   ],
   "skills": ["Stealth", "Acrobatics", "Perception", "Diplomacy", "Investigation", "Negotiation", "Disguise"],
-  "status": "",
   "type": "npc",
   "attributes": {
     "strength": 10,

@@ -1,6 +1,6 @@
 import type { RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { rollSentence, storyParagraphs } from "@d20/gm-core/story/render"
-import { findCurrentActor, isDead } from "@d20/gm-core/utils/turn-actors"
+import { findCurrentActor, hasFled, isDead } from "@d20/gm-core/utils/turn-actors"
 import type { Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
 import type { StagingShot } from "@d20/stage/spec/staging"
@@ -23,6 +23,7 @@ import { cityMapTrail } from "@/lib/citymap"
 import type { FeedbackDraft } from "@/lib/feedback/shared"
 import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
+import { conditionLabel } from "./condition-words"
 import type { FigureArt } from "./figures"
 import { applyMovement, context, positions as stagePositions } from "./movement"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
@@ -436,7 +437,7 @@ export function StagePlay(props: {
         if (!id) continue
         // A hero who is dying or Stable stays on the stage, down.
         if (isDead(c)) out.set(id, "dead")
-        else if (c.status?.trim().toLowerCase() === "fled") out.set(id, "fled")
+        else if (hasFled(c)) out.set(id, "fled")
         else out.delete(id)
       }
     return out
@@ -928,7 +929,7 @@ export function StagePlay(props: {
           )}
           {!scene && voice && <Plate compact={compact} line={{ key: paragraph, side: "right", ...voice }} />}
           <TurnOrder
-            order={(shown?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", health: c.healthPercent, status: c.status }))}
+            order={(shown?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", health: c.healthPercent, conditions: conditionLabel(c) }))}
             activeId={ended ? null : (spotlit?.id ?? null)}
             turnId={ended ? null : (actor?.id ?? null)}
             label={ended ? undefined : spotlit?.name}

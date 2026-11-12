@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import { type Strike, strike, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
+import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { afterHarm, deathSave } from "../sheet/death"
 import { applyStakes } from "../sheet/harm"
 import type { StoryBeat } from "../story/beats"
@@ -15,7 +16,7 @@ import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { d20sFor, rollDie } from "../utils/game-utils"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
-import { isDead, isDown } from "../utils/turn-actors"
+import { hasFled, isDead, isDown } from "../utils/turn-actors"
 import { DEATH_SAVE, isAttackRoll, isDeathSaveRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules } from "../wiki-adventures/player-safety"
 import { markSpellAsUsed } from "./spell-tracking-service"
@@ -49,7 +50,7 @@ function buildRollOutcomePrompt(args: {
   ledger?: string
   // An attack the engine has already resolved, in plain words: the hit or miss, the damage and how the target stands.
   attack?: string
-  // What the roll hurt or healed, already rolled by the engine, in plain words.
+  // What the roll did to hit points and conditions, already settled by the engine, in plain words.
   harm?: string[]
 }): string {
   return `
@@ -73,8 +74,8 @@ ${
     ? `${args.attack}\nThe game has already rolled this attack and its damage. Tell the blow exactly as stated: the hit or the miss, and how the target stands after it. Add no other harm and undo none of it. Give no number.`
     : `A dice roll was made for ${args.characterName}: ${args.rollType} (Result: ${args.totalResult}, Difficulty: ${args.difficulty}, Margin: ${args.margin}).${
         args.harm?.length
-          ? `\nThe game has already rolled what this did to hit points:\n${args.harm.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated. Add no other harm or healing and undo none of it. Give no number.`
-          : "\nThis roll changes no one's hit points. No one is wounded, healed, knocked out or killed by it."
+          ? `\nThe game has already settled what this did to hit points and conditions:\n${args.harm.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated. Add no other harm, healing or condition and undo none of it. Give no number.`
+          : "\nThis roll changes no one's hit points or conditions. No one is wounded, healed, knocked down, knocked out or killed by it."
       }`
 }
 
@@ -143,7 +144,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // A dying hero's Death Saving Throw: the rules decide it, and the roll beat tells it. No model is asked.
       const [natural] = d20sFor("normal", args.dice)
       const saved = deathSave(args.character, natural, rules)
-      const beat = rollBeat(by, args.character, DEATH_SAVE.rollType, { dice: [natural], natural, bonus: 0, total: natural, dc: DEATH_SAVE.difficulty, success: saved.success, mode: "normal" })
+      const bonus = 0 - d20Penalty(args.character)
+      const beat = rollBeat(by, args.character, DEATH_SAVE.rollType, { dice: [natural], natural, bonus, total: natural + bonus, dc: DEATH_SAVE.difficulty, success: saved.success, mode: "normal" })
       return {
         ...withStory(args.turn, [beat]),
         characters: args.turn.characters.map((character) =>
@@ -169,12 +171,14 @@ export function createAdventureRollResultService(ports: GmPorts) {
       numbers = { natural: blow.roll.natural, bonus: blow.roll.bonus, total: blow.roll.total, against: blow.roll.armorClass, success: blow.roll.hit }
     } else {
       // The bonus is read from the sheet as the die lands, so the sheet is always the one source of it.
-      const result = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, required.check), dc: required.difficulty, mode })
+      // A condition may make the roller fail a saving throw outright, whatever the dice show.
+      const failedBy = saveFailedBy(args.character, required.check)
+      const result = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, required.check), dc: required.difficulty, mode, fails: !!failedBy })
       // What the roll put at stake is settled here, by the engine: who it hurts or heals, and how they stand after.
       const settled = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
       turnCharacters = settled.characters
-      stakeFacts = settled.facts
-      roll = rollBeat(by, args.character, rollType, result, settled.harm)
+      stakeFacts = [...(failedBy ? [`${args.character.name} is ${failedBy} and fails this saving throw outright.`] : []), ...settled.facts]
+      roll = rollBeat(by, args.character, rollType, result, settled.harm, settled.conditions)
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
     const spell = isAttackRoll(required) ? undefined : required.spell
@@ -189,7 +193,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // The dead are named apart, so an outcome does not have one gasp or stand again.
     // The one just struck down is still named among those present, so the outcome can tell them falling.
     const presentNpcs = turnCharacters
-      .filter((character) => character.type === "npc" && (!isDown(character) || character.id === target?.id) && character.status !== "fled")
+      .filter((character) => character.type === "npc" && (!isDown(character) || character.id === target?.id) && !hasFled(character))
       .map((character) => character.name)
       .join(", ")
     const deadNames = turnCharacters.filter((character) => isDead(character) && character.id !== target?.id).map((character) => character.name)

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { conditionWords } from "@d20/gm-core/sheet/conditions"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { castIdFor, portraitFor, sceneFor } from "../src/scenes"
 import { adventureList, game, type Packs, transitionsOf } from "./game"
@@ -107,14 +108,14 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
       [["thalbern", "damage", 10, "bludgeoning"]]
     )
     assert.ok(harm![0].amount >= 11 && harm![0].amount <= 14)
-    assert.deepEqual([thalbern().hitPoints, thalbern().status], [0, "Unconscious"])
+    assert.deepEqual([thalbern().hitPoints, thalbern().dead, conditionWords(thalbern()).includes("Unconscious")], [0, undefined, true])
     // The round ends with the Owlbear upon him, and he is still dying.
     everyoneDone()
     await game(store, packs, gm("owlbear-confrontation"))({ kind: "continue", turnId: store.current()._id })
     assert.equal(store.current().encounterId, "owlbear-confrontation")
     assert.ok(store.current().characters.some((c) => c.type === "npc" && /owlbear/i.test(c.name)))
     staged("owlbear-confrontation")
-    assert.deepEqual([thalbern().hitPoints, thalbern().status, thalbern().deathSaves], [0, "Unconscious", { successes: 0, failures: 0 }])
+    assert.deepEqual([thalbern().hitPoints, conditionWords(thalbern()).includes("Unconscious"), thalbern().deathSaves], [0, true, { successes: 0, failures: 0 }])
     // His turn is a Death Saving Throw against 10, with no bonus, which the player throws. The Owlbear has acted.
     for (const c of store.current().characters) if (c.type === "npc") c.hasReplied = c.isComplete = true
     store.save()
@@ -129,7 +130,7 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
     await game(store, packs, gm("owlbear-confrontation"))({ kind: "continue", turnId: store.current()._id })
     assert.equal(store.current().encounterId, "timely-rescue")
     staged("timely-rescue")
-    assert.deepEqual([thalbern().hitPoints, thalbern().status, thalbern().deathSaves, thalbern().rollRequired], [1, undefined, undefined, undefined])
+    assert.deepEqual([thalbern().hitPoints, conditionWords(thalbern()).includes("Unconscious"), thalbern().deathSaves, thalbern().rollRequired], [1, false, undefined, undefined])
     for (const next of ["meeting-at-the-stones", "preparing-for-the-city"]) {
       everyoneDone()
       await game(store, packs, gm(next))({ kind: "continue", turnId: store.current()._id })

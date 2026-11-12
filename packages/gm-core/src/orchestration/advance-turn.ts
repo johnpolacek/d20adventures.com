@@ -26,7 +26,7 @@ import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn } from "../utils/game-utils"
 import { dropPlayerPrompt } from "../utils/narrative-utils"
-import { isDead } from "../utils/turn-actors"
+import { hasFled, isDead } from "../utils/turn-actors"
 import { validateAdventurePatch } from "../wiki-adventures/adventure-patch"
 import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter } from "../wiki-adventures/characters"
 import { pendingRescue, rescuedCharacters } from "../wiki-adventures/player-safety"
@@ -178,7 +178,7 @@ export function createAdvanceTurn(ports: GmPorts) {
             existingPlayerCharacters: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc"),
           })
         : (turn.characters as TurnCharacter[])
-            .filter((character) => !isDead(character) && character.status !== "fled")
+            .filter((character) => !isDead(character) && !hasFled(character))
             // Initiative was rolled as the encounter began. Every round keeps that order.
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
       // Entering the rescue encounter brings every hero who is down but not dead back to 1 hit point. Then a dying

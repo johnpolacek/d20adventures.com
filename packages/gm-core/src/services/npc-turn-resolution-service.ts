@@ -1,20 +1,17 @@
-import { withStatusWord } from "../sheet/death"
 import type { TurnCharacter } from "../types/adventure"
 
 export type NpcTurnEffect = {
   targetId: string
-  status?: string
   equipmentToAdd?: Array<{ name: string; description?: string }>
 }
 
-export function applyNpcEffectsToCharacters(args: { characters: TurnCharacter[]; npcId: string; effects?: NpcTurnEffect[]; applyHealthAndStatus: boolean }): TurnCharacter[] {
+// What an NPC's turn hands over. Hit points and conditions are the engine's: an outcome sets neither.
+export function applyNpcEffectsToCharacters(args: { characters: TurnCharacter[]; npcId: string; effects?: NpcTurnEffect[] }): TurnCharacter[] {
   return args.characters.map((character) => {
     const effect = args.effects?.find((entry) => entry.targetId === character.id)
-    let updated = { ...character }
+    const updated = { ...character }
 
     if (effect) {
-      if (args.applyHealthAndStatus && effect.status) updated = withStatusWord(updated, effect.status)
-
       if (effect.equipmentToAdd && effect.equipmentToAdd.length > 0) {
         const existingEquipment = Array.isArray(character.equipment) ? character.equipment : []
         updated.equipment = [...existingEquipment, ...effect.equipmentToAdd]

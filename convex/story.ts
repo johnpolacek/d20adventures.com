@@ -57,6 +57,8 @@ export const storyValidator = v.array(
           })
         )
       ),
+      // The conditions a check or save gave, or ended, and for whom.
+      conditions: v.optional(v.array(v.object({ target: v.string(), condition: v.string(), ends: v.optional(v.literal(true)) }))),
     }),
     v.object({ kind: v.literal("reply"), by, character: v.string(), text: v.string() })
   )

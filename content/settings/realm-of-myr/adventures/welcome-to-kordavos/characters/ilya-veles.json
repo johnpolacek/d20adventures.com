@@ -60,7 +60,6 @@
     }
   ],
   "specialAbilities": ["A Face in Every Hall: Ilya knows someone useful in nearly every tavern, salon, and feast-hall in Kordavos", "Skald's Memory: Ilya can recall any song, name, or conversation he has heard, word for word"],
-  "status": "",
   "type": "pc",
   "attributes": {
     "strength": 8,

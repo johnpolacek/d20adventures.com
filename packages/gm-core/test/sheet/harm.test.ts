@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { applyStakes } from "../../src/sheet/harm"
 import type { Sheet } from "../../src/sheet/sheet"
-import { HARM_DICE, printedDiceSchema, type Stake } from "../../src/sheet/stakes"
+import { HARM_DICE, type HarmStake, printedDiceSchema, type Stake } from "../../src/sheet/stakes"
 
 // Every expected number below was worked out by hand from the SRD 5.2.1 rules, not copied from the function's output.
 
@@ -16,7 +16,7 @@ const falls =
   (...dice: number[]) =>
   () =>
     dice.shift() as number
-const stake = (on: Stake["on"], target: string, kind: Stake["kind"], dice: string, type?: Stake["type"]): Stake => ({ on, target, kind, dice, ...(type ? { type } : {}) })
+const stake = (on: HarmStake["on"], target: string, kind: HarmStake["kind"], dice: string, type?: HarmStake["type"]): Stake => ({ on, target, kind, dice, ...(type ? { type } : {}) })
 
 test("the ladder is light 1d4, moderate 1d8, heavy 2d6, severe 4d6", () => {
   assert.deepEqual(HARM_DICE, { light: "1d4", moderate: "1d8", heavy: "2d6", severe: "4d6" })
@@ -45,7 +45,7 @@ test("damage meets the target's defenses and the rules of 0 hit points", () => {
   // A Skeleton is Vulnerable to Bludgeoning: 1d8 rolling 7 is doubled to 14, more than its 13. An NPC at 0 dies.
   const crushed = applyStakes({ characters: [skeleton], stakes: [stake("success", "skeleton", "damage", "1d8", "bludgeoning")], outcome: "success", roll: falls(7) })
   assert.equal(crushed.characters[0].hitPoints, 0)
-  assert.equal((crushed.characters[0] as { status?: string }).status, "dead")
+  assert.equal((crushed.characters[0] as { dead?: true }).dead, true)
   assert.deepEqual(crushed.facts, ["Skeleton takes 14 bludgeoning damage. Skeleton dies."])
   // 4d6 rolling 6, 6, 5 and 4 is 21 on Thalbern's 11: he is at 0 with 10 left over, less than his maximum of 11, so he is dying, not dead.
   const fallen = applyStakes({ characters: [thalbern], stakes: [stake("failure", "thalbern", "damage", "4d6", "bludgeoning")], outcome: "failure", roll: falls(6, 6, 5, 4) })
@@ -59,7 +59,7 @@ test("healing restores hit points up to the maximum and wakes one who is down", 
   assert.equal(applyStakes({ characters: [{ ...thalbern, hitPoints: 4 }], stakes: [stake("success", "thalbern", "healing", "1d8")], outcome: "success", roll: falls(6) }).characters[0].hitPoints, 10)
   assert.equal(applyStakes({ characters: [{ ...thalbern, hitPoints: 9 }], stakes: [stake("success", "thalbern", "healing", "1d8")], outcome: "success", roll: falls(8) }).characters[0].hitPoints, 11)
   // Down and dying, healed 1d4 rolling 3: conscious at 3, with the saves cleared.
-  const down = { ...thalbern, hitPoints: 0, healthPercent: 0, status: "Unconscious", deathSaves: { successes: 1, failures: 2 } }
+  const down = { ...thalbern, hitPoints: 0, healthPercent: 0, deathSaves: { successes: 1, failures: 2 } }
   const woken = applyStakes({ characters: [down], stakes: [stake("always", "thalbern", "healing", "1d4")], outcome: "failure", roll: falls(3) })
   assert.equal(woken.characters[0].hitPoints, 3)
   assert.equal(woken.characters[0].deathSaves, undefined)

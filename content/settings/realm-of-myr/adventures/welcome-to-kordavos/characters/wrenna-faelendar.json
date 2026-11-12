@@ -28,7 +28,6 @@
   ],
   "skills": ["Survival", "Tracking", "Stealth", "Perception", "Nature", "Archery"],
   "specialAbilities": ["Keen Senses: Wrenna's elven sight and hearing pick out details others miss, even in darkness", "Hunter's Mark: once Wrenna has a quarry's trail, she does not lose it"],
-  "status": "",
   "type": "pc",
   "attributes": {
     "strength": 10,

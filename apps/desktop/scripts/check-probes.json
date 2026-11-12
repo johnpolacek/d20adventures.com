@@ -102,7 +102,14 @@
     "spell": "Charm Person",
     "dcs": [10, 15],
     "mode": "normal",
-    "stakes": []
+    "stakes": [
+      {
+        "on": "success",
+        "target": "npcs-1749163978757",
+        "kind": "condition",
+        "condition": "charmed"
+      }
+    ]
   },
   {
     "id": "sneak-with-help",
@@ -241,5 +248,111 @@
         "kind": "damage"
       }
     ]
+  },
+  {
+    "id": "viper-venom",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "A viper strikes from the leaf litter and sinks its fangs into Thalbern's calf. Its venom burns up his leg and his sight starts to swim.",
+    "action": "I grit my teeth and fight off the venom.",
+    "checks": ["constitution-save"],
+    "dcs": [10, 15],
+    "mode": "normal",
+    "gives": [
+      {
+        "on": "failure",
+        "target": "thalbern",
+        "kind": "condition",
+        "condition": "poisoned"
+      }
+    ]
+  },
+  {
+    "id": "trip-reinhard",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "narrative": "Reinhard draws his blade and comes at them across the bank.",
+    "action": "I hook his ankle and throw my shoulder into him to knock him flat on his back.",
+    "checks": ["athletics", "strength"],
+    "dcs": [10, 15],
+    "mode": "normal",
+    "stakes": [
+      {
+        "on": "success",
+        "target": "npcs-1749163978757",
+        "kind": "condition",
+        "condition": "prone"
+      }
+    ]
+  },
+  {
+    "id": "tear-free",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "A weighted hunter's net drops from the branches and tangles Thalbern's arms and legs. He is caught fast in it.",
+    "action": "I tear at the net and wrench myself out of it.",
+    "conditionsOn": {
+      "thalbern": [
+        {
+          "id": "restrained"
+        }
+      ]
+    },
+    "checks": ["athletics", "strength", "acrobatics", "dexterity"],
+    "dcs": [10, 15],
+    "stakes": [
+      {
+        "on": "success",
+        "target": "thalbern",
+        "kind": "end-condition",
+        "condition": "restrained"
+      }
+    ]
+  },
+  {
+    "id": "poisoned-shot",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The viper's venom is in Thalbern's blood. His hands shake and the trees swim in front of him.",
+    "action": "I loose an arrow at the owlbear's chest.",
+    "conditionsOn": {
+      "thalbern": [
+        {
+          "id": "poisoned"
+        }
+      ]
+    },
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longbow",
+      "target": "owlbear"
+    },
+    "mode": "disadvantage"
+  },
+  {
+    "id": "owlbear-down",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The owlbear's feet go out from under it on the wet roots and it crashes onto its side.",
+    "action": "I rush in and drive my shortsword into it before it can rise.",
+    "conditionsOn": {
+      "owlbear": [
+        {
+          "id": "prone",
+          "turns": 1
+        }
+      ]
+    },
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortsword",
+      "target": "owlbear"
+    },
+    "mode": "advantage"
   }
 ]

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { conditionEntrySchema } from "../sheet/condition-entry"
 import { sheetSchema } from "../sheet/sheet"
 
 // Equipment item schema and type
@@ -64,6 +65,11 @@ export const baseCharacterSchema = z.object({
   // A hero at 0 hit points who is not dead: their Death Saving Throws so far, and whether they are Stable. Only the
   // engine writes them, through ../sheet/death.
   deathSaves: z.object({ successes: z.number().int().min(0).max(3), failures: z.number().int().min(0).max(3), stable: z.literal(true).optional() }).optional(),
+  // The SRD conditions the character bears. Only the engine writes them, through ../sheet/conditions.
+  conditions: z.array(conditionEntrySchema).optional(),
+  // Dead, or gone from the encounter for good. Neither is a condition, and only the engine sets them.
+  dead: z.literal(true).optional(),
+  fled: z.literal(true).optional(),
   equipment: z.array(equipmentItemSchema).optional(),
   skills: z.array(z.string()).optional(),
   spells: z.array(spellSchema).optional(),
@@ -82,7 +88,6 @@ export const pcSchema = baseCharacterSchema.extend({
   // "ai" marks an AI-controlled companion; userId is the adventure owner's.
   controlledBy: z.literal("ai").optional(),
   attributes: attributesSchema,
-  status: z.string().optional(),
 })
 
 export type PC = z.infer<typeof pcSchema>
@@ -91,7 +96,6 @@ export type PC = z.infer<typeof pcSchema>
 export const npcSchema = baseCharacterSchema.extend({
   type: z.literal("npc"),
   attributes: attributesSchema.partial().optional(),
-  status: z.string().optional(),
   // The SRD stat block the NPC uses for hit points and Armor Class: "guard", "owlbear". None means a Commoner.
   statBlock: z.string().optional(),
 })
@@ -111,8 +115,8 @@ export type PCTemplate = z.infer<typeof pcTemplateSchema>
 export const characterSchema = z.union([pcSchema, npcSchema])
 export type Character = z.infer<typeof characterSchema>
 
-// Generation schemas (without id and image for AI generation)
-export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true, sheet: true, hitPoints: true, deathSaves: true })
+// Generation schemas (without id and image for AI generation, and without what only the engine writes)
+export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true, sheet: true, hitPoints: true, deathSaves: true, conditions: true, dead: true, fled: true })
 
 export const npcGenerationSchema = baseCharacterGenerationSchema.extend({
   type: z.literal("npc"),

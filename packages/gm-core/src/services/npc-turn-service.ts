@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import { conditionWords } from "../sheet/conditions"
 import { afterHarm } from "../sheet/death"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
@@ -124,7 +125,7 @@ export function createNpcTurnService(ports: GmPorts) {
     beatsToAppend: StoryBeat[]
     actionSummary: string
     rollInfo?: NpcRollInfo
-    effects?: Array<{ targetId: string; status?: string; equipmentToAdd?: Array<{ name: string; description?: string }> }>
+    effects?: Array<{ targetId: string; equipmentToAdd?: Array<{ name: string; description?: string }> }>
   }> {
     console.log("[LLM] Starting NPC turn:", {
       npc: npcId,
@@ -320,7 +321,7 @@ export function createNpcTurnService(ports: GmPorts) {
         hasReplied: c.hasReplied,
         isComplete: c.isComplete,
         healthPercent: c.healthPercent,
-        status: c.status,
+        conditions: conditionWords(c),
       })),
     })
 

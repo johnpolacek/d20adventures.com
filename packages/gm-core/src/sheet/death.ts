@@ -1,5 +1,7 @@
-import { isDead, isDown, isDying } from "../utils/turn-actors"
+import { isDead, isDown, isDying, isIncapacitated } from "../utils/turn-actors"
 import { DEATH_SAVE, type RollRequirement } from "../validations/roll-requirement-schema"
+import type { ConditionEntry } from "./condition-entry"
+import { conditionsAtRoundStart, d20Penalty, withCondition } from "./conditions"
 import { hitPointsOf, withHitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
 
@@ -9,28 +11,40 @@ export type DeathSaves = { successes: number; failures: number; stable?: true }
 /** The adventure's rule that bears on death: with `playerDeath: false` a hero never dies, and is left Stable instead. */
 export type DeathRules = { playerDeath?: boolean }
 
-type Mortal = { name?: string; type: string; sheet?: Sheet; statBlock?: string; hitPoints?: number; healthPercent?: number; status?: string; deathSaves?: DeathSaves }
-
-// The status of a hero at 0 hit points, until substage 8 of stage 4 types the conditions.
-export const UNCONSCIOUS = "Unconscious"
+type Mortal = {
+  name?: string
+  type: string
+  sheet?: Sheet
+  statBlock?: string
+  hitPoints?: number
+  healthPercent?: number
+  dead?: true
+  fled?: true
+  conditions?: readonly ConditionEntry[]
+  deathSaves?: DeathSaves
+}
 
 const at = <T extends Mortal>(character: T, current: number) => withHitPoints(character, current) as T
 
-const dying = <T extends Mortal>(character: T, saves: DeathSaves = { successes: 0, failures: 0 }): T => ({ ...at(character, 0), status: UNCONSCIOUS, deathSaves: saves })
+// A hero at 0 hit points is Unconscious. That follows from the hit points (./conditions) and is not stored.
+const dying = <T extends Mortal>(character: T, saves: DeathSaves = { successes: 0, failures: 0 }): T => ({ ...at(character, 0), deathSaves: saves })
 
-const stable = <T extends Mortal>(character: T): T => ({ ...at(character, 0), status: UNCONSCIOUS, deathSaves: { ...(character.deathSaves ?? { successes: 0, failures: 0 }), stable: true } })
+const stable = <T extends Mortal>(character: T): T => ({ ...at(character, 0), deathSaves: { ...(character.deathSaves ?? { successes: 0, failures: 0 }), stable: true } })
 
-/** Back on their feet at `current` hit points: conscious, with their Death Saving Throws cleared. */
+/**
+ * Conscious again at `current` hit points, with their Death Saving Throws cleared. One who was down is left Prone, as
+ * the rules have it when Unconscious ends, and stands on their turn.
+ */
 export function revived<T extends Mortal>(character: T, current: number): T {
   const { deathSaves: _, ...rest } = at(character, current)
-  return { ...rest, status: character.status === UNCONSCIOUS ? undefined : character.status } as T
+  return (isDown(character) && current > 0 ? withCondition(rest as T, { id: "prone" }, { acted: !!(character as TurnFlags).isComplete }).character : rest) as T
 }
 
 /** Dead at 0 hit points. Where player death is off, a hero who would die is left Stable at 0 instead, out of the fight. */
 export function killed<T extends Mortal>(character: T, rules?: DeathRules): T {
   if (character.type === "pc" && rules?.playerDeath === false) return stable(character)
-  const { deathSaves: _, ...rest } = at(character, 0)
-  return { ...rest, status: "dead" } as T
+  const { deathSaves: _, conditions: __, ...rest } = at(character, 0)
+  return { ...rest, dead: true } as T
 }
 
 /** How the rules left someone who took damage or made a save. */
@@ -84,29 +98,18 @@ export function withHitPointsBy<T extends Mortal>(character: T, current: number,
   return character
 }
 
-/**
- * The model's word for a character's status. It does not kill a hero: a hero it calls dead drops to 0 hit points and the
- * rules of 0 hit points go on from there. Nor does it change the status of a hero at 0, who stays Unconscious.
- */
-export function withStatusWord<T extends Mortal>(character: T, status: string | undefined): T {
-  const word = status?.trim() || undefined
-  if (character.type !== "pc") return { ...character, status: word }
-  if (isDown(character)) return character
-  if (word?.toLowerCase() === "dead") return withDamage(character, hitPointsOf(character)?.current ?? 0).character
-  return { ...character, status: word }
-}
-
 export type DeathSaveResult = { character: Mortal; natural: number; success: boolean; fate?: Fate }
 
 /**
  * A dying hero's Death Saving Throw: a d20 with no bonus. 10 or more is a success and less a failure. A 1 is two
  * failures, and a 20 brings the hero back to 1 hit point, conscious. Three successes make the hero Stable, Unconscious
- * at 0 with no more saves. Three failures kill, or where player death is off leave the hero Stable.
+ * at 0 with no more saves. Three failures kill, or where player death is off leave the hero Stable. Exhaustion takes
+ * 2 off the roll for each level, and the 1 and the 20 are read off the die itself.
  */
 export function deathSave<T extends Mortal>(character: T, die: number, rules?: DeathRules): { character: T; natural: number; success: boolean; fate?: Fate } {
   if (!isDying(character)) throw new Error(`${character.name ?? "The character"} is not dying, so makes no Death Saving Throw.`)
   if (!Number.isInteger(die) || die < 1 || die > 20) throw new Error(`${die} is not a d20 roll.`)
-  const success = die >= DEATH_SAVE.difficulty
+  const success = die - d20Penalty(character) >= DEATH_SAVE.difficulty
   if (die === 20) return { character: revived(character, 1), natural: die, success, fate: "revived" }
   const saves = character.deathSaves ?? { successes: 0, failures: 0 }
   if (success) {
@@ -125,18 +128,23 @@ export function deathSave<T extends Mortal>(character: T, die: number, rules?: D
 type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: RollRequirement; rollResult?: number }
 
 /**
- * A character as a round begins. A dying hero's turn is their Death Saving Throw, already asked for, so the roll card
- * comes up on it. One who is down otherwise takes no turn. Everyone else has yet to act.
+ * A character as a round begins. Their conditions lose a turn each, and those that run out end. A dying hero's turn is
+ * their Death Saving Throw, already asked for, so the roll card comes up on it. One who is down otherwise, or
+ * Incapacitated, takes no turn. Everyone else has yet to act.
  */
-export function atRoundStart<T extends Mortal & TurnFlags>(character: T): T {
-  if (isDying(character)) return { ...character, rollRequired: DEATH_SAVE, rollResult: undefined, hasReplied: true, isComplete: false }
-  if (isDown(character)) return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
+export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
+  const character = conditionsAtRoundStart(before)
+  if (isDying(character)) return { ...character, rollRequired: { ...DEATH_SAVE, modifier: 0 - d20Penalty(character) }, rollResult: undefined, hasReplied: true, isComplete: false }
+  if (isDown(character) || isIncapacitated(character)) return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
   return { ...character, hasReplied: false, isComplete: false }
 }
 
-/** A character after harm mid-round: one now down who has no Death Saving Throw to make this round is done with it, and any roll they still owed is dropped. */
+/**
+ * A character after harm or a condition mid-round: one now down or Incapacitated who has no Death Saving Throw to make
+ * this round is done with it, and any roll they still owed is dropped.
+ */
 export function afterHarm<T extends Mortal & TurnFlags>(character: T): T {
-  if (!isDown(character)) return character
+  if (!isDown(character) && !isIncapacitated(character)) return character
   if (isDying(character) && character.rollRequired && "deathSave" in character.rollRequired) return character
   if (character.isComplete && !character.rollRequired) return character
   return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }

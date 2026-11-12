@@ -31,7 +31,6 @@
     }
   ],
   "skills": ["Swordsmanship", "Tactics", "Survival", "Perception", "Stealth", "Archery"],
-  "status": "",
   "type": "npc",
   "attributes": {
     "strength": 16,

@@ -1,7 +1,8 @@
 import type { TurnRecord } from "@d20/gm-core"
-import { atRoundStart, withStatusWord } from "@d20/gm-core/sheet/death"
+import { conditionsAtEncounterEnd, conditionWords, withoutCondition } from "@d20/gm-core/sheet/conditions"
+import { atRoundStart } from "@d20/gm-core/sheet/death"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
-import { isDead, isDown } from "@d20/gm-core/utils/turn-actors"
+import { hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { type CharacterUpdate, characterUpdateSchema } from "@d20/gm-core/wiki-adventures/character-updates"
 import { z } from "zod"
@@ -10,7 +11,7 @@ import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
 export const desktopPatchSchema = strictModelSchema(adventurePatchSchema.omit({ characterUpdates: true })).extend({
   characterUpdates: z.array(characterUpdateSchema).max(100).optional(),
 })
-export type CharacterState = Pick<TurnCharacter, "hitPoints" | "healthPercent" | "status" | "deathSaves" | "equipment" | "effects" | "spells">
+export type CharacterState = Pick<TurnCharacter, "hitPoints" | "healthPercent" | "conditions" | "dead" | "fled" | "deathSaves" | "equipment" | "effects" | "spells">
 export type CharacterStates = Record<string, CharacterState>
 const key = (name: string) => name.trim().toLowerCase()
 
@@ -18,7 +19,9 @@ export function characterState(c: CharacterState): CharacterState {
   return structuredClone({
     hitPoints: c.hitPoints,
     healthPercent: c.healthPercent,
-    status: c.status,
+    conditions: c.conditions,
+    dead: c.dead,
+    fled: c.fled,
     // Always set, so a hero brought back clears the saves a later spread would otherwise keep.
     deathSaves: c.deathSaves,
     equipment: c.equipment ?? [],
@@ -49,8 +52,8 @@ export function applyCharacterUpdates(characters: TurnCharacter[], input: unknow
     seen.add(update.characterId)
     const index = result.findIndex((c) => c.id === update.characterId)
     if (index < 0) throw new Error(`Unknown character in state update: ${update.characterId}`)
-    // Hit points are the engine's: a round's patch cannot set them. A status goes by the rules of 0 hit points.
-    if (update.status !== undefined) result[index] = withStatusWord(result[index], update.status)
+    // Hit points and conditions are the engine's: a round's patch can only end a condition its events ended with no roll.
+    for (const id of update.conditionsEnded ?? []) result[index] = withoutCondition(result[index], id).character
     const c = result[index]
     for (const change of update.inventoryChanges ?? []) {
       c.equipment ??= []
@@ -82,7 +85,7 @@ export function applyCharacterUpdates(characters: TurnCharacter[], input: unknow
   return result
 }
 
-const deathState = (c: TurnCharacter) => ({ hitPoints: c.hitPoints, healthPercent: c.healthPercent, status: c.status, deathSaves: c.deathSaves })
+const deathState = (c: TurnCharacter) => ({ hitPoints: c.hitPoints, healthPercent: c.healthPercent, conditions: c.conditions, dead: c.dead, deathSaves: c.deathSaves })
 
 export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnCharacter[]; remembered: CharacterStates; updates: unknown; encounterChanged: boolean }): {
   characters: TurnCharacter[]
@@ -108,11 +111,13 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
     // The rescue brings a hero at 0 back as the round turns, unless the round's patch already did.
     const before = args.current.find((c) => c.id === next.id)
     const revived = before && isDown(before) && !isDown(next) && isDown(states[next.id] ?? before) ? deathState(next) : {}
-    const c = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
+    const kept = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
+    // A new encounter ends the conditions of a fight's moment, and the lasting ones come along.
+    const c = args.encounterChanged ? conditionsAtEncounterEnd(kept) : kept
     if (!c.deathSaves) delete c.deathSaves
     if (args.encounterChanged) c.spells = (c.spells ?? []).map((s) => ({ ...s, isUsed: false }))
     // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none.
-    const ready = c.status === "fled" ? { ...c, hasReplied: false, isComplete: true } : atRoundStart(c)
+    const ready = hasFled(c) ? { ...c, hasReplied: false, isComplete: true } : atRoundStart(c)
     states[c.id] = characterState(ready)
     return ready
   })
@@ -130,13 +135,13 @@ const dead = (characters: TurnCharacter[]) => {
 export function characterContext(characters: TurnCharacter[], patchInstructions = false, viewer?: string) {
   const shown = (c: TurnCharacter) => {
     const state = characterState(c)
-    return viewer === undefined || c.id === viewer ? state : { healthPercent: c.healthPercent, status: c.status }
+    return viewer === undefined || c.id === viewer ? state : { healthPercent: c.healthPercent, conditions: conditionWords(c) || undefined, fled: c.fled }
   }
   const context = `\n\nCURRENT SAVED CHARACTER STATE (authoritative, after already resolved actions):\n${JSON.stringify(characters.map((c) => ({ id: c.id, name: c.name, ...shown(c) })))}${dead(characters)}`
   if (!patchInstructions) return context
   return `${context}
 Use exact character IDs and existing item/effect/spell names. State patches describe only additional changes established by resolved actions or your outcome narrative. Do not repeat changes already reflected above. Do not apply attempted actions that failed or still need a roll.
 For each item received, add one inventoryChanges entry {op:"add",name,description?}. For each item spent, lost, or transferred, use {op:"remove",name}. A transfer removes from the giver and adds to the receiver. Each entry is one item, not a quantity or currency balance.
-For effects use {op:"set",name,description,duration} to add or refresh, or {op:"remove",name} to end one. Duration is a positive number of rounds starting with the next round. Existing effects automatically lose one round on advance, so do not emit routine duration decrements. Empty status clears a status. Hit points and health are the game's: it rolls every wound and every healing, so never give a health value and never tell of harm or healing the state above does not show.
+For effects use {op:"set",name,description,duration} to add or refresh, or {op:"remove",name} to end one. Duration is a positive number of rounds starting with the next round. Existing effects automatically lose one round on advance, so do not emit routine duration decrements. Conditions are the game's: never give one. End one only when the round's events ended it with no roll, by id in conditionsEnded. Hit points and health are the game's: it rolls every wound and every healing, so never give a health value and never tell of harm or healing the state above does not show.
 Spell changes are {name,isUsed} for known spells only. Spells automatically recharge upon entering a different encounter. Do not invent items, conditions, currency accounting, or spells absent from established events. Omit unchanged fields and return characterUpdates:[] when no change is needed.`
 }

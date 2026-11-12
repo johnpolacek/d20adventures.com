@@ -258,23 +258,15 @@ export default defineSchema({
           )
         ),
         specialAbilities: v.optional(v.array(v.string())),
-        status: v.optional(v.string()),
+        conditions: v.optional(v.array(v.object({ id: v.string(), source: v.optional(v.string()), turns: v.optional(v.number()), level: v.optional(v.number()) }))),
+        dead: v.optional(v.literal(true)),
+        fled: v.optional(v.literal(true)),
         effects: v.optional(
           v.array(
             v.object({
               name: v.string(),
               description: v.optional(v.string()),
               duration: v.optional(v.number()),
-              status: v.optional(v.string()),
-              healthPercentDelta: v.optional(v.number()),
-              equipmentToAdd: v.optional(
-                v.array(
-                  v.object({
-                    name: v.string(),
-                    description: v.optional(v.string()),
-                  })
-                )
-              ),
             })
           )
         ),

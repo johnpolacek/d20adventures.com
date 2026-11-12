@@ -15,7 +15,8 @@ export interface OrderEntry {
   npc?: boolean
   // 0 to 100. Left out, the portrait has no bar.
   health?: number
-  status?: string
+  // In words: "Prone, Poisoned".
+  conditions?: string
 }
 
 const healthColor = (health: number) => (health <= 25 ? "#c8452f" : health <= 50 ? "#d98a3a" : health <= 75 ? "#d9b44a" : "#7fb069")
@@ -56,7 +57,7 @@ export function TurnOrder({
           const active = c.id === activeId
           const turn = c.id === turnId
           const health = c.health === undefined ? undefined : Math.max(0, Math.min(100, Math.round(c.health)))
-          const name = `${c.name}${health === undefined ? "" : `, ${health}% health${c.status ? `, ${c.status}` : ""}`}${turn ? ", their turn" : ""}`
+          const name = `${c.name}${health === undefined ? "" : `, ${health}% health${c.conditions ? `, ${c.conditions}` : ""}`}${turn ? ", their turn" : ""}`
           return (
             <div key={c.id} className="relative flex flex-col items-center">
               {turn && (

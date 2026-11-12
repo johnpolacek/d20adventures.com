@@ -1,4 +1,5 @@
 import type { GmPorts } from "../ports"
+import type { ConditionEntry } from "../sheet/condition-entry"
 import type { Sheet } from "../sheet/sheet"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
@@ -50,7 +51,19 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       order?: number
       story: StoryBeat[]
       adventureId: string
-      characters?: readonly { id: string; name: string; type?: string; sheet?: Sheet; statBlock?: string; healthPercent?: number; status?: string }[]
+      characters?: readonly {
+        id: string
+        name: string
+        type?: "pc" | "npc"
+        sheet?: Sheet
+        statBlock?: string
+        hitPoints?: number
+        healthPercent?: number
+        dead?: true
+        fled?: true
+        conditions?: ConditionEntry[]
+        isComplete?: boolean
+      }[]
     }
     adventure: {
       settingId: string

@@ -1,3 +1,4 @@
+import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { rollInitiative } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
@@ -46,9 +47,11 @@ export function buildLocalWikiTurnCharacters(args: {
     // carried at 0 stays down as they were: dead, Stable, or dying with their Death Saving Throws so far.
     // Initiative is rolled as the encounter begins and kept until it ends.
     hero.initiative = rollInitiative(hero, rollD20())
+    // The conditions of the fight they left are over, and the lasting ones come with them.
     const was = carried as Partial<TurnCharacter> | undefined
-    const down = was?.hitPoints === 0 ? { status: was.status, deathSaves: was.deathSaves } : undefined
-    characters.push(carried?.hitPoints === undefined ? withStartingHitPoints(hero) : { ...withHitPoints(hero, carried.hitPoints), ...down })
+    const kept = was ? conditionsAtEncounterEnd({ conditions: was.conditions }).conditions : undefined
+    const state = { conditions: kept, dead: was?.dead, deathSaves: was?.hitPoints === 0 ? was.deathSaves : undefined }
+    characters.push(carried?.hitPoints === undefined ? withStartingHitPoints(hero) : { ...withHitPoints(hero, carried.hitPoints), ...state })
   }
 
   for (const npcRef of args.encounter.npcRefs) {

@@ -31,7 +31,6 @@
     }
   ],
   "skills": ["Stealth", "Sleight of Hand", "Acrobatics", "Perception", "Investigation", "Deception"],
-  "status": "",
   "type": "npc",
   "attributes": {
     "strength": 9,

@@ -1,14 +1,16 @@
-import { damageTypeIdSchema } from "@d20/srd"
+import { conditionIdSchema, conditionIds, damageTypeIdSchema } from "@d20/srd"
 import { abilityById } from "@d20/srd/abilities"
 import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { attacksOf } from "../sheet/attack"
 import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
+import { conditionSpans } from "../sheet/condition-entry"
+import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
-import { isDead, isDown } from "../utils/turn-actors"
+import { hasFled, isDead, isDown } from "../utils/turn-actors"
 import type { ChosenRoll } from "../validations/roll-requirement-schema"
 import { formatSpellsForPrompt } from "./spell-tracking-service"
 
@@ -30,21 +32,25 @@ const rollPickSchema = z.object({
   harm: z
     .array(
       z.object({
-        on: z.enum(["success", "failure", "always"]).describe("The outcome of this roll that hurts or heals"),
-        target: z.string().max(80).describe("The id of who is hurt or healed: someone from Who Is Here, or the character's own id"),
-        kind: z.enum(["damage", "healing"]),
-        size: z.enum(harmSizes).optional().describe("How much, by name. The game rolls its dice"),
+        on: z.enum(["success", "failure", "always"]).describe("The outcome of this roll that does it"),
+        target: z.string().max(80).describe("The id of who it happens to: someone from Who Is Here, or the character's own id"),
+        kind: z.enum(["damage", "healing", "condition", "end-condition"]),
+        size: z.enum(harmSizes).optional().describe("For damage and healing: how much, by name. The game rolls its dice"),
         dice: z.string().max(12).optional().describe('Dice the encounter instructions print for it, as printed: "4d6". They replace the size'),
         type: z.string().max(20).optional().describe("For damage: its type, such as fire, poison, bludgeoning or psychic"),
+        condition: z.string().max(20).optional().describe("For a condition given or ended: its id, such as prone, poisoned or restrained"),
+        span: z.enum(conditionSpans).optional().describe("For a condition given: how long it lasts"),
+        source: z.string().max(80).optional().describe("For charmed, frightened or grappled: the id of who it comes from"),
       })
     )
     .max(4)
     .optional()
-    .describe("For a check or a save whose outcome would itself wound or heal someone. Empty for most rolls, and for every attack"),
+    .describe("For a check or a save whose outcome would itself wound or heal someone, or give or end a condition. Empty for most rolls, and for every attack"),
 })
 
 // Someone the roller could attack: anyone else in the scene who is still up.
-type Present = { id: string; name: string; type?: string; sheet?: TurnCharacter["sheet"]; statBlock?: string; healthPercent?: number; status?: string }
+type Present = Pick<TurnCharacter, "id" | "name"> &
+  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "isComplete">> & { statBlock?: string }
 
 const MENU = (kind: "skill" | "ability" | "save") =>
   checkMenu
@@ -67,13 +73,16 @@ export function createRollRequirementService(ports: GmPorts) {
   ): Promise<ChosenRoll | null> {
     const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {}
     const self = "id" in character ? character.id : undefined
-    const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDown(other) && other.status !== "fled")
+    // One who is Charmed cannot attack the charmer.
+    const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDown(other) && !hasFled(other) && !cannotAttack(character, other))
+    const conditions = conditionWords(character)
     const attacks = attacksOf(character)
     const casts = spellcastingAbilityOf(character)
     const contextLines = [
       `Name: ${character.name}`,
       `Archetype: ${character.archetype}`,
       `Race: ${character.race}`,
+      conditions ? `Conditions: ${conditions}` : undefined,
       character.spells && character.spells.length > 0 ? `Spells: ${formatSpellsForPrompt(character as unknown as TurnCharacter)}` : undefined,
       casts ? `Spellcasting ability: ${abilityById.get(casts)?.name}` : undefined,
       character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
@@ -133,7 +142,7 @@ ${MENU("save")}
    - Picking a lock or disarming a trap is "dexterity".
    - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check.
      Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
-     Who Is Here: ${targets.map((other) => `${other.id} (${other.name})`).join(", ") || "no one they could attack"}.
+     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
    - SPELLS: casting one of the character's own spells is a bare check of their spellcasting ability (see Character Context. For an NPC, the ability its magic comes from: intelligence, wisdom or charisma), and "spell" names the spell exactly as their list has it. Magic that is not a spell on their list is "arcana" with no "spell".
    - SPELL AVAILABILITY: Spells marked as "Used (unavailable this encounter)" CANNOT be cast again until the next encounter. If the character tries to cast one, "check" is "none": the spell simply fails to activate.
@@ -148,7 +157,7 @@ ${MENU("save")}
    - "advantage" when something in the scene clearly helps: the target is distracted or unaware, darkness or noise covers a sneak, an ally is helping, the right tool is at hand.
    - "disadvantage" when something in the scene clearly hinders: a storm drowns what they listen for, they are hurt or held, they act blind or in a rush.
    - "normal" otherwise, which is most rolls. Say what helps or hinders in "reason", in a few words.
-   - Not for what the character is good or bad at, and not for their armor: the game already counts both.
+   - Not for what the character is good or bad at, and not for their armor or anyone's conditions: the game already counts those.
 
 10) Set what the roll puts at stake for hit points, in "harm". Most rolls put none, so leave it empty. Use it only when this roll's own outcome would wound or heal someone:
    - A spell or an act that hurts someone when it works: on "success", target them, kind "damage".
@@ -156,7 +165,15 @@ ${MENU("save")}
    - A spell, a potion or a skill that heals: on "success", target who is healed, kind "healing".
    - "size" is light, moderate, heavy or severe, and the game rolls its dice. A scratch or a cantrip is light, a solid blow or a level 1 spell is moderate, a bad fall or a strong blast is heavy, and severe is rare. When the encounter instructions print dice for it (4d6), put them in "dice" as printed and leave "size" out.
    - "target" is an id from Who Is Here, or the character's own id${self ? `, ${self}` : ""}. Damage takes a "type": fire, cold, poison, psychic, bludgeoning and so on.
-   - An attack takes no "harm": its weapon sets the damage. Never use harm for fear, shame, a threat, or a fight not yet joined.
+   - An attack takes no "harm": its weapon sets the damage. Never use damage for fear, shame, a threat, or a fight not yet joined.
+
+11) "harm" also holds the conditions this roll's own outcome would give or end. Most rolls give none. The game knows these and applies their rules itself: ${conditionIds.join(", ")}.
+   - An act that puts one on someone when it works (a trip or a shove knocks them prone, a hold leaves them grappled, a net or a snare leaves them restrained, a spell charms or frightens them): on "success", target them, kind "condition", and "condition" is its id.
+   - A save against something that puts one on the character when it fails (a poison, a terror, a blinding flash, a snare): on "failure", target the character's own id, kind "condition".
+   - An act that frees someone of one they have when it works (breaking a hold, tearing out of a net, shaking off fear): on "success", target who is freed, kind "end-condition". Only for a condition that Conditions or Who Is Here shows they have.
+   - "span" is how long it lasts: "turn" is until their next turn is over, "minute" is the rest of a fight, "lasting" is until something ends it. Leave it out when unsure.
+   - "source" is the id of who it comes from, for charmed, frightened and grappled.
+   - Only what the rules call by one of those names. Never for being hurt, tired, surprised, hidden, distracted or off balance, and never because a roll simply fails.
 
 If NO roll is required, "check" is "none".
 
@@ -174,14 +191,17 @@ Action: "${action}"
         if (!target) throw new Error(`The game master asked for an attack on "${pick.target ?? ""}", who is not here to attack.`)
         const armorClass = combatStatsOf(target)?.armorClass
         if (armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
+        // The game master's read of the moment, then what the conditions of the two settle with no model.
         const picked = pick.mode ?? "normal"
+        const typed = attackModesFrom(character, target, attack.kind, options?.present)
+        const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
         const rollRequirement: ChosenRoll = {
           attack: { weapon: attack.id, target: target.id },
           rollType: attack.name,
           difficulty: armorClass,
           modifier: attack.bonus,
-          mode: picked,
-          ...(picked !== "normal" && pick.reason?.trim() ? { reasons: [pick.reason.trim()] } : {}),
+          mode: combineModes([picked, ...typed.map((source) => source.mode)]),
+          ...(reasons.length ? { reasons } : {}),
         }
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
         return rollRequirement
@@ -195,17 +215,28 @@ Action: "${action}"
 
       // A spell is named only when it is one of the roller's own.
       const spell = pick.spell?.trim() ? character.spells?.find((entry) => entry.name.toLowerCase() === pick.spell?.trim().toLowerCase())?.name : undefined
-      // The game master's read of the moment, then what the sheet settles with no model. Every source is kept as a
-      // reason, so a roll that Advantage and Disadvantage cancel can still say why.
-      const typed = sheetModes(character, check)
+      // The game master's read of the moment, then what the sheet and the roller's conditions settle with no model.
+      // Every source is kept as a reason, so a roll that Advantage and Disadvantage cancel can still say why.
+      const typed = [...sheetModes(character, check), ...checkModesFrom(character, check, options?.present)]
       const picked = pick.mode ?? "normal"
       const mode = combineModes([picked, ...typed.map((source) => source.mode)])
       const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
-      // The stakes, each off the menus: who, the dice by size or as the notes print them, and the damage type. One
-      // that names no one here, or neither a size nor printed dice, is dropped.
-      const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && other.status !== "fled").map((other) => other.id))
-      const stakes: Stake[] = (pick.harm ?? []).flatMap((entry) => {
+      // The stakes, each off the menus: who, the dice by size or as the notes print them, and the damage type, or a
+      // condition by its id. One that names no one here, neither a size nor printed dice, or no condition the rules
+      // have, is dropped.
+      const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other)).map((other) => other.id))
+      const stakes: Stake[] = (pick.harm ?? []).flatMap((entry): Stake[] => {
         if (!here.has(entry.target)) return []
+        if (entry.kind === "condition" || entry.kind === "end-condition") {
+          const condition = conditionIdSchema.safeParse(entry.condition?.trim().toLowerCase())
+          if (!condition.success) return []
+          if (entry.kind === "end-condition") return [{ on: entry.on, target: entry.target, kind: "condition", condition: condition.data, ends: true }]
+          // Who it comes from, where the rules turn on that: the one named, or the roller when it lands on someone else.
+          const from = entry.source && here.has(entry.source) && entry.source !== entry.target ? entry.source : entry.target !== self ? self : undefined
+          const source = CONDITION_RULES[condition.data].source ? from : undefined
+          return [{ on: entry.on, target: entry.target, kind: "condition", condition: condition.data, ...(entry.span ? { span: entry.span } : {}), ...(source ? { source } : {}) }]
+        }
+        if (entry.kind !== "damage" && entry.kind !== "healing") return []
         const printed = printedDiceSchema.safeParse(entry.dice?.trim())
         const dice = printed.success ? printed.data : entry.size ? HARM_DICE[entry.size] : undefined
         if (!dice) return []

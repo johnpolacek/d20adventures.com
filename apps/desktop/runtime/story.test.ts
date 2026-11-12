@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
+import { withCondition } from "@d20/gm-core/sheet/conditions"
 import { withDamage } from "@d20/gm-core/sheet/death"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
 import { game, type Packs, suggest, transitionsOf } from "./game"
@@ -49,13 +50,13 @@ async function playing(run: (store: LocalStore, step: (next: string, patch?: Rec
 async function midnight(store: LocalStore, step: (next: string, patch?: Record<string, unknown>) => Promise<void>) {
   await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
   await step("owlbear-confrontation")
-  // The Owlbear drops Thalbern to 0, all 11 of his hit points, and the round's end takes him to the rescue.
+  // The Owlbear drops Thalbern to 0, all 11 of his hit points, and poisons him. The round's end takes him to the rescue.
   const thalbern = store.current().characters.find((c) => c.id === THALBERN)!
-  Object.assign(thalbern, withDamage(thalbern, 11).character)
+  Object.assign(thalbern, withCondition(withDamage(thalbern, 11).character, { id: "poisoned" }).character)
   store.save()
   await step("owlbear-confrontation", {
     summaryDelta: "Thalbern drove off the owlbear with fire and took a feather from its nest.",
-    characterUpdates: [{ characterId: THALBERN, status: "Clawed", inventoryChanges: [{ op: "add", name: "Owlbear Feather", description: "Long, barred and grey." }] }],
+    characterUpdates: [{ characterId: THALBERN, inventoryChanges: [{ op: "add", name: "Owlbear Feather", description: "Long, barred and grey." }] }],
   })
   await step("meeting-at-the-stones", { summaryDelta: "Wollandora told Thalbern of relics taken from the elven vaults and a riverboat bound for Kordavos." })
   await step("preparing-for-the-city", {
@@ -63,6 +64,13 @@ async function midnight(store: LocalStore, step: (next: string, patch?: Record<s
     openThreads: [{ id: "the-boat", title: "The riverboat", text: "A Valkaran-made boat carried the relics downstream toward Kordavos." }],
   })
   assert.equal(store.state!.adventure.status, "completed")
+  assert.deepEqual(
+    store
+      .current()
+      .characters.find((c) => c.id === THALBERN)!
+      .conditions?.map((entry) => entry.id),
+    ["poisoned"]
+  )
 }
 
 test("a finished adventure becomes a chapter cut from what its save holds", async () => {
@@ -114,7 +122,7 @@ test("continuing carries the story and a hero's gear into the next adventure, an
     assert.ok(gear.includes("Owlbear Feather") && gear.includes("Herb Pouch") && gear.includes("Longbow"))
     assert.equal(gear.filter((name) => name === "Longbow").length, 1)
     assert.equal(thalbern.healthPercent, 100)
-    assert.ok(!thalbern.status)
+    assert.ok(!thalbern.dead && !thalbern.conditions?.length)
 
     // The GM reads it with the premise, and it outranks the notes.
     const prompts: string[] = []

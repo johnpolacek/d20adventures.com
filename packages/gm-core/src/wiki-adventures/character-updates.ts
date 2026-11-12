@@ -1,3 +1,4 @@
+import { conditionIdSchema } from "@d20/srd"
 import { z } from "zod"
 
 const name = z.string().trim().min(1).max(200)
@@ -16,7 +17,7 @@ export const spellUseChangeSchema = z.strictObject({ name, isUsed: z.boolean() }
 /** Explicit operations for hosts that apply character patches, rather than prose notes. */
 export const characterUpdateSchema = z.strictObject({
   characterId: name,
-  status: z.string().max(500).optional().describe("New status. An empty string clears it."),
+  conditionsEnded: z.array(conditionIdSchema).max(15).optional().describe("Conditions the round's events ended for this character with no roll, by id"),
   inventoryChanges: z.array(inventoryChangeSchema).max(100).optional(),
   effectChanges: z.array(effectChangeSchema).max(100).optional(),
   spellUseChanges: z.array(spellUseChangeSchema).max(100).optional(),

@@ -5,6 +5,8 @@ import { equipmentById } from "@d20/srd/equipment"
 import { monsterById } from "@d20/srd/monsters"
 import { skillById, skills } from "@d20/srd/skills"
 import { z } from "zod"
+import type { ConditionEntry } from "./condition-entry"
+import { d20Penalty } from "./conditions"
 import { deriveSheet } from "./derive"
 import type { Sheet } from "./sheet"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
@@ -25,8 +27,8 @@ export const difficulties = Object.keys(DIFFICULTY_CLASSES) as [Difficulty, ...D
 export const rollModes = ["normal", "advantage", "disadvantage"] as const
 export type RollMode = (typeof rollModes)[number]
 
-/** Who rolls: a hero with its sheet, or an NPC with the stat block it names. */
-export type Roller = { name?: string; type?: string; sheet?: Sheet; statBlock?: string }
+/** Who rolls: a hero with its sheet, or an NPC with the stat block it names, and the conditions they bear. */
+export type Roller = { name?: string; type?: string; sheet?: Sheet; statBlock?: string; conditions?: readonly ConditionEntry[] }
 
 /** The ability a check uses. */
 export const checkAbility = (check: Check): AbilityId => (check.kind === "skill" ? (skillById.get(check.skill)?.ability as AbilityId) : check.ability)
@@ -59,9 +61,11 @@ export const checkFromMenu = (id: string): Check | undefined => checkByMenuId.ge
 /**
  * The bonus a character adds to the d20 for a check. A hero's comes from its sheet. An NPC's comes from the SRD stat
  * block it names, or the Commoner's when it names none: the skill bonus the block prints, or the ability's modifier.
- * Nothing is rolled for a hero with no sheet.
+ * Exhaustion takes 2 off for each level. Nothing is rolled for a hero with no sheet.
  */
-export function checkBonus(character: Roller, check: Check): number {
+export const checkBonus = (character: Roller, check: Check): number => baseBonus(character, check) - d20Penalty(character)
+
+function baseBonus(character: Roller, check: Check): number {
   if (character.sheet) {
     const derived = deriveSheet(character.sheet)
     if (check.kind === "skill") return derived.skills[check.skill].bonus
@@ -114,9 +118,10 @@ export type CheckResult = {
 
 /**
  * Resolve a check: the d20 plus the bonus against the target. Advantage keeps the higher of two dice and Disadvantage
- * the lower. A 20 or a 1 on the die has no special effect on a check or a save: only the total counts.
+ * the lower. A 20 or a 1 on the die has no special effect on a check or a save: only the total counts. `fails` is a
+ * saving throw a condition makes the roller fail outright, whatever the dice show.
  */
-export function resolveCheck(args: { dice: readonly number[]; bonus: number; dc: number; mode?: RollMode }): CheckResult {
+export function resolveCheck(args: { dice: readonly number[]; bonus: number; dc: number; mode?: RollMode; fails?: boolean }): CheckResult {
   const mode = args.mode ?? "normal"
   const needed = mode === "normal" ? 1 : 2
   const dice = args.dice.slice(0, needed)
@@ -124,7 +129,7 @@ export function resolveCheck(args: { dice: readonly number[]; bonus: number; dc:
   for (const die of dice) if (!Number.isInteger(die) || die < 1 || die > 20) throw new Error(`${die} is not a d20 roll.`)
   const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
   const total = natural + args.bonus
-  return { dice, natural, bonus: args.bonus, total, dc: args.dc, success: total >= args.dc, mode }
+  return { dice, natural, bonus: args.bonus, total, dc: args.dc, success: !args.fails && total >= args.dc, mode }
 }
 
 export type { SkillId }

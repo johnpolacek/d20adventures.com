@@ -1,6 +1,7 @@
 import type { SheetView } from "@d20/gm-core/sheet/view"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import type { CardInfo } from "@/components/stage/character-card"
+import { conditionLabel } from "./condition-words"
 
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 
@@ -30,6 +31,7 @@ function sheetDetails(sheet: SheetView): NonNullable<CardInfo["details"]> {
 }
 
 export function characterInfo(character: TurnCharacter, portrait?: string, sheet?: SheetView | null): CardInfo {
+  const conditions = conditionLabel(character)
   const health = sheet ? `Hit Points: ${sheet.hitPoints.current} of ${sheet.hitPoints.maximum}` : `Health: ${character.healthPercent}%`
   return {
     id: character.id,
@@ -38,7 +40,7 @@ export function characterInfo(character: TurnCharacter, portrait?: string, sheet
     portrait,
     about: character.appearance,
     details: [
-      { label: "Condition", items: [health, ...(character.status ? [character.status] : [])] },
+      { label: "Condition", items: [health, ...(conditions ? [conditions] : [])] },
       ...(sheet ? sheetDetails(sheet) : []),
       { label: "Equipment", items: character.equipment?.length ? character.equipment.map((e) => `${e.name}${e.description ? `. ${e.description}` : ""}`) : ["None"] },
       { label: "Effects", items: character.effects?.length ? character.effects.map((e) => `${e.name}, ${e.duration} ${e.duration === 1 ? "round" : "rounds"} left. ${e.description}`) : ["None"] },

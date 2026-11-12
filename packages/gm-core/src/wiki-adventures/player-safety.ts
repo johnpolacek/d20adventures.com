@@ -1,3 +1,4 @@
+import type { ConditionEntry } from "../sheet/condition-entry"
 import { revived } from "../sheet/death"
 import type { Sheet } from "../sheet/sheet"
 import { isDead, isDown } from "../utils/turn-actors"
@@ -7,7 +8,17 @@ import type { RuntimeArtifacts, RuntimeManifest, RuntimeTransition } from "./typ
 // `playerDeath: false` leaves a hero who would die Stable at 0 hit points instead (../sheet/death), and `rescue`
 // moves a party with a hero down to a rescue encounter.
 export type SafetyRules = Pick<RuntimeManifest, "playerDeath" | "premise">
-type Health = { type: string; name?: string; sheet?: Sheet; hitPoints?: number; healthPercent?: number; status?: string; deathSaves?: { successes: number; failures: number; stable?: true } }
+type Health = {
+  type: string
+  name?: string
+  sheet?: Sheet
+  hitPoints?: number
+  healthPercent?: number
+  dead?: true
+  conditions?: readonly ConditionEntry[]
+  isComplete?: boolean
+  deathSaves?: { successes: number; failures: number; stable?: true }
+}
 
 const NO_DEATH_NOTE = "Player characters cannot die in this adventure. One who falls to 0 hit points is unconscious and out of the fight, and lives. Never describe a player character as dead."
 

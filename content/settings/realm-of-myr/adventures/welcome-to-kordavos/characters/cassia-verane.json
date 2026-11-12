@@ -65,7 +65,6 @@
     }
   ],
   "specialAbilities": ["Cartographer's Memory: Cassia can accurately recall and sketch any place she has seen", "Ward Sense: Cassia recognizes the structure of Valkaran wards and sealing magic on sight"],
-  "status": "",
   "type": "pc",
   "attributes": {
     "strength": 8,
