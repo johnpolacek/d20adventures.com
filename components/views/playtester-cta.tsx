@@ -11,7 +11,7 @@ export default function PlaytesterCta() {
 
   if (isLoaded && !isSignedIn) {
     return (
-      <SignUpButton mode="modal" forceRedirectUrl="/playtesters" signInForceRedirectUrl="/playtesters">
+      <SignUpButton mode="modal" forceRedirectUrl="/playtest" signInForceRedirectUrl="/playtest">
         <Button variant="epic" size="lg" className={className}>
           Become a Playtester
         </Button>
@@ -21,7 +21,7 @@ export default function PlaytesterCta() {
 
   return (
     <Button asChild variant="epic" size="lg" className={className}>
-      <Link href="/playtesters">Become a Playtester</Link>
+      <Link href="/playtest">Become a Playtester</Link>
     </Button>
   )
 }

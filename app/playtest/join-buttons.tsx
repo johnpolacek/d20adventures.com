@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button"
 export function JoinButtons() {
   return (
     <div className="flex flex-col items-center gap-5">
-      <SignUpButton mode="modal" forceRedirectUrl="/playtesters" signInForceRedirectUrl="/playtesters">
+      <SignUpButton mode="modal" forceRedirectUrl="/playtest" signInForceRedirectUrl="/playtest">
         <Button variant="epic" size="lg">
           Join the Playtest
         </Button>
       </SignUpButton>
-      <SignInButton mode="modal" forceRedirectUrl="/playtesters" signUpForceRedirectUrl="/playtesters">
+      <SignInButton mode="modal" forceRedirectUrl="/playtest" signUpForceRedirectUrl="/playtest">
         <button
           type="button"
           className="cursor-pointer font-sans text-sm tracking-wide text-stage-cream/70 underline decoration-stage-gold/50 underline-offset-4 transition-colors hover:text-stage-gold"

@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/*": ["./content/settings/realm-of-myr/**/*"],
   },
+  async redirects() {
+    return [{ source: "/playtesters", destination: "/playtest", permanent: true }]
+  },
   // Deploys leave out stage art (.vercelignore), so it is served from the bucket. `pnpm stage:sync` uploads it.
   // Local files win when present, so dev serves public/ as before.
   async rewrites() {
