@@ -173,6 +173,39 @@ Substages:
 
 Slots, spellcasting ability, spell attacks, save DCs, concentration, rituals. Damage, healing and condition spells resolve in the engine. Utility spells stay with the GM, bound by the spell text.
 
+Started 2026-11-12. Substages drafted the same day.
+
+How spells work before this stage: a hero carries a free-text list of spell names. Casting one is a bare check of the spellcasting ability against a difficulty the model picks, and any harm comes off the stage 4 ladder. A spell is used once an encounter (`spell-tracking-service.ts`). The lists do not follow the rules: Cassia carries Misty Step, a level 2 spell, Ilya carries "Inspire Courage", which is no spell, and the two Rangers carry none. NPCs with a caster's stat block attack with its weapon lines only.
+
+Owner decisions, 2026-11-12:
+
+- Each caster's spell list is rebuilt by the rules for level 1: the cantrips and prepared spells its class gives, all from its class's list.
+- Real spell slots: two level 1 slots, and cantrips are free. Until stage 7 gives rests, slots come back with a new encounter.
+- Every cantrip and level 1 spell of the six classes gets real rules in this stage: the 74 on the Bard, Cleric, Wizard and Ranger lists. A Fighter and a Rogue have none at level 1.
+
+The session's calls, which the owner may overrule:
+
+- A spell's typed data decides who resolves it. One with an attack, a save, damage, healing, a condition, a roll modifier or an Armor Class is the engine's. Any other is a utility spell: the engine checks it can be cast and spends the slot, and the GM tells it, bound by the spell's text.
+- Until stage 6 gives positions, an area takes as many creatures as its size allows, and the model names who is caught: a cone one for each 10 feet, a cube one for each 5 feet of its side, a sphere or cylinder one for each 5 feet of its radius, a line one for each 30 feet, each rounded up. Range is not checked.
+- Reaction spells (Shield, Feather Fall, Hellish Rebuke) wait for stage 6, where reactions are first counted.
+- A ritual is cast with no slot when the scene is not a fight.
+
+Substages:
+
+1. Spell maths. Pure functions in `packages/gm-core/src/sheet`: a caster's spell save DC and spell attack bonus, slots, cantrips and prepared spells by class and level, and how a typed spell falls on its targets: a spell attack against Armor Class, a save for none or half, damage dice, healing with the ability modifier, a condition on a failed save, and Magic Missile's darts. Tested with no model. Done: `packages/gm-core/src/sheet/spells.ts` (`spellcastingOf`, `isEngineSpell`, `targetLimit`, `castSpell`). Lyra's save DC is 13 and her spell attack +5. Of the 74 spells the engine resolves 42 and 32 are utility. Not dealt at the cast: what a spell does later or while it lasts (substage 7), temporary hit points, and Ice Knife's burst on those beside its target, which waits for positions.
+2. Spells on the sheet. The sheet names its cantrips and prepared spells by SRD id, checked against the class's list and counts. The premade casters' lists are rebuilt, and the free-text spell list leaves the heroes.
+3. Slots. A caster's used slots are stored, a cantrip spends none, and they come back with a new encounter. The once-an-encounter rule and its service are deleted.
+4. Casting on the menu. The model reads a move as casting one of the caster's own spells, by id, and names its targets. The engine checks it is prepared and a slot is left, and asks for the roll: a spell attack the player throws, or nothing to throw.
+5. A cast with nothing to throw. A save spell, a healing spell, Magic Missile and a utility spell resolve as the reply is read: the engine rolls each target's save and the dice, the story keeps each as a roll beat, and the GM tells the outcome.
+6. Concentration. One such spell at a time. Damage calls for a Constitution save, and the spell ends when it fails, when its caster is Incapacitated or dead, or when another is cast.
+7. Spells that last. Bless, Bane, Guidance, Resistance, Shield of Faith, Mage Armor, Hunter's Mark, Faerie Fire and the like put a typed effect on their targets for their duration, which the rolls then read.
+8. Utility spells. Cast and spent by the engine, told by the GM with the spell's own text in front of it.
+9. NPC spellcasting. An NPC with a caster's stat block casts the spells the block lists, by the same path.
+10. Spells on screen, on both hosts: the cast and its targets' saves in the story, slots on a caster's card, what a character concentrates on, and the spells they can cast.
+11. Retune and migrate. Encounter notes and NPC behaviors that name spells are checked against what the caster now has.
+12. Prompt checks. The scenes that cast are regraded on the spell, its targets and its slot.
+13. Close. Covert Cargo plays on both hosts with rules spellcasting.
+
 ### 6. Space
 
 Speed, range, areas of effect, cover, opportunity attacks. Positions come from zones and distances on the map and stage.
