@@ -44,6 +44,10 @@ export const effectSchema = z.object({
 
 export type Effect = z.infer<typeof effectSchema>
 
+/** A Beast form a hero has taken: its stat block's id, "wolf", and the whole hours it lasts yet. */
+export const shapeSchema = z.object({ form: z.string(), hours: z.number().int().min(1) })
+export type Shape = z.infer<typeof shapeSchema>
+
 export const baseCharacterSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -85,6 +89,10 @@ export const baseCharacterSchema = z.object({
   spellEffects: z.array(spellEffectSchema).optional(),
   concentration: concentrationSchema.optional(),
   tempHitPoints: z.number().int().min(1).optional(),
+  // The Beast form a hero has taken with Wild Shape, by its SRD stat block, and the hours it has left. While it holds,
+  // the stat block's attacks, Armor Class, Speed, size, Strength, Dexterity and Constitution are the hero's. Only the
+  // engine writes it, through ../sheet/shape.
+  shape: shapeSchema.optional(),
   // How a hero takes each reaction when their player does not answer the offer in time. One left out follows the
   // default (../sheet/reactions). The player sets them.
   standingOrders: standingOrdersSchema.optional(),
@@ -158,6 +166,7 @@ export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
   spellEffects: true,
   concentration: true,
   tempHitPoints: true,
+  shape: true,
   position: true,
   standingOrders: true,
   levelDue: true,

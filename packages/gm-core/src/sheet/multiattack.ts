@@ -2,6 +2,7 @@ import { monsterById } from "@d20/srd/monsters"
 import type { Monster } from "@d20/srd/schema/monsters"
 import { actionId } from "./attack"
 import type { Roller } from "./check"
+import { shapeOf } from "./shape"
 
 /**
  * A stat block's Multiattack, read from its words. The SRD types no part of it but the spells a replacement casts, so
@@ -150,10 +151,12 @@ function readOption(way: string, attackId: (name: string) => string, actionIdOf:
   return { attacks, ...(uses.length ? { uses } : {}), ...(when ? { when: when[1] } : {}) }
 }
 
-/** An NPC's Multiattack, read from its stat block. A hero, an NPC with a rules sheet, and a block with none or one unread have none. */
+/**
+ * An NPC's Multiattack, read from its stat block, or that of the Beast's shape a hero holds (./shape). Any other hero,
+ * an NPC with a rules sheet, and a block with none or one unread have none.
+ */
 export function multiattackOf(character: Roller): Multiattack | undefined {
-  if (character.type !== "npc" || character.sheet) return undefined
-  const monster = character.statBlock ? monsterById.get(character.statBlock) : undefined
+  const monster = shapeOf(character) ?? (character.type === "npc" && !character.sheet && character.statBlock ? monsterById.get(character.statBlock) : undefined)
   const read = monster ? readMultiattack(monster) : undefined
   return read && "options" in read ? read : undefined
 }

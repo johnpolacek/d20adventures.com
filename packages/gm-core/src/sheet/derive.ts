@@ -6,6 +6,7 @@ import { damageTypeById, damageTypes } from "@d20/srd/damage-types"
 import { equipmentById } from "@d20/srd/equipment"
 import { featById } from "@d20/srd/feats"
 import { languageById } from "@d20/srd/languages"
+import { monsters } from "@d20/srd/monsters"
 import type { Class, ClassFeature, FeatureOption, Subclass } from "@d20/srd/schema/classes"
 import type { Armor } from "@d20/srd/schema/equipment"
 import type { Background, Feat } from "@d20/srd/schema/origins"
@@ -145,6 +146,9 @@ export const keptOptions = (feature: ClassFeature): { id: string; name: string }
 /** The option a sheet keeps for a feature: its own choice, or for a feature that follows another, that one's. */
 export const keptChoiceOf = (sheet: Sheet, id: string): string | undefined => sheet.featureChoices?.[FOLLOWS[id] ?? id]
 
+/** Wild Shape, whose known forms are picks of Beast stat blocks. */
+export const WILD_SHAPE = "druid-wild-shape"
+
 /**
  * Features that take several options from their list, and how many at a level: Eldritch Invocations by the Warlock
  * table's Invocations column, and Metamagic two at each level it is gained ("two Metamagic options ... two more at
@@ -153,6 +157,8 @@ export const keptChoiceOf = (sheet: Sheet, id: string): string | undefined => sh
 const PICKED: Record<string, (cls: Class, level: number, feature: ClassFeature) => number> = {
   "warlock-eldritch-invocations": (cls, level) => cls.levels[level - 1]?.invocations ?? 0,
   "sorcerer-metamagic": (_, level, feature) => 2 * feature.levels.filter((at) => at <= level).length,
+  // Wild Shape's known forms, by the Beast Shapes table: four at level 2, six at 4, eight at 8.
+  [WILD_SHAPE]: (_, level, feature) => beastShapesAt(feature, level)?.known ?? 0,
 }
 
 /** Whether a feature takes several options from its list, kept in `featurePicks`. */
@@ -160,6 +166,30 @@ export const takesPicks = (feature: ClassFeature) => feature.id in PICKED
 
 /** How many options a feature takes at a level. */
 export const picksAt = (cls: Class, level: number, feature: ClassFeature): number => PICKED[feature.id]?.(cls, level, feature) ?? 0
+
+/** The row of Wild Shape's Beast Shapes table a Druid level has reached: how many forms, the highest Challenge Rating, and whether one may fly. */
+const beastShapesAt = (feature: ClassFeature, level: number) => feature.forms?.filter((row) => row.level <= level).at(-1)
+
+// "The Rat, Riding Horse, Spider, and Wolf are recommended." Read from Wild Shape's text, which the data does not type.
+const recommendedForms = (feature: ClassFeature): string[] =>
+  (/The (.+?) are recommended\./.exec(feature.description)?.[1] ?? "").split(/,? and |, /).map((name) => name.toLowerCase().replace(/ /g, "-"))
+
+/**
+ * The options a feature's picks are taken from at a level: its own, or for Wild Shape every Beast stat block of the
+ * Challenge Rating the Beast Shapes table allows, with no Fly Speed before the table allows one. The recommended forms
+ * come first, then the strongest. A level 2 Druid may know a Wolf (1/4) and not an Ape (1/2) or a Giant Bat, which flies.
+ */
+export function pickOptions(feature: ClassFeature, level: number): { id: string; name: string }[] {
+  if (feature.options) return feature.options.map((option) => ({ id: option.id, name: option.name }))
+  const row = feature.id === WILD_SHAPE ? beastShapesAt(feature, level) : undefined
+  if (!row) return []
+  const first = recommendedForms(feature)
+  const rank = (id: string) => (first.includes(id) ? first.indexOf(id) : first.length)
+  return monsters
+    .filter((monster) => monster.type === "beast" && monster.cr <= row.maxCr && (row.flySpeed || !monster.speed.fly))
+    .sort((a, b) => rank(a.id) - rank(b.id) || b.cr - a.cr || a.name.localeCompare(b.name))
+    .map((monster) => ({ id: monster.id, name: monster.name }))
+}
 
 /**
  * The cantrip an option's prerequisite asks for, read from its printed words, which the SRD data does not type: "a
@@ -764,6 +794,13 @@ function pickProblems(sheet: Sheet, parts: Parts): string[] {
     const wanted = picksAt(parts.class, sheet.level, feature)
     if (picks.length !== wanted) problems.push(`${feature.name} takes ${wanted} options at level ${sheet.level}, and the sheet has ${picks.length}`)
     const taken = new Set(picks.map((pick) => pick.option))
+    // Picks of options from elsewhere (Wild Shape's Beast forms) are each one of those, taken once.
+    if (!feature.options) {
+      const from = pickOptions(feature, sheet.level)
+      for (const pick of picks) if (!from.some((option) => option.id === pick.option)) problems.push(`"${pick.option}" is not a form ${feature.name} may know at level ${sheet.level}`)
+      if (taken.size < picks.length) problems.push(`${feature.name} knows a form twice`)
+      continue
+    }
     const seen = new Map<string, string[]>()
     for (const pick of picks) {
       const option = feature.options?.find((entry) => entry.id === pick.option)
@@ -913,12 +950,20 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
   const expertSkills = new Set<SkillId>(sheet.expertise ?? [])
   // Jack of All Trades: half the Proficiency Bonus, rounded down, on a check with a skill the Bard lacks.
   const jack = parts.features.some((feature) => feature.id === JACK_OF_ALL_TRADES) ? Math.floor(proficiencyBonus / 2) : 0
+  // A kept option's bonus to a skill's checks: a Magician's Wisdom modifier, at least 1, on Arcana and Nature checks,
+  // and a Thaumaturge's on Arcana and Religion checks.
+  const kept = chosenOptions(sheet, parts).features
+  const optionBonus = (skill: SkillId) =>
+    kept.reduce((sum, option) => {
+      const bonus = option.rollBonus
+      return bonus && (bonus.to as readonly string[]).includes(`${skill}-checks`) ? sum + Math.max(bonus.minimum ?? Number.NEGATIVE_INFINITY, abilityModifiers[bonus.plusModifierOf]) : sum
+    }, 0)
   const skills = Object.fromEntries(
     skillIds.map((skill) => {
       const ability = skillById.get(skill)?.ability as AbilityId
       const has = proficient.has(skill)
       const expertise = has && expertSkills.has(skill)
-      return [skill, { bonus: abilityModifiers[ability] + (has ? proficiencyBonus : jack) + (expertise ? proficiencyBonus : 0), proficient: has, expertise }]
+      return [skill, { bonus: abilityModifiers[ability] + (has ? proficiencyBonus : jack) + (expertise ? proficiencyBonus : 0) + optionBonus(skill), proficient: has, expertise }]
     })
   ) as DerivedSheet["skills"]
 

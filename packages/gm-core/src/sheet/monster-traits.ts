@@ -5,13 +5,15 @@ import { hasFled, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { DamageRoll, Defenses } from "./attack"
 import type { ConditionEntry } from "./condition-entry"
 import type { ModeSource } from "./conditions"
+import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
 import { type Point, placedOf, within } from "./space"
 import type { TurnEffect } from "./turn-effect"
 
 /**
  * The stat block traits that change a roll or hit points, read off the character's own stat block. A hero's sheet
- * carries none of them today, so a hero has none: nothing here asks whether a character is an NPC.
+ * carries none of them, so a hero has none but those of a Beast's shape they hold (a Wolf's Pack Tactics): nothing
+ * here asks whether a character is an NPC.
  *
  * None of these is typed in the data: each trait is a name and its text. So they are found by name in one table, and
  * Regeneration's numbers are read from its text (the hit points it gives, the damage types that stop it, and what it
@@ -37,8 +39,8 @@ const BY_NAME: Readonly<Record<string, MonsterTraitId>> = {
 
 type Bearer = { type?: string; sheet?: Sheet; statBlock?: string }
 
-// The stat block a character carries. One with a rules sheet has none.
-const traitsOf = (character: Bearer): readonly MonsterFeature[] => (character.sheet || !character.statBlock ? [] : (monsterById.get(character.statBlock)?.traits ?? []))
+// The stat block a character carries: an NPC's own, or the Beast's shape a hero holds (./shape). Another with a rules sheet has none.
+const traitsOf = (character: Bearer): readonly MonsterFeature[] => (shapeOf(character) ?? (character.sheet || !character.statBlock ? undefined : monsterById.get(character.statBlock)))?.traits ?? []
 
 const traitOf = (character: Bearer, id: MonsterTraitId): MonsterFeature | undefined => traitsOf(character).find((trait) => BY_NAME[trait.name] === id)
 

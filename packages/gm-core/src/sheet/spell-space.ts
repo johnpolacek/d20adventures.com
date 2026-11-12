@@ -1,4 +1,5 @@
 import type { Spell } from "@d20/srd/schema/spells"
+import { classSpellRange } from "./class-rules"
 import { BASE_REACH, between, type Cover, caughtIn, coverBetween, distance, type Floor, type Placed, placedOf, type Standing, spaceOf, within } from "./space"
 
 type Here = Standing & { id: string }
@@ -84,7 +85,8 @@ export function castInSpace(args: { spell: Spell; caster: Here; everyone: readon
   // attack with a range of Self (Vampiric Touch, "one creature within reach") reaches as a touch does.
   const touch = range.kind === "touch" || (range.kind === "self" && spell.attack === "melee")
   if (!touch && range.kind !== "feet") return { targets: [...args.named], cover: {}, measured: false }
-  const limit = touch ? BASE_REACH : (range.distance ?? 0)
+  // A class feature may lengthen the caster's own spell (Eldritch Spear).
+  const limit = touch ? BASE_REACH : (classSpellRange(caster, spell) ?? range.distance ?? 0)
   const near = named.filter((target) => target.id === caster.id || within(from, target, limit))
   if (named.length && !near.length) {
     const [first] = named

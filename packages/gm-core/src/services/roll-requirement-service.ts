@@ -6,13 +6,14 @@ import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../s
 import { attacksOf } from "../sheet/attack"
 import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
 import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
-import { bonusActionRule, type ChoiceRule, choiceRules, classCheckBonus, classCheckModes, seesRules } from "../sheet/class-rules"
+import { bonusActionRule, type ChoiceRule, choiceRules, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast } from "../sheet/class-rules"
 import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, usable } from "../sheet/features"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
+import { shapeOf } from "../sheet/shape"
 import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spell-effects"
 import { endsThings } from "../sheet/spell-ends"
@@ -178,8 +179,16 @@ export function createRollRequirementService(ports: GmPorts) {
       return feet === undefined ? undefined : `${Math.round(feet)} feet away`
     }
     const conditions = conditionWords(character)
+    const form = shapeOf(character)
     const attacks = attacksOf(character)
     const bonusActions = bonusActionsOf(character).filter(usable)
+    // The attacks the hero has once a Bonus Action that changes them is taken (Wild Shape's form), by its id.
+    const becoming = bonusActions.flatMap((entry) => {
+      const becomes = bonusActionRule(entry.id)?.becomes
+      return becomes ? [{ id: entry.id, attacks: attacksOf(becomes(character)) }] : []
+    })
+    const attackWords = (list: readonly (typeof attacks)[number][]) =>
+      list.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"
     // The choices of a hero's class the player makes in the moment, each only while it can be used (../sheet/classes).
     const hero = "type" in character && character.type === "pc"
     const choices = hero
@@ -228,8 +237,9 @@ export function createRollRequirementService(ports: GmPorts) {
         ...(long ? [`takes ${long} to cast`] : []),
         // On a floor an area takes whoever stands in it, so its count is not the game master's to keep.
         ...(mover && known.spell.range.area ? ["an area"] : limit > 1 ? [`up to ${limit} creatures`] : []),
-        ...(known.spell.ritual ? [known.prepared ? "ritual" : "ritual only"] : []),
+        ...(known.ritual ? [known.prepared ? "ritual" : "ritual only"] : []),
         ...(known.free > 0 ? [`${known.free} free`] : []),
+        ...(known.atWill ? [known.selfOnly ? "at will on themselves with no slot" : "at will with no slot"] : []),
       ]
       return `${known.spell.id} (${known.spell.name}, ${notes.join(", ")})`
     })
@@ -239,6 +249,8 @@ export function createRollRequirementService(ports: GmPorts) {
       `Archetype: ${character.archetype}`,
       `Race: ${character.race}`,
       conditions ? `Conditions: ${conditions}` : undefined,
+      // A Beast's shape the hero holds (Wild Shape): they act in its body (../sheet/shape).
+      form ? `Shape: a ${form.name}, a Beast form they have taken. They fight with its attacks, and cannot cast spells.` : undefined,
       // What an NPC is written to be able to do beyond its stat block's spells, in words. It is no spell the game rolls.
       !character.sheet && character.spells && character.spells.length > 0 ? `Other magic, in the story's words: ${character.spells.map((entry) => entry.name).join(", ")}` : undefined,
       casts ? `Spellcasting ability: ${abilityById.get(casts)?.name}` : undefined,
@@ -298,8 +310,8 @@ ${MENU("save")}
    - perception to notice something specific and hidden, investigation to search or analyze evidence, insight to read motives.
    - Picking a lock or disarming a trap is "dexterity".
    - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check. An attack always gives both "weapon" and "target".
-     Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
-     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), ...sees(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
+     Their attacks: ${attackWords(attacks)}.
+${becoming.length ? `     With a Bonus Action that changes their shape, an attack the same turn is made in the new shape with one of its attacks: ${becoming.map((entry) => `with ${entry.id}, ${attackWords(entry.attacks)}`).join("; ")}.\n` : ""}     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), ...sees(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
 ${
   "type" in character && character.type === "pc"
@@ -419,10 +431,7 @@ Action: "${action}"
       const schema = rollPickSchema.extend({
         ...chosen,
         spell: menu("spell", [...new Set([...knownSpells.map((known) => known.spell.id), ...held.map((entry) => entry.spell.id)])]),
-        weapon: menu(
-          "weapon",
-          attacks.map((attack) => attack.id)
-        ),
+        weapon: menu("weapon", [...new Set([...attacks, ...becoming.flatMap((entry) => entry.attacks)].map((attack) => attack.id))]),
         bonus: menu("bonus", [...bonusActions.map((entry) => entry.id), ...bonusSpells.map((known) => known.spell.id), ...heldBonus.map((entry) => entry.spell.id)]),
         // Where they may go: the floor's named places and the others on it.
         ...(mover && floor
@@ -513,18 +522,30 @@ Action: "${action}"
         }
         // The slot the spell is cast at: the one it is held at, the one spent, or a stat block's printed level.
         const slotLevel = again ? again.slot : paid?.cost.kind === "slot" ? paid.cost.level : (known?.castLevel ?? spell.level)
+        const type = damageTypeIdSchema.safeParse(pick.damageType?.trim().toLowerCase())
+        // The class's choices that ride a cast (Metamagic): each kept where it goes with the spell, and the spell as they
+        // make it, for its range and how many it takes. A spell used again is not cast, and takes none.
+        const ridden: Record<string, string | true> = {}
+        const spent = paid?.cost.kind === "slot" ? paid.cost.level : undefined
+        for (const { rule, values } of again ? [] : choices) {
+          const value = rule.rides === "cast" ? choiceValue(rule, values) : undefined
+          if (value !== undefined && rule.cast?.fits(character, { spell, level: slotLevel, slot: spent, ...(type.success ? { damageType: type.data } : {}) }, value)) ridden[rule.key] = value
+        }
+        const shaped = shapedCast(ridden, { spell, level: slotLevel, slot: spent })
         const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
         const asked = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])]
         // On a floor an area is measured, so those named are its aim and not its count.
         let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(
           0,
-          mover && spell.range.area ? undefined : targetLimit(spell, slotLevel, casterLevel)
+          mover && spell.range.area ? undefined : targetLimit(shaped.spell, shaped.level, casterLevel)
         )
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
           if (spell.attack && standing.length === 1) chosen = [standing[0].id]
           else if (self && ((spell.range.kind === "self" && !spell.range.area) || spell.healing)) chosen = [self]
         }
+        // An invocation's spell cast with no slot "on yourself" (Armor of Shadows) is the caster's, whoever is named.
+        if (known?.selfOnly && paid?.cost.kind !== "slot" && self) chosen = [self]
         // A spell the game tells needs no one named: the game master rules on whom it reaches.
         const told = spellLabel(spell) === "told"
         const falls = !told && !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
@@ -536,17 +557,16 @@ Action: "${action}"
         // everyone stands: within its range, past no total cover, and on whoever is in its area.
         // A melee spell attack with a range of Self (Vampiric Touch) reaches as a touch does. Spiritual Weapon used again
         // strikes from where its force is, which the floor does not hold, so it is not measured.
-        const touched = (spell.range.kind === "touch" || (spell.range.kind === "self" && spell.attack === "melee")) && chosen[0] !== self ? chosen[0] : undefined
+        const touched = (shaped.spell.range.kind === "touch" || (shaped.spell.range.kind === "self" && spell.attack === "melee")) && chosen[0] !== self ? chosen[0] : undefined
         const stood = withMove(character, moved(moveFor(touched ? { target: touched, reach: 5 } : undefined)))
         const unplaced = again?.spell.id === "spiritual-weapon"
-        const spaced = mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
+        const spaced = mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell: shaped.spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
         if (spaced?.problem) {
           also.ruling = spaced.problem
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
           return { roll: null, ...also }
         }
         if (spaced) chosen = spaced.targets
-        const type = damageTypeIdSchema.safeParse(pick.damageType?.trim().toLowerCase())
         const forSkill = skillIdSchema.safeParse(pick.helps?.trim().toLowerCase())
         const cast = {
           spell: spell.id,
@@ -559,6 +579,7 @@ Action: "${action}"
           // The slot level spent, for a hero, or held. An NPC's stat block may print the level it casts at.
           ...(again || paid?.cost.kind === "slot" || known?.castLevel ? { level: slotLevel } : {}),
           ...(again ? { again: true as const } : {}),
+          ...(Object.keys(ridden).length ? { choices: ridden } : {}),
         }
         const casting = spellcastingFor(character, spell.id)
         if (spell.attack) {
@@ -567,8 +588,11 @@ Action: "${action}"
           const armorClass = target && combatStatsOf(target)?.armorClass
           if (!target || armorClass === undefined || !casting) throw new Error(`${spell.name} has no one with an Armor Class to be cast at.`)
           const picked = pick.mode ?? "normal"
+          // The caster as the Bonus Action beside the cast leaves them, since it is applied first (Innate Sorcery).
+          const caster = { ...stood, id: self ?? character.name, name: character.name, type: character.type ?? "pc" } as Featured
+          const readied = used && usedRule ? (usedRule.use({ characters: [caster], actor: caster, action: used, roll: () => 1 }).characters[0] ?? caster) : caster
           const typed = [
-            ...(self ? [...spellAttackModes({ ...stood, id: self }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []),
+            ...(self ? [...spellAttackModes({ ...readied, id: self }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []),
             // A ranged spell attack has Disadvantage with an enemy within 5 feet who is up and able to act.
             ...(spell.attack === "ranged" && pressed(stood) ? [{ mode: "disadvantage" as const, from: "Enemy Within 5 Feet" }] : []),
           ]
@@ -592,7 +616,11 @@ Action: "${action}"
         // The pick names a weapon and a target off the two lists, by id. One left out is settled where only one could
         // be meant: the roller's only attack, and for a target the only one here, the one the Bonus Action is aimed
         // at, or the only one the action's own words name.
-        const attack = attacks.find((entry) => named(pick.weapon, entry.name, entry.id)) ?? (!pick.weapon?.trim() && attacks.length === 1 ? attacks[0] : undefined)
+        // Beside a Bonus Action that changes the hero (Wild Shape's form), the attack is made as it leaves them.
+        const becomes = usedRule?.becomes
+        const acting = becomes ? becomes(character) : character
+        const own = becomes ? attacksOf(acting) : attacks
+        const attack = own.find((entry) => named(pick.weapon, entry.name, entry.id)) ?? (!pick.weapon?.trim() && own.length === 1 ? own[0] : undefined)
         const said = new Set(action.toLowerCase().match(/[\w'-]+/g) ?? [])
         const spoken = targets.filter((other) => (other.name.toLowerCase().match(/[\w'-]+/g) ?? []).some((word) => !["the", "a", "an", "of"].includes(word) && said.has(word)))
         const meant = standing.length === 1 ? standing[0] : (targets.find((other) => named(pick.bonusTarget, other.name, other.id)) ?? (spoken.length === 1 ? spoken[0] : undefined))
@@ -611,7 +639,7 @@ Action: "${action}"
           !ask.away &&
           attackReach({ distance: apart, range: attack.range }) !== "out" &&
           attackReach({ distance: apart, reach: attack.reach }) === "out"
-        const stood = withMove(character, moved(moveFor(attack.reach !== undefined && !throws ? { target: target.id, reach: attack.reach } : undefined)))
+        const stood = withMove(acting, moved(moveFor(attack.reach !== undefined && !throws ? { target: target.id, reach: attack.reach } : undefined)))
         // A Bonus Action's Advantage on this attack (Steady Aim), for one who has not moved this turn when it is taken holding still.
         const aiming = !!usedRule?.attackModes && !(usedRule.still && also.move)
         // The class's choices with the attack: kept on the attack (a Cunning Strike), or on the turn with the actions

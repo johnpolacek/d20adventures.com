@@ -24,6 +24,7 @@ import {
   LAND_CHOICE,
   needsFeatureChoice,
   optionCantrips,
+  pickOptions,
   picksAt,
   sheetProblems,
   subclassLevelOf,
@@ -305,31 +306,34 @@ export function picksOffer(feature: ClassFeature, sheet: Sheet, picked: readonly
     count: cls ? picksAt(cls, sheet.level, feature) : 0,
     picked: picked.map((pick) => ({ ...pick })),
     replace,
-    options: (feature.options ?? []).map((option): PickOffer => {
-      const need = cantripNeed(option)
-      const grant = option.feat
-      return {
-        ...named(option),
-        ...(option.prerequisite
-          ? {
-              prerequisite: {
-                text: option.prerequisite.text,
-                ...(option.prerequisite.level ? { level: option.prerequisite.level } : {}),
-                ...(option.prerequisite.invocation ? { option: option.prerequisite.invocation } : {}),
-              },
-            }
-          : {}),
-        ...(option.repeatable ? { repeatable: true as const } : {}),
-        ...(need
-          ? {
-              cantrips: listSpells(need.spellList, 0, 0)
-                .filter((id) => cantripFits(need, id))
-                .map(spellNamed),
-            }
-          : {}),
-        ...(grant ? { feats: feats.filter((feat) => featOfferable(feat, grant.category)).map(named) } : {}),
-      }
-    }),
+    // Options from elsewhere (Wild Shape's Beast forms) are offered by name, with nothing more to them.
+    options: !feature.options
+      ? pickOptions(feature, sheet.level).map(named)
+      : feature.options.map((option): PickOffer => {
+          const need = cantripNeed(option)
+          const grant = option.feat
+          return {
+            ...named(option),
+            ...(option.prerequisite
+              ? {
+                  prerequisite: {
+                    text: option.prerequisite.text,
+                    ...(option.prerequisite.level ? { level: option.prerequisite.level } : {}),
+                    ...(option.prerequisite.invocation ? { option: option.prerequisite.invocation } : {}),
+                  },
+                }
+              : {}),
+            ...(option.repeatable ? { repeatable: true as const } : {}),
+            ...(need
+              ? {
+                  cantrips: listSpells(need.spellList, 0, 0)
+                    .filter((id) => cantripFits(need, id))
+                    .map(spellNamed),
+                }
+              : {}),
+            ...(grant ? { feats: feats.filter((feat) => featOfferable(feat, grant.category)).map(named) } : {}),
+          }
+        }),
   }
 }
 

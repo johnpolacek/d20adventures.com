@@ -315,7 +315,8 @@ export function StagePlay(props: {
     cardCharacter?.hitPoints,
     cardCharacter?.spellSlots,
     cardCharacter?.spellEffects,
-    cardCharacter?.featureUses
+    cardCharacter?.featureUses,
+    cardCharacter?.shape
   )
   // A hero this player plays shows their standing orders on the card, as the current turn keeps them.
   const cardOrders = latest?.characters.find((c) => c.id === cardCharacter?.id)?.standingOrders

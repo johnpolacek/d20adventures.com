@@ -1,4 +1,5 @@
 import type { AbilityId, DamageTypeId } from "@d20/srd"
+import type { Spell } from "@d20/srd/schema/spells"
 import type { z } from "zod"
 import type { TurnReading } from "../services/roll-requirement-service"
 import type { Character } from "../types/character"
@@ -10,8 +11,8 @@ import { classes } from "./classes"
 import type { ModeSource } from "./conditions"
 import type { DeathRules } from "./death"
 import type { ConditionChange, Harm } from "./harm"
-import type { Floor } from "./space"
-import type { Cast } from "./spells"
+import type { Floor, Point } from "./space"
+import type { Cast, Castee, castSpell } from "./spells"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
 
 /**
@@ -62,7 +63,40 @@ export type ClassRules = {
   castingBarred?: (character: Bearing) => string | undefined
   /** What a hero's own attack roll against an enemy does to them, on any roll of their turn (Rage is extended). Applied after the roll (./actions `afterRoll`). */
   attackRolled?: <T extends Bearing>(attacker: T, target: Bearing) => T
+  /** How far in feet one of a hero's own spells reaches, where a feature lengthens it (Eldritch Spear). Read where a spell is measured (./spell-space `castInSpace`). */
+  spellRange?: (caster: Roller, spell: Spell) => number | undefined
+  /**
+   * What rides each hit of a hero's own spell attack, beam by beam (Agonizing Blast, Repelling Blast): a bonus to the
+   * hit's damage, and where the one hit is pushed to. A spell attack makes no `landBlow`, so no `HitRule` reaches it.
+   * Read in ./spells `castSpell`.
+   */
+  spellHit?: (args: SpellHitArgs) => SpellHit | undefined
+  /**
+   * What a character gains once a roll drops an enemy of theirs to 0 hit points, their own roll or another's (Dark One's
+   * Blessing). `by` is whose roll it was. Read once a hero's roll is settled (./afterFelled).
+   */
+  felled?: <T extends Felling>(args: { character: T; felled: Felling; by: string }) => { character: T; name: string; text: string } | undefined
+  /** Advantage or Disadvantage on a hero's save to keep Concentration (Eldritch Mind). Read in ./spell-effects `settleConcentration`. */
+  concentrationModes?: (character: Roller) => ModeSource[]
+  /** What a feature adds to the save DC of a hero's own class spells while it lasts (Innate Sorcery). Read in ./spells `spellcastingOf`. */
+  spellSaveDc?: (character: Lasting) => number
+  /** Advantage or Disadvantage on a hero's attack roll with one of their own spells while a feature lasts (Innate Sorcery). Read in ./spells `spellAttackModes`. */
+  spellAttackModes?: (character: Lasting, spell: Spell) => ModeSource[]
+  /** Spell slots a feature has made beyond the class table's, by spell level, the first for level 1 (Font of Magic). Read in ./spells `slotsLeft`. */
+  createdSlots?: (character: Rested) => readonly number[]
 }
+
+/** One a feature may be lasting on, with the spells and effects that last on them. */
+export type Lasting = Roller & { id?: string; spellEffects?: readonly SpellEffect[] }
+
+/** What a spell attack's hit hands a class: who cast it and who it hit, with where they stand, and the floor if any. */
+export type SpellHitArgs = { caster: Roller & { id: string; position?: Point }; spell: Spell; target: Roller & { id: string; position?: Point }; floor?: Floor }
+
+/** What a class adds to a spell attack's hit: `bonus` added to its damage, and `to`, where the one hit is pushed. */
+export type SpellHit = { name: string; bonus?: number; to?: Point }
+
+/** One who may fell or be felled, with their hit points, Temporary Hit Points and place. */
+export type Felling = Bearing & { id: string; name?: string; position?: Point; tempHitPoints?: number; dead?: true }
 
 /** One a feature may be lasting on: a character with the turn effects it bears, and whether their turn this round is over. */
 export type Bearing = Roller & { id?: string; turnEffects?: readonly TurnEffect[]; isComplete?: boolean; hitPoints?: number; healthPercent?: number }
@@ -124,6 +158,11 @@ export type BonusActionRule = {
   follow?: string
   /** Whether a move taken with it draws no Opportunity Attacks, by the feet moved. */
   disengages?: (character: Roller & { id: string; position?: { x: number; y: number } }, feet: number) => boolean
+  /**
+   * The hero as taking it leaves them, where it changes their attacks (Wild Shape's form): an attack read beside it is
+   * made with the attacks they then have (../services/roll-requirement-service).
+   */
+  becomes?: <T extends Roller>(character: T) => T
   /** What using it does. Everyone comes back as it left them, with what happened. A use that cannot be made returns no use. */
   use: (args: { characters: Featured[]; actor: Featured; action: BonusAction; target?: string; roll: (sides: number) => number }) => { characters: Featured[]; use?: FeatureUse }
 }
@@ -157,10 +196,12 @@ export type ChoiceRule = {
   field: (values: readonly string[] | true) => z.ZodType
   /**
    * With an attack: "attack" keeps the pick on the attack, read as the blow lands (a Cunning Strike), and "turn" on
-   * the reading, applied with it (Action Surge). `actions` is how many more actions it gives the turn.
+   * the reading, applied with it (Action Surge). `actions` is how many more actions it gives the turn. With a spell
+   * cast as the action: "cast" keeps the pick on the cast, and `cast` says what it does to it (Metamagic).
    */
-  rides?: "attack" | "turn"
+  rides?: "attack" | "turn" | "cast"
   actions?: number
+  cast?: CastChoice
   /** A check of the pick's menu that uses it as the turn's whole action, with the reading it makes: "channel-divinity". */
   check?: string
   act?: (value: string | undefined, context: ChoiceContext) => TurnReading
@@ -185,6 +226,25 @@ export type ChoiceRule = {
   attackBonus?: (character: Roller, attack: Attack) => number
   /** It takes the turn's Bonus Action (a smite): the read leaves it out when the reading uses another. */
   bonusAction?: true
+}
+
+/** A cast as a choice that rides it reads it: the spell, the level it takes effect at, the slot it spends if any, and the damage type picked. */
+export type ChoiceCast = { spell: Spell; level: number; slot?: number; damageType?: DamageTypeId }
+
+/** What a spell is cast with, as ./spells `castSpell` takes it. */
+export type CastInput<T extends Castee> = Parameters<typeof castSpell<T>>[0]
+
+/** What a choice that rides a cast does to it (Metamagic). */
+export type CastChoice = {
+  /** Whether it goes with this cast. One that does not is left off the reading. */
+  fits: (caster: Rested, cast: ChoiceCast, value: string | true) => boolean
+  /** The spell and level as the choice makes them: read where the cast's range and targets are settled, and where it is resolved. */
+  shape?: (cast: ChoiceCast, value: string | true) => Pick<ChoiceCast, "spell" | "level">
+  /**
+   * The cast resolved with the choice: `resolve` is the engine's own resolution, of the cast it is handed. It comes back
+   * with what the choice spent, and its facts. `slot` is the slot level the cast spends, still unspent.
+   */
+  around?: <T extends Castee>(args: { input: CastInput<T>; value: string | true; slot?: number; resolve: (input: CastInput<T>) => Cast<T> }) => Cast<T>
 }
 
 /** What a reaction to an attack roll is asked with: `hit` is the roll in words, and `ask` offers it to `to`. */
@@ -415,6 +475,83 @@ export const classCastingBar = (character: Bearing): string | undefined =>
 /** An attacker after their own attack roll against an enemy, as each class's features take it. */
 export const afterClassAttackRoll = <T extends Bearing>(attacker: T, target: Bearing): T =>
   attacker.sheet ? classes().reduce((now, rules) => rules.attackRolled?.(now, target) ?? now, attacker) : attacker
+/** How far a hero's own spell reaches as their class lengthens it, or none where no feature does. */
+export const classSpellRange = (caster: Roller, spell: Spell): number | undefined =>
+  caster.sheet ? classes().reduce<number | undefined>((found, rules) => found ?? rules.spellRange?.(caster, spell), undefined) : undefined
+/** What the classes add to one hit of a hero's own spell attack, each with its name. */
+export const classSpellHits = (args: SpellHitArgs): SpellHit[] => (args.caster.sheet ? classes().flatMap((rules) => rules.spellHit?.(args) ?? []) : [])
+/** Advantage and Disadvantage a hero's class gives their save to keep Concentration. */
+export const classConcentrationModes = (character: Roller): ModeSource[] => (character.sheet ? classes().flatMap((rules) => rules.concentrationModes?.(character) ?? []) : [])
+/** What a hero's class features add to the save DC of their own class spells for now. */
+export const classSpellSaveDc = (character: Lasting): number => (character.sheet ? classes().reduce((sum, rules) => sum + (rules.spellSaveDc?.(character) ?? 0), 0) : 0)
+/** Advantage and Disadvantage a hero's class features give their attack roll with one of their own spells. */
+export const classSpellAttackModes = (character: Lasting, spell: Spell): ModeSource[] => (character.sheet ? classes().flatMap((rules) => rules.spellAttackModes?.(character, spell) ?? []) : [])
+/** The spell slots a hero's class features have made beyond the class table's, by spell level. */
+export function classCreatedSlots(character: Rested): number[] {
+  const made: number[] = []
+  if (!character.sheet) return made
+  for (const rules of classes()) for (const [index, count] of (rules.createdSlots?.(character) ?? []).entries()) made[index] = (made[index] ?? 0) + count
+  return made
+}
+
+// The choices that ride a cast, each with the value picked, in the order of the classes.
+const castRiders = (choices: Readonly<Record<string, string | true>> | undefined) =>
+  choiceRules().flatMap((rule) => {
+    const value = choices?.[rule.key]
+    return rule.rides === "cast" && rule.cast && value !== undefined ? [{ choice: rule.cast, value }] : []
+  })
+
+/** A cast as the choices riding it make it: the spell and the level it is measured and resolved at. */
+export function shapedCast(choices: Readonly<Record<string, string | true>> | undefined, cast: ChoiceCast): ChoiceCast {
+  let now = cast
+  for (const { choice, value } of castRiders(choices)) now = { ...now, ...(choice.shape?.(now, value) ?? {}) }
+  return now
+}
+
+/**
+ * A cast resolved with the choices riding it. Each choice wraps the engine's resolution in turn, the first outermost,
+ * and the cast is handed in as the choices shape it.
+ */
+export function resolveChosenCast<T extends Castee>(args: {
+  choices: Readonly<Record<string, string | true>> | undefined
+  input: CastInput<T>
+  slot?: number
+  resolve: (input: CastInput<T>) => Cast<T>
+}): Cast<T> {
+  const riders = castRiders(args.choices)
+  if (!riders.length) return args.resolve(args.input)
+  const shaped = shapedCast(args.choices, { spell: args.input.spell, level: args.input.level ?? args.input.spell.level, slot: args.slot, damageType: args.input.damageType })
+  const run = riders.reduceRight<(input: CastInput<T>) => Cast<T>>(
+    (next, { choice, value }) => (choice.around ? (input) => choice.around?.({ input, value, slot: args.slot, resolve: next }) ?? next(input) : next),
+    args.resolve
+  )
+  return run({ ...args.input, spell: shaped.spell, level: shaped.level })
+}
+
+/**
+ * Everyone after the classes answer the enemies a roll dropped to 0 hit points (Dark One's Blessing): each one up
+ * before the roll and down after it, as `before` and `after` hold them, offered to every hero. `by` is whose roll it
+ * was. Each gain comes with its words for the story.
+ */
+export function afterFelled<T extends Felling>(args: { before: readonly T[]; after: readonly T[]; by: string }): { characters: T[]; told: { by: string; name: string; text: string }[] } {
+  const down = (character: Felling) => !!character.dead || character.hitPoints === 0 || character.healthPercent === 0
+  const felled = args.after.filter((now) => down(now) && args.before.some((was) => was.id === now.id && !down(was)))
+  let characters = [...args.after]
+  const told: { by: string; name: string; text: string }[] = []
+  for (const fallen of felled) {
+    for (const rules of classes()) {
+      if (!rules.felled) continue
+      characters = characters.map((character) => {
+        if (!character.sheet || down(character)) return character
+        const gained = rules.felled?.({ character, felled: fallen, by: args.by })
+        if (!gained) return character
+        told.push({ by: character.id, name: gained.name, text: gained.text })
+        return gained.character
+      })
+    }
+  }
+  return { characters, told }
+}
 
 /** A character with a class's turn effect given, for its span, by `by`. One of the same id and giver is replaced. */
 export function withTurnEffect<T extends { turnEffects?: readonly TurnEffect[] }>(character: T, id: string, by: string): T {

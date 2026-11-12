@@ -75,6 +75,8 @@ type Probe = {
   choices?: Record<string, string | boolean>
   // A class feature used as the action with no roll (Channel Divinity): its effect, who it is used on, and whether it heals.
   feature?: { id: string; targets?: string[]; heal?: boolean }
+  // A Beast form the hero already holds with Wild Shape: its stat block and the hours it has left.
+  shape?: { form: string; hours: number }
 }
 // A stake as a scene writes it: damage or healing, or a condition given ("condition") or ended ("end-condition").
 type Wanted = { on: string; target: string; kind: string; condition?: string }
@@ -106,7 +108,7 @@ async function run(probe: Probe): Promise<Graded> {
   })
   const premade = JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8"))
   const holds = probe.held ? { spellEffects: [{ spell: probe.held.spell, by: premade.id, amount: probe.held.slot }], concentration: { spell: probe.held.spell } } : {}
-  const hero: Character = bears({ ...premade, ...(probe.sheet ? { sheet: { ...premade.sheet, ...probe.sheet } } : {}), ...holds, type: "pc" })
+  const hero: Character = bears({ ...premade, ...(probe.sheet ? { sheet: { ...premade.sheet, ...probe.sheet } } : {}), ...holds, ...(probe.shape ? { shape: probe.shape } : {}), type: "pc" })
   const encounter = pack.artifacts.encounters[probe.encounter]
   if (!encounter) throw new Error(`${probe.id}: no encounter ${probe.encounter}`)
   const model = localLlm("claude", mkdtempSync(join(tmpdir(), "check-probe-")))
@@ -178,7 +180,7 @@ async function run(probe: Probe): Promise<Graded> {
     const cunning = got && isAttackRoll(got) ? got.attack.choices?.cunning : undefined
     if (probe.cunning && cunning !== probe.cunning) faults.push(`Cunning Strike ${cunning || "none"}, wanted ${probe.cunning}`)
     for (const [key, wanted] of Object.entries(probe.choices ?? {})) {
-      const chosen = reading.choices?.[key] ?? (got && isAttackRoll(got) ? got.attack.choices?.[key] : undefined) ?? false
+      const chosen = reading.choices?.[key] ?? (got && isAttackRoll(got) ? got.attack.choices?.[key] : undefined) ?? cast?.choices?.[key] ?? false
       if (chosen !== wanted) faults.push(`choice ${key} ${JSON.stringify(chosen)}, wanted ${JSON.stringify(wanted)}`)
     }
     if (probe.feature) {

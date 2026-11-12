@@ -5,6 +5,7 @@ import type { Roller } from "./check"
 import { type Afflicted, cannotMove, exhaustionOf } from "./conditions"
 import { deriveSheet } from "./derive"
 import { speciesById } from "./house-species"
+import { shapeOf } from "./shape"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /**
@@ -41,6 +42,9 @@ export const spaceOf = (size: Size = "Medium"): number => SPACE[size]
  * A hero's is the one their sheet names, or else their species' first.
  */
 export function sizeOf(character: Roller): Size {
+  // A hero in a Beast's shape takes up the stat block's space (./shape).
+  const shape = shapeOf(character)
+  if (shape) return shape.size[0] ?? "Medium"
   if (character.sheet) return character.sheet.size ?? speciesById.get(character.sheet.species)?.sizes[0]?.size ?? "Medium"
   if (character.type !== "npc") return "Medium"
   return (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK))?.size[0] ?? "Medium"
@@ -125,6 +129,9 @@ export const rangedInCloseCombat = (attacker: Placed, others: readonly Bystander
 
 /** A character's Speed in feet: a hero's from its sheet, an NPC's walking Speed from its stat block. A hero with no sheet has none. */
 export function speedOf(character: Roller): number | undefined {
+  // A hero in a Beast's shape moves at the stat block's walking Speed (./shape).
+  const shape = shapeOf(character)
+  if (shape) return shape.speed.walk
   if (character.sheet) return deriveSheet(character.sheet).speed
   if (character.type !== "npc") return undefined
   return (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK))?.speed.walk

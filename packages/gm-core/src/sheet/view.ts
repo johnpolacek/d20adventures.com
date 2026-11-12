@@ -8,11 +8,13 @@ import type { ClassFeature } from "@d20/srd/schema/classes"
 import { skillById } from "@d20/srd/skills"
 import { spellById } from "@d20/srd/spells"
 import { subclassById } from "@d20/srd/subclasses"
-import { deriveSheet, grantsFeatByLevel, keptChoiceOf, keptOptions } from "./derive"
+import type { Shape } from "../types/character"
+import { deriveSheet, grantsFeatByLevel, keptChoiceOf, keptOptions, pickOptions } from "./derive"
 import { featureUseCount } from "./feature-rules"
 import type { HitPoints } from "./hit-points"
 import { speciesById } from "./house-species"
 import { reactionsOf } from "./reactions"
+import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
 import { speciesUseKey } from "./species-traits"
 import { slotsLeft, spellcastingOf, spellsOf } from "./spells"
@@ -65,6 +67,8 @@ export type SheetView = {
   reactions: ReactionId[]
   // Left out for a class with no Spellcasting.
   spellcasting?: SheetSpellcasting
+  /** The Beast form the hero is in, by name: "Wolf". Left out in their own shape. Armor Class and Speed are then the form's. */
+  form?: string
 }
 
 const RECHARGE: Record<string, string> = {
@@ -84,9 +88,11 @@ type Count = number | "proficiency-bonus" | { ability: AbilityId; minimum: 1 } |
  * spell slots they have used, by spell level (none when none are given). Throws when the class, species or background
  * is unknown, as `deriveSheet` does.
  */
-export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonly number[], spellEffects?: readonly SpellEffect[], featureUses?: Record<string, number>): SheetView {
+export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonly number[], spellEffects?: readonly SpellEffect[], featureUses?: Record<string, number>, shape?: Shape): SheetView {
   const derived = deriveSheet(sheet)
-  const stats = combatStatsOf({ sheet, spellEffects }) ?? { hitPointMaximum: derived.hitPointMaximum, armorClass: derived.armorClass }
+  // A Beast's shape the hero holds (Wild Shape): its Armor Class and Speed are theirs while it lasts (./shape).
+  const form = shapeOf({ sheet, shape, hitPoints })
+  const stats = combatStatsOf({ sheet, spellEffects, shape: form ? shape : undefined }) ?? { hitPointMaximum: derived.hitPointMaximum, armorClass: derived.armorClass, from: derived.armorClassFrom }
   const cls = classById.get(sheet.class)
   const species = speciesById.get(sheet.species)
   const background = backgroundById.get(sheet.background)
@@ -122,7 +128,7 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
   const picked = (feature: ClassFeature) =>
     (sheet.featurePicks?.[feature.id] ?? [])
       .map((pick) => {
-        const name = feature.options?.find((option) => option.id === pick.option)?.name ?? pick.option
+        const name = pickOptions(feature, sheet.level).find((option) => option.id === pick.option)?.name ?? pick.option
         const with_ = pick.cantrip ? spellById.get(pick.cantrip)?.name : pick.feat ? featById.get(pick.feat)?.name : undefined
         return with_ ? `${name} (${with_})` : name
       })
@@ -179,9 +185,9 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     // With the spells that last on the hero: Aid's higher maximum, Shield of Faith's 2, or Mage Armor's 13 and Dexterity.
     hitPoints: { current: Math.min(stats.hitPointMaximum, Math.max(0, hitPoints ?? stats.hitPointMaximum)), maximum: stats.hitPointMaximum },
     armorClass: stats.armorClass,
-    armorClassFrom: derived.armorClassFrom,
+    armorClassFrom: form ? stats.from : derived.armorClassFrom,
     initiative: derived.initiative,
-    speed: derived.speed,
+    speed: form ? form.speed.walk : derived.speed,
     passivePerception: derived.passivePerception,
     abilities: abilityIds.map((id) => ({
       id,
@@ -197,5 +203,6 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     features,
     reactions: reactionsOf({ id: "", type: "pc", sheet }),
     ...(spellcasting ? { spellcasting } : {}),
+    ...(form ? { form: form.name } : {}),
   }
 }

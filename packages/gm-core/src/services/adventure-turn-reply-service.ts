@@ -1,7 +1,7 @@
 import type { GmPorts } from "../ports"
 import { takeAction } from "../sheet/actions"
 import { checkBonus } from "../sheet/check"
-import { bonusActionRule, choiceRule, type Featured } from "../sheet/class-rules"
+import { bonusActionRule, choiceRule, classConcentrationModes, type Featured } from "../sheet/class-rules"
 import type { ConditionEntry } from "../sheet/condition-entry"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm } from "../sheet/death"
@@ -176,7 +176,13 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       })
       const mover = characters.find((character) => character.id === args.characterId)
       // A caster the blows hurt saves to keep Concentration, and one they dropped loses it.
-      const kept = settleConcentration({ before: characters, after: went.characters.map(afterHarm), bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
+      const kept = settleConcentration({
+        before: characters,
+        after: went.characters.map(afterHarm),
+        bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+        modes: classConcentrationModes,
+        d20: rollD20,
+      })
       characters = kept.characters
       for (const made of went.attacks) {
         const attacker = characters.find((character) => character.id === made.attacker)
@@ -249,7 +255,13 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
           const cast = again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level })
           const spent = cast.characters.map((character) => (character.id === actor.id && cost && !("problem" in cost) ? withCastSpent(character, cost.cost) : character))
           // A caster the spell hurt saves to keep Concentration.
-          const kept = settleConcentration({ before: characters, after: spent.map(afterHarm), bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
+          const kept = settleConcentration({
+            before: characters,
+            after: spent.map(afterHarm),
+            bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+            modes: classConcentrationModes,
+            d20: rollD20,
+          })
           characters = kept.characters
           spellBeats = [...reacted, ...castBeats(castBy, actor, spell, cast, names), ...kept.saves.map((save) => concentrationBeat(castBy, save, names))]
         }

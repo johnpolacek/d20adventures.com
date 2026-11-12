@@ -8,6 +8,7 @@ import { attackModesFrom, cannotAttack, hasCondition, type ModeSource } from "./
 import { deriveSheet } from "./derive"
 import { attacksPerAction as attacksPerActionOf } from "./feature-rules"
 import { multiattackAfter } from "./multiattack"
+import { shapeOf } from "./shape"
 import { attackReach, type Cover, coverBetween, coverBonus, type Floor, feetBetween, greaterCover, isNear, placedOf, type Standing, within } from "./space"
 import { attackModesFromSpells } from "./spell-effects"
 import { combatStatsOf } from "./stat-block"
@@ -252,7 +253,8 @@ export function nearestEnemy(character: InScene, from: readonly InScene[]): InSc
  * NPC's Multiattack once its first attack is made with `weapon` (./multiattack).
  */
 export function attackAfter(character: InScene, options: { actions?: number; weapon?: string } = {}): After {
-  if (!character.sheet) return tidy({ multiattack: options.weapon ? multiattackAfter(character, options.weapon) : [] })
+  // A hero in a Beast's shape attacks as its stat block does: its Multiattack, where it has one (./shape).
+  if (!character.sheet || shapeOf(character)) return tidy({ multiattack: options.weapon ? multiattackAfter(character, options.weapon) : [] })
   const attacks = attacksPerActionOf(character) * (options.actions ?? 1) - 1
   const flags = Object.fromEntries(follows().flatMap((rule) => (rule.attack && rule.offer?.(character) ? [[rule.key, true]] : [])))
   return tidy({ attacks, ...flags })

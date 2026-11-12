@@ -3,7 +3,7 @@ import { afterRoll } from "../sheet/actions"
 import { type Strike, strikeFacts } from "../sheet/attack"
 import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { checkBonus, resolveCheck } from "../sheet/check"
-import { classCheckBonus, effectChoice, type Featured, rescuedCheck } from "../sheet/class-rules"
+import { afterFelled, classCheckBonus, classConcentrationModes, effectChoice, type Featured, rescuedCheck, resolveChosenCast, shapedCast } from "../sheet/class-rules"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, deathSave } from "../sheet/death"
@@ -183,6 +183,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
       }
     }
     let turnCharacters = args.turn.characters
+    // The encounter's floor: what a hit moves is walked over it, and what the roll used up reads it.
+    const floor = await ports.content.floor?.(args.turn.encounterId)
     let blow: Strike | undefined
     let stakeFacts: string[] = []
     let target: TurnCharacter | undefined
@@ -216,6 +218,10 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const cost = again ? undefined : castCost(args.character, spell.id, required.cast.ritual === true, required.cast.level)
       if (cost && "problem" in cost) throw new Error(cost.problem)
       const names = storyNames(args.turn.characters)
+      // The spell as the caster's choices make it (Metamagic): Subtle Spell's casting draws no Counterspell.
+      const chosen = required.cast.choices
+      const slot = cost && "cost" in cost && cost.cost.kind === "slot" ? cost.cost.level : undefined
+      const shaped = shapedCast(chosen, { spell, level: required.cast.level ?? spell.level, slot, damageType: required.cast.damageType }).spell
       // Those of the other side may counter it, and those Magic Missile is aimed at may cast Shield, each by their
       // standing order at once: no one is asked on another's turn.
       const standing = turnCharacters
@@ -223,7 +229,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         ? reactionsToCast({
             characters: turnCharacters,
             casterId: args.characterId,
-            spell,
+            spell: shaped,
             targets: required.cast.targets,
             ask: (offer) => ordered(standing.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
             d20: rollD20,
@@ -252,8 +258,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
           skill: required.cast.skill,
           cover: required.cast.cover,
           measured: required.cast.measured,
+          floor,
         }
-        const cast = again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level: required.cast.level })
+        // A cast with the choices that ride it (Metamagic), each wrapped around the engine's own resolution.
+        const cast = again
+          ? castAgain({ ...how, spellId: spell.id })
+          : resolveChosenCast({ choices: chosen, input: { ...how, spell, level: required.cast.level }, slot, resolve: (input) => castSpell(input) })
         turnCharacters = cast.characters.map((character) => (character.id === args.characterId && cost ? withCastSpent(character, cost.cost) : character))
         rolls = [...reacted, ...castBeats(by, args.character, spell, cast, names)]
         spellCast = { name: spell.name, facts: [...(answered?.facts ?? []), ...cast.facts], ...(isEngineSpell(spell) ? {} : { text: spell.description }) }
@@ -323,12 +333,21 @@ export function createAdventureRollResultService(ports: GmPorts) {
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
     // What the roll used up: an ally's Help, and the roller's own hiding when they attacked.
-    const floor = await ports.content.floor?.(args.turn.encounterId)
     turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken, floor)
     // Concentration: a caster who lost hit points saves to keep their spell, and one now down or unable to act loses it.
-    const held = settleConcentration({ before: args.turn.characters, after: turnCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
+    const held = settleConcentration({
+      before: args.turn.characters,
+      after: turnCharacters,
+      bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+      modes: classConcentrationModes,
+      d20: rollD20,
+    })
     turnCharacters = held.characters
     rolls = [...rolls, ...held.saves.map((save) => concentrationBeat(by, save, storyNames(args.turn.characters)))]
+    // What the classes give once the roll dropped an enemy to 0 hit points (Dark One's Blessing).
+    const fell = afterFelled({ before: args.turn.characters, after: turnCharacters, by: args.characterId })
+    turnCharacters = fell.characters
+    rolls = [...rolls, ...fell.told.map((gain): StoryBeat => ({ kind: "feature", by, character: gain.by, name: gain.name, text: gain.text }))]
     if (inspired) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withoutInspiration(character) : character))
     const { total: totalResult, against: difficulty } = numbers
     const margin = totalResult - difficulty
@@ -362,7 +381,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       attack: blow && target ? strikeFacts(args.character.name, target.name, blow) : undefined,
       harm: stakeFacts,
       spell: spellCast,
-      also: held.facts,
+      also: [...held.facts, ...fell.told.map((gain) => gain.text)],
       ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
 

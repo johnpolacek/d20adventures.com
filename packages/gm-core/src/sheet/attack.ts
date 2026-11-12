@@ -3,6 +3,7 @@ import { damageTypeIds } from "@d20/srd"
 import { equipmentById } from "@d20/srd/equipment"
 import { featById } from "@d20/srd/feats"
 import { monsterById } from "@d20/srd/monsters"
+import type { Monster } from "@d20/srd/schema/monsters"
 import { weaponPropertyById } from "@d20/srd/weapon-properties"
 import { isIncapacitated } from "../utils/turn-actors"
 import type { Roller, RollMode } from "./check"
@@ -13,6 +14,7 @@ import { deriveSheet, trainedWith } from "./derive"
 import { criticalFrom, type OncePerTurn, usedThisTurn } from "./feature-rules"
 import type { ConditionChange } from "./harm"
 import { typesTaken } from "./monster-traits"
+import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
 import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, within } from "./space"
 import { enduringTraitOf } from "./species-traits"
@@ -122,6 +124,9 @@ export function attacksOf(character: Roller): Attack[] {
 }
 
 function baseAttacks(character: Roller): Attack[] {
+  // A hero in a Beast's shape attacks as its stat block does, and not with the weapons they carry (./shape).
+  const shape = shapeOf(character)
+  if (shape) return blockAttacks(shape)
   if (character.sheet) {
     const sheet = character.sheet
     // A class feature may change the attack: Martial Arts' die and Dexterity (./classes).
@@ -129,7 +134,11 @@ function baseAttacks(character: Roller): Attack[] {
   }
   if (character.type !== "npc") return []
   const monster = monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)
-  if (!monster) return []
+  return monster ? blockAttacks(monster) : []
+}
+
+// The attack actions a stat block prints, with the damage each deals on a hit.
+function blockAttacks(monster: Monster): Attack[] {
   return (monster.actions ?? []).flatMap((action) => {
     if (!action.attack) return []
     // A hit's damage. A part with a gate is dealt only when its gate holds, and only a gate the engine can judge: one
@@ -312,6 +321,9 @@ export function defensesOf(character: Bearing): Defenses {
 }
 
 function ownDefenses(character: Bearing): Defenses {
+  // A hero in a Beast's shape has the stat block's defenses, and those a class feature gives while it lasts (./shape).
+  const shape = shapeOf(character)
+  if (shape) return { immunities: shape.immunities, resistances: [...new Set([...(shape.resistances ?? []), ...classResistances(character)])], vulnerabilities: shape.vulnerabilities }
   if (character.sheet) return { resistances: [...new Set([...deriveSheet(character.sheet).resistances, ...classResistances(character)])] }
   const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
   return monster ? { immunities: monster.immunities, resistances: monster.resistances, vulnerabilities: monster.vulnerabilities } : {}

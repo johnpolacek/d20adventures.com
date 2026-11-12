@@ -66,6 +66,8 @@ export function buildLocalWikiTurnCharacters(args: {
       spellEffects: lasting?.spellEffects,
       concentration: lasting?.concentration,
       tempHitPoints: was?.tempHitPoints,
+      // A Beast's shape lasts hours, which only a rest counts (../sheet/rest).
+      shape: was?.shape,
       conditions: kept,
       turnEffects: undefined,
       featureUses: was?.featureUses,

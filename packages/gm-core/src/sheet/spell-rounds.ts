@@ -4,7 +4,7 @@ import { spellById } from "@d20/srd/spells"
 import { isDown } from "../utils/turn-actors"
 import { damageTaken, defensesOf, parseDice, rollDamage } from "./attack"
 import { checkBonus } from "./check"
-import { roundStartRules } from "./class-rules"
+import { classConcentrationModes, roundStartRules } from "./class-rules"
 import { conditionName, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, regenerate, withDamage } from "./death"
 import type { ConditionChange, Harm } from "./harm"
@@ -232,7 +232,13 @@ export function roundTurns<T extends Castee & { position?: Point }>(args: {
   rules?: DeathRules
 }): { characters: T[]; told: RoundFact[]; saves: ConcentrationSave[] } {
   const ended = spellsAtRoundEnd(args)
-  const kept = settleConcentration({ before: args.characters, after: ended.characters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: args.d20 })
+  const kept = settleConcentration({
+    before: args.characters,
+    after: ended.characters,
+    bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+    modes: classConcentrationModes,
+    d20: args.d20,
+  })
   const lost = kept.facts.map((text) => ({ character: args.characters.find((character) => character.name && text.startsWith(character.name))?.id ?? "", spell: "Concentration", text }))
   const regenerated = kept.characters.map((character) => regenerate(character))
   const regrown = regenerated.flatMap(({ character, fact, trait }) => (fact && trait ? [{ character: character.id, spell: trait, text: fact }] : []))

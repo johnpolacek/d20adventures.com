@@ -328,6 +328,8 @@ export function settleConcentration<T extends Bearer>(args: {
   before: readonly T[]
   after: readonly T[]
   bonus: (character: T) => number
+  /** Advantage or Disadvantage a caster's class gives the save (../class-rules `classConcentrationModes`). */
+  modes?: (character: T) => readonly ModeSource[]
   d20: () => number
 }): { characters: T[]; saves: ConcentrationSave[]; facts: string[] } {
   let characters = [...args.after]
@@ -340,7 +342,10 @@ export function settleConcentration<T extends Bearer>(args: {
     const lost = (was.hitPoints ?? 0) - (now.hitPoints ?? 0)
     let breaks = isDead(now) || isDown(now) || isIncapacitated(now) || hasFled(now)
     if (!breaks && lost > 0) {
-      const natural = args.d20()
+      // A class may give the save Advantage or Disadvantage (Eldritch Mind): two d20s, the higher or the lower kept.
+      const modes = (args.modes?.(now) ?? []).map((source) => source.mode)
+      const mode = modes.includes("advantage") === modes.includes("disadvantage") ? "normal" : modes.includes("advantage") ? "advantage" : "disadvantage"
+      const natural = mode === "normal" ? args.d20() : (mode === "advantage" ? Math.max : Math.min)(args.d20(), args.d20())
       const bonus = args.bonus(now)
       const dc = Math.max(10, Math.floor(lost / 2))
       const success = natural + bonus >= dc

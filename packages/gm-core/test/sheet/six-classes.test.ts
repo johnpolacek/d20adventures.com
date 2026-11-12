@@ -104,6 +104,8 @@ const druid: Sheet = {
   cantrips: ["druidcraft", "guidance", "produce-flame"],
   spells: ["cure-wounds", "entangle", "healing-word", "thunderwave", "barkskin", "moonbeam", "spike-growth", "call-lightning", "dispel-magic"],
   advancements: [{ level: 4, feat: "ability-score-improvement", abilities: { wis: 2 } }],
+  // Wild Shape's six known forms at level 5, of Challenge Rating 1/2 or lower.
+  featurePicks: { "druid-wild-shape": ["rat", "riding-horse", "spider", "wolf", "ape", "black-bear"].map((option) => ({ option })) },
 }
 
 // A Human Draconic Sorcerer, Criminal: 10 13 14 8 12 15, Con +2 and Dex +1, then Cha +2 at 4: Dex 14, Con 16, Cha 17.
@@ -225,6 +227,7 @@ test("the choices a feature keeps, given and refused", () => {
     advancements: [],
   }
   delete druid1.subclass
+  delete druid1.featurePicks
   const { "circle-of-the-land-circle-of-the-land-spells": _, ...primal } = druid.featureChoices ?? {}
   druid1.featureChoices = primal
   assert.deepEqual(sheetProblems(druid1), [])
@@ -292,6 +295,7 @@ test("the choices a feature keeps, given and refused", () => {
 test("a Druid of the Land takes her land at level 3, and its spells leave her prepared list", () => {
   const druid2: Sheet = { ...druid, level: 2, subclass: undefined, armor: "leather-armor", featureChoices: { "druid-primal-order": "warden" }, cantrips: ["druidcraft", "guidance"], advancements: [] }
   delete druid2.subclass
+  druid2.featurePicks = { "druid-wild-shape": ["rat", "riding-horse", "spider", "wolf"].map((option) => ({ option })) }
   druid2.spells = ["cure-wounds", "entangle", "healing-word", "thunderwave", "fog-cloud"]
   druid2.abilityScores = { ...druid.abilityScores, wis: 15 }
   assert.deepEqual(sheetProblems(druid2), [])

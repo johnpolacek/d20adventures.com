@@ -5,17 +5,17 @@ import { monsterById } from "@d20/srd/monsters"
 import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { attackModesFromActions, checkModesFromActions } from "./actions"
-import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defensesOf, resolveAttack, rollDamage } from "./attack"
+import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defensesOf, parseDice, resolveAttack, rollDamage } from "./attack"
 import { type Check, checkBonus, combineModes, type Roller, type RollMode } from "./check"
-import { classCastingBar, classCheckModes } from "./class-rules"
+import { classCastingBar, classCheckModes, classCreatedSlots, classSpellAttackModes, classSpellHits, classSpellSaveDc } from "./class-rules"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, revived, withDamage, withHealing } from "./death"
-import { deriveSheet, featuresOf, slotsAt } from "./derive"
+import { deriveSheet, featuresOf, pickedFreeCasts, slotsAt } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { magicSaveModes, typesTaken } from "./monster-traits"
-import { type Cover, coverBonus, isNear } from "./space"
+import { type Cover, coverBonus, type Floor, isNear } from "./space"
 import { speciesSaveModes } from "./species-traits"
 import {
   CASTER_HELD,
@@ -82,7 +82,8 @@ export function spellcastingOf(character: Roller): Spellcasting | undefined {
   const modifier = derived.abilityModifiers[cls.spellcasting.ability]
   return {
     ability: cls.spellcasting.ability,
-    saveDc: 8 + derived.proficiencyBonus + modifier,
+    // A feature may raise it while it lasts (Innate Sorcery).
+    saveDc: 8 + derived.proficiencyBonus + modifier + classSpellSaveDc(character),
     attackBonus: derived.proficiencyBonus + modifier,
     modifier,
     slots: slotsAt(cls, sheet.level),
@@ -330,6 +331,12 @@ export type KnownSpell = {
   castLevel?: number
   /** The ability a feat's spell is cast with (Magic Initiate), in place of the class's (`spellcastingFor`). */
   ability?: AbilityId
+  /** Cast as often as the hero likes with no slot, as a cantrip is: an Eldritch Invocation's spell (Armor of Shadows' Mage Armor). */
+  atWill?: true
+  /** Its casting with no slot is on the caster alone: "on yourself". */
+  selfOnly?: true
+  /** The option of a class feature its casting with no slot comes from, by id: "fiendish-vigor". */
+  from?: string
 }
 
 type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<string, number> }
@@ -385,6 +392,23 @@ export function spellsOf(character: Slotted): KnownSpell[] {
     const held = found.findIndex((known) => known.spell.id === spell.id)
     if (held < 0) found.push({ spell, cantrip: false, prepared: true, ritual: spell.ritual, free, useKey: key, ability })
     else if (!found[held].useKey) found[held] = { ...found[held], prepared: true, free, useKey: key }
+  }
+  // An Eldritch Invocation's spell cast with no slot (./derive pickedFreeCasts): at will, or as many times as the
+  // option's uses give, counted under its id (Gift of the Depths' Water Breathing, once a Long Rest), and then not at
+  // all, nor as a Ritual. A spell the hero also has prepared keeps its slots. One cast only in Dim Light or Darkness
+  // (One with Shadows) is left out: the engine knows no light.
+  for (const cast of pickedFreeCasts(sheet)) {
+    const spell = spellById.get(cast.spell)
+    if (!spell || cast.usableWhen) continue
+    const counted = typeof cast.uses?.count === "number" ? cast.uses.count : undefined
+    const how = {
+      ...(counted === undefined ? { atWill: true as const } : { free: Math.max(0, counted - (character.featureUses?.[cast.option] ?? 0)), useKey: cast.option }),
+      ...(cast.selfOnly ? { selfOnly: true as const } : {}),
+      from: cast.option,
+    }
+    const held = found.findIndex((known) => known.spell.id === spell.id)
+    if (held < 0) found.push({ spell, cantrip: false, prepared: counted === undefined, ritual: false, free: 0, ...how })
+    else if (!found[held].useKey && !found[held].atWill) found[held] = { ...found[held], ...how }
   }
   return found
 }
@@ -456,8 +480,20 @@ export function spellWords(character: Slotted & { spells?: readonly { name: stri
   const left = slotsLeft(character)
   const parts = [
     known.some((entry) => entry.cantrip) ? `Cantrips, cast at will: ${names(known.filter((entry) => entry.cantrip))}` : "",
-    known.some((entry) => !entry.cantrip && entry.prepared) ? `Prepared spells: ${names(known.filter((entry) => !entry.cantrip && entry.prepared))}` : "",
-    known.some((entry) => !entry.prepared) ? `Rituals from the spellbook, outside a fight: ${names(known.filter((entry) => !entry.prepared))}` : "",
+    known.some((entry) => !entry.cantrip && entry.prepared && !entry.atWill) ? `Prepared spells: ${names(known.filter((entry) => !entry.cantrip && entry.prepared && !entry.atWill))}` : "",
+    known.some((entry) => entry.atWill)
+      ? `At will with no slot: ${known
+          .filter((entry) => entry.atWill)
+          .map((entry) => `${entry.spell.name}${entry.selfOnly ? " (on themselves)" : ""}`)
+          .join(", ")}`
+      : "",
+    known.some((entry) => !entry.prepared && !entry.from) ? `Rituals from the spellbook, outside a fight: ${names(known.filter((entry) => !entry.prepared && !entry.from))}` : "",
+    known.some((entry) => !entry.prepared && entry.from)
+      ? `Cast with no slot: ${known
+          .filter((entry) => !entry.prepared && entry.from)
+          .map((entry) => `${entry.spell.name} (${entry.free} left)`)
+          .join(", ")}`
+      : "",
     left.length ? `Spell slots left: ${slotWords(character)}` : "",
   ]
   return parts.filter(Boolean).join(". ")
@@ -465,7 +501,9 @@ export function spellWords(character: Slotted & { spells?: readonly { name: stri
 
 /** A hero's spell slots left, by spell level, the first for level 1. */
 export function slotsLeft(character: Slotted): number[] {
-  return (spellcastingOf(character)?.slots ?? []).map((slots, index) => Math.max(0, slots - (character.spellSlots?.[index] ?? 0)))
+  // Slots a feature has made beyond the table's count too, until they are spent (Font of Magic).
+  const made = classCreatedSlots(character)
+  return (spellcastingOf(character)?.slots ?? []).map((slots, index) => Math.max(0, slots + (made[index] ?? 0) - (character.spellSlots?.[index] ?? 0)))
 }
 
 /** A hero's slots left in words, for each spell level they have slots of: "3 of level 1, 0 of level 2". */
@@ -505,7 +543,10 @@ export function castCost(character: Slotted, spellId: string, ritual = false, sl
   const barred = classCastingBar(character)
   if (barred) return { problem: barred }
   if (known.cantrip) return { cost: { kind: "cantrip" }, known }
+  // An invocation's spell cast at will spends nothing, as a cantrip does, unless a higher slot is named.
+  if (known.atWill && !(character.sheet && slot !== undefined && slot > known.spell.level && slotFor(character, known.spell.level, slot) === slot)) return { cost: { kind: "cantrip" }, known }
   if (ritual && known.ritual) return { cost: { kind: "ritual" }, known }
+  if (!known.prepared && known.from) return known.free > 0 && known.useKey ? { cost: { kind: "free", feature: known.useKey }, known } : { problem: `${name} has no casting left that takes no slot.` }
   if (!known.prepared) return { problem: `${name} is in the spellbook and not prepared, so it can only be cast as a Ritual.` }
   const upcast = character.sheet && slot !== undefined && slot > known.spell.level && slotFor(character, known.spell.level, slot) === slot
   if (known.free > 0 && known.useKey && !upcast) return { cost: { kind: "free", feature: known.useKey }, known }
@@ -648,6 +689,8 @@ export function castSpell<T extends Castee>(args: {
   cover?: Readonly<Record<string, Cover>>
   /** An area was measured on the floor (./spell-space): the spell takes everyone named, however many. */
   measured?: boolean
+  /** The encounter's floor, for what a hit moves (Repelling Blast's push). */
+  floor?: Floor
   /** The spell used again on a later turn, not cast: ./spells `castAgain`. */
   again?: boolean
 }): Cast<T> {
@@ -776,8 +819,15 @@ export function castSpell<T extends Castee>(args: {
         continue
       }
       if (roll.hit) {
+        // What a class adds to this hit, beam by beam: a bonus to its damage (Agonizing Blast), a push (Repelling Blast).
+        const riders = classSpellHits({ caster: find(caster.id) as T, spell, target, floor: args.floor })
+        const bonus = riders.reduce((sum, rider) => sum + (rider.bonus ?? 0), 0)
         if (parts.length) {
-          const thrown = rollDamage(parts, args.roll, roll.critical)
+          const [first, ...others] = parts
+          const given = first.dice ? parseDice(first.dice) : undefined
+          const plus = (given?.bonus ?? 0) + bonus
+          const added = given && bonus ? `${given.count}d${given.sides}${plus ? ` ${plus < 0 ? "-" : "+"} ${Math.abs(plus)}` : ""}` : undefined
+          const thrown = rollDamage(added ? [{ ...first, dice: added }, ...others] : parts, args.roll, roll.critical)
           const rolled = spell.id === "sorcerous-burst" ? burst(thrown, casting.modifier, args.roll) : thrown
           const dealt = hurt(target.id, rolled, (taken) => taken, roll.critical)
           attack = { ...attack, damage: rolled, taken: dealt?.amount ?? 0, ...(dealt?.fate ? { fate: dealt.fate } : {}) }
@@ -790,6 +840,12 @@ export function castSpell<T extends Castee>(args: {
           )
         )
         for (const link of spell.conditions ?? []) if (now(link) && link.trigger === "hit") give(target.id, link.condition)
+        for (const rider of riders) {
+          const struck = find(target.id) as T
+          if (!rider.to || struck.dead) continue
+          put({ ...struck, position: rider.to })
+          facts.push(`${caster.name}'s ${rider.name} pushes ${struck.name} straight away from them.`)
+        }
         // Vampiric Touch: "you regain Hit Points equal to half the amount of Necrotic damage dealt".
         if (spell.id === "vampiric-touch" && attack.taken > 1) {
           const healer = find(caster.id) as T
@@ -921,7 +977,9 @@ export function castSpell<T extends Castee>(args: {
       const target = find(id)
       if (!target || target.dead) continue
       const dice = raised(healing.dice, healing.perSlot, above)
-      const rolled = dice ? rollDamage([{ dice, type: "force" }], args.roll).total : (healing.amount ?? 0)
+      // Fiendish Vigor: cast with no slot, "you automatically get the highest number on the die".
+      const most = slot === spell.level && spellsOf(caster).find((known) => known.spell.id === spell.id)?.from === "fiendish-vigor"
+      const rolled = dice ? rollDamage([{ dice, type: "force" }], most ? (sides) => sides : args.roll).total : (healing.amount ?? 0)
       const amount = rolled + (healing.modifier ? casting.modifier : 0) + (healing.perSlotAmount ?? 0) * above
       if (amount > (target.tempHitPoints ?? 0)) put({ ...target, tempHitPoints: amount })
       facts.push(`${target.name} gains ${amount} Temporary Hit Points.`)
@@ -1114,7 +1172,7 @@ export function rollSave(args: {
 /** The modes that fall on a spell attack from the conditions and actions of the caster and the target. */
 type Bearer = Parameters<typeof attackModesFrom>[0] & Parameters<typeof attackModesFromActions>[0]
 export function spellAttackModes(caster: Bearer, target: Bearer, spell: Spell, present?: readonly Bearer[]) {
-  return [...attackModesFrom(caster, target, isNear(caster, target, spell.attack ?? "ranged"), present), ...attackModesFromActions(caster, target, present)]
+  return [...attackModesFrom(caster, target, isNear(caster, target, spell.attack ?? "ranged"), present), ...attackModesFromActions(caster, target, present), ...classSpellAttackModes(caster, spell)]
 }
 
 export { spellById }

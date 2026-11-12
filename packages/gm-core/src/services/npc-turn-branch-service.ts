@@ -3,6 +3,7 @@ import { afterRoll, takeAction } from "../sheet/actions"
 import { strikeFacts } from "../sheet/attack"
 import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { checkBonus, resolveCheck } from "../sheet/check"
+import { classConcentrationModes } from "../sheet/class-rules"
 import { saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, killed } from "../sheet/death"
@@ -215,6 +216,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         before: args.turn.characters,
         after: afterRoll(spent, args.npc.id, casting),
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+        modes: classConcentrationModes,
         d20: dice.d20,
       })
       updatedCharacters = kept.characters.map((character) => afterHarm(character))
@@ -280,7 +282,13 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         required = attacker && followingRoll({ character: attacker as InScene, made: required, present: updatedCharacters as InScene[], floor })
       }
       // A caster the blows hurt saves to keep Concentration, and one they dropped loses it.
-      const kept = settleConcentration({ before: args.turn.characters, after: updatedCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: dice.d20 })
+      const kept = settleConcentration({
+        before: args.turn.characters,
+        after: updatedCharacters,
+        bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+        modes: classConcentrationModes,
+        d20: dice.d20,
+      })
       updatedCharacters = kept.characters
       facts.push(...kept.facts)
       console.log("[LLM] NPC attacks:", facts)
@@ -341,6 +349,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         before: args.turn.characters,
         after: afterRoll(settled.characters, args.npc.id, rollRequirement),
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
+        modes: classConcentrationModes,
         d20: dice.d20,
       })
       updatedCharacters = stayed.characters

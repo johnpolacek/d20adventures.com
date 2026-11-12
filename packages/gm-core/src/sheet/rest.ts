@@ -121,15 +121,22 @@ const overWithin = (spellId: string, hours: number, turns?: number): boolean => 
 }
 
 // What the hours of a rest end: a fight's moment, the actions of turns, a held Bardic Inspiration die (it lasts an
-// hour), and the spells that run out, with the conditions they gave. `asleep` ends Concentration, as a Long Rest's
-// sleep leaves the hero Unconscious.
+// hour), the spells that run out, with the conditions they gave, and a Beast's shape whose hours run out, which the
+// rest's hours are the only clock for. `asleep` ends Concentration, as a Long Rest's sleep leaves the hero Unconscious.
 function timePasses<T extends Rester>(character: T, hours: number, asleep: boolean): T {
   const { inspiration: _, ...rest } = turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(character))
   const spellEffects = (rest.spellEffects ?? []).filter((effect) => !overWithin(effect.spell, hours, effect.turns))
   const conditions = (rest.conditions ?? []).filter((entry) => entry.spell === undefined || !overWithin(entry.spell, hours, entry.turns))
   const held = rest.concentration && !asleep && !overWithin(rest.concentration.spell, hours) ? rest.concentration : undefined
-  const { spellEffects: __, conditions: ___, concentration: ____, ...bare } = rest
-  return { ...bare, ...(spellEffects.length ? { spellEffects } : {}), ...(conditions.length ? { conditions } : {}), ...(held ? { concentration: held } : {}) } as T
+  const shape = rest.shape && rest.shape.hours > hours ? { ...rest.shape, hours: rest.shape.hours - hours } : undefined
+  const { spellEffects: __, conditions: ___, concentration: ____, shape: _____, ...bare } = rest
+  return {
+    ...bare,
+    ...(spellEffects.length ? { spellEffects } : {}),
+    ...(conditions.length ? { conditions } : {}),
+    ...(held ? { concentration: held } : {}),
+    ...(shape ? { shape } : {}),
+  } as T
 }
 
 // Why a character gains nothing from a rest, if they do not: the dead, and anyone at 0 hit points, who cannot start one.

@@ -1678,5 +1678,791 @@
       "targets": ["warehouse-thug"],
       "level": 1
     }
+  },
+  {
+    "id": "warlock-eldritch-smite",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "warlock",
+      "level": 5,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 17
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "eldritch-smite"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "eldritch-mind"
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "enthrall", "vampiric-touch"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I pour my patron's eldritch power into my longsword and smite the thug with it.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longsword",
+      "target": "warehouse-thug"
+    },
+    "choices": {
+      "eldritch-smite": "smite"
+    }
+  },
+  {
+    "id": "warlock-plain-blade",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "warlock",
+      "level": 5,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 17
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "eldritch-smite"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "eldritch-mind"
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "enthrall", "vampiric-touch"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I slash at the thug with my longsword.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longsword",
+      "target": "warehouse-thug"
+    },
+    "choices": {
+      "eldritch-smite": false
+    }
+  },
+  {
+    "id": "magical-cunning-at-peace",
+    "adventure": "covert-cargo",
+    "encounter": "the-crate",
+    "hero": "1749159962941",
+    "sheet": {
+      "class": "warlock",
+      "level": 5,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 17
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "eldritch-smite"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "eldritch-mind"
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "enthrall", "vampiric-touch"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ]
+    },
+    "slotsUsed": {
+      "1749159962941": [0, 0, 2]
+    },
+    "narrative": "The deck is quiet and the crate sits before Lyra, unguarded. Her pact magic is spent.",
+    "action": "While all is quiet, I kneel and perform my patron's rite to win back the power I spent.",
+    "checks": ["channel-divinity"],
+    "feature": {
+      "id": "magical-cunning"
+    }
+  },
+  {
+    "id": "magical-cunning-in-a-fight",
+    "adventure": "covert-cargo",
+    "encounter": "battle-on-the-boat",
+    "hero": "1749159962941",
+    "sheet": {
+      "class": "warlock",
+      "level": 5,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 17
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "eldritch-smite"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "eldritch-mind"
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "enthrall", "vampiric-touch"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ]
+    },
+    "slotsUsed": {
+      "1749159962941": [0, 0, 2]
+    },
+    "narrative": "Reinhard has drawn his blade and comes at Lyra across the cabin, and Silas holds the door with his daggers out. Her pact magic is spent.",
+    "action": "I kneel and perform my patron's rite to win back the power I spent.",
+    "checks": ["none"]
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 16,
+        "int": 8,
+        "wis": 13,
+        "cha": 17
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "false-life", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "transmuted-spell"
+          },
+          {
+            "option": "careful-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "id": "sorcerer-innate-bolt",
+    "action": "I let the sorcery in my blood blaze up, and hurl a fire bolt at the thug.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fire-bolt",
+      "targets": ["warehouse-thug"]
+    },
+    "bonus": {
+      "feature": "sorcerer-innate-sorcery"
+    },
+    "choices": {
+      "metamagic": false
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 16,
+        "int": 8,
+        "wis": 13,
+        "cha": 17
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "false-life", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "transmuted-spell"
+          },
+          {
+            "option": "careful-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "id": "sorcerer-transmuted-bolt",
+    "action": "I hurl a fire bolt at the thug, but twist its flame into biting frost as it flies.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fire-bolt",
+      "targets": ["warehouse-thug"]
+    },
+    "choices": {
+      "metamagic": "transmuted-spell"
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 16,
+        "int": 8,
+        "wis": 13,
+        "cha": 17
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "false-life", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "transmuted-spell"
+          },
+          {
+            "option": "careful-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "id": "sorcerer-plain-bolt",
+    "action": "I hurl a fire bolt at the thug.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fire-bolt",
+      "targets": ["warehouse-thug"]
+    },
+    "choices": {
+      "metamagic": false
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 16,
+        "int": 8,
+        "wis": 13,
+        "cha": 17
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "false-life", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "transmuted-spell"
+          },
+          {
+            "option": "careful-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "id": "sorcerer-forge-slot",
+    "action": "I pour my sorcery points into a fresh level 2 spell slot, then hurl a fire bolt at the thug.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fire-bolt",
+      "targets": ["warehouse-thug"]
+    },
+    "bonus": {
+      "feature": "font-of-magic-slot-2"
+    },
+    "choices": {
+      "metamagic": false
+    }
+  },
+  {
+    "id": "wild-shape-bite",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["poison-spray", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "heat-metal"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I drop to all fours as a great grey wolf and sink my teeth into the thug.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "bite",
+      "target": "warehouse-thug"
+    },
+    "bonus": {
+      "feature": "wild-shape-wolf"
+    }
+  },
+  {
+    "id": "no-wild-shape",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["poison-spray", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "heat-metal"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I crack the thug across the knees with my staff.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "quarterstaff",
+      "target": "warehouse-thug"
+    }
+  },
+  {
+    "id": "wolf-bites",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["poison-spray", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "heat-metal"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "narrative": "Steel rings in the warehouse. Branka, in the shape of a grey wolf, circles the thug, who squares up with a cudgel.",
+    "shape": {
+      "form": "wolf",
+      "hours": 1
+    },
+    "action": "I lunge for the thug's leg and drag him down.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "bite",
+      "target": "warehouse-thug"
+    }
+  },
+  {
+    "id": "lands-aid",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["poison-spray", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "heat-metal"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "narrative": "Steel rings in the warehouse. The thug has beaten Ilya to her knees beside him and turns on Branka with a cudgel.",
+    "hitPointsOn": {
+      "ilya-veles": 4
+    },
+    "action": "I call the earth's power: thorns burst up around the thug while flowers bloom at Ilya's feet to mend her.",
+    "checks": ["channel-divinity"],
+    "feature": {
+      "id": "lands-aid",
+      "targets": ["ilya-veles", "warehouse-thug"],
+      "heal": true
+    }
   }
 ]
