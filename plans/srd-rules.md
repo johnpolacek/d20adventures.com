@@ -386,7 +386,27 @@ Substages, the six other classes at levels 1 to 5:
 
 Levels 6 to 20, for the owner's fourth step: raise the cap, capstone raises above 20, spells from beyond a class's list, the shared rules of saves and checks (Evasion, Reliable Talent, Indomitable, the auras), then the features by band, martial and caster apart, and the Epic Boons. Their substages are written when that step starts.
 
-Substages for spells follow their survey.
+What the survey found of spells: 339 spells, of which 72 run, 73 run in part and 194 are told only. Of the 156 at levels 4 to 9, 11 run. The worst fault is a label: a spell with typed data counts as one the engine runs unless it is named as told or partly run, and none above level 3 is named, so 84 spells of levels 4 to 9 are called run that are not, the game master is given no text for them, and 18 of them roll saves that do nothing. A hero cannot reach them yet, but an NPC whose stat block casts them can. Fifteen spells of levels 0 to 3 on the Druid, Paladin, Sorcerer and Warlock lists were never worked through, and none runs in full: Eldritch Blast has one beam at every level, the smites become a bonus on every hit, Hellish Rebuke can never be cast.
+
+Substages, spells:
+
+- S1. Honest labels, before the six classes open: every spell is named as run, partly run or told by this survey, the read has a word for a told spell, a casting of a minute or more is not made in a fight, and the faults found on the way are mended or the spell is held as told. It makes every spell safe to cast.
+- S2. Counts and shapes: how many a spell takes, Eldritch Blast's beams, miles read as miles, a condition's own span.
+- S3. Defences a spell gives: resistances, immunities and Advantage.
+- S4. Saves made again, beyond ending on a success: damage on a failure, a tally of three, a later burn, a save on taking damage.
+- S5. Thresholds, death and restoration: the Power Words, Divine Word, Death Ward, Heal, Greater Restoration, raising the dead.
+- S6. Smites and what rides on the next hit, with the Paladin.
+- S7. A choice the caster makes, kept on the spell: a damage type, an ability, a mode.
+- S8. Spells used again on later turns.
+- S9. Out of play and back: Banishment, Maze.
+- S10. A teleport in a fight, and being thrown.
+- S11. Areas that stay on the floor or move, as state of the encounter: the clouds, Moonbeam, and the three areas built so far moved onto it.
+- S12. Walls, as solid things added to the floor in play.
+- S13. Summoned creatures, joining the encounter on their caster's side.
+- S14. A changed shape, shared with Wild Shape.
+- S15. A dominated creature's turn.
+
+Told by design, needing only S1: information, long rituals, illusions, travel, Time Stop, Wish, Clone, Contingency. S1 and what of S2 and S6 the six classes need go with the owner's first step. The rest go with the fourth.
 
 ## Unknowns
 
