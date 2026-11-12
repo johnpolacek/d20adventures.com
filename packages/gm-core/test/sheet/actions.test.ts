@@ -27,6 +27,7 @@ type Character = {
   turnEffects?: TurnEffect[]
   isComplete?: boolean
   hasReplied?: boolean
+  position?: { x: number; y: number }
 }
 // Thalbern, a Ranger: proficient in Stealth, Survival, Nature, Perception, Athletics and Intimidation.
 const thalbern: Character = { id: "thalbern", name: "Thalbern", type: "pc", sheet: sheet("the-midnight-summons/characters/thalbern.json"), hitPoints: 11 }
