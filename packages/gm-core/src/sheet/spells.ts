@@ -10,7 +10,7 @@ import { type Check, checkBonus, combineModes, type Roller, type RollMode } from
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, revived, withDamage, withHealing } from "./death"
-import { deriveSheet, featuresOf } from "./derive"
+import { deriveSheet, featuresOf, slotsAt } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { magicSaveModes, typesTaken } from "./monster-traits"
@@ -47,7 +47,7 @@ export type Spellcasting = {
   /** What is added to the d20 of a spell attack: the Proficiency Bonus and the spellcasting ability modifier. */
   attackBonus: number
   modifier: number
-  /** Spell slots by spell level, the first for level 1. */
+  /** Spell slots by spell level, the first for level 1. A Warlock's Pact Magic slots are all at their one level (./derive slotsAt). */
   slots: number[]
   /** How many cantrips and prepared spells the class gives at this level. */
   cantrips: number
@@ -84,7 +84,7 @@ export function spellcastingOf(character: Roller): Spellcasting | undefined {
     saveDc: 8 + derived.proficiencyBonus + modifier,
     attackBonus: derived.proficiencyBonus + modifier,
     modifier,
-    slots: [...(row?.spellSlots ?? [])],
+    slots: slotsAt(cls, sheet.level),
     cantrips: row?.cantrips ?? 0,
     prepared: row?.preparedSpells ?? 0,
   }

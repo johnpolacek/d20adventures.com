@@ -1,4 +1,5 @@
 import { classFeatureById } from "@d20/srd/class-features"
+import { classById } from "@d20/srd/classes"
 import type { Recharge } from "@d20/srd/schema/common"
 import { spellById } from "@d20/srd/spells"
 import { isDead } from "../utils/turn-actors"
@@ -96,6 +97,49 @@ export function arcaneRecoveryOf(character: Rester): number[] {
   return bestTotal > 0 ? best.map((count) => count ?? 0) : []
 }
 
+const MAGICAL_CUNNING = "warlock-magical-cunning"
+
+/**
+ * The Pact Magic slots a Warlock's Magical Cunning gives back, by level, the first for level 1: expended slots, no more
+ * than half the maximum rounded up, or all of them with Eldritch Master (level 20). None without the feature or with
+ * its use spent. A level 5 Warlock with both level 3 slots spent regains one: [0, 0, 1].
+ */
+export function magicalCunningOf(character: Rester): number[] {
+  const sheet = character.sheet
+  const features = sheet ? deriveSheet(sheet).classFeatures : []
+  if (!features.includes(MAGICAL_CUNNING) || (character.featureUses?.[MAGICAL_CUNNING] ?? 0) > 0) return []
+  const total = spellcastingOf(character)?.slots ?? []
+  let budget = features.includes("warlock-eldritch-master") ? Number.POSITIVE_INFINITY : Math.ceil(total.reduce((sum, count) => sum + count, 0) / 2)
+  const back = total.map((_, index) => {
+    const taken = Math.min(budget, character.spellSlots?.[index] ?? 0)
+    budget -= taken
+    return taken
+  })
+  return back.some((count) => count > 0) ? back : []
+}
+
+/**
+ * Magical Cunning (Warlock, level 2): a rite of 1 minute, so not made in a fight, after which the Warlock regains
+ * expended Pact Magic slots (./magicalCunningOf). It is used once a Long Rest. The Warlock after it with what it gave
+ * in words, or the reason it cannot be made.
+ */
+export function withMagicalCunning<T extends Rester>(character: T, options: { inFight: boolean }): RestResult<T> | { problem: string } {
+  const name = character.name ?? "The character"
+  if (!character.sheet || !deriveSheet(character.sheet).classFeatures.includes(MAGICAL_CUNNING)) return { problem: `${name} does not have Magical Cunning.` }
+  if (options.inFight) return { problem: "Magical Cunning is a rite of 1 minute, and is not made in a fight." }
+  if ((character.featureUses?.[MAGICAL_CUNNING] ?? 0) > 0) return { problem: `${name} has used Magical Cunning, and can use it again after a Long Rest.` }
+  const back = magicalCunningOf(character)
+  if (!back.length) return { problem: `${name} has no expended Pact Magic spell slots.` }
+  const spellSlots = (character.spellSlots ?? []).map((used, index) => used - (back[index] ?? 0))
+  const featureUses: Record<string, number> = { ...character.featureUses, [MAGICAL_CUNNING]: 1 }
+  const { spellSlots: _, featureUses: __, ...rest } = character
+  const count = back.reduce((sum, each) => sum + each, 0)
+  return {
+    character: { ...rest, featureUses, ...(spellSlots.some((used) => used > 0) ? { spellSlots } : {}) } as T,
+    facts: [`${name} performs Magical Cunning and regains ${count} Pact Magic spell ${count === 1 ? "slot" : "slots"}.`],
+  }
+}
+
 const HOURS = { round: 1 / 600, minute: 1 / 60, hour: 1, day: 24 } as const
 
 // Whether a spell is over after `hours` of rest: one counted in turns, or one whose stated duration runs out within the rest.
@@ -131,8 +175,8 @@ function unrested(character: Rester): string | undefined {
  * modifier added, at least 1 hit point a die. The engine spends them one at a time while the hero is short of their
  * maximum by the die's average or more and dice remain. Each class feature regains its uses as its data says: all of
  * them when it recharges on a Short Rest (Action Surge, Bardic Inspiration from level 5), one when a Long Rest feature
- * regains one on a Short Rest (Second Wind, Channel Divinity). A Wizard's Arcane Recovery takes back slots once a Long
- * Rest. An NPC's uses that are not a class feature's, a day's casts, stay spent. `roll` throws one die of the size given.
+ * regains one on a Short Rest (Second Wind, Channel Divinity). A Warlock regains every Pact Magic slot. A Wizard's
+ * Arcane Recovery takes back slots once a Long Rest. An NPC's uses that are not a class feature's, a day's casts, stay spent. `roll` throws one die of the size given.
  *
  * Thalbern, a level 1 Ranger with Constitution 13 (+1) at 3 of 11, is 8 short, more than a d10's 5.5: a 9 and his +1
  * make 10, back to 11, "Thalbern spends 1 Hit Point Die and regains 8 hit points, now 11 of 11."
@@ -174,6 +218,12 @@ export function shortRest<T extends Rester>(character: T, options: { roll: (side
 
   const recovered = (rested.featureUses?.["wizard-arcane-recovery"] ?? 0) > 0 ? [] : arcaneRecoveryOf(rested)
   let spellSlots = rested.spellSlots
+  // A class whose slots come back on a Short Rest (a Warlock's Pact Magic) regains them all.
+  const casting = rested.sheet && classById.get(rested.sheet.class)?.spellcasting
+  if (casting && SHORT.includes(casting.slotsRestore) && spellSlots?.some((used) => used > 0)) {
+    spellSlots = undefined
+    facts.push(`${name} regains all expended ${classFeatureById.get(casting.feature)?.name ?? "spell"} spell slots.`)
+  }
   if (recovered.length) {
     spellSlots = (rested.spellSlots ?? []).map((used, index) => used - (recovered[index] ?? 0))
     uses["wizard-arcane-recovery"] = 1

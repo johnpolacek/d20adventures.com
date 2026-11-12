@@ -65,13 +65,20 @@ export function subclassLevelOf(cls: Class): number {
   return Math.min(...cls.subclasses.map((id) => subclassById.get(id)?.level ?? 20))
 }
 
+/**
+ * A class's spell slots at a level, by spell level, the first for level 1. A Warlock's Pact Magic slots are all of one
+ * level, so they stand in that level's place and the levels below hold none: a level 5 Warlock has [0, 0, 2]. A class
+ * with no slots has none.
+ */
+export function slotsAt(cls: Class, level: number): number[] {
+  const row = cls.levels[level - 1]
+  if (row?.pactSlots && row.slotLevel) return Array.from({ length: row.slotLevel }, (_, index) => (index + 1 === row.slotLevel ? (row.pactSlots ?? 0) : 0))
+  return [...(row?.spellSlots ?? [])]
+}
+
 /** The highest spell level a class has a slot for at a level: the last filled column, or a Warlock's Pact Magic slot level. */
 export function highestSlotLevel(cls: Class, level: number): number {
-  const row = cls.levels[level - 1]
-  return Math.max(
-    row?.slotLevel ?? 0,
-    (row?.spellSlots ?? []).reduce((top, count, index) => (count > 0 ? index + 1 : top), 0)
-  )
+  return slotsAt(cls, level).reduce((top, count, index) => (count > 0 ? index + 1 : top), 0)
 }
 
 /** Whether a class's spell list holds a spell at a spell level from `from` to `to`. */
