@@ -1,14 +1,17 @@
 "use client"
 
 // The narrative, one paragraph at a time, in a panel that eases to each paragraph's height: the old text fades out, the
-// panel resizes, and the new text fades in. A paragraph that is a dice roll shows the roll itself (see RollResult). Dots mark the paragraph's place in the turn; the controls replay the turn,
+// panel resizes, and the new text fades in. A paragraph that is a dice roll shows the roll itself (see RollResult), and
+// one that is a class feature used shows it as a small entry (see FeatureEntry). Dots mark the paragraph's place in the turn; the controls replay the turn,
 // step back, move on (Continue when stepping through, the next paragraph when it plays itself), or skip to the end.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button, epicReducedButtonStyle } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Chevron, eyebrow, panel } from "./hud"
-import { RollResult, type RollResultData } from "./roll-result"
+import { FeatureEntry } from "./roll-parts"
+import { RollResult } from "./roll-result"
+import type { FeatureView, RollView } from "./roll-view"
 
 function Control({ label, children, ...rest }: React.ComponentProps<"button"> & { label: string; children: ReactNode }) {
   return (
@@ -28,6 +31,7 @@ export function Narration({
   heading,
   text,
   roll,
+  feature,
   index,
   count,
   hidden = false,
@@ -42,7 +46,9 @@ export function Narration({
   heading: string
   text: string | undefined
   // The paragraph's dice roll, when it is one.
-  roll?: RollResultData
+  roll?: RollView
+  // The paragraph's class feature used, when it is one.
+  feature?: FeatureView
   index: number
   count: number
   hidden?: boolean
@@ -56,6 +62,7 @@ export function Narration({
 }) {
   const [shown, setShown] = useState(text)
   const [shownRoll, setShownRoll] = useState(roll)
+  const [shownFeature, setShownFeature] = useState(feature)
   // The heading changes with its paragraph, so a new encounter's title never sits over the last one's closing words.
   const [shownHeading, setShownHeading] = useState(heading)
   const [visible, setVisible] = useState(false)
@@ -65,6 +72,7 @@ export function Narration({
     const swap = setTimeout(() => {
       setShown(text)
       setShownRoll(roll)
+      setShownFeature(feature)
       setShownHeading(heading)
     }, 300)
     const show = setTimeout(() => setVisible(true), 480)
@@ -72,7 +80,7 @@ export function Narration({
       clearTimeout(swap)
       clearTimeout(show)
     }
-  }, [text, roll, heading])
+  }, [text, roll, feature, heading])
 
   const inner = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number>()
@@ -96,6 +104,10 @@ export function Narration({
         {shownRoll ? (
           <div className={cn("transition-opacity duration-300", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
             {visible && <RollResult key={`${index}-${shown}`} roll={shownRoll} compact={compact} />}
+          </div>
+        ) : shownFeature ? (
+          <div className={cn("transition-opacity duration-300", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
+            <FeatureEntry feature={shownFeature} compact={compact} />
           </div>
         ) : (
           <p className={cn("font-serif text-stage-cream transition-opacity duration-300", visible ? "opacity-100" : "opacity-0", compact ? "text-[12px] leading-snug" : "text-[15px] leading-[1.65]")}>

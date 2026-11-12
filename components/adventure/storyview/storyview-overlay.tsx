@@ -96,7 +96,15 @@ export default function StoryviewOverlay({ snapshot, onClose }: { snapshot: Stor
             )}
           </div>
         )}
-        {player.status === "ready" && player.currentSlide && <StoryviewSlideView slide={player.currentSlide} segmentIndex={player.segmentIndex} getSpeaker={getSpeaker} />}
+        {player.status === "ready" && player.currentSlide && (
+          <StoryviewSlideView
+            slide={player.currentSlide}
+            segmentIndex={player.segmentIndex}
+            getSpeaker={getSpeaker}
+            // The turn's own characters while it is the current one, for how a dying hero stands. Their names otherwise.
+            characters={currentTurn?.id === snapshot.turnId ? currentTurn.characters : snapshot.characters}
+          />
+        )}
       </div>
 
       {player.storyviewAuto?.enabled && player.storyviewAuto.paused && (

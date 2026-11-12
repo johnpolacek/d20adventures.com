@@ -7,10 +7,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { inferStageMovement } from "@/app/_actions/stage-movement"
 import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
-import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
+import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
 import { ROLL_SECONDS } from "@/components/stage/roll-result"
+import type { RollView } from "@/components/stage/roll-view"
 import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
 import { type Bubble, Bubbles, Plate, type PlateLine } from "@/components/stage/stage-dialogue"
 import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
@@ -135,7 +136,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   }
 
   const runTurn = useCallback(
-    async (index: number, reply: string | null, roll: RollOutcome, replyFrom: string | null, rollInfo: JournalRoll | undefined) => {
+    async (index: number, reply: string | null, roll: RollOutcome, replyFrom: string | null, rollInfo: RollView | undefined) => {
       if (!stage || !player.current) return
       const t = TURNS[index]
       const ps = t.narrative(reply, roll, storyRef.current)
@@ -148,7 +149,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
         {
           number: index,
           title: t.title,
-          paragraphs: rollInfo ? [rollInfo, ...ps] : ps,
+          paragraphs: rollInfo ? [{ roll: rollInfo }, ...ps] : ps,
           reply: reply && replyFrom ? { name: replyFrom, text: reply, moved: usedRef.current || undefined, movedTo: movedTo.current } : undefined,
         },
       ])
@@ -182,7 +183,19 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
                   ...e,
                   paragraphs: [
                     ...ps,
-                    { name: nameOf(c.actor), skill: c.roll.skill, dc: c.roll.dc, base, total, success, versus: versus ? `${versus.name}'s ${versus.natural + versus.modifier}` : undefined },
+                    {
+                      roll: {
+                        kind: "check",
+                        character: nameOf(c.actor),
+                        check: c.roll.skill,
+                        dc: c.roll.dc,
+                        natural: base,
+                        modifier: c.roll.modifier,
+                        total,
+                        success,
+                        versus: versus ? `${versus.name}’s ${versus.natural + versus.modifier}` : undefined,
+                      },
+                    },
                     ...more,
                   ],
                 }
@@ -267,7 +280,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
     },
     [stage]
   )
-  const advance = (reply: string, roll: RollOutcome, rollInfo: JournalRoll | undefined, wait = 1600) => {
+  const advance = (reply: string, roll: RollOutcome, rollInfo: RollView | undefined, wait = 1600) => {
     const from = holdOf(turnIndex)?.actor
     setPhase("thinking")
     setTimeout(() => runTurn(turnIndex + 1, reply, roll, from ? nameOf(from) : null, rollInfo), wait)
@@ -351,9 +364,17 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
     const total = base + roll.modifier
     const success = total >= roll.dc
     if (roll.key) storyRef.current = { ...storyRef.current, [roll.key]: success }
-    const versus = roll.versus ? `${roll.versus.name}'s ${roll.versus.natural + roll.versus.modifier}` : undefined
+    const versus = roll.versus ? `${roll.versus.name}’s ${roll.versus.natural + roll.versus.modifier}` : undefined
     // The card rolls from the click: the turn goes on once its verdict is in.
-    setTimeout(() => advance(pendingReply.current ?? "", { total, success }, { name: nameOf(hold.actor), skill: roll.skill, dc: roll.dc, base, total, success, versus }), ROLL_SECONDS * 1000)
+    setTimeout(
+      () =>
+        advance(
+          pendingReply.current ?? "",
+          { total, success },
+          { kind: "check", character: nameOf(hold.actor), check: roll.skill, dc: roll.dc, natural: base, modifier: roll.modifier, total, success, versus }
+        ),
+      ROLL_SECONDS * 1000
+    )
   }
   // Clicking a character takes the camera to them; clicking them again opens their card.
   const focus = useCallback(
@@ -433,7 +454,7 @@ export function TurnMock({ demo = false }: { demo?: boolean }) {
   const actor = party.find((c) => c.id === actorId) ?? null
   let mode: CardMode | null = null
   if (phase === "hold" && hold) mode = { kind: "hold", prompt: hold.prompt, suggestion: hold.suggestion }
-  else if (phase === "roll" && rolling) mode = { kind: "roll", roll: rolling.roll, prompt: rolling.prompt }
+  else if (phase === "roll" && rolling) mode = { kind: "roll", roll: { kind: "check", ...rolling.roll }, prompt: rolling.prompt }
   else if (phase === "thinking") mode = { kind: "thinking", note }
   else if (phase === "done") mode = { kind: "done", next: "Next: The Harvest Festival" }
   const order: OrderEntry[] = [

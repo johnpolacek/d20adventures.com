@@ -265,6 +265,9 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
   }
 
   const showDiceRoll = characterState?.rollRequired && rollResult == null
+  // An attack's target, by name, for the roll card.
+  const asked = characterState?.rollRequired
+  const attackTarget = asked && "attack" in asked ? currentTurn.characters.find((c: { id: string }) => c.id === asked.attack.target)?.name : undefined
 
   return (
     <form onSubmit={handleReply} className="flex flex-col gap-4 min-h-[100px]">
@@ -373,7 +376,14 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
         </>
       )}
       {showDiceRoll && characterState?.rollRequired && (
-        <CharacterDiceRoll character={characterState as TurnCharacter} rollRequired={characterState.rollRequired} rollResult={rollResult ?? null} onRoll={handleRollResult} inputKey={input} />
+        <CharacterDiceRoll
+          character={characterState as TurnCharacter}
+          rollRequired={characterState.rollRequired}
+          target={attackTarget}
+          rollResult={rollResult ?? null}
+          onRoll={handleRollResult}
+          inputKey={input}
+        />
       )}
       {loading && <LoadingAnimation />}
     </form>

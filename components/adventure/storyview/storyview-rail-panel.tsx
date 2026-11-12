@@ -28,7 +28,7 @@ const STATUS_REFRESH_DEBOUNCE_MS = 2000
 
 /** First substantial paragraph of the story, enough for a cropped teaser. */
 function previewText(story: StoryBeat[]): string {
-  const texts = storyParagraphs(story).flatMap((p) => (p.beats[0].kind === "roll" || p.beats[0].kind === "reply" ? [] : [p.text]))
+  const texts = storyParagraphs(story).flatMap((p) => (p.beats[0].kind === "roll" || p.beats[0].kind === "reply" || p.beats[0].kind === "feature" ? [] : [p.text]))
   return texts.find((entry) => entry.length > 40) ?? (texts[0] ?? "").slice(0, 240)
 }
 

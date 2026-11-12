@@ -1,6 +1,9 @@
 import { useUser } from "@clerk/nextjs"
+import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { CircleCheckBig } from "lucide-react"
 import { useState } from "react"
+import { DeathSaveMarks } from "@/components/stage/roll-parts"
+import { standingOf, standingWords, WOUND_TONE } from "@/components/stage/standing"
 import Image from "@/components/ui/native-image"
 import { useTurn } from "@/lib/context/TurnContext"
 import { cn, getImageUrl } from "@/lib/utils"
@@ -8,6 +11,7 @@ import { isAiControlledPc, isDown } from "@/lib/utils/turn-actors"
 import type { TurnCharacter } from "@/types/adventure"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import { NPCCharacterSheetModal } from "./npc-character-sheet-modal"
+import { useSheetViews } from "./use-sheet-view"
 
 function CharacterImage({ src, alt }: { src: string; alt: string }) {
   const [loaded, setLoaded] = useState(false)
@@ -28,6 +32,8 @@ export default function TurnCharacterList() {
   const currentTurn = useTurn()
   const characters = (currentTurn?.characters || []).slice().sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
   const { user } = useUser()
+  // Every hero's sheet, for their hit points and Armor Class.
+  const sheets = useSheetViews(characters)
 
   const [selectedCharacter, setSelectedCharacter] = useState<TurnCharacter | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -51,6 +57,8 @@ export default function TurnCharacterList() {
             // Down: dead, dying or Stable.
             const isDead = isDown(character)
             const isPlayerCharacter = character.id === playerCharacter?.id
+            const standing = standingOf(character, sheets[character.id])
+            const conditions = conditionLabel(character)
             return (
               <li
                 key={character.id}
@@ -74,6 +82,22 @@ export default function TurnCharacterList() {
                     </div>
                   )}
 
+                  {standing && (
+                    <div className="text-xxs sm:text-xs font-mono flex items-center gap-2 mt-0.5">
+                      {standing.kind === "hero" ? (
+                        <span className="text-primary-100">
+                          {standing.hitPoints}/{standing.maximum} HP · AC {standing.armorClass}
+                        </span>
+                      ) : (
+                        <span style={{ color: standing.kind === "wound" ? WOUND_TONE[standing.word] : standing.kind === "stable" ? "#b7d38a" : WOUND_TONE.Dead }}>
+                          {standingWords(standing).split(",")[0]}
+                        </span>
+                      )}
+                      {standing.kind === "dying" && <DeathSaveMarks saves={standing} compact label={false} />}
+                    </div>
+                  )}
+                  {conditions && <div className="text-xxs sm:text-xs italic text-amber-200/90">{conditions}</div>}
+
                   {characters.length > 1 && !isDead && (
                     <div className="text-base flex items-center justify-center rounded-full bg-black ring ring-primary-600 w-8 h-8 font-mono absolute top-4 -left-5">{character.initiative}</div>
                   )}
@@ -87,18 +111,10 @@ export default function TurnCharacterList() {
                     ))}
                   </div>
                 ) : null}
-                {isDead && <div className="text-xxs sm:text-xs text-red-400 font-bold font-mono px-2 py-0.5 bg-black rounded absolute -bottom-2 ring ring-red-700 right-8 z-10">DEAD</div>}
+
                 {isPlayerCharacter && !isDead && (
                   <div className="text-xxs sm:text-xs text-amber-300/80 scale-x-110 tracking-wide font-bold font-mono px-1 py-0.5 bg-black rounded absolute -bottom-2.5 ring-2 ring-primary-600 right-8 z-10 scale-90">
                     YOU
-                  </div>
-                )}
-                {!isDead && (
-                  <div className="absolute top-0 left-0 w-full h-full rounded-xl overflow-hidden">
-                    <div
-                      className="absolute top-0 left-0 w-full h-full bg-red-800 transition-all duration-1000 ease-in-out"
-                      style={{ width: `${100 - character.healthPercent}%`, opacity: (100 - character.healthPercent) / 100 }}
-                    />
                   </div>
                 )}
               </li>

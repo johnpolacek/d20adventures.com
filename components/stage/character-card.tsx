@@ -1,9 +1,13 @@
 "use client"
 
-// A character's card, opened by clicking them on the stage or in the party row (the prototype's cards).
+// A character's card, opened by clicking them on the stage or in the party row (the prototype's cards). Under the name,
+// how they stand: a hero's hit points and Armor Class, an NPC's wound word, Dying with the saves, Stable or Dead. Then
+// their conditions and turn effects in words.
 
 import { cn } from "@/lib/utils"
 import { eyebrow, panel } from "./hud"
+import { DeathSaveMarks } from "./roll-parts"
+import { type Standing, standingWords, WOUND_TONE } from "./standing"
 
 export interface CardInfo {
   id: string
@@ -11,6 +15,10 @@ export interface CardInfo {
   role: string
   portrait?: string
   about?: string
+  // Left out where the game has none, as in the scripted demo, and for a hero whose sheet is not read yet.
+  standing?: Standing
+  // In words: "Prone, Poisoned, Dodging".
+  conditions?: string
   lines?: string[]
   details?: Array<{ label: string; items: string[] }>
 }
@@ -29,6 +37,8 @@ export function CharacterCard({ info, compact = false, onClose }: { info: CardIn
       )}
       <div className={eyebrow}>{info.role}</div>
       <h2 className="mt-1.5 mb-2.5 font-display text-[24px] font-normal leading-tight">{info.name}</h2>
+      {info.standing && <StandingRow standing={info.standing} />}
+      {info.conditions && <p className="mb-2.5 font-serif text-[13px] text-stage-cream italic">{info.conditions}</p>}
       {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
       {info.details?.map((section) => (
         <div key={section.label}>
@@ -53,5 +63,35 @@ export function CharacterCard({ info, compact = false, onClose }: { info: CardIn
         </>
       )}
     </section>
+  )
+}
+
+function StandingRow({ standing: s }: { standing: Standing }) {
+  const stat = (label: string, value: string) => (
+    <span className="flex items-baseline gap-1.5 rounded-[3px] border border-stage-line/25 bg-black/30 px-2 py-1">
+      <span className={cn(eyebrow, "text-stage-muted")}>{label}</span>
+      <span className="font-serif text-[15px] font-semibold tabular-nums text-stage-cream">{value}</span>
+    </span>
+  )
+  return (
+    <div className="mb-2.5 flex flex-wrap items-center gap-2">
+      <span className="sr-only">{standingWords(s)}</span>
+      <span aria-hidden="true" className="contents">
+        {s.kind === "hero" ? (
+          <>
+            {stat("Hit Points", `${s.hitPoints} / ${s.maximum}`)}
+            {stat("Armor Class", String(s.armorClass))}
+          </>
+        ) : (
+          <span
+            className="font-display text-[13px] font-bold tracking-[0.1em] uppercase"
+            style={{ color: s.kind === "wound" ? WOUND_TONE[s.word] : s.kind === "stable" ? "#b7d38a" : WOUND_TONE.Dead }}
+          >
+            {standingWords(s).split(",")[0]}
+          </span>
+        )}
+        {s.kind === "dying" && <DeathSaveMarks saves={s} compact />}
+      </span>
+    </div>
   )
 }

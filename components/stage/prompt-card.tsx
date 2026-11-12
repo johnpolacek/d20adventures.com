@@ -10,18 +10,29 @@ import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { rattle } from "./dice-sound"
 import { Chevron, eyebrow, Pill, panel } from "./hud"
-import { keptDie, modeName, type RollMode, RollResult } from "./roll-result"
+import { RollResult } from "./roll-result"
+import { type DeathSavesView, keptDie, modeName, type RollAsk, type RollKind, type RollMode, type RollView, thrownView } from "./roll-view"
+import { type Standing, standingWords } from "./standing"
 
 export interface CardCharacter {
   id: string
   name: string
   role: string
   portrait?: string
+  // How a hero stands: their hit points and Armor Class, or down.
+  standing?: Standing
 }
 export interface CardRoll {
+  // A check or a save, an attack, or a Death Saving Throw.
+  kind: RollKind
   skill: string
+  // A Difficulty Class, or for an attack the Armor Class of who is attacked.
   dc: number
   modifier: number
+  // An attack: who is attacked, by name.
+  target?: string
+  // A Death Saving Throw: the hero's saves so far.
+  deathSaves?: DeathSavesView
   // Advantage or Disadvantage: two d20s, the higher or the lower kept, and what gives it.
   mode?: RollMode
   reasons?: string[]
@@ -36,11 +47,11 @@ export interface CardSuggestion {
 // `suggestions` are chips over the reply box that fill it in, blank while they are being written. `suggestion` is
 // the demo's one scripted reply, behind its Suggest button.
 // A roll's `made` is its d20s once it is made (two with Advantage or Disadvantage), and `resolving` says the GM is still
-// answering it.
+// answering it. `result` is the engine's answer once it is in: the verdict as the rules read it, and what the roll did.
 // A thinking card's `who` is the NPC or AI hero the GM is playing, shown with their portrait, by the name to call them.
 export type CardMode =
   | { kind: "hold"; prompt: string; suggestion?: string; suggestions?: CardSuggestion[] | "loading" }
-  | { kind: "roll"; roll: CardRoll; prompt?: string; made?: number[]; resolving?: boolean }
+  | { kind: "roll"; roll: CardRoll; prompt?: string; made?: number[]; resolving?: boolean; result?: RollView }
   | { kind: "thinking"; note?: string; who?: CardCharacter }
   | { kind: "done"; next: string }
 
@@ -52,6 +63,7 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
           key={c.id}
           type="button"
           onClick={() => onPick(c.id)}
+          aria-label={c.standing ? `${c.name}, ${standingWords(c.standing)}` : c.name}
           className={cn("m-0 transition-opacity", c.id === actorId ? "opacity-100" : "opacity-60 hover:opacity-90", compact ? "w-11" : "w-[78px]")}
         >
           <div
@@ -75,6 +87,11 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
               )}
             >
               {c.name.split(" ")[0]}
+            </div>
+          )}
+          {!compact && c.standing && (
+            <div aria-hidden="true" className="mt-1 truncate font-sans text-[9px] tabular-nums tracking-wide text-stage-cream">
+              {c.standing.kind === "hero" ? `${c.standing.hitPoints}/${c.standing.maximum} · AC ${c.standing.armorClass}` : standingWords(c.standing).split(",")[0]}
             </div>
           )}
         </button>
@@ -203,6 +220,7 @@ function SingleRoll({
   forced,
   made,
   resolving,
+  result,
   onRoll,
   onContinue,
 }: {
@@ -213,23 +231,37 @@ function SingleRoll({
   forced?: number[]
   made?: number[]
   resolving?: boolean
+  result?: RollView
   onRoll: (dice: number[]) => void
   onContinue?: () => void
 }) {
   const [mine, setMine] = useState<number[] | null>(null)
   const [verdict, setVerdict] = useState(false)
   const dice = made ?? mine
-  const natural = dice === null ? null : keptDie(roll.mode, dice)
-  const ask = { character: actor.name, check: roll.skill, modifier: roll.modifier, dc: roll.dc, portrait: actor.portrait, mode: roll.mode, reasons: roll.reasons }
-  const total = natural === null ? 0 : natural + roll.modifier
+  // A Death Saving Throw shows no modifier unless it has one.
+  const ask: RollAsk = {
+    kind: roll.kind,
+    character: actor.name,
+    check: roll.skill,
+    ...(roll.kind === "death" && roll.modifier === 0 ? {} : { modifier: roll.modifier }),
+    dc: roll.dc,
+    portrait: actor.portrait,
+    mode: roll.mode,
+    reasons: roll.reasons,
+    target: roll.target,
+    deathSaves: roll.deathSaves,
+  }
+  // The verdict as the dice read until the engine's answer is in.
+  const shown: RollAsk | RollView = dice === null ? ask : result ? { ...result, portrait: actor.portrait, reasons: roll.reasons } : thrownView(ask, dice)
+  const title = roll.kind === "attack" ? "Attack Roll" : roll.kind === "death" ? "Death Saving Throw" : "Dice Roll"
   return (
     <div>
-      <div className={eyebrow}>{natural === null ? "Dice roll needed" : "Dice roll"}</div>
+      <div className={eyebrow}>{dice === null ? `${title} Needed` : title}</div>
       {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-stage-cream">{prompt}</p>}
       <div className={cn("mx-auto max-w-[440px] text-left", compact ? "mt-1.5" : "mt-3")}>
         <RollResult
           compact={compact}
-          roll={dice === null || natural === null ? ask : { ...ask, natural, dice: dice.length > 1 ? dice : undefined, total, success: total >= roll.dc }}
+          roll={shown}
           onRoll={() => {
             const thrown = Array.from({ length: roll.mode ? 2 : 1 }, (_, i) => forced?.[i] ?? 1 + Math.floor(Math.random() * 20))
             setMine(thrown)
@@ -238,7 +270,7 @@ function SingleRoll({
           onVerdict={() => setVerdict(true)}
         />
       </div>
-      {natural !== null && (
+      {dice !== null && (
         <div className={cn("grid place-items-center", compact ? "mt-1.5 h-8" : "mt-3 h-11")}>
           {verdict &&
             (resolving ? (
@@ -506,6 +538,7 @@ export function PromptCard({
             forced={forcedRoll}
             made={mode.made}
             resolving={mode.resolving}
+            result={mode.result}
             onRoll={onRoll}
             onContinue={onContinue}
           />

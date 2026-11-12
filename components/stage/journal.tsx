@@ -6,25 +6,15 @@
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
+import { DeathSaveMarks, FeatureEntry, RollDetails } from "./roll-parts"
+import { againstLabel, type FeatureView, isCritical, marginText, modeName, type RollView, rollSpeech, verdictOf } from "./roll-view"
 
-// A dice roll in the story: the natural roll, the total, and the DC or the roll it was against. With Advantage or
-// Disadvantage, both d20s as rolled (`base` is the one kept).
-export interface JournalRoll {
-  name: string
-  skill: string
-  dc: number
-  base: number
-  total: number
-  success: boolean
-  versus?: string
-  dice?: number[]
-  mode?: "advantage" | "disadvantage"
-}
+// The story in order: its paragraphs, each dice roll where it was called for, and each class feature used.
+export type JournalEntry = string | { roll: RollView } | { feature: FeatureView }
 export interface JournalTurn {
   number: number
   title: string
-  // The story in order, each dice roll where it was called for.
-  paragraphs: (string | JournalRoll)[]
+  paragraphs: JournalEntry[]
   reply?: { name: string; text: string; moved?: number; movedTo?: string }
 }
 export interface ChatLine {
@@ -39,12 +29,13 @@ export type JournalTab = "story" | "chat"
 const HEX = "50,3 91,27 91,73 50,97 9,73 9,27"
 const FACE = "50,22 19,72 81,72"
 const EDGES = "M50 22L50 3M50 22L9 27M50 22L91 27M19 72L9 27M19 72L9 73M19 72L50 97M81 72L91 27M81 72L91 73M81 72L50 97"
-// Indigo, as on the roll card.
+// Indigo, as on the roll card, and gold for a Critical Hit.
 const DIE = { fill: "#26215c", line: "#8f87d6", face: "#2f2a70", number: "#fef3c7" }
+const GOLD = { fill: "#a87a2c", line: "#ffd88a", face: "#d8a64c", number: "#3a220c" }
 
 // A die not kept is dimmed.
-function Die({ natural, dropped = false }: { natural: number; dropped?: boolean }) {
-  const c = DIE
+function Die({ natural, dropped = false, critical = false }: { natural: number; dropped?: boolean; critical?: boolean }) {
+  const c = critical ? GOLD : DIE
   return (
     <svg viewBox="0 0 100 100" aria-hidden="true" className={cn("h-10 w-10 shrink-0 drop-shadow-[0_2px_3px_#000a]", dropped && "opacity-35 grayscale")}>
       <polygon points={HEX} fill={c.fill} stroke={c.line} strokeWidth="4" strokeLinejoin="round" />
@@ -58,50 +49,67 @@ function Die({ natural, dropped = false }: { natural: number; dropped?: boolean 
 }
 
 // A roll as a small card: the die on its natural roll (both dice with Advantage or Disadvantage, the other dimmed), the
-// sum against the DC, and the verdict stamped at the end.
-function RollLine({ roll }: { roll: JournalRoll }) {
-  const mod = roll.total - roll.base
-  const verdict = roll.success ? "Success" : "Failure"
-  const tone = roll.success ? "#b7d38a" : "#e39a7c"
-  const dice = roll.dice && roll.dice.length > 1 ? roll.dice : [roll.base]
-  const kept = dice.indexOf(roll.base)
-  const mode = roll.mode === "advantage" ? "Advantage" : roll.mode === "disadvantage" ? "Disadvantage" : null
+// sum against the DC or the Armor Class, the verdict stamped at the end, and what the roll did under it. A Critical Hit
+// is gold. The site's turn view shows its rolls with it too.
+export function RollLine({ roll, className }: { roll: RollView; className?: string }) {
+  const crit = isCritical(roll)
+  const verdict = verdictOf(roll)
+  const tone = crit ? "#ffd88a" : roll.success ? "#b7d38a" : "#e39a7c"
+  const dice = roll.dice && roll.dice.length > 1 ? roll.dice : [roll.natural]
+  const kept = dice.indexOf(roll.natural)
+  const mode = roll.mode ? modeName(roll.mode) : null
+  const margin = roll.kind === "death" ? marginText(roll) : ""
+  const term = (sign: string, n: number) => (
+    <>
+      <span className="text-[12px] text-stage-muted">{sign}</span>
+      <span className="text-[14px]">{n}</span>
+    </>
+  )
   return (
-    <div className="my-3 flex items-center gap-3 rounded-[3px] border border-l-2 border-stage-line/15 bg-black/30 py-2 pr-3 pl-2" style={{ borderLeftColor: tone }}>
-      <span className="sr-only">
-        {roll.name} rolled {roll.skill}
-        {mode && dice.length > 1 ? ` with ${mode}: ${dice.join(" and ")}, keeping ${roll.base}` : `: ${roll.base}`} {mod < 0 ? "minus" : "plus"} {Math.abs(mod)} makes {roll.total} against{" "}
-        {roll.versus ?? `DC ${roll.dc}`}. {verdict}.
-      </span>
+    <div className={cn("my-3 flex items-start gap-3 rounded-[3px] border border-l-2 border-stage-line/15 bg-black/30 py-2 pr-3 pl-2", className)} style={{ borderLeftColor: tone }}>
+      <span className="sr-only">{rollSpeech(roll)}</span>
       <div className="flex shrink-0 gap-0.5">
         {dice.map((d, i) => (
-          <Die key={i} natural={d} dropped={dice.length > 1 && i !== kept} />
+          <Die key={i} natural={d} dropped={dice.length > 1 && i !== kept} critical={crit && i === kept} />
         ))}
       </div>
       <div aria-hidden="true" className="min-w-0 flex-1">
         <div className={cn(eyebrow, "overflow-hidden text-ellipsis whitespace-nowrap")}>
-          {roll.name} · {roll.skill}
+          {roll.character} · {roll.check}
+          {roll.target ? ` → ${roll.target}` : ""}
         </div>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <div className="flex items-baseline gap-x-1.5 whitespace-nowrap font-serif tabular-nums text-stage-cream">
-            <span className="text-[14px]">{roll.base}</span>
-            <span className="text-[12px] text-stage-muted">{mod < 0 ? "−" : "+"}</span>
-            <span className="text-[14px]">{Math.abs(mod)}</span>
+            <span className="text-[14px]">{roll.natural}</span>
+            {roll.modifier !== undefined && term(roll.modifier < 0 ? "−" : "+", Math.abs(roll.modifier))}
+            {roll.inspired !== undefined && (
+              <>
+                {term("+", roll.inspired)}
+                <span className="font-sans text-[8px] tracking-[0.2em] text-stage-muted uppercase">Inspiration</span>
+              </>
+            )}
             <span className="text-[12px] text-stage-muted">=</span>
             <span className="text-[19px] font-bold text-stage-gold">{roll.total}</span>
-            <span className="ml-1.5 font-sans text-[9px] tracking-[0.2em] text-stage-muted uppercase">{roll.versus ? "vs" : "DC"}</span>
+            <span className="ml-1.5 font-sans text-[9px] tracking-[0.2em] text-stage-muted uppercase">{roll.versus ? "vs" : againstLabel(roll.kind)}</span>
             <span className="text-[14px]">{roll.versus ?? roll.dc}</span>
           </div>
           <span className="flex shrink-0 items-center gap-2">
             {mode && <span className="font-serif text-[12px] font-semibold text-stage-gold">{mode}</span>}
             <span
               className="rounded-[3px] border px-1.5 py-0.5 font-display text-[10px] font-bold tracking-[0.06em] uppercase"
-              style={{ color: tone, borderColor: tone, boxShadow: `inset 0 0 6px ${tone}33`, textShadow: `0 0 6px ${tone}55` }}
+              style={{ color: tone, borderColor: tone, boxShadow: `${crit ? `0 0 10px ${tone}55, ` : ""}inset 0 0 6px ${tone}33`, textShadow: `0 0 6px ${tone}55` }}
             >
               {verdict}
             </span>
           </span>
         </div>
+        {margin && <div className="mt-1 font-serif text-[12px] text-stage-muted italic">{margin}</div>}
+        {roll.kind === "death" && roll.deathSaves && (
+          <div className="mt-1.5">
+            <DeathSaveMarks saves={roll.deathSaves} compact />
+          </div>
+        )}
+        <RollDetails roll={roll} compact className="mt-1.5" />
       </div>
     </div>
   )
@@ -229,8 +237,10 @@ export function Journal({
                       <p key={i} className="mb-2.5 font-serif text-[13.5px] leading-[1.65] text-stage-sage">
                         {p}
                       </p>
+                    ) : "roll" in p ? (
+                      <RollLine key={i} roll={p.roll} />
                     ) : (
-                      <RollLine key={i} roll={p} />
+                      <FeatureEntry key={i} feature={p.feature} compact className="my-3" />
                     )
                   )}
                 </article>

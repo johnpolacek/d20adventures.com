@@ -64,7 +64,13 @@ let take = 0
 
 function load(c: AudioContext) {
   if (!takes) {
-    takes = Promise.all(TAKES.map((url) => fetch(url).then((r) => r.arrayBuffer()).then((b) => c.decodeAudioData(b))))
+    takes = Promise.all(
+      TAKES.map((url) =>
+        fetch(url)
+          .then((r) => r.arrayBuffer())
+          .then((b) => c.decodeAudioData(b))
+      )
+    )
     // A failed load tries again on the next roll.
     takes.catch(() => {
       takes = null

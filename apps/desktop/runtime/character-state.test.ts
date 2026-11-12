@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import { conditionWords, withCondition } from "@d20/gm-core/sheet/conditions"
-import { withDamage, withHealing, withHitPointsBy } from "@d20/gm-core/sheet/death"
+import { killed, withDamage, withHealing, withHitPointsBy } from "@d20/gm-core/sheet/death"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { z } from "zod"
 import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
@@ -143,10 +143,9 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     t.reopen()
     assert.equal(JSON.stringify(t.store.state), snapshot)
 
-    const cardText = characterInfo(byId(t.store, t.pc.id))
-      .details!.flatMap((section) => section.items)
-      .join("\n")
-    for (const text of ["Health: 67%", "Restrained", "Gate token", "Rope. Ten metres", "Blessing, 2 rounds left", "Light, used"]) assert.ok(cardText.includes(text), text)
+    const card = characterInfo(byId(t.store, t.pc.id), undefined, null, undefined)
+    const cardText = [card.conditions ?? "", ...card.details!.flatMap((section) => section.items)].join("\n")
+    for (const text of ["Restrained", "Gate token", "Rope. Ten metres", "Blessing, 2 rounds left", "Light, used"]) assert.ok(cardText.includes(text), text)
 
     await advance(t.store, { characterUpdates: [{ characterId: t.pc.id, conditionsEnded: ["restrained"], effectChanges: [{ op: "remove", name: "Blessing" }] }] }, "the-harvest-festival")
     const festival = byId(t.store, t.pc.id)
@@ -176,6 +175,23 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     const carry = (encounterChanged: boolean) => nextCharacterState({ current: [worn], next: [worn], remembered: {}, updates: [], encounterChanged }).characters[0].conditions
     assert.deepEqual(carry(true), [{ id: "poisoned" }])
     assert.deepEqual(carry(false), [{ id: "prone", turns: 1 }, { id: "poisoned" }])
+  } finally {
+    t.close()
+  }
+})
+
+test("the story ends when every hero is dead", async () => {
+  const t = await setup()
+  try {
+    // One hero dead: the others play on.
+    const [first, ...rest] = t.store.current().characters.filter((c) => c.type === "pc")
+    setCharacter(t.store, first.id, (c) => killed(c))
+    await advance(t.store, {})
+    assert.equal(t.store.state!.adventure.status, "active")
+    // The last of them dead: no one is left to take a turn, and the adventure is over.
+    for (const hero of rest) setCharacter(t.store, hero.id, (c) => killed(c))
+    await advance(t.store, {})
+    assert.equal(t.store.state!.adventure.status, "completed")
   } finally {
     t.close()
   }

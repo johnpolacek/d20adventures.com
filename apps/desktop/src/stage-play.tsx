@@ -1,21 +1,24 @@
-import type { RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
-import { rollSentence, storyParagraphs } from "@d20/gm-core/story/render"
+import type { FeatureBeat, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
+import { nameOf, rollSentence, storyNames, storyParagraphs } from "@d20/gm-core/story/render"
+import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { findCurrentActor, hasFled, isDead } from "@d20/gm-core/utils/turn-actors"
 import type { Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useSheetView } from "@/components/adventure/use-sheet-view"
+import { useSheetView, useSheetViews } from "@/components/adventure/use-sheet-view"
 import { CharacterCard } from "@/components/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@/components/stage/city-map"
 import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
 import { EndingRating, FeedbackButton, FeedbackPanel, type FeedbackStart } from "@/components/stage/feedback"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
-import { type ChatLine, Journal, type JournalRoll, type JournalTurn } from "@/components/stage/journal"
+import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
-import { ROLL_SECONDS, type RollResultData } from "@/components/stage/roll-result"
+import { ROLL_SECONDS } from "@/components/stage/roll-result"
+import { featureView, type RollView, rollView } from "@/components/stage/roll-view"
 import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
+import { passedOver, passedWords, standingOf } from "@/components/stage/standing"
 import { TurnOrder } from "@/components/stage/turn-order"
 import { useStage } from "@/components/stage/use-stage"
 import { Button } from "@/components/ui/button"
@@ -23,19 +26,20 @@ import { cityMapTrail } from "@/lib/citymap"
 import type { FeedbackDraft } from "@/lib/feedback/shared"
 import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
-import { conditionLabel } from "./condition-words"
 import type { FigureArt } from "./figures"
 import { applyMovement, context, positions as stagePositions } from "./movement"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
-type Paragraph = { text: string; roll?: RollBeat; beats: StoryBeat[] }
+type Paragraph = { text: string; roll?: RollBeat; feature?: FeatureBeat; beats: StoryBeat[] }
 // A turn's story as paragraphs to read. A dice roll keeps its sentence, which the camera and screen readers read, and
-// its numbers, which the narration shows as the roll itself.
+// its numbers, which the narration shows as the roll itself. A class feature used keeps its sentence too, and the
+// narration shows it as an entry of its own.
 const story = (turn: { story: StoryBeat[] } | undefined, originals = false): Paragraph[] =>
   (turn ? storyParagraphs(turn.story) : []).flatMap((p) => {
     const first = p.beats[0]
     if (first.kind === "reply") return originals ? [{ text: `Player action: ${first.text}`, beats: p.beats }] : []
     if (first.kind === "roll") return [{ text: rollSentence(first), roll: first, beats: p.beats }]
+    if (first.kind === "feature") return [{ text: first.text, feature: first, beats: p.beats }]
     return [{ text: p.text, beats: p.beats }]
   })
 // Where a labelled paragraph puts the camera: on someone, on two people facing off, or on a place on the set.
@@ -84,7 +88,6 @@ function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string
   const near = Object.entries(stage.shots).sort(([, p], [, q]) => Math.hypot(p.target[0] - mx, p.target[2] - mz) - Math.hypot(q.target[0] - mx, q.target[2] - mz))[0]
   return near?.[0] ?? null
 }
-const journalRoll = (r: RollBeat): JournalRoll => ({ name: r.name, skill: r.check, dc: r.dc, base: r.natural, total: r.total, success: r.success, dice: r.dice, mode: r.mode })
 
 type Character = Save["turns"][number]["characters"][number]
 type Positions = Record<string, { x: number; z: number; ry: number }>
@@ -240,7 +243,8 @@ export function StagePlay(props: {
   const [reading, setReading] = useState(true)
   // The roll a hero has just made. It stays on the card, with how it came out, while the GM answers it, and the story
   // after it is read once the player continues. `tries` renews the card for a roll that was not taken.
-  const [held, setHeld] = useState<{ turn: string; actor: CardCharacter; roll: CardRoll; dice: number[]; at: number } | null>(null)
+  // `from` is how many beats the turn's story had when the roll was made: the engine's answer comes after them.
+  const [held, setHeld] = useState<{ turn: string; actor: CardCharacter; roll: CardRoll; dice: number[]; at: number; from: number } | null>(null)
   const heldRef = useRef(held)
   heldRef.current = held
   const [tries, setTries] = useState(0)
@@ -298,34 +302,26 @@ export function StagePlay(props: {
   const portrait = (c: { id: string; name: string; type?: string; race?: string; gender?: string }) => portraitFor(scene, c, figures, painted)
   // A hero's rules sheet for the card. NPCs keep their numbers to themselves.
   const cardSheet = useSheetView(cardCharacter?.type === "pc" ? cardCharacter.sheet : undefined, cardCharacter?.hitPoints)
-  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet) : null
+  const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet, standingOf(cardCharacter, cardSheet)) : null
+  // Every hero's sheet, for their hit points and Armor Class in the turn order and the party row.
+  const sheets = useSheetViews(shown?.characters ?? [])
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
+  // Who the turn passed over to reach the actor, because they cannot act, and why.
+  const passed = turn ? passedWords(passedOver(turn.characters, actor)) : ""
   // Read again only when the story itself changes, not on every save, such as positions after a walk.
   const told = turn ? JSON.stringify([turn._id, turn.story]) : ""
   const paragraphs = useMemo(() => story(turn), [told])
   const text = useMemo(() => paragraphs.map((p) => p.text), [paragraphs])
-  // The paragraph's dice roll, for the narration to show: the numbers from the roll, the roller's portrait from the scene.
+  // The paragraph's dice roll, for the narration to show: the numbers from the roll, the names and how a dying hero
+  // stands from the turn, the roller's portrait from the scene. Or the class feature it tells.
   const rolled = paragraphs[paragraph]?.roll
   const roller = rolled ? turn?.characters.find((c) => c.id === rolled.character) : undefined
   const rollerPortrait = roller ? portrait(roller) : undefined
-  const roll = useMemo<RollResultData | undefined>(
-    () =>
-      rolled && {
-        character: rolled.name,
-        check: rolled.check,
-        natural: rolled.natural,
-        modifier: rolled.modifier,
-        total: rolled.total,
-        dc: rolled.dc,
-        success: rolled.success,
-        portrait: rollerPortrait,
-        dice: rolled.dice,
-        mode: rolled.mode,
-      },
-    [rolled, rollerPortrait]
-  )
+  const roll = useMemo<RollView | undefined>(() => (rolled && turn ? rollView(rolled, turn.characters, rollerPortrait) : undefined), [rolled, turn?.characters, rollerPortrait])
+  const used = paragraphs[paragraph]?.feature
+  const feature = useMemo(() => (used && turn ? featureView(used, turn.characters) : undefined), [used, turn?.characters])
   // The cast member who plays a character in the turn, by the character's id.
   const castOf = useCallback(
     (id: string | undefined) => {
@@ -770,7 +766,10 @@ export function StagePlay(props: {
   )
   const party: CardCharacter[] = (turn?.characters ?? [])
     .filter((c) => c.type === "pc")
-    .map((c) => ({ id: c.id, name: c.name, role: `${c.race} ${c.archetype}${c.controlledBy === "ai" ? " · AI" : ""}`, portrait: portrait(c) }))
+    .map((c) => {
+      const standing = standingOf(c, sheets[c.id])
+      return { id: c.id, name: c.name, role: `${c.race} ${c.archetype}${c.controlledBy === "ai" ? " · AI" : ""}`, portrait: portrait(c), ...(standing ? { standing } : {}) }
+    })
   // Heroes the AI plays take their turns like NPCs, through Continue.
   const aiActor = actor?.type === "pc" && actor.controlledBy === "ai"
   const cardActor = aiActor || !actor || !props.controls(actor) ? null : (party.find((c) => c.id === actor.id) ?? null)
@@ -800,8 +799,12 @@ export function StagePlay(props: {
       live = false
     }
   }, [holdKey, holdTurn, holdActor])
+  // The engine's answer to the roll on the card, once it is in: the roll beat after the story the roll was made on.
+  const heldTurn = held ? save?.turns.find((t) => t._id === held.turn) : undefined
+  const answer = held && heldTurn?.story.slice(held.from).find((b): b is RollBeat => b.kind === "roll" && b.character === held.actor.id)
+  const result = useMemo(() => (answer && heldTurn ? rollView(answer, heldTurn.characters) : undefined), [answer, heldTurn?.characters])
   let mode: CardMode | null = null
-  if (held) mode = { kind: "roll", roll: held.roll, made: held.dice, resolving: props.busy }
+  if (held) mode = { kind: "roll", roll: held.roll, made: held.dice, resolving: props.busy, ...(result ? { result } : {}) }
   // A walk holds the card back without a word about the GM.
   else if (busy) mode = props.busy ? playing(turn?._id, actor, aiActor, portrait) : null
   else if (props.writing) mode = reading ? null : playing(turn?._id, actor, aiActor, portrait)
@@ -811,7 +814,15 @@ export function StagePlay(props: {
   else if (cardActor && rr)
     mode = {
       kind: "roll",
-      roll: { skill: rr.rollType, dc: rr.difficulty, modifier: rr.modifier, ...(rr.mode === "advantage" || rr.mode === "disadvantage" ? { mode: rr.mode, reasons: rr.reasons } : {}) },
+      roll: {
+        kind: "attack" in rr ? "attack" : "deathSave" in rr ? "death" : "check",
+        skill: rr.rollType,
+        dc: rr.difficulty,
+        modifier: rr.modifier,
+        ...(rr.mode === "advantage" || rr.mode === "disadvantage" ? { mode: rr.mode, reasons: rr.reasons } : {}),
+        ...("attack" in rr ? { target: nameOf(storyNames(turn?.characters ?? []), rr.attack.target) } : {}),
+        ...("deathSave" in rr ? { deathSaves: { successes: actor?.deathSaves?.successes ?? 0, failures: actor?.deathSaves?.failures ?? 0 } } : {}),
+      },
     }
   else if (cardActor) mode = { kind: "hold", prompt: `What does ${cardActor.name.split(" ")[0]} do?`, suggestions: holdKey ? (offered?.key === holdKey ? offered.list : "loading") : undefined }
   // What Continue would run: an NPC's or AI hero's turn, or the end of the round, in the turn the game is on, which
@@ -841,7 +852,7 @@ export function StagePlay(props: {
   }
   const makeRoll = async (dice: number[]) => {
     if (!turn || !actor || !cardActor || mode?.kind !== "roll") return
-    setHeld({ turn: turn._id, actor: cardActor, roll: mode.roll, dice, at: Date.now() })
+    setHeld({ turn: turn._id, actor: cardActor, roll: mode.roll, dice, at: Date.now(), from: turn.story.length })
     if (await props.onRoll(turn._id, actor.id, dice[0], dice[1])) return
     setHeld(null)
     setTries((n) => n + 1)
@@ -873,7 +884,7 @@ export function StagePlay(props: {
   const journal: JournalTurn[] = (save?.turns ?? []).map((t) => ({
     number: t.order,
     title: t.title,
-    paragraphs: story(t, true).map((p) => (p.roll ? journalRoll(p.roll) : p.text)),
+    paragraphs: story(t, true).map((p) => (p.roll ? { roll: rollView(p.roll, t.characters) } : p.feature ? { feature: featureView(p.feature, t.characters) } : p.text)),
   }))
   return (
     <StageHud
@@ -929,10 +940,15 @@ export function StagePlay(props: {
           )}
           {!scene && voice && <Plate compact={compact} line={{ key: paragraph, side: "right", ...voice }} />}
           <TurnOrder
-            order={(shown?.characters ?? []).map((c) => ({ id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", health: c.healthPercent, conditions: conditionLabel(c) }))}
+            order={(shown?.characters ?? []).map((c) => {
+              const standing = standingOf(c, sheets[c.id])
+              const conditions = conditionLabel(c)
+              return { id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", ...(standing ? { standing } : {}), ...(conditions ? { conditions } : {}) }
+            })}
             activeId={ended ? null : (spotlit?.id ?? null)}
             turnId={ended ? null : (actor?.id ?? null)}
             label={ended ? undefined : spotlit?.name}
+            passed={ended || spotlit !== actor ? undefined : passed || undefined}
             compact={compact}
             onPick={focus}
           />
@@ -944,6 +960,7 @@ export function StagePlay(props: {
                 heading={`Round ${shown?.order} · ${shown?.title}`}
                 text={text[paragraph]}
                 roll={roll}
+                feature={feature}
                 index={paragraph}
                 count={text.length}
                 compact={compact}
@@ -1009,7 +1026,8 @@ export function StagePlay(props: {
           )}
           {!ended && !busy && !reading && !mode && turn && !(autoContinue && continueKey && continued !== continueKey) && (
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
-              <p className="mb-3 font-serif text-xl">{actor ? `${actor.name}'s turn` : "The round is complete"}</p>
+              <p className={`${passed ? "mb-1" : "mb-3"} font-serif text-xl`}>{actor ? `${actor.name}’s Turn` : "The Round Is Complete"}</p>
+              {passed && <p className="mb-3 font-serif text-sm text-[#e39a7c]">Passed Over · {passed}</p>}
               {/* Another player's hero acts from their own screen. */}
               {actor?.type === "pc" && !aiActor ? (
                 <p className="text-sm text-stage-muted">Waiting for {actor.name.split(" ")[0]}</p>

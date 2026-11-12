@@ -1,3 +1,5 @@
+import { DeathSaveMarks } from "@/components/stage/roll-parts"
+import { againstLabel } from "@/components/stage/roll-view"
 import DiceRoll from "@/components/ui/dice-roll"
 import Image from "@/components/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
@@ -11,6 +13,7 @@ export default function CharacterDiceRoll({
   className,
   inputKey,
   character,
+  target,
 }: {
   rollRequired: NonNullable<RollRequirement>
   rollResult: number | null
@@ -18,8 +21,13 @@ export default function CharacterDiceRoll({
   className?: string
   inputKey?: string | number
   character: TurnCharacter
+  // An attack's target, by name.
+  target: string | undefined
 }) {
   const { rollType, difficulty, modifier, mode, reasons } = rollRequired
+  const kind = "attack" in rollRequired ? "attack" : "deathSave" in rollRequired ? "death" : "check"
+  // A Death Saving Throw shows no modifier unless it has one.
+  const shownModifier = kind === "death" && modifier === 0 ? null : modifier
 
   return (
     <div className={cn("relative aspect-[2/3] sm:aspect-auto md:min-h-[300px] font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
@@ -30,10 +38,12 @@ export default function CharacterDiceRoll({
       <div className="px-4 py-6 flex flex-col gap-4 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">
         <h4 className="text-sm">Dice Roll {rollResult === null ? "Needed" : ""}</h4>
         <h3 className="text-2xl text-amber-300">{rollType}</h3>
+        {kind === "attack" && target && <div className="font-mono text-xs text-primary-100 -mt-3 uppercase tracking-wider">→ {target}</div>}
         <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wider">
-          Target {difficulty}
-          <span className={modifier < 0 ? "text-red-400" : "text-green-400"}>{modifier < 0 ? `  ${modifier}` : `  +${modifier}`}</span>
+          {againstLabel(kind)} {difficulty}
+          {shownModifier !== null && <span className={shownModifier < 0 ? "text-red-400" : "text-green-400"}>{shownModifier < 0 ? `  ${shownModifier}` : `  +${shownModifier}`}</span>}
         </div>
+        {kind === "death" && <DeathSaveMarks saves={{ successes: character.deathSaves?.successes ?? 0, failures: character.deathSaves?.failures ?? 0 }} compact />}
         {mode !== "normal" && (
           <div className="font-mono text-xs text-amber-200 -mt-3 uppercase tracking-wider">
             {mode === "advantage" ? "Advantage" : "Disadvantage"}

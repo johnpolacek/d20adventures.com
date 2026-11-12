@@ -1,5 +1,7 @@
 "use client"
 
+import { conditionLabel } from "@d20/gm-core/utils/condition-label"
+import { standingOf, standingWords, WOUND_TONE } from "@/components/stage/standing"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
@@ -13,6 +15,9 @@ interface NPCCharacterSheetModalProps {
 
 export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCharacterSheetModalProps) {
   if (!character) return null
+  // An NPC shows one wound word, never a number. And its conditions in words.
+  const standing = standingOf(character, null)
+  const conditions = conditionLabel(character)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -39,18 +44,9 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
               <div>
                 <label className="text-xs font-mono text-white uppercase tracking-wider">Condition</label>
                 <div className="flex items-center gap-2">
-                  {character.healthPercent === 0 ? (
-                    <span className="text-red-400 font-bold">Dead</span>
-                  ) : character.healthPercent <= 25 ? (
-                    <span className="text-red-400">Severely Wounded</span>
-                  ) : character.healthPercent <= 50 ? (
-                    <span className="text-orange-400">Wounded</span>
-                  ) : character.healthPercent <= 75 ? (
-                    <span className="text-yellow-400">Bloodied</span>
-                  ) : (
-                    <span className="text-green-400">Healthy</span>
-                  )}
+                  {standing && <span style={{ color: standing.kind === "wound" ? WOUND_TONE[standing.word] : WOUND_TONE.Dead }}>{standingWords(standing).split(",")[0]}</span>}
                 </div>
+                {conditions && <div className="text-sm italic">{conditions}</div>}
               </div>
 
               {character.effects && character.effects.length > 0 ? (

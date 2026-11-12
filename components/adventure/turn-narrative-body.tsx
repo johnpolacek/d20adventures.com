@@ -12,8 +12,11 @@ import { storyParagraphs } from "@d20/gm-core/story/render"
 import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import React from "react"
-import CharacterDiceRollResultDisplay from "@/components/adventure/character-dice-roll-result-display"
 import TurnAdvanceButton from "@/components/adventure/turn-advance-button"
+import { RollLine } from "@/components/stage/journal"
+import { FeatureEntry } from "@/components/stage/roll-parts"
+import { featureView, rollView } from "@/components/stage/roll-view"
+import { passedOver, passedWords } from "@/components/stage/standing"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { cn } from "@/lib/utils"
@@ -47,6 +50,8 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
 
   // The turn's story as paragraphs.
   const paragraphs = storyParagraphs(currentTurn.story)
+  // Who the turn passed over to reach whose turn it is, because they cannot act, and why.
+  const passed = passedWords(passedOver(currentTurn.characters, currentCharacter))
 
   return (
     <div className="w-full grow max-w-3xl mx-auto fade-in">
@@ -67,6 +72,7 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
             </div>
           )
         }
+        if (part.kind === "feature") return <FeatureEntry key={idx} feature={featureView(part, currentTurn.characters)} className="mb-6 max-w-xl" />
         if (part.kind !== "roll") {
           return (
             <p key={idx} className="text-sm sm:text-base md:text-lg whitespace-pre-line mb-4">
@@ -74,21 +80,7 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
             </p>
           )
         }
-        return (
-          <div className="pb-6" key={`${part.character}-${part.check}-${part.total}-${part.dc}-${idx}`}>
-            <CharacterDiceRollResultDisplay
-              character={part.name}
-              rollType={part.check}
-              difficulty={part.dc}
-              result={part.total}
-              image={part.image}
-              modifier={part.modifier}
-              baseRoll={part.natural}
-              dice={part.dice}
-              mode={part.mode}
-            />
-          </div>
-        )
+        return <RollLine key={`${part.character}-${part.check}-${part.total}-${part.dc}-${idx}`} roll={rollView(part, currentTurn.characters)} className="mt-0 mb-6 max-w-xl" />
       })}
 
       {/* Show loading animation if an NPC is processing their turn */}
@@ -128,6 +120,7 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
             <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }} />
           </div>
           <p className="italic text-white/70">It is currently {currentCharacter?.name}&apos;s turn</p>
+          {passed && <p className="text-sm text-red-300/80">Passed Over · {passed}</p>}
         </div>
       ) : null}
 

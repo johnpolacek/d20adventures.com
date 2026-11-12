@@ -1,6 +1,6 @@
 "use client"
 
-import type { RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
+import type { FeatureBeat, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { storyParagraphs } from "@d20/gm-core/story/render"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { StoryviewAutoStatus, TurnAudioManifestResponse, TurnAudioSegmentWithUrl } from "@/types/turn-audio"
@@ -17,7 +17,11 @@ function loadStoredSpeed(): number {
   return SPEED_STEPS.includes(stored) ? stored : DEFAULT_SPEED
 }
 
-export type StoryviewSlide = { type: "paragraph"; partIndex: number; segments: TurnAudioSegmentWithUrl[] } | { type: "diceroll"; partIndex: number; part: RollBeat }
+// A class feature used is not narrated: it shows as an entry of its own, like a roll.
+export type StoryviewSlide =
+  | { type: "paragraph"; partIndex: number; segments: TurnAudioSegmentWithUrl[] }
+  | { type: "diceroll"; partIndex: number; part: RollBeat }
+  | { type: "feature"; partIndex: number; part: FeatureBeat }
 
 export type StoryviewStatus = "loading" | "generating" | "ready" | "error" | "insufficient-tokens"
 
@@ -58,6 +62,8 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
       const part = beats[0]
       if (part.kind === "roll") {
         result.push({ type: "diceroll", partIndex, part })
+      } else if (part.kind === "feature") {
+        result.push({ type: "feature", partIndex, part })
       } else if (part.kind !== "reply") {
         const partSegments = byPart.get(partIndex)
         if (partSegments && partSegments.length > 0) {
@@ -206,7 +212,7 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
     clearTimers()
     if (!playing || !currentSlide) return
 
-    if (currentSlide.type === "diceroll") {
+    if (currentSlide.type === "diceroll" || currentSlide.type === "feature") {
       stopAudio()
       diceTimerRef.current = setTimeout(advance, DICE_SLIDE_DWELL_MS / speed)
       return

@@ -1,6 +1,8 @@
 "use client"
 
-import CharacterDiceRollResultDisplay from "@/components/adventure/character-dice-roll-result-display"
+import { RollLine } from "@/components/stage/journal"
+import { FeatureEntry } from "@/components/stage/roll-parts"
+import { featureView, rollView } from "@/components/stage/roll-view"
 import Image from "@/components/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { StoryviewSlide } from "./use-storyview-player"
@@ -10,22 +12,28 @@ interface SpeakerInfo {
   image?: string
 }
 
-export default function StoryviewSlideView({ slide, segmentIndex, getSpeaker }: { slide: StoryviewSlide; segmentIndex: number; getSpeaker: (speakerId: string) => SpeakerInfo }) {
+export default function StoryviewSlideView({
+  slide,
+  segmentIndex,
+  getSpeaker,
+  characters,
+}: {
+  slide: StoryviewSlide
+  segmentIndex: number
+  getSpeaker: (speakerId: string) => SpeakerInfo
+  characters: Parameters<typeof rollView>[1]
+}) {
   if (slide.type === "diceroll") {
-    const part = slide.part
     return (
-      <div className="fade-in w-full max-w-2xl">
-        <CharacterDiceRollResultDisplay
-          character={part.name}
-          rollType={part.check}
-          difficulty={part.dc}
-          result={part.total}
-          image={part.image}
-          modifier={part.modifier}
-          baseRoll={part.natural}
-          dice={part.dice}
-          mode={part.mode}
-        />
+      <div className="fade-in w-full max-w-xl">
+        <RollLine roll={rollView(slide.part, characters)} />
+      </div>
+    )
+  }
+  if (slide.type === "feature") {
+    return (
+      <div className="fade-in w-full max-w-xl">
+        <FeatureEntry feature={featureView(slide.part, characters)} />
       </div>
     )
   }

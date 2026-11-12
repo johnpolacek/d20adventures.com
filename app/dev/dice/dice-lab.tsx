@@ -4,11 +4,13 @@
 // the number stays upright and changes in place, slowing as the die settles.
 //   Outline   a real d20's silhouette (components/stage/d20.tsx), tumbling in 3D; the roll card's die
 //   3D d20    a real icosahedron in three.js, shaded with no edge lines, that tumbles and settles with a face toward you
+// Under them, every look a roll and a character can have in rules combat, from mock data (./roll-looks).
 
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { D20Shape, D20Solid } from "@/components/stage/d20"
 import { Pill } from "@/components/stage/hud"
 import { cn } from "@/lib/utils"
+import { RollLooks } from "./roll-looks"
 
 const SECONDS = 1.2
 
@@ -141,6 +143,7 @@ export function DiceLab() {
             <Solid go={go} />
           </Take>
         </div>
+        <RollLooks />
       </div>
     </main>
   )

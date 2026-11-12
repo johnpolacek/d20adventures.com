@@ -1,7 +1,8 @@
 import type { SheetView } from "@d20/gm-core/sheet/view"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
+import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import type { CardInfo } from "@/components/stage/character-card"
-import { conditionLabel } from "./condition-words"
+import type { Standing } from "@/components/stage/standing"
 
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 
@@ -30,17 +31,21 @@ function sheetDetails(sheet: SheetView): NonNullable<CardInfo["details"]> {
   ]
 }
 
-export function characterInfo(character: TurnCharacter, portrait?: string, sheet?: SheetView | null): CardInfo {
+/**
+ * A character's card. `standing` is how they stand (components/stage/standing): a hero's hit points and Armor Class
+ * from their sheet, an NPC's wound word. The caller works it out, since this file loads under the desktop's tests.
+ */
+export function characterInfo(character: TurnCharacter, portrait: string | undefined, sheet: SheetView | null, standing: Standing | undefined): CardInfo {
   const conditions = conditionLabel(character)
-  const health = sheet ? `Hit Points: ${sheet.hitPoints.current} of ${sheet.hitPoints.maximum}` : `Health: ${character.healthPercent}%`
   return {
     id: character.id,
     name: character.name,
     role: `${character.race} ${character.archetype}`,
     portrait,
     about: character.appearance,
+    ...(standing ? { standing } : {}),
+    ...(conditions ? { conditions } : {}),
     details: [
-      { label: "Condition", items: [health, ...(conditions ? [conditions] : [])] },
       ...(sheet ? sheetDetails(sheet) : []),
       { label: "Equipment", items: character.equipment?.length ? character.equipment.map((e) => `${e.name}${e.description ? `. ${e.description}` : ""}`) : ["None"] },
       { label: "Effects", items: character.effects?.length ? character.effects.map((e) => `${e.name}, ${e.duration} ${e.duration === 1 ? "round" : "rounds"} left. ${e.description}`) : ["None"] },

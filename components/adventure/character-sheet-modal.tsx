@@ -1,6 +1,9 @@
 "use client"
 
+import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { useState } from "react"
+import { DeathSaveMarks } from "@/components/stage/roll-parts"
+import { standingOf, standingWords } from "@/components/stage/standing"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "@/components/ui/native-image"
@@ -48,6 +51,9 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
   // The rules sheet, where the hero has one. It loads only while the window is open.
   const sheet = useSheetView(open ? character?.sheet : undefined, character?.hitPoints)
   if (!character) return null
+  // How the hero stands: their hit points from the sheet, or dying, Stable or dead. And their conditions in words.
+  const standing = standingOf({ ...character, type: "pc" }, sheet)
+  const conditions = conditionLabel(character)
 
   const getModifier = (score: number) => Math.floor((score - 10) / 2)
   const formatModifier = (modifier: number) => (modifier >= 0 ? `+${modifier}` : `${modifier}`)
@@ -79,15 +85,35 @@ export function CharacterSheetModal({ character, open, onOpenChange }: Character
                 </div>
               )}
 
-              <div>
-                <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Health</label>
-                <div className="flex items-center gap-2">
-                  <div className="">{sheet ? `${sheet.hitPoints.current} / ${sheet.hitPoints.maximum}` : `${character.healthPercent}%`}</div>
-                  <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-green-500 to-red-500 transition-all duration-300" style={{ width: `${character.healthPercent}%` }} />
-                  </div>
+              {standing && (
+                <div>
+                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Hit Points</label>
+                  {standing.kind === "hero" ? (
+                    <div className="flex items-center gap-2">
+                      <div className="">
+                        {standing.hitPoints} / {standing.maximum}
+                      </div>
+                      <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-green-500 to-red-500 transition-all duration-300"
+                          style={{ width: `${(standing.hitPoints / Math.max(1, standing.maximum)) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <span className="text-red-300">{standingWords(standing).split(",")[0]}</span>
+                      {standing.kind === "dying" && <DeathSaveMarks saves={standing} compact />}
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
+              {conditions && (
+                <div>
+                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Conditions</label>
+                  <div className="text-sm">{conditions}</div>
+                </div>
+              )}
 
               {character.effects && character.effects.length > 0 ? (
                 <div>
