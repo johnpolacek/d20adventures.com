@@ -75,6 +75,19 @@ Not in this stage: the rules text itself (how play works, the rules glossary). T
 
 Class, level, species, background, hit points, Armor Class, proficiencies, saves, and the level 1 features of all twelve classes. Every bonus is derived from the sheet. Health percent stays as a derived value so current screens keep working. Existing heroes and NPCs move to the new sheet.
 
+Started 2026-11-11. Decisions: The Midnight Summons is the reference adventure for migration and playtests. There are no playtester saves to preserve, play is with premade heroes only, so old saves are wiped, not migrated. Premade heroes get their class, species and background mapped from their current archetype and story, with the unsure ones listed for the owner. The game master's prompts stay unchanged in this stage.
+
+Substages:
+
+1. Sheet maths. A sheet (class, level, species, background, ability scores, skills, armor) and one pure function in `packages/gm-core` that derives hit points, Armor Class, saves, skill bonuses and the rest from `@d20/srd`. Tested for all twelve classes at level 1. Done: `packages/gm-core/src/sheet`, run with `pnpm --filter @d20/gm-core test`.
+2. Hit points beside health percent. Characters carry current and maximum hit points. Health percent is worked out from them.
+3. Premade heroes get sheets. The adventure compiler rejects a hero without one.
+4. NPCs get hit points and Armor Class from a simple default. Monster stat blocks wait for stage 4.
+5. Storage on both hosts. Convex and the desktop database carry the sheet. Old saves are wiped.
+6. Level 1 features listed on the sheet, with their uses. They do nothing yet.
+7. The sheet on screen: class, hit points, Armor Class, saves and skills on the character card.
+8. Close: The Midnight Summons plays end to end on the site and the desktop app.
+
 ### 3. Checks
 
 The engine resolves ability checks and saving throws. The model picks only the skill and a DC from the SRD ladder. Advantage and disadvantage replace the model's free situational modifier.
@@ -102,7 +115,6 @@ Levels to 20. The full spell, monster and magic item lists. The hero creator reb
 ## Unknowns
 
 - No machine-readable SRD 5.2 source is verified yet. A third-party JSON API exists, unchecked.
-- Which adventure is the reference for migration and playtests.
 - How the model's reading of prose into a rules action is tested for accuracy.
 - Whether zones hold up for areas of effect and cover in stage 6.
 
