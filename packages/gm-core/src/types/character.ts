@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { sheetSchema } from "../sheet/sheet"
 
 // Equipment item schema and type
 export const equipmentItemSchema = z.object({
@@ -61,6 +62,8 @@ export const baseCharacterSchema = z.object({
   spells: z.array(spellSchema).optional(),
   specialAbilities: z.array(z.string()).optional(),
   effects: z.array(effectSchema).optional(),
+  // The rules sheet: class, species, background, scores. Hit points and every bonus are derived from it (see ../sheet).
+  sheet: sheetSchema.optional(),
 })
 
 export type BaseCharacter = z.infer<typeof baseCharacterSchema>
@@ -100,7 +103,7 @@ export const characterSchema = z.union([pcSchema, npcSchema])
 export type Character = z.infer<typeof characterSchema>
 
 // Generation schemas (without id and image for AI generation)
-export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true })
+export const baseCharacterGenerationSchema = baseCharacterSchema.omit({ id: true, image: true, sheet: true })
 
 export const npcGenerationSchema = baseCharacterGenerationSchema.extend({
   type: z.literal("npc"),

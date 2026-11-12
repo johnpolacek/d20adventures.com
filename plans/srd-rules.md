@@ -80,7 +80,7 @@ Started 2026-11-11. Decisions: The Midnight Summons is the reference adventure f
 Substages:
 
 1. Sheet maths. A sheet (class, level, species, background, ability scores, skills, armor) and one pure function in `packages/gm-core` that derives hit points, Armor Class, saves, skill bonuses and the rest from `@d20/srd`. Tested for all twelve classes at level 1. Done: `packages/gm-core/src/sheet`, run with `pnpm --filter @d20/gm-core test`.
-2. Hit points beside health percent. Characters carry current and maximum hit points. Health percent is worked out from them.
+2. Hit points beside health percent. A character carries its sheet, and its hit points are worked out from the sheet and its health percent. Health percent stays the stored value until stage 4, because the game master still wounds and heals in percent. Stage 4 turns it round. Done: `hitPointsOf` in `packages/gm-core/src/sheet/hit-points.ts`.
 3. Premade heroes get sheets. The adventure compiler rejects a hero without one.
 4. NPCs get hit points and Armor Class from a simple default. Monster stat blocks wait for stage 4.
 5. Storage on both hosts. Convex and the desktop database carry the sheet. Old saves are wiped.
