@@ -15,6 +15,8 @@ export type LocalWikiAdventureDefinition = {
   sourceRoots: string[]
   migrationReportPath?: string
   promptSlug: string
+  /** Shown first and full width on the setting's adventure listing. */
+  featured?: boolean
 }
 
 export type LocalWikiContentRef = {
@@ -92,6 +94,7 @@ export const LOCAL_WIKI_ADVENTURES = [
     sourceRoots: ["content/settings/realm-of-myr/adventures/welcome-to-kordavos"],
     migrationReportPath: "content/settings/realm-of-myr/adventures/welcome-to-kordavos/migration-report.json",
     promptSlug: "welcome-to-kordavos",
+    featured: true,
   },
 ] as const satisfies LocalWikiAdventureDefinition[]
 
