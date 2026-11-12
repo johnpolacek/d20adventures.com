@@ -198,7 +198,7 @@ export const turnEffectsAtEncounterEnd = <T extends { turnEffects?: readonly Tur
 /** What actions have left on a character, in words for the screen and the game master: "Dodging". */
 export function turnEffectWords(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): string {
   return (character.turnEffects ?? [])
-    .filter((effect) => effect.id !== "stood" && holds(effect, present))
+    .filter((effect) => effect.id !== "stood" && effect.id !== "reacted" && holds(effect, present))
     .map((effect) =>
       effect.id === "dodging"
         ? "Dodging"

@@ -282,15 +282,11 @@ export type Strike = {
   inspired?: number
 }
 
-type Target = Standing & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves; tempHitPoints?: number }
+/** Whom an attack is made at: one who stands somewhere, with hit points to lose. */
+export type Target = Standing & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves; tempHitPoints?: number }
 
-/**
- * One attack, start to finish: the attacker's own weapon or stat block action against the target's Armor Class, and on
- * a hit the damage dice against the target's defenses and hit points, by the rules of 0 hit points. A hit from within
- * 5 feet on a target who is Paralyzed or Unconscious is a Critical Hit. `roll` throws one damage die of the given size.
- * `target` comes back as the blow left them.
- */
-export function strike<T extends Target>(args: {
+/** What one attack is made with and against: who, at whom, with which attack, and the dice. */
+export type StrikeArgs<T extends Target> = {
   attacker: Standing
   target: T
   weapon: string
@@ -304,12 +300,26 @@ export function strike<T extends Target>(args: {
   present?: readonly (Standing & { hitPoints?: number; dead?: true; fled?: true })[]
   /** A Bardic Inspiration die the attacker holds. It is rolled on a miss it could turn into a hit, and never on a 1. */
   inspiration?: { die: number }
-}): Strike & { target: T } {
+}
+
+/** An attack rolled and not yet landed: everything decided before the damage, where a reaction to the hit may fall. */
+export type RolledAttack = {
+  attack: Attack
+  roll: AttackResult
+  /** A Bardic Inspiration die rolled and added to an attack roll that had missed. The roll's total includes it. */
+  inspired?: number
+}
+
+/**
+ * The first half of an attack: the attacker's own weapon or stat block action rolled against the target's Armor Class
+ * with its cover. Lasting spells add their dice (Bless). A held Bardic Inspiration die is rolled on a near miss. A hit
+ * from within 5 feet on a target who is Paralyzed or Unconscious is a Critical Hit. Nothing is dealt yet.
+ */
+export function rollAttack(args: Omit<StrikeArgs<Target>, "rules" | "present">): RolledAttack {
   const attack = attacksOf(args.attacker).find((entry) => entry.id === args.weapon)
   if (!attack) throw new Error(`${args.attacker.name ?? "The attacker"} has no attack "${args.weapon}".`)
   const stats = combatStatsOf(args.target)
   if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
-  const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
   // Lasting spells add their dice to the roll (Bless), or take them away (Bane).
   const armorClass = stats.armorClass + coverBonus(args.cover ?? "none")
   const rolled = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass, mode: args.mode, adds: rollAdds(args.attacker, "attack-rolls", args.roll) })
@@ -318,7 +328,31 @@ export function strike<T extends Target>(args: {
   const inspired = !rolled.hit && rolled.natural !== 1 && args.inspiration && short <= args.inspiration.die ? args.roll(args.inspiration.die) : undefined
   const lifted = inspired === undefined ? rolled : { ...rolled, total: rolled.total + inspired, hit: rolled.total + inspired >= armorClass }
   const roll = lifted.hit && !lifted.critical && criticalWhenHit(args.target, isNear(args.attacker, args.target, attack.kind)) ? { ...lifted, critical: true } : lifted
-  const spent = inspired === undefined ? {} : { inspired }
+  return { attack, roll, ...(inspired === undefined ? {} : { inspired }) }
+}
+
+/**
+ * A rolled attack read again against a new Armor Class, as a reaction that raises it does (Shield, Parry). A hit whose
+ * total is now below it misses. A 20 on the die still hits. A miss stays a miss. A 15 that hit Armor Class 12 misses
+ * against 17, and a 20 on the die hits 17 still.
+ */
+export function againstArmorClass(rolled: RolledAttack, armorClass: number): RolledAttack {
+  const { roll } = rolled
+  const hit = roll.hit && (roll.natural === 20 || roll.total >= armorClass)
+  return { ...rolled, roll: { ...roll, armorClass, hit, critical: hit && roll.critical } }
+}
+
+/**
+ * The second half of an attack: on a hit the damage dice, with the attacker's features (Sneak Attack) and their own
+ * spell on this target (Hunter's Mark), against the target's defenses and hit points, by the rules of 0 hit points.
+ * `target` comes back as the blow left them.
+ */
+export function landBlow<T extends Target>(args: Pick<StrikeArgs<T>, "attacker" | "target" | "roll" | "rules" | "present">, rolled: RolledAttack): Strike & { target: T } {
+  const { attack, roll } = rolled
+  const stats = combatStatsOf(args.target)
+  if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
+  const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
+  const spent = rolled.inspired === undefined ? {} : { inspired: rolled.inspired }
   if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target, ...spent }
   // A feature's dice (Sneak Attack), and the attacker's own spell on this target (Hunter's Mark).
   // An ally of the attacker's stands within 5 feet of the target, on their feet and able to act. An ally is one of the
@@ -355,6 +389,16 @@ export function strike<T extends Target>(args: {
     ...spent,
     target: struck.character,
   }
+}
+
+/**
+ * One attack, start to finish: `rollAttack`, then `landBlow`. The attacker's own weapon or stat block action against
+ * the target's Armor Class, and on a hit the damage dice against the target's defenses and hit points, by the rules of
+ * 0 hit points. A hit from within 5 feet on a target who is Paralyzed or Unconscious is a Critical Hit. `roll` throws
+ * one damage die of the given size. `target` comes back as the blow left them.
+ */
+export function strike<T extends Target>(args: StrikeArgs<T>): Strike & { target: T } {
+  return landBlow(args, rollAttack(args))
 }
 
 // How a target the blow left at 0 stands, in words.
