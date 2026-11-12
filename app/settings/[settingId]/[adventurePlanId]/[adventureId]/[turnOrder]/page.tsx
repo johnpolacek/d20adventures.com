@@ -3,11 +3,11 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { getTurnNavigationInfo, loadAdventureWithTurnByOrder } from "@/app/_actions/load-adventure"
 import TurnNavigation from "@/components/adventure/turn-navigation"
+import { loadFloorView } from "@/components/floorplan/load-floor"
 import { Button } from "@/components/ui/button"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Id } from "@/convex/_generated/dataModel"
 import { isDev } from "@/lib/auth-utils"
-import { loadEncounterMap2D } from "@/lib/mapview/load"
 import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { Adventure } from "@/types/adventure"
@@ -113,12 +113,12 @@ export default async function TurnPage({ params }: PageProps) {
   if ((adventureData?.adventure as { host?: unknown } | undefined)?.host) redirect(`/play/${adventureId}`)
 
   const encounter = findEncounter(adventurePlan, currentTurn?.encounterId)
-  const encounterMap = await loadEncounterMap2D(settingId, adventurePlanId, currentTurn?.encounterId)
-  const turnCharacters = currentTurn?.characters ?? []
-  const mapTokens = {
-    party: turnCharacters.filter((character) => character.type === "pc").map((character) => ({ name: character.name, image: character.image })),
-    npcs: Object.fromEntries(turnCharacters.filter((character) => character.type === "npc").map((character) => [character.id, { name: character.name, image: character.image }])),
-  }
+  const floor = currentTurn.encounterId
+    ? await loadFloorView(currentTurn.encounterId).catch((error) => {
+        console.error("[turn-page] floor plan load failed", error)
+        return null
+      })
+    : null
   const isLatestTurn = turnOrderNum === (navInfo?.totalTurns ?? 0)
 
   const canEdit = isDev()
@@ -136,8 +136,7 @@ export default async function TurnPage({ params }: PageProps) {
         encounterImage={encounter?.image || adventurePlan.image}
         currentTurn={currentTurn}
         disableSSE={!isLatestTurn}
-        encounterMap={encounterMap}
-        mapTokens={mapTokens}
+        floor={floor}
       />
       {canEdit && (
         <div className="w-full flex justify-end p-8">

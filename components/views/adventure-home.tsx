@@ -1,13 +1,12 @@
 "use client"
 
 import type { LobbyInvite } from "@/components/adventure/adventure-lobby"
-import type { MapTokens } from "@/components/mapview/encounter-map-2d"
+import type { FloorView } from "@/components/floorplan/view"
 import AdventureHomeContent from "@/components/views/adventure-home-content"
 import { AdventureProvider } from "@/lib/context/AdventureContext"
 import { TurnProvider } from "@/lib/context/TurnContext"
 import type { Adventure, Turn as TurnType } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import type { Encounter2DMap } from "@/types/encounter-map-2d"
 
 function AdventureHome({
   adventurePlanId,
@@ -17,8 +16,7 @@ function AdventureHome({
   currentTurn,
   adventurePlan,
   disableSSE = false,
-  encounterMap,
-  mapTokens,
+  floor,
   invite,
   hosted,
 }: {
@@ -29,8 +27,7 @@ function AdventureHome({
   currentTurn: TurnType | null
   adventurePlan?: AdventurePlan
   disableSSE?: boolean
-  encounterMap?: Encounter2DMap | null
-  mapTokens?: MapTokens
+  floor?: FloorView | null
   invite?: LobbyInvite
   hosted?: boolean
 }) {
@@ -42,8 +39,7 @@ function AdventureHome({
           initialSubtitle={currentTurn?.title || ""}
           adventure={adventure}
           adventurePlan={adventurePlan}
-          encounterMap={encounterMap}
-          mapTokens={mapTokens}
+          floor={floor}
           invite={invite}
           hosted={hosted}
         />

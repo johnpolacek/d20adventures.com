@@ -8,7 +8,7 @@ import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import AdventureLobby, { type LobbyInvite } from "@/components/adventure/adventure-lobby"
 import { InviteSignIn, LobbyIntro } from "@/components/adventure/invite-sign-in"
 import Turn from "@/components/adventure/turn"
-import type { MapTokens } from "@/components/mapview/encounter-map-2d"
+import type { FloorView } from "@/components/floorplan/view"
 import AccountRequired from "@/components/nav/account-required"
 import ImageHeader from "@/components/ui/image-header"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -18,15 +18,13 @@ import { cn, getImageUrl } from "@/lib/utils"
 import { findCurrentActor, hasPendingAutonomousAction } from "@/lib/utils/turn-actors"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import type { Encounter2DMap } from "@/types/encounter-map-2d"
 import { scrollToTop } from "../ui/utils"
 
 function AdventureHomeContent({
   initialImage,
   adventure,
   adventurePlan,
-  encounterMap,
-  mapTokens,
+  floor,
   invite,
   hosted,
 }: {
@@ -34,8 +32,7 @@ function AdventureHomeContent({
   initialSubtitle: string
   adventure: Adventure
   adventurePlan?: AdventurePlan
-  encounterMap?: Encounter2DMap | null
-  mapTokens?: MapTokens
+  floor?: FloorView | null
   invite?: LobbyInvite
   // A hosted game plays on its own page, with the GM in the host's app.
   hosted?: boolean
@@ -130,7 +127,7 @@ function AdventureHomeContent({
     <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
       <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
       {turn && !hosted ? (
-        <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} encounterMap={encounterMap} mapTokens={mapTokens} isSolo={(adventurePlan?.party?.[1] ?? 1) === 1} />
+        <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} floor={floor} isSolo={(adventurePlan?.party?.[1] ?? 1) === 1} />
       ) : (
         <>
           <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} hosted={hosted} />
