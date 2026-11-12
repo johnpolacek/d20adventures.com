@@ -340,6 +340,8 @@ Substages:
 
 Levels to 20. The other six classes. The full spell, monster and magic item lists.
 
+Started 2026-11-13. It opens with a survey of what the SRD data holds and what the engine runs of it, for classes and levels, spells, monsters and magic items. The substages are written from it.
+
 ## Unknowns
 
 - No machine-readable SRD 5.2 source is verified yet. A third-party JSON API exists, unchecked.
