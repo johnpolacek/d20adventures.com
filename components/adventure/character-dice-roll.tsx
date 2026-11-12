@@ -53,7 +53,14 @@ export default function CharacterDiceRoll({
             {reasons?.length ? <span className="block normal-case tracking-normal text-primary-300">{reasons.join(", ")}</span> : null}
           </div>
         )}
-        <DiceRoll key={inputKey} className="my-2 scale-90 sm:scale-100" iconSize={48} id="d20-roll" dice={mode === "normal" ? 1 : 2} {...(rollResult === null ? { onRoll } : {})} />
+        <DiceRoll
+          key={`${inputKey}:${JSON.stringify(rollRequired)}`}
+          className="my-2 scale-90 sm:scale-100"
+          iconSize={48}
+          id="d20-roll"
+          dice={mode === "normal" ? 1 : 2}
+          {...(rollResult === null ? { onRoll } : {})}
+        />
       </div>
     </div>
   )

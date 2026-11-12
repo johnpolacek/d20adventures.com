@@ -11,6 +11,7 @@ import { seatHost } from "@/lib/host/server"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
 import { isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
+import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import { startWikiAdventure } from "@/lib/wiki-adventures/start"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
@@ -46,9 +47,8 @@ export async function startAdventure({ settingId, adventurePlanId, adventureId }
   }
 
   try {
-    // Load adventure plan
-    const planPath = `settings/${settingId}/${adventurePlanId}.json`
-    const adventurePlan = (await readJsonFromS3(planPath)) as AdventurePlan
+    // The adventure's plan: an authored adventure's from its markdown.
+    const adventurePlan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
     if (!adventurePlan) {
       throw new Error("Adventure plan not found")
     }

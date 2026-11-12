@@ -10,7 +10,7 @@ import { encounterFloor } from "@/lib/gm-server/content"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { maybeTriggerStoryviewAutoGeneration } from "@/lib/services/turn-audio-service"
 import { buildLocalWikiTurnCharacters, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
-import type { PCTemplate } from "@/types/character"
+import { type PCTemplate, pcTemplateSchema } from "@/types/character"
 
 // Starts a wiki adventure in the lobby: its first turn from the start encounter's intro, with no model call. In a
 // hosted game, created heroes arrive with the paragraphs the host's GM wrote for them, and why they came and what
@@ -72,7 +72,8 @@ async function loadExistingPlayerCharacters(players: Array<{ userId: string; cha
     if (!player.characterId.startsWith("characters/")) continue
     // Arrivals are kept by the sheet's file name.
     const arrival = arrivals[player.characterId.split("/").pop()?.replace(".json", "") ?? ""]
-    const sheet = withArrival((await readJsonFromS3(player.characterId)) as PCTemplate, arrival)
+    // Read by the hero's schema, which drops what a file saved before the rules still holds.
+    const sheet = withArrival(pcTemplateSchema.parse(await readJsonFromS3(player.characterId)), arrival)
     sheetsByCharacterId[player.characterId] = sheet
     if (arrival) intros[sheet.id] = arrival.intro
     characters.push({
