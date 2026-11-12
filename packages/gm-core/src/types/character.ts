@@ -77,6 +77,9 @@ export const baseCharacterSchema = z.object({
   inspiration: inspirationSchema.optional(),
   // Spell slots used, by spell level, the first for level 1. Only the engine writes them, through ../sheet/spells.
   spellSlots: z.array(z.number().int().min(0)).optional(),
+  // Hit Point Dice spent, a count. A hero has as many as their level, and a Long Rest gives them all back. Only the
+  // engine writes it, through ../sheet/rest.
+  hitDiceUsed: z.number().int().min(0).optional(),
   // Spells that last on the character, the one spell they concentrate on, and Temporary Hit Points, which are lost
   // before hit points are. Only the engine writes them, through ../sheet/spell-effects.
   spellEffects: z.array(spellEffectSchema).optional(),
@@ -145,6 +148,7 @@ export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
   featureUses: true,
   inspiration: true,
   spellSlots: true,
+  hitDiceUsed: true,
   spellEffects: true,
   concentration: true,
   tempHitPoints: true,

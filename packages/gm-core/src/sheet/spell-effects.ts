@@ -149,14 +149,14 @@ const outlasts = (spell: Spell | undefined): boolean => {
 
 /**
  * A character as the story moves on to another encounter: spells counted in turns are over, with Concentration on
- * them and Temporary Hit Points. A spell that lasts longer than a minute stays, and so does its caster's
+ * them. Temporary Hit Points stay: they last until they are lost or a Long Rest. A spell that lasts longer than a minute stays, and so does its caster's
  * Concentration on it: Mage Armor, Hunter's Mark, Shield of Faith. A fight that moves from one scene to the next
  * keeps the mark on its quarry.
  */
 export function spellEffectsAtEncounterEnd<T extends Bearer>(character: T): T {
   const kept = (character.spellEffects ?? []).filter((effect) => effect.turns === undefined)
   const held = character.concentration && outlasts(spellById.get(character.concentration.spell)) ? character.concentration : undefined
-  const { spellEffects: _, concentration: __, tempHitPoints: ___, ...rest } = character
+  const { spellEffects: _, concentration: __, ...rest } = character
   return { ...rest, ...(kept.length ? { spellEffects: kept } : {}), ...(held ? { concentration: held } : {}) } as T
 }
 

@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { strike } from "../../src/sheet/attack"
 import { resolveCheck } from "../../src/sheet/check"
-import { bonusActionsOf, featuresAtEncounterEnd, inspirationHelps, inspiredCheck, useBonusAction } from "../../src/sheet/features"
+import { bonusActionsOf, inspirationAtEncounterEnd, inspirationHelps, inspiredCheck, useBonusAction } from "../../src/sheet/features"
+import { longRest, shortRest } from "../../src/sheet/rest"
 import type { Sheet } from "../../src/sheet/sheet"
 import type { Inspiration } from "../../src/sheet/turn-effect"
 
@@ -84,7 +85,10 @@ test("an attack that misses by no more than the die rolls it, and never on a 1",
   assert.equal(strike({ attacker: inspired, target: owlbear, weapon: "warhammer", dice: [10], roll: falls(5), inspiration: inspired.inspiration }).inspired, undefined)
 })
 
-test("a new encounter gives feature uses back and ends an unspent die", () => {
+test("a new encounter ends an unspent die and gives no feature use back: a rest does", () => {
   const worn = { ...branka, featureUses: { "fighter-second-wind": 2 }, inspiration: { die: 6, by: "ilya" } }
-  assert.deepEqual(featuresAtEncounterEnd(worn), branka)
+  assert.deepEqual(inspirationAtEncounterEnd(worn), { ...branka, featureUses: { "fighter-second-wind": 2 } })
+  // Second Wind regains one use on a Short Rest and both on a Long Rest. Branka is at her 14, so spends no Hit Die.
+  assert.deepEqual(bonusActionsOf(shortRest(worn, { roll: falls() }).character)[0].left, 1)
+  assert.deepEqual(bonusActionsOf(longRest(worn).character)[0].left, 2)
 })

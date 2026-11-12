@@ -4,8 +4,9 @@ import { test } from "node:test"
 import { takeAction } from "../../src/sheet/actions"
 import type { ConditionEntry } from "../../src/sheet/condition-entry"
 import { deriveSheet, sheetProblems } from "../../src/sheet/derive"
+import { longRest } from "../../src/sheet/rest"
 import type { Sheet } from "../../src/sheet/sheet"
-import { castCost, castSpell, classSpells, isEngineSpell, slotsAtEncounterEnd, slotsLeft, spellById, spellcastingOf, spellsOf, spellWords, targetLimit, withCastSpent } from "../../src/sheet/spells"
+import { castCost, castSpell, classSpells, isEngineSpell, slotsLeft, spellById, spellcastingOf, spellsOf, spellWords, targetLimit, withCastSpent } from "../../src/sheet/spells"
 import type { TurnEffect } from "../../src/sheet/turn-effect"
 
 // Every expected value below was worked out by hand from the SRD 5.2.1 spell rules, not copied from the function's output.
@@ -248,8 +249,8 @@ test("a caster's spells are the sheet's: cantrips at will, prepared spells for a
   assert.deepEqual([once.spellSlots, slotsLeft(once)[0], spent.spellSlots, slotsLeft(spent)[0]], [[1], 1, [2], 0])
   assert.equal(cost(spent, "magic-missile"), "Lyra has no level 1 spell slot left for Magic Missile.")
   assert.deepEqual([cost(spent, "ray-of-frost"), cost(spent, "detect-magic", true)], [{ kind: "cantrip" }, { kind: "ritual" }])
-  // A new encounter gives the slots back.
-  assert.deepEqual(slotsLeft(slotsAtEncounterEnd(spent)), [2, 0, 0, 0, 0, 0, 0, 0, 0])
+  // A new encounter gives nothing back: the slots stay spent until a Long Rest gives both back.
+  assert.deepEqual(slotsLeft(longRest(spent).character), [2, 0, 0, 0, 0, 0, 0, 0, 0])
   assert.equal(
     spellWords(once),
     "Cantrips, cast at will: Mage Hand, Light, Ray of Frost. Prepared spells: Detect Magic, Fog Cloud, Charm Person, Magic Missile. Rituals from the spellbook, outside a fight: Identify, Comprehend Languages. Level 1 spell slots left: 1"

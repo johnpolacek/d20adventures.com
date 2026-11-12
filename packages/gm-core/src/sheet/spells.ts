@@ -154,8 +154,8 @@ export function spellsOf(character: Slotted): KnownSpell[] {
 
 /**
  * The spells an NPC's stat block casts: those of its Spellcasting action, At Will or so many a day, and those a Bonus
- * Action of the block casts. A day's casts are counted through the encounter, as a hero's slots are, until stage 7 of
- * plans/srd-rules.md gives rests. A spell cast as a Reaction waits for stage 6.
+ * Action of the block casts. A day's casts stay spent until a Long Rest (./rest), as a hero's slots do. A spell cast as
+ * a Reaction waits for stage 6.
  */
 function statBlockSpells(character: Slotted, monster: NonNullable<ReturnType<typeof monsterById.get>>): KnownSpell[] {
   const found: KnownSpell[] = []
@@ -264,13 +264,6 @@ export function withCastSpent<T extends Slotted>(character: T, cost: CastCost): 
   }
   if (cost.kind === "free") return { ...character, featureUses: { ...character.featureUses, [cost.feature]: (character.featureUses?.[cost.feature] ?? 0) + 1 } }
   return character
-}
-
-/** A character as the story moves on to another encounter: spell slots come back, until stage 7 of plans/srd-rules.md gives rests. */
-export function slotsAtEncounterEnd<T extends { spellSlots?: readonly number[] }>(character: T): T {
-  if (!character.spellSlots) return character
-  const { spellSlots: _, ...rest } = character
-  return rest as T
 }
 
 /** A saving throw a target made against a spell, as it fell. */

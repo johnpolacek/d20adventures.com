@@ -1,10 +1,9 @@
 import { turnEffectsAtEncounterEnd } from "../sheet/actions"
 import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { atRoundStart, revived } from "../sheet/death"
-import { featuresAtEncounterEnd } from "../sheet/features"
+import { inspirationAtEncounterEnd } from "../sheet/features"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { spellEffectsAtEncounterEnd } from "../sheet/spell-effects"
-import { slotsAtEncounterEnd } from "../sheet/spells"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
@@ -74,8 +73,9 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
       ...pc,
       initiative: rollD20(),
     }))
-  // A new encounter comes later: the conditions of a fight's moment are over, and lasting ones stay.
-  pcs = pcs.map((pc) => spellEffectsAtEncounterEnd(slotsAtEncounterEnd(featuresAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(pc))))))
+  // A new encounter comes later: the conditions of a fight's moment are over, and lasting ones stay. Spell slots,
+  // feature uses and Hit Point Dice stay spent, and Temporary Hit Points stay, until a rest (../sheet/rest).
+  pcs = pcs.map((pc) => spellEffectsAtEncounterEnd(inspirationAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(pc)))))
 
   if (nextEncounter.resetHealth) {
     console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`)

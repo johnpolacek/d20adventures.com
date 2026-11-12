@@ -17,7 +17,7 @@ import type { Inspiration } from "./turn-effect"
  * is rolled and added, which may turn the failure into a success. The engine rolls it on the first failed roll the
  * die could save, as a player would.
  *
- * Uses come back with a new encounter, as spells do today, until stage 7 of plans/srd-rules.md gives rests.
+ * Uses come back only with a rest, as each feature's data says (./rest). A new encounter gives nothing back.
  */
 const BONUS_ACTIONS = ["fighter-second-wind", "bard-bardic-inspiration"] as const
 export type BonusActionId = (typeof BONUS_ACTIONS)[number]
@@ -118,8 +118,13 @@ export function withoutInspiration<T extends { inspiration?: Inspiration }>(char
   return rest as T
 }
 
-/** A character as the story moves on to another encounter: feature uses come back, and an unspent Bardic Inspiration die is gone. */
-export function featuresAtEncounterEnd<T extends { featureUses?: Record<string, number>; inspiration?: Inspiration }>(character: T): T {
-  const { featureUses: _, inspiration: __, ...rest } = character
+/**
+ * A character as the story moves on to another encounter: an unspent Bardic Inspiration die is gone. The SRD gives the
+ * die an hour, and the engine keeps no clock, so the encounter's end stands in for that hour. This is the one thing a
+ * new encounter takes from the features: their uses stay spent until a rest (./rest).
+ */
+export function inspirationAtEncounterEnd<T extends { inspiration?: Inspiration }>(character: T): T {
+  if (!character.inspiration) return character
+  const { inspiration: _, ...rest } = character
   return rest as T
 }

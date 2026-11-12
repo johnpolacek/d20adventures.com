@@ -6,6 +6,7 @@ import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import { conditionWords, withCondition } from "@d20/gm-core/sheet/conditions"
 import { killed, withDamage, withHealing, withHitPointsBy } from "@d20/gm-core/sheet/death"
+import { longRest } from "@d20/gm-core/sheet/rest"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { z } from "zod"
 import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
@@ -157,7 +158,8 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
       festival.effects!.map((e) => [e.name, e.duration]),
       [["Ward", 1]]
     )
-    assert.equal(festival.spellSlots, undefined, "spell slots come back on an encounter change")
+    assert.deepEqual(festival.spellSlots, [1], "a spent slot stays spent across an encounter change: only a rest gives it back")
+    assert.equal(longRest(festival).character.spellSlots, undefined, "a Long Rest gives the slot back")
     assert.equal(
       t.store.current().characters.some((c) => c.id === t.npc.id),
       false

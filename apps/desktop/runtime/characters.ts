@@ -2,9 +2,8 @@ import type { TurnRecord } from "@d20/gm-core"
 import { turnEffectsAtEncounterEnd } from "@d20/gm-core/sheet/actions"
 import { conditionsAtEncounterEnd, conditionWords, withoutCondition } from "@d20/gm-core/sheet/conditions"
 import { atRoundStart } from "@d20/gm-core/sheet/death"
-import { featuresAtEncounterEnd } from "@d20/gm-core/sheet/features"
+import { inspirationAtEncounterEnd } from "@d20/gm-core/sheet/features"
 import { spellEffectsAtEncounterEnd } from "@d20/gm-core/sheet/spell-effects"
-import { slotsAtEncounterEnd } from "@d20/gm-core/sheet/spells"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
@@ -24,6 +23,7 @@ export type CharacterState = Pick<
   | "featureUses"
   | "inspiration"
   | "spellSlots"
+  | "hitDiceUsed"
   | "spellEffects"
   | "concentration"
   | "tempHitPoints"
@@ -45,6 +45,7 @@ export function characterState(c: CharacterState): CharacterState {
     turnEffects: c.turnEffects,
     featureUses: c.featureUses,
     spellSlots: c.spellSlots,
+    hitDiceUsed: c.hitDiceUsed,
     spellEffects: c.spellEffects,
     concentration: c.concentration,
     tempHitPoints: c.tempHitPoints,
@@ -136,8 +137,10 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
     const before = args.current.find((c) => c.id === next.id)
     const revived = before && isDown(before) && !isDown(next) && isDown(states[next.id] ?? before) ? deathState(next) : {}
     const kept = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
-    // A new encounter ends the conditions of a fight's moment and what its actions left, and gives feature uses back. The lasting conditions come along.
-    const c = args.encounterChanged ? spellEffectsAtEncounterEnd(slotsAtEncounterEnd(featuresAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept))))) : kept
+    // A new encounter ends the conditions of a fight's moment, what its actions left and a held Bardic Inspiration die.
+    // The lasting conditions come along. Spell slots, feature uses and Hit Point Dice stay spent, and Temporary Hit
+    // Points stay, until a rest (@d20/gm-core/sheet/rest).
+    const c = args.encounterChanged ? spellEffectsAtEncounterEnd(inspirationAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept)))) : kept
     if (!c.deathSaves) delete c.deathSaves
     // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none.
     const ready = hasFled(c) ? { ...c, hasReplied: false, isComplete: true } : atRoundStart(c)

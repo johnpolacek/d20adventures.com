@@ -56,15 +56,19 @@ export function buildLocalWikiTurnCharacters(args: {
     const kept = was ? conditionsAtEncounterEnd({ conditions: was.conditions }).conditions : undefined
     // A spell that lasts longer than a minute comes along, with its caster's Concentration. The rest end with the encounter.
     const lasting = was ? spellEffectsAtEncounterEnd({ spellEffects: was.spellEffects, concentration: was.concentration }) : undefined
+    // Spent spell slots, feature uses and Hit Point Dice stay spent, and Temporary Hit Points stay until a hit takes
+    // them: only a rest gives back (../sheet/rest). A held Bardic Inspiration die ends with the encounter, standing in
+    // for its hour (../sheet/features).
     const state = {
       spellEffects: lasting?.spellEffects,
       concentration: lasting?.concentration,
-      tempHitPoints: undefined,
+      tempHitPoints: was?.tempHitPoints,
       conditions: kept,
       turnEffects: undefined,
-      featureUses: undefined,
+      featureUses: was?.featureUses,
       inspiration: undefined,
-      spellSlots: undefined,
+      spellSlots: was?.spellSlots,
+      hitDiceUsed: was?.hitDiceUsed,
       dead: was?.dead,
       deathSaves: was?.hitPoints === 0 ? was.deathSaves : undefined,
     }
@@ -75,7 +79,7 @@ export function buildLocalWikiTurnCharacters(args: {
     const sheet = args.artifacts.characterSheets.npcs[npcRef.id]?.sheet
     if (!sheet) throw new Error(`Missing NPC sheet for ${npcRef.id}`)
     // An NPC who was in the encounter just left comes as they left it. The dead stay out. The hurt stay hurt, with
-    // their lasting conditions and the spells that outlast a minute, as a hero does.
+    // their lasting conditions, the spells that outlast a minute, and what they have spent, as a hero does.
     const was = args.existingNpcs?.find((npc) => npc.id === sheet.id)
     if (was && isDead(was)) continue
     const npc = {
@@ -93,11 +97,14 @@ export function buildLocalWikiTurnCharacters(args: {
       continue
     }
     const lasting = spellEffectsAtEncounterEnd({ spellEffects: was.spellEffects, concentration: was.concentration })
+    // A day's casts stay spent, and Temporary Hit Points stay, until a Long Rest.
     characters.push({
       ...withHitPoints(npc, was.hitPoints),
       conditions: conditionsAtEncounterEnd({ conditions: was.conditions }).conditions,
       spellEffects: lasting.spellEffects,
       concentration: lasting.concentration,
+      featureUses: was.featureUses,
+      tempHitPoints: was.tempHitPoints,
     })
   }
 
