@@ -50,3 +50,6 @@ export type SpellEffect = z.infer<typeof spellEffectSchema>
 /** The spell a caster concentrates on, by SRD id. A caster concentrates on one at a time. */
 export const concentrationSchema = z.strictObject({ spell: z.string() })
 export type Concentration = z.infer<typeof concentrationSchema>
+
+/** Where a character stands on its encounter's floor, in feet. Only the engine writes it, through ./placement and ./space. */
+export const positionSchema = z.strictObject({ x: z.number(), y: z.number() })

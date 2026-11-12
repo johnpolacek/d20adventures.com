@@ -3,6 +3,7 @@ import { damageTypeIds } from "@d20/srd"
 import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
 import { monsterById } from "@d20/srd/monsters"
+import { weaponPropertyById } from "@d20/srd/weapon-properties"
 import type { Roller, RollMode } from "./check"
 import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
@@ -23,7 +24,14 @@ export type Attack = {
   /** What is added to the d20. */
   bonus: number
   damage: DamagePart[]
+  /** How far it reaches in melee, in feet: 5, or 10 with the Reach property, or what a stat block prints. A ranged weapon has none. */
+  reach?: number
+  /** A ranged or thrown attack's normal and long range, in feet. A range with no long range ends at the normal one. */
+  range?: { normal: number; long?: number }
 }
+
+/** A creature's reach unless a rule says otherwise. */
+export const BASE_REACH = 5
 
 /** The id every character's Unarmed Strike goes by. */
 export const UNARMED_STRIKE = "unarmed-strike"
@@ -39,7 +47,14 @@ export function weaponAttack(sheet: Sheet, weaponId: string): Attack {
   const derived = deriveSheet(sheet)
   const mods = derived.abilityModifiers
   if (weaponId === UNARMED_STRIKE) {
-    return { id: UNARMED_STRIKE, name: "Unarmed Strike", kind: "melee", bonus: mods.str + derived.proficiencyBonus, damage: [{ amount: Math.max(0, 1 + mods.str), type: "bludgeoning" }] }
+    return {
+      id: UNARMED_STRIKE,
+      name: "Unarmed Strike",
+      kind: "melee",
+      bonus: mods.str + derived.proficiencyBonus,
+      damage: [{ amount: Math.max(0, 1 + mods.str), type: "bludgeoning" }],
+      reach: BASE_REACH,
+    }
   }
   const weapon = equipmentById.get(weaponId)
   if (weapon?.kind !== "weapon") throw new Error(`"${weaponId}" is not a weapon`)
@@ -56,6 +71,9 @@ export function weaponAttack(sheet: Sheet, weaponId: string): Attack {
     kind: weapon.attackType === "ranged" ? "ranged" : properties.includes("thrown") ? "melee-or-ranged" : "melee",
     bonus: mods[ability] + (trained ? derived.proficiencyBonus : 0),
     damage: [damage],
+    // A melee weapon reaches 5 feet, and the Reach property adds 5: a Glaive reaches 10. A Ranged or Thrown one has its range.
+    ...(weapon.attackType === "melee" ? { reach: BASE_REACH + properties.reduce((sum, id) => sum + (weaponPropertyById.get(id)?.reachBonusFeet ?? 0), 0) } : {}),
+    ...(weapon.range ? { range: { normal: weapon.range.normal, long: weapon.range.long } } : {}),
   }
 }
 
@@ -94,7 +112,19 @@ function baseAttacks(character: Roller): Attack[] {
   return (monster.actions ?? []).flatMap((action) => {
     if (!action.attack) return []
     const damage = (action.damage ?? []).flatMap((part): DamagePart[] => (part.on === "hit" && part.type ? [{ ...(part.dice ? { dice: part.dice } : { amount: part.amount }), type: part.type }] : []))
-    return [{ id: actionId(action.name), name: action.name, kind: action.attack.kind, bonus: action.attack.bonus, damage }]
+    const { reach, range } = action.attack
+    return [
+      {
+        id: actionId(action.name),
+        name: action.name,
+        kind: action.attack.kind,
+        bonus: action.attack.bonus,
+        damage,
+        // A melee attack that prints no reach reaches 5 feet.
+        ...(action.attack.kind !== "ranged" ? { reach: reach ?? BASE_REACH } : {}),
+        ...(range ? { range: { normal: range.normal, ...(range.long !== undefined ? { long: range.long } : {}) } } : {}),
+      },
+    ]
   })
 }
 

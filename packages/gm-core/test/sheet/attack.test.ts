@@ -20,13 +20,21 @@ const falls =
     dice.shift() as number
 
 test("Thalbern's Longbow is +5 to hit for 1d8 + 3 Piercing", () => {
-  assert.deepEqual(weaponAttack(thalbern, "longbow"), { id: "longbow", name: "Longbow", kind: "ranged", bonus: 5, damage: [{ dice: "1d8 + 3", type: "piercing" }] })
+  assert.deepEqual(weaponAttack(thalbern, "longbow"), { id: "longbow", name: "Longbow", kind: "ranged", bonus: 5, damage: [{ dice: "1d8 + 3", type: "piercing" }], range: { normal: 150, long: 600 } })
 })
 
 test("a melee weapon uses Strength, and a Finesse weapon the higher of Strength and Dexterity", () => {
-  assert.deepEqual(weaponAttack(thalbern, "longsword"), { id: "longsword", name: "Longsword", kind: "melee", bonus: 3, damage: [{ dice: "1d8 + 1", type: "slashing" }] }) // 1 Str + 2
+  assert.deepEqual(weaponAttack(thalbern, "longsword"), { id: "longsword", name: "Longsword", kind: "melee", bonus: 3, damage: [{ dice: "1d8 + 1", type: "slashing" }], reach: 5 }) // 1 Str + 2
   // A Dagger is Finesse and Thrown: 3 Dex + 2, thrown or in hand.
-  assert.deepEqual(weaponAttack(thalbern, "dagger"), { id: "dagger", name: "Dagger", kind: "melee-or-ranged", bonus: 5, damage: [{ dice: "1d4 + 3", type: "piercing" }] })
+  assert.deepEqual(weaponAttack(thalbern, "dagger"), {
+    id: "dagger",
+    name: "Dagger",
+    kind: "melee-or-ranged",
+    bonus: 5,
+    damage: [{ dice: "1d4 + 3", type: "piercing" }],
+    reach: 5,
+    range: { normal: 20, long: 60 },
+  })
 })
 
 test("the Proficiency Bonus is added only for a weapon the class is trained in", () => {
@@ -40,7 +48,7 @@ test("the Proficiency Bonus is added only for a weapon the class is trained in",
 })
 
 test("an Unarmed Strike deals 1 + Strength Bludgeoning damage, with no dice", () => {
-  assert.deepEqual(weaponAttack(thalbern, "unarmed-strike"), { id: "unarmed-strike", name: "Unarmed Strike", kind: "melee", bonus: 3, damage: [{ amount: 2, type: "bludgeoning" }] })
+  assert.deepEqual(weaponAttack(thalbern, "unarmed-strike"), { id: "unarmed-strike", name: "Unarmed Strike", kind: "melee", bonus: 3, damage: [{ amount: 2, type: "bludgeoning" }], reach: 5 })
   assert.deepEqual(weaponAttack(wizard, "unarmed-strike").damage, [{ amount: 0, type: "bludgeoning" }]) // 1 - 1
 })
 
@@ -50,7 +58,7 @@ test("a hero attacks with the weapons on the sheet, and an NPC with its stat blo
     ["longbow", "dagger", "unarmed-strike"]
   )
   // Owlbear: "Rend. Melee Attack Roll: +7. Hit: 14 (2d8 + 5) Slashing damage", and its Multiattack is two Rends.
-  assert.deepEqual(attacksOf({ type: "npc", statBlock: "owlbear" }), [{ id: "rend", name: "Rend", kind: "melee", bonus: 7, damage: [{ dice: "2d8 + 5", type: "slashing" }] }])
+  assert.deepEqual(attacksOf({ type: "npc", statBlock: "owlbear" }), [{ id: "rend", name: "Rend", kind: "melee", bonus: 7, damage: [{ dice: "2d8 + 5", type: "slashing" }], reach: 5 }])
   assert.deepEqual(multiattackOf({ type: "npc", statBlock: "owlbear" }), [{ attack: "rend", times: 2 }])
   // Brown Bear: "one Bite attack and one Claw attack".
   assert.deepEqual(multiattackOf({ type: "npc", statBlock: "brown-bear" }), [

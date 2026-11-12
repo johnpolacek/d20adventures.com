@@ -1,14 +1,18 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
+import { attacksOf } from "../../src/sheet/attack"
 import type { Sheet } from "../../src/sheet/sheet"
 import {
   attackReach,
-  attackReachOf,
   caughtIn,
+  coverBetween,
+  coverBonus,
   distance,
   FEET_PER_METRE,
+  type Floor,
   feet,
+  greaterCover,
   inArea,
   meleeReachOf,
   metres,
@@ -18,13 +22,17 @@ import {
   opportunityAttackers,
   pushed,
   rangedInCloseCombat,
+  routeThrough,
+  type Solid,
   sizeOf,
+  solidAt,
   spaceOf,
   speedOf,
-  statBlockAttackReach,
+  standingRoom,
   stopShortFor,
   type Watcher,
-  weaponReach,
+  walk,
+  walkOver,
   within,
 } from "../../src/sheet/space"
 
@@ -76,17 +84,14 @@ test("an attack reaches, shoots at normal or long range, or cannot be made", () 
 
 test("a weapon's and a stat block attack's reach and range come from the SRD data", () => {
   // The Reach property adds 5 to the 5 every creature has. A Dagger is Thrown 20/60. A Longbow is Ammunition 150/600.
-  assert.deepEqual(weaponReach("glaive"), { reach: 10 })
-  assert.deepEqual(weaponReach("dagger"), { reach: 5, range: { normal: 20, long: 60 } })
-  assert.deepEqual(weaponReach("longbow"), { range: { normal: 150, long: 600 } })
-  assert.deepEqual(weaponReach("unarmed-strike"), { reach: 5 })
-  assert.deepEqual(weaponReach("chain-mail"), {})
+  const reaches = (character: Parameters<typeof attacksOf>[0]) =>
+    Object.fromEntries(attacksOf(character).map(({ id, reach, range }) => [id, { ...(reach ? { reach } : {}), ...(range ? { range } : {}) }]))
+  const armed = reaches({ ...thalbern, sheet: { ...sheet, weapons: ["glaive", "dagger", "longbow"] } })
+  assert.deepEqual(armed, { glaive: { reach: 10 }, dagger: { reach: 5, range: { normal: 20, long: 60 } }, longbow: { range: { normal: 150, long: 600 } }, "unarmed-strike": { reach: 5 } })
   // A Hill Giant's Tree Club reaches 10 and its Trash Lob throws 60/240. An Ogre's Javelin is melee or ranged.
-  assert.deepEqual(statBlockAttackReach("hill-giant", "tree-club"), { reach: 10 })
-  assert.deepEqual(statBlockAttackReach("hill-giant", "trash-lob"), { range: { normal: 60, long: 240 } })
-  assert.deepEqual(statBlockAttackReach("ogre", "javelin"), { reach: 5, range: { normal: 30, long: 120 } })
-  assert.deepEqual(attackReachOf(thalbern, "longbow"), { range: { normal: 150, long: 600 } })
-  assert.deepEqual(attackReachOf(owlbear, "rend"), { reach: 5 })
+  assert.deepEqual(reaches(hillGiant), { "tree-club": { reach: 10 }, "trash-lob": { range: { normal: 60, long: 240 } } })
+  assert.deepEqual(reaches({ ...owlbear, statBlock: "ogre" }).javelin, { reach: 5, range: { normal: 30, long: 120 } })
+  assert.deepEqual(reaches(owlbear).rend, { reach: 5 })
   // Reach for Opportunity Attacks is the longest melee reach: Thalbern's Shortsword and Dagger reach 5, a Glaive 10.
   assert.equal(meleeReachOf(thalbern), 5)
   assert.equal(meleeReachOf({ ...thalbern, sheet: { ...sheet, weapons: ["glaive"] } }), 10)
@@ -246,4 +251,71 @@ test("feet and metres", () => {
   // 30 / 3.28084 is about 9.144 metres.
   close(metres(30), 9.144)
   close(metres(feet(7)), 7)
+})
+
+// A room for the tests below. A wall runs north to south at x = 20, from y = -20 to y = 20, a foot thick, to the
+// ceiling. Its doorway is around its north end: a point just inside at (15, 25) and one just outside at (25, 25). A
+// crate 4 feet high sits at (40, 0), 2 feet to each side.
+const wall: Solid = { kind: "rect", x: 20, y: 0, halfWidth: 0.5, halfDepth: 20, turn: 0 }
+const crate: Solid = { kind: "rect", x: 40, y: 0, halfWidth: 2, halfDepth: 2, turn: 0, top: 4 }
+const room: Floor = { solids: [wall, crate], doors: [[at(15, 25), at(25, 25)]] }
+
+test("a walk stops at the first solid thing, and goes round by a doorway", () => {
+  assert.equal(solidAt(room.solids, at(20, 5)), wall)
+  assert.equal(solidAt(room.solids, at(20, 21)), undefined)
+  // A pillar 3 feet across, turned or not, is a circle.
+  assert.ok(solidAt([{ kind: "circle", x: 0, y: 0, radius: 1.5 }], at(1, 0)))
+  // Toward (30, 0) with 60 feet: the wall's near face is at 19.5. Standing on the face is not inside it, and the next
+  // half foot is: the walk stops at 19.5.
+  const stopped = walkOver(room.solids, o, at(30, 0), 60)
+  assert.deepEqual([stopped.at, stopped.used, stopped.blocked], [at(19.5, 0), 19.5, true])
+  // With nothing in the way the feet run out first: 10 of the 15 to (0, 15).
+  assert.deepEqual(walkOver(room.solids, o, at(0, 15), 10), { at: at(0, 10), used: 10, blocked: false })
+  // The way round: to the inside of the doorway, through it, and on.
+  assert.deepEqual(routeThrough(room, o, at(30, 10)), [at(15, 25), at(25, 25), at(30, 10)])
+  assert.deepEqual(routeThrough(room, o, at(10, 10)), [at(10, 10)])
+  // No doorway clears a wall with none.
+  assert.equal(routeThrough({ solids: [wall], doors: [] }, o, at(30, 0)), undefined)
+  // 30 feet of that way: √(15² + 25²) = 29.155 to the doorway, and the 0.845 left over of the 10 through it.
+  const round = walk(room, o, at(30, 10), 30)
+  close(round.used, 30)
+  close(round.at.x, 15 + (30 - Math.hypot(15, 25)))
+  assert.equal(round.at.y, 25)
+  assert.equal(round.path.length, 2)
+  // With no way round, the walker goes as far as the wall.
+  assert.deepEqual(walk({ solids: [wall], doors: [] }, o, at(30, 0), 60).at, at(19.5, 0))
+})
+
+test("a walker closes to reach of a creature, and stands beside whoever is there", () => {
+  // Closing with someone 20 feet off stops 5 short: 15 feet walked.
+  assert.deepEqual(walk({ solids: [], doors: [] }, o, at(20, 0), 30, { stopShort: 5 }), { at: at(15, 0), used: 15, path: [at(15, 0)] })
+  // Already within 5 feet: no step is taken.
+  assert.deepEqual(walk({ solids: [], doors: [] }, o, at(4, 0), 30, { stopShort: 5 }), { at: o, used: 0, path: [] })
+  // A spot someone stands on is not taken: the walker from the west ends 5 feet west of it.
+  const beside = standingRoom([], [at(10, 0)], o, at(10, 0))
+  close(beside.x, 5)
+  close(beside.y, 0)
+  assert.deepEqual(standingRoom([], [at(30, 0)], o, at(10, 0)), at(10, 0))
+})
+
+test("cover is read from what stands between the two, by its height", () => {
+  const archer = { at: at(25, 0) }
+  // The 4-foot crate in front of a 6-foot target hides 4 ÷ 6 of them: half cover. Against a 3.5-foot Small target it
+  // is as tall as they are: total cover.
+  assert.equal(coverBetween(room.solids, archer, { at: at(45, 0) }), "half")
+  assert.equal(coverBetween(room.solids, archer, { at: at(45, 0), size: "Small" }), "total")
+  // A 5-foot crate hides 5 ÷ 6: three-quarters cover.
+  assert.equal(coverBetween([{ ...crate, top: 5 }], archer, { at: at(45, 0) }), "three-quarters")
+  // The one who stands at the crate shoots over it: it is nearer them than the target.
+  assert.equal(coverBetween(room.solids, { at: at(45, 0) }, archer), "none")
+  // A wall to the ceiling is total cover from either side, and nothing between is none.
+  assert.equal(coverBetween(room.solids, { at: o }, archer), "total")
+  assert.equal(coverBetween(room.solids, archer, { at: o }), "total")
+  assert.equal(coverBetween(room.solids, archer, { at: at(25, 15) }), "none")
+  // Another creature on the line is half cover. One beside the line is not.
+  assert.equal(coverBetween([], { at: o }, { at: at(30, 0) }, [{ at: at(15, 1) }]), "half")
+  assert.equal(coverBetween([], { at: o }, { at: at(30, 0) }, [{ at: at(15, 6) }]), "none")
+  // Only the greater cover counts. Half adds 2 to Armor Class and Dexterity saves, three-quarters 5.
+  assert.equal(greaterCover("half", "three-quarters"), "three-quarters")
+  assert.deepEqual([coverBonus("none"), coverBonus("half"), coverBonus("three-quarters"), coverBonus("total")], [0, 2, 5, 0])
 })

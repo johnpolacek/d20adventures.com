@@ -1,9 +1,7 @@
 import type { Size } from "@d20/srd"
-import { equipmentById } from "@d20/srd/equipment"
 import { monsterById } from "@d20/srd/monsters"
 import { speciesById } from "@d20/srd/species"
-import { weaponPropertyById } from "@d20/srd/weapon-properties"
-import { actionId, UNARMED_STRIKE } from "./attack"
+import { type Attack, attacksOf, BASE_REACH } from "./attack"
 import type { Roller } from "./check"
 import { type Afflicted, cannotMove, exhaustionOf } from "./conditions"
 import { deriveSheet } from "./derive"
@@ -68,7 +66,7 @@ export function distance(a: Placed, b: Placed): number {
 export const within = (a: Placed, b: Placed, feet: number): boolean => distance(a, b) <= feet + TOLERANCE
 
 /** How far an attack reaches: a melee attack's reach, and a ranged or thrown attack's normal and long range. A single range has no long range. */
-export type AttackDistances = { reach?: number; range?: { normal: number; long?: number } }
+export type AttackDistances = Pick<Attack, "reach" | "range">
 
 /**
  * Where a target stands for an attack. "reach": within a melee attack's reach. "normal": within a ranged attack's
@@ -99,58 +97,12 @@ export type Bystander = Placed & { hostile: boolean; seesAttacker: boolean; inca
 export const rangedInCloseCombat = (attacker: Placed, others: readonly Bystander[]): boolean =>
   others.some((other) => other.hostile && other.seesAttacker && !other.incapacitated && within(attacker, other, 5))
 
-/** A creature's reach unless a rule says otherwise. */
-export const BASE_REACH = 5
-
-/**
- * How far a hero's weapon reaches. A melee weapon reaches 5 feet, and the Reach property adds 5: a Glaive reaches 10.
- * A Ranged weapon, and a Thrown one, has its normal and long range: a Dagger reaches 5 and throws 20/60. An Unarmed
- * Strike reaches 5. Anything else reaches nothing.
- */
-export function weaponReach(weaponId: string): AttackDistances {
-  if (weaponId === UNARMED_STRIKE) return { reach: BASE_REACH }
-  const weapon = equipmentById.get(weaponId)
-  if (weapon?.kind !== "weapon") return {}
-  const properties: readonly string[] = weapon.properties ?? []
-  const added = properties.reduce((sum, id) => sum + (weaponPropertyById.get(id)?.reachBonusFeet ?? 0), 0)
-  return {
-    ...(weapon.attackType === "melee" ? { reach: BASE_REACH + added } : {}),
-    ...(weapon.range ? { range: { normal: weapon.range.normal, long: weapon.range.long } } : {}),
-  }
-}
-
-/**
- * How far a stat block's attack reaches, by the attack's id (its name in lower case with dashes, as `attacksOf` gives
- * it): the reach and range it prints. A Hill Giant's Tree Club reaches 10, and its Trash Lob throws 60/240. A melee
- * attack that prints no reach reaches 5.
- */
-export function statBlockAttackReach(statBlock: string, attackId: string): AttackDistances {
-  const attack = monsterById.get(statBlock)?.actions?.find((action) => actionId(action.name) === attackId)?.attack
-  if (!attack) return {}
-  return {
-    ...(attack.kind !== "ranged" ? { reach: attack.reach ?? BASE_REACH } : {}),
-    ...(attack.range ? { range: { normal: attack.range.normal, ...(attack.range.long !== undefined ? { long: attack.range.long } : {}) } } : {}),
-  }
-}
-
-/** How far one of a character's attacks reaches, by its id: a hero's weapon, or an NPC's stat block attack. */
-export function attackReachOf(character: Roller, attackId: string): AttackDistances {
-  if (character.sheet) return weaponReach(attackId)
-  if (character.type !== "npc") return {}
-  return statBlockAttackReach(monsterById.has(character.statBlock ?? DEFAULT_STAT_BLOCK) ? (character.statBlock ?? DEFAULT_STAT_BLOCK) : DEFAULT_STAT_BLOCK, attackId)
-}
-
 /**
  * A character's reach for Opportunity Attacks: the longest of its melee attacks, which is at least 5. A hero holding a
  * Glaive reaches 10. A Hill Giant reaches 10 with its Tree Club.
  */
 export function meleeReachOf(character: Roller): number {
-  const ids = character.sheet
-    ? [...(character.sheet.weapons ?? []), UNARMED_STRIKE]
-    : character.type === "npc"
-      ? ((monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK))?.actions ?? []).flatMap((action) => (action.attack ? [actionId(action.name)] : []))
-      : []
-  return Math.max(BASE_REACH, ...ids.map((id) => attackReachOf(character, id).reach ?? 0))
+  return Math.max(BASE_REACH, ...attacksOf(character).map((attack) => attack.reach ?? 0))
 }
 
 /** A character's Speed in feet: a hero's from its sheet, an NPC's walking Speed from its stat block. A hero with no sheet has none. */
@@ -290,3 +242,153 @@ export function inArea(area: AreaOfEffect, origin: Point, toward: Point, point: 
  */
 export const caughtIn = <T extends { at: Point }>(area: AreaOfEffect, origin: Point, toward: Point, creatures: readonly T[], originSpace = 0): T[] =>
   creatures.filter((creature) => inArea(area, origin, toward, creature.at, originSpace))
+
+/**
+ * A solid thing on an encounter's floor, in feet: a wall, a crate, a table, a pillar. A rectangle is given by its
+ * centre, half its width and depth, and how far it is turned. `top` is how high it stands. One with no top is a wall
+ * to the ceiling.
+ */
+export type Solid = { kind: "rect"; x: number; y: number; halfWidth: number; halfDepth: number; turn: number; top?: number } | { kind: "circle"; x: number; y: number; radius: number; top?: number }
+
+/** An encounter's floor: its solid things, and its doorways as a point just inside and one just outside. */
+export type Floor = { solids: readonly Solid[]; doors: readonly (readonly [Point, Point])[] }
+
+const onSolid = (solid: Solid, point: Point): boolean => {
+  if (solid.kind === "circle") return between(solid, point) < solid.radius
+  const dx = point.x - solid.x
+  const dy = point.y - solid.y
+  const cos = Math.cos(solid.turn)
+  const sin = Math.sin(solid.turn)
+  return Math.abs(dx * cos - dy * sin) < solid.halfWidth && Math.abs(dx * sin + dy * cos) < solid.halfDepth
+}
+
+/** The solid thing a point is on, if any: where no one can stand or walk. */
+export const solidAt = (solids: readonly Solid[], point: Point): Solid | undefined => solids.find((solid) => onSolid(solid, point))
+
+// A walk and a line of sight are read every half foot.
+const STEP = 0.5
+
+/**
+ * Walk straight toward a point over a floor: no farther than the feet given, and no farther than the first solid thing
+ * in the way. With a crate 10 feet ahead, a walk of 30 feet toward a point 20 feet off stops at the crate, having used 10.
+ */
+export function walkOver(solids: readonly Solid[], from: Point, to: Point, feet: number): { at: Point; used: number; blocked: boolean } {
+  const gap = between(from, to)
+  const limit = Math.max(0, Math.min(gap, feet))
+  const along = (d: number): Point => (gap === 0 ? { ...from } : { x: from.x + ((to.x - from.x) * d) / gap, y: from.y + ((to.y - from.y) * d) / gap })
+  let used = 0
+  while (used < limit) {
+    const next = Math.min(limit, used + STEP)
+    if (solidAt(solids, along(next))) return { at: along(used), used, blocked: true }
+    used = next
+  }
+  return { at: along(used), used, blocked: false }
+}
+
+/**
+ * The way from one point to another: straight when nothing solid is between them, else through the doorway that makes
+ * the shortest way round, in at one side and out at the other. The points to walk through, ending at the goal. None
+ * when no doorway clears it.
+ */
+export function routeThrough(floor: Floor, from: Point, to: Point): Point[] | undefined {
+  const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY).blocked
+  if (clear(from, to)) return [to]
+  const length = (points: Point[]) => points.reduce((sum, point, index) => sum + between(index ? points[index - 1] : from, point), 0)
+  let best: Point[] | undefined
+  for (const [a, b] of floor.doors)
+    for (const [first, second] of [
+      [a, b],
+      [b, a],
+    ]) {
+      if (!clear(from, first) || !clear(first, second) || !clear(second, to)) continue
+      const way = [first, second, to]
+      if (!best || length(way) < length(best)) best = way
+    }
+  return best
+}
+
+/**
+ * Where one walking to a point comes to stand: the point itself while no one is on it, else the nearest clear spot
+ * around it on the walker's side, a space away from everyone and on nothing solid.
+ */
+export function standingRoom(solids: readonly Solid[], others: readonly Point[], walker: Point, to: Point, gap = BASE_REACH): Point {
+  const free = (point: Point) => others.every((other) => between(other, point) >= gap - 1e-6)
+  if (free(to)) return to
+  for (const radius of [gap, gap * 2, gap * 3]) {
+    const ring = Array.from({ length: 12 }, (_, index) => ({ x: to.x + Math.sin((index * Math.PI) / 6) * radius, y: to.y + Math.cos((index * Math.PI) / 6) * radius })).filter(
+      (point) => free(point) && !solidAt(solids, point) && !walkOver(solids, to, point, Number.POSITIVE_INFINITY).blocked
+    )
+    if (ring.length) return ring.reduce((a, b) => (between(a, walker) <= between(b, walker) ? a : b))
+  }
+  return to
+}
+
+/**
+ * A character's walk over a floor: toward a goal by the way `routeThrough` finds, as far as the feet given, stopping
+ * at the first solid thing when no way is clear. `stopShort` halts that many feet short of the goal, for closing with
+ * a creature, and `others` are the points where the rest stand, so the walker ends beside them and not on them. Gives
+ * where they end, the feet used, and the points walked through.
+ */
+export function walk(floor: Floor, from: Point, to: Point, feet: number, options: { stopShort?: number; others?: readonly Point[] } = {}): { at: Point; used: number; path: Point[] } {
+  const short = options.stopShort ?? 0
+  const gap = between(from, to)
+  if (gap <= short) return { at: { ...from }, used: 0, path: [] }
+  const near = short ? moveToward(to, from, short).at : to
+  const goal = standingRoom(floor.solids, options.others ?? [], from, near)
+  let at = { ...from }
+  let left = Math.max(0, feet)
+  const path: Point[] = []
+  for (const point of routeThrough(floor, from, goal) ?? [goal]) {
+    const leg = walkOver(floor.solids, at, point, left)
+    if (leg.used > 0) path.push(leg.at)
+    left -= leg.used
+    at = leg.at
+    if (leg.blocked || between(at, point) > 1e-6) break
+  }
+  return { at, used: Math.max(0, feet) - left, path }
+}
+
+/** How much of a target something hides: none, half, three-quarters, or all of it. */
+export type Cover = "none" | "half" | "three-quarters" | "total"
+const COVER_ORDER: readonly Cover[] = ["none", "half", "three-quarters", "total"]
+
+/** The greater of two covers: cover does not stack, and only the most protective counts. */
+export const greaterCover = (a: Cover, b: Cover): Cover => (COVER_ORDER.indexOf(a) >= COVER_ORDER.indexOf(b) ? a : b)
+
+/** What cover adds to Armor Class and to Dexterity saving throws: 2 for half, 5 for three-quarters. Total cover is not a bonus: the target cannot be aimed at. */
+export const coverBonus = (cover: Cover): number => (cover === "half" ? 2 : cover === "three-quarters" ? 5 : 0)
+
+// How tall a creature of a size stands, in feet, for judging how much of it a solid thing hides. The SRD gives no table: these are ours.
+const HEIGHT: Record<Size, number> = { Tiny: 2, Small: 3.5, Medium: 6, Large: 10, Huge: 16, Gargantuan: 24 }
+
+/**
+ * The cover a target has from an attacker, read along the straight line between them. A solid thing on the line that
+ * stands as tall as the target, or to the ceiling, is total cover. A lower one covers by its height against the
+ * target's: three-quarters of it or more is three-quarters cover, half or more is half cover. A low thing counts only
+ * when it is nearer the target than the attacker: one shoots over the crate one stands at, and not over the crate the
+ * target crouches behind. Another creature on the line is half cover. A 4-foot crate in front of a 6-foot target is
+ * 4 ÷ 6 of it: half cover. The solid things the two stand on themselves are not read.
+ */
+export function coverBetween(solids: readonly Solid[], attacker: Placed, target: Placed, others: readonly Placed[] = []): Cover {
+  const gap = between(attacker.at, target.at)
+  if (gap === 0) return "none"
+  const height = HEIGHT[target.size ?? "Medium"]
+  const along = (d: number): Point => ({ x: attacker.at.x + ((target.at.x - attacker.at.x) * d) / gap, y: attacker.at.y + ((target.at.y - attacker.at.y) * d) / gap })
+  const own = new Set(solids.filter((solid) => onSolid(solid, attacker.at) || onSolid(solid, target.at)))
+  let cover: Cover = "none"
+  for (let d = STEP; d < gap; d += STEP) {
+    const point = along(d)
+    for (const solid of solids) {
+      if (own.has(solid) || !onSolid(solid, point)) continue
+      if (solid.top === undefined || solid.top >= height) return "total"
+      if (d < gap / 2) continue
+      const share = solid.top / height
+      cover = greaterCover(cover, share >= 0.75 ? "three-quarters" : share >= 0.5 ? "half" : "none")
+    }
+  }
+  const blocking = others.some((other) => {
+    const nearest = nearestOnSegment(attacker.at, target.at, other.at)
+    return between(nearest, other.at) < spaceOf(other.size) / 2 && between(nearest, attacker.at) > 1e-6 && between(nearest, target.at) > 1e-6
+  })
+  return blocking ? greaterCover(cover, "half") : cover
+}
