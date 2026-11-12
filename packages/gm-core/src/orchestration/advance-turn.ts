@@ -191,7 +191,9 @@ export function createAdvanceTurn(ports: GmPorts) {
       const returning = allTurns.some((row) => row.encounterId === nextEncounter.id)
       const intro = isTransition && !returning ? cleanStory(authoredStory(nextEncounter.sections.intro ?? "", nextScene), nextScene, { step: "intro" }) : []
       const story = [...told, ...intro]
-      const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id)
+      // The story ends at its last encounter, or when every hero is dead: no one is left to take a turn.
+      const heroes = (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc")
+      const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id) || (heroes.length > 0 && heroes.every(isDead))
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,
         expectedCurrentTurnId: turnId,

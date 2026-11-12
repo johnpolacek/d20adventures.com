@@ -75,13 +75,23 @@ export type RollBeat = {
   harm?: { target: string; kind: "damage" | "healing"; dice: number[]; sides?: number; bonus: number; type?: string; amount: number }[]
   // The conditions a check or save gave, or ended, and for whom.
   conditions?: { target: string; condition: string; ends?: true }[]
+  // A Bardic Inspiration die rolled and added to a roll that had failed. `total` includes it.
+  inspired?: number
+  // A Death Saving Throw: the hero's successes and failures once it was made, and how it ended their dying, if it did.
+  deathSave?: { successes: number; failures: number; fate?: "revived" | "stable" | "dead" }
 }
+// A class feature a character used with their Bonus Action, which the engine applied: Second Wind, Bardic Inspiration.
+// `text` says it in a sentence, for every reader that knows no more of it. `harm` is what it healed, with the dice.
+export type FeatureBeat = { kind: "feature"; by: StoryBy; character: string; name: string; text: string; target?: string; harm?: RollBeat["harm"] }
 // The player's own words, before the GM wrote them into the story.
 export type ReplyBeat = { kind: "reply"; by: StoryBy; character: string; text: string }
-export type StoryBeat = NarrationBeat | ActionBeat | LineBeat | RollBeat | ReplyBeat
+export type StoryBeat = NarrationBeat | ActionBeat | LineBeat | RollBeat | ReplyBeat | FeatureBeat
 
 const id = z.string().min(1).max(80)
 const by = z.object({ step: z.enum(["intro", "reply", "roll", "npc", "round"]), character: id.optional() })
+const harmSchema = z.array(
+  z.object({ target: id, kind: z.enum(["damage", "healing"]), dice: z.array(z.number()), sides: z.number().optional(), bonus: z.number(), type: z.string().optional(), amount: z.number() })
+)
 // The stored shape, for stores that check what they keep.
 export const storyBeatSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("narration"), by, text: z.string(), place: id.optional() }),
@@ -119,12 +129,13 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
         taken: z.number().optional(),
       })
       .optional(),
-    harm: z
-      .array(z.object({ target: id, kind: z.enum(["damage", "healing"]), dice: z.array(z.number()), sides: z.number().optional(), bonus: z.number(), type: z.string().optional(), amount: z.number() }))
-      .optional(),
+    harm: harmSchema.optional(),
     conditions: z.array(z.object({ target: id, condition: z.string(), ends: z.literal(true).optional() })).optional(),
+    inspired: z.number().optional(),
+    deathSave: z.object({ successes: z.number(), failures: z.number(), fate: z.enum(["revived", "stable", "dead"]).optional() }).optional(),
   }),
   z.object({ kind: z.literal("reply"), by, character: id, text: z.string() }),
+  z.object({ kind: z.literal("feature"), by, character: id, name: z.string(), text: z.string(), target: id.optional(), harm: harmSchema.optional() }),
 ])
 export const storySchema = z.array(storyBeatSchema)
 

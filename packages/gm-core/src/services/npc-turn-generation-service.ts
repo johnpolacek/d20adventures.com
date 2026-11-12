@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
+import { hitPointWords } from "../sheet/hit-points"
 import { authoredText } from "../story/authored"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, knowledgeNote } from "../story/knowledge"
@@ -109,7 +110,7 @@ NPC Details:
 - Equipment: ${npcEquipmentList}
 - Skills: ${npc.skills?.join(", ") || "None"}
 - Spells: ${npcSpellsList}
-- Health: ${npc.healthPercent ?? 100}%
+- Health: ${hitPointWords(npc)}
 - Conditions: ${conditionWords(npc) || "None"}
 `
 
@@ -228,7 +229,7 @@ export function buildNpcOutcomePrompt(args: {
     .map((character) => {
       const status = isDown(character)
         ? `DEAD/UNCONSCIOUS (${isDead(character) ? "Dead" : "Unconscious"})`
-        : `HP ${character.healthPercent ?? 100}%${conditionWords(character) ? `, Conditions: ${conditionWords(character)}` : ""}`
+        : `${hitPointWords(character)}${conditionWords(character) ? `, Conditions: ${conditionWords(character)}` : ""}`
       return `- ${character.name}: ${character.archetype || "Unknown"}, ${status}, Equipment: ${character.equipment?.map((equipment) => equipment.name).join(", ") || "None"}`
     })
     .join("\n")

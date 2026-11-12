@@ -50,3 +50,10 @@ export function withHitPoints<T extends Wounded>(character: T, current: number):
 export function withStartingHitPoints<T extends Wounded>(character: T): T & { hitPoints: number; healthPercent: number } {
   return withHitPoints(character, character.hitPoints ?? maximumOf(character))
 }
+
+/** A character's hit points in words for the game master: "5 of 27 hit points, Bloodied". Bloodied is half the maximum or fewer. */
+export function hitPointWords(character: Wounded): string {
+  const hitPoints = hitPointsOf(character)
+  if (!hitPoints) return "no hit points"
+  return `${hitPoints.current} of ${hitPoints.maximum} hit points${hitPoints.current > 0 && hitPoints.current * 2 <= hitPoints.maximum ? ", Bloodied" : ""}`
+}

@@ -6,7 +6,7 @@ import { monsterById } from "@d20/srd/monsters"
 import type { Roller, RollMode } from "./check"
 import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
-import { deriveSheet } from "./derive"
+import { deriveSheet, trainedWith } from "./derive"
 import type { Sheet } from "./sheet"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 
@@ -45,7 +45,7 @@ export function weaponAttack(sheet: Sheet, weaponId: string): Attack {
   const properties: readonly string[] = weapon.properties ?? []
   const natural: AbilityId = weapon.attackType === "ranged" ? "dex" : "str"
   const ability: AbilityId = properties.includes("finesse") ? (mods.dex > mods.str ? "dex" : "str") : natural
-  const trained = derived.weaponProficiencies.some((entry) => entry.category === weapon.category && (!entry.withProperty || entry.withProperty.some((property) => properties.includes(property))))
+  const trained = trainedWith(derived.weaponProficiencies, weapon)
   const damage: DamagePart = weapon.damage.dice
     ? { dice: signed(weapon.damage.dice, mods[ability]), type: weapon.damage.type }
     : { amount: Math.max(0, (weapon.damage.amount ?? 0) + mods[ability]), type: weapon.damage.type }
@@ -56,6 +56,13 @@ export function weaponAttack(sheet: Sheet, weaponId: string): Attack {
     bonus: mods[ability] + (trained ? derived.proficiencyBonus : 0),
     damage: [damage],
   }
+}
+
+/** The mastery property a hero can use with a weapon: the weapon's own, when its kind is one their Weapon Mastery feature names. "vex", or none. */
+export function masteryOf(character: Roller, weaponId: string): string | undefined {
+  if (!character.sheet?.weaponMasteries?.includes(weaponId)) return undefined
+  const weapon = equipmentById.get(weaponId)
+  return weapon?.kind === "weapon" ? weapon.mastery : undefined
 }
 
 const actionId = (name: string) =>
@@ -223,6 +230,8 @@ export type Strike = {
   hitPoints: { before: number; after: number; maximum: number }
   /** What the rules of 0 hit points made of a target the blow left at 0 (./death). */
   fate?: Fate
+  /** A Bardic Inspiration die rolled and added to an attack roll that had missed. The roll's total includes it. */
+  inspired?: number
 }
 
 type Target = Roller & { type: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; deathSaves?: DeathSaves }
@@ -241,6 +250,8 @@ export function strike<T extends Target>(args: {
   mode?: RollMode
   roll: (sides: number) => number
   rules?: DeathRules
+  /** A Bardic Inspiration die the attacker holds. It is rolled on a miss it could turn into a hit, and never on a 1. */
+  inspiration?: { die: number }
 }): Strike & { target: T } {
   const attack = attacksOf(args.attacker).find((entry) => entry.id === args.weapon)
   if (!attack) throw new Error(`${args.attacker.name ?? "The attacker"} has no attack "${args.weapon}".`)
@@ -248,8 +259,13 @@ export function strike<T extends Target>(args: {
   if (!stats) throw new Error(`${args.target.name ?? "The target"} has no sheet or stat block to attack.`)
   const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
   const rolled = resolveAttack({ dice: args.dice, bonus: attack.bonus, armorClass: stats.armorClass, mode: args.mode })
-  const roll = rolled.hit && !rolled.critical && criticalWhenHit(args.target, attack.kind) ? { ...rolled, critical: true } : rolled
-  if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target }
+  // A miss by no more than the die could add, and not on a 1, rolls a held Bardic Inspiration die.
+  const short = stats.armorClass - rolled.total
+  const inspired = !rolled.hit && rolled.natural !== 1 && args.inspiration && short <= args.inspiration.die ? args.roll(args.inspiration.die) : undefined
+  const lifted = inspired === undefined ? rolled : { ...rolled, total: rolled.total + inspired, hit: rolled.total + inspired >= stats.armorClass }
+  const roll = lifted.hit && !lifted.critical && criticalWhenHit(args.target, attack.kind) ? { ...lifted, critical: true } : lifted
+  const spent = inspired === undefined ? {} : { inspired }
+  if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target, ...spent }
   const extra = featureDamage(args.attacker, attack, roll)
   const damage = rollDamage([...attack.damage, ...extra.map((feature) => feature.damage)], args.roll, roll.critical)
   const taken = damageTaken(damage, defensesOf(args.target))
@@ -262,6 +278,7 @@ export function strike<T extends Target>(args: {
     taken,
     hitPoints: { before, after: struck.character.hitPoints ?? 0, maximum: stats.hitPointMaximum },
     ...(struck.fate ? { fate: struck.fate } : {}),
+    ...spent,
     target: struck.character,
   }
 }

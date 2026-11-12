@@ -417,5 +417,67 @@
     "action": "I drop behind the stacked crates and go still, out of his sight, so I can strike from cover.",
     "checks": ["hide"],
     "dcs": [15]
+  },
+  {
+    "id": "second-wind-swing",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. The thug's cudgel has left Branka bloodied and breathing hard.",
+    "action": "I draw on my Second Wind, then bring my warhammer down on the thug.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "warhammer",
+      "target": "warehouse-thug"
+    },
+    "bonus": {
+      "feature": "fighter-second-wind"
+    }
+  },
+  {
+    "id": "plain-swing",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I bring my warhammer down on the thug.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "warhammer",
+      "target": "warehouse-thug"
+    }
+  },
+  {
+    "id": "catch-breath",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. The thug's cudgel has left Branka bloodied and breathing hard.",
+    "action": "I step back out of the press and catch my breath, drawing on my Second Wind.",
+    "checks": ["none", "disengage", "dodge"],
+    "bonus": {
+      "feature": "fighter-second-wind"
+    }
+  },
+  {
+    "id": "inspire-and-thrust",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "ilya-veles",
+    "allies": ["branka-stoneveil"],
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I sing a quick verse to put heart into Branka, then thrust my rapier at the thug.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "rapier",
+      "target": "warehouse-thug"
+    },
+    "bonus": {
+      "feature": "bard-bardic-inspiration",
+      "target": "branka-stoneveil"
+    }
   }
 ]

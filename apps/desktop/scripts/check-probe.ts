@@ -40,12 +40,14 @@ type Probe = {
   gives?: Wanted[]
   // An action that takes no roll, as it should be read: who Help is for, and with which skill.
   takes?: { target?: string; skills?: string[] }
+  // The Bonus Action the hero also uses, and who it is given to. None for most.
+  bonus?: { feature: string; target?: string }
   // Conditions someone in the scene already bears, by character id.
   conditionsOn?: Record<string, ConditionEntry[]>
 }
 // A stake as a scene writes it: damage or healing, or a condition given ("condition") or ended ("end-condition").
 type Wanted = { on: string; target: string; kind: string; condition?: string }
-type Graded = { id: string; pass: boolean; faults: string[]; got: unknown }
+type Graded = { id: string; pass: boolean; faults: string[]; got: unknown; bonus?: string }
 
 const here = fileURLToPath(new URL(".", import.meta.url))
 const argv = process.argv.slice(2)
@@ -89,6 +91,8 @@ async function run(probe: Probe): Promise<Graded> {
     const faults: string[] = []
     // Hide is a roll the engine sets, named for the action. An action with no roll is read by its own name.
     const picked = !got ? (reading.action?.action ?? "none") : isAttackRoll(got) ? "attack" : got.rollType.startsWith("Hide") ? "hide" : (menuId(got.check) ?? "?")
+    const said = (bonus?: { feature: string; target?: string }) => (bonus ? `${bonus.feature}${bonus.target ? ` for ${bonus.target}` : ""}` : "none")
+    if (said(reading.bonus) !== said(probe.bonus)) faults.push(`bonus action ${said(reading.bonus)}, wanted ${said(probe.bonus)}`)
     if (probe.takes && reading.action?.action === "help") {
       if (probe.takes.target && reading.action.target !== probe.takes.target) faults.push(`help for ${reading.action.target}, wanted ${probe.takes.target}`)
       if (probe.takes.skills && !probe.takes.skills.includes(reading.action.skill ?? "none")) faults.push(`help with ${reading.action.skill ?? "no skill"}, wanted ${probe.takes.skills.join(" or ")}`)
@@ -113,7 +117,7 @@ async function run(probe: Probe): Promise<Graded> {
       }
       for (const stake of probe.gives ?? []) if (!picked.includes(wants(stake))) faults.push(`stakes ${picked.join(", ") || "none"}, wanted ${wants(stake)} among them`)
     }
-    return { id: probe.id, pass: faults.length === 0, faults, got: got ?? reading.action ?? null }
+    return { id: probe.id, pass: faults.length === 0, faults, got: got ?? reading.action ?? null, bonus: said(reading.bonus) }
   } catch (error) {
     return { id: probe.id, pass: false, faults: [String(error)], got: null }
   } finally {
@@ -150,7 +154,7 @@ for (const g of graded) {
     : got
       ? `${got.rollType} ${got.attack ? `on ${got.attack.target}, AC` : "DC"} ${got.difficulty}, bonus ${got.modifier}${got.mode === "normal" ? "" : `, ${got.mode} (${got.reasons?.join(", ") ?? "no reason"})`}${got.stakes?.length ? `, stakes: ${got.stakes.map((stake) => `${"dice" in stake ? `${stake.dice} ` : ""}${staked(stake)}`).join("; ")}` : ""}`
       : "no roll"
-  log(`${g.pass ? "pass" : "FAIL"}  ${g.id.padEnd(18)} ${pick}${g.faults.length ? `\n      ${g.faults.join("; ")}` : ""}`)
+  log(`${g.pass ? "pass" : "FAIL"}  ${g.id.padEnd(18)} ${pick}${g.bonus && g.bonus !== "none" ? `, bonus action: ${g.bonus}` : ""}${g.faults.length ? `\n      ${g.faults.join("; ")}` : ""}`)
 }
 log(`\n${graded.filter((g) => g.pass).length} of ${graded.length} pass`)
 if (opt("--out")) writeFileSync(resolve(opt("--out")!), JSON.stringify(graded, null, 2))

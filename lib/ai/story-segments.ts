@@ -17,7 +17,9 @@ export const storyHash = (story: StoryBeat[]) => sha1(JSON.stringify(story))
 
 // The paragraphs Storyview reads aloud: everything but rolls and the players' own words, by their index in the story.
 export const narratedParagraphs = (story: StoryBeat[]) =>
-  storyParagraphs(story).flatMap((p, partIndex) => (p.beats[0].kind === "roll" || p.beats[0].kind === "reply" ? [] : [{ partIndex, text: p.text, hash: sha1(p.text) }]))
+  storyParagraphs(story).flatMap((p, partIndex) =>
+    p.beats[0].kind === "roll" || p.beats[0].kind === "reply" || p.beats[0].kind === "feature" ? [] : [{ partIndex, text: p.text, hash: sha1(p.text) }]
+  )
 
 // A turn's paragraphs split for voices: narration and actions in the narrator's voice, each line in its speaker's,
 // with its delivery as the style. A speaker who is not one of the turn's characters is read by the narrator.

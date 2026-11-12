@@ -4,6 +4,7 @@ import { type Strike, strike, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { afterHarm, deathSave } from "../sheet/death"
+import { inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
@@ -146,7 +147,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const [natural] = d20sFor("normal", args.dice)
       const saved = deathSave(args.character, natural, rules)
       const bonus = 0 - d20Penalty(args.character)
-      const beat = rollBeat(by, args.character, DEATH_SAVE.rollType, { dice: [natural], natural, bonus, total: natural + bonus, dc: DEATH_SAVE.difficulty, success: saved.success, mode: "normal" })
+      // The beat keeps the saves as this throw left them, and how it ended the hero's dying.
+      const fate = saved.fate === "revived" ? ("revived" as const) : saved.fate === "dies" ? ("dead" as const) : saved.fate === "stable" ? ("stable" as const) : undefined
+      const beat: StoryBeat = {
+        ...rollBeat(by, args.character, DEATH_SAVE.rollType, { dice: [natural], natural, bonus, total: natural + bonus, dc: DEATH_SAVE.difficulty, success: saved.success, mode: "normal" }),
+        deathSave: { ...saved.saves, ...(fate ? { fate } : {}) },
+      }
       return {
         ...withStory(args.turn, [beat]),
         characters: args.turn.characters.map((character) =>
@@ -160,13 +166,16 @@ export function createAdventureRollResultService(ports: GmPorts) {
     let target: TurnCharacter | undefined
     let roll: StoryBeat
     let numbers: { natural: number; bonus: number; total: number; against: number; success: boolean }
+    // Whether the roller's Bardic Inspiration die was rolled, and so is spent.
+    let inspired = false
     if (isAttackRoll(required)) {
       // An attack: the engine rolls to hit against the target's Armor Class and, on a hit, the damage. The target's
       // hit points change here and nowhere else.
       target = turnCharacters.find((character) => character.id === required.attack.target)
       if (!target) throw new Error("The one attacked is no longer here.")
-      const struck = strike({ attacker: args.character, target, weapon: required.attack.weapon, dice: d20sFor(mode, args.dice), mode, roll: rollDie, rules })
+      const struck = strike({ attacker: args.character, target, weapon: required.attack.weapon, dice: d20sFor(mode, args.dice), mode, roll: rollDie, rules, inspiration: args.character.inspiration })
       blow = struck
+      inspired = struck.inspired !== undefined
       turnCharacters = turnCharacters.map((character) => (character.id === required.attack.target ? afterHarm(struck.target) : character))
       roll = attackBeat(by, args.character, target.id, blow)
       numbers = { natural: blow.roll.natural, bonus: blow.roll.bonus, total: blow.roll.total, against: blow.roll.armorClass, success: blow.roll.hit }
@@ -174,7 +183,11 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // The bonus is read from the sheet as the die lands, so the sheet is always the one source of it.
       // A condition may make the roller fail a saving throw outright, whatever the dice show.
       const failedBy = saveFailedBy(args.character, required.check)
-      const result = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, required.check), dc: required.difficulty, mode, fails: !!failedBy })
+      const thrown = resolveCheck({ dice: d20sFor(mode, args.dice), bonus: checkBonus(args.character, required.check), dc: required.difficulty, mode, fails: !!failedBy })
+      // A held Bardic Inspiration die is rolled on a failure it could turn into a success.
+      const held = args.character.inspiration
+      const result = !failedBy && !thrown.success && inspirationHelps(held, thrown.dc - thrown.total) ? inspiredCheck(thrown, held, rollDie) : thrown
+      inspired = result.inspired !== undefined
       // What the roll put at stake is settled here, by the engine: who it hurts or heals, and how they stand after.
       const settled = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
       turnCharacters = settled.characters
@@ -183,7 +196,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
     // What the roll used up: an ally's Help, and the roller's own hiding when they attacked.
-    turnCharacters = afterRoll(turnCharacters, args.characterId, required)
+    turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken)
+    if (inspired) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withoutInspiration(character) : character))
     const spell = isAttackRoll(required) ? undefined : required.spell
     const { total: totalResult, against: difficulty } = numbers
     const margin = totalResult - difficulty

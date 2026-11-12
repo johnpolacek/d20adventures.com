@@ -260,6 +260,8 @@ export default defineSchema({
         specialAbilities: v.optional(v.array(v.string())),
         conditions: v.optional(v.array(v.object({ id: v.string(), source: v.optional(v.string()), turns: v.optional(v.number()), level: v.optional(v.number()) }))),
         turnEffects: v.optional(v.array(v.object({ id: v.string(), by: v.string(), skill: v.optional(v.string()), turns: v.number() }))),
+        featureUses: v.optional(v.record(v.string(), v.number())),
+        inspiration: v.optional(v.object({ die: v.number(), by: v.string() })),
         dead: v.optional(v.literal(true)),
         fled: v.optional(v.literal(true)),
         effects: v.optional(

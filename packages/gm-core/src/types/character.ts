@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { conditionEntrySchema } from "../sheet/condition-entry"
 import { sheetSchema } from "../sheet/sheet"
-import { turnEffectSchema } from "../sheet/turn-effect"
+import { featureUsesSchema, inspirationSchema, turnEffectSchema } from "../sheet/turn-effect"
 
 // Equipment item schema and type
 export const equipmentItemSchema = z.object({
@@ -71,6 +71,10 @@ export const baseCharacterSchema = z.object({
   // What an action of a turn has left on the character: Dodging, or an ally's Help. Only the engine writes it,
   // through ../sheet/actions.
   turnEffects: z.array(turnEffectSchema).optional(),
+  // How many times each class feature with a number of uses has been used, and a Bardic Inspiration die held. Only
+  // the engine writes them, through ../sheet/features.
+  featureUses: featureUsesSchema.optional(),
+  inspiration: inspirationSchema.optional(),
   // Dead, or gone from the encounter for good. Neither is a condition, and only the engine sets them.
   dead: z.literal(true).optional(),
   fled: z.literal(true).optional(),
@@ -128,6 +132,8 @@ export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
   deathSaves: true,
   conditions: true,
   turnEffects: true,
+  featureUses: true,
+  inspiration: true,
   dead: true,
   fled: true,
 })

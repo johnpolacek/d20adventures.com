@@ -163,6 +163,11 @@ function resistancesOf(sheet: Sheet, parts: Parts): DamageTypeId[] {
   return [...found].sort()
 }
 
+/** Whether weapon training covers a weapon: its category, and any property the training is limited to. */
+export function trainedWith(training: Class["weapons"], weapon: { category: string; properties?: readonly string[] }): boolean {
+  return training.some((entry) => entry.category === weapon.category && (!entry.withProperty || entry.withProperty.some((property) => (weapon.properties ?? []).includes(property))))
+}
+
 /** Faults in a sheet's choices: an id the SRD data lacks, a skill outside the class's list, armor the class is not trained in. */
 export function sheetProblems(sheet: Sheet): string[] {
   const { parts, problems } = lookup(sheet)
@@ -181,6 +186,17 @@ export function sheetProblems(sheet: Sheet): string[] {
   for (const skill of sheet.expertise ?? []) if (!proficient.has(skill)) problems.push(`Expertise in ${skill} needs proficiency in it`)
   const expertiseAllowed = parts.features.reduce((sum, feature) => sum + (feature.expertise ? feature.expertise.count * feature.levels.filter((level) => level <= sheet.level).length : 0), 0)
   if ((sheet.expertise?.length ?? 0) > expertiseAllowed) problems.push(`the sheet has Expertise in ${sheet.expertise?.length} skills, and its class features allow ${expertiseAllowed}`)
+
+  // Weapon Mastery: as many kinds of weapons as the class's table or feature gives, each one the class is trained in.
+  const masteriesAllowed = cls.levels[sheet.level - 1]?.weaponMastery ?? parts.features.reduce((most, feature) => Math.max(most, feature.weaponMasteries ?? 0), 0)
+  const masteries = sheet.weaponMasteries ?? []
+  if (masteries.length > masteriesAllowed) problems.push(`the sheet has mastery of ${masteries.length} kinds of weapons, and ${cls.name} allows ${masteriesAllowed} at level ${sheet.level}`)
+  if (new Set(masteries).size !== masteries.length) problems.push("a weapon mastery is listed twice")
+  for (const id of masteries) {
+    const weapon = equipmentById.get(id)
+    if (weapon?.kind !== "weapon") problems.push(`"${id}" is not a weapon to master`)
+    else if (!trainedWith(cls.weapons, weapon)) problems.push(`${cls.name} is not trained with the ${weapon.name}, so cannot master it`)
+  }
 
   const training = armorTrainingOf(sheet, parts)
   if (parts.armor && !training.some((kind) => kind === parts.armor?.category)) problems.push(`${cls.name} has no training with ${parts.armor.category} armor`)

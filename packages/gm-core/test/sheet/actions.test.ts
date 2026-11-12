@@ -2,11 +2,12 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { afterRoll, attackModesFromActions, checkModesFromActions, hideRoll, takeAction, turnEffectsAtEncounterEnd, turnEffectWords } from "../../src/sheet/actions"
-import { strike } from "../../src/sheet/attack"
+import { masteryOf, strike } from "../../src/sheet/attack"
 import type { Check } from "../../src/sheet/check"
 import type { ConditionEntry } from "../../src/sheet/condition-entry"
 import { attackModesFrom } from "../../src/sheet/conditions"
 import { atRoundStart } from "../../src/sheet/death"
+import { sheetProblems } from "../../src/sheet/derive"
 import { applyStakes } from "../../src/sheet/harm"
 import type { Sheet } from "../../src/sheet/sheet"
 import type { TurnEffect } from "../../src/sheet/turn-effect"
@@ -127,4 +128,37 @@ test("Dash and Disengage are taken and change no roll, and nothing an action lef
     assert.deepEqual([taken.characters, taken.fact], [[thalbern, owlbear], `Thalbern takes the ${action === "dash" ? "Dash" : "Disengage"} action.`])
   }
   assert.equal(turnEffectsAtEncounterEnd({ ...thalbern, turnEffects: [{ id: "dodging" as const, by: "thalbern", turns: 2 }] }).turnEffects, undefined)
+})
+
+test("Weapon Mastery: a Ranger and a Rogue master two kinds of weapons they are trained with, a Fighter three, a Wizard none", () => {
+  assert.deepEqual(sheetProblems(thalbern.sheet as Sheet), [])
+  assert.deepEqual(sheetProblems({ ...(thalbern.sheet as Sheet), weaponMasteries: ["longbow", "shortsword", "dagger"] }), [
+    "the sheet has mastery of 3 kinds of weapons, and Ranger allows 2 at level 1",
+  ])
+  assert.deepEqual(sheetProblems({ ...(branka.sheet as Sheet), weaponMasteries: ["warhammer", "longsword", "longbow"] }), [])
+  // A Rogue is trained with Simple weapons and with Martial weapons that are Finesse or Light. A Longbow is neither.
+  assert.deepEqual(sheetProblems({ ...(poppen.sheet as Sheet), weaponMasteries: ["shortbow", "longbow"] }), ["Rogue is not trained with the Longbow, so cannot master it"])
+  const lyra = sheet("covert-cargo/characters/1749159962941.json")
+  assert.deepEqual(sheetProblems({ ...lyra, weaponMasteries: ["quarterstaff"] }), ["the sheet has mastery of 1 kinds of weapons, and Wizard allows 0 at level 1"])
+  // The property is the weapon's own, and only for a kind the hero has mastered. Thalbern carries a Dagger and has not mastered it.
+  assert.deepEqual([masteryOf(thalbern, "shortsword"), masteryOf(thalbern, "longbow"), masteryOf(thalbern, "dagger"), masteryOf(owlbear, "rend")], ["vex", "slow", undefined, undefined])
+})
+
+test("Vex: a hit that deals damage gives the attacker's next attack on that creature Advantage, once", () => {
+  const blade = { attack: { weapon: "shortsword", target: "owlbear" }, rollType: "Shortsword", difficulty: 13, modifier: 5, mode: "normal" as const }
+  const scene = [{ ...thalbern, isComplete: true }, branka, owlbear]
+  // A hit for 6 with his mastered Shortsword.
+  const after = afterRoll(scene, "thalbern", blade, 6)
+  const beast = find(after, "owlbear")
+  assert.deepEqual(beast.turnEffects, [{ id: "vexed", by: "thalbern", turns: 2 }])
+  assert.deepEqual(attackModesFromActions(find(after, "thalbern"), beast, after), [{ mode: "advantage", from: "Vex" }])
+  assert.deepEqual(attackModesFromActions(branka, beast, after), [])
+  // It lasts through his next turn: the round turns, and it is still there for the attack he makes then.
+  const next = after.map(atRoundStart)
+  assert.deepEqual(modes(attackModesFromActions(find(next, "thalbern"), find(next, "owlbear"), next)), ["advantage"])
+  // That attack spends it. A miss sets up nothing, and another hit sets it up again.
+  assert.equal(find(afterRoll(next, "thalbern", blade, 0), "owlbear").turnEffects, undefined)
+  assert.deepEqual(find(afterRoll(next, "thalbern", blade, 4), "owlbear").turnEffects, [{ id: "vexed", by: "thalbern", turns: 2 }])
+  // A Longbow's mastery is Slow, and his Dagger is not mastered: neither gives it.
+  for (const weapon of ["longbow", "dagger"]) assert.equal(find(afterRoll(scene, "thalbern", { ...blade, attack: { weapon, target: "owlbear" } }, 6), "owlbear").turnEffects, undefined)
 })

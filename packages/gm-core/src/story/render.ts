@@ -8,8 +8,10 @@ export const storyNames = (characters: readonly { id: string; name: string }[]):
 const sameBy = (a: StoryBy, b: StoryBy) => a.step === b.step && a.character === b.character
 const who = (beat: StoryBeat) => (beat.kind === "action" ? beat.actor : beat.kind === "line" ? beat.speaker : undefined)
 
+// An attack is rolled against Armor Class and hits or misses. Anything else is rolled against a DC.
+const verdictOf = (r: RollBeat) => (r.attack ? (r.success ? (r.attack.critical ? "Critical Hit" : "Hit") : "Miss") : r.success ? "Success" : "Failure")
 export const rollSentence = (r: RollBeat) =>
-  `${r.name} · ${r.check}: ${r.natural}${r.modifier !== undefined ? ` ${r.modifier < 0 ? "-" : "+"} ${Math.abs(r.modifier)} = ${r.total}` : ""}, DC ${r.dc}. ${r.success ? "Success" : "Failure"}.`
+  `${r.name} · ${r.check}: ${r.natural}${r.modifier !== undefined ? ` ${r.modifier < 0 ? "-" : "+"} ${Math.abs(r.modifier)} = ${r.total}` : ""}, ${r.attack ? "AC" : "DC"} ${r.dc}. ${verdictOf(r)}.`
 
 export interface StoryParagraph {
   beats: StoryBeat[]
@@ -81,10 +83,22 @@ export function scriptLine(beat: StoryBeat, names: StoryNames, marked = true): s
       return `${nameOf(names, beat.speaker)}${beat.to ? ` to ${nameOf(names, beat.to)}` : ""}${beat.delivery ? `, ${beat.delivery}` : ""}${note}: "${beat.text}"`
     case "action":
       return `${beat.text}${note}`
-    case "roll":
-      return `[${beat.name} rolls ${beat.check}: ${beat.total} against DC ${beat.dc}, ${beat.success ? "success" : "failure"}]`
+    case "roll": {
+      // The engine's own record of what the roll did, so a later prompt tells no other harm.
+      if (beat.attack) {
+        const landed = beat.success ? `${beat.attack.critical ? "a Critical Hit" : "a hit"} for ${beat.attack.taken ?? 0} damage` : "a miss"
+        return `[${beat.name} attacks ${nameOf(names, beat.attack.target)} with ${beat.check}: ${beat.total} against Armor Class ${beat.dc}, ${landed}]`
+      }
+      const did = [
+        ...(beat.harm ?? []).map((harm) => `${nameOf(names, harm.target)} ${harm.kind === "healing" ? "regains" : "loses"} ${harm.amount} hit points`),
+        ...(beat.conditions ?? []).map((change) => `${nameOf(names, change.target)} is ${change.ends ? "no longer " : ""}${change.condition}`),
+      ]
+      return `[${beat.name} rolls ${beat.check}: ${beat.total} against DC ${beat.dc}, ${beat.success ? "success" : "failure"}${did.length ? `. ${did.join(". ")}` : ""}]`
+    }
     case "reply":
       return `[The player wrote for ${nameOf(names, beat.character)}: ${beat.text}]`
+    case "feature":
+      return `[${beat.text}]`
     default:
       return beat.text
   }

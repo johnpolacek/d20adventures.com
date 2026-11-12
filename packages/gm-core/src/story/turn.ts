@@ -66,6 +66,7 @@ export function rollBeat(
     ...(roller.image ? { image: roller.image } : {}),
     ...(harm?.length ? { harm } : {}),
     ...(conditions?.length ? { conditions } : {}),
+    ...(result.inspired !== undefined ? { inspired: result.inspired } : {}),
   }
 }
 
@@ -89,5 +90,6 @@ export function attackBeat(by: StoryBy, roller: { id: string; name: string; imag
     success: roll.hit,
     ...(roller.image ? { image: roller.image } : {}),
     attack: { target, ...(roll.critical ? { critical: true as const } : {}), ...(blow.damage ? { damage: blow.damage.parts, taken: blow.taken } : {}) },
+    ...(blow.inspired !== undefined ? { inspired: blow.inspired } : {}),
   }
 }

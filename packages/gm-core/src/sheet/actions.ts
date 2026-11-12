@@ -2,6 +2,7 @@ import type { SkillId } from "@d20/srd"
 import { monsterById } from "@d20/srd/monsters"
 import { skillById } from "@d20/srd/skills"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
+import { masteryOf } from "./attack"
 import { type Check, checkBonus, type Roller } from "./check"
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
@@ -93,6 +94,7 @@ export function attackModesFromActions(attacker: Acting, target: Acting, present
     if (effect.id === "dodging" && !cannotMove(target)) found.push({ mode: "disadvantage", from: `${target.name} Dodging` })
     const helper = all.find((character) => character.id === effect.by)
     if (effect.id === "distracted" && helper && helper.id !== attacker.id && helper.type === attacker.type) found.push({ mode: "advantage", from: `Help from ${helper.name}` })
+    if (effect.id === "vexed" && effect.by === attacker.id) found.push({ mode: "advantage", from: "Vex" })
   }
   return found
 }
@@ -118,18 +120,26 @@ const drop = <T extends Acting>(character: T, gone: (effect: TurnEffect) => bool
 }
 
 /**
- * Everyone after a roll is made, with what the roll used up. Help is for the next roll only: an attack on an enemy an
- * ally Helped against spends it, as a check with the skill Helped spends that. One who makes an attack roll is no
- * longer hidden, so their Invisible ends.
+ * Everyone after a roll is made, with what the roll used up and what it set up. Help is for the next roll only: an
+ * attack on an enemy an ally Helped against spends it, as a check with the skill Helped spends that. One who makes an
+ * attack roll is no longer hidden, so their Invisible ends. Vex: an attack that hits and deals damage with a weapon
+ * whose Vex mastery the attacker has gives their next attack on that creature Advantage, and that attack spends it.
+ * `dealt` is the damage an attack did, 0 for a miss.
  */
-export function afterRoll<T extends Acting & { conditions?: readonly ConditionEntry[] }>(characters: readonly T[], rollerId: string, roll: RequiredRoll): T[] {
+export function afterRoll<T extends Acting & { conditions?: readonly ConditionEntry[] }>(characters: readonly T[], rollerId: string, roll: RequiredRoll, dealt = 0): T[] {
   const roller = characters.find((character) => character.id === rollerId)
   if (!roller) return [...characters]
   if ("attack" in roll) {
+    const vexes = dealt > 0 && masteryOf(roller, roll.attack.weapon) === "vex"
     return characters.map((character) => {
       if (character.id === rollerId) return withoutCondition(character, "invisible").character
       if (character.id !== roll.attack.target) return character
-      return drop(character, (effect) => effect.id === "distracted" && effect.by !== rollerId && characters.find((other) => other.id === effect.by)?.type === roller.type)
+      const spent = drop(
+        character,
+        (effect) =>
+          (effect.id === "vexed" && effect.by === rollerId) || (effect.id === "distracted" && effect.by !== rollerId && characters.find((other) => other.id === effect.by)?.type === roller.type)
+      )
+      return vexes ? give(spent, { id: "vexed", by: rollerId, turns: 2 }) : spent
     })
   }
   if (!("check" in roll) || roll.check.kind !== "skill") return [...characters]
@@ -156,6 +166,6 @@ export const turnEffectsAtEncounterEnd = <T extends { turnEffects?: readonly Tur
 export function turnEffectWords(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): string {
   return (character.turnEffects ?? [])
     .filter((effect) => holds(effect, present))
-    .map((effect) => (effect.id === "dodging" ? "Dodging" : effect.id === "helped" ? `Helped with ${skillById.get(effect.skill ?? "stealth")?.name}` : "Distracted"))
+    .map((effect) => (effect.id === "dodging" ? "Dodging" : effect.id === "helped" ? `Helped with ${skillById.get(effect.skill ?? "stealth")?.name}` : effect.id === "vexed" ? "Vexed" : "Distracted"))
     .join(", ")
 }

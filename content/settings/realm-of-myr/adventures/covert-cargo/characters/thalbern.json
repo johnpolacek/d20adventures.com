@@ -53,6 +53,7 @@
     "otherSkills": ["perception"],
     "feats": ["alert"],
     "armor": "studded-leather-armor",
-    "weapons": ["longbow", "shortsword", "dagger"]
+    "weapons": ["longbow", "shortsword", "dagger"],
+    "weaponMasteries": ["longbow", "shortsword"]
   }
 }

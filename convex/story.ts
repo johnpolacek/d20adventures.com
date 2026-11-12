@@ -5,6 +5,17 @@ const oneOf = <T extends string>(values: readonly [T, ...T[]]) => v.union(...val
 
 // A turn's story as labelled beats, as the GM core writes it (packages/gm-core/src/story/beats.ts).
 const by = v.object({ step: v.union(v.literal("intro"), v.literal("reply"), v.literal("roll"), v.literal("npc"), v.literal("round")), character: v.optional(v.string()) })
+const harm = v.array(
+  v.object({
+    target: v.string(),
+    kind: v.union(v.literal("damage"), v.literal("healing")),
+    dice: v.array(v.number()),
+    sides: v.optional(v.number()),
+    bonus: v.number(),
+    type: v.optional(v.string()),
+    amount: v.number(),
+  })
+)
 export const storyValidator = v.array(
   v.union(
     v.object({ kind: v.literal("narration"), by, text: v.string(), place: v.optional(v.string()) }),
@@ -44,23 +55,17 @@ export const storyValidator = v.array(
         })
       ),
       // What a check or save hurt or healed: the dice as they fell and what each target lost or regained.
-      harm: v.optional(
-        v.array(
-          v.object({
-            target: v.string(),
-            kind: v.union(v.literal("damage"), v.literal("healing")),
-            dice: v.array(v.number()),
-            sides: v.optional(v.number()),
-            bonus: v.number(),
-            type: v.optional(v.string()),
-            amount: v.number(),
-          })
-        )
-      ),
+      harm: v.optional(harm),
       // The conditions a check or save gave, or ended, and for whom.
       conditions: v.optional(v.array(v.object({ target: v.string(), condition: v.string(), ends: v.optional(v.literal(true)) }))),
+      // A Bardic Inspiration die rolled and added to a roll that had failed.
+      inspired: v.optional(v.number()),
+      // A Death Saving Throw: the saves once it was made, and how it ended the hero's dying.
+      deathSave: v.optional(v.object({ successes: v.number(), failures: v.number(), fate: v.optional(v.union(v.literal("revived"), v.literal("stable"), v.literal("dead"))) })),
     }),
-    v.object({ kind: v.literal("reply"), by, character: v.string(), text: v.string() })
+    v.object({ kind: v.literal("reply"), by, character: v.string(), text: v.string() }),
+    // A class feature used with a Bonus Action, which the engine applied.
+    v.object({ kind: v.literal("feature"), by, character: v.string(), name: v.string(), text: v.string(), target: v.optional(v.string()), harm: v.optional(harm) })
   )
 )
 

@@ -14,7 +14,7 @@ export function createAdventure(ports: GmPorts) {
   const { assertAdventureAccessByTurn } = createAdventureAccess(ports)
   const { buildFirstTurnSetup } = createAdventureFirstTurnService(ports)
   const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
-  const { readTurnReply, applyTakenAction } = createAdventureTurnReplyService(ports)
+  const { readTurnReply, applyReading } = createAdventureTurnReplyService(ports)
   const { processNpcTurnsAfterCurrent } = createNpcTurnService(ports)
   const { writeReply } = createNarrativeGenerationService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
@@ -50,6 +50,8 @@ export function createAdventure(ports: GmPorts) {
         story: reply,
         rollRequirement: rollRequirementDetails,
       })
+      // A Bonus Action used beside the roll is applied now, before the die is thrown.
+      await applyReading({ turnId, characterId, reading })
       ports.narration.afterTurn(turnId)
       return { rollRequired: rollRequirementDetails }
     }
@@ -60,7 +62,7 @@ export function createAdventure(ports: GmPorts) {
       rollRequirement: undefined,
     })
     // An action with no roll (Dodge, Help) is the hero's whole turn: what it leaves is written before anyone else acts.
-    if (reading.action) await applyTakenAction({ turnId, characterId, action: reading.action })
+    await applyReading({ turnId, characterId, reading })
     if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
     ports.narration.afterTurn(turnId)
     return { rollRequired: null }

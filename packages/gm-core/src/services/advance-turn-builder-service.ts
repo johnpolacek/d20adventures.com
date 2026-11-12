@@ -1,6 +1,7 @@
 import { turnEffectsAtEncounterEnd } from "../sheet/actions"
 import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { atRoundStart, revived } from "../sheet/death"
+import { featuresAtEncounterEnd } from "../sheet/features"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
@@ -76,7 +77,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
   console.log(`[advanceTurn] Resetting spell usage for all PCs on encounter transition to: ${nextEncounter.id}`)
   pcs = resetAllSpells(pcs)
   // A new encounter comes later: the conditions of a fight's moment are over, and lasting ones stay.
-  pcs = pcs.map((pc) => turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(pc)))
+  pcs = pcs.map((pc) => featuresAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(pc))))
 
   if (nextEncounter.resetHealth) {
     console.log(`[advanceTurn] Resetting health for all characters due to resetHealth flag in encounter: ${nextEncounter.id}`)

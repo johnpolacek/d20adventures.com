@@ -63,6 +63,7 @@
     "classSkills": ["acrobatics", "deception", "perception", "persuasion"],
     "expertise": ["stealth", "sleight-of-hand"],
     "armor": "leather-armor",
-    "weapons": ["dagger", "shortbow"]
+    "weapons": ["dagger", "shortbow"],
+    "weaponMasteries": ["shortbow", "dagger"]
   }
 }

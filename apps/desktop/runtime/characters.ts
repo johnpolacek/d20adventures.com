@@ -2,6 +2,7 @@ import type { TurnRecord } from "@d20/gm-core"
 import { turnEffectsAtEncounterEnd } from "@d20/gm-core/sheet/actions"
 import { conditionsAtEncounterEnd, conditionWords, withoutCondition } from "@d20/gm-core/sheet/conditions"
 import { atRoundStart } from "@d20/gm-core/sheet/death"
+import { featuresAtEncounterEnd } from "@d20/gm-core/sheet/features"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
@@ -12,7 +13,10 @@ import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
 export const desktopPatchSchema = strictModelSchema(adventurePatchSchema.omit({ characterUpdates: true })).extend({
   characterUpdates: z.array(characterUpdateSchema).max(100).optional(),
 })
-export type CharacterState = Pick<TurnCharacter, "hitPoints" | "healthPercent" | "conditions" | "turnEffects" | "dead" | "fled" | "deathSaves" | "equipment" | "effects" | "spells">
+export type CharacterState = Pick<
+  TurnCharacter,
+  "hitPoints" | "healthPercent" | "conditions" | "turnEffects" | "featureUses" | "inspiration" | "dead" | "fled" | "deathSaves" | "equipment" | "effects" | "spells"
+>
 export type CharacterStates = Record<string, CharacterState>
 const key = (name: string) => name.trim().toLowerCase()
 
@@ -22,6 +26,8 @@ export function characterState(c: CharacterState): CharacterState {
     healthPercent: c.healthPercent,
     conditions: c.conditions,
     turnEffects: c.turnEffects,
+    featureUses: c.featureUses,
+    inspiration: c.inspiration,
     dead: c.dead,
     fled: c.fled,
     // Always set, so a hero brought back clears the saves a later spread would otherwise keep.
@@ -114,8 +120,8 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
     const before = args.current.find((c) => c.id === next.id)
     const revived = before && isDown(before) && !isDown(next) && isDown(states[next.id] ?? before) ? deathState(next) : {}
     const kept = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
-    // A new encounter ends the conditions of a fight's moment and what its actions left, and the lasting conditions come along.
-    const c = args.encounterChanged ? turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept)) : kept
+    // A new encounter ends the conditions of a fight's moment and what its actions left, and gives feature uses back. The lasting conditions come along.
+    const c = args.encounterChanged ? featuresAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept))) : kept
     if (!c.deathSaves) delete c.deathSaves
     if (args.encounterChanged) c.spells = (c.spells ?? []).map((s) => ({ ...s, isUsed: false }))
     // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none.

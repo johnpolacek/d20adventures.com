@@ -101,7 +101,8 @@ export function withHitPointsBy<T extends Mortal>(character: T, current: number,
   return character
 }
 
-export type DeathSaveResult = { character: Mortal; natural: number; success: boolean; fate?: Fate }
+/** A Death Saving Throw as it fell: the hero after it, the saves once it was made, and how it ended their dying, if it did. */
+export type DeathSaveResult<T> = { character: T; natural: number; success: boolean; fate?: Fate; saves: { successes: number; failures: number } }
 
 /**
  * A dying hero's Death Saving Throw: a d20 with no bonus. 10 or more is a success and less a failure. A 1 is two
@@ -109,23 +110,20 @@ export type DeathSaveResult = { character: Mortal; natural: number; success: boo
  * at 0 with no more saves. Three failures kill, or where player death is off leave the hero Stable. Exhaustion takes
  * 2 off the roll for each level, and the 1 and the 20 are read off the die itself.
  */
-export function deathSave<T extends Mortal>(character: T, die: number, rules?: DeathRules): { character: T; natural: number; success: boolean; fate?: Fate } {
+export function deathSave<T extends Mortal>(character: T, die: number, rules?: DeathRules): DeathSaveResult<T> {
   if (!isDying(character)) throw new Error(`${character.name ?? "The character"} is not dying, so makes no Death Saving Throw.`)
   if (!Number.isInteger(die) || die < 1 || die > 20) throw new Error(`${die} is not a d20 roll.`)
   const success = die - d20Penalty(character) >= DEATH_SAVE.difficulty
-  if (die === 20) return { character: revived(character, 1), natural: die, success, fate: "revived" }
-  const saves = character.deathSaves ?? { successes: 0, failures: 0 }
-  if (success) {
-    const successes = saves.successes + 1
-    if (successes >= 3) return { character: stable({ ...character, deathSaves: { ...saves, successes } }), natural: die, success, fate: "stable" }
-    return { character: dying(character, { ...saves, successes }), natural: die, success }
+  const before = character.deathSaves ?? { successes: 0, failures: 0 }
+  // A 20 wakes the hero and changes no save.
+  if (die === 20) return { character: revived(character, 1), natural: die, success, fate: "revived", saves: { successes: before.successes, failures: before.failures } }
+  const saves = success ? { successes: Math.min(3, before.successes + 1), failures: before.failures } : { successes: before.successes, failures: Math.min(3, before.failures + (die === 1 ? 2 : 1)) }
+  if (saves.successes >= 3) return { character: stable({ ...character, deathSaves: saves }), natural: die, success, fate: "stable", saves }
+  if (saves.failures >= 3) {
+    const done = killed({ ...character, deathSaves: saves }, rules)
+    return { character: done, natural: die, success, fate: isDead(done) ? "dies" : "stable", saves }
   }
-  const failures = saves.failures + (die === 1 ? 2 : 1)
-  if (failures >= 3) {
-    const done = killed({ ...character, deathSaves: { ...saves, failures: Math.min(3, failures) } }, rules)
-    return { character: done, natural: die, success, fate: isDead(done) ? "dies" : "stable" }
-  }
-  return { character: dying(character, { ...saves, failures }), natural: die, success }
+  return { character: dying(character, saves), natural: die, success, saves }
 }
 
 type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: RollRequirement; rollResult?: number }

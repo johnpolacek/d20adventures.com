@@ -47,6 +47,8 @@ export const sheetSchema = z.strictObject({
   shield: z.boolean().optional(),
   /** The weapons carried, by equipment id: "longbow". Every character can also make an Unarmed Strike. */
   weapons: z.array(idSchema).optional(),
+  /** The kinds of weapons whose mastery property the hero can use, by equipment id, from their Weapon Mastery feature. */
+  weaponMasteries: z.array(idSchema).optional(),
 })
 export type Sheet = z.infer<typeof sheetSchema>
 

@@ -49,6 +49,7 @@
     "featureChoices": {"fighter-fighting-style": "defense"},
     "armor": "breastplate",
     "shield": true,
-    "weapons": ["warhammer"]
+    "weapons": ["warhammer"],
+    "weaponMasteries": ["warhammer"]
   }
 }

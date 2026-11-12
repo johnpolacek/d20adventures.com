@@ -48,6 +48,7 @@
     "classSkills": ["acrobatics", "deception", "insight", "perception"],
     "expertise": ["stealth", "sleight-of-hand"],
     "armor": "leather-armor",
-    "weapons": ["dagger"]
+    "weapons": ["dagger"],
+    "weaponMasteries": ["dagger"]
   }
 }

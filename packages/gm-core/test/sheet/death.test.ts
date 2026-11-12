@@ -76,6 +76,12 @@ test("a Death Saving Throw: 10 or more succeeds, a 1 is two failures, a 20 wakes
   assert.deepEqual(deathSave(dying(), 10).character.deathSaves, { successes: 1, failures: 0 })
   assert.deepEqual(deathSave(dying(), 9).character.deathSaves, { successes: 0, failures: 1 })
   assert.deepEqual(deathSave(dying(), 1).character.deathSaves, { successes: 0, failures: 2 })
+  // The throw reports the saves as it left them, for the story to keep: 1 and 1 with a 13 is 2 and 1. A 20 changes
+  // none. A 1 on two failures is held at three.
+  assert.deepEqual(deathSave(dying(1, 1), 13).saves, { successes: 2, failures: 1 })
+  assert.deepEqual([deathSave(dying(2, 2), 20).saves, deathSave(dying(2, 2), 20).fate], [{ successes: 2, failures: 2 }, "revived"])
+  assert.deepEqual([deathSave(dying(0, 2), 1).saves, deathSave(dying(0, 2), 1).fate], [{ successes: 0, failures: 3 }, "dies"])
+  assert.deepEqual([deathSave(dying(0, 2), 1, off).saves, deathSave(dying(0, 2), 1, off).fate], [{ successes: 0, failures: 3 }, "stable"])
   // A 20: 1 hit point, conscious, saves cleared. 1 of 11 shows as 9%. When Unconscious ends he is left Prone, until
   // his own turn begins and he stands.
   const up = deathSave(dying(2, 2), 20)

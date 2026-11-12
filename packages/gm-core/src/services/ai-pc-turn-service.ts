@@ -153,7 +153,7 @@ export async function suggestActions(
 export function createAiPcTurnService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
-  const { readTurnReply, applyTakenAction } = createAdventureTurnReplyService(ports)
+  const { readTurnReply, applyReading } = createAdventureTurnReplyService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
   // The AI companion's move, as its own beats: what it does and, at times, says.
   async function generateAiPcIntent(args: {
@@ -246,11 +246,9 @@ export function createAiPcTurnService(ports: GmPorts) {
         story: beats,
         rollRequirement: rollRequirement ?? undefined,
       })
-      if (!rollRequirement) {
-        // submitReply marked the character complete. An action with no roll leaves its mark now.
-        if (reading.action) await applyTakenAction({ turnId, characterId, action: reading.action })
-        return
-      }
+      // A Bonus Action, and an action with no roll, leave their mark now. With no roll, submitReply marked the character complete.
+      await applyReading({ turnId, characterId, reading })
+      if (!rollRequirement) return
 
       turn = await ports.store.getTurn({ turnId })
       if (!turn) throw new Error("Turn disappeared while processing AI companion roll")

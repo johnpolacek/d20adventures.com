@@ -50,7 +50,7 @@ export function buildLocalWikiTurnCharacters(args: {
     // The conditions of the fight they left are over, and the lasting ones come with them.
     const was = carried as Partial<TurnCharacter> | undefined
     const kept = was ? conditionsAtEncounterEnd({ conditions: was.conditions }).conditions : undefined
-    const state = { conditions: kept, turnEffects: undefined, dead: was?.dead, deathSaves: was?.hitPoints === 0 ? was.deathSaves : undefined }
+    const state = { conditions: kept, turnEffects: undefined, featureUses: undefined, inspiration: undefined, dead: was?.dead, deathSaves: was?.hitPoints === 0 ? was.deathSaves : undefined }
     characters.push(carried?.hitPoints === undefined ? withStartingHitPoints(hero) : { ...withHitPoints(hero, carried.hitPoints), ...state })
   }
 

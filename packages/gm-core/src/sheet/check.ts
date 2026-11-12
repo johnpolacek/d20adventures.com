@@ -114,6 +114,8 @@ export type CheckResult = {
   dc: number
   success: boolean
   mode: RollMode
+  /** A Bardic Inspiration die rolled and added to a roll that had failed (./features). `total` includes it. */
+  inspired?: number
 }
 
 /**

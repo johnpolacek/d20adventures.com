@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
-import { type TakenAction, takeAction } from "../sheet/actions"
+import { takeAction } from "../sheet/actions"
 import type { ConditionEntry } from "../sheet/condition-entry"
+import { useBonusAction } from "../sheet/features"
 import type { Sheet } from "../sheet/sheet"
 import type { TurnEffect } from "../sheet/turn-effect"
 import { authoredText } from "../story/authored"
@@ -10,6 +11,7 @@ import { turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
+import { rollDie } from "../utils/game-utils"
 import { createRollRequirementService, type TurnReading } from "./roll-requirement-service"
 
 export function createAdventureTurnReplyService(ports: GmPorts) {
@@ -110,13 +112,37 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     })
   }
 
-  /** Apply an action that took no roll, once the reply is stored: what it leaves on the characters is written to the turn. */
-  async function applyTakenAction(args: { turnId: string; characterId: string; action: TakenAction }): Promise<void> {
+  /**
+   * Apply what a reply did beside any roll, once the reply is stored: a Bonus Action the hero used, and an action
+   * that took no roll. What they leave on the characters is written to the turn, and a Bonus Action is told in the
+   * story as a beat of its own.
+   */
+  async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading }): Promise<void> {
+    const { action, bonus } = args.reading
+    if (!action && !bonus) return
     const turn = await ports.store.getTurn({ turnId: args.turnId })
     if (!turn) throw new Error("Turn not found")
-    const { characters, fact } = takeAction(turn.characters as TurnCharacter[], args.characterId, args.action)
-    console.log("[LLM] Action taken:", fact ?? "none")
-    if (fact) await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, updatedAt: Date.now() } })
+    let characters = turn.characters as TurnCharacter[]
+    const used = bonus ? useBonusAction({ characters, actorId: args.characterId, feature: bonus.feature, target: bonus.target, roll: rollDie }) : undefined
+    if (used) characters = used.characters
+    const taken = action ? takeAction(characters, args.characterId, action) : undefined
+    if (taken) characters = taken.characters
+    console.log("[LLM] Reading applied:", { bonus: used?.use?.fact ?? "none", action: taken?.fact ?? "none" })
+    if (!used?.use && !taken?.fact) return
+    const told: StoryBeat[] = used?.use
+      ? [
+          {
+            kind: "feature",
+            by: { step: "reply", character: args.characterId },
+            character: args.characterId,
+            name: used.use.name,
+            text: used.use.fact,
+            ...(used.use.target ? { target: used.use.target } : {}),
+            ...(used.use.harm ? { harm: used.use.harm } : {}),
+          },
+        ]
+      : []
+    await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, ...(told.length ? { story: [...turn.story, ...told] } : {}), updatedAt: Date.now() } })
   }
-  return { readTurnReply, applyTakenAction }
+  return { readTurnReply, applyReading }
 }

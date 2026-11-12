@@ -49,6 +49,7 @@
     "otherSkills": ["insight"],
     "speciesChoices": {"elven-lineage": "wood-elf"},
     "armor": "leather-armor",
-    "weapons": ["longbow", "dagger"]
+    "weapons": ["longbow", "dagger"],
+    "weaponMasteries": ["longbow", "dagger"]
   }
 }

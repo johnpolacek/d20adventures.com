@@ -7,6 +7,7 @@ import { attacksOf } from "../sheet/attack"
 import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
 import { conditionSpans } from "../sheet/condition-entry"
 import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
+import { bonusActionsOf } from "../sheet/features"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import { actionIds } from "../sheet/turn-effect"
@@ -34,6 +35,8 @@ const rollPickSchema = z.object({
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
   target: z.string().max(80).optional().describe('For an attack: the id of who is attacked, from Who Is Here. For "help": the id of the ally helped, or of the enemy an ally will attack'),
   helps: z.string().max(40).optional().describe('For "help" given to an ally\'s check: the id of the skill it is for'),
+  bonus: z.string().max(40).optional().describe("The id of one of the character's own Bonus Actions they also use this turn, from Their Bonus Actions"),
+  bonusTarget: z.string().max(80).optional().describe("For a Bonus Action given to someone else: their id"),
   harm: z
     .array(
       z.object({
@@ -58,7 +61,7 @@ type Present = Pick<TurnCharacter, "id" | "name"> &
   Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "isComplete">> & { statBlock?: string }
 
 /** What the game master reads a character's move as: a roll the engine asks for, an action that takes none, or neither. */
-export type TurnReading = { roll: ChosenRoll | null; action?: TakenAction }
+export type TurnReading = { roll: ChosenRoll | null; action?: TakenAction /** One of the roller's own Bonus Actions, used beside the action. */; bonus?: { feature: string; target?: string } }
 
 const MENU = (kind: "skill" | "ability" | "save") =>
   checkMenu
@@ -85,6 +88,7 @@ export function createRollRequirementService(ports: GmPorts) {
     const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDown(other) && !hasFled(other) && !cannotAttack(character, other))
     const conditions = conditionWords(character)
     const attacks = attacksOf(character)
+    const bonusActions = bonusActionsOf(character).filter((entry) => entry.left > 0)
     const casts = spellcastingAbilityOf(character)
     const contextLines = [
       `Name: ${character.name}`,
@@ -157,6 +161,8 @@ ${MENU("save")}
      "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
      "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
      Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
+   - BONUS ACTIONS: beside the action above, the character may use one of their own Bonus Actions in the same turn. Set "bonus" to its id only when their words plainly use it, and leave it out otherwise. One given to someone else takes "bonusTarget", that ally's id.
+     Their Bonus Actions: ${bonusActions.map((entry) => `${entry.id} (${entry.name}, ${entry.left} left${entry.targeted ? ", given to an ally" : ""})`).join(", ") || "none"}.
    - SPELLS: casting one of the character's own spells is a bare check of their spellcasting ability (see Character Context. For an NPC, the ability its magic comes from: intelligence, wisdom or charisma), and "spell" names the spell exactly as their list has it. Magic that is not a spell on their list is "arcana" with no "spell".
    - SPELL AVAILABILITY: Spells marked as "Used (unavailable this encounter)" CANNOT be cast again until the next encounter. If the character tries to cast one, "check" is "none": the spell simply fails to activate.
 
@@ -197,6 +203,9 @@ Action: "${action}"
 
     try {
       const { object: pick } = await generateObject({ schema: rollPickSchema, prompt })
+      // A Bonus Action is the roller's own, with a use left. One the game master makes up is dropped.
+      const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
+      const bonus = used ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } } : {}
       if (pick.check === "attack") {
         const attack = attacks.find((entry) => entry.id === pick.weapon)
         const target = targets.find((other) => other.id === pick.target)
@@ -217,7 +226,7 @@ Action: "${action}"
           ...(reasons.length ? { reasons } : {}),
         }
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
-        return { roll: rollRequirement }
+        return { roll: rollRequirement, ...bonus }
       }
       const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other)).map((other) => other.id))
       // An action that takes no roll. Help names who it is for, and for a check the skill.
@@ -227,14 +236,14 @@ Action: "${action}"
         const helped = pick.target && pick.target !== self && here.has(pick.target) ? pick.target : undefined
         const read: TakenAction | undefined = taken !== "help" ? { action: taken } : helped ? { action: taken, target: helped, ...(skill.success ? { skill: skill.data } : {}) } : undefined
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, action: read })
-        return { roll: null, ...(read ? { action: read } : {}) }
+        return { roll: null, ...(read ? { action: read } : {}), ...bonus }
       }
       // Hide is a Stealth check the rules set: its target and what a success gives are the engine's.
       const hiding = pick.check === "hide" && self ? hideRoll({ ...character, id: self }) : undefined
       const check = hiding ? hiding.check : pick.check === "none" || pick.check === "hide" ? undefined : checkFromMenu(pick.check)
       if (!check) {
-        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false })
-        return { roll: null }
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...bonus })
+        return { roll: null, ...bonus }
       }
       const difficulty = hiding ? HIDE_DC : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
       if (!difficulty) throw new Error(`The game master asked for a ${checkName(check)} check with no difficulty.`)
@@ -284,7 +293,7 @@ Action: "${action}"
         ...(stakes.length ? { stakes } : {}),
       }
       console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
-      return { roll: rollRequirement }
+      return { roll: rollRequirement, ...bonus }
     } catch (error) {
       console.error("[LLM] Roll requirement error:", {
         character: character.name,
