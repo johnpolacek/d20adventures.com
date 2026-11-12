@@ -143,6 +143,8 @@ Owner decisions, 2026-11-11:
 - Death saving throws run in every adventure. Where an adventure has player death off, a third failure leaves the hero stable and out of the fight, not dead.
 - The Owlbear of The Midnight Summons keeps the Owlbear's stat block. The scene is about getting past it, calming it or being rescued, not about beating it.
 - Six classes carry the rules through stages 4 to 7: Fighter, Cleric, Wizard and Rogue, and with them Ranger and Bard, because the premade heroes are of those six. The other six keep the level 1 sheet they have, with their features listed and not live, until stage 8.
+- Harm outside an attack comes off a short ladder the model picks from and the engine rolls: light 1d4, moderate 1d8, heavy 2d6, severe 4d6. Dice printed in an encounter's notes are used as printed.
+- Until stage 5 gives spells their own dice, a spell that hurts or heals uses that same ladder.
 
 The session's calls, which the owner may overrule:
 
