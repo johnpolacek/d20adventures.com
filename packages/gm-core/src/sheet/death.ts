@@ -15,6 +15,7 @@ export type DeathSaves = { successes: number; failures: number; stable?: true }
 export type DeathRules = { playerDeath?: boolean }
 
 type Mortal = {
+  id?: string
   name?: string
   type: string
   sheet?: Sheet
@@ -146,7 +147,12 @@ type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: Ro
  * Incapacitated, takes no turn. Everyone else has yet to act.
  */
 export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
-  const character = spellEffectsAtRoundStart(turnEffectsAtRoundStart(conditionsAtRoundStart(before)))
+  // One who was Prone and is not now has stood, which costs half their Speed this turn (./space).
+  const prone = (one: T) => !!one.conditions?.some((entry) => entry.id === "prone")
+  const risen = conditionsAtRoundStart(before)
+  const eased = turnEffectsAtRoundStart(risen)
+  const stood: T = prone(before) && !prone(risen) ? { ...eased, turnEffects: [...(eased.turnEffects ?? []), { id: "stood" as const, by: before.id ?? "", turns: 1 }] } : eased
+  const character = spellEffectsAtRoundStart(stood)
   if (isDying(character)) return { ...character, rollRequired: { ...DEATH_SAVE, modifier: 0 - d20Penalty(character) }, rollResult: undefined, hasReplied: true, isComplete: false }
   if (isDown(character) || isIncapacitated(character)) return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
   return { ...character, hasReplied: false, isComplete: false }

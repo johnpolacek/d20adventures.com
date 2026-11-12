@@ -8,9 +8,9 @@ import { checkBonus, checkFromMenu, checkMenu, checkMenuIds, checkName, combineM
 import { conditionSpans } from "../sheet/condition-entry"
 import { attackModesFrom, CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords } from "../sheet/conditions"
 import { bonusActionsOf } from "../sheet/features"
-import { type MoveAsk, type Moved, takeMove, withMove } from "../sheet/moves"
+import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
-import { attackReach, coverBetween, coverBonus, feetBetween, greaterCover, isNear, movementBudgetOf, placedOf, within } from "../sheet/space"
+import { attackReach, coverBetween, coverBonus, feetBetween, greaterCover, isNear, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells } from "../sheet/spell-effects"
 import { castInSpace } from "../sheet/spell-space"
 import { castCost, isEngineSpell, slotsLeft, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
@@ -269,7 +269,7 @@ ${MENU("save")}
 ${
   mover && floor
     ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, only when they mean to stop short: a step back is 5.
-   - They can move ${movementBudgetOf(mover)} feet this turn, and twice that when the whole turn is "dash".
+   - They can move ${moveBudget(mover, others)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
    - Never refuse or change an action because of distance. The game settles reach and range itself.
    - A spell marked "an area" takes whoever stands in it, friend or foe: in "targets" give the one it is aimed at first, and for a spell that picks its creatures, each one picked.

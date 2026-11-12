@@ -266,7 +266,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
     // What the roll used up: an ally's Help, and the roller's own hiding when they attacked.
-    turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken)
+    turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken, await ports.content.floor?.(args.turn.encounterId))
     // Concentration: a caster who lost hit points saves to keep their spell, and one now down or unable to act loses it.
     const held = settleConcentration({ before: args.turn.characters, after: turnCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
     turnCharacters = held.characters

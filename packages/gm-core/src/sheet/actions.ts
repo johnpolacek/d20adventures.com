@@ -8,6 +8,7 @@ import { type Check, checkBonus, type Roller } from "./check"
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
+import { type Floor, type Point, pushed, sizeOf, walkOver } from "./space"
 import { afterAttackRoll } from "./spell-effects"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect, TurnEffect } from "./turn-effect"
@@ -128,13 +129,22 @@ const drop = <T extends Acting>(character: T, gone: (effect: TurnEffect) => bool
  * whose Vex mastery the attacker has gives their next attack on that creature Advantage, and that attack spends it.
  * `dealt` is the damage an attack did, 0 for a miss.
  */
-export function afterRoll<T extends Acting & { conditions?: readonly ConditionEntry[] }>(everyone: readonly T[], rollerId: string, roll: RequiredRoll, dealt = 0): T[] {
+export function afterRoll<T extends Acting & { conditions?: readonly ConditionEntry[]; position?: Point }>(
+  everyone: readonly T[],
+  rollerId: string,
+  roll: RequiredRoll,
+  dealt = 0,
+  floor?: Floor
+): T[] {
   let characters: readonly T[] = everyone
   const roller = characters.find((character) => character.id === rollerId)
   if (!roller) return [...characters]
   if ("attack" in roll) {
     characters = afterAttackRoll(characters, rollerId, roll.attack.target)
-    const vexes = dealt > 0 && masteryOf(roller, roll.attack.weapon) === "vex"
+    // What the weapon's mastery does to the one it hurt. Vex gives the attacker's next attack on them Advantage. Slow
+    // takes 10 feet from their Speed until the attacker's next turn. Push sends one no bigger than Large 10 feet straight
+    // away, as far as the first solid thing.
+    const mastery = dealt > 0 ? masteryOf(roller, roll.attack.weapon) : undefined
     return characters.map((character) => {
       if (character.id === rollerId) return withoutCondition(character, "invisible").character
       if (character.id !== roll.attack.target) return character
@@ -143,7 +153,13 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
         (effect) =>
           (effect.id === "vexed" && effect.by === rollerId) || (effect.id === "distracted" && effect.by !== rollerId && characters.find((other) => other.id === effect.by)?.type === roller.type)
       )
-      return vexes ? give(spent, { id: "vexed", by: rollerId, turns: 2 }) : spent
+      if (mastery === "vex") return give(spent, { id: "vexed", by: rollerId, turns: 2 })
+      if (mastery === "slow") return give(spent, { id: "slowed", by: rollerId, turns: 2 })
+      if (mastery === "push" && roller.position && spent.position && PUSHED_SIZES.includes(sizeOf(spent))) {
+        const to = pushed(spent.position, roller.position, PUSH_FEET)
+        return { ...spent, position: floor ? walkOver(floor.solids, spent.position, to, PUSH_FEET).at : to }
+      }
+      return spent
     })
   }
   // Casting a spell gives a hidden caster away, as an attack does. A spell attack spends what was for the next attack only.
@@ -152,6 +168,16 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
   if (!("check" in roll) || roll.check.kind !== "skill") return [...characters]
   const { skill } = roll.check
   return characters.map((character) => (character.id === rollerId ? drop(character, (effect) => effect.id === "helped" && effect.skill === skill) : character))
+}
+
+// The Push mastery: 10 feet, on a creature that is Large or smaller.
+const PUSH_FEET = 10
+const PUSHED_SIZES: readonly string[] = ["Tiny", "Small", "Medium", "Large"]
+
+/** What a turn's effects do to a character's movement this turn: Slowed takes 10 feet from their Speed, and one who stood from Prone spent half of it. */
+export function movementEffects(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): { slowed: boolean; stands: boolean } {
+  const held = (character.turnEffects ?? []).filter((effect) => holds(effect, present))
+  return { slowed: held.some((effect) => effect.id === "slowed"), stands: held.some((effect) => effect.id === "stood") }
 }
 
 /** What actions left on a character as a round begins: each lasts one round more, and then ends. */
@@ -172,7 +198,17 @@ export const turnEffectsAtEncounterEnd = <T extends { turnEffects?: readonly Tur
 /** What actions have left on a character, in words for the screen and the game master: "Dodging". */
 export function turnEffectWords(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): string {
   return (character.turnEffects ?? [])
-    .filter((effect) => holds(effect, present))
-    .map((effect) => (effect.id === "dodging" ? "Dodging" : effect.id === "helped" ? `Helped with ${skillById.get(effect.skill ?? "stealth")?.name}` : effect.id === "vexed" ? "Vexed" : "Distracted"))
+    .filter((effect) => effect.id !== "stood" && holds(effect, present))
+    .map((effect) =>
+      effect.id === "dodging"
+        ? "Dodging"
+        : effect.id === "helped"
+          ? `Helped with ${skillById.get(effect.skill ?? "stealth")?.name}`
+          : effect.id === "vexed"
+            ? "Vexed"
+            : effect.id === "slowed"
+              ? "Slowed"
+              : "Distracted"
+    )
     .join(", ")
 }

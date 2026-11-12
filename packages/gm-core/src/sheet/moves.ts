@@ -1,6 +1,8 @@
+import { movementEffects } from "./actions"
 import type { Afflicted } from "./conditions"
 import type { EncounterFloor } from "./placement"
 import { movementBudgetOf, type Point, pushed, type Standing, sizeOf, stopShortFor, walk } from "./space"
+import type { TurnEffect } from "./turn-effect"
 
 /** Where a move is read as going: to a named place or to someone, by id, or straight away from someone, and no farther than some feet. */
 export type MoveAsk = { to?: string; away?: string; feet?: number }
@@ -8,10 +10,17 @@ export type MoveAsk = { to?: string; away?: string; feet?: number }
 /** A move as the engine made it: where the character now stands, and the feet it took. */
 export type Moved = { at: Point; feet: number }
 
-type Mover = Afflicted & Standing
+type Mover = Afflicted & Standing & { turnEffects?: readonly TurnEffect[] }
 type Other = Standing & { id: string }
 
 const rounded = (point: Point): Point => ({ x: Math.round(point.x * 100) / 100, y: Math.round(point.y * 100) / 100 })
+
+/**
+ * The feet a character can move this turn: their Speed, less 10 when Slowed and half when they stood from Prone as the
+ * turn began, twice with Dash, and none for one who cannot move.
+ */
+export const moveBudget = (mover: Mover, others: readonly Other[] = [], dash = false): number =>
+  movementBudgetOf(mover, { dash, ...movementEffects(mover, [...others, mover] as Parameters<typeof movementEffects>[1]) })
 
 /**
  * A character's move on their turn, before they act. They walk toward the place or the creature named, or straight
@@ -27,7 +36,7 @@ export function takeMove(args: { floor: EncounterFloor; mover: Mover; others: re
   const from = args.mover.position
   if (!from) return undefined
   const ask = args.ask ?? {}
-  const budget = Math.min(movementBudgetOf(args.mover, { dash: args.dash }), ask.feet !== undefined && ask.feet > 0 ? ask.feet : Number.POSITIVE_INFINITY)
+  const budget = Math.min(moveBudget(args.mover, args.others, args.dash), ask.feet !== undefined && ask.feet > 0 ? ask.feet : Number.POSITIVE_INFINITY)
   if (budget <= 0) return undefined
   const standing = args.others.flatMap((other) => (other.position ? [other.position] : []))
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)

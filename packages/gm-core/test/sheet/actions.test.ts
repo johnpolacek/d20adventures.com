@@ -9,6 +9,7 @@ import { attackModesFrom } from "../../src/sheet/conditions"
 import { atRoundStart } from "../../src/sheet/death"
 import { sheetProblems } from "../../src/sheet/derive"
 import { applyStakes } from "../../src/sheet/harm"
+import { moveBudget } from "../../src/sheet/moves"
 import type { Sheet } from "../../src/sheet/sheet"
 import type { TurnEffect } from "../../src/sheet/turn-effect"
 
@@ -159,6 +160,41 @@ test("Vex: a hit that deals damage gives the attacker's next attack on that crea
   // That attack spends it. A miss sets up nothing, and another hit sets it up again.
   assert.equal(find(afterRoll(next, "thalbern", blade, 0), "owlbear").turnEffects, undefined)
   assert.deepEqual(find(afterRoll(next, "thalbern", blade, 4), "owlbear").turnEffects, [{ id: "vexed", by: "thalbern", turns: 2 }])
-  // A Longbow's mastery is Slow, and his Dagger is not mastered: neither gives it.
-  for (const weapon of ["longbow", "dagger"]) assert.equal(find(afterRoll(scene, "thalbern", { ...blade, attack: { weapon, target: "owlbear" } }, 6), "owlbear").turnEffects, undefined)
+  // His Dagger is not mastered, and gives nothing.
+  assert.equal(find(afterRoll(scene, "thalbern", { ...blade, attack: { weapon: "dagger", target: "owlbear" } }, 6), "owlbear").turnEffects, undefined)
+})
+
+test("Slow takes 10 feet from a Speed, Push sends its target 10 feet back, and standing from Prone costs half", () => {
+  const bow = { attack: { weapon: "longbow", target: "owlbear" }, rollType: "Longbow", difficulty: 13, modifier: 5, mode: "normal" as const }
+  const scene = [{ ...thalbern, isComplete: true }, owlbear]
+  // Thalbern's mastered Longbow is Slow: a hit that deals damage leaves the Owlbear Slowed until his next turn. Its
+  // Speed of 40 is 30, and with Dash 60. A miss leaves nothing.
+  const after = afterRoll(scene, "thalbern", bow, 6)
+  const beast = find(after, "owlbear")
+  assert.deepEqual([beast.turnEffects, turnEffectWords(beast, after)], [[{ id: "slowed", by: "thalbern", turns: 2 }], "Slowed"])
+  assert.deepEqual([moveBudget(owlbear), moveBudget(beast, after), moveBudget(beast, after, true)], [40, 30, 60])
+  assert.equal(find(afterRoll(scene, "thalbern", bow, 0), "owlbear").turnEffects, undefined)
+  // It ends when his next turn comes: in the next round it holds until he has acted.
+  const next = after.map(atRoundStart)
+  assert.equal(moveBudget(find(next, "owlbear"), next), 30)
+  assert.equal(
+    moveBudget(
+      find(next, "owlbear"),
+      next.map((one) => (one.id === "thalbern" ? { ...one, isComplete: true } : one))
+    ),
+    40
+  )
+  // Push, a Warhammer's mastery: Branka at the origin hits the Owlbear 5 feet east, and it ends 15 feet east. With a
+  // wall whose face is 9 feet east it is stopped there. A Huge creature is not moved.
+  const hammer = { attack: { weapon: "warhammer", target: "owlbear" }, rollType: "Warhammer", difficulty: 13, modifier: 5, mode: "normal" as const }
+  const fighter = { ...branka, sheet: { ...branka.sheet, weapons: ["warhammer"], weaponMasteries: ["warhammer"] } as Sheet, position: { x: 0, y: 0 } }
+  const near = { ...owlbear, position: { x: 5, y: 0 } }
+  assert.deepEqual(find(afterRoll([fighter, near], "branka", hammer, 7), "owlbear").position, { x: 15, y: 0 })
+  const wall = { solids: [{ kind: "rect" as const, x: 10, y: 0, halfWidth: 1, halfDepth: 10, turn: 0 }], doors: [] }
+  assert.deepEqual(find(afterRoll([fighter, near], "branka", hammer, 7, wall), "owlbear").position, { x: 9, y: 0 })
+  assert.deepEqual(find(afterRoll([fighter, { ...near, statBlock: "hill-giant" }], "branka", hammer, 7), "owlbear").position, { x: 5, y: 0 })
+  // One who was Prone stands as their turn begins, and has half their Speed left: 15 of Thalbern's 30, 45 with Dash.
+  const down = atRoundStart({ ...thalbern, conditions: [{ id: "prone" as const, turns: 1 }] })
+  assert.deepEqual([down.conditions, moveBudget(down, [down]), moveBudget(down, [down], true), turnEffectWords(down, [down])], [undefined, 15, 45, ""])
+  assert.equal(moveBudget(atRoundStart(down), []), 30)
 })

@@ -9,10 +9,12 @@ export type ActionId = (typeof actionIds)[number]
  * What an action leaves on a character until the turn of the one who took it comes round again. "dodging" is on the
  * one who took the Dodge action. "helped" is on an ally given the Help action for a check, and "distracted" is on an
  * enemy an ally's attack was helped against. "vexed" is on a creature hit with a weapon whose Vex mastery the attacker
- * has: their next attack on it has Advantage. Only the engine writes it, through ./actions.
+ * has: their next attack on it has Advantage. "slowed" is on a creature hit with a weapon whose Slow mastery the
+ * attacker has: its Speed is 10 feet less. "stood" is on one who rose from Prone as their turn began, which costs half
+ * their Speed. Only the engine writes it, through ./actions and ./death.
  */
 export const turnEffectSchema = z.strictObject({
-  id: z.enum(["dodging", "helped", "distracted", "vexed"]),
+  id: z.enum(["dodging", "helped", "distracted", "vexed", "slowed", "stood"]),
   /** The id of who took the action. */
   by: z.string(),
   /** For "helped": the skill the help is for. */
