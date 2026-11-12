@@ -152,8 +152,10 @@ export function createRollRequirementService(ports: GmPorts) {
   async function readPicked(action: string, character: Character, options?: Options): Promise<TurnReading> {
     const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {}
     const self = "id" in character ? character.id : undefined
-    // One who is Charmed cannot attack the charmer.
-    const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDown(other) && !hasFled(other) && !cannotAttack(character, other))
+    // Anyone here and not dead may be attacked, one down at 0 hit points too: a dying hero, or a Troll that may rise
+    // again. Where no one is named, only one still standing is taken. One who is Charmed cannot attack the charmer.
+    const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && !hasFled(other) && !cannotAttack(character, other))
+    const standing = targets.filter((other) => !isDown(other))
     // Where the roller stands, when the encounter has a floor: who else is on it, and how far each is.
     const floor = options?.floor
     const mover = self && floor && character.position ? { ...character, id: self } : undefined
@@ -284,7 +286,7 @@ ${MENU("save")}
    - Picking a lock or disarming a trap is "dexterity".
    - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check. An attack always gives both "weapon" and "target".
      Their attacks: ${attacks.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"}.
-     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, conditionWords(other), feetAway(other), lore(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
+     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), lore(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
 ${
   "type" in character && character.type === "pc"
@@ -528,7 +530,7 @@ Action: "${action}"
         )
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
-          if (spell.attack && targets.length === 1) chosen = [targets[0].id]
+          if (spell.attack && standing.length === 1) chosen = [standing[0].id]
           else if (self && ((spell.range.kind === "self" && !spell.range.area) || spell.healing)) chosen = [self]
         }
         const falls = !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
@@ -599,7 +601,7 @@ Action: "${action}"
         const attack = attacks.find((entry) => named(pick.weapon, entry.name, entry.id)) ?? (!pick.weapon?.trim() && attacks.length === 1 ? attacks[0] : undefined)
         const said = new Set(action.toLowerCase().match(/[\w'-]+/g) ?? [])
         const spoken = targets.filter((other) => (other.name.toLowerCase().match(/[\w'-]+/g) ?? []).some((word) => !["the", "a", "an", "of"].includes(word) && said.has(word)))
-        const meant = targets.length === 1 ? targets[0] : (targets.find((other) => named(pick.bonusTarget, other.name, other.id)) ?? (spoken.length === 1 ? spoken[0] : undefined))
+        const meant = standing.length === 1 ? standing[0] : (targets.find((other) => named(pick.bonusTarget, other.name, other.id)) ?? (spoken.length === 1 ? spoken[0] : undefined))
         const target = targets.find((other) => named(pick.target, other.name, other.id)) ?? (pick.target?.trim() ? undefined : meant)
         if (!attack) throw new Error(`The game master asked for an attack with "${pick.weapon ?? ""}", which ${character.name} does not have.`)
         if (!target) throw new Error(`The game master asked for an attack on "${pick.target ?? ""}", who is not here to attack.`)
@@ -634,7 +636,7 @@ Action: "${action}"
           modes: aiming ? [{ mode: "advantage", from: "Steady Aim" }] : [],
           moved: also.move?.feet,
           cunning,
-          after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { surge }) : undefined,
+          after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { surge, weapon: attack.id }) : undefined,
         })
         if ("ruling" in made) {
           also.ruling = made.ruling

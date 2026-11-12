@@ -1,11 +1,12 @@
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { RequiredAttack, RequiredRoll } from "../validations/roll-requirement-schema"
 import { type Acting, attackModesFromActions, hideRoll } from "./actions"
-import { type Attack, attacksOf, type CunningStrike, cunningStrikesOf } from "./attack"
+import { type Attack, attacksOf, averageDamage, type CunningStrike, cunningStrikesOf } from "./attack"
 import { combineModes, type RollMode } from "./check"
 import { attackModesFrom, cannotAttack, hasCondition, type ModeSource } from "./conditions"
 import { deriveSheet } from "./derive"
 import { attacksPerAction as attacksPerActionOf } from "./feature-rules"
+import { multiattackAfter } from "./multiattack"
 import { attackReach, type Cover, coverBetween, coverBonus, type Floor, feetBetween, greaterCover, isNear, placedOf, type Standing, within } from "./space"
 import { attackModesFromSpells } from "./spell-effects"
 import { combatStatsOf } from "./stat-block"
@@ -128,13 +129,17 @@ const attackable = (attacker: InScene, other: InScene): boolean => other.id !== 
  * just made (`after`):
  *
  * - The rest of an Attack action. With Extra Attack a hero attacks twice, and Action Surge gives another action's
- *   worth. Each attack is with the same weapon, at the same target, or once that one is down at the nearest enemy the
- *   weapon reaches from where the hero stands, with no move. With none, the rest of the action is lost.
+ *   worth. Each attack is with the same weapon.
+ * - The rest of an NPC's Multiattack: each attack with one of the attacks the Multiattack allows for it. Where it
+ *   allows several ("in any combination"), the engine takes the best at the target: one with no Disadvantage over one
+ *   with it, then the most average damage, then the longest reach.
  * - Horde Breaker, once a turn: another attack with the same weapon at a creature within 5 feet of the one just
  *   attacked, within the weapon's reach or range, that the hero has not attacked this turn.
  * - A Hide taken with Cunning Action: the Stealth check, after the rest.
  *
- * The player throws each d20 as they throw the first.
+ * An attack of the action or the Multiattack goes at the same target, or once that one is down or out of the weapon's
+ * reach or range, at the nearest enemy the weapon reaches from where the attacker stands, with no move. With none, the
+ * rest is lost. The player throws each d20 as they throw the first.
  */
 export function followingRoll(args: { character: InScene; made: RequiredRoll; present: readonly InScene[]; floor?: Floor }): RequiredRoll | undefined {
   const { character, made } = args
@@ -142,27 +147,49 @@ export function followingRoll(args: { character: InScene; made: RequiredRoll; pr
   if (!then || isDown(character) || isIncapacitated(character) || hasCondition(character, "incapacitated")) return undefined
   const next = { ...then }
   if ("attack" in made && made.attack) {
-    const attack = attacksOf(character).find((entry) => entry.id === made.attack.weapon)
+    const own = attacksOf(character)
+    const attack = own.find((entry) => entry.id === made.attack.weapon)
     const struck = [...new Set([...(then.struck ?? []), made.attack.target])]
-    const asked = (target: InScene, rest: After): RequiredRoll | undefined => {
-      const required = attack && attackRequirement({ character, target, attack, present: args.present, floor: args.floor, after: rest })
-      return required && "roll" in required ? required.roll : undefined
+    const asked = (using: Attack, target: InScene, rest: After): RequiredAttack | undefined => {
+      const required = attackRequirement({ character, target, attack: using, present: args.present, floor: args.floor, after: rest })
+      return "roll" in required ? required.roll : undefined
     }
-    const reached = (other: InScene) => !!attack && asked(other, {}) !== undefined
-    // The rest of the Attack action: the same target while it stands, or the nearest enemy in reach.
-    if (attack && (then.attacks ?? 0) > 0) {
-      const rest: After = { ...next, attacks: (then.attacks ?? 1) - 1, struck }
+    // The best of some attacks at a target, as the roll for it: no Disadvantage over Disadvantage, then the most damage, then the longest reach.
+    const best = (from: readonly Attack[], target: InScene, rest: After): RequiredAttack | undefined =>
+      from
+        .flatMap((entry) => {
+          const roll = asked(entry, target, rest)
+          return roll ? [{ entry, roll }] : []
+        })
+        .sort((a, b) => MODE_RANK[b.roll.mode] - MODE_RANK[a.roll.mode] || averageDamage(b.entry) - averageDamage(a.entry) || (b.entry.reach ?? 0) - (a.entry.reach ?? 0))[0]?.roll
+    // The next attack of an action or a Multiattack: the same target while it stands in reach, or the nearest enemy in reach.
+    const onward = (from: readonly Attack[], rest: After): RequiredAttack | undefined => {
+      const reached = (other: InScene) => best(from, other, {}) !== undefined
       const same = args.present.find((other) => other.id === made.attack.target && attackable(character, other))
-      const nearest =
+      const target =
         same && reached(same)
           ? same
           : nearestEnemy(
               character,
               args.present.filter((other) => attackable(character, other) && reached(other))
             )
-      const roll = nearest && asked(nearest, tidy(rest))
+      return target && best(from, target, tidy(rest))
+    }
+    // The rest of the Attack action, with the same weapon.
+    if (attack && (then.attacks ?? 0) > 0) {
+      const roll = onward([attack], { ...next, attacks: (then.attacks ?? 1) - 1, struck })
       if (roll) return roll
       next.attacks = 0
+    }
+    // The rest of a Multiattack, each attack with one it allows.
+    const [slot, ...slots] = then.multiattack ?? []
+    if (slot) {
+      const roll = onward(
+        own.filter((entry) => slot.includes(entry.id)),
+        { ...next, multiattack: slots, struck }
+      )
+      if (roll) return roll
+      next.multiattack = undefined
     }
     // Horde Breaker: a creature beside the one just attacked, not yet attacked this turn.
     if (attack && then.horde) {
@@ -170,23 +197,28 @@ export function followingRoll(args: { character: InScene; made: RequiredRoll; pr
       const at = original && placedOf(original)
       const beside = args.present.filter((other) => {
         const there = placedOf(other)
-        return attackable(character, other) && !struck.includes(other.id) && (!at || (!!there && within(there, at, 5))) && reached(other)
+        return attackable(character, other) && !struck.includes(other.id) && (!at || (!!there && within(there, at, 5))) && asked(attack, other, {}) !== undefined
       })
       const choice = at ? nearestEnemy(character, beside) : undefined
-      const roll = choice && asked(choice, tidy({ ...next, attacks: 0, horde: undefined, struck: [...struck, choice.id] }))
+      const roll = choice && asked(attack, choice, tidy({ ...next, attacks: 0, multiattack: undefined, horde: undefined, struck: [...struck, choice.id] }))
       if (roll) return roll
     }
     next.attacks = 0
+    next.multiattack = undefined
     next.horde = undefined
   }
   if (then.hide) return hideRoll(character)
   return undefined
 }
 
+// How a roll's mode ranks when the engine picks a weapon: Advantage over none, none over Disadvantage.
+const MODE_RANK: Record<RollMode, number> = { advantage: 2, normal: 1, disadvantage: 0 }
+
 // An `after` with nothing left in it left out.
 function tidy(then: After): After {
   const kept: After = {}
   if (then.attacks) kept.attacks = then.attacks
+  if (then.multiattack?.length) kept.multiattack = then.multiattack
   if (then.horde) kept.horde = true
   if (then.struck?.length) kept.struck = then.struck
   if (then.hide) kept.hide = true
@@ -199,9 +231,12 @@ function nearestEnemy(character: InScene, from: readonly InScene[]): InScene | u
   return [...from].sort((a, b) => feet(a) - feet(b))[0]
 }
 
-/** What a turn holds after its first attack, from the hero's features: the Attack action's other attacks, and Horde Breaker. */
-export function attackAfter(character: InScene, options: { surge?: boolean } = {}): After {
-  if (!character.sheet) return {}
+/**
+ * What a turn holds after its first attack: a hero's other attacks of the Attack action and Horde Breaker, from their
+ * features, or the rest of an NPC's Multiattack once its first attack is made with `weapon` (./multiattack).
+ */
+export function attackAfter(character: InScene, options: { surge?: boolean; weapon?: string } = {}): After {
+  if (!character.sheet) return tidy({ multiattack: options.weapon ? multiattackAfter(character, options.weapon) : [] })
   const perAction = attacksPerActionOf(character)
   const attacks = perAction - 1 + (options.surge ? perAction : 0)
   const horde = character.sheet.featureChoices?.["hunter-hunters-prey"] === "horde-breaker" && deriveSheet(character.sheet).classFeatures.includes("hunter-hunters-prey")

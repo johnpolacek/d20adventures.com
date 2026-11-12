@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
-import { attacksOf, damageTaken, defensesOf, multiattackOf, parseDice, resolveAttack, rollDamage, strike, strikeFacts, weaponAttack } from "../../src/sheet/attack"
+import { attacksOf, damageTaken, defensesOf, parseDice, resolveAttack, rollDamage, strike, strikeFacts, weaponAttack } from "../../src/sheet/attack"
 import type { Sheet } from "../../src/sheet/sheet"
 
 // Every expected number below was worked out by hand from the SRD 5.2.1 rules, not copied from the function's output.
@@ -57,16 +57,9 @@ test("a hero attacks with the weapons on the sheet, and an NPC with its stat blo
     attacksOf({ type: "pc", sheet: { ...thalbern, weapons: ["longbow", "dagger"] } }).map((attack) => attack.id),
     ["longbow", "dagger", "unarmed-strike"]
   )
-  // Owlbear: "Rend. Melee Attack Roll: +7. Hit: 14 (2d8 + 5) Slashing damage", and its Multiattack is two Rends.
+  // Owlbear: "Rend. Melee Attack Roll: +7. Hit: 14 (2d8 + 5) Slashing damage".
   assert.deepEqual(attacksOf({ type: "npc", statBlock: "owlbear" }), [{ id: "rend", name: "Rend", kind: "melee", bonus: 7, damage: [{ dice: "2d8 + 5", type: "slashing" }], reach: 5 }])
-  assert.deepEqual(multiattackOf({ type: "npc", statBlock: "owlbear" }), [{ attack: "rend", times: 2 }])
-  // Brown Bear: "one Bite attack and one Claw attack".
-  assert.deepEqual(multiattackOf({ type: "npc", statBlock: "brown-bear" }), [
-    { attack: "bite", times: 1 },
-    { attack: "claw", times: 1 },
-  ])
-  // A Wolf has one Bite and no Multiattack. A hero with no sheet has no attacks.
-  assert.deepEqual(multiattackOf({ type: "npc", statBlock: "wolf" }), [])
+  // A hero with no sheet has no attacks.
   assert.deepEqual(attacksOf({ type: "pc" }), [])
 })
 

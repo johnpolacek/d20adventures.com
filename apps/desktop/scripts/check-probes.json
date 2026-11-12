@@ -1013,5 +1013,37 @@
     "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
     "action": "I cast Shield on myself before he gets to me.",
     "checks": ["none", "dodge"]
+  },
+  {
+    "id": "finish-the-fallen",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "narrative": "Reinhard is down in the mud of the bank, senseless but still breathing. Silas has backed off toward the water.",
+    "action": "I put an arrow into Reinhard where he lies, so he never gets up again.",
+    "hitPointsOn": {
+      "npcs-1749163978757": 0
+    },
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortbow",
+      "target": "npcs-1749163978757"
+    }
+  },
+  {
+    "id": "shoot-the-one-standing",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "narrative": "Reinhard is down in the mud of the bank, senseless. Silas is still on his feet, edging toward the water.",
+    "action": "I shoot at the one still standing.",
+    "hitPointsOn": {
+      "npcs-1749163978757": 0
+    },
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortbow",
+      "target": "npcs-1749181492795"
+    }
   }
 ]

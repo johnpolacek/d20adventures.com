@@ -12,6 +12,7 @@ import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death
 import { deriveSheet, trainedWith } from "./derive"
 import { criticalFrom, featureChoice, hasFeature, type OncePerTurn, usedThisTurn } from "./feature-rules"
 import type { ConditionChange } from "./harm"
+import { typesTaken } from "./monster-traits"
 import type { Sheet } from "./sheet"
 import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, sizeOf, within } from "./space"
 import { enduringTraitOf } from "./species-traits"
@@ -35,7 +36,15 @@ export type Attack = {
   reach?: number
   /** A ranged or thrown attack's normal and long range, in feet. A range with no long range ends at the normal one. */
   range?: { normal: number; long?: number }
+  /** Damage a hit deals only when its gate holds: a Goblin's 1d4 with Advantage, a swarm's lesser Bites once it is Bloodied. */
+  gated?: GatedDamage[]
 }
+
+/** The gates on a hit's damage the engine can judge (`gateOf`). */
+export type DamageGate = "advantage" | "bloodied" | "target-bloodied" | "grappled-by-attacker"
+
+/** A damage part dealt only when its gate holds. `replaces` is the index in the attack's damage of the part it is dealt in place of. */
+export type GatedDamage = { part: DamagePart; when: DamageGate; replaces?: number }
 
 /** The id every character's Unarmed Strike goes by. */
 export const UNARMED_STRIKE = "unarmed-strike"
@@ -122,7 +131,18 @@ function baseAttacks(character: Roller): Attack[] {
   if (!monster) return []
   return (monster.actions ?? []).flatMap((action) => {
     if (!action.attack) return []
-    const damage = (action.damage ?? []).flatMap((part): DamagePart[] => (part.on === "hit" && part.type ? [{ ...(part.dice ? { dice: part.dice } : { amount: part.amount }), type: part.type }] : []))
+    // A hit's damage. A part with a gate is dealt only when its gate holds, and only a gate the engine can judge: one
+    // it cannot (a charge, damage at the start of a later turn) is left out.
+    const printed = action.damage ?? []
+    const plain = printed.filter((part) => part.on === "hit" && part.type && !part.appliesWhen && !part.unless && !part.timing && part.alternativeTo === undefined)
+    const own = (part: (typeof printed)[number]): DamagePart => ({ ...(part.dice ? { dice: part.dice } : { amount: part.amount }), type: part.type as DamageTypeId })
+    const gated = printed.flatMap((part): GatedDamage[] => {
+      const when = part.on === "hit" && part.type && part.appliesWhen && !part.unless && !part.timing ? gateOf(part.appliesWhen) : undefined
+      if (!when) return []
+      const replaced = part.alternativeTo === undefined ? undefined : plain.indexOf(printed[part.alternativeTo])
+      if (replaced === -1) return []
+      return [{ part: own(part), when, ...(replaced === undefined ? {} : { replaces: replaced }) }]
+    })
     const { reach, range } = action.attack
     return [
       {
@@ -130,7 +150,8 @@ function baseAttacks(character: Roller): Attack[] {
         name: action.name,
         kind: action.attack.kind,
         bonus: action.attack.bonus,
-        damage,
+        damage: plain.map(own),
+        ...(gated.length ? { gated } : {}),
         // A melee attack that prints no reach reaches 5 feet.
         ...(action.attack.kind !== "ranged" ? { reach: reach ?? BASE_REACH } : {}),
         ...(range ? { range: { normal: range.normal, ...(range.long !== undefined ? { long: range.long } : {}) } } : {}),
@@ -145,20 +166,52 @@ function baseAttacks(character: Roller): Attack[] {
  */
 export const meleeReachOf = (character: Roller): number => Math.max(BASE_REACH, ...attacksOf(character).map((attack) => attack.reach ?? 0))
 
-/** How many attacks an NPC's Multiattack makes with each of its attack actions: an Owlbear's is two Rends. Unknown wording gives none. */
-export function multiattackOf(character: Roller): { attack: string; times: number }[] {
-  if (character.type !== "npc" || character.sheet) return []
-  const monster = monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)
-  const text = monster?.actions?.find((action) => action.name === "Multiattack")?.text
-  if (!monster || !text) return []
-  const numbers: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5 }
-  const found: { attack: string; times: number }[] = []
-  for (const action of monster.actions ?? []) {
-    if (!action.attack) continue
-    const match = new RegExp(`\\b(one|two|three|four|five) ${action.name} attacks?\\b`, "i").exec(text)
-    if (match) found.push({ attack: actionId(action.name), times: numbers[match[1].toLowerCase()] })
+/** The average of an attack's damage, as the stat block prints it: 1d8 + 3 is 7.5. Gated damage is left out. */
+export const averageDamage = (attack: Attack): number =>
+  attack.damage.reduce((sum, part) => {
+    if (!part.dice) return sum + (part.amount ?? 0)
+    const { count, sides, bonus } = parseDice(part.dice)
+    return sum + (count * (sides + 1)) / 2 + bonus
+  }, 0)
+
+/**
+ * What a damage part's gate asks, of those the engine can judge: the attack roll had Advantage, the attacker is
+ * Bloodied, the target is Bloodied, or the target is Grappled by the attacker. Read from the gate's printed words. Any
+ * other gate is none the engine can judge yet, and its part is left out: a charge of 20 feet in a straight line.
+ */
+export function gateOf(words: string): DamageGate | undefined {
+  if (/\bhad Advantage\b/i.test(words)) return "advantage"
+  if (/^if the target is Bloodied$/i.test(words)) return "target-bloodied"
+  if (/^if the target is Grappled by the \w+$/i.test(words)) return "grappled-by-attacker"
+  if (/^if the (?!target\b)\w+ is Bloodied$/i.test(words)) return "bloodied"
+  return undefined
+}
+
+/** Whether a part's gate holds as the hit lands. */
+function gateHolds(gate: DamageGate, at: { mode: RollMode; attacker: Roller & { hitPoints?: number }; target: Target; before: number; maximum: number }): boolean {
+  switch (gate) {
+    case "advantage":
+      return at.mode === "advantage"
+    case "bloodied": {
+      const maximum = combatStatsOf(at.attacker)?.hitPointMaximum
+      return maximum !== undefined && (at.attacker.hitPoints ?? maximum) * 2 <= maximum
+    }
+    case "target-bloodied":
+      return at.before * 2 <= at.maximum
+    case "grappled-by-attacker":
+      return (at.target.conditions ?? []).some((entry) => entry.id === "grappled" && entry.source === at.attacker.id)
   }
-  return found
+}
+
+/** The damage a hit deals: the attack's own, with each gated part whose gate holds added, or put in place of the part it replaces. */
+export function damageOnHit(attack: Attack, at: Parameters<typeof gateHolds>[1]): DamagePart[] {
+  const parts: (DamagePart | undefined)[] = [...attack.damage]
+  for (const gated of attack.gated ?? []) {
+    if (!gateHolds(gated.when, at)) continue
+    if (gated.replaces === undefined) parts.push(gated.part)
+    else parts[gated.replaces] = gated.part
+  }
+  return parts.filter((part) => part !== undefined)
 }
 
 export type AttackResult = {
@@ -370,7 +423,7 @@ export type Target = Standing & {
 
 /** What one attack is made with and against: who, at whom, with which attack, and the dice. */
 export type StrikeArgs<T extends Target> = {
-  attacker: Standing & { turnEffects?: readonly TurnEffect[] }
+  attacker: Standing & { hitPoints?: number; turnEffects?: readonly TurnEffect[] }
   target: T
   weapon: string
   dice: readonly number[]
@@ -454,7 +507,8 @@ const TRIPPED_SIZES: readonly string[] = ["Tiny", "Small", "Medium", "Large"]
 /**
  * The second half of an attack: on a hit the damage dice, with the attacker's features (Sneak Attack, Colossus Slayer)
  * and their own spell on this target (Hunter's Mark), against the target's defenses and hit points, by the rules of 0
- * hit points. Savage Attacker rolls the weapon's dice twice, once a turn, and keeps the higher. `halve` may halve what
+ * hit points. A stat block's gated damage is dealt only when its gate holds (`damageOnHit`): a Goblin's 1d4 with
+ * Advantage. Savage Attacker rolls the weapon's dice twice, once a turn, and keeps the higher. `halve` may halve what
  * the target takes (Uncanny Dodge). A Cunning Strike's Trip then has the target save or fall Prone. A hit on one with
  * Mirror Image may strike a duplicate, and deal nothing. Magic Weapon adds its bonus to a weapon's damage. `target`
  * comes back as the blow left them.
@@ -499,8 +553,9 @@ export function landBlow<T extends Target>(
   const enchanted = weapon ? weaponDamageFromSpells(args.attacker).map(({ name, damage }) => ({ name, damage: { amount: damage.amount, type: damage.type ?? attack.damage[0]?.type ?? "force" } })) : []
   const extra = [...features, ...markDamage(args.attacker.id, args.target), ...enchanted]
   const savage = weapon && !!args.attacker.sheet && deriveSheet(args.attacker.sheet).feats.includes("savage-attacker") && !usedThisTurn(args.attacker, "savage-attacker", args.turnOf)
-  const first = rollDamage(attack.damage, args.roll, roll.critical)
-  const second = savage ? rollDamage(attack.damage, args.roll, roll.critical) : undefined
+  const dealt = damageOnHit(attack, { mode: roll.mode, attacker: args.attacker, target: args.target, before, maximum: stats.hitPointMaximum })
+  const first = rollDamage(dealt, args.roll, roll.critical)
+  const second = savage ? rollDamage(dealt, args.roll, roll.critical) : undefined
   const kept = second && second.total > first.total ? second : first
   const added = rollDamage(
     extra.map((feature) => feature.damage),
@@ -508,10 +563,12 @@ export function landBlow<T extends Target>(
     roll.critical
   )
   const damage: DamageRoll = { parts: [...kept.parts, ...added.parts], total: kept.total + added.total }
-  const full = damageTaken(damage, defensesOf(args.target))
+  const defenses = defensesOf(args.target)
+  const full = damageTaken(damage, defenses)
   const halved = full > 0 && !!args.halve?.(full)
   const taken = halved ? Math.floor(full / 2) : full
-  let struck = withDamage({ ...args.target, hitPoints: before }, taken, { critical: roll.critical, rules: args.rules })
+  // Acid or Fire taken stops a Troll's Regeneration (./monster-traits).
+  let struck = withDamage({ ...args.target, hitPoints: before }, taken, { critical: roll.critical, rules: args.rules, types: typesTaken(damage, defenses) })
   const used = [...extra.flatMap((feature) => ("once" in feature && feature.once ? [feature.once] : [])), ...(savage ? (["savage-attacker"] as const) : [])]
   const names = [...extra.map((feature) => feature.name), ...(savage ? ["Savage Attacker"] : [])]
   // A Cunning Strike's Trip falls after the damage: a target no bigger than Large saves with Dexterity or falls Prone.

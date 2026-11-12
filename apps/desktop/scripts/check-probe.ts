@@ -55,6 +55,7 @@ type Probe = {
   bonus?: { feature: string; target?: string }
   // Conditions someone in the scene already bears, by character id.
   conditionsOn?: Record<string, ConditionEntry[]>
+  hitPointsOn?: Record<string, number>
   // Space: everyone stands where the encounter's floor stages them, and `at` moves some of them, in feet.
   floor?: true
   at?: Record<string, [number, number]>
@@ -98,6 +99,7 @@ async function run(probe: Probe): Promise<Graded> {
     ...character,
     ...(probe.conditionsOn?.[character.id] ? { conditions: probe.conditionsOn[character.id] } : {}),
     ...(probe.slotsUsed?.[character.id] ? { spellSlots: probe.slotsUsed[character.id] } : {}),
+    ...(probe.hitPointsOn?.[character.id] !== undefined ? { hitPoints: probe.hitPointsOn[character.id] } : {}),
   })
   const premade = JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8"))
   const holds = probe.held ? { spellEffects: [{ spell: probe.held.spell, by: premade.id, amount: probe.held.slot }], concentration: { spell: probe.held.spell } } : {}

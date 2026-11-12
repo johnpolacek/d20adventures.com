@@ -11,11 +11,12 @@ const asked = {
   mode: z.enum(rollModes),
   reasons: z.array(z.string()).optional().describe("What gives the roll Advantage or Disadvantage, each in a few words"),
   // What the turn still holds once this roll is resolved, which the engine asks for next (../sheet/attack-roll.ts
-  // `followingRoll`): the rest of an Attack action with Extra Attack or Action Surge, Horde Breaker, and a Hide taken
-  // with Cunning Action.
+  // `followingRoll`): the rest of an Attack action with Extra Attack or Action Surge, the rest of an NPC's Multiattack,
+  // Horde Breaker, and a Hide taken with Cunning Action.
   after: z
     .strictObject({
       attacks: z.number().int().min(1).optional().describe("Attacks of the Attack action still to make after this one, with the same weapon"),
+      multiattack: z.array(z.array(z.string()).min(1)).min(1).optional().describe("The attacks of an NPC's Multiattack still to make after this one, each the ids of the attacks it may be made with"),
       horde: z.literal(true).optional().describe("Horde Breaker's attack is still to come this turn"),
       struck: z.array(z.string()).optional().describe("Who has been attacked this turn, by id"),
       hide: z.literal(true).optional().describe("A Hide taken with Cunning Action is still to roll"),

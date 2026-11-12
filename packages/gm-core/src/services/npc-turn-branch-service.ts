@@ -1,12 +1,12 @@
 import type { GmPorts } from "../ports"
 import { afterRoll, takeAction } from "../sheet/actions"
-import { multiattackOf, strikeFacts } from "../sheet/attack"
+import { strikeFacts } from "../sheet/attack"
+import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, killed } from "../sheet/death"
 import { d20sOf, replaying } from "../sheet/dice"
-import { attacksPerAction } from "../sheet/feature-rules"
 import { applyStakes } from "../sheet/harm"
 import { type Ask, attackWithReactions, checkWithCuttingWords, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
@@ -16,8 +16,8 @@ import { cleanStory, type StoryScene } from "../story/clean"
 import { storyNames } from "../story/render"
 import { attackBeat, castAnswerBeats, castBeats, concentrationBeat, rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
-import { isDown } from "../utils/turn-actors"
-import { isAttackRoll, isCastRoll } from "../validations/roll-requirement-schema"
+import { isDead } from "../utils/turn-actors"
+import { isAttackRoll, isCastRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import type { SafetyRules } from "../wiki-adventures/player-safety"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { applyNpcEffectsToCharacters, type NpcTurnEffect } from "./npc-turn-resolution-service"
@@ -105,6 +105,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     let rollInfo: NpcRollInfo | undefined
     let effects: NpcTurnEffect[] | undefined
 
+    const floor = await ports.content.floor?.(args.turn.encounterId)
     const reading =
       args.resume?.reading ??
       (await readAction(args.actionResult.actionSummary, args.npc, {
@@ -112,7 +113,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         encounterIntro: args.encounterContext?.intro || "",
         narrativeContext: script,
         present: args.turn.characters,
-        floor: await ports.content.floor?.(args.turn.encounterId),
+        floor,
       }))
     const rollRequirement = reading.roll
     // The turn's dice are kept, so the turn can be played again the same after a player answers a reaction.
@@ -247,29 +248,27 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     } else if (rollRequirement && isAttackRoll(rollRequirement)) {
       // An attack: the engine rolls to hit and for damage, and changes the target's hit points. An NPC whose stat block
-      // has a Multiattack makes all of it against the one it attacks, and stops when that one goes down.
-      const { weapon, target: targetId } = rollRequirement.attack
-      const multiattack = multiattackOf(args.npc)
-      // An NPC with a rules sheet attacks as a hero does: twice with Extra Attack.
-      const weapons = multiattack.some((entry) => entry.attack === weapon)
-        ? multiattack.flatMap((entry) => Array.from({ length: entry.times }, () => entry.attack))
-        : Array.from({ length: attacksPerAction(args.npc) }, () => weapon)
+      // has a Multiattack makes all of it, and an NPC with a rules sheet attacks as a hero does, twice with Extra
+      // Attack. Each attack after the first is the one the rules ask for next (`followingRoll`): at the same target, or
+      // once that one is down or out of reach at the nearest enemy in reach, and none when no one is.
       const rolls: StoryBeat[] = []
       const facts: string[] = [...leavingFacts]
-      for (const each of weapons) {
+      let required: RequiredRoll | undefined = rollRequirement
+      while (required && isAttackRoll(required)) {
+        const { weapon, target: targetId } = required.attack
         const target = updatedCharacters.find((character) => character.id === targetId)
-        if (!target || isDown(target)) break
+        if (!target || isDead(target)) break
         // The one hit may answer with Shield or Parry before the blow lands.
         const made = attackWithReactions({
           characters: updatedCharacters,
           attackerId: args.npc.id,
           targetId,
-          weapon: each,
-          dice: d20sOf(dice, rollRequirement.mode),
-          mode: rollRequirement.mode,
+          weapon,
+          dice: d20sOf(dice, required.mode),
+          mode: required.mode,
           roll: dice.roll,
           rules: args.rules,
-          cover: rollRequirement.attack.cover,
+          cover: required.attack.cover,
           ask,
         })
         const blow = made.blow
@@ -277,6 +276,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         rolls.push(...made.reactions.map(told), attackBeat(npcStep(args.npc), args.npc, targetId, blow))
         facts.push(...made.reactions.map((taken) => taken.text), strikeFacts(args.npc.name, target.name, blow))
         rollInfo = { rollType: blow.attack.name, difficulty: blow.roll.armorClass, baseRoll: blow.roll.natural, modifier: blow.roll.bonus, result: blow.roll.total, success: blow.roll.hit }
+        const attacker = updatedCharacters.find((character) => character.id === args.npc.id)
+        required = attacker && followingRoll({ character: attacker as InScene, made: required, present: updatedCharacters as InScene[], floor })
       }
       // A caster the blows hurt saves to keep Concentration, and one they dropped loses it.
       const kept = settleConcentration({ before: args.turn.characters, after: updatedCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: dice.d20 })

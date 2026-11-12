@@ -7,11 +7,11 @@ import {
   type Attack,
   againstArmorClass,
   attacksOf,
+  averageDamage,
   type CunningStrike,
   hitsAnyway,
   landBlow,
   meleeReachOf,
-  parseDice,
   type RolledAttack,
   rollAttack,
   type Strike,
@@ -57,14 +57,6 @@ export const canReact = (character: Reactor): boolean => !isDown(character) && !
 export function withReaction<T extends Reactor>(character: T): T {
   return { ...character, turnEffects: [...(character.turnEffects ?? []).filter((effect) => effect.id !== "reacted"), { id: "reacted", by: character.id, turns: 1 }] }
 }
-
-// The average of an attack's damage: 1d8 + 1 is 5.5.
-const averageDamage = (attack: Attack): number =>
-  attack.damage.reduce((sum, part) => {
-    if (!part.dice) return sum + (part.amount ?? 0)
-    const { count, sides, bonus } = parseDice(part.dice)
-    return sum + (count * (sides + 1)) / 2 + bonus
-  }, 0)
 
 /**
  * The attack a character makes an Opportunity Attack with: one melee attack, with a weapon or an Unarmed Strike. The
