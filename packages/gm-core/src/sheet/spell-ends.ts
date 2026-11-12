@@ -13,6 +13,11 @@ import type { Concentration, SpellEffect } from "./turn-effect"
 
 type Ended = { id: string; name: string; conditions?: readonly ConditionEntry[]; spellEffects?: readonly SpellEffect[]; concentration?: Concentration; isComplete?: boolean }
 
+const ENDING = ["lesser-restoration", "remove-curse", "dispel-magic"]
+
+/** Whether a spell ends what other spells or conditions do: Lesser Restoration, Remove Curse, Dispel Magic. */
+export const endsThings = (spellId: string): boolean => ENDING.includes(spellId)
+
 // The conditions Lesser Restoration ends, in the order the engine chooses among them: the one that hinders most first.
 const RESTORED: readonly ConditionId[] = ["paralyzed", "blinded", "poisoned", "deafened"]
 
@@ -32,7 +37,7 @@ export function endsBySpell<T extends Ended>(args: {
   d20: () => number
   modifier: number
 }): { characters: T[]; conditions: ConditionChange[]; facts: string[] } | undefined {
-  if (!["lesser-restoration", "remove-curse", "dispel-magic"].includes(args.spell.id)) return undefined
+  if (!endsThings(args.spell.id)) return undefined
   let characters = [...args.characters]
   const conditions: ConditionChange[] = []
   const facts: string[] = []

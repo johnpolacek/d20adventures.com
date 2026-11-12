@@ -1,15 +1,19 @@
 import { turnEffectsAtEncounterEnd } from "../sheet/actions"
 import { conditionsAtEncounterEnd } from "../sheet/conditions"
-import { atRoundStart, revived } from "../sheet/death"
+import { atRoundStart, type DeathRules, revived } from "../sheet/death"
 import { inspirationAtEncounterEnd } from "../sheet/features"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { spellEffectsAtEncounterEnd } from "../sheet/spell-effects"
+import { roundTurns } from "../sheet/spell-rounds"
+import { rollInitiative } from "../sheet/stat-block"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
+import { storyNames } from "../story/render"
+import { roundBeats } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
-import { rollD20 } from "../utils/game-utils"
+import { rollD20, rollDie } from "../utils/game-utils"
 import { hasFled, isDead } from "../utils/turn-actors"
 import { findEncounterInPlan } from "./advance-turn-prompt-service"
 
@@ -35,8 +39,11 @@ export type BuildNextTurnResult =
       shouldProcessNpcTurns: boolean
     }
 
-function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; story: StoryBeat[] }): Turn {
-  let newCharacters: TurnCharacter[] = (args.turn.characters as TurnCharacter[]).filter((c) => !isDead(c) && !hasFled(c))
+function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; currentEncounterTitle: string; story: StoryBeat[]; rules?: DeathRules }): Turn {
+  // As the round ends, lasting spells do what they do at a turn's end or start (Acid Arrow's burn, Spirit Guardians, a
+  // repeated save), told after the round's story. One they drop is not carried on.
+  const turned = roundTurns({ characters: args.turn.characters as TurnCharacter[], d20: rollD20, roll: rollDie, rules: args.rules })
+  let newCharacters: TurnCharacter[] = turned.characters.filter((c) => !isDead(c) && !hasFled(c))
 
   // Last round's rolls are over. Initiative was rolled as the encounter began, and every round keeps that order. A
   // dying hero's turn is their Death Saving Throw.
@@ -49,7 +56,7 @@ function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; c
     adventureId: args.adventureId,
     encounterId: args.turn.encounterId,
     title: args.currentEncounterTitle,
-    story: args.story,
+    story: [...args.story, ...roundBeats(turned, storyNames(args.turn.characters))],
     characters: newCharacters,
   }
 }
@@ -69,9 +76,10 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
 
   let pcs: TurnCharacter[] = (args.turn.characters as TurnCharacter[])
     .filter((c) => c.type === "pc" && !isDead(c) && !hasFled(c))
+    // Initiative from the sheet: the d20 and its bonus, with Advantage where the sheet gives it.
     .map(({ rollResult: _rollResult, ...pc }) => ({
       ...pc,
-      initiative: rollD20(),
+      initiative: rollInitiative(pc, rollD20(), rollD20()),
     }))
   // A new encounter comes later: the conditions of a fight's moment are over, and lasting ones stay. Spell slots,
   // feature uses and Hit Point Dice stay spent, and Temporary Hit Points stay, until a rest (../sheet/rest).
@@ -96,7 +104,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
     if (nextEncounter.skipInitialNpcTurns && isFirstTurnForEncounter) {
       npcInitiative = 0
     } else {
-      npcInitiative = typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollD20()
+      npcInitiative = typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollInitiative({ ...npc, type: "npc" }, rollD20())
     }
 
     return withStartingHitPoints({
@@ -142,6 +150,7 @@ export function buildNextTurnFromProgression(args: {
       adventureId: args.adventureId,
       currentEncounterTitle: args.currentEncounterTitle,
       story: args.llmResult.story,
+      rules: { playerDeath: args.plan.playerDeath },
     })
     return { status: "turn_built", turn, shouldProcessNpcTurns: true }
   }

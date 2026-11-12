@@ -131,6 +131,12 @@ const SAVE_ADVANTAGE: Record<string, readonly (AbilityId | "death")[]> = { haste
 /** What a character's spells add to or take from a saving throw of one ability: Slow's −2 on Dexterity saves. */
 export const saveBonusFromSpells = (character: Bearer, ability: AbilityId): number => (ability === "dex" && effectsOf(character).some(({ spell }) => spell.id === "slow") ? -2 : 0)
 
+/** The Advantage a character's spells give a check, when it is a saving throw: for a save rolled outside ./spells `rollSave`. */
+export const saveModesFor = (character: Bearer, check: Check): ModeSource[] => (check.kind === "save" ? saveModesFromSpells(character, check.ability) : [])
+
+/** What a character's spells add to a check, when it is a saving throw: for a save rolled outside ./spells `rollSave`. */
+export const saveBonusFor = (character: Bearer, check: Check): number => (check.kind === "save" ? saveBonusFromSpells(character, check.ability) : 0)
+
 /** Whether a character's spells keep them from taking Reactions: Slow. */
 export const cannotReactBySpell = (character: Bearer): boolean => effectsOf(character).some(({ spell }) => spell.id === "slow")
 

@@ -9,6 +9,7 @@ settingId: "realm-of-myr"
 adventureId: "welcome-to-kordavos"
 landmark: "kordavos/blackthorn-mansion"
 roundBudget: 2
+rest: long
 npcs:
   - id: "barok-redbeard"
     behavior: "Gruff but dignified, vigilant, holds grudges from past encounters. Checks the party as one group. One invitation or one good bluff gets them all up the stairs."

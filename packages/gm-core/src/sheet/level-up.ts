@@ -32,10 +32,14 @@ import type { Advancement, Sheet } from "./sheet"
 
 export type Named = { id: string; name: string }
 
-/** A feat a level offers, with what taking it asks for: the raises its increase allows, or Magic Initiate's spell picks. */
+/**
+ * A feat a level offers, with what taking it asks for: the raises its increase allows, Magic Initiate's spell picks,
+ * or Skilled's skills, sent as `featPicks.skills`. The engine holds no tool proficiencies, so Skilled gives skills.
+ */
 export type FeatOffer = Named & {
   abilityScoreIncrease?: { from: AbilityId[]; choices: { count: number; amount: number }[]; maximum: number }
   spellPicks?: { spellLists: string[]; spellAbility: AbilityId[]; cantrips: number; spellLevel: number }
+  skillPicks?: { count: number; from: Named[] }
 }
 
 /** An option of a feature's choice. One that brings cantrips (Druidic Warrior) says how many and from which spells. */
@@ -80,8 +84,8 @@ export type LevelUpChoices = {
   feat?: string
   /** The scores the feat raises: `{ str: 2 }` or `{ str: 1, con: 1 }`. */
   abilities?: Partial<Record<AbilityId, number>>
-  /** Magic Initiate's picks, when it is the feat taken. */
-  featPicks?: Pick<Advancement, "spellList" | "spellAbility" | "cantrips" | "spell">
+  /** The feat's own picks: Magic Initiate's spells, or Skilled's skills. */
+  featPicks?: Pick<Advancement, "spellList" | "spellAbility" | "cantrips" | "spell" | "skills">
   expertise?: SkillId[]
   skills?: SkillId[]
   /** A feature's id and the option or feat taken: `{ "ranger-fighting-style": "archery" }`. */
@@ -151,8 +155,10 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
       feats: offered.map((feat): FeatOffer => {
         const increase = feat.abilityScoreIncrease
         const picks = feat.benefits?.find((benefit) => benefit.cantrips && benefit.spellLists)
+        const proficiencies = feat.proficiencyChoice
         return {
           ...named(feat),
+          ...(proficiencies ? { skillPicks: { count: proficiencies.count, from: skillIds.filter((skill) => !derived.skills[skill].proficient).map(skillNamed) } } : {}),
           ...(increase
             ? { abilityScoreIncrease: { from: increase.from === "any" ? [...abilityIds] : [...increase.from], choices: increase.choices.map((choice) => ({ ...choice })), maximum: increase.maximum } }
             : {}),

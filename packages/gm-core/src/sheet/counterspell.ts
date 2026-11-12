@@ -1,9 +1,8 @@
 import { monsterById } from "@d20/srd/monsters"
 import type { Spell } from "@d20/srd/schema/spells"
 import { hasCondition } from "./conditions"
-import { type Ask, canReact, type ReactionOffer, type ReactionTaken, withReaction } from "./reactions"
+import { type Ask, canReact, type ReactionOffer, type ReactionTaken, shieldAgainstMagicMissile, withReaction } from "./reactions"
 import { placedOf, type Standing, within } from "./space"
-import { cannotReactBySpell } from "./spell-effects"
 import { type CastCost, type Castee, castCost, rollSave, type SaveRoll, spellcastingOf, withCastSpent } from "./spells"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
@@ -45,7 +44,7 @@ export function counterspellCost(counterer: Counterer): CastCost | undefined {
  * every casting can be seen.
  */
 export function canCounter(counterer: Counterer, caster: Castee & Standing, spell: Spell): boolean {
-  if (counterer.id === caster.id || counterer.type === caster.type || !canReact(counterer) || cannotReactBySpell(counterer)) return false
+  if (counterer.id === caster.id || counterer.type === caster.type || !canReact(counterer)) return false
   const { verbal, somatic, material } = spell.components
   if (!verbal && !somatic && !material) return false
   if (hasCondition(counterer, "blinded") || hasCondition(caster, "invisible")) return false
@@ -142,4 +141,19 @@ export function counterspells<T extends Counterer>(args: {
     if (save.countered) return { characters, countered: true, saves, reactions, facts }
   }
   return { characters, countered: false, saves, reactions, facts }
+}
+
+/** A casting as its reactions left it: whether it was countered, the Counterspell saves, and every reaction taken. */
+export type CastAnswered<T> = { characters: T[]; countered: boolean; saves: SaveRoll[]; reactions: ReactionTaken[]; facts: string[] }
+
+/**
+ * The reactions a casting draws, settled after its cost is known and before it takes effect: Counterspell from the
+ * other side (`counterspells`), and when the spell goes on and it is Magic Missile, Shield from each one it is aimed
+ * at. A spell used again on a later turn (./spells `castAgain`) is not cast, and draws none of them.
+ */
+export function reactionsToCast<T extends Counterer>(args: Parameters<typeof counterspells<T>>[0]): CastAnswered<T> {
+  const countering = counterspells(args)
+  if (countering.countered || args.spell.id !== "magic-missile") return countering
+  const shielded = shieldAgainstMagicMissile({ characters: countering.characters, casterId: args.casterId, targets: args.targets, ask: args.ask })
+  return { ...countering, characters: shielded.characters, reactions: [...countering.reactions, ...shielded.reactions], facts: [...countering.facts, ...shielded.reactions.map((taken) => taken.text)] }
 }

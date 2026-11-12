@@ -15,9 +15,10 @@ import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../she
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
 import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet/space"
-import { attackModesFromSpells } from "../sheet/spell-effects"
+import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spell-effects"
+import { endsThings } from "../sheet/spell-ends"
 import { castInSpace } from "../sheet/spell-space"
-import { castCost, isEngineSpell, slotsLeft, slotWords, spellAttackModes, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
+import { againOf, castableOnTurn, castCost, isEngineSpell, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellcastingOf, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import { actionIds } from "../sheet/turn-effect"
@@ -52,6 +53,11 @@ const rollPickSchema = z.object({
   helps: z.string().max(40).optional().describe('For "help" given to an ally\'s check, or a spell cast for one skill such as Guidance: the id of the skill it is for'),
   bonus: z.string().max(40).optional().describe("The id of one of the character's own Bonus Actions they also use this turn, from Their Bonus Actions"),
   bonusTarget: z.string().max(80).optional().describe("For a Bonus Action given to someone else: their id"),
+  bonusTargets: z
+    .array(z.string().max(80))
+    .max(8)
+    .optional()
+    .describe("For a Bonus Action spell that takes several creatures: the id of each one it is cast on, from Who Is Here or the character's own id"),
   moveTo: z.string().max(80).optional().describe("Where the character goes before they act: the id of a place or of someone here, from Where Things Are"),
   moveAway: z.string().max(80).optional().describe("Instead of moveTo: the id of someone here they back straight away from"),
   moveFeet: z.number().min(0).max(240).optional().describe("How far they go, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10"),
@@ -92,8 +98,8 @@ export type TurnReading = {
   feature?: RequiredFeature
   /** Action Surge is used: one more action this turn, which the attack's `after` already counts. Its use is spent as the reading is applied. */
   surge?: true
-  /** One of the roller's own Bonus Actions, used beside the action. */
-  bonus?: { feature: string; target?: string }
+  /** One of the roller's own Bonus Actions, used beside the action. A spell that takes several creatures names each in `targets`. */
+  bonus?: { feature: string; target?: string; targets?: string[] }
   /** Where the move took the roller before they acted, and the feet it used. */
   move?: Moved
   /** A rest the party takes, which the hero's turn is given to. */
@@ -175,13 +181,31 @@ export function createRollRequirementService(ports: GmPorts) {
       ].filter(Boolean)
       return words.length ? words.join(", ") : "no immunities, resistances or vulnerabilities"
     }
-    const knownSpells = spellsOf(character)
-    // The spells of theirs that take a Bonus Action and can be paid for now.
-    const bonusSpells = knownSpells.filter((known) => known.spell.castingTime.unit === "bonus-action" && !("problem" in castCost(character, known.spell.id)))
+    // A spell cast as a Reaction (Shield, Counterspell) is cast only when its trigger is offered, never on a turn.
+    const knownSpells = spellsOf(character).filter((known) => castableOnTurn(known.spell))
+    // The spells the caster holds and may use again this turn with no cost: Spiritual Weapon's attack, Heat Metal's burn, Vampiric Touch.
+    const held = self ? againOf({ ...character, id: self }) : []
+    const heldBonus = held.filter((entry) => entry.takes === "bonus-action")
+    // The spells of theirs that take a Bonus Action and can be paid for now. One they hold is used again, not cast.
+    const bonusSpells = knownSpells.filter(
+      (known) => known.spell.castingTime.unit === "bonus-action" && !held.some((entry) => entry.spell.id === known.spell.id) && !("problem" in castCost(character, known.spell.id))
+    )
     const slots = slotsLeft(character)
     // What kind of spell each is, so the game master knows who it is cast on.
     const spellKind = (spell: (typeof knownSpells)[number]["spell"]) =>
-      spell.attack ? "a spell attack" : spell.saves ? "its targets save" : spell.healing ? "heals" : spell.damage ? "strikes with no roll" : isEngineSpell(spell) ? "lasts on its target" : "utility"
+      spell.attack
+        ? "a spell attack"
+        : spell.saves
+          ? "its targets save"
+          : spell.healing
+            ? "heals"
+            : spell.damage
+              ? "strikes with no roll"
+              : endsThings(spell.id)
+                ? "ends a condition or a spell on its target"
+                : isEngineSpell(spell)
+                  ? "lasts on its target"
+                  : "utility"
     const spellLines = knownSpells.map((known) => {
       const limit = targetLimit(known.spell)
       const notes = [
@@ -279,7 +303,17 @@ ${
            (entry) =>
              `${entry.id} (${[entry.name, entry.left === undefined ? "" : entry.left > 0 ? `${entry.left} left` : `a level ${entry.slot} spell slot buys one`, entry.targeted ? "given to an ally" : ""].filter(Boolean).join(", ")})`
          ),
-         ...bonusSpells.map((known) => `${known.spell.id} (${known.spell.name}, a spell cast with a Bonus Action${known.spell.range.kind === "self" ? "" : ', "bonusTarget" is who it is cast on'})`),
+         ...bonusSpells.map(
+           (known) =>
+             `${known.spell.id} (${known.spell.name}, a spell cast with a Bonus Action${
+               known.spell.range.kind === "self"
+                 ? ""
+                 : targetLimit(known.spell) > 1
+                   ? `, "bonusTargets" are each one it is cast on, up to ${targetLimit(known.spell)}`
+                   : ', "bonusTarget" is who it is cast on'
+             })`
+         ),
+         ...heldBonus.map((entry) => `${entry.spell.id} (${entry.spell.name}, held: used again with no slot, "bonusTarget" is who it is used on)`),
        ].join(", ") || "none"
      }.
      A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.${
@@ -316,7 +350,14 @@ ${
 `
     : ""
 }   - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
-     Their Spells: ${spellLines.join(", ") || "none"}.${slots.length ? ` Spell slots left: ${slotWords(character)}.` : ""}
+     Their Spells: ${spellLines.join(", ") || "none"}.${slots.length ? ` Spell slots left: ${slotWords(character)}.` : ""}${
+       held.length
+         ? `
+     Their Spells Held, already cast and still lasting, used again with no slot by "check" "cast" with its id and "targets" who it strikes: ${held
+       .map((entry) => `${entry.spell.id} (${entry.spell.name}, ${spellKind(entry.spell)}, ${entry.takes === "action" ? "takes the action" : "a Bonus Action"})`)
+       .join(", ")}. Using one again is not casting it anew.`
+         : ""
+     }
      A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
      A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all is "arcana".
 
@@ -398,15 +439,12 @@ Action: "${action}"
                 .describe("For an attack: the Cunning Strike effect added to a Sneak Attack"),
             }
           : {}),
-        spell: menu(
-          "spell",
-          knownSpells.map((known) => known.spell.id)
-        ),
+        spell: menu("spell", [...new Set([...knownSpells.map((known) => known.spell.id), ...held.map((entry) => entry.spell.id)])]),
         weapon: menu(
           "weapon",
           attacks.map((attack) => attack.id)
         ),
-        bonus: menu("bonus", [...bonusActions.map((entry) => entry.id), ...bonusSpells.map((known) => known.spell.id)]),
+        bonus: menu("bonus", [...bonusActions.map((entry) => entry.id), ...bonusSpells.map((known) => known.spell.id), ...heldBonus.map((entry) => entry.spell.id)]),
         // Where they may go: the floor's named places and the others on it.
         ...(mover && floor
           ? {
@@ -426,12 +464,15 @@ Action: "${action}"
       // A Bonus Action is the roller's own, with a use left. One the game master makes up is dropped.
       const used = bonusActions.find((entry) => entry.id === pick.bonus?.trim())
       // A spell cast with a Bonus Action, beside the action. Only one spell a turn takes a slot, so beside a cast it is dropped.
-      const quick = pick.check === "cast" ? undefined : bonusSpells.find((known) => known.spell.id === pick.bonus?.trim() || known.spell.name.toLowerCase() === pick.bonus?.trim().toLowerCase())
+      // A spell held and used again spends no slot, so it may go beside a cast.
+      const isPicked = (spell: { id: string; name: string }) => spell.id === pick.bonus?.trim() || spell.name.toLowerCase() === pick.bonus?.trim().toLowerCase()
+      const quick = (pick.check === "cast" ? undefined : bonusSpells.find((known) => isPicked(known.spell))) ?? heldBonus.find((entry) => isPicked(entry.spell))
+      const quickTargets = [...(pick.bonusTargets ?? []), ...(pick.bonusTarget ? [pick.bonusTarget] : [])]
       // What the reading carries beside its roll: a Bonus Action, the move, and a ruling of space.
       const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "surge"> = used
         ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
         : quick
-          ? { bonus: { feature: quick.spell.id, ...(pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
+          ? { bonus: { feature: quick.spell.id, ...(quickTargets[0] ? { target: quickTargets[0] } : {}), ...(quickTargets.length > 1 ? { targets: [...new Set(quickTargets)] } : {}) } }
           : {}
       // The move, made before the action: to the place or the one named, or away from one. With Dash the whole turn is
       // movement. An attack in melee may close with its target instead, which is settled where the attack is.
@@ -459,11 +500,15 @@ Action: "${action}"
       // A name is taken for its id, in a weapon, a spell or a target.
       const named = (given: string | undefined, name: string, id: string) => !!given?.trim() && [id.toLowerCase(), name.toLowerCase()].includes(given.trim().toLowerCase())
       if (pick.check === "cast") {
-        // A spell is one of the caster's own, with a slot for it. One the caster lacks, or cannot pay for, is not cast.
-        const known = knownSpells.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
+        // A spell is one the caster holds and uses again with no cost, or one of their own with a slot for it. One the
+        // caster lacks, or cannot pay for, is not cast.
+        const again = held.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
+        const known = again ? undefined : knownSpells.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
         // A slot named that the caster lacks, or below the spell's level, falls to the lowest that can pay.
         const cost = known && castCost(character, known.spell.id, pick.ritual === true, pick.slot)
-        if (!known || !cost || "problem" in cost) {
+        const paid = cost && !("problem" in cost) ? cost : undefined
+        const spell = again?.spell ?? (paid ? known?.spell : undefined)
+        if (!spell) {
           console.log("[LLM] Roll requirement decision:", {
             character: character.name,
             requiresRoll: false,
@@ -472,13 +517,14 @@ Action: "${action}"
           })
           return { roll: null, ...also }
         }
-        const { spell } = known
+        // The slot the spell is cast at: the one it is held at, the one spent, or a stat block's printed level.
+        const slotLevel = again ? again.slot : paid?.cost.kind === "slot" ? paid.cost.level : (known?.castLevel ?? spell.level)
         const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
         const asked = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])]
         // On a floor an area is measured, so those named are its aim and not its count.
         let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(
           0,
-          mover && spell.range.area ? undefined : targetLimit(spell, cost.cost.kind === "slot" ? cost.cost.level : spell.level)
+          mover && spell.range.area ? undefined : targetLimit(spell, slotLevel)
         )
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
@@ -492,9 +538,12 @@ Action: "${action}"
         }
         // Space, on a floor. A touch closes with the one touched, as a melee attack does. Then the spell falls where
         // everyone stands: within its range, past no total cover, and on whoever is in its area.
-        const touched = spell.range.kind === "touch" && chosen[0] !== self ? chosen[0] : undefined
+        // A melee spell attack with a range of Self (Vampiric Touch) reaches as a touch does. Spiritual Weapon used again
+        // strikes from where its force is, which the floor does not hold, so it is not measured.
+        const touched = (spell.range.kind === "touch" || (spell.range.kind === "self" && spell.attack === "melee")) && chosen[0] !== self ? chosen[0] : undefined
         const stood = withMove(character, moved(moveFor(touched ? { target: touched, reach: 5 } : undefined)))
-        const spaced = mover && floor ? castInSpace({ spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
+        const unplaced = again?.spell.id === "spiritual-weapon"
+        const spaced = mover && floor && !unplaced ? castInSpace({ spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
         if (spaced?.problem) {
           also.ruling = spaced.problem
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
@@ -508,13 +557,14 @@ Action: "${action}"
           targets: chosen,
           ...(spaced && Object.keys(spaced.cover).length ? { cover: spaced.cover } : {}),
           ...(spaced?.measured ? { measured: true as const } : {}),
-          ...(cost.cost.kind === "ritual" ? { ritual: true as const } : {}),
+          ...(paid?.cost.kind === "ritual" ? { ritual: true as const } : {}),
           ...(type.success ? { damageType: type.data } : {}),
           ...(forSkill.success ? { skill: forSkill.data } : {}),
-          // The slot level spent, for a hero. An NPC's stat block may print the level it casts at.
-          ...(cost.cost.kind === "slot" ? { level: cost.cost.level } : known.castLevel ? { level: known.castLevel } : {}),
+          // The slot level spent, for a hero, or held. An NPC's stat block may print the level it casts at.
+          ...(again || paid?.cost.kind === "slot" || known?.castLevel ? { level: slotLevel } : {}),
+          ...(again ? { again: true as const } : {}),
         }
-        const casting = spellcastingOf(character)
+        const casting = spellcastingFor(character, spell.id)
         if (spell.attack) {
           // A spell attack is the caster's to throw, against the first target's Armor Class.
           const target = everyone.find((other) => other.id === chosen[0])
@@ -652,6 +702,7 @@ Action: "${action}"
         ...sheetModes(character, check),
         ...checkModesFrom(character, check, options?.present),
         ...(self ? checkModesFromActions({ ...character, id: self }, check, options?.present) : []),
+        ...saveModesFor(character, check),
       ]
       const picked = pick.mode ?? "normal"
       const mode = combineModes([picked, ...typed.map((source) => source.mode)])
@@ -682,7 +733,7 @@ Action: "${action}"
         check,
         rollType: hiding ? hiding.rollType : checkName(check),
         difficulty,
-        modifier: checkBonus(character, check),
+        modifier: checkBonus(character, check) + saveBonusFor(character, check),
         mode,
         ...(reasons.length ? { reasons } : {}),
         ...(stakes.length ? { stakes } : {}),

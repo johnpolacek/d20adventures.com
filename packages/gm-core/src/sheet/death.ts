@@ -5,7 +5,7 @@ import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtRoundStart, d20Penalty, withCondition } from "./conditions"
 import { hitPointsOf, withHitPoints } from "./hit-points"
 import type { Sheet } from "./sheet"
-import { spellEffectsAtRoundStart } from "./spell-effects"
+import { saveModesFromSpells, spellEffectsAtRoundStart } from "./spell-effects"
 import type { SpellEffect, TurnEffect } from "./turn-effect"
 
 /** A hero's Death Saving Throws while at 0 hit points: three successes make them Stable, three failures kill. */
@@ -144,7 +144,7 @@ type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: Ro
  * A character as a round begins. Their conditions lose a turn each, and those that run out end, as does what last
  * round's actions left on them. A dying hero's turn is
  * their Death Saving Throw, already asked for, so the roll card comes up on it. One who is down otherwise, or
- * Incapacitated, takes no turn. Everyone else has yet to act.
+ * Incapacitated, takes no turn. Everyone else has yet to act. Beacon of Hope gives a Death Saving Throw Advantage.
  */
 export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
   // One who was Prone and is not now has stood, which costs half their Speed this turn (./space).
@@ -153,7 +153,16 @@ export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
   const eased = turnEffectsAtRoundStart(risen)
   const stood: T = prone(before) && !prone(risen) ? { ...eased, turnEffects: [...(eased.turnEffects ?? []), { id: "stood" as const, by: before.id ?? "", turns: 1 }] } : eased
   const character = spellEffectsAtRoundStart(stood)
-  if (isDying(character)) return { ...character, rollRequired: { ...DEATH_SAVE, modifier: 0 - d20Penalty(character) }, rollResult: undefined, hasReplied: true, isComplete: false }
+  // Beacon of Hope gives the Death Saving Throw Advantage.
+  const helped = saveModesFromSpells(character, "death")
+  if (isDying(character))
+    return {
+      ...character,
+      rollRequired: { ...DEATH_SAVE, modifier: 0 - d20Penalty(character), ...(helped.length ? { mode: "advantage" as const, reasons: helped.map((source) => source.from) } : {}) },
+      rollResult: undefined,
+      hasReplied: true,
+      isComplete: false,
+    }
   if (isDown(character) || isIncapacitated(character)) return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
   return { ...character, hasReplied: false, isComplete: false }
 }

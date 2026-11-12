@@ -3,17 +3,18 @@ import { afterRoll, takeAction } from "../sheet/actions"
 import { multiattackOf, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { saveFailedBy } from "../sheet/conditions"
+import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, killed } from "../sheet/death"
 import { d20sOf, replaying } from "../sheet/dice"
 import { attacksPerAction } from "../sheet/feature-rules"
 import { applyStakes } from "../sheet/harm"
 import { type Ask, attackWithReactions, checkWithCuttingWords, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
-import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
+import { castAgain, castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { storyNames } from "../story/render"
-import { attackBeat, castBeats, concentrationBeat, rollBeat, turnScript } from "../story/turn"
+import { attackBeat, castAnswerBeats, castBeats, concentrationBeat, rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { isDown } from "../utils/turn-actors"
 import { isAttackRoll, isCastRoll } from "../validations/roll-requirement-schema"
@@ -177,25 +178,38 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       // The engine resolves it by the spell's typed data and spends the stat block's count for it. The NPC's spell
       // attack and every target's saving throw are rolled here, a hero's too.
       const spell = spellById.get(casting.cast.spell)
-      const cost = spell && castCost(args.npc, spell.id)
-      if (!spell || !cost || "problem" in cost) throw new Error(cost && "problem" in cost ? cost.problem : `"${casting.cast.spell}" is not a spell.`)
-      const cast = castSpell({
-        characters: updatedCharacters,
-        casterId: args.npc.id,
-        spell,
-        targets: casting.cast.targets,
-        ...(spell.attack ? { attackDice: d20sOf(dice, casting.mode) } : {}),
-        mode: casting.mode,
-        d20: dice.d20,
-        roll: dice.roll,
-        rules: args.rules,
-        damageType: casting.cast.damageType,
-        skill: casting.cast.skill,
-        level: casting.cast.level,
-        cover: casting.cast.cover,
-        measured: casting.cast.measured,
-      })
-      const spent = cast.characters.map((character) => (character.id === args.npc.id ? withCastSpent(character, cost.cost) : character))
+      const again = casting.cast.again === true
+      const cost = spell && !again ? castCost(args.npc, spell.id) : undefined
+      if (!spell || (cost && "problem" in cost)) throw new Error(cost && "problem" in cost ? cost.problem : `"${casting.cast.spell}" is not a spell.`)
+      const names = storyNames(args.turn.characters)
+      // The heroes may counter it, and those Magic Missile is aimed at may cast Shield. A player's hero is asked, and
+      // the turn waits on the answer as it does for Shield against an attack.
+      const answered = cost ? reactionsToCast({ characters: updatedCharacters, casterId: args.npc.id, spell, targets: casting.cast.targets, ask, d20: dice.d20, roll: dice.roll }) : undefined
+      if (answered) updatedCharacters = answered.characters
+      const reacted = answered ? castAnswerBeats(npcStep(args.npc), answered, names) : []
+      const cast =
+        answered?.countered || !(again || cost)
+          ? undefined
+          : (() => {
+              const how = {
+                characters: updatedCharacters,
+                casterId: args.npc.id,
+                targets: casting.cast.targets,
+                ...(spell.attack ? { attackDice: d20sOf(dice, casting.mode) } : {}),
+                mode: casting.mode,
+                d20: dice.d20,
+                roll: dice.roll,
+                rules: args.rules,
+                damageType: casting.cast.damageType,
+                skill: casting.cast.skill,
+                cover: casting.cast.cover,
+                measured: casting.cast.measured,
+              }
+              return again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level: casting.cast.level })
+            })()
+      // Countered, the action is spent and the cast is not made, and a slot is not expended.
+      const spentCost = cost && (answered?.countered ? costWhenCountered(cost.cost) : cost.cost)
+      const spent = (cast?.characters ?? updatedCharacters).map((character) => (character.id === args.npc.id && spentCost ? withCastSpent(character, spentCost) : character))
       const kept = settleConcentration({
         before: args.turn.characters,
         after: afterRoll(spent, args.npc.id, casting),
@@ -203,9 +217,9 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         d20: dice.d20,
       })
       updatedCharacters = kept.characters.map((character) => afterHarm(character))
-      const thrown = cast.attack?.roll
+      const thrown = cast?.attack?.roll
       if (thrown) rollInfo = { rollType: spell.name, difficulty: thrown.armorClass, baseRoll: thrown.natural, modifier: thrown.bonus, result: thrown.total, success: thrown.hit }
-      const facts = [...cast.facts, ...kept.facts]
+      const facts = [...(answered?.facts ?? []), ...(cast?.facts ?? []), ...kept.facts]
       console.log("[LLM] NPC casts:", { spell: spell.id, targets: casting.cast.targets, facts })
       const outcomeResult = await generateNpcOutcome(
         buildNpcOutcomePrompt({
@@ -217,15 +231,15 @@ export function createNpcTurnBranchService(ports: GmPorts) {
           rollType: spell.name,
           result: thrown?.total ?? 0,
           difficulty: casting.difficulty,
-          success: thrown ? thrown.hit : true,
+          success: thrown ? thrown.hit : !answered?.countered,
           scene: args.scene,
-          spell: { name: spell.name, facts, ...(isEngineSpell(spell) ? {} : { text: spell.description }) },
+          spell: { name: spell.name, facts, ...(cast && !isEngineSpell(spell) ? { text: spell.description } : {}) },
         }),
         args.npc.id
       )
-      const names = storyNames(args.turn.characters)
       beatsToAppend = [
-        ...castBeats(npcStep(args.npc), args.npc, spell, cast, names),
+        ...reacted,
+        ...(cast ? castBeats(npcStep(args.npc), args.npc, spell, cast, names) : []),
         ...kept.saves.map((save) => concentrationBeat(npcStep(args.npc), save, names)),
         ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc)),
       ]

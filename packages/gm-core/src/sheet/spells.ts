@@ -88,6 +88,28 @@ export function spellcastingOf(character: Roller): Spellcasting | undefined {
   }
 }
 
+/**
+ * The spellcasting a character casts one spell with: their class's, or for a spell a feat gave them (Magic Initiate)
+ * the ability that feat names, with the Proficiency Bonus, for its save DC and attack bonus. A Fighter with Magic
+ * Initiate (Wizard) and Intelligence 10 casts its spells at DC 10 and +2.
+ */
+export function spellcastingFor(character: Slotted, spellId: string): Spellcasting | undefined {
+  const own = spellcastingOf(character)
+  const ability = spellsOf(character).find((known) => known.spell.id === spellId)?.ability
+  if (!ability || !character.sheet) return own
+  const derived = deriveSheet(character.sheet)
+  const modifier = derived.abilityModifiers[ability]
+  return {
+    ability,
+    saveDc: 8 + derived.proficiencyBonus + modifier,
+    attackBonus: derived.proficiencyBonus + modifier,
+    modifier,
+    slots: own?.slots ?? [],
+    cantrips: own?.cantrips ?? 0,
+    prepared: own?.prepared ?? 0,
+  }
+}
+
 /** The spells on a class's list up to a spell level, by id. */
 export function classSpells(classId: string, upToLevel: number): string[] {
   return (classById.get(classId)?.spellcasting?.spellList ?? []).filter((entry) => entry.level <= upToLevel).flatMap((entry) => entry.spells)
@@ -205,13 +227,17 @@ export type KnownSpell = {
   useKey?: string
   /** The slot level an NPC's stat block casts it at, where it prints one: "Fireball (level 4 version)". */
   castLevel?: number
+  /** The ability a feat's spell is cast with (Magic Initiate), in place of the class's (`spellcastingFor`). */
+  ability?: AbilityId
 }
 
 type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<string, number> }
 
 /**
- * The spells a hero can cast, from the sheet: the cantrips known, the spells prepared, and for a Wizard the Ritual
- * spells of the spellbook. A hero with no sheet, and an NPC, has none here.
+ * The spells a hero can cast, from the sheet: the cantrips known, the spells prepared, for a Wizard the Ritual spells
+ * of the spellbook, and each Magic Initiate's two cantrips and its level 1 spell, always prepared, with one cast a Long
+ * Rest that takes no slot (counted under `magic-initiate-<list>`), all cast with the ability the feat names. A hero
+ * with no sheet has none. An NPC's are its stat block's.
  */
 export function spellsOf(character: Slotted): KnownSpell[] {
   const block = statBlockCasting(character)
@@ -238,6 +264,24 @@ export function spellsOf(character: Slotted): KnownSpell[] {
   for (const id of derived.cantrips) add(id, { cantrip: true, prepared: true })
   for (const id of derived.preparedSpells) add(id, { cantrip: false, prepared: true })
   if (cls?.spellcasting?.ritualFromSpellbook) for (const id of derived.spellbook) if (spellById.get(id)?.ritual) add(id, { cantrip: false, prepared: false })
+  // Magic Initiate, from an Origin feat or one taken at a level: "You can cast it once without a spell slot, and you
+  // regain the ability to cast it in that way when you finish a Long Rest. You can also cast the spell using any
+  // spell slots you have." A spell the class already gives keeps the class's ability and gains the free cast.
+  for (const entry of sheet.advancements ?? []) {
+    if (entry.feat !== "magic-initiate" || !entry.spellList || !entry.spellAbility) continue
+    const key = `magic-initiate-${entry.spellList}`
+    const ability = entry.spellAbility
+    for (const id of entry.cantrips ?? []) {
+      const spell = spellById.get(id)
+      if (spell && !found.some((known) => known.spell.id === id)) found.push({ spell, cantrip: true, prepared: true, ritual: spell.ritual, free: 0, ability })
+    }
+    const spell = entry.spell ? spellById.get(entry.spell) : undefined
+    if (!spell) continue
+    const free = Math.max(0, 1 - (character.featureUses?.[key] ?? 0))
+    const held = found.findIndex((known) => known.spell.id === spell.id)
+    if (held < 0) found.push({ spell, cantrip: false, prepared: true, ritual: spell.ritual, free, useKey: key, ability })
+    else if (!found[held].useKey) found[held] = { ...found[held], prepared: true, free, useKey: key }
+  }
   return found
 }
 
@@ -500,7 +544,7 @@ export function castSpell<T extends Castee>(args: {
   const { spell } = args
   let characters = [...args.characters]
   const caster = characters.find((character) => character.id === args.casterId)
-  const casting = caster && spellcastingOf(caster)
+  const casting = caster && spellcastingFor(caster, spell.id)
   if (!caster || !casting) throw new Error(`${caster?.name ?? "This character"} cannot cast spells.`)
   const level = caster.sheet?.level ?? 1
   const features = new Set(caster.sheet ? featuresOf(caster.sheet).map((feature) => feature.id) : [])

@@ -80,6 +80,7 @@ type Count = number | "proficiency-bonus" | { ability: AbilityId; minimum: 1 } |
  */
 export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonly number[], spellEffects?: readonly SpellEffect[], featureUses?: Record<string, number>): SheetView {
   const derived = deriveSheet(sheet)
+  const stats = combatStatsOf({ sheet, spellEffects }) ?? { hitPointMaximum: derived.hitPointMaximum, armorClass: derived.armorClass }
   const cls = classById.get(sheet.class)
   const species = speciesById.get(sheet.species)
   const background = backgroundById.get(sheet.background)
@@ -154,9 +155,9 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     backgroundName: background.name,
     proficiencyBonus: derived.proficiencyBonus,
     hitDie: derived.hitDie,
-    hitPoints: { current: Math.min(derived.hitPointMaximum, Math.max(0, hitPoints ?? derived.hitPointMaximum)), maximum: derived.hitPointMaximum },
-    // With the spells that last on the hero: Shield of Faith's 2, or Mage Armor's 13 and Dexterity.
-    armorClass: combatStatsOf({ sheet, spellEffects })?.armorClass ?? derived.armorClass,
+    // With the spells that last on the hero: Aid's higher maximum, Shield of Faith's 2, or Mage Armor's 13 and Dexterity.
+    hitPoints: { current: Math.min(stats.hitPointMaximum, Math.max(0, hitPoints ?? stats.hitPointMaximum)), maximum: stats.hitPointMaximum },
+    armorClass: stats.armorClass,
     armorClassFrom: derived.armorClassFrom,
     initiative: derived.initiative,
     speed: derived.speed,

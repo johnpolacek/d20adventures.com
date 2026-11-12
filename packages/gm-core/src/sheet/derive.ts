@@ -430,7 +430,22 @@ function advancementProblems(sheet: Sheet, parts: Parts): string[] {
       proficient.add(skill)
     }
   }
-  for (const entry of entries) if (entry.skills && !skillGrants.some((grant) => grant.level === entry.level)) problems.push(`no feature of level ${entry.level} gives skill proficiencies`)
+  // A feat that gives skill proficiencies (Skilled), taken at a level: its skills are kept on its entry. The engine
+  // holds no tool proficiencies, so its three are skills.
+  for (const entry of entries) {
+    const choice = entry.feat ? featById.get(entry.feat)?.proficiencyChoice : undefined
+    if (!choice || !grants.some((grant) => grant.level === entry.level)) continue
+    const skills = entry.skills ?? []
+    if (skills.length !== choice.count) problems.push(`${featById.get(entry.feat ?? "")?.name} gives ${choice.count} skill proficiencies at level ${entry.level}, and the sheet has ${skills.length}`)
+    for (const skill of skills) {
+      if (proficient.has(skill)) problems.push(`${skill} is already a proficiency, so ${featById.get(entry.feat ?? "")?.name} cannot give it`)
+      proficient.add(skill)
+    }
+  }
+  for (const entry of entries) {
+    const byFeat = !!entry.feat && !!featById.get(entry.feat)?.proficiencyChoice && grants.some((grant) => grant.level === entry.level)
+    if (entry.skills && !byFeat && !skillGrants.some((grant) => grant.level === entry.level)) problems.push(`no feature of level ${entry.level} gives skill proficiencies`)
+  }
 
   // The scores before any raise, then each raise in level order.
   const scores = { ...sheet.abilityScores }

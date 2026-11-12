@@ -2,6 +2,7 @@ import type { GmPorts } from "../ports"
 import { takeAction } from "../sheet/actions"
 import { checkBonus } from "../sheet/check"
 import type { ConditionEntry } from "../sheet/condition-entry"
+import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm } from "../sheet/death"
 import { hasFeature, withFeatureUsed } from "../sheet/feature-rules"
 import { useBonusAction } from "../sheet/features"
@@ -10,16 +11,18 @@ import { partyRest, restName } from "../sheet/rest"
 import type { Sheet } from "../sheet/sheet"
 import { speedOf } from "../sheet/space"
 import { settleConcentration } from "../sheet/spell-effects"
-import { castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
+import { castInSpace } from "../sheet/spell-space"
+import { againOf, castAgain, castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { TurnEffect } from "../sheet/turn-effect"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames } from "../story/render"
-import { attackBeat, castBeats, concentrationBeat, turnScript } from "../story/turn"
+import { attackBeat, castAnswerBeats, castBeats, concentrationBeat, turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
 import { rollD20, rollDie } from "../utils/game-utils"
+import { hasFled, isDead, isDown } from "../utils/turn-actors"
 import { createRollRequirementService, type TurnReading } from "./roll-requirement-service"
 
 /**
@@ -190,16 +193,64 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     }
     // A Bonus Action is a class feature of the hero's, or one of their spells that takes one. The spell is cast by
     // the same rules as any other, and the story keeps it with no telling of its own: the turn's action is told after.
+    // A spell they hold is used again with no cost (Spiritual Weapon's attack). One cast is measured where the hero now
+    // stands, may be countered by the other side, and Magic Missile may draw Shield, each by their standing order.
     const actor = characters.find((character) => character.id === args.characterId)
     const spell = bonus ? spellById.get(bonus.feature) : undefined
-    const cost = spell && actor ? castCost(actor, spell.id) : undefined
+    const again = spell && actor ? againOf(actor).find((entry) => entry.spell.id === spell.id) : undefined
+    const cost = spell && actor && !again ? castCost(actor, spell.id) : undefined
     let spellBeats: StoryBeat[] = []
-    if (spell && actor && cost && !("problem" in cost)) {
-      // Cast at the slot it spends: a Healing Word from a level 2 slot heals as a level 2 casting.
-      const level = cost.cost.kind === "slot" ? cost.cost.level : undefined
-      const cast = castSpell({ characters, casterId: actor.id, spell, targets: [bonus?.target ?? actor.id], d20: rollD20, roll: rollDie, level })
-      characters = cast.characters.map((character) => (character.id === actor.id ? withCastSpent(character, cost.cost) : character))
-      spellBeats = castBeats({ step: "reply", character: actor.id }, actor, spell, cast, storyNames(turn.characters))
+    if (spell && actor && (again || (cost && !("problem" in cost)))) {
+      const names = storyNames(turn.characters)
+      const castBy = { step: "reply" as const, character: actor.id }
+      const everyone = characters.filter((character) => !isDead(character) && !hasFled(character))
+      // Who it is cast on: those named, or for a spell attack the only foe here, and otherwise the caster.
+      const foes = everyone.filter((character) => character.type !== actor.type && !isDown(character))
+      const named = bonus?.targets ?? (bonus?.target ? [bonus.target] : spell.attack ? (foes.length === 1 ? [foes[0].id] : []) : [actor.id])
+      const floor = again?.spell.id === "spiritual-weapon" ? undefined : await ports.content.floor?.(turn.encounterId)
+      const spaced = floor ? castInSpace({ spell, caster: actor, everyone, named, floor }) : undefined
+      if (spaced?.problem || !named.length) {
+        const problem = spaced?.problem ?? { name: "No One To Cast On", text: `${actor.name} has no one to cast ${spell.name} on.` }
+        spellBeats = [{ kind: "feature", by: castBy, character: actor.id, name: problem.name, text: problem.text }]
+      } else {
+        const targets = spaced?.targets ?? named
+        const answered =
+          cost && !("problem" in cost)
+            ? reactionsToCast({
+                characters,
+                casterId: actor.id,
+                spell,
+                targets,
+                ask: (offer) => ordered(characters.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
+                d20: rollD20,
+                roll: rollDie,
+              })
+            : undefined
+        if (answered) characters = answered.characters
+        const reacted = answered ? castAnswerBeats(castBy, answered, names) : []
+        if (answered?.countered && cost && !("problem" in cost)) {
+          characters = characters.map((character) => (character.id === actor.id ? withCastSpent(character, costWhenCountered(cost.cost)) : character))
+          spellBeats = reacted
+        } else {
+          const how = {
+            characters,
+            casterId: actor.id,
+            targets,
+            d20: rollD20,
+            roll: rollDie,
+            ...(spaced && Object.keys(spaced.cover).length ? { cover: spaced.cover } : {}),
+            ...(spaced?.measured ? { measured: true } : {}),
+          }
+          // Cast at the slot it spends: a Healing Word from a level 2 slot heals as a level 2 casting.
+          const level = cost && !("problem" in cost) && cost.cost.kind === "slot" ? cost.cost.level : undefined
+          const cast = again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level })
+          const spent = cast.characters.map((character) => (character.id === actor.id && cost && !("problem" in cost) ? withCastSpent(character, cost.cost) : character))
+          // A caster the spell hurt saves to keep Concentration.
+          const kept = settleConcentration({ before: characters, after: spent.map(afterHarm), bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
+          characters = kept.characters
+          spellBeats = [...reacted, ...castBeats(castBy, actor, spell, cast, names), ...kept.saves.map((save) => concentrationBeat(castBy, save, names))]
+        }
+      }
     }
     const used = bonus && !spell ? useBonusAction({ characters, actorId: args.characterId, feature: bonus.feature, target: bonus.target, roll: rollDie }) : undefined
     if (used) characters = used.characters

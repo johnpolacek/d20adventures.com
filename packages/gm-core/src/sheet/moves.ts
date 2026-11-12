@@ -2,6 +2,7 @@ import { movementEffects } from "./actions"
 import type { Afflicted } from "./conditions"
 import type { EncounterFloor } from "./placement"
 import { movementBudgetOf, type Point, pushed, type Standing, sizeOf, stopShortFor, walk } from "./space"
+import { spellEffectsAfterMove } from "./spell-effects"
 import type { TurnEffect } from "./turn-effect"
 
 /** Where a move is read as going: to a named place or to someone, by id, or straight away from someone, and no farther than some feet. */
@@ -53,5 +54,6 @@ export function takeMove(args: { floor: EncounterFloor; mover: Mover; others: re
   return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded) }
 }
 
-/** The mover where a move left them. */
-export const withMove = <T extends Standing>(character: T, moved: Moved | undefined): T => (moved ? { ...character, position: moved.at } : character)
+/** The mover where a move left them: out of any area that stays on the floor (Web), whatever the move's length. */
+export const withMove = <T extends Standing & Parameters<typeof spellEffectsAfterMove>[0]>(character: T, moved: Moved | undefined): T =>
+  moved ? spellEffectsAfterMove({ ...character, position: moved.at }) : character

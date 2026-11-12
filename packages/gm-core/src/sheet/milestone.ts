@@ -21,7 +21,7 @@ export const levelUpChoicesSchema = z.strictObject({
   feat: idSchema.optional(),
   abilities: z.strictObject({ str: raise, dex: raise, con: raise, int: raise, wis: raise, cha: raise }).partial().optional(),
   featPicks: z
-    .strictObject({ spellList: classIdSchema, spellAbility: z.enum(abilityIds), cantrips: z.array(idSchema), spell: idSchema })
+    .strictObject({ spellList: classIdSchema, spellAbility: z.enum(abilityIds), cantrips: z.array(idSchema), spell: idSchema, skills: z.array(skillIdSchema) })
     .partial()
     .optional(),
   expertise: z.array(skillIdSchema).optional(),

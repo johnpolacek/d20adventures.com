@@ -15,6 +15,7 @@ export type Picks = {
   featAbility?: AbilityId
   featCantrips: string[]
   featSpell?: string
+  featSkills: string[]
   expertise: Record<string, string[]>
   skills: string[]
   featureChoices: Record<string, string>
@@ -31,6 +32,7 @@ export function emptyPicks(options: LevelUpOptions): Picks {
     subclass: options.subclass?.length === 1 ? options.subclass[0].id : undefined,
     abilities: {},
     featCantrips: [],
+    featSkills: [],
     expertise: {},
     skills: [],
     featureChoices: {},
@@ -85,6 +87,7 @@ export function missing(options: LevelUpOptions, picks: Picks): string[] {
       short(picks.featCantrips.length, feat.spellPicks.cantrips, "cantrip", "cantrips")
       if (!picks.featSpell) left.push("a spell")
     }
+    if (feat?.skillPicks) short(picks.featSkills.length, Math.min(feat.skillPicks.count, feat.skillPicks.from.length), "skill", "skills")
   }
   for (const entry of options.expertise ?? []) short(picks.expertise[entry.feature.id]?.length ?? 0, Math.min(entry.count, entry.from.length), "Expertise skill", "Expertise skills")
   if (options.skills) short(picks.skills.length, Math.min(options.skills.count, options.skills.from.length), "skill", "skills")
@@ -116,6 +119,7 @@ export function toChoices(options: LevelUpOptions, picks: Picks): LevelUpChoices
     ...(feat ? { feat: feat.id } : {}),
     ...(feat?.abilityScoreIncrease && Object.keys(abilities).length ? { abilities } : {}),
     ...(feat?.spellPicks ? { featPicks: { spellList: picks.featList, spellAbility: picks.featAbility, cantrips: picks.featCantrips, spell: picks.featSpell } } : {}),
+    ...(feat?.skillPicks ? { featPicks: { skills: picks.featSkills } } : {}),
     ...(expertise.length ? { expertise } : {}),
     ...(options.skills && picks.skills.length ? { skills: picks.skills } : {}),
     ...(Object.keys(picks.featureChoices).length ? { featureChoices: picks.featureChoices } : {}),
@@ -144,6 +148,7 @@ export function fromChoices(options: LevelUpOptions, choices: LevelUpChoices): P
     featAbility: choices.featPicks?.spellAbility,
     featCantrips: [...(choices.featPicks?.cantrips ?? [])],
     featSpell: choices.featPicks?.spell,
+    featSkills: [...(choices.featPicks?.skills ?? [])],
     skills: [...(choices.skills ?? [])],
     featureChoices: { ...choices.featureChoices },
     cantrips: [...(choices.cantrips ?? [])],

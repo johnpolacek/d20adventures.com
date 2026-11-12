@@ -976,5 +976,42 @@
       "id": "turn-undead",
       "targets": ["ancient-undead"]
     }
+  },
+  {
+    "id": "spiritual-weapon-again",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "level": 3,
+      "subclass": "life-domain",
+      "spells": ["healing-word", "guiding-bolt", "shield-of-faith", "sanctuary", "command", "spiritual-weapon"]
+    },
+    "held": {
+      "spell": "spiritual-weapon",
+      "slot": 2
+    },
+    "narrative": "Last turn Milos called up a spectral hammer of force, and it still hangs in the air beside Scarface Alaric.",
+    "action": "I send my spectral hammer crashing down on Alaric again.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "spiritual-weapon",
+      "targets": ["scarface-alaric"],
+      "again": true
+    }
+  },
+  {
+    "id": "shield-is-no-cast",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "sheet": {
+      "spells": ["detect-magic", "shield", "charm-person", "magic-missile"],
+      "spellbook": ["detect-magic", "identify", "comprehend-languages", "shield", "charm-person", "magic-missile"]
+    },
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
+    "action": "I cast Shield on myself before he gets to me.",
+    "checks": ["none", "dodge"]
   }
 ]

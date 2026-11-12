@@ -2,10 +2,8 @@ import type { AbilityId, DamageTypeId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { monsterById } from "@d20/srd/monsters"
 import { isDead } from "../utils/turn-actors"
-import { checkModesFromActions } from "./actions"
 import { damageTaken, defensesOf, parseDice, rollDamage } from "./attack"
-import { type Check, checkBonus, combineModes } from "./check"
-import { checkModesFrom, conditionName, saveFailedBy, withCondition } from "./conditions"
+import { conditionName, withCondition } from "./conditions"
 import { afterHarm, type Fate, withDamage, withHealing } from "./death"
 import { deriveSheet } from "./derive"
 import { hasFeature, usesLeft, withFeatureUsed } from "./feature-rules"
@@ -13,8 +11,7 @@ import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import type { Sheet } from "./sheet"
 import { placedOf, within } from "./space"
-import { rollAdds } from "./spell-effects"
-import { type Cast, type SaveRoll, spellcastingOf } from "./spells"
+import { type Cast, rollSave, type SaveRoll, spellcastingOf } from "./spells"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /**
@@ -127,28 +124,9 @@ export function channelDivinity<T extends Channeled>(args: {
   const harm: Harm[] = []
   const conditions: ConditionChange[] = []
   const facts: string[] = []
+  // A save by the usual rules of one against a spell (./spells `rollSave`), against the Cleric's spell save DC.
   const save = (target: T, ability: AbilityId): SaveRoll => {
-    const check: Check = { kind: "save", ability }
-    const failedBy = saveFailedBy(target, check)
-    const mode = combineModes([...checkModesFrom(target, check, characters), ...checkModesFromActions(target, check, characters)].map((source) => source.mode))
-    const dice = Array.from({ length: mode === "normal" ? 1 : 2 }, () => args.d20())
-    const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
-    const bonus = checkBonus(target, check)
-    const adds = rollAdds(target, "saving-throws", args.roll)
-    const total = natural + bonus + adds.reduce((sum, add) => sum + add.amount, 0)
-    const rolled: SaveRoll = {
-      target: target.id,
-      ability,
-      dice,
-      natural,
-      bonus,
-      total,
-      dc,
-      success: !failedBy && total >= dc,
-      mode,
-      ...(failedBy ? { failedBy } : {}),
-      ...(adds.length ? { adds } : {}),
-    }
+    const rolled = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters })
     saves.push(rolled)
     return rolled
   }

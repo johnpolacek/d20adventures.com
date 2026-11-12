@@ -26,10 +26,10 @@ import type { DeathRules } from "./death"
 import { hasFeature, withUsedThisTurn } from "./feature-rules"
 import { inspirationUse, withInspirationSpent } from "./features"
 import { type Cover, distance, opportunityAttackers, type Point, placedOf, type Standing, sizeOf, type Watcher, within } from "./space"
-import { withSpellEffect } from "./spell-effects"
+import { cannotReactBySpell, spellEffectsAfterMove, withSpellEffect } from "./spell-effects"
 import { type CastCost, castCost, spellsOf, withCastSpent } from "./spells"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
-import { type Order, orderSchema, type ReactionId, reactionIdSchema, reactionIds, type StandingOrders, standingOrdersSchema, type TurnEffect } from "./turn-effect"
+import { type Order, orderSchema, type ReactionId, reactionIdSchema, reactionIds, type SpellEffect, type StandingOrders, standingOrdersSchema, type TurnEffect } from "./turn-effect"
 
 /**
  * Reactions by the SRD 5.2.1 rules, as pure functions. A Reaction is an instant response to a trigger, on anyone's
@@ -39,7 +39,7 @@ import { type Order, orderSchema, type ReactionId, reactionIdSchema, reactionIds
  */
 
 /** Who may take a Reaction: one who stands somewhere and may have taken one already. */
-type Reactor = Standing & { id: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; turnEffects?: readonly TurnEffect[] }
+type Reactor = Standing & { id: string; hitPoints?: number; healthPercent?: number; dead?: true; fled?: true; turnEffects?: readonly TurnEffect[]; spellEffects?: readonly SpellEffect[] }
 
 /** One who may cast a spell as a Reaction: their slots and uses are spent by it. */
 type Caster = Reactor & { spellSlots?: readonly number[]; featureUses?: Record<string, number> }
@@ -48,10 +48,10 @@ type Caster = Reactor & { spellSlots?: readonly number[]; featureUses?: Record<s
 export const hasReacted = (character: { turnEffects?: readonly TurnEffect[] }): boolean => !!character.turnEffects?.some((effect) => effect.id === "reacted")
 
 /**
- * Whether a character can take a Reaction now: up, still here, not Incapacitated, and with none taken this round. A
- * Bandit who made an Opportunity Attack this round cannot make another until the next round begins.
+ * Whether a character can take a Reaction now: up, still here, not Incapacitated, not under Slow, and with none taken
+ * this round. A Bandit who made an Opportunity Attack this round cannot make another until the next round begins.
  */
-export const canReact = (character: Reactor): boolean => !isDown(character) && !hasFled(character) && !isIncapacitated(character) && !hasReacted(character)
+export const canReact = (character: Reactor): boolean => !isDown(character) && !hasFled(character) && !isIncapacitated(character) && !hasReacted(character) && !cannotReactBySpell(character)
 
 /** A character who has taken their Reaction. It lasts this round, and the next round's start ends it. */
 export function withReaction<T extends Reactor>(character: T): T {
@@ -199,6 +199,39 @@ export function withShield<T extends Caster>(target: T): T {
   const cost = shieldCost(target)
   if (!cost) throw new Error(`${target.name ?? "This character"} cannot cast Shield.`)
   return withSpellEffect(withReaction(withCastSpent(target, cost)), { spell: "shield", by: target.id, turns: 1 })
+}
+
+/**
+ * Shield against Magic Missile: "you take no damage from Magic Missile". Each one the darts are aimed at who may cast
+ * Shield (`shieldOffer`'s test, with no roll to read) is offered it through `ask`, and it always matters: it turns
+ * every dart. Each who takes it spends their slot or use and their Reaction, and bears Shield until their next turn,
+ * which keeps the darts off them (./spells `castSpell`). Everyone comes back as it left them, with the reactions taken.
+ */
+export function shieldAgainstMagicMissile<T extends Caster & { name?: string }>(args: {
+  characters: readonly T[]
+  casterId: string
+  targets: readonly string[]
+  ask: Ask
+}): { characters: T[]; reactions: ReactionTaken[] } {
+  let characters = [...args.characters]
+  const reactions: ReactionTaken[] = []
+  const caster = characters.find((character) => character.id === args.casterId)
+  for (const id of new Set(args.targets)) {
+    const target = characters.find((character) => character.id === id)
+    if (!caster || !target || target.id === caster.id || !canReact(target) || immuneToMagicMissile(target) || !shieldCost(target)) continue
+    const text = `${caster.name ?? "A caster"} casts Magic Missile at ${target.name ?? "them"}. Shield would keep every dart off them.`
+    if (!args.ask({ id: "shield", to: target.id, from: caster.id, weapon: "magic-missile", matters: true }, text)) continue
+    const shielded = withShield(target)
+    characters = characters.map((character) => (character.id === shielded.id ? shielded : character))
+    const armorClass = combatStatsOf(shielded)?.armorClass
+    reactions.push({
+      by: target.id,
+      id: "shield",
+      name: "Shield",
+      text: `${target.name ?? "They"} casts Shield: no damage from Magic Missile${armorClass === undefined ? "" : `, and Armor Class ${armorClass}`} until their next turn.`,
+    })
+  }
+  return { characters, reactions }
 }
 
 /**
@@ -520,7 +553,8 @@ export function moveWithReactions<T extends InPlay>(args: {
       attacks.push({ attacker: attacker.id, blow: made.blow, reactions: made.reactions })
       if (isDown(made.target)) return { characters, attacks, stopped: true }
     }
-    characters = characters.map((character) => (character.id === args.moverId ? { ...character, position: { x: to.x, y: to.y } } : character))
+    // A mover who takes a step has left the areas that stay on the floor (Web, Stinking Cloud, Sleet Storm).
+    characters = characters.map((character) => (character.id === args.moverId ? spellEffectsAfterMove({ ...character, position: { x: to.x, y: to.y } }) : character))
   }
   return { characters, attacks, stopped: false }
 }

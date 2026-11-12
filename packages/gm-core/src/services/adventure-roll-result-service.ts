@@ -5,13 +5,14 @@ import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { channelDivinity, divinityName } from "../sheet/channel-divinity"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
+import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, deathSave } from "../sheet/death"
 import { withFeatureUsed } from "../sheet/feature-rules"
 import { inspirationHelps, inspiredCheck, tacticalMind, withoutInspiration } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
 import { attackWithReactions, ordered } from "../sheet/reactions"
-import { checkAdds, settleConcentration } from "../sheet/spell-effects"
-import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
+import { checkAdds, saveBonusFor, settleConcentration } from "../sheet/spell-effects"
+import { castAgain, castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -19,7 +20,7 @@ import { castRulesNote } from "../story/limits"
 import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
-import { attackBeat, castBeats, concentrationBeat, rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
+import { attackBeat, castAnswerBeats, castBeats, concentrationBeat, rollBeat, sceneFor, storyOutputObject, withStory } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { d20sFor, rollD20, rollDie } from "../utils/game-utils"
@@ -164,13 +165,15 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const rules = { playerDeath: args.playerDeath }
     if (isDeathSaveRoll(required)) {
       // A dying hero's Death Saving Throw: the rules decide it, and the roll beat tells it. No model is asked.
-      const [natural] = d20sFor("normal", args.dice)
+      // With Advantage (Beacon of Hope) the higher of two dice counts, its 1 or 20 too.
+      const dice = d20sFor(mode, args.dice)
+      const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
       const saved = deathSave(args.character, natural, rules)
       const bonus = 0 - d20Penalty(args.character)
       // The beat keeps the saves as this throw left them, and how it ended the hero's dying.
       const fate = saved.fate === "revived" ? ("revived" as const) : saved.fate === "dies" ? ("dead" as const) : saved.fate === "stable" ? ("stable" as const) : undefined
       const beat: StoryBeat = {
-        ...rollBeat(by, args.character, DEATH_SAVE.rollType, { dice: [natural], natural, bonus, total: natural + bonus, dc: DEATH_SAVE.difficulty, success: saved.success, mode: "normal" }),
+        ...rollBeat(by, args.character, DEATH_SAVE.rollType, { dice, natural, bonus, total: natural + bonus, dc: DEATH_SAVE.difficulty, success: saved.success, mode }),
         deathSave: { ...saved.saves, ...(fate ? { fate } : {}) },
       }
       return {
@@ -216,34 +219,60 @@ export function createAdventureRollResultService(ports: GmPorts) {
     } else if (isCastRoll(required)) {
       // A spell: the engine resolves it by its typed data, and spends what it costs. A spell attack takes the caster's
       // d20. Any other takes none, and each target's saving throw is rolled here.
+      // A spell the caster holds and uses again (Spiritual Weapon's attack) costs nothing and draws no reaction.
       const spell = spellById.get(required.cast.spell)
       if (!spell) throw new Error(`"${required.cast.spell}" is not a spell.`)
-      const cost = castCost(args.character, spell.id, required.cast.ritual === true, required.cast.level)
-      if ("problem" in cost) throw new Error(cost.problem)
-      const cast = castSpell({
-        characters: turnCharacters,
-        casterId: args.characterId,
-        spell,
-        targets: required.cast.targets,
-        ...(spell.attack ? { attackDice: d20sFor(mode, args.dice) } : {}),
-        mode,
-        d20: rollD20,
-        roll: rollDie,
-        rules,
-        damageType: required.cast.damageType,
-        skill: required.cast.skill,
-        level: required.cast.level,
-        cover: required.cast.cover,
-        measured: required.cast.measured,
-      })
-      turnCharacters = cast.characters.map((character) => (character.id === args.characterId ? withCastSpent(character, cost.cost) : character))
-      rolls = castBeats(by, args.character, spell, cast, storyNames(args.turn.characters))
-      spellCast = { name: spell.name, facts: cast.facts, ...(isEngineSpell(spell) ? {} : { text: spell.description }) }
-      struckIds = required.cast.targets
-      const thrown = cast.attack?.roll
-      numbers = thrown
-        ? { natural: thrown.natural, bonus: thrown.bonus, total: thrown.total, against: thrown.armorClass, success: thrown.hit }
-        : { natural: 0, bonus: 0, total: 0, against: 0, success: true }
+      const again = required.cast.again === true
+      const cost = again ? undefined : castCost(args.character, spell.id, required.cast.ritual === true, required.cast.level)
+      if (cost && "problem" in cost) throw new Error(cost.problem)
+      const names = storyNames(args.turn.characters)
+      // Those of the other side may counter it, and those Magic Missile is aimed at may cast Shield, each by their
+      // standing order at once: no one is asked on another's turn.
+      const standing = turnCharacters
+      const answered = cost
+        ? reactionsToCast({
+            characters: turnCharacters,
+            casterId: args.characterId,
+            spell,
+            targets: required.cast.targets,
+            ask: (offer) => ordered(standing.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
+            d20: rollD20,
+            roll: rollDie,
+          })
+        : undefined
+      if (answered) turnCharacters = answered.characters
+      const reacted = answered ? castAnswerBeats(by, answered, names) : []
+      if (answered?.countered && cost) {
+        // Countered: the action is spent and the cast is not made, and a slot is not expended.
+        turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withCastSpent(character, costWhenCountered(cost.cost)) : character))
+        rolls = reacted
+        spellCast = { name: spell.name, facts: answered.facts }
+        numbers = { natural: 0, bonus: 0, total: 0, against: 0, success: false }
+      } else {
+        const how = {
+          characters: turnCharacters,
+          casterId: args.characterId,
+          targets: required.cast.targets,
+          ...(spell.attack ? { attackDice: d20sFor(mode, args.dice) } : {}),
+          mode,
+          d20: rollD20,
+          roll: rollDie,
+          rules,
+          damageType: required.cast.damageType,
+          skill: required.cast.skill,
+          cover: required.cast.cover,
+          measured: required.cast.measured,
+        }
+        const cast = again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level: required.cast.level })
+        turnCharacters = cast.characters.map((character) => (character.id === args.characterId && cost ? withCastSpent(character, cost.cost) : character))
+        rolls = [...reacted, ...castBeats(by, args.character, spell, cast, names)]
+        spellCast = { name: spell.name, facts: [...(answered?.facts ?? []), ...cast.facts], ...(isEngineSpell(spell) ? {} : { text: spell.description }) }
+        struckIds = required.cast.targets
+        const thrown = cast.attack?.roll
+        numbers = thrown
+          ? { natural: thrown.natural, bonus: thrown.bonus, total: thrown.total, against: thrown.armorClass, success: thrown.hit }
+          : { natural: 0, bonus: 0, total: 0, against: 0, success: true }
+      }
     } else if (isAttackRoll(required)) {
       // An attack: the engine rolls to hit against the target's Armor Class and, on a hit, the damage. The target's
       // hit points change here and nowhere else.
@@ -278,7 +307,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const failedBy = saveFailedBy(args.character, required.check)
       const thrown = resolveCheck({
         dice: d20sFor(mode, args.dice),
-        bonus: checkBonus(args.character, required.check),
+        // Slow's −2 on a Dexterity save.
+        bonus: checkBonus(args.character, required.check) + saveBonusFor(args.character, required.check),
         dc: required.difficulty,
         mode,
         fails: !!failedBy,

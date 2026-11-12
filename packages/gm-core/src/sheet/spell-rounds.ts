@@ -3,13 +3,14 @@ import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { isDown } from "../utils/turn-actors"
 import { damageTaken, defensesOf, rollDamage } from "./attack"
+import { checkBonus } from "./check"
 import { conditionName, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, withDamage } from "./death"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { type Point, placedOf, within } from "./space"
-import { AREA_SPELLS, endConcentration, spellEnded } from "./spell-effects"
-import { type Castee, rollSave, type SaveRoll, spellcastingOf } from "./spells"
+import { AREA_SPELLS, type ConcentrationSave, endConcentration, settleConcentration, spellEnded } from "./spell-effects"
+import { type Castee, rollSave, type SaveRoll, spellcastingFor } from "./spells"
 
 /**
  * What lasting spells do as one round gives way to the next. The engine runs a round as everyone's turns together, so
@@ -34,12 +35,18 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
   d20: () => number
   roll: (sides: number) => number
   rules?: DeathRules
-}): { characters: T[]; saves: SaveRoll[]; harm: Harm[]; conditions: ConditionChange[]; facts: string[] } {
+}): { characters: T[]; saves: SaveRoll[]; harm: Harm[]; conditions: ConditionChange[]; facts: string[]; told: RoundFact[] } {
   let characters = [...args.characters]
   const saves: SaveRoll[] = []
   const harm: Harm[] = []
   const conditions: ConditionChange[] = []
   const facts: string[] = []
+  const told: RoundFact[] = []
+  // A fact for the game master, kept with the one it is about and the spell, for the story.
+  const tell = (character: string, spell: string, text: string) => {
+    facts.push(text)
+    told.push({ character, spell, text })
+  }
   const find = (id: string | undefined) => characters.find((character) => character.id === id)
   const put = (after: T) => {
     characters = characters.map((character) => (character.id === after.id ? after : character))
@@ -61,8 +68,8 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     harm.push({ target: id, kind: "damage", dice: part?.dice ?? [], sides: part?.sides, bonus: part?.bonus ?? 0, type, amount })
     return amount
   }
-  const save = (target: T, ability: AbilityId, caster: T) => {
-    const dc = spellcastingOf(caster)?.saveDc ?? 10
+  const save = (target: T, ability: AbilityId, caster: T, spell: Spell) => {
+    const dc = spellcastingFor(caster, spell.id)?.saveDc ?? 10
     const thrown = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters })
     saves.push(thrown)
     return thrown
@@ -73,10 +80,10 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     // Given before the round begins, so a condition of one turn lasts through the turn to come. Prone ends as the turn
     // begins, when its bearer stands with half their Speed.
     const given = withCondition(target, { id, source: caster.id, span, spell: spell.id }, { acted: id !== "prone" })
-    if (!given.given) return facts.push(`${target.name} cannot be ${conditionName(id)} and is not.`)
+    if (!given.given) return tell(target.id, spell.name, `${target.name} cannot be ${conditionName(id)} and is not.`)
     put(afterHarm(given.character))
     conditions.push({ target: target.id, condition: id })
-    return facts.push(`${target.name} is now ${conditionName(id)}.`)
+    return tell(target.id, spell.name, `${target.name} is now ${conditionName(id)}.`)
   }
   // A spell still holds while its caster is here, and concentrating on it when it takes Concentration.
   const holds = (spell: Spell, by: string | undefined) => {
@@ -95,8 +102,8 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
       const target = find(was.id)
       const caster = spell && holds(spell, by)
       if (!spell || !repeat || NOT_REPEATED.has(id) || !target || target.dead || isDown(target) || !caster) continue
-      const thrown = save(target, repeat.ability, caster)
-      facts.push(`${verdict(target, thrown, spell, caster)}${thrown.success ? `, and ${spell.name} ends on them` : ""}.`)
+      const thrown = save(target, repeat.ability, caster, spell)
+      tell(target.id, spell.name, `${verdict(target, thrown, spell, caster)}${thrown.success ? `, and ${spell.name} ends on them` : ""}.`)
       if (!thrown.success) continue
       const ending = (find(was.id) as T).conditions?.filter((entry) => entry.spell === id).map((entry) => entry.id) ?? []
       put(spellEnded(find(was.id) as T, (spellId) => spellId === id))
@@ -111,7 +118,7 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     const spell = spellById.get("acid-arrow")
     if (!effect || !target || target.dead || !spell) continue
     const amount = hurt(was.id, `${2 + Math.max(0, (effect.amount ?? spell.level) - spell.level)}d4`, "acid")
-    facts.push(`Acid Arrow's acid burns ${target.name} again for ${amount} acid damage.${standing(was.id)}`)
+    tell(target.id, spell.name, `Acid Arrow's acid burns ${target.name} again for ${amount} acid damage.${standing(was.id)}`)
   }
 
   // Spirit Guardians, round its caster.
@@ -126,9 +133,9 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     for (const other of characters) {
       const there = placedOf(other)
       if (other.id === caster.id || other.type === caster.type || other.dead || !there || !within(at, there, area)) continue
-      const thrown = save(other, "wis", caster)
+      const thrown = save(other, "wis", caster, spell)
       const amount = hurt(other.id, `${3 + above}d8`, "radiant", (taken) => (thrown.success ? Math.floor(taken / 2) : taken))
-      facts.push(`${verdict(other, thrown, spell, caster)} and takes ${amount} radiant damage.${standing(other.id)}`)
+      tell(other.id, spell.name, `${verdict(other, thrown, spell, caster)} and takes ${amount} radiant damage.${standing(other.id)}`)
     }
   }
 
@@ -141,26 +148,46 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
       if (!spell || !caster || !target || target.dead || isDown(target)) continue
       if (spell.id === "web" && target.conditions?.some((entry) => entry.id === "restrained" && entry.spell === "web")) continue
       const ability = spell.saves?.[0]?.ability ?? "dex"
-      const thrown = save(target, ability, caster)
-      facts.push(`${verdict(target, thrown, spell, caster)}.`)
+      const thrown = save(target, ability, caster, spell)
+      tell(target.id, spell.name, `${verdict(target, thrown, spell, caster)}.`)
       if (thrown.success) continue
       if (spell.id === "web") give(target, "restrained", spell, caster, "lasting")
       if (spell.id === "stinking-cloud") {
         give(target, "poisoned", spell, caster, "turn")
-        facts.push(`${target.name} can take no action or Bonus Action this turn.`)
+        tell(target.id, spell.name, `${target.name} can take no action or Bonus Action this turn.`)
       }
       if (spell.id === "sleet-storm") {
         give(find(was.id) as T, "prone", spell, caster, "turn")
         if ((find(was.id) as T).concentration) {
           const ended = endConcentration(characters, was.id)
           characters = ended.characters
-          if (ended.ended) facts.push(`${target.name} loses Concentration, and ${ended.ended} ends.`)
+          if (ended.ended) tell(target.id, spell.name, `${target.name} loses Concentration, and ${ended.ended} ends.`)
         }
       }
     }
   }
 
-  return { characters, saves, harm, conditions, facts }
+  return { characters, saves, harm, conditions, facts, told }
+}
+
+/** A fact of a round's turn, with the one it is about and the spell's name. */
+export type RoundFact = { character: string; spell: string; text: string }
+
+/**
+ * The turn of a round within an encounter, before the next begins (./death `atRoundStart`): what lasting spells do
+ * (`spellsAtRoundEnd`), then Concentration settled for anyone they hurt or dropped. Everyone comes back as it left them,
+ * with each fact about the one it is about, for the story: a Concentration save's too, under Concentration.
+ */
+export function roundTurns<T extends Castee & { position?: Point }>(args: {
+  characters: readonly T[]
+  d20: () => number
+  roll: (sides: number) => number
+  rules?: DeathRules
+}): { characters: T[]; told: RoundFact[]; saves: ConcentrationSave[] } {
+  const ended = spellsAtRoundEnd(args)
+  const kept = settleConcentration({ before: args.characters, after: ended.characters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: args.d20 })
+  const lost = kept.facts.map((text) => ({ character: args.characters.find((character) => character.name && text.startsWith(character.name))?.id ?? "", spell: "Concentration", text }))
+  return { characters: kept.characters, told: [...ended.told, ...lost.filter((fact) => fact.character)], saves: kept.saves }
 }
 
 // Fear's repeated save is made only "If the creature ends its turn in a space where it doesn't have line of sight to

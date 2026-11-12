@@ -35,7 +35,9 @@ type Probe = {
   mode?: string
   // A spell cast: its SRD id, everyone it is cast on, and whether as a Ritual.
   // `ritual: "either"` is for a Ritual spell cast with time to spare and no word of how: slowly or with a slot are both right.
-  cast?: { spell: string; targets?: string[]; ritual?: boolean | "either"; level?: number }
+  cast?: { spell: string; targets?: string[]; ritual?: boolean | "either"; level?: number; again?: true }
+  // A spell the hero already cast and still holds, at the slot it was cast at: Spiritual Weapon to use again.
+  held?: { spell: string; slot: number }
   // Spell slots a character has already used, by character id.
   slotsUsed?: Record<string, number[]>
   // The hero's sheet for this scene only, laid over the premade's: a level 3 caster with a level 2 slot to spend.
@@ -98,7 +100,8 @@ async function run(probe: Probe): Promise<Graded> {
     ...(probe.slotsUsed?.[character.id] ? { spellSlots: probe.slotsUsed[character.id] } : {}),
   })
   const premade = JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8"))
-  const hero: Character = bears({ ...premade, ...(probe.sheet ? { sheet: { ...premade.sheet, ...probe.sheet } } : {}), type: "pc" })
+  const holds = probe.held ? { spellEffects: [{ spell: probe.held.spell, by: premade.id, amount: probe.held.slot }], concentration: { spell: probe.held.spell } } : {}
+  const hero: Character = bears({ ...premade, ...(probe.sheet ? { sheet: { ...premade.sheet, ...probe.sheet } } : {}), ...holds, type: "pc" })
   const encounter = pack.artifacts.encounters[probe.encounter]
   if (!encounter) throw new Error(`${probe.id}: no encounter ${probe.encounter}`)
   const model = localLlm("claude", mkdtempSync(join(tmpdir(), "check-probe-")))
@@ -155,6 +158,8 @@ async function run(probe: Probe): Promise<Graded> {
       if (told(cast) !== told(wanted)) faults.push(`cast ${told(cast)}, wanted ${told(wanted)}`)
       // The slot level the cast spends, where the scene names one.
       if (probe.cast?.level && cast?.level !== probe.cast.level) faults.push(`cast with a level ${cast?.level ?? "no"} slot, wanted level ${probe.cast.level}`)
+      // A spell held and used again, not cast anew.
+      if (!!probe.cast?.again !== !!cast?.again) faults.push(`${cast?.again ? "used again" : "cast anew"}, wanted ${probe.cast?.again ? "used again" : "cast anew"}`)
     }
     const said = (bonus?: { feature: string; target?: string }) => (bonus ? `${bonus.feature}${bonus.target ? ` for ${bonus.target}` : ""}` : "none")
     if (said(reading.bonus) !== said(probe.bonus)) faults.push(`bonus action ${said(reading.bonus)}, wanted ${said(probe.bonus)}`)

@@ -14,7 +14,7 @@ import { criticalFrom, featureChoice, hasFeature, type OncePerTurn, usedThisTurn
 import type { ConditionChange } from "./harm"
 import type { Sheet } from "./sheet"
 import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, sizeOf, within } from "./space"
-import { markDamage, rollAdds } from "./spell-effects"
+import { checkAdds, markDamage, mirrorImage, rollAdds, saveBonusFor, saveModesFor, weaponDamageFromSpells } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { TurnEffect } from "./turn-effect"
 
@@ -349,6 +349,8 @@ export type Strike = {
   cunning?: CunningResult
   /** Conditions the blow gave: Prone from a Cunning Strike's Trip. */
   conditions?: ConditionChange[]
+  /** The hit struck one of the target's illusory duplicates (Mirror Image), which is destroyed: no damage. */
+  deflected?: true
 }
 
 /** Whom an attack is made at: one who stands somewhere, with hit points to lose. */
@@ -450,8 +452,9 @@ const TRIPPED_SIZES: readonly string[] = ["Tiny", "Small", "Medium", "Large"]
  * The second half of an attack: on a hit the damage dice, with the attacker's features (Sneak Attack, Colossus Slayer)
  * and their own spell on this target (Hunter's Mark), against the target's defenses and hit points, by the rules of 0
  * hit points. Savage Attacker rolls the weapon's dice twice, once a turn, and keeps the higher. `halve` may halve what
- * the target takes (Uncanny Dodge). A Cunning Strike's Trip then has the target save or fall Prone. `target` comes back
- * as the blow left them.
+ * the target takes (Uncanny Dodge). A Cunning Strike's Trip then has the target save or fall Prone. A hit on one with
+ * Mirror Image may strike a duplicate, and deal nothing. Magic Weapon adds its bonus to a weapon's damage. `target`
+ * comes back as the blow left them.
  */
 export function landBlow<T extends Target>(
   args: Pick<StrikeArgs<T>, "attacker" | "target" | "roll" | "rules" | "present" | "turnOf" | "cunning" | "halve">,
@@ -463,6 +466,9 @@ export function landBlow<T extends Target>(
   const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
   const spent = rolled.inspired === undefined ? {} : { inspired: rolled.inspired }
   if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target, ...spent }
+  // Mirror Image: a duplicate may take the hit in the target's place, and is destroyed.
+  const imaged = mirrorImage(args.target, args.attacker, args.roll)
+  if (imaged.deflected) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: imaged.character, ...spent, deflected: true }
   // A feature's dice (Sneak Attack), and the attacker's own spell on this target (Hunter's Mark).
   // An ally of the attacker's stands within 5 feet of the target, on their feet and able to act. An ally is one of the
   // attacker's own kind, a hero for a hero.
@@ -484,9 +490,11 @@ export function landBlow<T extends Target>(
       )
     })
   const features = featureDamage({ attacker: args.attacker, attack, roll, allyBeside, hurt: before < stats.hitPointMaximum, turnOf: args.turnOf, cunning: args.cunning })
-  const extra = [...features, ...markDamage(args.attacker.id, args.target)]
   // Savage Attacker: once a turn, a weapon's damage dice are rolled twice, and the higher is kept.
   const weapon = equipmentById.get(attack.id)?.kind === "weapon"
+  // Magic Weapon's bonus to the damage rolls of the weapon it is on, taken to be the one its bearer attacks with.
+  const enchanted = weapon ? weaponDamageFromSpells(args.attacker).map(({ name, damage }) => ({ name, damage: { amount: damage.amount, type: damage.type ?? attack.damage[0]?.type ?? "force" } })) : []
+  const extra = [...features, ...markDamage(args.attacker.id, args.target), ...enchanted]
   const savage = weapon && !!args.attacker.sheet && deriveSheet(args.attacker.sheet).feats.includes("savage-attacker") && !usedThisTurn(args.attacker, "savage-attacker", args.turnOf)
   const first = rollDamage(attack.damage, args.roll, roll.critical)
   const second = savage ? rollDamage(attack.damage, args.roll, roll.critical) : undefined
@@ -509,13 +517,14 @@ export function landBlow<T extends Target>(
   if (args.cunning === "trip" && features.some((feature) => feature.name === "Sneak Attack") && args.attacker.sheet && !isDown(struck.character)) {
     const check = { kind: "save" as const, ability: "dex" as const }
     const target = struck.character
-    const mode = combineModes(checkModesFrom(target, check).map((source) => source.mode))
+    const mode = combineModes([...checkModesFrom(target, check), ...saveModesFor(target, check)].map((source) => source.mode))
     const save = resolveCheck({
       dice: mode === "normal" ? [args.roll(20)] : [args.roll(20), args.roll(20)],
-      bonus: checkBonus(target, check),
+      bonus: checkBonus(target, check) + saveBonusFor(target, check),
       dc: cunningStrikeDc(args.attacker.sheet),
       mode,
       fails: !!saveFailedBy(target, check),
+      adds: checkAdds(target, check, args.roll),
     })
     const small = TRIPPED_SIZES.includes(sizeOf(target))
     const given = small && !save.success ? withCondition(target, { id: "prone" }) : undefined
@@ -572,6 +581,8 @@ function fallen(target: string, blow: Strike): string {
 /** A strike in plain words for the game master, who tells it and never changes it: who was hit, how hard, and how they stand. */
 export function strikeFacts(attacker: string, target: string, blow: Strike): string {
   const { roll, attack, hitPoints } = blow
+  if (blow.deflected)
+    return `${attacker}'s ${attack.name} attack HITS (${roll.total} against Armor Class ${roll.armorClass}), but strikes one of ${target}'s illusory duplicates, which is destroyed. ${target} takes no damage.`
   if (!roll.hit) return `${attacker}'s ${attack.name} attack on ${target} MISSES (${roll.total} against Armor Class ${roll.armorClass}). ${target} takes no damage.`
   const types = [...new Set(blow.damage?.parts.map((part) => part.type) ?? [])].join(" and ")
   const stands =

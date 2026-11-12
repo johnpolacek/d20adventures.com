@@ -17,6 +17,7 @@ import { atRoundStart } from "../sheet/death"
 import { autoChoices, levelOwed, takeLevel } from "../sheet/milestone"
 import { placeCharacters, standingWords } from "../sheet/placement"
 import { partyRest, restName } from "../sheet/rest"
+import { roundTurns } from "../sheet/spell-rounds"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
@@ -24,10 +25,10 @@ import { cleanLearned, learnedField, privateFacts } from "../story/knowledge"
 import { heardNames } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
-import { beatsField, sceneFor, storyProse, turnScript } from "../story/turn"
+import { beatsField, roundBeats, sceneFor, storyProse, turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
-import { mapConvexTurnToTurn, rollDie } from "../utils/game-utils"
+import { mapConvexTurnToTurn, rollD20, rollDie } from "../utils/game-utils"
 import { dropPlayerPrompt } from "../utils/narrative-utils"
 import { hasFled, isDead } from "../utils/turn-actors"
 import { validateAdventurePatch } from "../wiki-adventures/adventure-patch"
@@ -208,13 +209,17 @@ export function createAdvanceTurn(ports: GmPorts) {
         name: restName(nextEncounter.rest ?? "short"),
         text: facts.join(" "),
       }))
-      const settled = rest?.characters ?? standing
+      const beforeRound = rest?.characters ?? standing
+      // Within the encounter, as the round ends, lasting spells do what they do at a turn's end or start (Acid Arrow's
+      // burn, Spirit Guardians, a repeated save), told after the round's story. One they drop is not carried on.
+      const turned = isTransition ? undefined : roundTurns({ characters: beforeRound, d20: rollD20, roll: rollDie, rules: { playerDeath: artifacts.manifest.playerDeath } })
+      const settled = turned ? turned.characters.filter((character) => !isDead(character) && !hasFled(character)) : beforeRound
       const opening = (rescuing ? rescuedCharacters(settled) : settled).map(atRoundStart)
       // A new encounter opens on its intro, read as beats for the characters who are in it. One the party has played
       // before does not read it again: they know the place, and the round's own story has brought them back.
       const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters: opening }) : scene
       const intro = isTransition && !returning ? cleanStory(authoredStory(nextEncounter.sections.intro ?? "", nextScene), nextScene, { step: "intro" }) : []
-      const story = [...told, ...rested, ...intro]
+      const story = [...told, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...rested, ...intro]
       // The story ends at its last encounter, or when every hero is dead: no one is left to take a turn.
       const heroes = (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc")
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id) || (heroes.length > 0 && heroes.every(isDead))

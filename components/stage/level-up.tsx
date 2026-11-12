@@ -245,7 +245,7 @@ export function LevelUp({
               from={options.feat.feats}
               picked={picks.feat ? [picks.feat] : []}
               most={1}
-              onPick={([id]) => set({ feat: id, abilities: {}, featList: undefined, featAbility: undefined, featCantrips: [], featSpell: undefined })}
+              onPick={([id]) => set({ feat: id, abilities: {}, featList: undefined, featAbility: undefined, featCantrips: [], featSpell: undefined, featSkills: [] })}
             />
             {raise && feat?.abilityScoreIncrease && (
               <fieldset className="m-0 mt-2 flex min-w-0 flex-wrap gap-1.5 border-0 p-0">
@@ -266,6 +266,13 @@ export function LevelUp({
                   )
                 })}
               </fieldset>
+            )}
+            {feat?.skillPicks && (
+              <div className="mt-3">
+                <Labeled label={`Skills · ${picks.featSkills.length} of ${feat.skillPicks.count}`}>
+                  <Options label="Skills" from={feat.skillPicks.from} picked={picks.featSkills} most={feat.skillPicks.count} onPick={(ids) => set({ featSkills: ids })} />
+                </Labeled>
+              </div>
             )}
             {feat?.spellPicks && (
               <div className="mt-3 space-y-2">

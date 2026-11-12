@@ -59,6 +59,7 @@ export const rollRequirementSchema = z.union([
         .optional()
         .describe("The cover each target has from where the spell comes, by id"),
       measured: z.literal(true).optional().describe("An area was measured on the floor, so the spell takes everyone named, however many"),
+      again: z.literal(true).optional().describe("A spell the caster holds, used again on a later turn with no cost: Spiritual Weapon's attack, Heat Metal's burn"),
     }),
     ...asked,
   }),

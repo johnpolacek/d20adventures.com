@@ -2,8 +2,10 @@ import { z } from "zod"
 import type { GmPorts } from "../ports"
 import type { Strike } from "../sheet/attack"
 import type { CheckResult } from "../sheet/check"
+import type { ReactionTaken } from "../sheet/reactions"
 import type { ConcentrationSave } from "../sheet/spell-effects"
-import type { Cast } from "../sheet/spells"
+import type { RoundFact } from "../sheet/spell-rounds"
+import type { Cast, SaveRoll } from "../sheet/spells"
 import { isDown } from "../utils/turn-actors"
 import { authoredStory } from "./authored"
 import { type RollBeat, type StoryBeat, type StoryBy, storyOutputSchema } from "./beats"
@@ -105,9 +107,10 @@ const listed = (names: string[]) => (names.length < 3 ? names.join(" and ") : `$
 const ABILITY_NAMES = { str: "Strength", dex: "Dexterity", con: "Constitution", int: "Intelligence", wis: "Wisdom", cha: "Charisma" } as const
 
 /**
- * A spell cast as the story keeps it. A spell attack is the caster's roll against Armor Class, with its damage. Each
- * target's saving throw is a roll of the target's own, with what it then lost or was given. A spell with no spell
- * attack opens on an entry of its own that names it, with what it dealt or healed with no roll.
+ * A spell cast as the story keeps it. A spell attack is the caster's roll against Armor Class, with its damage, and
+ * each of Scorching Ray's rays is a roll of its own. Each target's saving throw is a roll of the target's own, with
+ * what it then lost or was given. A spell with no spell attack opens on an entry of its own that names it, with what
+ * it dealt or healed with no roll.
  */
 export function castBeats(
   by: StoryBy,
@@ -118,12 +121,18 @@ export function castBeats(
   verb = "casts"
 ): StoryBeat[] {
   const beats: StoryBeat[] = []
-  const struck = cast.attack
-  // What the attack itself dealt is on its own beat. The rest belongs to the saves, or to the spell with no roll.
-  const rest = struck?.damage ? cast.harm.slice(1) : cast.harm
+  // Each spell attack the spell made: one, or each of Scorching Ray's rays in turn.
+  const attacks = cast.rays ?? (cast.attack ? [cast.attack] : [])
+  // What the attacks themselves dealt is on their own beats, in the order they fell. The rest belongs to the saves, or
+  // to the spell with no roll.
+  const rest = cast.harm.slice(attacks.filter((attack) => attack.damage).length)
   const saved = new Set(cast.saves.map((save) => save.target))
-  if (struck) {
+  // A condition the attacks gave is told once, on the first beat for its target.
+  const told = new Set<string>()
+  for (const struck of attacks) {
     const { roll } = struck
+    const given = !saved.has(struck.target) && !told.has(struck.target) ? cast.conditions.filter((change) => change.target === struck.target) : []
+    told.add(struck.target)
     beats.push({
       kind: "roll",
       by,
@@ -140,9 +149,10 @@ export function castBeats(
       attack: { target: struck.target, ...(roll.critical ? { critical: true as const } : {}), ...(struck.damage ? { damage: struck.damage.parts, taken: struck.taken } : {}) },
       ...(roll.adds?.length ? { adds: roll.adds } : {}),
       spell: spell.name,
-      ...(cast.conditions.some((change) => change.target === struck.target && !saved.has(change.target)) ? { conditions: cast.conditions.filter((change) => change.target === struck.target) } : {}),
+      ...(given.length ? { conditions: given } : {}),
     })
-  } else {
+  }
+  if (!attacks.length) {
     // Everyone the spell took. A spell on its caster alone names no one.
     const on = cast.targets.length === 1 && cast.targets[0] === caster.id ? [] : cast.targets
     const direct = rest.filter((harm) => !saved.has(harm.target))
@@ -180,6 +190,49 @@ export function castBeats(
     })
   }
   return beats
+}
+
+/**
+ * The reactions a casting drew, as the story keeps them (../sheet/counterspell `reactionsToCast`): each reaction an
+ * entry of its own, and each Constitution save its caster made against Counterspell a roll of theirs.
+ */
+export function castAnswerBeats(by: StoryBy, answered: { reactions: readonly ReactionTaken[]; saves: readonly SaveRoll[] }, names: StoryNames): StoryBeat[] {
+  // Each Counterspell's save, in the order they were cast.
+  let next = 0
+  return answered.reactions.flatMap((taken): StoryBeat[] => {
+    const save = taken.id === "counterspell" ? answered.saves[next++] : undefined
+    const entry: StoryBeat = { kind: "feature", by, character: taken.by, name: taken.name, text: taken.text }
+    if (!save) return [entry]
+    return [
+      entry,
+      {
+        kind: "roll",
+        by,
+        character: save.target,
+        name: nameOf(names, save.target),
+        check: "Constitution Saving Throw",
+        natural: save.natural,
+        ...(save.mode !== "normal" ? { dice: save.dice, mode: save.mode } : {}),
+        modifier: save.bonus,
+        total: save.total,
+        dc: save.dc,
+        success: save.success,
+        ...(save.adds?.length ? { adds: save.adds } : {}),
+        spell: taken.name,
+      },
+    ]
+  })
+}
+
+/**
+ * What lasting spells did as a round turned (../sheet/spell-rounds `roundTurns`), as the story keeps it: each fact an
+ * entry of its own under the spell's name, about the one it fell on, and each Concentration save a roll of the caster's.
+ */
+export function roundBeats(turned: { told: readonly RoundFact[]; saves: readonly ConcentrationSave[] }, names: StoryNames): StoryBeat[] {
+  return [
+    ...turned.told.map((fact): StoryBeat => ({ kind: "feature", by: { step: "round", character: fact.character }, character: fact.character, name: fact.spell, text: fact.text })),
+    ...turned.saves.map((save) => concentrationBeat({ step: "round", character: save.character }, save, names)),
+  ]
 }
 
 /** A caster's saving throw to keep Concentration after taking damage, as the story keeps it. */

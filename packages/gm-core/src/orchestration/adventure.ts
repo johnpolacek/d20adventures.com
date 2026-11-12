@@ -71,9 +71,13 @@ export function createAdventure(ports: GmPorts) {
     // A spell or a feature that asks for no throw is resolved now: the engine rolls it, and the GM tells it.
     const quiet = reading.cast ?? reading.feature
     if (quiet && !fell) await resolveCast({ turnId, characterId, cast: quiet })
-    if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
+    // What the turn still holds for the hero once the cast is resolved, such as a Hide taken with Cunning Action: the
+    // hero throws it next, and the others wait on it.
+    const after = quiet && !fell ? await ports.store.getTurn({ turnId }) : undefined
+    const owed = (after?.characters as TurnCharacter[] | undefined)?.find((entry) => entry.id === characterId)?.rollRequired ?? null
+    if (!owed && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
     ports.narration.afterTurn(turnId)
-    return { rollRequired: null }
+    return { rollRequired: owed }
   }
 
   // A player's reply in their own words: written into the story as their hero's beats, then taken as the hero's turn.
