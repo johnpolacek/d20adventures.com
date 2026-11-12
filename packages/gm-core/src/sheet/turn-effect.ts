@@ -56,3 +56,16 @@ export type Concentration = z.infer<typeof concentrationSchema>
 
 /** Where a character stands on its encounter's floor, in feet. Only the engine writes it, through ./placement and ./space. */
 export const positionSchema = z.strictObject({ x: z.number(), y: z.number() })
+
+/** The reactions the engine knows. */
+export const reactionIds = ["opportunity-attack", "shield", "parry", "uncanny-dodge", "counterspell"] as const
+export const reactionIdSchema = z.enum(reactionIds)
+export type ReactionId = z.infer<typeof reactionIdSchema>
+
+/** How a hero takes a reaction when no one answers the offer: always, only when it matters, or never. */
+export const orderSchema = z.enum(["always", "when-it-matters", "never"])
+export type Order = z.infer<typeof orderSchema>
+
+/** A hero's standing order for each reaction. One left out follows the default. */
+export const standingOrdersSchema = z.partialRecord(reactionIdSchema, orderSchema)
+export type StandingOrders = z.infer<typeof standingOrdersSchema>

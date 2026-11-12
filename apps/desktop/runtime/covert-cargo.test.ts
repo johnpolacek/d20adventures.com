@@ -235,6 +235,134 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
   })
 })
 
+// The model for a round where each NPC walks to the saloon door and does nothing else there.
+const walksOff = (): Llm => ({
+  generateText: async () => ({ text: "Boots ring on the boards." }),
+  generateObject: async ({ schema }) => {
+    for (const answer of [
+      { nextEncounterId: "battle-on-the-boat", beats: [{ kind: "narration", text: "The fight goes on." }], adventurePatch: {} },
+      { actionSummary: "Walks to the saloon door.", beats: [{ kind: "narration", text: "He turns for the door." }], actionType: "other" },
+      { beats: [{ kind: "narration", text: "He reaches the door." }], effects: [] },
+      { check: "none", moveTo: "cabinDoor" },
+    ]) {
+      const parsed = schema.safeParse(answer)
+      if (parsed.success) return { object: parsed.data }
+    }
+    throw new Error("Unexpected model request")
+  },
+})
+
+test("a hero is offered a reaction, the round waits, and the answer plays the NPC's turn on", async () => {
+  await inTheBattle(async (store, play) => {
+    // Lyra stands 5 feet south of Reinhard, with no one else near. He walks off to the saloon door.
+    const reinhard = () => store.current().characters.find((c) => c.name === "Reinhard")!
+    const silas = () => store.current().characters.find((c) => c.name === "Silas")!
+    lyra(store).position = { x: reinhard().position!.x, y: reinhard().position!.y + 5 }
+    silas().hasReplied = silas().isComplete = true
+    store.save()
+    const was = { at: reinhard().position, story: store.current().story.length, hitPoints: reinhard().hitPoints }
+    await play(walksOff())
+    // His turn has stopped on the offer and written nothing: he has not moved, and the story is as it was.
+    const offered = store.current().reaction
+    assert.deepEqual([offered?.offer.id, offered?.offer.to, offered?.npc, offered?.answer], ["opportunity-attack", lyra(store).id, reinhard().id, undefined])
+    assert.match(offered?.text ?? "", /Reinhard is leaving Lyra Silvanus's reach/)
+    assert.deepEqual([reinhard().position, store.current().story.length, reinhard().isComplete], [was.at, was.story, false])
+    // The round waits: playing on changes nothing while the offer stands.
+    await play(walksOff())
+    assert.ok(store.current().reaction)
+    assert.equal(store.current().story.length, was.story)
+    // She takes it. His turn is played on with the same reading: she strikes, he walks on, and she has reacted.
+    await game(store, packs, walksOff())({ kind: "react", turnId: store.current()._id, characterId: lyra(store).id, take: true })
+    assert.equal(store.current().reaction, undefined)
+    const told = store.current().story.slice(was.story)
+    assert.deepEqual(
+      told.flatMap((beat) => (beat.kind === "feature" ? [[beat.name, beat.character]] : [])),
+      [["Opportunity Attack", lyra(store).id]]
+    )
+    assert.equal(told.filter((beat) => beat.kind === "roll").length, 1)
+    assert.notDeepEqual(reinhard().position, was.at)
+    assert.equal(reinhard().isComplete, true)
+    assert.ok(lyra(store).turnEffects?.some((effect) => effect.id === "reacted"))
+  })
+})
+
+test("a hero who walks out of an NPC's reach is struck at, and one who Disengages is not", async () => {
+  const walk = async (check: "none" | "disengage") => {
+    let told: { features: string[]; rolls: number } | undefined
+    await inTheBattle(async (store) => {
+      const reinhard = () => store.current().characters.find((c) => c.name === "Reinhard")!
+      lyra(store).position = { x: reinhard().position!.x, y: reinhard().position!.y + 5 }
+      // Silas stands by the door she walks to: he is sent off, so only Reinhard's reach is left.
+      store.current().characters.find((c) => c.name === "Silas")!.position = { x: 100, y: 100 }
+      Object.assign(lyra(store), { hasReplied: false, isComplete: false })
+      store.save()
+      const was = store.current().story.length
+      const llm = walksOff()
+      const picks: Llm = {
+        ...llm,
+        generateObject: async (request) =>
+          request.schema.safeParse({ check, moveTo: "cabinDoor" }).success ? { object: request.schema.parse({ check, moveTo: "cabinDoor" }) } : llm.generateObject(request),
+      }
+      await game(store, packs, picks)({ kind: "reply", turnId: store.current()._id, characterId: lyra(store).id, text: "Lyra walks to the saloon door." })
+      const after = store.current().story.slice(was)
+      told = {
+        features: after.flatMap((beat) => (beat.kind === "feature" ? [`${beat.name} by ${beat.character === reinhard().id ? "Reinhard" : beat.character}`] : [])),
+        rolls: after.filter((beat) => beat.kind === "roll").length,
+      }
+      assert.equal(!!reinhard().turnEffects?.some((effect) => effect.id === "reacted"), check === "none")
+    })
+    return told
+  }
+  // Reinhard takes his Opportunity Attack at once: an NPC follows its standing order with no wait.
+  assert.deepEqual(await walk("none"), { features: ["Opportunity Attack by Reinhard"], rolls: 1 })
+  assert.deepEqual(await walk("disengage"), { features: [], rolls: 0 })
+})
+
+test("an offer no one answers follows the hero's standing order when it runs out", async () => {
+  await inTheBattle(async (store, play) => {
+    const reinhard = () => store.current().characters.find((c) => c.name === "Reinhard")!
+    const silas = () => store.current().characters.find((c) => c.name === "Silas")!
+    lyra(store).position = { x: reinhard().position!.x, y: reinhard().position!.y + 5 }
+    silas().hasReplied = silas().isComplete = true
+    store.save()
+    const was = store.current().story.length
+    await play(walksOff())
+    assert.ok(store.current().reaction)
+    // The wait runs out. By default she takes every Opportunity Attack.
+    store.current().reaction!.expiresAt = 0
+    store.save()
+    await play(walksOff())
+    assert.equal(store.current().reaction, undefined)
+    assert.equal(
+      store
+        .current()
+        .story.slice(was)
+        .filter((beat) => beat.kind === "feature" && beat.name === "Opportunity Attack").length,
+      1
+    )
+  })
+  // Told never to take one, she is not asked, and he walks off untroubled.
+  await inTheBattle(async (store, play) => {
+    const reinhard = () => store.current().characters.find((c) => c.name === "Reinhard")!
+    const silas = () => store.current().characters.find((c) => c.name === "Silas")!
+    lyra(store).position = { x: reinhard().position!.x, y: reinhard().position!.y + 5 }
+    silas().hasReplied = silas().isComplete = true
+    store.save()
+    await game(store, packs, walksOff())({ kind: "orders", turnId: store.current()._id, characterId: lyra(store).id, orders: { "opportunity-attack": "never" } })
+    const was = store.current().story.length
+    await play(walksOff())
+    assert.equal(store.current().reaction, undefined)
+    assert.equal(reinhard().isComplete, true)
+    assert.equal(
+      store
+        .current()
+        .story.slice(was)
+        .filter((beat) => beat.kind === "feature").length,
+      0
+    )
+  })
+})
+
 test("the stage sends the elves off when they are paid, and lays out the fight's losers", () => {
   const exits = (id: string) => (sceneFor(id)!.staging as { exits?: { cast: string; when?: string; to?: string; via?: unknown[]; lands?: unknown; shot?: string }[] }).exits ?? []
   const paid = exits("the-transaction")

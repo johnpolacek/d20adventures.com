@@ -245,7 +245,12 @@ export class LocalStore implements Store, Roster {
     this.save()
   }
   async updateTurn({ turnId, patch }: Parameters<Store["updateTurn"]>[0]) {
-    Object.assign(this.turn(turnId), patch)
+    const turn = this.turn(turnId)
+    const { reaction, ...rest } = patch
+    Object.assign(turn, rest)
+    // The reaction the round waits on: set, or cleared with null.
+    if (reaction === null) delete turn.reaction
+    else if (reaction !== undefined) turn.reaction = reaction
     this.save()
   }
   async patchAdventure({ adventureId, patch }: Parameters<Store["patchAdventure"]>[0]) {

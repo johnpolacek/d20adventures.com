@@ -27,6 +27,7 @@ export type CharacterState = Pick<
   | "spellEffects"
   | "concentration"
   | "tempHitPoints"
+  | "standingOrders"
   | "dead"
   | "fled"
   | "deathSaves"
@@ -49,6 +50,7 @@ export function characterState(c: CharacterState): CharacterState {
     spellEffects: c.spellEffects,
     concentration: c.concentration,
     tempHitPoints: c.tempHitPoints,
+    standingOrders: c.standingOrders,
     inspiration: c.inspiration,
     dead: c.dead,
     fled: c.fled,

@@ -69,6 +69,8 @@ export function buildLocalWikiTurnCharacters(args: {
       inspiration: undefined,
       spellSlots: was?.spellSlots,
       hitDiceUsed: was?.hitDiceUsed,
+      // The player's own orders for the hero's reactions go on with them.
+      standingOrders: was?.standingOrders,
       dead: was?.dead,
       deathSaves: was?.hitPoints === 0 ? was.deathSaves : undefined,
     }

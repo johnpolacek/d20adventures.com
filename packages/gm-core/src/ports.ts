@@ -1,5 +1,6 @@
 import type { z } from "zod"
 import type { EncounterFloor } from "./sheet/placement"
+import type { PendingReaction } from "./sheet/reactions"
 import type { StoryBeat } from "./story/beats"
 import type { StoryPlace } from "./story/clean"
 import type { KnownFact } from "./story/knowledge"
@@ -35,6 +36,8 @@ export type TurnRecord = {
   characters: TurnCharacter[]
   order: number
   isFinalEncounter?: boolean
+  // A reaction offered to a player's hero in the middle of an NPC's turn, while the round waits for the answer.
+  reaction?: PendingReaction
 }
 
 export type AdventureRecord = {
@@ -83,7 +86,8 @@ export interface Store {
   getTurnByOrder(args: { adventureId: string; order: number }): Promise<TurnRecord | null>
   // `story` holds the reply's beats, the player's own words first, to add to the turn's story.
   submitReply(args: { turnId: string; characterId: string; story: StoryBeat[]; rollRequirement?: RollRequirement }): Promise<unknown>
-  updateTurn(args: { turnId: string; patch: { story?: StoryBeat[]; characters?: TurnCharacter[]; updatedAt?: number } }): Promise<unknown>
+  // `reaction` sets the reaction the round waits on, and null clears it.
+  updateTurn(args: { turnId: string; patch: { story?: StoryBeat[]; characters?: TurnCharacter[]; updatedAt?: number; reaction?: PendingReaction | null } }): Promise<unknown>
   patchAdventure(args: {
     adventureId: string
     patch: { currentTurnId?: string; currentEncounterId?: string; endedAt?: number; updatedAt?: number; status?: "waitingForPlayers" | "active" | "completed" }

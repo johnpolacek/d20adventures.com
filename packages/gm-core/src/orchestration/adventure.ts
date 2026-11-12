@@ -5,6 +5,7 @@ import { createAdventureRollResultService, getEncounterInstructionsFromPlan } fr
 import { createAdventureTurnReplyService } from "../services/adventure-turn-reply-service"
 import { createNarrativeGenerationService } from "../services/narrative-generation-service"
 import { createNpcTurnService } from "../services/npc-turn-service"
+import { type StandingOrders, standingOrdersSchema } from "../sheet/turn-effect"
 import type { StoryBeat } from "../story/beats"
 import { storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
@@ -50,10 +51,12 @@ export function createAdventure(ports: GmPorts) {
         story: reply,
         rollRequirement: rollRequirementDetails,
       })
-      // A Bonus Action used beside the roll is applied now, before the die is thrown.
-      await applyReading({ turnId, characterId, reading })
+      // A Bonus Action used beside the roll is applied now, before the die is thrown. A hero dropped as they moved
+      // throws nothing: their turn is over, and the others play on.
+      const { fell } = await applyReading({ turnId, characterId, reading })
+      if (fell && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
       ports.narration.afterTurn(turnId)
-      return { rollRequired: rollRequirementDetails }
+      return { rollRequired: fell ? null : rollRequirementDetails }
     }
     await ports.store.submitReply({
       turnId,
@@ -62,9 +65,9 @@ export function createAdventure(ports: GmPorts) {
       rollRequirement: undefined,
     })
     // An action with no roll (Dodge, Help) is the hero's whole turn: what it leaves is written before anyone else acts.
-    await applyReading({ turnId, characterId, reading })
+    const { fell } = await applyReading({ turnId, characterId, reading })
     // A spell that asks for no throw is resolved now: the engine rolls it, and the GM tells it.
-    if (reading.cast) await resolveCast({ turnId, characterId, cast: reading.cast })
+    if (reading.cast && !fell) await resolveCast({ turnId, characterId, cast: reading.cast })
     if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
     ports.narration.afterTurn(turnId)
     return { rollRequired: null }
@@ -222,5 +225,33 @@ export function createAdventure(ports: GmPorts) {
     // 6. Return the updated turn
     return await ports.store.getTurn({ turnId })
   }
-  return { processTurnReply, processPlayerReply, createAdventureWithFirstTurn, resolvePlayerRollResult }
+  // A player's answer to a reaction offered to their hero: take it or let it pass. The NPC's turn that waited on it is
+  // then played on. An answer for an offer that is gone, or for someone else's hero, is refused.
+  async function answerReaction({ turnId, characterId, take }: { turnId: string; characterId: string; take: boolean }) {
+    const userId = await ports.identity()
+    if (!userId) throw new Error("Unauthorized")
+    const { turn } = await assertAdventureAccessByTurn(userId, turnId)
+    assertPlayerCharacterControl(userId, turn, characterId)
+    const waiting = turn.reaction
+    if (!waiting || waiting.offer.to !== characterId) throw new Error("No reaction is offered to this character.")
+    await ports.store.updateTurn({ turnId, patch: { reaction: { ...waiting, answer: take }, updatedAt: Date.now() } })
+    if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
+    return { answered: true }
+  }
+
+  // A player's standing orders for their hero's reactions: what the hero does when an offer goes unanswered.
+  async function setStandingOrders({ turnId, characterId, orders }: { turnId: string; characterId: string; orders: StandingOrders }) {
+    const userId = await ports.identity()
+    if (!userId) throw new Error("Unauthorized")
+    const { turn } = await assertAdventureAccessByTurn(userId, turnId)
+    assertPlayerCharacterControl(userId, turn, characterId)
+    const standingOrders = standingOrdersSchema.parse(orders)
+    await ports.store.updateTurn({
+      turnId,
+      patch: { characters: (turn.characters as TurnCharacter[]).map((character) => (character.id === characterId ? { ...character, standingOrders } : character)), updatedAt: Date.now() },
+    })
+    return { standingOrders }
+  }
+
+  return { processTurnReply, processPlayerReply, createAdventureWithFirstTurn, resolvePlayerRollResult, answerReaction, setStandingOrders }
 }

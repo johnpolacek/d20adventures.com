@@ -6,10 +6,12 @@ import { againstArmorClass, landBlow, rollAttack, strike } from "../../src/sheet
 import type { ConditionEntry } from "../../src/sheet/condition-entry"
 import { atRoundStart } from "../../src/sheet/death"
 import {
+  attackWithReactions,
   canReact,
   DEFAULT_ORDERS,
   immuneToMagicMissile,
   monsterReactions,
+  moveWithReactions,
   offeredAttack,
   opportunityAttacks,
   opportunityWeapon,
@@ -262,4 +264,52 @@ test("an offer is plain data that makes the rolled attack whole again", () => {
   assert.deepEqual(offeredAttack(stored, bandit), rolled)
   assert.equal(offeredAttack({ id: "opportunity-attack", to: "bandit", from: "thalbern", weapon: "scimitar", matters: true }, bandit), undefined)
   assert.equal(reactionOfferSchema.safeParse({ ...offer, id: "dodge" }).success, false)
+})
+
+test("an attack is answered by Shield or Parry when the one hit is asked and says yes", () => {
+  const yes = () => true
+  const no = () => false
+  // A Bandit, Scimitar +3 for 1d6 + 1, rolls an 11: 14 hits Lyra's Armor Class 10. Shield makes it 15: a miss. She has
+  // one slot fewer, no Reaction left, and Shield on her. Said no to, the blow lands: a 4 on the d6 and 1 is 5 of her 6.
+  const robber: Character = { id: "bandit", name: "Bandit", type: "npc", statBlock: "bandit", hitPoints: 11, position: { x: 5, y: 0 } }
+  const mage: Character = { ...lyra, position: { x: 0, y: 0 } }
+  const blocked = attackWithReactions({ characters: [mage, robber], attackerId: "bandit", targetId: "lyra", weapon: "scimitar", dice: [11], roll: () => 4, ask: yes })
+  assert.deepEqual([blocked.blow.roll.hit, blocked.blow.roll.armorClass, blocked.target.hitPoints, blocked.target.spellSlots, canReact(blocked.target)], [false, 15, 6, [1], false])
+  assert.deepEqual(blocked.reactions, [{ by: "lyra", id: "shield", name: "Shield", text: "Lyra casts Shield: Armor Class 15 until their next turn." }])
+  const taken = attackWithReactions({ characters: [mage, robber], attackerId: "bandit", targetId: "lyra", weapon: "scimitar", dice: [11], roll: () => 4, ask: no })
+  assert.deepEqual([taken.blow.roll.hit, taken.target.hitPoints, taken.target.spellSlots, taken.reactions], [true, 1, undefined, []])
+  // What is asked says whether it matters: a 14 against 10 does, and a 17 would hit 15 all the same.
+  const asked: boolean[] = []
+  const note = (offer: ReactionOffer) => asked.push(offer.matters) > 0 && false
+  attackWithReactions({ characters: [mage, robber], attackerId: "bandit", targetId: "lyra", weapon: "scimitar", dice: [11], roll: () => 4, ask: note })
+  attackWithReactions({ characters: [mage, robber], attackerId: "bandit", targetId: "lyra", weapon: "scimitar", dice: [14], roll: () => 4, ask: note })
+  assert.deepEqual(asked, [true, false])
+  // A miss asks nothing.
+  assert.equal(
+    attackWithReactions({ characters: [mage, robber], attackerId: "bandit", targetId: "lyra", weapon: "scimitar", dice: [3], roll: () => 4, ask: () => assert.fail("asked on a miss") }).blow.roll.hit,
+    false
+  )
+})
+
+test("a move draws an Opportunity Attack from each whose reach it leaves, and a blow that drops the mover stops it", () => {
+  const yes = () => true
+  // Thalbern at the origin beside a Bandit 5 feet east walks 20 feet west in two legs. The Bandit strikes as he
+  // leaves its reach on the first leg: Scimitar +3 with a 15 is 18 against Armor Class 15, a hit for 4 + 1. He goes on
+  // with 6 hit points, and the Bandit has no Reaction left.
+  const robber: Character = { id: "bandit", name: "Bandit", type: "npc", statBlock: "bandit", hitPoints: 11, position: { x: 5, y: 0 } }
+  const path = [
+    { x: -10, y: 0 },
+    { x: -20, y: 0 },
+  ]
+  const went = moveWithReactions({ characters: [thalbern, robber], moverId: "thalbern", path, ask: yes, d20: () => 15, roll: () => 4 })
+  const find = (characters: Character[], id: string) => characters.find((character) => character.id === id) as Character
+  assert.deepEqual([went.attacks.length, went.attacks[0].attacker, went.attacks[0].blow.taken, went.stopped], [1, "bandit", 5, false])
+  assert.deepEqual([find(went.characters, "thalbern").position, find(went.characters, "thalbern").hitPoints, canReact(find(went.characters, "bandit"))], [{ x: -20, y: 0 }, 6, false])
+  // One who Disengaged draws none, and one the Bandit is told not to strike is let go.
+  assert.equal(moveWithReactions({ characters: [thalbern, robber], moverId: "thalbern", path, disengaged: true, ask: yes, d20: () => 15, roll: () => 4 }).attacks.length, 0)
+  assert.equal(moveWithReactions({ characters: [thalbern, robber], moverId: "thalbern", path, ask: () => false, d20: () => 15, roll: () => 4 }).attacks.length, 0)
+  // With 5 hit points left the blow drops him, and he falls where he stood.
+  const hurt = { ...thalbern, hitPoints: 5 }
+  const fell = moveWithReactions({ characters: [hurt, robber], moverId: "thalbern", path, ask: yes, d20: () => 15, roll: () => 4 })
+  assert.deepEqual([fell.stopped, find(fell.characters, "thalbern").position, find(fell.characters, "thalbern").hitPoints], [true, { x: 0, y: 0 }, 0])
 })

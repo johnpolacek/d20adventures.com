@@ -2,7 +2,7 @@ import { monsterById } from "@d20/srd/monsters"
 import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
 import { hasFled, isDown, isIncapacitated } from "../utils/turn-actors"
-import { type Attack, attacksOf, meleeReachOf, parseDice, type RolledAttack, type Strike, strike, strikeFacts, type Target, UNARMED_STRIKE } from "./attack"
+import { type Attack, againstArmorClass, attacksOf, landBlow, meleeReachOf, parseDice, type RolledAttack, rollAttack, type Strike, strike, strikeFacts, type Target, UNARMED_STRIKE } from "./attack"
 import { type RollMode, rollModes } from "./check"
 import { cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
@@ -10,7 +10,7 @@ import { type Cover, opportunityAttackers, type Point, placedOf, type Standing, 
 import { withSpellEffect } from "./spell-effects"
 import { type CastCost, castCost, withCastSpent } from "./spells"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
-import type { TurnEffect } from "./turn-effect"
+import { type Order, orderSchema, type ReactionId, reactionIdSchema, reactionIds, type StandingOrders, standingOrdersSchema, type TurnEffect } from "./turn-effect"
 
 /**
  * Reactions by the SRD 5.2.1 rules, as pure functions. A Reaction is an instant response to a trigger, on anyone's
@@ -200,18 +200,7 @@ export function parryOffer(target: Caster, rolled: RolledAttack, attacker?: Stan
   return { bonus: parry.bonus, armorClass, matters: rolled.roll.natural !== 20 && rolled.roll.total < armorClass }
 }
 
-/** The reactions the engine knows. */
-export const reactionIds = ["opportunity-attack", "shield", "parry", "uncanny-dodge", "counterspell"] as const
-export const reactionIdSchema = z.enum(reactionIds)
-export type ReactionId = z.infer<typeof reactionIdSchema>
-
-/** How a hero takes a reaction when no one answers the offer: always, only when it matters, or never. */
-export const orderSchema = z.enum(["always", "when-it-matters", "never"])
-export type Order = z.infer<typeof orderSchema>
-
-/** A hero's standing order for each reaction. One left out follows the default. */
-export const standingOrdersSchema = z.partialRecord(reactionIdSchema, orderSchema)
-export type StandingOrders = z.infer<typeof standingOrdersSchema>
+export { type Order, orderSchema, type ReactionId, reactionIdSchema, reactionIds, type StandingOrders, standingOrdersSchema }
 
 /** The default orders: take every Opportunity Attack, and the rest only when they matter. */
 export const DEFAULT_ORDERS: Record<ReactionId, Order> = {
@@ -279,3 +268,122 @@ export function offeredAttack(offer: ReactionOffer, attacker: Standing): RolledA
   if (!attack || !offer.roll) return undefined
   return { attack, roll: offer.roll, ...(offer.inspired !== undefined ? { inspired: offer.inspired } : {}) }
 }
+
+/**
+ * How an offer is answered while a turn is resolved: taken or not. For an NPC it is the standing order, at once. For a
+ * player's hero the turn flow may stop here to ask, and play the turn again from its start when the answer comes.
+ * `text` is the offer in words, for the screen.
+ */
+export type Ask = (offer: ReactionOffer, text: string) => boolean
+
+/** A reaction taken, for the story: who took it, which, and what it did in words. */
+export type ReactionTaken = { by: string; id: ReactionId; name: string; text: string }
+
+type InPlay = Target & Caster & { name: string; hasReplied?: boolean; isComplete?: boolean }
+
+/**
+ * One attack with the reactions that may answer it. The roll is made, the one hit may cast Shield or Parry when they
+ * have it and `ask` says so, the roll is read again against the Armor Class that makes, and then the blow lands or
+ * does not. Everyone comes back as it left them. A Bandit Captain hit by a 16 against Armor Class 15 parries it into a
+ * miss against 17, and has no Reaction left this round.
+ */
+export function attackWithReactions<T extends InPlay>(args: {
+  characters: readonly T[]
+  attackerId: string
+  targetId: string
+  weapon: string
+  dice: readonly number[]
+  roll: (sides: number) => number
+  mode?: RollMode
+  rules?: DeathRules
+  cover?: Cover
+  inspiration?: { die: number }
+  ask: Ask
+}): { characters: T[]; blow: Strike; target: T; reactions: ReactionTaken[] } {
+  const attacker = args.characters.find((character) => character.id === args.attackerId)
+  let target = args.characters.find((character) => character.id === args.targetId)
+  if (!attacker || !target) throw new Error("The attacker or the one attacked is no longer here.")
+  let rolled = rollAttack({ attacker, target, weapon: args.weapon, dice: args.dice, mode: args.mode, roll: args.roll, cover: args.cover, inspiration: args.inspiration })
+  const reactions: ReactionTaken[] = []
+  const offer = (id: ReactionId, matters: boolean): ReactionOffer => ({
+    id,
+    to: args.targetId,
+    from: args.attackerId,
+    weapon: args.weapon,
+    roll: rolled.roll,
+    ...(rolled.inspired !== undefined ? { inspired: rolled.inspired } : {}),
+    matters,
+  })
+  const hit = `${attacker.name}'s ${rolled.attack.name} hits ${target.name}: ${rolled.roll.total} against Armor Class ${rolled.roll.armorClass}.`
+  const shield = shieldOffer(target, rolled)
+  const parry = shield ? undefined : parryOffer(target, rolled, attacker)
+  if (shield && args.ask(offer("shield", shield.matters), `${hit} Shield would make it Armor Class ${shield.armorClass}.`)) {
+    target = withShield(target)
+    rolled = againstArmorClass(rolled, shield.armorClass)
+    reactions.push({ by: target.id, id: "shield", name: "Shield", text: `${target.name} casts Shield: Armor Class ${shield.armorClass} until their next turn.` })
+  } else if (parry && args.ask(offer("parry", parry.matters), `${hit} Parry would make it Armor Class ${parry.armorClass}.`)) {
+    target = withReaction(target)
+    rolled = againstArmorClass(rolled, parry.armorClass)
+    reactions.push({ by: target.id, id: "parry", name: "Parry", text: `${target.name} parries: Armor Class ${parry.armorClass} against this attack.` })
+  }
+  const { target: struck, ...blow } = landBlow({ attacker, target, roll: args.roll, rules: args.rules, present: args.characters }, rolled)
+  return { characters: args.characters.map((character) => (character.id === struck.id ? struck : character)), blow, target: struck, reactions }
+}
+
+/** An Opportunity Attack as a move was made: who made it, the blow, and the reactions that answered it. */
+export type OpportunityAttackMade = { attacker: string; blow: Strike; reactions: ReactionTaken[] }
+
+/**
+ * A move with the Opportunity Attacks it draws. The mover walks the path leg by leg. Each one whose reach a leg leaves
+ * may strike, when `ask` says so, right before the mover leaves it, and then has no Reaction left this round. A mover
+ * the blow drops stops where it fell. Everyone comes back as the move left them, the mover standing where it ended.
+ * One who took the Disengage action draws none.
+ */
+export function moveWithReactions<T extends InPlay>(args: {
+  characters: readonly T[]
+  moverId: string
+  path: readonly Point[]
+  disengaged?: boolean
+  ask: Ask
+  d20: () => number
+  roll: (sides: number) => number
+  rules?: DeathRules
+}): { characters: T[]; attacks: OpportunityAttackMade[]; stopped: boolean } {
+  let characters = [...args.characters]
+  const attacks: OpportunityAttackMade[] = []
+  const moverNow = () => characters.find((character) => character.id === args.moverId) as T
+  for (const to of args.path) {
+    const mover = moverNow()
+    const from = mover.position
+    if (!from) break
+    for (const { attacker, weapon } of opportunityAttacks({ mover, from, to, everyone: characters, disengaged: args.disengaged })) {
+      const attack = attacksOf(attacker).find((entry) => entry.id === weapon)
+      const text = `${mover.name} is leaving ${attacker.name}'s reach. ${attacker.name} may strike with ${attack?.name ?? "an attack"}.`
+      if (!args.ask({ id: "opportunity-attack", to: attacker.id, from: mover.id, weapon, matters: true }, text)) continue
+      const made = attackWithReactions({ characters, attackerId: attacker.id, targetId: mover.id, weapon, dice: [args.d20()], roll: args.roll, rules: args.rules, ask: args.ask })
+      characters = made.characters.map((character) => (character.id === attacker.id ? withReaction(character) : character))
+      attacks.push({ attacker: attacker.id, blow: made.blow, reactions: made.reactions })
+      if (isDown(made.target)) return { characters, attacks, stopped: true }
+    }
+    characters = characters.map((character) => (character.id === args.moverId ? { ...character, position: { x: to.x, y: to.y } } : character))
+  }
+  return { characters, attacks, stopped: false }
+}
+
+/**
+ * A reaction offered to a player's hero and not yet answered, as the turn keeps it while the round waits. `npc` is
+ * whose turn stopped. `resume` holds what that turn had already settled, so it is played again the same: what the NPC
+ * meant to do, how it was read, the dice it rolled, and the answers given so far. `answer` is the player's, when it
+ * has come. After `expiresAt` the hero's standing order answers.
+ */
+export type PendingReaction = {
+  offer: ReactionOffer
+  text: string
+  expiresAt: number
+  npc: string
+  answer?: boolean
+  resume: { action: unknown; reading: unknown; dice: number[]; answers: boolean[] }
+}
+
+/** How long the round waits on a player's answer, in milliseconds. */
+export const REACTION_WAIT = 20_000

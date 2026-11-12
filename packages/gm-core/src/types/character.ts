@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { conditionEntrySchema } from "../sheet/condition-entry"
 import { sheetSchema } from "../sheet/sheet"
-import { concentrationSchema, featureUsesSchema, inspirationSchema, positionSchema, spellEffectSchema, turnEffectSchema } from "../sheet/turn-effect"
+import { concentrationSchema, featureUsesSchema, inspirationSchema, positionSchema, spellEffectSchema, standingOrdersSchema, turnEffectSchema } from "../sheet/turn-effect"
 
 // Equipment item schema and type
 export const equipmentItemSchema = z.object({
@@ -85,6 +85,9 @@ export const baseCharacterSchema = z.object({
   spellEffects: z.array(spellEffectSchema).optional(),
   concentration: concentrationSchema.optional(),
   tempHitPoints: z.number().int().min(1).optional(),
+  // How a hero takes each reaction when their player does not answer the offer in time. One left out follows the
+  // default (../sheet/reactions). The player sets them.
+  standingOrders: standingOrdersSchema.optional(),
   // Where the character stands on the encounter's floor, in feet. Only the engine writes it, through ../sheet/placement
   // as an encounter opens and as the character moves. One in an encounter with no floor plan has none.
   position: positionSchema.optional(),
@@ -153,6 +156,7 @@ export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
   concentration: true,
   tempHitPoints: true,
   position: true,
+  standingOrders: true,
   dead: true,
   fled: true,
 })

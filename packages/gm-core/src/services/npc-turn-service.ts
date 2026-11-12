@@ -2,6 +2,7 @@ import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { afterHarm } from "../sheet/death"
 import { standingWords } from "../sheet/placement"
+import { ordered, type PendingReaction, REACTION_WAIT } from "../sheet/reactions"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { KnownFact } from "../story/knowledge"
@@ -17,6 +18,8 @@ import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "./npc-tur
 import { buildNpcActionContext, buildNpcActionPrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "./npc-turn-intent-service"
 import { finalizeNpcTurnResponse } from "./npc-turn-postprocess-service"
+import { ReactionPending } from "./reaction-pending"
+import type { TurnReading } from "./roll-requirement-service"
 
 // The encounter's intro as the GM reads it, private paragraphs marked, and its authored source, which each NPC reads as
 // it knows it.
@@ -106,6 +109,7 @@ export function createNpcTurnService(ports: GmPorts) {
     strangers,
     earlier,
     rules,
+    resume,
   }: {
     turn: Turn
     npcId: string
@@ -121,6 +125,8 @@ export function createNpcTurnService(ports: GmPorts) {
     earlier?: string
     // The adventure's rules: with `playerDeath: false` a hero the NPC would kill is left Stable instead.
     rules?: SafetyRules
+    // The turn played again after a hero's reaction was answered: what the NPC meant to do and all it had settled.
+    resume?: PendingReaction["resume"]
   }): Promise<{
     updatedCharacters: TurnCharacter[]
     beatsToAppend: StoryBeat[]
@@ -177,7 +183,8 @@ export function createNpcTurnService(ports: GmPorts) {
       )
     )
 
-    const actionResult = await generateNpcAction(prompt1, npc.id)
+    // A turn played again keeps what the NPC meant to do the first time.
+    const actionResult = (resume?.action as Awaited<ReturnType<typeof generateNpcAction>> | undefined) ?? (await generateNpcAction(prompt1, npc.id))
 
     console.log("[LLM] NPC action response:", {
       actionType: actionResult.actionType,
@@ -209,6 +216,11 @@ export function createNpcTurnService(ports: GmPorts) {
       },
       scene,
       rules,
+      resume: resume && { reading: resume.reading as TurnReading, dice: resume.dice, answers: resume.answers },
+    }).catch((error) => {
+      // A turn that stops to ask a player keeps what the NPC meant to do, so it is not asked of the model again.
+      if (error instanceof ReactionPending) throw new ReactionPending(error.offer, error.text, { ...error.resume, action: actionResult })
+      throw error
     })
 
     const updatedCharacters = branchResult.updatedCharacters
@@ -404,10 +416,21 @@ export function createNpcTurnService(ports: GmPorts) {
         continue // NPC already processed or no longer eligible
       }
 
+      // A reaction offered to a hero in the middle of this NPC's turn. The round waits for the player's answer until
+      // the offer runs out, and then the hero's standing order answers. With the answer in, the NPC's turn is played
+      // again from its start with the same reading and dice, and goes on past the offer.
+      const waiting = turn.reaction?.npc === npc.id ? turn.reaction : undefined
+      if (waiting && waiting.answer === undefined && Date.now() < waiting.expiresAt) {
+        console.log("[LLM DM] Waiting on a reaction:", waiting.text)
+        break
+      }
+      const reactor = waiting && characters.find((c) => c.id === waiting.offer.to)
+      const resume = waiting && { ...waiting.resume, answers: [...waiting.resume.answers, waiting.answer ?? ordered(reactor?.standingOrders, waiting.offer.id, waiting.offer.matters)] }
+
       // Since the NPC's last turn: the rest of the scene's last round, then this one.
       const prev = allTurns.find((t) => t.order === (turn!.order ?? 0) - 1 && t.encounterId === turn!.encounterId)
       const since = prev ? prev.story.slice(prev.story.map((b) => b.by.step === "npc" && b.by.character === npc.id).lastIndexOf(true) + 1) : []
-      if (waitsUnaddressed(npc, [...since, ...turn.story])) {
+      if (!resume && waitsUnaddressed(npc, [...since, ...turn.story])) {
         console.log("[LLM DM] NPC waits to be addressed, skipping:", npc.name)
         await ports.store.updateTurn({
           turnId: turn._id,
@@ -447,8 +470,27 @@ export function createNpcTurnService(ports: GmPorts) {
           strangers,
           earlier: npcEarlierTurns(allTurns, turn, npc.id),
           rules,
+          resume,
         })
       } catch (error) {
+        if (error instanceof ReactionPending) {
+          // The turn has written nothing. The offer is kept on the turn for the player to see and answer.
+          console.log("[LLM DM] A reaction is offered, the round waits:", error.text)
+          await ports.store.updateTurn({
+            turnId: turn._id,
+            patch: {
+              reaction: {
+                offer: error.offer,
+                text: error.text,
+                expiresAt: Date.now() + REACTION_WAIT,
+                npc: npc.id,
+                resume: { action: error.resume.action, reading: error.resume.reading, dice: error.resume.dice, answers: error.resume.answers },
+              },
+              updatedAt: Date.now(),
+            },
+          })
+          break
+        }
         console.error("[LLM] NPC turn failed, stopping loop for retry:", npc.name, error)
         break
       }
@@ -489,7 +531,8 @@ export function createNpcTurnService(ports: GmPorts) {
 
       await ports.store.updateTurn({
         turnId: turn._id,
-        patch: turnPatch,
+        // The reaction the turn waited on is answered and done.
+        patch: resume ? { ...turnPatch, reaction: null } : turnPatch,
       })
 
       processedNpcCount++

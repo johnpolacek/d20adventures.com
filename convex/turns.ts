@@ -69,10 +69,13 @@ export const updateTurn = mutation({
       story: v.optional(storyValidator),
       characters: v.optional(v.array(v.any())),
       updatedAt: v.optional(v.number()),
+      // The reaction the round waits on, as the engine keeps it. Null clears it.
+      reaction: v.optional(v.union(v.any(), v.null())),
     }),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.turnId, args.patch)
+    const { reaction, ...patch } = args.patch
+    await ctx.db.patch(args.turnId, { ...patch, ...(reaction === undefined ? {} : { reaction: reaction ?? undefined }) })
     return true
   },
 })

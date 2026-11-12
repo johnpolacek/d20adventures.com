@@ -7,8 +7,8 @@ import type { TurnEffect } from "./turn-effect"
 /** Where a move is read as going: to a named place or to someone, by id, or straight away from someone, and no farther than some feet. */
 export type MoveAsk = { to?: string; away?: string; feet?: number }
 
-/** A move as the engine made it: where the character now stands, and the feet it took. */
-export type Moved = { at: Point; feet: number }
+/** A move as the engine made it: where the character now stands, the feet it took, and the points it walked through, the last of them where it stands. */
+export type Moved = { at: Point; feet: number; path: Point[] }
 
 type Mover = Afflicted & Standing & { turnEffects?: readonly TurnEffect[] }
 type Other = Standing & { id: string }
@@ -50,7 +50,7 @@ export function takeMove(args: { floor: EncounterFloor; mover: Mover; others: re
     walked = walk(args.floor, from, toward.position, budget, { stopShort: stopShortFor(sizeOf(args.mover), sizeOf(toward), reach), others: standing })
   } else if (fleeing?.position) walked = walk(args.floor, from, pushed(from, fleeing.position, budget), budget, { others: standing })
   if (!walked || walked.used < 0.5) return undefined
-  return { at: rounded(walked.at), feet: Math.round(walked.used) }
+  return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded) }
 }
 
 /** The mover where a move left them. */

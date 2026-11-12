@@ -1,11 +1,12 @@
 import type { GmPorts } from "../ports"
 import { afterRoll } from "../sheet/actions"
-import { type Strike, strike, strikeFacts } from "../sheet/attack"
+import { type Strike, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { afterHarm, deathSave } from "../sheet/death"
 import { inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
+import { attackWithReactions, ordered } from "../sheet/reactions"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
@@ -224,22 +225,26 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // hit points change here and nowhere else.
       target = turnCharacters.find((character) => character.id === required.attack.target)
       if (!target) throw new Error("The one attacked is no longer here.")
-      const struck = strike({
-        attacker: args.character,
-        target,
+      // The one hit may answer with Parry or Shield before the blow lands. An NPC, and a hero on another hero's
+      // turn, follow their standing order at once.
+      const standing = turnCharacters
+      const made = attackWithReactions({
+        characters: turnCharacters,
+        attackerId: args.characterId,
+        targetId: target.id,
         weapon: required.attack.weapon,
         dice: d20sFor(mode, args.dice),
         mode,
         roll: rollDie,
         rules,
         inspiration: args.character.inspiration,
-        present: turnCharacters,
         cover: required.attack.cover,
+        ask: (offer) => ordered(standing.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
       })
-      blow = struck
-      inspired = struck.inspired !== undefined
-      turnCharacters = turnCharacters.map((character) => (character.id === required.attack.target ? afterHarm(struck.target) : character))
-      rolls = [attackBeat(by, args.character, target.id, blow)]
+      blow = made.blow
+      inspired = made.blow.inspired !== undefined
+      turnCharacters = made.characters.map((character) => (character.id === required.attack.target ? afterHarm(character) : character))
+      rolls = [...made.reactions.map((taken): StoryBeat => ({ kind: "feature", by, character: taken.by, name: taken.name, text: taken.text })), attackBeat(by, args.character, target.id, blow)]
       struckIds = [target.id]
       numbers = { natural: blow.roll.natural, bonus: blow.roll.bonus, total: blow.roll.total, against: blow.roll.armorClass, success: blow.roll.hit }
     } else {

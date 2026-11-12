@@ -1,6 +1,7 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { standingOrdersSchema } from "@d20/gm-core/sheet/turn-effect"
 import { api } from "@/convex/_generated/api"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
 import { assertAdventureAccess } from "@/lib/adventure-access"
@@ -16,6 +17,18 @@ import type { PC } from "@/types/character"
 export async function processPlayerReply(args: { turnId: Id<"turns">; characterId: string; playerInput: string }) {
   await refuseHostedTurn(args.turnId)
   return createServerCore().processPlayerReply(args)
+}
+
+// A player's answer to a reaction offered to their hero in the middle of an NPC's turn.
+export async function answerReaction(args: { turnId: Id<"turns">; characterId: string; take: boolean }) {
+  await refuseHostedTurn(args.turnId)
+  return createServerCore().answerReaction(args)
+}
+
+// A player's standing orders for their hero's reactions, followed when an offer goes unanswered.
+export async function setStandingOrders(args: { turnId: Id<"turns">; characterId: string; orders: Record<string, string> }) {
+  await refuseHostedTurn(args.turnId)
+  return createServerCore().setStandingOrders({ ...args, orders: standingOrdersSchema.parse(args.orders) })
 }
 
 export async function createAdventureWithFirstTurn(

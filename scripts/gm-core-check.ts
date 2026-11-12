@@ -457,14 +457,14 @@ async function npcFixedOutcome() {
   answer = { check: "attack", weapon: "shortsword", target: "owlbear" }
   assert.deepEqual(await readAction("Thalbern charges the owlbear.", ranger, at(45)), {
     roll: null,
-    move: { at: { x: 30, y: 0 }, feet: 30 },
+    move: { at: { x: 30, y: 0 }, feet: 30, path: [{ x: 30, y: 0 }] },
     ruling: { name: "Out Of Reach", text: "Thalbern moves 30 feet and is 13 feet from Owlbear, out of reach with Shortsword. The attack is not made." },
   })
   // From 30 feet he walks 22.5 and strikes. The model named no move: the attack closed by itself.
   const charge = await readAction("Thalbern charges the owlbear.", ranger, at(30))
   assert.deepEqual(
     [charge.move, charge.roll && "attack" in charge.roll ? charge.roll.attack : undefined, charge.ruling],
-    [{ at: { x: 22.5, y: 0 }, feet: 23 }, { weapon: "shortsword", target: "owlbear" }, undefined]
+    [{ at: { x: 22.5, y: 0 }, feet: 23, path: [{ x: 22.5, y: 0 }] }, { weapon: "shortsword", target: "owlbear" }, undefined]
   )
   // A Longbow is 150/600: at 200 feet it is long range, with Disadvantage, and no one moves. With a Wolf beside him
   // a shot at 60 feet has Disadvantage too. At 700 feet it is out of range.
@@ -478,14 +478,14 @@ async function npcFixedOutcome() {
   answer = { check: "attack", weapon: "dagger", target: "owlbear" }
   assert.equal((await readAction("Thalbern throws his dagger.", ranger, at(15))).move, undefined)
   answer = { check: "attack", weapon: "dagger", target: "owlbear", moveTo: "owlbear" }
-  assert.deepEqual((await readAction("Thalbern runs in and stabs.", ranger, at(15))).move, { at: { x: 7.5, y: 0 }, feet: 8 })
+  assert.deepEqual((await readAction("Thalbern runs in and stabs.", ranger, at(15))).move, { at: { x: 7.5, y: 0 }, feet: 8, path: [{ x: 7.5, y: 0 }] })
   // A move with no roll: to a place as far as his Speed goes, all the way with Dash, and a step back from the Owlbear.
   answer = { check: "none", moveTo: "gangway" }
-  assert.deepEqual(await readAction("Thalbern heads for the gangway.", ranger, at(45)), { roll: null, move: { at: { x: 0, y: 30 }, feet: 30 } })
+  assert.deepEqual(await readAction("Thalbern heads for the gangway.", ranger, at(45)), { roll: null, move: { at: { x: 0, y: 30 }, feet: 30, path: [{ x: 0, y: 30 }] } })
   answer = { check: "dash", moveTo: "gangway" }
-  assert.deepEqual(await readAction("Thalbern sprints for the gangway.", ranger, at(45)), { roll: null, action: { action: "dash" }, move: { at: { x: 0, y: 50 }, feet: 50 } })
+  assert.deepEqual(await readAction("Thalbern sprints for the gangway.", ranger, at(45)), { roll: null, action: { action: "dash" }, move: { at: { x: 0, y: 50 }, feet: 50, path: [{ x: 0, y: 50 }] } })
   answer = { check: "none", moveAway: "owlbear", moveFeet: 10 }
-  assert.deepEqual((await readAction("Thalbern backs off.", ranger, at(8))).move, { at: { x: -10, y: 0 }, feet: 10 })
+  assert.deepEqual((await readAction("Thalbern backs off.", ranger, at(8))).move, { at: { x: -10, y: 0 }, feet: 10, path: [{ x: -10, y: 0 }] })
   // Cover. A 4-foot crate, 4 feet across, 20 feet along the line and nearer the Owlbear, hides 4 of its 10 feet:
   // none. A 6-foot one hides 6 of 10: half cover, and Armor Class 13 is 15. A wall to the ceiling is total cover: no
   // shot. Cover the game master names beside what the floor holds is taken when it is the greater.

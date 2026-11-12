@@ -1,16 +1,19 @@
 import type { GmPorts } from "../ports"
 import { takeAction } from "../sheet/actions"
+import { checkBonus } from "../sheet/check"
 import type { ConditionEntry } from "../sheet/condition-entry"
+import { afterHarm } from "../sheet/death"
 import { useBonusAction } from "../sheet/features"
-import { withMove } from "../sheet/moves"
+import { moveWithReactions, ordered } from "../sheet/reactions"
 import { partyRest, restName } from "../sheet/rest"
 import type { Sheet } from "../sheet/sheet"
+import { settleConcentration } from "../sheet/spell-effects"
 import { castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { TurnEffect } from "../sheet/turn-effect"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames } from "../story/render"
-import { castBeats, turnScript } from "../story/turn"
+import { attackBeat, castBeats, concentrationBeat, turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
@@ -120,15 +123,50 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
   /**
    * Apply what a reply did beside any roll, once the reply is stored: a Bonus Action the hero used, and an action
    * that took no roll. What they leave on the characters is written to the turn, and a Bonus Action is told in the
-   * story as a beat of its own.
+   * story as a beat of its own. `fell` says an Opportunity Attack dropped the hero as they moved: the rest of their
+   * turn is lost.
    */
-  async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading }): Promise<void> {
+  async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading }): Promise<{ fell?: true }> {
     const { action, bonus, move, ruling, rest } = args.reading
-    if (!action && !bonus && !move && !ruling && !rest) return
+    if (!action && !bonus && !move && !ruling && !rest) return {}
     const turn = await ports.store.getTurn({ turnId: args.turnId })
     if (!turn) throw new Error("Turn not found")
-    // The move comes first: the hero stands where it took them before anything else of the turn is resolved.
-    let characters = (turn.characters as TurnCharacter[]).map((character) => (character.id === args.characterId ? withMove(character, move) : character))
+    // The move comes first: the hero stands where it took them before anything else of the turn is resolved. Those
+    // whose reach it leaves may strike as it does, each by their standing order at once, and so may the hero answer
+    // them. One who took the Disengage action draws no such attack.
+    let characters = turn.characters as TurnCharacter[]
+    const leaving: StoryBeat[] = []
+    if (move) {
+      const by = { step: "reply" as const, character: args.characterId }
+      const went = moveWithReactions({
+        characters,
+        moverId: args.characterId,
+        path: move.path,
+        disengaged: action?.action === "disengage",
+        ask: (offer) => ordered(characters.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
+        d20: rollD20,
+        roll: rollDie,
+      })
+      const mover = characters.find((character) => character.id === args.characterId)
+      // A caster the blows hurt saves to keep Concentration, and one they dropped loses it.
+      const kept = settleConcentration({ before: characters, after: went.characters.map(afterHarm), bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
+      characters = kept.characters
+      for (const made of went.attacks) {
+        const attacker = characters.find((character) => character.id === made.attacker)
+        if (!attacker || !mover) continue
+        leaving.push(
+          { kind: "feature", by, character: attacker.id, name: "Opportunity Attack", text: `${attacker.name} strikes as ${mover.name} leaves their reach.`, target: mover.id },
+          ...made.reactions.map((taken): StoryBeat => ({ kind: "feature", by, character: taken.by, name: taken.name, text: taken.text })),
+          attackBeat(by, attacker, mover.id, made.blow)
+        )
+      }
+      leaving.push(...kept.saves.map((save) => concentrationBeat(by, save, storyNames(turn.characters))))
+      // A hero the blow dropped does nothing more this turn: what they meant to do is lost, and any roll with it.
+      if (went.stopped) {
+        await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, story: [...turn.story, ...leaving], updatedAt: Date.now() } })
+        return { fell: true }
+      }
+    }
     // A Bonus Action is a class feature of the hero's, or one of their spells that takes one. The spell is cast by
     // the same rules as any other, and the story keeps it with no telling of its own: the turn's action is told after.
     const actor = characters.find((character) => character.id === args.characterId)
@@ -155,7 +193,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       name: restName(rest ?? "short"),
       text: facts.join(" "),
     }))
-    if (!used?.use && !taken?.fact && !spellBeats.length && !move && !ruling && !resting) return
+    if (!used?.use && !taken?.fact && !spellBeats.length && !move && !ruling && !resting) return {}
     // What the rules of space would not allow is told as an entry of its own, so the story does not keep an attack that was never made.
     const ruled: StoryBeat[] = ruling ? [{ kind: "feature", by: { step: "reply", character: args.characterId }, character: args.characterId, name: ruling.name, text: ruling.text }] : []
     const feature: StoryBeat[] = spellBeats.length
@@ -173,8 +211,9 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
             },
           ]
         : []
-    const told = [...feature, ...ruled, ...restBeats]
+    const told = [...leaving, ...feature, ...ruled, ...restBeats]
     await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, ...(told.length ? { story: [...turn.story, ...told] } : {}), updatedAt: Date.now() } })
+    return {}
   }
   return { readTurnReply, applyReading }
 }

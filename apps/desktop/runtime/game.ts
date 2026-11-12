@@ -3,6 +3,7 @@ import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type CityMap, withCityContext } from "@d20/gm-core/citymap"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import { placeCharacters } from "@d20/gm-core/sheet/placement"
+import { standingOrdersSchema } from "@d20/gm-core/sheet/turn-effect"
 import { withArrivals } from "@d20/gm-core/story/authored"
 import { namesMetBefore } from "@d20/gm-core/story/names"
 import { characterScript, introTurn } from "@d20/gm-core/story/turn"
@@ -92,6 +93,9 @@ export const commandSchema = z.discriminatedUnion("kind", [
   // Ends a hero's turn with no reply. Nothing is written into the story and the GM is not asked.
   z.object({ kind: z.literal("skip"), turnId: z.string(), characterId: z.string() }),
   z.object({ kind: z.literal("continue"), turnId: z.string() }),
+  // A player's answer to a reaction offered to their hero, and their standing orders for when no answer comes.
+  z.object({ kind: z.literal("react"), turnId: z.string(), characterId: z.string(), take: z.boolean() }),
+  z.object({ kind: z.literal("orders"), turnId: z.string(), characterId: z.string(), orders: standingOrdersSchema }),
 ])
 export type GameCommand = z.infer<typeof commandSchema>
 export const suggestCommandSchema = z.object({ kind: z.literal("suggest"), turnId: z.string(), characterId: z.string() })
@@ -186,6 +190,8 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     const before = findCurrentActor(store.current().characters)
     await core.processNpcTurnsAfterCurrent(store.current()._id)
     const actor = findCurrentActor(store.current().characters)
+    // A turn that stopped to offer a hero a reaction is not a failure: the round waits on the answer.
+    if (store.current().reaction) return
     if (actor && actor.id === before?.id && (actor.type === "npc" || actor.controlledBy === "ai"))
       throw inferenceFailure ?? new Error("The GM could not finish this character's turn. Continue to retry.")
   }
@@ -277,6 +283,16 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     }
     const turn = store.turn(command.turnId)
     if (store.state!.adventure.status === "completed") throw new Error("This adventure is complete.")
+    if (command.kind === "react") {
+      // The answer is kept, and the NPC's turn that waited on it is played on.
+      await core.answerReaction({ turnId: turn._id, characterId: command.characterId, take: command.take })
+      await autonomous()
+      return store.state
+    }
+    if (command.kind === "orders") {
+      await core.setStandingOrders({ turnId: turn._id, characterId: command.characterId, orders: command.orders })
+      return store.state
+    }
     if (command.kind === "continue") {
       const current = findCurrentActor(turn.characters)
       if (current?.type === "pc" && current.controlledBy !== "ai") throw new Error("A player character still needs to act.")

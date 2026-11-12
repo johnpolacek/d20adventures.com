@@ -194,6 +194,9 @@ export default defineSchema({
     title: v.string(),
     // The turn as labelled beats, in order: narration, actions, spoken lines, rolls and the players' own words.
     story: storyValidator,
+    // A reaction offered to a player's hero in the middle of an NPC's turn, while the round waits for the answer. The
+    // engine writes and reads it (packages/gm-core/src/sheet/reactions.ts).
+    reaction: v.optional(v.any()),
     characters: v.array(
       v.object({
         id: v.string(),
@@ -264,6 +267,7 @@ export default defineSchema({
         concentration: v.optional(v.object({ spell: v.string() })),
         tempHitPoints: v.optional(v.number()),
         position: v.optional(v.object({ x: v.number(), y: v.number() })),
+        standingOrders: v.optional(v.record(v.string(), v.string())),
         inspiration: v.optional(v.object({ die: v.number(), by: v.string() })),
         dead: v.optional(v.literal(true)),
         fled: v.optional(v.literal(true)),

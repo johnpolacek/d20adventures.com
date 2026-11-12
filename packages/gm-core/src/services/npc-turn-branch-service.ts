@@ -1,11 +1,12 @@
 import type { GmPorts } from "../ports"
 import { afterRoll, takeAction } from "../sheet/actions"
-import { multiattackOf, strike, strikeFacts } from "../sheet/attack"
+import { multiattackOf, strikeFacts } from "../sheet/attack"
 import { checkBonus, resolveCheck } from "../sheet/check"
 import { saveFailedBy } from "../sheet/conditions"
 import { afterHarm, killed } from "../sheet/death"
+import { d20sOf, replaying } from "../sheet/dice"
 import { applyStakes } from "../sheet/harm"
-import { withMove } from "../sheet/moves"
+import { type Ask, attackWithReactions, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import { castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
@@ -13,13 +14,13 @@ import { cleanStory, type StoryScene } from "../story/clean"
 import { storyNames } from "../story/render"
 import { attackBeat, castBeats, concentrationBeat, rollBeat, turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
-import { d20sFor, rollD20, rollDie } from "../utils/game-utils"
 import { isDown } from "../utils/turn-actors"
 import { isAttackRoll, isCastRoll } from "../validations/roll-requirement-schema"
 import type { SafetyRules } from "../wiki-adventures/player-safety"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { applyNpcEffectsToCharacters, type NpcTurnEffect } from "./npc-turn-resolution-service"
-import { createRollRequirementService } from "./roll-requirement-service"
+import { ReactionPending } from "./reaction-pending"
+import { createRollRequirementService, type TurnReading } from "./roll-requirement-service"
 
 export type NpcRollInfo = {
   rollType: string
@@ -92,6 +93,9 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     scene: StoryScene
     // The adventure's rules: with `playerDeath: false` a hero this NPC would kill is left Stable instead.
     rules?: SafetyRules
+    // The turn played again after a reaction was answered: how the move was read, the dice it rolled, and the answers
+    // given so far. Everything up to the last answer then falls as it fell before.
+    resume?: { reading: TurnReading; dice: number[]; answers: boolean[] }
   }): Promise<Omit<NpcTurnBranchResult, "actionSummary">> {
     let beatsToAppend: StoryBeat[] = []
     const script = turnScript(args.turn)
@@ -99,16 +103,66 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     let rollInfo: NpcRollInfo | undefined
     let effects: NpcTurnEffect[] | undefined
 
-    const reading = await readAction(args.actionResult.actionSummary, args.npc, {
-      encounterInstructions: args.encounterContext?.instructions || "",
-      encounterIntro: args.encounterContext?.intro || "",
-      narrativeContext: script,
-      present: args.turn.characters,
-      floor: await ports.content.floor?.(args.turn.encounterId),
-    })
+    const reading =
+      args.resume?.reading ??
+      (await readAction(args.actionResult.actionSummary, args.npc, {
+        encounterInstructions: args.encounterContext?.instructions || "",
+        encounterIntro: args.encounterContext?.intro || "",
+        narrativeContext: script,
+        present: args.turn.characters,
+        floor: await ports.content.floor?.(args.turn.encounterId),
+      }))
     const rollRequirement = reading.roll
-    // The move comes first: the NPC stands where it took them before the rest of the turn is resolved.
-    if (reading.move) updatedCharacters = updatedCharacters.map((character) => (character.id === args.npc.id ? withMove(character, reading.move) : character))
+    // The turn's dice are kept, so the turn can be played again the same after a player answers a reaction.
+    const dice = replaying(args.resume?.dice)
+    const answers = args.resume?.answers ?? []
+    let answered = 0
+    // How a reaction offered in this turn is answered. An NPC and an AI companion follow their standing order at once,
+    // and so does a hero whose order refuses it or to whom it would make no difference. Any other hero's player is
+    // asked: the answers already in are taken in order, and at the first one missing the turn stops here to wait.
+    const ask: Ask = (offer, text) => {
+      const reactor = updatedCharacters.find((character) => character.id === offer.to)
+      const order = ordered(reactor?.standingOrders, offer.id, offer.matters)
+      if (!reactor || reactor.type !== "pc" || reactor.controlledBy === "ai" || !order || !offer.matters) return order
+      if (answered < answers.length) return answers[answered++]
+      throw new ReactionPending(offer, text, { reading, dice: [...dice.log], answers: [...answers] })
+    }
+    const told = (taken: ReactionTaken): StoryBeat => ({ kind: "feature", by: npcStep(args.npc), character: taken.by, name: taken.name, text: taken.text })
+    // The move comes first, and those whose reach it leaves may strike as it does. The NPC stands where the move took
+    // it, or where a blow dropped it, before the rest of the turn is resolved.
+    const leaving: StoryBeat[] = []
+    const leavingFacts: string[] = []
+    if (reading.move) {
+      const went = moveWithReactions({
+        characters: updatedCharacters,
+        moverId: args.npc.id,
+        path: reading.move.path,
+        disengaged: reading.action?.action === "disengage",
+        ask,
+        d20: dice.d20,
+        roll: dice.roll,
+        rules: args.rules,
+      })
+      updatedCharacters = went.characters.map(afterHarm)
+      for (const made of went.attacks) {
+        const attacker = updatedCharacters.find((character) => character.id === made.attacker)
+        if (!attacker) continue
+        leaving.push(
+          { kind: "feature", by: npcStep(args.npc), character: attacker.id, name: "Opportunity Attack", text: `${attacker.name} strikes as ${args.npc.name} leaves their reach.`, target: args.npc.id },
+          ...made.reactions.map(told),
+          attackBeat(npcStep(args.npc), attacker, args.npc.id, made.blow)
+        )
+        leavingFacts.push(
+          `${attacker.name} makes an Opportunity Attack as ${args.npc.name} moves away. ${strikeFacts(attacker.name, args.npc.name, made.blow)}`,
+          ...made.reactions.map((taken) => taken.text)
+        )
+      }
+      // An NPC the blow dropped does nothing more: its turn is the fall.
+      if (went.stopped) {
+        console.log("[LLM] NPC dropped by an Opportunity Attack:", leavingFacts)
+        return { updatedCharacters, rollInfo: undefined, effects: undefined, beatsToAppend: leaving }
+      }
+    }
 
     console.log("[LLM] NPC roll requirement:", {
       requiresRoll: !!rollRequirement,
@@ -129,10 +183,10 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         casterId: args.npc.id,
         spell,
         targets: casting.cast.targets,
-        ...(spell.attack ? { attackDice: d20sFor(casting.mode) } : {}),
+        ...(spell.attack ? { attackDice: d20sOf(dice, casting.mode) } : {}),
         mode: casting.mode,
-        d20: rollD20,
-        roll: rollDie,
+        d20: dice.d20,
+        roll: dice.roll,
         rules: args.rules,
         damageType: casting.cast.damageType,
         skill: casting.cast.skill,
@@ -145,7 +199,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         before: args.turn.characters,
         after: afterRoll(spent, args.npc.id, casting),
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
-        d20: rollD20,
+        d20: dice.d20,
       })
       updatedCharacters = kept.characters.map((character) => afterHarm(character))
       const thrown = cast.attack?.roll
@@ -183,28 +237,31 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       const multiattack = multiattackOf(args.npc)
       const weapons = multiattack.some((entry) => entry.attack === weapon) ? multiattack.flatMap((entry) => Array.from({ length: entry.times }, () => entry.attack)) : [weapon]
       const rolls: StoryBeat[] = []
-      const facts: string[] = []
+      const facts: string[] = [...leavingFacts]
       for (const each of weapons) {
         const target = updatedCharacters.find((character) => character.id === targetId)
         if (!target || isDown(target)) break
-        const blow = strike({
-          attacker: updatedCharacters.find((character) => character.id === args.npc.id) ?? args.npc,
-          target,
+        // The one hit may answer with Shield or Parry before the blow lands.
+        const made = attackWithReactions({
+          characters: updatedCharacters,
+          attackerId: args.npc.id,
+          targetId,
           weapon: each,
-          dice: d20sFor(rollRequirement.mode),
+          dice: d20sOf(dice, rollRequirement.mode),
           mode: rollRequirement.mode,
-          roll: rollDie,
+          roll: dice.roll,
           rules: args.rules,
-          present: updatedCharacters,
           cover: rollRequirement.attack.cover,
+          ask,
         })
-        updatedCharacters = updatedCharacters.map((character) => (character.id === targetId ? afterHarm(blow.target) : character))
-        rolls.push(attackBeat(npcStep(args.npc), args.npc, targetId, blow))
-        facts.push(strikeFacts(args.npc.name, target.name, blow))
+        const blow = made.blow
+        updatedCharacters = made.characters.map((character) => (character.id === targetId ? afterHarm(character) : character))
+        rolls.push(...made.reactions.map(told), attackBeat(npcStep(args.npc), args.npc, targetId, blow))
+        facts.push(...made.reactions.map((taken) => taken.text), strikeFacts(args.npc.name, target.name, blow))
         rollInfo = { rollType: blow.attack.name, difficulty: blow.roll.armorClass, baseRoll: blow.roll.natural, modifier: blow.roll.bonus, result: blow.roll.total, success: blow.roll.hit }
       }
       // A caster the blows hurt saves to keep Concentration, and one they dropped loses it.
-      const kept = settleConcentration({ before: args.turn.characters, after: updatedCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: rollD20 })
+      const kept = settleConcentration({ before: args.turn.characters, after: updatedCharacters, bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }), d20: dice.d20 })
       updatedCharacters = kept.characters
       facts.push(...kept.facts)
       console.log("[LLM] NPC attacks:", facts)
@@ -240,12 +297,12 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       // engine settles what the roll put at stake before anyone tells it.
       const failedBy = saveFailedBy(args.npc, rollRequirement.check)
       const rolled = resolveCheck({
-        dice: d20sFor(rollRequirement.mode),
+        dice: d20sOf(dice, rollRequirement.mode),
         bonus: rollRequirement.modifier,
         dc: rollRequirement.difficulty,
         mode: rollRequirement.mode,
         fails: !!failedBy,
-        adds: checkAdds(args.npc, rollRequirement.check, rollDie),
+        adds: checkAdds(args.npc, rollRequirement.check, dice.roll),
       })
       const { natural: baseRoll, bonus: modifier, total: result, success } = rolled
       rollInfo = {
@@ -256,12 +313,12 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         result,
         success,
       }
-      const settled = applyStakes({ characters: updatedCharacters, stakes: rollRequirement.stakes, outcome: success ? "success" : "failure", roll: rollDie, rules: args.rules })
+      const settled = applyStakes({ characters: updatedCharacters, stakes: rollRequirement.stakes, outcome: success ? "success" : "failure", roll: dice.roll, rules: args.rules })
       const stayed = settleConcentration({
         before: args.turn.characters,
         after: afterRoll(settled.characters, args.npc.id, rollRequirement),
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
-        d20: rollD20,
+        d20: dice.d20,
       })
       updatedCharacters = stayed.characters
       console.log("[LLM] NPC dice roll:", { rollType: rollRequirement.rollType, result, difficulty: rollRequirement.difficulty, success, harm: settled.facts })
@@ -300,6 +357,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     }
 
+    // What happened as the NPC moved is told first.
+    beatsToAppend = [...leaving, ...beatsToAppend]
     return {
       updatedCharacters,
       rollInfo,
