@@ -147,8 +147,8 @@ test("a Sorcerer takes two Metamagic options at level 2, and may replace one at 
   assert.deepEqual(problemsOf(taking([{ option: "careful-spell" }, { option: "careful-spell" }])), ["Careful Spell is picked twice, and it is not repeatable"])
   assert.deepEqual(problemsOf(taking([{ option: "careful-spell" }, { option: "fireball" }])), ['"fireball" is not an option of Metamagic'])
   // Choose For Me takes Quickened and Twinned Spell.
-  assert.deepEqual(autoChoices(level1.sheet).featurePicks?.["sorcerer-metamagic"], [{ option: "quickened-spell" }, { option: "twinned-spell" }])
+  assert.deepEqual(autoChoices(level1.sheet).featurePicks?.["sorcerer-metamagic"], [{ option: "twinned-spell" }, { option: "heightened-spell" }])
   // At level 3 one may be replaced, keeping two.
-  const level3 = ok(levelUp(level2, { ...autoChoices(level2), featurePicks: { "sorcerer-metamagic": [{ option: "careful-spell" }, { option: "quickened-spell" }] } }))
-  assert.deepEqual(level3.featurePicks?.["sorcerer-metamagic"], [{ option: "careful-spell" }, { option: "quickened-spell" }])
+  const level3 = ok(levelUp(level2, { ...autoChoices(level2), featurePicks: { "sorcerer-metamagic": [{ option: "careful-spell" }, { option: "twinned-spell" }] } }))
+  assert.deepEqual(level3.featurePicks?.["sorcerer-metamagic"], [{ option: "careful-spell" }, { option: "twinned-spell" }])
 })

@@ -206,3 +206,15 @@ test("a Troll down at 0 hit points struck with Fire stays down with its Regenera
   const struck = strike({ attacker: pc("branka"), target: troll, weapon: "warhammer", dice: [15], roll: falls(4, 1, 2, 2) })
   assert.deepEqual([struck.hitPoints.after, struck.target.dead, struck.target.turnEffects], [0, undefined, undefined])
 })
+
+test("an NPC who attacks an NPC keeps to that one, and never turns on a hero", () => {
+  // A Scout fights beside the heroes: "The scout makes two attacks, using Shortsword and Longbow in any combination."
+  // Her first attack is at a Skeleton 5 feet off, and a hero stands 5 feet off on her other side.
+  const scout = npc("astrid", "scout", at(0))
+  const skeleton = npc("bones", "skeleton", at(5))
+  const friend = pc("maren", at(-5))
+  // Both attacks go at the Skeleton while it stands.
+  assert.deepEqual(turnOf(scout, skeleton, "shortsword", [scout, skeleton, friend]), ["shortsword at bones", "shortsword at bones"])
+  // The first drops it: the second is lost, and the hero beside her is not attacked.
+  assert.deepEqual(turnOf(scout, skeleton, "shortsword", [scout, skeleton, friend], [scout, { ...skeleton, hitPoints: 0 }, friend]), ["shortsword at bones"])
+})

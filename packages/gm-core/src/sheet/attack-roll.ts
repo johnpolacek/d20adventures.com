@@ -124,9 +124,11 @@ function featModes(attacker: InScene, target: InScene): ModeSource[] {
   return held && hasCondition(target, "grappled") ? [{ mode: "advantage", from: "Grappler" }] : []
 }
 
+// Whether one can still be attacked: another, up, here, and not one the attacker is Charmed by.
+const standing = (attacker: InScene, other: InScene): boolean => other.id !== attacker.id && !isDown(other) && !hasFled(other) && !cannotAttack(attacker, other)
+
 /** Whether one is an enemy the attacker can still attack: of the other side, up, here, and not one they are Charmed by. */
-export const attackable = (attacker: InScene, other: InScene): boolean =>
-  other.id !== attacker.id && other.type !== attacker.type && !isDown(other) && !hasFled(other) && !cannotAttack(attacker, other)
+export const attackable = (attacker: InScene, other: InScene): boolean => other.type !== attacker.type && standing(attacker, other)
 
 /**
  * The roll a turn asks for after one is resolved, or none when the turn is done. What it still holds is on the roll
@@ -142,7 +144,9 @@ export const attackable = (attacker: InScene, other: InScene): boolean =>
  *
  * An attack of the action or the Multiattack goes at the same target, or once that one is down or out of the weapon's
  * reach or range, at the nearest enemy the weapon reaches from where the attacker stands, with no move. With none, the
- * rest is lost. The player throws each d20 as they throw the first.
+ * rest is lost. Where the turn's first attack was at one of the attacker's own kind, an NPC at an NPC as one who fights
+ * beside the heroes does, the rest go at that one alone: the engine does not know which other NPC is their foe, and a
+ * hero is not. The player throws each d20 as they throw the first.
  */
 export function followingRoll(args: { character: InScene; made: RequiredRoll; present: readonly InScene[]; floor?: Floor }): RequiredRoll | undefined {
   const { character, made } = args
@@ -168,14 +172,17 @@ export function followingRoll(args: { character: InScene; made: RequiredRoll; pr
     // The next attack of an action or a Multiattack: the same target while it stands in reach, or the nearest enemy in reach.
     const onward = (from: readonly Attack[], rest: After): RequiredAttack | undefined => {
       const reached = (other: InScene) => best(from, other, {}) !== undefined
-      const same = args.present.find((other) => other.id === made.attack.target && attackable(character, other))
+      const first = args.present.find((other) => other.id === made.attack.target)
+      const same = first && standing(character, first) ? first : undefined
       const target =
         same && reached(same)
           ? same
-          : nearestEnemy(
-              character,
-              args.present.filter((other) => attackable(character, other) && reached(other))
-            )
+          : first && first.type === character.type
+            ? undefined
+            : nearestEnemy(
+                character,
+                args.present.filter((other) => attackable(character, other) && reached(other))
+              )
       return target && best(from, target, tidy(rest))
     }
     // The rest of the Attack action, with the same weapon.
