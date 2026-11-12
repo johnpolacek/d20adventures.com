@@ -8,14 +8,15 @@ import type { Standing } from "@/components/stage/standing"
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 
 /** The card's rules sections for a hero with a sheet: what the rules work out from its class, species and scores. */
-function sheetDetails(sheet: SheetView): NonNullable<CardInfo["details"]> {
+function sheetDetails(sheet: SheetView, hitDiceUsed = 0): NonNullable<CardInfo["details"]> {
   return [
     {
       label: "Sheet",
       items: [
-        `Level ${sheet.level} ${sheet.speciesName} ${sheet.className}, ${sheet.backgroundName}`,
+        `Level ${sheet.level} ${sheet.speciesName} ${sheet.className}${sheet.subclassName ? `, ${sheet.subclassName}` : ""}, ${sheet.backgroundName}`,
         `Armor Class ${sheet.armorClass}, Initiative ${signed(sheet.initiative)}, Speed ${sheet.speed} ft.`,
         `Passive Perception ${sheet.passivePerception}, Proficiency ${signed(sheet.proficiencyBonus)}`,
+        `Hit Dice ${Math.max(0, sheet.level - hitDiceUsed)} of ${sheet.level}, d${sheet.hitDie}`,
       ],
     },
     { label: "Saving Throws", items: [sheet.abilities.map((a) => `${a.name.slice(0, 3)} ${signed(a.save)}`).join(", ")] },
@@ -28,7 +29,7 @@ function sheetDetails(sheet: SheetView): NonNullable<CardInfo["details"]> {
           .join(", "),
       ],
     },
-    { label: "Features", items: sheet.features.map((f) => (f.uses ? `${f.name}, ${f.uses.count} per ${f.uses.recharge}` : f.name)) },
+    { label: "Features", items: sheet.features.map((f) => (f.uses ? `${f.name}, ${f.uses.left} of ${f.uses.count}, ${f.uses.recharge}` : f.name)) },
   ]
 }
 
@@ -50,7 +51,7 @@ export function characterInfo(character: TurnCharacter, portrait: string | undef
     ...(sheet?.spellcasting ? { spellcasting: sheet.spellcasting } : {}),
     ...(reactions?.length ? { reactions } : {}),
     details: [
-      ...(sheet ? sheetDetails(sheet) : []),
+      ...(sheet ? sheetDetails(sheet, character.hitDiceUsed) : []),
       { label: "Equipment", items: character.equipment?.length ? character.equipment.map((e) => `${e.name}${e.description ? `. ${e.description}` : ""}`) : ["None"] },
       { label: "Effects", items: character.effects?.length ? character.effects.map((e) => `${e.name}, ${e.duration} ${e.duration === 1 ? "round" : "rounds"} left. ${e.description}`) : ["None"] },
       ...(character.spells?.length ? [{ label: "Spells", items: character.spells.map((s) => `${s.name}${s.description ? `. ${s.description}` : ""}`) }] : []),

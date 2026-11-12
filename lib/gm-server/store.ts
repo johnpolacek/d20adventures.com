@@ -2,6 +2,8 @@ import type { Store, TurnRecord } from "@d20/gm-core"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { convex } from "@/lib/convex/server"
+import { sheetId } from "@/lib/host/seats"
+import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 
 /** Convex IDs are branded only at the host boundary. Documents remain unchanged. */
 export const serverStore: Store = {
@@ -16,6 +18,14 @@ export const serverStore: Store = {
       adventureId: adventureId as Id<"adventures">,
       patch: { ...patch, currentTurnId: patch.currentTurnId as Id<"turns"> | undefined },
     }),
+  // A hero is a file in their player's account. The levelled sheet is written over the one it holds.
+  keepHero: async ({ adventureId, characterId, sheet, milestones }) => {
+    const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> })
+    const key = adventure?.players?.find((player) => sheetId(player.characterId) === characterId)?.characterId
+    if (!key?.startsWith("characters/")) return
+    const hero = (await readJsonFromS3(key)) as Record<string, unknown>
+    await updateJsonOnS3(key, { ...hero, sheet, milestones })
+  },
   createTurn: ({ adventureId, ...args }) => convex.mutation(api.turns.createTurn, { ...args, adventureId: adventureId as Id<"adventures"> }),
   commitWikiTurnAdvance: ({ adventureId, expectedCurrentTurnId, ...args }) =>
     convex.mutation(api.adventure.commitWikiTurnAdvance, {

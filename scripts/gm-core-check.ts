@@ -97,6 +97,7 @@ function memoryGame() {
       writes.push("adventure:commitWikiTurnAdvance")
       return handler(commitWikiTurnAdvance)({ db }, args)
     },
+    keepHero: async () => null,
     createTurn: unavailable,
     patchAdventure: unavailable,
     createAdventureWithFirstTurn: unavailable,
@@ -617,7 +618,6 @@ function rollsEndWithTheRound() {
   if (same.status === "turn_built") assert.ok(same.turn.characters.every((c) => c.rollResult === undefined))
 }
 
-async function main() {
 // Extra Attack: a level 5 Fighter's first attack leaves the second for the player to throw, at the same target, and
 // her turn ends only with it.
 async function extraAttack() {
@@ -648,6 +648,7 @@ async function extraAttack() {
   assert.equal(game.records.get("turn-1").story.filter((beat: { kind: string; attack?: unknown }) => beat.kind === "roll" && beat.attack).length, 2)
 }
 
+async function main() {
   const originalRandom = Math.random
   const originalConsole = { ...console }
   Math.random = () => 0.8
@@ -662,8 +663,8 @@ async function extraAttack() {
     await replayTurn()
     await characterPrompts()
     await accessAndInstanceIsolation()
-  } finally {
     await extraAttack()
+  } finally {
     Math.random = originalRandom
     Object.assign(console, originalConsole)
   }

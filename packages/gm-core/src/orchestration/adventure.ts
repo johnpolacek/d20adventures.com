@@ -5,6 +5,8 @@ import { createAdventureRollResultService, getEncounterInstructionsFromPlan } fr
 import { createAdventureTurnReplyService } from "../services/adventure-turn-reply-service"
 import { createNarrativeGenerationService } from "../services/narrative-generation-service"
 import { createNpcTurnService } from "../services/npc-turn-service"
+import type { LevelUpChoices } from "../sheet/level-up"
+import { levelOwed, takeLevel } from "../sheet/milestone"
 import { type StandingOrders, standingOrdersSchema } from "../sheet/turn-effect"
 import type { StoryBeat } from "../story/beats"
 import { storyProse } from "../story/turn"
@@ -254,5 +256,25 @@ export function createAdventure(ports: GmPorts) {
     return { standingOrders }
   }
 
-  return { processTurnReply, processPlayerReply, createAdventureWithFirstTurn, resolvePlayerRollResult, answerReaction, setStandingOrders }
+  // A player takes the level a finished adventure owes their hero, with their own choices for it. The engine checks
+  // them: what stops the level comes back as `problems`, and nothing is written. The levelled sheet is kept as the
+  // hero's own, for the adventures to come.
+  async function levelUpHero({ turnId, characterId, choices }: { turnId: string; characterId: string; choices: LevelUpChoices }) {
+    const userId = await ports.identity()
+    if (!userId) throw new Error("Unauthorized")
+    const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
+    const character = assertPlayerCharacterControl(userId, turn, characterId) as TurnCharacter
+    if (!levelOwed(character, adventure.planId, adventure.status === "completed")) throw new Error("No level is owed to this hero.")
+    const taken = takeLevel(character, adventure.planId, choices)
+    if ("problems" in taken) return { problems: taken.problems }
+    const levelled = taken.character
+    await ports.store.updateTurn({
+      turnId,
+      patch: { characters: (turn.characters as TurnCharacter[]).map((other) => (other.id === characterId ? levelled : other)), updatedAt: Date.now() },
+    })
+    if (levelled.sheet) await ports.store.keepHero({ adventureId: turn.adventureId, characterId, sheet: levelled.sheet, milestones: levelled.milestones ?? [] })
+    return { sheet: levelled.sheet, milestones: levelled.milestones }
+  }
+
+  return { processTurnReply, processPlayerReply, createAdventureWithFirstTurn, resolvePlayerRollResult, answerReaction, setStandingOrders, levelUpHero }
 }

@@ -14,6 +14,7 @@ import {
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
 import { atRoundStart } from "../sheet/death"
+import { autoChoices, levelOwed, takeLevel } from "../sheet/milestone"
 import { placeCharacters, standingWords } from "../sheet/placement"
 import { partyRest, restName } from "../sheet/rest"
 import { authoredStory } from "../story/authored"
@@ -208,15 +209,25 @@ export function createAdvanceTurn(ports: GmPorts) {
         text: facts.join(" "),
       }))
       const settled = rest?.characters ?? standing
-      const characters = (rescuing ? rescuedCharacters(settled) : settled).map(atRoundStart)
+      const opening = (rescuing ? rescuedCharacters(settled) : settled).map(atRoundStart)
       // A new encounter opens on its intro, read as beats for the characters who are in it. One the party has played
       // before does not read it again: they know the place, and the round's own story has brought them back.
-      const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters }) : scene
+      const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters: opening }) : scene
       const intro = isTransition && !returning ? cleanStory(authoredStory(nextEncounter.sections.intro ?? "", nextScene), nextScene, { step: "intro" }) : []
       const story = [...told, ...rested, ...intro]
       // The story ends at its last encounter, or when every hero is dead: no one is left to take a turn.
       const heroes = (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc")
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id) || (heroes.length > 0 && heroes.every(isDead))
+      // The adventure's end gives each hero who lived a level (../sheet/milestone). An AI companion takes theirs at
+      // once, by the choices that need no player. A player makes their own on the level-up screen.
+      const companions: TurnCharacter[] = []
+      const characters = opening.map((character) => {
+        if (!isFinalEncounter || character.type !== "pc" || character.controlledBy !== "ai" || !levelOwed(character, adventure.planId, true) || !character.sheet) return character
+        const taken = takeLevel(character, adventure.planId, autoChoices(character.sheet))
+        if ("problems" in taken) return character
+        companions.push(taken.character)
+        return taken.character
+      })
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,
         expectedCurrentTurnId: turnId,
@@ -235,6 +246,8 @@ export function createAdvanceTurn(ports: GmPorts) {
         isFinalEncounter,
         knowledge,
       })
+      for (const companion of companions)
+        if (companion.sheet) await ports.store.keepHero({ adventureId: turnData.adventureId, characterId: companion.id, sheet: companion.sheet, milestones: companion.milestones ?? [] })
       ports.narration.afterTurn(commitResult.turnId)
       return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, story, characters, isFinalEncounter } }
     }

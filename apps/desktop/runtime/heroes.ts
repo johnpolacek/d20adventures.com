@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import type { GmPorts, Llm } from "@d20/gm-core"
 import { createGenerateCharacterAction } from "@d20/gm-core/character/generate-character-action"
 import { type Arrival, arrivalSchema, draftsArrival, HERO_CREATOR, HERO_CREATOR_OFF, heroDraftPrompt, playableHero, withArrival, writeArrival } from "@d20/gm-core/character/hero-draft"
+import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import { type PCTemplate, pcTemplateSchema } from "@d20/gm-core/types/character"
 import { z } from "zod"
 import { STOCK_FIGURES } from "../src/figures"
@@ -147,9 +148,12 @@ export async function writeArrivals(pack: Pack, ids: string[], roster: Roster, l
 }
 
 export type PartyChoice = { id: string; ai: boolean }
+/** A hero's rules sheet as their last level left it, and the adventures that gave them a level. */
+export type KeptHero = { sheet: Sheet; milestones: string[] }
 // Checks a new game's party against the adventure and resolves each hero's sheet. Premades come from the adventure.
 // Roster heroes are copied in, so later roster changes never alter a running adventure.
-export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
+// A premade whose levels the player holds comes with the rules sheet those levels left, `kept`.
+export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[], kept: Record<string, KeptHero> = {}) {
   const m = pack.artifacts.manifest
   const [min, max] = [m.minPlayers ?? 1, m.maxPlayers ?? choices.length]
   if (new Set(choices.map((c) => c.id)).size !== choices.length) throw new Error("A hero can join the party only once.")
@@ -161,7 +165,11 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[]) {
   const figures: Record<string, string> = {}
   const painted: string[] = []
   for (const choice of choices) {
-    if (m.premadeCharacterIds.includes(choice.id)) continue
+    if (m.premadeCharacterIds.includes(choice.id)) {
+      const premade = pack.artifacts.characterSheets.premadeCharacters[choice.id]?.sheet
+      if (premade && kept[choice.id]) sheets[choice.id] = { ...premade, ...kept[choice.id] }
+      continue
+    }
     const hero = roster.find((h) => h.id === choice.id)
     if (!hero) throw new Error("That hero is not in your roster.")
     if (!playableHero(hero)) throw new Error(`${hero.name} has no rules sheet.`)

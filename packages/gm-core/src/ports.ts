@@ -1,6 +1,7 @@
 import type { z } from "zod"
 import type { EncounterFloor } from "./sheet/placement"
 import type { PendingReaction } from "./sheet/reactions"
+import type { Sheet } from "./sheet/sheet"
 import type { StoryBeat } from "./story/beats"
 import type { StoryPlace } from "./story/clean"
 import type { KnownFact } from "./story/knowledge"
@@ -48,6 +49,7 @@ export type AdventureRecord = {
   ownerId: string
   playerIds: string[]
   runType?: "campaign" | "practice"
+  status?: "waitingForPlayers" | "active" | "completed"
   // What each character knows: see story/knowledge.ts.
   knowledge?: KnownFact[]
   // The paragraphs that show created heroes in the start encounter's intro, by hero id: see story/authored.ts.
@@ -92,6 +94,9 @@ export interface Store {
     adventureId: string
     patch: { currentTurnId?: string; currentEncounterId?: string; endedAt?: number; updatedAt?: number; status?: "waitingForPlayers" | "active" | "completed" }
   }): Promise<unknown>
+  // A hero's rules sheet as a level left it, kept as the hero's own so the next adventure starts from it.
+  // `milestones` are the adventures that have given the hero a level.
+  keepHero(args: { adventureId: string; characterId: string; sheet: Sheet; milestones: string[] }): Promise<unknown>
   createTurn(args: NewTurn): Promise<string>
   commitWikiTurnAdvance(args: WikiTurnCommit): Promise<{ turnId: string; adventureId: string }>
   createAdventureWithFirstTurn(args: {

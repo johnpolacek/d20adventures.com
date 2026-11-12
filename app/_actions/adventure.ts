@@ -1,6 +1,7 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { levelUpChoicesSchema } from "@d20/gm-core/sheet/milestone"
 import { standingOrdersSchema } from "@d20/gm-core/sheet/turn-effect"
 import { api } from "@/convex/_generated/api"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
@@ -29,6 +30,12 @@ export async function answerReaction(args: { turnId: Id<"turns">; characterId: s
 export async function setStandingOrders(args: { turnId: Id<"turns">; characterId: string; orders: Record<string, string> }) {
   await refuseHostedTurn(args.turnId)
   return createServerCore().setStandingOrders({ ...args, orders: standingOrdersSchema.parse(args.orders) })
+}
+
+// A player takes the level a finished adventure owes their hero. It needs no game master, so a hosted game's hero
+// levels here too. What stops the level comes back as `problems`.
+export async function levelUpHero(args: { turnId: Id<"turns">; characterId: string; choices: unknown }) {
+  return createServerCore().levelUpHero({ ...args, choices: levelUpChoicesSchema.parse(args.choices) })
 }
 
 export async function createAdventureWithFirstTurn(

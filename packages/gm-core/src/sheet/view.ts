@@ -43,6 +43,8 @@ export type SheetView = {
   backgroundName: string
   proficiencyBonus: number
   hitPoints: HitPoints
+  /** The sides of the class's Hit Point Die. A hero has one for each level. */
+  hitDie: number
   armorClass: number
   armorClassFrom: string
   initiative: number
@@ -151,6 +153,7 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     speciesName: species.name,
     backgroundName: background.name,
     proficiencyBonus: derived.proficiencyBonus,
+    hitDie: derived.hitDie,
     hitPoints: { current: Math.min(derived.hitPointMaximum, Math.max(0, hitPoints ?? derived.hitPointMaximum)), maximum: derived.hitPointMaximum },
     // With the spells that last on the hero: Shield of Faith's 2, or Mage Armor's 13 and Dexterity.
     armorClass: combatStatsOf({ sheet, spellEffects })?.armorClass ?? derived.armorClass,

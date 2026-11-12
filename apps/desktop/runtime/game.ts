@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { type Content, createGmCore, type Llm } from "@d20/gm-core"
 import { type CityMap, withCityContext } from "@d20/gm-core/citymap"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
+import { levelUpChoicesSchema } from "@d20/gm-core/sheet/milestone"
 import { placeCharacters } from "@d20/gm-core/sheet/placement"
 import { standingOrdersSchema } from "@d20/gm-core/sheet/turn-effect"
 import { withArrivals } from "@d20/gm-core/story/authored"
@@ -96,6 +97,7 @@ export const commandSchema = z.discriminatedUnion("kind", [
   // A player's answer to a reaction offered to their hero, and their standing orders for when no answer comes.
   z.object({ kind: z.literal("react"), turnId: z.string(), characterId: z.string(), take: z.boolean() }),
   z.object({ kind: z.literal("orders"), turnId: z.string(), characterId: z.string(), orders: standingOrdersSchema }),
+  z.object({ kind: z.literal("level"), turnId: z.string(), characterId: z.string(), choices: levelUpChoicesSchema }),
 ])
 export type GameCommand = z.infer<typeof commandSchema>
 export const suggestCommandSchema = z.object({ kind: z.literal("suggest"), turnId: z.string(), characterId: z.string() })
@@ -216,14 +218,14 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
         turnId = randomUUID()
       const choices = command.party ?? suggestedParty(plan, artifacts.manifest.premadeCharacterIds, artifacts.manifest.premadeCharacterIds.length).map((id) => ({ id, ai: false }))
       // Checked before any arrival is written.
-      partyFor(packFor(plan), choices, store.heroes())
+      partyFor(packFor(plan), choices, store.heroes(), store.kept())
       await writeArrivals(
         packFor(plan),
         choices.map((c) => c.id),
         store,
         llm
       )
-      const party = partyFor(packFor(plan), choices, store.heroes())
+      const party = partyFor(packFor(plan), choices, store.heroes(), store.kept())
       // Everyone starts where the encounter's floor stages them.
       const floor = await encounterFloor(encounter.id)
       const built = buildLocalWikiTurnCharacters({ artifacts, encounter, players: party.players, sheetsByCharacterId: party.sheets })
@@ -282,6 +284,12 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       return store.state
     }
     const turn = store.turn(command.turnId)
+    if (command.kind === "level") {
+      // The level a finished adventure owes the hero, with the player's choices for it.
+      const taken = await core.levelUpHero({ turnId: turn._id, characterId: command.characterId, choices: command.choices })
+      if (taken.problems) throw new Error(`${taken.problems.join(". ")}.`)
+      return store.state
+    }
     if (store.state!.adventure.status === "completed") throw new Error("This adventure is complete.")
     if (command.kind === "react") {
       // The answer is kept, and the NPC's turn that waited on it is played on.
@@ -320,11 +328,11 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
         store.save()
         const [result, second] = store.state!.rolls[key]
         await core.resolvePlayerRollResult({ turnId: turn._id, characterId: actor.id, result, second })
+        // Resolved: a second roll in the same turn (an Extra Attack) throws its own dice.
+        delete store.state!.rolls[key]
+        store.save()
       }
     }
     return store.state
   }
 }
-        // Resolved: a second roll in the same turn (an Extra Attack) throws its own dice.
-        delete store.state!.rolls[key]
-        store.save()

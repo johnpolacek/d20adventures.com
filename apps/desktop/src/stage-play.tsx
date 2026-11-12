@@ -1,3 +1,5 @@
+import { levelOwed } from "@d20/gm-core/sheet/level-owed"
+import type { LevelUpChoices } from "@d20/gm-core/sheet/level-up"
 import { metres } from "@d20/gm-core/sheet/space"
 import type { FeatureBeat, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { nameOf, rollSentence, storyNames, storyParagraphs } from "@d20/gm-core/story/render"
@@ -14,6 +16,7 @@ import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
 import { EndingRating, FeedbackButton, FeedbackPanel, type FeedbackStart } from "@/components/stage/feedback"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
 import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
+import { LevelUp } from "@/components/stage/level-up"
 import { Narration } from "@/components/stage/narration"
 import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
 import { ReactionCard, useExpired } from "@/components/stage/reaction-card"
@@ -198,6 +201,9 @@ export function StagePlay(props: {
   onReact?: (turnId: string, characterId: string, take: boolean) => Promise<boolean>
   // A hero's standing orders for their reactions, the whole set. Without it the hero's card shows none.
   onOrders?: (turnId: string, characterId: string, orders: StandingOrders) => Promise<boolean>
+  // A player's choices for the level a finished adventure owes their hero. Resolves to what stopped the level, or
+  // nothing when it was taken. Without it no level is offered.
+  onLevel?: (turnId: string, characterId: string, choices: LevelUpChoices) => Promise<string | undefined>
   // NPC turns, AI heroes' turns and the end of a round run on their own. An NPC's or AI hero's turn is written while
   // the story before it is read, and the end of a round once the round has been read. One that fails leaves the
   // Continue button, to retry. Without it Continue always waits for a click.
@@ -224,6 +230,8 @@ export function StagePlay(props: {
 
   const [draft, setDraft] = useState("")
   const [open, setOpen] = useState<"journal" | "chat" | "settings" | "map" | "feedback" | null>(null)
+  // The hero whose level-up screen is open.
+  const [levelling, setLevelling] = useState<string | null>(null)
   const [feedbackStart, setFeedbackStart] = useState<FeedbackStart>({ kind: "general" })
   const [endingSent, setEndingSent] = useState(false)
   const closePanel = useCallback(() => setOpen(null), [])
@@ -786,6 +794,10 @@ export function StagePlay(props: {
   // A finished adventure ends on its final narration. Its last turn has characters but takes no more actions.
   const finished = save?.adventure.status === "completed"
   const ended = finished && turn === latest
+  // The level the finished adventure owes each hero this player plays.
+  const owed =
+    props.onLevel && save && latest ? latest.characters.filter((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && levelOwed(c, save.adventure.planId, Boolean(finished))) : []
+  const levelHero = owed.find((c) => c.id === levelling)
   // Suggested replies are asked for once per hero's turn, as soon as it comes up with the game on screen, so they are
   // often there once the narration has been read. A request that fails offers none.
   const suggestRef = useRef(props.onSuggest)
@@ -1034,6 +1046,15 @@ export function StagePlay(props: {
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
               <div className="text-[10px] tracking-[.3em] text-stage-gold">THE END</div>
               <p className="mt-2 mb-4 font-display text-2xl">{save.adventure.title}</p>
+              {owed.length > 0 && (
+                <div className="mb-3 flex flex-wrap justify-center gap-2">
+                  {owed.map((c) => (
+                    <Pill key={c.id} active onClick={() => setLevelling(c.id)}>
+                      Level Up {c.name}
+                    </Pill>
+                  ))}
+                </div>
+              )}
               {props.endActions}
               <Pill className="ml-2" onClick={() => setOpen("journal")}>
                 Journal
@@ -1047,6 +1068,23 @@ export function StagePlay(props: {
                   }}
                 />
               )}
+            </div>
+          )}
+          {levelHero?.sheet && latest && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-3">
+              <LevelUp
+                hero={levelHero.name}
+                portrait={portrait(levelHero)}
+                sheet={levelHero.sheet}
+                compact={compact}
+                className={compact ? "max-h-full w-[min(480px,100%)]" : "max-h-[88%] w-[min(600px,100%)]"}
+                onClose={() => setLevelling(null)}
+                onTake={async (choices) => {
+                  const refused = await props.onLevel?.(latest._id, levelHero.id, choices)
+                  if (!refused) setLevelling(null)
+                  return refused
+                }}
+              />
             </div>
           )}
           {reaction && offerShown && (

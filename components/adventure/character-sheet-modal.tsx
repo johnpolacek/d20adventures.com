@@ -85,7 +85,8 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
               </div>
               {sheet && (
                 <div className="text-xs font-mono text-primary-200 uppercase tracking-wider">
-                  Level {sheet.level} {sheet.speciesName} {sheet.className} · {sheet.backgroundName}
+                  Level {sheet.level} {sheet.speciesName} {sheet.className}
+                  {sheet.subclassName ? ` · ${sheet.subclassName}` : ""} · {sheet.backgroundName}
                 </div>
               )}
 
@@ -144,6 +145,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
                   ["Speed", `${sheet.speed} ft.`],
                   ["Proficiency", formatModifier(sheet.proficiencyBonus)],
                   ["Perception", String(sheet.passivePerception)],
+                  [`Hit Dice d${sheet.hitDie}`, `${Math.max(0, sheet.level - (character.hitDiceUsed ?? 0))} / ${sheet.level}`],
                 ].map(([label, value]) => (
                   <div key={label} className="text-center p-2 bg-black/30 rounded border border-primary-700">
                     <div className="text-[10px] font-mono text-primary-200 uppercase leading-tight">{label}</div>
@@ -244,7 +246,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
                       {feature.uses && (
                         <span className="text-primary-300">
                           {" "}
-                          · {feature.uses.count} per {feature.uses.recharge}
+                          · {feature.uses.left} / {feature.uses.count} · {feature.uses.recharge}
                         </span>
                       )}
                     </span>

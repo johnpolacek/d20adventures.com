@@ -51,6 +51,7 @@ export function remoteStore(post: HostPost): Store {
     updateTurn: op("updateTurn") as Store["updateTurn"],
     patchAdventure: op("patchAdventure") as Store["patchAdventure"],
     commitWikiTurnAdvance: op("commitWikiTurnAdvance") as Store["commitWikiTurnAdvance"],
+    keepHero: op("keepHero") as Store["keepHero"],
     createTurn: async () => {
       throw new Error("Hosted games play authored adventures only.")
     },

@@ -246,7 +246,7 @@ async function hostedTurn(turnId: string, userId: string) {
 
 // The GM core's store operations the host's app may run, each limited to games it hosts. Creating adventures and
 // legacy turns stay with the website.
-const STORE_OPS = ["getTurn", "getAdventure", "getTurns", "getTurnByOrder", "submitReply", "updateTurn", "patchAdventure", "commitWikiTurnAdvance"] as const
+const STORE_OPS = ["getTurn", "getAdventure", "getTurns", "getTurnByOrder", "submitReply", "updateTurn", "patchAdventure", "commitWikiTurnAdvance", "keepHero"] as const
 export type HostStoreOp = (typeof STORE_OPS)[number]
 export const isHostStoreOp = (op: unknown): op is HostStoreOp => STORE_OPS.includes(op as HostStoreOp)
 

@@ -393,6 +393,15 @@ export function DesktopGame() {
               return Boolean(res && !res.error)
             }
       }
+      // A hosted game's heroes level on the website, where their players' accounts keep them.
+      onLevel={
+        hosting
+          ? undefined
+          : async (turnId, characterId, choices) => {
+              const res = await invoke({ kind: "level", turnId, characterId, choices }, "quiet")
+              return res ? (res.error ?? undefined) : "The level could not be taken."
+            }
+      }
       autoContinue={!hosting}
       onContinue={(turnId) => {
         if (hosting) void act(() => host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "continue" } }))

@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 import LoadingAnimation from "../ui/loading-animation"
 import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
+import { TurnLevelUp } from "./turn-level-up"
 import TurnNarrativeReply from "./turn-narrative-reply"
 import { TurnReaction, useStandingOffer } from "./turn-reaction"
 import { useTurnActions } from "./use-turn-actions"
@@ -131,6 +132,7 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
 
       {currentTurn?.isFinalEncounter && (
         <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
+          <TurnLevelUp className="mb-6" />
           <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} nextAdventure={nextAdventure} />
         </div>
       )}

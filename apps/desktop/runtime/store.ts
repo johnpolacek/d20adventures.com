@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto"
 import { DatabaseSync } from "node:sqlite"
 import type { AdventureRecord, Store, TurnRecord, WikiTurnCommit } from "@d20/gm-core"
+import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import { mergeKnowledge } from "@d20/gm-core/story/knowledge"
 import { withStory } from "@d20/gm-core/story/turn"
 import { type AdventurePatch, validateAdventurePatch } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { validateRuntimeTransition } from "@d20/gm-core/wiki-adventures/transition-validator"
 import { type CharacterStates, desktopPatchSchema, nextCharacterState, rememberCharacters } from "./characters"
-import type { Hero, Roster } from "./heroes"
+import type { Hero, KeptHero, Roster } from "./heroes"
 import type { Chapter } from "./story"
 
 export type SavedAdventure = AdventureRecord & {
@@ -75,7 +76,7 @@ export class LocalStore implements Store, Roster {
   ) {
     this.db = new DatabaseSync(path)
     this.db.exec(
-      "PRAGMA busy_timeout=1000; CREATE TABLE IF NOT EXISTS save (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS active (id INTEGER PRIMARY KEY CHECK(id=1), pid INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS archive (id INTEGER PRIMARY KEY, archived_at INTEGER NOT NULL, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS heroes (id TEXT PRIMARY KEY, updated_at INTEGER NOT NULL, json TEXT NOT NULL)"
+      "PRAGMA busy_timeout=1000; CREATE TABLE IF NOT EXISTS save (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS active (id INTEGER PRIMARY KEY CHECK(id=1), pid INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS archive (id INTEGER PRIMARY KEY, archived_at INTEGER NOT NULL, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS heroes (id TEXT PRIMARY KEY, updated_at INTEGER NOT NULL, json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS kept (id TEXT PRIMARY KEY, json TEXT NOT NULL)"
     )
     // Archived saves keep a summary beside the full save, so listing them never parses whole adventures.
     const columns = this.db.prepare("PRAGMA table_info(archive)").all() as { name: string }[]
@@ -161,7 +162,7 @@ export class LocalStore implements Store, Roster {
       }
       const count = (table: string) => (this.db.prepare(`SELECT count(*) AS n FROM ${table}`).get() as { n: number }).n
       const gone = { plays: count("save") + count("archive"), heroes: heroes ? count("heroes") : 0 }
-      this.db.exec(`DELETE FROM save; DELETE FROM archive; DELETE FROM active;${heroes ? " DELETE FROM heroes;" : ""}`)
+      this.db.exec(`DELETE FROM save; DELETE FROM archive; DELETE FROM active;${heroes ? " DELETE FROM heroes; DELETE FROM kept;" : ""}`)
       this.db.exec("COMMIT")
       this.state = null
       this.ownsLock = false
@@ -212,6 +213,16 @@ export class LocalStore implements Store, Roster {
   }
   deleteHero(id: string) {
     this.db.prepare("DELETE FROM heroes WHERE id=?").run(id)
+  }
+  // The levels an adventure's own heroes hold, by hero id: each one's rules sheet as their last level left it. A hero
+  // of the roster keeps theirs on the roster.
+  kept(): Record<string, KeptHero> {
+    return Object.fromEntries((this.db.prepare("SELECT id, json FROM kept").all() as { id: string; json: string }[]).map((r) => [r.id, JSON.parse(r.json)]))
+  }
+  async keepHero({ characterId, sheet, milestones }: { adventureId: string; characterId: string; sheet: Sheet; milestones: string[] }) {
+    const hero = this.heroes().find((h) => h.id === characterId)
+    if (hero) this.putHero({ ...hero, sheet, milestones })
+    else this.db.prepare("INSERT INTO kept VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET json=excluded.json").run(characterId, JSON.stringify({ sheet, milestones } satisfies KeptHero))
   }
   current() {
     if (!this.state) throw new Error("Start an adventure first.")

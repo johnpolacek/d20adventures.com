@@ -265,6 +265,8 @@ export default defineSchema({
         featureUses: v.optional(v.record(v.string(), v.number())),
         spellSlots: v.optional(v.array(v.number())),
         hitDiceUsed: v.optional(v.number()),
+        // The adventures that have given the hero a level. Only the engine writes it (packages/gm-core/src/sheet/milestone.ts).
+        milestones: v.optional(v.array(v.string())),
         spellEffects: v.optional(v.array(v.object({ spell: v.string(), by: v.string(), turns: v.optional(v.number()), amount: v.optional(v.number()), skill: v.optional(v.string()) }))),
         concentration: v.optional(v.object({ spell: v.string() })),
         tempHitPoints: v.optional(v.number()),
