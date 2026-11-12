@@ -26,6 +26,8 @@ const about = (adventure: HeroAdventure) => `They are about to set out on ${adve
 const WORLD = [
   "Everything about them belongs in a medieval fantasy world: no modern objects, words or ideas, and no firearms.",
   "Name no real gods, places, factions or people beyond those given here. Invent small ones of their own if needed, such as a home village or a mentor.",
+  // The owner's word, 2026-11-12: the March of Davos keeps the faith of Valkara, and other faiths may be invented.
+  "The faith of the March of Davos, where Kordavos stands, is the Church of Valkara: a devout hero of the March keeps it. One from another land may keep a faith of their own, which you may invent.",
 ].join(" ")
 
 /**
