@@ -66,7 +66,8 @@ export function masteryOf(character: Roller, weaponId: string): string | undefin
   return weapon?.kind === "weapon" ? weapon.mastery : undefined
 }
 
-const actionId = (name: string) =>
+/** A stat block action's id: its name in lower case with dashes. "Tree Club" is "tree-club". */
+export const actionId = (name: string) =>
   name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")

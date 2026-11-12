@@ -217,6 +217,23 @@ Substages:
 
 Speed, range, areas of effect, cover, opportunity attacks. Positions come from zones and distances on the map and stage.
 
+Started 2026-11-12.
+
+How space works before this stage: the rules engine sees no positions. An attack is near when it is melee and far when it is ranged, range is never checked, an area takes as many creatures as its size allows and the model names them, and Dash and Disengage are recorded and change nothing. The two hosts share nothing. The site keeps no positions in play: each encounter has a generated grid map on S3 with fixed starting tokens, read as 5 feet a cell, and no one on it moves. The desktop keeps live positions in metres on the authored 3D sets, which cover all 69 encounters: a second model call reads a reply's movement, and the 3D view walks it after the turn's dice are resolved, with a Speed taken from the hero's species by name. The game master is told of space in the round-end prompt alone, in different words on each host.
+
+Owner's calls asked 2026-11-12, not yet answered: one map for both hosts or one each, what the site draws, who judges cover, and how reactions fire. The substages after the first are written when they are.
+
+The session's calls, which the owner may overrule:
+
+- The engine measures in feet on a flat plane, with no elevation. A creature stands at the centre of a round space as wide as its size's square.
+- Distance reads as a grid would: two Medium creatures whose centres are 5 feet apart are 5 feet from each other, and a Large one's space brings it nearer. Half a foot either way still counts as within reach or range.
+- An area catches a creature whose centre is inside it. A cone, cube or line starts at the edge of its caster's space and points where the caster aims it.
+- A move is a straight path. An Opportunity Attack falls to one whose reach the path leaves, wherever the path began.
+
+Substages:
+
+1. Space maths. Pure functions in `packages/gm-core/src/sheet`: a creature's space and the distance between two, an attack's reach and its normal and long range, a ranged attack beside an enemy, Speed and a turn's movement with Dash, Exhaustion, the Slow mastery and standing from Prone, a straight move and a Push, who gets an Opportunity Attack on a move, and who stands in a sphere, cylinder, emanation, cube, cone or line. Tested with no model. Done: `packages/gm-core/src/sheet/space.ts`, 11 tests. Nothing calls it yet. Not in it: Difficult Terrain, crawling, flying and climbing, moving through another's space, cover and elevation.
+
 ### 7. Rest and levelling
 
 Short and long rests, hit dice, experience, levels 2 to 5. Class features, the SRD subclass for each class, and feats.
@@ -233,4 +250,4 @@ Levels to 20. The full spell, monster and magic item lists. The hero creator reb
 
 ## Status
 
-Stage 1 in progress since 2026-11-11. Stage 2 closed 2026-11-11. Stage 3 built and played on both hosts 2026-11-11: its live deploy and the save wipe wait on the owner. Stage 4 built and played on both hosts 2026-11-12: the live database's saved play is the owner's to clear, and the live deploy follows it. Stage 5 built and played on both hosts 2026-11-12, and goes out with the same deploy.
+Stage 1 in progress since 2026-11-11. Stage 2 closed 2026-11-11. Stage 3 built and played on both hosts 2026-11-11: its live deploy and the save wipe wait on the owner. Stage 4 built and played on both hosts 2026-11-12: the live database's saved play is the owner's to clear, and the live deploy follows it. Stage 5 built and played on both hosts 2026-11-12, and goes out with the same deploy. Stage 6 started 2026-11-12: its maths is built, and the rest waits on the owner's calls.
