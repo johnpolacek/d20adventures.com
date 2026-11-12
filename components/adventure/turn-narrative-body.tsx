@@ -130,9 +130,9 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
         </div>
       ) : null}
 
+      <TurnLevelUp className="mt-8" />
       {currentTurn?.isFinalEncounter && (
         <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
-          <TurnLevelUp className="mb-6" />
           <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} nextAdventure={nextAdventure} />
         </div>
       )}

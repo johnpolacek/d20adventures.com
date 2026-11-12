@@ -26,6 +26,8 @@ const adventureFrontmatterSchema = z.object({
     })
     .optional(),
   nextAdventure: z.string().optional(),
+  // The level the adventure is played at. 1 where none is given.
+  level: z.number().int().min(1).max(20).optional(),
   playerDeath: z.boolean().optional(),
   strangers: z.boolean().optional(),
   rescue: z.object({ encounter: z.string().min(1) }).optional(),
@@ -196,6 +198,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
     premadeCharacterIds: adventure?.premadeCharacters ?? [],
     availableCharacterOptions: adventure?.availableCharacterOptions,
     nextAdventureId: adventure?.nextAdventure,
+    level: adventure?.level,
     playerDeath: adventure?.playerDeath,
     strangers: adventure?.strangers,
     rescue: adventure?.rescue && { encounterId: adventure.rescue.encounter },

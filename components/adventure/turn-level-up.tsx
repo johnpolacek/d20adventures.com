@@ -1,7 +1,7 @@
 "use client"
 
-// The level a finished adventure owes this player's heroes: a button for each on the ending, and the level-up screen
-// it opens. The engine checks the choices, and the levelled hero is kept in the player's account.
+// The levels this player's heroes are owed: a button for each, and the level-up screen it opens. The engine checks
+// the choices, and the levelled hero is kept in the player's account.
 
 import { useUser } from "@clerk/nextjs"
 import { levelOwed } from "@d20/gm-core/sheet/level-owed"
@@ -10,18 +10,16 @@ import { levelUpHero } from "@/app/_actions/adventure"
 import { LevelUp } from "@/components/stage/level-up"
 import { Button } from "@/components/ui/button"
 import type { Id } from "@/convex/_generated/dataModel"
-import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { getImageUrl } from "@/lib/utils"
 import { controlsHero } from "./turn-reaction"
 
 export function TurnLevelUp({ className }: { className?: string }) {
   const { currentTurn } = useTurnContext()
-  const { adventurePlanId } = useAdventure()
   const { user } = useUser()
   const [open, setOpen] = useState<string | null>(null)
-  if (!currentTurn?.isFinalEncounter) return null
-  const owed = currentTurn.characters.filter((character) => controlsHero(character, user?.id) && levelOwed(character, adventurePlanId, true))
+  if (!currentTurn) return null
+  const owed = currentTurn.characters.filter((character) => controlsHero(character, user?.id) && levelOwed(character))
   const hero = owed.find((character) => character.id === open)
   if (!owed.length) return null
   return (

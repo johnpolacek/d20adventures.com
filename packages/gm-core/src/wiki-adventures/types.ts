@@ -102,6 +102,8 @@ export type RuntimeManifest = {
   premadeCharacterIds: string[]
   availableCharacterOptions?: { races: string[]; archetypes: string[] }
   nextAdventureId?: string
+  // The level the adventure is played at, 1 where none is given. A hero below it is owed the levels up to it.
+  level?: number
   // false: player characters never die here. See wiki-adventures/player-safety.ts.
   playerDeath?: boolean
   // true: the heroes start as strangers, and the core keeps who has heard each hero's name. See story/names.ts.

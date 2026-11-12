@@ -19,10 +19,15 @@ const offline: Llm = {
     throw new Error("offline")
   },
 }
+// A game master who moves the story on to one encounter.
+const onTo = (nextEncounterId: string): Llm => ({
+  ...offline,
+  generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId, beats: [{ kind: "narration", text: "The story moves on." }] }) }),
+})
 const [THALBERN, LYRA, POPPEN] = ["thalbern", "1749159962941", "1749307435667"]
-function setup() {
+function setup(using: Packs = packs) {
   const dir = mkdtempSync(join(tmpdir(), "d20-milestone-test-"))
-  const store = new LocalStore(join(dir, "save.sqlite"), transitionsOf(packs))
+  const store = new LocalStore(join(dir, "save.sqlite"), transitionsOf(using))
   return {
     store,
     cleanup: () => {
@@ -33,73 +38,93 @@ function setup() {
 }
 const hero = (store: LocalStore, id: string) => store.current().characters.find((c) => c.id === id)!
 const sheetOf = (store: LocalStore, id: string) => hero(store, id).sheet as Sheet
+function roundOver(store: LocalStore) {
+  for (const c of store.current().characters) {
+    c.isComplete = true
+    c.hasReplied = true
+  }
+  store.save()
+}
 
-test("a finished adventure gives the player's hero a level by their own choices, once, and the hero keeps it", async () => {
+test("a hero below their adventure's level is owed it: a companion takes it at once, a player by their own choices, and it is kept", async () => {
   const { store, cleanup } = setup()
   try {
     const run = game(store, packs, offline)
-    await run({ kind: "start", provider: "claude", adventure: "the-midnight-summons", party: [{ id: THALBERN, ai: false }] })
+    // Welcome to Kordavos is played at level 2, and its heroes come at level 1.
+    assert.equal(packs["welcome-to-kordavos"].artifacts.manifest.level, 2)
+    await run({
+      kind: "start",
+      provider: "claude",
+      adventure: "welcome-to-kordavos",
+      party: [
+        { id: THALBERN, ai: false },
+        { id: LYRA, ai: true },
+        { id: POPPEN, ai: true },
+      ],
+    })
     const turnId = store.current()._id
+    // The companions are level 2 and whole: Lyra's 6 hit points are 10, and Poppen's 10 are 17.
+    assert.deepEqual([sheetOf(store, LYRA).level, hero(store, LYRA).hitPoints, hero(store, LYRA).levelDue], [2, 10, undefined])
+    assert.deepEqual([sheetOf(store, POPPEN).level, hero(store, POPPEN).hitPoints, hero(store, POPPEN).levelDue], [2, 17, undefined])
+    // Thalbern waits on his player.
+    assert.deepEqual([sheetOf(store, THALBERN).level, hero(store, THALBERN).hitPoints, hero(store, THALBERN).levelDue], [1, 11, 2])
     const choices = autoChoices(sheetOf(store, THALBERN))
-    // No level while the adventure is still being played.
-    await assert.rejects(() => run({ kind: "level", turnId, characterId: THALBERN, choices }), /No level is owed/)
-    store.state!.adventure.status = "completed"
-    store.save()
     // A choice the level does not ask for is refused, and nothing is written.
     await assert.rejects(() => run({ kind: "level", turnId, characterId: THALBERN, choices: { ...choices, subclass: "hunter" } }), /level 2 grants no subclass/)
     assert.equal(sheetOf(store, THALBERN).level, 1)
+    // An AI companion's level is not the player's to take.
+    await assert.rejects(() => run({ kind: "level", turnId, characterId: POPPEN, choices: {} }), /AI companion/)
 
     await run({ kind: "level", turnId, characterId: THALBERN, choices })
-    assert.equal(sheetOf(store, THALBERN).level, 2)
-    assert.equal(hero(store, THALBERN).hitPoints, 18)
-    assert.deepEqual(hero(store, THALBERN).milestones, ["the-midnight-summons"])
+    assert.deepEqual([sheetOf(store, THALBERN).level, hero(store, THALBERN).hitPoints, hero(store, THALBERN).levelDue], [2, 18, undefined])
     assert.equal(store.kept()[THALBERN].sheet.level, 2)
     await assert.rejects(() => run({ kind: "level", turnId, characterId: THALBERN, choices }), /No level is owed/)
 
-    // Going on into Covert Cargo, and a game of it started afresh later: Thalbern comes as he is, at level 2.
-    for (const continues of [true, false]) {
-      await run({
-        kind: "start",
-        provider: "claude",
-        adventure: "covert-cargo",
-        replace: true,
-        continues,
-        party: [
-          { id: THALBERN, ai: false },
-          { id: LYRA, ai: true },
-          { id: POPPEN, ai: true },
-        ],
-      })
-      assert.equal(sheetOf(store, THALBERN).level, 2)
-      assert.equal(hero(store, THALBERN).hitPoints, 18)
-      assert.deepEqual(hero(store, THALBERN).milestones, ["the-midnight-summons"])
-      assert.equal(sheetOf(store, LYRA).level, 1)
-    }
     // The level goes on with him from one encounter into the next.
-    const turn = store.current()
-    for (const c of turn.characters) {
-      c.isComplete = true
-      c.hasReplied = true
-    }
-    store.save()
-    const model: Llm = {
-      ...offline,
-      generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: "the-transaction", beats: [{ kind: "narration", text: "The boat ties up at the pier." }] }) }),
-    }
-    await game(store, packs, model)({ kind: "continue", turnId: turn._id })
-    assert.equal(store.current().encounterId, "the-transaction")
-    assert.equal(sheetOf(store, THALBERN).level, 2)
-    assert.deepEqual(hero(store, THALBERN).milestones, ["the-midnight-summons"])
+    roundOver(store)
+    await game(store, packs, onTo("the-front-of-the-line"))({ kind: "continue", turnId })
+    assert.equal(store.current().encounterId, "the-front-of-the-line")
+    assert.deepEqual([sheetOf(store, THALBERN).level, hero(store, THALBERN).levelDue, sheetOf(store, LYRA).level], [2, undefined, 2])
+
+    // A new game later, of an adventure played at level 1: he comes as he is, at level 2, and is owed nothing.
+    await run({ kind: "start", provider: "claude", adventure: "the-midnight-summons", replace: true, party: [{ id: THALBERN, ai: false }] })
+    assert.deepEqual([sheetOf(store, THALBERN).level, hero(store, THALBERN).hitPoints, hero(store, THALBERN).levelDue], [2, 18, undefined])
   } finally {
     cleanup()
   }
 })
 
-test("as an adventure ends, an AI companion takes their level at once, and the player's hero waits on the player", async () => {
+test("a level a player has not taken stays owed from one encounter to the next", async () => {
   const { store, cleanup } = setup()
   try {
     await game(
       store,
+      packs,
+      offline
+    )({
+      kind: "start",
+      provider: "claude",
+      adventure: "welcome-to-kordavos",
+      party: [
+        { id: LYRA, ai: false },
+        { id: THALBERN, ai: true },
+        { id: POPPEN, ai: true },
+      ],
+    })
+    roundOver(store)
+    await game(store, packs, onTo("the-front-of-the-line"))({ kind: "continue", turnId: store.current()._id })
+    assert.deepEqual([sheetOf(store, LYRA).level, hero(store, LYRA).levelDue, sheetOf(store, THALBERN).level], [1, 2, 2])
+  } finally {
+    cleanup()
+  }
+})
+
+test("an adventure's end raises its heroes to the level of the adventure that follows", async () => {
+  // Covert Cargo leads into The Road to Kordavos, played at level 1: its end gives no level.
+  const plain = setup()
+  try {
+    await game(
+      plain.store,
       packs,
       offline
     )({
@@ -112,33 +137,50 @@ test("as an adventure ends, an AI companion takes their level at once, and the p
         { id: THALBERN, ai: true },
       ],
     })
-    const turn = store.current()
-    // The last encounter before the end, the round played out.
-    turn.encounterId = "the-escape"
+    plain.store.current().encounterId = "the-escape"
+    plain.store.state!.adventure.currentEncounterId = "the-escape"
+    roundOver(plain.store)
+    await game(plain.store, packs, onTo("return-to-the-city"))({ kind: "continue", turnId: plain.store.current()._id })
+    assert.equal(plain.store.state!.adventure.status, "completed")
+    for (const id of [LYRA, POPPEN, THALBERN]) assert.deepEqual([sheetOf(plain.store, id).level, hero(plain.store, id).levelDue], [1, undefined], id)
+    assert.deepEqual(plain.store.kept(), {})
+  } finally {
+    plain.cleanup()
+  }
+
+  // Were the Road played at level 2, the end of Covert Cargo would give that level: the companions take it at once
+  // and it is kept, and Lyra's waits on her player.
+  const raised: Packs = structuredClone(packs)
+  raised["the-road-to-kordavos"].artifacts.manifest.level = 2
+  const { store, cleanup } = setup(raised)
+  try {
+    await game(
+      store,
+      raised,
+      offline
+    )({
+      kind: "start",
+      provider: "claude",
+      adventure: "covert-cargo",
+      party: [
+        { id: LYRA, ai: false },
+        { id: POPPEN, ai: true },
+        { id: THALBERN, ai: true },
+      ],
+    })
+    store.current().encounterId = "the-escape"
     store.state!.adventure.currentEncounterId = "the-escape"
-    for (const c of turn.characters) {
-      c.isComplete = true
-      c.hasReplied = true
-    }
-    store.save()
-    const model: Llm = {
-      ...offline,
-      generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: "return-to-the-city", beats: [{ kind: "narration", text: "They walk back toward the city." }] }) }),
-    }
-    await game(store, packs, model)({ kind: "continue", turnId: turn._id })
+    roundOver(store)
+    await game(store, raised, onTo("return-to-the-city"))({ kind: "continue", turnId: store.current()._id })
     assert.equal(store.state!.adventure.status, "completed")
-    // The companions are level 2 and kept. Lyra's level waits on her player.
     for (const id of [POPPEN, THALBERN]) {
-      assert.equal(sheetOf(store, id).level, 2, id)
-      assert.deepEqual(hero(store, id).milestones, ["covert-cargo"])
+      assert.deepEqual([sheetOf(store, id).level, hero(store, id).levelDue], [2, undefined], id)
       assert.equal(store.kept()[id].sheet.level, 2)
     }
-    assert.equal(sheetOf(store, LYRA).level, 1)
-    assert.equal(store.kept()[LYRA], undefined)
-    await game(store, packs, offline)({ kind: "level", turnId: store.current()._id, characterId: LYRA, choices: autoChoices(sheetOf(store, LYRA)) })
-    assert.equal(sheetOf(store, LYRA).level, 2)
-    // An AI companion's level is not the player's to take.
-    await assert.rejects(() => game(store, packs, offline)({ kind: "level", turnId: store.current()._id, characterId: POPPEN, choices: {} }), /AI companion/)
+    assert.deepEqual([sheetOf(store, LYRA).level, hero(store, LYRA).levelDue, store.kept()[LYRA]], [1, 2, undefined])
+    // The finished adventure still lets her take it.
+    await game(store, raised, offline)({ kind: "level", turnId: store.current()._id, characterId: LYRA, choices: autoChoices(sheetOf(store, LYRA)) })
+    assert.deepEqual([sheetOf(store, LYRA).level, store.kept()[LYRA].sheet.level], [2, 2])
   } finally {
     cleanup()
   }

@@ -25,7 +25,7 @@ export default function LevelUpPage() {
     // The hero at each level below the cap, by the choices that need no player.
     const sheets = [hero.sheet]
     while (sheets.length < LEVEL_CAP - 1) {
-      const taken = takeLevel({ type: "pc", sheet: sheets[sheets.length - 1] }, `level-${sheets.length}`, autoChoices(sheets[sheets.length - 1]))
+      const taken = takeLevel({ type: "pc", sheet: sheets[sheets.length - 1], levelDue: LEVEL_CAP }, autoChoices(sheets[sheets.length - 1]))
       if ("problems" in taken) break
       sheets.push(taken.character.sheet)
     }

@@ -25,7 +25,7 @@ const hero = (extra: Partial<PCTemplate> = {}): PCTemplate => ({
 })
 const start = (premade: PCTemplate, saved?: PCTemplate) =>
   buildLocalWikiTurnCharacters({
-    artifacts: { characterSheets: { premadeCharacters: { thalbern: { sheet: premade } }, npcs: {} } } as unknown as Parameters<typeof buildLocalWikiTurnCharacters>[0]["artifacts"],
+    artifacts: { manifest: {}, characterSheets: { premadeCharacters: { thalbern: { sheet: premade } }, npcs: {} } } as unknown as Parameters<typeof buildLocalWikiTurnCharacters>[0]["artifacts"],
     encounter: { npcRefs: [] } as unknown as Parameters<typeof buildLocalWikiTurnCharacters>[0]["encounter"],
     players: [{ userId: "user-1", characterId: "characters/user-1/thalbern.json" }],
     sheetsByCharacterId: saved ? { "characters/user-1/thalbern.json": saved } : undefined,

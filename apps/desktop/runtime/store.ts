@@ -219,10 +219,10 @@ export class LocalStore implements Store, Roster {
   kept(): Record<string, KeptHero> {
     return Object.fromEntries((this.db.prepare("SELECT id, json FROM kept").all() as { id: string; json: string }[]).map((r) => [r.id, JSON.parse(r.json)]))
   }
-  async keepHero({ characterId, sheet, milestones }: { adventureId: string; characterId: string; sheet: Sheet; milestones: string[] }) {
+  async keepHero({ characterId, sheet }: { adventureId: string; characterId: string; sheet: Sheet }) {
     const hero = this.heroes().find((h) => h.id === characterId)
-    if (hero) this.putHero({ ...hero, sheet, milestones })
-    else this.db.prepare("INSERT INTO kept VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET json=excluded.json").run(characterId, JSON.stringify({ sheet, milestones } satisfies KeptHero))
+    if (hero) this.putHero({ ...hero, sheet })
+    else this.db.prepare("INSERT INTO kept VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET json=excluded.json").run(characterId, JSON.stringify({ sheet } satisfies KeptHero))
   }
   current() {
     if (!this.state) throw new Error("Start an adventure first.")

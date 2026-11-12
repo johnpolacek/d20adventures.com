@@ -1,5 +1,6 @@
 import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
+import { raisedTo } from "../sheet/milestone"
 import { spellEffectsAtEncounterEnd } from "../sheet/spell-effects"
 import { rollInitiative } from "../sheet/stat-block"
 import type { TurnCharacter } from "../types/adventure"
@@ -40,7 +41,6 @@ export function buildLocalWikiTurnCharacters(args: {
     const hero = {
       ...sheet,
       ...(rules ? { sheet: rules } : {}),
-      ...(carried?.milestones ? { milestones: carried.milestones } : {}),
       id: sheet.id,
       type: "pc" as const,
       userId: player.userId,
@@ -76,7 +76,10 @@ export function buildLocalWikiTurnCharacters(args: {
       dead: was?.dead,
       deathSaves: was?.hitPoints === 0 ? was.deathSaves : undefined,
     }
-    characters.push(carried?.hitPoints === undefined ? withStartingHitPoints(hero) : { ...withHitPoints(hero, carried.hitPoints), ...state })
+    const standing = carried?.hitPoints === undefined ? withStartingHitPoints(hero) : { ...withHitPoints(hero, carried.hitPoints), ...state }
+    // A hero below the level the adventure is played at is owed the levels up to it. One the AI plays takes them at
+    // once, and a player's is marked for the level-up screen (../sheet/milestone).
+    characters.push(raisedTo(standing, Math.max(args.artifacts.manifest.level ?? 1, carried?.levelDue ?? 1)))
   }
 
   for (const npcRef of args.encounter.npcRefs) {

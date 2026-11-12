@@ -794,9 +794,8 @@ export function StagePlay(props: {
   // A finished adventure ends on its final narration. Its last turn has characters but takes no more actions.
   const finished = save?.adventure.status === "completed"
   const ended = finished && turn === latest
-  // The level the finished adventure owes each hero this player plays.
-  const owed =
-    props.onLevel && save && latest ? latest.characters.filter((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && levelOwed(c, save.adventure.planId, Boolean(finished))) : []
+  // The levels owed to each hero this player plays.
+  const owed = props.onLevel && latest ? latest.characters.filter((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && levelOwed(c)) : []
   const levelHero = owed.find((c) => c.id === levelling)
   // Suggested replies are asked for once per hero's turn, as soon as it comes up with the game on screen, so they are
   // often there once the narration has been read. A request that fails offers none.
@@ -1068,6 +1067,15 @@ export function StagePlay(props: {
                   }}
                 />
               )}
+            </div>
+          )}
+          {!ended && owed.length > 0 && !levelHero && !props.overlay && (
+            <div className="absolute top-24 left-1/2 z-30 flex -translate-x-1/2 flex-wrap justify-center gap-2">
+              {owed.map((c) => (
+                <Pill key={c.id} active onClick={() => setLevelling(c.id)}>
+                  Level Up {c.name}
+                </Pill>
+              ))}
             </div>
           )}
           {levelHero?.sheet && latest && (

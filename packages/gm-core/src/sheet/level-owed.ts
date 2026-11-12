@@ -7,9 +7,15 @@ import type { Sheet } from "./sheet"
 /** The highest level the engine's features run to. */
 export const LEVEL_CAP = 5
 
-export type Levelling = { type: string; name?: string; sheet?: Sheet; milestones?: string[]; hitPoints?: number; healthPercent?: number; dead?: true }
+export type Levelling = { type: string; name?: string; sheet?: Sheet; levelDue?: number; hitPoints?: number; healthPercent?: number; dead?: true }
 
-/** Whether a finished adventure owes a hero a level: they lived, it has not given them one, and they are below the cap. */
-export function levelOwed(hero: Levelling, adventureId: string, completed: boolean): boolean {
-  return completed && hero.type === "pc" && !!hero.sheet && hero.sheet.level < LEVEL_CAP && !isDead(hero) && !hero.milestones?.includes(adventureId)
+/** Whether a hero is owed a level: they live, and they are below the level due to them and below the cap. */
+export function levelOwed(hero: Levelling): boolean {
+  return hero.type === "pc" && !!hero.sheet && !isDead(hero) && hero.levelDue !== undefined && hero.sheet.level < Math.min(hero.levelDue, LEVEL_CAP)
+}
+
+/** A hero with the level due to them: kept while they are below it, and gone once they have reached it. */
+export function withLevelDue<T extends Levelling>(hero: T, level: number): T {
+  const { levelDue: _, ...rest } = hero
+  return (hero.type === "pc" && hero.sheet && hero.sheet.level < Math.min(level, LEVEL_CAP) ? { ...rest, levelDue: level } : rest) as T
 }

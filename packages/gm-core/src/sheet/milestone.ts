@@ -2,16 +2,17 @@ import { type AbilityId, abilityIds, classIdSchema, idSchema, type SkillId, skil
 import { classById } from "@d20/srd/classes"
 import { z } from "zod"
 import { deriveSheet } from "./derive"
-import { withHitPoints } from "./hit-points"
-import { LEVEL_CAP, type Levelling } from "./level-owed"
+import { hitPointsOf, withHitPoints } from "./hit-points"
+import { type Levelling, levelOwed, withLevelDue } from "./level-owed"
 import { type LevelUpChoices, levelUp, levelUpOptions } from "./level-up"
 import type { Sheet } from "./sheet"
 import { isEngineSpell, spellById } from "./spells"
 
 /**
- * Levelling by milestone: finishing an adventure gives each hero who lived through it one level, once for that
- * adventure. The hero keeps the ids of the adventures that gave them a level (`milestones`), so one played again gives
- * nothing more.
+ * Levelling by milestone. Each adventure is played at a level (its manifest's `level`, 1 where it gives none), and a
+ * hero below the level of their adventure is owed the levels up to it: `levelDue` on the hero. The end of an adventure
+ * raises what is due to the level of the adventure that follows. An AI companion takes what is due at once, and a
+ * player chooses theirs on the level-up screen.
  */
 
 const raise = z.number().int().min(1).max(2)
@@ -107,20 +108,33 @@ export function autoChoices(sheet: Sheet): LevelUpChoices {
 }
 
 /**
- * A hero one level on for a finished adventure, with the player's choices, or what stops it. They stand at their new
- * Hit Point maximum, as a hero does between adventures.
+ * A hero one level on, with the player's choices, or what stops it. Their hit points rise by what the level adds to
+ * their maximum, and one at 0 stays there. The level due to them is kept while they are still below it.
  */
-export function takeLevel<T extends Levelling>(
-  hero: T,
-  adventureId: string,
-  choices: LevelUpChoices
-): { character: T & { sheet: Sheet; milestones: string[]; hitPoints: number; healthPercent: number } } | { problems: string[] } {
+export function takeLevel<T extends Levelling>(hero: T, choices: LevelUpChoices): { character: T & { sheet: Sheet; hitPoints: number; healthPercent: number } } | { problems: string[] } {
   if (!hero.sheet) return { problems: ["the hero has no rules sheet"] }
-  if (hero.milestones?.includes(adventureId)) return { problems: ["this adventure has already given its level"] }
-  if (hero.sheet.level >= LEVEL_CAP) return { problems: [`level ${LEVEL_CAP} is the highest for now`] }
+  if (!levelOwed(hero)) return { problems: ["no level is owed to this hero"] }
   const result = levelUp(hero.sheet, choices)
   if ("problems" in result) return result
-  return { character: withHitPoints({ ...hero, sheet: result.sheet, milestones: [...(hero.milestones ?? []), adventureId] }, Number.POSITIVE_INFINITY) }
+  const before = hitPointsOf(hero)
+  const levelled = withLevelDue({ ...hero, sheet: result.sheet }, hero.levelDue ?? result.sheet.level)
+  const maximum = hitPointsOf(levelled)?.maximum ?? 0
+  const current = before && before.current > 0 ? before.current + maximum - before.maximum : (before?.current ?? maximum)
+  return { character: withHitPoints(levelled, current) as T & { sheet: Sheet; hitPoints: number; healthPercent: number } }
 }
 
-export { LEVEL_CAP, levelOwed } from "./level-owed"
+/**
+ * A hero brought to the level due to them. One an AI plays takes every level at once, by the choices that need no
+ * player. A player's hero is marked as owed it, and chooses on the level-up screen.
+ */
+export function raisedTo<T extends Levelling & { controlledBy?: "ai" }>(hero: T, level: number): T {
+  let raised = withLevelDue(hero, level)
+  while (raised.controlledBy === "ai" && raised.sheet && levelOwed(raised)) {
+    const taken = takeLevel(raised, autoChoices(raised.sheet))
+    if ("problems" in taken) break
+    raised = taken.character
+  }
+  return raised
+}
+
+export { LEVEL_CAP, levelOwed, withLevelDue } from "./level-owed"

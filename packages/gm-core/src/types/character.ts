@@ -88,9 +88,9 @@ export const baseCharacterSchema = z.object({
   // How a hero takes each reaction when their player does not answer the offer in time. One left out follows the
   // default (../sheet/reactions). The player sets them.
   standingOrders: standingOrdersSchema.optional(),
-  // The adventures that have given the hero a level, by adventure id: each gives one, once. Only the engine writes
-  // it, through ../sheet/milestone.
-  milestones: z.array(z.string()).optional(),
+  // The level due to a hero who is below it: the level their adventure is played at, or the one the next is, once
+  // this one is finished. Only the engine writes it, through ../sheet/milestone.
+  levelDue: z.number().int().min(1).max(20).optional(),
   // Where the character stands on the encounter's floor, in feet. Only the engine writes it, through ../sheet/placement
   // as an encounter opens and as the character moves. One in an encounter with no floor plan has none.
   position: positionSchema.optional(),
@@ -160,7 +160,7 @@ export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
   tempHitPoints: true,
   position: true,
   standingOrders: true,
-  milestones: true,
+  levelDue: true,
   dead: true,
   fled: true,
 })

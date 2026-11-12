@@ -19,12 +19,12 @@ export const serverStore: Store = {
       patch: { ...patch, currentTurnId: patch.currentTurnId as Id<"turns"> | undefined },
     }),
   // A hero is a file in their player's account. The levelled sheet is written over the one it holds.
-  keepHero: async ({ adventureId, characterId, sheet, milestones }) => {
+  keepHero: async ({ adventureId, characterId, sheet }) => {
     const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> })
     const key = adventure?.players?.find((player) => sheetId(player.characterId) === characterId)?.characterId
     if (!key?.startsWith("characters/")) return
     const hero = (await readJsonFromS3(key)) as Record<string, unknown>
-    await updateJsonOnS3(key, { ...hero, sheet, milestones })
+    await updateJsonOnS3(key, { ...hero, sheet })
   },
   createTurn: ({ adventureId, ...args }) => convex.mutation(api.turns.createTurn, { ...args, adventureId: adventureId as Id<"adventures"> }),
   commitWikiTurnAdvance: ({ adventureId, expectedCurrentTurnId, ...args }) =>

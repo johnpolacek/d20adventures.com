@@ -4,6 +4,7 @@ type: "adventure"
 title: "Welcome to Kordavos"
 settingId: "realm-of-myr"
 startEncounter: "the-gates-of-kordavos"
+level: 2
 minPlayers: 3
 maxPlayers: 5
 strangers: true

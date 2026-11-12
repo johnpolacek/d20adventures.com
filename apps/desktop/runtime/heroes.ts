@@ -148,8 +148,8 @@ export async function writeArrivals(pack: Pack, ids: string[], roster: Roster, l
 }
 
 export type PartyChoice = { id: string; ai: boolean }
-/** A hero's rules sheet as their last level left it, and the adventures that gave them a level. */
-export type KeptHero = { sheet: Sheet; milestones: string[] }
+/** A hero's rules sheet as their last level left it. */
+export type KeptHero = { sheet: Sheet }
 // Checks a new game's party against the adventure and resolves each hero's sheet. Premades come from the adventure.
 // Roster heroes are copied in, so later roster changes never alter a running adventure.
 // A premade whose levels the player holds comes with the rules sheet those levels left, `kept`.
@@ -167,7 +167,7 @@ export function partyFor(pack: Pack, choices: PartyChoice[], roster: Hero[], kep
   for (const choice of choices) {
     if (m.premadeCharacterIds.includes(choice.id)) {
       const premade = pack.artifacts.characterSheets.premadeCharacters[choice.id]?.sheet
-      if (premade && kept[choice.id]) sheets[choice.id] = { ...premade, ...kept[choice.id] }
+      if (premade && kept[choice.id]) sheets[choice.id] = { ...premade, sheet: kept[choice.id].sheet }
       continue
     }
     const hero = roster.find((h) => h.id === choice.id)
