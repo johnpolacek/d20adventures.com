@@ -33,7 +33,6 @@ export default function LevelUpPage() {
   if (!isDev()) notFound()
   const premade = HEROES.map((path) => JSON.parse(readFileSync(join(process.cwd(), "content/settings/realm-of-myr/adventures", path), "utf8")) as { name: string; image?: string; sheet: Sheet })
   const made = MADE.flatMap(({ name, ...rest }) => {
-    // The creator does not offer these classes yet, and the rules already make them.
     const pick = rest as CreationPick
     const built = createSheet(pick, autoCreate(pick))
     return "problems" in built ? [] : [{ name, image: undefined as string | undefined, sheet: built.sheet }]

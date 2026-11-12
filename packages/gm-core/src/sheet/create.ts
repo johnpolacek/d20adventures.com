@@ -28,11 +28,10 @@ export type HeroRecord = Required<Pick<PCTemplate, "race" | "archetype" | "attri
  */
 
 /**
- * The classes a hero can be made in: the six whose play the rules engine runs. A class is added as its play is built.
- * The menu, the pick a host receives (`creationPickSchema`) and its type hold to it. The creation maths below work for
- * every SRD class, so a test may hand them another to check its sheet before the class is opened.
+ * The classes a hero can be made in: all twelve of the SRD, whose play the rules engine runs at levels 1 to 5. The
+ * menu, the pick a host receives (`creationPickSchema`) and its type hold to it.
  */
-export const CREATION_CLASSES = ["bard", "cleric", "fighter", "ranger", "rogue", "wizard"] as const
+export const CREATION_CLASSES = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"] as const
 export type CreationClassId = (typeof CREATION_CLASSES)[number]
 
 /** The Standard Array: "Use the following six scores for your abilities: 15, 14, 13, 12, 10, 8." (SRD 5.2.1, p. 21) */

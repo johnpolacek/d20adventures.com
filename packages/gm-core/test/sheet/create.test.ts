@@ -133,8 +133,7 @@ test("Choose For Me makes a legal hero of every class with every species and bac
     menu.classes.map((entry) => entry.id),
     [...CREATION_CLASSES]
   )
-  // The creator offers six classes. The sweep lifts that list to all twelve of the SRD, so a class's level 1 sheet is
-  // known to be legal before the class is opened.
+  // The creator offers all twelve classes of the SRD.
   // The SRD's nine, then the game's own Half-Elf and Half-Orc.
   assert.equal(menu.species.length, 11)
   assert.equal(menu.backgrounds.length, 4)
