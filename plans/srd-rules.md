@@ -148,7 +148,7 @@ Proposed, for the owner to settle:
 
 Substages:
 
-1. Attack and damage maths. Pure functions in `packages/gm-core/src/sheet`: a hero's attacks from the weapons on the sheet, an NPC's from its stat block's actions, an attack roll against Armor Class (a 20 on the die hits and is a Critical Hit, a 1 misses), damage dice with a Critical Hit's doubled dice, and Resistance, Vulnerability and Immunity. Tested with no model: Thalbern's Longbow is +5 to hit for 1d8 + 3 Piercing.
+1. Attack and damage maths. Pure functions in `packages/gm-core/src/sheet`: a hero's attacks from the weapons on the sheet, an NPC's from its stat block's actions, an attack roll against Armor Class (a 20 on the die hits and is a Critical Hit, a 1 misses), damage dice with a Critical Hit's doubled dice, and Resistance, Vulnerability and Immunity. Tested with no model: Thalbern's Longbow is +5 to hit for 1d8 + 3 Piercing. Done: `packages/gm-core/src/sheet/attack.ts` (`weaponAttack`, `attacksOf`, `multiattackOf`, `resolveAttack`, `rollDamage`, `damageTaken`).
 2. Weapons on the sheet. The sheet names its weapons by SRD id. The nine premade heroes get theirs from the gear they carry, and the compiler checks them.
 3. Hit points are stored. A character carries its current hit points, an NPC starts at its stat block's, and the engine alone changes them. `healthPercent` leaves the content files.
 4. Initiative from the sheet and the stat block, rolled once per encounter.
