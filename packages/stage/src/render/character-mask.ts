@@ -6,6 +6,16 @@ import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
 // the scene depth (the main pass's depth texture) is discarded, so a figure behind a crowd member or a post is not
 // masked where it is hidden.
 const VS = "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }"
+// A skinned source (a rigged 3D figure) is drawn in the pose it is in, from its own skeleton.
+const VS_SKINNED = `#include <common>
+#include <skinning_pars_vertex>
+varying vec2 vUv;
+void main(){ vUv = uv;
+#include <skinbase_vertex>
+#include <begin_vertex>
+#include <skinning_vertex>
+#include <project_vertex>
+}`
 const FS = `uniform sampler2D map, mapB, tDepth; uniform vec2 size; uniform float near, far, useMap, keep, mixB; varying vec2 vUv;
 float lin(float z){ return 2.0 * near * far / (far + near - (z * 2.0 - 1.0) * (far - near)); }
 void main(){
@@ -95,13 +105,15 @@ export class CharacterMask {
       let proxy: THREE.Mesh
       if (custom) proxy = custom(this.common)
       else {
+        const skinned = src instanceof THREE.SkinnedMesh
         const material = new THREE.ShaderMaterial({
-          vertexShader: VS,
+          vertexShader: skinned ? VS_SKINNED : VS,
           fragmentShader: FS,
           side: (src.material as THREE.Material).side ?? THREE.FrontSide,
           uniforms: { ...this.common, map: { value: null }, mapB: { value: null }, mixB: { value: 0 }, useMap: { value: map ? 1 : 0 }, keep: { value: keep } },
         })
-        proxy = new THREE.Mesh(src.geometry, material)
+        proxy = skinned ? new THREE.SkinnedMesh(src.geometry, material) : new THREE.Mesh(src.geometry, material)
+        if (skinned) (proxy as THREE.SkinnedMesh).bind(src.skeleton, src.bindMatrix)
         proxy.matrixAutoUpdate = false
         proxy.matrixWorldAutoUpdate = false
         proxy.frustumCulled = false
@@ -124,6 +136,8 @@ export class CharacterMask {
       it.proxy.visible = on
       if (!on) continue
       it.proxy.matrixWorld.copy(it.src.matrixWorld)
+      // The mask scene never updates its matrices, so a skinned proxy takes its source's, which follow the pose.
+      if (it.proxy instanceof THREE.SkinnedMesh) it.proxy.bindMatrixInverse.copy((it.src as THREE.SkinnedMesh).bindMatrixInverse)
       if (it.instanced) (it.proxy as THREE.InstancedMesh).count = (it.src as THREE.InstancedMesh).count
       else if (it.map && tex instanceof THREE.Texture) {
         const u = (it.proxy.material as THREE.ShaderMaterial).uniforms

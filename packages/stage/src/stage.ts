@@ -5,6 +5,7 @@ import type { Footprint } from "./builders/types"
 import { type EffectEnd, type EffectKind, Effects, type Element, type PropKind } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { Crowd } from "./figures/crowd"
+import { Models } from "./figures/models"
 import { type CastMember, Standees } from "./figures/standees"
 import { V } from "./kit/geometry"
 import { createRand, hashSeed } from "./kit/rng"
@@ -135,6 +136,8 @@ export class Stage {
   readonly pipeline: Pipeline
   readonly crowd: Crowd
   readonly standees: Standees
+  // Cast members as rigged 3D figures, in place of their standees while the `figures` flag is on.
+  readonly models: Models
   readonly effects: Effects
   readonly cast: CastMember[]
   controls: OrbitControls | null = null
@@ -354,7 +357,9 @@ export class Stage {
     this.cast = resolveCast(set, staging)
     this.standees = new Standees(this.cast, this.shared, maxAnisotropy)
     this.world.add(this.standees.group)
-    this.effects = new Effects({ hit: (id, color, strength) => this.standees.hit(id, color, strength), camera: this.camera })
+    this.models = new Models(this.cast, this.shared, this.standees)
+    this.world.add(this.models.group)
+    this.effects = new Effects({ hit: (id, color, strength) => this.hit(id, color, strength), camera: this.camera })
     this.world.add(this.effects.group)
 
     // Ambient loops (a queue at a checkpoint), fed by the staging's cast and lines.
@@ -391,11 +396,22 @@ export class Stage {
     this.pipeline = new Pipeline(renderer, this.scene, this.camera)
     this.pipeline.paint.warmth = set.atmosphere.grade === "warm" ? 1 : 0
     this.shared.warmth.value = this.pipeline.paint.warmth
-    this.pipeline.mask.setSources([
-      // Crowd cards keep half the paint; named characters keep about 80% of the crisp render.
-      ...(this.crowd.cards ? [{ src: this.crowd.cards.mesh, keep: 0.625, custom: (common: Parameters<Crowd["maskProxy"]>[0]) => this.crowd.maskProxy(common, 0.625)! }] : []),
-      ...this.standees.maskSources(),
-    ])
+    const mask = () =>
+      this.pipeline.mask.setSources([
+        // Crowd cards keep half the paint; named characters keep about 80% of the crisp render.
+        ...(this.crowd.cards ? [{ src: this.crowd.cards.mesh, keep: 0.625, custom: (common: Parameters<Crowd["maskProxy"]>[0]) => this.crowd.maskProxy(common, 0.625)! }] : []),
+        ...this.standees.maskSources(),
+        ...this.models.maskSources(),
+      ])
+    mask()
+    // Figures arrive after the stage is built (and only with their flag on): the mask and the painted set take them then.
+    const flat = new Set<THREE.Material>()
+    this.models.onChange = () => {
+      mask()
+      const fresh = this.models.materials().filter((m) => !flat.has(m))
+      for (const m of fresh) flat.add(m)
+      this.painted?.flatFigures(fresh, true)
+    }
 
     // A painted set's camera is a tripod, with its own controls once the paintings are up (see load).
     this.painted?.patch(this.plate)
@@ -453,6 +469,7 @@ export class Stage {
       this.backdropReady,
       this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve(),
       paintings,
+      this.flags.figures ? this.models.enable(true) : Promise.resolve(),
     ])
     if (this.painted && painted) {
       const plate = new Set(this.plate)
@@ -947,9 +964,10 @@ export class Stage {
       const p = this.point(lands)
       c.ry = Math.atan2(c.x - p.x, c.z - p.z)
     }
-    // Nobody is seen to fall: they are down when the picture comes back.
-    if (PEOPLE_STILL && this.motion && !instant && down !== this.standees.down.has(id)) return void this.unseen().then(() => this.standees.lay(id, down, true))
+    // Nobody is seen to fall: they are down when the picture comes back. A 3D figure has a fall of its own, and is seen.
+    if (PEOPLE_STILL && this.motion && !instant && down !== this.standees.down.has(id) && !this.models.active(id)) return void this.unseen().then(() => this.standees.lay(id, down, true))
     this.standees.lay(id, down, instant)
+    if (instant) this.models.settle(id)
   }
   isDown(id: string) {
     return this.standees.down.has(id)
@@ -1088,6 +1106,7 @@ export class Stage {
   }
   setFlags(f: Partial<Flags>) {
     this.flags = { ...this.flags, ...f }
+    if (f.figures !== undefined) void this.models.enable(f.figures)
     this.applyTier()
   }
   private applyTier() {
@@ -1228,6 +1247,7 @@ export class Stage {
     this.lightRoom(dt)
     if (this.motion) this.effects.update(dt)
     this.standees.update(dt, this.camera)
+    this.models.update(dt, this.motion)
     this.crowd.updateLOD(this.camera)
     // A fade takes a third of a second, or none with motion off.
     this.crowd.occlude(this.camera, this.tripod?.aim ?? this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
@@ -1398,7 +1418,8 @@ export class Stage {
   }
   // A flash and a shake on a cast member's card, as when struck.
   hit(id: string, color = "#ff5a3c", strength = 1) {
-    this.standees.hit(id, color, strength)
+    if (this.models.active(id)) this.models.hit(id, color, strength)
+    else this.standees.hit(id, color, strength)
   }
   clearEffects() {
     this.effects.clear()
@@ -1411,9 +1432,12 @@ export class Stage {
   pick(x: number, y: number) {
     const ndc = new THREE.Vector2((x / this.canvas.clientWidth) * 2 - 1, -(y / this.canvas.clientHeight) * 2 + 1)
     this.ray.setFromCamera(ndc, this.camera)
-    for (const hit of this.ray.intersectObject(this.standees.group, true)) {
+    for (const hit of this.ray.intersectObjects([this.standees.group, this.models.pickable()], true)) {
       const id = hit.object.userData.castId as string | undefined
-      if (id && (!hit.uv || this.standees.opaqueAt(id, hit.uv))) return id
+      if (!id) continue
+      // A figure is picked by its own shape, a card by its painted part.
+      const card = hit.object.parent?.parent === this.standees.group
+      if (card ? !this.models.active(id) && (!hit.uv || this.standees.opaqueAt(id, hit.uv)) : this.models.active(id)) return id
     }
     return null
   }
@@ -1446,6 +1470,7 @@ export class Stage {
     for (const d of this.disposables) d.dispose()
     this.crowd.dispose()
     this.standees.dispose()
+    this.models.dispose()
     this.effects.dispose()
     this.coinMesh?.geometry.dispose()
     this.materials.dispose()

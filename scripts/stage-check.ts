@@ -174,7 +174,7 @@ async function main() {
     for (const e of staging.entrances) if (e.shot && !shots[e.shot]) throw new Error(`staging ${key}: unknown entrance shot ${e.shot}`)
     for (const e of staging.exits) if (e.shot && !shots[e.shot]) throw new Error(`staging ${key}: unknown exit shot ${e.shot}`)
     checkExits(key, staging.exits, set.marks, footprints, doors, cast)
-    const missing = staging.cast.flatMap((c) => Object.values(c.art)).filter((u) => u.startsWith("/stage/") && !existsSync(`public${u}`))
+    const missing = staging.cast.flatMap((c) => [...Object.values(c.art), ...(c.figure ? [c.figure.model] : [])]).filter((u) => u.startsWith("/stage/") && !existsSync(`public${u}`))
     if (missing.length) throw new Error(`staging ${key}: missing art ${missing.join(", ")}`)
     console.log(`PASS staging ${key}: ${cast.length} cast (${cast.map((c) => c.id).join(", ")}), ${Object.keys(shots).length} shots (${Object.keys(shots).join(", ")})`)
     if (set.painted && staging.painted) checkPainted(set.painted, { ...shots, ...Object.fromEntries(cast.map((c) => [`on ${c.id}`, frameShot(HERO_SHOT(c.id), cast)])) })

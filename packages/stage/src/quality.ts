@@ -34,8 +34,10 @@ export interface Flags {
   cardRadius?: number
   mirror?: number
   brush: number
+  // Cast members with a `figure` show as rigged 3D figures in place of their cards. Off by default: an experiment.
+  figures: boolean
 }
-export const DEFAULT_FLAGS: Flags = { crowd: "hybrid", paint: "depth", brush: 1 }
+export const DEFAULT_FLAGS: Flags = { crowd: "hybrid", paint: "depth", brush: 1, figures: false }
 
 // Software renderers and small touch screens start low; everything else starts at high.
 export function autoTier(gl: WebGLRenderingContext | WebGL2RenderingContext): TierName {

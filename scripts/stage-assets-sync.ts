@@ -24,6 +24,7 @@ const TYPES: Record<string, string> = {
   ".json": "application/json",
   ".mp3": "audio/mpeg",
   ".mp4": "video/mp4",
+  ".glb": "model/gltf-binary",
 }
 // Art is sometimes repainted under the same name, so caches stay short.
 const CACHE = "public, max-age=300"

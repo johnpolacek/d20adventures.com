@@ -25,6 +25,19 @@ const castMember = z
     role: z.string().max(160).default(""),
     height: size(4),
     art: z.object({ front: assetUrl, back: assetUrl.optional(), portrait: assetUrl.optional() }).strict(),
+    // A rigged, animated glTF figure shown in place of the card while the stage's `figures` flag is on: its clips by
+    // name, the nodes left out (a pack's spare weapons and shields), and how fast the idle plays.
+    figure: z
+      .object({
+        model: assetUrl,
+        idle: z.string().max(80).optional(),
+        hit: z.string().max(80).optional(),
+        fall: z.string().max(80).optional(),
+        hide: z.array(z.string().max(80)).max(40).optional(),
+        pace: num(0.1, 4).optional(),
+      })
+      .strict()
+      .optional(),
     at: z.union([idName, vec2]),
     facing: facing.default(0),
     // Lying where they fell when the scene opens (a body left by an earlier encounter).

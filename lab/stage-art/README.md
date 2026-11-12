@@ -276,6 +276,27 @@ Known limits:
 - The checkpoint awning shows a lighter patch where the zoom painting ends.
 - A staging's `painted: false` shows a painted set as built, for a staging its paintings do not reach.
 
+## A 3D figure in the real Stage, 2026-11-13
+
+One cast member as a rigged, animated glTF figure in place of his standee, in the engine and not only the lab: Garlan at the gate, behind the `figures` flag (off by default). `packages/stage/src/figures/models.ts` holds it. A staging names the model per cast member (`cast[].figure`: the file, the idle, hit and fall clips, the nodes left out).
+
+- See it: `/dev/stage?staging=welcome-to-kordavos/the-gates-of-kordavos&tier=ultra&figures=on`, or the `figures` pill under More. `&painted=0` shows the same staging on the set as built, under the brush filter.
+- The model: the KayKit Adventurers Knight, CC0, unmodified. Source, licence and hash are in `public/stage/figures/kaykit-knight.source.json`.
+- It stands at the cast spot, faces the way the cast member faces, and is scaled so the top of its idle pose is his 1.94 m. It casts and takes the sun's shadow, and the set hides it as it hides a card.
+- It idles on its own clip. A hit plays its flinch with the flash a card takes. A fall plays its fall clip in view, where a card is put down under a dip. With motion off it holds its pose and is put down at once.
+- The character mask draws it skinned, in the pose it is in, at the full keep a named card has. On a painted set it keeps the engine's shading and takes only the set's tint: the paintings' gain is for display colour and washed it out.
+- Cost, ultra at DPR 2, 2880 by 1800, M-series: 5,012 triangles shown of 6,952 in the file, 16 more draw calls, about 10,000 more triangles a frame with the shadow pass. Frame time did not move: 29 to 30 ms with the card and with the figure, and 16.5 ms at the high tier both ways. The file is 3.66 MB, of which 3.3 MB is its 76 clips. Cut to the three it uses it would be about 0.45 MB.
+
+What looked wrong:
+
+- The style. The pack's figures are toys, two and a half heads tall, flat shaded. Beside photographs on a painted set it reads as a mascot. On the set as built, under the brush filter, it sits far better.
+- The head is a metre across at his height, so it covers the guard behind him and crowds the party.
+- A card turns up to 60 degrees toward the camera. A figure faces where it faces, so shots framed for cards show it in profile or from behind.
+- On a painted set nothing shades it: the set's own shadows are in the paintings. It stands in full sun under the awning.
+- No walk yet. Nobody walks while `PEOPLE_STILL` is on.
+
+Not tried: a figure with real proportions. Quaternius's Modular Character Outfits (Fantasy) with the Universal Animation Library is CC0 and closer to the cards, but itch.io serves it through a download page a script may not drive, so it needs fetching by hand. Its clips are in a separate file, which `figure` does not take yet.
+
 ## Running it
 
 ```sh

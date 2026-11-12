@@ -33,6 +33,7 @@ function flagsFrom(p: Props["params"]): Partial<Flags> {
   if (p.dpr && Number(p.dpr) > 0) f.dpr = Number(p.dpr)
   if (p.cardr && Number(p.cardr) > 0) f.cardRadius = Number(p.cardr)
   if (p.brush && Number(p.brush) >= 0) f.brush = Number(p.brush)
+  if (p.figures === "on" || p.figures === "off") f.figures = p.figures === "on"
   return f
 }
 
@@ -63,7 +64,9 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
     let interval: ReturnType<typeof setInterval> | null = null
     ;(async () => {
       const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
-      const staging = stagingKey ? await STAGINGS[stagingKey]?.() : null
+      const loaded = stagingKey ? await STAGINGS[stagingKey]?.() : null
+      // &painted=0: the set as built, under the brush filter, where a staging would show its paintings.
+      const staging = loaded && params.painted === "0" ? { ...(loaded as object), painted: false } : loaded
       const stagedSet = staging && typeof staging === "object" && "set" in staging ? String((staging as { set: string }).set) : null
       const key = params.set ? setKey : stagedSet && SETS[stagedSet] ? stagedSet : setKey
       const set = await SETS[key]()
@@ -235,6 +238,9 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                 </button>
                 <button className={pill(!!stats?.bloom)} onClick={() => set((s) => s.setFlags({ bloom: !s.pipeline.bloom.enabled }))}>
                   bloom
+                </button>
+                <button className={pill(stage.flags.figures)} onClick={() => set((s) => s.setFlags({ figures: !s.flags.figures }))}>
+                  figures
                 </button>
                 <button className={pill(stage.motion)} onClick={() => set((s) => (s.motion = !s.motion))}>
                   motion

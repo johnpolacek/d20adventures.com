@@ -347,7 +347,9 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
   // the owner found the engine's light on it wrong both ways: the sun's highlights and relief read as a glaze, and the
   // set's shade as a figure blacked out. Their shadows on the ground still place them. A flash when one is struck
   // still shows, since it is light of the card's own. `uPaintLight` is the colour of the light they stand in.
-  flatFigures(materials: THREE.Material[]) {
+  // A `lit` figure is a 3D model. It has no light of its own, so it keeps the engine's shading and takes only the
+  // tint: the paintings' gain is for display colour, and would wash out a figure the sun already lights.
+  flatFigures(materials: THREE.Material[], lit = false) {
     for (const m of new Set(materials) as Set<Patched>) {
       const before = m.onBeforeCompile
       const key = m.customProgramCacheKey.bind(m)
@@ -360,10 +362,12 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
           .replace("#include <common>", `#include <common>\nuniform vec2 uPaintGrade; uniform float uPaintFigure; uniform vec3 uPaintLight;\n${GLSL}`)
           .replace(
             "#include <opaque_fragment>",
-            "outgoingLight = mix(outgoingLight, paintGrade(cardArt, vec2(uPaintGrade.x, 1.0)) * uPaintLight + totalEmissiveRadiance, uPaintFigure);\n#include <opaque_fragment>"
+            lit
+              ? "outgoingLight = mix(outgoingLight, (outgoingLight - totalEmissiveRadiance) * uPaintLight + totalEmissiveRadiance, uPaintFigure);\n#include <opaque_fragment>"
+              : "outgoingLight = mix(outgoingLight, paintGrade(cardArt, vec2(uPaintGrade.x, 1.0)) * uPaintLight + totalEmissiveRadiance, uPaintFigure);\n#include <opaque_fragment>"
           )
       }
-      m.customProgramCacheKey = () => `${key()}|flat`
+      m.customProgramCacheKey = () => `${key()}|${lit ? "lit" : "flat"}`
       m.needsUpdate = true
     }
   }

@@ -1,6 +1,7 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
+import type { FigureSpec } from "./models"
 
 // Named characters (PCs and staged NPCs) as world-style standees: a painted card with front and back art, lit through a
 // normal map derived from its silhouette, casting and receiving shadows, leaning toward the camera within 60 degrees of
@@ -17,6 +18,8 @@ export interface CastMember {
   role: string
   height: number
   art: CastArt
+  // A rigged 3D figure shown in place of the card while the `figures` flag is on (figures/models.ts).
+  figure?: FigureSpec
   x: number
   z: number
   ry: number
@@ -151,6 +154,12 @@ function bulgeNormals(img: HTMLImageElement) {
   return t
 }
 
+// The grade toward the set palette (see standeeMaterial), on `diffuseColor`. Needs the `uWarmth` uniform.
+export const PALETTE_GRADE = /* glsl */ ` { vec3 c = diffuseColor.rgb; float l = dot(c, vec3(.299, .587, .114));
+   float hi = smoothstep(.55, .95, l); c = mix(vec3(l), c, .87 - hi * .1); c *= 1.0 - hi * .14; c *= mix(vec3(1.0), vec3(1.025, 1.0, .95), uWarmth);
+   c += vec3(.04, .016, -.01) * (1.0 - smoothstep(0.0, .55, l)) * uWarmth; c = mix(c, c * c * (3.0 - 2.0 * c), .18);
+   diffuseColor.rgb = c; }`
+
 type BackUniforms = { uMapB: THREE.IUniform<THREE.Texture | null>; uBack: THREE.IUniform<number> }
 
 // Grade toward the set palette: warmed with umber in the shadows (unless the set grades neutral), painted saturation down about 13%, and the brightest painted
@@ -177,10 +186,7 @@ function standeeMaterial(shared: SharedUniforms, back: BackUniforms) {
  diffuseColor *= sampledDiffuseColor;
 #endif
  vec3 cardArt = diffuseColor.rgb;
- { vec3 c = diffuseColor.rgb; float l = dot(c, vec3(.299, .587, .114));
-   float hi = smoothstep(.55, .95, l); c = mix(vec3(l), c, .87 - hi * .1); c *= 1.0 - hi * .14; c *= mix(vec3(1.0), vec3(1.025, 1.0, .95), uWarmth);
-   c += vec3(.04, .016, -.01) * (1.0 - smoothstep(0.0, .55, l)) * uWarmth; c = mix(c, c * c * (3.0 - 2.0 * c), .18);
-   diffuseColor.rgb = c; }`
+${PALETTE_GRADE}`
       )
       .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n normal = normalize(normal + normalize(vViewPosition) * .3 * faceDirection);")
   })
@@ -243,6 +249,8 @@ export class Standees {
   // Where a tripod camera stands, in a painted set: cards then face the camera squarely (see update).
   tripod: THREE.Vector3 | null = null
   offstage = new Set<string>()
+  // Cast members shown as a 3D figure instead (figures/models.ts): the card is hidden, its patch of shade stays.
+  replaced = new Set<string>()
   // Cast members lying where they fell. The card tips back onto the ground.
   down = new Set<string>()
   // Cast members just struck: a flash of colour on the card and a shake, fading over about half a second.
@@ -393,6 +401,7 @@ export class Standees {
       s.grp.position.set(c.x, c.y ?? 0, c.z)
       s.grp.rotation.y = s.yaw
       s.grp.visible = !this.offstage.has(c.id)
+      s.mesh.visible = s.loaded && !this.replaced.has(c.id)
       s.fall += ((this.down.has(c.id) ? 1 : 0) - s.fall) * Math.min(1, dt * 3.5)
       // Just above the ground, so the fallen card does not fight the floor for depth.
       s.mesh.position.y = Math.abs(Math.cos(c.stride)) * 0.035 * c.walk + s.fall * 0.03
