@@ -367,7 +367,26 @@ Substages, magic items:
 - I5. Loot an adventure authors, given by the engine and kept between adventures. The game master invents no magic item.
 - I6. The item effects the data has no field for yet: resistances, a set ability score, speed, conditions.
 
-Substages for classes and levels, and for spells, follow their surveys.
+What the survey found of classes and levels: the data holds 231 class and subclass features. For the six built classes at levels 1 to 5, 50 run and 8 run in part. For the six other classes, 22 run, all from shared code, 63 are only listed and 17 have no home on the sheet. The sheet model already reaches level 20 for all twelve classes with no fault, and all 264 pairings of the six other classes with the species and backgrounds make a legal level 1 sheet, so the one thing that stops a hero past level 5 is `LEVEL_CAP`. Legal hides some wrong values: a feature's Speed, hit points, saving throws and senses are not read, a Warlock has no slots at any level, Lay on Hands has no count, and Invocations and Metamagic have nowhere to be kept. The read's menus are built from fixed lists keyed to Fighter, Rogue and Cleric.
+
+Substages, the six other classes at levels 1 to 5:
+
+- C1. The sheet for them: a feature's Speed, hit points, saving throws and senses are read, the choices a feature keeps (Primal Order, Blessed Warrior's cantrips, a Circle of the Land's land), Lay on Hands as a pool, and the SRD's suggested scores for each class.
+- C2. Choices of several from a list, kept on the sheet and chosen on both screens: Eldritch Invocations and Metamagic.
+- C3. Seams: a class's Bonus Actions, menu lines, reactions, turn effects and once-a-turn marks are registered beside the class, so a new class adds its own and edits no shared list. The 66 prompt checks pass unchanged.
+- C4. Pact Magic: a Warlock's slots, their return on a Short Rest, and Magical Cunning.
+- C5. Barbarian: Rage, Reckless Attack, Danger Sense, Primal Knowledge, Frenzy, Fast Movement.
+- C6. Monk: Martial Arts, Focus with Flurry of Blows, Patient Defense and Step of the Wind, Uncanny Metabolism, Deflect Attacks, Open Hand Technique, Stunning Strike.
+- C7. Paladin: Lay on Hands, a Smite on a hit, Divine Sense, Sacred Weapon.
+- C8. Sorcerer: Innate Sorcery, Font of Magic, Metamagic at the cast, Draconic Resilience, Sorcerous Restoration.
+- C9. Warlock: Invocations in play, Dark One's Blessing.
+- C10. Druid: Primal Order, land spells, Land's Aid, Wild Companion, Wild Resurgence.
+- C11. Wild Shape: a form kept on the character, a beast's attacks, Temporary Hit Points, and how it ends.
+- C12. Each class is opened in the creator as it is built. Prompt checks for the new menus. Close: a made hero of each new class plays on both hosts.
+
+Levels 6 to 20, for the owner's fourth step: raise the cap, capstone raises above 20, spells from beyond a class's list, the shared rules of saves and checks (Evasion, Reliable Talent, Indomitable, the auras), then the features by band, martial and caster apart, and the Epic Boons. Their substages are written when that step starts.
+
+Substages for spells follow their survey.
 
 ## Unknowns
 
