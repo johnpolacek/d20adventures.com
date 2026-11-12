@@ -189,6 +189,7 @@ The session's calls, which the owner may overrule:
 - Until stage 6 gives positions, an area takes as many creatures as its size allows, and the model names who is caught: a cone one for each 10 feet, a cube one for each 5 feet of its side, a sphere or cylinder one for each 5 feet of its radius, a line one for each 30 feet, each rounded up. Range is not checked.
 - Reaction spells (Shield, Feather Fall, Hellish Rebuke) wait for stage 6, where reactions are first counted.
 - A ritual is cast with no slot when the scene is not a fight.
+- A hero's save against an NPC's spell is rolled by the game, not thrown by the player. Owner's call, 2026-11-12: it stays so.
 
 Substages:
 
@@ -210,7 +211,7 @@ Substages:
     - On the site an NPC came into the next encounter whole: Reinhard went from 2 hit points to 32. An NPC who goes on comes as they left: hurt, with lasting conditions and spells, and not at all when dead. The desktop already remembered them.
     - A condition from a spell that outlasts a minute goes on into the next encounter, as the spell does: Charm Person's hour.
     - A card spells Hunter’s Mark as the SRD does.
-    Prompt checks after the schema change: 44 of 44. Left for later: the site shows nothing when the read of a reply fails, and the reply is lost. The site's model missed "as a ritual" and spent a slot. The GM told Reinhard's long sword where his stat block rolled a Mace. A cast the game refuses still stands in the story as the player wrote it. The site carries an NPC from the encounter just left, where the desktop remembers every NPC met.
+    Prompt checks after the schema change: 44 of 44. When the read of a reply failed, the site showed nothing and the reply was lost: the reply box now comes back with the player's words in it and says the game master could not read them. Left for later: the site's model missed "as a ritual" and spent a slot. The GM told Reinhard's long sword where his stat block rolled a Mace. A cast the game refuses still stands in the story as the player wrote it. The site carries an NPC from the encounter just left, where the desktop remembers every NPC met.
 
 ### 6. Space
 

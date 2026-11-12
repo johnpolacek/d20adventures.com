@@ -146,7 +146,10 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
       await submitReply({ turnId: currentTurn.id, characterId: character.id, playerInput: input.trim() })
     } catch (err) {
       console.error("[handleCharacterReply] Error:", err)
-      setError(err instanceof Error ? err.message : "Failed to submit reply. Please try again.")
+      // The reply was not taken, so the box comes back with the player's words still in it. Being out of tokens is
+      // told by the turn's own alert.
+      setHasSubmitted(false)
+      if (!(err instanceof Error && err.message.includes("Insufficient tokens"))) setError("The game master could not read that reply. Send it again.")
       setLoading(false)
     }
   }

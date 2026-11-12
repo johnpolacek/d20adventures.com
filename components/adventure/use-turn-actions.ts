@@ -97,12 +97,8 @@ export function useTurnActions() {
     } catch (error) {
       if (error instanceof Error && error.message.includes("Insufficient tokens")) {
         setTokenError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
-      } else if (error instanceof Error) {
-        setTokenError(error.message)
-      } else {
-        setTokenError("An unexpected error occurred while processing your action. Please try again.")
       }
-      // Re-throw so TurnNarrativeReply can run its own error handling too
+      // The reply box tells any other failure itself, beside the words that were not taken.
       throw error
     }
   }
