@@ -276,6 +276,35 @@ Owner decisions, 2026-11-12:
 - A player makes their own level-up choices on a level-up screen, built in this stage.
 - A reaction is offered to the player, the round waits a short time, and then the hero's standing order is followed. Every standing order has a sensible default, so nothing ever blocks.
 
+How these work before this stage: nothing takes a reaction, and leaving an enemy's reach is free. A spell slot and a feature's uses come back with every new encounter, a stopgap written into six places, and no one has Hit Dice. Every hero is level 1 in every adventure. The sheet has no subclass and nowhere to keep the choices of a level, a hero cannot cast a spell with a higher slot, and the features of levels 2 to 5 are typed in the SRD data but none of them runs. A premade hero's sheet comes from the adventure's own files each time, so nothing a hero gains is kept on the desktop, and the site keeps one copy for each player that nothing writes back to.
+
+The session's calls, which the owner may overrule:
+
+- A reaction comes back as a round begins, since the engine starts everyone's round at once.
+- The wait for a player's answer is 20 seconds. The default standing orders: take every Opportunity Attack, cast Shield when it turns a hit into a miss, and use Uncanny Dodge on a hit that takes a quarter of the hero's hit points or would drop them.
+- NPCs take their reactions by the same orders, with no wait: Opportunity Attacks, Parry, and a Mage's Shield.
+- Feather Fall stays the game master's to tell: the engine has no falling.
+- A level gives the fixed hit points the SRD allows, not a roll.
+- On a Short Rest a hero spends Hit Dice one at a time while they are short of their maximum by the die's average or more.
+- A rest asked for in play is read off the menu like any action, and the engine refuses it while a fight is on.
+
+Substages:
+
+1. Reaction maths. Pure functions in `packages/gm-core/src/sheet`: one reaction a round, an attack split into its roll and its blow so a reaction can fall between them, who may make an Opportunity Attack on a move and with what, Shield and Parry against a hit, and a standing order's answer. Tested with no model.
+2. Reactions that need no asking. An NPC's Opportunity Attack on a hero who leaves its reach, its Parry and a Mage's Shield, resolved inside the turn. Disengage now does what it says.
+3. A hero's reaction. The round stops on an offer, waits, and follows the standing order when no answer comes: on the site, the desktop and hosted play. Standing orders are kept on the hero and can be changed.
+4. Rest maths. A Short Rest and a Long Rest by the SRD: Hit Dice, hit points, spell slots, each feature's uses by how it recharges, Arcane Recovery, Exhaustion. The six places where slots and uses came back with an encounter are deleted.
+5. Rests in play. A rest the adventure marks on an encounter, a Long Rest between adventures, and a rest the players ask for, on the read's menu.
+6. The sheet at levels 2 to 5: a subclass, the choices each level asks for, checked wherever a sheet is loaded, the subclass's features and always-prepared spells, and casting with a higher slot.
+7. Class and subclass features of levels 2 to 5 for the six classes, and the feats the premades hold, as engine rules.
+8. Spells of levels 2 and 3 on the four casters' lists, with Counterspell as a reaction.
+9. Milestones. Finishing an adventure gives a level, and a hero's own sheet is kept on both hosts.
+10. The level-up screen, on both hosts: the player's choices for the level, checked by the engine.
+11. On screen: the reaction offer and its countdown, standing orders, rests and Hit Dice, the subclass and its features.
+12. Retune and migrate: the premades, the encounters, the Long Rest the notes of The Ambush ask for.
+13. Prompt checks for the rests and the new actions.
+14. Close. An adventure plays on both hosts through a rest and a level.
+
 Short and long rests, hit dice, experience, levels 2 to 5. Class features, the SRD subclass for each class, and feats.
 
 ### 8. Breadth
