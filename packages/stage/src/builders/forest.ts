@@ -179,7 +179,7 @@ export const tree = defineBuilder(
           if (p.moss > 0 && rand() < p.moss) beards(b, M.moss, rand, tip, 2 + Math.floor(rand() * 3), h * 0.1)
         }
       }
-      ctx.circle(0, 0, r * 1.6)
+      ctx.circle(0, 0, r * 1.6, h)
       return
     }
     if (p.kind === "gnarled") {
@@ -213,7 +213,7 @@ export const tree = defineBuilder(
           }
         }
       }
-      ctx.circle(0, 0, r + 0.3)
+      ctx.circle(0, 0, r + 0.3, h)
       return
     }
     if (p.kind === "pine") {
@@ -227,7 +227,7 @@ export const tree = defineBuilder(
         const c = top(y)
         b.add(unitCone(), leaves(), M4(c.x, y + w * 0.6, c.z, rand(0, TAU), w, w * 1.5, w), { uv: "keep", flat: true })
       }
-      ctx.circle(0, 0, r + 0.25)
+      ctx.circle(0, 0, r + 0.25, h)
       return
     }
     if (p.kind === "fir") {
@@ -250,7 +250,7 @@ export const tree = defineBuilder(
           mass(b, leaves(), M4(c.x + Math.cos(a) * out, y - s * 0.1, c.z + Math.sin(a) * out, rand(0, TAU), s, s * 0.75, s), rand, p.low)
         }
       }
-      ctx.circle(0, 0, r + 0.25)
+      ctx.circle(0, 0, r + 0.25, h)
       return
     }
     const birch = p.kind === "birch"
@@ -280,7 +280,7 @@ export const tree = defineBuilder(
       if (p.moss > 0 && rand() < p.moss) beards(b, M.moss, rand, V(anchor.x + off.x, anchor.y + off.y - s * 0.55, anchor.z + off.z), 3 + Math.floor(rand() * 4), h * 0.16)
     }
     if (p.moss > 0) for (const end of ends) beards(b, M.moss, rand, end, Math.round(2 + p.moss * 3), h * 0.13)
-    ctx.circle(0, 0, r + 0.25)
+    ctx.circle(0, 0, r + 0.25, h)
   },
   { bark: "bark", birch: "birch", leaves: "leaves", leavesDark: "leavesDark", leavesLight: "leavesLight", moss: "moss" }
 )
@@ -318,7 +318,7 @@ export const log = defineBuilder(z.object({ length: size(30).default(5), r: size
     const x = rand(-0.35, 0.35) * p.length
     limb(b, M.bark, V(x, p.r * 1.2, 0), V(x + rand(-0.5, 0.5), p.r * 1.2 + rand(0.6, 1.2), rand(-0.6, 0.6)), p.r * 0.25)
   }
-  ctx.footprint(0, 0, p.length / 2, p.r + 0.2)
+  ctx.footprint(0, 0, p.length / 2, p.r + 0.2, 0, undefined, p.r * 1.9)
 })
 
 // A worn trail: a flat strip just above the ground along a polyline. Not solid.

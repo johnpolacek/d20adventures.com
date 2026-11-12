@@ -25,7 +25,7 @@ export const barrier = defineBuilder(
     box(b, M.table, 0, 0.6, 0, p.length + 0.2, 0.1, 0.1)
     const plaque = ctx.mat(p.plaques)
     for (let x = x0 + 0.6; x < x1; x += 1.1) box(b, plaque, x, 1.1, 0.075, 0.5, 0.1, 0.01)
-    ctx.footprint(0, 0, p.length / 2 + 0.2, 0.5)
+    ctx.footprint(0, 0, p.length / 2 + 0.2, 0.5, 0, undefined, 1.17)
   }
 )
 
@@ -133,7 +133,7 @@ export const brazier = defineBuilder(z.object({}).strict(), (ctx) => {
       { uv: "keep" }
     )
   }
-  ctx.circle(0, 0, 0.6)
+  ctx.circle(0, 0, 0.6, 1.04)
 })
 
 // The sergeant's table: an open ledger without a word written on it, scales, ink, the strongbox and its coins.
@@ -168,7 +168,7 @@ export const ledgerTable = defineBuilder(z.object({ cloth: matName.default("bann
   F.box(M.iron, 0.85, 1.03, 0.225, 0.07, 0.1, 0.02)
   for (let i = 0; i < 26; i++) F.cyl(M.coin, 0.85 + rand(-0.18, 0.18), 1.2 + rand(0, 0.05), 0.05 + rand(-0.12, 0.12), 0.03, 0.03, 0.006, 8)
   for (let i = 0; i < 6; i++) F.cyl(M.coin, rand(-0.2, 0.1), 0.945 + i * 0.007, 0.22, 0.03, 0.03, 0.006, 8)
-  ctx.footprint(0, 0, 1.4, 0.6)
+  ctx.footprint(0, 0, 1.4, 0.6, 0, undefined, 0.94)
 })
 
 // An old handcart pulled aside for searching; its load half unpacked on the paving.
@@ -204,7 +204,7 @@ export const cart = defineBuilder(z.object({}).strict(), (ctx) => {
     M4(1.5, 0.14, -0.1, 0.4, 1, 1, 1, 0, Math.PI / 2),
     { uv: "keep" }
   )
-  ctx.footprint(0.3, 0.5, 1.6, 2.2)
+  ctx.footprint(0.3, 0.5, 1.6, 2.2, 0, undefined, 1.56)
 })
 
 // A cloth awning between four corner poles (corners in the object's frame: front-left, front-right, back-left, back-right).

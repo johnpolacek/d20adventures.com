@@ -42,6 +42,9 @@ export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary): Built
   const _s = new THREE.Vector3()
 
   const toWorld = (frame: THREE.Matrix4, x: number, y: number, z: number) => _v.set(x, y, z).applyMatrix4(frame)
+  // A local height as metres above the object's own ground: through the frame as `top` is, less where the ground lands,
+  // so a crate on a deck is as tall as the crate, not the deck and the crate.
+  const standing = (frame: THREE.Matrix4, x: number, z: number, height: number, ground: number) => toWorld(frame, x, height, z).y - ground
   const yawOf = (frame: THREE.Matrix4) => {
     frame.decompose(_v, _q, _s)
     const e = new THREE.Euler().setFromQuaternion(_q, "YXZ")
@@ -77,13 +80,18 @@ export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary): Built
       mat: (name) => mat(overrides[name] ?? name),
       rand,
       frame,
-      footprint: (x, z, hw, hd, ry = 0, top) => {
+      footprint: (x, z, hw, hd, ry = 0, top, height = top) => {
         const p = toWorld(frame, x, 0, z)
-        footprints.push({ kind: "rect", x: p.x, z: p.z, hw, hd, ry: ry + worldYaw, ...(top === undefined ? {} : { top: toWorld(frame, x, top, z).y }) })
+        const ground = p.y
+        const fp: Footprint = { kind: "rect", x: p.x, z: p.z, hw, hd, ry: ry + worldYaw }
+        if (top !== undefined) fp.top = toWorld(frame, x, top, z).y
+        if (height !== undefined) fp.height = standing(frame, x, z, height, ground)
+        footprints.push(fp)
       },
-      circle: (x, z, r) => {
+      circle: (x, z, r, height) => {
         const p = toWorld(frame, x, 0, z)
-        footprints.push({ kind: "circle", x: p.x, z: p.z, r })
+        const ground = p.y
+        footprints.push({ kind: "circle", x: p.x, z: p.z, r, ...(height === undefined ? {} : { height: standing(frame, x, z, height, ground) }) })
       },
       anchor: (tag, x, y, z) => {
         const p = toWorld(frame, x, y, z)

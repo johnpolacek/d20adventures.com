@@ -15,7 +15,7 @@ const uvMode = z.enum(["planar", "radial", "keep"]).optional()
 export const boxPrim = defineBuilder(z.object({ size: z.tuple([size(500), size(500), size(500)]), material: matName, solid, ...tilt }).strict(), (ctx, p) => {
   const [w, h, d] = p.size
   ctx.b.add(new THREE.BoxGeometry(1, 1, 1), ctx.mat(p.material), M4(0, 0, 0, 0, 1, 1, 1, p.pitch * DEG, p.roll * DEG).multiply(M4(0, h / 2, 0, 0, w, h, d)))
-  if (p.solid) ctx.footprint(0, 0, w / 2, d / 2)
+  if (p.solid) ctx.footprint(0, 0, w / 2, d / 2, 0, undefined, h)
 })
 
 export const cylinderPrim = defineBuilder(
@@ -40,7 +40,7 @@ export const cylinderPrim = defineBuilder(
       flat: p.segments <= 12,
     })
     g.dispose()
-    if (p.solid) ctx.circle(0, 0, Math.max(rb, rt))
+    if (p.solid) ctx.circle(0, 0, Math.max(rb, rt), p.height)
   }
 )
 

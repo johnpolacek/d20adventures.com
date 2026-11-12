@@ -478,7 +478,7 @@ export const column = defineBuilder(
       F.box(M.trim, 0, base + 0.04, r * 0.52, r * 2.1, 0.05, 0.02)
       F.box(M.shaft, 0, H - cap / 2, 0, r * 2.8, cap, r * 1.5)
       if (p.gilt) F.box(M.trim, 0, H - cap * 0.6, r * 0.77, r * 2.4, cap * 0.35, 0.02)
-      ctx.footprint(0, 0, r * 1.3, r * 0.7)
+      ctx.footprint(0, 0, r * 1.3, r * 0.7, 0, undefined, H)
       return
     }
     F.lathe(
@@ -522,7 +522,7 @@ export const column = defineBuilder(
       24
     )
     F.box(M.shaft, 0, H - 0.04, 0, r * 3.3, 0.08, r * 3.3)
-    ctx.circle(0, 0, r * 1.45)
+    ctx.circle(0, 0, r * 1.45, H)
   },
   { shaft: "stone", flute: "stoneDark", trim: "gilt" }
 )
@@ -675,7 +675,7 @@ export const armchair = defineBuilder(
       F.cyl(M.leather, s * (w / 2 - 0.07), 0.6, -d / 2 + 0.02, 0.085, 0.085, d - 0.02, 12, Math.PI / 2)
       F.cyl(M.trim, s * (w / 2 - 0.07), 0.6, d / 2, 0.087, 0.087, 0.012, 12, Math.PI / 2)
     }
-    ctx.footprint(0, 0, w / 2, d / 2, 0, 1.0)
+    ctx.footprint(0, 0, w / 2, d / 2, 0, 1.0, 0.37 + p.back)
   },
   { leather: "leather", legs: "oakDark", trim: "brass" }
 )
@@ -718,7 +718,7 @@ export const globe = defineBuilder(
       M4(0, 0.87 + r * 0.6, 0, 0.3, 1, 1, 1, 0, 0.4),
       { uv: "keep" }
     )
-    ctx.circle(0, 0, r * 1.2)
+    ctx.circle(0, 0, r * 1.2, 0.87 + r * 1.6)
   },
   { wood: "oakDark", map: "globeMap", trim: "brass" }
 )
@@ -744,7 +744,7 @@ export const candleStand = defineBuilder(
       F.cyl(M.wax, x, p.height, zz, 0.02, 0.018, ch, 8)
       F.sphere(M.flame, x, p.height + ch + 0.02, zz, 0.011, 0.028, 0.011, 6)
     }
-    ctx.circle(0, 0, 0.2)
+    ctx.circle(0, 0, 0.2, p.height)
   },
   { iron: "iron", wax: "candle", flame: "candleFlame" }
 )

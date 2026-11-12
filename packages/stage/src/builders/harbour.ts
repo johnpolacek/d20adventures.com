@@ -131,7 +131,7 @@ export const galleon = defineBuilder(
         box(b, M.bulwark, mx, 0.5, mz, seg + 0.02, 1.0, 0.12, yaw)
         box(b, M.rail, mx, 1.04, mz, seg + 0.04, 0.08, 0.22, yaw)
         beam(b, M.rail, [x0 * 0.985, 0, z0], [x0 * 0.985, 1.0, z0], 0.06, 5)
-        ctx.footprint(mx, mz, seg / 2 + 0.05, 0.15, yaw)
+        ctx.footprint(mx, mz, seg / 2 + 0.05, 0.15, yaw, undefined, 1.08)
       }
     }
     // The gangway's gap: a doorway for walks, a step inside the rail and a step out on the quay, and posts either side.
@@ -164,7 +164,7 @@ export const galleon = defineBuilder(
       const lx = sx * (sw / 2 - 0.5)
       for (const side of [-0.28, 0.28]) beam(b, M.rail, [lx + side, 0, zf + 1.1], [lx + side, sh + 0.9, zf + 0.05], 0.04, 5)
       for (let k = 1; k < 8; k++) F.box(M.rail, lx, (k * sh) / 8, zf + 1.1 - (k * 1.05) / 8, 0.56, 0.04, 0.08)
-      ctx.footprint(lx, zf + 0.55, 0.32, 0.55)
+      ctx.footprint(lx, zf + 0.55, 0.32, 0.55, 0, undefined, sh + 0.9)
     }
     // A balustrade round the sterncastle's deck.
     for (const [ax, az, cx, cz] of [
@@ -233,7 +233,7 @@ export const galleon = defineBuilder(
         F.box(M.port, x, -0.75, zz, 0.06, 0.55, 0.6)
         F.box(M.gilt, x + sx * 0.02, -0.75, zz, 0.04, 0.65, 0.7)
       }
-    ctx.footprint(0, (z0 + zf) / 2, sw / 2 + 0.1, (zf - z0) / 2 + 0.05)
+    ctx.footprint(0, (z0 + zf) / 2, sw / 2 + 0.1, (zf - z0) / 2 + 0.05, 0, undefined, top + 0.83)
     // The forecastle: the bow's deck raised over the hull's taper.
     const zb = L / 2 - p.fore
     const bowPts = edge.filter(([, zz]) => zz > zb)
@@ -255,7 +255,7 @@ export const galleon = defineBuilder(
     )
     F.box(M.gilt, 0, fh - 0.06, zb - 0.02, half * 2 - 0.2, 0.1, 0.06)
     F.box(M.void, 0, 0.85, zb - 0.01, 0.9, 1.6, 0.04)
-    ctx.footprint(0, (zb + L / 2) / 2, half, (L / 2 - zb) / 2)
+    ctx.footprint(0, (zb + L / 2) / 2, half, (L / 2 - zb) / 2, 0, undefined, fh)
     // Masts, yards, sails and rigging.
     const masts = [
       { z: -L * 0.2, h: p.height * 0.78 },
@@ -266,7 +266,7 @@ export const galleon = defineBuilder(
     for (const [mi, m] of masts.entries()) {
       const base = 0
       beam(b, M.mast, [0, base - 0.2, m.z], [0, m.h, m.z], 0.32, 10, 0.14)
-      ctx.circle(0, m.z, 0.45)
+      ctx.circle(0, m.z, 0.45, m.h)
       // A fighting top: a round platform two thirds up.
       F.cyl(M.mast, 0, m.h * 0.66, m.z, 0.9, 1.0, 0.12, 14)
       tops.push(new THREE.Vector3(0, m.h, m.z))
@@ -355,7 +355,7 @@ export const galleon = defineBuilder(
       const a = (k * TAU) / 6
       beam(b, M.rail, [Math.cos(a) * 0.4, 0.75, cz + Math.sin(a) * 0.4], [Math.cos(a) * 1.1, 0.78, cz + Math.sin(a) * 1.1], 0.035, 5)
     }
-    ctx.circle(0, cz, 0.5)
+    ctx.circle(0, cz, 0.5, 0.96)
     // The cargo hatch: a raised coaming, and its two doors shut on it or thrown outward and split.
     for (const [x, zz, w, d] of [
       [0, hz - H / 2 - 0.08, H + 0.32, 0.16],
@@ -483,7 +483,7 @@ export const cage = defineBuilder(
     // Straw on the floor, and scorched boards round the cage where the acid ran.
     F.box(M.straw, 0, 0.02, 0, w - 0.2, 0.04, d - 0.2)
     if (p.melted > 0) for (let k = 0; k < 7; k++) F.box(M.scorch, rand(-w / 2, w / 2), 0.045, rand(-d / 2, d / 2), rand(0.3, 0.8), 0.005, rand(0.3, 0.8), rand(0, TAU))
-    ctx.footprint(0, 0, w / 2, d / 2)
+    ctx.footprint(0, 0, w / 2, d / 2, 0, undefined, h)
   },
   { iron: "iron", slag: "slag", acid: "acid", straw: "cageStraw", scorch: "scorch" }
 )
@@ -556,8 +556,8 @@ export const crane = defineBuilder(
         beam(b, M.rope, [0, hookY + 0.2, p.reach], [Math.cos(a) * 0.75, hookY - 1.05, p.reach + Math.sin(a) * 0.75], 0.018, 3)
       }
     }
-    ctx.footprint(0, 0, 1.6, 1.6)
-    ctx.footprint(0, -1.6, 0.8, R)
+    ctx.footprint(0, 0, 1.6, 1.6, 0, undefined, 0.8)
+    ctx.footprint(0, -1.6, 0.8, R, 0, undefined, wy + R)
   },
   { stone: "stone", timber: "timber", rope: "rope", iron: "iron", crate: "crate" }
 )
@@ -646,7 +646,7 @@ export const warehouse = defineBuilder(
       w + 0.6,
       M4(-(w + 0.6) / 2, h, 0, Math.PI / 2)
     )
-    ctx.footprint(0, -0.8, w / 2, d / 2 - 0.8)
+    ctx.footprint(0, -0.8, w / 2, d / 2 - 0.8, 0, undefined, h)
   },
   { stone: "stone", trim: "stoneTrim", void: "void", timber: "timber", shutter: "shutter", rope: "rope", iron: "iron", roof: "roof" }
 )
@@ -705,5 +705,5 @@ export const bollard = defineBuilder(z.object({ height: size(2).default(0.7) }).
     ],
     14
   )
-  ctx.circle(0, 0, 0.22)
+  ctx.circle(0, 0, 0.22, p.height)
 })

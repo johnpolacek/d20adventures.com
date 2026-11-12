@@ -10,7 +10,13 @@ import { coord, defineBuilder, matName, num, size } from "./types"
 // A lamp's flame: crossed cards of live fire where the set has a fire material, as its braziers burn, else a glowing cone.
 function flame(f: Frame, M: Record<string, THREE.Material>, x: number, y: number, z: number, w: number, h: number) {
   if (M.fire?.userData.fire)
-    for (let i = 0; i < 3; i++) f.geo(M.fire, G("flame-card", () => new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0)), M4(x, y, z, 0.4 + (i * TAU) / 6, w, h, 1), { uv: "keep" })
+    for (let i = 0; i < 3; i++)
+      f.geo(
+        M.fire,
+        G("flame-card", () => new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0)),
+        M4(x, y, z, 0.4 + (i * TAU) / 6, w, h, 1),
+        { uv: "keep" }
+      )
   else
     f.lathe(
       M.flame,
@@ -160,7 +166,7 @@ export const drumTower = defineBuilder(
     ctx.anchor("lookout", Math.sin(side * -0.2) * (r + 1), 63.6, Math.cos(side * -0.2) * (r + 1))
     ctx.anchor("lookout", Math.sin(side * 0.3) * (r + 1), 63.6, Math.cos(side * 0.3) * (r + 1))
     ctx.anchor("lookout", 0, 89.6, r2 + 0.6)
-    if (p.footprint > 0) ctx.circle(0, 0, r + p.footprint)
+    if (p.footprint > 0) ctx.circle(0, 0, r + p.footprint, 63.6)
   }
 )
 
@@ -487,7 +493,7 @@ export const gatehouse = defineBuilder(
     // The crowd keeps clear of the wall mass either side of the portal.
     const zf = p.footprintTo
     const hw = (W + 2 - (R - 0.8)) / 2
-    for (const s of [-1, 1]) ctx.footprint(s * (R - 0.8 + hw), (zf - D - 2) / 2, hw, (zf + D + 2) / 2)
+    for (const s of [-1, 1]) ctx.footprint(s * (R - 0.8 + hw), (zf - D - 2) / 2, hw, (zf + D + 2) / 2, 0, undefined, T)
   }
 )
 
@@ -542,7 +548,7 @@ export const curtainWall = defineBuilder(
     }
     for (let x = x0 + 10; x < x1 - 4; x += 16) banner(b, ctx.mat(rand.pick(p.banners)), x, h - 1.2, 1.3, 3, rand(12, 17), 0, M.iron)
     for (let x = x0 + 6; x < x1 - 3; x += 9) ctx.anchor("lookout", x, h + 1.3, -0.6)
-    ctx.footprint(0, -3.5, len / 2, 5)
+    ctx.footprint(0, -3.5, len / 2, 5, 0, undefined, h + 1.4)
   }
 )
 
@@ -629,7 +635,7 @@ export const roundTower = defineBuilder(
       }
     if (p.banner) banner(b, ctx.mat(p.banner), Math.sin(face) * (r + 0.9), h * 0.7, Math.cos(face) * (r + 0.9), 3.6, h * 0.38, face, M.iron)
     ctx.anchor("lookout", Math.sin(face) * r, h + 2.4, Math.cos(face) * r)
-    ctx.circle(0, 0, r + 2)
+    ctx.circle(0, 0, r + 2, h + 2.4)
   },
   { wall: "stone" }
 )
@@ -694,7 +700,7 @@ export const squareTower = defineBuilder(
     }
     cyl(b, M.roof, 0, h + 2, 0, w * 0.72, 0.2, w * 0.9, 4, { uv: "planar", ry: Math.PI / 4 })
     if (p.pennant) pennant(b, ctx.mat(p.pennant), M.iron, 0, h + 2 + w * 0.9 - 0.5, 0, 7, 1.8, 6, 0.4)
-    ctx.footprint(0, 0, w / 2 + 2, w / 2 + 2)
+    ctx.footprint(0, 0, w / 2 + 2, w / 2 + 2, 0, undefined, h + 2)
   },
   { wall: "stone" }
 )

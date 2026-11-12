@@ -67,7 +67,7 @@ export const cask = defineBuilder(
       F.box(M.cradle, 0, 0.08, zz, width + 0.1, 0.16, 0.16)
       for (let i = 0; i <= p.count; i++) F.box(M.cradle, -width / 2 + i * step, 0.2, zz, 0.12, 0.14, 0.17)
     }
-    ctx.footprint(0, 0, width / 2, L / 2, 0, p.tiers * r * 1.72 + 0.4)
+    ctx.footprint(0, 0, width / 2, L / 2, 0, p.tiers * r * 1.72 + 0.4, r * 2 + 0.16 + (p.tiers - 1) * r * 1.72)
   },
   { wood: "barrel", head: "caskHead", iron: "iron", cradle: "timber" }
 )
@@ -110,7 +110,7 @@ export const wineRack = defineBuilder(
         ctx.b.add(body, m, M4(x, y, D * 0.42), { uv: "keep" })
         ctx.b.add(neck, m, M4(x, y, D * 0.9), { uv: "keep" })
       }
-    ctx.footprint(0, D / 2, W / 2, D / 2)
+    ctx.footprint(0, D / 2, W / 2, D / 2, 0, undefined, H + 0.06)
   },
   { wood: "timber", back: "dark", bottle: "bottleDark", bottleB: "bottleGreen", bottleC: "bottleBrown" }
 )

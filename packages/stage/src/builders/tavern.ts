@@ -72,10 +72,10 @@ export const wall = defineBuilder(
       if (q) {
         if (q.sill > 0.005) pieces.push({ x0, x1, y0: 0, y1: q.sill })
         if (q.sill + q.height < H - 0.005) pieces.push({ x0, x1, y0: q.sill + q.height, y1: H })
-        if (q.kind === "window") ctx.footprint((x0 + x1) / 2, 0, (x1 - x0) / 2, T / 2 + 0.03)
+        if (q.kind === "window") ctx.footprint((x0 + x1) / 2, 0, (x1 - x0) / 2, T / 2 + 0.03, 0, undefined, H)
       } else {
         pieces.push({ x0, x1, y0: 0, y1: H })
-        ctx.footprint((x0 + x1) / 2, 0, (x1 - x0) / 2, T / 2 + 0.03)
+        ctx.footprint((x0 + x1) / 2, 0, (x1 - x0) / 2, T / 2 + 0.03, 0, undefined, H)
       }
     }
     for (const s of pieces) F.box(M.wall, (s.x0 + s.x1) / 2, (s.y0 + s.y1) / 2, 0, s.x1 - s.x0, s.y1 - s.y0, T)
@@ -172,7 +172,7 @@ export const wall = defineBuilder(
       )
       hinge.geo(M.iron, knob(), M4(lw - 0.14, 1.07, 0.03, 0, 0.022, 0.022, 0.022), { uv: "keep" })
       const mid = new THREE.Vector3(lw / 2, 0, -0.03).applyMatrix4(M4(x0 + 0.02, 0, T / 2 - 0.04, -a))
-      ctx.footprint(mid.x, mid.z, lw / 2, 0.05, -a)
+      ctx.footprint(mid.x, mid.z, lw / 2, 0.05, -a, undefined, q.height)
     }
   },
   { wall: "plaster", glassOut: "glass" }
@@ -364,7 +364,7 @@ export const hearth = defineBuilder(
       ])
         beam(b, M.iron, [ix + dx, 0.02, 0.2], [ix + dx * 0.4, h, 0.05], 0.012, 4)
     }
-    ctx.footprint(0, -d / 2, w / 2, d / 2)
+    ctx.footprint(0, -d / 2, w / 2, d / 2, 0, undefined, H)
   },
   { stone: "hearthStone", mortar: "hearthMortar", apron: "hearthApron", mantel: "timber", flame: "candleFlame" }
 )
@@ -683,7 +683,7 @@ export const bar = defineBuilder(
       beam(b, M.brass, [x, 1.22, zb + 0.52], [x, 1.22, zb + 0.6], 0.02, 6)
       beam(b, M.brass, [x, 1.22, zb + 0.6], [x, 1.14, zb + 0.62], 0.014, 5)
     }
-    ctx.footprint(0, zb + 0.25, L / 2, 0.27)
+    ctx.footprint(0, zb + 0.25, L / 2, 0.27, 0, undefined, 2.88)
   },
   { top: "timber", flame: "candleFlame" }
 )
@@ -740,7 +740,7 @@ export const stairs = defineBuilder(
         beam(b, M.timber, [x, y, zz], [x, y + 0.86 - 0.04, zz], 0.018, 5)
       }
     }
-    ctx.footprint(0, -U / 2, w / 2 + 0.08, U / 2)
+    ctx.footprint(0, -U / 2, w / 2 + 0.08, U / 2, 0, undefined, R)
   },
   { tread: "timber", riser: "timber" }
 )

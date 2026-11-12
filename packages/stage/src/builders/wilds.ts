@@ -163,7 +163,7 @@ export const standingStone = defineBuilder(
     const lz = ((rand(-1, 1) * p.lean) / 180) * Math.PI
     b.add(g, M.stone, M4(0, 0, 0, rand(-0.2, 0.2), 1, 1, 1, lx, lz))
     g.dispose()
-    ctx.footprint(0, 0, p.width / 2 + 0.25, p.depth / 2 + 0.3)
+    ctx.footprint(0, 0, p.width / 2 + 0.25, p.depth / 2 + 0.3, 0, undefined, p.height)
   }
 )
 
@@ -174,7 +174,10 @@ export const rock = defineBuilder(z.object({ size: size(10).default(1.2), flat: 
   const s = p.size
   const detail = s > 0.9 ? 3 : 2
   const g = boulder(rand, detail)
-  b.add(g, M.stone, M4(0, s * 0.18 * p.flat, 0, rand(0, TAU), s, s * p.flat * rand(0.8, 1.1), s * rand(0.7, 1), rand(-0.15, 0.15)))
+  // The turn first and then the squash, as the arguments below were once drawn inline, so the stream is unchanged.
+  const turn = rand(0, TAU)
+  const sy = s * p.flat * rand(0.8, 1.1)
+  b.add(g, M.stone, M4(0, s * 0.18 * p.flat, 0, turn, s, sy, s * rand(0.7, 1), rand(-0.15, 0.15)))
   g.dispose()
   if (rand() < 0.5) {
     const g2 = boulder(rand, 2)
@@ -182,7 +185,7 @@ export const rock = defineBuilder(z.object({ size: size(10).default(1.2), flat: 
     b.add(g2, M.stone, M4(s * 0.95, s * 0.06, s * 0.35, rand(0, TAU), s * k, s * k * 0.8, s * k))
     g2.dispose()
   }
-  ctx.circle(0, 0, s * 0.95)
+  ctx.circle(0, 0, s * 0.95, s * 0.18 * p.flat + sy)
 })
 
 // Flagstones set in turf along a polyline: irregular slabs, a little proud of the grass, with gaps between them and a

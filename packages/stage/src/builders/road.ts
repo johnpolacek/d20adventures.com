@@ -103,7 +103,7 @@ export const wagon = defineBuilder(
     }
     // A water barrel lashed to the side.
     barrel(b, M, -(W / 2 + 0.2), deck - 0.3, -0.4, 0.2, 0.55)
-    ctx.footprint(0, 0, W / 2 + 0.35, L / 2 + 0.3)
+    ctx.footprint(0, 0, W / 2 + 0.35, L / 2 + 0.3, 0, undefined, p.cover ? deck + 0.48 + (W / 2 + 0.04) * 1.3 : deck + 1.1)
   },
   { wood: "wagonWood", canvas: "wagonCanvas", mark: "wagonMark", iron: "iron" }
 )
@@ -137,7 +137,7 @@ export const shrine = defineBuilder(
       F.sphere(M.candleFlame, x, y + 0.18, 0.08, 0.012, 0.025, 0.012, 6)
     }
     for (let i = 0; i < 5; i++) F.sphere(i % 2 ? M.flowerA : M.flowerB, -0.1 + i * 0.05, y + 0.06, 0.16, 0.03, 0.025, 0.03, 6)
-    ctx.footprint(0, 0, 0.4, 0.4)
+    ctx.footprint(0, 0, 0.4, 0.4, 0, undefined, y + 0.83)
   },
   { stone: "shrineStone", roof: "shrineRoof" }
 )
@@ -206,7 +206,7 @@ export const fortuneTable = defineBuilder(
     F.box(M.cardBack, 0.33, top + 0.02, -0.12, 0.062, 0.03, 0.097, 0.3)
     // A small horn cup.
     F.cyl(M.wood, -0.34, top + 0.01, -0.15, 0.035, 0.045, 0.1, 10)
-    ctx.footprint(0, 0, w / 2 + 0.1, d / 2 + 0.1)
+    ctx.footprint(0, 0, w / 2 + 0.1, d / 2 + 0.1, 0, undefined, top)
   },
   { wood: "tableWood" }
 )

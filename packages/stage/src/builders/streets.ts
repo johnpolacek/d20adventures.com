@@ -81,7 +81,7 @@ export const tenement = defineBuilder(
       v.dispose()
       F.geo(M.stone, vi, M4(0, spr, 0, 0, 1, 1, 1, -Math.PI / 2))
       vi.dispose()
-      for (const s of [-1, 1]) ctx.footprint(s * (w / 2 - pier / 2), 0, pier / 2, d / 2)
+      for (const s of [-1, 1]) ctx.footprint(s * (w / 2 - pier / 2), 0, pier / 2, d / 2, 0, undefined, G0 + p.storeys * SH)
     } else {
       F.box(M.stone, 0, G0 / 2, 0, w, G0, d)
       F.box(M.stoneTrim, 0, G0 - 0.08, fz + 0.06, w + 0.1, 0.16, 0.16)
@@ -125,7 +125,7 @@ export const tenement = defineBuilder(
           for (let i = -1; i <= 1; i++) F.box(M.iron, wx + i * 0.18, 1.6, fz + 0.06, 0.025, 0.72, 0.025)
         }
       }
-      ctx.footprint(0, 0, w / 2, d / 2)
+      ctx.footprint(0, 0, w / 2, d / 2, 0, undefined, G0 + p.storeys * SH)
     }
     // Storeys: each juts `jetty` further over the street and leans a little further, on joist ends and brackets.
     let face = fz

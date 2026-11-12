@@ -9,10 +9,11 @@ export type Point = z.infer<typeof pointSchema>
 
 // Something solid on the floor, as the set build's footprints: a rotated rectangle (`hw` and `hd` are half its width and
 // depth, `ry` its yaw in radians) or a circle. `top`, when given, is the world height of something low that can be seen
-// over. A rectangle without one, and every circle, stands full height.
+// over: a camera reads it, and a rectangle without one, and every circle, blocks its view. `height` is how high the thing
+// stands above the ground it is on, for judging cover; none is unknown.
 export const solidSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("rect"), x: z.number(), z: z.number(), hw: z.number(), hd: z.number(), ry: z.number(), top: z.number().optional() }).strict(),
-  z.object({ kind: z.literal("circle"), x: z.number(), z: z.number(), r: z.number() }).strict(),
+  z.object({ kind: z.literal("rect"), x: z.number(), z: z.number(), hw: z.number(), hd: z.number(), ry: z.number(), top: z.number().optional(), height: z.number().optional() }).strict(),
+  z.object({ kind: z.literal("circle"), x: z.number(), z: z.number(), r: z.number(), height: z.number().optional() }).strict(),
 ])
 export type Solid = z.infer<typeof solidSchema>
 

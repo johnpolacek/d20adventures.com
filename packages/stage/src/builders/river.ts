@@ -315,7 +315,7 @@ export const riverboat = defineBuilder(
         0,
         Hc
       )
-      ctx.footprint(0, (z0 + zs) / 2, hw, (zs - z0) / 2)
+      ctx.footprint(0, (z0 + zs) / 2, hw, (zs - z0) / 2, 0, undefined, Hc)
       // Upright boards: a lining in panels narrower than they are tall, so the grain runs up the wall.
       const lining = (cx: number, cz: number, yaw: number, len: number, y0 = 0, y1 = Hc) => {
         const n = Math.max(1, Math.ceil(len / 0.9))
@@ -378,7 +378,7 @@ export const riverboat = defineBuilder(
             piece(cuts[j], cuts[j + 1], 0, q.y0)
             piece(cuts[j], cuts[j + 1], q.y1, Hc)
           } else piece(cuts[j], cuts[j + 1], 0, Hc)
-          if (!q?.door) ctx.footprint(...at((cuts[j] + cuts[j + 1]) / 2, T / 2), (cuts[j + 1] - cuts[j]) / 2, T / 2 + 0.03, yaw)
+          if (!q?.door) ctx.footprint(...at((cuts[j] + cuts[j + 1]) / 2, T / 2), (cuts[j + 1] - cuts[j]) / 2, T / 2 + 0.03, yaw, undefined, Hc)
         }
         for (const q of opens) {
           if (q.door) continue
@@ -449,7 +449,7 @@ export const riverboat = defineBuilder(
           for (const zo of [-0.28, 0.28]) if (Math.abs(y - 1.45) > 0.25 || Math.abs(zo) > 0.2) b.add(knob, M.iron, M4(fx + side * 0.008, y, lz + zo, 0, 0.014, 0.014, 0.014), { uv: "keep" })
         b.add(knob, M.brass, M4(fx + side * 0.04, 1.0, lz + 0.3, 0, 0.05, 0.05, 0.05), { uv: "keep" })
       }
-      ctx.footprint(lx, lz, 0.05, 0.38)
+      ctx.footprint(lx, lz, 0.05, 0.38, 0, undefined, 1.98)
       // The way in and out, for walks: a step inside the doorway and a step outside it.
       ctx.anchor("door", 0, 0, z1 - 0.6)
       ctx.anchor("door", 0, 0, z1 + 0.6)
@@ -565,7 +565,7 @@ export const riverboat = defineBuilder(
         M4(bx, 0.22, bz, 0, 1, 0.44, 1),
         { uv: "keep" }
       )
-    if (!p.interior) ctx.footprint(0, zc, Wc / 2, Lc / 2)
+    if (!p.interior) ctx.footprint(0, zc, Wc / 2, Lc / 2, 0, undefined, Hc)
   },
   {
     hull: "hull",

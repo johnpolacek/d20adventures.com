@@ -232,7 +232,7 @@ function buildStall(
     beam(b, M.pole, [w / 2 - 0.2, 0, d / 2 + 0.1], [w / 2 - 0.2, hf + 1.8, d / 2 + 0.1], 0.05, 5)
     lantern(b, M, w / 2 - 0.2, hf + 0.6, d / 2 + 0.1)
   }
-  ctx.footprint(0, 0, w / 2 + Math.min(0.6, p.pad), d / 2 + p.pad)
+  ctx.footprint(0, 0, w / 2 + Math.min(0.6, p.pad), d / 2 + p.pad, 0, undefined, hb)
 }
 export const stall = defineBuilder(
   z
@@ -286,7 +286,7 @@ export const sail = defineBuilder(
       const a = rand(0, TAU)
       beam(b, M.rope, q, [q.x + Math.cos(a) * 2.5, 0, q.z + Math.sin(a) * 2.5], 0.012, 3)
     }
-    for (const q of c) ctx.footprint(q.x, q.z, 0.6, 0.6)
+    for (const q of c) ctx.footprint(q.x, q.z, 0.6, 0.6, 0, undefined, q.y + 0.35)
   }
 )
 
@@ -320,7 +320,7 @@ export const spearRack = defineBuilder(
         { uv: "keep" }
       )
     }
-    ctx.footprint(0, 0, w / 2 + 0.3, 0.8)
+    ctx.footprint(0, 0, w / 2 + 0.3, 0.8, 0, undefined, 1.6)
   }
 )
 
@@ -341,7 +341,7 @@ export const standard = defineBuilder(
       beam(b, M.pole, [Math.cos(a) * 1.3, 0, Math.sin(a) * 1.3], top.clone().add(V(rand(-0.2, 0.2), rand(0, 1.5), rand(-0.2, 0.2))), 0.06, 5)
     }
     pennant(b, ctx.mat(p.pennant), M.pole, 0, h - 2.5, 0, rand(2.5, 4), 0.9, 3, rand(-1, 1))
-    ctx.footprint(0, 0, 1.5, 1.5)
+    ctx.footprint(0, 0, 1.5, 1.5, 0, undefined, h)
   }
 )
 
@@ -354,7 +354,7 @@ export const crateProp = defineBuilder(z.object({ size: size(3).default(0.8), st
 })
 export const barrelProp = defineBuilder(z.object({ r: size(2).default(0.38), h: size(3).default(1), solid: z.boolean().default(false) }).strict(), (ctx, p) => {
   barrel(ctx.b, ctx.M, 0, 0, 0, p.r, p.h)
-  if (p.solid) ctx.circle(0, 0, p.r)
+  if (p.solid) ctx.circle(0, 0, p.r, p.h)
 })
 export const sackProp = defineBuilder(z.object({ size: size(3).default(0.6) }).strict(), (ctx, p) => sack(ctx.b, ctx.M, ctx.rand, 0, 0, 0, p.size))
 export const potProp = defineBuilder(z.object({ size: size(3).default(0.5) }).strict(), (ctx, p) => pot(ctx.b, ctx.M, ctx.rand, 0, 0, 0, p.size))
@@ -404,17 +404,25 @@ export const prizeWheel = defineBuilder(
       M4(0, h + r + 0.06, 0.07, 0, 0.05, 0.16, 0.02, Math.PI, 0),
       { uv: "keep" }
     )
-    ctx.circle(0, -0.08, 0.35)
+    ctx.circle(0, -0.08, 0.35, h + r)
   }
 )
 // A carter's heap: a crate (often another on top), a barrel and a sack.
 export const goodsPile = defineBuilder(z.object({}).strict(), (ctx) => {
   const { b, M, rand } = ctx
-  crate(b, M, 0, 0, 0, rand(0.7, 1), rand(0, 1))
-  if (rand() < 0.7) crate(b, M, rand(-0.1, 0.1), 0.8, 0, rand(0.5, 0.7), rand(0, 1))
+  // Each draw in the order the arguments once drew it inline, so the stream is unchanged.
+  const s0 = rand(0.7, 1)
+  crate(b, M, 0, 0, 0, s0, rand(0, 1))
+  let high = Math.max(s0, 1.05)
+  if (rand() < 0.7) {
+    const dx = rand(-0.1, 0.1)
+    const s1 = rand(0.5, 0.7)
+    crate(b, M, dx, 0.8, 0, s1, rand(0, 1))
+    high = Math.max(high, 0.8 + s1)
+  }
   barrel(b, M, 1.1, 0, 0.4, 0.4, 1.05)
   sack(b, M, rand, -0.9, 0, 0.6, 0.7)
-  ctx.footprint(0.1, 0.2, 1.6, 1)
+  ctx.footprint(0.1, 0.2, 1.6, 1, 0, undefined, high)
 })
 
 // ── Town ──
@@ -468,7 +476,7 @@ export const house = defineBuilder(
       M4(-(w + 0.8) / 2, h, 0, Math.PI / 2)
     )
     if (rand() < 0.5) F.box(M.dark, w * 0.25, h + d * 0.3, 0, 0.8, 2.2, 0.8)
-    ctx.footprint(0, 0, w / 2 + 0.5, d / 2 + 0.5)
+    ctx.footprint(0, 0, w / 2 + 0.5, d / 2 + 0.5, 0, undefined, h)
   }
 )
 

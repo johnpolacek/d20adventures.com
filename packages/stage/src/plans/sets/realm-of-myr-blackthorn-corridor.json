@@ -2,14 +2,14 @@
   "id": "realm-of-myr/blackthorn-corridor",
   "title": "The Blackthorn mansion: the upper corridor",
   "solids": [
-    { "kind": "circle", "x": -1.7, "z": -22.6, "r": 0.2 },
-    { "kind": "circle", "x": -1.7, "z": -11.3, "r": 0.2 },
-    { "kind": "rect", "x": -2.5, "z": -15, "hw": 0.3, "hd": 15.6, "ry": 0 },
-    { "kind": "rect", "x": -1.55, "z": 0.3, "hw": 0.95, "hd": 0.33, "ry": 0 },
-    { "kind": "rect", "x": -0.408, "z": 0, "hw": 0.585, "hd": 0.05, "ry": 1.222 },
-    { "kind": "rect", "x": 0, "z": -30.3, "hw": 2.8, "hd": 0.3, "ry": 0 },
-    { "kind": "rect", "x": 1.55, "z": 0.3, "hw": 0.95, "hd": 0.33, "ry": 0 },
-    { "kind": "rect", "x": 2.5, "z": -15, "hw": 0.3, "hd": 15.6, "ry": 0 }
+    { "kind": "circle", "x": -1.7, "z": -22.6, "r": 0.2, "height": 1.6 },
+    { "kind": "circle", "x": -1.7, "z": -11.3, "r": 0.2, "height": 1.6 },
+    { "kind": "rect", "x": -2.5, "z": -15, "hw": 0.3, "hd": 15.6, "ry": 0, "height": 4.62 },
+    { "kind": "rect", "x": -1.55, "z": 0.3, "hw": 0.95, "hd": 0.33, "ry": 0, "height": 4.6 },
+    { "kind": "rect", "x": -0.408, "z": 0, "hw": 0.585, "hd": 0.05, "ry": 1.222, "height": 2.2 },
+    { "kind": "rect", "x": 0, "z": -30.3, "hw": 2.8, "hd": 0.3, "ry": 0, "height": 5 },
+    { "kind": "rect", "x": 1.55, "z": 0.3, "hw": 0.95, "hd": 0.33, "ry": 0, "height": 4.6 },
+    { "kind": "rect", "x": 2.5, "z": -15, "hw": 0.3, "hd": 15.6, "ry": 0, "height": 4.62 }
   ],
   "doors": [[{ "x": 0, "z": 1.2 }, { "x": 0, "z": -0.6 }]],
   "places": [

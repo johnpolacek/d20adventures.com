@@ -4,8 +4,9 @@ import type { Sink } from "../kit/geometry"
 import type { Rand } from "../kit/rng"
 
 // Where the crowd may not stand: a rotated rectangle [x, z, halfWidth, halfDepth, yaw radians] or a circle [x, z, r].
-// `top`, when given, is the world height of something low (a crate) that a camera can see over.
-export type Footprint = { kind: "rect"; x: number; z: number; hw: number; hd: number; ry: number; top?: number } | { kind: "circle"; x: number; z: number; r: number }
+// `top`, when given, is the world height of something low (a crate) that a camera can see over. `height` is how high the
+// thing stands above the ground it is on, in metres, for judging cover; none is unknown.
+export type Footprint = { kind: "rect"; x: number; z: number; hw: number; hd: number; ry: number; top?: number; height?: number } | { kind: "circle"; x: number; z: number; r: number; height?: number }
 export interface Anchor {
   tag: string
   x: number
@@ -22,8 +23,10 @@ export interface BuildCtx {
   mat: (name: string) => THREE.Material
   rand: Rand
   frame: THREE.Matrix4
-  footprint: (x: number, z: number, hw: number, hd: number, ry?: number, top?: number) => void
-  circle: (x: number, z: number, r: number) => void
+  // `top` is the local height a camera sees over (see Footprint); `height` how high the thing stands, for cover, and
+  // when left out it is `top`.
+  footprint: (x: number, z: number, hw: number, hd: number, ry?: number, top?: number, height?: number) => void
+  circle: (x: number, z: number, r: number, height?: number) => void
   anchor: (tag: string, x: number, y: number, z: number) => void
   // Standalone meshes (not merged): the land ring, anything with its own attributes.
   addObject: (o: THREE.Object3D) => void

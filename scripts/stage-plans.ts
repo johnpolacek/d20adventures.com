@@ -61,8 +61,17 @@ function setPlan(raw: unknown) {
     .map(
       (f): Solid =>
         f.kind === "circle"
-          ? { kind: "circle", x: round(f.x), z: round(f.z), r: round(f.r) }
-          : { kind: "rect", x: round(f.x), z: round(f.z), hw: round(f.hw), hd: round(f.hd), ry: round(f.ry), top: f.top === undefined ? undefined : round(f.top) }
+          ? { kind: "circle", x: round(f.x), z: round(f.z), r: round(f.r), height: f.height === undefined ? undefined : round(f.height) }
+          : {
+              kind: "rect",
+              x: round(f.x),
+              z: round(f.z),
+              hw: round(f.hw),
+              hd: round(f.hd),
+              ry: round(f.ry),
+              top: f.top === undefined ? undefined : round(f.top),
+              height: f.height === undefined ? undefined : round(f.height),
+            }
     )
     .sort(bySolid)
   const doors = doorways(built.anchors).map(([a, b]): [Point, Point] => [pt(a.x, a.z), pt(b.x, b.z)])

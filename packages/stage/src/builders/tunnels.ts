@@ -183,7 +183,7 @@ export const bore = defineBuilder(
       ctx.b.add(cap, M.wall, new THREE.Matrix4(), { uv: "keep" })
       cap.dispose()
       const t = dirs[i]
-      ctx.footprint(mid.x - t.x * (end === 0 ? 0.15 : -0.15), mid.z - t.y * (end === 0 ? 0.15 : -0.15), r + 0.2, 0.15, Math.atan2(t.x, t.y))
+      ctx.footprint(mid.x - t.x * (end === 0 ? 0.15 : -0.15), mid.z - t.y * (end === 0 ? 0.15 : -0.15), r + 0.2, 0.15, Math.atan2(t.x, t.y), undefined, p.walls + r)
     }
     // Walls to the walks: a thin rect beyond each side of every leg.
     for (let i = 0; i < p.path.length - 1; i++) {
@@ -194,7 +194,7 @@ export const bore = defineBuilder(
       t.normalize()
       const ry = Math.atan2(t.x, t.y)
       const mid = A.clone().add(B).multiplyScalar(0.5)
-      for (const s of [-1, 1]) ctx.footprint(mid.x - t.y * s * (r + 0.15), mid.y + t.x * s * (r + 0.15), 0.15, len / 2, ry)
+      for (const s of [-1, 1]) ctx.footprint(mid.x - t.y * s * (r + 0.15), mid.y + t.x * s * (r + 0.15), 0.15, len / 2, ry, undefined, p.walls + r)
     }
   },
   { wall: "tunnelStone", floor: "tunnelFloor" }
@@ -272,7 +272,7 @@ export const cave = defineBuilder(
     for (let i = 0; i < 64; i++) {
       const a = (i / 64) * Math.PI * 2
       if (mouth(a, 0.5)) continue
-      ctx.circle(Math.sin(a) * (p.rx - 0.1), Math.cos(a) * (p.rz - 0.1), 0.5)
+      ctx.circle(Math.sin(a) * (p.rx - 0.1), Math.cos(a) * (p.rz - 0.1), 0.5, p.height)
     }
   },
   { wall: "tunnelRock", floor: "tunnelFloor" }

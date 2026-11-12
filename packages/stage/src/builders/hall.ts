@@ -75,7 +75,7 @@ export const rotunda = defineBuilder(
         const a = a0 + ((a1 - a0) * (i + 0.5)) / n
         const len = ((a1 - a0) / n) * DEG * (r + T / 2)
         const [x, zz] = at(a, r + T / 2)
-        ctx.footprint(x, zz, len / 2 + 0.02, T / 2 + 0.03, a * DEG)
+        ctx.footprint(x, zz, len / 2 + 0.02, T / 2 + 0.03, a * DEG, undefined, p.height)
       }
       // Plinth and cornice run round the inner face.
       F.shape(M.trim, sector(r - 0.12, r, a0, a1, n), 0.4, M4(0, 0, 0, 0, 1, 1, 1, -Math.PI / 2))
@@ -246,7 +246,7 @@ export const dais = defineBuilder(
         }
       }
     ctx.footprint(0, r * 0.45, r, r * 0.45, 0, h)
-    ctx.circle(0, 0, r * 0.98)
+    ctx.circle(0, 0, r * 0.98, h)
   },
   { stone: "stone", trim: "stoneTrim", frieze: "stoneDark", top: "velvet" }
 )
