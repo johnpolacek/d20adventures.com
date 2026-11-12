@@ -27,8 +27,12 @@ export function buildLocalWikiTurnCharacters(args: {
       args.artifacts.characterSheets.premadeCharacters[id]?.sheet ??
       args.existingPlayerCharacters?.find((character) => character.id === id || character.id === player.characterId)
     if (!sheet) throw new Error(`Missing player character sheet for ${player.characterId}`)
+    // A player's saved copy of a premade hero may predate the rules. It keeps its own state and takes the
+    // adventure's rules sheet for that hero.
+    const rules = sheet.sheet ?? (args.artifacts.characterSheets.premadeCharacters[sheet.id] ?? args.artifacts.characterSheets.premadeCharacters[id])?.sheet.sheet
     characters.push({
       ...sheet,
+      ...(rules ? { sheet: rules } : {}),
       id: sheet.id,
       type: "pc",
       userId: player.userId,

@@ -1,3 +1,4 @@
+import { sheetSchema } from "@d20/gm-core/sheet/sheet"
 import type { Adventure, TurnCharacter } from "@/types/adventure"
 import type { PCTemplate } from "@/types/character"
 
@@ -40,6 +41,7 @@ export function toPCTemplate(obj: unknown): PCTemplate | null {
       return { name: "", description: "", duration: 0 }
     })
   }
+  const sheet = sheetSchema.safeParse(o.sheet)
   return {
     id: o.id,
     name: o.name,
@@ -60,6 +62,8 @@ export function toPCTemplate(obj: unknown): PCTemplate | null {
     effects,
     type: "pc",
     attributes,
+    // The rules sheet rides along when it is well formed. A hero made before the rules has none.
+    ...(sheet.success ? { sheet: sheet.data } : {}),
   }
 }
 
