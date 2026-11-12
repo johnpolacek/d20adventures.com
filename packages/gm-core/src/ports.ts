@@ -115,7 +115,9 @@ export interface Content {
   }>
   loadPlan(settingId: string, planId: string): Promise<AdventurePlan>
   loadLegacyPlan(settingId: string, planId: string): Promise<AdventurePlan | null>
-  spatialContext(settingId: string, planId: string, encounterId: string, characters: TurnCharacter[]): Promise<string | undefined>
+  // What the game master is told of where the scene is: the engine's own words for where everyone stands, `staging`,
+  // with whatever the host knows of the place around it, such as the city map.
+  spatialContext(settingId: string, planId: string, encounterId: string, staging: string | undefined): Promise<string | undefined>
   // The encounter's floor, in feet: its solid things, doorways and named places, and where its staging puts the cast.
   // An encounter with no floor plan has none, and its characters have no positions.
   floor?(encounterId: string): Promise<EncounterFloor | undefined>

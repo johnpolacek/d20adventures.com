@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { afterHarm } from "../sheet/death"
+import { standingWords } from "../sheet/placement"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { KnownFact } from "../story/knowledge"
@@ -138,6 +139,7 @@ export function createNpcTurnService(ports: GmPorts) {
 
     // NPC turn processing
 
+    const floor = await ports.content.floor?.(turn.encounterId)
     const npcActionContext = buildNpcActionContext({
       turn,
       npc,
@@ -148,6 +150,7 @@ export function createNpcTurnService(ports: GmPorts) {
       knowledge,
       strangers,
       earlier,
+      standing: floor ? standingWords(turn.characters, floor) : undefined,
     })
     const scene = await sceneFor(ports, turn)
     const prompt1 = buildNpcActionPrompt({

@@ -2,6 +2,7 @@ import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { hitPointWords } from "../sheet/hit-points"
+import { movementBudgetOf } from "../sheet/space"
 import { spellWords } from "../sheet/spells"
 import { authoredText } from "../story/authored"
 import type { StoryScene } from "../story/clean"
@@ -65,11 +66,13 @@ type NpcActionContext = {
   strangers?: boolean
   // What this NPC did in the scene's earlier rounds, as a script.
   earlier?: string
+  // Where everyone stands, in the engine's words (standingWords). None when the encounter has no floor.
+  standing?: string
 }
 
 // What an NPC's turn reads. The round and the intro are as the NPC knows them: without the private beats and
 // paragraphs it is not in, or the players' own words. The GM's notes stay whole, since they direct the GM.
-export function buildNpcActionContext({ turn, npc, encounterContext, sectionContext, sceneContext, adventureOverview, knowledge, strangers, earlier }: NpcActionContext): {
+export function buildNpcActionContext({ turn, npc, encounterContext, sectionContext, sceneContext, adventureOverview, knowledge, strangers, earlier, standing }: NpcActionContext): {
   contextString: string
   npcDetails: string
   // The absolute rules the GM notes set for this NPC, lifted out to sit beside the rule that the notes bind.
@@ -96,6 +99,9 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
     strangers ? unheardNote(namesHeard(knowledge, turn), npc, turn.characters) : "",
     earlier ? `What ${npc.name} did in earlier rounds of this scene. None of these lines is said again, and an action that failed is not tried again the same way:\n${earlier}` : "",
     narrativeContext ? `Recent Narrative:\n${narrativeContext}` : "",
+    standing
+      ? `Where Everyone Stands:\n${standing}\nThese places and distances are the game's own. ${npc.name} can move ${movementBudgetOf(npc)} feet on this turn before acting, and reaches 5 feet in melee unless a weapon says more. Plan what ${npc.name} can do from where they stand, and tell nothing that disagrees with these distances.`
+      : "",
   ]
     .filter(Boolean)
     .join("\n\n")

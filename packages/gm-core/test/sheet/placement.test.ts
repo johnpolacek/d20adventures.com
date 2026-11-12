@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { type EncounterFloor, floorFromMetres, placeCharacters } from "../../src/sheet/placement"
+import { type EncounterFloor, floorFromMetres, placeCharacters, standingWords } from "../../src/sheet/placement"
 import { FEET_PER_METRE } from "../../src/sheet/space"
 
 // Every expected value below was worked out by hand, not copied from the function's output.
@@ -80,4 +80,34 @@ test("an encounter places its characters from the floor", () => {
   for (const other of crowd.slice(0, 3)) assert.ok(Math.hypot(yeva.x - (other.position?.x ?? 0), yeva.y - (other.position?.y ?? 0)) >= 5 - 1e-6)
   // A position from the encounter before is not kept.
   assert.equal(placeCharacters([{ ...npc("npcs-2", "Silas"), position: at(3, 3) }], floor)[0].position, undefined)
+})
+
+test("the game master is told where everyone stands, in feet", () => {
+  // Lyra is on the crate's spot. Reinhard is 3 and 4 feet off it, 5 feet away. Poppen is 30 feet east of Lyra, 20 feet
+  // short of the gangway at 50: √(27² + 4²) is 27.3 from Reinhard. Silas has no position, and the dead are left out.
+  const floor: EncounterFloor = {
+    solids: [],
+    doors: [],
+    places: [
+      { id: "crate", label: "the crate", at: { x: 0, y: 0 } },
+      { id: "gangway", label: "the gangway", at: { x: 50, y: 0 } },
+    ],
+    cast: [],
+    party: [],
+    spare: [],
+    where: "The riverboat's lamplit saloon.",
+  }
+  const stands = (name: string, x: number, y: number, extra: object = {}) => ({ name, type: "npc", position: { x, y }, ...extra })
+  assert.equal(
+    standingWords([stands("Lyra", 0, 0), stands("Reinhard", 3, 4), stands("Poppen", 30, 0), { name: "Silas", type: "npc" }, stands("Aelar", 1, 1, { dead: true as const })], floor),
+    [
+      "The riverboat's lamplit saloon.",
+      "Named places: the crate, the gangway.",
+      "Where everyone stands, and how many feet each of the others is from them:",
+      "- Lyra, at the crate: Reinhard 5, Poppen 30.",
+      "- Reinhard, at the crate: Lyra 5, Poppen 27.",
+      "- Poppen, 20 feet from the gangway: Lyra 30, Reinhard 27.",
+    ].join("\n")
+  )
+  assert.equal(standingWords([{ name: "Silas", type: "npc" }], floor), undefined)
 })

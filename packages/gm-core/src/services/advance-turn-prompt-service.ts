@@ -159,9 +159,9 @@ ${args.encounterInstructions}
 
 ${
   args.spatialContext
-    ? `Battle Map Staging:
+    ? `Where Everyone Stands:
 ${args.spatialContext}
-Keep described distances, positioning, and movement consistent with this staging. A creature that starts far from the party must plausibly cross that distance (over one or more turns) before it can be in melee; a creature that starts adjacent should be described as immediately close. Use the map's place names when referring to locations.
+These places and distances are the game's own. Tell nothing that disagrees with them, and move no one yourself: the game moves each character on their own turn.
 
 `
     : ""

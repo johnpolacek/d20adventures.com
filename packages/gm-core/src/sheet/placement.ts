@@ -1,4 +1,4 @@
-import { FEET_PER_METRE, type Floor, type Point, type Solid, standingRoom } from "./space"
+import { BASE_REACH, between, distance, FEET_PER_METRE, type Floor, type Point, placedOf, type Solid, type Standing, standingRoom } from "./space"
 
 /** A named place of the floor, which a character may walk to: "the gangway", "the cabin door". */
 export type Place = { id: string; label: string; at: Point }
@@ -10,7 +10,13 @@ export type Staged = { id: string; name?: string; at: Point }
  * An encounter's floor as the engine reads it, in feet: its solid things and doorways, its named places, where the
  * cast starts, the spots where the party stands, and spare spots for heroes beyond them.
  */
-export type EncounterFloor = Floor & { places: readonly Place[]; cast: readonly Staged[]; party: readonly Staged[]; spare: readonly Point[] }
+export type EncounterFloor = Floor & {
+  places: readonly Place[]
+  cast: readonly Staged[]
+  party: readonly Staged[]
+  spare: readonly Point[] /** The place in a sentence or two, for the game master. */
+  where?: string
+}
 
 type Metres = { x: number; z: number }
 
@@ -25,6 +31,7 @@ export type FloorPlanInMetres = {
   cast: readonly ({ id: string; name?: string } & Metres)[]
   party: readonly ({ id: string } & Metres)[]
   spare: readonly Metres[]
+  where?: string
 }
 
 const inFeet = (point: Metres): Point => ({ x: point.x * FEET_PER_METRE, y: point.z * FEET_PER_METRE })
@@ -44,6 +51,7 @@ export function floorFromMetres(plan: FloorPlanInMetres): EncounterFloor {
     cast: plan.cast.map((member) => ({ id: member.id, ...(member.name ? { name: member.name } : {}), at: inFeet(member) })),
     party: plan.party.map((slot) => ({ id: slot.id, at: inFeet(slot) })),
     spare: plan.spare.map(inFeet),
+    ...(plan.where ? { where: plan.where } : {}),
   }
 }
 
@@ -86,4 +94,34 @@ export function placeCharacters<T extends Placeable>(characters: readonly T[], f
     const at = placed.get(character.id)
     return (at ? { ...rest, position: { x: at.x, y: at.y } } : rest) as T
   })
+}
+
+/**
+ * Where everyone stands, in words for the game master: the place, its named spots, and each character with the spot
+ * they are at or nearest and how far each of the others is from them, in feet. The dead, the fled and those with no
+ * position are left out. None when no one has a position.
+ */
+export function standingWords(characters: readonly (Standing & { name: string; dead?: true; fled?: true })[], floor: EncounterFloor): string | undefined {
+  const here = characters.flatMap((character) => {
+    const at = character.dead || character.fled ? undefined : placedOf(character)
+    return at ? [{ name: character.name, at }] : []
+  })
+  if (!here.length) return undefined
+  const spot = (at: Point) => {
+    const nearest = [...floor.places].sort((a, b) => between(a.at, at) - between(b.at, at))[0]
+    if (!nearest) return ""
+    const feet = between(nearest.at, at)
+    return feet <= BASE_REACH ? `, at ${nearest.label}` : `, ${Math.round(feet)} feet from ${nearest.label}`
+  }
+  const lines = here.map((one) => {
+    const others = here.filter((other) => other !== one).map((other) => `${other.name} ${Math.round(distance(one.at, other.at))}`)
+    return `- ${one.name}${spot(one.at.at)}${others.length ? `: ${others.join(", ")}` : ""}.`
+  })
+  return [
+    floor.where,
+    floor.places.length ? `Named places: ${floor.places.map((place) => place.label).join(", ")}.` : undefined,
+    `Where everyone stands, and how many feet each of the others is from them:\n${lines.join("\n")}`,
+  ]
+    .filter(Boolean)
+    .join("\n")
 }

@@ -13,7 +13,7 @@ import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventure
 import type { RuntimeArtifacts } from "@d20/gm-core/wiki-adventures/types"
 import { MOVEMENT_SYSTEM, movementIntentSchema, movementPrompt } from "@d20/stage/movement"
 import { z } from "zod"
-import { scenePlaces, spatialContext } from "../src/scenes"
+import { scenePlaces } from "../src/scenes"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
 import { encounterFloor } from "./floor"
 import { gmModelSchema, partyFor, writeArrivals } from "./heroes"
@@ -142,8 +142,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     loadWikiRuntime: async (_setting, plan) => told(plan),
     loadPlan: async (_setting, plan) => buildAdventurePlanViewFromArtifacts(told(plan).artifacts),
     loadLegacyPlan: async () => null,
-    spatialContext: async (_setting, plan, encounter, characters) =>
-      withCityContext(spatialContext(encounter, characters, store.state?.positions ?? {}, store.state?.figures), packFor(plan).cityMap, packFor(plan).artifacts.encounters, encounter),
+    spatialContext: async (_setting, plan, encounter, staging) => withCityContext(staging, packFor(plan).cityMap, packFor(plan).artifacts.encounters, encounter),
     places: async (encounter) => scenePlaces(encounter),
     floor: encounterFloor,
     // Of the story so far, only the chapters this hero lived.

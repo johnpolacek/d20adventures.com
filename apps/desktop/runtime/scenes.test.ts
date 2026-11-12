@@ -234,9 +234,10 @@ test("positions reset on a new encounter, persist through rounds and reopening, 
     assert.equal(run.store.state!.turns.length, 4)
     assert.deepEqual(run.store.state!.positions["milos-radan"], { x: -10, z: 3.9, ry: 1 })
     assert.match(prompt, /festival square/)
-    assert.match(prompt, /Karim's jewel stall \(-11\.8, 3\.9\)/)
-    assert.match(prompt, /Milos Radan \(-10\.0, 3\.9\)/)
-    assert.match(prompt, /Madam Zephyra \(-12\.4, -6\.7\)/)
+    // The GM is told where the engine has everyone, in feet, not where the 3D view last drew them.
+    assert.match(prompt, /Named places: [^\n]*Karim's jewel stall/)
+    assert.match(prompt, /- Milos Radan, [^\n]*Madam Zephyra \d+/)
+    assert.match(prompt, /- Madam Zephyra, /)
 
     // A walk read after the round's end was written is kept, since the next round is in the same square.
     const lastRound = run.store.state!.turns.at(-2)!._id

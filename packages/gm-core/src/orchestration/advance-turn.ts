@@ -14,7 +14,7 @@ import {
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
 import { atRoundStart } from "../sheet/death"
-import { placeCharacters } from "../sheet/placement"
+import { placeCharacters, standingWords } from "../sheet/placement"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
@@ -97,13 +97,12 @@ export function createAdvanceTurn(ports: GmPorts) {
       beats: turn.story.length,
     })
 
-    // Battle-map staging for the narration prompt: token starting positions and
-    // party↔NPC distances so described movement matches the map players see.
-    // Gracefully absent when the encounter has no stored map.
-    const turnCharactersForMap = turn.characters as TurnCharacter[]
-    const spatialContext = await ports.content.spatialContext(settingId, adventurePlanId, turn.encounterId, turnCharactersForMap)
+    // Where everyone stands, for the narration prompt, in the engine's own words and the same on every host. None
+    // when the encounter has no floor.
+    const floorNow = await ports.content.floor?.(turn.encounterId)
+    const spatialContext = await ports.content.spatialContext(settingId, adventurePlanId, turn.encounterId, floorNow ? standingWords(turn.characters as TurnCharacter[], floorNow) : undefined)
     if (spatialContext) {
-      console.log(`[advanceTurn:${requestId}] Battle map staging for narration prompt:\n${spatialContext}`)
+      console.log(`[advanceTurn:${requestId}] Where everyone stands, for the narration prompt:\n${spatialContext}`)
     }
 
     if (isLocalWikiAdventure(settingId, adventurePlanId)) {

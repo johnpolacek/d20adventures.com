@@ -90,8 +90,10 @@ test("the real core walks Covert Cargo from the pier into the cabin and back to 
     assert.match(prompts[0], /Poppen and Thalbern do not know of each other/)
     assert.match(prompts[0], /Perception check, DC 15/)
     assert.match(prompts[0], /Once Silas hands over the payment they leave the boat/)
-    assert.match(prompts[0], /Poppen Quickfoot \(-5\.0, 4\.3\)/)
-    assert.match(prompts[0], /Thalbern \(-1\.4, -6\.4\)/)
+    // Where everyone stands is the engine's, in feet: Poppen's bushes are 5 metres west of the origin and Reinhard
+    // stands in the saloon, so the two are tens of feet apart.
+    assert.match(prompts[0], /- Poppen Quickfoot, [^\n]*Reinhard \d\d/)
+    assert.match(prompts[0], /- Thalbern, /)
     assert.match(prompts[0], /the thicket on the bank below the stern/)
   } finally {
     store.close()
