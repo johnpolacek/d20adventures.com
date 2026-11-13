@@ -15,12 +15,12 @@
         "portrait": "/stage/fixtures/welcome-to-kordavos/garlan-portrait.jpg"
       },
       "figure": {
-        "model": "/stage/figures/kaykit-knight.glb",
+        "model": "/stage/figures/garlan.glb",
         "idle": "Idle",
-        "hit": "Hit_A",
-        "fall": "Death_A",
-        "hide": ["1H_Sword", "1H_Sword_Offhand", "2H_Sword", "Badge_Shield", "Rectangle_Shield", "Round_Shield", "Spike_Shield"],
-        "pace": 0.6
+        "hit": "Hit",
+        "fall": "Fall",
+        "ownLight": true,
+        "turn": 32
       },
       "at": "sergeant",
       "facing": "queueHead"

@@ -280,6 +280,7 @@ Known limits:
 
 One cast member as a rigged, animated glTF figure in place of his standee, in the engine and not only the lab: Garlan at the gate, behind the `figures` flag (off by default). `packages/stage/src/figures/models.ts` holds it. A staging names the model per cast member (`cast[].figure`: the file, the idle, hit and fall clips, the nodes left out).
 
+- Garlan has since been rebuilt from his own paintings (next section), so the knight no longer shows. Its file stays in `public/stage/figures`.
 - See it: `/dev/stage?staging=welcome-to-kordavos/the-gates-of-kordavos&tier=ultra&figures=on`, or the `figures` pill under More. `&painted=0` shows the same staging on the set as built, under the brush filter.
 - The model: the KayKit Adventurers Knight, CC0, unmodified. Source, licence and hash are in `public/stage/figures/kaykit-knight.source.json`.
 - It stands at the cast spot, faces the way the cast member faces, and is scaled so the top of its idle pose is his 1.94 m. It casts and takes the sun's shadow, and the set hides it as it hides a card.
@@ -296,6 +297,28 @@ What looked wrong:
 - No walk yet. Nobody walks while `PEOPLE_STILL` is on.
 
 Not tried: a figure with real proportions. Quaternius's Modular Character Outfits (Fantasy) with the Universal Animation Library is CC0 and closer to the cards, but itch.io serves it through a download page a script may not drive, so it needs fetching by hand. Its clips are in a separate file, which `figure` does not take yet.
+
+## A figure from the character's own paintings, 2026-11-13
+
+The owner did not want figures to depend on anyone else's art: a pack has what it has (the free Quaternius outfits had no knight and no head), and a generator charges for each try. `figure.ts` builds a figure from what the project already paints. Garlan at the gate now shows as one, in place of the KayKit knight, behind the same `figures` flag.
+
+- In: the A-pose front and back paintings `character.ts sheet` makes, and `figures/<id>.json`, which gives the height and where the joints are on the front painting. Out: `public/stage/figures/<id>.glb`. Garlan takes 3.5 seconds.
+- The outline is cut from the front painting and inflated like a membrane, so a limb comes out round and a chest deep. Each part is then deepened by what its bone says it is: a membrane alone makes a head as flat as a coin.
+- The front painting lies on the front, the back painting on the back. The back is turned about and slid onto the front's outline row by row, with the slides evened out over 25 rows. Without the evening the paint tore from row to row.
+- The outline's exact edge is the texture's alpha, and the mesh's rim is moved onto the outline. Left on the grid, the two sheets met beside the outline and the cut ran up the steep rim as a row of teeth, 5 cm tall from the side.
+- Eighteen bones. Each point follows the bones nearest to it going through the body, never across a gap, so a hand hanging by a hip stays the arm's.
+- Idle, Hit and Fall are written in the script as joint turns: breathing and a slow look about, a blow to the chest, onto his back over his heels.
+- In the engine: `ownLight` shows the paint evenly lit on a painted set, as a card is. Lit by the sun as well, he came out yellow with a grey tabard. `turn: 32` turns him toward the camera past 32 degrees off his front or back, as a card turns: he has no side.
+- Cost, ultra at DPR 2: 17,428 triangles, no more draw calls than the card, 913 KB (183 KB of it the texture). Frame time did not move: 29 to 30 ms either way, 16.5 ms at the high tier.
+
+What looked wrong:
+
+- The side of the head. At 32 degrees and close, as in the gate's two-shot, the hair and ear are the edge of the front painting stretched back, and it shows as streaks.
+- His pose. The card has him beckoning. The figure stands as the A-pose sheet has him, arms at his sides.
+- From square on he is a relief, 21 cm deep at the chest. It only reads as a body because he never shows his side.
+- Not tried: a walk, a second character, a dwarf or a halfling, a cloak, a figure holding something.
+
+Blender is installed (5.3, Homebrew) and was not needed: the script writes the glTF itself. It is there for work by hand on a figure this makes.
 
 ## Running it
 
@@ -317,6 +340,7 @@ Toggles in the panel switch each spike. `?clip=thalbern-h3-idle` plays the H3 lo
 | `marble.ts` | World Labs: credits, depth to panorama, panorama to splat world. |
 | `character.ts` | A standee redrawn as an A-pose sheet, then a rigged 3D model from Meshy on fal. |
 | `cards.ts` | The cast's cards repainted as photographs through the Codex CLI, and cut out. |
+| `figure.ts` | A rigged, animated 3D figure built from a character's A-pose paintings, with nothing from a third party. |
 | `lab.ts`, `viewer.tsx` | The three changes, applied to a running Stage, and the lab page at `app/dev/stage-lab`. |
 
 Generated assets in `public/stage-lab/` and raw outputs in `raw/` are not committed. The scripts regenerate them, with new model output each time.

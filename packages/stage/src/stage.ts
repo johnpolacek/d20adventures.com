@@ -408,9 +408,11 @@ export class Stage {
     const flat = new Set<THREE.Material>()
     this.models.onChange = () => {
       mask()
-      const fresh = this.models.materials().filter((m) => !flat.has(m))
-      for (const m of fresh) flat.add(m)
-      this.painted?.flatFigures(fresh, true)
+      for (const own of [true, false]) {
+        const fresh = this.models.materials(own).filter((m) => !flat.has(m))
+        for (const m of fresh) flat.add(m)
+        this.painted?.flatFigures(fresh, !own)
+      }
     }
 
     // A painted set's camera is a tripod, with its own controls once the paintings are up (see load).
@@ -610,6 +612,7 @@ export class Stage {
       this.controls?.update()
       this.transition = null
       this.standees.reset()
+      this.models.reset()
       this.settle()
     } else {
       const target = this.controls ? this.controls.target.clone() : this.camera.getWorldDirection(V()).multiplyScalar(10).add(this.camera.position)
@@ -783,6 +786,7 @@ export class Stage {
       // The window may have changed shape since the view was worked out.
       this.refit()
       this.standees.reset()
+      this.models.reset()
       this.arrived = this.shared.time.value
       // A dip under way brings the picture back itself, once whoever it hides has been put in place.
       if (!this.dip) this.canvas.style.opacity = "1"
@@ -1247,7 +1251,7 @@ export class Stage {
     this.lightRoom(dt)
     if (this.motion) this.effects.update(dt)
     this.standees.update(dt, this.camera)
-    this.models.update(dt, this.motion)
+    this.models.update(dt, this.motion, this.camera)
     this.crowd.updateLOD(this.camera)
     // A fade takes a third of a second, or none with motion off.
     this.crowd.occlude(this.camera, this.tripod?.aim ?? this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)

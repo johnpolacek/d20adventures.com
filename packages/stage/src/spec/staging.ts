@@ -26,7 +26,8 @@ const castMember = z
     height: size(4),
     art: z.object({ front: assetUrl, back: assetUrl.optional(), portrait: assetUrl.optional() }).strict(),
     // A rigged, animated glTF figure shown in place of the card while the stage's `figures` flag is on: its clips by
-    // name, the nodes left out (a pack's spare weapons and shields), and how fast the idle plays.
+    // name, the nodes left out (a pack's spare weapons and shields), and how fast the idle plays. `ownLight` and
+    // `turn` are for a figure built from the character's paintings (figures/models.ts says what they do).
     figure: z
       .object({
         model: assetUrl,
@@ -35,6 +36,8 @@ const castMember = z
         fall: z.string().max(80).optional(),
         hide: z.array(z.string().max(80)).max(40).optional(),
         pace: num(0.1, 4).optional(),
+        ownLight: z.boolean().optional(),
+        turn: num(0, 90).optional(),
       })
       .strict()
       .optional(),

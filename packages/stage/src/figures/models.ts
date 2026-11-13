@@ -20,9 +20,16 @@ export interface FigureSpec {
   hide?: string[]
   // Seconds of idle per second: a short idle loop reads as bouncing at full speed.
   pace?: number
+  // The texture is a painting with its own light (a figure built from the character's paintings, see
+  // lab/stage-art/figure.ts): on a painted set it shows evenly lit, as a card does.
+  ownLight?: boolean
+  // The most the camera may see of its side, in degrees off its front or its back. Past that it turns toward the
+  // camera, as a card does: a figure made of a front and a back painting has no side worth showing.
+  turn?: number
 }
 
 type Mat = THREE.MeshStandardMaterial
+const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
 interface Model {
   cast: CastMember
@@ -37,6 +44,9 @@ interface Model {
   fallT: number
   scale: number
   lift: number
+  // The way it is turned, which is the cast member's facing unless `turn` is cheating it; and the face it shows.
+  yaw: number | null
+  side: 0 | 1 | null
   meshes: THREE.Mesh[]
   materials: Mat[]
   base: THREE.Color[]
@@ -46,11 +56,13 @@ interface Model {
 // Albedo is graded toward the set palette as a card's is. On a painted set a card shows its art unlit, since a
 // photograph carries its own light. A model carries none, so it keeps the engine's shading there and takes only the
 // painted set's tint (Painted.flatFigures, `lit`).
-function figureMaterial(src: Mat, shared: SharedUniforms): Mat {
+function figureMaterial(src: Mat, shared: SharedUniforms, ownLight: boolean): Mat {
   const m = src.clone()
-  return stageMaterial(m, shared, "figure", (s) => {
+  return stageMaterial(m, shared, ownLight ? "figure-own" : "figure", (s) => {
     s.uniforms.uWarmth = shared.warmth
-    s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nuniform float uWarmth;").replace("#include <map_fragment>", `#include <map_fragment>\n${PALETTE_GRADE}`)
+    s.fragmentShader = s.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform float uWarmth;")
+      .replace("#include <map_fragment>", `#include <map_fragment>\n${ownLight ? " vec3 cardArt = diffuseColor.rgb;\n" : ""}${PALETTE_GRADE}`)
   })
 }
 
@@ -136,7 +148,7 @@ export class Models {
       o.frustumCulled = false
       o.userData.castId = cast.id
       const src = o.material as Mat
-      if (!materials.has(src)) materials.set(src, figureMaterial(src, this.shared))
+      if (!materials.has(src)) materials.set(src, figureMaterial(src, this.shared, !!spec.ownLight))
       o.material = materials.get(src) as Mat
       triangles += (o.geometry.index?.count ?? o.geometry.attributes.position.count) / 3
       meshes.push(o)
@@ -161,6 +173,8 @@ export class Models {
       fall,
       hitT: null,
       fallT,
+      yaw: null,
+      side: null,
       scale,
       lift: -box.min.y * scale,
       meshes,
@@ -192,13 +206,28 @@ export class Models {
     return this.group
   }
   maskSources(): MaskSource[] {
-    return this.on ? [...this.items.values()].flatMap((m) => m.meshes.map((src) => ({ src }))) : []
+    if (!this.on) return []
+    // A figure whose outline is cut by its texture (see lab/stage-art/figure.ts) is masked by that same cut.
+    return [...this.items.values()].flatMap((m) =>
+      m.meshes.map((src) => {
+        const mat = src.material as Mat
+        return mat.alphaTest > 0 && mat.map ? { src, map: () => mat.map } : { src }
+      })
+    )
   }
-  materials(): THREE.Material[] {
-    return [...this.items.values()].flatMap((m) => m.materials)
+  // The figures' materials: those that carry their own light, or those the engine lights.
+  materials(ownLight: boolean): THREE.Material[] {
+    return [...this.items.values()].filter((m) => !!m.spec.ownLight === ownLight).flatMap((m) => m.materials)
+  }
+  // The camera has cut to somewhere else: a figure that turns toward it is turned at once.
+  reset() {
+    for (const m of this.items.values()) {
+      m.yaw = null
+      m.side = null
+    }
   }
   // With motion off the figure holds its pose, and a fall or a rise is put at its end. A flash still fades.
-  update(dt: number, motion: boolean) {
+  update(dt: number, motion: boolean, camera: THREE.Camera) {
     if (!this.on) return
     const step = motion ? dt : 0
     for (const m of this.items.values()) {
@@ -227,7 +256,19 @@ export class Models {
       m.mixer.update(step)
       m.root.position.set(c.x, (c.y ?? 0) + m.lift, c.z)
       // A model with no fall clip is tipped onto its back, as a card is.
-      m.root.rotation.set(m.fall ? 0 : -(m.fallT / length) * (Math.PI / 2 - 0.04), c.ry, 0, "YXZ")
+      // Which face shows is settled as a card's is: the back past 100 degrees off its facing, the front again under 80.
+      let want = c.ry
+      if (m.spec.turn !== undefined && !down && m.fallT === 0) {
+        const off = wrap(Math.atan2(camera.position.x - c.x, camera.position.z - c.z) - c.ry)
+        const a = Math.abs(off)
+        if (m.side === null) m.side = a > Math.PI / 2 ? 1 : 0
+        else if (a > THREE.MathUtils.degToRad(100)) m.side = 1
+        else if (a < THREE.MathUtils.degToRad(80)) m.side = 0
+        const seen = m.side ? wrap(off - Math.PI) : off
+        want = c.ry + Math.sign(seen) * Math.max(0, Math.abs(seen) - THREE.MathUtils.degToRad(m.spec.turn))
+      } else if (m.yaw !== null && (down || m.fallT > 0)) want = m.yaw
+      m.yaw = m.yaw === null || !motion ? want : m.yaw + wrap(want - m.yaw) * (1 - Math.exp(-dt * 4.5))
+      m.root.rotation.set(m.fall ? 0 : -(m.fallT / length) * (Math.PI / 2 - 0.04), m.yaw, 0, "YXZ")
       m.root.visible = !this.standees.offstage.has(c.id)
       const flash = this.hits.get(c.id)
       if (flash) {
