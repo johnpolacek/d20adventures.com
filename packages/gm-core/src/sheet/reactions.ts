@@ -21,14 +21,16 @@ import {
   UNARMED_STRIKE,
 } from "./attack"
 import { type CheckResult, combineModes, type RollMode, rollModes } from "./check"
-import { type DamageAnswer, type Featured, hitRules, type Landed, type Reacted, reactionRules, settledByClasses, turnEffectRule } from "./class-rules"
+import { classAttackModes, type DamageAnswer, type Featured, hitRules, type Landed, type Reacted, reactionRules, settledByClasses, turnEffectRule } from "./class-rules"
 import { attackModesFrom, cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
 import { withFeatureUsed, withUsedThisTurn } from "./feature-rules"
+import { seesThrough } from "./floor-areas"
 import { releasedHolds } from "./hit-riders"
 import { areEnemies } from "./sides"
 import { type Cover, opportunityAttackers, type Point, placedOf, type Standing, sizeOf, type Watcher, within } from "./space"
-import { cannotReactBySpell, spellEffectsAfterMove, withSpellEffect } from "./spell-effects"
+import { cannotReactBySpell, withSpellEffect } from "./spell-effects"
+import { areasWalked, type RoundFact } from "./spell-rounds"
 import { type CastCost, castCost, spellsOf, withCastSpent } from "./spells"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import { type Order, orderSchema, type ReactionId, reactionIds, type SpellEffect, type StandingOrders, type TurnEffect } from "./turn-effect"
@@ -101,7 +103,8 @@ export function opportunityAttacks<T extends Reactor>(args: {
         hostile: areEnemies(other, mover),
         // A class's turn effect may bar them (Open Hand Technique's Addle).
         canReact: canReact(other) && !cannotAttack(other, mover) && !(other.turnEffects ?? []).some((effect) => turnEffectRule(effect.id)?.barsOpportunityAttacks),
-        seesMover: !hasCondition(other, "blinded") && !hasCondition(mover, "invisible"),
+        // A mover in an area that hides it, as fog does, is not seen (./floor-areas).
+        seesMover: !hasCondition(other, "blinded") && !hasCondition(mover, "invisible") && seesThrough(other, mover, args.everyone),
       },
     ]
   })
@@ -483,6 +486,23 @@ export function attackWithReactions<T extends InPlay>(args: {
     if (!rule.landed || !blow.features?.length) continue
     characters = rule.landed({ characters: characters as unknown as Landed[], attackerId: args.attackerId, targetId: args.targetId, added: blow.features, choices: args.choices }) as unknown as T[]
   }
+  // What the hit does to another once it has dealt its damage (Superior Hunter's Prey), told beside the reactions.
+  for (const rule of hitRules()) {
+    if (!rule.spills || !blow.features?.length || blow.taken <= 0) continue
+    const spilt = rule.spills({
+      characters: characters as unknown as (Landed & Target)[],
+      attackerId: args.attackerId,
+      targetId: args.targetId,
+      added: blow.features,
+      taken: blow.taken,
+      roll: args.roll,
+      turnOf,
+      rules: args.rules,
+    })
+    if (!spilt) continue
+    characters = spilt.characters as unknown as T[]
+    reactions.push(spilt.told)
+  }
   // A grapple or an attachment ends as its holder drops (./hit-riders).
   characters = releasedHolds(characters).characters
   // The classes' reactions once the blow has hurt: the one hit may strike back (a Berserker's Retaliation).
@@ -541,9 +561,10 @@ export type OpportunityAttackMade = { attacker: string; blow: Strike; reactions:
 
 /**
  * A move with the Opportunity Attacks it draws. The mover walks the path leg by leg. Each one whose reach a leg leaves
- * may strike, when `ask` says so, right before the mover leaves it, and then has no Reaction left this round. A mover
- * the blow drops stops where it fell. Everyone comes back as the move left them, the mover standing where it ended.
- * One who took the Disengage action draws none.
+ * may strike, when `ask` says so, right before the mover leaves it, and then has no Reaction left this round. Each area
+ * on the floor a leg comes into or crosses touches the mover as its spell says (../spell-rounds `areasWalked`: Moonbeam's
+ * save, Spike Growth's spikes), told in `told`. A mover the blow or the area drops stops where it fell. Everyone comes
+ * back as the move left them, the mover standing where it ended. One who took the Disengage action draws no attack.
  */
 export function moveWithReactions<T extends InPlay>(args: {
   characters: readonly T[]
@@ -554,9 +575,10 @@ export function moveWithReactions<T extends InPlay>(args: {
   d20: () => number
   roll: (sides: number) => number
   rules?: DeathRules
-}): { characters: T[]; attacks: OpportunityAttackMade[]; stopped: boolean } {
+}): { characters: T[]; attacks: OpportunityAttackMade[]; stopped: boolean; told: RoundFact[] } {
   let characters = [...args.characters]
   const attacks: OpportunityAttackMade[] = []
+  const told: RoundFact[] = []
   const moverNow = () => characters.find((character) => character.id === args.moverId) as T
   for (const to of args.path) {
     const mover = moverNow()
@@ -566,16 +588,32 @@ export function moveWithReactions<T extends InPlay>(args: {
       const attack = attacksOf(attacker).find((entry) => entry.id === weapon)
       const text = `${mover.name} is leaving ${attacker.name}'s reach. ${attacker.name} may strike with ${attack?.name ?? "an attack"}.`
       if (!args.ask({ id: "opportunity-attack", to: attacker.id, from: mover.id, weapon, matters: true }, text)) continue
-      const made = attackWithReactions({ characters, attackerId: attacker.id, targetId: mover.id, weapon, dice: [args.d20()], roll: args.roll, rules: args.rules, ask: args.ask })
+      // A feature of either may put Advantage or Disadvantage on it (Escape the Horde).
+      const mode = combineModes(classAttackModes({ attacker, target: mover, opportunity: true }).map((source) => source.mode))
+      const dice = mode === "normal" ? [args.d20()] : [args.d20(), args.d20()]
+      const made = attackWithReactions({
+        characters,
+        attackerId: attacker.id,
+        targetId: mover.id,
+        weapon,
+        dice,
+        ...(mode === "normal" ? {} : { mode }),
+        roll: args.roll,
+        rules: args.rules,
+        ask: args.ask,
+      })
       characters = made.characters.map((character) => (character.id === attacker.id ? withReaction(character) : character))
       attacks.push({ attacker: attacker.id, blow: made.blow, reactions: made.reactions })
-      if (isDown(made.target)) return { characters, attacks, stopped: true }
+      if (isDown(made.target)) return { characters, attacks, stopped: true, told }
     }
-    // A mover who takes a step has left the areas that stay on the floor (Web, Stinking Cloud, Sleet Storm).
-    characters = characters.map((character) => (character.id === args.moverId ? spellEffectsAfterMove({ ...character, position: { x: to.x, y: to.y } }) : character))
+    // The step, through the areas that stay on the floor.
+    const walked = areasWalked({ characters, moverId: args.moverId, from, to, d20: args.d20, roll: args.roll, rules: args.rules })
+    characters = walked.characters
+    told.push(...walked.told)
+    if (isDown(moverNow())) return { characters, attacks, stopped: true, told }
   }
   // A holder who moves out of its reach lets go of the one it held (./hit-riders).
-  return { characters: releasedHolds(characters).characters, attacks, stopped: false }
+  return { characters: releasedHolds(characters).characters, attacks, stopped: false, told }
 }
 
 /**

@@ -184,6 +184,8 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
           attackBeat(by, attacker, mover.id, made.blow)
         )
       }
+      // What the areas on the floor did to the hero as they walked (../sheet/spell-rounds `areasWalked`).
+      leaving.push(...went.told.map((fact): StoryBeat => ({ kind: "feature", by, character: fact.character, name: fact.spell, text: fact.text })))
       leaving.push(...kept.saves.map((save) => concentrationBeat(by, save, storyNames(turn.characters))))
       // A hero the blow dropped does nothing more this turn: what they meant to do is lost, and any roll with it.
       if (went.stopped) {

@@ -23,7 +23,7 @@ import { areEnemies, type Side, sameSide, sideWord } from "../sheet/sides"
 import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spell-effects"
 import { endsThings } from "../sheet/spell-ends"
-import { type SpellChoice, spellRule } from "../sheet/spell-rules"
+import { areaOfSpell, type SpellChoice, spellRule } from "../sheet/spell-rules"
 import { castInSpace } from "../sheet/spell-space"
 import {
   againOf,
@@ -139,6 +139,14 @@ export type TurnReading = {
   rest?: RestKind
   /** Something the move asked for that the rules of space do not allow, to be told in the story: an attack out of reach. */
   ruling?: { name: string; text: string }
+}
+
+// How a spell that stays on the floor is put, for the read's list of spells: a wall across the way to the one named, or
+// a thing in a space beside them. One whose area is centred on the one named is "an area" already.
+const stayWords = (spellId: string): string[] => {
+  const stays = spellRule(spellId)?.stays
+  if (stays?.wall) return [`a wall ${stays.wall.across === "through" ? "through" : "just before"} the one named, across the way to them`]
+  return stays?.beside ? ["put beside the one named"] : []
 }
 
 const MENU = (kind: "skill" | "ability" | "save") =>
@@ -259,11 +267,12 @@ export function createRollRequirementService(ports: GmPorts) {
     const held = self ? againOf({ ...character, id: self }) : []
     const heldBonus = held.filter((entry) => entry.takes === "bonus-action")
     // The spells of theirs that take a Bonus Action and can be paid for now, a stat block's cast as one among them. One
-    // they hold is used again, not cast.
-    const bonusSpells = knownSpells.filter(
-      (known) =>
-        (known.spell.castingTime.unit === "bonus-action" || known.bonusAction) && !held.some((entry) => entry.spell.id === known.spell.id) && !("problem" in castCost(character, known.spell.id))
-    )
+    // they hold is used again, not cast. One cast by a feature used as the action (Divine Intervention) is not.
+    const bonusSpells = knownSpells.filter((known) => {
+      if ((known.spell.castingTime.unit !== "bonus-action" && !known.bonusAction) || held.some((entry) => entry.spell.id === known.spell.id)) return false
+      const paying = castCost(character, known.spell.id)
+      return !("problem" in paying) && !(paying.cost.kind === "free" && paying.cost.feature === known.given?.feature)
+    })
     // The spells of theirs that ask a choice as they are cast (../sheet/spell-rules `choice`): Hex's ability, Chromatic
     // Orb's damage type. The read asks each in its field, and only where the caster has one.
     const choosing = knownSpells.flatMap((known) => {
@@ -294,8 +303,10 @@ export function createRollRequirementService(ports: GmPorts) {
     // Spells a magic item casts, and those of them the hero can also cast by their own means.
     const itemSpells = knownSpells.filter((known) => known.item)
     const eitherWay = itemSpells.some((known) => !known.itemOnly)
+    // The features that cast spells with no slot (Divine Intervention), by name.
+    const givers = [...new Set(knownSpells.flatMap((known) => (known.given ? [known.given.name] : [])))]
     const spellLines = knownSpells.map((known) => {
-      const limit = targetLimit(known.spell, known.spell.level, casterLevel)
+      const limit = targetLimit(known.spell, known.spell.level, casterLevel, character)
       const long = longCasting(known.spell)
       const notes = [
         known.cantrip ? "cantrip" : `level ${known.spell.level}`,
@@ -303,9 +314,13 @@ export function createRollRequirementService(ports: GmPorts) {
         ...(long ? [`takes ${long} to cast`] : []),
         // On a floor an area takes whoever stands in it, so its count is not the game master's to keep.
         // A spell that makes several areas (Meteor Swarm) is aimed at as many, one named for each.
-        ...(mover && known.spell.range.area ? [areasOf(known.spell) > 1 ? `${areasOf(known.spell)} areas, each centred on one named` : "an area"] : limit > 1 ? [`up to ${limit} creatures`] : []),
+        ...(mover && areaOfSpell(known.spell) ? [areasOf(known.spell) > 1 ? `${areasOf(known.spell)} areas, each centred on one named` : "an area"] : limit > 1 ? [`up to ${limit} creatures`] : []),
+        // What stays on the floor where it is put (../sheet/spell-rules `stays`): a wall across the way to the one named, or a thing beside them.
+        ...(mover ? stayWords(known.spell.id) : []),
         ...(known.ritual ? [known.prepared ? "ritual" : "ritual only"] : []),
         ...(known.free > 0 ? [`${known.free} free`] : []),
+        // A feature's casting with no slot (Divine Intervention).
+        ...(known.given ? [`${known.prepared ? "or " : ""}by ${known.given.name}`] : []),
         ...(known.atWill ? [known.selfOnly ? "at will on themselves with no slot" : "at will with no slot"] : []),
         // A spell a magic item casts, with what it spends (../sheet/item-use).
         ...(known.item ? [`${known.itemOnly ? "" : "or "}${itemCastingWords(known.item)}`] : []),
@@ -445,7 +460,10 @@ ${
        held.length
          ? `
      Their Spells Held, already cast and still lasting, used again with no slot by "check" "cast" with its id and "targets" who it strikes: ${held
-       .map((entry) => `${entry.spell.id} (${entry.spell.name}, ${spellKind(entry.spell)}, ${entry.takes === "action" ? "takes the action" : "a Bonus Action"})`)
+       .map(
+         (entry) =>
+           `${entry.spell.id} (${entry.spell.name}, ${spellKind(entry.spell)}, ${entry.takes === "action" ? "takes the action" : "a Bonus Action"}${mover && spellRule(entry.spell.id)?.stays ? ", moved onto the one named" : ""})`
+       )
        .join(", ")}. Using one again is not casting it anew.`
          : ""
      }${
@@ -463,6 +481,11 @@ ${
      }
 ${shapeCasting}     A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
 ${
+  givers.length
+    ? `     A spell marked "by ${givers.join('" or "by ')}" is cast by that feature as the action, once, with no slot, only when the player calls on it or on their god to intervene. One they have prepared is cast so only when no slot for it is left.
+`
+    : ""
+}${
   itemSpells.length
     ? `     A spell marked "from" a magic item is cast from it, and spends the item's charges or use in place of a slot. With too few left it cannot be cast. One whose charges raise its level is cast at the level the player names, in "slot", and at its lowest when they name none.${eitherWay ? ' A spell they can also cast with their own slots is cast from the item only when they say so, and then "item" is true.' : ""}
 `
@@ -700,7 +723,7 @@ Action: "${action}"
         // On a floor an area is measured, so those named are its aim and not its count.
         let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(
           0,
-          mover && spell.range.area ? undefined : targetLimit(shaped.spell, shaped.level, casterLevel)
+          mover && spell.range.area ? undefined : targetLimit(shaped.spell, shaped.level, casterLevel, acting)
         )
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
@@ -727,7 +750,8 @@ Action: "${action}"
         const unplaced = !!again?.unplaced
         // Used again, a spell that reaches farther than its range says is measured by that reach (Produce Flame's 60 feet).
         const reaching = again?.reach ? { ...shaped.spell, range: { kind: "feet" as const, distance: again.reach } } : shaped.spell
-        const spaced = mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell: reaching, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
+        const spaced =
+          mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell: reaching, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor, again: !!again }) : undefined
         if (spaced?.problem) {
           also.ruling = spaced.problem
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
@@ -740,6 +764,9 @@ Action: "${action}"
           targets: chosen,
           ...(spaced && Object.keys(spaced.cover).length ? { cover: spaced.cover } : {}),
           ...(spaced?.measured ? { measured: true as const } : {}),
+          // Where an area that stays on the floor is put (../sheet/spell-space).
+          ...(spaced?.at ? { at: spaced.at } : {}),
+          ...(spaced?.to ? { to: spaced.to } : {}),
           ...(paid?.cost.kind === "ritual" ? { ritual: true as const } : {}),
           ...(type.success ? { damageType: type.data } : {}),
           ...(forSkill.success ? { skill: forSkill.data } : {}),
@@ -762,7 +789,7 @@ Action: "${action}"
           const caster = { ...stood, id: self ?? character.name, name: character.name, type: character.type ?? "pc" } as Featured
           const readied = used && usedRule ? (usedRule.use({ characters: [caster], actor: caster, action: used, roll: () => 1 }).characters[0] ?? caster) : caster
           const found = [
-            ...(self ? [...spellAttackModes({ ...readied, id: self }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []),
+            ...(self ? [...spellAttackModes({ ...readied, id: self }, { ...target, type: target.type ?? "npc" }, spell, everyone), ...attackModesFromSpells(character, target)] : []),
             // A ranged spell attack has Disadvantage with an enemy within 5 feet who is up and able to act.
             ...(spell.attack === "ranged" && pressed(stood) ? [{ mode: "disadvantage" as const, from: "Enemy Within 5 Feet" }] : []),
           ]

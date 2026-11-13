@@ -174,7 +174,7 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     slots: casting.slots.flatMap((total, index) => (total > 0 ? [{ level: index + 1, total, left: left[index] ?? total }] : [])),
     cantrips: names((entry) => entry.cantrip),
     prepared: names((entry) => !entry.cantrip && entry.prepared),
-    rituals: names((entry) => !entry.prepared),
+    rituals: names((entry) => !entry.prepared && !entry.given),
   }
 
   return {

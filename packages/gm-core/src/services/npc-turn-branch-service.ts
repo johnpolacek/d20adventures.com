@@ -164,6 +164,9 @@ export function createNpcTurnBranchService(ports: GmPorts) {
           ...made.reactions.map((taken) => taken.text)
         )
       }
+      // What the areas on the floor did to it as it walked (../sheet/spell-rounds `areasWalked`).
+      leaving.push(...went.told.map((fact): StoryBeat => ({ kind: "feature", by: npcStep(args.npc), character: fact.character, name: fact.spell, text: fact.text })))
+      leavingFacts.push(...went.told.map((fact) => fact.text))
       // An NPC the blow dropped does nothing more: its turn is the fall.
       if (went.stopped) {
         console.log("[LLM] NPC dropped by an Opportunity Attack:", leavingFacts)
@@ -253,6 +256,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
                 choice: casting.cast.choice,
                 cover: casting.cast.cover,
                 measured: casting.cast.measured,
+                at: casting.cast.at,
+                to: casting.cast.to,
               }
               return again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level: casting.cast.level })
             })()

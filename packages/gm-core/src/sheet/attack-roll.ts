@@ -7,6 +7,7 @@ import { classCovers, type FollowRule, followRules, withAdvantageBarred } from "
 import { attackModesFrom, cannotAttack, hasCondition, type ModeSource } from "./conditions"
 import { deriveSheet } from "./derive"
 import { attacksPerAction as attacksPerActionOf } from "./feature-rules"
+import { floorInPlay, obscuredModes } from "./floor-areas"
 import { riderBars } from "./hit-riders"
 import { multiattackAfter } from "./multiattack"
 import { shapeOf } from "./shape"
@@ -88,7 +89,8 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
   })
   // A feature of one present may give the target cover too (Smite of Protection).
   const named = classCovers(target, ask.present).reduce(greaterCover, ask.cover ?? "none")
-  const cover = floor && from && aimed ? greaterCover(coverBetween(floor.solids, from, aimed, between), named) : named
+  // A wall that stands on the floor in play is among its solid things (./floor-areas: Wall of Force).
+  const cover = floor && from && aimed ? greaterCover(coverBetween(floorInPlay(floor, ask.present).solids, from, aimed, between), named) : named
   if (cover === "total") {
     return { ruling: { name: "Total Cover", text: `${character.name}${moved} has no clear line to ${target.name}: something solid stands between them. The attack is not made.` } }
   }
@@ -113,6 +115,8 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
     ...attackModesFrom(character, target, feet === undefined ? attack.kind !== "ranged" : isNear(character, target, attack.kind), ask.present),
     ...attackModesFromActions(character, target, ask.present, attack),
     ...attackModesFromSpells(character, target),
+    // An area that hides one from the other, as fog does (./floor-areas).
+    ...obscuredModes(character, target, ask.present),
     ...featModes(character, target),
     ...spaced,
     ...(ask.modes ?? []),

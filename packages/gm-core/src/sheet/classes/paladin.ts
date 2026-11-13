@@ -264,7 +264,7 @@ export function abjureFoes<T extends Abjurer>(args: {
       facts.push(legendaryResistanceWords(target.name, spent))
     }
     if (saved.rescued) {
-      put(withRescueSpent(find(target.id) ?? target, saved.rescued))
+      put(withRescueSpent(find(saved.rescued.by ?? target.id) ?? target, saved.rescued))
       facts.push(rescueWords(target.name, saved.rescued, saved))
     }
     const verdict = `${target.name} ${saved.success ? "SUCCEEDS on" : "FAILS"} the Wisdom saving throw against ${paladin.name}'s Abjure Foes (${saved.total} against DC ${dc})`

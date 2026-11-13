@@ -31,6 +31,7 @@ import { DEFAULT_STAT_BLOCK } from "./stat-block"
  * the creature takes damage, nor make it flee: the game master tells that.
  * Preserve Life (Life Domain, level 3): five times the Cleric level in hit points, divided among Bloodied creatures
  * within 30 feet, the Cleric among them, none raised above half its hit point maximum.
+ * Supreme Healing (Life Domain, level 17): Divine Spark's dice count their highest when it heals.
  */
 
 export const DIVINITY_FEATURE = "cleric-channel-divinity"
@@ -140,7 +141,7 @@ export function channelDivinity<T extends Channeled>(args: {
       facts.push(legendaryResistanceWords(target.name, spent))
     }
     if (rolled.rescued) {
-      put(withRescueSpent(find(target.id) ?? target, rolled.rescued))
+      put(withRescueSpent(find(rolled.rescued.by ?? target.id) ?? target, rolled.rescued))
       facts.push(rescueWords(target.name, rolled.rescued, rolled))
     }
     return rolled
@@ -158,7 +159,9 @@ export function channelDivinity<T extends Channeled>(args: {
     const target = args.targets.map(find).find((other): other is T => !!other && other.id !== cleric.id && !isDead(other) && near(other))
     if (!target) return none(`There is no one within 30 feet of ${cleric.name} to use Divine Spark on.`)
     targets = [target.id]
-    const rolled = rollDamage([{ dice: sparkDice(cleric.sheet.level), type: "radiant" }], args.roll)
+    // Supreme Healing (Life Domain, level 17): dice rolled to restore hit points count their highest.
+    const supreme = args.heal && hasFeature(cleric, "life-domain-supreme-healing")
+    const rolled = rollDamage([{ dice: sparkDice(cleric.sheet.level), type: "radiant" }], supreme ? (sides) => sides : args.roll)
     const [part] = rolled.parts
     const amount = Math.max(0, rolled.total + wisdom)
     if (args.heal) {

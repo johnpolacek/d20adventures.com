@@ -58,6 +58,10 @@ export const spellEffectSchema = z.strictObject({
   choice: z.string().optional(),
   /** The saves its bearer has passed and failed against it, where three of a kind decide its end: Flesh to Stone, Contagion. */
   tally: z.strictObject({ passed: z.number().int().min(0), failed: z.number().int().min(0) }).optional(),
+  /** Where its area stands on the encounter's floor, in feet, held on its caster: Web's Cube, Moonbeam's beam, a wall's one end (./floor-areas). */
+  at: z.strictObject({ x: z.number(), y: z.number() }).optional(),
+  /** A wall's other end, in feet. */
+  to: z.strictObject({ x: z.number(), y: z.number() }).optional(),
 })
 export type SpellEffect = z.infer<typeof spellEffectSchema>
 

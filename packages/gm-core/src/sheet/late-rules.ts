@@ -12,6 +12,7 @@ type Downed = (args: { before: readonly object[]; after: readonly object[]; d20:
 
 const immunities: ImmunityReader[] = []
 let downed: Downed | undefined
+let concentrationKept: ((character: object, spellId: string) => boolean) | undefined
 
 /** Add a reader of conditions a character is immune to for now (Mindless Rage), and by those present (Aura of Courage). */
 export function registerImmunities(reader: ImmunityReader): void {
@@ -30,3 +31,21 @@ export function registerDowned(answer: Downed): void {
 export function answerDowned<T extends object>(args: { before: readonly T[]; after: readonly T[]; d20: () => number }): { characters: T[]; told: Told[] } {
   return downed ? (downed(args) as { characters: T[]; told: Told[] }) : { characters: [...args.after], told: [] }
 }
+
+/** Set what says whether damage cannot break a character's Concentration on a spell (../class-rules `classKeepsConcentration`). */
+export function registerConcentrationKept(reader: (character: object, spellId: string) => boolean): void {
+  concentrationKept = reader
+}
+
+/** Whether damage cannot break a character's Concentration on a spell by the registered reader (Relentless Hunter), so no save is made. */
+export const keepsConcentration = (character: object, spellId: string): boolean => !!concentrationKept?.(character, spellId)
+
+let speedGiven: ((character: object) => number | undefined) | undefined
+
+/** Set what gives the Speed a feature lends a character for now (../class-rules `classSpeed`). */
+export function registerSpeed(reader: (character: object) => number | undefined): void {
+  speedGiven = reader
+}
+
+/** The Speed the registered reader gives a character for now (Dragon Wings), or none. */
+export const featureSpeed = (character: object): number | undefined => speedGiven?.(character)

@@ -5,7 +5,7 @@ import { spellById } from "@d20/srd/spells"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { type Attack, masteryOf } from "./attack"
 import type { Check, Roller } from "./check"
-import { afterClassAttackRoll, classCheckBonus, classMastery, classStaysHidden, turnEffectRule } from "./class-rules"
+import { afterClassAttackRoll, classAttackModes, classCheckBonus, classMastery, classStaysHidden, turnEffectRule } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
@@ -128,6 +128,8 @@ export function attackModesFromActions(attacker: Acting, target: Acting, present
     if (effect.id === "sapped") found.push({ mode: "disadvantage", from: "Sap" })
     found.push(...(turnEffectRule(effect.id)?.attacking?.(effect, attacker, target, attack) ?? []))
   }
+  // A standing feature of either (Precise Hunter).
+  found.push(...classAttackModes({ attacker, target }))
   return found
 }
 
@@ -151,6 +153,11 @@ const drop = <T extends Acting>(character: T, gone: (effect: TurnEffect) => bool
   const { turnEffects: _, ...rest } = character
   return (turnEffects.length ? { ...rest, turnEffects } : rest) as T
 }
+
+// One whose attack or cast gives them away: their Invisible ends, unless a class feature gave it for a span of its own
+// (Nature's Veil), which no attack or cast ends.
+const unhidden = <T extends Acting>(character: T): T =>
+  character.conditions?.some((entry) => entry.id === "invisible" && entry.feature) ? character : withoutCondition(character, "invisible").character
 
 /**
  * Everyone after a roll is made, with what the roll used up and what it set up. Help is for the next roll only: an
@@ -188,7 +195,7 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
       if (character.id === rollerId) {
         // The attack as it was made, for a class feature that keeps the attacker hidden or moves them after it.
         const made = { attack: roll.attack, dealt, ...(floor ? { floor } : {}) }
-        const hidden = classStaysHidden(character, made) ? character : withoutCondition(character, "invisible").character
+        const hidden = classStaysHidden(character, made) ? character : unhidden(character)
         const seen = drop(hidden, (effect) => effect.id === "sapped")
         return aimed && areEnemies(aimed, character) ? afterClassAttackRoll(seen, aimed, made) : seen
       }
@@ -216,7 +223,7 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
   }
   if ("cast" in roll) {
     const aimed = !!spellById.get(roll.cast.spell)?.attack
-    return characters.map((character) => (character.id === rollerId ? drop(withoutCondition(character, "invisible").character, (effect) => aimed && effect.id === "sapped") : character))
+    return characters.map((character) => (character.id === rollerId ? drop(unhidden(character), (effect) => aimed && effect.id === "sapped") : character))
   }
   if (!("check" in roll) || roll.check.kind !== "skill") return [...characters]
   const { skill } = roll.check

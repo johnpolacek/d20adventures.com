@@ -1,8 +1,8 @@
 import { movementEffects } from "./actions"
 import type { Afflicted } from "./conditions"
+import { floorAreas, floorInPlay, roughGround } from "./floor-areas"
 import type { EncounterFloor } from "./placement"
 import { movementBudgetOf, type Point, pushed, type Standing, sizeOf, stopShortFor, walk } from "./space"
-import { spellEffectsAfterMove } from "./spell-effects"
 import type { TurnEffect } from "./turn-effect"
 
 /** Where a move is read as going: to a named place or to someone, by id, or straight away from someone, and no farther than some feet. */
@@ -26,7 +26,7 @@ export const moveBudget = (mover: Mover, others: readonly Other[] = [], dash = f
 /**
  * A character's move on their turn, before they act. They walk toward the place or the creature named, or straight
  * away from one, by the floor's ways, as far as their movement goes: their Speed, twice it with Dash, none for one who
- * cannot move. Walking to a creature stops within 5 feet of them, and never on anyone. With no move named, `close`
+ * cannot move, Difficult Terrain costing double. Walking to a creature stops within 5 feet of them, and never on anyone. With no move named, `close`
  * walks them to within reach of the one they attack in melee, when that one is out of reach. None when they stay where
  * they are, or have no position.
  *
@@ -50,20 +50,23 @@ export function takeMove(args: {
   const budget = Math.min(own > 0 ? own + (args.extra ?? 0) : 0, ask.feet !== undefined && ask.feet > 0 ? ask.feet : Number.POSITIVE_INFINITY)
   if (budget <= 0) return undefined
   const standing = args.others.flatMap((other) => (other.position ? [other.position] : []))
+  // The walls that stand in play, and the ground that costs more to cross (./floor-areas: Wall of Force, Web).
+  const everyone = [args.mover, ...args.others]
+  const floor = floorInPlay(args.floor, everyone)
+  const rough = roughGround(floorAreas(everyone))
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)
   const place = ask.to ? args.floor.places.find((entry) => entry.id === ask.to) : undefined
   const toward = someone(ask.to) ?? (!place && !ask.away ? someone(args.close?.target) : undefined)
   const fleeing = !place && !toward ? someone(ask.away) : undefined
   let walked: ReturnType<typeof walk> | undefined
-  if (place) walked = walk(args.floor, from, place.at, budget, { others: standing })
+  if (place) walked = walk(floor, from, place.at, budget, { others: standing, rough })
   else if (toward?.position) {
     const reach = args.close && args.close.target === toward.id ? args.close.reach : 5
-    walked = walk(args.floor, from, toward.position, budget, { stopShort: stopShortFor(sizeOf(args.mover), sizeOf(toward), reach), others: standing })
-  } else if (fleeing?.position) walked = walk(args.floor, from, pushed(from, fleeing.position, budget), budget, { others: standing })
+    walked = walk(floor, from, toward.position, budget, { stopShort: stopShortFor(sizeOf(args.mover), sizeOf(toward), reach), others: standing, rough })
+  } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough })
   if (!walked || walked.used < 0.5) return undefined
   return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded) }
 }
 
-/** The mover where a move left them: out of any area that stays on the floor (Web), whatever the move's length. */
-export const withMove = <T extends Standing & Parameters<typeof spellEffectsAfterMove>[0]>(character: T, moved: Moved | undefined): T =>
-  moved ? spellEffectsAfterMove({ ...character, position: moved.at }) : character
+/** The mover where a move left them. */
+export const withMove = <T extends Standing>(character: T, moved: Moved | undefined): T => (moved ? { ...character, position: moved.at } : character)

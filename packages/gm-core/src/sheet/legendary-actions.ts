@@ -11,7 +11,6 @@ import { takeMove } from "./moves"
 import type { EncounterFloor } from "./placement"
 import { type Ask, attackWithReactions, moveWithReactions, type OpportunityAttackMade, type ReactionTaken } from "./reactions"
 import { moveToward, sizeOf, solidAt, speedOf, stopShortFor } from "./space"
-import { spellEffectsAfterMove } from "./spell-effects"
 
 /**
  * Legendary Actions by the SRD 5.2.1 rules (page 257, and each block's section): a Legendary creature has a number of
@@ -220,6 +219,8 @@ export function legendaryActionsAfter<T extends Legend>(args: {
     const left = read.left - 1
     const name = legend.name
     const opportunity: OpportunityAttackMade[] = []
+    // What the areas on the floor did to it as it walked (../spell-rounds `areasWalked`).
+    const walkedThrough: string[] = []
     let moved: number | undefined
     let teleported: true | undefined
     let fell = false
@@ -238,13 +239,14 @@ export function legendaryActionsAfter<T extends Legend>(args: {
           const went = moveWithReactions({ characters, moverId: id, path: step.path, disengaged: option.move.disengaged, ask: args.ask, d20: args.d20, roll: args.roll, rules: args.rules })
           characters = went.characters.map((character) => afterHarm(character))
           opportunity.push(...went.attacks)
+          walkedThrough.push(...went.told.map((fact) => fact.text))
           moved = step.feet
           fell = went.stopped
         }
       } else if (legend.position && goal.position) {
         const to = moveToward(legend.position, goal.position, option.move.feet, stopShortFor(sizeOf(legend), sizeOf(goal), reach || 5))
         if (to.used >= 0.5 && !solidAt(args.floor.solids, to.at)) {
-          put(spellEffectsAfterMove({ ...find(id), position: to.at }))
+          put({ ...find(id), position: to.at })
           moved = Math.round(to.used)
           teleported = true
         }
@@ -300,7 +302,7 @@ export function legendaryActionsAfter<T extends Legend>(args: {
       opportunity,
       ...(blow ? { blow } : {}),
       reactions,
-      text: `${name} takes a Legendary Action after ${ended.name}'s turn: ${option.name}.${goes}${toward}${strikes} ${left} of ${read.uses} uses left this round${lair}.`,
+      text: `${name} takes a Legendary Action after ${ended.name}'s turn: ${option.name}.${goes}${toward}${strikes}${walkedThrough.map((fact) => ` ${fact}`).join("")} ${left} of ${read.uses} uses left this round${lair}.`,
     })
   }
   return { characters, taken }

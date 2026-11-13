@@ -40,13 +40,13 @@ export const sunbeam: SpellRules = {
 /**
  * Flaming Sphere: "As a Bonus Action, you can move the sphere up to 30 feet, rolling it along the ground. If you move the
  * sphere into a creature's space, that creature makes the save against the sphere, and the sphere stops moving for the
- * turn." It burns no one as it appears, and the ram is its use again, on the one named. Where it stands is not held on
- * the floor, so the one it rams is not measured from it, and the save of one who ends its turn within 5 feet of it is
- * the game master's to tell.
+ * turn." It burns no one as it appears, and the ram is its use again, on the one named within 30 feet of where it
+ * stands, and it stops beside them. Where it stands is held on the floor, with the save of one who ends its turn within
+ * 5 feet of it (./lasting-areas).
  */
 export const flamingSphere: SpellRules = {
   spells: ["flaming-sphere"],
   held: { byCaster: true },
-  again: { takes: "bonus-action", unplaced: true, onlyLater: true, parts: (part) => !!part.appliesWhen },
+  again: { takes: "bonus-action", onlyLater: true, reach: 30, parts: (part) => !!part.appliesWhen },
   savedAtCast: (_, again) => again,
 }

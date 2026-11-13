@@ -375,7 +375,7 @@ export function useBlockAction<T extends Acting>(args: {
       facts.push(legendaryResistanceWords(target.name, spent))
     }
     if (thrown.rescued) {
-      put(withRescueSpent(find(id) ?? target, thrown.rescued))
+      put(withRescueSpent(find(thrown.rescued.by ?? id) ?? target, thrown.rescued))
       facts.push(rescueWords(target.name, thrown.rescued, thrown))
     }
     const verdict = `${target.name} ${thrown.success ? "SUCCEEDS on" : "FAILS"} the ${ABILITY_NAMES[action.ability]} saving throw against ${actor.name}'s ${action.name} (${thrown.total} against DC ${action.dc})`

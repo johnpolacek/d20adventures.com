@@ -5,7 +5,7 @@ import { spellById } from "@d20/srd/spells"
 import { isDead } from "../utils/turn-actors"
 import { turnEffectsAtEncounterEnd } from "./actions"
 import type { Roller } from "./check"
-import { shortRestRules } from "./class-rules"
+import { afterClassLongRest, shortRestRules } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtEncounterEnd, exhaustionOf, withoutCondition } from "./conditions"
 import { type DeathSaves, withHealing } from "./death"
@@ -258,6 +258,10 @@ export function longRest<T extends Rester>(character: T, options: { roll?: (side
     const left = exhaustionOf(rested)
     facts.push(left ? `${name}'s Exhaustion falls to level ${left}.` : `${name} is no longer Exhausted.`)
   }
+  // What the classes leave beyond the uses given back (Greater Divine Intervention's Long Rests still owed).
+  const classed = afterClassLongRest(character, rested)
+  rested = classed.character
+  facts.push(...classed.facts)
   if (rested.sheet) {
     const items = itemsRested(rested.sheet, "long", options.roll)
     rested = { ...rested, sheet: items.sheet }

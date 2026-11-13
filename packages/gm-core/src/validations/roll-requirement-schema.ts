@@ -67,6 +67,8 @@ export const rollRequirementSchema = z.union([
         .optional()
         .describe("The cover each target has from where the spell comes, by id"),
       measured: z.literal(true).optional().describe("An area was measured on the floor, so the spell takes everyone named, however many"),
+      at: z.object({ x: z.number(), y: z.number() }).optional().describe("Where a spell whose area stays on the floor is put, in feet: its point, or a wall's one end (../sheet/spell-space.ts)"),
+      to: z.object({ x: z.number(), y: z.number() }).optional().describe("A wall's other end, in feet"),
       again: z.literal(true).optional().describe("A spell the caster holds, used again on a later turn with no cost: Spiritual Weapon's attack, Heat Metal's burn"),
       choices: z
         .record(z.string(), z.union([z.string(), z.literal(true)]))

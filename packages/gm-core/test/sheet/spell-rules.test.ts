@@ -26,7 +26,8 @@ test("every spell a rule names is one of the SRD's, and no two files fill the sa
   assert.equal(spellRule("sleep")?.endsOnDamage, true)
   assert.equal(spellRule("light"), undefined)
   // The round's rules run in the order the files are listed: the repeated saves, Sleep's, the burns, Acid Arrow's,
-  // Spirit Guardians and the areas, then Vitriolic Sphere's later burn, Flesh to Stone's and Contagion's counts, and
-  // Regenerate's hit point and Power Word Stun's save.
-  assert.equal(roundRules().length, 11)
+  // Spirit Guardians, the areas on the floor as turns end, as they drift and as turns start, then Vitriolic Sphere's later
+  // burn, Flesh to Stone's and Contagion's counts, and Regenerate's hit point and Power Word Stun's save, and Ensnaring
+  // Strike's burn.
+  assert.equal(roundRules().length, 14)
 })

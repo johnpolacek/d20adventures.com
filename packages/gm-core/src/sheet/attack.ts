@@ -7,7 +7,7 @@ import type { Monster } from "@d20/srd/schema/monsters"
 import { weaponPropertyById } from "@d20/srd/weapon-properties"
 import { isIncapacitated } from "../utils/turn-actors"
 import type { Roller, RollMode } from "./check"
-import { type Bearing, classAttack, classResistances, type Extra, type HitArgs, type HitRider, hitRule, hitRules, reactionRule, turnEffectRule } from "./class-rules"
+import { type Bearing, classAttack, classMarkDie, classResistances, type Extra, type HitArgs, type HitRider, hitRule, hitRules, reactionRule, turnEffectRule } from "./class-rules"
 import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, wardedWords, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
@@ -588,7 +588,8 @@ export function landBlow<T extends Target>(
   const weapon = equipmentById.get(attack.id)?.kind === "weapon"
   // Magic Weapon's bonus to the damage rolls of the weapon it is on, taken to be the one its bearer attacks with.
   const enchanted = weapon ? weaponDamageFromSpells(args.attacker).map(({ name, damage }) => ({ name, damage: { amount: damage.amount, type: damage.type ?? attack.damage[0]?.type ?? "force" } })) : []
-  const extra = [...features, ...markDamage(args.attacker.id, args.target), ...enchanted]
+  // The mark's die may be another by the attacker's feature (Foe Slayer's d10).
+  const extra = [...features, ...markDamage(args.attacker.id, args.target, (spellId) => classMarkDie(args.attacker, spellId)), ...enchanted]
   const savage = weapon && !!args.attacker.sheet && deriveSheet(args.attacker.sheet).feats.includes("savage-attacker") && !usedThisTurn(args.attacker, "savage-attacker", args.turnOf)
   const own = damageOnHit(attack, { mode: roll.mode, attacker: args.attacker, target: args.target, before, maximum: stats.hitPointMaximum, charged: args.charged })
   const dealt = retyped ? own.map((part) => ({ ...part, type: retyped })) : own

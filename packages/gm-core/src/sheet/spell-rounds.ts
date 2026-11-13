@@ -5,13 +5,14 @@ import { checkBonus } from "./check"
 import { classConcentrationModes, roundStartRules } from "./class-rules"
 import { conditionName, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, regenerate, withDamage } from "./death"
+import { enters, feetIn, floorAreas, touchedThisTurn, withTouch } from "./floor-areas"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { ridersAtRoundEnd } from "./hit-riders"
 import { legendaryResistanceWords, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { typesTaken } from "./monster-traits"
 import { rescueWords, withRescueSpent } from "./save-rules"
-import type { Point } from "./space"
+import { type Point, sizeOf } from "./space"
 import { type ConcentrationSave, settleConcentration } from "./spell-effects"
 import { type RoundContext, roundRules } from "./spell-rules"
 import { type Castee, rollSave, type SaveRoll, spellcastingFor } from "./spells"
@@ -35,6 +36,22 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
   roll: (sides: number) => number
   rules?: DeathRules
 }): { characters: T[]; saves: SaveRoll[]; harm: Harm[]; conditions: ConditionChange[]; facts: string[]; told: RoundFact[] } {
+  const { round, done } = roundTools(args)
+  for (const rule of roundRules()) for (const was of args.characters) rule(round, was)
+  return done()
+}
+
+/** What the round's tools leave: everyone as they are, with the saves, harm and conditions, and the facts in words. */
+type Turned<T> = { characters: T[]; saves: SaveRoll[]; harm: Harm[]; conditions: ConditionChange[]; facts: string[]; told: RoundFact[] }
+
+// The tools every spell rule shares as a round turns or a move is walked (./spell-rules `RoundContext`), over everyone as
+// they are left so far, and what they come to.
+function roundTools<T extends Castee & { position?: Point }>(args: {
+  characters: readonly T[]
+  d20: () => number
+  roll: (sides: number) => number
+  rules?: DeathRules
+}): { round: RoundContext; done: () => Turned<T> } {
   let characters = [...args.characters]
   const saves: SaveRoll[] = []
   const harm: Harm[] = []
@@ -79,7 +96,7 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
       tell(target.id, spell.name, legendaryResistanceWords(target.name, spent))
     }
     if (thrown.rescued) {
-      put(withRescueSpent(find(target.id) ?? target, thrown.rescued))
+      put(withRescueSpent(find(thrown.rescued.by ?? target.id) ?? target, thrown.rescued))
       tell(target.id, spell.name, rescueWords(target.name, thrown.rescued, thrown))
     }
     return thrown
@@ -118,9 +135,45 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     holds,
     conditions,
   }
-  for (const rule of roundRules()) for (const was of args.characters) rule(round, was)
+  return { round, done: () => ({ characters, saves, harm, conditions, facts, told }) }
+}
 
-  return { characters, saves, harm, conditions, facts, told }
+/**
+ * A step of a move through the areas that stay on the floor (./floor-areas), from one point to the next of the path:
+ * each area the mover comes into touches them as its rules say (./spell-rules `stays`), once a turn unless it says each
+ * time, and one they walk in touches them for the feet walked (Spike Growth). A forced move or a teleport is no walk,
+ * and is not read here. Everyone comes back as the step left them, the mover standing at its end, with the saves, the
+ * harm, and what happened in words.
+ */
+export function areasWalked<T extends Castee & { position?: Point }>(args: {
+  characters: readonly T[]
+  moverId: string
+  from: Point
+  to: Point
+  d20: () => number
+  roll: (sides: number) => number
+  rules?: DeathRules
+}): Turned<T> {
+  const moved = args.characters.map((character) => (character.id === args.moverId ? { ...character, position: { x: args.to.x, y: args.to.y } } : character))
+  const { round, done } = roundTools({ ...args, characters: moved })
+  const mover = round.find(args.moverId)
+  if (!mover) return done()
+  const size = sizeOf(mover)
+  for (const area of floorAreas(args.characters)) {
+    const when = area.rules.when ?? []
+    const touches = area.rules.touches
+    if (!touches) continue
+    const now = round.find(args.moverId)
+    if (!now || now.dead) break
+    const feet = when.includes("move") ? feetIn(area, args.from, args.to, size) : 0
+    if (feet > 0) touches({ round, area, creature: now, moment: "move", feet })
+    if (!when.includes("enter") || !enters(area, args.from, args.to, size)) continue
+    if (!area.rules.eachEntry && touchedThisTurn(now, area)) continue
+    touches({ round, area, creature: now, moment: "enter" })
+    const after = round.find(args.moverId)
+    if (after) round.put(withTouch(after, area))
+  }
+  return done()
 }
 
 /** A fact of a round's turn, with the one it is about and the spell's name. */

@@ -80,12 +80,13 @@ test("Primal Champion and Body and Mind raise two scores by 4, to at most 25, an
 })
 
 test("a cantrip's dice at levels 5, 11 and 17: Fire Bolt's 2d10, 3d10 and 4d10", () => {
-  // Every die falls as 4, and a 15 hits the Ogre's Armor Class 11.
+  // Every die falls as 4, and a 15 hits the Ogre's Armor Class 11. The Wizard is an Evoker, whose Empowered Evocation
+  // adds the Intelligence modifier, +5, from level 10.
   for (const [level, dealt] of [
     [4, 4],
     [5, 8],
-    [11, 12],
-    [17, 16],
+    [11, 12 + 5],
+    [17, 16 + 5],
   ] as const) {
     const wizard = hero("wizard", level)
     const bolt = castSpell({ characters: [wizard, ogre()], casterId: wizard.id, spell: spell("fire-bolt"), targets: ["ogre"], attackDice: [15], d20: () => 10, roll: fours })

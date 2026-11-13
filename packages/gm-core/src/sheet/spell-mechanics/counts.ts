@@ -3,8 +3,7 @@ import type { SpellRules } from "../spell-rules"
 /**
  * Spells whose text takes several creatures with no area: the count is in their words alone, and the data adds those a
  * higher slot gives (`extraTargetsPerSlot`). "Any number" is taken as twenty (Beacon of Hope, Animal Shapes, Mass Heal),
- * a wall of wind as many as stand along its 50 feet, and Slow "up to six" in its cube. Entangle's 20-foot square, which
- * its data holds no area for, takes four as a 20-foot cube would, and Mass Cure Wounds "up to six". A spell that takes
+ * a wall of wind as many as stand along its 50 feet, and Slow "up to six" in its cube, and Mass Cure Wounds "up to six". A spell that takes
  * "you and up to eight" takes nine, the caster among them. Chain Lightning takes its first target and the three its
  * bolts leap to.
  */
@@ -17,7 +16,6 @@ const COUNTS: Record<string, number> = {
   "beacon-of-hope": 20,
   "wind-wall": 10,
   slow: 6,
-  entangle: 4,
   "mass-cure-wounds": 6,
   "mass-suggestion": 12,
   "chain-lightning": 4,

@@ -299,7 +299,14 @@ export const solidAt = (solids: readonly Solid[], point: Point): Solid | undefin
  * Where a straight path from one point to another first comes into a solid thing, as a share of the path from 0 to 1.
  * None when it misses, or only touches its edge. The geometry is exact: a wall thinner than a step is still a wall.
  */
-function entersAt(solid: Solid, from: Point, to: Point): number | undefined {
+const entersAt = (solid: Solid, from: Point, to: Point): number | undefined => spanThrough(solid, from, to)?.[0]
+
+/**
+ * The stretch of a straight path from one point to another that lies inside a shape, as shares of the path from 0 to
+ * 1: where it comes in, and where it goes out. One that starts inside comes in at 0. None when it misses, or only
+ * touches its edge. A path from (−10, 0) to (10, 0) through a circle of radius 5 at the origin is inside from 0.25 to 0.75.
+ */
+export function spanThrough(solid: Solid, from: Point, to: Point): readonly [number, number] | undefined {
   const EDGE = 1e-9
   if (solid.kind === "circle") {
     const dx = to.x - from.x
@@ -315,7 +322,8 @@ function entersAt(solid: Solid, from: Point, to: Point): number | undefined {
     const first = (-b - Math.sqrt(root)) / (2 * a)
     const last = (-b + Math.sqrt(root)) / (2 * a)
     const enter = Math.max(first, 0)
-    return Math.min(last, 1) - enter > EDGE ? enter : undefined
+    const leave = Math.min(last, 1)
+    return leave - enter > EDGE ? [enter, leave] : undefined
   }
   // In the rectangle's own frame it is a box about the origin, and the path is clipped to it side by side.
   const cos = Math.cos(solid.turn)
@@ -338,17 +346,51 @@ function entersAt(solid: Solid, from: Point, to: Point): number | undefined {
     enter = Math.max(enter, Math.min(one, other))
     leave = Math.min(leave, Math.max(one, other))
   }
-  return leave - enter > EDGE ? enter : undefined
+  return leave - enter > EDGE ? [enter, leave] : undefined
+}
+
+/**
+ * Ground that costs more than a foot of movement for each foot moved through it, as a shape on the floor and the feet
+ * each foot costs: Difficult Terrain's 2, Wall of Thorns' 4.
+ */
+export type Rough = { shape: Solid; cost: number }
+
+// How far along a straight path of `gap` feet a walker gets for `feet` of movement, where the rough ground it crosses
+// costs more: the feet walked and the movement spent. Where rough shapes overlap the dearest counts.
+function roughWalk(rough: readonly Rough[], from: Point, to: Point, gap: number, feet: number): { walked: number; spent: number } {
+  if (!rough.length || gap === 0) return { walked: Math.min(gap, feet), spent: Math.min(gap, feet) }
+  const marks = new Set([0, gap])
+  const spans = rough.flatMap((each) => {
+    const span = spanThrough(each.shape, from, to)
+    if (!span) return []
+    marks.add(span[0] * gap)
+    marks.add(span[1] * gap)
+    return [{ from: span[0] * gap, to: span[1] * gap, cost: each.cost }]
+  })
+  const points = [...marks].sort((a, b) => a - b)
+  let walked = 0
+  let spent = 0
+  for (let index = 1; index < points.length; index++) {
+    const start = points[index - 1]
+    const length = points[index] - start
+    const middle = start + length / 2
+    const cost = Math.max(1, ...spans.filter((span) => span.from <= middle && middle <= span.to).map((span) => span.cost))
+    if (spent + length * cost >= feet) return { walked: walked + (feet - spent) / cost, spent: feet }
+    walked += length
+    spent += length * cost
+  }
+  return { walked, spent }
 }
 
 /**
  * Walk straight toward a point over a floor: no farther than the feet given, and no farther than the first solid thing
  * in the way. With a crate 10 feet ahead, a walk of 30 feet toward a point 20 feet off stops at the crate, having used
- * 10. One who starts on something solid, as on a roof, walks off it freely.
+ * 10. One who starts on something solid, as on a roof, walks off it freely. Rough ground on the way costs more of the
+ * feet given for each foot walked (`rough`): 30 feet across 10 feet of Difficult Terrain walk 20, and `used` is the
+ * movement spent.
  */
-export function walkOver(solids: readonly Solid[], from: Point, to: Point, feet: number): { at: Point; used: number; blocked: boolean } {
+export function walkOver(solids: readonly Solid[], from: Point, to: Point, feet: number, rough: readonly Rough[] = []): { at: Point; used: number; blocked: boolean } {
   const gap = between(from, to)
-  const limit = Math.max(0, Math.min(gap, feet))
   const along = (d: number): Point => (gap === 0 ? { ...from } : { x: from.x + ((to.x - from.x) * d) / gap, y: from.y + ((to.y - from.y) * d) / gap })
   let first = Number.POSITIVE_INFINITY
   for (const solid of solids) {
@@ -356,7 +398,9 @@ export function walkOver(solids: readonly Solid[], from: Point, to: Point, feet:
     const enter = entersAt(solid, from, to)
     if (enter !== undefined) first = Math.min(first, enter * gap)
   }
-  return first < limit ? { at: along(first), used: first, blocked: true } : { at: along(limit), used: limit, blocked: false }
+  const reach = Math.min(gap, first)
+  const went = roughWalk(rough, from, along(reach), reach, Math.max(0, feet))
+  return { at: along(went.walked), used: went.spent, blocked: first < gap && went.walked >= reach - 1e-9 && went.spent < feet - 1e-9 }
 }
 
 /**
@@ -413,10 +457,17 @@ export function standingRoom(solids: readonly Solid[], others: readonly Point[],
 /**
  * A character's walk over a floor: toward a goal by the way `routeThrough` finds, as far as the feet given, stopping
  * at the first solid thing when no way is clear. `stopShort` halts that many feet short of the goal, for closing with
- * a creature, and `others` are the points where the rest stand, so the walker ends beside them and not on them. Gives
- * where they end, the feet used, and the points walked through.
+ * a creature, and `others` are the points where the rest stand, so the walker ends beside them and not on them. Ground
+ * that costs more to cross (`rough`: Difficult Terrain) spends more of the feet given. Gives where they end, the feet
+ * used, and the points walked through.
  */
-export function walk(floor: Floor, from: Point, to: Point, feet: number, options: { stopShort?: number; others?: readonly Point[] } = {}): { at: Point; used: number; path: Point[] } {
+export function walk(
+  floor: Floor,
+  from: Point,
+  to: Point,
+  feet: number,
+  options: { stopShort?: number; others?: readonly Point[]; rough?: readonly Rough[] } = {}
+): { at: Point; used: number; path: Point[] } {
   const short = options.stopShort ?? 0
   const gap = between(from, to)
   const others = options.others ?? []
@@ -447,7 +498,7 @@ export function walk(floor: Floor, from: Point, to: Point, feet: number, options
   let left = Math.max(0, feet)
   const path: Point[] = []
   for (const point of way ?? [goal]) {
-    const leg = walkOver(floor.solids, at, point, left)
+    const leg = walkOver(floor.solids, at, point, left, options.rough)
     if (leg.used > 0) path.push(leg.at)
     left -= leg.used
     at = leg.at

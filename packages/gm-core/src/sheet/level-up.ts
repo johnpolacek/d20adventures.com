@@ -322,7 +322,7 @@ export function picksOffer(feature: ClassFeature, sheet: Sheet, picked: readonly
     ...(slots ? { slots } : {}),
     // Options from elsewhere are offered by name, with nothing more to them: Wild Shape's Beast forms, and a spell with its level.
     options: !feature.options
-      ? pickOptions(feature, sheet.level).map((option) => ({ ...named(option), ...(option.level !== undefined ? { level: option.level } : {}) }))
+      ? pickOptions(feature, sheet.level, sheet).map((option) => ({ ...named(option), ...(option.level !== undefined ? { level: option.level } : {}) }))
       : feature.options.map((option): PickOffer => {
           const need = cantripNeed(option)
           const grant = option.feat

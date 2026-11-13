@@ -171,6 +171,9 @@ const PICKED: Record<string, (cls: Class, level: number, feature: ClassFeature) 
 
 /** Mystic Arcanum (Warlock, level 11), whose picks are Warlock spells of levels 6 to 9. */
 export const MYSTIC_ARCANUM = "warlock-mystic-arcanum"
+/** Spell Mastery (Wizard, level 18) and Signature Spells (Wizard, level 20), whose picks are spells of the spellbook. */
+export const SPELL_MASTERY = "wizard-spell-mastery"
+export const SIGNATURE_SPELLS = "wizard-signature-spells"
 
 /**
  * Features whose picks are spells, by feature id: the spell lists they come from, the spell levels each pick may be at
@@ -178,10 +181,26 @@ export const MYSTIC_ARCANUM = "warlock-mystic-arcanum"
  * spell of level 6 at 11, of level 7 at 13, of 8 at 15 and of 9 at 17, cast once a Long Rest with no slot, and not
  * prepared. Magical Discoveries (College of Lore, level 6): two spells of the Cleric, Druid or Wizard list, each a
  * cantrip or of a level the Bard has slots for, always prepared. The SRD data types the Arcanum's levels, and the
- * Discoveries' lists and count are in its text.
+ * Discoveries' lists and count are in its text. Spell Mastery (Wizard, level 18): a level 1 and a level 2 spell of the
+ * spellbook with a casting time of an action, always prepared, cast at their own level with no slot as often as the
+ * Wizard likes. Signature Spells (Wizard, level 20): two level 3 spells of the spellbook, always prepared, each cast once
+ * at level 3 with no slot, back on a Short or Long Rest. Their levels, the book, the casting time and the casts are in
+ * their text, which the data does not type. `book` takes the picks from the spellbook, `action` only spells cast with
+ * an action, and `cast` lets each pick be cast with no slot: at will, or as many times as the feature's `uses` give,
+ * each spell counted alone (./pickedFreeCasts).
  */
-const SPELL_PICKS: Record<string, { lists: readonly string[]; prepared: boolean; slots: (feature: ClassFeature, level: number) => number[][] }> = {
-  [MYSTIC_ARCANUM]: { lists: ["warlock"], prepared: false, slots: (feature, level) => (feature.spellLevels ?? []).filter((row) => row.level <= level).map((row) => [row.spellLevel]) },
+const SPELL_PICKS: Record<
+  string,
+  {
+    lists: readonly string[]
+    prepared: boolean
+    slots: (feature: ClassFeature, level: number) => number[][]
+    book?: true
+    action?: true
+    cast?: true
+  }
+> = {
+  [MYSTIC_ARCANUM]: { lists: ["warlock"], prepared: false, cast: true, slots: (feature, level) => (feature.spellLevels ?? []).filter((row) => row.level <= level).map((row) => [row.spellLevel]) },
   "college-of-lore-magical-discoveries": {
     lists: ["cleric", "druid", "wizard"],
     prepared: true,
@@ -191,6 +210,8 @@ const SPELL_PICKS: Record<string, { lists: readonly string[]; prepared: boolean;
       return [levels, levels]
     },
   },
+  [SPELL_MASTERY]: { lists: ["wizard"], prepared: true, book: true, action: true, cast: true, slots: () => [[1], [2]] },
+  [SIGNATURE_SPELLS]: { lists: ["wizard"], prepared: true, book: true, cast: true, slots: () => [[3], [3]] },
 }
 for (const id of Object.keys(SPELL_PICKS)) PICKED[id] = (_, level, feature) => SPELL_PICKS[id].slots(feature, level).length
 
@@ -236,9 +257,11 @@ const recommendedForms = (feature: ClassFeature): string[] =>
  * Challenge Rating the Beast Shapes table allows, with no Fly Speed before the table allows one. The recommended forms
  * come first, then the strongest. A level 2 Druid may know a Wolf (1/4) and not an Ape (1/2) or a Giant Bat, which flies.
  */
-export function pickOptions(feature: ClassFeature, level: number): { id: string; name: string; level?: number }[] {
+export function pickOptions(feature: ClassFeature, level: number, sheet?: Sheet): { id: string; name: string; level?: number }[] {
   if (feature.options) return feature.options.map((option) => ({ id: option.id, name: option.name }))
-  // A feature whose picks are spells: those of its lists at the levels its slots take, highest first.
+  // A feature whose picks are spells: those of its lists at the levels its slots take, highest first. One whose picks
+  // come from the spellbook takes those of the sheet's book, where a sheet is given, and one that asks for it only
+  // spells cast with an action.
   const spells = SPELL_PICKS[feature.id]
   if (spells) {
     const levels = new Set(spells.slots(feature, level).flat())
@@ -246,6 +269,8 @@ export function pickOptions(feature: ClassFeature, level: number): { id: string;
     return [...ids]
       .flatMap((id) => {
         const spell = spellById.get(id)
+        if (spells.book && sheet && !(sheet.spellbook ?? []).includes(id)) return []
+        if (spells.action && spell?.castingTime.unit !== "action") return []
         return spell ? [{ id, name: spell.name, level: spell.level }] : []
       })
       .sort((a, b) => b.level - a.level || a.name.localeCompare(b.name))
@@ -418,6 +443,17 @@ function speedBonusOf(sheet: Sheet, parts: Parts): number {
   }, 0)
 }
 
+// Speeds a class feature gives equal to the hero's Speed, which the data leaves untyped and the text says: Roving's
+// "You also have a Climb Speed and a Swim Speed equal to your Speed" (Ranger, level 6).
+const FEATURE_SPEEDS: Record<string, readonly ("swim" | "climb")[]> = { "ranger-roving": ["climb", "swim"] }
+
+/** The Swim and Climb Speeds of a sheet's items (`items`) with those its features give, each its Speed. The higher counts. */
+function featureSpeedsOf(parts: Parts, speed: number, items: { swim?: number; climb?: number }): { swim?: number; climb?: number } {
+  const speeds = { ...items }
+  for (const feature of parts.features) for (const mode of FEATURE_SPEEDS[feature.id] ?? []) speeds[mode] = Math.max(speeds[mode] ?? 0, speed)
+  return speeds
+}
+
 function armorTrainingOf(sheet: Sheet, parts: Parts): ArmorTraining[] {
   const training = new Set<ArmorTraining>(parts.class.armor ?? [])
   for (const option of chosenOptions(sheet, parts).features) for (const kind of option.armorTraining ?? []) training.add(kind)
@@ -551,13 +587,19 @@ export function alwaysPrepared(sheet: Sheet): string[] {
 /**
  * The spells the options a sheet has picked let the hero cast with no spell slot, each with the option it comes from:
  * Armor of Shadows' Mage Armor on themselves, at will, and Gift of the Depths' Water Breathing once a Long Rest, by its
- * `uses`. Pact of the Chain's Find Familiar is one.
+ * `uses`. Pact of the Chain's Find Familiar is one. A spell picked for a feature whose picks are cast with no slot
+ * (Spell Mastery at will, Signature Spells once a rest each) is one too, counted under "<feature>:<spell>".
  */
 export function pickedFreeCasts(sheet: Sheet): { spell: string; option: string; feature: string; selfOnly?: true; usableWhen?: string; uses?: FeatureOption["uses"] }[] {
   const { parts } = lookup(sheet)
   if (!parts) return []
   return parts.features.flatMap((feature) =>
     (sheet.featurePicks?.[feature.id] ?? []).flatMap((pick) => {
+      if (SPELL_PICKS[feature.id]?.cast) {
+        const count = feature.uses?.count
+        const uses = typeof count === "number" && feature.uses ? { uses: { count, recharge: feature.uses.recharge } } : {}
+        return [{ spell: pick.option, option: `${feature.id}:${pick.option}`, feature: feature.id, ...uses }]
+      }
       const option = feature.options?.find((entry) => entry.id === pick.option)
       return (option?.freeCast ?? []).map((cast) => ({
         spell: cast.spell,
@@ -884,7 +926,7 @@ function pickProblems(sheet: Sheet, parts: Parts): string[] {
     // Picks of spells (Mystic Arcanum) are each a spell of the feature's lists, taken once, that fill its slots.
     const slots = spellPickSlots(feature, sheet.level)
     if (slots) {
-      const from = pickOptions(feature, sheet.level)
+      const from = pickOptions(feature, sheet.level, sheet)
       const levels = picks.flatMap((pick) => from.find((option) => option.id === pick.option)?.level ?? [])
       for (const pick of picks) if (!from.some((option) => option.id === pick.option)) problems.push(`"${pick.option}" is not a spell ${feature.name} may take at level ${sheet.level}`)
       if (taken.size < picks.length) problems.push(`${feature.name} takes a spell twice`)
@@ -1129,7 +1171,7 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
     // Initiative is a Dexterity check, so an item's bonus to ability checks counts as well as one to Initiative.
     initiative: abilityModifiers.dex + (initiativeFeat ? proficiencyBonus : 0) + itemBonus(sheet, "initiative") + itemBonus(sheet, "ability-checks"),
     speed,
-    speeds: speedsWithItems(sheet, speed),
+    speeds: featureSpeedsOf(parts, speed, speedsWithItems(sheet, speed)),
     senses: sensesOf(sheet, parts),
     resistances: resistancesOf(sheet, parts),
     immunities: [...new Set(itemImmunities(sheet))].sort(),

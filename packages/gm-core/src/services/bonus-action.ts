@@ -67,7 +67,7 @@ export async function useBonus(args: {
   const attacking = again ? !!spell.attack : attacksWhenCast(spell)
   const named = bonus.targets ?? (bonus.target ? [bonus.target] : attacking ? (foes.length === 1 ? [foes[0].id] : []) : [actor.id])
   const floor = again?.unplaced ? undefined : await args.floor()
-  const spaced = floor ? castInSpace({ spell, caster: actor, everyone, named, floor }) : undefined
+  const spaced = floor ? castInSpace({ spell, caster: actor, everyone, named, floor, again: !!again }) : undefined
   if (spaced?.problem || !named.length) {
     const problem = spaced?.problem ?? { name: "No One To Cast On", text: `${actor.name} has no one to cast ${spell.name} on.` }
     return { characters, beats: [{ kind: "feature", by: args.by, character: actor.id, name: problem.name, text: problem.text }] }
@@ -95,7 +95,11 @@ export async function useBonus(args: {
     roll: args.roll,
     ...(spaced && Object.keys(spaced.cover).length ? { cover: spaced.cover } : {}),
     ...(spaced?.measured ? { measured: true } : {}),
+    ...(spaced?.at ? { at: spaced.at } : {}),
+    ...(spaced?.to ? { to: spaced.to } : {}),
     ...(paid?.cost.kind === "item" ? { item: true } : {}),
+    // A casting that spends no slot though the spell has a level: a feature's or an invocation's at will.
+    ...(paid && paid.cost.kind !== "slot" && paid.cost.kind !== "item" ? { noSlot: true } : {}),
     ...(bonus.choice ? { choice: bonus.choice } : {}),
   }
   // Cast at the slot it spends: a Healing Word from a level 2 slot heals as a level 2 casting. One from an item at the item's level.

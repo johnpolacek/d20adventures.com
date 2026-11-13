@@ -1,27 +1,42 @@
 import type { DamageTypeId } from "@d20/srd"
+import { classFeatureById } from "@d20/srd/class-features"
 import { equipmentById } from "@d20/srd/equipment"
+import { monsterById } from "@d20/srd/monsters"
 import { z } from "zod"
 import type { RequiredFeature } from "../../validations/roll-requirement-schema"
-import { type Attack, defensesOf, parseDice } from "../attack"
+import { type Attack, defensesOf, parseDice, rollDamage, damageTaken, type Target } from "../attack"
 import { attackable, nearestEnemy } from "../attack-roll"
 import type { Roller } from "../check"
-import type { ClassRules } from "../class-rules"
+import type { CastChoice, ClassRules, DieHolder, FollowRule, HitRider, SaveRule } from "../class-rules"
 import { withCondition } from "../conditions"
+import { withDamage, withHealing } from "../death"
 import { deriveSheet, trainedWith } from "../derive"
-import { hasFeature, usedThisTurn } from "../feature-rules"
-import { magicalCunningOf, withMagicalCunning } from "../rest"
+import { featureUseCount, hasFeature, usedThisTurn, usesLeft, withFeatureUsed, withUsedThisTurn } from "../feature-rules"
+import type { Harm } from "../harm"
+import { hitPointsOf } from "../hit-points"
+import { hitDiceOf, magicalCunningOf, withMagicalCunning } from "../rest"
 import { areEnemies } from "../sides"
 import { feetBetween, pushed, sizeOf, walkOver } from "../space"
-import { slotsLeft, withCastSpent } from "../spells"
+import { type Castee, rollSave, type SaveRoll, slotsLeft, spellcastingOf, withCastSpent } from "../spells"
+import { DEFAULT_STAT_BLOCK } from "../stat-block"
 
 /**
- * The Warlock's features in play, levels 1 to 5. Pact Magic's slots and their return on a Short Rest are the sheet's
+ * The Warlock's features in play, levels 1 to 20. Pact Magic's slots and their return on a Short Rest are the sheet's
  * and ../rest's, and a Warlock casts through the same path as any caster (../spells), every spell at the Pact slot's
- * level. Eldritch Blast's beams are its own data: one at levels 1 to 4 and two at level 5, each its own attack roll,
- * falling on the targets named in turn (../spells `castSpell`).
+ * level: three slots from 11 and four from 17, of level 5 from 9. Eldritch Blast's beams are its own data: one at
+ * levels 1 to 4, two at 5, three at 11 and four at 17, each its own attack roll, falling on the targets named in turn
+ * (../spells `castSpell`).
  *
  * Magical Cunning (level 2): a rite of 1 minute, the turn's whole action, never while a fight is on, once a Long Rest.
- * It gives back expended Pact Magic slots, up to half the maximum rounded up (../rest `withMagicalCunning`).
+ * It gives back expended Pact Magic slots, up to half the maximum rounded up, and all of them with Eldritch Master
+ * (level 20) (../rest `withMagicalCunning`).
+ *
+ * Contact Patron (level 9): Contact Other Plane always prepared, with one cast a Long Rest that takes no slot, read
+ * from the data (../derive, ../spells `spellsOf`). The spell itself is told, its save among it.
+ *
+ * Mystic Arcanum (levels 11, 13, 15, 17): the spells picked are kept in `featurePicks` (../derive `SPELL_PICKS`), and
+ * each is cast once a Long Rest with no slot, at its own level, counted under "warlock-mystic-arcanum:<spell>"
+ * (../derive `pickedFreeCasts`). A spell the engine labels told stays told.
  *
  * Eldritch Invocations, as the sheet's `featurePicks` hold them, each with the cantrip it is taken for:
  * Agonizing Blast adds the Charisma modifier to each hit of its cantrip, beam by beam. Repelling Blast pushes a Large
@@ -29,26 +44,45 @@ import { slotsLeft, withCastSpent } from "../spells"
  * there, and only where there is a floor. Eldritch Spear lengthens its cantrip's range by 30 feet a Warlock level.
  * Eldritch Mind gives Advantage on the Constitution save to keep Concentration. The free casts (Armor of Shadows,
  * Fiendish Vigor, Mask of Many Faces, Misty Visions, Otherworldly Leap, Ascendant Step, Master of Myriad Forms, Gift of
- * the Depths, Pact of the Chain's Find Familiar) are spells the hero knows (../spells `spellsOf`), Fiendish Vigor's
- * Temporary Hit Points at the die's highest. Pact of the Blade: the pact weapon is the first Melee weapon on the sheet,
- * since the sheet keeps no other word of which weapon is bonded. It is attacked with proficiency and with Charisma in
- * place of Strength or Dexterity where that is higher, and deals Necrotic, Psychic or Radiant damage in place of its
- * own where that harms the target more. Thirsting Blade (level 5) gives a second attack with the pact weapon. Eldritch
- * Smite (level 5) spends a Pact Magic slot on a pact weapon hit, once a turn, for 1d8 Force damage and 1d8 more a slot
- * level, and knocks a Huge or smaller target Prone.
- * Left told: Devil's Sight and One with Shadows (the engine knows no light), Gaze of Two Minds (senses), Gift of the
- * Depths' swimming and breathing, Pact of the Tome (the sheet keeps no word of the book's cantrips and rituals), Pact
- * of the Chain's familiar and Investment of the Chain Master (no familiar joins the encounter).
+ * the Depths, Whispers of the Grave, Visions of Distant Realms, Pact of the Chain's Find Familiar) are spells the hero
+ * knows (../spells `spellsOf`), Fiendish Vigor's Temporary Hit Points at the die's highest. Pact of the Blade: the pact
+ * weapon is the first Melee weapon on the sheet, since the sheet keeps no other word of which weapon is bonded. It is
+ * attacked with proficiency and with Charisma in place of Strength or Dexterity where that is higher, and deals
+ * Necrotic, Psychic or Radiant damage in place of its own where that harms the target more. Thirsting Blade (level 5)
+ * gives a second attack with the pact weapon, and Devouring Blade (level 12) a third. Eldritch Smite (level 5) spends a
+ * Pact Magic slot on a pact weapon hit, once a turn, for 1d8 Force damage and 1d8 more a slot level, and knocks a Huge
+ * or smaller target Prone. Lifedrinker (level 9) adds 1d6 Necrotic, Psychic or Radiant damage to a pact weapon hit
+ * once a turn, the type that harms the target most, and spends a Hit Point Die to heal the Warlock by its roll plus
+ * the Constitution modifier, at least 1, when they are missing at least the die's average. Witch Sight's Truesight is
+ * on the sheet (../derive).
+ * Left told: Devil's Sight, One with Shadows and Witch Sight in play (the engine knows no light, and its areas that
+ * hide do not tell darkness from fog), Gaze of Two Minds (senses), Gift of the Depths' swimming and breathing, Pact of
+ * the Tome (the sheet keeps no word of the book's cantrips and rituals), Gift of the Protectors (it needs the book's
+ * page of names), Pact of the Chain's familiar and Investment of the Chain Master (no familiar joins the encounter).
  *
  * Fiend Patron (level 3): the Fiend Spells are always prepared (../derive). Dark One's Blessing gives Temporary Hit
  * Points equal to the Charisma modifier plus the Warlock level, at least 1, when the Warlock drops an enemy to 0 hit
- * points, or another does within 10 feet of them (../class-rules `afterFelled`).
+ * points, or another does within 10 feet of them (../class-rules `afterFelled`), after a hero's own roll.
+ * Dark One's Own Luck (level 6): 1d10 added to a failed ability check or saving throw the die could turn, by a plain
+ * rule as a player would, once a roll, as many times a Long Rest as the Charisma modifier: on the read's own roll
+ * (`failedRollDie`, a held Bardic Inspiration die first) and on a save the engine rolls against harm (`saves`).
+ * Fiendish Resilience (level 10): the damage type kept on the sheet is resisted (../derive).
+ * Hurl Through Hell (level 14): once a turn on a hit with an attack roll, chosen with the attack (a weapon's, or a
+ * spell attack's with "cast"), the target makes a Charisma save against the spell save DC. On a failure it takes 8d10
+ * Psychic damage if it is not a Fiend and is Incapacitated through its next turn. Once a Long Rest, or by a Pact Magic
+ * slot when the use is spent. Its vanishing and return to its space are told: the engine has no way yet to take a
+ * creature out of play and bring it back.
  */
 
 const INVOCATIONS = "warlock-eldritch-invocations"
 const CUNNING = "magical-cunning"
 const SMITE = "eldritch-smite"
 const BLESSING = "fiend-patron-dark-ones-blessing"
+const OWN_LUCK = "fiend-patron-dark-ones-own-luck"
+const HURL = "fiend-patron-hurl-through-hell"
+// The choice of Hurl Through Hell with a spell attack, beside the one that rides a weapon's.
+const HURL_CAST = "hurl-through-hell-cast"
+const LIFEDRINKER = "lifedrinker"
 
 // Repelling Blast: "push the creature up to 10 feet straight away from you", on one "Large or smaller".
 const REPEL_FEET = 10

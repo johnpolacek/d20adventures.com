@@ -3,16 +3,7 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import type { ConditionEntry } from "../../src/sheet/condition-entry"
 import type { Sheet } from "../../src/sheet/sheet"
-import {
-  attackModesFromSpells,
-  cannotReactBySpell,
-  endConcentration,
-  hitPointMaximumFromSpells,
-  rollAdds,
-  settleConcentration,
-  spellEffectsAfterMove,
-  weaponDamageFromSpells,
-} from "../../src/sheet/spell-effects"
+import { attackModesFromSpells, cannotReactBySpell, endConcentration, hitPointMaximumFromSpells, rollAdds, settleConcentration, weaponDamageFromSpells } from "../../src/sheet/spell-effects"
 import { spellsAtRoundEnd } from "../../src/sheet/spell-rounds"
 import { castAgain, castableOnTurn, castSpell, isEngineSpell, spellById, targetLimit } from "../../src/sheet/spells"
 import { combatStatsOf } from "../../src/sheet/stat-block"
@@ -244,15 +235,6 @@ test("Spirit Guardians strikes each foe within 15 feet of its caster as the roun
   // side, and the Owlbear is out of the aura.
   const round = spellsAtRoundEnd({ characters: cast.characters, d20: falls(5), roll: falls(2, 3, 4) })
   assert.deepEqual([find(round.characters, "bandit").hitPoints, find(round.characters, "thalbern").hitPoints, find(round.characters, "owlbear").hitPoints], [2, 11, 59])
-})
-
-test("Web catches those in it, who save as their turn begins or are Restrained, and a move leaves it", () => {
-  const webbed = castSpell({ characters: [lyra, bandit()], casterId: "lyra", spell: spell("web"), targets: ["bandit"], d20: falls(), roll: falls() })
-  assert.deepEqual([webbed.saves, find(webbed.characters, "bandit").spellEffects], [[], [{ spell: "web", by: "lyra" }]])
-  // A 4 and his +1 is 5 against 13: Restrained.
-  const round = spellsAtRoundEnd({ characters: webbed.characters, d20: falls(4), roll: falls() })
-  assert.deepEqual(find(round.characters, "bandit").conditions, [{ id: "restrained", source: "lyra", spell: "web" }])
-  assert.equal(spellEffectsAfterMove(find(round.characters, "bandit")).spellEffects, undefined)
 })
 
 test("Lesser Restoration, Remove Curse and Dispel Magic end what other spells and conditions do", () => {

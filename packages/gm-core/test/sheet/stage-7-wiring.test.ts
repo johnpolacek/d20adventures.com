@@ -6,7 +6,6 @@ import type { ConditionEntry } from "../../src/sheet/condition-entry"
 import { costWhenCountered, reactionsToCast } from "../../src/sheet/counterspell"
 import { atRoundStart } from "../../src/sheet/death"
 import { type LevelUpChoices, levelUp, levelUpOptions } from "../../src/sheet/level-up"
-import { withMove } from "../../src/sheet/moves"
 import { type Ask, canReact } from "../../src/sheet/reactions"
 import type { Sheet } from "../../src/sheet/sheet"
 import { saveBonusFor, saveModesFor } from "../../src/sheet/spell-effects"
@@ -96,11 +95,6 @@ test("Scorching Ray is told as one attack for each ray, each with its own damage
     beats.map((beat) => (beat.kind === "roll" ? beat.attack?.taken : beat.kind)),
     [2, 2, 2]
   )
-})
-
-test("a step out of a Web leaves it", () => {
-  const caught = { ...bandit, position: { x: 0, y: 0 }, spellEffects: [{ spell: "web", by: "lyra" }] }
-  assert.equal(withMove(caught, { at: { x: 5, y: 0 }, feet: 5, path: [{ x: 5, y: 0 }] }).spellEffects, undefined)
 })
 
 test("Shield turns Magic Missile, and Counterspell stops it without spending the slot", () => {

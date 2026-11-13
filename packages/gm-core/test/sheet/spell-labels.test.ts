@@ -46,8 +46,8 @@ test("every spell is named as run, partly run or told, and the count by label", 
     for (const each of list) found[spellLabel(each)] += 1
     return found
   }
-  assert.deepEqual(count(spells), { run: 75, partly: 64, told: 200 })
-  assert.deepEqual(count(spells.filter((each) => each.level <= 3)), { run: 50, partly: 45, told: 88 })
+  assert.deepEqual(count(spells), { run: 77, partly: 76, told: 186 })
+  assert.deepEqual(count(spells.filter((each) => each.level <= 3)), { run: 52, partly: 48, told: 83 })
   // Each spell named is one of the SRD's, and named once.
   const named = namedSpellIds()
   assert.deepEqual(
@@ -62,11 +62,11 @@ test("every spell is named as run, partly run or told, and the count by label", 
   )
 })
 
-test("a told spell cast right after a hit stays on the turn's menu, where a smite the game runs does not", () => {
+test("a spell cast right after a hit is off the turn's menu, since it rides the attack (Ensnaring Strike, the smites)", () => {
   assert.deepEqual(
     ["ensnaring-strike", "divine-smite", "shining-smite"].map((id) => [spellLabel(spell(id)), castableOnTurn(spell(id))]),
     [
-      ["told", true],
+      ["partly", false],
       ["run", false],
       ["partly", false],
     ]
@@ -74,10 +74,10 @@ test("a told spell cast right after a hit stays on the turn's menu, where a smit
 })
 
 test("a told spell spends its cost and holds Concentration, and the engine rolls nothing for it", () => {
-  // Call Lightning is told: no save is made and no one is hurt, but Lyra concentrates on it.
-  const cast = castSpell({ characters: [lyra, bandit], casterId: "lyra", spell: spell("call-lightning"), targets: ["bandit"], d20: falls(1), roll: falls(10, 10, 10) })
+  // Storm of Vengeance is told: no save is made and no one is hurt, but Lyra concentrates on it.
+  const cast = castSpell({ characters: [lyra, bandit], casterId: "lyra", spell: spell("storm-of-vengeance"), targets: ["bandit"], d20: falls(1), roll: falls(10, 10) })
   assert.deepEqual([cast.saves.length, cast.harm.length, cast.facts, find(cast.characters, "bandit").hitPoints], [0, 0, [], 11])
-  assert.equal(find(cast.characters, "lyra").concentration?.spell, "call-lightning")
+  assert.equal(find(cast.characters, "lyra").concentration?.spell, "storm-of-vengeance")
   // Sanctuary is told: the one warded makes no save.
   assert.equal(castSpell({ characters: [milos, lyra], casterId: "milos", spell: spell("sanctuary"), targets: ["lyra"], d20: falls(1), roll: falls() }).saves.length, 0)
 })

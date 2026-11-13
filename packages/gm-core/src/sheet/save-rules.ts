@@ -1,9 +1,10 @@
 import type { AbilityId, ConditionId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { isDown, isIncapacitated } from "../utils/turn-actors"
-import type { CheckResult, Roller } from "./check"
+import type { Roller } from "./check"
 import { auraRules, classEvasion, type SaveRule, saveRules } from "./class-rules"
 import { hasFeature, withFeatureUsed } from "./feature-rules"
+import { withReaction } from "./reactions"
 import { sameSide } from "./sides"
 import { feetBetween, type Standing } from "./space"
 
@@ -29,11 +30,13 @@ export function damageOnSave(character: Roller, save: { ability: AbilityId; succ
 }
 
 /**
- * What a hero's class may still do for one of their failed saving throws against harm (Indomitable): the first rule
- * that answers, with the save as it then stands and the feature whose use it spends. None for a save that cost nothing.
+ * What the classes may still do for a failed saving throw against harm: the saver's own feature (Indomitable), or one
+ * of another present who answers it (Countercharm, whose `by` is that one). The first rule that answers, with the save
+ * as it then stands and the feature whose use it spends. None for a save that cost nothing. Each rule checks the
+ * feature it needs, so one with no sheet may still be answered by another's.
  */
-export function rescuedSave(args: Parameters<SaveRule>[0]): { result: CheckResult; feature: string; name: string } | undefined {
-  if (!args.character.sheet || args.result.success) return undefined
+export function rescuedSave(args: Parameters<SaveRule>[0]): ReturnType<SaveRule> {
+  if (args.result.success) return undefined
   if (!args.stakes.conditions?.length && !args.stakes.damage) return undefined
   for (const rule of saveRules()) {
     const answered = rule(args)
@@ -42,8 +45,15 @@ export function rescuedSave(args: Parameters<SaveRule>[0]): { result: CheckResul
   return undefined
 }
 
-/** One who saved, with the use of the feature that rescued the save spent. */
-export const withRescueSpent = <T extends object>(character: T, rescued: { feature: string }): T => withFeatureUsed(character as T & { featureUses?: Record<string, number> }, rescued.feature)
+/**
+ * The one a rescue spent from, as it leaves them: the saver with the use of their feature spent, or where another
+ * answered the save (`by`, Countercharm) that one with their Reaction taken. Handed anyone else, it changes nothing.
+ */
+export function withRescueSpent<T extends object>(character: T, rescued: { feature: string; by?: string }): T {
+  if (!rescued.by) return withFeatureUsed(character as T & { featureUses?: Record<string, number> }, rescued.feature)
+  const reactor = character as T & { id?: string }
+  return reactor.id === rescued.by ? (withReaction(reactor as unknown as Parameters<typeof withReaction>[0]) as unknown as T) : character
+}
 
 /**
  * A rescued save in the story's words: "Branka fails the saving throw (9 against DC 15) and calls on Indomitable: 19,

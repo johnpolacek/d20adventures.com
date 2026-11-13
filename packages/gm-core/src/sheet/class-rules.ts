@@ -4,7 +4,7 @@ import type { z } from "zod"
 import type { TurnReading } from "../services/roll-requirement-service"
 import type { Character } from "../types/character"
 import type { RequiredFeature, RequiredRoll } from "../validations/roll-requirement-schema"
-import type { Attack, AttackResult, DamagePart, RolledAttack, Target } from "./attack"
+import type { Attack, AttackResult, DamagePart, DamageRoll, RolledAttack, Target } from "./attack"
 import type { InScene } from "./attack-roll"
 import { type Check, type CheckResult, checkBonus, type Roller } from "./check"
 import { classes } from "./classes"
@@ -12,12 +12,12 @@ import type { ConditionEntry } from "./condition-entry"
 import type { ModeSource } from "./conditions"
 import type { DeathRules } from "./death"
 import type { ConditionChange, Harm } from "./harm"
-import { registerDowned, registerImmunities } from "./late-rules"
+import { registerConcentrationKept, registerDowned, registerImmunities, registerSpeed } from "./late-rules"
 import type { SaveStakes } from "./legendary-resistance"
 import { type AuraHolder, auraConditionImmunities } from "./save-rules"
 import type { Cover, Floor, Point } from "./space"
 import type { Cast, Castee, castSpell } from "./spells"
-import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
+import type { Concentration, Inspiration, SpellEffect, TurnEffect } from "./turn-effect"
 
 /**
  * What a class's features hand the engine, at each seam of play. A class file under ./classes fills one of these, and
@@ -157,23 +157,122 @@ export type ClassRules = {
    * words. Read in ./item-spend `withChargesSpent`.
    */
   keepsCharges?: (character: Roller, roll: (sides: number) => number) => { kept: boolean; text: string } | undefined
+  /**
+   * What a feature does to the healing of a hero's own spell as it is cast, for each one it heals: `bonus` hit points
+   * more (Disciple of Life), and `most`, its dice counted at their highest (Supreme Healing). `slot` is the spell slot
+   * the cast spends, none for one that spends none. Read in ./spells `castSpell`.
+   */
+  spellHealing?: (args: { caster: Roller; spell: Spell; slot?: number }) => { bonus?: number; most?: true } | undefined
+  /**
+   * What a feature adds to the damage of a hero's own spell that lands by a save or with no roll (Potent Spellcasting's
+   * Wisdom modifier). A spell attack's hit takes `spellHit`. `item` is a cast from a magic item. Read in ./spells `castSpell`.
+   */
+  spellDamage?: (args: { caster: Roller; spell: Spell; item: boolean }) => number
+  /**
+   * What a feature does once a hero's own spell is cast and all it did is dealt, a told one too (Blessed Healer): everyone
+   * as it leaves them, with its words and the hit points it moved. `slot` is the slot spent, none for a cast that spends
+   * none. `harm` is what the cast did. Read at the end of ./spells `castSpell`.
+   */
+  spellCast?: <T extends Castee>(args: {
+    caster: T
+    spell: Spell
+    slot?: number
+    item: boolean
+    harm: readonly Harm[]
+    characters: readonly T[]
+    roll: (sides: number) => number
+  }) => { characters: T[]; facts: string[]; harm?: Harm[] } | undefined
+  /**
+   * Spells a feature lets a hero cast with no slot beyond their own, while it has a use left (Divine Intervention's
+   * Cleric spells), each counted under `feature`. A spell they have prepared keeps its slots, and is cast so only when
+   * none is left. Read in ./spells `spellsOf` and `castCost`.
+   */
+  spellsGiven?: (character: Rested) => readonly { feature: string; name: string; spells: readonly string[] }[]
+  /**
+   * What a Long Rest leaves a hero beyond the uses it gives back (Greater Divine Intervention's 2d4 Long Rests): `before`
+   * is the hero as the rest began. Read in ./rest `longRest`.
+   */
+  longRest?: <T extends Rested>(args: { before: T; after: T }) => { character: T; facts: string[] }
+  /**
+   * Advantage or Disadvantage a feature puts on an attack roll, by who makes it and who it is made against, for the
+   * features of either (Precise Hunter on the one the hero marked, Escape the Horde on an Opportunity Attack at the
+   * hero). `opportunity` is set for an Opportunity Attack. Read in ./actions `attackModesFromActions`, and for an
+   * Opportunity Attack in ./reactions `moveWithReactions`.
+   */
+  attackModes?: (args: { attacker: Roller & { id: string }; target: Roller & { id: string; spellEffects?: readonly SpellEffect[] }; opportunity?: true }) => ModeSource[]
+  /**
+   * Whether taking damage cannot break a hero's Concentration on a spell (Relentless Hunter's Hunter's Mark): no save is
+   * made for it. Read in ./spell-effects `settleConcentration`, through ./late-rules.
+   */
+  keepsConcentration?: (character: Roller, spellId: string) => boolean
+  /** The size of the die a hero's own marking spell adds to their hits, where a feature changes it (Foe Slayer's d10). Read in ./attack `landBlow`. */
+  markDie?: (character: Roller, spellId: string) => number | undefined
+  /**
+   * A die a character may roll and add to their own d20 roll that failed, where it fell short by no more than the die
+   * can add: a held Bardic Inspiration die on any D20 Test, Peerless Skill's on an ability check or attack roll. It comes
+   * with what rolling it spends, by whether the roll then succeeded. The first class that answers gives it. Read for the
+   * read's attack roll (./attack `rollAttack`) and check (../services/adventure-roll-result-service).
+   */
+  failedRollDie?: (character: DieHolder, test: "attack" | "check" | "save") => FailedRollDie | undefined
+  /**
+   * Creatures more that one of a hero's own spells may take, each within `within` feet of the first (Words of Creation's
+   * second within 10 feet). Read in ./spells `targetLimit` and ./spell-space `castInSpace`.
+   */
+  moreTargets?: (caster: Roller, spell: Spell) => { count: number; within: number } | undefined
+  /**
+   * Whether one of a hero's own spells still deals half its damage to one its attack roll misses or who succeeds on its
+   * save, and nothing more (Potent Cantrip). Read in ./spells `castSpell`.
+   */
+  halvesAvoided?: (caster: Roller, spell: Spell) => boolean
+  /**
+   * Whether the dice a hero's own spell rolls for damage as it is cast count at their highest (Overchannel). `slot` is
+   * the slot the cast spends, none for one that spends none. Read in ./spells `castSpell`.
+   */
+  spellDamageMost?: (args: { caster: Lasting; spell: Spell; slot?: number }) => boolean
+  /**
+   * Those a hero's own spell spares as it is cast (Sculpt Spells): each succeeds on its saving throws against it at once
+   * and takes none of its damage that a success would halve. `taken` is everyone it takes, in the order named, and
+   * `level` the level it is cast at. Read in ./spells `castSpell`, before its saves.
+   */
+  spellSpares?: (args: { caster: Roller & { id: string }; spell: Spell; level: number; taken: readonly (Roller & { id: string })[] }) => { ids: readonly string[]; name: string } | undefined
+  /**
+   * A damage roll of a hero's own spell as a feature changes it once its dice have fallen, before it is dealt (Elemental
+   * Affinity's Charisma modifier, Empowered Spell's rerolls), with its words. `first` is the cast's first damage roll,
+   * and `roll` throws a die. Not read for a spell used again. Read in ./spells `castSpell`.
+   */
+  spellDamageRolled?: (args: { caster: Bearing; spell: Spell; rolled: DamageRoll; first: boolean; roll: (sides: number) => number }) => { rolled: DamageRoll; fact?: string } | undefined
+  /**
+   * The Speed a hero moves at over the floor while a feature lasts, where it is more than their own (Dragon Wings' Fly
+   * Speed: the floor is flat, so flying is moving). Read in ./space `speedOf`, through ./late-rules.
+   */
+  speed?: (character: Roller) => number | undefined
 }
+
+/** One who may hold or roll a die on their own failed d20 roll: a held Bardic Inspiration die, and the uses and slots of their own features. */
+export type DieHolder = Roller & { inspiration?: Inspiration; featureUses?: Record<string, number>; spellSlots?: readonly number[] }
+
+/** A die rolled on a failed d20 roll (`failedRollDie`): its sides, and the one who rolled it once it is rolled, by whether the roll then succeeded. */
+export type FailedRollDie = { die: number; spend: <T extends DieHolder>(character: T, success: boolean) => T }
 
 /** One of a hero's own attack rolls as it was made: what was asked (with the choices and the cover), the damage it dealt, and the floor. */
 export type AttackMade = { attack: { weapon: string; target: string; cover?: string; choices?: Record<string, string> }; dealt: number; floor?: Floor }
 
 /**
- * A failed saving throw of the hero's own against harm, and what may still save it: the save as it then stands, the
- * feature whose use it spends, and its name for the story. `stakes` is what the failure would cost. `d20` rolls a die
- * for a reroll.
+ * A failed saving throw against harm, and what may still save it: the save as it then stands, the feature whose use it
+ * spends, and its name for the story. `stakes` is what the failure would cost. `d20` rolls a die for a reroll.
+ * `present` is everyone here, for a feature of another's that answers the save (Countercharm), and `by` is that one,
+ * whose Reaction it takes in place of a use.
  */
 export type SaveRule = (args: {
-  character: Roller & { featureUses?: Record<string, number> }
+  character: Roller & { id?: string; featureUses?: Record<string, number> }
   ability: AbilityId
   result: CheckResult
   stakes: SaveStakes
   d20: () => number
-}) => { result: CheckResult; feature: string; name: string } | undefined
+  /** Throws a die of another size, for a feature that adds one to the save (Dark One's Own Luck's d10). */
+  roll?: (sides: number) => number
+  present?: readonly Castee[]
+}) => { result: CheckResult; feature: string; name: string; by?: string } | undefined
 
 /**
  * An aura: a standing effect a hero's feature spreads to themselves and those of their side within its reach, while the
@@ -346,7 +445,7 @@ export type ChoiceRule = {
 }
 
 /** A cast as a choice that rides it reads it: the spell, the level it takes effect at, the slot it spends if any, and the damage type picked. */
-export type ChoiceCast = { spell: Spell; level: number; slot?: number; damageType?: DamageTypeId }
+export type ChoiceCast = { spell: Spell; level: number; slot?: number; damageType?: DamageTypeId; chosen?: Readonly<Record<string, string | true>> }
 
 /** What a spell is cast with, as ./spells `castSpell` takes it. */
 export type CastInput<T extends Castee> = Parameters<typeof castSpell<T>>[0]
@@ -361,7 +460,13 @@ export type CastChoice = {
    * The cast resolved with the choice: `resolve` is the engine's own resolution, of the cast it is handed. It comes back
    * with what the choice spent, and its facts. `slot` is the slot level the cast spends, still unspent.
    */
-  around?: <T extends Castee>(args: { input: CastInput<T>; value: string | true; slot?: number; resolve: (input: CastInput<T>) => Cast<T> }) => Cast<T>
+  around?: <T extends Castee>(args: {
+    input: CastInput<T>
+    value: string | true
+    slot?: number
+    choices?: Readonly<Record<string, string | true>>
+    resolve: (input: CastInput<T>) => Cast<T>
+  }) => Cast<T>
 }
 
 /** What a reaction to an attack roll is asked with: `hit` is the roll in words, and `ask` offers it to `to`. */
@@ -481,6 +586,21 @@ export type HitRule = {
    * slot spent, the Concentration it begins and the spell it leaves on the target. Read in ./reactions `attackWithReactions`.
    */
   landed?: <T extends Landed>(args: { characters: T[]; attackerId: string; targetId: string; added: readonly string[]; choices?: Record<string, string> }) => T[]
+  /**
+   * What the hit does to another than the one hit, once it has landed and dealt `taken` (Superior Hunter's Prey):
+   * everyone as it leaves them, and its words, told beside the attack's reactions. `turnOf` is whose turn it is, for a
+   * once-a-turn mark. Read in ./reactions `attackWithReactions`.
+   */
+  spills?: <T extends Landed & Target>(args: {
+    characters: T[]
+    attackerId: string
+    targetId: string
+    added: readonly string[]
+    taken: number
+    roll: (sides: number) => number
+    turnOf?: string
+    rules?: DeathRules
+  }) => { characters: T[]; told: Reacted } | undefined
 }
 
 /** One a hit's landing may change: a hero with uses, slots, lasting spells and Concentration, and whether their turn this round is over. */
@@ -610,6 +730,10 @@ export const classConditionImmunities = (character: Bearing): ConditionId[] => (
 registerImmunities((character, present) => [...classConditionImmunities(character as Bearing), ...auraConditionImmunities(character as AuraHolder, (present ?? []) as AuraHolder[])])
 // ./spell-effects `settleConcentration` answers those a roll dropped through it too.
 registerDowned((args) => afterDowned(args as unknown as Parameters<typeof afterDowned>[0]))
+// And asks whether damage cannot break a hero's Concentration on their spell (Relentless Hunter).
+registerConcentrationKept((character, spellId) => classKeepsConcentration(character as Roller, spellId))
+// And ./space `speedOf` the Speed a feature gives (Dragon Wings).
+registerSpeed((character) => classSpeed(character as Roller))
 /** The least the total of a hero's own check or save counts as by their class, or none. */
 export const classTotalFloor = (character: Roller, check: Check): number | undefined =>
   character.sheet ? classes().reduce<number | undefined>((most, rules) => Math.max(most ?? 0, rules.totalFloor?.(character, check) ?? 0) || undefined, undefined) : undefined
@@ -703,8 +827,99 @@ export const classSpellRange = (caster: Roller, spell: Spell): number | undefine
   caster.sheet ? classes().reduce<number | undefined>((found, rules) => found ?? rules.spellRange?.(caster, spell), undefined) : undefined
 /** What the classes add to one hit of a hero's own spell attack, each with its name. */
 export const classSpellHits = (args: SpellHitArgs): SpellHit[] => (args.caster.sheet ? classes().flatMap((rules) => rules.spellHit?.(args) ?? []) : [])
+/** What the classes do to the healing of a hero's own spell, for each one it heals: hit points more, and dice at their highest. */
+export function classSpellHealing(args: { caster: Roller; spell: Spell; slot?: number }): { bonus: number; most: boolean } {
+  const found = args.caster.sheet ? classes().flatMap((rules) => rules.spellHealing?.(args) ?? []) : []
+  return { bonus: found.reduce((sum, one) => sum + (one.bonus ?? 0), 0), most: found.some((one) => one.most) }
+}
+/** What the classes add to the damage of a hero's own spell that lands by a save or with no roll. */
+export const classSpellDamage = (args: { caster: Roller; spell: Spell; item: boolean }): number => (args.caster.sheet ? classes().reduce((sum, rules) => sum + (rules.spellDamage?.(args) ?? 0), 0) : 0)
+/** Everyone as the classes leave them once a hero's own spell is cast, with the words and hit points of each. */
+export function afterClassCast<T extends Castee>(args: {
+  caster: T
+  spell: Spell
+  slot?: number
+  item: boolean
+  harm: readonly Harm[]
+  characters: readonly T[]
+  roll: (sides: number) => number
+}): {
+  characters: T[]
+  facts: string[]
+  harm: Harm[]
+} {
+  let characters = [...args.characters]
+  const facts: string[] = []
+  const harm: Harm[] = []
+  if (!args.caster.sheet) return { characters, facts, harm }
+  for (const rules of classes()) {
+    const caster = characters.find((character) => character.id === args.caster.id) ?? args.caster
+    const done = rules.spellCast?.({ ...args, caster, characters })
+    if (!done) continue
+    characters = done.characters
+    facts.push(...done.facts)
+    harm.push(...(done.harm ?? []))
+  }
+  return { characters, facts, harm }
+}
+/** The spells the classes let a hero cast with no slot beyond their own, each with the feature it is counted under. */
+export const classSpellsGiven = (character: Rested): { feature: string; name: string; spells: readonly string[] }[] =>
+  character.sheet ? classes().flatMap((rules) => rules.spellsGiven?.(character) ?? []) : []
+/** A hero as the classes leave them once a Long Rest is over, with the words of each. */
+export function afterClassLongRest<T extends Rested>(before: T, after: T): { character: T; facts: string[] } {
+  let character = after
+  const facts: string[] = []
+  if (!after.sheet) return { character, facts }
+  for (const rules of classes()) {
+    const done = rules.longRest?.({ before, after: character })
+    if (!done) continue
+    character = done.character
+    facts.push(...done.facts)
+  }
+  return { character, facts }
+}
 /** Advantage and Disadvantage a hero's class gives their save to keep Concentration. */
 export const classConcentrationModes = (character: Roller): ModeSource[] => (character.sheet ? classes().flatMap((rules) => rules.concentrationModes?.(character) ?? []) : [])
+/** Whether a hero's class keeps damage from breaking their Concentration on a spell, so no save is made for it. */
+export const classKeepsConcentration = (character: Roller, spellId: string): boolean => !!character.sheet && classes().some((rules) => rules.keepsConcentration?.(character, spellId))
+/** Advantage and Disadvantage the classes' features of the attacker and of the one attacked put on an attack roll. */
+export const classAttackModes = (args: Parameters<NonNullable<ClassRules["attackModes"]>>[0]): ModeSource[] =>
+  args.attacker.sheet || args.target.sheet ? classes().flatMap((rules) => rules.attackModes?.(args) ?? []) : []
+/** The size of the die a hero's own marking spell adds to their hits by their class (Foe Slayer), or none where no feature changes it. */
+export const classMarkDie = (character: Roller, spellId: string): number | undefined =>
+  character.sheet ? classes().reduce<number | undefined>((found, rules) => found ?? rules.markDie?.(character, spellId), undefined) : undefined
+/**
+ * The die a character may roll and add to their own d20 roll that failed, by the first class that gives one, or none.
+ * A held Bardic Inspiration die is not a hero's alone, so the character needs no sheet.
+ */
+export const failedRollDieOf = (character: DieHolder, test: "attack" | "check" | "save"): FailedRollDie | undefined =>
+  classes().reduce<FailedRollDie | undefined>((found, rules) => found ?? rules.failedRollDie?.(character, test), undefined)
+/** Creatures more a hero's own spell may take by their class, each within `within` feet of the first, or none. */
+export const classMoreTargets = (caster: Roller, spell: Spell): { count: number; within: number } | undefined =>
+  caster.sheet ? classes().reduce<{ count: number; within: number } | undefined>((found, rules) => found ?? rules.moreTargets?.(caster, spell), undefined) : undefined
+/** Whether a hero's class has their own spell deal half its damage to one it misses or who saves (Potent Cantrip). */
+export const classHalvesAvoided = (caster: Roller, spell: Spell): boolean => !!caster.sheet && classes().some((rules) => rules.halvesAvoided?.(caster, spell))
+/** Whether a hero's class has the damage dice of their own spell count at their highest as it is cast (Overchannel). */
+export const classSpellDamageMost = (args: { caster: Lasting; spell: Spell; slot?: number }): boolean => !!args.caster.sheet && classes().some((rules) => rules.spellDamageMost?.(args))
+/** A damage roll of a hero's own spell as their class features change it once its dice have fallen, each feature after the one before, with their words. */
+export function classSpellDamageRolled(args: Parameters<NonNullable<ClassRules["spellDamageRolled"]>>[0]): { rolled: DamageRoll; facts: string[] } {
+  let rolled = args.rolled
+  const facts: string[] = []
+  if (!args.caster.sheet) return { rolled, facts }
+  for (const rules of classes()) {
+    const changed = rules.spellDamageRolled?.({ ...args, rolled })
+    if (!changed) continue
+    rolled = changed.rolled
+    if (changed.fact) facts.push(changed.fact)
+  }
+  return { rolled, facts }
+}
+/** The most Speed a hero's class features give them over the floor for now, or none. */
+export const classSpeed = (character: Roller): number | undefined =>
+  character.sheet ? classes().reduce<number | undefined>((most, rules) => Math.max(most ?? 0, rules.speed?.(character) ?? 0) || undefined, undefined) : undefined
+/** Those a hero's class spares of the ones their own spell takes, with the feature's name, or none (Sculpt Spells). */
+export const classSpellSpares = (args: Parameters<NonNullable<ClassRules["spellSpares"]>>[0]): { ids: readonly string[]; name: string } | undefined =>
+  args.caster.sheet ? classes().reduce<{ ids: readonly string[]; name: string } | undefined>((found, rules) => found ?? rules.spellSpares?.(args), undefined) : undefined
 /** What a hero's class features add to the save DC of their own class spells for now. */
 export const classSpellSaveDc = (character: Lasting): number => (character.sheet ? classes().reduce((sum, rules) => sum + (rules.spellSaveDc?.(character) ?? 0), 0) : 0)
 /** Advantage and Disadvantage a hero's class features give their attack roll with one of their own spells. */
@@ -727,7 +942,7 @@ const castRiders = (choices: Readonly<Record<string, string | true>> | undefined
 /** A cast as the choices riding it make it: the spell and the level it is measured and resolved at. */
 export function shapedCast(choices: Readonly<Record<string, string | true>> | undefined, cast: ChoiceCast): ChoiceCast {
   let now = cast
-  for (const { choice, value } of castRiders(choices)) now = { ...now, ...(choice.shape?.(now, value) ?? {}) }
+  for (const { choice, value } of castRiders(choices)) now = { ...now, ...(choice.shape?.({ ...now, chosen: choices }, value) ?? {}) }
   return now
 }
 
@@ -745,7 +960,7 @@ export function resolveChosenCast<T extends Castee>(args: {
   if (!riders.length) return args.resolve(args.input)
   const shaped = shapedCast(args.choices, { spell: args.input.spell, level: args.input.level ?? args.input.spell.level, slot: args.slot, damageType: args.input.damageType })
   const run = riders.reduceRight<(input: CastInput<T>) => Cast<T>>(
-    (next, { choice, value }) => (choice.around ? (input) => choice.around?.({ input, value, slot: args.slot, resolve: next }) ?? next(input) : next),
+    (next, { choice, value }) => (choice.around ? (input) => choice.around?.({ input, value, slot: args.slot, choices: args.choices, resolve: next }) ?? next(input) : next),
     args.resolve
   )
   return run({ ...args.input, spell: shaped.spell, level: shaped.level })

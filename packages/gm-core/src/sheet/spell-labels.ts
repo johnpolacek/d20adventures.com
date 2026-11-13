@@ -107,6 +107,9 @@ const RUN = new Set([
   "harm",
   "spare-the-dying",
   "regenerate",
+  // Areas that stay on the floor (./spell-mechanics/lasting-areas). Sleet Storm's doused flames are the story's.
+  "grease",
+  "sleet-storm",
 ])
 
 /**
@@ -114,15 +117,15 @@ const RUN = new Set([
  * text for the rest, which changes no one's hit points or conditions. What each leaves to the text: Chill Touch's bar
  * on healing, Shocking Grasp's bar on Opportunity Attacks, Ray of Frost's lost Speed, Starry Wisp's and Faerie Fire's
  * light against the Invisible, Charm Person's Advantage while it is fought, Chromatic Orb's leap, Command's words,
- * Dissonant Whispers' flight, Entangle's and Grease's ground, Grease's later falls, Hex's move, Hunter's
+ * Dissonant Whispers' flight, Ensnaring Strike's escape check, whose DC the game master is told, Entangle's escape check and its sparing its caster, Hex's move, Hunter's
  * Mark's tracking and its move, Ice Knife's burst on those beside its target,
- * Sleep's shake awake, Thunderwave's push, Mind Spike's tracking, Moonbeam's later
- * burns and its move, Shining Smite's light and its bar on the Invisible, Sunburst's end of Darkness, Mass Suggestion's
+ * Sleep's shake awake, Thunderwave's push, Mind Spike's tracking, Moonbeam's undoing of a changed
+ * shape, Shining Smite's light and its bar on the Invisible, Sunburst's end of Darkness, Mass Suggestion's
  * course of activity and its end when that is done, Enhance Ability's different ability for each target, Flesh to
  * Stone's Speed of 0 on a success and its lasting stone after the whole minute, Contagion's save when its Poisoned would
  * end and its 7 days, Befuddlement's bar on spells and the Magic action and its save every 30 days, the Dominate spells'
  * Advantage while the target is fought, their commands and their longer Concentration from a higher slot, Charm
- * Monster's Advantage while it is fought, Flaming Sphere's place and the save of one who ends its turn beside it,
+ * Monster's Advantage while it is fought, Flaming Sphere's move that rams no one, over barriers and across pits,
  * Shillelagh's end when the weapon is let go and its working on a stat block's weapon. Mind
  * Blank's shield against sensing and scrying, Fire Shield's flames on one who hits it and its light, Protection from
  * Evil and Good's bar on being possessed, Charmed or Frightened by those creatures, Dispel Evil and Good's Break
@@ -130,7 +133,13 @@ const RUN = new Set([
  * Restoration's cursed item and lowered ability scores, Disintegrate's objects and creations of force, Finger of
  * Death's Zombie, and the raising of one who died before this round, whom the engine no longer holds, and True
  * Resurrection's new body and an Undead's living form, Resurrection's tax for one dead a year or more, and Warding
- * Bond's damage shared with its caster and its end.
+ * Bond's damage shared with its caster and its end. The areas that stay on the floor (./spell-mechanics/lasting-areas,
+ * walls) leave: Web's anchoring, breaking free and burning, and its Lightly Obscured, Stinking Cloud's bar on actions and
+ * the strong wind that ends it, Cloudkill's, Fog Cloud's and Incendiary Cloud's wind too, and the direction Incendiary
+ * Cloud drifts, which the engine takes as straight away, Darkness on an object and the light it dispels, Spike Growth's
+ * camouflage, Insect Plague's Lightly Obscured, Black Tentacles' escape check, Guardian of Faith's body in the way,
+ * Call Lightning's storm already raging, the rings, domes and panels of the walls and how high they stand, Blade
+ * Barrier's Three-Quarters Cover, and Wall of Force at an angle or afloat, against Disintegrate and the Ethereal Plane.
  */
 const PARTLY = new Set([
   "chill-touch",
@@ -141,9 +150,9 @@ const PARTLY = new Set([
   "chromatic-orb",
   "command",
   "dissonant-whispers",
+  "ensnaring-strike",
   "entangle",
   "faerie-fire",
-  "grease",
   "hex",
   "hunters-mark",
   "ice-knife",
@@ -166,7 +175,6 @@ const PARTLY = new Set([
   "fear",
   "haste",
   "hypnotic-pattern",
-  "sleet-storm",
   "slow",
   "spirit-guardians",
   "stinking-cloud",
@@ -197,12 +205,24 @@ const PARTLY = new Set([
   "raise-dead",
   "resurrection",
   "true-resurrection",
+  "cloudkill",
+  "fog-cloud",
+  "darkness",
+  "spike-growth",
+  "insect-plague",
+  "incendiary-cloud",
+  "black-tentacles",
+  "guardian-of-faith",
+  "call-lightning",
+  "wall-of-fire",
+  "wall-of-force",
+  "blade-barrier",
+  "wall-of-thorns",
 ])
 
 // Held as told for a fault the engine has, though their data is typed: Divine Favor would add its die to hits on its
-// caster, Goodberry makes no berries, Call Lightning's data types no area round the point it strikes, so it would strike
-// only the one named, Hellish Rebuke is never offered as a Reaction, Sanctuary has the one warded save,
-// Resistance's die is taken off no damage, and Ensnaring Strike has no hit to ride (./castableOnTurn). Above level 3 every spell
+// caster, Goodberry makes no berries, Hellish Rebuke is never offered as a Reaction, Sanctuary has the one warded save,
+// and Resistance's die is taken off no damage. Above level 3 every spell
 // not named above, until the owner's fourth step.
 
 /** How much of a spell the engine runs (`SpellLabel`). */

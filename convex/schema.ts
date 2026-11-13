@@ -289,6 +289,9 @@ export default defineSchema({
               skill: v.optional(v.string()),
               choice: v.optional(v.string()),
               tally: v.optional(v.object({ passed: v.number(), failed: v.number() })),
+              // Where a spell's lasting area stands on the floor, and a wall's other end, in feet.
+              at: v.optional(v.object({ x: v.number(), y: v.number() })),
+              to: v.optional(v.object({ x: v.number(), y: v.number() })),
             })
           )
         ),

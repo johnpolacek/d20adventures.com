@@ -6,7 +6,7 @@ import type { Attack } from "./attack"
 import type { Check } from "./check"
 import type { ModeSource } from "./conditions"
 import { itemSaveModes } from "./item-effects"
-import { answerDowned } from "./late-rules"
+import { answerDowned, keepsConcentration } from "./late-rules"
 import { speciesSaveModes } from "./species-traits"
 import { type Bearer, type Deflected, heldRule, spellRule } from "./spell-rules"
 import type { SpellEffect } from "./turn-effect"
@@ -221,12 +221,17 @@ export const attackWithSpells = (character: Bearer, attack: Attack): Attack =>
 export const checkAdds = (character: Bearer, check: Check, roll: (sides: number) => number): RollAdd[] =>
   check.kind === "save" ? rollAdds(character, "saving-throws", roll) : rollAdds(character, "ability-checks", roll, check.kind === "skill" ? check.skill : undefined)
 
-/** Damage an attacker's own spell adds to a hit on this target: Hunter's Mark's d6 on the one marked. */
-export function markDamage(attackerId: string | undefined, target: Bearer): { name: string; damage: { dice: string; type: DamageTypeId } }[] {
+/**
+ * Damage an attacker's own spell adds to a hit on this target: Hunter's Mark's d6 on the one marked. `die` is the size
+ * of its die where the attacker's feature changes it (Foe Slayer's d10).
+ */
+export function markDamage(attackerId: string | undefined, target: Bearer, die?: (spellId: string) => number | undefined): { name: string; damage: { dice: string; type: DamageTypeId } }[] {
   if (!attackerId) return []
   return effectsOf(target).flatMap(({ effect, spell }) => {
     const mark = markOf(spell)
-    return mark?.dice && effect.by === attackerId ? [{ name: spell.name, damage: { dice: mark.dice, type: mark.types[0] } }] : []
+    if (!mark?.dice || effect.by !== attackerId) return []
+    const sides = die?.(spell.id)
+    return [{ name: spell.name, damage: { dice: sides ? mark.dice.replace(/d\d+$/, `d${sides}`) : mark.dice, type: mark.types[0] } }]
   })
 }
 
@@ -285,11 +290,14 @@ const outlasts = (spell: Spell | undefined): boolean => {
  * A character as the story moves on to another encounter: spells counted in turns are over, with Concentration on
  * them. Temporary Hit Points stay: they last until they are lost or a Long Rest. A spell that lasts longer than a minute stays, and so does its caster's
  * Concentration on it: Mage Armor, Hunter's Mark, Shield of Faith. A fight that moves from one scene to the next
- * keeps the mark on its quarry.
+ * keeps the mark on its quarry. An area that stays on the floor (Web, Moonbeam, a wall) ends, with Concentration on it.
  */
 export function spellEffectsAtEncounterEnd<T extends Bearer>(character: T): T {
-  const kept = (character.spellEffects ?? []).filter((effect) => effect.turns === undefined)
-  const held = character.concentration && outlasts(spellById.get(character.concentration.spell)) ? character.concentration : undefined
+  // An area left on the floor stays where it was put, and the story has left it: its spell ends (./floor-areas).
+  const left = (character.spellEffects ?? []).filter((effect) => effect.at).map((effect) => effect.spell)
+  const kept = (character.spellEffects ?? []).filter((effect) => effect.turns === undefined && !effect.at)
+  const concentrating = character.concentration && !left.includes(character.concentration.spell) ? character.concentration : undefined
+  const held = concentrating && outlasts(spellById.get(concentrating.spell)) ? concentrating : undefined
   const { spellEffects: _, concentration: __, ...rest } = character
   return { ...rest, ...(kept.length ? { spellEffects: kept } : {}), ...(held ? { concentration: held } : {}) } as T
 }
@@ -354,7 +362,8 @@ export function settleConcentration<T extends Bearer>(args: {
     const spell = spellById.get(now.concentration.spell)?.name ?? now.concentration.spell
     const lost = (was.hitPoints ?? 0) - (now.hitPoints ?? 0)
     let breaks = isDead(now) || isDown(now) || isIncapacitated(now) || hasFled(now)
-    if (!breaks && lost > 0) {
+    // A class feature may keep damage from breaking it, and then no save is made (Relentless Hunter's Hunter's Mark).
+    if (!breaks && lost > 0 && !keepsConcentration(now, now.concentration.spell)) {
       // A class may give the save Advantage or Disadvantage (Eldritch Mind): two d20s, the higher or the lower kept.
       const modes = (args.modes?.(now) ?? []).map((source) => source.mode)
       const mode = modes.includes("advantage") === modes.includes("disadvantage") ? "normal" : modes.includes("advantage") ? "advantage" : "disadvantage"
@@ -404,10 +413,3 @@ export function spellEnded<T extends Bearer>(character: T, gone: (spellId: strin
   const { conditions: _, ...rest } = cleared
   return (conditions.length ? { ...rest, conditions } : rest) as T
 }
-
-/**
- * A character after they move: they have left the areas that stay on the floor (./spell-rules `area`: Web, Stinking
- * Cloud, Sleet Storm), and no longer bear their effect. A condition the area gave stays (Web's Restrained ends by breaking free). For the move
- * code (./moves), on a move of any length.
- */
-export const spellEffectsAfterMove = <T extends Bearer>(character: T): T => strip(character, (effect) => !!heldRule(effect.spell)?.area)

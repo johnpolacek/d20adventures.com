@@ -1,6 +1,5 @@
 import { type SpellRules, useSpellMechanics } from "../spell-rules"
 import { acidArrow } from "./acid-arrow"
-import { areas } from "./areas"
 import { attackRiders } from "./attack-riders"
 import { blindnessDeafness } from "./blindness-deafness"
 import { boons } from "./boons"
@@ -11,8 +10,10 @@ import { charmMonster, dominations, hideousLaughter } from "./damage-saves"
 import { heroism, invisibility, mirrorImageRules, shield } from "./defences"
 import { animalFriendship, charmPerson, endOnDamage, holdPerson } from "./enchantments"
 import { dispelMagic, lesserRestoration, removeCurse } from "./endings"
+import { ensnaringStrike } from "./ensnaring-strike"
 import { haste, slow } from "./haste-slow"
 import { heatMetal } from "./heat-metal"
+import { areaDrifts, areaTurnEnds, areaTurnStarts, lastingAreas } from "./lasting-areas"
 import { phantasmalKiller, vitriolicSphere } from "./later-harm"
 import { marks } from "./marks"
 import { phantasmalForce } from "./phantasmal-force"
@@ -29,14 +30,15 @@ import { divineWord, powerWordKill, powerWordStun } from "./thresholds"
 import { turnBurns } from "./turn-burns"
 import { arcaneSword, flameBlade, flamingSphere, produceFlame, sunbeam } from "./used-again"
 import { vampiricTouch } from "./vampiric-touch"
+import { walls } from "./walls"
 import { deathWard, dispelEvilAndGood, fireShield, foresight, freedomOfMovement, heroesFeast, mindBlank, protectionFromEvilAndGood, protectionFromPoison, stoneskin, wardingBond } from "./wards"
 import { shillelagh } from "./weapon-spells"
 
 /**
  * Every spell mechanism file's rules (../spell-rules). A new mechanism adds its file here, and edits no other shared
- * place. Rules that act as a round turns run in this order, each for every character, so the first six keep theirs: a
+ * place. Rules that act as a round turns run in this order, each for every character, so the first eight keep theirs: a
  * save repeated at a turn's end, Sleep's second save, a burn as a turn starts, Acid Arrow's later burn, Spirit Guardians,
- * and the areas on the floor. A new file goes at the end. It is a function, read as play needs it, since the files read
+ * and the areas on the floor as every turn ends, as they drift, and as every turn starts. A new file goes at the end. It is a function, read as play needs it, since the files read
  * the shared code that reads this list, and it is handed to ../spell-rules as this module loads.
  */
 export const spellMechanics = (): readonly SpellRules[] => [
@@ -45,7 +47,9 @@ export const spellMechanics = (): readonly SpellRules[] => [
   turnBurns,
   acidArrow,
   spiritGuardians,
-  areas,
+  areaTurnEnds,
+  areaDrifts,
+  areaTurnStarts,
   fear,
   ...counts,
   holdPerson,
@@ -118,6 +122,9 @@ export const spellMechanics = (): readonly SpellRules[] => [
   trueResurrection,
   revivifyDust,
   shillelagh,
+  ensnaringStrike,
+  ...lastingAreas,
+  ...walls,
 ]
 
 useSpellMechanics(spellMechanics)

@@ -3,11 +3,23 @@ import { afterRoll } from "../sheet/actions"
 import { type Strike, strikeFacts } from "../sheet/attack"
 import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { checkBonus, resolveCheck } from "../sheet/check"
-import { afterFelled, classCheckBonus, classConcentrationModes, classD20Floor, classTotalFloor, type Featured, rescuedCheck, resolveChosenCast, shapedCast } from "../sheet/class-rules"
+import {
+  afterFelled,
+  classCheckBonus,
+  classConcentrationModes,
+  classD20Floor,
+  classTotalFloor,
+  type DieHolder,
+  type Featured,
+  failedRollDieOf,
+  rescuedCheck,
+  resolveChosenCast,
+  shapedCast,
+} from "../sheet/class-rules"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, deathSave } from "../sheet/death"
-import { featureResolver, inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
+import { featureResolver, inspirationHelps, inspiredCheck } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
 import { legendaryActionsOf } from "../sheet/legendary-actions"
 import { attackWithReactions, ordered } from "../sheet/reactions"
@@ -203,8 +215,9 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // Everyone the roll fell on, who stay named among those present so the outcome can tell them falling.
     let struckIds: string[] = []
     let numbers: { natural: number; bonus: number; total: number; against: number; success: boolean }
-    // Whether the roller's Bardic Inspiration die was rolled, and so is spent.
-    let inspired = false
+    // What rolling a Bardic Inspiration die on the roller's failed roll spends (./class-rules `failedRollDie`): a held die,
+    // or a use of Peerless Skill's where the roll then succeeds.
+    let spendDie: (<T extends DieHolder>(character: T) => T) | undefined
     if (isFeatureRoll(required)) {
       // A class feature used as the action (Channel Divinity), or a Beast's breath in Wild Shape: the engine rolls it and
       // every target's save, and spends the use, as it does a spell that asks for no throw. It is told by the same path
@@ -274,8 +287,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
           choice: required.cast.choice,
           cover: required.cast.cover,
           measured: required.cast.measured,
+          at: required.cast.at,
+          to: required.cast.to,
           floor,
           ...(required.cast.item ? { item: true } : {}),
+          // A casting that spends no slot though the spell has a level: a feature's, a Ritual, an invocation's at will.
+          ...(cost && "cost" in cost && cost.cost.kind !== "slot" && cost.cost.kind !== "item" ? { noSlot: true } : {}),
         }
         // A cast with the choices that ride it (Metamagic), each wrapped around the engine's own resolution.
         const cast = again
@@ -298,6 +315,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // The one hit may answer with Parry or Shield before the blow lands. An NPC, and a hero on another hero's
       // turn, follow their standing order at once.
       const standing = turnCharacters
+      const die = failedRollDieOf(args.character, "attack")
       const made = attackWithReactions({
         characters: turnCharacters,
         attackerId: args.characterId,
@@ -307,14 +325,14 @@ export function createAdventureRollResultService(ports: GmPorts) {
         mode,
         roll: rollDie,
         rules,
-        inspiration: args.character.inspiration,
+        inspiration: die,
         cover: required.attack.cover,
         choices: required.attack.choices,
         charge: required.attack.charge,
         ask: (offer) => ordered(standing.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
       })
       blow = made.blow
-      inspired = made.blow.inspired !== undefined
+      if (die && made.blow.inspired !== undefined) spendDie = (character) => die.spend(character, made.blow.roll.hit)
       turnCharacters = made.characters.map((character) => (character.id === required.attack.target ? afterHarm(character) : character))
       rolls = [...made.reactions.map((taken): StoryBeat => ({ kind: "feature", by, character: taken.by, name: taken.name, text: taken.text })), attackBeat(by, args.character, target.id, blow)]
       struckIds = [target.id]
@@ -336,10 +354,10 @@ export function createAdventureRollResultService(ports: GmPorts) {
         // Indomitable Might: a Strength check or save totals at least the Strength score.
         leastTotal: classTotalFloor(args.character, required.check),
       })
-      // A held Bardic Inspiration die is rolled on a failure it could turn into a success.
-      const held = args.character.inspiration
-      const lifted = !failedBy && !thrown.success && inspirationHelps(held, thrown.dc - thrown.total) ? inspiredCheck(thrown, held, rollDie) : thrown
-      inspired = lifted.inspired !== undefined
+      // A Bardic Inspiration die is rolled on a failure it could turn into a success: a held one, or Peerless Skill's.
+      const die = failedRollDieOf(args.character, required.check.kind === "save" ? "save" : "check")
+      const lifted = !failedBy && !thrown.success && inspirationHelps(die, thrown.dc - thrown.total) ? inspiredCheck(thrown, die, rollDie) : thrown
+      if (die && lifted.inspired !== undefined) spendDie = (character) => die.spend(character, lifted.success)
       // What the roller's class may still do for a failed check: a Fighter's Tactical Mind takes a d10, paid for with
       // Second Wind only when it then succeeds.
       const check = required.check
@@ -378,7 +396,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const fell = afterFelled({ before: args.turn.characters, after: turnCharacters, by: args.characterId })
     turnCharacters = fell.characters
     rolls = [...rolls, ...fell.told.map((gain): StoryBeat => ({ kind: "feature", by, character: gain.by, name: gain.name, text: gain.text }))]
-    if (inspired) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withoutInspiration(character) : character))
+    const spent = spendDie
+    if (spent) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? spent(character) : character))
     const { total: totalResult, against: difficulty } = numbers
     const margin = totalResult - difficulty
     const story = args.turn.story

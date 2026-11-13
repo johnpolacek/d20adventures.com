@@ -86,16 +86,17 @@ export function useBonusAction<T extends Featured>(args: {
 }
 
 /**
- * Whether a held Bardic Inspiration die is rolled on a failed d20: only when the roll failed by no more than the die
- * could add. `short` is how far the total fell below its target.
+ * Whether a Bardic Inspiration die is rolled on a failed d20, a held one or Peerless Skill's (./class-rules
+ * `failedRollDie`): only when the roll failed by no more than the die could add. `short` is how far the total fell below
+ * its target.
  */
-export const inspirationHelps = (inspiration: Inspiration | undefined, short: number): inspiration is Inspiration => !!inspiration && short > 0 && short <= inspiration.die
+export const inspirationHelps = <D extends { die: number }>(inspiration: D | undefined, short: number): inspiration is D => !!inspiration && short > 0 && short <= inspiration.die
 
 /**
  * A failed check or save with a Bardic Inspiration die rolled and added. `roll` throws the die. A roll a condition
  * fails outright cannot be saved, so the caller does not ask.
  */
-export function inspiredCheck(result: CheckResult, inspiration: Inspiration, roll: (sides: number) => number): CheckResult {
+export function inspiredCheck(result: CheckResult, inspiration: { die: number }, roll: (sides: number) => number): CheckResult {
   const inspired = roll(inspiration.die)
   if (!Number.isInteger(inspired) || inspired < 1 || inspired > inspiration.die) throw new Error(`${inspired} is not a d${inspiration.die} roll.`)
   const total = result.total + inspired

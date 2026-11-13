@@ -1,4 +1,4 @@
-import type { AbilityId, ConditionId, DamageTypeId } from "@d20/srd"
+import type { AbilityId, ConditionId, DamageTypeId, Size } from "@d20/srd"
 import type { Spell } from "@d20/srd/schema/spells"
 import type { Attack, DamageRoll } from "./attack"
 import type { Check, Roller } from "./check"
@@ -8,7 +8,7 @@ import type { DeathRules } from "./death"
 import type { ConditionChange, Harm } from "./harm"
 import type { SaveStakes } from "./legendary-resistance"
 import type { Sheet } from "./sheet"
-import type { Point } from "./space"
+import type { AreaOfEffect, Point } from "./space"
 import type { Castee, SaveRoll, SpellAttack, Spellcasting } from "./spells"
 import type { Concentration, SpellEffect } from "./turn-effect"
 
@@ -101,6 +101,10 @@ export type SpellRules = {
   /** The spell is used again on later turns while it is held, with an action or a Bonus Action. */
   again?: SpellAgain
 
+  // What stays on the floor (./floor-areas), read as moves are walked (./reactions), sight is judged, and a round turns.
+  /** Its area stays on the floor where it is put, held on its caster as the effect's `at`, until the spell ends. */
+  stays?: StaysRules
+
   // As a round turns (./spell-rounds), which stands for every turn's start and end at once.
   /**
    * What the rules do for one character as a round turns: a bearer's save at the end of its turn, a burn as its turn
@@ -142,12 +146,56 @@ export type SpellChoice = { values: readonly string[]; field: "damageType" | "sp
  */
 export type SpellAgain = { takes: "action" | "bonus-action"; unplaced?: true; onlyLater?: true; reach?: number; parts?: (part: SpellPart) => boolean }
 
+/** When an area on the floor touches a creature: as it enters it on a move, as its turn starts or ends there, for each stretch it walks in it, or as the area moves into its space. */
+export type AreaMoment = "enter" | "start" | "end" | "move" | "moved"
+
+/**
+ * An area that stays on the floor where its caster put it (./floor-areas), held on the caster's effect as `at`, and a
+ * wall's other end as `to`. It ends with the effect: Concentration lost, its caster's turns run out, or the story moves
+ * to another encounter. Its shape is the spell's typed area unless `area` gives it.
+ */
+export type StaysRules = {
+  /** Its area where its data types none, or as the slot sizes it: Grease's 10-foot square, Fog Cloud's 20 feet more a slot. */
+  area?: (slot: number) => AreaOfEffect
+  /** It is put in a space beside the one named, on its caster's side, and is no area the cast measures: Flaming Sphere. */
+  beside?: true
+  /** It stands over its caster where it is cast, and what it strikes is measured from there: Call Lightning's cloud. */
+  overhead?: true
+  /** A straight wall, across the line from its caster to the one named (./floor-areas). */
+  wall?: WallRules
+  /** It is Heavily Obscured: a sight line into, out of or through it is blocked. */
+  obscures?: true
+  /** The feet of movement each foot through it costs: 2 for Difficult Terrain. */
+  rough?: number
+  /** It blocks a walk and gives Total Cover, as something solid does: Wall of Force. */
+  solid?: true
+  /** Where it touches one beside its own area, as their turn ends: Wall of Fire's 10 feet on its burning side. */
+  near?: (area: FloorArea, at: Point, size: Size) => boolean
+  /** When it touches a creature (`touches`). */
+  when?: readonly AreaMoment[]
+  /** "A creature makes this save only once per turn": entering it and ending a turn in it share one. */
+  oncePerTurn?: true
+  /** It touches one who enters it each time, not the first time on a turn only: Grease. */
+  eachEntry?: true
+  /** It moves this many feet straight away from its caster as their turn starts: Cloudkill's 10. */
+  drifts?: number
+  /** What it does to a creature it touches. */
+  touches?: (touch: AreaTouch) => void
+}
+
+/** A straight wall: how long and thick it is in feet, and whether it stands through the one named or just before them. */
+export type WallRules = { length: number; thickness: number; across: "through" | "before" }
+
+/** An area on the floor as it touches a creature: the round's tools, the area, the one touched, when, and for a walk in it the feet walked. */
+export type AreaTouch = { round: RoundContext; area: FloorArea; creature: RoundBearer; moment: AreaMoment; feet?: number }
+
+/** An area that stays on the floor (./floor-areas `floorAreas`): its spell, its caster's id, its effect, its shape and where it stands. */
+export type FloorArea = { spell: Spell; by: string; effect: SpellEffect; slot: number; area: AreaOfEffect; at: Point; to?: Point; rules: StaysRules }
+
 /** What a lasting spell does while it is on its bearer, read where rolls are made and defences counted. */
 export type HeldRules = {
   /** The caster alone holds the effect, with the slot it was cast at as its `amount`: Spirit Guardians. */
   byCaster?: true
-  /** Its bearer stands in an area on the floor, and leaves it on any move: Web. */
-  area?: true
   /** The number the effect holds, by the slot: Mirror Image's three duplicates. */
   amount?: (slot: number) => number
   /** Advantage or Disadvantage on attack rolls against its bearer. */
@@ -265,6 +313,9 @@ export type CastContext = {
   targets: readonly string[]
   /** Everyone as the cast has left them so far. */
   everyone: () => readonly Castee[]
+  /** Where its area is put on the floor, for one that stays there (`stays`): its point, and a wall's other end. */
+  at?: Point
+  to?: Point
   /** The conditions the cast has given or ended so far, added to in order. */
   conditions: ConditionChange[]
   /** A condition the spell gives one, for its span or the span the spell's text gives it, told and counted. */
@@ -351,6 +402,12 @@ const built = (): Map<string, SpellRules> => {
 
 /** A spell's own rules, by its SRD id, laid together from every file that names it. None for a spell no file names. */
 export const spellRule = (id: string): SpellRules | undefined => built().get(id)
+
+/** The area a spell is cast over: its typed area, or the one its own rules give where they put it on the floor (`stays.area`). */
+export const areaOfSpell = (spell: Spell, slot = spell.level): (AreaOfEffect & { selective?: boolean }) | undefined => {
+  const stays = spellRule(spell.id)?.stays
+  return stays?.beside || stays?.wall ? undefined : (stays?.area?.(slot) ?? spell.range.area)
+}
 
 /** A held spell's rules, by its SRD id. */
 export const heldRule = (id: string): HeldRules | undefined => spellRule(id)?.held
