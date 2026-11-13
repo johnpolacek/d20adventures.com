@@ -547,7 +547,8 @@ async function main() {
       }
     }
   const webp = await sharp(atlas, { raw: { width: w * 2, height: h, channels: 4 } })
-    .webp({ quality: 90, alphaQuality: 100, exact: true })
+    // sharp takes `exact` for WebP, which keeps the colour of fully clear pixels, and its types do not list it yet.
+    .webp({ quality: 90, alphaQuality: 100, exact: true } as sharp.WebpOptions)
     .toBuffer()
   await sharp(atlas, { raw: { width: w * 2, height: h, channels: 4 } })
     .png()
