@@ -300,6 +300,8 @@ Not tried: a figure with real proportions. Quaternius's Modular Character Outfit
 
 ## A figure from the character's own paintings, 2026-11-13
 
+The owner looked at it the same day and judged that it does not work. Garlan is a standee again: his staging names no figure, and both model files (this one and the KayKit knight) are out of `public/stage/figures`. The script and the `figures` flag remain, with nothing using them. `figure.ts garlan` builds his model again from the paintings in `raw/`.
+
 The owner did not want figures to depend on anyone else's art: a pack has what it has (the free Quaternius outfits had no knight and no head), and a generator charges for each try. `figure.ts` builds a figure from what the project already paints. Garlan at the gate now shows as one, in place of the KayKit knight, behind the same `figures` flag.
 
 - In: the A-pose front and back paintings `character.ts sheet` makes, and `figures/<id>.json`, which gives the height and where the joints are on the front painting. Out: `public/stage/figures/<id>.glb`. Garlan takes 3.5 seconds.

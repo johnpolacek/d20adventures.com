@@ -14,14 +14,6 @@
         "back": "/stage/fixtures/welcome-to-kordavos/garlan-back.webp",
         "portrait": "/stage/fixtures/welcome-to-kordavos/garlan-portrait.jpg"
       },
-      "figure": {
-        "model": "/stage/figures/garlan.glb",
-        "idle": "Idle",
-        "hit": "Hit",
-        "fall": "Fall",
-        "ownLight": true,
-        "turn": 32
-      },
       "at": "sergeant",
       "facing": "queueHead"
     },
