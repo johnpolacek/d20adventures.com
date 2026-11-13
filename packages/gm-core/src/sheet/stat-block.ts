@@ -1,5 +1,6 @@
 import { monsterById } from "@d20/srd/monsters"
 import type { Shape } from "../types/character"
+import { blockOf, DEFAULT_STAT_BLOCK, ownBlockOf } from "./blocks"
 import { deriveSheet } from "./derive"
 import { itemBonus } from "./items"
 import { shapeOf } from "./shape"
@@ -7,8 +8,7 @@ import type { Sheet } from "./sheet"
 import { armorClassWithSpells, hitPointMaximumFromSpells } from "./spell-effects"
 import type { SpellEffect } from "./turn-effect"
 
-/** The stat block an NPC uses when it names none: the SRD's Commoner. */
-export const DEFAULT_STAT_BLOCK = "commoner"
+export { DEFAULT_STAT_BLOCK }
 
 export type CombatStats = { hitPointMaximum: number; armorClass: number /** Where the numbers come from: "Guard", "Chain Mail", "Unarmored Defense". */; from: string }
 
@@ -30,9 +30,11 @@ export function combatStatsOf(character: { type?: string; sheet?: Sheet; statBlo
     return { hitPointMaximum: derived.hitPointMaximum + hitPointMaximumFromSpells(character), armorClass, from: derived.armorClassFrom }
   }
   if (character.type !== "npc") return undefined
-  const monster = monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)
-  if (!monster) return undefined
-  return { hitPointMaximum: monster.hp.average + hitPointMaximumFromSpells(character), armorClass: armorClassWithSpells(character, monster.ac), from: monster.name }
+  // In a shape a spell gave it (Polymorph), an NPC keeps its own Hit Points and takes the form's Armor Class (./blocks).
+  const own = ownBlockOf(character)
+  const monster = blockOf(character)
+  if (!own || !monster) return undefined
+  return { hitPointMaximum: own.hp.average + hitPointMaximumFromSpells(character), armorClass: armorClassWithSpells(character, monster.ac), from: monster.name }
 }
 
 /** Whether an id names an SRD stat block. */
@@ -49,7 +51,7 @@ export function initiativeBonusOf(character: { name?: string; type?: string; she
     const shape = shapeOf(character)
     return shape ? derived.initiative - derived.abilityModifiers.dex + shape.abilities.dex.mod : derived.initiative
   }
-  const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
+  const monster = character.type === "npc" ? blockOf(character) : undefined
   if (!monster) throw new Error(`${character.name ?? "This character"} has no rules sheet, so no Initiative can be rolled for them.`)
   return monster.initiative.modifier
 }

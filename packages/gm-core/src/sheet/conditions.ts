@@ -1,7 +1,7 @@
 import { type AbilityId, type ConditionId, conditionIds } from "@d20/srd"
 import { conditionById } from "@d20/srd/conditions"
-import { monsterById } from "@d20/srd/monsters"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
+import { blockOf } from "./blocks"
 import type { Check } from "./check"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { itemConditionImmunities } from "./item-effects"
@@ -11,7 +11,6 @@ import type { Sheet } from "./sheet"
 import type { Side as Mark } from "./sides"
 import type { Point } from "./space"
 import { d20PenaltyFromSpells, shutOutBySpell, spellImmunities, stillBySpell } from "./spell-effects"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect } from "./turn-effect"
 
 type Side = "advantage" | "disadvantage"
@@ -236,7 +235,7 @@ export const resistsAllDamage = (target: Afflicted): boolean => borne(target).so
  * scene where the caller knows them (Aura of Courage's Frightened).
  */
 export function immuneTo(character: Afflicted, id: ConditionId, spell?: string, present?: readonly Afflicted[]): boolean {
-  const monster = character.type === "npc" ? monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
+  const monster = character.type === "npc" ? blockOf(character) : undefined
   return (
     !!monster?.conditionImmunities?.includes(id) ||
     borne(character).some((entry) => CONDITION_RULES[entry.id].immuneTo?.includes(id)) ||

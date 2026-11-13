@@ -141,13 +141,21 @@ test("a Long Rest gives back everything, and one level of Exhaustion", () => {
     spellEffects: [{ spell: "mage-armor", by: "lyra" }],
   }
   const rested = longRest(worn)
-  // Mage Armor's 8 hours are over, and the sleep ends Concentration.
-  assert.deepEqual(rested.character, { ...thalbern, healthPercent: 100, conditions: [{ id: "exhaustion", level: 1 }] })
+  // Mage Armor's 8 hours are over, and the sleep ends Concentration. Thalbern is Human: Resourceful gives Heroic
+  // Inspiration as the rest ends (SRD 5.2.1 p. 86).
+  assert.deepEqual(rested.character, { ...thalbern, healthPercent: 100, conditions: [{ id: "exhaustion", level: 1 }], heroicInspiration: true })
   assert.deepEqual([hitDiceLeft(rested.character), slotsLeft(rested.character).slice(0, 2), exhaustionOf(rested.character)], [5, [4, 2], 1])
-  assert.deepEqual(rested.facts, ["Thalbern finishes a Long Rest: 39 of 39 hit points, every Hit Point Die, spell slot and feature use back.", "Thalbern's Exhaustion falls to level 1."])
+  assert.deepEqual(rested.facts, [
+    "Thalbern finishes a Long Rest: 39 of 39 hit points, every Hit Point Die, spell slot and feature use back.",
+    "Thalbern's Exhaustion falls to level 1.",
+    "Thalbern gains Heroic Inspiration by Resourceful.",
+  ])
   // A last level of Exhaustion ends the condition.
   const fresh = longRest({ ...thalbern, conditions: [{ id: "exhaustion", level: 1 }] })
   assert.deepEqual([fresh.character.conditions, fresh.facts[1]], [undefined, "Thalbern is no longer Exhausted."])
+  // Heroic Inspiration already held is kept, never doubled, and told no more.
+  const held = longRest({ ...thalbern, heroicInspiration: true })
+  assert.deepEqual([held.character.heroicInspiration, held.facts.length], [true, 1])
 })
 
 test("a rest needs at least 1 hit point to start, and the dead are not restored", () => {

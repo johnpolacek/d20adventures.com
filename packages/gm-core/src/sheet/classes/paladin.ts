@@ -1,13 +1,13 @@
 import type { ConditionId, DamageTypeId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { equipmentById } from "@d20/srd/equipment"
-import { monsterById } from "@d20/srd/monsters"
 import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
 import { hasFled, isDead, isDown, isIncapacitated } from "../../utils/turn-actors"
 import type { RequiredFeature } from "../../validations/roll-requirement-schema"
 import { type Attack, damageTaken, defensesOf, parseDice, UNARMED_STRIKE } from "../attack"
+import { ownBlockOf } from "../blocks"
 import type { Roller } from "../check"
 import { type ClassRules, type Featured, withTurnEffect } from "../class-rules"
 import { CONDITION_SPANS } from "../condition-entry"
@@ -22,7 +22,6 @@ import { areEnemies } from "../sides"
 import { feetBetween, placedOf, within } from "../space"
 import { withConcentration, withSpellEffect } from "../spell-effects"
 import { type Cast, castCost, rollSave, type SaveRoll, slotsLeft, spellcastingOf, withCastSpent } from "../spells"
-import { DEFAULT_STAT_BLOCK } from "../stat-block"
 import type { SpellEffect, TurnEffect } from "../turn-effect"
 
 /**
@@ -85,7 +84,7 @@ const POISON_COST = 5
 /** A creature's type from its stat block: "undead", "fiend". A hero, or an NPC with a rules sheet, has none the engine reads. */
 export function creatureTypeOf(character: { type?: string; sheet?: unknown; statBlock?: string }): string | undefined {
   if (character.type !== "npc" || character.sheet) return undefined
-  return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.type
+  return ownBlockOf(character)?.type
 }
 
 // A smite picked with the attack: the spell, and the slot level when the player asked for a higher one ("-level-2").

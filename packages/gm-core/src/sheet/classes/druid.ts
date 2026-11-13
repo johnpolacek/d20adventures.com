@@ -1,22 +1,41 @@
+import type { DamageTypeId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
+import type { Spell } from "@d20/srd/schema/spells"
 import { z } from "zod"
 import { hasFled, isDead } from "../../utils/turn-actors"
 import type { RequiredFeature } from "../../validations/roll-requirement-schema"
-import { damageTaken, defensesOf, rollDamage } from "../attack"
-import type { ClassRules, Featured } from "../class-rules"
+import { damageTaken, defensesOf, rollDamage, UNARMED_STRIKE } from "../attack"
+import type { Roller } from "../check"
+import { type ClassRules, classCastingBar, type Featured, type Rested } from "../class-rules"
 import { afterHarm, enduredWords, type Fate, withDamage, withHealing } from "../death"
-import { hasFeature, usesLeft, withFeatureUsed } from "../feature-rules"
+import { deriveSheet, keptChoiceOf } from "../derive"
+import { hasFeature, usedThisTurn, usesLeft, withFeatureUsed } from "../feature-rules"
 import type { Harm } from "../harm"
 import { hitPointsOf } from "../hit-points"
 import { sameSide } from "../sides"
 import { placedOf, within } from "../space"
+import { spellRule } from "../spell-rules"
+import { rangeFeet } from "../spell-space"
 import { type Cast, rollSave, type SaveRoll, slotsLeft, spellcastingOf } from "../spells"
-import { formAtRoundStart, formBarsCasting, WILD_RESURGENCE, WILD_SHAPE, wildShapeActions, wildShapeUse, withWildShapeSpent } from "./wild-shape"
+import {
+  moveSanctuary,
+  NATURES_SANCTUARY,
+  NATURES_WARD,
+  naturalRecoveryCasts,
+  naturalRecoveryRest,
+  naturesSanctuary,
+  sanctuaryAtRoundStart,
+  sanctuaryCover,
+  sanctuaryResistances,
+  wardType,
+} from "./druid-land"
+import { formAtRoundStart, formBarsCasting, inWildShape, WILD_RESURGENCE, WILD_SHAPE, wildShapeActions, wildShapeUse, withWildShapeSpent } from "./wild-shape"
 
 /**
- * The Druid's features in play. The slots and prepared spells are the sheet's: a Druid casts through the same path as
- * any caster (../spells), with Speak with Animals always prepared by Druidic and a Circle of the Land's land spells by
- * the land kept on the sheet (../derive).
+ * The Druid's features in play, levels 1 to 20, with the Circle of the Land. The slots and prepared spells are the
+ * sheet's: a Druid casts through the same path as any caster (../spells), with Speak with Animals always prepared by
+ * Druidic and a Circle of the Land's land spells by the land kept on the sheet (../derive). The later Ability Score
+ * Improvements and the Epic Boon are the sheet's too.
  *
  * Primal Order is the sheet's: a Magician's extra cantrip and Wisdom modifier on Arcana and Nature checks, a Warden's
  * Martial weapons and Medium armor (../derive).
@@ -31,6 +50,23 @@ import { formAtRoundStart, formBarsCasting, WILD_RESURGENCE, WILD_SHAPE, wildSha
  * Wild Shape to spare: a Druid with slots left keeps the use for a form.
  * Wild Companion (level 2) is told only: Find Familiar's familiar is a creature the engine does not yet add to an
  * encounter (S13), so the spell is the game master's to tell, and so is a use spent on it.
+ *
+ * Elemental Fury (level 7), the option kept on the sheet, and Improved Elemental Fury (level 15), which follows it:
+ * - Potent Spellcasting: the Wisdom modifier added to the damage of a Druid cantrip, one of the Druid list's: on a spell
+ *   attack's hit (Starry Wisp, Produce Flame's hurl) and where a save's or no roll's damage is rolled. From level 15 a
+ *   Druid cantrip with a range of 10 feet or more reaches 300 feet further, read where a spell is measured.
+ * - Primal Strike: once on each of the Druid's own turns, a hit with a weapon or a Beast form's attack in Wild Shape
+ *   deals 1d8 more, 2d8 from level 15, by the text, since the data types neither die. Of Cold, Fire, Lightning and
+ *   Thunder the engine takes the one that harms the target most, Thunder first where they harm alike.
+ * Beast Spells (level 18): ./wild-shape `formBarsCasting`.
+ * Archdruid (level 20):
+ * - Evergreen Wild Shape: as Initiative is rolled with no use of Wild Shape left, one comes back.
+ * - Nature Magician: once a Long Rest, uses of Wild Shape become one spell slot, 2 levels a use. The engine takes it by
+ *   a plain rule as a round of a fight begins, for a Druid with no spell slot left of any level: every use left, up to
+ *   four, a level 8 slot. The slot is kept under "druid-archdruid:slot-<level>" in `featureUses` and counted beside
+ *   the table's (../spells `slotsLeft`) until a Long Rest. It comes before Wild Resurgence's level 1 slot.
+ * - Longevity is the story's.
+ * The Circle of the Land's Natural Recovery, Nature's Ward and Nature's Sanctuary: ./druid-land.
  */
 
 const LANDS_AID = "circle-of-the-land-lands-aid"
@@ -152,9 +188,62 @@ export function landsAid<T extends Aided>(args: {
 // Wild Resurgence's second part, once a Long Rest, kept as a use under the feature's own id.
 const resurgenceSpent = (character: Featured): boolean => (character.featureUses?.[WILD_RESURGENCE] ?? 0) > 0
 
+const ELEMENTAL_FURY = "druid-elemental-fury"
+const IMPROVED_FURY = "druid-improved-elemental-fury"
+const PRIMAL_STRIKE = "primal-strike"
+const POTENT = "potent-spellcasting"
+// Improved Potent Spellcasting's 300 feet, from the text.
+const POTENT_REACH = 300
+const ARCHDRUID = "druid-archdruid"
+// Nature Magician's slot, kept in `featureUses` until a Long Rest.
+const magicianSlotKey = (level: number) => `${ARCHDRUID}:slot-${level}`
+// Nature Magician makes at most a level 8 slot: four uses, 2 levels each, and slots stop at level 9.
+const MAGICIAN_USES = 4
+
+// The Elemental Fury option the hero keeps, or none.
+const fury = (character: Roller): string | undefined => (character.sheet && hasFeature(character, ELEMENTAL_FURY) ? keptChoiceOf(character.sheet, ELEMENTAL_FURY) : undefined)
+const wisdomOf = (character: Roller): number => (character.sheet ? deriveSheet(character.sheet).abilityModifiers.wis : 0)
+// A Druid cantrip: one of level 0 on the Druid list.
+const druidCantrip = (spell: Spell): boolean => spell.level === 0 && spell.classes.includes("druid")
+
+// How much of a damage type reaches a creature through its defenses.
+function share(target: Roller, type: DamageTypeId): number {
+  const defenses = defensesOf(target)
+  if (defenses.immunities?.includes(type)) return 0
+  return (defenses.resistances?.includes(type) ? 0.5 : 1) * (defenses.vulnerabilities?.includes(type) ? 2 : 1)
+}
+const PRIMAL_TYPES: readonly DamageTypeId[] = ["thunder", "lightning", "cold", "fire"]
+
+// Nature Magician: every use of Wild Shape left, up to four, turned into one slot, once a Long Rest, for a Druid with no
+// slot left. None where it is not taken.
+function natureMagician<T extends Featured>(druid: T): { character: T; told: { name: string; text: string } } | undefined {
+  if (!hasFeature(druid, ARCHDRUID) || usesLeft(druid, ARCHDRUID) < 1 || slotsLeft(druid).some((left) => left > 0)) return undefined
+  const uses = Math.min(MAGICIAN_USES, usesLeft(druid, WILD_SHAPE))
+  if (uses < 1) return undefined
+  const level = 2 * uses
+  const spent = withFeatureUsed({ ...druid, featureUses: { ...druid.featureUses, [WILD_SHAPE]: (druid.featureUses?.[WILD_SHAPE] ?? 0) + uses } }, ARCHDRUID)
+  return {
+    character: { ...spent, featureUses: { ...spent.featureUses, [magicianSlotKey(level)]: (spent.featureUses?.[magicianSlotKey(level)] ?? 0) + 1 } },
+    told: { name: "Nature Magician", text: `${druid.name} turns ${uses} ${uses === 1 ? "use" : "uses"} of Wild Shape into a level ${level} spell slot.` },
+  }
+}
+
+// Wild Resurgence: a use of Wild Shape for a level 1 slot, once a Long Rest, when the Druid has no slot left.
+function resurgence<T extends Featured>(druid: T): { character: T; told: { name: string; text: string } } | undefined {
+  if (!hasFeature(druid, WILD_RESURGENCE) || resurgenceSpent(druid)) return undefined
+  if (slotsLeft(druid).some((left) => left > 0) || usesLeft(druid, WILD_SHAPE) < 1) return undefined
+  const spent = withFeatureUsed(druid, WILD_SHAPE)
+  const slots = [...(spent.spellSlots ?? [])]
+  slots[0] = Math.max(0, (slots[0] ?? 0) - 1)
+  return {
+    character: { ...spent, spellSlots: slots, featureUses: { ...spent.featureUses, [WILD_RESURGENCE]: 1 } },
+    told: { name: "Wild Resurgence", text: `${druid.name ?? "The Druid"} spends a use of Wild Shape to regain a level 1 spell slot.` },
+  }
+}
+
 export const druid: ClassRules = {
   class: "druid",
-  bonusActions: wildShapeActions,
+  bonusActions: [...wildShapeActions, moveSanctuary],
   choices: [
     {
       key: "aided",
@@ -186,22 +275,82 @@ export const druid: ClassRules = {
         name: "Land's Aid",
       }),
     },
+    {
+      key: "sanctuary",
+      check: "natures-sanctuary",
+      offer: (character) => (hasFeature(character, NATURES_SANCTUARY) && wildShapeUse(character) ? true : undefined),
+      prompt: () =>
+        `   - NATURE'S SANCTUARY: when the character calls up spectral trees and vines to shelter their allies as the action, "check" is "natures-sanctuary" and "targets" names the one the trees stand around first, the character themselves if no one else. Those of the party within the 15-foot cube have Half Cover and resist the character's land's damage. The game spends a use of Wild Shape.
+`,
+      field: () => z.literal(true).optional().describe('For "natures-sanctuary": true'),
+      act: (_value, { character, everyone, pick, named, also }) => {
+        const targets = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])].flatMap((asked) => everyone.find((other) => named(asked, other.name, other.id))?.id ?? [])
+        const feature: RequiredFeature = { feature: { id: "natures-sanctuary", targets }, rollType: "Nature's Sanctuary", difficulty: 0, modifier: 0, mode: "normal" }
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, feature: feature.feature })
+        return { roll: null, feature, ...also }
+      },
+      effects: ["natures-sanctuary"],
+      resolve: ({ characters, actorId, feature }) => ({
+        ...naturesSanctuary({ characters: characters as Parameters<typeof naturesSanctuary>[0]["characters"][number][], druidId: actorId, targets: feature.targets }),
+        name: "Nature's Sanctuary",
+      }),
+    },
   ],
-  turnEffects: [{ id: "wild-resurgence", span: 1 }],
+  hits: [
+    {
+      id: PRIMAL_STRIKE,
+      // Once on each of the Druid's own turns, on a hit with a weapon or with a Beast form's attack.
+      damage: ({ attacker, attack, weapon, turnOf, target }) => {
+        if (!attacker.sheet || !attacker.id || turnOf !== attacker.id || fury(attacker) !== PRIMAL_STRIKE) return undefined
+        if (!weapon && !(inWildShape(attacker) && attack.id !== UNARMED_STRIKE)) return undefined
+        if (usedThisTurn(attacker, PRIMAL_STRIKE, turnOf)) return undefined
+        const type = target ? PRIMAL_TYPES.reduce((best, next) => (share(target, next) > share(target, best) ? next : best)) : PRIMAL_TYPES[0]
+        return { name: "Primal Strike", damage: { dice: hasFeature(attacker, IMPROVED_FURY) ? "2d8" : "1d8", type }, once: PRIMAL_STRIKE }
+      },
+    },
+  ],
+  turnEffects: [
+    { id: "wild-resurgence", span: 1 },
+    { id: PRIMAL_STRIKE, span: 1 },
+  ],
   castingBarred: formBarsCasting,
-  roundStart: (character) => {
-    const ended = formAtRoundStart(character)
-    if (ended) return ended
-    // Wild Resurgence: a use of Wild Shape for a level 1 slot, once a Long Rest, when the Druid has no slot left.
-    const druid = character as typeof character & Featured
-    if (!hasFeature(druid, WILD_RESURGENCE) || resurgenceSpent(druid) || isDead(druid) || druid.hitPoints === 0) return { character }
-    if ((character as { shape?: unknown }).shape || slotsLeft(druid).some((left) => left > 0) || usesLeft(druid, WILD_SHAPE) < 1) return { character }
-    const spent = withFeatureUsed(druid, WILD_SHAPE)
-    const slots = [...(spent.spellSlots ?? [])]
-    slots[0] = Math.max(0, (slots[0] ?? 0) - 1)
-    return {
-      character: { ...spent, spellSlots: slots, featureUses: { ...spent.featureUses, [WILD_RESURGENCE]: 1 } } as typeof character,
-      told: { name: "Wild Resurgence", text: `${druid.name ?? "The Druid"} spends a use of Wild Shape to regain a level 1 spell slot.` },
+  // Potent Spellcasting: the Wisdom modifier on a Druid cantrip's damage, by a save or no roll, and on a spell attack's hit.
+  spellDamage: ({ caster, spell, item }) => (!item && druidCantrip(spell) && fury(caster) === POTENT ? wisdomOf(caster) : 0),
+  spellHit: ({ caster, spell }) => (druidCantrip(spell) && fury(caster) === POTENT ? { name: "Potent Spellcasting", bonus: wisdomOf(caster) } : undefined),
+  // Improved Potent Spellcasting: 300 feet more on a Druid cantrip that reaches 10 feet or more.
+  spellRange: (caster, spell) => {
+    if (!druidCantrip(spell) || fury(caster) !== POTENT || !hasFeature(caster, IMPROVED_FURY)) return undefined
+    const reach = spellRule(spell.id)?.range?.(caster) ?? rangeFeet(spell.range)
+    return reach !== undefined && reach >= 10 ? reach + POTENT_REACH : undefined
+  },
+  // Nature's Ward in a Beast form, whose stat block's defenses stand in place of the sheet's, and a Cube's Resistance.
+  resistances: (character) => [...(inWildShape(character) ? [wardType(character as Rested) ?? []].flat() : []), ...sanctuaryResistances(character)],
+  conditionImmunities: (character) => (hasFeature(character, NATURES_WARD) ? (classFeatureById.get(NATURES_WARD)?.conditionImmunities?.conditions ?? []) : []),
+  cover: sanctuaryCover,
+  spellsGiven: naturalRecoveryCasts,
+  shortRest: naturalRecoveryRest,
+  createdSlots: (character) => (hasFeature(character, ARCHDRUID) ? [1, 2, 3, 4, 5, 6, 7, 8].map((level) => character.featureUses?.[magicianSlotKey(level)] ?? 0) : []),
+  // Evergreen Wild Shape: a use back as Initiative is rolled with none left.
+  initiative: (character) => {
+    if (!hasFeature(character, ARCHDRUID) || !hasFeature(character, WILD_SHAPE) || usesLeft(character, WILD_SHAPE) > 0) return character
+    return { ...character, featureUses: { ...character.featureUses, [WILD_SHAPE]: Math.max(0, (character.featureUses?.[WILD_SHAPE] ?? 0) - 1) } }
+  },
+  roundStart: (character, round) => {
+    let now = character
+    const told: { name: string; text: string }[] = []
+    const step = (done: { character: typeof character; told?: { name: string; text: string } } | undefined) => {
+      if (!done) return
+      now = done.character
+      if (done.told) told.push(done.told)
     }
+    step(formAtRoundStart(now))
+    step(sanctuaryAtRoundStart(now as typeof now & Rested, round))
+    // A use of Wild Shape for a slot, for a Druid up with no slot left: Nature Magician, or else Wild Resurgence. Below
+    // level 18 a Druid in a form cannot cast, so keeps the use.
+    const druid = now as typeof now & Featured
+    const casts = !classCastingBar(druid)
+    if (hasFeature(druid, WILD_SHAPE) && !isDead(druid) && druid.hitPoints !== 0 && casts)
+      step((natureMagician(druid) ?? resurgence(druid)) as { character: typeof character; told: { name: string; text: string } } | undefined)
+    return { character: now, ...(told.length ? { told: { name: told[0].name, text: told.map((entry) => entry.text).join(" ") } } : {}) }
   },
 }

@@ -9,6 +9,8 @@ import { spellById } from "@d20/srd/spells"
 import { subclassById } from "@d20/srd/subclasses"
 import {
   alwaysPrepared,
+  BOOK_OF_SHADOWS,
+  bookOfShadowsOptions,
   cantripFits,
   cantripNeed,
   cantripsAllowed,
@@ -24,6 +26,7 @@ import {
   LAND_CHOICE,
   needsFeatureChoice,
   optionCantrips,
+  PACT_OF_THE_TOME,
   pickOptions,
   picksAt,
   preparedLists,
@@ -64,7 +67,8 @@ export type ChoiceOffer = Named & { cantrips?: { count: number; from: Named[] };
  * An option of a feature that takes several (an Eldritch Invocation, a Metamagic option), with its prerequisite as
  * printed and what the engine checks of it: a class level, another option of the feature picked, and a cantrip of the
  * kind it names, from `cantrips`, which the hero must know. An option that gives a feat offers `feats`. A repeatable
- * option is picked again with another cantrip or feat.
+ * option is picked again with another cantrip or feat. One that holds spells of its own (Pact of the Tome) offers
+ * `book`: how many cantrips and level 1 spells it holds, and those it may, less those the hero already has.
  */
 export type PickOffer = Named & {
   /** A spell's level, for a feature whose picks are spells (Mystic Arcanum). */
@@ -73,6 +77,7 @@ export type PickOffer = Named & {
   repeatable?: true
   cantrips?: Named[]
   feats?: Named[]
+  book?: { cantrips: number; rituals: number; from: (Named & { level: number })[] }
 }
 
 /**
@@ -314,6 +319,13 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
 export function picksOffer(feature: ClassFeature, sheet: Sheet, picked: readonly FeaturePick[], replace: boolean): PicksOffer {
   const cls = classById.get(sheet.class)
   const slots = spellPickSlots(feature, sheet.level)
+  // A Book of Shadows may hold what the hero does not already have, its own spells kept from before among them.
+  const bookOffer = () => {
+    const kept = picked.flatMap((pick) => (pick.option === PACT_OF_THE_TOME ? (pick.spells ?? []) : []))
+    const derived = deriveSheet(sheet)
+    const held = new Set([...derived.cantrips, ...derived.preparedSpells].filter((id) => !kept.includes(id)))
+    return { ...BOOK_OF_SHADOWS, from: bookOfShadowsOptions().filter((spell) => !held.has(spell.id)) }
+  }
   return {
     feature: named(feature),
     count: cls ? picksAt(cls, sheet.level, feature) : 0,
@@ -346,6 +358,7 @@ export function picksOffer(feature: ClassFeature, sheet: Sheet, picked: readonly
                 }
               : {}),
             ...(grant ? { feats: feats.filter((feat) => featOfferable(feat, grant.category)).map(named) } : {}),
+            ...(option.id === PACT_OF_THE_TOME ? { book: bookOffer() } : {}),
           }
         }),
   }

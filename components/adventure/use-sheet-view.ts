@@ -6,7 +6,7 @@ import type { SheetView } from "@d20/gm-core/sheet/view"
 import { useEffect, useState } from "react"
 
 /**
- * A hero's rules sheet, worked out for display at its stored hit points and the spell slots used, in the Beast form they are in. The rules data
+ * A hero's rules sheet, worked out for display at its stored hit points and the spell slots used, in the Beast form they are in, with their Heroic Inspiration. The rules data
  * loads on first use, in its own chunk, so pages that never open a sheet do not carry it. Null while loading, and for a character with no sheet.
  */
 type Shape = { form: string; hours: number }
@@ -17,7 +17,8 @@ export function useSheetView(
   spellSlots: readonly number[] | undefined,
   spellEffects?: readonly SpellEffect[],
   featureUses?: Record<string, number>,
-  shape?: Shape
+  shape?: Shape,
+  heroicInspiration?: boolean
 ): SheetView | null {
   const [view, setView] = useState<SheetView | null>(null)
   const key = sheet ? JSON.stringify(sheet) : ""
@@ -41,7 +42,8 @@ export function useSheetView(
               JSON.parse(slots) as number[],
               JSON.parse(effects) as SpellEffect[],
               JSON.parse(uses) as Record<string, number>,
-              form ? (JSON.parse(form) as Shape) : undefined
+              form ? (JSON.parse(form) as Shape) : undefined,
+              heroicInspiration
             )
           )
       })
@@ -51,7 +53,7 @@ export function useSheetView(
     return () => {
       live = false
     }
-  }, [key, hitPoints, slots, effects, uses, form])
+  }, [key, hitPoints, slots, effects, uses, form, heroicInspiration])
   return view
 }
 
@@ -69,15 +71,18 @@ export function useSheetViews(
     spellEffects?: readonly SpellEffect[]
     featureUses?: Record<string, number>
     shape?: Shape
+    heroicInspiration?: true
   }[]
 ): Record<string, SheetView> {
   const [views, setViews] = useState<Record<string, SheetView>>({})
   const key = JSON.stringify(
-    characters.flatMap((c) => (c.type === "pc" && c.sheet ? [[c.id, c.sheet, c.hitPoints ?? null, c.spellSlots ?? [], c.spellEffects ?? [], c.featureUses ?? {}, c.shape ?? null]] : []))
+    characters.flatMap((c) =>
+      c.type === "pc" && c.sheet ? [[c.id, c.sheet, c.hitPoints ?? null, c.spellSlots ?? [], c.spellEffects ?? [], c.featureUses ?? {}, c.shape ?? null, !!c.heroicInspiration]] : []
+    )
   )
   useEffect(() => {
     let live = true
-    const heroes = JSON.parse(key) as [string, Sheet, number | null, number[], SpellEffect[], Record<string, number>, Shape | null][]
+    const heroes = JSON.parse(key) as [string, Sheet, number | null, number[], SpellEffect[], Record<string, number>, Shape | null, boolean][]
     if (!heroes.length) {
       setViews({})
       return
@@ -86,9 +91,9 @@ export function useSheetViews(
       .then(({ sheetView }) => {
         if (!live) return
         const out: Record<string, SheetView> = {}
-        for (const [id, sheet, hitPoints, spellSlots, spellEffects, featureUses, shape] of heroes) {
+        for (const [id, sheet, hitPoints, spellSlots, spellEffects, featureUses, shape, inspired] of heroes) {
           try {
-            out[id] = sheetView(sheet, hitPoints ?? undefined, spellSlots, spellEffects, featureUses, shape ?? undefined)
+            out[id] = sheetView(sheet, hitPoints ?? undefined, spellSlots, spellEffects, featureUses, shape ?? undefined, inspired)
           } catch {
             // A sheet the rules cannot read shows no numbers.
           }

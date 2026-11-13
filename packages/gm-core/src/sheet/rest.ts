@@ -10,10 +10,12 @@ import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtEncounterEnd, exhaustionOf, withoutCondition } from "./conditions"
 import { type DeathSaves, withHealing } from "./death"
 import { casterOf, deriveSheet, sheetProblems } from "./derive"
+import { hasHeroicInspiration, withHeroicInspiration } from "./heroic-inspiration"
 import { hitPointsOf, withHitPoints } from "./hit-points"
 import { itemsRested } from "./item-spend"
 import { attuneOnShortRest } from "./items"
 import type { Sheet } from "./sheet"
+import { longRestInspiration } from "./species-traits"
 import { keptByRest, spellEffectsRested } from "./spell-effects"
 import { spellcastingOf } from "./spells"
 import type { Concentration, Inspiration, SpellEffect, TurnEffect } from "./turn-effect"
@@ -238,7 +240,7 @@ export function shortRest<T extends Rester>(character: T, options: { roll: (side
  * NPC its day's casts. One level of Exhaustion goes. Temporary Hit Points end, and so do Concentration, which the
  * sleep breaks, and every spell that runs out within 8 hours. The engine keeps no clock, so the rest stands for the dawn:
  * each magic item regains its charges as its data says, rolled with `roll`, and its uses that come back at dawn
- * (./item-spend `itemsRested`).
+ * (./item-spend `itemsRested`). A Human gains Heroic Inspiration by Resourceful.
  *
  * Thalbern at 3 of 11 with 1 Hit Die spent and a Hunter's Mark cast: "Thalbern finishes a Long Rest: 11 of 11 hit
  * points, every Hit Point Die, spell slot and feature use back."
@@ -262,6 +264,12 @@ export function longRest<T extends Rester>(character: T, options: { roll?: (side
   const classed = afterClassLongRest(character, rested)
   rested = classed.character
   facts.push(...classed.facts)
+  // A Human's Resourceful: Heroic Inspiration as the rest ends, kept where they already have it, since no one holds two.
+  const resourceful = longRestInspiration(rested)
+  if (resourceful && !hasHeroicInspiration(rested)) {
+    rested = withHeroicInspiration(rested)
+    facts.push(`${name} gains Heroic Inspiration by ${resourceful}.`)
+  }
   if (rested.sheet) {
     const items = itemsRested(rested.sheet, "long", options.roll)
     rested = { ...rested, sheet: items.sheet }

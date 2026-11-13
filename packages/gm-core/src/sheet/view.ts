@@ -72,6 +72,8 @@ export type SheetView = {
   items: ItemView[]
   /** The Beast form the hero is in, by name: "Wolf". Left out in their own shape. Armor Class and Speed are then the form's. */
   form?: string
+  /** The hero has Heroic Inspiration (./heroic-inspiration). Left out when they do not. */
+  heroicInspiration?: true
 }
 
 const RECHARGE: Record<string, string> = {
@@ -91,7 +93,15 @@ type Count = number | "proficiency-bonus" | { ability: AbilityId; minimum: 1 } |
  * spell slots they have used, by spell level (none when none are given). Throws when the class, species or background
  * is unknown, as `deriveSheet` does.
  */
-export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonly number[], spellEffects?: readonly SpellEffect[], featureUses?: Record<string, number>, shape?: Shape): SheetView {
+export function sheetView(
+  sheet: Sheet,
+  hitPoints?: number,
+  spellSlots?: readonly number[],
+  spellEffects?: readonly SpellEffect[],
+  featureUses?: Record<string, number>,
+  shape?: Shape,
+  heroicInspiration?: boolean
+): SheetView {
   const derived = deriveSheet(sheet)
   // A Beast's shape the hero holds (Wild Shape): its Armor Class and Speed are theirs while it lasts (./shape).
   const form = shapeOf({ sheet, shape, hitPoints })
@@ -209,5 +219,6 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     items: itemViews(sheet),
     ...(spellcasting ? { spellcasting } : {}),
     ...(form ? { form: form.name } : {}),
+    ...(heroicInspiration ? { heroicInspiration: true as const } : {}),
   }
 }

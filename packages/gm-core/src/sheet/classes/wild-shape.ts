@@ -1,5 +1,6 @@
 import { classFeatureById } from "@d20/srd/class-features"
 import { monsterById, monsters } from "@d20/srd/monsters"
+import type { Spell } from "@d20/srd/schema/spells"
 import type { Shape } from "../../types/character"
 import { isDead, isDown, isIncapacitated } from "../../utils/turn-actors"
 import type { Roller } from "../check"
@@ -10,17 +11,23 @@ import { slotsLeft, withCastSpent } from "../spells"
 import type { TurnEffect } from "../turn-effect"
 
 /**
- * Wild Shape (Druid, level 2) in play, by the SRD 5.2.1 (p. 42), and the first part of Wild Resurgence (level 5).
+ * Wild Shape (Druid, level 2) in play, by the SRD 5.2.1 (p. 42), the first part of Wild Resurgence (level 5), and Beast
+ * Spells (level 18).
  *
- * Known forms: the four Beast forms of the Beast Shapes table (six from level 4) are picks on the sheet, under the
- * feature's id in `featurePicks`, from the Beast stat blocks of the Challenge Rating the table allows and with no Fly
- * Speed before level 8 (../derive `pickOptions`). The read offers each known form as its own Bonus Action:
- * "wild-shape-wolf".
+ * Known forms: the four Beast forms of the Beast Shapes table (six from level 4, eight from 8) are picks on the sheet,
+ * under the feature's id in `featurePicks`, from the Beast stat blocks of the Challenge Rating the table allows (1/4,
+ * 1/2 from 4, 1 from 8) and with no Fly Speed before level 8 (../derive `pickOptions`). The read offers each known form
+ * as its own Bonus Action: "wild-shape-wolf". A form's Fly Speed is a move over the flat floor at the better of it and
+ * the walking Speed (../space `speedOf`), and a Swim Speed finds no water there. Replacing a known form as a Long Rest
+ * ends is not built: neither host's rest asks the player anything, and the level-up screen picks forms only as levels
+ * are gained.
  * Taking a form: a Bonus Action that spends a use, with uses by the class table's Wild Shape column and one back on a
  * Short Rest (../rest). The form is kept on the character (`shape`), with the hours it lasts: half the Druid level,
  * rounded down. The hero gains Temporary Hit Points equal to the Druid level, which take the place of fewer held, and
  * then has the stat block's attacks, Armor Class, Speed, size, Strength, Dexterity and Constitution (../shape). They
  * keep their own hit points and everything else, and cannot cast spells. Concentration is kept.
+ * Beast Spells (level 18): in a form the Druid casts as in their own shape, but for a spell whose Material component has
+ * a cost or is consumed, which is still barred (`formBarsCasting`).
  * How it ends: by using Wild Shape again, which takes the new form; as a Bonus Action by choice; with the Incapacitated
  * condition or at 0 hit points or death, as the round turns (the shape stops counting at once, ../shape `shapeOf`);
  * and when its hours run out, which only a rest counts (../rest), since the engine keeps no clock between encounters.
@@ -32,6 +39,7 @@ import type { TurnEffect } from "../turn-effect"
 
 export const WILD_SHAPE = "druid-wild-shape"
 export const WILD_RESURGENCE = "druid-wild-resurgence"
+const BEAST_SPELLS = "druid-beast-spells"
 // The once-a-turn mark of Wild Resurgence's slot spent for a use.
 const RESURGENCE_MARK = "wild-resurgence"
 
@@ -88,7 +96,12 @@ function shifted<T extends Shifter>(actor: T, form: string): T {
 const highestCr = Math.max(0, ...(classFeatureById.get(WILD_SHAPE)?.forms ?? []).map((row) => row.maxCr))
 const beasts = monsters.filter((monster) => monster.type === "beast" && monster.cr <= highestCr)
 
-const NOTE = `${FORM_PREFIX}<form> is Wild Shape: the character shifts into that Beast's form beside the action, when the player's words call for it. In a form they fight with its attacks and cannot cast spells. ${LEAVE_FORM} returns them to their own shape.`
+// What casting is left to a Druid in a form, in words.
+const formCasting = (character: Roller): string =>
+  hasFeature(character, BEAST_SPELLS) ? "can still cast spells, but not one whose Material component has a cost or is consumed" : "cannot cast spells"
+
+const NOTE = (character: Roller) =>
+  `${FORM_PREFIX}<form> is Wild Shape: the character shifts into that Beast's form beside the action, when the player's words call for it. In a form they fight with its attacks and ${formCasting(character)}. ${LEAVE_FORM} returns them to their own shape.`
 
 /** Wild Shape's Bonus Actions: one for each known form, and one to leave a form. */
 export const wildShapeActions: BonusActionRule[] = [
@@ -117,7 +130,7 @@ export const wildShapeActions: BonusActionRule[] = [
           use: {
             feature: action.id,
             name: action.name,
-            fact: `${was.name} ${from ? `leaves the shape of the ${from} and ` : ""}shifts into the shape of a ${beast.name}${paid.slot ? `, spending a level ${paid.slot} spell slot for the use by Wild Resurgence` : ""}. They gain ${level} Temporary Hit Points, and for up to ${hours} ${hours === 1 ? "hour" : "hours"} they have its attacks, Armor Class, Speed, Strength, Dexterity and Constitution. They keep their own hit points, mind and voice, and cannot cast spells.`,
+            fact: `${was.name} ${from ? `leaves the shape of the ${from} and ` : ""}shifts into the shape of a ${beast.name}${paid.slot ? `, spending a level ${paid.slot} spell slot for the use by Wild Resurgence` : ""}. They gain ${level} Temporary Hit Points, and for up to ${hours} ${hours === 1 ? "hour" : "hours"} they have its attacks, Armor Class, Speed, Strength, Dexterity and Constitution. They keep their own hit points, mind and voice, and ${formCasting(was)}.`,
           },
         }
       },
@@ -128,7 +141,8 @@ export const wildShapeActions: BonusActionRule[] = [
     feature: WILD_SHAPE,
     name: "Wild Shape: Leave the Form",
     note: NOTE,
-    offer: (character) => !!character.shape,
+    // A shape a spell gave (Polymorph) is the spell's to end, not Wild Shape's.
+    offer: (character) => !!character.shape && !character.shape.spell,
     becomes: withoutShape,
     use: ({ characters, actor, action }) => {
       const was = actor as Shifter
@@ -142,9 +156,21 @@ export const wildShapeActions: BonusActionRule[] = [
   },
 ]
 
-/** Why a Druid in a form cannot cast spells. */
-export const formBarsCasting = (character: Roller): string | undefined =>
-  hasFeature(character, WILD_SHAPE) && shapeOf(character) ? `${character.name ?? "The Druid"} cannot cast spells in Wild Shape.` : undefined
+/** Whether a hero holds a form of Wild Shape now, and not a shape a spell gave (Polymorph), whose rules are the spell's. */
+export const inWildShape = (character: Roller & { shape?: Shape }): boolean => !!shapeOf(character) && !character.shape?.spell
+
+/**
+ * Why a Druid in a form cannot cast a spell. With Beast Spells, only one whose Material component has a cost or is
+ * consumed is barred, and with no spell named none is.
+ */
+export function formBarsCasting(character: Roller, spell?: Spell): string | undefined {
+  if (!hasFeature(character, WILD_SHAPE) || !inWildShape(character)) return undefined
+  const name = character.name ?? "The Druid"
+  if (!hasFeature(character, BEAST_SPELLS)) return `${name} cannot cast spells in Wild Shape.`
+  const material = spell?.components.material
+  if (!material || (!material.costs?.length && material.consumed === "none")) return undefined
+  return `${name} cannot cast ${spell.name} in Wild Shape: its Material component ${material.consumed === "none" ? "has a cost" : "is consumed"}.`
+}
 
 /**
  * A form that has ended as the round turns: its bearer has the Incapacitated condition, is at 0 hit points, or is
@@ -153,7 +179,7 @@ export const formBarsCasting = (character: Roller): string | undefined =>
 export function formAtRoundStart<T extends Roller & { id: string; shape?: Shape; hitPoints?: number; healthPercent?: number; dead?: true }>(
   character: T
 ): { character: T; told?: { name: string; text: string } } | undefined {
-  if (!character.shape) return undefined
+  if (!character.shape || character.shape.spell) return undefined
   if (!isIncapacitated(character) && !isDown(character) && !isDead(character)) return undefined
   const form = monsterById.get(character.shape.form)?.name ?? character.shape.form
   return { character: withoutShape(character), told: { name: "Wild Shape", text: `${character.name ?? "The Druid"}'s Wild Shape ends: the ${form}'s shape falls away, back to their own.` } }

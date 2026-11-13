@@ -117,6 +117,20 @@ export function fillsSlots(offer: PicksOffer, picked: readonly FeaturePick[]): b
   return true
 }
 
+/** Picks with the spells of an option that holds its own (Pact of the Tome's Book of Shadows) set to `spells`. */
+export function withBookSpells(picked: readonly FeaturePick[], option: string, spells: readonly string[]): FeaturePick[] {
+  return picked.map((pick) => (pick.option === option ? { ...pick, spells: [...spells] } : pick))
+}
+
+/** A picked option's book: how many cantrips and level 1 spells it holds, and how many of each its pick has. */
+export function bookOf(offer: PicksOffer, pick: FeaturePick): { cantrips: number; rituals: number; hasCantrips: number; hasRituals: number } | undefined {
+  const book = offer.options.find((option) => option.id === pick.option)?.book
+  if (!book) return undefined
+  const levelOf = (id: string) => book.from.find((spell) => spell.id === id)?.level
+  const spells = pick.spells ?? []
+  return { cantrips: book.cantrips, rituals: book.rituals, hasCantrips: spells.filter((id) => levelOf(id) === 0).length, hasRituals: spells.filter((id) => levelOf(id) === 1).length }
+}
+
 /** How many of the picks kept from before a feature's picks have dropped. */
 export function replacedCount(offer: PicksOffer, picked: readonly FeaturePick[]): number {
   return offer.picked.filter((old) => !picked.some((each) => each.option === old.option && each.cantrip === old.cantrip && each.feat === old.feat)).length
@@ -160,6 +174,14 @@ export function missing(options: LevelUpOptions, picks: Picks, prepared?: readon
     short(picked.length, offer.count, offer.feature.name.replace(/s$/, ""), offer.feature.name)
     if (replacedCount(offer, picked) > (offer.replace ? 1 : 0)) left.push(`${offer.feature.name}: ${offer.replace ? "only one" : "none"} of those held may be replaced`)
     if (!fillsSlots(offer, picked)) left.push(`${offer.feature.name}: one spell of each level`)
+    for (const pick of picked) {
+      const book = bookOf(offer, pick)
+      const name = offer.options.find((option) => option.id === pick.option)?.name ?? pick.option
+      if (book) {
+        short(book.hasCantrips, book.cantrips, `${name} cantrip`, `${name} cantrips`)
+        short(book.hasRituals, book.rituals, `${name} ritual`, `${name} rituals`)
+      }
+    }
   }
   if (options.cantrips) short(picks.cantrips.length, options.cantrips.count, "cantrip", "cantrips")
   if (options.spellbook) {

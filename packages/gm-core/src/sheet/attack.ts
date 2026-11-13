@@ -2,12 +2,26 @@ import type { AbilityId, DamageTypeId, Size } from "@d20/srd"
 import { damageTypeIds } from "@d20/srd"
 import { equipmentById } from "@d20/srd/equipment"
 import { featById } from "@d20/srd/feats"
-import { monsterById } from "@d20/srd/monsters"
 import type { Monster } from "@d20/srd/schema/monsters"
 import { weaponPropertyById } from "@d20/srd/weapon-properties"
-import { isIncapacitated } from "../utils/turn-actors"
+import { hasFled, isIncapacitated } from "../utils/turn-actors"
+import { blockOf } from "./blocks"
 import type { Roller, RollMode } from "./check"
-import { type Bearing, classAttack, classMarkDie, classResistances, type Extra, type HitArgs, type HitRider, hitRule, hitRules, reactionRule, turnEffectRule } from "./class-rules"
+import {
+  attackRescued,
+  type Bearing,
+  classAttack,
+  classIgnoredResistances,
+  classMarkDie,
+  classResistances,
+  type Extra,
+  type HitArgs,
+  type HitRider,
+  hitRule,
+  hitRules,
+  reactionRule,
+  turnEffectRule,
+} from "./class-rules"
 import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, wardedWords, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
@@ -17,13 +31,14 @@ import { type BlockRider, blockRidersOnHit, blockRiderWords, chargeOf, noLargerT
 import { itemTrainsWith, itemWeaponDamage } from "./item-effects"
 import { magicWeaponOf } from "./items"
 import { typesTaken } from "./monster-traits"
+import type { Rescued } from "./save-rules"
 import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
 import { sameSide } from "./sides"
 import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, within } from "./space"
 import { enduringTraitOf } from "./species-traits"
 import { attackWithSpells, deflectedHit, markDamage, rollAdds, spellDamageImmunities, spellResistances, weaponDamageFromSpells } from "./spell-effects"
-import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
+import { combatStatsOf } from "./stat-block"
 import type { TurnEffect } from "./turn-effect"
 
 /** Damage one attack deals of one type: dice as the SRD writes them ("1d8 + 3"), or a flat amount with no dice. */
@@ -162,7 +177,7 @@ function baseAttacks(character: Roller): Attack[] {
     return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => withMagicWeapon(sheet, attackWithSpells(character, classAttack(character, weaponAttack(sheet, weapon)))))
   }
   if (character.type !== "npc") return []
-  const monster = monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)
+  const monster = blockOf(character)
   return monster ? blockAttacks(monster) : []
 }
 
@@ -363,6 +378,17 @@ export function defensesOf(character: Bearing): Defenses {
   return resistsAllDamage(character) ? { ...warded, resistances: damageTypeIds } : warded
 }
 
+/**
+ * A target's defenses against the damage one deals: theirs, less the Resistances the dealer's damage ignores (Boon of
+ * Irresistible Offense's Bludgeoning, Piercing and Slashing).
+ */
+export function defensesAgainst(target: Bearing, dealer: Bearing | undefined): Defenses {
+  const defenses = defensesOf(target)
+  const ignored = dealer ? classIgnoredResistances(dealer) : []
+  if (!ignored.length || !defenses.resistances?.some((type) => ignored.includes(type))) return defenses
+  return { ...defenses, resistances: defenses.resistances.filter((type) => !ignored.includes(type)) }
+}
+
 function ownDefenses(character: Bearing): Defenses {
   // A hero in a Beast's shape has the stat block's defenses, and those a class feature gives while it lasts (./shape).
   // Anyone has those a spell on them gives (Protection from Energy).
@@ -373,7 +399,7 @@ function ownDefenses(character: Bearing): Defenses {
     const derived = deriveSheet(character.sheet)
     return { ...(derived.immunities.length ? { immunities: derived.immunities } : {}), resistances: [...new Set([...derived.resistances, ...classResistances(character), ...spelled])] }
   }
-  const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
+  const monster = character.type === "npc" ? blockOf(character) : undefined
   if (!monster) return {}
   const resistances = spelled.length ? [...new Set([...(monster.resistances ?? []), ...spelled])] : monster.resistances
   return { immunities: monster.immunities, resistances, vulnerabilities: monster.vulnerabilities }
@@ -439,6 +465,8 @@ export type Strike = {
   conditions?: ConditionChange[]
   /** The hit struck one of the target's illusory duplicates (Mirror Image), which is destroyed: no damage. */
   deflected?: true
+  /** Rescues of the target's saves against what rode on the hit that another answered (Countercharm), for the caller to spend on them. */
+  rescues?: Rescued[]
 }
 
 /** Whom an attack is made at: one who stands somewhere, with hit points to lose. */
@@ -484,6 +512,8 @@ export type RolledAttack = {
   roll: AttackResult
   /** A Bardic Inspiration die rolled and added to an attack roll that had missed. The roll's total includes it. */
   inspired?: number
+  /** A miss a hero's feature or feat turned or rolled again (./class-rules `attackRescues`), and the roll that missed. The caller spends it. */
+  rescued?: { feature: string; first: AttackResult }
 }
 
 /**
@@ -511,8 +541,11 @@ export function rollAttack(args: Omit<StrikeArgs<Target>, "rules" | "present">):
   const short = armorClass - rolled.total
   const inspired = !rolled.hit && rolled.natural !== 1 && args.inspiration && short <= args.inspiration.die ? args.roll(args.inspiration.die) : undefined
   const lifted = inspired === undefined ? rolled : { ...rolled, total: rolled.total + inspired, hit: rolled.total + inspired >= armorClass }
-  const roll = lifted.hit && !lifted.critical && criticalWhenHit(args.target, isNear(args.attacker, args.target, attack.kind)) ? { ...lifted, critical: true } : lifted
-  return { attack, roll, ...(inspired === undefined ? {} : { inspired }) }
+  // A hero's own feature or feat may still turn a miss (Peerless Aim), and last Heroic Inspiration's reroll.
+  const rescue = attackRescued({ attacker: args.attacker, target: args.target, roll: lifted, extra: inspired ?? 0, d20: () => args.roll(20) })
+  const settled = rescue?.roll ?? lifted
+  const roll = settled.hit && !settled.critical && criticalWhenHit(args.target, isNear(args.attacker, args.target, attack.kind)) ? { ...settled, critical: true } : settled
+  return { attack, roll, ...(inspired === undefined ? {} : { inspired }), ...(rescue ? { rescued: { feature: rescue.feature, first: lifted } } : {}) }
 }
 
 /** What a class's turn effects on the target add to an attack roll against them (Sundering Blow's 5): the most of each kind. */
@@ -576,7 +609,7 @@ export function landBlow<T extends Target>(
         sameSide(other, args.attacker) &&
         (other.hitPoints ?? 1) > 0 &&
         !other.dead &&
-        !other.fled &&
+        !hasFled(other) &&
         !isIncapacitated(other) &&
         within(at, beside, 5)
       )
@@ -602,7 +635,7 @@ export function landBlow<T extends Target>(
     roll.critical
   )
   const damage: DamageRoll = { parts: [...kept.parts, ...added.parts], total: kept.total + added.total }
-  const defenses = defensesOf(args.target)
+  const defenses = defensesAgainst(args.target, args.attacker)
   const full = damageTaken(damage, defenses)
   const reduced = full > 0 ? args.reduce?.(full, [...new Set(damage.parts.map((part) => part.type))]) : undefined
   const taken = reduced ? reduced.taken : full
@@ -646,6 +679,7 @@ export function landBlow<T extends Target>(
     ...(reduced ? { reduced: { id: reduced.id, from: full } } : {}),
     ...(riders.length ? { riders } : {}),
     ...(conditions.length ? { conditions } : {}),
+    ...(block.spent.length ? { rescues: block.spent } : {}),
     target: struck.character,
   }
 }

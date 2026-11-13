@@ -5,14 +5,15 @@ import { equipmentById } from "@d20/srd/equipment"
 import { z } from "zod"
 import { hasFled, isDead, isDown, isIncapacitated } from "../../utils/turn-actors"
 import { type Attack, UNARMED_STRIKE } from "../attack"
-import { type Check, checkAbility, checkBonus, combineModes, type Roller, resolveCheck } from "../check"
-import { type Bearing, type ClassRules, classCheckModes, type Featured, type Felling, type RoundTurn, withTurnEffect } from "../class-rules"
+import { type Check, checkAbility, type Roller } from "../check"
+import { type Bearing, type ClassRules, type Featured, type Felling, type RoundTurn, withTurnEffect } from "../class-rules"
 import { CONDITION_SPANS } from "../condition-entry"
 import { conditionName, hasCondition, withCondition, withoutCondition } from "../conditions"
 import { deriveSheet } from "../derive"
 import { hasFeature, usedThisTurn, usesLeft, withFeatureUsed } from "../feature-rules"
 import { withHitPoints } from "../hit-points"
 import { opportunityWeapon } from "../reactions"
+import { dieByD20, rescueWords, withRescueSpent, withSaveAnswered } from "../save-rules"
 import type { Sheet } from "../sheet"
 import { areEnemies } from "../sides"
 import { feetBetween, speedOf } from "../space"
@@ -231,16 +232,19 @@ function shakenOff<T extends Roller & { id: string }>(character: T, round: Round
  * Constitution save as they drop. On a success they stand at twice their level, their turn as it was before they
  * dropped. Either way the use is counted.
  */
-function relentless<T extends Felling>(was: T, now: T, d20: () => number): { character: T; name: string; text: string } | undefined {
-  const lying = now as T & { featureUses?: Record<string, number>; deathSaves?: { stable?: true } }
-  if (!now.sheet || !hasFeature(was, RELENTLESS) || !isRaging(was) || lying.deathSaves?.stable) return undefined
-  const dc = relentlessDc(lying)
-  const check: Check = { kind: "save", ability: "con" }
-  const mode = combineModes(classCheckModes(was, check).map((source) => source.mode))
-  const save = resolveCheck({ dice: Array.from({ length: mode === "normal" ? 1 : 2 }, () => d20()), bonus: checkBonus(was, check), dc, mode })
+function relentless<T extends Felling>(was: T, now: T, everyone: readonly T[], d20: () => number): { character: T; name: string; text: string } | undefined {
+  const spent = now as T & { featureUses?: Record<string, number>; deathSaves?: { stable?: true } }
+  if (!now.sheet || !hasFeature(was, RELENTLESS) || !isRaging(was) || spent.deathSaves?.stable) return undefined
+  const dc = relentlessDc(spent)
+  // As every save is rolled (../spells `rollSave`), as the hero stood before they dropped: an aura of one near adds to
+  // it, and a failure, which leaves them dying, may still be rescued (Heroic Inspiration).
+  const present = everyone.map((other) => (other.id === was.id ? was : other))
+  const save = rollSave({ target: was as unknown as Castee, ability: "con", dc, d20, roll: dieByD20(d20), characters: present as unknown as Castee[], stakes: { death: true }, magical: false })
+  const lying = (save.rescued ? withRescueSpent(spent, save.rescued) : spent) as typeof spent
   const featureUses = { ...lying.featureUses, [RELENTLESS]: (lying.featureUses?.[RELENTLESS] ?? 0) + 1 }
   const name = now.name ?? "The Barbarian"
-  const rolled = `${name} makes a DC ${dc} Constitution saving throw for Relentless Rage: ${save.total}`
+  const rescued = save.rescued ? `${rescueWords(name, save.rescued, save)} ` : ""
+  const rolled = `${rescued}${name} makes a DC ${dc} Constitution saving throw for Relentless Rage: ${save.total}`
   if (!save.success) return { character: { ...lying, featureUses }, name: "Relentless Rage", text: `${rolled}, a failure, and stays down.` }
   // Twice the Barbarian level, which is the hero's level.
   const standing = now.sheet.level * 2
@@ -330,13 +334,18 @@ export const barbarian: ClassRules = {
             stakes: { conditions: ["frightened"] },
             magical: false,
           })
+          // What answered the save is spent: a Legendary Resistance, or a rescue (Countercharm).
+          const answered = withSaveAnswered(now, target.id, thrown, thrown, target.name)
+          now = answered.characters
+          const first = answered.facts.length ? `${answered.facts.join(" ")} ` : ""
           if (thrown.success) {
-            told.push(`${target.name} succeeds (${thrown.total}).`)
+            told.push(thrown.legendary ? first.trim() : `${first}${target.name} succeeds (${thrown.total}).`)
             continue
           }
-          const given = withCondition(target, { id: "frightened", source: actor.id, span: "minute" }, { acted: !!(target as { isComplete?: boolean }).isComplete })
+          const saver = now.find((character) => character.id === target.id) ?? target
+          const given = withCondition(saver, { id: "frightened", source: actor.id, span: "minute" }, { acted: !!(target as { isComplete?: boolean }).isComplete })
           if (given.given) now = now.map((character) => (character.id === target.id ? given.character : character))
-          told.push(given.given ? `${target.name} fails (${thrown.total}) and is Frightened of ${actor.name}.` : `${target.name} fails (${thrown.total}) but cannot be Frightened.`)
+          told.push(`${first}${given.given ? `${target.name} fails (${thrown.total}) and is Frightened of ${actor.name}.` : `${target.name} fails (${thrown.total}) but cannot be Frightened.`}`)
         }
         const paid = restores ? ", spending a use of Rage to restore it" : ""
         const fact = `${actor.name} strikes terror with Intimidating Presence${paid}: a DC ${dc} Wisdom saving throw.${told.length ? ` ${told.join(" ")}` : " No enemy is near enough."}`
@@ -490,7 +499,7 @@ export const barbarian: ClassRules = {
     character.sheet && hasFeature(character, "barbarian-indomitable-might") && (checkAbility(check) === "str" || primalAbility(character, check) === "str")
       ? deriveSheet(character.sheet).abilityScores.str
       : undefined,
-  downed: ({ was, now, d20 }) => relentless(was, now, d20),
+  downed: ({ was, now, everyone, d20 }) => relentless(was, now, everyone, d20),
   // Relentless Rage's DC is back to 10 after a Short Rest. A Long Rest clears every use.
   shortRest: (character) => {
     if (!character.featureUses?.[RELENTLESS]) return { character, facts: [] }

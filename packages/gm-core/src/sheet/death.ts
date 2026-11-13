@@ -3,11 +3,13 @@ import { spells } from "@d20/srd/spells"
 import { isDead, isDown, isDying, isIncapacitated } from "../utils/turn-actors"
 import { DEATH_SAVE, type RollRequirement } from "../validations/roll-requirement-schema"
 import { turnEffectsAtRoundStart } from "./actions"
+import { type CheckResult, type RollMode, resolveCheck } from "./check"
 import { classDeathSave, withDamageEndings } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtRoundStart, d20Penalty, withCondition } from "./conditions"
 import { hitPointsOf, withHitPoints } from "./hit-points"
 import { isRegenerationStopped, regenerationOf, regenerationStopped, stopsRegeneration } from "./monster-traits"
+import { type AnsweredSave, answeredSave, auraOnSave } from "./save-rules"
 import type { Sheet } from "./sheet"
 import { enduringTraitLeft, enduringTraitOf } from "./species-traits"
 import { saveModesFromSpells, spellEffectsAtRoundStart, withDeathWardSpent } from "./spell-effects"
@@ -162,10 +164,11 @@ export type DeathSaveResult<T> = { character: T; natural: number; success: boole
  * 2 off the roll for each level, and the 1 and the 20 are read off the die itself. A class feature may count a lower die
  * as a 20 (Defy Death's 18 to 20).
  */
-export function deathSave<T extends Mortal>(character: T, die: number, rules?: DeathRules): DeathSaveResult<T> {
+export function deathSave<T extends Mortal>(character: T, die: number, rules?: DeathRules, total?: number): DeathSaveResult<T> {
   if (!isDying(character)) throw new Error(`${character.name ?? "The character"} is not dying, so makes no Death Saving Throw.`)
   if (!Number.isInteger(die) || die < 1 || die > 20) throw new Error(`${die} is not a d20 roll.`)
-  const success = die - d20Penalty(character) >= DEATH_SAVE.difficulty
+  // `total` is the throw's where more than the die and Exhaustion count: an aura's bonus, a rescue's addition.
+  const success = (total ?? die - d20Penalty(character)) >= DEATH_SAVE.difficulty
   const before = character.deathSaves ?? { successes: 0, failures: 0 }
   // A 20 wakes the hero and changes no save.
   if (die >= classDeathSave(character).twentyFrom)
@@ -177,6 +180,39 @@ export function deathSave<T extends Mortal>(character: T, die: number, rules?: D
     return { character: done, natural: die, success, fate: isDead(done) ? "dies" : "stable", saves }
   }
   return { character: dying(character, saves), natural: die, success, saves }
+}
+
+/**
+ * A Death Saving Throw as it is thrown, from the d20s the hero rolled: the die that counts by Advantage or
+ * Disadvantage, less 2 for each level of Exhaustion, plus what an aura of one near adds to a saving throw (Aura of
+ * Protection: the dying hero is no bearer, being Unconscious). A failure is a step toward death, so it is answered as
+ * every save is (./save-rules `answeredSave`): a feature may still rescue it (Indomitable's reroll, Stroke of Luck's 20,
+ * Heroic Inspiration), and the new roll's die and total settle it. A Death Saving Throw is tied to no ability, and is
+ * handed on as Constitution, which none of those rules reads. The caller spends what answered it.
+ */
+export function thrownDeathSave<T extends Mortal & { id: string }>(args: {
+  character: T
+  dice: readonly number[]
+  mode: RollMode
+  present: readonly object[]
+  rules?: DeathRules
+  d20: () => number
+  roll: (sides: number) => number
+}): { saved: DeathSaveResult<T>; result: CheckResult; answer: AnsweredSave } {
+  const { character } = args
+  const bonus = auraOnSave(character, { kind: "save" }, args.present) - d20Penalty(character)
+  const result = resolveCheck({ dice: args.dice, bonus, dc: DEATH_SAVE.difficulty, mode: args.mode })
+  const answer = answeredSave({
+    character: character as Parameters<typeof answeredSave>[0]["character"],
+    ability: "con",
+    result,
+    stakes: { death: true },
+    d20: args.d20,
+    roll: args.roll,
+    present: args.present as Parameters<typeof answeredSave>[0]["present"],
+  })
+  const settled = answer.result
+  return { saved: deathSave(character, settled.natural, args.rules, settled.total), result: settled, answer }
 }
 
 /**

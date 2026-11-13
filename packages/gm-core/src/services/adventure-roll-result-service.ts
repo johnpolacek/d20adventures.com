@@ -16,15 +16,16 @@ import {
   resolveChosenCast,
   shapedCast,
 } from "../sheet/class-rules"
-import { d20Penalty, saveFailedBy } from "../sheet/conditions"
+import { saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
-import { afterHarm, deathSave } from "../sheet/death"
+import { afterHarm, thrownDeathSave } from "../sheet/death"
 import { featureResolver, inspirationHelps, inspiredCheck } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
 import { legendaryActionsOf } from "../sheet/legendary-actions"
 import { attackWithReactions, ordered } from "../sheet/reactions"
-import { auraOnSave } from "../sheet/save-rules"
+import { answeredSave, auraOnSave, saveStakesOf, withSaveAnswered } from "../sheet/save-rules"
 import { checkAdds, saveBonusFor, settleConcentration } from "../sheet/spell-effects"
+import { areasForced } from "../sheet/spell-rounds"
 import { type CastCost, castAgain, castCost, castSpell, isEngineSpell, spellById, withCastPaid } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
@@ -185,23 +186,23 @@ export function createAdventureRollResultService(ports: GmPorts) {
     }
     if (isDeathSaveRoll(required)) {
       // A dying hero's Death Saving Throw: the rules decide it, and the roll beat tells it. No model is asked.
-      // With Advantage (Beacon of Hope) the higher of two dice counts, its 1 or 20 too.
-      const dice = d20sFor(mode, args.dice)
-      const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
-      const saved = deathSave(args.character, natural, rules)
-      const bonus = 0 - d20Penalty(args.character)
+      // With Advantage (Beacon of Hope) the higher of two dice counts, its 1 or 20 too. An aura of one near adds to it,
+      // and a feature may still rescue a failure (Indomitable), told before the roll's beat.
+      const thrown = thrownDeathSave({ character: args.character, dice: d20sFor(mode, args.dice), mode, present: args.turn.characters, rules, d20: rollD20, roll: rollDie })
+      const { saved, result } = thrown
       // The beat keeps the saves as this throw left them, and how it ended the hero's dying.
       const fate = saved.fate === "revived" ? ("revived" as const) : saved.fate === "dies" ? ("dead" as const) : saved.fate === "stable" ? ("stable" as const) : undefined
       const beat: StoryBeat = {
-        ...rollBeat(by, args.character, DEATH_SAVE.rollType, { dice, natural, bonus, total: natural + bonus, dc: DEATH_SAVE.difficulty, success: saved.success, mode }),
+        ...rollBeat(by, args.character, DEATH_SAVE.rollType, { ...result, success: saved.success }),
         deathSave: { ...saved.saves, ...(fate ? { fate } : {}) },
       }
-      return afterTurn({
-        ...withStory(args.turn, [beat]),
-        characters: args.turn.characters.map((character) =>
-          character.id === args.characterId ? { ...saved.character, rollRequired: undefined, rollResult: natural, isComplete: true, hasReplied: true } : character
-        ),
-      })
+      const settled = args.turn.characters.map((character) =>
+        character.id === args.characterId ? { ...saved.character, rollRequired: undefined, rollResult: result.natural, isComplete: true, hasReplied: true } : character
+      )
+      const answered = withSaveAnswered(settled, args.characterId, thrown.answer, result, args.character.name)
+      const rescue = thrown.answer.rescued
+      const told: StoryBeat[] = rescue ? [{ kind: "feature", by, character: rescue.by ?? args.characterId, name: rescue.name, text: answered.facts.join(" ") }] : []
+      return afterTurn({ ...withStory(args.turn, [...told, beat]), characters: answered.characters })
     }
     let turnCharacters = args.turn.characters
     // The encounter's floor: what a hit moves is walked over it, and what the roll used up reads it.
@@ -370,18 +371,45 @@ export function createAdventureRollResultService(ports: GmPorts) {
             roll: rollDie,
             staked: !!required.stakes?.some((stake) => stake.on === "failure" && stake.target === args.characterId && stake.kind !== "healing"),
           })
-      const result = minded?.result ?? lifted
       const after = minded?.after
       if (after) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? after(character) : character))
+      // A failed save is answered as every save the engine rolls is (../sheet/save-rules `answeredSave`): a feature of
+      // the roller's or of one near may still rescue it (Indomitable, Countercharm, Heroic Inspiration), judged on what
+      // the read put at stake on them, and once what was already rolled for it is spent.
+      const spentSoFar = die && lifted.inspired !== undefined ? die.spend(args.character, lifted.success) : args.character
+      const answer =
+        check.kind === "save"
+          ? answeredSave({
+              character: after ? after(spentSoFar) : spentSoFar,
+              ability: check.ability,
+              result: minded?.result ?? lifted,
+              stakes: saveStakesOf(required.stakes, args.characterId),
+              failedBy: !!failedBy,
+              d20: rollD20,
+              roll: rollDie,
+              present: turnCharacters,
+            })
+          : { result: minded?.result ?? lifted }
+      const result = answer.result
+      const answered = withSaveAnswered(turnCharacters, args.characterId, answer, result, args.character.name)
+      turnCharacters = answered.characters
       // What the roll put at stake is settled here, by the engine: who it hurts or heals, and how they stand after.
       const settled = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
       turnCharacters = settled.characters
-      stakeFacts = [...(failedBy ? [`${args.character.name} is ${failedBy} and fails this saving throw outright.`] : []), ...settled.facts]
-      rolls = [rollBeat(by, args.character, rollType, result, settled.harm, settled.conditions)]
+      stakeFacts = [...(failedBy ? [`${args.character.name} is ${failedBy} and fails this saving throw outright.`] : []), ...answered.facts, ...settled.facts]
+      const rescue = answer.rescued
+      rolls = [
+        ...(rescue ? [{ kind: "feature" as const, by, character: rescue.by ?? args.characterId, name: rescue.name, text: answered.facts.join(" ") }] : []),
+        rollBeat(by, args.character, rollType, result, settled.harm, settled.conditions),
+      ]
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }
     // What the roll used up: an ally's Help, and the roller's own hiding when they attacked.
     turnCharacters = afterRoll(turnCharacters, args.characterId, required, blow?.taken, floor)
+    // One the roll moved by force (a push, a Withdraw) comes into the areas on its way (../sheet/spell-rounds `areasForced`).
+    const forced = areasForced({ before: args.turn.characters, after: turnCharacters, d20: rollD20, roll: rollDie, rules })
+    turnCharacters = forced.characters
+    rolls = [...rolls, ...forced.told.map((fact): StoryBeat => ({ kind: "feature", by, character: fact.character, name: fact.spell, text: fact.text }))]
     // Concentration: a caster who lost hit points saves to keep their spell, and one now down or unable to act loses it.
     const held = settleConcentration({
       before: args.turn.characters,
@@ -430,7 +458,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       attack: blow && target ? strikeFacts(args.character.name, target.name, blow) : undefined,
       harm: stakeFacts,
       spell: spellCast,
-      also: [...held.facts, ...fell.told.map((gain) => gain.text)],
+      also: [...forced.told.map((fact) => fact.text), ...held.facts, ...fell.told.map((gain) => gain.text)],
       ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
 

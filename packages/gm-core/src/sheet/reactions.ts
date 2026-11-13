@@ -1,5 +1,4 @@
 import type { DamageTypeId } from "@d20/srd"
-import { monsterById } from "@d20/srd/monsters"
 import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
 import { type ActorLike, findCurrentActor, hasFled, isDown, isIncapacitated } from "../utils/turn-actors"
@@ -15,24 +14,25 @@ import {
   type RolledAttack,
   rollAttack,
   type Strike,
-  strike,
   strikeFacts,
   type Target,
   UNARMED_STRIKE,
 } from "./attack"
+import { blockOf } from "./blocks"
 import { type CheckResult, combineModes, type RollMode, rollModes } from "./check"
-import { classAttackModes, type DamageAnswer, type Featured, hitRules, type Landed, type Reacted, reactionRules, settledByClasses, turnEffectRule } from "./class-rules"
+import { attackRescueRule, classAttackModes, type DamageAnswer, type Featured, hitRules, type Landed, type Reacted, reactionRules, settledByClasses, turnEffectRule } from "./class-rules"
 import { attackModesFrom, cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
 import { withFeatureUsed, withUsedThisTurn } from "./feature-rules"
 import { seesThrough } from "./floor-areas"
 import { releasedHolds } from "./hit-riders"
+import { withRescueSpent } from "./save-rules"
 import { areEnemies } from "./sides"
 import { type Cover, opportunityAttackers, type Point, placedOf, type Standing, sizeOf, type Watcher, within } from "./space"
 import { cannotReactBySpell, withSpellEffect } from "./spell-effects"
 import { areasWalked, type RoundFact } from "./spell-rounds"
 import { type CastCost, castCost, spellsOf, withCastSpent } from "./spells"
-import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
+import { combatStatsOf } from "./stat-block"
 import { type Order, orderSchema, type ReactionId, reactionIds, type SpellEffect, type StandingOrders, type TurnEffect } from "./turn-effect"
 
 /**
@@ -128,9 +128,14 @@ export function resolveOpportunityAttack<A extends Reactor, T extends Target>(ar
   cover?: Cover
   present?: readonly (Standing & { hitPoints?: number; dead?: true; fled?: true })[]
 }): { blow: Strike; attacker: A; target: T; fact: string } {
-  const { target, ...blow } = strike(args)
+  const rolled = rollAttack(args)
+  const { target, ...blow } = landBlow(args, rolled)
   const attacker = args.attacker.name ?? "The attacker"
-  return { blow, attacker: withReaction(args.attacker), target, fact: `${attacker} makes an Opportunity Attack. ${strikeFacts(attacker, args.target.name ?? "the target", blow)}` }
+  // A miss the attacker's feature turned or rolled again (Peerless Aim, Heroic Inspiration) is spent and told.
+  const rescue = rolled.rescued && attackRescueRule(rolled.rescued.feature)
+  const rescued = rolled.rescued && rescue ? `${rescue.words(attacker, rolled.rescued.first, rolled.roll)} ` : ""
+  const spent = rescue ? rescue.spend(args.attacker, undefined) : args.attacker
+  return { blow, attacker: withReaction(spent), target, fact: `${attacker} makes an Opportunity Attack. ${rescued}${strikeFacts(attacker, args.target.name ?? "the target", blow)}` }
 }
 
 /** What the Shield spell adds to Armor Class, from its typed data: 5. */
@@ -150,7 +155,7 @@ export type MonsterReaction = { id: "parry"; name: string; bonus: number } | { i
  * 2. A hero has none here.
  */
 export function monsterReactions(character: Caster): MonsterReaction[] {
-  const monster = character.type === "npc" && !character.sheet ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
+  const monster = character.type === "npc" && !character.sheet ? blockOf(character) : undefined
   return (monster?.reactions ?? []).flatMap((reaction): MonsterReaction[] => {
     const parry = reaction.name === "Parry" ? /adds (\d+) to its AC against that attack/.exec(reaction.text) : null
     if (parry) return attacksOf(character).some((attack) => attack.reach !== undefined) ? [{ id: "parry", name: reaction.name, bonus: Number(parry[1]) }] : []
@@ -417,6 +422,12 @@ export function attackWithReactions<T extends InPlay>(args: {
   const put = (changed: T) => {
     characters = characters.map((character) => (character.id === changed.id ? changed : character))
   }
+  // A miss the attacker's feature turned or rolled again (Peerless Aim, Heroic Inspiration) is spent and told.
+  const rescue = rolled.rescued && attackRescueRule(rolled.rescued.feature)
+  if (rolled.rescued && rescue) {
+    put(rescue.spend(attacker, turnOf))
+    reactions.push({ by: attacker.id, id: rescue.feature, name: rescue.name, text: rescue.words(attacker.name, rolled.rescued.first, rolled.roll) })
+  }
   const hit = `${attacker.name}'s ${rolled.attack.name} hits ${target.name}: ${rolled.roll.total} against Armor Class ${rolled.roll.armorClass}.`
   const shield = shieldOffer(target, rolled)
   const parry = shield ? undefined : parryOffer(target, rolled, attacker)
@@ -479,6 +490,11 @@ export function attackWithReactions<T extends InPlay>(args: {
   put(settledByClasses(attacker, characters.find((character) => character.id === args.targetId) as T, blow.roll.hit))
   // The once-a-turn features the blow used are marked on the attacker.
   for (const id of blow.used ?? []) put(withUsedThisTurn(characters.find((character) => character.id === args.attackerId) as T, id, turnOf))
+  // What answered the target's save against the hit's rider, where another answered it (Countercharm).
+  for (const rescued of blow.rescues ?? []) {
+    const answerer = characters.find((character) => character.id === rescued.by)
+    if (answerer) put(withRescueSpent(answerer, rescued))
+  }
   // And what rode on the hit spent of theirs: a Stunning Strike's Focus Point.
   for (const id of blow.spent ?? []) put(withFeatureUsed(characters.find((character) => character.id === args.attackerId) as T & { featureUses?: Record<string, number> }, id))
   // What the hit leaves on everyone once it has landed: a smite's spell slot, and the spell it leaves on the target.
@@ -565,12 +581,14 @@ export type OpportunityAttackMade = { attacker: string; blow: Strike; reactions:
  * on the floor a leg comes into or crosses touches the mover as its spell says (../spell-rounds `areasWalked`: Moonbeam's
  * save, Spike Growth's spikes), told in `told`. A mover the blow or the area drops stops where it fell. Everyone comes
  * back as the move left them, the mover standing where it ended. One who took the Disengage action draws no attack.
+ * A teleport (`teleport`: ./moves `takeTeleport`) draws none either, and only an area it lands in touches the mover.
  */
 export function moveWithReactions<T extends InPlay>(args: {
   characters: readonly T[]
   moverId: string
   path: readonly Point[]
   disengaged?: boolean
+  teleport?: boolean
   ask: Ask
   d20: () => number
   roll: (sides: number) => number
@@ -584,7 +602,7 @@ export function moveWithReactions<T extends InPlay>(args: {
     const mover = moverNow()
     const from = mover.position
     if (!from) break
-    for (const { attacker, weapon } of opportunityAttacks({ mover, from, to, everyone: characters, disengaged: args.disengaged })) {
+    for (const { attacker, weapon } of opportunityAttacks({ mover, from, to, everyone: characters, disengaged: args.disengaged, teleport: args.teleport })) {
       const attack = attacksOf(attacker).find((entry) => entry.id === weapon)
       const text = `${mover.name} is leaving ${attacker.name}'s reach. ${attacker.name} may strike with ${attack?.name ?? "an attack"}.`
       if (!args.ask({ id: "opportunity-attack", to: attacker.id, from: mover.id, weapon, matters: true }, text)) continue
@@ -607,7 +625,7 @@ export function moveWithReactions<T extends InPlay>(args: {
       if (isDown(made.target)) return { characters, attacks, stopped: true, told }
     }
     // The step, through the areas that stay on the floor.
-    const walked = areasWalked({ characters, moverId: args.moverId, from, to, d20: args.d20, roll: args.roll, rules: args.rules })
+    const walked = areasWalked({ characters, moverId: args.moverId, from, to, d20: args.d20, roll: args.roll, rules: args.rules, arrives: args.teleport })
     characters = walked.characters
     told.push(...walked.told)
     if (isDown(moverNow())) return { characters, attacks, stopped: true, told }

@@ -292,6 +292,8 @@ export default defineSchema({
               // Where a spell's lasting area stands on the floor, and a wall's other end, in feet.
               at: v.optional(v.object({ x: v.number(), y: v.number() })),
               to: v.optional(v.object({ x: v.number(), y: v.number() })),
+              // The one who bears it is out of play until it ends: a Banishment, a Maze.
+              away: v.optional(v.literal(true)),
             })
           )
         ),
@@ -299,10 +301,14 @@ export default defineSchema({
         tempHitPoints: v.optional(v.number()),
         // The side an encounter marks an NPC as on: with the party, or a bystander. Unmarked is a foe.
         side: v.optional(v.union(v.literal("party"), v.literal("none"))),
-        shape: v.optional(v.object({ form: v.string(), hours: v.number() })),
+        // A Beast's or another's form the character holds: a Druid's Wild Shape, or a spell's, with the spell and its caster.
+        shape: v.optional(v.object({ form: v.string(), hours: v.number(), spell: v.optional(v.string()), by: v.optional(v.string()) })),
+        // Whom a spell binds the character to, and the side they then fight on: a summoned creature, a dominated one.
+        master: v.optional(v.object({ id: v.string(), spell: v.string(), side: v.union(v.literal("party"), v.literal("foe"), v.literal("none")), summoned: v.optional(v.literal(true)) })),
         position: v.optional(v.object({ x: v.number(), y: v.number() })),
         standingOrders: v.optional(v.record(v.string(), v.string())),
         inspiration: v.optional(v.object({ die: v.number(), by: v.string() })),
+        heroicInspiration: v.optional(v.literal(true)),
         dead: v.optional(v.literal(true)),
         fled: v.optional(v.literal(true)),
         effects: v.optional(

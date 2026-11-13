@@ -66,8 +66,17 @@ export type ClassRules = {
   resistances?: (character: Bearing) => readonly DamageTypeId[]
   /** The ability a hero makes a check with in place of its own, where a feature lets them (Primal Knowledge). Read for the check's bonus (./check `checkBonus`). */
   checkAbility?: (character: Bearing, check: Check) => AbilityId | undefined
-  /** Why a hero cannot cast a spell now, where a feature bars it (Rage). Read before any cast is paid for (./spells `castCost`). */
-  castingBarred?: (character: Bearing) => string | undefined
+  /**
+   * Why a hero cannot cast a spell now, where a feature bars it (Rage), or bars this spell (Beast Spells' costly Material
+   * components). With no spell, whether any cast is barred. Read before any cast is paid for (./spells `castCost`).
+   */
+  castingBarred?: (character: Bearing, spell?: Spell) => string | undefined
+  /**
+   * A spell with a casting time of an action a feature lets a hero cast with the Bonus Action, for a price paid as it is
+   * cast (Quickened Spell). Read where the read offers Bonus Action spells (../services/roll-requirement-service) and
+   * where one is cast (../services/bonus-action).
+   */
+  bonusCasts?: BonusCastRule[]
   /**
    * What a hero's own attack roll against an enemy does to them, on any roll of their turn (Rage is extended). `made`
    * is the attack as it was asked, the damage it dealt and the floor, for one that moves them after it (a Cunning
@@ -105,8 +114,17 @@ export type ClassRules = {
    * a skill they are trained in). Read for the read's check (../services/adventure-roll-result-service).
    */
   d20Floor?: (character: Roller, check: Check) => number | undefined
-  /** What may still save a hero's failed saving throw against harm (Indomitable). Read in ./spells `rollSave`, through ./save-rules `rescuedSave`. */
+  /**
+   * What may still save a hero's failed saving throw against harm (Indomitable). Read through ./save-rules
+   * `answeredSave` for every save: ./spells `rollSave`, a save from a hit, a Death Saving Throw, a Concentration save
+   * and the read's own save.
+   */
   saves?: SaveRule[]
+  /**
+   * What may still turn a hero's own attack roll that missed, after a held Bardic Inspiration die (Peerless Aim,
+   * Heroic Inspiration). Read in ./attack `rollAttack`, through `attackRescued`, and spent in ./reactions `attackWithReactions`.
+   */
+  attackRescues?: AttackRescue[]
   /** Auras a hero's features spread to those of their side near them (Aura of Protection). Read through ./save-rules. */
   auras?: AuraRule[]
   /**
@@ -138,10 +156,10 @@ export type ClassRules = {
   totalFloor?: (character: Roller, check: Check) => number | undefined
   /**
    * What a feature does for a hero a roll or a round dropped to 0 hit points without killing them (Relentless Rage):
-   * `was` is how they stood before, `now` how they lie. Read in ./spell-effects `settleConcentration`, which every
-   * roll that harms is settled by, before Concentration is.
+   * `was` is how they stood before, `now` how they lie, and `everyone` all present as the roll left them. Read in
+   * ./spell-effects `settleConcentration`, which every roll that harms is settled by, before Concentration is.
    */
-  downed?: <T extends Felling>(args: { was: T; now: T; d20: () => number }) => { character: T; name: string; text: string } | undefined
+  downed?: <T extends Felling>(args: { was: T; now: T; everyone: readonly T[]; d20: () => number }) => { character: T; name: string; text: string } | undefined
   /**
    * The feature that keeps any attack roll against a hero from having Advantage now (Elusive), by name, or none. Read
    * where an attack roll's Advantage and Disadvantage are settled (./attack-roll `attackRequirement`, and a spell attack
@@ -157,6 +175,13 @@ export type ClassRules = {
    * words. Read in ./item-spend `withChargesSpent`.
    */
   keepsCharges?: (character: Roller, roll: (sides: number) => number) => { kept: boolean; text: string } | undefined
+  /**
+   * Whether a spell slot of `level` a hero's cast is about to spend is kept, by a die a feat rolls (Boon of Spell
+   * Recall's d4), with its words where it is. Read in ./spells `withCastPaid`.
+   */
+  keepsSlot?: (character: Roller, level: number, roll: (sides: number) => number) => string | undefined
+  /** Damage types whose Resistance the damage a hero deals ignores (Boon of Irresistible Offense). Read in ./attack `defensesAgainst`. */
+  ignoresResistance?: (character: Roller) => readonly DamageTypeId[]
   /**
    * What a feature does to the healing of a hero's own spell as it is cast, for each one it heals: `bonus` hit points
    * more (Disciple of Life), and `most`, its dice counted at their highest (Supreme Healing). `slot` is the spell slot
@@ -187,7 +212,7 @@ export type ClassRules = {
    * Cleric spells), each counted under `feature`. A spell they have prepared keeps its slots, and is cast so only when
    * none is left. Read in ./spells `spellsOf` and `castCost`.
    */
-  spellsGiven?: (character: Rested) => readonly { feature: string; name: string; spells: readonly string[] }[]
+  spellsGiven?: (character: Rested) => readonly SpellsGiven[]
   /**
    * What a Long Rest leaves a hero beyond the uses it gives back (Greater Divine Intervention's 2d4 Long Rests): `before`
    * is the hero as the rest began. Read in ./rest `longRest`.
@@ -248,6 +273,12 @@ export type ClassRules = {
   speed?: (character: Roller) => number | undefined
 }
 
+/**
+ * Spells a feature casts with no slot, counted under `feature`. With `first`, one the hero has prepared is cast so before
+ * any slot is spent, unless a higher slot is named (Natural Recovery), in place of only once no slot is left.
+ */
+export type SpellsGiven = { feature: string; name: string; spells: readonly string[]; first?: true }
+
 /** One who may hold or roll a die on their own failed d20 roll: a held Bardic Inspiration die, and the uses and slots of their own features. */
 export type DieHolder = Roller & { inspiration?: Inspiration; featureUses?: Record<string, number>; spellSlots?: readonly number[] }
 
@@ -272,7 +303,20 @@ export type SaveRule = (args: {
   /** Throws a die of another size, for a feature that adds one to the save (Dark One's Own Luck's d10). */
   roll?: (sides: number) => number
   present?: readonly Castee[]
-}) => { result: CheckResult; feature: string; name: string; by?: string } | undefined
+}) => { result: CheckResult; feature: string; name: string; by?: string; reaction?: true } | undefined
+
+/**
+ * A rescue of a hero's own attack roll that missed: the roll as it then stands, once `rescue` answers. `extra` is what a
+ * Bardic Inspiration die already added to the total. `spend` is the hero once it is used, `turnOf` whose turn it is.
+ */
+export type AttackRescue = {
+  feature: string
+  name: string
+  rescue: (args: { attacker: Bearing; target: Bearing; roll: AttackResult; extra: number; d20: () => number }) => AttackResult | undefined
+  spend: <T extends Bearing>(attacker: T, turnOf: string | undefined) => T
+  /** The rescue in the story's words. */
+  words: (name: string, first: AttackResult, now: AttackResult) => string
+}
 
 /**
  * An aura: a standing effect a hero's feature spreads to themselves and those of their side within its reach, while the
@@ -684,6 +728,23 @@ export type FollowRule = {
   }) => RequiredRoll | undefined
 }
 
+/**
+ * A spell of an action cast with the Bonus Action by a feature (Quickened Spell). `takes` says whether this hero may so
+ * cast this spell now, the price within reach. `words` marks it on the read's menu of Bonus Actions, and `note` is a line
+ * of the read's prompt. `pay` spends the price as it is cast, never the slot at `slot`, which the cast spends, with the
+ * fact of it. None when it cannot be paid.
+ */
+export type BonusCastRule = {
+  id: string
+  takes: (character: BonusCaster, spell: Spell) => boolean
+  words: string
+  note: string
+  pay: <T extends BonusCaster>(character: T, slot: number | undefined) => { character: T; fact: string } | undefined
+}
+
+/** One who casts a spell with the Bonus Action by a feature: their sheet, uses and slots, and the effects that last on them. */
+export type BonusCaster = Rested & Lasting & Bearing
+
 /** One who rests, as ./rest keeps them. */
 export type Rested = Roller & { name?: string; featureUses?: Record<string, number>; spellSlots?: readonly number[] }
 
@@ -752,7 +813,7 @@ export function afterDowned<T extends Felling>(args: { before: readonly T[]; aft
     const was = args.before.find((one) => one.id === now.id)
     if (!was || !now.sheet || now.dead || down(was) || !down(now)) return now
     for (const rules of classes()) {
-      const answered = rules.downed?.({ was, now, d20: args.d20 })
+      const answered = rules.downed?.({ was, now, everyone: args.after, d20: args.d20 })
       if (!answered) continue
       told.push({ by: now.id, name: answered.name, text: answered.text })
       return answered.character
@@ -761,6 +822,17 @@ export function afterDowned<T extends Felling>(args: { before: readonly T[]; aft
   })
   return { characters, told }
 }
+
+/** What may still turn a hero's own attack roll that missed: the first rescue that answers, with the roll as it then stands, or none. */
+export function attackRescued(args: Parameters<AttackRescue["rescue"]>[0]): { roll: AttackResult; feature: string } | undefined {
+  if (args.roll.hit || !args.attacker.sheet) return undefined
+  for (const rule of every("attackRescues")) {
+    const roll = rule.rescue(args)
+    if (roll) return { roll, feature: rule.feature }
+  }
+  return undefined
+}
+export const attackRescueRule = (feature: string): AttackRescue | undefined => every("attackRescues").find((rule) => rule.feature === feature)
 
 /** What the classes may still do for one of a hero's own checks that failed: the first that answers, or none. */
 export function rescuedCheck(args: Parameters<CheckRule>[0]): ReturnType<CheckRule> {
@@ -791,8 +863,11 @@ export const classCheckAbility = (character: Bearing, check: Check): AbilityId |
 /** The bonus a character adds to a check, made with the ability their class has them use in place of its own (Primal Knowledge). */
 export const classCheckBonus = (character: Bearing, check: Check): number => checkBonus(character, check, classCheckAbility(character, check))
 /** Why a hero's class bars them from casting now, or none. */
-export const classCastingBar = (character: Bearing): string | undefined =>
-  character.sheet ? classes().reduce<string | undefined>((found, rules) => found ?? rules.castingBarred?.(character), undefined) : undefined
+/** The feature by which a hero may cast this spell of an action with the Bonus Action now (Quickened Spell), if any. */
+export const classBonusCast = (character: BonusCaster, spell: Spell): BonusCastRule | undefined => (character.sheet ? every("bonusCasts").find((rule) => rule.takes(character, spell)) : undefined)
+
+export const classCastingBar = (character: Bearing, spell?: Spell): string | undefined =>
+  character.sheet ? classes().reduce<string | undefined>((found, rules) => found ?? rules.castingBarred?.(character, spell), undefined) : undefined
 /** An attacker after their own attack roll against an enemy, as each class's features take it. */
 export const afterClassAttackRoll = <T extends Bearing & { position?: Point }>(attacker: T, target: Bearing & { position?: Point }, made?: AttackMade): T =>
   attacker.sheet ? classes().reduce((now, rules) => rules.attackRolled?.(now, target, made) ?? now, attacker) : attacker
@@ -822,6 +897,11 @@ export function withDamageEndings<T extends { conditions?: readonly ConditionEnt
   const { conditions: _, ...rest } = character
   return (conditions.length ? { ...rest, conditions } : rest) as T
 }
+/** The words of a hero's feature that keeps a spell slot their cast is about to spend, by its die, or none where the slot is spent. */
+export const classKeptSlot = (character: Roller, level: number, roll: (sides: number) => number): string | undefined =>
+  character.sheet ? classes().reduce<string | undefined>((found, rules) => found ?? rules.keepsSlot?.(character, level, roll), undefined) : undefined
+/** Damage types whose Resistance a hero's damage ignores, by their features and feats. */
+export const classIgnoredResistances = (character: Roller): DamageTypeId[] => (character.sheet ? [...new Set(classes().flatMap((rules) => rules.ignoresResistance?.(character) ?? []))] : [])
 /** Whether a hero's class keeps an item's charges about to be spent, by its die, with its words, or none. */
 export const classKeepsCharges = (character: Roller, roll: (sides: number) => number): { kept: boolean; text: string } | undefined =>
   character.sheet ? classes().reduce<{ kept: boolean; text: string } | undefined>((found, rules) => found ?? rules.keepsCharges?.(character, roll), undefined) : undefined
@@ -866,8 +946,7 @@ export function afterClassCast<T extends Castee>(args: {
   return { characters, facts, harm }
 }
 /** The spells the classes let a hero cast with no slot beyond their own, each with the feature it is counted under. */
-export const classSpellsGiven = (character: Rested): { feature: string; name: string; spells: readonly string[] }[] =>
-  character.sheet ? classes().flatMap((rules) => rules.spellsGiven?.(character) ?? []) : []
+export const classSpellsGiven = (character: Rested): SpellsGiven[] => (character.sheet ? classes().flatMap((rules) => rules.spellsGiven?.(character) ?? []) : [])
 /** A hero as the classes leave them once a Long Rest is over, with the words of each. */
 export function afterClassLongRest<T extends Rested>(before: T, after: T): { character: T; facts: string[] } {
   let character = after

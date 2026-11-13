@@ -1,6 +1,5 @@
 import { spellById } from "@d20/srd/spells"
-import { legendaryResistanceWords, withLegendaryResistanceSpent } from "../legendary-resistance"
-import { rescueWords, withRescueSpent } from "../save-rules"
+import { withSaveAnswered } from "../save-rules"
 import { spellEnded } from "../spell-effects"
 import type { SpellRules } from "../spell-rules"
 import { type Castee, rollSave, spellcastingFor } from "../spells"
@@ -46,22 +45,24 @@ const savedOnDamage = (id: string, advantage?: string): SpellRules["damaged"] =>
       stakes: { conditions: against },
       also: advantage ? [{ mode: "advantage" as const, from: advantage }] : [],
     })
-    let after = bearer
-    const facts: string[] = []
-    if (thrown.legendary) {
-      after = withLegendaryResistanceSpent(after)
-      facts.push(legendaryResistanceWords(bearer.name ?? "They", after))
-    }
-    if (thrown.rescued) {
-      after = withRescueSpent(after, thrown.rescued)
-      facts.push(rescueWords(bearer.name ?? "They", thrown.rescued, thrown))
-    }
     const name = bearer.name ?? "They"
+    // What answered the save is spent: the bearer's Legendary Resistance or rescue, or the Reaction of another who
+    // answered it (Countercharm), who comes back among `others`.
+    const answered = withSaveAnswered(
+      characters.map((character) => (character.id === bearer.id ? bearer : character)),
+      bearer.id ?? "",
+      thrown,
+      thrown,
+      name
+    )
+    let after = answered.characters.find((character) => character.id === bearer.id) ?? bearer
+    const others = thrown.rescued?.by && thrown.rescued.by !== bearer.id ? answered.characters.filter((character) => character.id === thrown.rescued?.by) : []
+    const facts: string[] = [...answered.facts]
     facts.push(
       `${name} takes damage and ${thrown.success ? "SUCCEEDS on" : "FAILS"} the saving throw against ${caster.name ?? "the caster"}'s ${spell.name} (${thrown.total} against DC ${dc})${thrown.success ? `, and ${spell.name} ends on them` : ""}.`
     )
     if (thrown.success) after = spellEnded(after, (held) => held === id)
-    return { bearer: after, facts }
+    return { bearer: after, facts, ...(others.length ? { others } : {}) }
   }
 
 /**

@@ -1,5 +1,5 @@
 import type { ConditionId } from "@d20/srd"
-import { isDown } from "../../utils/turn-actors"
+import { hasFled, isDown } from "../../utils/turn-actors"
 import type { Afflicted } from "../conditions"
 import { floorAreas, inFloorArea, touchedThisTurn } from "../floor-areas"
 import { damageOnSave } from "../save-rules"
@@ -352,7 +352,7 @@ export const areaDrifts: SpellRules = {
       round.tell(caster.id, area.spell.name, `${caster.name}'s ${area.spell.name} drifts ${feet} feet away from them.`)
       if (!area.rules.when?.includes("moved") || !area.rules.touches) continue
       for (const other of round.everyone()) {
-        if (other.dead || !other.position || touchedAt(area, other) || !touchedAt(moved, other)) continue
+        if (other.dead || hasFled(other) || !other.position || touchedAt(area, other) || !touchedAt(moved, other)) continue
         area.rules.touches({ round, area: moved, creature: other, moment: "moved" })
       }
     }

@@ -49,7 +49,7 @@ export const spellOrder = (a: { id: string; level?: number }, b: { id: string; l
 
 /**
  * Metamagic in the order a pick that needs no player takes it: the options the engine runs at the cast (./classes/sorcerer),
- * by how often each changes a fight, then Quickened, which it does not offer in play.
+ * by how often each changes a fight, then Quickened, which rides only a spell cast with the Bonus Action.
  */
 const METAMAGIC_ORDER = [
   "twinned-spell",
@@ -66,7 +66,7 @@ const METAMAGIC_ORDER = [
 
 /**
  * The picks of a feature that takes several, filled to its count with picks that need no player: those kept, then the
- * options whose prerequisite the hero meets, an option that casts a spell the engine runs, in full or in part, with no slot first, then one
+ * options whose prerequisite the hero meets, an option that casts a spell the engine runs in full with no slot first, then one
  * that works with a cantrip the hero knows (with the first such cantrip), then the rest in the data's order (Metamagic
  * by `METAMAGIC_ORDER`). An option that gives a feat gives the first the hero lacks. `known` is the hero's cantrips,
  * `held` their feats, and `level` the class level.
@@ -89,15 +89,18 @@ export function autoPicks(offer: PicksOffer, level: number, known: readonly stri
     }
     return picks
   }
-  const runs = (id: string) => {
-    const spell = spellById.get(id)
-    return !!spell && spellLabel(spell) !== "told"
-  }
-  const casts = (id: string) => (classFeatureById.get(offer.feature.id)?.options?.find((option) => option.id === id)?.freeCast ?? []).some((cast) => runs(cast.spell))
+  // An option's free cast of a spell the engine runs in full comes first, then an option for a cantrip the hero knows,
+  // then a free cast of a spell run only in part: a familiar called out of a fight is worth less than a stronger blast.
+  const frees = (id: string, label: "run" | "partly") =>
+    (classFeatureById.get(offer.feature.id)?.options?.find((option) => option.id === id)?.freeCast ?? []).some((cast) => {
+      const spell = spellById.get(cast.spell)
+      return !!spell && spellLabel(spell) === label
+    })
   const rank = (id: string) => {
     const option = offer.options.find((each) => each.id === id)
-    if (casts(id)) return 0
+    if (frees(id, "run")) return 0
     if (option?.cantrips) return 1
+    if (frees(id, "partly")) return 1.5
     if (option?.feats) return 3
     const order = METAMAGIC_ORDER.indexOf(id)
     return 2 + (order < 0 ? 0 : order / 100)
@@ -124,7 +127,20 @@ export function autoPicks(offer: PicksOffer, level: number, known: readonly stri
     if (!next) break
     picks.push(next)
   }
-  return picks
+  // An option that holds spells of its own (Pact of the Tome) has them filled where it has too few.
+  return picks.map((pick) => {
+    const book = offer.options.find((option) => option.id === pick.option)?.book
+    return book && (pick.spells?.length ?? 0) !== book.cantrips + book.rituals ? { ...pick, spells: filledBook(book, spells) } : pick
+  })
+}
+
+/**
+ * A Book of Shadows' spells that need no player: the cantrips and the level 1 Ritual spells it may hold, each by
+ * `spellOrder`, none the hero already has (`spells`).
+ */
+function filledBook(book: NonNullable<PicksOffer["options"][number]["book"]>, spells: readonly string[]): string[] {
+  const free = book.from.filter((spell) => !spells.includes(spell.id)).sort(spellOrder)
+  return [...free.filter((spell) => spell.level === 0).slice(0, book.cantrips), ...free.filter((spell) => spell.level === 1).slice(0, book.rituals)].map((spell) => spell.id)
 }
 
 /**
@@ -195,8 +211,8 @@ export function autoChoices(sheet: Sheet): LevelUpChoices {
       .flatMap((entry) => entry.options.find((option) => option.id === choices.featureChoices?.[entry.feature.id])?.prepares ?? [])
       .map((spell) => spell.id)
     const replaced = (sheet.spells ?? []).filter((id) => prepares.includes(id)).length
-    // A spell a feature's picks take now (Magical Discoveries) is always prepared, so it is not picked again.
-    const picked = Object.values(choices.featurePicks ?? {}).flatMap((picks) => picks.map((pick) => pick.option))
+    // A spell a feature's picks take now (Magical Discoveries, a Book of Shadows') is always prepared, so it is not picked again.
+    const picked = Object.values(choices.featurePicks ?? {}).flatMap((picks) => picks.flatMap((pick) => [pick.option, ...(pick.spells ?? [])]))
     const from = options.spells.from.filter((entry) => (!book || book.has(entry.id)) && !prepares.includes(entry.id) && !picked.includes(entry.id)).sort(spellOrder)
     choices.spells = from.slice(0, options.spells.count + replaced).map((entry) => entry.id)
   }

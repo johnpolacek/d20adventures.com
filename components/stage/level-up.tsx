@@ -3,12 +3,12 @@
 // The level a finished adventure gives a hero: what the level brings, and each choice it asks of the player. The
 // engine says what is asked and checks what is chosen. Both hosts use it.
 
-import type { LevelUpChoices, LevelUpOptions, Named, PicksOffer } from "@d20/gm-core/sheet/level-up"
+import type { LevelUpChoices, LevelUpOptions, Named, PickOffer, PicksOffer } from "@d20/gm-core/sheet/level-up"
 import type { FeaturePick, Sheet } from "@d20/gm-core/sheet/sheet"
 import { useEffect, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
-import { ABILITY_NAMES, type AbilityId, emptyPicks, fromChoices, missing, type Picks, preparable, raiseOf, spellsToPick, toChoices, toggled, togglePick, unmet } from "./level-up-view"
+import { ABILITY_NAMES, type AbilityId, emptyPicks, fromChoices, missing, type Picks, preparable, raiseOf, spellsToPick, toChoices, toggled, togglePick, unmet, withBookSpells } from "./level-up-view"
 
 type Rules = {
   options: LevelUpOptions
@@ -225,7 +225,58 @@ function FeaturePicks({ offer, picked, level, known, onPick }: { offer: PicksOff
             </Labeled>
           )
         })}
+      {picked.map((pick) => {
+        const option = offer.options.find((entry) => entry.id === pick.option)
+        return option?.book ? (
+          <BookPicks key={`${option.id}-book`} name={option.name} book={option.book} chosen={pick.spells ?? []} known={known} onPick={(spells) => onPick(withBookSpells(picked, option.id, spells))} />
+        ) : null
+      })}
     </div>
+  )
+}
+
+// The spells an option holds of its own (Pact of the Tome's Book of Shadows): its cantrips and its level 1 spells, a row each.
+function BookPicks({
+  name,
+  book,
+  chosen,
+  known,
+  onPick,
+}: {
+  name: string
+  book: NonNullable<PickOffer["book"]>
+  chosen: readonly string[]
+  known: readonly string[]
+  onPick: (spells: string[]) => void
+}) {
+  const rows = [
+    { level: 0, label: "Cantrips", most: book.cantrips },
+    { level: 1, label: "Rituals", most: book.rituals },
+  ]
+  const of = (level: number) => book.from.filter((spell) => spell.level === level && !(level === 0 && known.includes(spell.id) && !chosen.includes(spell.id)))
+  return (
+    <Labeled label={name}>
+      <div className="space-y-2">
+        {rows.map((row) => {
+          const from = of(row.level)
+          const mine = chosen.filter((id) => from.some((spell) => spell.id === id))
+          return (
+            <div key={row.level} className="flex gap-2">
+              <span className="w-16 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-stage-cream/60">
+                {row.label} {mine.length}/{row.most}
+              </span>
+              <Options
+                label={`${name} ${row.label}`}
+                from={from}
+                picked={mine}
+                most={row.most}
+                onPick={(ids) => onPick([...chosen.filter((id) => !from.some((spell) => spell.id === id)), ...ids.slice(0, row.most)])}
+              />
+            </div>
+          )
+        })}
+      </div>
+    </Labeled>
   )
 }
 

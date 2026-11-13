@@ -1,20 +1,20 @@
 import type { SkillId } from "@d20/srd"
-import { monsterById } from "@d20/srd/monsters"
 import { skillById } from "@d20/srd/skills"
 import { spellById } from "@d20/srd/spells"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { type Attack, masteryOf } from "./attack"
+import { blockOf } from "./blocks"
 import type { Check, Roller } from "./check"
 import { afterClassAttackRoll, classAttackModes, classCheckBonus, classMastery, classStaysHidden, turnEffectRule } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
+import { floorInPlay, shovedTo } from "./floor-areas"
 import { detached } from "./hit-riders"
 import { handOver } from "./loot"
 import { areEnemies, sameSide } from "./sides"
-import { type Floor, type Point, pushed, sizeOf, walkOver } from "./space"
+import { type Floor, type Point, sizeOf } from "./space"
 import { afterAttackRoll } from "./spell-effects"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect, TurnEffect } from "./turn-effect"
 
 /**
@@ -61,7 +61,7 @@ export type Acting = Afflicted & Roller & { id: string; name: string; turnEffect
 // Whether a character is proficient in a skill: a hero by its sheet, an NPC when its stat block prints the skill.
 function proficientIn(character: Acting, skill: SkillId): boolean {
   if (character.sheet) return deriveSheet(character.sheet).skills[skill].proficient
-  const monster = character.type === "npc" ? monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
+  const monster = character.type === "npc" ? blockOf(character) : undefined
   return monster?.skills?.[skill] !== undefined
 }
 
@@ -194,7 +194,8 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
     return characters.map((character) => {
       if (character.id === rollerId) {
         // The attack as it was made, for a class feature that keeps the attacker hidden or moves them after it.
-        const made = { attack: roll.attack, dealt, ...(floor ? { floor } : {}) }
+        // Its floor is the one in play, the walls spells raised among its solid things (./floor-areas `floorInPlay`).
+        const made = { attack: roll.attack, dealt, ...(floor ? { floor: floorInPlay(floor, characters) } : {}) }
         const hidden = classStaysHidden(character, made) ? character : unhidden(character)
         const seen = drop(hidden, (effect) => effect.id === "sapped")
         return aimed && areEnemies(aimed, character) ? afterClassAttackRoll(seen, aimed, made) : seen
@@ -209,10 +210,8 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
       if (mastery === "vex") return give(spent, { id: "vexed", by: rollerId, turns: 2 })
       if (mastery === "slow") return give(spent, { id: "slowed", by: rollerId, turns: 2 })
       if (mastery === "sap") return give(spent, { id: "sapped", by: rollerId, turns: 2 })
-      if (mastery === "push" && roller.position && spent.position && PUSHED_SIZES.includes(sizeOf(spent))) {
-        const to = pushed(spent.position, roller.position, PUSH_FEET)
-        return { ...spent, position: floor ? walkOver(floor.solids, spent.position, to, PUSH_FEET).at : to }
-      }
+      if (mastery === "push" && roller.position && spent.position && PUSHED_SIZES.includes(sizeOf(spent)))
+        return { ...spent, position: shovedTo(floor, characters, spent.position, roller.position, PUSH_FEET) }
       return spent
     })
   }
@@ -231,7 +230,7 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
 }
 
 // A character pushed by the class turn effects on them that push (`pushes`), each straight away from its giver as far
-// as the first solid thing, with those effects ended.
+// as the first solid thing, a wall in play among them (./floor-areas `shovedTo`), with those effects ended.
 function pushedByClass<T extends Acting & { position?: Point }>(character: T, everyone: readonly T[], floor: Floor | undefined): T {
   const pushes = (character.turnEffects ?? []).filter((effect) => turnEffectRule(effect.id)?.pushes)
   if (!pushes.length) return character
@@ -240,8 +239,7 @@ function pushedByClass<T extends Acting & { position?: Point }>(character: T, ev
     const from = everyone.find((other) => other.id === effect.by)?.position
     const feet = turnEffectRule(effect.id)?.pushes ?? 0
     if (!at || !from) continue
-    const to = pushed(at, from, feet)
-    at = floor ? walkOver(floor.solids, at, to, feet).at : to
+    at = shovedTo(floor, everyone, at, from, feet)
   }
   const left = drop(character, (effect) => !!turnEffectRule(effect.id)?.pushes)
   return at ? { ...left, position: at } : left

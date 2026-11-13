@@ -1,3 +1,4 @@
+import { hasFled } from "../utils/turn-actors"
 import { BASE_REACH, between, distance, FEET_PER_METRE, type Floor, type Point, placedOf, type Solid, type Standing, standingRoom } from "./space"
 
 /** A named place of the floor, which a character may walk to: "the gangway", "the cabin door". */
@@ -62,7 +63,7 @@ export function floorFromMetres(plan: FloorPlanInMetres): EncounterFloor {
   }
 }
 
-type Placeable = { id: string; name: string; type?: string; position?: Point }
+type Placeable = { id: string; name: string; type?: string; position?: Point; master?: { id: string; summoned?: true } }
 
 // The staged cast member who stands for a character: by id, or by first name where an older staging names its cast so.
 const stagedFor = (cast: readonly Staged[], character: Placeable): Staged | undefined =>
@@ -102,6 +103,11 @@ export function placeCharacters<T extends Placeable>(characters: readonly T[], f
     const staged = stagedFor(floor.cast, npc)
     if (staged) placed.set(npc.id, staged.at)
   }
+  // A creature a spell called, which no staging names, stands beside the one who called it.
+  for (const called of characters) {
+    const by = called.master?.summoned ? placed.get(called.master.id) : undefined
+    if (by && !placed.has(called.id)) placed.set(called.id, standingRoom(floor.solids, [...placed.values()], by, by))
+  }
   // Whether this encounter stages someone more than a space from where the last one did.
   const restaged = (id: string) => {
     const now = placed.get(id)
@@ -120,12 +126,12 @@ export function placeCharacters<T extends Placeable>(characters: readonly T[], f
 
 /**
  * Where everyone stands, in words for the game master: the place, its named spots, and each character with the spot
- * they are at or nearest and how far each of the others is from them, in feet. The dead, the fled and those with no
- * position are left out. None when no one has a position.
+ * they are at or nearest and how far each of the others is from them, in feet. The dead, the fled, those away for now
+ * and those with no position are left out. None when no one has a position.
  */
 export function standingWords(characters: readonly (Standing & { name: string; dead?: true; fled?: true })[], floor: EncounterFloor): string | undefined {
   const here = characters.flatMap((character) => {
-    const at = character.dead || character.fled ? undefined : placedOf(character)
+    const at = character.dead || hasFled(character) ? undefined : placedOf(character)
     return at ? [{ name: character.name, at }] : []
   })
   if (!here.length) return undefined

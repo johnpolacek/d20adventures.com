@@ -45,9 +45,20 @@ export const effectSchema = z.object({
 
 export type Effect = z.infer<typeof effectSchema>
 
-/** A Beast form a hero has taken: its stat block's id, "wolf", and the whole hours it lasts yet. */
-export const shapeSchema = z.object({ form: z.string(), hours: z.number().int().min(1) })
+/**
+ * A form a character has taken: its stat block's id, "wolf", and the whole hours it lasts yet. One a spell gave names the
+ * spell and its caster, and ends with the spell (Polymorph). One with neither is Wild Shape's.
+ */
+export const shapeSchema = z.object({ form: z.string(), hours: z.number().int().min(1), spell: z.string().optional(), by: z.string().optional() })
 export type Shape = z.infer<typeof shapeSchema>
+
+/**
+ * Whom a creature acts for, by a spell: the one who called it (Summon Dragon, `summoned`) or dominates it (Dominate
+ * Person), the spell, and the side that puts it on while the spell lasts (../sheet/sides). One summoned is gone when the
+ * spell ends, and one dominated is its own again.
+ */
+export const masterSchema = z.object({ id: z.string(), spell: z.string(), side: z.enum(["party", "foe", "none"]), summoned: z.literal(true).optional() })
+export type Master = z.infer<typeof masterSchema>
 
 export const baseCharacterSchema = z.object({
   id: z.string(),
@@ -80,6 +91,9 @@ export const baseCharacterSchema = z.object({
   // the engine writes them, through ../sheet/features.
   featureUses: featureUsesSchema.optional(),
   inspiration: inspirationSchema.optional(),
+  // Heroic Inspiration: a hero has it or does not, and expends it to reroll a die. Only the engine writes it, through
+  // ../sheet/heroic-inspiration.
+  heroicInspiration: z.literal(true).optional(),
   // Spell slots used, by spell level, the first for level 1. Only the engine writes them, through ../sheet/spells.
   spellSlots: z.array(z.number().int().min(0)).optional(),
   // Hit Point Dice spent, a count. A hero has as many as their level, and a Long Rest gives them all back. Only the
@@ -94,6 +108,9 @@ export const baseCharacterSchema = z.object({
   // the stat block's attacks, Armor Class, Speed, size, Strength, Dexterity and Constitution are the hero's. Only the
   // engine writes it, through ../sheet/shape.
   shape: shapeSchema.optional(),
+  // Whom the character acts for while a spell binds them: who summoned or dominates them. Only the engine writes it,
+  // through ../sheet/spell-mechanics.
+  master: masterSchema.optional(),
   // How a hero takes each reaction when their player does not answer the offer in time. One left out follows the
   // default (../sheet/reactions). The player sets them.
   standingOrders: standingOrdersSchema.optional(),
@@ -165,12 +182,14 @@ export const baseCharacterGenerationSchema = baseCharacterSchema.omit({
   turnEffects: true,
   featureUses: true,
   inspiration: true,
+  heroicInspiration: true,
   spellSlots: true,
   hitDiceUsed: true,
   spellEffects: true,
   concentration: true,
   tempHitPoints: true,
   shape: true,
+  master: true,
   position: true,
   standingOrders: true,
   levelDue: true,

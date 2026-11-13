@@ -1,8 +1,8 @@
 import { type DamageTypeId, damageTypeIds } from "@d20/srd"
-import { monsterById } from "@d20/srd/monsters"
 import type { MonsterFeature } from "@d20/srd/schema/monsters"
 import { hasFled, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { DamageRoll, Defenses } from "./attack"
+import { blockOf } from "./blocks"
 import type { ConditionEntry } from "./condition-entry"
 import type { ModeSource } from "./conditions"
 import { shapeOf } from "./shape"
@@ -41,7 +41,7 @@ const BY_NAME: Readonly<Record<string, MonsterTraitId>> = {
 type Bearer = { type?: string; sheet?: Sheet; statBlock?: string }
 
 // The stat block a character carries: an NPC's own, or the Beast's shape a hero holds (./shape). Another with a rules sheet has none.
-const traitsOf = (character: Bearer): readonly MonsterFeature[] => (shapeOf(character) ?? (character.sheet || !character.statBlock ? undefined : monsterById.get(character.statBlock)))?.traits ?? []
+const traitsOf = (character: Bearer): readonly MonsterFeature[] => (shapeOf(character) ?? (character.sheet || !character.statBlock ? undefined : blockOf(character)))?.traits ?? []
 
 const traitOf = (character: Bearer, id: MonsterTraitId): MonsterFeature | undefined => traitsOf(character).find((trait) => BY_NAME[trait.name] === id)
 

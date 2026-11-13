@@ -2,6 +2,7 @@ import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { hitPointWords } from "../sheet/hit-points"
+import { boundWords } from "../sheet/masters"
 import { moveBudget } from "../sheet/moves"
 import { sidesWords } from "../sheet/sides"
 import { spellWords } from "../sheet/spells"
@@ -91,6 +92,7 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
   const deadPlayerCharacters = playerCharacters.filter(isDown)
   // Who the encounter puts with the party and who is a bystander, only where it marks someone (../sheet/sides).
   const sides = sidesWords(turn.characters.filter((character) => !isDead(character) && !character.fled))
+  const bound = boundWords(npc, turn.characters)
 
   const contextString = [
     adventureOverview ? `Adventure Overview: ${adventureOverview}` : "",
@@ -100,6 +102,8 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
     encounterContext?.instructions ? `Encounter Instructions: ${encounterContext.instructions}` : "",
     npc.behavior ? `NPC Behavior: ${npc.behavior}` : "",
     sides ? `Sides: ${sides}` : "",
+    // A creature a spell binds to another: who commands it (../sheet/masters).
+    bound ? `Bound by a Spell: ${bound}` : "",
     knowledgeNote(knowledge, npc),
     strangers ? unheardNote(namesHeard(knowledge, turn), npc, turn.characters) : "",
     earlier ? `What ${npc.name} did in earlier rounds of this scene. None of these lines is said again, and an action that failed is not tried again the same way:\n${earlier}` : "",

@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { autoCreate, type CreationPick, createSheet } from "@d20/gm-core/sheet/create"
 import { autoChoices, LEVEL_CAP, takeLevel } from "@d20/gm-core/sheet/milestone"
-import type { Sheet } from "@d20/gm-core/sheet/sheet"
+import type { FeaturePick, Sheet } from "@d20/gm-core/sheet/sheet"
 import { notFound } from "next/navigation"
 import { isDev } from "@/lib/auth-utils"
 import { LevelUpLab } from "./level-up-lab"
@@ -27,6 +27,13 @@ const MADE = [
   { name: "Paladin", class: "paladin", species: "human", background: "soldier" },
   { name: "Sorcerer", class: "sorcerer", species: "dragonborn", background: "sage" },
   { name: "Warlock", class: "warlock", species: "tiefling", background: "acolyte" },
+  {
+    name: "Warlock (Tome)",
+    class: "warlock",
+    species: "tiefling",
+    background: "acolyte",
+    picks: [{ option: "pact-of-the-tome", spells: ["fire-bolt", "mage-hand", "minor-illusion", "detect-magic", "find-familiar"] }],
+  },
 ]
 
 // The levels the lab takes a hero to: each to 5, then those that bring a choice of their own (Magical Secrets at 10, a
@@ -36,9 +43,9 @@ const SHOWN = [2, 3, 4, 5, 6, 10, 11, 17, 19, 20]
 export default function LevelUpPage() {
   if (!isDev()) notFound()
   const premade = HEROES.map((path) => JSON.parse(readFileSync(join(process.cwd(), "content/settings/realm-of-myr/adventures", path), "utf8")) as { name: string; image?: string; sheet: Sheet })
-  const made = MADE.flatMap(({ name, ...rest }) => {
+  const made = MADE.flatMap(({ name, picks, ...rest }: (typeof MADE)[number] & { picks?: FeaturePick[] }) => {
     const pick = rest as CreationPick
-    const built = createSheet(pick, autoCreate(pick))
+    const built = createSheet(pick, { ...autoCreate(pick), ...(picks ? { featurePicks: { "warlock-eldritch-invocations": picks } } : {}) })
     return "problems" in built ? [] : [{ name, image: undefined as string | undefined, sheet: built.sheet }]
   })
   const heroes = [...premade, ...made].map((hero) => {

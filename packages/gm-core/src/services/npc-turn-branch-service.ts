@@ -11,7 +11,9 @@ import { d20sOf, replaying } from "../sheet/dice"
 import { bonusDisengages, featureResolver } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
 import { type Ask, attackWithReactions, checkWithReactions, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
+import { answeredSave, saveStakesOf, withSaveAnswered } from "../sheet/save-rules"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
+import { areasForced } from "../sheet/spell-rounds"
 import { castAgain, castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
@@ -143,6 +145,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         characters: updatedCharacters,
         moverId: args.npc.id,
         path: reading.move.path,
+        // A spell's teleport walks nothing (../sheet/moves `takeTeleport`).
+        teleport: reading.move.teleport,
         // The Disengage action, or a Bonus Action that takes it (Cunning Action, Nimble Escape).
         disengaged: reading.action?.action === "disengage" || bonusDisengages(args.npc, reading.bonus?.feature, reading.move.feet),
         ask,
@@ -258,15 +262,18 @@ export function createNpcTurnBranchService(ports: GmPorts) {
                 measured: casting.cast.measured,
                 at: casting.cast.at,
                 to: casting.cast.to,
+                floor,
               }
               return again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level: casting.cast.level })
             })()
       // Countered, the action is spent and the cast is not made, and a slot is not expended.
       const spentCost = cost && (answered?.countered ? costWhenCountered(cost.cost) : cost.cost)
       const spent = (cast?.characters ?? updatedCharacters).map((character) => (character.id === args.npc.id && spentCost ? withCastSpent(character, spentCost) : character))
+      // One the spell moved by force (Thunderwave's push) comes into the areas on its way (../sheet/spell-rounds `areasForced`).
+      const forced = areasForced({ before: updatedCharacters, after: afterRoll(spent, args.npc.id, casting, 0, floor), d20: dice.d20, roll: dice.roll, rules: args.rules })
       const kept = settleConcentration({
         before: args.turn.characters,
-        after: afterRoll(spent, args.npc.id, casting),
+        after: forced.characters,
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
         modes: classConcentrationModes,
         d20: dice.d20,
@@ -275,7 +282,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       const thrown = cast?.attack?.roll
       if (thrown) rollInfo = { rollType: spell.name, difficulty: thrown.armorClass, baseRoll: thrown.natural, modifier: thrown.bonus, result: thrown.total, success: thrown.hit }
       const then = following(casting)
-      const facts = [...bonusFacts, ...(answered?.facts ?? []), ...(cast?.facts ?? []), ...kept.facts, ...then.facts]
+      const facts = [...bonusFacts, ...(answered?.facts ?? []), ...(cast?.facts ?? []), ...forced.told.map((fact) => fact.text), ...kept.facts, ...then.facts]
       console.log("[LLM] NPC casts:", { spell: spell.id, targets: casting.cast.targets, facts })
       const outcomeResult = await generateNpcOutcome(
         buildNpcOutcomePrompt({
@@ -296,6 +303,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       beatsToAppend = [
         ...reacted,
         ...(cast ? castBeats(npcStep(args.npc), args.npc, spell, cast, names) : []),
+        ...forced.told.map((fact): StoryBeat => ({ kind: "feature", by: npcStep(args.npc), character: fact.character, name: fact.spell, text: fact.text })),
         ...kept.saves.map((save) => concentrationBeat(npcStep(args.npc), save, names)),
         ...then.beats,
         ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc)),
@@ -393,7 +401,26 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       // The heroes' reactions to a check that succeeds: a Bard may take a die off it with Cutting Words.
       const cut = checkWithReactions({ characters: updatedCharacters, rollerId: args.npc.id, result: thrown, roll: dice.roll, ask, save: rollRequirement.check.kind === "save" })
       updatedCharacters = cut.characters
-      const rolled = cut.result
+      // A failed save is answered as every save is (../sheet/save-rules `answeredSave`): a Legendary creature may choose
+      // to succeed, and a feature may still rescue it, judged on what the read put at stake on the NPC.
+      const check = rollRequirement.check
+      const saver = updatedCharacters.find((character) => character.id === args.npc.id) ?? args.npc
+      const answer =
+        check.kind === "save"
+          ? answeredSave({
+              character: saver,
+              ability: check.ability,
+              result: cut.result,
+              stakes: saveStakesOf(rollRequirement.stakes, args.npc.id),
+              failedBy: !!failedBy,
+              d20: dice.d20,
+              roll: dice.roll,
+              present: updatedCharacters,
+            })
+          : { result: cut.result }
+      const answered = withSaveAnswered(updatedCharacters, args.npc.id, answer, answer.result, args.npc.name)
+      updatedCharacters = answered.characters
+      const rolled = answer.result
       const { natural: baseRoll, bonus: modifier, total: result, success } = rolled
       rollInfo = {
         rollType: rollRequirement.rollType,
@@ -431,6 +458,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
             ...bonusFacts,
             ...cut.reactions.map((taken) => taken.text),
             ...(failedBy ? [`${args.npc.name} is ${failedBy} and fails this saving throw outright.`] : []),
+            ...answered.facts,
             ...settled.facts,
             ...stayed.facts,
             ...then.facts,

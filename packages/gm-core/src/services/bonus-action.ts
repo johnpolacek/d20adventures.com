@@ -1,5 +1,5 @@
 import { checkBonus } from "../sheet/check"
-import { classConcentrationModes } from "../sheet/class-rules"
+import { classBonusCast, classConcentrationModes } from "../sheet/class-rules"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm } from "../sheet/death"
 import { useBonusAction } from "../sheet/features"
@@ -60,6 +60,10 @@ export async function useBonus(args: {
   const cost = actor && !again ? castCost(actor, spell.id) : undefined
   if (!actor || !(again || (cost && !("problem" in cost)))) return { characters, beats: [] }
   const paid = cost && !("problem" in cost) ? cost : undefined
+  // A spell of an action is cast with the Bonus Action only by a feature that allows it (Quickened Spell), whose price
+  // is paid as it is cast, never the slot the cast spends.
+  const quickened = paid && spell.castingTime.unit !== "bonus-action" && !paid.known.bonusAction ? classBonusCast(actor, spell) : undefined
+  if (paid && spell.castingTime.unit !== "bonus-action" && !paid.known.bonusAction && !quickened) return { characters, beats: [] }
   const everyone = characters.filter((character) => !isDead(character) && !hasFled(character))
   // Who it is cast on: those named, or for a spell attack the only foe here, and otherwise the caster.
   const foes = everyone.filter((character) => areEnemies(character, actor) && !isDown(character))
@@ -73,6 +77,11 @@ export async function useBonus(args: {
     return { characters, beats: [{ kind: "feature", by: args.by, character: actor.id, name: problem.name, text: problem.text }] }
   }
   const targets = spaced?.targets ?? named
+  const priced = quickened?.pay(actor, paid?.cost.kind === "slot" ? paid.cost.level : undefined)
+  if (quickened && !priced)
+    return { characters, beats: [{ kind: "feature", by: args.by, character: actor.id, name: "Not Quickened", text: `${actor.name} cannot pay to cast ${spell.name} with the Bonus Action.` }] }
+  if (priced) characters = characters.map((character) => (character.id === actor.id ? priced.character : character))
+  const quickBeats: StoryBeat[] = priced ? [{ kind: "feature", by: args.by, character: actor.id, name: "Quickened Spell", text: priced.fact }] : []
   const answered = paid ? reactionsToCast({ characters, casterId: actor.id, spell, targets, ask: args.ask, d20: args.d20, roll: args.roll }) : undefined
   if (answered) characters = answered.characters
   const reacted = answered ? castAnswerBeats(args.by, answered, args.names) : []
@@ -85,7 +94,8 @@ export async function useBonus(args: {
   }
   if (answered?.countered && paid) {
     characters = characters.map((character) => (character.id === actor.id ? pay(character, costWhenCountered(paid.cost)) : character))
-    return { characters, beats: reacted, ...(paidFacts.length ? { fact: paidFacts.join(" ") } : {}) }
+    const facts = [...(priced ? [priced.fact] : []), ...paidFacts]
+    return { characters, beats: [...quickBeats, ...reacted], ...(facts.length ? { fact: facts.join(" ") } : {}) }
   }
   const how = {
     characters,
@@ -116,7 +126,7 @@ export async function useBonus(args: {
   })
   return {
     characters: kept.characters,
-    beats: [...reacted, ...castBeats(args.by, actor, spell, cast, args.names), ...kept.saves.map((save) => concentrationBeat(args.by, save, args.names))],
-    fact: [`${actor.name} casts ${spell.name} as a Bonus Action.`, ...cast.facts, ...paidFacts].join(" "),
+    beats: [...quickBeats, ...reacted, ...castBeats(args.by, actor, spell, cast, args.names), ...kept.saves.map((save) => concentrationBeat(args.by, save, args.names))],
+    fact: [...(priced ? [priced.fact] : []), `${actor.name} casts ${spell.name} as a Bonus Action.`, ...cast.facts, ...paidFacts].join(" "),
   }
 }

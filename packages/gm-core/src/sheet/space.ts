@@ -1,13 +1,12 @@
 import type { Size } from "@d20/srd"
-import { monsterById } from "@d20/srd/monsters"
 import type { Attack } from "./attack"
+import { blockOf } from "./blocks"
 import type { Roller } from "./check"
 import { type Afflicted, cannotMove, exhaustionOf } from "./conditions"
 import { deriveSheet } from "./derive"
 import { speciesById } from "./house-species"
 import { featureSpeed } from "./late-rules"
 import { shapeOf } from "./shape"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /**
  * Space: distance, reach, range, movement, Opportunity Attacks and areas of effect, by the SRD 5.2.1, as plain maths.
@@ -48,7 +47,7 @@ export function sizeOf(character: Roller): Size {
   if (shape) return shape.size[0] ?? "Medium"
   if (character.sheet) return character.sheet.size ?? speciesById.get(character.sheet.species)?.sizes[0]?.size ?? "Medium"
   if (character.type !== "npc") return "Medium"
-  return (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK))?.size[0] ?? "Medium"
+  return blockOf(character)?.size[0] ?? "Medium"
 }
 
 // How far a creature's space reaches past a 5-foot square on each side: 2.5 feet for a Large one, none for a Tiny one.
@@ -130,13 +129,14 @@ export const rangedInCloseCombat = (attacker: Placed, others: readonly Bystander
 
 /** A character's Speed in feet: a hero's from its sheet, an NPC's walking Speed from its stat block. A hero with no sheet has none. */
 export function speedOf(character: Roller): number | undefined {
-  // A hero in a Beast's shape moves at the stat block's walking Speed (./shape).
+  // A hero in a Beast's shape moves at the stat block's walking Speed, or its Fly Speed where that is more: the floor is
+  // flat, so flying is moving, as with Dragon Wings (./shape). A Swim Speed finds no water on the floor.
   const shape = shapeOf(character)
-  if (shape) return shape.speed.walk
+  if (shape) return Math.max(shape.speed.walk, shape.speed.fly ?? 0)
   // A feature may give a Speed beyond their own while it lasts (Dragon Wings' Fly Speed), by ./late-rules.
   if (character.sheet) return Math.max(deriveSheet(character.sheet).speed, featureSpeed(character) ?? 0)
   if (character.type !== "npc") return undefined
-  return (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK))?.speed.walk
+  return blockOf(character)?.speed.walk
 }
 
 /** What the Slow mastery takes from a creature's Speed until the start of the attacker's next turn. Hits from several weapons take no more. */

@@ -7307,5 +7307,997 @@
       "secondMetamagic": false,
       "empowered": false
     }
+  },
+  {
+    "id": "natures-sanctuary",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 14,
+      "species": "dwarf",
+      "background": "soldier",
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 17,
+        "int": 13,
+        "wis": 20,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid",
+        "druid-elemental-fury": "potent-spellcasting"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "languages": ["dwarvish", "common-sign-language"],
+      "cantrips": ["poison-spray", "starry-wisp", "produce-flame", "guidance"],
+      "spells": [
+        "cure-wounds",
+        "healing-word",
+        "ice-knife",
+        "thunderwave",
+        "animal-friendship",
+        "heat-metal",
+        "flame-blade",
+        "call-lightning",
+        "revivify",
+        "wind-wall",
+        "fire-shield",
+        "wall-of-fire",
+        "cone-of-cold",
+        "contagion",
+        "insect-plague",
+        "heal",
+        "regenerate"
+      ],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          },
+          {
+            "option": "ape"
+          },
+          {
+            "option": "black-bear"
+          },
+          {
+            "option": "brown-bear"
+          },
+          {
+            "option": "dire-wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 1,
+            "con": 1
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug and his friends have Ilya pinned against the crates, cudgels raised to strike again.",
+    "action": "I call spectral trees and vines up around Ilya to shelter her from their blows.",
+    "checks": ["channel-divinity"],
+    "feature": {
+      "id": "natures-sanctuary",
+      "targets": ["ilya-veles"]
+    }
+  },
+  {
+    "id": "no-natures-sanctuary",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 14,
+      "species": "dwarf",
+      "background": "soldier",
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 17,
+        "int": 13,
+        "wis": 20,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid",
+        "druid-elemental-fury": "potent-spellcasting"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "languages": ["dwarvish", "common-sign-language"],
+      "cantrips": ["poison-spray", "starry-wisp", "produce-flame", "guidance"],
+      "spells": [
+        "cure-wounds",
+        "healing-word",
+        "ice-knife",
+        "thunderwave",
+        "animal-friendship",
+        "heat-metal",
+        "flame-blade",
+        "call-lightning",
+        "revivify",
+        "wind-wall",
+        "fire-shield",
+        "wall-of-fire",
+        "cone-of-cold",
+        "contagion",
+        "insect-plague",
+        "heal",
+        "regenerate"
+      ],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          },
+          {
+            "option": "ape"
+          },
+          {
+            "option": "black-bear"
+          },
+          {
+            "option": "brown-bear"
+          },
+          {
+            "option": "dire-wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 1,
+            "con": 1
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug turns on Branka with his cudgel.",
+    "action": "I swing my quarterstaff at the thug's head.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "quarterstaff",
+      "target": "warehouse-thug"
+    }
+  },
+  {
+    "id": "sanctuary-move",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 14,
+      "species": "dwarf",
+      "background": "soldier",
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 17,
+        "int": 13,
+        "wis": 20,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid",
+        "druid-elemental-fury": "potent-spellcasting"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "languages": ["dwarvish", "common-sign-language"],
+      "cantrips": ["poison-spray", "starry-wisp", "produce-flame", "guidance"],
+      "spells": [
+        "cure-wounds",
+        "healing-word",
+        "ice-knife",
+        "thunderwave",
+        "animal-friendship",
+        "heat-metal",
+        "flame-blade",
+        "call-lightning",
+        "revivify",
+        "wind-wall",
+        "fire-shield",
+        "wall-of-fire",
+        "cone-of-cold",
+        "contagion",
+        "insect-plague",
+        "heal",
+        "regenerate"
+      ],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          },
+          {
+            "option": "ape"
+          },
+          {
+            "option": "black-bear"
+          },
+          {
+            "option": "brown-bear"
+          },
+          {
+            "option": "dire-wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 1,
+            "con": 1
+          }
+        }
+      ]
+    },
+    "spellEffectsOn": {
+      "branka-stoneveil": [
+        {
+          "spell": "natures-sanctuary",
+          "by": "branka-stoneveil",
+          "turns": 8,
+          "at": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. Branka's spectral trees stand where the fight began, but the thug has drawn back across the floor and Ilya has gone after him.",
+    "action": "I send my spectral trees over to stand around the thug, then lash at him with Starry Wisp.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "starry-wisp",
+      "targets": ["warehouse-thug"]
+    },
+    "bonus": {
+      "feature": "natures-sanctuary-move",
+      "target": "warehouse-thug"
+    }
+  },
+  {
+    "id": "beast-spells-cast",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 18,
+      "species": "dwarf",
+      "background": "soldier",
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 19,
+        "int": 13,
+        "wis": 20,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid",
+        "druid-elemental-fury": "potent-spellcasting"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "languages": ["dwarvish", "common-sign-language"],
+      "cantrips": ["poison-spray", "starry-wisp", "produce-flame", "guidance"],
+      "spells": [
+        "cure-wounds",
+        "healing-word",
+        "ice-knife",
+        "thunderwave",
+        "animal-friendship",
+        "heat-metal",
+        "flame-blade",
+        "call-lightning",
+        "revivify",
+        "wind-wall",
+        "fire-shield",
+        "wall-of-fire",
+        "cone-of-cold",
+        "contagion",
+        "insect-plague",
+        "heal",
+        "regenerate",
+        "befuddlement",
+        "foresight",
+        "true-resurrection"
+      ],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          },
+          {
+            "option": "ape"
+          },
+          {
+            "option": "black-bear"
+          },
+          {
+            "option": "brown-bear"
+          },
+          {
+            "option": "dire-wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        }
+      ]
+    },
+    "shape": {
+      "form": "wolf",
+      "hours": 9
+    },
+    "hitPointsOn": {
+      "branka-stoneveil": 40
+    },
+    "narrative": "Steel rings in the warehouse. Branka, in the shape of a grey wolf, circles the thug, bleeding from a deep cut along her flank.",
+    "action": "Still a wolf, I howl the words of Cure Wounds over myself.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "cure-wounds",
+      "targets": ["branka-stoneveil"]
+    }
+  },
+  {
+    "id": "misty-step-away",
+    "adventure": "covert-cargo",
+    "encounter": "battle-on-the-boat",
+    "hero": "1749159962941",
+    "floor": true,
+    "at": {
+      "1749159962941": [0, 0],
+      "npcs-1749163978757": [5, 0],
+      "npcs-1749181492795": [40, 30]
+    },
+    "sheet": {
+      "level": 7,
+      "spells": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "misty-step", "dimension-door"],
+      "spellbook": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "misty-step", "dimension-door", "identify", "comprehend-languages"]
+    },
+    "narrative": "Reinhard is right on top of Lyra, his blade raised, and Silas watches from the far rail.",
+    "action": "I cast Misty Step to blink away from Reinhard, well out of his reach.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "misty-step",
+      "targets": ["1749159962941"],
+      "level": 2
+    },
+    "moved": {
+      "clearOf": "npcs-1749163978757"
+    }
+  },
+  {
+    "id": "dimension-door-to-ally",
+    "adventure": "covert-cargo",
+    "encounter": "battle-on-the-boat",
+    "hero": "1749159962941",
+    "allies": ["thalbern"],
+    "floor": true,
+    "at": {
+      "1749159962941": [0, 0],
+      "npcs-1749163978757": [5, 0],
+      "npcs-1749181492795": [5, 5],
+      "thalbern": [80, 0]
+    },
+    "sheet": {
+      "level": 7,
+      "spells": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "misty-step", "dimension-door"],
+      "spellbook": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "misty-step", "dimension-door", "identify", "comprehend-languages"]
+    },
+    "narrative": "Reinhard and Silas have Lyra cornered by the cabin. Thalbern is far down the pier.",
+    "action": "I cast Dimension Door and step out right beside Thalbern.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "dimension-door",
+      "targets": ["1749159962941"],
+      "level": 4
+    },
+    "moved": {
+      "near": "thalbern"
+    }
+  },
+  {
+    "id": "misty-step-not-wanted",
+    "adventure": "covert-cargo",
+    "encounter": "battle-on-the-boat",
+    "hero": "1749159962941",
+    "floor": true,
+    "at": {
+      "1749159962941": [0, 0],
+      "npcs-1749163978757": [5, 0],
+      "npcs-1749181492795": [40, 30]
+    },
+    "sheet": {
+      "level": 7,
+      "spells": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "misty-step", "dimension-door"],
+      "spellbook": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "misty-step", "dimension-door", "identify", "comprehend-languages"]
+    },
+    "narrative": "Reinhard is right beside Lyra, his blade raised.",
+    "action": "I hold my ground and fire a Ray of Frost at Reinhard.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "ray-of-frost",
+      "targets": ["npcs-1749163978757"]
+    },
+    "moved": {
+      "none": true
+    }
+  },
+  {
+    "id": "maze-cast",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "sheet": {
+      "level": 15,
+      "spells": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "maze"],
+      "spellbook": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "identify", "comprehend-languages", "maze"]
+    },
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
+    "action": "I cast Maze on Reinhard and lose him in a labyrinth.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "maze",
+      "targets": ["npcs-1749163978757"],
+      "level": 8
+    }
+  },
+  {
+    "id": "summon-dragon-cold",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "sheet": {
+      "level": 9,
+      "spells": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "summon-dragon"],
+      "spellbook": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "identify", "comprehend-languages", "summon-dragon"]
+    },
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
+    "action": "I cast Summon Dragon and call a dragon spirit to fight beside me, taking its resistance to cold.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "summon-dragon",
+      "targets": [],
+      "level": 5
+    },
+    "choice": "cold"
+  },
+  {
+    "id": "polymorph-frog",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "sheet": {
+      "level": 7,
+      "spells": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "polymorph"],
+      "spellbook": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "identify", "comprehend-languages", "polymorph"]
+    },
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
+    "action": "I cast Polymorph on Reinhard and turn him into a frog.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "polymorph",
+      "targets": ["npcs-1749163978757"],
+      "level": 4
+    },
+    "choice": "frog"
+  },
+  {
+    "id": "giant-insect-wasp",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "sheet": {
+      "level": 7,
+      "spells": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "giant-insect"],
+      "spellbook": ["detect-magic", "fog-cloud", "charm-person", "magic-missile", "identify", "comprehend-languages", "giant-insect"]
+    },
+    "narrative": "Reinhard draws his blade and comes at Lyra across the deck.",
+    "action": "I cast Giant Insect and summon a giant wasp to drive Reinhard back.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "giant-insect",
+      "targets": [],
+      "level": 4
+    },
+    "choice": "wasp"
+  },
+  {
+    "id": "command-flee",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "spells": ["healing-word", "bless", "guiding-bolt", "command"]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a drawn blade.",
+    "action": "I point at the thug and command him: \"Flee!\"",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "command",
+      "targets": ["warehouse-thug"]
+    },
+    "choice": "flee"
+  },
+  {
+    "id": "tome-cantrip",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "warlock",
+      "level": 5,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 17
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "eldritch-smite"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "pact-of-the-tome",
+            "spells": ["fire-bolt", "mage-hand", "minor-illusion", "detect-magic", "alarm"]
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "enthrall", "vampiric-touch"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I hurl a fire bolt at the thug.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fire-bolt",
+      "targets": ["warehouse-thug"]
+    }
+  },
+  {
+    "id": "tome-ritual",
+    "adventure": "covert-cargo",
+    "encounter": "the-crate",
+    "hero": "1749159962941",
+    "sheet": {
+      "class": "warlock",
+      "level": 5,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 14,
+        "int": 12,
+        "wis": 10,
+        "cha": 17
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "eldritch-smite"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "pact-of-the-tome",
+            "spells": ["fire-bolt", "mage-hand", "minor-illusion", "detect-magic", "alarm"]
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "enthrall", "vampiric-touch"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ]
+    },
+    "narrative": "The deck is quiet and the crate sits before her, unguarded.",
+    "action": "I sit down by the crate and take ten slow minutes to cast Detect Magic over it as a ritual, from my Book of Shadows.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "detect-magic",
+      "targets": ["1749159962941"],
+      "ritual": true
+    }
+  },
+  {
+    "id": "quickened-and-bolt",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 16,
+        "int": 8,
+        "wis": 13,
+        "cha": 17
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "false-life", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "quickened-spell"
+          },
+          {
+            "option": "transmuted-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery"
+    },
+    "narrative": "Steel rings in the warehouse. Alaric and the thug square up to Cassia with drawn blades.",
+    "action": "I quicken a mind spike into Alaric's head, then hurl a fire bolt at the thug.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fire-bolt",
+      "targets": ["warehouse-thug"]
+    },
+    "bonus": {
+      "feature": "mind-spike",
+      "target": "scarface-alaric"
+    }
+  },
+  {
+    "id": "quickened-not-plain",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 16,
+        "int": 8,
+        "wis": 13,
+        "cha": 17
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "false-life", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "quickened-spell"
+          },
+          {
+            "option": "transmuted-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery"
+    },
+    "narrative": "Steel rings in the warehouse. Alaric and the thug square up to Cassia with drawn blades.",
+    "action": "I drive a mind spike into Alaric's head.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "mind-spike",
+      "targets": ["scarface-alaric"]
+    }
+  },
+  {
+    "id": "quickened-no-second",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 16,
+        "int": 8,
+        "wis": 13,
+        "cha": 17
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "false-life", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "quickened-spell"
+          },
+          {
+            "option": "transmuted-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery"
+    },
+    "narrative": "Steel rings in the warehouse. Alaric and the thug square up to Cassia with drawn blades.",
+    "action": "I quicken an ice knife at Alaric, then drive a mind spike into the thug's mind.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "mind-spike",
+      "targets": ["warehouse-thug"]
+    }
   }
 ]

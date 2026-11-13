@@ -1,9 +1,8 @@
-import { monsterById } from "@d20/srd/monsters"
 import { spellById } from "@d20/srd/spells"
+import { ownBlockOf } from "../blocks"
 import type { Roller } from "../check"
 import { spellEnded } from "../spell-effects"
 import type { SpellRules } from "../spell-rules"
-import { DEFAULT_STAT_BLOCK } from "../stat-block"
 
 /**
  * Sleep: "Creatures that don't sleep, such as elves, or that have Immunity to the Exhaustion condition automatically
@@ -12,7 +11,7 @@ import { DEFAULT_STAT_BLOCK } from "../stat-block"
 function sleepless(character: Roller & { race?: string }): boolean {
   if (character.sheet) return character.sheet.species === "elf"
   if (/\b(elf|elven)\b/i.test(character.race ?? "") && !/half/i.test(character.race ?? "")) return true
-  return !!(character.type === "npc" && monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.conditionImmunities?.includes("exhaustion"))
+  return !!(character.type === "npc" && ownBlockOf(character)?.conditionImmunities?.includes("exhaustion"))
 }
 
 /**

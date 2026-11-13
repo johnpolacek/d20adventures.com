@@ -4,6 +4,7 @@ import { afterHarm } from "../sheet/death"
 import { legendaryActionsOf, withLegendaryActionsRegained } from "../sheet/legendary-actions"
 import { standingWords } from "../sheet/placement"
 import { ordered, type PendingReaction, REACTION_WAIT } from "../sheet/reactions"
+import { ruledReading } from "../sheet/ruled-turns"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { KnownFact } from "../story/knowledge"
@@ -11,7 +12,7 @@ import { type StoryNames, storyNames, storyText } from "../story/render"
 import { sceneFor } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
-import { isAiControlledPc, isDown, isDying } from "../utils/turn-actors"
+import { isAiControlledPc, isDown, isDying, playsForMaster } from "../utils/turn-actors"
 import { gmNotesWithRules, type SafetyRules } from "../wiki-adventures/player-safety"
 import { createAiPcTurnService } from "./ai-pc-turn-service"
 import { legendaryAfterTurn } from "./legendary-action-service"
@@ -185,8 +186,12 @@ export function createNpcTurnService(ports: GmPorts) {
       )
     )
 
-    // A turn played again keeps what the NPC meant to do the first time.
-    const actionResult = (resume?.action as Awaited<ReturnType<typeof generateNpcAction>> | undefined) ?? (await generateNpcAction(prompt1, npc.id))
+    // A turn played again keeps what the NPC meant to do the first time. A turn a spell rules (Command's word, Fear's
+    // flight) is the rule's, and the model is not asked (../sheet/ruled-turns).
+    const ruled = ruledReading(npc, turn.characters, floor)
+    const actionResult =
+      (resume?.action as Awaited<ReturnType<typeof generateNpcAction>> | undefined) ??
+      (ruled ? { actionSummary: ruled.ruling.text, beats: [], actionType: "other" as const, effects: [] } : await generateNpcAction(prompt1, npc.id))
 
     console.log("[LLM] NPC action response:", {
       actionType: actionResult.actionType,
@@ -344,7 +349,8 @@ export function createNpcTurnService(ports: GmPorts) {
         console.log("[LLM] Skipping fallen player character:", char.name)
         continue
       }
-      if (isAiControlledPc(char)) {
+      // A hero a spell has bound to another (Dominate Person) is played as a companion is, for their master (./ai-pc-turn-service).
+      if (isAiControlledPc(char) || playsForMaster(char)) {
         // AI companion: play their turn automatically, then keep walking the
         // initiative order. On failure leave them pending so the client-side
         // ensureNpcProcessed safety net can retry instead of wedging the turn.

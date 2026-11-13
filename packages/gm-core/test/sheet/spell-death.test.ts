@@ -167,7 +167,8 @@ test("Disintegrate leaves dust that only True Resurrection raises, and Raise Dea
   assert.deepEqual([risen.hitPoints, d20Penalty(risen)], [11, 4])
   assert.equal(find(cast("raise-dead", [{ ...npc("zombie", "zombie", 0), dead: true }], ["zombie"]).characters, "zombie").dead, true)
   assert.deepEqual(
+    // Finger of Death runs in full now that its Zombie rises (./spell-summons.test.ts).
     ["raise-dead", "resurrection", "true-resurrection", "disintegrate", "finger-of-death"].map((id) => spellLabel(spell(id))),
-    ["partly", "partly", "partly", "partly", "partly"]
+    ["partly", "partly", "partly", "partly", "run"]
   )
 })

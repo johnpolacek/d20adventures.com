@@ -1,6 +1,6 @@
-import { monsterById } from "@d20/srd/monsters"
 import type { Monster } from "@d20/srd/schema/monsters"
 import { actionId } from "./attack"
+import { blockOf } from "./blocks"
 import type { Roller } from "./check"
 import { shapeOf } from "./shape"
 
@@ -156,7 +156,7 @@ function readOption(way: string, attackId: (name: string) => string, actionIdOf:
  * an NPC with a rules sheet, and a block with none or one unread have none.
  */
 export function multiattackOf(character: Roller): Multiattack | undefined {
-  const monster = shapeOf(character) ?? (character.type === "npc" && !character.sheet && character.statBlock ? monsterById.get(character.statBlock) : undefined)
+  const monster = shapeOf(character) ?? (character.type === "npc" && !character.sheet && character.statBlock ? blockOf(character) : undefined)
   const read = monster ? readMultiattack(monster) : undefined
   return read && "options" in read ? read : undefined
 }

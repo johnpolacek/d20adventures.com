@@ -1,12 +1,13 @@
 import type { AbilityId, ConditionId, DamageTypeId, SkillId } from "@d20/srd"
 import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
-import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
+import { isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Attack } from "./attack"
 import type { Check } from "./check"
 import type { ModeSource } from "./conditions"
 import { itemSaveModes } from "./item-effects"
-import { answerDowned, keepsConcentration } from "./late-rules"
+import { answerDowned, answerSaveLate, auraOnSaveLate, keepsConcentration } from "./late-rules"
+import { freedFrom } from "./masters"
 import { speciesSaveModes } from "./species-traits"
 import { type Bearer, type Deflected, heldRule, spellRule } from "./spell-rules"
 import type { SpellEffect } from "./turn-effect"
@@ -295,7 +296,8 @@ const outlasts = (spell: Spell | undefined): boolean => {
 export function spellEffectsAtEncounterEnd<T extends Bearer>(character: T): T {
   // An area left on the floor stays where it was put, and the story has left it: its spell ends (./floor-areas).
   const left = (character.spellEffects ?? []).filter((effect) => effect.at).map((effect) => effect.spell)
-  const kept = (character.spellEffects ?? []).filter((effect) => effect.turns === undefined && !effect.at)
+  // One away comes back as the story moves on: what took them is over (Maze).
+  const kept = (character.spellEffects ?? []).filter((effect) => effect.turns === undefined && !effect.at && !effect.away)
   const concentrating = character.concentration && !left.includes(character.concentration.spell) ? character.concentration : undefined
   const held = concentrating && outlasts(spellById.get(concentrating.spell)) ? concentrating : undefined
   const { spellEffects: _, concentration: __, ...rest } = character
@@ -320,7 +322,8 @@ export function endConcentration<T extends Bearer>(characters: readonly T[], cas
       const cleared = strip(character, (effect) => effect.spell === held && effect.by === casterId)
       const conditions = (cleared.conditions ?? []).filter((entry) => !(entry.spell === held && entry.source === casterId))
       const { conditions: _, ...rest } = cleared
-      const freed = (conditions.length ? { ...rest, conditions } : rest) as T
+      // One the spell summoned is gone, one it dominated is their own again, and a shape it gave falls away (./masters).
+      const freed = freedFrom((conditions.length ? { ...rest, conditions } : rest) as T, (spell, by) => spell === held && by === casterId)
       if (character.id !== casterId) return freed
       const { concentration: __, ...done } = freed
       return done as T
@@ -361,18 +364,26 @@ export function settleConcentration<T extends Bearer>(args: {
     if (!was.id || !now?.concentration) continue
     const spell = spellById.get(now.concentration.spell)?.name ?? now.concentration.spell
     const lost = (was.hitPoints ?? 0) - (now.hitPoints ?? 0)
-    let breaks = isDead(now) || isDown(now) || isIncapacitated(now) || hasFled(now)
+    // One away for now keeps it: no rule ends Concentration for being elsewhere (Maze).
+    let breaks = isDead(now) || isDown(now) || isIncapacitated(now) || now.fled === true
     // A class feature may keep damage from breaking it, and then no save is made (Relentless Hunter's Hunter's Mark).
     if (!breaks && lost > 0 && !keepsConcentration(now, now.concentration.spell)) {
       // A class may give the save Advantage or Disadvantage (Eldritch Mind): two d20s, the higher or the lower kept.
       const modes = (args.modes?.(now) ?? []).map((source) => source.mode)
       const mode = modes.includes("advantage") === modes.includes("disadvantage") ? "normal" : modes.includes("advantage") ? "advantage" : "disadvantage"
-      const natural = mode === "normal" ? args.d20() : (mode === "advantage" ? Math.max : Math.min)(args.d20(), args.d20())
-      const bonus = args.bonus(now)
+      const dice = mode === "normal" ? [args.d20()] : [args.d20(), args.d20()]
+      const natural = mode === "normal" ? dice[0] : (mode === "advantage" ? Math.max : Math.min)(...dice)
+      // An aura of one near adds to it (Aura of Protection), and a failure may still be rescued (Indomitable), as every
+      // save is (../save-rules `answeredSave`, through ./late-rules): losing the spell is what it costs.
+      const bonus = args.bonus(now) + auraOnSaveLate(now, characters)
       const dc = Math.max(10, Math.floor(lost / 2))
-      const success = natural + bonus >= dc
-      saves.push({ character: was.id, spell, natural, bonus, total: natural + bonus, dc, success })
-      breaks = !success
+      const thrown = { dice, natural, bonus, total: natural + bonus, dc, success: natural + bonus >= dc, mode } as const
+      const answered = answerSaveLate({ characters, saverId: was.id, name: now.name ?? "The caster", result: { ...thrown, dice }, stakes: { concentration: now.concentration.spell }, d20: args.d20 })
+      characters = answered.characters
+      facts.push(...answered.facts)
+      const { result } = answered
+      saves.push({ character: was.id, spell, natural: result.natural, bonus: result.total - result.natural, total: result.total, dc, success: result.success })
+      breaks = !result.success
     }
     if (breaks) {
       characters = endConcentration(characters, was.id).characters
@@ -392,13 +403,17 @@ export function settleConcentration<T extends Bearer>(args: {
   }
   // What else damage to its bearer does, by the spell's own rules (./spell-rules `damaged`).
   for (const was of args.before) {
-    const lost = (was.hitPoints ?? 0) - (characters.find((character) => character.id === was.id)?.hitPoints ?? 0)
-    if (lost <= 0) continue
-    for (const id of spellsOn(characters.find((character) => character.id === was.id) as T)) {
+    // Damage the Temporary Hit Points took is damage taken too, and a shape a spell gave is the spell's (Polymorph).
+    const now = characters.find((character) => character.id === was.id)
+    const lost = (was.hitPoints ?? 0) + (was.tempHitPoints ?? 0) - (now?.hitPoints ?? 0) - (now?.tempHitPoints ?? 0)
+    if (lost <= 0 || !now) continue
+    const shaped = (now as { shape?: { spell?: string } }).shape?.spell
+    for (const id of [...new Set([...spellsOn(now), ...(shaped ? [shaped] : [])])]) {
       const bearer = characters.find((character) => character.id === was.id)
       const answered = bearer && spellRule(id)?.damaged?.({ bearer, lost, d20: args.d20, characters })
       if (!answered) continue
-      characters = characters.map((character) => (character.id === was.id ? answered.bearer : character))
+      // Another its answer spent from (a Bard whose Countercharm rerolled the bearer's save) comes back too, as `others`.
+      characters = characters.map((character) => (character.id === was.id ? answered.bearer : (answered.others?.find((other) => other.id === character.id) ?? character)))
       facts.push(...answered.facts)
     }
   }
@@ -407,7 +422,11 @@ export function settleConcentration<T extends Bearer>(args: {
 
 /** A character with the effects and the conditions of the spells `gone` names taken off them, whoever cast them. */
 export function spellEnded<T extends Bearer>(character: T, gone: (spellId: string) => boolean): T {
-  const cleared = strip(character, (effect) => gone(effect.spell))
+  // What the spell bound them to or made of them ends with it too (./masters).
+  const cleared = freedFrom(
+    strip(character, (effect) => gone(effect.spell)),
+    gone
+  )
   if (!cleared.conditions?.some((entry) => entry.spell && gone(entry.spell))) return cleared
   const conditions = cleared.conditions.filter((entry) => !(entry.spell && gone(entry.spell)))
   const { conditions: _, ...rest } = cleared

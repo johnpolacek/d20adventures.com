@@ -1,11 +1,12 @@
 import type { AbilityId, ConditionId, DamageTypeId, SkillId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { classById } from "@d20/srd/classes"
-import { monsterById } from "@d20/srd/monsters"
+import type { monsterById } from "@d20/srd/monsters"
 import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { attackModesFromActions, checkModesFromActions } from "./actions"
-import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defensesOf, parseDice, resolveAttack, rollDamage } from "./attack"
+import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defensesAgainst, defensesOf, parseDice, resolveAttack, rollDamage } from "./attack"
+import { blockOf } from "./blocks"
 import { type Check, checkBonus, combineModes, type Roller, type RollMode } from "./check"
 import {
   afterClassCast,
@@ -13,6 +14,7 @@ import {
   classCheckModes,
   classCreatedSlots,
   classHalvesAvoided,
+  classKeptSlot,
   classMoreTargets,
   classSpellAttackModes,
   classSpellDamage,
@@ -29,16 +31,17 @@ import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./cond
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, wardedWords, withDamage, withHealing } from "./death"
 import { deriveSheet, pickedFreeCasts, slotsAt } from "./derive"
-import { obscuredModes } from "./floor-areas"
+import { floorInPlay, obscuredModes } from "./floor-areas"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { itemSaveModes } from "./item-effects"
 import { withItemCastSpent } from "./item-spend"
 import { type ItemCasting, type ItemCost, itemCastCost, itemCastingWords, itemSpellsOf } from "./item-use"
 import { itemBonus } from "./items"
-import { legendaryResistanceWords, type SaveStakes, spendsLegendaryResistance, withLegendaryResistanceSpent } from "./legendary-resistance"
+import { legendaryResistanceWords, type SaveStakes, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { magicSaveModes, typesTaken } from "./monster-traits"
-import { auraSaveBonus, damageOnSave, rescuedSave, rescueWords, withRescueSpent } from "./save-rules"
+import { answeredSave, auraSaveBonus, damageOnSave, type Rescued, rescueWords, withRescueSpent } from "./save-rules"
+import { shapeBarsCasting } from "./shape"
 import { type Cover, coverBonus, type Floor, isNear, type Point } from "./space"
 import { speciesSaveModes } from "./species-traits"
 import {
@@ -58,7 +61,8 @@ import {
 import { endsBySpell } from "./spell-ends"
 import { spellLabel } from "./spell-labels"
 import { areaOfSpell, type CastContext, heldRule, spellRule } from "./spell-rules"
-import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
+import { combatStatsOf } from "./stat-block"
+import { withSummoned } from "./summoned"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
 // Every spell mechanism file's rules, handed to ./spell-rules as they load. Last of the imports, so the files load once
 // the shared code they read has.
@@ -87,7 +91,7 @@ export type Spellcasting = {
 
 // An NPC's stat block, and its Spellcasting action if it has one.
 function statBlockCasting(character: Roller) {
-  const monster = !character.sheet && character.type === "npc" ? monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
+  const monster = !character.sheet && character.type === "npc" ? blockOf(character) : undefined
   const casting = monster?.actions?.find((action) => action.spellcasting?.ability)?.spellcasting
   return monster && casting?.ability ? { monster, casting, ability: casting.ability } : undefined
 }
@@ -328,7 +332,7 @@ export function spellsOf(character: Slotted): KnownSpell[] {
     else if (!found[held].useKey && !found[held].atWill) found[held] = { ...found[held], ...how }
   }
   // Spells a class feature casts with no slot while it has a use left (Divine Intervention): one the hero has prepared
-  // keeps its slots and gains the feature's casting.
+  // keeps its slots and gains the feature's casting, or with `first` is cast so before a slot is spent (Natural Recovery).
   for (const given of classSpellsGiven(character)) {
     for (const id of given.spells) {
       const spell = spellById.get(id)
@@ -336,6 +340,7 @@ export function spellsOf(character: Slotted): KnownSpell[] {
       const by = { feature: given.feature, name: given.name }
       if (!spell) continue
       if (held < 0) found.push({ spell, cantrip: false, prepared: false, ritual: false, free: 0, given: by })
+      else if (given.first && found[held].prepared && !found[held].cantrip && !found[held].useKey) found[held] = { ...found[held], free: 1, useKey: given.feature }
       else if (!found[held].cantrip && !found[held].given) found[held] = { ...found[held], given: by }
     }
   }
@@ -489,7 +494,8 @@ export function castCost(character: Slotted, spellId: string, ritual = false, sl
   const name = spellById.get(spellId)?.name ?? spellId
   if (!known) return { problem: `${name} is not a spell ${character.name ?? "this character"} can cast.` }
   // A class feature that bars casting while it lasts (Rage) bars every spell, a cantrip too.
-  const barred = classCastingBar(character) ?? spellRule(known.spell.id)?.barred?.(character, known.spell)
+  // So does a shape a spell gave that keeps no spellcasting (./shape: Polymorph).
+  const barred = classCastingBar(character, known.spell) ?? shapeBarsCasting(character) ?? spellRule(known.spell.id)?.barred?.(character, known.spell)
   if (barred) return { problem: barred }
   if (known.item && (known.itemOnly || fromItem)) {
     const paid = itemCastCost(known.item, known.spell, slot)
@@ -532,6 +538,9 @@ export function withCastSpent<T extends Slotted>(character: T, cost: CastCost): 
  * with `roll`, and may destroy it (./item-spend `withChargesSpent`). Any other cost is `withCastSpent`.
  */
 export function withCastPaid<T extends Slotted>(character: T, cost: CastCost, roll: (sides: number) => number): { character: T; facts: string[] } {
+  // A feat's die may keep the slot (Boon of Spell Recall).
+  const kept = cost.kind === "slot" ? classKeptSlot(character, cost.level, roll) : undefined
+  if (kept) return { character, facts: [kept] }
   if (cost.kind !== "item" || !character.sheet) return { character: withCastSpent(character, cost), facts: [] }
   const paid = withItemCastSpent(character.sheet, cost, roll)
   return { character: { ...character, sheet: paid.sheet }, facts: paid.facts }
@@ -557,7 +566,7 @@ export type SaveRoll = {
    * and total above are the new roll's, `first` the failed total. The caller spends the feature's use, or where another
    * answered it (`by`, Countercharm) that one's Reaction.
    */
-  rescued?: { feature: string; name: string; first: number; by?: string }
+  rescued?: Rescued
   /** What auras of those near added to the save (Aura of Protection), already in `bonus`. */
   auras?: string[]
 }
@@ -696,7 +705,7 @@ export function castSpell<T extends Castee>(args: {
   cover?: Readonly<Record<string, Cover>>
   /** An area was measured on the floor (./spell-space): the spell takes everyone named, however many. */
   measured?: boolean
-  /** The encounter's floor, for what a hit moves (Repelling Blast's push). */
+  /** The encounter's floor, for what the spell moves (Repelling Blast's push, Thunderwave's). */
   floor?: Floor
   /** The spell used again on a later turn, not cast: ./spells `castAgain`. */
   again?: boolean
@@ -782,7 +791,7 @@ export function castSpell<T extends Castee>(args: {
   const hurt = (id: string, rolled: DamageRoll, amountOf: (taken: number) => number, critical = false) => {
     const target = find(id)
     if (!target) return undefined
-    const defenses = defensesOf(target)
+    const defenses = defensesAgainst(target, caster)
     const amount = amountOf(damageTaken(rolled, defenses))
     const struck = withDamage(target, amount, { critical, rules: args.rules, types: typesTaken(rolled, defenses) })
     put(afterHarm(struck.character))
@@ -850,6 +859,7 @@ export function castSpell<T extends Castee>(args: {
     ...(choice ? { choice } : {}),
     ...(args.at ? { at: args.at } : {}),
     ...(args.to ? { to: args.to } : {}),
+    ...(args.floor ? { floor: args.floor } : {}),
     find: (id) => find(id),
     put: (after) => put(after as T),
     harm,
@@ -919,7 +929,7 @@ export function castSpell<T extends Castee>(args: {
       }
       if (roll.hit) {
         // What a class adds to this hit, beam by beam: a bonus to its damage (Agonizing Blast), a push (Repelling Blast).
-        const riders = classSpellHits({ caster: find(caster.id) as T, spell, target, floor: args.floor })
+        const riders = classSpellHits({ caster: find(caster.id) as T, spell, target, floor: floorInPlay(args.floor, characters) })
         const bonus = riders.reduce((sum, rider) => sum + (rider.bonus ?? 0), 0)
         if (parts.length) {
           const [first, ...others] = parts
@@ -1121,7 +1131,9 @@ export function castSpell<T extends Castee>(args: {
             : []
           : taking.length
             ? taking
-            : [caster.id]
+            : rule?.held?.away
+              ? []
+              : [caster.id]
     const turns = span ? CONDITION_SPANS[span] : undefined
     for (const id of taken) {
       const target = find(id)
@@ -1139,6 +1151,8 @@ export function castSpell<T extends Castee>(args: {
           // An area that stays on the floor stands where it was put, held on its caster (./floor-areas).
           ...(args.at && rule?.stays && id === caster.id ? { at: args.at } : {}),
           ...(args.to && rule?.stays && id === caster.id ? { to: args.to } : {}),
+          // One it takes out of the encounter while it lasts (./spell-rules `held.away`: Banishment).
+          ...(rule?.held?.away ? { away: true as const } : {}),
         })
       )
       facts.push(args.at && rule?.stays && id === caster.id ? `${caster.name}'s ${spell.name} now stands on the floor.` : `${spell.name} is now on ${target.name}.`)
@@ -1160,6 +1174,13 @@ export function castSpell<T extends Castee>(args: {
 
   // What the spell's own rules leave once the rest is done (Acid Arrow's later burn).
   if (!args.again) rule?.cast?.(context)
+  // The creatures the spell brings into the encounter, on its caster's side (./spell-rules `summons`, ./summoned).
+  const called = args.again ? undefined : rule?.summons?.(context)
+  if (called?.length) {
+    const joined = withSummoned({ characters, casterId: caster.id, spell: spell.id, summons: called, d20: args.d20, solids: args.floor?.solids })
+    characters = joined.characters
+    facts.push(...joined.facts)
+  }
 
   return done()
 }
@@ -1276,35 +1297,33 @@ export function rollSave(args: {
   // A feature may let a score stand in for a lower total (Indomitable Might).
   const total = Math.max(classTotalFloor(target, check) ?? 0, natural + bonus + adds.reduce((sum, add) => sum + add.amount, 0))
   const passed = !failedBy && total >= args.dc
-  const legendary = !passed && !!args.stakes && spendsLegendaryResistance(target, args.stakes)
-  // A hero's class may still reroll a failed save against harm (Indomitable).
-  const rescue =
-    !passed && !legendary && !failedBy && args.stakes
-      ? rescuedSave({
-          character: target,
-          ability,
-          result: { dice, natural, bonus, total, dc: args.dc, success: false, mode, ...(adds.length ? { adds } : {}) },
-          stakes: args.stakes,
-          d20: args.d20,
-          roll: args.roll,
-          present: args.characters,
-        })
-      : undefined
-  const success = passed || legendary || !!rescue?.result.success
+  // A Legendary creature may choose to succeed, and a hero's feature may still reroll a failed save against harm
+  // (Indomitable), as every save is answered (./save-rules `answeredSave`).
+  const answer = answeredSave({
+    character: target,
+    ability,
+    result: { dice, natural, bonus, total, dc: args.dc, success: passed, mode, ...(adds.length ? { adds } : {}) },
+    stakes: args.stakes,
+    failedBy: !!failedBy,
+    d20: args.d20,
+    roll: args.roll,
+    present: args.characters,
+  })
+  const rescued = answer.rescued ? answer.result : undefined
   return {
     target: target.id,
     ability,
-    dice: rescue?.result.dice ?? dice,
-    natural: rescue?.result.natural ?? natural,
+    dice: rescued?.dice ?? dice,
+    natural: rescued?.natural ?? natural,
     bonus,
-    total: rescue?.result.total ?? total,
+    total: rescued?.total ?? total,
     dc: args.dc,
-    success,
-    mode: rescue?.result.mode ?? mode,
+    success: answer.result.success,
+    mode: rescued?.mode ?? mode,
     ...(failedBy ? { failedBy } : {}),
-    ...((rescue?.result.adds ?? adds).length ? { adds: rescue?.result.adds ?? adds } : {}),
-    ...(legendary ? { legendary: true as const } : {}),
-    ...(rescue ? { rescued: { feature: rescue.feature, name: rescue.name, first: total, ...(rescue.by ? { by: rescue.by } : {}) } } : {}),
+    ...((rescued?.adds ?? adds).length ? { adds: rescued?.adds ?? adds } : {}),
+    ...(answer.legendary ? { legendary: true as const } : {}),
+    ...(answer.rescued ? { rescued: answer.rescued } : {}),
     ...(aura.from.length ? { auras: aura.from } : {}),
   }
 }

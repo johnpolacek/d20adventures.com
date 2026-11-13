@@ -49,3 +49,32 @@ export function registerSpeed(reader: (character: object) => number | undefined)
 
 /** The Speed the registered reader gives a character for now (Dragon Wings), or none. */
 export const featureSpeed = (character: object): number | undefined => speedGiven?.(character)
+
+/** A Concentration save as it fell, before what the rules may still do for it: the d20s, the one that counts, and the rest. */
+type SaveThrown = { dice: number[]; natural: number; bonus: number; total: number; dc: number; success: boolean; mode: "normal" | "advantage" | "disadvantage" }
+type SaveAnswers = {
+  /** What the auras of those present add to one's saving throws (Aura of Protection). */
+  aura: (character: object, present: readonly object[]) => number
+  /** Everyone once a failed save is answered as every save is, with the save as it then stands and its words. */
+  answer: (args: { characters: readonly object[]; saverId: string; name: string; result: SaveThrown; stakes: { concentration: string }; d20: () => number }) => {
+    characters: object[]
+    result: SaveThrown
+    facts: string[]
+  }
+}
+
+let saveAnswers: SaveAnswers | undefined
+
+/** Set what answers a save rolled low in the load order (../save-rules): ./spell-effects `settleConcentration`'s. */
+export function registerSaveAnswers(answers: SaveAnswers): void {
+  saveAnswers = answers
+}
+
+/** What the auras of those present add to one's saving throws, by the registered reader, or nothing. */
+export const auraOnSaveLate = (character: object, present: readonly object[]): number => saveAnswers?.aura(character, present) ?? 0
+
+/** Everyone once a failed save is answered by the registered rules (Indomitable, Heroic Inspiration), or as they were. */
+export function answerSaveLate<T extends object>(args: Parameters<SaveAnswers["answer"]>[0] & { characters: readonly T[] }): { characters: T[]; result: SaveThrown; facts: string[] } {
+  if (!saveAnswers || args.result.success) return { characters: [...args.characters], result: args.result, facts: [] }
+  return saveAnswers.answer(args) as { characters: T[]; result: SaveThrown; facts: string[] }
+}

@@ -54,3 +54,7 @@ export function enduringTraitLeft(character: Bearer & { featureUses?: Record<str
   const trait = enduringTraitOf(character)
   return trait && (character.featureUses?.[trait.key] ?? 0) < trait.uses ? trait : undefined
 }
+
+/** The species trait that gives a hero Heroic Inspiration as a Long Rest ends, by name (a Human's Resourceful), or none. */
+export const longRestInspiration = (character: Bearer): string | undefined =>
+  speciesOf(character)?.traits.find((trait) => trait.heroicInspiration === "long-rest" && (trait.level ?? 1) <= (character.sheet?.level ?? 1))?.name

@@ -41,9 +41,10 @@ export type Advancement = z.infer<typeof advancementSchema>
 /**
  * One option picked for a feature that takes several from its list: an Eldritch Invocation, a Metamagic option. An
  * option that names one of the hero's cantrips (Agonizing Blast) keeps it in `cantrip`, and one that grants a feat
- * (Lessons of the First Ones) keeps it in `feat`. A repeatable option is picked again with another of those.
+ * (Lessons of the First Ones) keeps it in `feat`. A repeatable option is picked again with another of those. One that
+ * holds spells of its own (Pact of the Tome's Book of Shadows) keeps them in `spells`.
  */
-export const featurePickSchema = z.strictObject({ option: idSchema, cantrip: idSchema.optional(), feat: idSchema.optional() })
+export const featurePickSchema = z.strictObject({ option: idSchema, cantrip: idSchema.optional(), feat: idSchema.optional(), spells: z.array(idSchema).optional() })
 export type FeaturePick = z.infer<typeof featurePickSchema>
 
 /**

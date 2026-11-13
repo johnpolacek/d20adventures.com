@@ -45,11 +45,13 @@ import type { SpellEffect, TurnEffect } from "../turn-effect"
  *   conditions that last as long as it does, is counted twice as long. A longer spell outlasts the fight already, and
  *   the engine keeps no clock past a rest, so its doubling is told. While the Sorcerer concentrates on it they have
  *   Advantage on saves to keep it, by the lasting mark "extended-spell", whose `choice` is the spell.
- * - Quickened Spell is not offered. It would cast a spell of an action as the Bonus Action, which buys a turn either a
- *   second spell or an action beside the spell. The read carries one cast a turn, and drops a spell cast with the Bonus
- *   Action beside a spell cast with the action (../../services/roll-requirement-service), so the second spell has no way
- *   in. A Bonus Action spell is cast by ../../services/bonus-action with no Metamagic riding it, so the other use, the
- *   spell with an Attack or a Dash, would need that path to take a spell of an action and pay for it.
+ * - Quickened Spell (`bonusCasts`): a spell with a casting time of an action is offered among the Bonus Action spells
+ *   while the Sorcerer could pay 2 Sorcery Points, and is cast by the Bonus Action's path, which pays them as it is cast
+ *   (../../services/bonus-action). Beside it the action may be an attack, a Dash or a cantrip: the read keeps a spell
+ *   cast with the Bonus Action beside a cast with the action only where that cast is a cantrip, so no spell of level 1
+ *   or higher is cast on the same turn (../../services/roll-requirement-service). The Bonus Action is resolved before
+ *   the action, so no spell of the turn's own comes before it. A reaction's spell on the Sorcerer's own turn is not
+ *   counted. Quickened is the one option a Bonus Action cast takes: no other rides it, Sorcery Incarnate's second neither.
  * Sorcerous Restoration (level 5): as a Short Rest ends with Sorcery Points spent, the Sorcerer regains up to half their
  * Sorcerer level rounded down, once a Long Rest.
  * Sorcery Incarnate (level 7): with no use of Innate Sorcery left, a Bonus Action of its own unleashes it for 2 Sorcery
@@ -73,6 +75,7 @@ const METAMAGIC = "sorcerer-metamagic"
 const RESTORATION = "sorcerer-sorcerous-restoration"
 const INCARNATE = "sorcerer-sorcery-incarnate"
 const APOTHEOSIS = "sorcerer-arcane-apotheosis"
+const QUICKENED = "quickened-spell"
 const AFFINITY = "draconic-sorcery-elemental-affinity"
 const WINGS = "draconic-sorcery-dragon-wings"
 
@@ -640,6 +643,19 @@ export const sorcerer: ClassRules = {
 `,
       field: () => z.boolean().optional().describe("True when the player's words pour more force into a spell's damage with Empowered Spell"),
       cast: empowered,
+    },
+  ],
+  // Quickened Spell: a spell of an action cast with the Bonus Action, for 2 Sorcery Points paid as it is cast.
+  bonusCasts: [
+    {
+      id: QUICKENED,
+      takes: (character, spell) => picked(character).includes(QUICKENED) && spell.castingTime.unit === "action" && canPay(character, QUICKENED),
+      words: `quickened: a spell of an action cast with the Bonus Action, for ${metamagicCost(QUICKENED)} Sorcery Points`,
+      note: 'A spell marked quickened is cast with Quickened Spell only when the player\'s words cast it quickly beside their action. The action beside it may be an attack, a Dash, a cantrip or the like, never a spell of level 1 or higher. Without such words it is cast with the action, in "check".',
+      pay: (character, slot) => {
+        const paid = paidOption(character, QUICKENED, slot)
+        return paid ? { character: paid.character, fact: `${paidWords(character.name ?? "The Sorcerer", QUICKENED, paid)}: the spell is cast with the Bonus Action.` } : undefined
+      },
     },
   ],
   turnEffects: [

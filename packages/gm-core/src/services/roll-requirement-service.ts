@@ -6,16 +6,17 @@ import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../s
 import { attacksOf } from "../sheet/attack"
 import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
 import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
-import { type ChoiceRule, choiceRules, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast, withAdvantageBarred } from "../sheet/class-rules"
+import { type ChoiceRule, choiceRules, classBonusCast, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast, withAdvantageBarred } from "../sheet/class-rules"
 import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, bonusRuleFor, usable } from "../sheet/features"
 import { chargedFeet, escapeFrom } from "../sheet/hit-riders"
 import { itemCastingWords, menuId } from "../sheet/item-use"
 import { itemName, itemWords } from "../sheet/items"
-import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
+import { type MoveAsk, type Moved, moveBudget, takeMove, takeTeleport, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
+import { ruledReading } from "../sheet/ruled-turns"
 import { auraOnSave } from "../sheet/save-rules"
 import { shapeOf } from "../sheet/shape"
 import type { OwnedItem } from "../sheet/sheet"
@@ -24,7 +25,7 @@ import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet
 import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spell-effects"
 import { endsThings } from "../sheet/spell-ends"
 import { areaOfSpell, type SpellChoice, spellRule } from "../sheet/spell-rules"
-import { castInSpace } from "../sheet/spell-space"
+import { castInSpace, rangeFeet } from "../sheet/spell-space"
 import {
   againOf,
   areasOf,
@@ -175,6 +176,9 @@ export function createRollRequirementService(ports: GmPorts) {
    * the roll when the turn has none. One that is taken holding still (Steady Aim) cannot be taken with a move.
    */
   async function readAction(action: string, character: Character, options?: Options): Promise<TurnReading> {
+    // A turn a spell rules (Command's word, Fear's flight) is taken by its rule, whatever was asked (../sheet/ruled-turns).
+    const ruled = "id" in character ? ruledReading(character, (options?.present ?? []) as Parameters<typeof ruledReading>[1], options?.floor) : undefined
+    if (ruled) return ruled
     const reading = await readPicked(action, character, options)
     const self = "id" in character ? character.id : undefined
     const rule = bonusRuleFor(character, reading.bonus?.feature)
@@ -263,13 +267,18 @@ export function createRollRequirementService(ports: GmPorts) {
     const sees = (other: Present) => (self ? seesRules().map((rule) => rule({ ...character, id: self }, other)) : [])
     // A spell cast as a Reaction (Shield, Counterspell) is cast only when its trigger is offered, never on a turn.
     const knownSpells = spellsOf(character).filter((known) => castableOnTurn(known.spell))
+    // Their spells that teleport them (../sheet/spell-rules `teleports`), for the read's word on moving.
+    const leapers = knownSpells.filter((known) => spellRule(known.spell.id)?.teleports).map((known) => known.spell.name)
     // The spells the caster holds and may use again this turn with no cost: Spiritual Weapon's attack, Heat Metal's burn, Vampiric Touch.
     const held = self ? againOf({ ...character, id: self }) : []
     const heldBonus = held.filter((entry) => entry.takes === "bonus-action")
-    // The spells of theirs that take a Bonus Action and can be paid for now, a stat block's cast as one among them. One
-    // they hold is used again, not cast. One cast by a feature used as the action (Divine Intervention) is not.
+    // The feature by which a spell of an action is cast with the Bonus Action (Quickened Spell), for a hero who has one.
+    const quickens = (known: (typeof knownSpells)[number]) => (known.spell.castingTime.unit !== "bonus-action" && !known.bonusAction ? classBonusCast(character, known.spell) : undefined)
+    // The spells of theirs that take a Bonus Action and can be paid for now, a stat block's cast as one among them, and
+    // those a feature lets them cast with one. One they hold is used again, not cast. One cast by a feature used as the
+    // action (Divine Intervention) is not.
     const bonusSpells = knownSpells.filter((known) => {
-      if ((known.spell.castingTime.unit !== "bonus-action" && !known.bonusAction) || held.some((entry) => entry.spell.id === known.spell.id)) return false
+      if ((known.spell.castingTime.unit !== "bonus-action" && !known.bonusAction && !quickens(known)) || held.some((entry) => entry.spell.id === known.spell.id)) return false
       const paying = castCost(character, known.spell.id)
       return !("problem" in paying) && !(paying.cost.kind === "free" && paying.cost.feature === known.given?.feature)
     })
@@ -294,9 +303,11 @@ export function createRollRequirementService(ports: GmPorts) {
             ? "heals"
             : spell.damage
               ? "strikes with no roll"
-              : endsThings(spell.id)
-                ? "ends a condition or a spell on its target"
-                : "lasts on its target"
+              : spellRule(spell.id)?.summons
+                ? "calls a creature to the caster's side, cast on no one"
+                : endsThings(spell.id)
+                  ? "ends a condition or a spell on its target"
+                  : "lasts on its target"
       return label === "partly" ? `${kind}, the rest told by the game master` : kind
     }
     const casterLevel = character.sheet?.level ?? 1
@@ -337,7 +348,8 @@ export function createRollRequirementService(ports: GmPorts) {
       `Race: ${character.race}`,
       conditions ? `Conditions: ${conditions}` : undefined,
       // A Beast's shape the hero holds (Wild Shape): they act in its body (../sheet/shape).
-      form ? `Shape: a ${form.name}, a Beast form they have taken. They fight with its attacks, and cannot cast spells.` : undefined,
+      // A class feature may let them cast in it (Beast Spells), save for a spell it still bars.
+      form ? `Shape: a ${form.name}, a Beast form they have taken. They fight with its attacks, and ${classCastingBar(character) ? "cannot cast spells" : "can still cast spells"}.` : undefined,
       // What an NPC is written to be able to do beyond its stat block's spells, in words. It is no spell the game rolls.
       !character.sheet && character.spells && character.spells.length > 0 ? `Other magic, in the story's words: ${character.spells.map((entry) => entry.name).join(", ")}` : undefined,
       casts ? `Spellcasting ability: ${abilityById.get(casts)?.name}` : undefined,
@@ -425,7 +437,7 @@ ${freeable.length ? `     "escape": they give the turn to pulling off a creature
          ),
          ...bonusSpells.map(
            (known) =>
-             `${known.spell.id} (${known.spell.name}, a spell cast with a Bonus Action${
+             `${known.spell.id} (${known.spell.name}, ${quickens(known)?.words ?? "a spell cast with a Bonus Action"}${
                known.spell.range.kind === "self"
                  ? ""
                  : targetLimit(known.spell) > 1
@@ -437,12 +449,13 @@ ${freeable.length ? `     "escape": they give the turn to pulling off a creature
        ].join(", ") || "none"
      }.
      A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.${[
-       ...new Set(
-         bonusActions.flatMap((entry) => {
+       ...new Set([
+         ...bonusActions.flatMap((entry) => {
            const note = bonusRuleFor(character, entry.id)?.note
            return (typeof note === "function" ? note(character) : note) ?? []
-         })
-       ),
+         }),
+         ...bonusSpells.flatMap((known) => quickens(known)?.note ?? []),
+       ]),
      ]
        .map(
          (note) => `
@@ -526,7 +539,7 @@ ${
     ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10.
    - They can move ${moveBudget(mover, others)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
-   - Never refuse or change an action because of distance. The game settles reach and range itself.
+${leapers.length ? `   - ${leapers.join(" and ")} ${leapers.length > 1 ? "teleport" : "teleports"} them: cast it, and "moveTo" or "moveAway" is where it takes them. The game puts them there with no walk, and that is their move this turn.\n` : ""}   - Never refuse or change an action because of distance. The game settles reach and range itself.
    - A spell marked "an area" takes whoever stands in it, friend or foe: in "targets" give the one it is aimed at first, and for a spell that picks its creatures, each one picked.
    - The game reads cover from the walls and furniture of the place. Set "cover" only for something the story put between the two that the place does not hold.
      Where Things Are, from where the character stands:
@@ -576,6 +589,12 @@ Action: "${action}"
           .describe('For a spell of Spell Choices that asks "spellChoice": what the caster chooses, from its values')
       // Whether a spell is cast from a magic item, asked only where the hero can cast one of them by their own means too.
       if (eitherWay) chosen.item = z.boolean().optional().describe('For "cast": true when they cast a spell from the magic item Their Spells name for it, in place of their own slot')
+      // Whether the player calls on a feature that casts with no slot (Divine Intervention). The use is one a Long Rest,
+      // so the engine spends it only on a plain yes, and a spell named with no such call is not cast by it.
+      if (givers.length)
+        chosen.calls = z
+          .boolean()
+          .describe(`True only when the player's words call on ${givers.join(" or ")}, or on their god to intervene. False for anything else, a spell they simply name among it`)
       const schema = rollPickSchema.extend({
         ...chosen,
         spell: menu("spell", [...new Set([...knownSpells.map((known) => known.spell.id), ...held.map((entry) => entry.spell.id)])]),
@@ -616,7 +635,11 @@ Action: "${action}"
                 isPicked(known.spell) && spellRule(known.spell.id)?.again?.takes === "action" && [known.spell.id, known.spell.name.toLowerCase()].includes(pick.spell?.trim().toLowerCase() ?? "")
             )
           : undefined
-      const quick = (pick.check === "cast" ? castThenUsed : bonusSpells.find((known) => isPicked(known.spell))) ?? heldBonus.find((entry) => isPicked(entry.spell))
+      // A spell of an action quickened with the Bonus Action (Quickened Spell) goes beside a cantrip cast with the action,
+      // and is dropped beside a spell of level 1 or higher, which may not be cast on the same turn.
+      const castLevel = knownSpells.find((known) => [known.spell.id, known.spell.name.toLowerCase()].includes(pick.spell?.trim().toLowerCase() ?? ""))?.spell.level
+      const quickenedBeside = pick.check === "cast" && castLevel === 0 ? bonusSpells.find((known) => isPicked(known.spell) && !!quickens(known)) : undefined
+      const quick = (pick.check === "cast" ? (castThenUsed ?? quickenedBeside) : bonusSpells.find((known) => isPicked(known.spell))) ?? heldBonus.find((entry) => isPicked(entry.spell))
       const quickTargets = [...(pick.bonusTargets ?? []), ...(pick.bonusTarget ? [pick.bonusTarget] : [])]
       // What a spell's caster chose for it, in the field its choice is asked in, where it is one of its values.
       const choiceFor = (spell: { id: string }): string | undefined => {
@@ -647,7 +670,19 @@ Action: "${action}"
       const dash = pick.check === "dash" || !!usedRule?.dash
       // A Bonus Action that moves the hero beside their Speed (Instinctive Pounce with a Rage entered).
       const extra = usedRule?.moveBonus?.(character)
-      const moveFor = (close?: { target: string; reach: number }) => (mover && floor ? takeMove({ floor, mover, others, ask, dash, close, ...(extra ? { extra } : {}) }) : undefined)
+      // A spell of the turn that teleports its caster (../sheet/spell-rules `teleports`): the move is where it takes them,
+      // with no walk, as far as the spell goes, and it is their move this turn.
+      const castName = pick.check === "cast" ? pick.spell?.trim().toLowerCase() : undefined
+      const leaping = [quick?.spell, knownSpells.find((entry) => !!castName && [entry.spell.id, entry.spell.name.toLowerCase()].includes(castName))?.spell].find(
+        (spell) => !!spell && !!spellRule(spell.id)?.teleports
+      )
+      const leap = leaping && spellRule(leaping.id)?.teleports
+      const moveFor = (close?: { target: string; reach: number }) =>
+        mover && floor
+          ? leaping && leap
+            ? takeTeleport({ floor, mover, others, ask, feet: leap.feet ?? rangeFeet(leaping.range) ?? 0, sees: !!leap.sees })
+            : takeMove({ floor, mover, others, ask, dash, close, ...(extra ? { extra } : {}) })
+          : undefined
       const moved = (move: Moved | undefined) => {
         if (move) also.move = move
         else delete also.move
@@ -684,14 +719,15 @@ Action: "${action}"
         // Beside a Bonus Action that changes the hero (leaving Wild Shape's form), the spell is cast as it leaves them.
         const acting = usedRule?.becomes ? usedRule.becomes(character) : character
         const cost = known && castCost(acting, known.spell.id, pick.ritual === true, pick.slot, pick.item === true)
-        const paid = cost && !("problem" in cost) ? cost : undefined
+        const uncalled = !!cost && !("problem" in cost) && cost.cost.kind === "free" && !!known?.given && cost.cost.feature === known.given.feature && pick.calls !== true
+        const paid = cost && !("problem" in cost) && !uncalled ? cost : undefined
         const spell = again?.spell ?? (paid ? known?.spell : undefined)
         if (!spell) {
           console.log("[LLM] Roll requirement decision:", {
             character: character.name,
             requiresRoll: false,
             cast: pick.spell,
-            refused: cost && "problem" in cost ? cost.problem : "not one of their spells",
+            refused: cost && "problem" in cost ? cost.problem : uncalled ? `cast by ${known?.given?.name} only when the player calls on it` : "not one of their spells",
           })
           return { roll: null, ...also }
         }
@@ -732,11 +768,13 @@ Action: "${action}"
         }
         // An invocation's spell cast with no slot "on yourself" (Armor of Shadows) is the caster's, whoever is named.
         if (known?.selfOnly && paid?.cost.kind !== "slot" && self) chosen = [self]
+        // A spell that teleports its caster is cast on them: where it takes them is the move (../sheet/spell-rules `teleports`).
+        if (spellRule(spell.id)?.teleports && self) chosen = [self]
         // A spell the game tells needs no one named: the game master rules on whom it reaches.
         const told = spellLabel(spell) === "told"
         // One that does nothing to anyone as it is cast needs no one named either (Flame Blade, Flaming Sphere).
         const idle = !again && !!spellRule(spell.id)?.again?.onlyLater
-        const falls = !told && !idle && !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
+        const falls = !told && !idle && !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions || spellRule(spell.id)?.held?.away)
         if (falls && !chosen.length) {
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast: spell.id, refused: "no one here to cast it on" })
           return { roll: null, ...also }

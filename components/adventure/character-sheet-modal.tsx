@@ -54,7 +54,15 @@ function ExpandableText({ title, text }: ExpandableTextProps) {
 
 export function CharacterSheetModal({ character, open, onOpenChange, onOrders }: CharacterSheetModalProps) {
   // The rules sheet, where the hero has one. It loads only while the window is open.
-  const sheet = useSheetView(open ? character?.sheet : undefined, character?.hitPoints, character?.spellSlots, character?.spellEffects, character?.featureUses, character?.shape)
+  const sheet = useSheetView(
+    open ? character?.sheet : undefined,
+    character?.hitPoints,
+    character?.spellSlots,
+    character?.spellEffects,
+    character?.featureUses,
+    character?.shape,
+    character?.heroicInspiration
+  )
   if (!character) return null
   // How the hero stands: their hit points from the sheet, or dying, Stable or dead. And their conditions in words.
   const standing = standingOf({ ...character, type: "pc" }, sheet)
@@ -99,6 +107,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
                       <div className="">
                         {standing.hitPoints} / {standing.maximum}
                         {standing.temporary ? <span className="text-primary-200"> +{standing.temporary} Temporary</span> : null}
+                        {sheet?.heroicInspiration ? <span className="text-primary-200"> · Heroic Inspiration</span> : null}
                       </div>
                       <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
                         <div

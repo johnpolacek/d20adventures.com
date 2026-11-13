@@ -1,12 +1,11 @@
-import { monsterById } from "@d20/srd/monsters"
+import { ownBlockOf } from "../blocks"
 import type { Roller } from "../check"
 import type { SpellRules } from "../spell-rules"
-import { DEFAULT_STAT_BLOCK } from "../stat-block"
 
 // A hero is of a playable species, every one of them a Humanoid. An NPC is of its stat block's type.
 export function creatureTypeOf(character: Roller): string {
   if (character.sheet || character.type !== "npc") return "humanoid"
-  return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.type ?? "humanoid"
+  return ownBlockOf(character)?.type ?? "humanoid"
 }
 
 // "Choose a Humanoid", "One Humanoid", "Target a Beast": the one creature type a spell takes.

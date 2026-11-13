@@ -4,11 +4,12 @@ import { hasFled, isDead } from "../../utils/turn-actors"
 import { masteryOf, parseDice, rollDamage } from "../attack"
 import { type Check, type CheckResult, type Roller, resolveCheck } from "../check"
 import { type Bearing, type ClassRules, type SaveRule, withTurnEffect } from "../class-rules"
-import { immuneTo } from "../conditions"
 import { withHealing } from "../death"
 import { deriveSheet } from "../derive"
 import { hasFeature, usesLeft, withFeatureUsed } from "../feature-rules"
+import { withHeroicInspiration } from "../heroic-inspiration"
 import { hitPointsOf } from "../hit-points"
+import { failureCosts } from "../save-rules"
 import { speedOf } from "../space"
 
 /**
@@ -31,7 +32,8 @@ import { speedOf } from "../space"
  * Constitution modifier.
  * Extra Attack, Two and Three Extra Attacks, Improved and Superior Critical, Action Surge's second use from level 17
  * and Additional Fighting Style are read from the data by ../feature-rules and ../derive.
- * Told only: Heroic Warrior (Champion, level 10), since the engine keeps no Heroic Inspiration.
+ * Heroic Warrior (Champion, level 10): as each round of a fight turns, the engine's start of the Fighter's turn, one
+ * without Heroic Inspiration gains it (../heroic-inspiration).
  */
 
 /**
@@ -59,14 +61,14 @@ const INDOMITABLE = "fighter-indomitable"
 
 /**
  * Indomitable on a failed save against harm (../save-rules `rescuedSave`): the engine uses it by a plain rule, as a
- * player would, on a failure the reroll could still turn, when the failure costs a condition the hero is not immune to
- * or damage. The reroll keeps the save's Advantage or Disadvantage and what was added to it, with the Fighter level
+ * player would, on a failure the reroll could still turn, when the failure costs harm (../save-rules `failureCosts`):
+ * damage, a condition the hero is not immune to, a held spell or a step toward death. The reroll keeps the save's Advantage or Disadvantage and what was added to it, with the Fighter level
  * beside. None when it is not used.
  */
 export function indomitable(args: Parameters<SaveRule>[0]): ReturnType<SaveRule> {
   const { character, result, stakes } = args
   if (!character.sheet || usesLeft(character, INDOMITABLE) < 1) return undefined
-  if (!stakes.damage && !(stakes.conditions ?? []).some((id) => !immuneTo(character, id))) return undefined
+  if (!failureCosts(character, stakes)) return undefined
   const level = character.sheet.level
   const kept = (result.adds ?? []).reduce((sum, add) => sum + add.amount, 0)
   if (20 + result.bonus + kept + level < result.dc) return undefined
@@ -131,6 +133,12 @@ export function heroicRally<T extends Roller & { id: string; hitPoints?: number;
     told: { name: "Heroic Rally", text: `${character.name ?? "The Fighter"} regains ${amount} hit points by Heroic Rally${after ? `, now ${after.current} of ${after.maximum}` : ""}.` },
   }
 }
+
+const HEROIC_WARRIOR = "champion-heroic-warrior"
+
+/** Heroic Warrior as a round of a fight turns: a Champion who starts their turn without Heroic Inspiration gains it. */
+export const heroicWarrior = <T extends Roller & { dead?: true; fled?: true }>(character: T): T =>
+  hasFeature(character, HEROIC_WARRIOR) && !isDead(character) && !hasFled(character) ? withHeroicInspiration(character) : character
 
 export const fighter: ClassRules = {
   class: "fighter",
@@ -213,7 +221,7 @@ export const fighter: ClassRules = {
     },
   ],
   attackSettled: studied,
-  roundStart: heroicRally,
+  roundStart: (character) => heroicRally(heroicWarrior(character)),
   // Defy Death. Its 18 is read from the text: the data does not type it.
   deathSave: (character) => (hasFeature(character, SURVIVOR) ? { modes: [{ mode: "advantage", from: "Defy Death" }], twentyFrom: 18 } : undefined),
 }

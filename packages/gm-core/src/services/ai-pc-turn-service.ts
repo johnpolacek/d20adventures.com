@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { GmPorts, Llm } from "../ports"
 import { itemWords } from "../sheet/items"
+import { boundWords } from "../sheet/masters"
 import { spellWords } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
@@ -11,7 +12,7 @@ import { characterStory, scriptLine, storyNames } from "../story/render"
 import { characterScript, sceneFor, storyOutputObject, storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import { PLAYER_KNOWLEDGE_RULE } from "../utils/narrative-utils"
-import { isAiControlledPc, isDown, takesTurn } from "../utils/turn-actors"
+import { isAiControlledPc, isDown, playsForMaster, takesTurn } from "../utils/turn-actors"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { premiseNote } from "../wiki-adventures/player-safety"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "./adventure-roll-result-service"
@@ -40,7 +41,8 @@ function buildAiPcIntentPrompt(
   lately: string[] = [],
   knowledge?: KnownFact[],
   unheard = "",
-  led: string[] = []
+  led: string[] = [],
+  bound?: string
 ): string {
   return `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
@@ -74,7 +76,7 @@ RIGHT: "He raises his blade and lunges forward with a powerful overhead strike."
 Character:
 ${characterSheet(character)}
 Others present in the scene: ${sceneRoster || "None"}
-${unheard ? `\n${unheard}\n` : ""}${premiseBlock(premise)}${knownBlock(knowledge, character)}${led.length ? `\nWhat the heroes played by a person said and did in earlier rounds, most recent last. Any side they took there is the party's:\n${led.map((m) => `- ${m}`).join("\n")}\n` : ""}${lately.length ? `\nWhat ${character.name} did in earlier rounds, most recent last. Do something different now unless this moment truly calls for the same again:\n${lately.map((m) => `- ${m}`).join("\n")}\n` : ""}
+${bound ? `\nBound by a Spell: ${bound}\n` : ""}${unheard ? `\n${unheard}\n` : ""}${premiseBlock(premise)}${knownBlock(knowledge, character)}${led.length ? `\nWhat the heroes played by a person said and did in earlier rounds, most recent last. Any side they took there is the party's:\n${led.map((m) => `- ${m}`).join("\n")}\n` : ""}${lately.length ? `\nWhat ${character.name} did in earlier rounds, most recent last. Do something different now unless this moment truly calls for the same again:\n${lately.map((m) => `- ${m}`).join("\n")}\n` : ""}
 Recent Narrative:
 ${narrative}
 
@@ -182,7 +184,9 @@ export function createAiPcTurnService(ports: GmPorts) {
   }): Promise<StoryBeat[]> {
     const roster = buildSceneRoster(args.allCharacters, args.character.id, args.heard)
     const unheard = unheardNote(args.heard, args.character, args.allCharacters)
-    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, roster, args.scene, args.premise, args.lately, args.knowledge, unheard, args.led)
+    // A hero a spell binds to another does their bidding (../sheet/masters).
+    const bound = boundWords(args.character, args.allCharacters)
+    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, roster, args.scene, args.premise, args.lately, args.knowledge, unheard, args.led, bound)
     const { object } = await generateObject({ prompt, schema: storyOutputObject, viewer: args.character.id })
     const beats = cleanStory(object.beats, args.scene, { step: "reply", character: args.character.id })
     if (!beats.length) throw new Error(`Empty intent generated for AI companion ${args.character.name}`)
@@ -221,7 +225,7 @@ export function createAiPcTurnService(ports: GmPorts) {
     let turn = await ports.store.getTurn({ turnId })
     if (!turn) throw new Error("Turn not found")
     let character = (turn.characters as TurnCharacter[]).find((c) => c.id === characterId)
-    if (!character || !isAiControlledPc(character) || character.isComplete || !takesTurn(character)) {
+    if (!character || !(isAiControlledPc(character) || playsForMaster(character)) || character.isComplete || !takesTurn(character)) {
       console.log("[AI PC] Skipping — character missing, not AI-controlled, already complete, or down:", characterId)
       return
     }

@@ -22,6 +22,8 @@ const made = (): Sheet => {
   return result.sheet
 }
 const INVOCATIONS = "warlock-eldritch-invocations"
+// Pact of the Tome with its Book of Shadows filled: three cantrips and two level 1 Ritual spells the hero lacks.
+const TOME: FeaturePick = { option: "pact-of-the-tome", spells: ["fire-bolt", "mage-hand", "minor-illusion", "detect-magic", "find-familiar"] }
 const invocations = (sheet: Sheet) => sheet.featurePicks?.[INVOCATIONS] ?? []
 const problemsOf = (result: ReturnType<typeof levelUp>) => ("problems" in result ? result.problems : [])
 
@@ -48,10 +50,10 @@ test("a level 1 Warlock takes one invocation, one with no prerequisite", () => {
     const result = createSheet(pick, { ...autoCreate(pick), featurePicks: { [INVOCATIONS]: picks } })
     return "problems" in result ? result.problems : []
   }
-  assert.deepEqual(chosen([{ option: "pact-of-the-tome" }]), [])
+  assert.deepEqual(chosen([TOME]), [])
   assert.deepEqual(chosen([]), ["Eldritch Invocations lists no picks", "Eldritch Invocations takes 1 options at level 1, and the sheet has 0"])
   assert.deepEqual(chosen([{ option: "agonizing-blast", cantrip: "eldritch-blast" }]), ["Agonizing Blast needs level 2, and the sheet is level 1"])
-  assert.deepEqual(chosen([{ option: "pact-of-the-tome" }, { option: "eldritch-mind" }]), ["Eldritch Invocations takes 1 options at level 1, and the sheet has 2"])
+  assert.deepEqual(chosen([TOME, { option: "eldritch-mind" }]), ["Eldritch Invocations takes 1 options at level 1, and the sheet has 2"])
 })
 
 test("a Warlock at level 2 takes two more, may replace one, and is refused an unmet prerequisite", () => {
@@ -74,7 +76,7 @@ test("a Warlock at level 2 takes two more, may replace one, and is refused an un
   ])
   // One kept from before is replaced, and only one.
   assert.equal(invocations(ok(taking([{ option: "eldritch-mind" }, { option: "devils-sight" }, { option: "otherworldly-leap" }]))).length, 3)
-  const refused = problemsOf(levelUp(two, { ...autoChoices(two), featurePicks: { [INVOCATIONS]: [{ option: "armor-of-shadows" }, { option: "pact-of-the-tome" }, { option: "pact-of-the-chain" }] } }))
+  const refused = problemsOf(levelUp(two, { ...autoChoices(two), featurePicks: { [INVOCATIONS]: [{ option: "armor-of-shadows" }, TOME, { option: "pact-of-the-chain" }] } }))
   assert.deepEqual(refused, ["Eldritch Invocations may replace one option at level 3, and the choices replace 2"])
   // An invocation is not taken twice unless it is repeatable.
   assert.deepEqual(problemsOf(taking([{ option: "armor-of-shadows" }, { option: "devils-sight" }, { option: "devils-sight" }])), ["Devil’s Sight is picked twice, and it is not repeatable"])

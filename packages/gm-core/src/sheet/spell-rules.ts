@@ -8,7 +8,7 @@ import type { DeathRules } from "./death"
 import type { ConditionChange, Harm } from "./harm"
 import type { SaveStakes } from "./legendary-resistance"
 import type { Sheet } from "./sheet"
-import type { AreaOfEffect, Point } from "./space"
+import type { AreaOfEffect, Floor, Point } from "./space"
 import type { Castee, SaveRoll, SpellAttack, Spellcasting } from "./spells"
 import type { Concentration, SpellEffect } from "./turn-effect"
 
@@ -56,6 +56,12 @@ export type SpellRules = {
   takesDead?: true
   /** Its range in feet for this caster, where its words change it: Spare the Dying's, doubled at levels 5, 11 and 17 (./spell-space). */
   range?: (caster: Roller) => number | undefined
+  /**
+   * It carries its caster to where the read's move names, with no walk: as far as `feet`, or its range where none is
+   * given, onto a clear spot, and with `sees` only as far as they can see along the way (../moves `takeTeleport`):
+   * Misty Step, Dimension Door.
+   */
+  teleports?: { feet?: number; sees?: true }
 
   // A choice the caster makes as they cast it (../services/roll-requirement-service), kept on its effect as `choice`.
   /** What the caster chooses: its values, the field of the read it is asked in, and what it is in words. */
@@ -92,6 +98,21 @@ export type SpellRules = {
   ends?: <T extends Ended>(args: EndsArgs<T>) => { characters: T[]; conditions: ConditionChange[]; facts: string[] }
   /** What the spell leaves once everything else of the cast is done: Acid Arrow's later burn. */
   cast?: (cast: CastContext) => void
+  /**
+   * The creatures the spell brings into the encounter, each on its caster's side and bound to them (../types/character
+   * `master`), placed beside the caster and in the turn order as each says, once the rest of the cast is done: Summon
+   * Dragon's Draconic Spirit. One is gone when the spell ends (./spell-effects `endConcentration`).
+   */
+  summons?: (cast: CastContext) => readonly Summon[]
+  /** One bound to its caster by the spell (`master`), on a turn with no command, in words for the model that writes its turn: "it takes the Dodge action". */
+  idle?: string
+  /** The shape the spell gives (../types/character `shape`, ./shape): what of themselves its bearer keeps in it. */
+  shape?: ShapeRules
+  /**
+   * Its bearer's turn as the spell rules it, in place of what they would do (./ruled-turns): Command's Halt, Fear's
+   * flight. None where the turn is the bearer's own.
+   */
+  rulesTurn?: (bearer: Bearer & { id: string; name: string }, characters: readonly Bearer[]) => RuledTurn | undefined
 
   // What a held spell is and does (./spell-effects).
   /** The spell lasts on those it takes though its data holds no lasting value, and what it does while it lasts. */
@@ -113,12 +134,17 @@ export type SpellRules = {
   round?: (round: RoundContext, was: RoundBearer) => void
   /** The save the spell's data repeats at the end of each turn is not made by the engine: Fear's, made only out of its caster's sight. */
   repeatsSave?: false
+  /**
+   * What the rules do as a round turns for one its effect has taken away (`held.away`), whom no other round rule
+   * reaches while they are gone: Maze's check to escape, Banishment's end for good.
+   */
+  whileAway?: (round: RoundContext, was: RoundBearer) => void
 
   // When a bearer takes damage (./spell-effects `settleConcentration`).
   /** The spell ends on its bearer when they take damage: Sleep, Hypnotic Pattern. */
   endsOnDamage?: true
   /** What else damage to its bearer does: a save to end it. */
-  damaged?: <T extends Bearer>(args: { bearer: T; lost: number; d20: () => number; characters: readonly T[] }) => { bearer: T; facts: string[] } | undefined
+  damaged?: <T extends Bearer>(args: { bearer: T; lost: number; d20: () => number; characters: readonly T[] }) => { bearer: T; facts: string[]; others?: T[] } | undefined
 
   // When its bearer casts a spell (./spells `castSpell`).
   /** The spell ends on one who casts a spell while it is on them: Invisibility. */
@@ -128,6 +154,26 @@ export type SpellRules = {
   /** One the spell was on as it ends: Haste's lethargy. */
   ended?: <T extends Bearer>(bearer: T, casterId: string) => T
 }
+
+/**
+ * A creature a spell brings into the encounter (`summons`): its stat block's id (./blocks), its name, and its turn.
+ * "after" shares its caster's Initiative and takes its turn right after theirs, and "own" rolls its own. `waits`: it
+ * takes no turn this round (Finger of Death's Zombie rises at the start of its caster's next turn). `beside`: it stands
+ * beside this one, where it came from (the one Finger of Death killed), else beside its caster.
+ */
+export type Summon = { statBlock: string; name: string; initiative: "after" | "own"; waits?: true; beside?: string }
+
+/**
+ * What one in a shape a spell gave keeps of themselves (./shape): their Intelligence, Wisdom and Charisma, where the
+ * form's replace all six (Polymorph), and their spellcasting (Shapechange).
+ */
+export type ShapeRules = { keepsMind?: true; casts?: true }
+
+/**
+ * A turn a spell rules (`rulesTurn`): its name and what happens in words, and the move it makes, toward or straight
+ * away from one, with the Dash action where `dash`. The turn is then over.
+ */
+export type RuledTurn = { name: string; text: string; move?: { to?: string; away?: string }; dash?: true }
 
 /**
  * A choice a spell asks of its caster as it is cast. `values` are ids: damage types, abilities, a mode's condition. The
@@ -259,6 +305,8 @@ export type HeldRules = {
   deflects?: <T extends Bearer>(bearer: T, attacker: Bearer, roll: (sides: number) => number) => Deflected<T> | undefined
   /** What it makes of one of its bearer's own weapon attacks: Shillelagh's Club or Quarterstaff. Read in ./attack `attacksOf`. */
   weaponAttack?: (effect: SpellEffect, attack: Attack, bearer: Bearer) => Attack
+  /** Its bearer is out of the encounter while it lasts, its effect marked `away` (../utils/turn-actors `isAway`): Banishment's demiplane, Maze. */
+  away?: true
 }
 
 /** A hit a held spell may have turned: its bearer as it leaves them, whether it was, the dice, and how many there were. */
@@ -318,6 +366,8 @@ export type CastContext = {
   to?: Point
   /** The conditions the cast has given or ended so far, added to in order. */
   conditions: ConditionChange[]
+  /** The encounter's floor, for one the spell moves (Thunderwave's push, ./floor-areas `shovedTo`). None where there is no floor. */
+  floor?: Floor
   /** A condition the spell gives one, for its span or the span the spell's text gives it, told and counted. */
   give: (id: string, condition: ConditionId, span?: ConditionSpan) => void
   /** A saving throw against the caster's spell save DC, counted and told with what Legendary Resistance and the like spend. */
@@ -366,6 +416,8 @@ export type RoundContext = {
   holds: (spell: Spell, by: string | undefined) => RoundBearer | undefined
   /** Conditions given or ended this round. */
   conditions: ConditionChange[]
+  /** A d20 thrown, for a check the rules make for one (Maze's Intelligence (Investigation) check). */
+  d20: () => number
 }
 
 // The list of every file's rules, which ./spell-mechanics/index.ts hands over as it loads, and the rules of each spell

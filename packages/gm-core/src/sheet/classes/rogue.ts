@@ -4,16 +4,18 @@ import { classById } from "@d20/srd/classes"
 import { z } from "zod"
 import { isDown, isIncapacitated } from "../../utils/turn-actors"
 import { parseDice, type Target } from "../attack"
-import { type Check, type CheckResult, checkBonus, combineModes, type Roller, resolveCheck } from "../check"
+import { type Check, type CheckResult, type Roller, resolveCheck } from "../check"
 import type { BonusActionRule, ClassRules, HitRider, HitRule, SaveRule } from "../class-rules"
-import { checkModesFrom, hasCondition, immuneTo, saveFailedBy, withCondition } from "../conditions"
+import { hasCondition, saveFailedBy, withCondition } from "../conditions"
 import { deriveSheet } from "../derive"
 import { hasFeature, usedThisTurn, usesLeft, withFeatureUsed } from "../feature-rules"
-import { spendsLegendaryResistance, withLegendaryResistanceSpent } from "../legendary-resistance"
+import { shovedTo } from "../floor-areas"
+import { withLegendaryResistanceSpent } from "../legendary-resistance"
 import { canReact } from "../reactions"
+import { failureCosts, saveCheck, withRescueSpent } from "../save-rules"
 import type { Sheet } from "../sheet"
-import { pushed, sizeOf, speedOf, walkOver } from "../space"
-import { checkAdds, saveBonusFor, saveModesFor } from "../spell-effects"
+import { sizeOf, speedOf } from "../space"
+import { type Castee, rollSave } from "../spells"
 import { combatStatsOf } from "../stat-block"
 
 /**
@@ -124,18 +126,21 @@ const TRIPPED_SIZES: readonly string[] = ["Tiny", "Small", "Medium", "Large"]
  * succeed where it would be put out of the fight (../legendary-resistance): `resisted` says so.
  */
 function strikeSave<T extends Target>(rogue: Roller, target: T, ability: AbilityId, against: readonly ConditionId[], d20: () => number, roll: (sides: number) => number) {
-  const check = { kind: "save" as const, ability }
-  const mode = combineModes([...checkModesFrom(target, check), ...saveModesFor(target, check, [...against])].map((source) => source.mode))
-  const save = resolveCheck({
-    dice: mode === "normal" ? [d20()] : [d20(), d20()],
-    bonus: checkBonus(target, check) + saveBonusFor(target, check),
+  // As every save is rolled (../spells `rollSave`), against no magic: a rescue of the target's own is spent.
+  const thrown = rollSave({
+    target: target as unknown as Castee,
+    ability,
     dc: cunningStrikeDc(rogue.sheet as Sheet),
-    mode,
-    fails: !!saveFailedBy(target, check),
-    adds: checkAdds(target, check, roll),
+    d20,
+    roll,
+    characters: [target as unknown as Castee],
+    against,
+    stakes: { conditions: against },
+    magical: false,
   })
-  const resisted = !save.success && spendsLegendaryResistance(target, { conditions: against })
-  return { save, resisted, target: resisted ? withLegendaryResistanceSpent(target) : target }
+  const resisted = !!thrown.legendary
+  const after = resisted ? withLegendaryResistanceSpent(target) : thrown.rescued ? withRescueSpent(target, thrown.rescued) : target
+  return { save: resisted ? { ...saveCheck(thrown), success: false } : saveCheck(thrown), resisted, target: after }
 }
 
 // The two turns a Blinded lasts "until the end of its next turn", or one before the target has acted this round.
@@ -151,10 +156,10 @@ function strikeEffect<T extends Target>(id: string, effect: CunningStrike, rogue
   if (isDown(target)) return undefined
   const d20 = () => roll(20)
   if (effect === "trip") {
-    const { save } = strikeSave(rogue, target, "dex", ["prone"], d20, roll)
-    const given = TRIPPED_SIZES.includes(sizeOf(target)) && !save.success ? withCondition(target, { id: "prone" }) : undefined
+    const { save, target: saver } = strikeSave(rogue, target, "dex", ["prone"], d20, roll)
+    const given = TRIPPED_SIZES.includes(sizeOf(target)) && !save.success ? withCondition(saver, { id: "prone" }) : undefined
     return {
-      target: given?.given ? given.character : target,
+      target: given?.given ? given.character : saver,
       rider: { id, effect, save, took: !!given?.given },
       conditions: given?.given ? [{ target: target.id ?? "", condition: "prone" as const }] : [],
     }
@@ -234,9 +239,9 @@ export function strokeOfLuck(character: Roller & { featureUses?: Record<string, 
   return resolveCheck({ dice: result.mode === "normal" ? [20] : [20, 20], bonus: result.bonus, dc: result.dc, mode: result.mode, adds: result.adds })
 }
 
-/** Stroke of Luck on a failed save against harm (../save-rules `rescuedSave`): a failure that costs damage or a condition the hero is not immune to. */
+/** Stroke of Luck on a failed save against harm (../save-rules `rescuedSave`): a failure that costs harm (../save-rules `failureCosts`). A Death Saving Throw's 20 brings the hero back. */
 const luckySave: SaveRule = ({ character, ability, result, stakes }) => {
-  if (!stakes.damage && !(stakes.conditions ?? []).some((id) => !immuneTo(character, id))) return undefined
+  if (!failureCosts(character, stakes)) return undefined
   const lucky = strokeOfLuck(character, { kind: "save", ability }, result)
   return lucky && { result: lucky, feature: STROKE_OF_LUCK, name: classFeatureById.get(STROKE_OF_LUCK)?.name ?? "Stroke of Luck" }
 }
@@ -341,13 +346,14 @@ export const rogue: ClassRules = {
   ],
   turnEffects: [{ id: "sneak-attack", span: 1 }],
   // Withdraw: right after the attack, half the Speed straight back from the one struck, as far as the first solid
-  // thing, with no Opportunity Attacks: the position is set, not walked.
+  // thing, with no Opportunity Attacks: the position is set, not walked, though it comes into areas on its way
+  // (../spell-rounds `areasForced`).
   attackRolled: (attacker, target, made) => {
     if (!made || made.dealt <= 0 || !sneakLanded(attacker) || !attacker.position || !target.position) return attacker
     if (!cunningPicked(attacker, made.attack.choices).includes("withdraw")) return attacker
     const feet = Math.floor((speedOf(attacker) ?? 0) / 2)
-    const to = pushed(attacker.position, target.position, feet)
-    return { ...attacker, position: made.floor ? walkOver(made.floor.solids, attacker.position, to, feet).at : to }
+    // The floor is the one in play, walls raised by spells among its solid things (../actions `afterRoll`).
+    return { ...attacker, position: shovedTo(made.floor, [], attacker.position, target.position, feet) }
   },
   staysHidden: (attacker, made) => made.dealt > 0 && made.attack.cover === "three-quarters" && sneakLanded(attacker) && cunningPicked(attacker, made.attack.choices).includes("stealth-attack"),
   // Knock Out's Unconscious ends "until it takes any damage".
@@ -361,7 +367,7 @@ export const rogue: ClassRules = {
     const thrown = strikeSave(rogue, character as unknown as Target, "con", ["unconscious"], round.d20, round.roll)
     const name = character.name ?? "The target"
     const verdict = `${name} repeats the Constitution save against Knock Out (${thrown.save.total} against DC ${thrown.save.dc})`
-    if (!thrown.save.success && !thrown.resisted) return { character, told: { name: "Knock Out", text: `${verdict} and fails: they stay Unconscious.` } }
+    if (!thrown.save.success && !thrown.resisted) return { character: thrown.target as unknown as typeof character, told: { name: "Knock Out", text: `${verdict} and fails: they stay Unconscious.` } }
     const woken = thrown.target as unknown as typeof character
     const conditions = (woken.conditions ?? []).filter((entry) => entry !== held)
     const { conditions: _, ...rest } = woken

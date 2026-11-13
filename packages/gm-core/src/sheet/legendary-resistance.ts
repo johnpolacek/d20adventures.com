@@ -1,5 +1,5 @@
 import type { ConditionId } from "@d20/srd"
-import { monsterById } from "@d20/srd/monsters"
+import { blockOf } from "./blocks"
 import { type Afflicted, immuneTo } from "./conditions"
 import { hitPointsOf } from "./hit-points"
 
@@ -21,14 +21,17 @@ export type LegendaryResistance = { uses: number; inLair?: number; left: number 
 
 export function legendaryResistanceOf(character: Resister): LegendaryResistance | undefined {
   if (character.type !== "npc" || character.sheet || !character.statBlock) return undefined
-  const trait = monsterById.get(character.statBlock)?.traits?.find((entry) => entry.name === LEGENDARY_RESISTANCE)
+  const trait = blockOf(character)?.traits?.find((entry) => entry.name === LEGENDARY_RESISTANCE)
   const uses = trait?.uses?.count
   if (typeof uses !== "number") return undefined
   return { uses, ...(trait?.uses?.countInLair ? { inLair: trait.uses.countInLair } : {}), left: Math.max(0, uses - (character.featureUses?.[LEGENDARY_RESISTANCE] ?? 0)) }
 }
 
-/** What a failed save would cost: the conditions it would give, and the damage it would deal after defenses. */
-export type SaveStakes = { conditions?: readonly ConditionId[]; damage?: number }
+/**
+ * What a failed save would cost: the conditions it would give, and the damage it would deal after defenses. A save to
+ * keep Concentration costs the spell (`concentration`, its id), and a Death Saving Throw a step toward death (`death`).
+ */
+export type SaveStakes = { conditions?: readonly ConditionId[]; damage?: number; concentration?: string; death?: true }
 
 // The conditions that take a creature's turns or actions away: Incapacitated and those that carry it, and Restrained,
 // which holds it in place and takes Advantage from its attacks. Banishment gives Incapacitated.

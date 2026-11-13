@@ -5,7 +5,7 @@ import { atRoundStart } from "@d20/gm-core/sheet/death"
 import { inspirationAtEncounterEnd } from "@d20/gm-core/sheet/features"
 import { spellEffectsAtEncounterEnd } from "@d20/gm-core/sheet/spell-effects"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
-import { hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
+import { isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { type CharacterUpdate, characterUpdateSchema } from "@d20/gm-core/wiki-adventures/character-updates"
 import { z } from "zod"
@@ -22,6 +22,7 @@ export type CharacterState = Pick<
   | "turnEffects"
   | "featureUses"
   | "inspiration"
+  | "heroicInspiration"
   | "spellSlots"
   | "hitDiceUsed"
   | "spellEffects"
@@ -52,6 +53,7 @@ export function characterState(c: CharacterState): CharacterState {
     tempHitPoints: c.tempHitPoints,
     standingOrders: c.standingOrders,
     inspiration: c.inspiration,
+    heroicInspiration: c.heroicInspiration,
     dead: c.dead,
     fled: c.fled,
     // Always set, so a hero brought back clears the saves a later spread would otherwise keep.
@@ -144,8 +146,9 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
     // Points stay, until a rest (@d20/gm-core/sheet/rest).
     const c = args.encounterChanged ? spellEffectsAtEncounterEnd(inspirationAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept)))) : kept
     if (!c.deathSaves) delete c.deathSaves
-    // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none.
-    const ready = hasFled(c) ? { ...c, hasReplied: false, isComplete: true } : atRoundStart(c)
+    // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none. One away for now
+    // (a spell's demiplane) has their spells counted down as anyone's, and takes no turn till they are back.
+    const ready = c.fled ? { ...c, hasReplied: false, isComplete: true } : atRoundStart(c)
     states[c.id] = characterState(ready)
     return ready
   })

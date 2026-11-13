@@ -1,8 +1,8 @@
 import type { AbilityId, DamageTypeId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
-import { monsterById } from "@d20/srd/monsters"
 import { isDead } from "../utils/turn-actors"
 import { damageTaken, defensesOf, parseDice, rollDamage } from "./attack"
+import { ownBlockOf } from "./blocks"
 import { conditionName, withCondition } from "./conditions"
 import { afterHarm, enduredWords, type Fate, wardedWords, withDamage, withHealing } from "./death"
 import { deriveSheet } from "./derive"
@@ -15,7 +15,6 @@ import type { Sheet } from "./sheet"
 import { sameSide } from "./sides"
 import { placedOf, within } from "./space"
 import { type Cast, rollSave, type SaveRoll, spellcastingOf } from "./spells"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /**
  * A Cleric's Channel Divinity by the SRD 5.2.1, as pure functions. Each use is a Magic action that spends one of the
@@ -54,7 +53,7 @@ export function divinityPicksOf(character: { sheet?: Sheet; featureUses?: Record
 /** Whether a creature is Undead: an NPC whose stat block says so. A hero, or an NPC with a rules sheet, is not. */
 export function isUndead(character: { type?: string; sheet?: unknown; statBlock?: string }): boolean {
   if (character.type !== "npc" || character.sheet) return false
-  return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.type === "undead"
+  return ownBlockOf(character)?.type === "undead"
 }
 
 // The Divine Spark option's dice at a Cleric level: 1d8, 2d8 from 7, 3d8 from 13, 4d8 from 18.

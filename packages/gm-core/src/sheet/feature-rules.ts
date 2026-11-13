@@ -16,6 +16,9 @@ type Holder = { sheet?: Sheet; featureUses?: Record<string, number> }
 /** Whether a hero has a class or subclass feature at their level, by its SRD id. An NPC with a stat block has none. */
 export const hasFeature = (character: { sheet?: Sheet }, id: string): boolean => !!character.sheet && deriveSheet(character.sheet).classFeatures.includes(id)
 
+/** Whether a hero has a feat, by its SRD id: one their background gives or one they took. An NPC with a stat block has none. */
+export const hasFeat = (character: { sheet?: Sheet }, id: string): boolean => !!character.sheet && deriveSheet(character.sheet).feats.includes(id)
+
 /** The option a hero keeps for a feature: Hunter's Prey's "colossus-slayer". */
 export const featureChoice = (character: { sheet?: Sheet }, id: string): string | undefined => (hasFeature(character, id) ? character.sheet?.featureChoices?.[id] : undefined)
 

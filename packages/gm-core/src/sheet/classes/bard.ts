@@ -139,7 +139,7 @@ export const countercharm: SaveRule = ({ character, result, stakes, d20, present
   const dice = Array.from({ length: mode === "normal" ? 1 : 2 }, () => d20())
   const rerolled = resolveCheck({ dice, bonus: result.bonus, dc: result.dc, mode, adds: result.adds ?? [] })
   const name = classFeatureById.get(COUNTERCHARM)?.name ?? "Countercharm"
-  return { result: rerolled, feature: COUNTERCHARM, name: bard.id === saver.id ? name : `${bard.name}'s ${name}`, by: bard.id }
+  return { result: rerolled, feature: COUNTERCHARM, name: bard.id === saver.id ? name : `${bard.name}'s ${name}`, by: bard.id, reaction: true }
 }
 
 /** Superior Inspiration as Initiative is rolled: a Bard with fewer than two uses of Bardic Inspiration left regains them up to two. */

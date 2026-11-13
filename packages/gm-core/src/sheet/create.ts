@@ -682,10 +682,12 @@ export function autoCreate(pick: CreationPick): CreationChoices {
   if (options.spellbook) choices.spellbook = firstSpells(options.spellbook.from, options.spellbook.count)
   if (options.featurePicks) {
     const feats = [background.feat.id ?? "", ...(choices.speciesFeat ? [choices.speciesFeat] : [])]
-    choices.featurePicks = Object.fromEntries(options.featurePicks.map((offer) => [offer.feature.id, autoPicks(offer, 1, choices.cantrips ?? [], feats)]))
+    choices.featurePicks = Object.fromEntries(options.featurePicks.map((offer) => [offer.feature.id, autoPicks(offer, 1, choices.cantrips ?? [], feats, [...known])]))
   }
+  // A Book of Shadows' spells are the hero's already, so they are not prepared again.
+  const shadows = Object.values(choices.featurePicks ?? {}).flatMap((picks) => picks.flatMap((entry) => entry.spells ?? []))
   if (options.spells) {
-    const from = choices.spellbook ? options.spells.from.filter((entry) => choices.spellbook?.includes(entry.id)) : options.spells.from
+    const from = (choices.spellbook ? options.spells.from.filter((entry) => choices.spellbook?.includes(entry.id)) : options.spells.from).filter((entry) => !shadows.includes(entry.id))
     choices.spells = bySpellOrder(from)
       .slice(0, options.spells.count)
       .map((entry) => entry.id)

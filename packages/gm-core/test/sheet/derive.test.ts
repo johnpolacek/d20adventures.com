@@ -206,7 +206,7 @@ const heroes: { name: string; sheet: Sheet; hp: number; ac: number; from: string
         background: "acolyte",
         abilityScores: scores(8, 14, 13, 12, 10, 16),
         classSkills: ["arcana", "deception"],
-        featurePicks: { "warlock-eldritch-invocations": [{ option: "pact-of-the-tome" }] },
+        featurePicks: { "warlock-eldritch-invocations": [{ option: "pact-of-the-tome", spells: ["fire-bolt", "mage-hand", "minor-illusion", "identify", "find-familiar"] }] },
         armor: "leather-armor",
       },
       hp: 9,

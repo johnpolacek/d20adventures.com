@@ -1,7 +1,7 @@
 import { type AbilityId, abilityIds, type DamageTypeId, type SkillId, skillIds } from "@d20/srd"
 import { backgroundById } from "@d20/srd/backgrounds"
 import { classFeatureById } from "@d20/srd/class-features"
-import { classById } from "@d20/srd/classes"
+import { classById, classes } from "@d20/srd/classes"
 import { damageTypeById, damageTypes } from "@d20/srd/damage-types"
 import { equipmentById } from "@d20/srd/equipment"
 import { featById } from "@d20/srd/feats"
@@ -231,6 +231,33 @@ export function fillsSpellSlots(slots: readonly (readonly number[])[], levels: r
   }
   return true
 }
+
+/**
+ * Pact of the Tome, an Eldritch Invocation: the Book of Shadows holds three cantrips and two level 1 spells that have
+ * the Ritual tag, from any class's spell list, none the hero already has prepared. While the book is on the Warlock
+ * they are prepared and function as Warlock spells: the cantrips are known, and the two spells always prepared, so a
+ * Ritual is cast as one or with a slot. They are kept on the invocation's pick, in `spells`. The counts are in its text
+ * (SRD 5.2.1, page 74), which the data does not type. The book is always on the Warlock. Choosing again as it is
+ * conjured anew at a rest is not offered: the picks change where the invocation may be replaced, at a level.
+ */
+export const PACT_OF_THE_TOME = "pact-of-the-tome"
+export const BOOK_OF_SHADOWS = { cantrips: 3, rituals: 2 } as const
+const INVOCATIONS = "warlock-eldritch-invocations"
+
+/** The spells a Book of Shadows may hold: every class's cantrips and its level 1 spells with the Ritual tag, by name within each level. */
+export function bookOfShadowsOptions(): { id: string; name: string; level: number }[] {
+  const ids = new Set(classes.flatMap((cls) => (cls.spellcasting?.spellList ?? []).filter((entry) => entry.level <= 1).flatMap((entry) => entry.spells)))
+  return [...ids]
+    .flatMap((id) => {
+      const spell = spellById.get(id)
+      return spell && (spell.level === 0 || (spell.level === 1 && spell.ritual)) ? [{ id, name: spell.name, level: spell.level }] : []
+    })
+    .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name))
+}
+
+/** The spells a sheet's Book of Shadows holds, from its Pact of the Tome pick: none without one. */
+const bookOf = (sheet: Sheet, parts: Parts): string[] =>
+  parts.features.some((feature) => feature.id === INVOCATIONS) ? (sheet.featurePicks?.[INVOCATIONS] ?? []).flatMap((pick) => (pick.option === PACT_OF_THE_TOME ? (pick.spells ?? []) : [])) : []
 
 /** Magical Secrets (Bard, level 10): the Bard's prepared spells may come from the Bard, Cleric, Druid and Wizard lists, by its text. */
 const MAGICAL_SECRETS = "bard-magical-secrets"
@@ -624,14 +651,16 @@ const pickedPrepared = (sheet: Sheet, parts: Parts): string[] =>
 
 /** As `alwaysPrepared`, from parts already looked up. A cantrip among them is known, so it is in `alwaysKnownOf`. */
 function alwaysPreparedOf(sheet: Sheet, parts: Parts): string[] {
-  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass), ...pickedPrepared(sheet, parts)])].filter(
-    (id) => !isCantrip(id)
-  )
+  return [
+    ...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass), ...pickedPrepared(sheet, parts), ...bookOf(sheet, parts)]),
+  ].filter((id) => !isCantrip(id))
 }
 
-/** The cantrips a feature or the subclass gives with its always-prepared spells: a land's, and a cantrip of Magical Discoveries. They are not listed on the sheet. */
+/** The cantrips a feature or the subclass gives with its always-prepared spells: a land's, a cantrip of Magical Discoveries, and a Book of Shadows'. They are not listed on the sheet. */
 function alwaysKnownOf(sheet: Sheet, parts: Parts): string[] {
-  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass), ...pickedPrepared(sheet, parts)])].filter(isCantrip)
+  return [
+    ...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass), ...pickedPrepared(sheet, parts), ...bookOf(sheet, parts)]),
+  ].filter(isCantrip)
 }
 
 /**
@@ -675,9 +704,11 @@ function spellProblems(sheet: Sheet, parts: Parts): string[] {
   for (const id of prepared)
     if (!lists.some((list) => onSpellList(list, id, 1, highest)))
       problems.push(`"${id}" is not a ${lists.map((list) => classById.get(list)?.name ?? list).join(" or ")} spell of a level the sheet has slots for`)
-  const always = alwaysPreparedOf(sheet, parts)
+  // A spell a Book of Shadows holds that the hero already has is the book's fault, named in ./pickProblems.
+  const shadows = bookOf(sheet, parts)
+  const always = alwaysPreparedOf(sheet, parts).filter((id) => !shadows.includes(id))
   for (const id of prepared) if (always.includes(id)) problems.push(`"${id}" is always prepared, so it is not listed among the prepared spells`)
-  for (const id of cantrips) if (alwaysKnownOf(sheet, parts).includes(id)) problems.push(`"${id}" is always known, so it is not listed among the cantrips`)
+  for (const id of cantrips) if (alwaysKnownOf(sheet, parts).includes(id) && !shadows.includes(id)) problems.push(`"${id}" is always known, so it is not listed among the cantrips`)
   for (const [name, ids] of [
     ["cantrip", cantrips],
     ["prepared spell", prepared],
@@ -904,6 +935,36 @@ function originProblems(sheet: Sheet, parts: Parts): string[] {
 }
 
 /**
+ * Faults in a Book of Shadows' spells: three cantrips and two level 1 spells with the Ritual tag, five in all, each
+ * once, from any class's list, and none the hero already has by another way: the sheet's cantrips and prepared spells,
+ * the species', those a feature, the subclass or a feat gives.
+ */
+function bookProblems(sheet: Sheet, parts: Parts, spells: readonly string[]): string[] {
+  const problems: string[] = []
+  const from = bookOfShadowsOptions()
+  const levelOf = (id: string) => from.find((option) => option.id === id)?.level
+  const cantrips = spells.filter((id) => levelOf(id) === 0).length
+  const rituals = spells.filter((id) => levelOf(id) === 1).length
+  for (const id of spells)
+    if (levelOf(id) === undefined) problems.push(`${spellById.get(id)?.name ?? `"${id}"`} is neither a cantrip nor a level 1 Ritual spell, so the Book of Shadows cannot hold it`)
+  if (new Set(spells).size !== spells.length) problems.push("the Book of Shadows holds a spell twice")
+  if (cantrips !== BOOK_OF_SHADOWS.cantrips || rituals !== BOOK_OF_SHADOWS.rituals || spells.length !== BOOK_OF_SHADOWS.cantrips + BOOK_OF_SHADOWS.rituals)
+    problems.push(`the Book of Shadows holds ${BOOK_OF_SHADOWS.cantrips} cantrips and ${BOOK_OF_SHADOWS.rituals} level 1 Ritual spells, and the pick has ${cantrips} and ${rituals}`)
+  const feats = (sheet.advancements ?? []).flatMap((entry) => [...(entry.cantrips ?? []), ...(entry.spell ? [entry.spell] : [])])
+  const held = new Set([
+    ...(sheet.cantrips ?? []),
+    ...(sheet.spells ?? []),
+    ...speciesCantripsOf(sheet, parts),
+    ...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []),
+    ...subclassPrepared(sheet, parts.subclass),
+    ...pickedPrepared(sheet, parts),
+    ...feats,
+  ])
+  for (const id of spells) if (held.has(id)) problems.push(`the hero already has ${spellById.get(id)?.name ?? id}, so the Book of Shadows cannot hold it`)
+  return problems
+}
+
+/**
  * Faults in the options picked for features that take several (`featurePicks`): as many as the feature takes at the
  * level, each an option of the feature whose prerequisite the hero meets (the class level, another option picked, a
  * cantrip of the kind it names, which the pick keeps and the hero knows), none taken twice unless it is repeatable and
@@ -932,7 +993,7 @@ function pickProblems(sheet: Sheet, parts: Parts): string[] {
       if (taken.size < picks.length) problems.push(`${feature.name} takes a spell twice`)
       if (levels.length === picks.length && picks.length === slots.length && !fillsSpellSlots(slots, levels))
         problems.push(`${feature.name} takes spells of levels ${slots.map((slot) => (slot.length > 1 ? `0 to ${Math.max(...slot)}` : slot[0])).join(", ")} at level ${sheet.level}`)
-      for (const pick of picks) if (pick.cantrip || pick.feat) problems.push(`${feature.name} takes a spell, and the pick names a cantrip or feat beside it`)
+      for (const pick of picks) if (pick.cantrip || pick.feat || pick.spells) problems.push(`${feature.name} takes a spell, and the pick names a cantrip, feat or spells beside it`)
       continue
     }
     // Picks of options from elsewhere (Wild Shape's Beast forms) are each one of those, taken once.
@@ -968,6 +1029,8 @@ function pickProblems(sheet: Sheet, parts: Parts): string[] {
         if (!feat || feat.category !== grant.category) problems.push(`${option.name} gives ${grant.category ?? "a"} feat, and "${pick.feat}" is not one`)
         else if (!featOfferable(feat, grant.category)) problems.push(`${feat.name} asks for picks that have no home when ${option.name} gives it`)
       }
+      if (option.id === PACT_OF_THE_TOME) problems.push(...bookProblems(sheet, parts, pick.spells ?? []))
+      else if (pick.spells) problems.push(`${option.name} takes no spells`)
       const again = seen.get(option.id)
       const mark = pick.cantrip ?? pick.feat ?? ""
       if (again && !option.repeatable) problems.push(`${option.name} is picked twice, and it is not repeatable`)

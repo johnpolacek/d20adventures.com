@@ -1,7 +1,7 @@
 "use client"
 
 // A character's card, opened by clicking them on the stage or in the party row (the prototype's cards). Under the name,
-// how they stand: a hero's hit points with any Temporary Hit Points and Armor Class, an NPC's wound word, Dying with the
+// how they stand: a hero's hit points with any Temporary Hit Points, Armor Class and Heroic Inspiration, an NPC's wound word, Dying with the
 // saves, Stable or Dead. Then their conditions, turn effects and lasting spells in words, and a caster's spellcasting:
 // spell save DC, spell attack bonus, the slots of each level left as marks, and the spells they can cast. A hero the
 // player plays shows their standing orders for reactions.
@@ -164,6 +164,11 @@ function StandingRow({ standing: s }: { standing: Standing }) {
             {stat("Hit Points", `${s.hitPoints} / ${s.maximum}`)}
             {s.temporary ? stat("Temporary Hit Points", String(s.temporary)) : null}
             {stat("Armor Class", String(s.armorClass))}
+            {s.inspired ? (
+              <span className="flex items-baseline rounded-[3px] border border-stage-line/25 bg-black/30 px-2 py-1">
+                <span className={cn(eyebrow, "text-stage-cream")}>Heroic Inspiration</span>
+              </span>
+            ) : null}
           </>
         ) : (
           <span

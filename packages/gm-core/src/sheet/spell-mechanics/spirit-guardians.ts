@@ -1,4 +1,5 @@
 import { spellById } from "@d20/srd/spells"
+import { hasFled } from "../../utils/turn-actors"
 import { areEnemies } from "../sides"
 import { placedOf, within } from "../space"
 import type { SpellRules } from "../spell-rules"
@@ -21,7 +22,7 @@ export const spiritGuardians: SpellRules = {
     const above = Math.max(0, (effect.amount ?? spell.level) - spell.level)
     for (const other of round.everyone()) {
       const there = placedOf(other)
-      if (other.id === caster.id || !areEnemies(other, caster) || other.dead || !there || !within(at, there, area)) continue
+      if (other.id === caster.id || !areEnemies(other, caster) || other.dead || hasFled(other) || !there || !within(at, there, area)) continue
       const thrown = round.save(other, "wis", caster, spell)
       const amount = round.hurt(other.id, `${3 + above}d8`, "radiant", (taken) => (thrown.success ? Math.floor(taken / 2) : taken))
       round.tell(other.id, spell.name, `${round.verdict(other, thrown, spell, caster)} and takes ${amount} radiant damage.${round.standing(other.id)}`)

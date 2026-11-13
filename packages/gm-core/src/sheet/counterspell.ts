@@ -1,11 +1,10 @@
-import { monsterById } from "@d20/srd/monsters"
 import type { Spell } from "@d20/srd/schema/spells"
+import { blockOf } from "./blocks"
 import { hasCondition } from "./conditions"
 import { type Ask, canReact, type ReactionOffer, type ReactionTaken, shieldAgainstMagicMissile, withReaction } from "./reactions"
 import { areEnemies, type Sided, sameSide } from "./sides"
 import { placedOf, type Standing, within } from "./space"
 import { type CastCost, type Castee, castCost, rollSave, type SaveRoll, spellcastingOf, withCastSpent } from "./spells"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /**
  * Counterspell by the SRD 5.2.1 text, a Reaction "which you take when you see a creature within 60 feet of yourself
@@ -30,7 +29,7 @@ export function counterspellCost(counterer: Counterer): CastCost | undefined {
     const cast = castCost(counterer, "counterspell")
     return "cost" in cast ? cast.cost : undefined
   }
-  const monster = counterer.type === "npc" ? monsterById.get(counterer.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
+  const monster = counterer.type === "npc" ? blockOf(counterer) : undefined
   const reaction = monster?.reactions?.find((entry) => entry.spellcasting?.spells?.some((spell) => spell.id === "counterspell"))
   if (!reaction) return undefined
   const count = reaction.uses?.count

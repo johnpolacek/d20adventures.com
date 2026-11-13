@@ -1,9 +1,9 @@
 import { monsterRuleById } from "@d20/srd/monster-rules"
-import { monsterById } from "@d20/srd/monsters"
 import type { Monster } from "@d20/srd/schema/monsters"
 import { hasFled, isDown, isIncapacitated } from "../utils/turn-actors"
 import { actionId, attacksOf, averageDamage, type Strike } from "./attack"
 import { attackable, attackRequirement, type InScene, nearestEnemy } from "./attack-roll"
+import { blockOf } from "./blocks"
 import type { RollMode } from "./check"
 import { hasCondition } from "./conditions"
 import { afterHarm, type DeathRules } from "./death"
@@ -113,7 +113,7 @@ type Holder = { type?: string; sheet?: unknown; statBlock?: string; featureUses?
  */
 export function legendaryActionsOf(character: Holder): (LegendaryActions & { left: number }) | undefined {
   if (character.type !== "npc" || character.sheet || !character.statBlock) return undefined
-  const monster = monsterById.get(character.statBlock)
+  const monster = blockOf(character)
   const read = monster ? readLegendaryActions(monster) : undefined
   if (!read || "unread" in read) return undefined
   return { ...read, left: Math.max(0, read.uses - (character.featureUses?.[LEGENDARY_ACTIONS] ?? 0)) }
@@ -246,9 +246,13 @@ export function legendaryActionsAfter<T extends Legend>(args: {
       } else if (legend.position && goal.position) {
         const to = moveToward(legend.position, goal.position, option.move.feet, stopShortFor(sizeOf(legend), sizeOf(goal), reach || 5))
         if (to.used >= 0.5 && !solidAt(args.floor.solids, to.at)) {
-          put({ ...find(id), position: to.at })
+          // It walks nothing: it draws no Opportunity Attack, and only an area it lands in touches it.
+          const went = moveWithReactions({ characters, moverId: id, path: [to.at], teleport: true, ask: args.ask, d20: args.d20, roll: args.roll, rules: args.rules })
+          characters = went.characters.map((character) => afterHarm(character))
+          walkedThrough.push(...went.told.map((fact) => fact.text))
           moved = Math.round(to.used)
           teleported = true
+          fell = went.stopped
         }
       }
     }

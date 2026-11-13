@@ -8,7 +8,7 @@ import type { CreationChoices, CreationOptions, CreationPick, EquipmentOffer } f
 import type { FeatOffer, Named, PicksOffer } from "@d20/gm-core/sheet/level-up"
 import type { FeaturePick } from "@d20/gm-core/sheet/sheet"
 import { useMemo } from "react"
-import { ABILITY_NAMES, type AbilityId, toggled, togglePick, unmet } from "@/components/stage/level-up-view"
+import { ABILITY_NAMES, type AbilityId, toggled, togglePick, unmet, withBookSpells } from "@/components/stage/level-up-view"
 import { Option, siteField, siteLabel } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
 import type { HeroRulesKit } from "./use-hero-rules"
@@ -185,6 +185,30 @@ function FeaturePicks({ offer, picked, known, onPick }: { offer: PicksOffer; pic
             </Sub>
           )
         })}
+      {picked.map((pick) => {
+        const option = offer.options.find((entry) => entry.id === pick.option)
+        const book = option?.book
+        if (!option || !book) return null
+        const chosen = pick.spells ?? []
+        return [
+          { level: 0, label: "Cantrips", most: book.cantrips },
+          { level: 1, label: "Rituals", most: book.rituals },
+        ].map((row) => {
+          const from = book.from.filter((spell) => spell.level === row.level && !(row.level === 0 && known.includes(spell.id) && !chosen.includes(spell.id)))
+          const mine = chosen.filter((id) => from.some((spell) => spell.id === id))
+          return (
+            <Sub key={`${option.id}-${row.level}`} label={`${option.name} ${row.label} · ${mine.length} of ${row.most}`}>
+              <Picks
+                label={`${option.name} ${row.label}`}
+                from={from}
+                picked={mine}
+                most={row.most}
+                onPick={(ids) => onPick(withBookSpells(picked, option.id, [...chosen.filter((id) => !from.some((spell) => spell.id === id)), ...ids.slice(0, row.most)]))}
+              />
+            </Sub>
+          )
+        })
+      })}
     </>
   )
 }

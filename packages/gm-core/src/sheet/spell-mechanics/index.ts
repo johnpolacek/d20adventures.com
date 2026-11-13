@@ -1,16 +1,21 @@
 import { type SpellRules, useSpellMechanics } from "../spell-rules"
 import { acidArrow } from "./acid-arrow"
 import { attackRiders } from "./attack-riders"
+import { banishment, maze } from "./away"
 import { blindnessDeafness } from "./blindness-deafness"
 import { boons } from "./boons"
 import { sacredFlame, sorcerousBurst } from "./cantrips"
 import { chromaticOrb, enhanceAbility, hex, protectionFromEnergy } from "./choices"
+import { commands } from "./commands"
+import { conjures } from "./conjures"
 import { counts } from "./counts"
 import { charmMonster, dominations, hideousLaughter } from "./damage-saves"
 import { heroism, invisibility, mirrorImageRules, shield } from "./defences"
 import { animalFriendship, charmPerson, endOnDamage, holdPerson } from "./enchantments"
 import { dispelMagic, lesserRestoration, removeCurse } from "./endings"
 import { ensnaringStrike } from "./ensnaring-strike"
+import { dimensionDoor, mistyStep, thunderwave } from "./forced-moves"
+import { forms } from "./forms"
 import { haste, slow } from "./haste-slow"
 import { heatMetal } from "./heat-metal"
 import { areaDrifts, areaTurnEnds, areaTurnStarts, lastingAreas } from "./lasting-areas"
@@ -26,6 +31,7 @@ import { shatter } from "./shatter"
 import { sleep } from "./sleep"
 import { spiritGuardians } from "./spirit-guardians"
 import { spiritualWeapon } from "./spiritual-weapon"
+import { summons } from "./summons"
 import { divineWord, powerWordKill, powerWordStun } from "./thresholds"
 import { turnBurns } from "./turn-burns"
 import { arcaneSword, flameBlade, flamingSphere, produceFlame, sunbeam } from "./used-again"
@@ -125,6 +131,15 @@ export const spellMechanics = (): readonly SpellRules[] => [
   ensnaringStrike,
   ...lastingAreas,
   ...walls,
+  banishment,
+  maze,
+  thunderwave,
+  mistyStep,
+  dimensionDoor,
+  ...summons,
+  ...forms,
+  ...commands,
+  ...conjures,
 ]
 
 useSpellMechanics(spellMechanics)

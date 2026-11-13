@@ -31,7 +31,7 @@ import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn, rollD20, rollDie } from "../utils/game-utils"
 import { dropPlayerPrompt } from "../utils/narrative-utils"
-import { hasFled, isDead } from "../utils/turn-actors"
+import { isDead } from "../utils/turn-actors"
 import { validateAdventurePatch } from "../wiki-adventures/adventure-patch"
 import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter } from "../wiki-adventures/characters"
 import { pendingRescue, rescuedCharacters } from "../wiki-adventures/player-safety"
@@ -183,7 +183,8 @@ export function createAdvanceTurn(ports: GmPorts) {
             existingNpcs: (turn.characters as TurnCharacter[]).filter((character) => character.type === "npc"),
           })
         : (turn.characters as TurnCharacter[])
-            .filter((character) => !isDead(character) && !hasFled(character))
+            // One away for now (../utils/turn-actors `isAway`) stays: they come back as their spell ends.
+            .filter((character) => !isDead(character) && !character.fled)
             // Initiative was rolled as the encounter began. Every round keeps that order.
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
       // Entering the rescue encounter brings every hero who is down but not dead back to 1 hit point. Then a dying
@@ -214,7 +215,7 @@ export function createAdvanceTurn(ports: GmPorts) {
       // Within the encounter, as the round ends, lasting spells do what they do at a turn's end or start (Acid Arrow's
       // burn, Spirit Guardians, a repeated save), told after the round's story. One they drop is not carried on.
       const turned = isTransition ? undefined : roundTurns({ characters: beforeRound, d20: rollD20, roll: rollDie, rules: { playerDeath: artifacts.manifest.playerDeath } })
-      const settled = turned ? turned.characters.filter((character) => !isDead(character) && !hasFled(character)) : beforeRound
+      const settled = turned ? turned.characters.filter((character) => !isDead(character) && !character.fled) : beforeRound
       const opening = (rescuing ? rescuedCharacters(settled) : settled).map(atRoundStart)
       // A new encounter opens on its intro, read as beats for the characters who are in it. One the party has played
       // before does not read it again: they know the place, and the round's own story has brought them back.

@@ -2,10 +2,10 @@ import { type AbilityId, abilityIdSchema, type SkillId, skillIdSchema } from "@d
 import { abilities, abilityById } from "@d20/srd/abilities"
 import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
-import { monsterById } from "@d20/srd/monsters"
 import { skillById, skills } from "@d20/srd/skills"
 import { z } from "zod"
 import type { Shape } from "../types/character"
+import { blockOf } from "./blocks"
 import type { ConditionEntry } from "./condition-entry"
 import { d20Penalty } from "./conditions"
 import { deriveSheet } from "./derive"
@@ -14,7 +14,6 @@ import { itemBonus } from "./items"
 import { shapedModifiers, shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
 import type { Side } from "./sides"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect } from "./turn-effect"
 
 /** What is rolled: one of the eighteen skills, a bare ability, or a saving throw. */
@@ -88,7 +87,7 @@ function baseBonus(character: Roller, check: Check, instead?: AbilityId): number
     // In a Beast's shape its Strength, Dexterity and Constitution take the place of the hero's, who keeps their
     // proficiencies, and a skill or save the stat block prints higher is used instead (./shape).
     const shape = shapeOf(character)
-    const mods = shapedModifiers(derived.abilityModifiers, shape)
+    const mods = shapedModifiers(derived.abilityModifiers, shape, character.shape)
     // A skill made with another ability, where a class feature allows it (`instead`, ./class-rules `classCheckBonus`):
     // the skill's training stays, and that ability's modifier takes the place of its own.
     const own =
@@ -101,7 +100,7 @@ function baseBonus(character: Roller, check: Check, instead?: AbilityId): number
     const printed = !shape ? undefined : check.kind === "skill" ? shape.skills?.[check.skill] : check.kind === "save" ? shape.abilities[check.ability].save : undefined
     return Math.max(own, printed ?? own)
   }
-  const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
+  const monster = character.type === "npc" ? blockOf(character) : undefined
   if (!monster) throw new Error(`${character.name ?? "This character"} has no rules sheet, so nothing can be rolled for them.`)
   const line = monster.abilities[checkAbility(check)]
   if (check.kind === "skill") return monster.skills?.[check.skill] ?? line.mod

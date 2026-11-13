@@ -1,3 +1,4 @@
+import { spellById } from "@d20/srd/spells"
 import { atInitiative } from "../sheet/class-rules"
 import { conditionsAtEncounterEnd } from "../sheet/conditions"
 import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
@@ -72,6 +73,8 @@ export function buildLocalWikiTurnCharacters(args: {
       turnEffects: undefined,
       featureUses: was?.featureUses,
       inspiration: undefined,
+      // Heroic Inspiration is kept until it is spent.
+      heroicInspiration: was?.heroicInspiration,
       spellSlots: was?.spellSlots,
       hitDiceUsed: was?.hitDiceUsed,
       // The player's own orders for the hero's reactions go on with them.
@@ -122,7 +125,38 @@ export function buildLocalWikiTurnCharacters(args: {
     })
   }
 
-  return characters.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
+  // A creature a spell called comes along with the one who called it while the spell goes on: its caster is here and
+  // still concentrating on it, or it needs no Concentration (Find Steed, Find Familiar). It shares its caster's new
+  // Initiative, or rolls its own, as its spell says. One bound by a spell that is over is its own again, or gone.
+  const holds = (master: NonNullable<TurnCharacter["master"]>) => {
+    const caster = characters.find((character) => character.id === master.id)
+    return !!caster && !isDead(caster) && (!spellById.get(master.spell)?.duration.concentration || caster.concentration?.spell === master.spell)
+  }
+  for (const summoned of args.existingNpcs ?? []) {
+    if (!summoned.master?.summoned || isDead(summoned) || summoned.fled || characters.some((character) => character.id === summoned.id) || !holds(summoned.master)) continue
+    const caster = characters.find((character) => character.id === summoned.master?.id)
+    // One that shared its caster's Initiative in the encounter left shares it here too.
+    const before = [...(args.existingNpcs ?? []), ...((args.existingPlayerCharacters ?? []) as Partial<TurnCharacter>[])].find((character) => character.id === summoned.master?.id)
+    const after = before?.initiative !== undefined && summoned.initiative === before.initiative
+    const lasting = spellEffectsAtEncounterEnd({ spellEffects: summoned.spellEffects, concentration: summoned.concentration })
+    characters.push({
+      ...summoned,
+      initiative: after ? (caster?.initiative ?? 0) : rollInitiative({ type: "npc", statBlock: (summoned as { statBlock?: string }).statBlock }, rollD20()),
+      hasReplied: false,
+      isComplete: false,
+      conditions: conditionsAtEncounterEnd({ conditions: summoned.conditions }).conditions,
+      spellEffects: lasting.spellEffects,
+      concentration: lasting.concentration,
+      turnEffects: undefined,
+    })
+  }
+  const freed = characters.flatMap((character): TurnCharacter[] => {
+    if (!character.master || holds(character.master)) return [character]
+    if (character.master.summoned) return []
+    const { master: _, ...rest } = character
+    return [rest as TurnCharacter]
+  })
+  return freed.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 }
 
 export function isLocalWikiFinalEncounter(artifacts: RuntimeArtifacts, encounterId: string) {

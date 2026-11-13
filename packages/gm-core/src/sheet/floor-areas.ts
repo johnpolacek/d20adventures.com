@@ -1,12 +1,11 @@
 import type { Size } from "@d20/srd"
-import { monsterById } from "@d20/srd/monsters"
 import { spellById } from "@d20/srd/spells"
+import { blockOf } from "./blocks"
 import type { Roller } from "./check"
 import type { ModeSource } from "./conditions"
 import { deriveSheet } from "./derive"
-import { type AreaOfEffect, between, type Floor, type Point, type Rough, type Solid, type Standing, sizeOf, solidAt, spaceOf, spanThrough } from "./space"
+import { type AreaOfEffect, between, type Floor, type Point, pushed, type Rough, type Solid, type Standing, sizeOf, solidAt, spaceOf, spanThrough, walkOver } from "./space"
 import { type FloorArea, spellRule } from "./spell-rules"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect, TurnEffect } from "./turn-effect"
 
 /**
@@ -104,11 +103,22 @@ export function floorInPlay<F extends Floor>(floor: F | undefined, characters: r
   return walls.length ? { ...floor, solids: [...floor.solids, ...walls.map((area) => areaShape(area))] } : floor
 }
 
+/**
+ * Where one moved by force comes to stand, with no walk of their own: pushed straight away from a point (Thunderwave, a
+ * weapon's Push, Repelling Blast), or sent back from one (a Rogue's Withdraw), as far as the feet, and stopped at the
+ * first solid thing on the floor in play, a wall a spell raised among them. With no floor, what stands in the way is
+ * unknown, and they go the whole way. What areas they come into on the way is ./spell-rounds `areasForced`.
+ */
+export function shovedTo(floor: Floor | undefined, everyone: readonly Holder[], at: Point, awayFrom: Point, feet: number): Point {
+  const to = pushed(at, awayFrom, feet)
+  return floor ? walkOver(floorInPlay(floor, everyone).solids, at, to, feet).at : to
+}
+
 // How far a creature senses with Blindsight, which sees into an area that hides: a hero's sheet, or an NPC's stat block.
 function blindsightOf(character: Roller): number {
   if (character.sheet) return deriveSheet(character.sheet).senses.find((sense) => sense.type === "blindsight")?.range ?? 0
   if (character.type !== "npc") return 0
-  return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.senses?.blindsight ?? 0
+  return blockOf(character)?.senses?.blindsight ?? 0
 }
 
 /**

@@ -1,22 +1,21 @@
 import type { AbilityId, ConditionId, DamageTypeId, Size } from "@d20/srd"
-import { monsterById } from "@d20/srd/monsters"
 import type { Monster, MonsterFeature } from "@d20/srd/schema/monsters"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import { type Attack, actionId, attacksOf, damageTaken, defensesOf, rollDamage, type Target } from "./attack"
-import { type CheckResult, checkBonus, combineModes, type Roller, resolveCheck } from "./check"
+import { blockOf, ownBlockOf } from "./blocks"
+import type { CheckResult, Roller } from "./check"
 import type { HitRider } from "./class-rules"
 import type { ConditionEntry, ConditionSpan } from "./condition-entry"
-import { checkModesFrom, conditionName, saveFailedBy, withCondition, withoutCondition } from "./conditions"
+import { conditionName, withCondition, withoutCondition } from "./conditions"
 import { afterHarm, type DeathRules, withDamage } from "./death"
 import { deriveSheet } from "./derive"
 import type { ConditionChange } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { typesTaken } from "./monster-traits"
-import { type AuraHolder, auraSaveBonus } from "./save-rules"
+import { type Rescued, saveCheck, withSaveAnswered } from "./save-rules"
 import { shapeOf } from "./shape"
 import { attackReach, feetBetween, type Point, type Standing, sizeOf } from "./space"
-import { checkAdds, saveBonusFor, saveModesFor } from "./spell-effects"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
+import { type Castee, rollSave } from "./spells"
 import type { TurnEffect } from "./turn-effect"
 
 /**
@@ -262,7 +261,7 @@ export const noLargerThan = (target: Roller, size: Size): boolean => SIZES.index
 // A creature's type: a hero is a Humanoid, and keeps their type in a Beast's shape. An NPC is its stat block's type.
 function creatureTypeOf(character: Roller): string {
   if (character.sheet || character.type !== "npc") return "humanoid"
-  return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.type ?? "humanoid"
+  return ownBlockOf(character)?.type ?? "humanoid"
 }
 
 /** Whether a rider's gate holds for this target as the hit lands, with the feet the attacker charged. */
@@ -341,12 +340,14 @@ export function blockRidersOnHit<T extends Target>(args: {
   roll: (sides: number) => number
   present?: readonly Held[]
   charged?: number
-}): { target: T; riders: HitRider[]; conditions: ConditionChange[] } {
+}): { target: T; riders: HitRider[]; conditions: ConditionChange[]; spent: Rescued[] } {
   let target = args.target
   const riders: HitRider[] = []
   const conditions: ConditionChange[] = []
+  // Rescues of the target's saves that another answered (Countercharm), for the caller to spend on that one.
+  const spent: Rescued[] = []
   const by = args.attacker.id ?? ""
-  if (!args.attack.riders?.length || isDown(target) || isDead(target)) return { target, riders, conditions }
+  if (!args.attack.riders?.length || isDown(target) || isDead(target)) return { target, riders, conditions, spent }
   const acted = !!(target as { isComplete?: boolean }).isComplete
   const give = (id: ConditionId, span: ConditionSpan, attack?: string) => {
     const given = withCondition(target, { id, source: by, span, ...(attack ? { attack } : {}) }, { acted, present: args.present })
@@ -382,29 +383,46 @@ export function blockRidersOnHit<T extends Target>(args: {
       continue
     }
     if (rider.save) {
-      const check = { kind: "save" as const, ability: rider.save.ability }
-      const mode = combineModes([...checkModesFrom(target, check, args.present), ...saveModesFor(target, check, rider.conditions)].map((source) => source.mode))
-      // An aura of one near adds to the save (Aura of Protection), as it does to every save ./spells `rollSave` makes.
-      const aura = auraSaveBonus(target as AuraHolder, (args.present ?? []) as AuraHolder[])
-      const save = resolveCheck({
-        dice: mode === "normal" ? [args.roll(20)] : [args.roll(20), args.roll(20)],
-        bonus: checkBonus(target, check) + saveBonusFor(target, check) + aura.amount,
+      // The save as every save is rolled (./spells `rollSave`), against no magic: an aura of one near adds to it, a
+      // Legendary creature may choose to succeed, and a feature may still rescue it (Indomitable, Countercharm).
+      const present = (args.present ?? []).some((other) => other.id === target.id) ? args.present : [target, ...(args.present ?? [])]
+      const thrown = rollSave({
+        target: target as unknown as Castee,
+        ability: rider.save.ability,
         dc: rider.save.dc,
-        mode,
-        fails: !!saveFailedBy(target, check),
-        adds: checkAdds(target, check, args.roll),
+        d20: () => args.roll(20),
+        roll: args.roll,
+        characters: (present ?? []) as unknown as Castee[],
+        against: rider.conditions,
+        stakes: { conditions: rider.conditions },
+        magical: false,
       })
+      const save = saveCheck(thrown)
       const ability = Object.entries(ABILITIES).find(([, id]) => id === rider.save?.ability)?.[0] ?? rider.save.ability
+      // What answered the save is spent: the target's own use, and another's (Countercharm) on the blow, for the caller.
+      const answered = withSaveAnswered([target], target.id ?? "", thrown, thrown, "{target}")
+      target = answered.characters[0] ?? target
+      if (thrown.rescued?.by && thrown.rescued.by !== target.id) spent.push(thrown.rescued)
+      const first = answered.facts.length ? `${answered.facts.join(" ")} ` : ""
       if (save.success) {
-        riders.push(told(`{target} succeeds on the ${ability} saving throw (${save.total} against DC ${save.dc}) and is not ${names(rider.conditions)}.`, save, false))
+        riders.push(
+          told(
+            first
+              ? `${first}{target} is not ${names(rider.conditions)}.`
+              : `{target} succeeds on the ${ability} saving throw (${save.total} against DC ${save.dc}) and is not ${names(rider.conditions)}.`,
+            save,
+            false
+          )
+        )
         continue
       }
       const given = rider.conditions.filter((id) => give(id, rider.span))
       riders.push(
         told(
-          given.length
-            ? `{target} fails the ${ability} saving throw (${save.total} against DC ${save.dc}) and has the ${names(given)} condition until the end of their next turn.`
-            : `{target} fails the ${ability} saving throw, and cannot be ${names(rider.conditions)}.`,
+          first +
+            (given.length
+              ? `{target} fails the ${ability} saving throw (${save.total} against DC ${save.dc}) and has the ${names(given)} condition until the end of their next turn.`
+              : `{target} fails the ${ability} saving throw, and cannot be ${names(rider.conditions)}.`),
           save,
           given.length > 0
         )
@@ -414,7 +432,7 @@ export function blockRidersOnHit<T extends Target>(args: {
     const given = rider.conditions.filter((id) => give(id, rider.span))
     if (given.length) riders.push(told(`{target} has the ${names(given)} condition${rider.conditions.includes("prone") ? "" : " until their next turn is over"}.`))
   }
-  return { target, riders, conditions }
+  return { target, riders, conditions, spent }
 }
 
 /** The escape DC of the grapple a creature is held in, and whether checks to escape it have Disadvantage. None for one not Grappled. */
@@ -436,7 +454,7 @@ function strengthAndProficiency(holder: Roller): number {
     const derived = deriveSheet(holder.sheet)
     return derived.abilityModifiers.str + derived.proficiencyBonus
   }
-  const monster: Monster | undefined = shape ?? monsterById.get(holder.statBlock ?? DEFAULT_STAT_BLOCK)
+  const monster: Monster | undefined = shape ?? blockOf(holder)
   return monster ? monster.abilities.str.mod + monster.pb : 0
 }
 
@@ -447,9 +465,9 @@ export const detached = <T extends { turnEffects?: readonly TurnEffect[] }>(char
   return (turnEffects.length ? { ...rest, turnEffects } : rest) as T
 }
 
-// Whether a holder still holds: here, up, not Incapacitated, and within the attack's reach of the one held.
+// Whether a holder still holds: here, up, not Incapacitated, and within the attack's reach of the one held, who is here too.
 function stillHolds(holder: (Holder & { dead?: true; fled?: true }) | undefined, held: Standing, attack: string | undefined): boolean {
-  if (!holder || isDead(holder) || hasFled(holder) || isDown(holder) || isIncapacitated(holder)) return false
+  if (!holder || isDead(holder) || hasFled(holder) || hasFled(held) || isDown(holder) || isIncapacitated(holder)) return false
   const apart = feetBetween(holder, held)
   if (apart === undefined) return true
   const reach = attacksOf(holder).find((entry) => entry.id === attack)?.reach ?? 5

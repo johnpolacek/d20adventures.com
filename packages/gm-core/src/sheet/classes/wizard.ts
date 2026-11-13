@@ -55,8 +55,16 @@ const OVERCHANNEL = "evoker-overchannel"
 export function arcaneRecoveryOf(character: { sheet?: Sheet; spellSlots?: readonly number[] }): number[] {
   const sheet = character.sheet
   if (!sheet || !deriveSheet(sheet).classFeatures.includes(ARCANE_RECOVERY)) return []
-  const budget = Math.ceil(sheet.level / 2)
-  const spent = (character.spellSlots ?? []).slice(0, 5)
+  return recoverableSlots(character.spellSlots, Math.ceil(sheet.level / 2))
+}
+
+/**
+ * The expended spell slots to take back within a budget of combined levels, by level, the first for level 1, none of
+ * level 6 or higher: the most levels it can, and of equal totals the higher slots. The Circle of the Land's Natural
+ * Recovery takes back the same way (./druid).
+ */
+export function recoverableSlots(spellSlots: readonly number[] | undefined, budget: number): number[] {
+  const spent = (spellSlots ?? []).slice(0, 5)
   let best: number[] = []
   let bestTotal = 0
   // Every way to take back some of the spent slots of each level, few enough to try them all.

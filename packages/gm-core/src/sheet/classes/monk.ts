@@ -8,21 +8,21 @@ import type { RequiredFeature } from "../../validations/roll-requirement-schema"
 import { takeAction } from "../actions"
 import { type Attack, attacksOf, damageTaken, defensesOf, parseDice, rollDamage, type Target, UNARMED_STRIKE } from "../attack"
 import { attackable, type InScene, nearestEnemy } from "../attack-roll"
-import { type Check, checkBonus, combineModes, type Roller, resolveCheck } from "../check"
+import { type Check, type Roller, resolveCheck } from "../check"
 import { type BonusActionRule, type ClassRules, type DamageAnswer, type Featured, type FollowRule, type HitRider, type SaveRule, withTurnEffect } from "../class-rules"
-import { checkModesFrom, immuneTo, saveFailedBy, withCondition, withoutCondition } from "../conditions"
+import { withCondition, withoutCondition } from "../conditions"
 import { afterHarm, withDamage, withHealing } from "../death"
 import { deriveSheet } from "../derive"
 import { hasFeature, usedThisTurn, usesLeft, withFeatureUsed } from "../feature-rules"
 import type { Harm } from "../harm"
 import { hitPointsOf } from "../hit-points"
-import { spendsLegendaryResistance, withLegendaryResistanceSpent } from "../legendary-resistance"
+import { withLegendaryResistanceSpent } from "../legendary-resistance"
 import { canReact } from "../reactions"
+import { failureCosts, saveCheck, withRescueSpent, withSaveAnswered } from "../save-rules"
 import type { Sheet } from "../sheet"
 import { areEnemies } from "../sides"
 import { placedOf, within } from "../space"
-import { checkAdds, saveBonusFor, saveModesFor } from "../spell-effects"
-import { type Cast, rollSave, type SaveRoll } from "../spells"
+import { type Cast, type Castee, rollSave, type SaveRoll } from "../spells"
 import type { SpellEffect, TurnEffect } from "../turn-effect"
 
 /**
@@ -226,17 +226,26 @@ function flurryStrikes(technique?: Technique): FollowRule[] {
   ]
 }
 
-// A save against a Monk's feature, rolled for its target.
-function focusSave<T extends Target>(attacker: Roller, target: T, ability: Check & { kind: "save" }, against: Parameters<typeof saveModesFor>[2], roll: (sides: number) => number) {
-  const mode = combineModes([...checkModesFrom(target, ability), ...saveModesFor(target, ability, against)].map((source) => source.mode))
-  return resolveCheck({
-    dice: mode === "normal" ? [roll(20)] : [roll(20), roll(20)],
-    bonus: checkBonus(target, ability) + saveBonusFor(target, ability),
+/**
+ * A save against a Monk's feature, rolled for its target as every save is (../spells `rollSave`), against no magic: a
+ * Legendary creature may choose to succeed where the conditions at stake would put it out of the fight (`resisted`),
+ * and a rescue of the target's own is spent. `target` is the one who saved, as that leaves them.
+ */
+function focusSave<T extends Target>(attacker: Roller, target: T, ability: Check & { kind: "save" }, against: readonly ConditionId[], roll: (sides: number) => number) {
+  const thrown = rollSave({
+    target: target as unknown as Castee,
+    ability: ability.ability,
     dc: focusSaveDc(attacker.sheet as Sheet),
-    mode,
-    fails: !!saveFailedBy(target, ability),
-    adds: checkAdds(target, ability, roll),
+    d20: () => roll(20),
+    roll,
+    characters: [target as unknown as Castee],
+    against,
+    stakes: { conditions: against },
+    magical: false,
   })
+  const resisted = !!thrown.legendary
+  const saver = resisted ? withLegendaryResistanceSpent(target) : thrown.rescued ? withRescueSpent(target, thrown.rescued) : target
+  return { save: resisted ? { ...saveCheck(thrown), success: false } : saveCheck(thrown), resisted, target: saver }
 }
 
 // The damage types Deflect Attacks answers below level 13.
@@ -273,7 +282,7 @@ const redirect =
     if (!die) return { characters }
     const { sides } = parseDice(die)
     const dex = deriveSheet(monk.sheet).abilityModifiers.dex
-    const save = focusSave(monk, foe, { kind: "save", ability: "dex" }, [], roll)
+    const { save } = focusSave(monk, foe, { kind: "save", ability: "dex" }, [], roll)
     const spent = characters.map((character) => (character.id === monkId ? withFeatureUsed(character, FOCUS) : character))
     const said = `${monk.name} spends a Focus Point to redirect the force at ${foe.name}`
     if (save.success)
@@ -391,15 +400,17 @@ export function quiveringPalm<T extends Palmed>(args: {
   const [part] = rolled.parts
   const dc = focusSaveDc(monk.sheet)
   const saved: SaveRoll = rollSave({ target, ability: "con", dc, d20: args.d20, roll: args.roll, characters, stakes: { damage: rolled.total }, spell: false })
+  // What answered the save is spent, told with the save by the cast's beats: a Legendary Resistance, or a rescue.
+  const answered = withSaveAnswered(characters, target.id, saved, saved, target.name).characters
   const dealt = saved.success ? Math.floor(rolled.total / 2) : rolled.total
   const taken = damageTaken({ parts: [{ type: "force", dice: [], bonus: dealt, total: dealt }], total: dealt }, defensesOf(target))
-  const struck = withDamage(target, taken, { rules: args.rules, types: ["force"] })
+  const struck = withDamage(answered.find((character) => character.id === target.id) ?? target, taken, { rules: args.rules, types: ["force"] })
   const after = afterHarm(struck.character)
   const left = hitPointsOf(after)
   const ended = withoutVibrations(monk)
   const harm: Harm[] = [{ target: target.id, kind: "damage", dice: part?.dice ?? [], sides: part?.sides, bonus: 0, type: "force", amount: taken }]
   return {
-    characters: characters.map((character) => (character.id === target.id ? after : character.id === monk.id ? ended : character)),
+    characters: answered.map((character) => (character.id === target.id ? after : character.id === monk.id ? ended : character)),
     targets: [target.id],
     saves: [saved],
     harm,
@@ -423,14 +434,14 @@ const palmSets = (attacker: Roller & { featureUses?: Record<string, number> }, a
 
 /**
  * Disciplined Survivor on a failed save against harm (../save-rules `rescuedSave`): the engine spends a Focus Point by a
- * plain rule, as a player would, on a failure the reroll could still turn, when the failure costs damage or a condition
- * the Monk is not immune to. The reroll keeps the save's Advantage or Disadvantage and what was added to it, and the new
+ * plain rule, as a player would, on a failure the reroll could still turn, when the failure costs harm (../save-rules
+ * `failureCosts`). The reroll keeps the save's Advantage or Disadvantage and what was added to it, and the new
  * roll stands.
  */
 export function disciplinedSurvivor(args: Parameters<SaveRule>[0]): ReturnType<SaveRule> {
   const { character, result, stakes } = args
   if (!character.sheet || !hasFeature(character, "monk-disciplined-survivor") || usesLeft(character, FOCUS) < 1) return undefined
-  if (!stakes.damage && !(stakes.conditions ?? []).some((id) => !immuneTo(character, id))) return undefined
+  if (!failureCosts(character, stakes)) return undefined
   const kept = (result.adds ?? []).reduce((sum, add) => sum + add.amount, 0)
   if (20 + result.bonus + kept < result.dc) return undefined
   const dice = Array.from({ length: result.mode === "normal" ? 1 : 2 }, () => args.d20())
@@ -630,11 +641,9 @@ export const monk: ClassRules = {
         const striker = attacker as typeof attacker & { featureUses?: Record<string, number>; turnEffects?: readonly TurnEffect[] }
         if (!hasFeature(attacker, "monk-stunning-strike") || !bears(striker, "stunning-strike-ready") || usedThisTurn(striker, "stunning-strike", undefined)) return undefined
         if (usesLeft(striker, FOCUS) < 1 || !isMonkAttack(attack.id) || isDown(target)) return undefined
-        const save = focusSave(attacker, target, { kind: "save", ability: "con" }, ["stunned"], roll)
-        const by = attacker.id ?? ""
         // A Legendary creature that fails may choose to succeed, and spends a use of its resistance (../legendary-resistance).
-        const resisted = !save.success && spendsLegendaryResistance(target, { conditions: ["stunned"] })
-        const held = resisted ? withLegendaryResistanceSpent(target) : target
+        const { save, resisted, target: held } = focusSave(attacker, target, { kind: "save", ability: "con" }, ["stunned"], roll)
+        const by = attacker.id ?? ""
         const passed = save.success || resisted
         // A failure: Stunned until the Monk's next turn, counted as a span of the target's turn (../conditions).
         const stunned = passed ? undefined : withCondition(held, { id: "stunned", source: by, span: "turn" }, { acted: !!(target as { isComplete?: boolean }).isComplete })
@@ -663,18 +672,18 @@ export const monk: ClassRules = {
         if (!technique || !hasFeature(attacker, "warrior-of-the-open-hand-open-hand-technique") || isDown(target)) return undefined
         if (technique === "addle") return { target: withTurnEffect(target, "addled", attacker.id ?? ""), rider: { id: "open-hand", effect: "addle", took: true }, conditions: [] }
         if (technique === "push") {
-          const save = focusSave(attacker, target, { kind: "save", ability: "str" }, [], roll)
+          const { save, target: saver } = focusSave(attacker, target, { kind: "save", ability: "str" }, [], roll)
           return {
-            target: save.success ? target : withTurnEffect(target, "open-hand-pushed", attacker.id ?? ""),
+            target: save.success ? saver : withTurnEffect(saver, "open-hand-pushed", attacker.id ?? ""),
             rider: { id: "open-hand", effect: "push", save, took: !save.success },
             conditions: [],
           }
         }
         if (technique !== "topple") return undefined
-        const save = focusSave(attacker, target, { kind: "save", ability: "dex" }, ["prone"], roll)
-        const given = save.success ? undefined : withCondition(target, { id: "prone" })
+        const { save, target: saver } = focusSave(attacker, target, { kind: "save", ability: "dex" }, ["prone"], roll)
+        const given = save.success ? undefined : withCondition(saver, { id: "prone" })
         return {
-          target: given?.given ? given.character : target,
+          target: given?.given ? given.character : saver,
           rider: { id: "open-hand", effect: "topple", save, took: !!given?.given },
           conditions: given?.given ? [{ target: target.id ?? "", condition: "prone" }] : [],
         }

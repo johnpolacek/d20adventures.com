@@ -62,6 +62,11 @@ export const spellEffectSchema = z.strictObject({
   at: z.strictObject({ x: z.number(), y: z.number() }).optional(),
   /** A wall's other end, in feet. */
   to: z.strictObject({ x: z.number(), y: z.number() }).optional(),
+  /**
+   * Its bearer is out of the encounter while it lasts, and comes back to the place they left as it ends: Banishment's
+   * demiplane, Maze, Hurl Through Hell. They take no turn, no one reaches them, and they are in no one's way.
+   */
+  away: z.literal(true).optional(),
 })
 export type SpellEffect = z.infer<typeof spellEffectSchema>
 

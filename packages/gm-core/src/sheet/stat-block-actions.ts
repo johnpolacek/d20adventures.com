@@ -1,8 +1,8 @@
 import type { AbilityId, ConditionId, DamageTypeId } from "@d20/srd"
-import { monsterById } from "@d20/srd/monsters"
 import type { Area, Monster, MonsterFeature } from "@d20/srd/schema/monsters"
 import { isDead } from "../utils/turn-actors"
 import { actionId, type DamagePart, damageTaken, defensesOf, rollDamage } from "./attack"
+import { blockOf } from "./blocks"
 import type { BonusAction, BonusActionRule } from "./class-rules"
 import type { ConditionSpan } from "./condition-entry"
 import { conditionName, withCondition } from "./conditions"
@@ -15,7 +15,6 @@ import { damageOnSave, rescueWords, withRescueSpent } from "./save-rules"
 import { shapeOf } from "./shape"
 import { coverBonus } from "./space"
 import { type Cast, type Castee, rollSave, type SaveRoll, spellById } from "./spells"
-import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
 /**
  * What a stat block gives its creature beyond its attacks and its Spellcasting, read off the block: the Bonus Actions
@@ -207,7 +206,7 @@ export function statBlockOf(character: Blocked): Monster | undefined {
   const shape = shapeOf(character as Parameters<typeof shapeOf>[0])
   if (shape) return shape
   if (character.sheet || character.type !== "npc") return undefined
-  return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)
+  return blockOf(character)
 }
 
 type Using = Blocked & { featureUses?: Record<string, number> }

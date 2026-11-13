@@ -1,11 +1,12 @@
 import type { AbilityId, ConditionId, DamageTypeId } from "@d20/srd"
 import type { Spell } from "@d20/srd/schema/spells"
+import { isAway } from "../utils/turn-actors"
 import { damageTaken, defensesOf, rollDamage } from "./attack"
 import { checkBonus } from "./check"
 import { classConcentrationModes, roundStartRules } from "./class-rules"
 import { conditionName, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, regenerate, withDamage } from "./death"
-import { enters, feetIn, floorAreas, touchedThisTurn, withTouch } from "./floor-areas"
+import { enters, feetIn, floorAreas, inFloorArea, touchedThisTurn, withTouch } from "./floor-areas"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { ridersAtRoundEnd } from "./hit-riders"
@@ -14,7 +15,7 @@ import { typesTaken } from "./monster-traits"
 import { rescueWords, withRescueSpent } from "./save-rules"
 import { type Point, sizeOf } from "./space"
 import { type ConcentrationSave, settleConcentration } from "./spell-effects"
-import { type RoundContext, roundRules } from "./spell-rules"
+import { type RoundContext, roundRules, spellRule } from "./spell-rules"
 import { type Castee, rollSave, type SaveRoll, spellcastingFor } from "./spells"
 import { recharged } from "./stat-block-actions"
 
@@ -37,7 +38,9 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
   rules?: DeathRules
 }): { characters: T[]; saves: SaveRoll[]; harm: Harm[]; conditions: ConditionChange[]; facts: string[]; told: RoundFact[] } {
   const { round, done } = roundTools(args)
-  for (const rule of roundRules()) for (const was of args.characters) rule(round, was)
+  // One away (../utils/turn-actors `isAway`) is reached by no rule but what their own spell does while they are gone.
+  for (const rule of roundRules()) for (const was of args.characters) if (!isAway(was)) rule(round, was)
+  for (const was of args.characters) for (const effect of was.spellEffects ?? []) if (effect.away) spellRule(effect.spell)?.whileAway?.(round, was)
   return done()
 }
 
@@ -134,6 +137,7 @@ function roundTools<T extends Castee & { position?: Point }>(args: {
     standing,
     holds,
     conditions,
+    d20: args.d20,
   }
   return { round, done: () => ({ characters, saves, harm, conditions, facts, told }) }
 }
@@ -141,9 +145,10 @@ function roundTools<T extends Castee & { position?: Point }>(args: {
 /**
  * A step of a move through the areas that stay on the floor (./floor-areas), from one point to the next of the path:
  * each area the mover comes into touches them as its rules say (./spell-rules `stays`), once a turn unless it says each
- * time, and one they walk in touches them for the feet walked (Spike Growth). A forced move or a teleport is no walk,
- * and is not read here. Everyone comes back as the step left them, the mover standing at its end, with the saves, the
- * harm, and what happened in words.
+ * time, and one they walk in touches them for the feet walked (Spike Growth). A forced move is read so too
+ * (`areasForced`). A teleport (`arrives`) crosses nothing: only an area it lands in, and did not start in, touches the
+ * mover, as they enter it. Everyone comes back as the step left them, the mover standing at its end, with the saves,
+ * the harm, and what happened in words.
  */
 export function areasWalked<T extends Castee & { position?: Point }>(args: {
   characters: readonly T[]
@@ -153,6 +158,7 @@ export function areasWalked<T extends Castee & { position?: Point }>(args: {
   d20: () => number
   roll: (sides: number) => number
   rules?: DeathRules
+  arrives?: boolean
 }): Turned<T> {
   const moved = args.characters.map((character) => (character.id === args.moverId ? { ...character, position: { x: args.to.x, y: args.to.y } } : character))
   const { round, done } = roundTools({ ...args, characters: moved })
@@ -165,15 +171,45 @@ export function areasWalked<T extends Castee & { position?: Point }>(args: {
     if (!touches) continue
     const now = round.find(args.moverId)
     if (!now || now.dead) break
-    const feet = when.includes("move") ? feetIn(area, args.from, args.to, size) : 0
+    const feet = when.includes("move") && !args.arrives ? feetIn(area, args.from, args.to, size) : 0
     if (feet > 0) touches({ round, area, creature: now, moment: "move", feet })
-    if (!when.includes("enter") || !enters(area, args.from, args.to, size)) continue
+    const entered = args.arrives ? !inFloorArea(area, args.from, size) && inFloorArea(area, args.to, size) : enters(area, args.from, args.to, size)
+    if (!when.includes("enter") || !entered) continue
     if (!area.rules.eachEntry && touchedThisTurn(now, area)) continue
     touches({ round, area, creature: now, moment: "enter" })
     const after = round.find(args.moverId)
     if (after) round.put(withTouch(after, area))
   }
   return done()
+}
+
+/**
+ * Everyone after something moved some of them by force, with no walk of their own: a push (Thunderwave, a weapon's
+ * Push, Repelling Blast, a Monk's or a Barbarian's), or a Rogue's Withdraw. Each one standing elsewhere now than before
+ * comes into the areas on the straight way from where they stood, as a step of a walk does (`areasWalked`), and it
+ * draws no Opportunity Attack. `before` and `after` are everyone either side of it.
+ */
+export function areasForced<T extends Castee & { position?: Point }>(args: {
+  before: readonly { id: string; position?: Point }[]
+  after: readonly T[]
+  d20: () => number
+  roll: (sides: number) => number
+  rules?: DeathRules
+}): { characters: T[]; told: RoundFact[] } {
+  let characters = [...args.after]
+  const told: RoundFact[] = []
+  for (const was of args.before) {
+    const now = characters.find((character) => character.id === was.id)
+    const from = was.position
+    const to = now?.position
+    if (!now || !from || !to || (from.x === to.x && from.y === to.y) || now.dead) continue
+    // Walked from where they stood, back to where the force left them.
+    const stood = characters.map((character) => (character.id === was.id ? { ...character, position: from } : character))
+    const walked = areasWalked({ characters: stood, moverId: was.id, from, to, d20: args.d20, roll: args.roll, rules: args.rules })
+    characters = walked.characters
+    told.push(...walked.told)
+  }
+  return { characters, told }
 }
 
 /** A fact of a round's turn, with the one it is about and the spell's name. */

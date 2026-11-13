@@ -111,7 +111,7 @@ test("Countercharm rerolls a failed save against Frightened with Advantage, for 
   const saved = roar([at(7, 20), wren(0), lion], 4, 9, 14)
   assert.deepEqual(
     [saved.saves[0].dice, saved.saves[0].total, saved.saves[0].success, saved.saves[0].mode, saved.saves[0].rescued],
-    [[9, 14], 14, true, "advantage", { feature: "bard-countercharm", name: "Lyra's Countercharm", first: 4, by: "lyra" }]
+    [[9, 14], 14, true, "advantage", { feature: "bard-countercharm", name: "Lyra's Countercharm", first: 4, by: "lyra", reaction: true }]
   )
   assert.equal(find(saved.characters, "wren").conditions, undefined)
   assert.equal(find(saved.characters, "wren").turnEffects, undefined)
@@ -127,8 +127,8 @@ test("Countercharm rerolls a failed save against Frightened with Advantage, for 
 test("Countercharm answers the Bard's own save, and not a save against another condition or a foe's", () => {
   // Lyra's own Wisdom save is +0. A 2 fails against DC 11, the reroll falls 15 and 3 with Advantage: 15, a success.
   const own = rollSave({ target: at(7), ability: "wis", dc: 11, d20: falls(2, 15, 3), roll: falls(), characters: [at(7)], stakes: { conditions: ["charmed"] } })
-  assert.deepEqual([own.total, own.rescued], [15, { feature: "bard-countercharm", name: "Countercharm", first: 2, by: "lyra" }])
-  assert.deepEqual(withRescueSpent(at(7), { feature: "bard-countercharm", by: "lyra" }).turnEffects, [{ id: "reacted", by: "lyra", turns: 1 }])
+  assert.deepEqual([own.total, own.rescued], [15, { feature: "bard-countercharm", name: "Countercharm", first: 2, by: "lyra", reaction: true }])
+  assert.deepEqual(withRescueSpent(at(7), { feature: "bard-countercharm", by: "lyra", reaction: true }).turnEffects, [{ id: "reacted", by: "lyra", turns: 1 }])
   // A save against Poisoned is not one it answers, nor a save by a foe of the Bard's.
   const poisoned = rollSave({ target: wren(0), ability: "con", dc: 11, d20: falls(2), roll: falls(), characters: [at(7, 10), wren(0)], stakes: { conditions: ["poisoned"] } })
   assert.equal(poisoned.rescued, undefined)

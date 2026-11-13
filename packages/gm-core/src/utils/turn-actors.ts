@@ -14,10 +14,13 @@ export type ActorLike = {
   healthPercent?: number
   dead?: true
   fled?: true
+  spellEffects?: readonly { spell?: string; away?: true }[]
   conditions?: readonly { id: string }[]
   deathSaves?: { successes?: number; failures?: number; stable?: true }
   initiative?: number
   rollRequired?: RollRequirement
+  // Whom a spell binds the character to act for (../types/character `master`).
+  master?: { id: string }
 }
 
 // What the three tests below read. Dead, down and dying are three things.
@@ -27,6 +30,7 @@ type Standing = {
   healthPercent?: number
   dead?: true
   fled?: true
+  spellEffects?: readonly { spell?: string; away?: true }[]
   conditions?: readonly { id: string }[]
   deathSaves?: { successes?: number; failures?: number; stable?: true }
 }
@@ -37,14 +41,30 @@ export function isAiControlledPc(character: ActorLike): boolean {
   return character.type === "pc" && character.controlledBy === "ai"
 }
 
+/**
+ * A hero a spell has bound to act for another (Dominate Person): the server plays their turns, as it plays an AI
+ * companion's, doing their master's bidding, until the spell ends. Their player is told so in the story.
+ */
+export function playsForMaster(character: ActorLike): boolean {
+  return character.type === "pc" && !!character.master
+}
+
 /** Dead. It is not a condition: nothing ends it. */
 export function isDead(character: Standing): boolean {
   return character.dead === true
 }
 
-/** Fled: gone from the encounter for good. It is not a condition either. */
+/**
+ * Not in the encounter: fled, gone for good, or away for now (`isAway`). Neither is a condition. Every rule of who is
+ * here reads this. Only the end of a round reads `fled` alone, to let go of those who left for good.
+ */
 export function hasFled(character: Standing): boolean {
-  return character.fled === true
+  return character.fled === true || isAway(character)
+}
+
+/** Away for now: a spell has taken them out of the encounter until it ends (Banishment, Maze), marked on its effect as `away`. They come back to the place they left. */
+export function isAway(character: Standing): boolean {
+  return !!character.spellEffects?.some((effect) => effect.away)
 }
 
 /** Down: at 0 hit points, so dead, dying or Stable. A character who is down cannot act or speak, and no one attacks them by choice. */
@@ -66,8 +86,12 @@ export function isIncapacitated(character: Standing): boolean {
   return !!character.conditions?.some((entry) => INCAPACITATING.has(entry.id))
 }
 
-/** Takes a turn this round: anyone up and able to act, and a dying hero whose Death Saving Throw is asked for. A hero who drops mid-round makes theirs next round. */
+/**
+ * Takes a turn this round: anyone up and able to act, and a dying hero whose Death Saving Throw is asked for. A hero who
+ * drops mid-round makes theirs next round. One away takes none: what their spell lets them do there, the engine does.
+ */
 export function takesTurn(character: ActorLike): boolean {
+  if (isAway(character)) return false
   if (isDying(character)) return !!character.rollRequired && "deathSave" in character.rollRequired
   return !isDown(character) && !isIncapacitated(character)
 }
@@ -87,5 +111,5 @@ export function findCurrentActor<T extends ActorLike>(characters: T[]): T | unde
 export function hasPendingAutonomousAction(character: ActorLike): boolean {
   if (character.isComplete) return false
   if (character.type === "npc") return !character.hasReplied
-  return isAiControlledPc(character)
+  return isAiControlledPc(character) || playsForMaster(character)
 }

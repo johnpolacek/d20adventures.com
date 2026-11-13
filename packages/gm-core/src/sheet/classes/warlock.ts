@@ -1,25 +1,28 @@
 import type { DamageTypeId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { equipmentById } from "@d20/srd/equipment"
-import { monsterById } from "@d20/srd/monsters"
 import { z } from "zod"
 import type { RequiredFeature } from "../../validations/roll-requirement-schema"
 import { type Attack, damageTaken, defensesOf, parseDice, rollDamage } from "../attack"
 import { attackable, nearestEnemy } from "../attack-roll"
+import { ownBlockOf } from "../blocks"
 import type { Roller } from "../check"
 import type { CastChoice, ClassRules, DieHolder, FollowRule, HitRider, SaveRule } from "../class-rules"
+import { CONDITION_SPANS } from "../condition-entry"
 import { withCondition } from "../conditions"
 import { withDamage, withHealing } from "../death"
 import { deriveSheet, trainedWith } from "../derive"
 import { featureUseCount, hasFeature, usedThisTurn, usesLeft, withFeatureUsed, withUsedThisTurn } from "../feature-rules"
+import { shovedTo } from "../floor-areas"
 import type { Harm } from "../harm"
 import { hitPointsOf } from "../hit-points"
 import { withLegendaryResistanceSpent } from "../legendary-resistance"
 import { hitDiceOf, magicalCunningOf, withMagicalCunning } from "../rest"
+import { withRescueSpent } from "../save-rules"
 import { areEnemies } from "../sides"
-import { feetBetween, pushed, sizeOf, walkOver } from "../space"
+import { feetBetween, sizeOf } from "../space"
+import { withSpellEffect } from "../spell-effects"
 import { type Castee, rollSave, type SaveRoll, slotsLeft, spellcastingOf, withCastSpent } from "../spells"
-import { DEFAULT_STAT_BLOCK } from "../stat-block"
 import type { TurnEffect } from "../turn-effect"
 
 /**
@@ -56,11 +59,12 @@ import type { TurnEffect } from "../turn-effect"
  * or smaller target Prone. Lifedrinker (level 9) adds 1d6 Necrotic, Psychic or Radiant damage to a pact weapon hit
  * once a turn, the type that harms the target most, and spends a Hit Point Die to heal the Warlock by its roll plus
  * the Constitution modifier, at least 1, when they are missing at least the die's average. Witch Sight's Truesight is
- * on the sheet (../derive).
+ * on the sheet (../derive). Pact of the Tome's Book of Shadows is the sheet's too: its three cantrips are known and its
+ * two Ritual spells always prepared, kept on the invocation's pick, and cast by the same path as any spell (../derive).
  * Left told: Devil's Sight, One with Shadows and Witch Sight in play (the engine knows no light, and its areas that
- * hide do not tell darkness from fog), Gaze of Two Minds (senses), Gift of the Depths' swimming and breathing, Pact of
- * the Tome (the sheet keeps no word of the book's cantrips and rituals), Gift of the Protectors (it needs the book's
- * page of names), Pact of the Chain's familiar and Investment of the Chain Master (no familiar joins the encounter).
+ * hide do not tell darkness from fog), Gaze of Two Minds (senses), Gift of the Depths' swimming and breathing, the
+ * book as a Spellcasting Focus, Gift of the Protectors (it needs the book's page of names), Pact of the Chain's
+ * familiar and Investment of the Chain Master (no familiar joins the encounter).
  *
  * Fiend Patron (level 3): the Fiend Spells are always prepared (../derive). Dark One's Blessing gives Temporary Hit
  * Points equal to the Charisma modifier plus the Warlock level, at least 1, when the Warlock drops an enemy to 0 hit
@@ -72,8 +76,8 @@ import type { TurnEffect } from "../turn-effect"
  * Hurl Through Hell (level 14): once a turn on a hit with an attack roll, chosen with the attack (a weapon's, or a
  * spell attack's with "cast"), the target makes a Charisma save against the spell save DC. On a failure it takes 8d10
  * Psychic damage if it is not a Fiend and is Incapacitated through its next turn. Once a Long Rest, or by a Pact Magic
- * slot when the use is spent. Its vanishing and return to its space are told: the engine has no way yet to take a
- * creature out of play and bring it back.
+ * slot when the use is spent. While Incapacitated so it is away, out of the encounter, and it returns to the space it
+ * left as that ends. Coming back to a space someone now holds is the game master's to tell.
  */
 
 const INVOCATIONS = "warlock-eldritch-invocations"
@@ -212,7 +216,7 @@ type Hurled<T> = { target: T; save: SaveRoll; taken: number; given: boolean; leg
  */
 export function hurled<T extends Castee>(warlock: Roller & { id: string }, target: T, d20: () => number, roll: (sides: number) => number): Hurled<T> {
   const feature = classFeatureById.get(HURL)
-  const kind = target.type === "npc" && !target.sheet ? monsterById.get(target.statBlock ?? DEFAULT_STAT_BLOCK)?.type : undefined
+  const kind = target.type === "npc" && !target.sheet ? ownBlockOf(target)?.type : undefined
   const fiend = !!kind && (feature?.damage?.notCreatureTypes ?? ["fiend"]).includes(kind)
   const dice = feature?.damage?.dice ?? "8d10"
   const rolled = fiend ? undefined : rollDamage([{ dice, type: "psychic" }], roll)
@@ -220,12 +224,17 @@ export function hurled<T extends Castee>(warlock: Roller & { id: string }, targe
   const stakes = { conditions: ["incapacitated" as const], ...(rolled ? { damage: rolled.total } : {}) }
   const save = rollSave({ target, ability: "cha", dc, d20, roll, characters: [target], stakes, against: ["incapacitated"], spell: false })
   if (save.legendary) return { target: withLegendaryResistanceSpent(target), save, taken: 0, given: false, legendary: true }
-  if (save.success) return { target, save, taken: 0, given: false, legendary: false }
+  // A rescue of the target's own is spent (Indomitable).
+  const saver = save.rescued ? withRescueSpent(target, save.rescued) : target
+  if (save.success) return { target: saver, save, taken: 0, given: false, legendary: false }
   const taken = rolled ? damageTaken(rolled, defensesOf(target)) : 0
-  const struck = taken ? withDamage(target, taken, { types: ["psychic"] }).character : target
+  const struck = taken ? withDamage(saver, taken, { types: ["psychic"] }).character : saver
   const down = struck.dead || struck.hitPoints === 0
   const incapacitated = down ? undefined : withCondition(struck, { id: "incapacitated", source: warlock.id, span: "turn", feature: HURL }, { acted: !!target.isComplete })
-  return { target: incapacitated?.given ? incapacitated.character : struck, save, taken, given: !!incapacitated?.given, legendary: false }
+  // "The target disappears": it is out of the encounter as long as it is Incapacitated, and returns to its space as that
+  // ends (../../utils/turn-actors `isAway`).
+  const gone = incapacitated?.given ? withSpellEffect(incapacitated.character, { spell: HURL, by: warlock.id, turns: CONDITION_SPANS.turn + (target.isComplete ? 1 : 0), away: true }) : undefined
+  return { target: gone ?? struck, save, taken, given: !!incapacitated?.given, legendary: false }
 }
 
 // Hurl Through Hell in the story's words, after the hit's.
@@ -453,10 +462,10 @@ export const warlock: ClassRules = {
   spellHit: ({ caster, spell, target, floor }) => {
     const hits = []
     if (hasInvocation(caster, "agonizing-blast", spell.id)) hits.push({ name: "Agonizing Blast", bonus: charisma(caster) })
-    // A push needs a floor to be walked over: with none, what stands in the way is unknown, and it is told.
+    // A push needs a floor to be walked over: with none, what stands in the way is unknown, and it is told. The floor is
+    // the one in play, its walls raised by spells among its solid things (../spells `castSpell`).
     if (hasInvocation(caster, "repelling-blast", spell.id) && floor && caster.position && target.position && REPELLED.includes(sizeOf(target))) {
-      const to = pushed(target.position, caster.position, REPEL_FEET)
-      hits.push({ name: "Repelling Blast", to: walkOver(floor.solids, target.position, to, REPEL_FEET).at })
+      hits.push({ name: "Repelling Blast", to: shovedTo(floor, [], target.position, caster.position, REPEL_FEET) })
     }
     if (!hits.length) return undefined
     return {

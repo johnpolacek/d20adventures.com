@@ -110,28 +110,32 @@ const RUN = new Set([
   // Areas that stay on the floor (./spell-mechanics/lasting-areas). Sleet Storm's doused flames are the story's.
   "grease",
   "sleet-storm",
+  // Moved by force or with no walk (./spell-mechanics/forced-moves). Thunderwave's unsecured objects and its boom are the story's.
+  "thunderwave",
+  "misty-step",
+  // A creature a spell calls (./spell-mechanics/summons): Finger of Death's Zombie.
+  "finger-of-death",
 ])
 
 /**
  * Spells the engine runs in part. It rolls and applies what its rules hold, and the game master is given the spell's
  * text for the rest, which changes no one's hit points or conditions. What each leaves to the text: Chill Touch's bar
  * on healing, Shocking Grasp's bar on Opportunity Attacks, Ray of Frost's lost Speed, Starry Wisp's and Faerie Fire's
- * light against the Invisible, Charm Person's Advantage while it is fought, Chromatic Orb's leap, Command's words,
+ * light against the Invisible, Charm Person's Advantage while it is fought, Chromatic Orb's leap, Command's Drop, which holds nothing, its Grovel given a turn early as the save fails, and Approach ending the turn where it stops short, Fear's dropped grip and its save once out of its caster's sight,
  * Dissonant Whispers' flight, Ensnaring Strike's escape check, whose DC the game master is told, Entangle's escape check and its sparing its caster, Hex's move, Hunter's
  * Mark's tracking and its move, Ice Knife's burst on those beside its target,
- * Sleep's shake awake, Thunderwave's push, Mind Spike's tracking, Moonbeam's undoing of a changed
+ * Sleep's shake awake, Mind Spike's tracking, Moonbeam's undoing of a changed
  * shape, Shining Smite's light and its bar on the Invisible, Sunburst's end of Darkness, Mass Suggestion's
  * course of activity and its end when that is done, Enhance Ability's different ability for each target, Flesh to
  * Stone's Speed of 0 on a success and its lasting stone after the whole minute, Contagion's save when its Poisoned would
  * end and its 7 days, Befuddlement's bar on spells and the Magic action and its save every 30 days, the Dominate spells'
- * Advantage while the target is fought, their commands and their longer Concentration from a higher slot, Charm
+ * Advantage while the target is fought and their longer Concentration from a higher slot, Charm
  * Monster's Advantage while it is fought, Flaming Sphere's move that rams no one, over barriers and across pits,
  * Shillelagh's end when the weapon is let go and its working on a stat block's weapon. Mind
  * Blank's shield against sensing and scrying, Fire Shield's flames on one who hits it and its light, Protection from
  * Evil and Good's bar on being possessed, Charmed or Frightened by those creatures, Dispel Evil and Good's Break
  * Enchantment and Dismissal, Freedom of Movement's terrain, Swim Speed, Speed kept from magic and escape, Greater
- * Restoration's cursed item and lowered ability scores, Disintegrate's objects and creations of force, Finger of
- * Death's Zombie, and the raising of one who died before this round, whom the engine no longer holds, and True
+ * Restoration's cursed item and lowered ability scores, Disintegrate's objects and creations of force, and the raising of one who died before this round, whom the engine no longer holds, and True
  * Resurrection's new body and an Undead's living form, Resurrection's tax for one dead a year or more, and Warding
  * Bond's damage shared with its caster and its end. The areas that stay on the floor (./spell-mechanics/lasting-areas,
  * walls) leave: Web's anchoring, breaking free and burning, and its Lightly Obscured, Stinking Cloud's bar on actions and
@@ -157,7 +161,6 @@ const PARTLY = new Set([
   "hunters-mark",
   "ice-knife",
   "sleep",
-  "thunderwave",
   "mind-spike",
   "moonbeam",
   "shining-smite",
@@ -201,7 +204,6 @@ const PARTLY = new Set([
   "freedom-of-movement",
   "greater-restoration",
   "disintegrate",
-  "finger-of-death",
   "raise-dead",
   "resurrection",
   "true-resurrection",
@@ -218,6 +220,35 @@ const PARTLY = new Set([
   "wall-of-force",
   "blade-barrier",
   "wall-of-thorns",
+  // Out of the encounter and back (./spell-mechanics/away): the nearest open space one takes on returning to a space
+  // someone now holds is the game master's, and so is the plane Banishment sends one home to.
+  "banishment",
+  "maze",
+  // Dimension Door's one willing creature taken along, and a place it names that is not on the floor or beside someone
+  // (./spell-mechanics/forced-moves).
+  "dimension-door",
+  // Creatures a spell calls into the encounter (./spell-mechanics/summons), which stand beside their caster where the
+  // spell lets them appear anywhere in range: Summon Dragon's Fly and Swim Speeds on a flat floor, Giant Insect's Web
+  // Bolt that stops a target, its Venomous Spew and Spider Climb, Find Steed's riding, Life Bond and Bonus Actions, Animate
+  // Objects' Large and Huge objects and the object left at 0 Hit Points, which the engine animates as Medium ones, and
+  // Find Familiar's telepathy, senses, touch spells and pocket dimension.
+  "summon-dragon",
+  "giant-insect",
+  "find-steed",
+  "animate-objects",
+  "find-familiar",
+  // A changed shape (./spell-mechanics/forms): what the form cannot say or carry, the Concentration its caster keeps
+  // after Polymorph ends early on the target, True Polymorph's forms that are not Beasts, its objects and its lasting
+  // past the hour, Animal Shapes' different form for each and its later changes, and Shapechange's later shifts and gear.
+  "polymorph",
+  "true-polymorph",
+  "animal-shapes",
+  "shapechange",
+  // Conjurings that call no creature (./spell-mechanics/conjures): Conjure Animals' pack moved with its caster and the
+  // Advantage on Strength saves beside it, and Conjure Woodland Beings' spirits as they move onto one or one walks into
+  // them, which the engine counts as the round turns, and its Disengage as a Bonus Action.
+  "conjure-animals",
+  "conjure-woodland-beings",
 ])
 
 // Held as told for a fault the engine has, though their data is typed: Divine Favor would add its die to hits on its

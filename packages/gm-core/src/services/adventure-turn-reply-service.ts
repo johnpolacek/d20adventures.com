@@ -152,6 +152,8 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         characters,
         moverId: args.characterId,
         path: move.path,
+        // A spell's teleport walks nothing (../sheet/moves `takeTeleport`).
+        teleport: move.teleport,
         // The Disengage action, or a Bonus Action that moves without drawing them: Cunning Action's, or Tactical
         // Shift's half Speed taken with Second Wind.
         disengaged:
