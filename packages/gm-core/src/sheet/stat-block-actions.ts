@@ -6,7 +6,7 @@ import { actionId, type DamagePart, damageTaken, defensesOf, rollDamage } from "
 import type { BonusAction, BonusActionRule } from "./class-rules"
 import type { ConditionSpan } from "./condition-entry"
 import { conditionName, withCondition } from "./conditions"
-import { afterHarm, type DeathRules, enduredWords, type Fate, withDamage } from "./death"
+import { afterHarm, type DeathRules, enduredWords, type Fate, wardedWords, withDamage } from "./death"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { legendaryResistanceWords, withLegendaryResistanceSpent } from "./legendary-resistance"
@@ -304,6 +304,7 @@ function standing(character: Castee, fate: Fate | undefined): string {
   if (fate === "killed") return `${character.name} is killed outright.`
   if (fate === "stable") return `${character.name} is Unconscious and Stable, out of the fight.`
   if (fate === "endures") return enduredWords(character.name, character)
+  if (fate === "warded") return wardedWords(character.name)
   if (fate === "dying") return `${character.name} is at 0 hit points, Unconscious and dying.`
   const hitPoints = hitPointsOf(character)
   if (hitPoints?.current === 0) return `${character.name} is at 0 hit points and down, not dead.`
@@ -399,7 +400,7 @@ export function useBlockAction<T extends Acting>(args: {
       // Until the end of the target's next turn, or the end or start of the creature's own: the engine counts a turn by
       // the rounds that begin, and the creature is taking its turn now.
       const acted = entry.lasts === "target" ? !!now.isComplete : entry.lasts === "source"
-      const given = withCondition(now, { id: entry.condition, source: actor.id, ...(entry.span ? { span: entry.span } : {}) }, { acted })
+      const given = withCondition(now, { id: entry.condition, source: actor.id, ...(entry.span ? { span: entry.span } : {}) }, { acted, present: characters })
       if (!given.given) {
         facts.push(`${now.name} cannot be ${conditionName(entry.condition)} and is not.`)
         continue

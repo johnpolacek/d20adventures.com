@@ -3,7 +3,7 @@ import type { RequiredAttack, RequiredRoll } from "../validations/roll-requireme
 import { type Acting, attackModesFromActions, hideRoll } from "./actions"
 import { type Attack, attacksOf, averageDamage } from "./attack"
 import { combineModes, type RollMode } from "./check"
-import { type FollowRule, followRules, withAdvantageBarred } from "./class-rules"
+import { classCovers, type FollowRule, followRules, withAdvantageBarred } from "./class-rules"
 import { attackModesFrom, cannotAttack, hasCondition, type ModeSource } from "./conditions"
 import { deriveSheet } from "./derive"
 import { attacksPerAction as attacksPerActionOf } from "./feature-rules"
@@ -86,7 +86,9 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
     const at = other.id === target.id || isDown(other) ? undefined : placedOf(other)
     return at ? [at] : []
   })
-  const cover = floor && from && aimed ? greaterCover(coverBetween(floor.solids, from, aimed, between), ask.cover ?? "none") : (ask.cover ?? "none")
+  // A feature of one present may give the target cover too (Smite of Protection).
+  const named = classCovers(target, ask.present).reduce(greaterCover, ask.cover ?? "none")
+  const cover = floor && from && aimed ? greaterCover(coverBetween(floor.solids, from, aimed, between), named) : named
   if (cover === "total") {
     return { ruling: { name: "Total Cover", text: `${character.name}${moved} has no clear line to ${target.name}: something solid stands between them. The attack is not made.` } }
   }

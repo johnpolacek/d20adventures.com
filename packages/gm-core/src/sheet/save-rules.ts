@@ -1,4 +1,4 @@
-import type { AbilityId } from "@d20/srd"
+import type { AbilityId, ConditionId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { isDown, isIncapacitated } from "../utils/turn-actors"
 import type { CheckResult, Roller } from "./check"
@@ -75,6 +75,24 @@ export function auraReaches(bearer: AuraHolder, feature: string, character: Aura
   const reach = auraReach(bearer, feature)
   const apart = feetBetween(bearer, character)
   return reach !== undefined && apart !== undefined && sameSide(bearer, character) && apart <= reach
+}
+
+/** What the auras of those present add to one of `character`'s own checks: their bonus on a saving throw, and nothing on any other check. */
+export const auraOnSave = (character: object, check: { kind: string }, present: readonly object[]): number =>
+  check.kind === "save" ? auraSaveBonus(character as AuraHolder, present as AuraHolder[]).amount : 0
+
+/**
+ * The conditions the auras of those present make `character` immune to while they are in them (Aura of Courage's
+ * Frightened): one already given has no effect there (./conditions).
+ */
+export function auraConditionImmunities(character: AuraHolder, present: readonly AuraHolder[]): ConditionId[] {
+  const bearers = present.some((other) => other.id === character.id) ? present : [character, ...present]
+  const found = new Set<ConditionId>()
+  for (const rule of auraRules()) {
+    if (!rule.conditionImmunities) continue
+    for (const bearer of bearers) if (auraReaches(bearer, rule.feature, character)) for (const id of rule.conditionImmunities(bearer)) found.add(id)
+  }
+  return [...found]
 }
 
 /**

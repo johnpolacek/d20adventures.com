@@ -9,7 +9,7 @@ import { isIncapacitated } from "../utils/turn-actors"
 import type { Roller, RollMode } from "./check"
 import { type Bearing, classAttack, classResistances, type Extra, type HitArgs, type HitRider, hitRule, hitRules, reactionRule, turnEffectRule } from "./class-rules"
 import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
-import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
+import { type DeathRules, type DeathSaves, type Fate, wardedWords, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
 import { criticalFrom, type OncePerTurn, usedThisTurn } from "./feature-rules"
 import type { ConditionChange } from "./harm"
@@ -22,7 +22,7 @@ import type { Sheet } from "./sheet"
 import { sameSide } from "./sides"
 import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, within } from "./space"
 import { enduringTraitOf } from "./species-traits"
-import { deflectedHit, markDamage, rollAdds, spellResistances, weaponDamageFromSpells } from "./spell-effects"
+import { attackWithSpells, deflectedHit, markDamage, rollAdds, spellDamageImmunities, spellResistances, weaponDamageFromSpells } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { TurnEffect } from "./turn-effect"
 
@@ -158,7 +158,8 @@ function baseAttacks(character: Roller): Attack[] {
     const sheet = character.sheet
     // A class feature may change the attack: Martial Arts' die and Dexterity (./classes). A magic weapon's bonus is
     // added after it, so no feature's own working leaves it out.
-    return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => withMagicWeapon(sheet, classAttack(character, weaponAttack(sheet, weapon))))
+    // A spell on them may change it too (Shillelagh), before a magic weapon's bonus.
+    return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => withMagicWeapon(sheet, attackWithSpells(character, classAttack(character, weaponAttack(sheet, weapon)))))
   }
   if (character.type !== "npc") return []
   const monster = monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)
@@ -356,7 +357,10 @@ export type Defenses = { immunities?: readonly DamageTypeId[]; resistances?: rea
  */
 export function defensesOf(character: Bearing): Defenses {
   const own = ownDefenses(character)
-  return resistsAllDamage(character) ? { ...own, resistances: damageTypeIds } : own
+  // Immunity a spell on them gives (Mind Blank's Psychic), beside their own.
+  const immune = spellDamageImmunities(character)
+  const warded = immune.length ? { ...own, immunities: [...new Set([...(own.immunities ?? []), ...immune])] } : own
+  return resistsAllDamage(character) ? { ...warded, resistances: damageTypeIds } : warded
 }
 
 function ownDefenses(character: Bearing): Defenses {
@@ -419,6 +423,8 @@ export type Strike = {
   fate?: Fate
   /** The species trait that held a target the blow would have dropped to 0 at 1 hit point: "Relentless Endurance". */
   endured?: string
+  /** A spell that warded them against death held them at 1 hit point, and ended (Death Ward). */
+  warded?: true
   /** A Bardic Inspiration die rolled and added to an attack roll that had missed. The roll's total includes it. */
   inspired?: number
   /** The once-a-turn features this blow used, for the attacker to be marked with (./feature-rules). */
@@ -632,6 +638,7 @@ export function landBlow<T extends Target>(
     hitPoints: { before, after: struck.character.hitPoints ?? 0, maximum: stats.hitPointMaximum },
     ...(struck.fate ? { fate: struck.fate } : {}),
     ...(struck.fate === "endures" ? { endured: enduringTraitOf(struck.character)?.name ?? "endurance" } : {}),
+    ...(struck.fate === "warded" ? { warded: true as const } : {}),
     ...spent,
     ...(used.length ? { used } : {}),
     ...(charged.length ? { spent: charged } : {}),
@@ -678,9 +685,11 @@ export function strikeFacts(attacker: string, target: string, blow: Strike): str
   const types = [...new Set(blow.damage?.parts.map((part) => part.type) ?? [])].join(" and ")
   const stands = blow.endured
     ? `${target} would drop to 0 hit points and drops to 1 instead, by ${blow.endured}.`
-    : hitPoints.after === 0
-      ? fallen(target, blow)
-      : `${target} has ${hitPoints.after} of ${hitPoints.maximum} hit points left${hitPoints.after * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
+    : blow.warded
+      ? wardedWords(target)
+      : hitPoints.after === 0
+        ? fallen(target, blow)
+        : `${target} has ${hitPoints.after} of ${hitPoints.maximum} hit points left${hitPoints.after * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
   const halved = blow.reduced ? (reactionRule(blow.reduced.id)?.damageWords?.(target) ?? "") : ""
   const trip = (blow.riders ?? []).map((rider) => (rider.id === STAT_BLOCK_RIDER ? blockRiderWords(attacker, target, rider) : (hitRule(rider.id)?.words?.(attacker, target, rider) ?? ""))).join("")
   return `${attacker}'s ${attack.name} attack on ${target} ${roll.critical ? "is a CRITICAL HIT" : "HITS"}${blow.features?.length ? ` with a ${blow.features.join(" and ")}` : ""} (${roll.total} against Armor Class ${roll.armorClass}) for ${blow.taken} ${types} damage.${halved} ${stands}${trip}`

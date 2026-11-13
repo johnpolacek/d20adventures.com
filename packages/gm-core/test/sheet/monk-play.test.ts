@@ -84,7 +84,7 @@ test("Martial Arts: the die and Dexterity for an Unarmed Strike and a Monk weapo
 
 test("Monk's Focus: Focus Points counted and spent, Patient Defense's Dodge, and every point back on a Short Rest", () => {
   const menu = bonusActionsOf(kaito)
-  // Five points at level 5. Flurry of Blows counts them, with an Open Hand Monk's Addle and Topple, and the free
+  // Five points at level 5. Flurry of Blows counts them, with an Open Hand Monk's Addle, Topple and Push, and the free
   // Disengage and Dash count none.
   assert.deepEqual(
     menu.filter((entry) => entry.id !== "martial-arts-strike").map((entry) => [entry.id, entry.left]),
@@ -92,6 +92,7 @@ test("Monk's Focus: Focus Points counted and spent, Patient Defense's Dodge, and
       ["flurry-of-blows", 5],
       ["flurry-of-blows-addle", 5],
       ["flurry-of-blows-topple", 5],
+      ["flurry-of-blows-push", 5],
       ["patient-defense", undefined],
       ["patient-defense-focus", 5],
       ["step-of-the-wind", undefined],

@@ -11,6 +11,7 @@ import { featureResolver, inspirationHelps, inspiredCheck, withoutInspiration } 
 import { applyStakes } from "../sheet/harm"
 import { legendaryActionsOf } from "../sheet/legendary-actions"
 import { attackWithReactions, ordered } from "../sheet/reactions"
+import { auraOnSave } from "../sheet/save-rules"
 import { checkAdds, saveBonusFor, settleConcentration } from "../sheet/spell-effects"
 import { type CastCost, castAgain, castCost, castSpell, isEngineSpell, spellById, withCastPaid } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
@@ -324,8 +325,8 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const failedBy = saveFailedBy(args.character, required.check)
       const thrown = resolveCheck({
         dice: d20sFor(mode, args.dice),
-        // Slow's −2 on a Dexterity save.
-        bonus: classCheckBonus(args.character, required.check) + saveBonusFor(args.character, required.check),
+        // Slow's −2 on a Dexterity save, and an aura of one near on any save (Aura of Protection).
+        bonus: classCheckBonus(args.character, required.check) + saveBonusFor(args.character, required.check) + auraOnSave(args.character, required.check, args.turn.characters),
         dc: required.difficulty,
         mode,
         fails: !!failedBy,

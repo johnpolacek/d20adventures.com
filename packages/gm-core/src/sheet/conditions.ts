@@ -4,13 +4,13 @@ import { monsterById } from "@d20/srd/monsters"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Check } from "./check"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
-import { featureImmunities } from "./late-rules"
 import { itemConditionImmunities } from "./item-effects"
+import { featureImmunities } from "./late-rules"
 import { packTacticsModes } from "./monster-traits"
 import type { Sheet } from "./sheet"
 import type { Side as Mark } from "./sides"
 import type { Point } from "./space"
-import { spellImmunities } from "./spell-effects"
+import { d20PenaltyFromSpells, shutOutBySpell, spellImmunities, stillBySpell } from "./spell-effects"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect } from "./turn-effect"
 
@@ -114,7 +114,8 @@ export type Afflicted = {
 export const conditionName = (id: ConditionId): string => conditionById.get(id)?.name ?? id
 
 /** One who cannot move: down, unable to act, or with a Speed of 0. They cannot stand from Prone, and get nothing from the Dodge action. */
-export const cannotMove = (character: Afflicted): boolean => isDown(character) || isIncapacitated(character) || (character.conditions ?? []).some((entry) => CONDITION_RULES[entry.id].speedZero)
+export const cannotMove = (character: Afflicted): boolean =>
+  isDown(character) || isIncapacitated(character) || (character.conditions ?? []).some((entry) => CONDITION_RULES[entry.id].speedZero) || stillBySpell(character)
 
 // Whether a stored condition still holds. One that ends on standing is over once its bearer's own turn has begun: it
 // has one turn left and they have acted this round, or they are acting now. One who cannot stand keeps it.
@@ -144,8 +145,8 @@ export const hasCondition = (character: Afflicted, id: ConditionId): boolean => 
 /** A character's Exhaustion level, 0 to 6. */
 export const exhaustionOf = (character: Afflicted): number => character.conditions?.find((entry) => entry.id === "exhaustion")?.level ?? 0
 
-/** What Exhaustion takes off every d20 a character rolls: 2 for each level. */
-export const d20Penalty = (character: Afflicted): number => 2 * exhaustionOf(character)
+/** What Exhaustion takes off every d20 a character rolls, 2 for each level, and a spell's penalty to D20 Tests (Raise Dead's). */
+export const d20Penalty = (character: Afflicted): number => 2 * exhaustionOf(character) + d20PenaltyFromSpells(character)
 
 /** A character's conditions in words, for the game master and the screen: "Prone, Poisoned, Exhaustion 2". */
 export function conditionWords(character: Afflicted): string {
@@ -166,13 +167,16 @@ export type ModeSource = { mode: Side; from: string }
 
 /**
  * Advantage and Disadvantage a character's conditions put on its own ability check or saving throw, each with the
- * condition it comes from. `present` is everyone in the scene, so fear of someone who is gone does not count. The roll
- * is made on the character's own turn, so one who was Prone has stood.
+ * condition it comes from. `present` is everyone in the scene, so fear of someone who is gone does not count, and a
+ * condition an aura of one near makes them immune to has no effect (Aura of Courage). The roll is made on the
+ * character's own turn, so one who was Prone has stood.
  */
 export function checkModesFrom(character: Afflicted, check: Check, present?: readonly Afflicted[]): ModeSource[] {
   const found: ModeSource[] = []
+  const shut = present ? featureImmunities(character, present) : []
   for (const entry of borne(character, true)) {
     const rules = CONDITION_RULES[entry.id]
+    if (shut.includes(entry.id)) continue
     if (rules.source === "in-sight" && !sourceHere(entry.source, present)) continue
     if (check.kind !== "save" && rules.checks) found.push({ mode: rules.checks, from: conditionName(entry.id) })
     if (check.kind === "save" && rules.saves?.disadvantage?.includes(check.ability)) found.push({ mode: "disadvantage", from: conditionName(entry.id) })
@@ -195,9 +199,11 @@ export function saveFailedBy(character: Afflicted, check: Check): string | undef
  */
 export function attackModesFrom(attacker: Afflicted, target: Afflicted, near: boolean, present?: readonly Afflicted[]): ModeSource[] {
   const found: ModeSource[] = []
+  // A condition an aura of one near makes the attacker immune to has no effect while they are in it (Aura of Courage).
+  const shut = present ? featureImmunities(attacker, present) : []
   for (const entry of borne(attacker, true)) {
     const rules = CONDITION_RULES[entry.id]
-    if (!rules.attacks) continue
+    if (!rules.attacks || shut.includes(entry.id)) continue
     if (rules.source === "in-sight" && !sourceHere(entry.source, present)) continue
     if (rules.source === "others" && entry.source && entry.source === target.id) continue
     found.push({ mode: rules.attacks, from: conditionName(entry.id) })
@@ -211,9 +217,10 @@ export function attackModesFrom(attacker: Afflicted, target: Afflicted, near: bo
   return found
 }
 
-/** Whom a character cannot attack: the one who has them Charmed. */
-export function cannotAttack(attacker: Afflicted, target: Afflicted): boolean {
-  return (attacker.conditions ?? []).some((entry) => CONDITION_RULES[entry.id].source === "source" && !!entry.source && entry.source === target.id)
+/** Whom a character cannot attack: the one who has them Charmed, unless an aura of one in `present` makes it have no effect (Aura of Devotion). */
+export function cannotAttack(attacker: Afflicted, target: Afflicted, present?: readonly Afflicted[]): boolean {
+  const shut = present ? featureImmunities(attacker, present) : []
+  return (attacker.conditions ?? []).some((entry) => CONDITION_RULES[entry.id].source === "source" && !!entry.source && entry.source === target.id && !shut.includes(entry.id))
 }
 
 /** Whether a hit on this target is a Critical Hit whatever the die shows: the target is Paralyzed or Unconscious and the attacker is within 5 feet. */
@@ -225,16 +232,18 @@ export const resistsAllDamage = (target: Afflicted): boolean => borne(target).so
 /**
  * Whether a character cannot be given a condition: its stat block is immune to it, a condition it bears shuts it out, a
  * spell on it does, a magic item it wears does (a Periapt of Proof against Poison's Poisoned), or a class feature
- * while it lasts (Mindless Rage's Charmed and Frightened).
+ * while it lasts (Mindless Rage's Charmed and Frightened), its own or an aura's of one in `present`, everyone in the
+ * scene where the caller knows them (Aura of Courage's Frightened).
  */
-export function immuneTo(character: Afflicted, id: ConditionId): boolean {
+export function immuneTo(character: Afflicted, id: ConditionId, spell?: string, present?: readonly Afflicted[]): boolean {
   const monster = character.type === "npc" ? monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
   return (
     !!monster?.conditionImmunities?.includes(id) ||
     borne(character).some((entry) => CONDITION_RULES[entry.id].immuneTo?.includes(id)) ||
     spellImmunities(character).includes(id) ||
+    shutOutBySpell(character, id, spell) ||
     (!!character.sheet && itemConditionImmunities(character.sheet).includes(id)) ||
-    featureImmunities(character).includes(id)
+    featureImmunities(character, present).includes(id)
   )
 }
 
@@ -249,14 +258,15 @@ const without = <T extends Afflicted>(character: T, keep: (entry: ConditionEntry
  * kills: the caller sees `level` and applies the death. Any other condition is borne once, and a second giving renews
  * it. `span` is how long it lasts, by name, or the condition's usual span. A span is counted in the bearer's own
  * turns, so one who has already acted this round (`acted`) keeps it through their next turn. Prone takes no span: it
- * lasts until the bearer's own turn begins, when they stand.
+ * lasts until the bearer's own turn begins, when they stand. `present` is everyone in the scene, for an aura that
+ * makes one near immune (Aura of Courage).
  */
 export function withCondition<T extends Afflicted>(
   character: T,
   give: { id: ConditionId; source?: string; span?: ConditionSpan; spell?: string; attack?: string; feature?: string },
-  options: { acted?: boolean } = {}
+  options: { acted?: boolean; present?: readonly Afflicted[] } = {}
 ): { character: T; given: boolean; level?: number } {
-  if (isDead(character) || immuneTo(character, give.id)) return { character, given: false }
+  if (isDead(character) || immuneTo(character, give.id, give.spell, options.present)) return { character, given: false }
   const rules = CONDITION_RULES[give.id]
   const others = (character.conditions ?? []).filter((entry) => entry.id !== give.id)
   if (give.id === "exhaustion") {

@@ -280,7 +280,17 @@ export default defineSchema({
         // The level due to a hero who is below it. Only the engine writes it (packages/gm-core/src/sheet/milestone.ts).
         levelDue: v.optional(v.number()),
         spellEffects: v.optional(
-          v.array(v.object({ spell: v.string(), by: v.string(), turns: v.optional(v.number()), amount: v.optional(v.number()), skill: v.optional(v.string()), choice: v.optional(v.string()) }))
+          v.array(
+            v.object({
+              spell: v.string(),
+              by: v.string(),
+              turns: v.optional(v.number()),
+              amount: v.optional(v.number()),
+              skill: v.optional(v.string()),
+              choice: v.optional(v.string()),
+              tally: v.optional(v.object({ passed: v.number(), failed: v.number() })),
+            })
+          )
         ),
         concentration: v.optional(v.object({ spell: v.string() })),
         tempHitPoints: v.optional(v.number()),

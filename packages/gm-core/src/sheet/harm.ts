@@ -2,7 +2,7 @@ import type { ConditionId } from "@d20/srd"
 import { damageTaken, defensesOf, rollDamage } from "./attack"
 import type { Roller } from "./check"
 import { conditionName, exhaustionOf, withCondition, withoutCondition } from "./conditions"
-import { afterHarm, type DeathRules, enduredWords, type Fate, killed, withDamage, withHealing } from "./death"
+import { afterHarm, type DeathRules, enduredWords, type Fate, killed, wardedWords, withDamage, withHealing } from "./death"
 import { hitPointsOf } from "./hit-points"
 import { typesTaken } from "./monster-traits"
 import type { Stake } from "./stakes"
@@ -21,6 +21,7 @@ function standing(character: Harmed, fate: Fate | undefined): string {
   if (fate === "killed") return `${character.name} is killed outright.`
   if (fate === "stable") return `${character.name} is Unconscious and Stable, out of the fight.`
   if (fate === "endures") return enduredWords(character.name, character)
+  if (fate === "warded") return wardedWords(character.name)
   if (fate === "dying") return `${character.name} is at 0 hit points, Unconscious and dying.`
   const hitPoints = hitPointsOf(character)
   if (!hitPoints) return ""
@@ -63,7 +64,7 @@ export function applyStakes<T extends Harmed>(args: {
         facts.push(stake.condition === "exhaustion" && exhaustionOf(freed.character) ? `${target.name} loses a level of Exhaustion.` : `${target.name} is no longer ${name}.`)
         continue
       }
-      const given = withCondition(target, { id: stake.condition, source: stake.source, span: stake.span }, { acted: !!target.isComplete })
+      const given = withCondition(target, { id: stake.condition, source: stake.source, span: stake.span }, { acted: !!target.isComplete, present: characters })
       if (!given.given) {
         facts.push(`${target.name} cannot be ${name} and is not.`)
         continue

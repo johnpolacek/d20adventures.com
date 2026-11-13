@@ -46,8 +46,8 @@ test("every spell is named as run, partly run or told, and the count by label", 
     for (const each of list) found[spellLabel(each)] += 1
     return found
   }
-  assert.deepEqual(count(spells), { run: 52, partly: 45, told: 242 })
-  assert.deepEqual(count(spells.filter((each) => each.level <= 3)), { run: 45, partly: 43, told: 95 })
+  assert.deepEqual(count(spells), { run: 75, partly: 64, told: 200 })
+  assert.deepEqual(count(spells.filter((each) => each.level <= 3)), { run: 50, partly: 45, told: 88 })
   // Each spell named is one of the SRD's, and named once.
   const named = namedSpellIds()
   assert.deepEqual(

@@ -89,7 +89,7 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
   const give = (target: T, id: ConditionId, spell: Spell, caster: T, span: "turn" | "lasting") => {
     // Given before the round begins, so a condition of one turn lasts through the turn to come. Prone ends as the turn
     // begins, when its bearer stands with half their Speed.
-    const given = withCondition(target, { id, source: caster.id, span, spell: spell.id }, { acted: id !== "prone" })
+    const given = withCondition(target, { id, source: caster.id, span, spell: spell.id }, { acted: id !== "prone", present: characters })
     if (!given.given) return tell(target.id, spell.name, `${target.name} cannot be ${conditionName(id)} and is not.`)
     put(afterHarm(given.character))
     conditions.push({ target: target.id, condition: id })

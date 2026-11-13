@@ -56,6 +56,8 @@ export const spellEffectSchema = z.strictObject({
   skill: skillIdSchema.optional(),
   /** What its caster chose as they cast it, where the spell asks a choice: Protection from Energy's damage type, Hex's ability. */
   choice: z.string().optional(),
+  /** The saves its bearer has passed and failed against it, where three of a kind decide its end: Flesh to Stone, Contagion. */
+  tally: z.strictObject({ passed: z.number().int().min(0), failed: z.number().int().min(0) }).optional(),
 })
 export type SpellEffect = z.infer<typeof spellEffectSchema>
 

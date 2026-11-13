@@ -12,6 +12,7 @@ import { deriveSheet } from "./derive"
 import type { ConditionChange } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { typesTaken } from "./monster-traits"
+import { type AuraHolder, auraSaveBonus } from "./save-rules"
 import { shapeOf } from "./shape"
 import { attackReach, feetBetween, type Point, type Standing, sizeOf } from "./space"
 import { checkAdds, saveBonusFor, saveModesFor } from "./spell-effects"
@@ -348,7 +349,7 @@ export function blockRidersOnHit<T extends Target>(args: {
   if (!args.attack.riders?.length || isDown(target) || isDead(target)) return { target, riders, conditions }
   const acted = !!(target as { isComplete?: boolean }).isComplete
   const give = (id: ConditionId, span: ConditionSpan, attack?: string) => {
-    const given = withCondition(target, { id, source: by, span, ...(attack ? { attack } : {}) }, { acted })
+    const given = withCondition(target, { id, source: by, span, ...(attack ? { attack } : {}) }, { acted, present: args.present })
     if (!given.given) return false
     target = given.character
     conditions.push({ target: target.id ?? "", condition: id })
@@ -382,10 +383,12 @@ export function blockRidersOnHit<T extends Target>(args: {
     }
     if (rider.save) {
       const check = { kind: "save" as const, ability: rider.save.ability }
-      const mode = combineModes([...checkModesFrom(target, check), ...saveModesFor(target, check, rider.conditions)].map((source) => source.mode))
+      const mode = combineModes([...checkModesFrom(target, check, args.present), ...saveModesFor(target, check, rider.conditions)].map((source) => source.mode))
+      // An aura of one near adds to the save (Aura of Protection), as it does to every save ./spells `rollSave` makes.
+      const aura = auraSaveBonus(target as AuraHolder, (args.present ?? []) as AuraHolder[])
       const save = resolveCheck({
         dice: mode === "normal" ? [args.roll(20)] : [args.roll(20), args.roll(20)],
-        bonus: checkBonus(target, check) + saveBonusFor(target, check),
+        bonus: checkBonus(target, check) + saveBonusFor(target, check) + aura.amount,
         dc: rider.save.dc,
         mode,
         fails: !!saveFailedBy(target, check),

@@ -4,13 +4,13 @@ import type { SpellRules } from "../spell-rules"
 import { DEFAULT_STAT_BLOCK } from "../stat-block"
 
 // A hero is of a playable species, every one of them a Humanoid. An NPC is of its stat block's type.
-function creatureTypeOf(character: Roller): string {
+export function creatureTypeOf(character: Roller): string {
   if (character.sheet || character.type !== "npc") return "humanoid"
   return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.type ?? "humanoid"
 }
 
 // "Choose a Humanoid", "One Humanoid", "Target a Beast": the one creature type a spell takes.
-const only =
+export const only =
   (type: "humanoid" | "beast"): SpellRules["takes"] =>
   (target, spell) =>
     creatureTypeOf(target) === type ? undefined : `${target.name} is not a ${type === "humanoid" ? "Humanoid" : "Beast"}, so ${spell.name} does not take them.`

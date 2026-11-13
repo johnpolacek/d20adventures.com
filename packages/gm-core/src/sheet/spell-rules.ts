@@ -1,10 +1,12 @@
 import type { AbilityId, ConditionId, DamageTypeId } from "@d20/srd"
 import type { Spell } from "@d20/srd/schema/spells"
-import type { DamageRoll } from "./attack"
+import type { Attack, DamageRoll } from "./attack"
 import type { Check, Roller } from "./check"
-import type { ConditionEntry } from "./condition-entry"
+import type { ConditionEntry, ConditionSpan } from "./condition-entry"
 import type { ModeSource } from "./conditions"
+import type { DeathRules } from "./death"
 import type { ConditionChange, Harm } from "./harm"
+import type { SaveStakes } from "./legendary-resistance"
 import type { Sheet } from "./sheet"
 import type { Point } from "./space"
 import type { Castee, SaveRoll, SpellAttack, Spellcasting } from "./spells"
@@ -44,6 +46,16 @@ export type SpellRules = {
    * cast: Heat Metal's burn on the one who holds the metal, Blindness/Deafness's condition by the caster's `choice`.
    */
   applies?: (part: SpellPart, choice: string | undefined) => boolean
+  /**
+   * What the spell does at once to one it takes, by how that one stands, in place of everything its data does to them:
+   * Power Word Kill's death at 100 hit points or fewer, Raise Dead's return. True when it has settled them, and the
+   * rest of the cast passes them by.
+   */
+  settles?: (cast: CastContext, target: Castee) => boolean
+  /** It is cast on the dead: the read takes one who died and is still here as its target (Raise Dead). */
+  takesDead?: true
+  /** Its range in feet for this caster, where its words change it: Spare the Dying's, doubled at levels 5, 11 and 17 (./spell-space). */
+  range?: (caster: Roller) => number | undefined
 
   // A choice the caster makes as they cast it (../services/roll-requirement-service), kept on its effect as `choice`.
   /** What the caster chooses: its values, the field of the read it is asked in, and what it is in words. */
@@ -87,7 +99,7 @@ export type SpellRules = {
 
   // As the caster's later turns come (./spells `againOf`, `castAgain`).
   /** The spell is used again on later turns while it is held, with an action or a Bonus Action. */
-  again?: { takes: "action" | "bonus-action"; unplaced?: true }
+  again?: SpellAgain
 
   // As a round turns (./spell-rounds), which stands for every turn's start and end at once.
   /**
@@ -120,6 +132,16 @@ export type SpellRules = {
  */
 export type SpellChoice = { values: readonly string[]; field: "damageType" | "spellChoice"; words: string }
 
+/**
+ * How a held spell is used again on its caster's later turns (./spells `againOf`, `castAgain`). `takes` is the action
+ * or the Bonus Action it costs. `unplaced`: its force is not held on the floor, so the one it strikes is not measured
+ * (Spiritual Weapon). `onlyLater`: as it is cast it does nothing to anyone, and all it does comes as it is used again
+ * (Flame Blade's blade). `reach`: how many feet from its caster it reaches when used again, where its range does not
+ * say (Produce Flame's 60). `parts`: the parts of its data it deals when used again, in place of those its text times
+ * for later turns (Flaming Sphere's ram).
+ */
+export type SpellAgain = { takes: "action" | "bonus-action"; unplaced?: true; onlyLater?: true; reach?: number; parts?: (part: SpellPart) => boolean }
+
 /** What a lasting spell does while it is on its bearer, read where rolls are made and defences counted. */
 export type HeldRules = {
   /** The caster alone holds the effect, with the slot it was cast at as its `amount`: Spirit Guardians. */
@@ -130,8 +152,10 @@ export type HeldRules = {
   amount?: (slot: number) => number
   /** Advantage or Disadvantage on attack rolls against its bearer. */
   attacked?: "advantage" | "disadvantage"
-  /** Disadvantage on its bearer's own attack rolls. */
-  attacks?: "disadvantage"
+  /** Advantage or Disadvantage on its bearer's own attack rolls: Foresight's Advantage. */
+  attacks?: "advantage" | "disadvantage"
+  /** Advantage or Disadvantage on attack rolls against its bearer by this attacker: Protection from Evil and Good's Disadvantage on a Fiend's. */
+  attackedFrom?: (attacker: Bearer) => "advantage" | "disadvantage" | undefined
   /** It is spent by the next attack roll it changes. */
   once?: true
   /** What it takes from its bearer's Armor Class: Slow's 2. */
@@ -148,6 +172,30 @@ export type HeldRules = {
   wards?: (spell: Spell) => boolean
   /** Conditions its bearer cannot be given: Heroism's Frightened. */
   immunities?: readonly ConditionId[]
+  /** A condition its bearer cannot be given by the spell that would give it (`spell`, none where no spell does): Freedom of Movement's Restrained by a spell. */
+  shutsOut?: (condition: ConditionId, spell: string | undefined) => boolean
+  /** Saves its bearer makes to avoid or end these conditions, with Advantage: Protection from Poison's Poisoned. */
+  saveAdvantageAgainst?: readonly ConditionId[]
+  /** Damage types its bearer is immune to: Mind Blank's Psychic. Read in ./attack `defensesOf`. */
+  damageImmunities?: readonly DamageTypeId[]
+  /**
+   * The first time its bearer would drop to 0 hit points they drop to 1 instead, and an effect that would kill them
+   * outright without damage is negated, and either way it ends: Death Ward (./death `withDamage`).
+   */
+  wardsDeath?: true
+  /** What it takes from every D20 Test its bearer makes, by the effect: Raise Dead's −4 as its `amount`. Read in ./conditions `d20Penalty`. */
+  d20Less?: (effect: SpellEffect) => number
+  /** Its `amount` is taken from its bearer's Hit Point maximum: Harm's. */
+  maximumLess?: true
+  /** Its bearer's Speed is 0: Power Word Stun on one it does not stun. */
+  speedZero?: true
+  /**
+   * What a rest leaves of it, in place of its spell's duration: Harm's lowered maximum stays, and Raise Dead's penalty
+   * eases by 1 on a Long Rest (./rest). None where it ends.
+   */
+  rested?: (effect: SpellEffect, long: boolean) => SpellEffect | undefined
+  /** Its own rules put it on those the spell reaches (`settles`, `failedSave`), and the cast leaves none of its own: Harm's lowered maximum. */
+  placed?: true
   /** It is the weapon's: its roll modifier adds to weapon attacks and not spell attacks, and its amount to weapon damage. */
   weapon?: true
   /** A limit of its roll modifier the engine does not measure, so it always holds: Warding Bond's 60 feet. */
@@ -161,6 +209,8 @@ export type HeldRules = {
   checkModes?: (effect: SpellEffect, check: Check) => ModeSource[]
   /** What a hit by an attack roll on its bearer may strike in their place: Mirror Image's duplicates. */
   deflects?: <T extends Bearer>(bearer: T, attacker: Bearer, roll: (sides: number) => number) => Deflected<T> | undefined
+  /** What it makes of one of its bearer's own weapon attacks: Shillelagh's Club or Quarterstaff. Read in ./attack `attacksOf`. */
+  weaponAttack?: (effect: SpellEffect, attack: Attack, bearer: Bearer) => Attack
 }
 
 /** A hit a held spell may have turned: its bearer as it leaves them, whether it was, the dice, and how many there were. */
@@ -209,6 +259,18 @@ export type CastContext = {
   roll: (sides: number) => number
   /** How a character stands after harm or healing, in words for the game master. */
   standing: (character: Castee) => string
+  /** The adventure's rule on death, for a spell that kills (Power Word Kill). */
+  rules?: DeathRules
+  /** Everyone the spell took, by id, in the order named, once those it settled are gone. */
+  targets: readonly string[]
+  /** Everyone as the cast has left them so far. */
+  everyone: () => readonly Castee[]
+  /** The conditions the cast has given or ended so far, added to in order. */
+  conditions: ConditionChange[]
+  /** A condition the spell gives one, for its span or the span the spell's text gives it, told and counted. */
+  give: (id: string, condition: ConditionId, span?: ConditionSpan) => void
+  /** A saving throw against the caster's spell save DC, counted and told with what Legendary Resistance and the like spend. */
+  save: (target: Castee, ability: AbilityId, stakes: SaveStakes) => SaveRoll
 }
 
 /** One a spell that ends things may change (`SpellRules.ends`). */

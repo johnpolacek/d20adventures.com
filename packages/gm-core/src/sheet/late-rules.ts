@@ -6,20 +6,20 @@ import type { ConditionId } from "@d20/srd"
  * class rules register their readers here as they load (./class-rules), and this file imports nothing that runs.
  */
 
-type ImmunityReader = (character: object) => readonly ConditionId[]
+type ImmunityReader = (character: object, present?: readonly object[]) => readonly ConditionId[]
 type Told = { by: string; name: string; text: string }
 type Downed = (args: { before: readonly object[]; after: readonly object[]; d20: () => number }) => { characters: object[]; told: Told[] }
 
 const immunities: ImmunityReader[] = []
 let downed: Downed | undefined
 
-/** Add a reader of conditions a character is immune to for now (Mindless Rage). */
+/** Add a reader of conditions a character is immune to for now (Mindless Rage), and by those present (Aura of Courage). */
 export function registerImmunities(reader: ImmunityReader): void {
   if (!immunities.includes(reader)) immunities.push(reader)
 }
 
-/** The conditions the registered readers make a character immune to for now. */
-export const featureImmunities = (character: object): ConditionId[] => immunities.flatMap((reader) => reader(character))
+/** The conditions the registered readers make a character immune to for now. `present` is everyone in the scene, where it is known. */
+export const featureImmunities = (character: object, present?: readonly object[]): ConditionId[] => immunities.flatMap((reader) => reader(character, present))
 
 /** Set what answers the heroes a roll dropped to 0 hit points (../class-rules `afterDowned`). */
 export function registerDowned(answer: Downed): void {

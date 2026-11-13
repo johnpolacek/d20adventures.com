@@ -3395,5 +3395,1297 @@
       "cunning": false,
       "cunning2": false
     }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "barbarian",
+      "level": 14,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 20,
+        "dex": 13,
+        "con": 18,
+        "int": 10,
+        "wis": 12,
+        "cha": 8
+      },
+      "classSkills": ["animal-handling", "perception"],
+      "weapons": ["greataxe", "handaxe", "spear", "shortbow"],
+      "weaponMasteries": ["greataxe", "handaxe", "shortbow", "spear"],
+      "subclass": "path-of-the-berserker",
+      "advancements": [
+        {
+          "level": 3,
+          "skills": ["survival"]
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "greataxe",
+      "target": "warehouse-thug"
+    },
+    "id": "brutal-hamstring",
+    "action": "Caring nothing for my own guard, I put all my strength into one savage reckless chop at the thug's legs to cripple him.",
+    "choices": {
+      "reckless": true,
+      "brutal": "hamstring-blow"
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "barbarian",
+      "level": 14,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 20,
+        "dex": 13,
+        "con": 18,
+        "int": 10,
+        "wis": 12,
+        "cha": 8
+      },
+      "classSkills": ["animal-handling", "perception"],
+      "weapons": ["greataxe", "handaxe", "spear", "shortbow"],
+      "weaponMasteries": ["greataxe", "handaxe", "shortbow", "spear"],
+      "subclass": "path-of-the-berserker",
+      "advancements": [
+        {
+          "level": 3,
+          "skills": ["survival"]
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "greataxe",
+      "target": "warehouse-thug"
+    },
+    "id": "brutal-forceful",
+    "action": "I throw all caution aside and heave my greataxe into the thug with everything I have, a crushing blow to hurl him back across the warehouse.",
+    "choices": {
+      "reckless": true,
+      "brutal": "forceful-blow"
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "barbarian",
+      "level": 14,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 20,
+        "dex": 13,
+        "con": 18,
+        "int": 10,
+        "wis": 12,
+        "cha": 8
+      },
+      "classSkills": ["animal-handling", "perception"],
+      "weapons": ["greataxe", "handaxe", "spear", "shortbow"],
+      "weaponMasteries": ["greataxe", "handaxe", "shortbow", "spear"],
+      "subclass": "path-of-the-berserker",
+      "advancements": [
+        {
+          "level": 3,
+          "skills": ["survival"]
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "greataxe",
+      "target": "warehouse-thug"
+    },
+    "id": "brutal-none",
+    "action": "I throw all caution aside and swing my greataxe wildly at the thug, leaving myself wide open.",
+    "choices": {
+      "reckless": true,
+      "brutal": false
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "barbarian",
+      "level": 14,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 20,
+        "dex": 13,
+        "con": 18,
+        "int": 10,
+        "wis": 12,
+        "cha": 8
+      },
+      "classSkills": ["animal-handling", "perception"],
+      "weapons": ["greataxe", "handaxe", "spear", "shortbow"],
+      "weaponMasteries": ["greataxe", "handaxe", "shortbow", "spear"],
+      "subclass": "path-of-the-berserker",
+      "advancements": [
+        {
+          "level": 3,
+          "skills": ["survival"]
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "greataxe",
+      "target": "warehouse-thug"
+    },
+    "id": "intimidating-roar",
+    "action": "I let out a terrifying roar to strike fear into the thug, then bring my greataxe down on him.",
+    "bonus": {
+      "feature": "intimidating-presence"
+    },
+    "choices": {
+      "reckless": false
+    }
+  },
+  {
+    "id": "flame-blade-evoke-and-strike",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["poison-spray", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "flame-blade"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I call a blade of fire into my free hand and slash the thug with it.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "flame-blade",
+      "targets": ["warehouse-thug"],
+      "again": true
+    },
+    "bonus": {
+      "feature": "flame-blade"
+    }
+  },
+  {
+    "id": "flame-blade-held-strike",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["poison-spray", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "flame-blade"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "held": {
+      "spell": "flame-blade",
+      "slot": 2
+    },
+    "narrative": "A blade of fire burns in Branka's hand. The thug squares up to her with a cudgel.",
+    "action": "I slash the thug with my fiery blade.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "flame-blade",
+      "targets": ["warehouse-thug"],
+      "again": true
+    }
+  },
+  {
+    "id": "sunbeam-again",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 16,
+        "int": 8,
+        "wis": 13,
+        "cha": 17
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "chromatic-orb", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "transmuted-spell"
+          },
+          {
+            "option": "careful-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery"
+    },
+    "held": {
+      "spell": "sunbeam",
+      "slot": 6
+    },
+    "narrative": "Last turn Cassia loosed a beam of sunlight, and a mote of radiance still shines above her. The thug, half blinded, squares up to her with a cudgel.",
+    "action": "I sear the thug with another beam of sunlight.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "sunbeam",
+      "targets": ["warehouse-thug"],
+      "again": true
+    },
+    "choices": {
+      "metamagic": false
+    }
+  },
+  {
+    "id": "abjure-foes",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Alaric and his thug square up to Branka with short swords.",
+    "sheet": {
+      "class": "paladin",
+      "level": 9,
+      "species": "human",
+      "background": "soldier",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 20,
+        "dex": 10,
+        "con": 14,
+        "int": 8,
+        "wis": 12,
+        "cha": 15
+      },
+      "classSkills": ["persuasion", "insight"],
+      "otherSkills": ["deception", "performance", "animal-handling", "medicine"],
+      "feats": ["skilled"],
+      "armor": "chain-mail",
+      "shield": true,
+      "weapons": ["longsword", "javelin", "spear", "shortbow"],
+      "spells": ["cure-wounds", "heroism", "searing-smite", "bless", "command", "shining-smite", "prayer-of-healing", "revivify", "remove-curse"],
+      "weaponMasteries": ["longsword", "javelin"],
+      "featureChoices": {
+        "paladin-fighting-style": "archery"
+      },
+      "subclass": "oath-of-devotion",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 1,
+            "cha": 1
+          }
+        }
+      ]
+    },
+    "action": "I thrust my holy symbol at Alaric and his thug and command them, in the name of my oath, to cower before me.",
+    "checks": ["channel-divinity"],
+    "feature": {
+      "id": "abjure-foes",
+      "targets": ["scarface-alaric", "warehouse-thug"]
+    }
+  },
+  {
+    "id": "restoring-touch",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Alaric flung lime in Ilya's eyes, and she stumbles blind.",
+    "sheet": {
+      "class": "paladin",
+      "level": 14,
+      "species": "human",
+      "background": "soldier",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 20,
+        "dex": 10,
+        "con": 14,
+        "int": 8,
+        "wis": 12,
+        "cha": 17
+      },
+      "classSkills": ["persuasion", "insight"],
+      "otherSkills": ["deception", "performance", "animal-handling", "medicine"],
+      "feats": ["skilled"],
+      "armor": "chain-mail",
+      "shield": true,
+      "weapons": ["longsword", "javelin", "spear", "shortbow"],
+      "spells": ["cure-wounds", "heroism", "searing-smite", "bless", "command", "shining-smite", "prayer-of-healing", "revivify", "remove-curse", "lesser-restoration", "magic-weapon"],
+      "weaponMasteries": ["longsword", "javelin"],
+      "featureChoices": {
+        "paladin-fighting-style": "archery"
+      },
+      "subclass": "oath-of-devotion",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 1,
+            "cha": 1
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        }
+      ]
+    },
+    "conditionsOn": {
+      "ilya-veles": [
+        {
+          "id": "blinded",
+          "source": "scarface-alaric"
+        }
+      ]
+    },
+    "action": "I press my glowing palm over Ilya's eyes to burn the blindness away, then cut at the thug with my longsword.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longsword",
+      "target": "warehouse-thug"
+    },
+    "bonus": {
+      "feature": "lay-on-hands-restore",
+      "target": "ilya-veles"
+    },
+    "choices": {
+      "smite": false
+    }
+  },
+  {
+    "id": "holy-nimbus",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Alaric and his thug square up to Branka with short swords.",
+    "sheet": {
+      "class": "paladin",
+      "level": 20,
+      "species": "human",
+      "background": "soldier",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 21,
+        "dex": 10,
+        "con": 14,
+        "int": 8,
+        "wis": 12,
+        "cha": 19
+      },
+      "classSkills": ["persuasion", "insight"],
+      "otherSkills": ["deception", "performance", "animal-handling", "medicine"],
+      "feats": ["skilled"],
+      "armor": "chain-mail",
+      "shield": true,
+      "weapons": ["longsword", "javelin", "spear", "shortbow"],
+      "spells": [
+        "cure-wounds",
+        "heroism",
+        "searing-smite",
+        "bless",
+        "command",
+        "shining-smite",
+        "prayer-of-healing",
+        "revivify",
+        "remove-curse",
+        "lesser-restoration",
+        "magic-weapon",
+        "warding-bond",
+        "geas",
+        "raise-dead",
+        "dispel-evil-and-good"
+      ],
+      "weaponMasteries": ["longsword", "javelin"],
+      "featureChoices": {
+        "paladin-fighting-style": "archery"
+      },
+      "subclass": "oath-of-devotion",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 1,
+            "cha": 1
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 19,
+          "feat": "boon-of-truesight",
+          "abilities": {
+            "str": 1
+          }
+        }
+      ]
+    },
+    "action": "I call down my god's holy light so my aura blazes with sunlight, then cut at the thug with my longsword.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longsword",
+      "target": "warehouse-thug"
+    },
+    "bonus": {
+      "feature": "holy-nimbus"
+    },
+    "choices": {
+      "smite": false
+    }
+  },
+  {
+    "id": "high-paladin-plain",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Alaric and his thug square up to Branka with short swords.",
+    "sheet": {
+      "class": "paladin",
+      "level": 20,
+      "species": "human",
+      "background": "soldier",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 21,
+        "dex": 10,
+        "con": 14,
+        "int": 8,
+        "wis": 12,
+        "cha": 19
+      },
+      "classSkills": ["persuasion", "insight"],
+      "otherSkills": ["deception", "performance", "animal-handling", "medicine"],
+      "feats": ["skilled"],
+      "armor": "chain-mail",
+      "shield": true,
+      "weapons": ["longsword", "javelin", "spear", "shortbow"],
+      "spells": [
+        "cure-wounds",
+        "heroism",
+        "searing-smite",
+        "bless",
+        "command",
+        "shining-smite",
+        "prayer-of-healing",
+        "revivify",
+        "remove-curse",
+        "lesser-restoration",
+        "magic-weapon",
+        "warding-bond",
+        "geas",
+        "raise-dead",
+        "dispel-evil-and-good"
+      ],
+      "weaponMasteries": ["longsword", "javelin"],
+      "featureChoices": {
+        "paladin-fighting-style": "archery"
+      },
+      "subclass": "oath-of-devotion",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "str": 1,
+            "cha": 1
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 19,
+          "feat": "boon-of-truesight",
+          "abilities": {
+            "str": 1
+          }
+        }
+      ]
+    },
+    "action": "I slash at the thug with my longsword.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longsword",
+      "target": "warehouse-thug"
+    },
+    "choices": {
+      "smite": false,
+      "sacred": false
+    }
+  },
+  {
+    "id": "monk-flurry-push",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "sheet": {
+      "class": "monk",
+      "level": 5,
+      "species": "human",
+      "background": "soldier",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 19,
+        "con": 14,
+        "int": 10,
+        "wis": 14,
+        "cha": 8
+      },
+      "classSkills": ["stealth", "insight"],
+      "otherSkills": ["acrobatics", "sleight-of-hand", "animal-handling", "medicine"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "shortbow"],
+      "subclass": "warrior-of-the-open-hand",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        }
+      ],
+      "cantrips": [],
+      "spells": [],
+      "spellbook": []
+    },
+    "action": "I jab the thug with my spear, then hammer his chest with a flurry of open-palm blows to drive him back across the warehouse.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "spear",
+      "target": "warehouse-thug"
+    },
+    "bonus": {
+      "feature": "flurry-of-blows-push"
+    },
+    "choices": {
+      "stun": false
+    }
+  },
+  {
+    "id": "monk-wholeness",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Cassia staggers back from the thug's cudgel, bleeding from a split brow.",
+    "sheet": {
+      "class": "monk",
+      "level": 6,
+      "species": "human",
+      "background": "acolyte",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 15,
+        "con": 13,
+        "int": 11,
+        "wis": 18,
+        "cha": 8
+      },
+      "classSkills": ["acrobatics", "stealth"],
+      "otherSkills": ["animal-handling", "medicine", "perception", "survival"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "cleric",
+          "spellAbility": "wis",
+          "cantrips": ["sacred-flame", "guidance"],
+          "spell": "cure-wounds"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        }
+      ],
+      "subclass": "warrior-of-the-open-hand"
+    },
+    "hitPointsOn": {
+      "cassia-verane": 12
+    },
+    "action": "I steady my breath and draw my inner energy into my wounds to mend them, then punch the thug in the gut.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "unarmed-strike",
+      "target": "warehouse-thug"
+    },
+    "bonus": {
+      "feature": "wholeness-of-body"
+    },
+    "choices": {
+      "stun": false
+    }
+  },
+  {
+    "id": "monk-quivering-palm",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "sheet": {
+      "class": "monk",
+      "level": 17,
+      "species": "human",
+      "background": "acolyte",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 19,
+        "con": 13,
+        "int": 11,
+        "wis": 20,
+        "cha": 8
+      },
+      "classSkills": ["acrobatics", "stealth"],
+      "otherSkills": ["animal-handling", "medicine", "perception", "survival"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "cleric",
+          "spellAbility": "wis",
+          "cantrips": ["sacred-flame", "guidance"],
+          "spell": "cure-wounds"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        }
+      ],
+      "subclass": "warrior-of-the-open-hand"
+    },
+    "action": "I press my open palm to the thug's chest and set a deadly vibration humming through his body.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "unarmed-strike",
+      "target": "warehouse-thug"
+    },
+    "choices": {
+      "quivering-palm": "palm",
+      "stun": false
+    }
+  },
+  {
+    "id": "monk-palm-none",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "sheet": {
+      "class": "monk",
+      "level": 17,
+      "species": "human",
+      "background": "acolyte",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 19,
+        "con": 13,
+        "int": 11,
+        "wis": 20,
+        "cha": 8
+      },
+      "classSkills": ["acrobatics", "stealth"],
+      "otherSkills": ["animal-handling", "medicine", "perception", "survival"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "cleric",
+          "spellAbility": "wis",
+          "cantrips": ["sacred-flame", "guidance"],
+          "spell": "cure-wounds"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        }
+      ],
+      "subclass": "warrior-of-the-open-hand"
+    },
+    "action": "I punch the thug in the jaw.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "unarmed-strike",
+      "target": "warehouse-thug"
+    },
+    "choices": {
+      "quivering-palm": false,
+      "stun": false
+    }
+  },
+  {
+    "id": "monk-palm-end",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. The thug, who took Cassia's palm to the chest a moment ago, squares up again with his cudgel.",
+    "sheet": {
+      "class": "monk",
+      "level": 17,
+      "species": "human",
+      "background": "acolyte",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 19,
+        "con": 13,
+        "int": 11,
+        "wis": 20,
+        "cha": 8
+      },
+      "classSkills": ["acrobatics", "stealth"],
+      "otherSkills": ["animal-handling", "medicine", "perception", "survival"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger"],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "cleric",
+          "spellAbility": "wis",
+          "cantrips": ["sacred-flame", "guidance"],
+          "spell": "cure-wounds"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        }
+      ],
+      "subclass": "warrior-of-the-open-hand"
+    },
+    "spellEffectsOn": {
+      "cassia-verane": [
+        {
+          "spell": "warrior-of-the-open-hand-quivering-palm",
+          "by": "cassia-verane",
+          "choice": "warehouse-thug",
+          "turns": 244800
+        }
+      ]
+    },
+    "action": "I clench my fist and end the vibrations I left inside the thug.",
+    "checks": ["channel-divinity"],
+    "feature": {
+      "id": "quivering-palm",
+      "targets": ["warehouse-thug"]
+    }
+  },
+  {
+    "id": "shillelagh-force",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["shillelagh", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "flame-blade"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I whisper to my quarterstaff and wreathe it in raw force for the fight to come.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "shillelagh",
+      "targets": ["branka-stoneveil"]
+    },
+    "choice": "force"
+  },
+  {
+    "id": "revivify-fallen",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "level": 5,
+      "subclass": "life-domain",
+      "spells": ["healing-word", "bless", "guiding-bolt", "shield-of-faith", "spiritual-weapon", "aid", "protection-from-energy", "revivify", "spirit-guardians"],
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        }
+      ]
+    },
+    "deadOn": ["branka-stoneveil"],
+    "narrative": "The thug's cudgel came down hard, and Branka lies still on the warehouse floor, dead a moment ago.",
+    "action": "I kneel beside Branka, press a diamond to her chest and cast Revivify to call her back.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "revivify",
+      "targets": ["branka-stoneveil"]
+    }
+  },
+  {
+    "id": "raise-dead-at-peace",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "level": 9,
+      "subclass": "life-domain",
+      "spells": ["healing-word", "bless", "guiding-bolt", "shield-of-faith", "spiritual-weapon", "aid", "protection-from-energy", "revivify", "spirit-guardians", "raise-dead"],
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "wis": 2
+          }
+        }
+      ]
+    },
+    "deadOn": ["branka-stoneveil"],
+    "narrative": "The thugs have fled and the warehouse is quiet. Branka's body lies among the crates, where she fell.",
+    "action": "With no one left to fight, I begin the long rite of Raise Dead over Branka.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "raise-dead",
+      "targets": ["branka-stoneveil"]
+    }
+  },
+  {
+    "id": "chill-fire-shield",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "sheet": {
+      "level": 7,
+      "spells": ["detect-magic", "magic-missile", "fire-shield"],
+      "spellbook": ["detect-magic", "magic-missile", "fire-shield"]
+    },
+    "narrative": "Reinhard's men hurl burning oil across the deck toward Lyra.",
+    "action": "I wreathe myself in the chill shield, cold blue flames to keep the fire off me.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fire-shield",
+      "targets": ["1749159962941"]
+    },
+    "choice": "chill"
   }
 ]

@@ -265,9 +265,7 @@ export const barbarian: ClassRules = {
       note: "barbarian-rage is for a character who flies into a Rage, a battle fury, beside the action, when the player's words call for it.",
       // Instinctive Pounce: entering a Rage moves the hero up to half their Speed more.
       moveBonus: (character) =>
-        hasFeature(character, "barbarian-instinctive-pounce") && !isRaging(character) && !heavyArmored(character) && usesLeft(character, RAGE) > 0
-          ? Math.floor((speedOf(character) ?? 0) / 2)
-          : 0,
+        hasFeature(character, "barbarian-instinctive-pounce") && !isRaging(character) && !heavyArmored(character) && usesLeft(character, RAGE) > 0 ? Math.floor((speedOf(character) ?? 0) / 2) : 0,
       use: ({ characters, actor: featured, action }) => {
         const actor = featured as Raged
         if (heavyArmored(actor)) return { characters }
@@ -498,7 +496,10 @@ export const barbarian: ClassRules = {
     if (!character.featureUses?.[RELENTLESS]) return { character, facts: [] }
     const { [RELENTLESS]: _, ...rest } = character.featureUses
     const { featureUses: __, ...others } = character
-    return { character: { ...others, ...(Object.keys(rest).length ? { featureUses: rest } : {}) } as typeof character, facts: [`${character.name ?? "The Barbarian"}'s Relentless Rage is back to DC 10.`] }
+    return {
+      character: { ...others, ...(Object.keys(rest).length ? { featureUses: rest } : {}) } as typeof character,
+      facts: [`${character.name ?? "The Barbarian"}'s Relentless Rage is back to DC 10.`],
+    }
   },
   reactions: [
     {

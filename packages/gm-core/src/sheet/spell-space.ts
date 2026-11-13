@@ -110,8 +110,9 @@ export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone
   // attack with a range of Self (Vampiric Touch, "one creature within reach") reaches as a touch does.
   const touch = range.kind === "touch" || (range.kind === "self" && spell.attack === "melee")
   if (!touch && rangeFeet(range) === undefined) return { targets: [...args.named], cover: {}, measured: false }
-  // A class feature may lengthen the caster's own spell (Eldritch Spear).
-  const limit = touch ? BASE_REACH : (("level" in spell ? classSpellRange(caster, spell) : undefined) ?? rangeFeet(range) ?? 0)
+  // A class feature may lengthen the caster's own spell (Eldritch Spear), and so may the spell's own words (./spell-rules
+  // `range`: Spare the Dying's at levels 5, 11 and 17).
+  const limit = touch ? BASE_REACH : (("level" in spell ? (classSpellRange(caster, spell) ?? rule?.range?.(caster)) : undefined) ?? rangeFeet(range) ?? 0)
   // Those after the first may need to stand near the first (./spell-rules `nearFirst`: Chain Lightning's 30 feet).
   const leap = rule?.nearFirst
   const near = named.filter((target, index) => (target.id === caster.id || within(from, target, limit)) && (leap === undefined || index === 0 || within(named[0], target, leap)))

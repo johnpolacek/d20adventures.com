@@ -14,6 +14,7 @@ import { hitPointsOf, withHitPoints } from "./hit-points"
 import { itemsRested } from "./item-spend"
 import { attuneOnShortRest } from "./items"
 import type { Sheet } from "./sheet"
+import { keptByRest, spellEffectsRested } from "./spell-effects"
 import { spellcastingOf } from "./spells"
 import type { Concentration, Inspiration, SpellEffect, TurnEffect } from "./turn-effect"
 
@@ -126,8 +127,9 @@ const overWithin = (spellId: string, hours: number, turns?: number): boolean => 
 // hour), the spells that run out, with the conditions they gave, and a Beast's shape whose hours run out, which the
 // rest's hours are the only clock for. `asleep` ends Concentration, as a Long Rest's sleep leaves the hero Unconscious.
 function timePasses<T extends Rester>(character: T, hours: number, asleep: boolean): T {
-  const { inspiration: _, ...rest } = turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(character))
-  const spellEffects = (rest.spellEffects ?? []).filter((effect) => !overWithin(effect.spell, hours, effect.turns))
+  // A spell's own rules may say what a rest leaves of it (./spell-rules `rested`): Raise Dead's penalty eases on a Long Rest.
+  const { inspiration: _, ...rest } = spellEffectsRested(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(character)), asleep)
+  const spellEffects = (rest.spellEffects ?? []).filter((effect) => keptByRest(effect) || !overWithin(effect.spell, hours, effect.turns))
   const conditions = (rest.conditions ?? []).filter((entry) => entry.spell === undefined || !overWithin(entry.spell, hours, entry.turns))
   const held = rest.concentration && !asleep && !overWithin(rest.concentration.spell, hours) ? rest.concentration : undefined
   const shape = rest.shape && rest.shape.hours > hours ? { ...rest.shape, hours: rest.shape.hours - hours } : undefined

@@ -14,7 +14,8 @@ import type { DeathRules } from "./death"
 import type { ConditionChange, Harm } from "./harm"
 import { registerDowned, registerImmunities } from "./late-rules"
 import type { SaveStakes } from "./legendary-resistance"
-import type { Floor, Point } from "./space"
+import { type AuraHolder, auraConditionImmunities } from "./save-rules"
+import type { Cover, Floor, Point } from "./space"
 import type { Cast, Castee, castSpell } from "./spells"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
 
@@ -109,6 +110,11 @@ export type ClassRules = {
   /** Auras a hero's features spread to those of their side near them (Aura of Protection). Read through ./save-rules. */
   auras?: AuraRule[]
   /**
+   * Cover a feature of anyone present gives one attacked, beside what stands between (Smite of Protection's Half Cover in
+   * the aura). The greatest counts. Read in ./attack-roll `attackRequirement`.
+   */
+  cover?: (target: Covered, present: readonly Covered[]) => Cover | undefined
+  /**
    * The mastery property a hero's attack uses in place of its weapon's own, where a feature replaces it for the attack
    * (Tactical Master), by what was chosen with the attack. Read where a hit's mastery is applied (./actions `afterRoll`).
    */
@@ -179,7 +185,12 @@ export type AuraRule = {
   feature: string
   /** What it adds to each saving throw of one it reaches (Aura of Protection's Charisma modifier). */
   saveBonus?: (bearer: Roller) => number
+  /** The conditions one it reaches is immune to, and which have no effect on one who has them (Aura of Courage's Frightened). Read in ./conditions `immuneTo`. */
+  conditionImmunities?: (bearer: Roller) => readonly ConditionId[]
 }
+
+/** One attacked, or present beside them, as a feature that gives cover reads them. */
+export type Covered = Roller & { id: string; position?: Point; turnEffects?: readonly TurnEffect[] }
 
 /** A round as it turns, for `roundStart`: everyone here, and the dice. */
 export type RoundTurn = { everyone: readonly (Roller & { id: string; position?: Point })[]; d20: () => number; roll: (sides: number) => number }
@@ -244,8 +255,8 @@ export type BonusActionRule = {
   targeted?: true
   /** The level of the spell slot that buys a use when none is left. */
   buys?: (character: Pick<Featured, "sheet" | "featureUses" | "spellSlots">) => number | undefined
-  /** A line of the read's prompt below the Bonus Actions, given once however many share it. */
-  note?: string
+  /** A line of the read's prompt below the Bonus Actions, given once however many share it, or the line for this hero (Heightened Focus's three strikes). */
+  note?: string | ((character: Roller) => string)
   /** It moves as a Dash does: twice the Speed. */
   dash?: true
   /** The feet more it lets the hero move this turn, beside their Speed (Instinctive Pounce's half Speed with a Rage entered). Read in ./moves `takeMove`. */
@@ -386,7 +397,7 @@ export type ReactionRule = {
     ask: (matters: boolean, text: string) => boolean
     types: readonly DamageTypeId[]
     roll: (sides: number) => number
-  }) => { taken: number; reaction: Reacted } | undefined
+  }) => { taken: number; reaction: Reacted; answer?: DamageAnswer } | undefined
   /**
    * An answer once a blow has landed and dealt its damage: the one hit strikes back at the attacker with one attack, by
    * the attack's id (Retaliation). Asked of the one hit while they can react, up and with the attacker within 5 feet.
@@ -404,6 +415,13 @@ export type ReactionRule = {
     ask: (to: string, matters: boolean, text: string) => boolean
   }) => { characters: Featured[]; result: CheckResult; reaction: Reacted } | undefined
 }
+
+/**
+ * What a reaction to damage does once the blow has landed, beyond the damage it cut (Deflect Attacks' redirect):
+ * everyone as it leaves them, and its words. `melee` is whether the attack was a melee one. Read in ./reactions
+ * `attackWithReactions`.
+ */
+export type DamageAnswer = (args: { characters: Featured[]; melee: boolean; roll: (sides: number) => number }) => { characters: Featured[]; reaction?: Reacted }
 
 /** Damage a feature adds to a hit, and the once-a-turn mark it uses (`TurnEffectRule`). */
 export type Extra = { name: string; damage: DamagePart; once?: string }
@@ -567,6 +585,8 @@ export const turnEffectRule = (id: string): TurnEffectRule | undefined => every(
 export const checkRules = (): CheckRule[] => every("checks")
 export const saveRules = (): SaveRule[] => every("saves")
 export const auraRules = (): AuraRule[] => every("auras")
+/** The covers the classes' features of those present give one attacked (Smite of Protection), beside what stands between. */
+export const classCovers = (target: Covered, present: readonly Covered[]): Cover[] => classes().flatMap((rules) => rules.cover?.(target, present) ?? [])
 /** Whether a hero's class gives them Evasion. */
 export const classEvasion = (character: Roller): boolean => !!character.sheet && classes().some((rules) => rules.evasion?.(character))
 /** The least the d20 of a hero's own check counts as by their class, or none. */
@@ -586,8 +606,8 @@ export function classDeathSave(character: Roller): { modes: ModeSource[]; twenty
 }
 /** Conditions a hero's class features make them immune to for now. */
 export const classConditionImmunities = (character: Bearing): ConditionId[] => (character.sheet ? [...new Set(classes().flatMap((rules) => rules.conditionImmunities?.(character) ?? []))] : [])
-// ./conditions `immuneTo` reads them through ./late-rules, which loads no class file.
-registerImmunities((character) => classConditionImmunities(character as Bearing))
+// ./conditions `immuneTo` reads them through ./late-rules, which loads no class file, with the auras of those present.
+registerImmunities((character, present) => [...classConditionImmunities(character as Bearing), ...auraConditionImmunities(character as AuraHolder, (present ?? []) as AuraHolder[])])
 // ./spell-effects `settleConcentration` answers those a roll dropped through it too.
 registerDowned((args) => afterDowned(args as unknown as Parameters<typeof afterDowned>[0]))
 /** The least the total of a hero's own check or save counts as by their class, or none. */

@@ -10,7 +10,7 @@ import { type Check, checkBonus, combineModes, type Roller, type RollMode } from
 import { classCastingBar, classCheckModes, classCreatedSlots, classSpellAttackModes, classSpellHits, classSpellSaveDc, classTotalFloor } from "./class-rules"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
-import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, withDamage, withHealing } from "./death"
+import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, wardedWords, withDamage, withHealing } from "./death"
 import { deriveSheet, featuresOf, pickedFreeCasts, slotsAt } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
@@ -607,6 +607,7 @@ function standing(character: Castee, fate: Fate | undefined): string {
   if (fate === "killed") return `${character.name} is killed outright.`
   if (fate === "stable") return `${character.name} is Unconscious and Stable, out of the fight.`
   if (fate === "endures") return enduredWords(character.name, character)
+  if (fate === "warded") return wardedWords(character.name)
   if (fate === "dying") return `${character.name} is at 0 hit points, Unconscious and dying.`
   const hitPoints = hitPointsOf(character)
   // Down at 0 and not dead: a Troll, whose Regeneration settles it as its turn begins.
@@ -699,11 +700,13 @@ export function castSpell<T extends Castee>(args: {
   const typeOf = (types: readonly DamageTypeId[]) => (args.damageType && types.includes(args.damageType) ? args.damageType : types[0])
   // What the spell does as it takes effect, or, used again, what it does on a later turn. What it does under a stated
   // condition, or as one option of several (Command's Grovel), is not dealt here, unless the spell's own rules take it
-  // (./spell-rules `applies`).
+  // (./spell-rules `applies`). Used again, a spell's own rules may name the parts it deals (`again.parts`: Flaming Sphere's ram).
+  const usedAgain = rule?.again?.parts
   const now = (part: { timing?: string; appliesWhen?: string; unless?: string; label?: string; condition?: ConditionId }) =>
-    args.again ? !!part.timing && !part.label : !part.timing && !part.label && (!part.appliesWhen || !!rule?.applies?.(part, choice))
-  // A spell with a second save to come holds its first condition only until that save: the bearer's next turn (Sleep).
-  const span = spell.saves?.some((save) => save.when === "later") ? "turn" : spanOf(spell)
+    args.again ? (usedAgain ? usedAgain(part) : !!part.timing && !part.label) : !part.timing && !part.label && (!part.appliesWhen || !!rule?.applies?.(part, choice))
+  // A spell with a second save to come that gives a condition of its own holds its first condition only until that
+  // save: the bearer's next turn (Sleep). A later save that gives nothing leaves the span alone (Contagion's).
+  const span = spell.saves?.some((save, index) => save.when === "later" && (spell.conditions ?? []).some((link) => link.save === index)) ? "turn" : spanOf(spell)
   // A spell cast with a slot above its own level adds what its text gives for each level above: damage and healing
   // dice, fixed healing, creatures (in `targets` above) and darts.
   const above = slot - spell.level
@@ -733,13 +736,17 @@ export function castSpell<T extends Castee>(args: {
     })
     return { amount, fate: struck.fate, type: part?.type ?? "" }
   }
-  const give = (id: string, condition: ConditionId) => {
+  const give = (id: string, condition: ConditionId, lasting?: ConditionSpan) => {
     const target = find(id)
     if (!target) return
     // A condition lasts as long as the text gives it for (Sunburst's Blinded "for 1 minute"), or the spell's duration.
     // One from a spell that is over at once lasts a turn: Ray of Sickness's Poisoned and Color Spray's Blinded, "until
-    // the end of your next turn".
-    const given = withCondition(target, { id: condition, source: caster.id, span: conditionSpanOf(spell, condition) ?? span ?? "turn", spell: spell.id }, { acted: !!target.isComplete })
+    // the end of your next turn". A spell's own rules may give the span (`lasting`).
+    const given = withCondition(
+      target,
+      { id: condition, source: caster.id, span: lasting ?? conditionSpanOf(spell, condition) ?? span ?? "turn", spell: spell.id },
+      { acted: !!target.isComplete, present: characters }
+    )
     if (!given.given) {
       facts.push(`${target.name} cannot be ${conditionName(condition)} and is not.`)
       return
@@ -765,6 +772,25 @@ export function castSpell<T extends Castee>(args: {
     attacks,
     roll: args.roll,
     standing: (character) => standing(character, undefined),
+    ...(args.rules ? { rules: args.rules } : {}),
+    targets: [],
+    everyone: () => characters,
+    conditions,
+    give,
+    save: (target, ability, stakes) => {
+      const thrown = rollSave({ target, ability, dc: casting.saveDc, d20: args.d20, roll: args.roll, characters, stakes, ...(stakes.conditions ? { against: stakes.conditions } : {}) })
+      saves.push(thrown)
+      if (thrown.legendary) {
+        const spent = withLegendaryResistanceSpent(find(target.id) ?? (target as T))
+        put(spent)
+        facts.push(legendaryResistanceWords(target.name, spent))
+      }
+      if (thrown.rescued) {
+        put(withRescueSpent(find(target.id) ?? (target as T), thrown.rescued))
+        facts.push(rescueWords(target.name, thrown.rescued, thrown))
+      }
+      return thrown
+    },
   }
 
   // A creature the spell cannot take: Hold Person takes a Humanoid (./spell-rules `takes`).
@@ -775,7 +801,10 @@ export function castSpell<T extends Castee>(args: {
     facts.push(refused)
     return false
   }
-  const taking = targets.filter(takes)
+  // A spell that does nothing to anyone as it is cast takes no one until it is used again (`again.onlyLater`: Flame Blade).
+  // The rest of the spell passes by one it settles by how they stand (./spell-rules `settles`: Power Word Kill).
+  const taking = rule?.again?.onlyLater && !args.again ? [] : targets.filter(takes).filter((id) => args.again || !rule?.settles?.(context, find(id) as T))
+  context.targets = taking
 
   // The spell attacks: one, or Scorching Ray's rays on the targets in turn.
   if (spell.attack && taking.length) {
@@ -1037,19 +1066,33 @@ export function castSpell<T extends Castee>(args: {
  * The spells a character may use again this turn, with no new slot: those they cast and still hold, each with the slot
  * it was cast at and what it takes, an action or a Bonus Action (./spell-rules `again`). For the turn's menu, beside the
  * spells they can cast. `unplaced` is one whose force the floor does not hold, so it is not measured (Spiritual Weapon).
+ * `reach` is how far from them it reaches, where its range does not say (Produce Flame). A spell with no Concentration
+ * is held while its effect lasts.
  */
-export function againOf(character: {
-  id?: string
-  spellEffects?: readonly SpellEffect[]
-  concentration?: Concentration
-}): { spell: Spell; slot: number; takes: "action" | "bonus-action"; unplaced?: true }[] {
+export function againOf(character: { id?: string; spellEffects?: readonly SpellEffect[]; concentration?: Concentration }): HeldAgain[] {
   return (character.spellEffects ?? []).flatMap((effect) => {
     const spell = spellById.get(effect.spell)
     const again = spellRule(effect.spell)?.again
-    if (!spell || !again || effect.by !== character.id || character.concentration?.spell !== effect.spell) return []
-    return [{ spell, slot: effect.amount ?? spell.level, takes: again.takes, ...(again.unplaced ? { unplaced: true as const } : {}) }]
+    if (!spell || !again || effect.by !== character.id || (spell.duration.concentration && character.concentration?.spell !== effect.spell)) return []
+    return heldAgain(spell, effect.amount ?? spell.level) ?? []
   })
 }
+
+/** A spell its caster may use again, at the slot it was cast at (`againOf`). */
+export type HeldAgain = { spell: Spell; slot: number; takes: "action" | "bonus-action"; unplaced?: true; reach?: number }
+
+/**
+ * A spell as it is used again at a slot, by its own rules (./spell-rules `again`): for one held, and for one cast with a
+ * Bonus Action and used with the action the same turn (Flame Blade). None for a spell that is not used again.
+ */
+export function heldAgain(spell: Spell, slot: number): HeldAgain | undefined {
+  const again = spellRule(spell.id)?.again
+  if (!again) return undefined
+  return { spell, slot, takes: again.takes, ...(again.unplaced ? { unplaced: true as const } : {}), ...(again.reach ? { reach: again.reach } : {}) }
+}
+
+/** Whether a spell makes its spell attack as it is cast: not one whose attack comes only as it is used again (Flame Blade). */
+export const attacksWhenCast = (spell: Spell): boolean => !!spell.attack && !spellRule(spell.id)?.again?.onlyLater
 
 /**
  * A spell used again on a later turn: Spiritual Weapon's attack, Heat Metal's burn and its save, Vampiric Touch's
@@ -1117,7 +1160,7 @@ export function rollSave(args: {
   const sources = [
     ...checkModesFrom(target, check, args.characters),
     ...checkModesFromActions(target, check, args.characters),
-    ...saveModesFromSpells(target, ability),
+    ...saveModesFromSpells(target, ability, args.against),
     ...speciesSaveModes(target, ability, args.against),
     ...(args.magical === false ? [] : magicSaveModes(target)),
     ...itemSaveModes(target.sheet, args.against, args.magical === false ? "other" : args.spell === false ? "magic" : "spell"),

@@ -7,22 +7,30 @@ import { boons } from "./boons"
 import { sacredFlame, sorcerousBurst } from "./cantrips"
 import { chromaticOrb, enhanceAbility, hex, protectionFromEnergy } from "./choices"
 import { counts } from "./counts"
+import { charmMonster, dominations, hideousLaughter } from "./damage-saves"
 import { heroism, invisibility, mirrorImageRules, shield } from "./defences"
 import { animalFriendship, charmPerson, endOnDamage, holdPerson } from "./enchantments"
 import { dispelMagic, lesserRestoration, removeCurse } from "./endings"
 import { haste, slow } from "./haste-slow"
 import { heatMetal } from "./heat-metal"
+import { phantasmalKiller, vitriolicSphere } from "./later-harm"
 import { marks } from "./marks"
 import { phantasmalForce } from "./phantasmal-force"
 import { fear, repeatedSaves } from "./repeated-saves"
+import { disintegrate, greaterRestoration, harm, heal, massHeal, powerWordHeal, raiseDead, regenerateSpell, resurrection, revivifyDust, spareTheDying, trueResurrection } from "./restoration"
 import { revivify } from "./revivify"
+import { contagion, fleshToStone } from "./save-tallies"
 import { chainLightning, meteorSwarm } from "./shapes"
 import { shatter } from "./shatter"
 import { sleep } from "./sleep"
 import { spiritGuardians } from "./spirit-guardians"
 import { spiritualWeapon } from "./spiritual-weapon"
+import { divineWord, powerWordKill, powerWordStun } from "./thresholds"
 import { turnBurns } from "./turn-burns"
+import { arcaneSword, flameBlade, flamingSphere, produceFlame, sunbeam } from "./used-again"
 import { vampiricTouch } from "./vampiric-touch"
+import { deathWard, dispelEvilAndGood, fireShield, foresight, freedomOfMovement, heroesFeast, mindBlank, protectionFromEvilAndGood, protectionFromPoison, stoneskin, wardingBond } from "./wards"
+import { shillelagh } from "./weapon-spells"
 
 /**
  * Every spell mechanism file's rules (../spell-rules). A new mechanism adds its file here, and edits no other shared
@@ -71,6 +79,45 @@ export const spellMechanics = (): readonly SpellRules[] => [
   protectionFromEnergy,
   enhanceAbility,
   hex,
+  phantasmalKiller,
+  vitriolicSphere,
+  fleshToStone,
+  contagion,
+  hideousLaughter,
+  ...dominations,
+  charmMonster,
+  flameBlade,
+  produceFlame,
+  arcaneSword,
+  sunbeam,
+  flamingSphere,
+  stoneskin,
+  protectionFromPoison,
+  mindBlank,
+  heroesFeast,
+  foresight,
+  fireShield,
+  protectionFromEvilAndGood,
+  dispelEvilAndGood,
+  freedomOfMovement,
+  deathWard,
+  wardingBond,
+  powerWordKill,
+  powerWordStun,
+  divineWord,
+  heal,
+  massHeal,
+  powerWordHeal,
+  greaterRestoration,
+  harm,
+  spareTheDying,
+  regenerateSpell,
+  disintegrate,
+  raiseDead,
+  resurrection,
+  trueResurrection,
+  revivifyDust,
+  shillelagh,
 ]
 
 useSpellMechanics(spellMechanics)

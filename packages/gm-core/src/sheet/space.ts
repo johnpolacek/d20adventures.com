@@ -146,16 +146,7 @@ export const SLOW_FEET = 10
  * half that Speed, rounded down, and one with a Speed of 0 cannot stand. A Speed of 30 with Dash, standing up, is
  * 30 + 30 − 15 = 45 feet. `reduced` is feet a class feature takes off the Speed besides (Hamstring Blow's 15).
  */
-export function movementBudget(args: {
-  speed: number
-  cannotMove?: boolean
-  dash?: boolean
-  stands?: boolean
-  slowed?: boolean
-  halved?: boolean
-  reduced?: number
-  exhaustion?: number
-}): number {
+export function movementBudget(args: { speed: number; cannotMove?: boolean; dash?: boolean; stands?: boolean; slowed?: boolean; halved?: boolean; reduced?: number; exhaustion?: number }): number {
   if (args.cannotMove) return 0
   // A Speed halved (a Stunning Strike saved against) is halved first, rounded down: 30 becomes 15.
   const base = args.halved ? Math.floor(args.speed / 2) : args.speed

@@ -2,6 +2,7 @@ import type { AbilityId, ConditionId, DamageTypeId, SkillId } from "@d20/srd"
 import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
+import type { Attack } from "./attack"
 import type { Check } from "./check"
 import type { ModeSource } from "./conditions"
 import { itemSaveModes } from "./item-effects"
@@ -25,6 +26,8 @@ export const heldByCaster = (spellId: string): boolean => !!heldRule(spellId)?.b
 
 /** Whether a spell leaves an effect on those it takes. */
 export function lasts(spell: Spell): boolean {
+  // One whose own rules put its effect (./spell-rules `placed`: Harm's lowered maximum) leaves none of the cast's.
+  if (heldRule(spell.id)?.placed) return false
   return !!(spell.ac || spell.rollModifier || spell.hitPointMaximum || heldRule(spell.id) || markOf(spell) || (spell.healing?.temporary && spell.healing.timing))
 }
 
@@ -67,16 +70,21 @@ export function armorClassWithSpells(character: Bearer, armorClass: number, unar
  * the effect's `amount`.
  */
 export const hitPointMaximumFromSpells = (character: Bearer): number =>
-  effectsOf(character).reduce((sum, { effect, spell }) => sum + (spell.hitPointMaximum ? (effect.amount ?? spell.hitPointMaximum.amount ?? 0) : 0), 0)
+  effectsOf(character).reduce(
+    (sum, { effect, spell }) => sum + (spell.hitPointMaximum ? (effect.amount ?? spell.hitPointMaximum.amount ?? 0) : heldRule(spell.id)?.maximumLess ? -(effect.amount ?? 0) : 0),
+    0
+  )
 
 /**
  * Advantage a character's spells give their own saving throw, each with the spell: Haste on Dexterity saves, Beacon of
  * Hope on Wisdom saves and Death Saving Throws ("death"), and what a spell gives the saves of one ability by its effect
  * (`checkModesFromSpells`).
  */
-export function saveModesFromSpells(character: Bearer, ability: AbilityId | "death"): ModeSource[] {
+export function saveModesFromSpells(character: Bearer, ability: AbilityId | "death", against: readonly ConditionId[] = []): ModeSource[] {
   return [
     ...effectsOf(character).flatMap(({ spell }) => (heldRule(spell.id)?.saveAdvantage?.includes(ability) ? [{ mode: "advantage" as const, from: spell.name }] : [])),
+    // A save made to avoid or end a condition the spell guards against: Protection from Poison's Poisoned.
+    ...effectsOf(character).flatMap(({ spell }) => (heldRule(spell.id)?.saveAdvantageAgainst?.some((id) => against.includes(id)) ? [{ mode: "advantage" as const, from: spell.name }] : [])),
     ...(ability === "death" ? [] : checkModesFromSpells(character, { kind: "save", ability })),
   ]
 }
@@ -96,6 +104,40 @@ export function initiativeAdvantageBySpell(character: Bearer): boolean {
 /** Damage types a character resists while a spell is on them (./spell-rules `resistances`): Protection from Energy's chosen type. */
 export const spellResistances = (character: Bearer): DamageTypeId[] => [...new Set(effectsOf(character).flatMap(({ effect, spell }) => heldRule(spell.id)?.resistances?.(effect) ?? []))]
 
+/** Damage types a character is immune to while a spell is on them (./spell-rules `damageImmunities`): Mind Blank's Psychic. */
+export const spellDamageImmunities = (character: Bearer): DamageTypeId[] => [...new Set(effectsOf(character).flatMap(({ spell }) => heldRule(spell.id)?.damageImmunities ?? []))]
+
+/** What a character's spells take from each of their D20 Tests (./spell-rules `d20Less`): Raise Dead's −4, easing by 1 each Long Rest. */
+export const d20PenaltyFromSpells = (character: Bearer): number => effectsOf(character).reduce((sum, { effect, spell }) => sum + (heldRule(spell.id)?.d20Less?.(effect) ?? 0), 0)
+
+/** Whether a spell on a character makes their Speed 0 (./spell-rules `speedZero`): Power Word Stun on one it does not stun. */
+export const stillBySpell = (character: Bearer): boolean => effectsOf(character).some(({ spell }) => !!heldRule(spell.id)?.speedZero)
+
+/** The spell on a character that wards them from death (./spell-rules `wardsDeath`): Death Ward. */
+export const deathWardOf = (character: Bearer): SpellEffect | undefined => character.spellEffects?.find((effect) => !!heldRule(effect.spell)?.wardsDeath)
+
+/** A character with the spell that warded them from death spent, and its name, or none where no spell wards them. */
+export function withDeathWardSpent<T extends Bearer>(character: T): { character: T; name: string } | undefined {
+  const ward = deathWardOf(character)
+  return ward ? { character: strip(character, (effect) => effect === ward), name: spellById.get(ward.spell)?.name ?? ward.spell } : undefined
+}
+
+/** A character's lasting spells after a rest (./spell-rules `rested`): those a rest changes, changed, and those it ends, gone. The rest are left to their duration. */
+export function spellEffectsRested<T extends Bearer>(character: T, long: boolean): T {
+  if (!character.spellEffects?.some((effect) => heldRule(effect.spell)?.rested)) return character
+  const spellEffects = character.spellEffects.flatMap((effect) => {
+    const rested = heldRule(effect.spell)?.rested
+    if (!rested) return [effect]
+    const left = rested(effect, long)
+    return left ? [left] : []
+  })
+  const { spellEffects: _, ...rest } = character
+  return (spellEffects.length ? { ...rest, spellEffects } : rest) as T
+}
+
+/** Whether a spell's own rules keep its effect through a rest, so the rest's hours do not end it: Harm's lowered maximum. */
+export const keptByRest = (effect: SpellEffect): boolean => !!heldRule(effect.spell)?.rested
+
 /** What a character's spells add to or take from a saving throw of one ability, each spell once: Slow's −2 on Dexterity saves. */
 export const saveBonusFromSpells = (character: Bearer, ability: AbilityId): number =>
   [...new Set(effectsOf(character).map(({ spell }) => spell.id))].reduce((sum, id) => sum + (heldRule(id)?.saveBonus?.[ability] ?? 0), 0)
@@ -108,7 +150,7 @@ export const saveBonusFromSpells = (character: Bearer, ability: AbilityId): numb
  */
 export const saveModesFor = (character: Bearer, check: Check, against: readonly ConditionId[] = []): ModeSource[] =>
   check.kind === "save"
-    ? [...saveModesFromSpells(character, check.ability), ...speciesSaveModes(character, check.ability, against), ...itemSaveModes(character.sheet, against)]
+    ? [...saveModesFromSpells(character, check.ability, against), ...speciesSaveModes(character, check.ability, against), ...itemSaveModes(character.sheet, against)]
     : checkModesFromSpells(character, check)
 
 /** What a character's spells add to a check, when it is a saving throw: for a save rolled outside ./spells `rollSave`. */
@@ -171,6 +213,10 @@ export function weaponDamageFromSpells(attacker: Bearer): { name: string; damage
   return effectsOf(attacker).flatMap(({ effect, spell }) => (heldRule(spell.id)?.weapon ? [{ name: spell.name, damage: { amount: effect.amount ?? spell.rollModifier?.amount ?? 1 } }] : []))
 }
 
+/** One of a character's weapon attacks as their spells make it (./spell-rules `weaponAttack`): Shillelagh's Club. */
+export const attackWithSpells = (character: Bearer, attack: Attack): Attack =>
+  effectsOf(character).reduce((made, { effect, spell }) => heldRule(spell.id)?.weaponAttack?.(effect, made, character) ?? made, attack)
+
 /** The dice for a check or a save, from the check's kind. */
 export const checkAdds = (character: Bearer, check: Check, roll: (sides: number) => number): RollAdd[] =>
   check.kind === "save" ? rollAdds(character, "saving-throws", roll) : rollAdds(character, "ability-checks", roll, check.kind === "skill" ? check.skill : undefined)
@@ -190,8 +236,14 @@ export function attackModesFromSpells(attacker: Bearer, target: Bearer): ModeSou
   for (const { spell } of effectsOf(target)) {
     const side = heldRule(spell.id)?.attacked
     if (side) found.push({ mode: side, from: spell.name })
+    // By who attacks: Protection from Evil and Good against a Fiend.
+    const from = heldRule(spell.id)?.attackedFrom?.(attacker)
+    if (from) found.push({ mode: from, from: spell.name })
   }
-  for (const { spell } of effectsOf(attacker)) if (heldRule(spell.id)?.attacks) found.push({ mode: "disadvantage", from: spell.name })
+  for (const { spell } of effectsOf(attacker)) {
+    const side = heldRule(spell.id)?.attacks
+    if (side) found.push({ mode: side, from: spell.name })
+  }
   return found
 }
 
@@ -203,6 +255,10 @@ export function afterAttackRoll<T extends Bearer>(characters: readonly T[], atta
 
 /** Conditions a character cannot be given while a spell is on them: Heroism shuts out Frightened. */
 export const spellImmunities = (character: Bearer): ConditionId[] => [...new Set((character.spellEffects ?? []).flatMap((effect) => heldRule(effect.spell)?.immunities ?? []))]
+
+/** Whether a spell on a character keeps a condition off them, given by this spell or none (./spell-rules `shutsOut`): Freedom of Movement's Restrained by a spell. */
+export const shutOutBySpell = (character: Bearer, condition: ConditionId, spell: string | undefined): boolean =>
+  (character.spellEffects ?? []).some((effect) => !!heldRule(effect.spell)?.shutsOut?.(condition, spell))
 
 /**
  * A character's lasting spells as a round begins: each with a count of turns loses one, and one that runs out ends.

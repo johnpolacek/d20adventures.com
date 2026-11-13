@@ -76,6 +76,37 @@ const RUN = new Set([
   // A choice kept on the spell (./spell-mechanics/choices): Blindness/Deafness's condition, Protection from Energy's type.
   "blindness-deafness",
   "protection-from-energy",
+  // Saves made again (./spell-mechanics/repeated-saves, later-harm, damage-saves): Phantasmal Killer's and Weird's
+  // damage on each failure, Vitriolic Sphere's later burn, Hideous Laughter's save on taking damage.
+  "phantasmal-killer",
+  "weird",
+  "vitriolic-sphere",
+  "hideous-laughter",
+  // Used again on later turns (./spell-mechanics/used-again): Flame Blade's and Produce Flame's strikes, Arcane Sword's,
+  // Sunbeam's new Lines.
+  "flame-blade",
+  "produce-flame",
+  "arcane-sword",
+  "sunbeam",
+  // Defences a spell gives (./spell-mechanics/wards): resistances, immunities, Advantage, and Death Ward's 1 hit point.
+  // Heroes' Feast's day ends with a Long Rest, and its hour of eating passes in the story.
+  "stoneskin",
+  "protection-from-poison",
+  "heroes-feast",
+  "foresight",
+  "death-ward",
+  "greater-invisibility",
+  // Thresholds and restoration (./spell-mechanics/thresholds, restoration): Divine Word's banished leave the fight, which
+  // the engine takes to be on the Material Plane. Regenerate's body parts are the story's.
+  "power-word-kill",
+  "power-word-stun",
+  "power-word-heal",
+  "divine-word",
+  "heal",
+  "mass-heal",
+  "harm",
+  "spare-the-dying",
+  "regenerate",
 ])
 
 /**
@@ -84,10 +115,22 @@ const RUN = new Set([
  * on healing, Shocking Grasp's bar on Opportunity Attacks, Ray of Frost's lost Speed, Starry Wisp's and Faerie Fire's
  * light against the Invisible, Charm Person's Advantage while it is fought, Chromatic Orb's leap, Command's words,
  * Dissonant Whispers' flight, Entangle's and Grease's ground, Grease's later falls, Hex's move, Hunter's
- * Mark's tracking and its move, Hideous Laughter's save on damage, Ice Knife's burst on those beside its target,
+ * Mark's tracking and its move, Ice Knife's burst on those beside its target,
  * Sleep's shake awake, Thunderwave's push, Mind Spike's tracking, Moonbeam's later
  * burns and its move, Shining Smite's light and its bar on the Invisible, Sunburst's end of Darkness, Mass Suggestion's
- * course of activity and its end when that is done, Enhance Ability's different ability for each target.
+ * course of activity and its end when that is done, Enhance Ability's different ability for each target, Flesh to
+ * Stone's Speed of 0 on a success and its lasting stone after the whole minute, Contagion's save when its Poisoned would
+ * end and its 7 days, Befuddlement's bar on spells and the Magic action and its save every 30 days, the Dominate spells'
+ * Advantage while the target is fought, their commands and their longer Concentration from a higher slot, Charm
+ * Monster's Advantage while it is fought, Flaming Sphere's place and the save of one who ends its turn beside it,
+ * Shillelagh's end when the weapon is let go and its working on a stat block's weapon. Mind
+ * Blank's shield against sensing and scrying, Fire Shield's flames on one who hits it and its light, Protection from
+ * Evil and Good's bar on being possessed, Charmed or Frightened by those creatures, Dispel Evil and Good's Break
+ * Enchantment and Dismissal, Freedom of Movement's terrain, Swim Speed, Speed kept from magic and escape, Greater
+ * Restoration's cursed item and lowered ability scores, Disintegrate's objects and creations of force, Finger of
+ * Death's Zombie, and the raising of one who died before this round, whom the engine no longer holds, and True
+ * Resurrection's new body and an Undead's living form, Resurrection's tax for one dead a year or more, and Warding
+ * Bond's damage shared with its caster and its end.
  */
 const PARTLY = new Set([
   "chill-touch",
@@ -102,7 +145,6 @@ const PARTLY = new Set([
   "faerie-fire",
   "grease",
   "hex",
-  "hideous-laughter",
   "hunters-mark",
   "ice-knife",
   "sleep",
@@ -135,11 +177,31 @@ const PARTLY = new Set([
   "mass-suggestion",
   "sunburst",
   "enhance-ability",
+  "flesh-to-stone",
+  "contagion",
+  "befuddlement",
+  "dominate-beast",
+  "dominate-person",
+  "dominate-monster",
+  "charm-monster",
+  "flaming-sphere",
+  "shillelagh",
+  "mind-blank",
+  "fire-shield",
+  "protection-from-evil-and-good",
+  "dispel-evil-and-good",
+  "freedom-of-movement",
+  "greater-restoration",
+  "disintegrate",
+  "finger-of-death",
+  "raise-dead",
+  "resurrection",
+  "true-resurrection",
 ])
 
 // Held as told for a fault the engine has, though their data is typed: Divine Favor would add its die to hits on its
-// caster, Goodberry makes no berries, Call Lightning strikes one creature once, Flame Blade and Produce Flame attack as
-// they are cast and deal nothing, Hellish Rebuke is never offered as a Reaction, Sanctuary has the one warded save,
+// caster, Goodberry makes no berries, Call Lightning's data types no area round the point it strikes, so it would strike
+// only the one named, Hellish Rebuke is never offered as a Reaction, Sanctuary has the one warded save,
 // Resistance's die is taken off no damage, and Ensnaring Strike has no hit to ride (./castableOnTurn). Above level 3 every spell
 // not named above, until the owner's fourth step.
 

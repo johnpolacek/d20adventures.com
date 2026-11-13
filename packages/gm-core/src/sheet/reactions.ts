@@ -21,7 +21,7 @@ import {
   UNARMED_STRIKE,
 } from "./attack"
 import { type CheckResult, combineModes, type RollMode, rollModes } from "./check"
-import { type Featured, hitRules, type Landed, type Reacted, reactionRules, settledByClasses, turnEffectRule } from "./class-rules"
+import { type DamageAnswer, type Featured, hitRules, type Landed, type Reacted, reactionRules, settledByClasses, turnEffectRule } from "./class-rules"
 import { attackModesFrom, cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
 import { withFeatureUsed, withUsedThisTurn } from "./feature-rules"
@@ -445,6 +445,8 @@ export function attackWithReactions<T extends InPlay>(args: {
   target = characters.find((character) => character.id === args.targetId) as T
   // The classes' reactions once the damage is known: a Rogue's Uncanny Dodge halves it.
   const struckBy = target
+  // What the reaction that cut the damage does once the blow has landed (Deflect Attacks' redirect).
+  let answer: DamageAnswer | undefined
   const reduce = (taken: number, types: readonly DamageTypeId[]) => {
     for (const rule of reactionRules()) {
       const answered = rule.onDamage?.({
@@ -458,12 +460,18 @@ export function attackWithReactions<T extends InPlay>(args: {
       })
       if (!answered) continue
       reactions.push(answered.reaction)
+      answer = answered.answer
       return { id: rule.id, taken: answered.taken }
     }
     return undefined
   }
   const { target: struck, ...blow } = landBlow({ attacker, target, roll: args.roll, rules: args.rules, present: characters, turnOf, choices: args.choices, reduce, charged: args.charge }, rolled)
   put(blow.reduced ? withReaction(struck) : struck)
+  if (answer && blow.reduced) {
+    const answered = answer({ characters: characters as unknown as Featured[], melee: rolled.attack.kind !== "ranged", roll: args.roll })
+    characters = answered.characters as unknown as T[]
+    if (answered.reaction) reactions.push(answered.reaction)
+  }
   // What the attacker's class leaves on the one attacked once the roll hit or missed (Studied Attacks).
   put(settledByClasses(attacker, characters.find((character) => character.id === args.targetId) as T, blow.roll.hit))
   // The once-a-turn features the blow used are marked on the attacker.

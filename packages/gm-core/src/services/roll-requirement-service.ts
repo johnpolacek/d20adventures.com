@@ -16,6 +16,7 @@ import { itemName, itemWords } from "../sheet/items"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
+import { auraOnSave } from "../sheet/save-rules"
 import { shapeOf } from "../sheet/shape"
 import type { OwnedItem } from "../sheet/sheet"
 import { areEnemies, type Side, sameSide, sideWord } from "../sheet/sides"
@@ -24,7 +25,22 @@ import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spel
 import { endsThings } from "../sheet/spell-ends"
 import { type SpellChoice, spellRule } from "../sheet/spell-rules"
 import { castInSpace } from "../sheet/spell-space"
-import { againOf, areasOf, castableOnTurn, castCost, longCasting, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellLabel, spellsOf, targetLimit } from "../sheet/spells"
+import {
+  againOf,
+  areasOf,
+  attacksWhenCast,
+  castableOnTurn,
+  castCost,
+  heldAgain,
+  longCasting,
+  slotsLeft,
+  slotWords,
+  spellAttackModes,
+  spellcastingFor,
+  spellLabel,
+  spellsOf,
+  targetLimit,
+} from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import { blockActionsOf, blockActionWords } from "../sheet/stat-block-actions"
@@ -180,8 +196,8 @@ export function createRollRequirementService(ports: GmPorts) {
     const { encounterInstructions = "", encounterIntro = "", narrativeContext = "" } = options || {}
     const self = "id" in character ? character.id : undefined
     // Anyone here and not dead may be attacked, one down at 0 hit points too: a dying hero, or a Troll that may rise
-    // again. Where no one is named, only one still standing is taken. One who is Charmed cannot attack the charmer.
-    const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && !hasFled(other) && !cannotAttack(character, other))
+    // again. Where no one is named, only one still standing is taken. One who is Charmed cannot attack the charmer, unless an aura makes the charm have no effect (Aura of Devotion).
+    const targets = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && !hasFled(other) && !cannotAttack(character, other, options?.present))
     const standing = targets.filter((other) => !isDown(other))
     // Where the roller stands, when the encounter has a floor: who else is on it, and how far each is.
     const floor = options?.floor
@@ -296,6 +312,9 @@ export function createRollRequirementService(ports: GmPorts) {
       ]
       return `${known.spell.id} (${known.spell.name}, ${notes.join(", ")})`
     })
+    // The dead still here, for a caster with a spell cast on the dead (../sheet/spell-rules `takesDead`: Raise Dead).
+    const raising = knownSpells.filter((known) => spellRule(known.spell.id)?.takesDead)
+    const deadHere = raising.length ? (options?.present ?? []).filter((other) => other.id !== self && isDead(other)) : []
     const casts = spellcastingAbilityOf(character)
     const contextLines = [
       `Name: ${character.name}`,
@@ -397,13 +416,18 @@ ${freeable.length ? `     "escape": they give the turn to pulling off a creature
                  : targetLimit(known.spell) > 1
                    ? `, "bonusTargets" are each one it is cast on, up to ${targetLimit(known.spell)}`
                    : ', "bonusTarget" is who it is cast on'
-             })`
+             }${spellRule(known.spell.id)?.again?.takes === "action" ? `, then used with the action this turn or later by "check" "cast" with its id and "targets" who it strikes` : ""})`
          ),
          ...heldBonus.map((entry) => `${entry.spell.id} (${entry.spell.name}, held: used again with no slot, "bonusTarget" is who it is used on)`),
        ].join(", ") || "none"
      }.
      A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.${[
-       ...new Set(bonusActions.flatMap((entry) => bonusRuleFor(character, entry.id)?.note ?? [])),
+       ...new Set(
+         bonusActions.flatMap((entry) => {
+           const note = bonusRuleFor(character, entry.id)?.note
+           return (typeof note === "function" ? note(character) : note) ?? []
+         })
+       ),
      ]
        .map(
          (note) => `
@@ -430,6 +454,11 @@ ${
      Spell Choices: a spell here is cast with a choice the caster makes, given in its field beside "spell" or "bonus": ${choosing
        .map(({ spell, asked }) => `${spell.id}, "${asked.field}" is ${asked.words}: ${asked.values.join(", ")}`)
        .join("; ")}. When the player names none, choose what serves their aim.`
+         : ""
+     }${
+       deadHere.length
+         ? `
+     The Dead Here, whom only ${raising.map((known) => known.spell.id).join(", ")} can be cast on, named in "targets" by these ids: ${deadHere.map((other) => `${other.id} (${other.name})`).join(", ")}.`
          : ""
      }
 ${shapeCasting}     A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
@@ -555,7 +584,16 @@ Action: "${action}"
       // A spell cast with a Bonus Action, beside the action. Only one spell a turn takes a slot, so beside a cast it is dropped.
       // A spell held and used again spends no slot, so it may go beside a cast.
       const isPicked = (spell: { id: string; name: string }) => spell.id === pick.bonus?.trim() || spell.name.toLowerCase() === pick.bonus?.trim().toLowerCase()
-      const quick = (pick.check === "cast" ? undefined : bonusSpells.find((known) => isPicked(known.spell))) ?? heldBonus.find((entry) => isPicked(entry.spell))
+      // A spell cast with a Bonus Action and used with the action the same turn (Flame Blade's blade, then its strike):
+      // the cast goes beside the use, which spends no slot.
+      const castThenUsed =
+        pick.check === "cast"
+          ? bonusSpells.find(
+              (known) =>
+                isPicked(known.spell) && spellRule(known.spell.id)?.again?.takes === "action" && [known.spell.id, known.spell.name.toLowerCase()].includes(pick.spell?.trim().toLowerCase() ?? "")
+            )
+          : undefined
+      const quick = (pick.check === "cast" ? castThenUsed : bonusSpells.find((known) => isPicked(known.spell))) ?? heldBonus.find((entry) => isPicked(entry.spell))
       const quickTargets = [...(pick.bonusTargets ?? []), ...(pick.bonusTarget ? [pick.bonusTarget] : [])]
       // What a spell's caster chose for it, in the field its choice is asked in, where it is one of its values.
       const choiceFor = (spell: { id: string }): string | undefined => {
@@ -609,8 +647,16 @@ Action: "${action}"
       if (pick.check === "cast") {
         // A spell is one the caster holds and uses again with no cost, or one of their own with a slot for it. One the
         // caster lacks, or cannot pay for, is not cast.
-        const again = held.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
+        const castSlot = (id: string) => {
+          const paying = castCost(character, id)
+          return "cost" in paying && (paying.cost.kind === "slot" || paying.cost.kind === "item") ? paying.cost.level : undefined
+        }
+        const again =
+          held.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id)) ??
+          (castThenUsed ? heldAgain(castThenUsed.spell, castSlot(castThenUsed.spell.id) ?? castThenUsed.castLevel ?? castThenUsed.spell.level) : undefined)
         const known = again ? undefined : knownSpells.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
+        // Whether the spell makes a spell attack now: as it is cast, or as it is used again.
+        const attacking = again ? !!again.spell.attack : !!known && attacksWhenCast(known.spell)
         // A slot named that the caster lacks, or below the spell's level, falls to the lowest that can pay.
         // Beside a Bonus Action that changes the hero (leaving Wild Shape's form), the spell is cast as it leaves them.
         const acting = usedRule?.becomes ? usedRule.becomes(character) : character
@@ -647,7 +693,9 @@ Action: "${action}"
           if (value !== undefined && rule.cast?.fits(acting, { spell, level: slotLevel, slot: spent, ...(type.success ? { damageType: type.data } : {}) }, value)) ridden[rule.key] = value
         }
         const shaped = shapedCast(ridden, { spell, level: slotLevel, slot: spent })
-        const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
+        // A spell cast on the dead (Raise Dead) takes one who is dead and still here.
+        const takesDead = !!spellRule(spell.id)?.takesDead
+        const everyone = (options?.present ?? []).filter((other) => (!isDead(other) || takesDead) && !hasFled(other))
         const asked = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])]
         // On a floor an area is measured, so those named are its aim and not its count.
         let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => named(given, other.name, other.id))?.id ?? []))].slice(
@@ -656,14 +704,16 @@ Action: "${action}"
         )
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
-          if (spell.attack && standing.length === 1) chosen = [standing[0].id]
+          if (attacking && standing.length === 1) chosen = [standing[0].id]
           else if (self && ((spell.range.kind === "self" && !spell.range.area) || spell.healing)) chosen = [self]
         }
         // An invocation's spell cast with no slot "on yourself" (Armor of Shadows) is the caster's, whoever is named.
         if (known?.selfOnly && paid?.cost.kind !== "slot" && self) chosen = [self]
         // A spell the game tells needs no one named: the game master rules on whom it reaches.
         const told = spellLabel(spell) === "told"
-        const falls = !told && !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
+        // One that does nothing to anyone as it is cast needs no one named either (Flame Blade, Flaming Sphere).
+        const idle = !again && !!spellRule(spell.id)?.again?.onlyLater
+        const falls = !told && !idle && !!(spell.attack || spell.saves || spell.damage || spell.healing || spell.conditions)
         if (falls && !chosen.length) {
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast: spell.id, refused: "no one here to cast it on" })
           return { roll: null, ...also }
@@ -672,10 +722,12 @@ Action: "${action}"
         // everyone stands: within its range, past no total cover, and on whoever is in its area.
         // A melee spell attack with a range of Self (Vampiric Touch) reaches as a touch does. Spiritual Weapon used again
         // strikes from where its force is, which the floor does not hold, so it is not measured.
-        const touched = (shaped.spell.range.kind === "touch" || (shaped.spell.range.kind === "self" && spell.attack === "melee")) && chosen[0] !== self ? chosen[0] : undefined
+        const touched = (shaped.spell.range.kind === "touch" || (shaped.spell.range.kind === "self" && attacking && spell.attack === "melee")) && chosen[0] !== self ? chosen[0] : undefined
         const stood = withMove(acting, moved(moveFor(touched ? { target: touched, reach: 5 } : undefined)))
         const unplaced = !!again?.unplaced
-        const spaced = mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell: shaped.spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
+        // Used again, a spell that reaches farther than its range says is measured by that reach (Produce Flame's 60 feet).
+        const reaching = again?.reach ? { ...shaped.spell, range: { kind: "feet" as const, distance: again.reach } } : shaped.spell
+        const spaced = mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell: reaching, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
         if (spaced?.problem) {
           also.ruling = spaced.problem
           console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
@@ -701,7 +753,7 @@ Action: "${action}"
           ...(Object.keys(ridden).length ? { choices: ridden } : {}),
         }
         const casting = spellcastingFor(acting, spell.id, paid?.cost.kind === "item")
-        if (spell.attack) {
+        if (attacking) {
           // A spell attack is the caster's to throw, against the first target's Armor Class.
           const target = everyone.find((other) => other.id === chosen[0])
           const armorClass = target && combatStatsOf(target)?.armorClass
@@ -946,7 +998,7 @@ Action: "${action}"
         check,
         rollType: hiding ? hiding.rollType : escaping ? `Escape (${checkName(check)})` : checkName(check),
         difficulty,
-        modifier: classCheckBonus(character, check) + saveBonusFor(character, check),
+        modifier: classCheckBonus(character, check) + saveBonusFor(character, check) + auraOnSave(character, check, options?.present ?? []),
         mode,
         ...(reasons.length ? { reasons } : {}),
         ...(stakes.length ? { stakes } : {}),

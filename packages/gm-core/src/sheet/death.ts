@@ -1,4 +1,5 @@
 import type { DamageTypeId } from "@d20/srd"
+import { spells } from "@d20/srd/spells"
 import { isDead, isDown, isDying, isIncapacitated } from "../utils/turn-actors"
 import { DEATH_SAVE, type RollRequirement } from "../validations/roll-requirement-schema"
 import { turnEffectsAtRoundStart } from "./actions"
@@ -9,7 +10,8 @@ import { hitPointsOf, withHitPoints } from "./hit-points"
 import { isRegenerationStopped, regenerationOf, regenerationStopped, stopsRegeneration } from "./monster-traits"
 import type { Sheet } from "./sheet"
 import { enduringTraitLeft, enduringTraitOf } from "./species-traits"
-import { saveModesFromSpells, spellEffectsAtRoundStart } from "./spell-effects"
+import { saveModesFromSpells, spellEffectsAtRoundStart, withDeathWardSpent } from "./spell-effects"
+import { heldRule } from "./spell-rules"
 import type { SpellEffect, TurnEffect } from "./turn-effect"
 
 /** A hero's Death Saving Throws while at 0 hit points: three successes make them Stable, three failures kill. */
@@ -41,7 +43,7 @@ const at = <T extends Mortal>(character: T, current: number) => withHitPoints(ch
 // A hero at 0 hit points is Unconscious. That follows from the hit points (./conditions) and is not stored.
 const dying = <T extends Mortal>(character: T, saves: DeathSaves = { successes: 0, failures: 0 }): T => ({ ...at(character, 0), deathSaves: saves })
 
-const stable = <T extends Mortal>(character: T): T => ({ ...at(character, 0), deathSaves: { ...(character.deathSaves ?? { successes: 0, failures: 0 }), stable: true } })
+export const stable = <T extends Mortal>(character: T): T => ({ ...at(character, 0), deathSaves: { ...(character.deathSaves ?? { successes: 0, failures: 0 }), stable: true } })
 
 /**
  * Conscious again at `current` hit points, with their Death Saving Throws cleared. One who was down is left Prone, as
@@ -61,13 +63,20 @@ export function killed<T extends Mortal>(character: T, rules?: DeathRules): T {
 
 /**
  * How the rules left someone who took damage or made a save. "endures": a hero who would have dropped to 0 dropped to
- * 1 by a species trait (Relentless Endurance, Hard to Fell).
+ * 1 by a species trait (Relentless Endurance, Hard to Fell). "warded": one who would have dropped to 0 dropped to 1 by
+ * a spell that wards them against death, which ends (Death Ward).
  */
-export type Fate = "dies" | "dying" | "killed" | "stable" | "revived" | "endures"
+export type Fate = "dies" | "dying" | "killed" | "stable" | "revived" | "endures" | "warded"
 
 /** A hero who endured, in words for the game master: the trait that held them at 1 hit point. */
 export function enduredWords(name: string, character: Parameters<typeof enduringTraitOf>[0]): string {
   return `${name} would drop to 0 hit points and drops to 1 instead, by ${enduringTraitOf(character)?.name ?? "their endurance"}.`
+}
+
+/** One a spell warded against death, in words for the game master: they drop to 1, and the spell ends. */
+export function wardedWords(name: string): string {
+  const ward = spells.find((spell) => heldRule(spell.id)?.wardsDeath)?.name ?? "a ward against death"
+  return `${name} would drop to 0 hit points and drops to 1 instead, by ${ward}, which ends.`
 }
 
 /**
@@ -102,6 +111,9 @@ export function withDamage<T extends Mortal>(character: T, amount: number, optio
   const damage = dealt
   const { current, maximum } = hitPoints
   if (current > damage) return { character: at(character, current - damage) }
+  // A spell that wards against death (Death Ward): the first time they would drop to 0, they drop to 1, and it ends.
+  const warded = current > 0 ? withDeathWardSpent(character) : undefined
+  if (warded) return { character: at(warded.character, 1), fate: "warded" }
   if (character.type !== "pc") return regenerationOf(character)?.diesAtTurnStart ? { character: at(character, 0) } : { character: killed(character), fate: "dies" }
   if (current > 0) {
     if (damage - current >= maximum) return withFate(killed(character, options.rules), "killed")
