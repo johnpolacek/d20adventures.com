@@ -6,7 +6,7 @@ import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../s
 import { attacksOf } from "../sheet/attack"
 import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
 import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
-import { bonusActionRule, type ChoiceRule, choiceRules, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast } from "../sheet/class-rules"
+import { bonusActionRule, type ChoiceRule, choiceRules, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast } from "../sheet/class-rules"
 import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, usable } from "../sheet/features"
@@ -185,8 +185,18 @@ export function createRollRequirementService(ports: GmPorts) {
     // The attacks the hero has once a Bonus Action that changes them is taken (Wild Shape's form), by its id.
     const becoming = bonusActions.flatMap((entry) => {
       const becomes = bonusActionRule(entry.id)?.becomes
-      return becomes ? [{ id: entry.id, attacks: attacksOf(becomes(character)) }] : []
+      if (!becomes) return []
+      const after = becomes(character)
+      return [{ id: entry.id, attacks: attacksOf(after), casts: !classCastingBar(after) && spellsOf(after).length > 0 }]
     })
+    // Those that change whether the hero can cast this turn, since a cast beside one is made in the shape it leaves them.
+    const castsNow = !classCastingBar(character)
+    const castingChanged = becoming.filter((entry) => entry.casts !== castsNow)
+    const castWith = castingChanged.filter((entry) => entry.casts).map((entry) => entry.id)
+    const castNotWith = castingChanged.filter((entry) => !entry.casts).map((entry) => entry.id)
+    const shapeCasting = castingChanged.length
+      ? `     A spell cast the same turn as a Bonus Action that changes their shape is cast in the new shape.${castWith.length ? ` In their present shape they cannot cast, and with ${castWith.join(" or ")} first they can: then "bonus" is ${castWith.map((id) => `"${id}"`).join(" or ")} and "check" is "cast", with a spell from Their Spells.` : ""}${castNotWith.length ? ` With ${castNotWith.join(" or ")} they cannot cast any spell this turn, so beside one of those no spell is cast.` : ""}\n`
+      : ""
     const attackWords = (list: readonly (typeof attacks)[number][]) =>
       list.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"
     // The choices of a hero's class the player makes in the moment, each only while it can be used (../sheet/classes).
@@ -360,7 +370,7 @@ ${choices.map(({ rule, values }) => rule.prompt(values)).join("")}   - SPELLS: w
        .join(", ")}. Using one again is not casting it anew.`
          : ""
      }
-     A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
+${shapeCasting}     A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
      A spell marked "told by the game master" is cast all the same: "check" is "cast" with everyone it is cast on, and the game spends what it costs. The game master tells what it does from its text. One marked "the rest told by the game master" is rolled in part by the game, and the rest is told.
      Every cast sets "fight": true when a fight is on in the scene, false when it is not. A spell marked "takes" a minute or more "to cast" cannot be cast while a fight is on, and the game will say so.
      A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all is "arcana".
@@ -499,7 +509,9 @@ Action: "${action}"
         const again = held.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
         const known = again ? undefined : knownSpells.find((entry) => named(pick.spell, entry.spell.name, entry.spell.id))
         // A slot named that the caster lacks, or below the spell's level, falls to the lowest that can pay.
-        const cost = known && castCost(character, known.spell.id, pick.ritual === true, pick.slot)
+        // Beside a Bonus Action that changes the hero (leaving Wild Shape's form), the spell is cast as it leaves them.
+        const acting = usedRule?.becomes ? usedRule.becomes(character) : character
+        const cost = known && castCost(acting, known.spell.id, pick.ritual === true, pick.slot)
         const paid = cost && !("problem" in cost) ? cost : undefined
         const spell = again?.spell ?? (paid ? known?.spell : undefined)
         if (!spell) {
@@ -529,7 +541,7 @@ Action: "${action}"
         const spent = paid?.cost.kind === "slot" ? paid.cost.level : undefined
         for (const { rule, values } of again ? [] : choices) {
           const value = rule.rides === "cast" ? choiceValue(rule, values) : undefined
-          if (value !== undefined && rule.cast?.fits(character, { spell, level: slotLevel, slot: spent, ...(type.success ? { damageType: type.data } : {}) }, value)) ridden[rule.key] = value
+          if (value !== undefined && rule.cast?.fits(acting, { spell, level: slotLevel, slot: spent, ...(type.success ? { damageType: type.data } : {}) }, value)) ridden[rule.key] = value
         }
         const shaped = shapedCast(ridden, { spell, level: slotLevel, slot: spent })
         const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
@@ -558,7 +570,7 @@ Action: "${action}"
         // A melee spell attack with a range of Self (Vampiric Touch) reaches as a touch does. Spiritual Weapon used again
         // strikes from where its force is, which the floor does not hold, so it is not measured.
         const touched = (shaped.spell.range.kind === "touch" || (shaped.spell.range.kind === "self" && spell.attack === "melee")) && chosen[0] !== self ? chosen[0] : undefined
-        const stood = withMove(character, moved(moveFor(touched ? { target: touched, reach: 5 } : undefined)))
+        const stood = withMove(acting, moved(moveFor(touched ? { target: touched, reach: 5 } : undefined)))
         const unplaced = again?.spell.id === "spiritual-weapon"
         const spaced = mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell: shaped.spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
         if (spaced?.problem) {
@@ -581,7 +593,7 @@ Action: "${action}"
           ...(again ? { again: true as const } : {}),
           ...(Object.keys(ridden).length ? { choices: ridden } : {}),
         }
-        const casting = spellcastingFor(character, spell.id)
+        const casting = spellcastingFor(acting, spell.id)
         if (spell.attack) {
           // A spell attack is the caster's to throw, against the first target's Armor Class.
           const target = everyone.find((other) => other.id === chosen[0])

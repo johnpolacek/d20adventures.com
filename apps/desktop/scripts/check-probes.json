@@ -2464,5 +2464,131 @@
       "targets": ["ilya-veles", "warehouse-thug"],
       "heal": true
     }
+  },
+  {
+    "id": "leave-shape-and-heal",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["poison-spray", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "heat-metal"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "narrative": "Steel rings in the warehouse. Branka, in the shape of a grey wolf, backs away from the thug, bleeding from a deep cut along her flank.",
+    "shape": {
+      "form": "wolf",
+      "hours": 1
+    },
+    "hitPointsOn": {
+      "branka-stoneveil": 5
+    },
+    "action": "I shake off the wolf's shape and cast Cure Wounds on myself.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "cure-wounds",
+      "targets": ["branka-stoneveil"]
+    },
+    "bonus": {
+      "feature": "leave-wild-shape"
+    }
+  },
+  {
+    "id": "wild-shape-no-cast",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "druid",
+      "level": 3,
+      "species": "dwarf",
+      "background": "soldier",
+      "languages": ["dwarvish", "common-sign-language"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 13,
+        "con": 16,
+        "int": 13,
+        "wis": 15,
+        "cha": 10
+      },
+      "classSkills": ["animal-handling", "insight"],
+      "featureChoices": {
+        "druid-primal-order": "warden",
+        "circle-of-the-land-circle-of-the-land-spells": "arid"
+      },
+      "armor": "leather-armor",
+      "shield": true,
+      "weapons": ["sickle", "quarterstaff", "spear", "shortbow"],
+      "weaponMasteries": [],
+      "cantrips": ["poison-spray", "starry-wisp"],
+      "spells": ["cure-wounds", "healing-word", "ice-knife", "thunderwave", "animal-friendship", "heat-metal"],
+      "featurePicks": {
+        "druid-wild-shape": [
+          {
+            "option": "rat"
+          },
+          {
+            "option": "riding-horse"
+          },
+          {
+            "option": "spider"
+          },
+          {
+            "option": "wolf"
+          }
+        ]
+      },
+      "subclass": "circle-of-the-land"
+    },
+    "hitPointsOn": {
+      "branka-stoneveil": 8
+    },
+    "narrative": "Steel rings in the warehouse. Branka, bleeding from a cut along her arm, faces the thug and his cudgel.",
+    "action": "I take the shape of a wolf and cast Cure Wounds on myself.",
+    "checks": ["none"],
+    "bonus": {
+      "feature": "wild-shape-wolf"
+    }
   }
 ]
