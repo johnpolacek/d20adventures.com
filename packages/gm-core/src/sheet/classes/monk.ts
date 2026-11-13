@@ -13,6 +13,7 @@ import { checkModesFrom, saveFailedBy, withCondition } from "../conditions"
 import { withHealing } from "../death"
 import { deriveSheet } from "../derive"
 import { hasFeature, usedThisTurn, usesLeft, withFeatureUsed } from "../feature-rules"
+import { spendsLegendaryResistance, withLegendaryResistanceSpent } from "../legendary-resistance"
 import { canReact } from "../reactions"
 import type { Sheet } from "../sheet"
 import { checkAdds, saveBonusFor, saveModesFor } from "../spell-effects"
@@ -276,11 +277,15 @@ export const monk: ClassRules = {
         if (usesLeft(striker, FOCUS) < 1 || !isMonkAttack(attack.id) || isDown(target)) return undefined
         const save = focusSave(attacker, target, { kind: "save", ability: "con" }, ["stunned"], roll)
         const by = attacker.id ?? ""
+        // A Legendary creature that fails may choose to succeed, and spends a use of its resistance (../legendary-resistance).
+        const resisted = !save.success && spendsLegendaryResistance(target, { conditions: ["stunned"] })
+        const held = resisted ? withLegendaryResistanceSpent(target) : target
+        const passed = save.success || resisted
         // A failure: Stunned until the Monk's next turn, counted as a span of the target's turn (../conditions).
-        const stunned = save.success ? undefined : withCondition(target, { id: "stunned", source: by, span: "turn" }, { acted: !!(target as { isComplete?: boolean }).isComplete })
+        const stunned = passed ? undefined : withCondition(held, { id: "stunned", source: by, span: "turn" }, { acted: !!(target as { isComplete?: boolean }).isComplete })
         // A success: Speed halved and the next attack on it with Advantage, until the Monk's next turn.
-        const after = stunned?.given ? stunned.character : save.success ? withTurnEffect(withTurnEffect(target, "stunning-strike-slowed", by), "stunning-strike-opened", by) : target
-        const rider: HitRider = { id: "stunning-strike", effect: stunned?.given ? "stunned" : save.success ? "staggered" : "unmoved", save, took: !!stunned?.given || save.success }
+        const after = stunned?.given ? stunned.character : passed ? withTurnEffect(withTurnEffect(held, "stunning-strike-slowed", by), "stunning-strike-opened", by) : held
+        const rider: HitRider = { id: "stunning-strike", effect: stunned?.given ? "stunned" : resisted ? "resisted" : passed ? "staggered" : "unmoved", save, took: !!stunned?.given || passed }
         return { target: after, rider, conditions: stunned?.given ? [{ target: target.id ?? "", condition: "stunned" }] : [], spends: FOCUS, once: "stunning-strike" }
       },
       words: (attacker, target, rider) =>
@@ -289,7 +294,9 @@ export const monk: ClassRules = {
             ? `${target} fails the Constitution save and is Stunned until ${attacker}'s next turn.`
             : rider.effect === "staggered"
               ? `${target} makes the Constitution save, but their Speed is halved and the next attack on them has Advantage until ${attacker}'s next turn.`
-              : `${target} fails the Constitution save, and cannot be Stunned.`
+              : rider.effect === "resisted"
+                ? `${target} fails the Constitution save and chooses to succeed instead (Legendary Resistance), but their Speed is halved and the next attack on them has Advantage until ${attacker}'s next turn.`
+                : `${target} fails the Constitution save, and cannot be Stunned.`
         }`,
     },
     {

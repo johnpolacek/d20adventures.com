@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { afterHarm } from "../sheet/death"
+import { withLegendaryActionsRegained } from "../sheet/legendary-actions"
 import { standingWords } from "../sheet/placement"
 import { ordered, type PendingReaction, REACTION_WAIT } from "../sheet/reactions"
 import { authoredText } from "../story/authored"
@@ -460,7 +461,8 @@ export function createNpcTurnService(ports: GmPorts) {
       let result: Awaited<ReturnType<typeof processNpcTurnWithLLM>>
       try {
         result = await processNpcTurnWithLLM({
-          turn: { ...turn, id: turn._id, characters },
+          // A Legendary creature regains its Legendary Action uses as its turn begins (../sheet/legendary-actions).
+          turn: { ...turn, id: turn._id, characters: characters.map((c) => (c.id === npc.id ? withLegendaryActionsRegained(c) : c)) },
           npcId: npc.id,
           encounterContext,
           sectionContext,

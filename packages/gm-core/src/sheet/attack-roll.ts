@@ -7,6 +7,7 @@ import { type FollowRule, followRules } from "./class-rules"
 import { attackModesFrom, cannotAttack, hasCondition, type ModeSource } from "./conditions"
 import { deriveSheet } from "./derive"
 import { attacksPerAction as attacksPerActionOf } from "./feature-rules"
+import { riderBars } from "./hit-riders"
 import { multiattackAfter } from "./multiattack"
 import { shapeOf } from "./shape"
 import { attackReach, type Cover, coverBetween, coverBonus, type Floor, feetBetween, greaterCover, isNear, placedOf, type Standing, within } from "./space"
@@ -41,6 +42,8 @@ export type AttackAsk = {
   modes?: readonly ModeSource[]
   /** Feet the roller moved before the attack, for the words of a ruling. */
   moved?: number
+  /** Feet the roller moved straight toward the target immediately before the attack, for a stat block's charge (./hit-riders). */
+  charged?: number
   /** What class features the attacker chose for this attack, kept on it until the blow lands: a Cunning Strike's `cunning`. */
   choices?: Record<string, string>
   after?: After
@@ -80,6 +83,9 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
   if (cover === "total") {
     return { ruling: { name: "Total Cover", text: `${character.name}${moved} has no clear line to ${target.name}: something solid stands between them. The attack is not made.` } }
   }
+  // A stat block's hold bars some attacks: a grapple holding with every part, an attachment, a held one its Tail spares.
+  const barred = riderBars(character, target, attack, ask.present)
+  if (barred) return { ruling: { name: "Holding On", text: `${barred} The attack is not made.` } }
   // A ranged attack has Disadvantage at long range, and with an enemy within 5 feet who is up and able to act.
   const ranged = band === "normal" || band === "long"
   const crowded =
@@ -106,7 +112,14 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
   const counted = cover === "half" || cover === "three-quarters" ? cover : undefined
   return {
     roll: {
-      attack: { weapon: attack.id, target: target.id, ...(counted ? { cover: counted } : {}), ...(ask.choices && Object.keys(ask.choices).length ? { choices: ask.choices } : {}) },
+      attack: {
+        weapon: attack.id,
+        target: target.id,
+        ...(counted ? { cover: counted } : {}),
+        ...(ask.choices && Object.keys(ask.choices).length ? { choices: ask.choices } : {}),
+        // Kept only for an attack whose stat block gives a charge something (./hit-riders).
+        ...(ask.charged && charges(attack) ? { charge: ask.charged } : {}),
+      },
       rollType: attack.name,
       difficulty: armorClass + coverBonus(cover),
       modifier: attack.bonus,
@@ -116,6 +129,9 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
     },
   }
 }
+
+// Whether a stat block's attack gives a charge anything: damage, or a condition.
+const charges = (attack: Attack): boolean => !!attack.gated?.some((part) => part.charge) || !!attack.riders?.some((rider) => rider.kind !== "attach" && rider.gate?.charge !== undefined)
 
 /** Advantage a feat gives an attack: Grappler's on a creature the attacker has Grappled. */
 function featModes(attacker: InScene, target: InScene): ModeSource[] {

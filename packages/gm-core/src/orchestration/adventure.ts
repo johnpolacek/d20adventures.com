@@ -3,6 +3,7 @@ import type { GmPorts } from "../ports"
 import { createAdventureFirstTurnService } from "../services/adventure-first-turn-service"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "../services/adventure-roll-result-service"
 import { createAdventureTurnReplyService } from "../services/adventure-turn-reply-service"
+import { createLegendaryActionService } from "../services/legendary-action-service"
 import { createNarrativeGenerationService } from "../services/narrative-generation-service"
 import { createNpcTurnService } from "../services/npc-turn-service"
 import type { LevelUpChoices } from "../sheet/level-up"
@@ -21,6 +22,7 @@ export function createAdventure(ports: GmPorts) {
   const { readTurnReply, applyReading } = createAdventureTurnReplyService(ports)
   const { processNpcTurnsAfterCurrent } = createNpcTurnService(ports)
   const { writeReply } = createNarrativeGenerationService(ports)
+  const { afterHeroTurn } = createLegendaryActionService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
   // `story` is the reply as the hero's beats, from writeReply. The player's own words go before it.
   async function processTurnReply({ turnId, characterId, originalPlayerInput, story }: { turnId: string; characterId: string; originalPlayerInput?: string; story: StoryBeat[] }) {
@@ -57,6 +59,8 @@ export function createAdventure(ports: GmPorts) {
       // A Bonus Action used beside the roll is applied now, before the die is thrown. A hero dropped as they moved
       // throws nothing: their turn is over, and the others play on.
       const { fell } = await applyReading({ turnId, characterId, reading })
+      // A fall ends the hero's turn: a Legendary creature may act on it (../sheet/legendary-actions).
+      if (fell) await afterHeroTurn(turnId, characterId)
       if (fell && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
       ports.narration.afterTurn(turnId)
       return { rollRequired: fell ? null : rollRequirementDetails }
@@ -76,6 +80,8 @@ export function createAdventure(ports: GmPorts) {
     // hero throws it next, and the others wait on it.
     const after = quiet && !fell ? await ports.store.getTurn({ turnId }) : undefined
     const owed = (after?.characters as TurnCharacter[] | undefined)?.find((entry) => entry.id === characterId)?.rollRequired ?? null
+    // The hero's turn is over. A cast it resolved has had its Legendary Actions taken with the roll's outcome.
+    if (fell || !quiet) await afterHeroTurn(turnId, characterId)
     if (!owed && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
     ports.narration.afterTurn(turnId)
     return { rollRequired: owed }

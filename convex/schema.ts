@@ -260,7 +260,11 @@ export default defineSchema({
           )
         ),
         specialAbilities: v.optional(v.array(v.string())),
-        conditions: v.optional(v.array(v.object({ id: v.string(), source: v.optional(v.string()), turns: v.optional(v.number()), level: v.optional(v.number()), spell: v.optional(v.string()) }))),
+        conditions: v.optional(
+          v.array(
+            v.object({ id: v.string(), source: v.optional(v.string()), turns: v.optional(v.number()), level: v.optional(v.number()), spell: v.optional(v.string()), attack: v.optional(v.string()) })
+          )
+        ),
         turnEffects: v.optional(v.array(v.object({ id: v.string(), by: v.string(), skill: v.optional(v.string()), turns: v.number() }))),
         featureUses: v.optional(v.record(v.string(), v.number())),
         spellSlots: v.optional(v.array(v.number())),

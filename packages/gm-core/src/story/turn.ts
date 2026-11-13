@@ -188,6 +188,11 @@ export function castBeats(
       ...(harm.length ? { harm } : {}),
       ...(conditions.length ? { conditions } : {}),
     })
+    // A failed save a Legendary creature chose to succeed on, told as the fact it is.
+    if (save.legendary) {
+      const name = target?.name ?? nameOf(names, save.target)
+      beats.push({ kind: "feature", by, character: save.target, name: "Legendary Resistance", text: `${name} fails the saving throw and chooses to succeed instead.` })
+    }
   }
   return beats
 }

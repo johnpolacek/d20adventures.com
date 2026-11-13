@@ -45,6 +45,7 @@ export const rollRequirementSchema = z.union([
         .record(z.string(), z.string())
         .optional()
         .describe("What class features the attacker chose for this attack, by the key of each choice (../sheet/class-rules.ts): a Cunning Strike's cunning"),
+      charge: z.number().optional().describe("Feet the attacker moved straight toward the target immediately before this attack, for a stat block's charge"),
     }),
     ...asked,
   }),
@@ -73,13 +74,18 @@ export const rollRequirementSchema = z.union([
     ...asked,
   }),
   // A class feature used as the turn's action that the engine resolves with no throw of the hero's, as it resolves a
-  // spell that asks for none: a Cleric's Channel Divinity (../sheet/classes/cleric.ts). `difficulty` is the save DC.
+  // spell that asks for none: a Cleric's Channel Divinity (../sheet/classes/cleric.ts), or an action of a stat block
+  // that is a save, a breath weapon's (../sheet/stat-block-actions.ts). `difficulty` is the save DC.
   z.object({
     feature: z.object({
       id: z.string().describe("The effect, by the id its class feature resolves it under: Channel Divinity's turn-undead"),
       targets: z.array(z.string()).describe("The ids of who it is used on"),
       heal: z.literal(true).optional().describe("Divine Spark restores hit points in place of harming"),
       damageType: z.enum(["necrotic", "radiant"]).optional().describe("Divine Spark's damage type"),
+      cover: z
+        .record(z.string(), z.enum(["half", "three-quarters"]))
+        .optional()
+        .describe("For a stat block's action over an area: the cover each target has from where it comes, by id"),
     }),
     ...asked,
   }),

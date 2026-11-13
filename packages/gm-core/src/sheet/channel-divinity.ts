@@ -9,6 +9,7 @@ import { deriveSheet } from "./derive"
 import { hasFeature, usesLeft, withFeatureUsed } from "./feature-rules"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { legendaryResistanceWords, type SaveStakes, withLegendaryResistanceSpent } from "./legendary-resistance"
 import type { Sheet } from "./sheet"
 import { placedOf, within } from "./space"
 import { type Cast, rollSave, type SaveRoll, spellcastingOf } from "./spells"
@@ -126,9 +127,15 @@ export function channelDivinity<T extends Channeled>(args: {
   const conditions: ConditionChange[] = []
   const facts: string[] = []
   // A save by the usual rules of one against a spell (./spells `rollSave`), against the Cleric's spell save DC.
-  const save = (target: T, ability: AbilityId): SaveRoll => {
-    const rolled = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters })
+  // A Legendary creature may choose to succeed against what a failure costs it (./legendary-resistance).
+  const save = (target: T, ability: AbilityId, stakes: SaveStakes): SaveRoll => {
+    const rolled = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters, stakes })
     saves.push(rolled)
+    if (rolled.legendary) {
+      const spent = withLegendaryResistanceSpent(find(target.id) ?? target)
+      put(spent)
+      facts.push(legendaryResistanceWords(target.name, spent))
+    }
     return rolled
   }
   const hurt = (target: T, amount: number, type: DamageTypeId, dice: number[], sides: number, bonus: number) => {
@@ -154,7 +161,8 @@ export function channelDivinity<T extends Channeled>(args: {
       facts.push(`${cleric.name}'s Divine Spark restores ${amount} hit points to ${target.name}. ${standing(healed, target.name, undefined)}`)
     } else {
       const type = args.damageType ?? "radiant"
-      const saved = save(target, "con")
+      const full = damageTaken({ parts: [{ type: args.damageType ?? "radiant", dice: [], bonus: amount, total: amount }], total: amount }, defensesOf(target))
+      const saved = save(target, "con", { damage: full - Math.floor(full / 2) })
       const dealt = saved.success ? Math.floor(amount / 2) : amount
       const done = hurt(target, dealt, type, part.dice, part.sides ?? parseDice(sparkDice(cleric.sheet.level)).sides, wisdom)
       facts.push(
@@ -171,7 +179,7 @@ export function channelDivinity<T extends Channeled>(args: {
     // Sear Undead: one roll of the Wisdom modifier's d8s, at least one, for every Undead that fails.
     const sear = hasFeature(cleric, "cleric-sear-undead") && turned.length ? rollDamage([{ dice: `${Math.max(1, wisdom)}d8`, type: "radiant" }], args.roll) : undefined
     for (const target of turned) {
-      const saved = save(target, "wis")
+      const saved = save(target, "wis", { conditions: ["frightened", "incapacitated"], damage: sear ? damageTaken(sear, defensesOf(target)) : 0 })
       const verdict = `${target.name} ${saved.success ? "SUCCEEDS on" : "FAILS"} the Wisdom saving throw against ${cleric.name}'s Turn Undead (${saved.total} against DC ${dc})`
       if (saved.success) {
         facts.push(`${verdict} and is not turned.`)

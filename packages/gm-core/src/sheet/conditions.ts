@@ -238,7 +238,7 @@ const without = <T extends Afflicted>(character: T, keep: (entry: ConditionEntry
  */
 export function withCondition<T extends Afflicted>(
   character: T,
-  give: { id: ConditionId; source?: string; span?: ConditionSpan; spell?: string },
+  give: { id: ConditionId; source?: string; span?: ConditionSpan; spell?: string; attack?: string },
   options: { acted?: boolean } = {}
 ): { character: T; given: boolean; level?: number } {
   if (isDead(character) || immuneTo(character, give.id)) return { character, given: false }
@@ -250,18 +250,28 @@ export function withCondition<T extends Afflicted>(
   }
   const span = CONDITION_SPANS[rules.stands ? rules.span : (give.span ?? rules.span)]
   const turns = span === undefined ? undefined : span + (options.acted ? 1 : 0)
-  const entry: ConditionEntry = { id: give.id, ...(give.source ? { source: give.source } : {}), ...(turns ? { turns } : {}), ...(give.spell ? { spell: give.spell } : {}) }
+  const entry: ConditionEntry = {
+    id: give.id,
+    ...(give.source ? { source: give.source } : {}),
+    ...(turns ? { turns } : {}),
+    ...(give.spell ? { spell: give.spell } : {}),
+    ...(give.attack ? { attack: give.attack } : {}),
+  }
   return { character: { ...character, conditions: [...others, entry] }, given: true }
 }
 
-/** End a condition a character bears. Exhaustion loses one level. Unconscious at 0 hit points ends only with healing. */
+/**
+ * End a condition a character bears. Exhaustion loses one level. Unconscious at 0 hit points ends only with healing. A
+ * grapple a stat block's attack gave ends with what that attack gave until the grapple ends: a crocodile's Restrained.
+ */
 export function withoutCondition<T extends Afflicted>(character: T, id: ConditionId): { character: T; ended: boolean } {
   const held = character.conditions?.find((entry) => entry.id === id)
   if (!held) return { character, ended: false }
   if (id === "exhaustion" && (held.level ?? 1) > 1) {
     return { character: { ...character, conditions: (character.conditions ?? []).map((entry) => (entry === held ? { ...entry, level: (held.level ?? 1) - 1 } : entry)) }, ended: true }
   }
-  return { character: without(character, (entry) => entry.id !== id), ended: true }
+  const tied = (entry: ConditionEntry) => id === "grappled" && held.attack !== undefined && entry.attack === held.attack && entry.source === held.source
+  return { character: without(character, (entry) => entry.id !== id && !tied(entry)), ended: true }
 }
 
 /**

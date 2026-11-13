@@ -9,6 +9,7 @@ import type { ConditionEntry } from "@d20/gm-core/sheet/condition-entry"
 import { placeCharacters } from "@d20/gm-core/sheet/placement"
 import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import type { Stake } from "@d20/gm-core/sheet/stakes"
+import { blockActionsOf } from "@d20/gm-core/sheet/stat-block-actions"
 import { authoredText } from "@d20/gm-core/story/authored"
 import { storyNames } from "@d20/gm-core/story/render"
 import type { Character } from "@d20/gm-core/types/character"
@@ -20,7 +21,8 @@ import { loadPack } from "./scene-judge"
 // Shows that the game master picks sensible checks. Each scene in check-probes.json is one action by a premade hero in
 // a real encounter, with the picks that are right for it written beside it: the check off the menu, the target from
 // the ladder, and Advantage or Disadvantage. The model is asked once per scene and its pick is graded by those rules,
-// with no second model. In process, on the current prompt and content.
+// with no second model. A scene may instead have one of the encounter's NPCs act (`actor`), its action being what its
+// turn wrote, read as the NPC's turn reads it. In process, on the current prompt and content.
 // pnpm --dir apps/desktop check:probe [--only id,id] [--out file.json]
 
 type Probe = {
@@ -77,6 +79,11 @@ type Probe = {
   feature?: { id: string; targets?: string[]; heal?: boolean }
   // A Beast form the hero already holds with Wild Shape: its stat block and the hours it has left.
   shape?: { form: string; hours: number }
+  // One of the encounter's NPCs, by id, who acts in the hero's place: `action` is what its turn wrote. The hero and the
+  // allies are the heroes it acts among.
+  actor?: string
+  // Uses of features already spent, by character id: a breath not yet recharged is { "Poison Breath": 1 }.
+  usesOn?: Record<string, Record<string, number>>
 }
 // A stake as a scene writes it: damage or healing, or a condition given ("condition") or ended ("end-condition").
 type Wanted = { on: string; target: string; kind: string; condition?: string }
@@ -105,6 +112,7 @@ async function run(probe: Probe): Promise<Graded> {
     ...(probe.conditionsOn?.[character.id] ? { conditions: probe.conditionsOn[character.id] } : {}),
     ...(probe.slotsUsed?.[character.id] ? { spellSlots: probe.slotsUsed[character.id] } : {}),
     ...(probe.hitPointsOn?.[character.id] !== undefined ? { hitPoints: probe.hitPointsOn[character.id] } : {}),
+    ...(probe.usesOn?.[character.id] ? { featureUses: probe.usesOn[character.id] } : {}),
   })
   const premade = JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${probe.hero}.json`), "utf8"))
   const holds = probe.held ? { spellEffects: [{ spell: probe.held.spell, by: premade.id, amount: probe.held.slot }], concentration: { spell: probe.held.spell } } : {}
@@ -129,10 +137,12 @@ async function run(probe: Probe): Promise<Graded> {
       })),
       ...encounter.npcRefs.map((ref) => bears({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const })),
     ])
-    const [standing] = everyone
+    // The one who acts: the hero, or the NPC the scene names.
+    const standing = probe.actor ? everyone.find((character) => character.id === probe.actor) : everyone[0]
+    if (!standing) throw new Error(`${probe.id}: no ${probe.actor} in ${probe.encounter}`)
     const reading = await readAction(probe.action, standing, {
       floor,
-      encounterIntro: authoredText(encounter.sections.intro ?? "", storyNames([hero])),
+      encounterIntro: probe.actor ? authoredText(encounter.sections.intro ?? "", storyNames(everyone), probe.actor) : authoredText(encounter.sections.intro ?? "", storyNames([hero])),
       encounterInstructions: encounter.sections.gmNotes ?? "",
       narrativeContext: probe.narrative ?? "",
       // The hero and the encounter's NPCs, so an attack has someone to land on.
@@ -146,7 +156,10 @@ async function run(probe: Probe): Promise<Graded> {
     const picked = cast
       ? "cast"
       : reading.feature
-        ? "channel-divinity"
+        ? // An action of the stat block is named by its id, and a class feature used as the action as Channel Divinity.
+          blockActionsOf(standing).some((entry) => entry.id === reading.feature?.feature.id)
+          ? reading.feature.feature.id
+          : "channel-divinity"
         : !got
           ? reading.rest
             ? `${reading.rest}-rest`

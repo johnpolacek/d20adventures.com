@@ -15,6 +15,7 @@ import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { premiseNote } from "../wiki-adventures/player-safety"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "./adventure-roll-result-service"
 import { createAdventureTurnReplyService } from "./adventure-turn-reply-service"
+import { createLegendaryActionService } from "./legendary-action-service"
 
 // The character as a player knows them. Each line ends with a newline.
 function characterSheet(character: TurnCharacter): string {
@@ -158,6 +159,7 @@ export function createAiPcTurnService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
   const { readTurnReply, applyReading } = createAdventureTurnReplyService(ports)
+  const { afterHeroTurn } = createLegendaryActionService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
   // The AI companion's move, as its own beats: what it does and, at times, says.
   async function generateAiPcIntent(args: {
@@ -253,7 +255,8 @@ export function createAiPcTurnService(ports: GmPorts) {
       })
       // A Bonus Action, and an action with no roll, leave their mark now. With no roll, submitReply marked the character complete.
       await applyReading({ turnId, characterId, reading })
-      if (!rollRequirement) return
+      // With no roll the companion's turn is over, and a Legendary creature may act on it (../sheet/legendary-actions).
+      if (!rollRequirement) return afterHeroTurn(turnId, characterId)
 
       turn = await ports.store.getTurn({ turnId })
       if (!turn) throw new Error("Turn disappeared while processing AI companion roll")

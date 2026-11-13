@@ -24,6 +24,7 @@ import { type Featured, hitRules, type Landed, type Reacted, reactionRules, turn
 import { cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
 import { withFeatureUsed, withUsedThisTurn } from "./feature-rules"
+import { releasedHolds } from "./hit-riders"
 import { type Cover, opportunityAttackers, type Point, placedOf, type Standing, sizeOf, type Watcher, within } from "./space"
 import { cannotReactBySpell, spellEffectsAfterMove, withSpellEffect } from "./spell-effects"
 import { type CastCost, castCost, spellsOf, withCastSpent } from "./spells"
@@ -388,6 +389,8 @@ export function attackWithReactions<T extends InPlay>(args: {
   inspiration?: { die: number }
   /** What class features the attacker chose for this attack: a Cunning Strike's `cunning`. */
   choices?: Record<string, string>
+  /** Feet the attacker moved straight toward the target immediately before this attack, for a stat block's charge. */
+  charge?: number
   ask: Ask
 }): { characters: T[]; blow: Strike; target: T; reactions: ReactionTaken[] } {
   let characters = [...args.characters]
@@ -457,7 +460,7 @@ export function attackWithReactions<T extends InPlay>(args: {
     }
     return undefined
   }
-  const { target: struck, ...blow } = landBlow({ attacker, target, roll: args.roll, rules: args.rules, present: characters, turnOf, choices: args.choices, reduce }, rolled)
+  const { target: struck, ...blow } = landBlow({ attacker, target, roll: args.roll, rules: args.rules, present: characters, turnOf, choices: args.choices, reduce, charged: args.charge }, rolled)
   put(blow.reduced ? withReaction(struck) : struck)
   // The once-a-turn features the blow used are marked on the attacker.
   for (const id of blow.used ?? []) put(withUsedThisTurn(characters.find((character) => character.id === args.attackerId) as T, id, turnOf))
@@ -468,6 +471,8 @@ export function attackWithReactions<T extends InPlay>(args: {
     if (!rule.landed || !blow.features?.length) continue
     characters = rule.landed({ characters: characters as unknown as Landed[], attackerId: args.attackerId, targetId: args.targetId, added: blow.features, choices: args.choices }) as unknown as T[]
   }
+  // A grapple or an attachment ends as its holder drops (./hit-riders).
+  characters = releasedHolds(characters).characters
   const after = characters.find((character) => character.id === args.targetId) as T
   return { characters, blow, target: after, reactions }
 }
@@ -510,7 +515,8 @@ export function moveWithReactions<T extends InPlay>(args: {
     // A mover who takes a step has left the areas that stay on the floor (Web, Stinking Cloud, Sleet Storm).
     characters = characters.map((character) => (character.id === args.moverId ? spellEffectsAfterMove({ ...character, position: { x: to.x, y: to.y } }) : character))
   }
-  return { characters, attacks, stopped: false }
+  // A holder who moves out of its reach lets go of the one it held (./hit-riders).
+  return { characters: releasedHolds(characters).characters, attacks, stopped: false }
 }
 
 /**

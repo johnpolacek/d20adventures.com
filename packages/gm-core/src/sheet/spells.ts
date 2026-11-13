@@ -14,6 +14,7 @@ import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, r
 import { deriveSheet, featuresOf, pickedFreeCasts, slotsAt } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { legendaryResistanceWords, type SaveStakes, spendsLegendaryResistance, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { magicSaveModes, typesTaken } from "./monster-traits"
 import { type Cover, coverBonus, type Floor, isNear } from "./space"
 import { speciesSaveModes } from "./species-traits"
@@ -337,6 +338,8 @@ export type KnownSpell = {
   selfOnly?: true
   /** The option of a class feature its casting with no slot comes from, by id: "fiendish-vigor". */
   from?: string
+  /** A stat block casts it as a Bonus Action, whatever its own casting time: a Priest's Bless by Divine Aid. */
+  bonusAction?: true
 }
 
 type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<string, number> }
@@ -415,13 +418,13 @@ export function spellsOf(character: Slotted): KnownSpell[] {
 
 /**
  * The spells an NPC's stat block casts: those of its Spellcasting action, At Will or so many a day, and those a Bonus
- * Action of the block casts. A day's casts stay spent until a Long Rest (./rest), as a hero's slots do. A spell cast as
- * a Reaction waits for stage 6.
+ * Action of the block casts, as a Bonus Action. A day's casts stay spent until a Long Rest (./rest), as a hero's slots
+ * do. A spell cast as a Reaction waits for stage 6.
  */
 function statBlockSpells(character: Slotted, monster: NonNullable<ReturnType<typeof monsterById.get>>): KnownSpell[] {
   const found: KnownSpell[] = []
   const used = (key: string) => character.featureUses?.[key] ?? 0
-  const add = (entry: { id: string; note?: string }, how: { atWill: boolean; uses: number; key: string }) => {
+  const add = (entry: { id: string; note?: string }, how: { atWill: boolean; uses: number; key: string; bonusAction?: true }) => {
     const spell = spellById.get(entry.id)
     if (!spell || found.some((known) => known.spell.id === entry.id)) return
     const level = /level (\d) version/.exec(entry.note ?? "")
@@ -433,6 +436,7 @@ function statBlockSpells(character: Slotted, monster: NonNullable<ReturnType<typ
       free: how.atWill ? 0 : Math.max(0, how.uses - used(how.key)),
       ...(how.atWill ? {} : { useKey: how.key }),
       ...(level ? { castLevel: Number(level[1]) } : {}),
+      ...(how.bonusAction ? { bonusAction: true as const } : {}),
     })
   }
   for (const action of monster.actions ?? []) {
@@ -446,7 +450,7 @@ function statBlockSpells(character: Slotted, monster: NonNullable<ReturnType<typ
   }
   for (const feature of monster.bonusActions ?? []) {
     const count = feature.uses?.count
-    for (const entry of feature.spellcasting?.spells ?? []) add(entry, { atWill: count === undefined, uses: typeof count === "number" ? count : 1, key: feature.name })
+    for (const entry of feature.spellcasting?.spells ?? []) add(entry, { atWill: count === undefined, uses: typeof count === "number" ? count : 1, key: feature.name, bonusAction: true })
   }
   return found
 }
@@ -582,6 +586,8 @@ export type SaveRoll = {
   mode: RollMode
   failedBy?: string
   adds?: RollAdd[]
+  /** The save failed, and the creature chose to succeed by Legendary Resistance (./legendary-resistance). The caller spends the use. */
+  legendary?: true
 }
 /** A spell attack as it fell: the roll, and on a hit the damage dice and what the target lost. */
 export type SpellAttack = { target: string; roll: AttackResult; damage?: DamageRoll; taken: number; fate?: Fate; deflected?: true }
@@ -908,8 +914,17 @@ export function castSpell<T extends Castee>(args: {
         continue
       }
       const against = (spell.conditions ?? []).filter((link) => link.trigger === "failed-save" && link.save === index).map((link) => link.condition)
-      const thrown = rollSave({ target, ability: save.ability, dc: casting.saveDc, d20: args.d20, roll: args.roll, characters, cover: covered(id), also: modesAgainst(spell, target), against })
+      // What failing would cost: the conditions, and the damage beyond what a success still takes.
+      const full = rolled ? damageTaken(rolled, defensesOf(target)) : 0
+      const stakes = { conditions: against, damage: full - (half ? Math.floor(full / 2) : 0) }
+      const thrown = rollSave({ target, ability: save.ability, dc: casting.saveDc, d20: args.d20, roll: args.roll, characters, cover: covered(id), also: modesAgainst(spell, target), against, stakes })
       saves.push(thrown)
+      // A Legendary creature that chose to succeed has spent a use of Legendary Resistance, told before the rest.
+      if (thrown.legendary) {
+        const spent = withLegendaryResistanceSpent(target)
+        put(spent)
+        facts.push(legendaryResistanceWords(target.name, spent))
+      }
       const { success } = thrown
       const verdict = `${target.name} ${success ? "SUCCEEDS on" : "FAILS"} the saving throw against ${caster.name}'s ${spell.name} (${thrown.total} against DC ${casting.saveDc})`
       if (rolled && (!success || half)) {
@@ -1131,7 +1146,12 @@ function effectAmount(spell: Spell, slot: number): number | undefined {
  * Resistance gives it Advantage. The d20 or two, the save bonus, cover on a Dexterity save, the dice
  * of spells on them (Bless, Bane), Slow's −2 on Dexterity, and the Advantage and Disadvantage of their conditions,
  * actions and spells (Haste, Beacon of Hope), of their species against the conditions at stake (`against`: Fey
- * Ancestry on Charmed), and of the spell itself (`also`). A condition may fail it outright.
+ * Ancestry on Charmed), and of the spell itself (`also`). A condition may fail it outright. A stat block's action
+ * that is not magic (a breath weapon) passes `magical: false`, and Magic Resistance gives nothing against it.
+ *
+ * A Legendary creature that fails may choose to succeed (./legendary-resistance), judged on `stakes`: what the failure
+ * would cost it. A caller that gives no stakes is never answered so, and one that gives them spends the use when the
+ * save comes back `legendary`.
  */
 export function rollSave(args: {
   target: Castee
@@ -1144,6 +1164,10 @@ export function rollSave(args: {
   also?: readonly { mode: "advantage" | "disadvantage"; from: string }[]
   /** The conditions the save is made to avoid or end, for a species trait that gives Advantage against them (Fey Ancestry). */
   against?: readonly ConditionId[]
+  /** What a failure would cost the one who saves, for Legendary Resistance. */
+  stakes?: SaveStakes
+  /** False for an effect that is not magic, a breath weapon's: Magic Resistance gives nothing against it. */
+  magical?: false
 }): SaveRoll {
   const { target, ability } = args
   const check: Check = { kind: "save", ability }
@@ -1153,7 +1177,7 @@ export function rollSave(args: {
     ...checkModesFromActions(target, check, args.characters),
     ...saveModesFromSpells(target, ability),
     ...speciesSaveModes(target, ability, args.against),
-    ...magicSaveModes(target),
+    ...(args.magical === false ? [] : magicSaveModes(target)),
     ...classCheckModes(target, check),
     ...(args.also ?? []),
   ]
@@ -1165,8 +1189,23 @@ export function rollSave(args: {
   // A lasting spell on the target adds its dice to the save, or takes them away.
   const adds = rollAdds(target, "saving-throws", args.roll)
   const total = natural + bonus + adds.reduce((sum, add) => sum + add.amount, 0)
-  const success = !failedBy && total >= args.dc
-  return { target: target.id, ability, dice, natural, bonus, total, dc: args.dc, success, mode, ...(failedBy ? { failedBy } : {}), ...(adds.length ? { adds } : {}) }
+  const passed = !failedBy && total >= args.dc
+  const legendary = !passed && !!args.stakes && spendsLegendaryResistance(target, args.stakes)
+  const success = passed || legendary
+  return {
+    target: target.id,
+    ability,
+    dice,
+    natural,
+    bonus,
+    total,
+    dc: args.dc,
+    success,
+    mode,
+    ...(failedBy ? { failedBy } : {}),
+    ...(adds.length ? { adds } : {}),
+    ...(legendary ? { legendary: true as const } : {}),
+  }
 }
 
 /** The modes that fall on a spell attack from the conditions and actions of the caster and the target. */

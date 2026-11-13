@@ -4,6 +4,7 @@ import { test } from "node:test"
 import { monsters } from "@d20/srd/monsters"
 import { attacksOf, gateOf, strike } from "../../src/sheet/attack"
 import { attackAfter, attackRequirement, followingRoll, type InScene } from "../../src/sheet/attack-roll"
+import { chargeOf } from "../../src/sheet/hit-riders"
 import { multiattackOf, readMultiattack } from "../../src/sheet/multiattack"
 import type { Sheet } from "../../src/sheet/sheet"
 import type { RequiredRoll } from "../../src/validations/roll-requirement-schema"
@@ -151,11 +152,12 @@ test("a hit's gated damage is dealt only when its gate holds, and a gate the eng
   assert.equal(strike({ attacker: npc("rats", "swarm-of-rats", { hitPoints: 7 }), target, weapon: "bites", dice: [18], roll: falls(3) }).taken, 3)
   assert.equal(strike({ attacker: npc("rats", "swarm-of-rats", { hitPoints: 8 }), target, weapon: "bites", dice: [18], roll: falls(3, 2) }).taken, 5)
   // A Boar's Gore: "4 (1d6 + 1) Piercing damage. If the target is a Medium or smaller creature and the boar moved 20+
-  // feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Piercing damage". The
-  // engine keeps no straight run, so the extra is left out, not added.
+  // feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Piercing damage". The extra
+  // is gated on the charge, which the move the read gave measures (./hit-riders).
   assert.deepEqual(attacksOf({ type: "npc", statBlock: "boar" })[0].damage, [{ dice: "1d6 + 1", type: "piercing" }])
-  assert.equal(attacksOf({ type: "npc", statBlock: "boar" })[0].gated, undefined)
-  // Every gated part of a hit in the SRD: 14 given by their gates, and these 15 left out, charges and damage that comes later.
+  assert.deepEqual(attacksOf({ type: "npc", statBlock: "boar" })[0].gated, [{ part: { dice: "1d6", type: "piercing" }, when: "charge", charge: { feet: 20, size: "Medium" } }])
+  // Every gated part of a hit in the SRD: 14 given by their gates, 13 by a charge, and these 2 left out, damage that
+  // comes later, which a stat block's riders run where they are read (./hit-riders).
   const left: string[] = []
   let given = 0
   for (const monster of monsters)
@@ -163,32 +165,16 @@ test("a hit's gated damage is dealt only when its gate holds, and a gate the eng
       if (!action.attack) continue
       for (const part of action.damage ?? []) {
         if (part.on !== "hit" || !(part.appliesWhen || part.timing || part.alternativeTo !== undefined)) continue
-        if (!part.timing && part.appliesWhen && gateOf(part.appliesWhen)) given++
+        if (!part.timing && part.appliesWhen && (gateOf(part.appliesWhen) || chargeOf(part.appliesWhen))) given++
         else left.push(`${monster.id} ${action.name}`)
       }
     }
-  assert.equal(given, 14)
+  assert.equal(given, 27)
   assert.equal(
     attacksOf({ type: "npc", statBlock: "goblin-boss" }).reduce((sum, attack) => sum + (attack.gated?.length ?? 0), 0),
     2
   )
-  assert.deepEqual(left, [
-    "animated-rug-of-smothering Smother",
-    "boar Gore",
-    "elk Ram",
-    "giant-boar Gore",
-    "giant-elk Ram",
-    "giant-goat Ram",
-    "giant-seahorse Ram",
-    "goat Ram",
-    "minotaur-of-baphomet Gore",
-    "minotaur-skeleton Gore",
-    "rhinoceros Gore",
-    "stirge Proboscis",
-    "triceratops Gore",
-    "warhorse Hooves",
-    "wereboar Tusk",
-  ])
+  assert.deepEqual(left, ["animated-rug-of-smothering Smother", "stirge Proboscis"])
 })
 
 test("a Troll down at 0 hit points struck with Fire stays down with its Regeneration stopped", () => {

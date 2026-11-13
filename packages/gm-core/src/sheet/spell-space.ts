@@ -25,7 +25,10 @@ export type CastInSpace = {
  *
  * Burning Hands, a 15-foot cone, aimed at a Bandit 10 feet off, catches the Bandit and the ally standing beside him.
  */
-export function castInSpace(args: { spell: Spell; caster: Here; everyone: readonly Here[]; named: readonly string[]; floor: Floor }): CastInSpace {
+/** What falls where a spell would that is no spell: a stat block's breath, by its name and where it reaches (./stat-block-actions). */
+export type Aimed = { name: string; range: Spell["range"]; attack?: undefined }
+
+export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone: readonly Here[]; named: readonly string[]; floor: Floor }): CastInSpace {
   const { spell, caster, floor } = args
   const from = placedOf(caster)
   if (!from) return { targets: [...args.named], cover: {}, measured: false }
@@ -86,7 +89,7 @@ export function castInSpace(args: { spell: Spell; caster: Here; everyone: readon
   const touch = range.kind === "touch" || (range.kind === "self" && spell.attack === "melee")
   if (!touch && range.kind !== "feet") return { targets: [...args.named], cover: {}, measured: false }
   // A class feature may lengthen the caster's own spell (Eldritch Spear).
-  const limit = touch ? BASE_REACH : (classSpellRange(caster, spell) ?? range.distance ?? 0)
+  const limit = touch ? BASE_REACH : (("level" in spell ? classSpellRange(caster, spell) : undefined) ?? range.distance ?? 0)
   const near = named.filter((target) => target.id === caster.id || within(from, target, limit))
   if (named.length && !near.length) {
     const [first] = named

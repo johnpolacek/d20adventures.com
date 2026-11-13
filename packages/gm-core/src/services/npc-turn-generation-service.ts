@@ -4,6 +4,7 @@ import { conditionWords } from "../sheet/conditions"
 import { hitPointWords } from "../sheet/hit-points"
 import { movementBudgetOf } from "../sheet/space"
 import { spellWords } from "../sheet/spells"
+import { statBlockLines } from "../sheet/stat-block-actions"
 import { authoredText } from "../story/authored"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, knowledgeNote } from "../story/knowledge"
@@ -108,6 +109,8 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
 
   const npcEquipmentList = npc.equipment?.map((equipment) => equipment.name).join(", ") || "None"
   const npcSpellsList = spellWords(npc) || "None"
+  // What its stat block lets it do this turn, one line each: a breath not yet recharged is left out.
+  const blockLines = statBlockLines(npc)
   const npcDetails = `
 NPC Details:
 - Name: ${npc.name}
@@ -116,7 +119,7 @@ NPC Details:
 - Equipment: ${npcEquipmentList}
 - Skills: ${npc.skills?.join(", ") || "None"}
 - Spells: ${npcSpellsList}
-- Health: ${hitPointWords(npc)}
+${blockLines.length ? `- Stat Block, what it can do this turn:\n${blockLines.map((line) => `  - ${line}`).join("\n")}\n` : ""}- Health: ${hitPointWords(npc)}
 - Conditions: ${conditionWords(npc) || "None"}
 `
 
@@ -152,7 +155,7 @@ You are the DM. Your SOLE responsibility right now is to decide the action for O
 **THE CURRENT NPC IS: ${args.npc.name}** (ID: ${args.npc.id}, Type: ${args.npc.type})
 
 CRITICAL: When the NPC attacks or uses equipment, you MUST use ONLY the weapons and items listed in their Equipment above. Do NOT invent or reference weapons they don't have.
-
+${statBlockLines(args.npc).length ? "\nCRITICAL: The NPC's Stat Block lines above are what it can do this turn, beside its Equipment. One of its stat block's actions that is not listed there is not ready, and is not used.\n" : ""}
 CRITICAL: When the NPC casts spells, they may ONLY use spells marked as "Available" in their Spells list above. Spells marked as "Used (unavailable this encounter)" have already been cast and CANNOT be used again until the next encounter. If the NPC has no available spells, they must use physical actions or equipment instead.
 
 CRITICAL: Pay close attention to the NPC's behavior and role. The NPC behavior section describes their specific responsibilities, motivations, and how they should act in this encounter. This is the most important context for determining their action.
@@ -230,8 +233,9 @@ export function buildNpcOutcomePrompt(args: {
   // What a check or save did to hit points and conditions, already settled by the engine, in plain words.
   harm?: string[]
   // A spell the NPC cast, already resolved by the engine: its name, what it did in plain words, and for a utility
-  // spell its own text, which binds what it can do.
-  spell?: { name: string; facts: string[]; text?: string }
+  // spell its own text, which binds what it can do. A stat block's action it used (a breath) is told the same way,
+  // with the verb "uses".
+  spell?: { name: string; facts: string[]; text?: string; verb?: string }
 }): string {
   const playerCharacterNames = args.playerCharacters.map((character) => character.name)
   const playerCharacterDetails = args.playerCharacters
@@ -285,9 +289,9 @@ Player Characters: ${playerCharacterNames.join(", ")}
 Action: ${args.actionSummary}
 ${
   args.spell
-    ? `${args.npcName} casts ${args.spell.name}.${
+    ? `${args.npcName} ${args.spell.verb ?? "casts"} ${args.spell.name}.${
         args.spell.facts.length
-          ? `\nThe game has already rolled this spell:\n${args.spell.facts.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated: each hit, miss and save, and how each one stands after it. Add no other harm, healing or condition and undo none of it. Give no number.`
+          ? `\nThe game has already rolled ${args.spell.verb ? "it" : "this spell"}:\n${args.spell.facts.map((line) => `- ${line}`).join("\n")}\nTell it exactly as stated: each hit, miss and save, and how each one stands after it. Add no other harm, healing or condition and undo none of it. Give no number.`
           : ""
       }${args.spell.text ? `\nThe spell does what its own text says and no more:\n"""${args.spell.text}"""\nIt changes no one's hit points or conditions.` : ""}`
     : args.attacks?.length

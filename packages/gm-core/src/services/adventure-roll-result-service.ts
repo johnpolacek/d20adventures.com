@@ -3,12 +3,13 @@ import { afterRoll } from "../sheet/actions"
 import { type Strike, strikeFacts } from "../sheet/attack"
 import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { checkBonus, resolveCheck } from "../sheet/check"
-import { afterFelled, classCheckBonus, classConcentrationModes, effectChoice, type Featured, rescuedCheck, resolveChosenCast, shapedCast } from "../sheet/class-rules"
+import { afterFelled, classCheckBonus, classConcentrationModes, type Featured, rescuedCheck, resolveChosenCast, shapedCast } from "../sheet/class-rules"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, deathSave } from "../sheet/death"
-import { inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
+import { featureResolver, inspirationHelps, inspiredCheck, withoutInspiration } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
+import { legendaryActionsOf } from "../sheet/legendary-actions"
 import { attackWithReactions, ordered } from "../sheet/reactions"
 import { checkAdds, saveBonusFor, settleConcentration } from "../sheet/spell-effects"
 import { castAgain, castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
@@ -27,6 +28,7 @@ import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narr
 import { hasFled, isDead, isDown } from "../utils/turn-actors"
 import { DEATH_SAVE, isAttackRoll, isCastRoll, isDeathSaveRoll, isFeatureRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules } from "../wiki-adventures/player-safety"
+import { legendaryAfterHero } from "./legendary-action-service"
 
 export function getEncounterInstructionsFromPlan(plan: AdventurePlan, encounterId: string): string {
   for (const section of plan.sections) {
@@ -162,6 +164,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
     const { rollType, mode } = required
     const by = { step: "roll" as const, character: args.character.id }
     const rules = { playerDeath: args.playerDeath }
+    // The hero's turn is over: a Legendary creature may act on it, told after the turn's own story (../sheet/legendary-actions).
+    const afterTurn = async (done: { story: StoryBeat[]; characters: TurnCharacter[] }) => {
+      if (!done.characters.some((character) => legendaryActionsOf(character))) return done
+      const acted = legendaryAfterHero({ characters: done.characters, heroId: args.characterId, floor: await ports.content.floor?.(args.turn.encounterId), rules })
+      return { story: [...done.story, ...acted.beats], characters: acted.characters }
+    }
     if (isDeathSaveRoll(required)) {
       // A dying hero's Death Saving Throw: the rules decide it, and the roll beat tells it. No model is asked.
       // With Advantage (Beacon of Hope) the higher of two dice counts, its 1 or 20 too.
@@ -175,12 +183,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
         ...rollBeat(by, args.character, DEATH_SAVE.rollType, { dice, natural, bonus, total: natural + bonus, dc: DEATH_SAVE.difficulty, success: saved.success, mode }),
         deathSave: { ...saved.saves, ...(fate ? { fate } : {}) },
       }
-      return {
+      return afterTurn({
         ...withStory(args.turn, [beat]),
         characters: args.turn.characters.map((character) =>
           character.id === args.characterId ? { ...saved.character, rollRequired: undefined, rollResult: natural, isComplete: true, hasReplied: true } : character
         ),
-      }
+      })
     }
     let turnCharacters = args.turn.characters
     // The encounter's floor: what a hit moves is walked over it, and what the roll used up reads it.
@@ -197,11 +205,10 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // Whether the roller's Bardic Inspiration die was rolled, and so is spent.
     let inspired = false
     if (isFeatureRoll(required)) {
-      // A class feature used as the action (Channel Divinity): the engine rolls it and every target's save, and spends
-      // the use, as it does a spell that asks for no throw. It is told by the same path as a cast.
-      const resolve = effectChoice(required.feature.id)?.resolve
-      if (!resolve) throw new Error(`"${required.feature.id}" is no class feature's effect.`)
-      const used = resolve({ characters: turnCharacters as Featured[], actorId: args.characterId, feature: required.feature, d20: rollD20, roll: rollDie, rules })
+      // A class feature used as the action (Channel Divinity), or a Beast's breath in Wild Shape: the engine rolls it and
+      // every target's save, and spends the use, as it does a spell that asks for no throw. It is told by the same path
+      // as a cast.
+      const used = featureResolver(required.feature.id)({ characters: turnCharacters as Featured[], actorId: args.characterId, feature: required.feature, d20: rollD20, roll: rollDie, rules })
       turnCharacters = used.characters as typeof turnCharacters
       const { name } = used
       rolls = castBeats(by, args.character, { name }, used, storyNames(args.turn.characters), "uses")
@@ -293,6 +300,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         inspiration: args.character.inspiration,
         cover: required.attack.cover,
         choices: required.attack.choices,
+        charge: required.attack.charge,
         ask: (offer) => ordered(standing.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
       })
       blow = made.blow
@@ -415,10 +423,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         : afterHarm(character)
     )
 
-    return {
-      story: newStory,
-      characters: updatedCharacters,
-    }
+    return next ? { story: newStory, characters: updatedCharacters } : afterTurn({ story: newStory, characters: updatedCharacters })
   }
   return { resolvePlayerRollNarrativeAndCharacters }
 }

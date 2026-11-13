@@ -2590,5 +2590,141 @@
     "bonus": {
       "feature": "wild-shape-wolf"
     }
+  },
+  {
+    "id": "drake-breathes",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "the-beast-escapes",
+    "hero": "branka-stoneveil",
+    "allies": ["milos-radan"],
+    "actor": "forest-drake",
+    "narrative": "Branka and Milos close on the drake from either side of the gangplank.",
+    "action": "The drake rears back and breathes a choking green cloud of poison over Branka and Milos.",
+    "checks": ["poison-breath"],
+    "feature": {
+      "id": "poison-breath",
+      "targets": ["branka-stoneveil", "milos-radan"]
+    }
+  },
+  {
+    "id": "drake-breath-spent",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "the-beast-escapes",
+    "hero": "branka-stoneveil",
+    "allies": ["milos-radan"],
+    "actor": "forest-drake",
+    "usesOn": {
+      "forest-drake": {
+        "Poison Breath": 1
+      }
+    },
+    "narrative": "The poison cloud thins over the quay. Branka stands before the drake, her shield raised.",
+    "action": "The drake lunges at Branka, tearing at her with claw and jaw.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "rend",
+      "target": "branka-stoneveil"
+    }
+  },
+  {
+    "id": "spy-disengages",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "actor": "scarface-alaric",
+    "narrative": "Steel rings in the warehouse. Branka presses Alaric back against the crates.",
+    "action": "Alaric slashes at Branka with his shortsword, then slips nimbly out of her reach before she can answer.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortsword",
+      "target": "branka-stoneveil"
+    },
+    "bonus": {
+      "feature": "cunning-action-disengage"
+    }
+  },
+  {
+    "id": "spy-hides",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "actor": "scarface-alaric",
+    "narrative": "Steel rings in the warehouse. Alaric has backed off among the stacked crates.",
+    "action": "Alaric fires his hand crossbow at Milos, then ducks behind the stacked crates out of sight.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "hand-crossbow",
+      "target": "milos-radan"
+    },
+    "bonus": {
+      "feature": "cunning-action-hide"
+    }
+  },
+  {
+    "id": "bandit-plain",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "beset-by-street-urchins",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "actor": "finn-swiftfoot",
+    "narrative": "Branka has caught Mara by the wrist. Finn draws a scimitar from under his coat.",
+    "action": "Finn slashes at Branka with his scimitar to make her let go.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "scimitar",
+      "target": "branka-stoneveil"
+    }
+  },
+  {
+    "id": "drake-breathes-floor",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "the-beast-escapes",
+    "hero": "branka-stoneveil",
+    "allies": ["milos-radan"],
+    "actor": "forest-drake",
+    "floor": true,
+    "at": {
+      "forest-drake": [22, 12],
+      "branka-stoneveil": [8, 12],
+      "milos-radan": [8, 16]
+    },
+    "narrative": "Branka and Milos stand side by side a dozen feet from the drake.",
+    "action": "The drake rears back and breathes a choking green cloud of poison over Branka and Milos.",
+    "checks": ["poison-breath"],
+    "feature": {
+      "id": "poison-breath",
+      "targets": ["branka-stoneveil", "milos-radan"]
+    },
+    "moved": {
+      "none": true
+    }
+  },
+  {
+    "id": "grapple-escape",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "narrative": "The owlbear has caught Thalbern in its forelegs and crushes him against its chest. He is held fast.",
+    "action": "I twist and shove against its grip to wrench myself free.",
+    "conditionsOn": {
+      "thalbern": [
+        {
+          "id": "grappled",
+          "source": "owlbear"
+        }
+      ]
+    },
+    "checks": ["athletics", "acrobatics"],
+    "dcs": [15],
+    "stakes": [
+      {
+        "on": "success",
+        "target": "thalbern",
+        "kind": "end-condition",
+        "condition": "grappled"
+      }
+    ]
   }
 ]

@@ -9,6 +9,7 @@ import { afterClassAttackRoll, classCheckBonus, turnEffectRule } from "./class-r
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
+import { detached } from "./hit-riders"
 import { type Floor, type Point, pushed, sizeOf, walkOver } from "./space"
 import { afterAttackRoll } from "./spell-effects"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
@@ -25,8 +26,10 @@ import type { SpellEffect, TurnEffect } from "./turn-effect"
  * Hide: a DC 15 Dexterity (Stealth) check, and on a success the character has the Invisible condition. It ends when
  * they make an attack roll.
  * Dash and Disengage are taken and recorded. What they change is movement, which stage 6 of plans/srd-rules.md gives.
+ * Escape, as a stat block's text gives it: a creature attached to one (a Stirge) is pulled off by them or by one within
+ * 5 feet of them, and nothing is rolled (./hit-riders). Breaking a grapple is a check, which the read makes.
  */
-export type TakenAction = { action: "dodge" } | { action: "help"; target: string; skill?: SkillId } | { action: "dash" } | { action: "disengage" }
+export type TakenAction = { action: "dodge" } | { action: "help"; target: string; skill?: SkillId } | { action: "dash" } | { action: "disengage" } | { action: "escape"; target: string }
 
 /** The Difficulty Class of the Hide action's Dexterity (Stealth) check. */
 export const HIDE_DC = 15
@@ -69,6 +72,12 @@ export function takeAction<T extends Acting>(characters: readonly T[], actorId: 
   if (taken.action === "dodge") return { characters: put(give(actor, { id: "dodging", by: actor.id, turns: 2 })), fact: `${actor.name} takes the Dodge action.` }
   if (taken.action === "dash") return { characters: [...characters], fact: `${actor.name} takes the Dash action.` }
   if (taken.action === "disengage") return { characters: [...characters], fact: `${actor.name} takes the Disengage action.` }
+  if (taken.action === "escape") {
+    const freed = characters.find((character) => character.id === taken.target)
+    const holder = characters.find((character) => freed?.turnEffects?.some((effect) => effect.id === "attached" && effect.by === character.id))
+    if (!freed || !holder) return { characters: [...characters] }
+    return { characters: put(detached(freed)), fact: `${actor.name} pulls ${holder.name} off ${freed.id === actor.id ? "themselves" : freed.name}.` }
+  }
   const target = characters.find((character) => character.id === taken.target && character.id !== actor.id)
   if (!target) return { characters: [...characters] }
   if (target.type === actor.type) {
@@ -229,6 +238,7 @@ export function turnEffectWords(character: { turnEffects?: readonly TurnEffect[]
       if (effect.id === "helped") return [`Helped with ${skillById.get(effect.skill ?? "stealth")?.name}`]
       if (effect.id === "vexed") return ["Vexed"]
       if (effect.id === "slowed") return ["Slowed"]
+      if (effect.id === "attached") return ["Attached"]
       if (effect.id === "distracted") return ["Distracted"]
       const words = turnEffectRule(effect.id)?.words?.(effect)
       return words ? [words] : []

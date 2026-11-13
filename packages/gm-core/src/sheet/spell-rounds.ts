@@ -9,10 +9,13 @@ import { conditionName, withCondition } from "./conditions"
 import { afterHarm, type DeathRules, regenerate, withDamage } from "./death"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { ridersAtRoundEnd } from "./hit-riders"
+import { legendaryResistanceWords, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { typesTaken } from "./monster-traits"
 import { type Point, placedOf, within } from "./space"
 import { AREA_SPELLS, type ConcentrationSave, endConcentration, settleConcentration, spellEnded } from "./spell-effects"
 import { type Castee, rollSave, type SaveRoll, spellcastingFor } from "./spells"
+import { recharged } from "./stat-block-actions"
 
 /**
  * What lasting spells do as one round gives way to the next. The engine runs a round as everyone's turns together, so
@@ -74,8 +77,14 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
   }
   const save = (target: T, ability: AbilityId, caster: T, spell: Spell, against: readonly ConditionId[] = []) => {
     const dc = spellcastingFor(caster, spell.id)?.saveDc ?? 10
-    const thrown = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters, against })
+    // Made to avoid or end the conditions it names, which a Legendary creature may choose to succeed against.
+    const thrown = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters, against, stakes: { conditions: against } })
     saves.push(thrown)
+    if (thrown.legendary) {
+      const spent = withLegendaryResistanceSpent(find(target.id) ?? target)
+      put(spent)
+      tell(target.id, spell.name, legendaryResistanceWords(target.name, spent))
+    }
     return thrown
   }
   const verdict = (target: T, thrown: SaveRoll, spell: Spell, caster: T) =>
@@ -218,8 +227,9 @@ export type RoundFact = { character: string; spell: string; text: string }
 
 /**
  * The turn of a round within an encounter, before the next begins (./death `atRoundStart`): what lasting spells do
- * (`spellsAtRoundEnd`), then Concentration settled for anyone they hurt or dropped, then Regeneration as each turn
- * begins (./death `regenerate`), then what a class does as a round begins (./classes). Regeneration belongs to the
+ * (`spellsAtRoundEnd`), then a stat block's holds (./hit-riders `ridersAtRoundEnd`), then Concentration settled for anyone they hurt or dropped, then a stat block's Recharge rolled
+ * and Regeneration as each turn begins (./stat-block-actions `recharged`, ./death `regenerate`), then what a class does
+ * as a round begins (./classes). Regeneration belongs to the
  * start of the creature's turn, and the engine starts every turn of a round at once, right after this: it runs here so
  * its fact reaches the story with the round's others. Everyone comes back as it left them, with each fact about the
  * one it is about, for the story: a Concentration save's too, under Concentration, Regeneration's under the trait's
@@ -232,15 +242,18 @@ export function roundTurns<T extends Castee & { position?: Point }>(args: {
   rules?: DeathRules
 }): { characters: T[]; told: RoundFact[]; saves: ConcentrationSave[] } {
   const ended = spellsAtRoundEnd(args)
+  // A stat block's holds: those ended let go, and one attached drains the one it holds (./hit-riders).
+  const held = ridersAtRoundEnd({ characters: ended.characters, roll: args.roll, rules: args.rules })
   const kept = settleConcentration({
     before: args.characters,
-    after: ended.characters,
+    after: held.characters,
     bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
     modes: classConcentrationModes,
     d20: args.d20,
   })
   const lost = kept.facts.map((text) => ({ character: args.characters.find((character) => character.name && text.startsWith(character.name))?.id ?? "", spell: "Concentration", text }))
-  const regenerated = kept.characters.map((character) => regenerate(character))
+  // A stat block's spent Recharge rolls its d6 as the creature's turn starts (./stat-block-actions), with no telling.
+  const regenerated = kept.characters.map((character) => regenerate(recharged(character, args.roll)))
   const regrown = regenerated.flatMap(({ character, fact, trait }) => (fact && trait ? [{ character: character.id, spell: trait, text: fact }] : []))
   const classed: RoundFact[] = []
   const characters = regenerated.map(({ character }) =>
@@ -250,7 +263,7 @@ export function roundTurns<T extends Castee & { position?: Point }>(args: {
       return begun.character
     }, character)
   )
-  return { characters, told: [...ended.told, ...lost.filter((fact) => fact.character), ...regrown, ...classed], saves: kept.saves }
+  return { characters, told: [...ended.told, ...held.told, ...lost.filter((fact) => fact.character), ...regrown, ...classed], saves: kept.saves }
 }
 
 // Fear's repeated save is made only "If the creature ends its turn in a space where it doesn't have line of sight to

@@ -1,4 +1,4 @@
-import type { AbilityId, DamageTypeId } from "@d20/srd"
+import type { AbilityId, DamageTypeId, Size } from "@d20/srd"
 import { damageTypeIds } from "@d20/srd"
 import { equipmentById } from "@d20/srd/equipment"
 import { featById } from "@d20/srd/feats"
@@ -13,6 +13,7 @@ import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death
 import { deriveSheet, trainedWith } from "./derive"
 import { criticalFrom, type OncePerTurn, usedThisTurn } from "./feature-rules"
 import type { ConditionChange } from "./harm"
+import { type BlockRider, blockRidersOnHit, blockRiderWords, chargeOf, noLargerThan, type RiderHeld, readRiders, STAT_BLOCK_RIDER } from "./hit-riders"
 import { typesTaken } from "./monster-traits"
 import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
@@ -40,13 +41,19 @@ export type Attack = {
   range?: { normal: number; long?: number }
   /** Damage a hit deals only when its gate holds: a Goblin's 1d4 with Advantage, a swarm's lesser Bites once it is Bloodied. */
   gated?: GatedDamage[]
+  /** What a stat block's attack does on a hit beyond its damage: a condition, a save, a grapple, an attachment (./hit-riders). */
+  riders?: BlockRider[]
 }
 
-/** The gates on a hit's damage the engine can judge (`gateOf`). */
-export type DamageGate = "advantage" | "bloodied" | "target-bloodied" | "grappled-by-attacker"
+/** The gates on a hit's damage the engine can judge (`gateOf`), and a charge (./hit-riders `chargeOf`). */
+export type DamageGate = "advantage" | "bloodied" | "target-bloodied" | "grappled-by-attacker" | "charge"
 
-/** A damage part dealt only when its gate holds. `replaces` is the index in the attack's damage of the part it is dealt in place of. */
-export type GatedDamage = { part: DamagePart; when: DamageGate; replaces?: number }
+/**
+ * A damage part dealt only when its gate holds. `replaces` is the index in the attack's damage of the part it is dealt
+ * in place of. A charge's part holds the feet the attacker must have moved straight toward the target, and the size the
+ * target may be at most.
+ */
+export type GatedDamage = { part: DamagePart; when: DamageGate; replaces?: number; charge?: { feet: number; size?: Size } }
 
 /** The id every character's Unarmed Strike goes by. */
 export const UNARMED_STRIKE = "unarmed-strike"
@@ -147,12 +154,17 @@ function blockAttacks(monster: Monster): Attack[] {
     const plain = printed.filter((part) => part.on === "hit" && part.type && !part.appliesWhen && !part.unless && !part.timing && part.alternativeTo === undefined)
     const own = (part: (typeof printed)[number]): DamagePart => ({ ...(part.dice ? { dice: part.dice } : { amount: part.amount }), type: part.type as DamageTypeId })
     const gated = printed.flatMap((part): GatedDamage[] => {
-      const when = part.on === "hit" && part.type && part.appliesWhen && !part.unless && !part.timing ? gateOf(part.appliesWhen) : undefined
+      const judged = part.on === "hit" && part.type && part.appliesWhen && !part.unless && !part.timing ? part.appliesWhen : undefined
+      const charge = judged ? chargeOf(judged) : undefined
+      const when = charge ? "charge" : judged ? gateOf(judged) : undefined
       if (!when) return []
       const replaced = part.alternativeTo === undefined ? undefined : plain.indexOf(printed[part.alternativeTo])
       if (replaced === -1) return []
-      return [{ part: own(part), when, ...(replaced === undefined ? {} : { replaces: replaced }) }]
+      return [{ part: own(part), when, ...(replaced === undefined ? {} : { replaces: replaced }), ...(charge ? { charge } : {}) }]
     })
+    // What the hit does beyond its damage, when its text is read in full (./hit-riders).
+    const read = readRiders(action)
+    const riders = "riders" in read ? read.riders : []
     const { reach, range } = action.attack
     return [
       {
@@ -162,6 +174,7 @@ function blockAttacks(monster: Monster): Attack[] {
         bonus: action.attack.bonus,
         damage: plain.map(own),
         ...(gated.length ? { gated } : {}),
+        ...(riders.length ? { riders } : {}),
         // A melee attack that prints no reach reaches 5 feet.
         ...(action.attack.kind !== "ranged" ? { reach: reach ?? BASE_REACH } : {}),
         ...(range ? { range: { normal: range.normal, ...(range.long !== undefined ? { long: range.long } : {}) } } : {}),
@@ -197,9 +210,12 @@ export function gateOf(words: string): DamageGate | undefined {
   return undefined
 }
 
-/** Whether a part's gate holds as the hit lands. */
-function gateHolds(gate: DamageGate, at: { mode: RollMode; attacker: Roller & { hitPoints?: number }; target: Target; before: number; maximum: number }): boolean {
-  switch (gate) {
+/**
+ * Whether a part's gate holds as the hit lands. `charged` is the feet the attacker moved straight toward the target
+ * immediately before the hit.
+ */
+function gateHolds(gated: GatedDamage, at: { mode: RollMode; attacker: Roller & { hitPoints?: number }; target: Target; before: number; maximum: number; charged?: number }): boolean {
+  switch (gated.when) {
     case "advantage":
       return at.mode === "advantage"
     case "bloodied": {
@@ -210,6 +226,8 @@ function gateHolds(gate: DamageGate, at: { mode: RollMode; attacker: Roller & { 
       return at.before * 2 <= at.maximum
     case "grappled-by-attacker":
       return (at.target.conditions ?? []).some((entry) => entry.id === "grappled" && entry.source === at.attacker.id)
+    case "charge":
+      return !!gated.charge && (at.charged ?? 0) >= gated.charge.feet && (!gated.charge.size || noLargerThan(at.target, gated.charge.size))
   }
 }
 
@@ -217,7 +235,7 @@ function gateHolds(gate: DamageGate, at: { mode: RollMode; attacker: Roller & { 
 export function damageOnHit(attack: Attack, at: Parameters<typeof gateHolds>[1]): DamagePart[] {
   const parts: (DamagePart | undefined)[] = [...attack.damage]
   for (const gated of attack.gated ?? []) {
-    if (!gateHolds(gated.when, at)) continue
+    if (!gateHolds(gated, at)) continue
     if (gated.replaces === undefined) parts.push(gated.part)
     else parts[gated.replaces] = gated.part
   }
@@ -422,6 +440,8 @@ export type StrikeArgs<T extends Target> = {
   choices?: Record<string, string>
   /** Asked once the damage is known, before it is dealt: a Reaction that cuts it, by its id, and what is taken instead (Uncanny Dodge). */
   reduce?: (taken: number, types: readonly DamageTypeId[]) => { id: string; taken: number } | undefined
+  /** Feet the attacker moved straight toward the target immediately before this attack, for a stat block's charge (./hit-riders). */
+  charged?: number
 }
 
 /** An attack rolled and not yet landed: everything decided before the damage, where a reaction to the hit may fall. */
@@ -485,7 +505,7 @@ export function againstArmorClass(rolled: RolledAttack, armorClass: number): Rol
  * comes back as the blow left them.
  */
 export function landBlow<T extends Target>(
-  args: Pick<StrikeArgs<T>, "attacker" | "target" | "roll" | "rules" | "present" | "turnOf" | "choices" | "reduce">,
+  args: Pick<StrikeArgs<T>, "attacker" | "target" | "roll" | "rules" | "present" | "turnOf" | "choices" | "reduce" | "charged">,
   rolled: RolledAttack
 ): Strike & { target: T } {
   const { attack, roll } = rolled
@@ -526,7 +546,7 @@ export function landBlow<T extends Target>(
   const enchanted = weapon ? weaponDamageFromSpells(args.attacker).map(({ name, damage }) => ({ name, damage: { amount: damage.amount, type: damage.type ?? attack.damage[0]?.type ?? "force" } })) : []
   const extra = [...features, ...markDamage(args.attacker.id, args.target), ...enchanted]
   const savage = weapon && !!args.attacker.sheet && deriveSheet(args.attacker.sheet).feats.includes("savage-attacker") && !usedThisTurn(args.attacker, "savage-attacker", args.turnOf)
-  const own = damageOnHit(attack, { mode: roll.mode, attacker: args.attacker, target: args.target, before, maximum: stats.hitPointMaximum })
+  const own = damageOnHit(attack, { mode: roll.mode, attacker: args.attacker, target: args.target, before, maximum: stats.hitPointMaximum, charged: args.charged })
   const dealt = retyped ? own.map((part) => ({ ...part, type: retyped })) : own
   const first = rollDamage(dealt, args.roll, roll.critical)
   const second = savage ? rollDamage(dealt, args.roll, roll.critical) : undefined
@@ -560,6 +580,11 @@ export function landBlow<T extends Target>(
     if (rode.spends) charged.push(rode.spends)
     if (rode.once) used.push(rode.once)
   }
+  // What a stat block's attack does beyond its damage, after a class's: a Wolf's Prone, a Giant Crab's grapple.
+  const block = blockRidersOnHit({ attacker: args.attacker, target: struck.character, attack, roll: args.roll, present: args.present as RiderHeld[] | undefined, charged: args.charged })
+  struck = { ...struck, character: block.target }
+  riders.push(...block.riders)
+  conditions.push(...block.conditions)
   return {
     attack,
     ...(names.length ? { features: names } : {}),
@@ -619,6 +644,6 @@ export function strikeFacts(attacker: string, target: string, blow: Strike): str
       ? fallen(target, blow)
       : `${target} has ${hitPoints.after} of ${hitPoints.maximum} hit points left${hitPoints.after * 2 <= hitPoints.maximum ? " and is Bloodied" : ""}.`
   const halved = blow.reduced ? (reactionRule(blow.reduced.id)?.damageWords?.(target) ?? "") : ""
-  const trip = (blow.riders ?? []).map((rider) => hitRule(rider.id)?.words?.(attacker, target, rider) ?? "").join("")
+  const trip = (blow.riders ?? []).map((rider) => (rider.id === STAT_BLOCK_RIDER ? blockRiderWords(attacker, target, rider) : (hitRule(rider.id)?.words?.(attacker, target, rider) ?? ""))).join("")
   return `${attacker}'s ${attack.name} attack on ${target} ${roll.critical ? "is a CRITICAL HIT" : "HITS"}${blow.features?.length ? ` with a ${blow.features.join(" and ")}` : ""} (${roll.total} against Armor Class ${roll.armorClass}) for ${blow.taken} ${types} damage.${halved} ${stands}${trip}`
 }

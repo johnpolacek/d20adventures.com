@@ -14,8 +14,9 @@ export type ActionId = (typeof actionIds)[number]
  * their Speed. "reacted" is on one who has taken their Reaction this round, by themselves: they take no other until the
  * next round begins. "savage-attacker" marks the feat used once a turn, on the attacker, with `by` the one whose turn
  * it was. "regeneration-stopped" is on a creature with Regeneration that took damage of a type that stops it (a
- * Troll's Acid or Fire), by itself: the trait does not work as its next turn begins (./monster-traits). All of them end
- * as the next round begins. A class's own, its once-a-turn marks among them ("sneak-attack"), are named in its class
+ * Troll's Acid or Fire), by itself: the trait does not work as its next turn begins (./monster-traits). "attached" is
+ * on a creature a stat block's attack attached to (a Stirge's Proboscis), by the attacker, renewed as each round turns
+ * while it holds on (./hit-riders). All of them end as the next round begins. A class's own, its once-a-turn marks among them ("sneak-attack"), are named in its class
  * file (./classes), which this file does not read: the browser loads it, and the class files read the SRD. Only the
  * engine writes it, through ./actions, ./death, ./reactions, ./attack and the class files.
  */

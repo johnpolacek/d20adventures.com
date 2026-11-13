@@ -6,10 +6,11 @@ import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../s
 import { attacksOf } from "../sheet/attack"
 import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
 import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
-import { bonusActionRule, type ChoiceRule, choiceRules, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast } from "../sheet/class-rules"
+import { type ChoiceRule, choiceRules, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast } from "../sheet/class-rules"
 import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
-import { bonusActionsOf, usable } from "../sheet/features"
+import { bonusActionsOf, bonusRuleFor, usable } from "../sheet/features"
+import { chargedFeet, escapeFrom } from "../sheet/hit-riders"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
@@ -21,6 +22,7 @@ import { castInSpace } from "../sheet/spell-space"
 import { againOf, castableOnTurn, castCost, longCasting, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellLabel, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
+import { blockActionsOf, blockActionWords } from "../sheet/stat-block-actions"
 import { actionIds } from "../sheet/turn-effect"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
@@ -140,7 +142,7 @@ export function createRollRequirementService(ports: GmPorts) {
   async function readAction(action: string, character: Character, options?: Options): Promise<TurnReading> {
     const reading = await readPicked(action, character, options)
     const self = "id" in character ? character.id : undefined
-    const rule = bonusActionRule(reading.bonus?.feature)
+    const rule = bonusRuleFor(character, reading.bonus?.feature)
     if (rule?.still && reading.move) {
       const { bonus: _, ...rest } = reading
       return rest
@@ -178,13 +180,21 @@ export function createRollRequirementService(ports: GmPorts) {
       const feet = mover ? feetBetween(mover, other) : undefined
       return feet === undefined ? undefined : `${Math.round(feet)} feet away`
     }
+    // Who a creature is attached to that the roller may pull off as their action: themselves, or an ally within 5 feet (../sheet/hit-riders).
+    const beside = (other: Present) => {
+      const feet = mover ? feetBetween(mover, other) : undefined
+      return feet === undefined || attackReach({ distance: feet, reach: 5 }) !== "out"
+    }
+    const freeable = [{ ...character, id: self ?? "" }, ...others.filter((other) => other.type === character.type && beside(other))].filter((other) =>
+      other.turnEffects?.some((effect) => effect.id === "attached")
+    )
     const conditions = conditionWords(character)
     const form = shapeOf(character)
     const attacks = attacksOf(character)
     const bonusActions = bonusActionsOf(character).filter(usable)
     // The attacks the hero has once a Bonus Action that changes them is taken (Wild Shape's form), by its id.
     const becoming = bonusActions.flatMap((entry) => {
-      const becomes = bonusActionRule(entry.id)?.becomes
+      const becomes = bonusRuleFor(character, entry.id)?.becomes
       if (!becomes) return []
       const after = becomes(character)
       return [{ id: entry.id, attacks: attacksOf(after), casts: !classCastingBar(after) && spellsOf(after).length > 0 }]
@@ -207,6 +217,9 @@ export function createRollRequirementService(ports: GmPorts) {
           return values === undefined ? [] : [{ rule, values }]
         })
       : []
+    // The actions of the roller's stat block that are a save (a breath weapon), those it can take now: an NPC's own, or
+    // the Beast's a hero holds with Wild Shape (../sheet/stat-block-actions).
+    const blockActions = blockActionsOf(character)
     // What the roller's class tells them of another, beside them in Who Is Here: a Hunter's Lore.
     const sees = (other: Present) => (self ? seesRules().map((rule) => rule({ ...character, id: self }, other)) : [])
     // A spell cast as a Reaction (Shield, Counterspell) is cast only when its trigger is offered, never on a turn.
@@ -214,9 +227,11 @@ export function createRollRequirementService(ports: GmPorts) {
     // The spells the caster holds and may use again this turn with no cost: Spiritual Weapon's attack, Heat Metal's burn, Vampiric Touch.
     const held = self ? againOf({ ...character, id: self }) : []
     const heldBonus = held.filter((entry) => entry.takes === "bonus-action")
-    // The spells of theirs that take a Bonus Action and can be paid for now. One they hold is used again, not cast.
+    // The spells of theirs that take a Bonus Action and can be paid for now, a stat block's cast as one among them. One
+    // they hold is used again, not cast.
     const bonusSpells = knownSpells.filter(
-      (known) => known.spell.castingTime.unit === "bonus-action" && !held.some((entry) => entry.spell.id === known.spell.id) && !("problem" in castCost(character, known.spell.id))
+      (known) =>
+        (known.spell.castingTime.unit === "bonus-action" || known.bonusAction) && !held.some((entry) => entry.spell.id === known.spell.id) && !("problem" in castCost(character, known.spell.id))
     )
     const slots = slotsLeft(character)
     // What kind of spell each is, so the game master knows who it is cast on. One the game does not run is told by the
@@ -332,7 +347,7 @@ ${
      "hide": they get out of sight to strike or slip away unseen. The game rolls stealth for it and sets its difficulty, so give none.
      "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
      "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
-     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
+${freeable.length ? `     "escape": they give the turn to pulling off a creature attached to them or to an ally beside them, and nothing is rolled. "target" is the id of who is freed: ${freeable.map((other) => other.id).join(" or ")}.\n` : ""}     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
    - BONUS ACTIONS: beside the action above, the character may use one of their own Bonus Actions in the same turn. Set "bonus" to its id only when their words plainly use it, and leave it out otherwise. One given to someone else takes "bonusTarget", that ally's id.
      Their Bonus Actions: ${
        [
@@ -354,14 +369,20 @@ ${
        ].join(", ") || "none"
      }.
      A spell cast with a Bonus Action goes in "bonus" when the character also does something else this turn, and in "check" as a "cast" when it is all they do.${[
-       ...new Set(bonusActions.flatMap((entry) => bonusActionRule(entry.id)?.note ?? [])),
+       ...new Set(bonusActions.flatMap((entry) => bonusRuleFor(character, entry.id)?.note ?? [])),
      ]
        .map(
          (note) => `
      ${note}`
        )
        .join("")}
-${choices.map(({ rule, values }) => rule.prompt(values)).join("")}   - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
+${
+  blockActions.length
+    ? `   - THEIR STAT BLOCK'S ACTIONS: when the character uses one of these as the action, "check" is its id and "targets" are who it is aimed at, from Who Is Here. The game rolls every save and all the damage, so it takes no "difficulty" and no "harm". One that takes an area takes whoever stands in it, friend or foe: the one it is aimed at goes first in "targets".
+     ${blockActions.map((entry) => `${entry.id} (${entry.name}: ${blockActionWords(entry)})`).join(", ")}.
+`
+    : ""
+}${choices.map(({ rule, values }) => rule.prompt(values)).join("")}   - SPELLS: when the character casts one of their own spells, "check" is "cast", "spell" is its id from Their Spells, and "targets" are the ids of everyone it is cast on, from Who Is Here or the character's own id${self ? `, ${self}` : ""}. The game knows every spell and rolls it, so a cast takes no "difficulty" and no "harm". A spell that takes several creatures names each of them. One that touches no creature, such as a light or a sensing, names no one.
      Their Spells: ${spellLines.join(", ") || "none"}.${slots.length ? ` Spell slots left: ${slotWords(character)}.` : ""}${
        held.length
          ? `
@@ -435,7 +456,7 @@ Action: "${action}"
           : rollPickSchema.shape[key]
       // The choices of the hero's class are on the menu only while the hero has them and can use them. One used as the
       // whole action is a check of the menu's own.
-      const checks = choices.flatMap(({ rule }) => (rule.check ? [rule.check] : []))
+      const checks = [...choices.flatMap(({ rule }) => (rule.check ? [rule.check] : [])), ...blockActions.map((entry) => entry.id), ...(freeable.length ? ["escape"] : [])]
       const chosen: Record<string, z.ZodType> = checks.length ? { check: z.enum([...rollPickSchema.shape.check.options, ...checks]).describe(rollPickSchema.shape.check.description ?? "") } : {}
       for (const { rule, values } of choices) chosen[rule.key] = rule.field(values)
       const schema = rollPickSchema.extend({
@@ -481,7 +502,7 @@ Action: "${action}"
       // movement. An attack in melee may close with its target instead, which is settled where the attack is.
       const ask: MoveAsk = { to: pick.moveTo?.trim() || undefined, away: pick.moveAway?.trim() || undefined, feet: pick.moveFeet }
       // Dash, as the action or with a Bonus Action that moves as one (Cunning Action).
-      const usedRule = bonusActionRule(used?.id)
+      const usedRule = bonusRuleFor(character, used?.id)
       const dash = pick.check === "dash" || !!usedRule?.dash
       const moveFor = (close?: { target: string; reach: number }) => (mover && floor ? takeMove({ floor, mover, others, ask, dash, close }) : undefined)
       const moved = (move: Moved | undefined) => {
@@ -685,6 +706,8 @@ Action: "${action}"
           cover: pick.cover,
           modes: [...(aiming ? (usedRule?.attackModes ?? []) : []), ...chosenModes],
           moved: also.move?.feet,
+          // A charge: how far the move ran straight at the one attacked, up to where it ended (../sheet/hit-riders).
+          charged: also.move && acting.position && target.position ? chargedFeet(acting.position, also.move.path, target.position) : undefined,
           choices: onAttack,
           after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { actions, weapon: attack.id }) : undefined,
         })
@@ -697,6 +720,37 @@ Action: "${action}"
         const roll = chosenBonus ? { ...made.roll, modifier: made.roll.modifier + chosenBonus } : made.roll
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...roll })
         return { roll, ...also }
+      }
+      // An action of the stat block that is a save, used as the whole action: the game rolls it as it is resolved, as a
+      // class feature used as the action is. On a floor its area is measured where the move left the roller, and takes
+      // whoever stands in it. Elsewhere it takes those named, and the only one standing when none is.
+      const block = blockActions.find((entry) => entry.id === pick.check)
+      if (block) {
+        const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
+        const asked = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])]
+        let chosen = [...new Set(asked.flatMap((given) => everyone.find((other) => other.id !== self && named(given, other.name, other.id))?.id ?? []))]
+        if (!chosen.length && standing.length === 1) chosen = [standing[0].id]
+        const range = block.area
+          ? { kind: block.range === undefined ? ("self" as const) : ("feet" as const), ...(block.range === undefined ? {} : { distance: block.range }), area: block.area }
+          : { kind: "feet" as const, distance: block.range }
+        const stood = withMove(character, also.move)
+        const spaced = mover && floor ? castInSpace({ spell: { name: block.name, range }, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
+        if (spaced?.problem) {
+          also.ruling = spaced.problem
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
+          return { roll: null, ...also }
+        }
+        const targets = (spaced?.targets ?? chosen).filter((id) => id !== self).slice(0, block.area ? undefined : 1)
+        const cover = Object.fromEntries(Object.entries(spaced?.cover ?? {}).filter(([id]) => targets.includes(id)))
+        const feature: RequiredFeature = {
+          feature: { id: block.id, targets, ...(Object.keys(cover).length ? { cover } : {}) },
+          rollType: block.name,
+          difficulty: block.dc,
+          modifier: 0,
+          mode: "normal",
+        }
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, feature: feature.feature })
+        return { roll: null, feature, ...also }
       }
       // A class feature used as the whole action (Channel Divinity): its class file makes the reading.
       const acting = choices.find(({ rule }) => rule.check && rule.act && pick.check === rule.check)
@@ -712,6 +766,14 @@ Action: "${action}"
         return { roll: null, rest, ...also }
       }
       const here = new Set((options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other)).map((other) => other.id))
+      // Pulling off a creature attached to the roller or to an ally beside them is the action, and nothing is rolled
+      // (../sheet/hit-riders).
+      if (pick.check === "escape") {
+        const freed = freeable.find((other) => other.id === pick.target?.trim()) ?? (freeable.length === 1 ? freeable[0] : undefined)
+        const read: TakenAction | undefined = freed ? { action: "escape", target: freed.id } : undefined
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, action: read })
+        return { roll: null, ...(read ? { action: read } : {}), ...also }
+      }
       // An action that takes no roll. Help names who it is for, and for a check the skill.
       const taken = actionIds.find((id) => id === pick.check)
       if (taken) {
@@ -723,12 +785,12 @@ Action: "${action}"
       }
       // Hide is a Stealth check the rules set: its target and what a success gives are the engine's.
       const hiding = pick.check === "hide" && self ? hideRoll({ ...character, id: self }) : undefined
-      const check = hiding ? hiding.check : pick.check === "none" || pick.check === "hide" ? undefined : checkFromMenu(pick.check)
+      let check = hiding ? hiding.check : pick.check === "none" || pick.check === "hide" ? undefined : checkFromMenu(pick.check)
       if (!check) {
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
         return { roll: null, ...also }
       }
-      const difficulty = hiding ? HIDE_DC : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
+      let difficulty: number | undefined = hiding ? HIDE_DC : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
       if (!difficulty) throw new Error(`The game master asked for a ${checkName(check)} check with no difficulty.`)
 
       // The stakes, each off the menus: who, the dice by size or as the notes print them, and the damage type, or a
@@ -753,6 +815,15 @@ Action: "${action}"
         return [{ on: entry.on, target: entry.target, kind: entry.kind, dice, ...(entry.kind === "damage" && type.success ? { type: type.data } : {}) }]
       })
       const stakes = hiding?.stakes ?? picks
+      // Breaking free of a grapple is a Strength (Athletics) or Dexterity (Acrobatics) check, as the action, against the
+      // grapple's escape DC (../sheet/hit-riders `escapeFrom`). Its success ends the Grappled condition.
+      const freeing = stakes.some((stake) => stake.kind === "condition" && stake.ends && stake.condition === "grappled" && stake.target === self && stake.on === "success")
+      const escaping = freeing ? escapeFrom(character, options?.present ?? []) : undefined
+      if (escaping) {
+        const nimble = (check.kind === "skill" && check.skill === "acrobatics") || (check.kind === "ability" && check.ability === "dex")
+        check = { kind: "skill", skill: nimble ? "acrobatics" : "athletics" }
+        difficulty = escaping.dc
+      }
       // A save made to avoid or end a condition on the roller, for a species trait against it (Fey Ancestry on Charmed).
       const against = stakes.flatMap((stake) => (stake.kind === "condition" && stake.target === self && (stake.ends ? stake.on === "success" : stake.on === "failure") ? [stake.condition] : []))
       // The game master's read of the moment, then what the sheet and the roller's conditions settle with no model.
@@ -763,13 +834,14 @@ Action: "${action}"
         ...checkModesFrom(character, check, options?.present),
         ...(self ? checkModesFromActions({ ...character, id: self }, check, options?.present) : []),
         ...saveModesFor(character, check, against),
+        ...(escaping?.hinders ? [{ mode: "disadvantage" as const, from: `${escaping.holder.name ?? "The grappler"}'s Grip` }] : []),
       ]
       const picked = pick.mode ?? "normal"
       const mode = combineModes([picked, ...typed.map((source) => source.mode)])
       const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
       const rollRequirement: ChosenRoll = {
         check,
-        rollType: hiding ? hiding.rollType : checkName(check),
+        rollType: hiding ? hiding.rollType : escaping ? `Escape (${checkName(check)})` : checkName(check),
         difficulty,
         modifier: classCheckBonus(character, check) + saveBonusFor(character, check),
         mode,

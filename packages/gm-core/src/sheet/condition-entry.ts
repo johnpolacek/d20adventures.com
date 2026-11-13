@@ -21,6 +21,11 @@ export const conditionEntrySchema = z.strictObject({
   turns: z.number().int().min(1).optional(),
   /** The spell that gave it, by SRD id. It ends with that spell: when its caster's Concentration on it breaks. */
   spell: z.string().optional(),
+  /**
+   * The stat block attack that holds the bearer, by id, with `source` its attacker: a grapple and what lasts until the
+   * grapple ends. Ending the Grappled condition ends every one the same attack of the same holder gave (./hit-riders).
+   */
+  attack: z.string().optional(),
   /** An Exhaustion level, 1 to 6. */
   level: z.number().int().min(1).max(6).optional(),
 })

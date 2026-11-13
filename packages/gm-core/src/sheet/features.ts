@@ -1,8 +1,9 @@
 import { classFeatureById } from "@d20/srd/class-features"
-import type { CheckResult } from "./check"
-import { type BonusAction, bonusActionRule, bonusActionRules, type Featured, type FeatureUse } from "./class-rules"
+import type { CheckResult, Roller } from "./check"
+import { type BonusAction, type BonusActionRule, bonusActionRule, bonusActionRules, type ChoiceRule, effectChoice, type Featured, type FeatureUse } from "./class-rules"
 import { deriveSheet } from "./derive"
 import { featureUseCount } from "./feature-rules"
+import { blockBonusActions, blockBonusRule, resolveBlockAction } from "./stat-block-actions"
 import type { Inspiration } from "./turn-effect"
 
 export type { BonusAction, FeatureUse }
@@ -15,15 +16,23 @@ export type { BonusAction, FeatureUse }
  * Uses come back only with a rest, as each feature's data says (./rest). A new encounter gives nothing back.
  */
 
+/** One whose Bonus Actions are read: a hero by the sheet and any Beast's shape held, an NPC by its stat block. */
+type Holder = Pick<Roller, "sheet" | "type" | "statBlock" | "shape"> & { hitPoints?: number; healthPercent?: number; dead?: true; conditions?: Roller["conditions"] }
+
 /** Whether a Bonus Action can be used now: a use left, a slot to buy one, or no count at all. */
 export const usable = (action: BonusAction): boolean => action.left === undefined || action.left > 0 || action.slot !== undefined
 
-/** A hero's Bonus Actions the engine applies, each with its uses. An NPC and a hero with no sheet have none. */
-export function bonusActionsOf(character: Pick<Featured, "sheet" | "featureUses" | "spellSlots">): BonusAction[] {
+/**
+ * A character's Bonus Actions the engine applies, each with its uses: a hero's class features, and those of a stat
+ * block that take an action of a turn (Cunning Action, Nimble Escape), an NPC's own or a Beast's a hero holds with Wild
+ * Shape, whose game statistics are the Beast's (./stat-block-actions). A hero with no sheet has none.
+ */
+export function bonusActionsOf(character: Pick<Featured, "featureUses" | "spellSlots"> & Holder): BonusAction[] {
+  const block = blockBonusActions(character).map((entry) => entry.action)
   const sheet = character.sheet
-  if (!sheet) return []
+  if (!sheet) return block
   const derived = deriveSheet(sheet)
-  return bonusActionRules().flatMap((rule): BonusAction[] => {
+  const own = bonusActionRules().flatMap((rule): BonusAction[] => {
     const feature = classFeatureById.get(rule.feature)
     if (!feature || !derived.classFeatures.includes(feature.id) || (rule.offer && !rule.offer(character))) return []
     const targeted = !!rule.targeted
@@ -34,10 +43,26 @@ export function bonusActionsOf(character: Pick<Featured, "sheet" | "featureUses"
     const bought = left === 0 ? rule.buys?.(character) : undefined
     return [{ id: rule.id, name: rule.name ?? feature.name, uses, left, targeted, ...(bought ? { slot: bought } : {}) }]
   })
+  return [...own, ...block]
+}
+
+/** The rule of one of a character's Bonus Actions, by its id: its stat block's, or a class's. */
+export const bonusRuleFor = (character: Holder, id: string | undefined): BonusActionRule | undefined => blockBonusRule(character, id) ?? bonusActionRule(id)
+
+/**
+ * How a feature used as the turn's action (`RequiredFeature`) is resolved, by its effect's id: a class's (Channel
+ * Divinity), or else an action of the user's stat block that is a save (./stat-block-actions), which tells why when
+ * the user has no such action ready.
+ */
+export const featureResolver = (id: string): NonNullable<ChoiceRule["resolve"]> => effectChoice(id)?.resolve ?? resolveBlockAction
+
+/** Whether a move taken with a Bonus Action draws no Opportunity Attacks, by the Bonus Action's own rule and the feet moved. */
+export function bonusDisengages(character: (Featured & { position?: { x: number; y: number } }) | undefined, bonus: string | undefined, feet: number): boolean {
+  return !!character && !!bonusRuleFor(character, bonus)?.disengages?.(character, feet)
 }
 
 /**
- * Use one of a hero's Bonus Actions. Everyone comes back as it left them, with what happened for the story. `roll`
+ * Use one of a character's Bonus Actions. Everyone comes back as it left them, with what happened for the story. `roll`
  * throws one die of the given size. A feature the hero lacks, or one with no uses left, changes nothing and returns no
  * use, and so does one its class file cannot apply (Bardic Inspiration with no one else here to give it to). Some
  * change no one here: the read of the turn applies them to its move and its roll (Cunning Action, Steady Aim).
@@ -52,7 +77,7 @@ export function useBonusAction<T extends Featured>(args: {
   const characters = [...args.characters]
   const actor = characters.find((character) => character.id === args.actorId)
   const action = actor && bonusActionsOf(actor).find((entry) => entry.id === args.feature)
-  const rule = bonusActionRule(action?.id)
+  const rule = actor && bonusRuleFor(actor, action?.id)
   if (!actor || !action || !rule || !usable(action)) return { characters }
   return rule.use({ characters, actor, action, target: args.target, roll: args.roll }) as { characters: T[]; use?: FeatureUse }
 }

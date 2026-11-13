@@ -1,34 +1,25 @@
 import type { GmPorts } from "../ports"
 import { takeAction } from "../sheet/actions"
 import { checkBonus } from "../sheet/check"
-import { bonusActionRule, choiceRule, classConcentrationModes, type Featured } from "../sheet/class-rules"
+import { choiceRule, classConcentrationModes, type Featured } from "../sheet/class-rules"
 import type { ConditionEntry } from "../sheet/condition-entry"
-import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm } from "../sheet/death"
-import { useBonusAction } from "../sheet/features"
+import { bonusDisengages } from "../sheet/features"
 import { moveWithReactions, ordered } from "../sheet/reactions"
 import { partyRest, restName } from "../sheet/rest"
 import type { Sheet } from "../sheet/sheet"
 import { settleConcentration } from "../sheet/spell-effects"
-import { castInSpace } from "../sheet/spell-space"
-import { againOf, castAgain, castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
 import type { TurnEffect } from "../sheet/turn-effect"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames } from "../story/render"
-import { attackBeat, castAnswerBeats, castBeats, concentrationBeat, turnScript } from "../story/turn"
+import { attackBeat, concentrationBeat, turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
 import { rollD20, rollDie } from "../utils/game-utils"
-import { hasFled, isDead, isDown } from "../utils/turn-actors"
+import { useBonus } from "./bonus-action"
 import { createRollRequirementService, type TurnReading } from "./roll-requirement-service"
-
-// Whether a move taken with a Bonus Action draws no Opportunity Attacks, by the Bonus Action's own rule and the feet moved.
-function disengages(character: TurnCharacter | undefined, bonus: string | undefined, feet: number): boolean {
-  const rule = bonusActionRule(bonus)
-  return !!character && !!rule?.disengages?.(character, feet)
-}
 
 export function createAdventureTurnReplyService(ports: GmPorts) {
   const { readAction } = createRollRequirementService(ports)
@@ -165,7 +156,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         // Shift's half Speed taken with Second Wind.
         disengaged:
           action?.action === "disengage" ||
-          disengages(
+          bonusDisengages(
             characters.find((character) => character.id === args.characterId),
             bonus?.feature,
             move.feet
@@ -200,78 +191,25 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         return { fell: true }
       }
     }
-    // A Bonus Action is a class feature of the hero's, or one of their spells that takes one. The spell is cast by
-    // the same rules as any other, and the story keeps it with no telling of its own: the turn's action is told after.
-    // A spell they hold is used again with no cost (Spiritual Weapon's attack). One cast is measured where the hero now
-    // stands, may be countered by the other side, and Magic Missile may draw Shield, each by their standing order.
-    const actor = characters.find((character) => character.id === args.characterId)
-    const spell = bonus ? spellById.get(bonus.feature) : undefined
-    const again = spell && actor ? againOf(actor).find((entry) => entry.spell.id === spell.id) : undefined
-    const cost = spell && actor && !again ? castCost(actor, spell.id) : undefined
-    let spellBeats: StoryBeat[] = []
-    if (spell && actor && (again || (cost && !("problem" in cost)))) {
-      const names = storyNames(turn.characters)
-      const castBy = { step: "reply" as const, character: actor.id }
-      const everyone = characters.filter((character) => !isDead(character) && !hasFled(character))
-      // Who it is cast on: those named, or for a spell attack the only foe here, and otherwise the caster.
-      const foes = everyone.filter((character) => character.type !== actor.type && !isDown(character))
-      const named = bonus?.targets ?? (bonus?.target ? [bonus.target] : spell.attack ? (foes.length === 1 ? [foes[0].id] : []) : [actor.id])
-      const floor = again?.spell.id === "spiritual-weapon" ? undefined : await ports.content.floor?.(turn.encounterId)
-      const spaced = floor ? castInSpace({ spell, caster: actor, everyone, named, floor }) : undefined
-      if (spaced?.problem || !named.length) {
-        const problem = spaced?.problem ?? { name: "No One To Cast On", text: `${actor.name} has no one to cast ${spell.name} on.` }
-        spellBeats = [{ kind: "feature", by: castBy, character: actor.id, name: problem.name, text: problem.text }]
-      } else {
-        const targets = spaced?.targets ?? named
-        const answered =
-          cost && !("problem" in cost)
-            ? reactionsToCast({
-                characters,
-                casterId: actor.id,
-                spell,
-                targets,
-                ask: (offer) => ordered(characters.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
-                d20: rollD20,
-                roll: rollDie,
-              })
-            : undefined
-        if (answered) characters = answered.characters
-        const reacted = answered ? castAnswerBeats(castBy, answered, names) : []
-        if (answered?.countered && cost && !("problem" in cost)) {
-          characters = characters.map((character) => (character.id === actor.id ? withCastSpent(character, costWhenCountered(cost.cost)) : character))
-          spellBeats = reacted
-        } else {
-          const how = {
-            characters,
-            casterId: actor.id,
-            targets,
-            d20: rollD20,
-            roll: rollDie,
-            ...(spaced && Object.keys(spaced.cover).length ? { cover: spaced.cover } : {}),
-            ...(spaced?.measured ? { measured: true } : {}),
-          }
-          // Cast at the slot it spends: a Healing Word from a level 2 slot heals as a level 2 casting.
-          const level = cost && !("problem" in cost) && cost.cost.kind === "slot" ? cost.cost.level : undefined
-          const cast = again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level })
-          const spent = cast.characters.map((character) => (character.id === actor.id && cost && !("problem" in cost) ? withCastSpent(character, cost.cost) : character))
-          // A caster the spell hurt saves to keep Concentration.
-          const kept = settleConcentration({
-            before: characters,
-            after: spent.map(afterHarm),
-            bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
-            modes: classConcentrationModes,
-            d20: rollD20,
-          })
-          characters = kept.characters
-          spellBeats = [...reacted, ...castBeats(castBy, actor, spell, cast, names), ...kept.saves.map((save) => concentrationBeat(castBy, save, names))]
-        }
-      }
-    }
-    const used = bonus && !spell ? useBonusAction({ characters, actorId: args.characterId, feature: bonus.feature, target: bonus.target, roll: rollDie }) : undefined
+    // A Bonus Action: a feature of the hero's, or one of their spells that takes one, used by the one path an NPC's
+    // takes too (./bonus-action). Those the spell may draw a reaction from answer by their standing order at once.
+    const used = bonus
+      ? await useBonus({
+          characters,
+          actorId: args.characterId,
+          bonus,
+          floor: async () => ports.content.floor?.(turn.encounterId),
+          ask: (offer) => ordered(characters.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
+          d20: rollD20,
+          roll: rollDie,
+          by: { step: "reply", character: args.characterId },
+          names: storyNames(turn.characters),
+        })
+      : undefined
     if (used) characters = used.characters
     const taken = action ? takeAction(characters, args.characterId, action) : undefined
     if (taken) characters = taken.characters
-    console.log("[LLM] Reading applied:", { bonus: used?.use?.fact ?? "none", action: taken?.fact ?? "none", move: move ?? "none", ruling: ruling?.text ?? "none" })
+    console.log("[LLM] Reading applied:", { bonus: used?.fact ?? "none", action: taken?.fact ?? "none", move: move ?? "none", ruling: ruling?.text ?? "none" })
     // A rest is the whole party's: every hero takes it, and each one's gains are told as an entry of their own.
     const resting = rest ? partyRest(characters, rest, rollDie) : undefined
     if (resting) characters = resting.characters
@@ -282,24 +220,10 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       name: restName(rest ?? "short"),
       text: facts.join(" "),
     }))
-    if (!used?.use && !taken?.fact && !spellBeats.length && !move && !ruling && !resting && !choices) return {}
+    if (!used?.beats.length && !taken?.fact && !move && !ruling && !resting && !choices) return {}
     // What the rules of space would not allow is told as an entry of its own, so the story does not keep an attack that was never made.
     const ruled: StoryBeat[] = ruling ? [{ kind: "feature", by: { step: "reply", character: args.characterId }, character: args.characterId, name: ruling.name, text: ruling.text }] : []
-    const feature: StoryBeat[] = spellBeats.length
-      ? spellBeats
-      : used?.use
-        ? [
-            {
-              kind: "feature",
-              by: { step: "reply", character: args.characterId },
-              character: args.characterId,
-              name: used.use.name,
-              text: used.use.fact,
-              ...(used.use.target ? { target: used.use.target } : {}),
-              ...(used.use.harm ? { harm: used.use.harm } : {}),
-            },
-          ]
-        : []
+    const feature: StoryBeat[] = used?.beats ?? []
     const told = [...leaving, ...chose, ...feature, ...ruled, ...restBeats]
     await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, ...(told.length ? { story: [...turn.story, ...told] } : {}), updatedAt: Date.now() } })
     return {}
