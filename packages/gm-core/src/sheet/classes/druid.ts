@@ -282,7 +282,7 @@ export const druid: ClassRules = {
       prompt: () =>
         `   - NATURE'S SANCTUARY: when the character calls up spectral trees and vines to shelter their allies as the action, "check" is "natures-sanctuary" and "targets" names the one the trees stand around first, the character themselves if no one else. Those of the party within the 15-foot cube have Half Cover and resist the character's land's damage. The game spends a use of Wild Shape.
 `,
-      field: () => z.literal(true).optional().describe('For "natures-sanctuary": true'),
+      field: () => z.boolean().optional().describe('For "natures-sanctuary": true'),
       act: (_value, { character, everyone, pick, named, also }) => {
         const targets = [...(pick.targets ?? []), ...(pick.target ? [pick.target] : [])].flatMap((asked) => everyone.find((other) => named(asked, other.name, other.id))?.id ?? [])
         const feature: RequiredFeature = { feature: { id: "natures-sanctuary", targets }, rollType: "Nature's Sanctuary", difficulty: 0, modifier: 0, mode: "normal" }

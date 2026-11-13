@@ -705,6 +705,58 @@
     "ruling": "Out Of Range"
   },
   {
+    "id": "cast-on-banished",
+    "adventure": "covert-cargo",
+    "encounter": "battle-on-the-boat",
+    "hero": "1749159962941",
+    "floor": true,
+    "at": {
+      "1749159962941": [0, 0],
+      "npcs-1749163978757": [20, 0],
+      "npcs-1749181492795": [20, 10]
+    },
+    "spellEffectsOn": {
+      "npcs-1749163978757": [
+        {
+          "spell": "banishment",
+          "by": "1749159962941",
+          "away": true,
+          "turns": 9
+        }
+      ]
+    },
+    "narrative": "Reinhard vanished a moment ago, banished from the deck by Lyra's spell. Silas stares at the empty planks where he stood.",
+    "action": "Lyra casts Ray of Frost at Reinhard.",
+    "checks": ["none"],
+    "ruling": "Not Here"
+  },
+  {
+    "id": "attack-banished",
+    "adventure": "covert-cargo",
+    "encounter": "battle-on-the-boat",
+    "hero": "1749159962941",
+    "floor": true,
+    "at": {
+      "1749159962941": [0, 0],
+      "npcs-1749163978757": [20, 0],
+      "npcs-1749181492795": [20, 10]
+    },
+    "spellEffectsOn": {
+      "npcs-1749163978757": [
+        {
+          "spell": "banishment",
+          "by": "1749159962941",
+          "away": true,
+          "turns": 9
+        }
+      ]
+    },
+    "narrative": "Reinhard vanished a moment ago, banished from the deck by Lyra's spell. Silas stares at the empty planks where he stood.",
+    "action": "Lyra lunges to stab Reinhard with her dagger.",
+    "checks": ["none"],
+    "ruling": "Not Here"
+  },
+  {
     "id": "hurry-to-heal",
     "adventure": "welcome-to-kordavos",
     "encounter": "mystery-cargo",
@@ -2620,6 +2672,32 @@
     },
     "narrative": "The poison cloud thins over the quay. Branka stands before the drake, her shield raised.",
     "action": "The drake lunges at Branka, tearing at her with claw and jaw.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "rend",
+      "target": "branka-stoneveil"
+    }
+  },
+  {
+    "id": "drake-rends-the-bear",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "the-beast-escapes",
+    "hero": "branka-stoneveil",
+    "allies": ["milos-radan"],
+    "actor": "forest-drake",
+    "usesOn": {
+      "forest-drake": {
+        "Poison Breath": 1
+      }
+    },
+    "shape": {
+      "form": "brown-bear",
+      "hours": 1,
+      "spell": "polymorph",
+      "by": "milos-radan"
+    },
+    "narrative": "A brown bear and a priest stand before the drake on the quay. The poison cloud has thinned.",
+    "action": "The drake lunges at the brown bear, tearing at it with claw and jaw.",
     "checks": ["attack"],
     "attack": {
       "weapon": "rend",

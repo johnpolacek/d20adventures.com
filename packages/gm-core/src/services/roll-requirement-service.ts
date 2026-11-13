@@ -48,7 +48,7 @@ import { blockActionsOf, blockActionWords } from "../sheet/stat-block-actions"
 import { actionIds } from "../sheet/turn-effect"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
-import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
+import { hasFled, isAway, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { ChosenRoll, RequiredCast, RequiredFeature } from "../validations/roll-requirement-schema"
 
 // An NPC whose action the notes fix rolls nothing. Mara's lift "always happens" unless a hero spots it, yet she rolled
@@ -111,7 +111,7 @@ const rollPickSchema = z.object({
 
 // Someone the roller could attack: anyone else in the scene who is still up.
 type Present = Pick<TurnCharacter, "id" | "name"> &
-  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "spellEffects" | "isComplete" | "position">> & {
+  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "spellEffects" | "isComplete" | "position" | "shape">> & {
     statBlock?: string
     side?: Side
   }
@@ -215,6 +215,14 @@ export function createRollRequirementService(ports: GmPorts) {
     const floor = options?.floor
     const mover = self && floor && character.position ? { ...character, id: self } : undefined
     const others = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && !hasFled(other))
+    // Those a spell holds away for now (Banishment, Maze): no one's target until they return, and told so when named.
+    const awayNow = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && isAway(other))
+    const notHere = (other: Present, undone: string) => ({ name: "Not Here", text: `${other.name} is away, out of the encounter until the spell that took them ends. ${undone}` })
+    // The shape another holds (Wild Shape, Polymorph), so words like "the giant ape" find them in Who Is Here.
+    const formWord = (other: Present) => {
+      const held = shapeOf(other)
+      return held ? `in the shape of a ${held.name}` : ""
+    }
     const feetAway = (other: Present) => {
       const feet = mover ? feetBetween(mover, other) : undefined
       return feet === undefined ? undefined : `${Math.round(feet)} feet away`
@@ -416,8 +424,8 @@ ${MENU("save")}
    - Picking a lock or disarming a trap is "dexterity".
    - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check. An attack always gives both "weapon" and "target".
      Their attacks: ${attackWords(attacks)}.
-${becoming.length ? `     With a Bonus Action that changes their shape, an attack the same turn is made in the new shape with one of its attacks: ${becoming.map((entry) => `with ${entry.id}, ${attackWords(entry.attacks)}`).join("; ")}.\n` : ""}     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, sideWord(other), isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), ...sees(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
-     If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
+${becoming.length ? `     With a Bonus Action that changes their shape, an attack the same turn is made in the new shape with one of its attacks: ${becoming.map((entry) => `with ${entry.id}, ${attackWords(entry.attacks)}`).join("; ")}.\n` : ""}     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, formWord(other), sideWord(other), isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), ...sees(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
+${awayNow.length ? `     Away: ${awayNow.map((other) => `${other.id} (${other.name})`).join(", ")}. A spell holds them out of the encounter for now. When the player's words attack one of them or cast a spell on them, "check" is still "attack" or "cast" and they are the target by their id: the game tells that they are not here.\n` : ""}     If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
 ${
   "type" in character && character.type === "pc"
     ? `   - RESTS: when the party stops to rest and the scene is safe for it, "check" is "short-rest" (about an hour: binding wounds, catching breath) or "long-rest" (a night's sleep, in a safe place, when the story has the night to spare). The whole party rests, and the game gives back what a rest gives. Never during a fight or a chase, with danger at hand, or with something pressing that will not wait: then "check" is "none".
@@ -544,7 +552,7 @@ ${leapers.length ? `   - ${leapers.join(" and ")} ${leapers.length > 1 ? "telepo
    - The game reads cover from the walls and furniture of the place. Set "cover" only for something the story put between the two that the place does not hold.
      Where Things Are, from where the character stands:
      Places: ${floor.places.map((place) => `${place.id} (${place.label}, ${Math.round(Math.hypot(place.at.x - (mover.position?.x ?? 0), place.at.y - (mover.position?.y ?? 0)))} feet away)`).join(", ") || "none named"}.
-     Everyone here: ${others.flatMap((other) => (other.position ? [`${other.id} (${other.name}, ${feetAway(other)})`] : [])).join(", ") || "no one"}.
+     Everyone here: ${others.flatMap((other) => (other.position ? [`${other.id} (${[other.name, formWord(other), feetAway(other)].filter(Boolean).join(", ")})`] : [])).join(", ") || "no one"}.
 
 `
     : ""
@@ -582,9 +590,10 @@ Action: "${action}"
           .optional()
           .describe('For "give": the id of the magic item handed over')
       // What a spell asks its caster to choose, asked only where they have such a spell (Spell Choices).
+      // A long menu (Shapechange's forms, Polymorph's Beasts) is asked as plain words: the site's model refuses a schema
+      // with so many values. `choiceFor` keeps only a value of the spell's own either way.
       if (spellChoices.length)
-        chosen.spellChoice = z
-          .enum(spellChoices as [string, ...string[]])
+        chosen.spellChoice = (spellChoices.length > 40 ? z.string().max(60) : z.enum(spellChoices as [string, ...string[]]))
           .optional()
           .describe('For a spell of Spell Choices that asks "spellChoice": what the caster chooses, from its values')
       // Whether a spell is cast from a magic item, asked only where the hero can cast one of them by their own means too.
@@ -645,7 +654,7 @@ Action: "${action}"
       const choiceFor = (spell: { id: string }): string | undefined => {
         const asked: SpellChoice | undefined = spellRule(spell.id)?.choice
         const given = asked ? pick[asked.field] : undefined
-        const value = typeof given === "string" ? given.trim().toLowerCase() : undefined
+        const value = typeof given === "string" ? given.trim().toLowerCase().replace(/\s+/g, "-") : undefined
         return value && asked?.values.includes(value) ? value : undefined
       }
       const quickChoice = quick ? choiceFor(quick.spell) : undefined
@@ -761,6 +770,13 @@ Action: "${action}"
           0,
           mover && spell.range.area ? undefined : targetLimit(shaped.spell, shaped.level, casterLevel, acting)
         )
+        // One named who is away is not cast on, and the spell is kept.
+        const gone = chosen.length ? undefined : awayNow.find((other) => asked.some((given) => named(given, other.name, other.id)))
+        if (gone) {
+          also.ruling = notHere(gone, `${spell.name} is not cast.`)
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, cast: spell.id, refused: "the one named is away" })
+          return { roll: null, ...also }
+        }
         // No one named: a spell on the caster alone is theirs, a spell attack lands on the only foe here, and healing is the caster's own.
         if (!chosen.length) {
           if (attacking && standing.length === 1) chosen = [standing[0].id]
@@ -863,6 +879,13 @@ Action: "${action}"
         const spoken = targets.filter((other) => (other.name.toLowerCase().match(/[\w'-]+/g) ?? []).some((word) => !["the", "a", "an", "of"].includes(word) && said.has(word)))
         const meant = standing.length === 1 ? standing[0] : (targets.find((other) => named(pick.bonusTarget, other.name, other.id)) ?? (spoken.length === 1 ? spoken[0] : undefined))
         const target = targets.find((other) => named(pick.target, other.name, other.id)) ?? (pick.target?.trim() ? undefined : meant)
+        // One named who is away is not attacked.
+        const gone = target ? undefined : awayNow.find((other) => named(pick.target, other.name, other.id))
+        if (gone) {
+          also.ruling = notHere(gone, "The attack is not made.")
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, refused: "the one attacked is away" })
+          return { roll: null, ...also }
+        }
         if (!attack) throw new Error(`The game master asked for an attack with "${pick.weapon ?? ""}", which ${character.name} does not have.`)
         if (!target) throw new Error(`The game master asked for an attack on "${pick.target ?? ""}", who is not here to attack.`)
         if (combatStatsOf(target)?.armorClass === undefined) throw new Error(`${target.name} has no sheet or stat block to attack.`)
