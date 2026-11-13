@@ -62,6 +62,7 @@ export const rollRequirementSchema = z.union([
       choice: z.string().optional().describe("For a spell that asks its caster a choice, what they chose: Hex's ability, Protection from Energy's damage type (../sheet/spell-rules.ts)"),
       level: z.number().int().min(1).max(9).optional().describe("The slot level it is cast at: the slot a hero spends, the level an NPC's stat block prints, or the level a magic item casts it at"),
       item: z.literal(true).optional().describe("Cast from a magic item the hero owns, which spends the item's charges or use in place of a slot"),
+      called: z.literal(true).optional().describe("Cast by a feature the player called on (Divine Intervention), which spends its use in place of a slot"),
       cover: z
         .record(z.string(), z.enum(["half", "three-quarters"]))
         .optional()

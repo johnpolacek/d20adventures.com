@@ -489,7 +489,7 @@ export type CastCost = { kind: "cantrip" } | { kind: "ritual" } | { kind: "free"
  * item) spends the item's charges or use in place of a slot, and `slot` is then the level asked for, where the item
  * casts it at more than one. `problem` says why not, for the game master.
  */
-export function castCost(character: Slotted, spellId: string, ritual = false, slot?: number, fromItem = false): { cost: CastCost; known: KnownSpell } | { problem: string } {
+export function castCost(character: Slotted, spellId: string, ritual = false, slot?: number, fromItem = false, called = false): { cost: CastCost; known: KnownSpell } | { problem: string } {
   const known = spellsOf(character).find((entry) => entry.spell.id === spellId)
   const name = spellById.get(spellId)?.name ?? spellId
   if (!known) return { problem: `${name} is not a spell ${character.name ?? "this character"} can cast.` }
@@ -507,9 +507,9 @@ export function castCost(character: Slotted, spellId: string, ritual = false, sl
   if (ritual && known.ritual) return { cost: { kind: "ritual" }, known }
   if (!known.prepared && known.from) return known.free > 0 && known.useKey ? { cost: { kind: "free", feature: known.useKey }, known } : { problem: `${name} has no casting left that takes no slot.` }
   // A feature's casting with no slot (Divine Intervention): the only one of a spell not prepared, and of one prepared
-  // when no slot of its level or higher is left.
+  // when the player calls on the feature (`called`) or no slot of its level or higher is left.
   const given = known.given && { cost: { kind: "free" as const, feature: known.given.feature }, known }
-  if (!known.prepared && given) return given
+  if (given && (called || !known.prepared)) return given
   if (!known.prepared) return { problem: `${name} is in the spellbook and not prepared, so it can only be cast as a Ritual.` }
   const upcast = character.sheet && slot !== undefined && slot > known.spell.level && slotFor(character, known.spell.level, slot) === slot
   if (known.free > 0 && known.useKey && !upcast) return { cost: { kind: "free", feature: known.useKey }, known }

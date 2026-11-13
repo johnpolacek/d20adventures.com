@@ -718,7 +718,7 @@ Action: "${action}"
         // A slot named that the caster lacks, or below the spell's level, falls to the lowest that can pay.
         // Beside a Bonus Action that changes the hero (leaving Wild Shape's form), the spell is cast as it leaves them.
         const acting = usedRule?.becomes ? usedRule.becomes(character) : character
-        const cost = known && castCost(acting, known.spell.id, pick.ritual === true, pick.slot, pick.item === true)
+        const cost = known && castCost(acting, known.spell.id, pick.ritual === true, pick.slot, pick.item === true, pick.calls === true)
         const uncalled = !!cost && !("problem" in cost) && cost.cost.kind === "free" && !!known?.given && cost.cost.feature === known.given.feature && pick.calls !== true
         const paid = cost && !("problem" in cost) && !uncalled ? cost : undefined
         const spell = again?.spell ?? (paid ? known?.spell : undefined)
@@ -814,6 +814,7 @@ Action: "${action}"
           ...(again || paid?.cost.kind === "slot" || known?.castLevel || (paid?.cost.kind === "item" && slotLevel > spell.level) ? { level: slotLevel } : {}),
           // Cast from a magic item: the item's charges or use are spent, at the item's save DC where it states one.
           ...(paid?.cost.kind === "item" ? { item: true as const } : {}),
+          ...(paid?.cost.kind === "free" && pick.calls === true && paid.known.given?.feature === paid.cost.feature ? { called: true as const } : {}),
           ...(again ? { again: true as const } : {}),
           ...(Object.keys(ridden).length ? { choices: ridden } : {}),
         }

@@ -237,7 +237,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const spell = spellById.get(required.cast.spell)
       if (!spell) throw new Error(`"${required.cast.spell}" is not a spell.`)
       const again = required.cast.again === true
-      const cost = again ? undefined : castCost(args.character, spell.id, required.cast.ritual === true, required.cast.level, required.cast.item === true)
+      const cost = again ? undefined : castCost(args.character, spell.id, required.cast.ritual === true, required.cast.level, required.cast.item === true, required.cast.called === true)
       if (cost && "problem" in cost) throw new Error(cost.problem)
       const names = storyNames(args.turn.characters)
       // The spell as the caster's choices make it (Metamagic): Subtle Spell's casting draws no Counterspell.

@@ -124,6 +124,10 @@ test("Divine Intervention: any Cleric spell of level 5 or lower with no slot, on
   const drained = castCost({ ...mira, spellSlots: [0, 0, 0, 0, 2] }, "flame-strike")
   assert.ok("cost" in drained)
   assert.equal(drained.cost.kind, "free")
+  // When the player calls on their god, Divine Intervention casts it and the slot is kept.
+  const called = castCost(mira, "flame-strike", false, undefined, false, true)
+  assert.ok("cost" in called)
+  assert.deepEqual(called.cost, { kind: "free", feature: "cleric-divine-intervention" })
   // Spent, it is gone until a Long Rest. Not at level 9.
   const spent = withCastSpent(mira, hold.cost)
   assert.ok("problem" in castCost(spent, "hold-person"))
