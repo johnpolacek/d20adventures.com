@@ -413,7 +413,7 @@ Where stage 9 stands, 2026-11-13, when the owner paused it. Done: the six classe
 - S13, S14 and S15: summoned creatures, a changed shape shared with Wild Shape, and a dominated creature's turn. Faithful Steed, Dragon Companion, Wild Companion and Pact of the Chain wait on S13.
 - L14, the Epic Boons in play, with Heroic Inspiration built once for the Fighter's Heroic Warrior, a Human's trait and the Musician feat, and the saves a rescue does not reach: one the player rolls, a Death Saving Throw, a save from a monster's hit and a Concentration save, for Indomitable, Disciplined Survivor, Countercharm and Dark One's Own Luck.
 - Pact of the Tome's spell picker, and Quickened Spell.
-- L15, the close: every prompt check, and a made party of high level played on each host. One scene failed once of 170 on the last full run and passed for its builder, `sorcerer-incarnate-two`, where the model took one Metamagic option of two: run it five times before judging.
+- L15, the close: every prompt check, and a made party of high level played on each host. One scene is unsteady: `sorcerer-incarnate-two` passed 2 times of 4, the model taking one Metamagic option where the reply asks for two. Its prompt line for the second option needs work, or the scene's words do. The other 169 passed on the last full run.
 
 Three builds were stopped mid-work for L5, S9 and S10, and S13 to S15. What they had written is kept out of the tree in a git stash named "stage 9 partial". It is unfinished and untested: read it for ideas or drop it, and start each of those substages from its line above.
 
