@@ -195,7 +195,8 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     abilities: abilityIds.map((id) => ({
       id,
       name: abilityById.get(id)?.name ?? titled(id),
-      score: sheet.abilityScores[id],
+      // With a worn item's set score: Gauntlets of Ogre Power's Strength 19.
+      score: derived.abilityScores[id],
       modifier: derived.abilityModifiers[id],
       save: derived.savingThrows[id].bonus,
       saveProficient: derived.savingThrows[id].proficient,

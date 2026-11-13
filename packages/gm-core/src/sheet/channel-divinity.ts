@@ -130,7 +130,7 @@ export function channelDivinity<T extends Channeled>(args: {
   // A save by the usual rules of one against a spell (./spells `rollSave`), against the Cleric's spell save DC.
   // A Legendary creature may choose to succeed against what a failure costs it (./legendary-resistance).
   const save = (target: T, ability: AbilityId, stakes: SaveStakes): SaveRoll => {
-    const rolled = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters, stakes })
+    const rolled = rollSave({ target, ability, dc, d20: args.d20, roll: args.roll, characters, stakes, spell: false })
     saves.push(rolled)
     if (rolled.legendary) {
       const spent = withLegendaryResistanceSpent(find(target.id) ?? target)

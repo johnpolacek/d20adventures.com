@@ -3,6 +3,8 @@ import type { CheckResult, Roller } from "./check"
 import { type BonusAction, type BonusActionRule, bonusActionRule, bonusActionRules, type ChoiceRule, effectChoice, type Featured, type FeatureUse } from "./class-rules"
 import { deriveSheet } from "./derive"
 import { featureUseCount } from "./feature-rules"
+import { potionRule } from "./item-spend"
+import { potionActionsOf } from "./item-use"
 import { blockBonusActions, blockBonusRule, resolveBlockAction } from "./stat-block-actions"
 import type { Inspiration } from "./turn-effect"
 
@@ -43,11 +45,12 @@ export function bonusActionsOf(character: Pick<Featured, "featureUses" | "spellS
     const bought = left === 0 ? rule.buys?.(character) : undefined
     return [{ id: rule.id, name: rule.name ?? feature.name, uses, left, targeted, ...(bought ? { slot: bought } : {}) }]
   })
-  return [...own, ...block]
+  // The potions the hero has, each drunk or given as a Bonus Action (./item-use).
+  return [...own, ...block, ...potionActionsOf(character)]
 }
 
-/** The rule of one of a character's Bonus Actions, by its id: its stat block's, or a class's. */
-export const bonusRuleFor = (character: Holder, id: string | undefined): BonusActionRule | undefined => blockBonusRule(character, id) ?? bonusActionRule(id)
+/** The rule of one of a character's Bonus Actions, by its id: its stat block's, a potion's, or a class's. */
+export const bonusRuleFor = (character: Holder, id: string | undefined): BonusActionRule | undefined => blockBonusRule(character, id) ?? potionRule(character, id) ?? bonusActionRule(id)
 
 /**
  * How a feature used as the turn's action (`RequiredFeature`) is resolved, by its effect's id: a class's (Channel

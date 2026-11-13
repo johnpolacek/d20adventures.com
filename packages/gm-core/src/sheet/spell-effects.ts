@@ -5,6 +5,7 @@ import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Check } from "./check"
 import type { ConditionEntry } from "./condition-entry"
 import type { ModeSource } from "./conditions"
+import { itemSaveModes } from "./item-effects"
 import type { Sheet } from "./sheet"
 import { speciesSaveModes } from "./species-traits"
 import type { Concentration, SpellEffect } from "./turn-effect"
@@ -138,11 +139,12 @@ const SAVE_ADVANTAGE: Record<string, readonly (AbilityId | "death")[]> = { haste
 export const saveBonusFromSpells = (character: Bearer, ability: AbilityId): number => (ability === "dex" && effectsOf(character).some(({ spell }) => spell.id === "slow") ? -2 : 0)
 
 /**
- * The Advantage a character's spells and species give a check, when it is a saving throw: for a save rolled outside
- * ./spells `rollSave`. `against` names the conditions the save is made to avoid or end (Fey Ancestry on Charmed).
+ * The Advantage a character's spells, species and worn magic items give a check, when it is a saving throw: for a save
+ * rolled outside ./spells `rollSave`, which is against no spell. `against` names the conditions the save is made to
+ * avoid or end (Fey Ancestry on Charmed, a Periapt of Health on Poisoned).
  */
 export const saveModesFor = (character: Bearer, check: Check, against: readonly ConditionId[] = []): ModeSource[] =>
-  check.kind === "save" ? [...saveModesFromSpells(character, check.ability), ...speciesSaveModes(character, check.ability, against)] : []
+  check.kind === "save" ? [...saveModesFromSpells(character, check.ability), ...speciesSaveModes(character, check.ability, against), ...itemSaveModes(character.sheet, against)] : []
 
 /** What a character's spells add to a check, when it is a saving throw: for a save rolled outside ./spells `rollSave`. */
 export const saveBonusFor = (character: Bearer, check: Check): number => (check.kind === "save" ? saveBonusFromSpells(character, check.ability) : 0)

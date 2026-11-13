@@ -9,6 +9,7 @@ import type { Shape } from "../types/character"
 import type { ConditionEntry } from "./condition-entry"
 import { d20Penalty } from "./conditions"
 import { deriveSheet } from "./derive"
+import { itemCheckModes } from "./item-effects"
 import { itemBonus } from "./items"
 import { shapedModifiers, shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
@@ -113,7 +114,8 @@ export const spellcastingAbilityOf = (character: Roller): AbilityId | undefined 
 /**
  * Advantage and Disadvantage the sheet itself settles, each with what it comes from. No model is asked: armor that
  * hinders Stealth gives Disadvantage on Dexterity (Stealth) checks. A class's own follow them (./class-rules
- * `classCheckModes`): a Champion's Remarkable Athlete gives Advantage on Strength (Athletics) checks. Other typed
+ * `classCheckModes`): a Champion's Remarkable Athlete gives Advantage on Strength (Athletics) checks. A worn magic
+ * item gives its own (./item-effects): a Cloak of Elvenkind's Advantage on Dexterity (Stealth) checks. Other typed
  * sources join here as they are needed.
  */
 export function sheetModes(character: Roller, check: Check): { mode: "advantage" | "disadvantage"; from: string }[] {
@@ -123,6 +125,7 @@ export function sheetModes(character: Roller, check: Check): { mode: "advantage"
   if (check.kind === "skill" && check.skill === "stealth" && sheet.armor && deriveSheet(sheet).stealthDisadvantage) {
     found.push({ mode: "disadvantage", from: equipmentById.get(sheet.armor)?.name ?? "Armor" })
   }
+  found.push(...itemCheckModes(sheet, check))
   return found
 }
 

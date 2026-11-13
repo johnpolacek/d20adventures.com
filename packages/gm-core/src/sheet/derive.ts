@@ -14,6 +14,7 @@ import { skillById } from "@d20/srd/skills"
 import { spellById } from "@d20/srd/spells"
 import { subclassById } from "@d20/srd/subclasses"
 import { grantedSkills, type SpeciesEntry, speciesById } from "./house-species"
+import { itemCheckModes, itemImmunities, itemResistances, itemSenses, scoresWithItems, speedsWithItems, walkWithItems } from "./item-effects"
 import { type Caster, itemBonus, itemProblems } from "./items"
 import type { Advancement, Sheet } from "./sheet"
 
@@ -23,6 +24,8 @@ type Sense = { type: "darkvision" | "blindsight" | "tremorsense" | "truesight"; 
 /** Everything the rules work out from a sheet. Nothing here is stored: it is derived again whenever the sheet changes. */
 export type DerivedSheet = {
   proficiencyBonus: number
+  /** The ability scores as they stand with the hero's magic items: Gauntlets of Ogre Power's Strength 19. */
+  abilityScores: Record<AbilityId, number>
   abilityModifiers: Record<AbilityId, number>
   hitDie: number
   hitPointMaximum: number
@@ -35,9 +38,13 @@ export type DerivedSheet = {
   initiative: number
   /** Feet. */
   speed: number
+  /** A Swim or Climb Speed in feet, where a magic item gives one. */
+  speeds: { swim?: number; climb?: number }
   senses: Sense[]
   /** Damage types the character always resists. A resistance that holds only under a condition (Rage) is not here. */
   resistances: DamageTypeId[]
+  /** Damage types the character always takes none of: a Periapt of Proof against Poison's Poison. */
+  immunities: DamageTypeId[]
   armorTraining: ArmorTraining[]
   weaponProficiencies: Class["weapons"]
   /** The worn armor gives Disadvantage on Dexterity (Stealth) checks. */
@@ -401,6 +408,12 @@ function sensesOf(sheet: Sheet, parts: Parts): Sense[] {
   // A class feature's, an option's (Witch Sight) and a feat's (Boon of Truesight).
   for (const source of standingOf(sheet, parts)) standing(source.senses)
   for (const feat of parts.feats) for (const benefit of feat.benefits ?? []) standing(benefit.senses)
+  // A worn magic item's: Goggles of Night lengthen a Darkvision the hero has by 60 feet, or give one of 60.
+  const owned = new Map(best)
+  for (const sense of itemSenses(sheet)) {
+    const had = owned.get(sense.type)
+    best.set(sense.type, Math.max(best.get(sense.type) ?? 0, had && sense.lengthens ? had + sense.lengthens : sense.range))
+  }
   return [...best].map(([type, range]) => ({ type, range }))
 }
 
@@ -425,6 +438,8 @@ function resistancesOf(sheet: Sheet, parts: Parts): DamageTypeId[] {
   for (const option of options) take(option.resistances)
   for (const source of standingOf(sheet, parts)) take(source.resistances)
   for (const feat of parts.feats) for (const benefit of feat.benefits ?? []) take(benefit.resistances)
+  // A worn magic item's: a Brooch of Shielding's Force, a Ring of Resistance's chosen type.
+  for (const type of itemResistances(sheet)) found.add(type)
   // A kept choice of a damage type (Elemental Affinity, Fiendish Resilience), and Nature's Ward's by the land chosen.
   const held = new Set(parts.features.map((feature) => feature.id))
   for (const id of RESISTANCE_CHOICES) {
@@ -953,7 +968,9 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
   const row = parts.class.levels[sheet.level - 1]
   const proficiencyBonus = row.proficiencyBonus
 
-  const abilityModifiers = Object.fromEntries(abilityIds.map((ability) => [ability, modifier(sheet.abilityScores[ability])])) as Record<AbilityId, number>
+  // The scores with the hero's magic items, which every modifier follows: Gauntlets of Ogre Power's Strength 19.
+  const abilityScores = scoresWithItems(sheet)
+  const abilityModifiers = Object.fromEntries(abilityIds.map((ability) => [ability, modifier(abilityScores[ability])])) as Record<AbilityId, number>
   const standing = standingOf(sheet, parts)
 
   const savingThrows = Object.fromEntries(
@@ -991,14 +1008,17 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
   const { armorClass: worn, from } = armorClassOf(sheet, parts, abilityModifiers)
   const armorClass = worn + itemBonus(sheet, "armor-class")
   const initiativeFeat = parts.feats.some((feat) => feat.benefits?.some((benefit) => benefit.initiativeBonus === "proficiency-bonus"))
-  const tooHeavy = parts.armor?.strengthRequired !== undefined && sheet.abilityScores.str < parts.armor.strengthRequired
+  const tooHeavy = parts.armor?.strengthRequired !== undefined && abilityScores.str < parts.armor.strengthRequired
   const chosen = chosenOptions(sheet, parts)
   const options = chosen.features
   // A Wood Elf's lineage sets its Speed to 35 feet.
   const baseSpeed = Math.max(parts.species.speed, ...chosen.species.map((option) => option.speed ?? 0))
+  // Boots of Striding and Springing make it 30 unless it is higher, and spare the hero the slowing of Heavy Armor.
+  const speed = walkWithItems(sheet, baseSpeed + speedBonusOf(sheet, parts), tooHeavy ? 10 : 0)
 
   return {
     proficiencyBonus,
+    abilityScores,
     abilityModifiers,
     hitDie: parts.class.hitDie,
     hitPointMaximum: hitPointMaximumOf(sheet, parts, abilityModifiers.con),
@@ -1006,12 +1026,15 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
     armorClassFrom: from,
     savingThrows,
     skills,
-    passivePerception: 10 + skills.perception.bonus,
+    // Advantage on Wisdom (Perception) checks adds 5 to Passive Perception: a Sentinel Shield's.
+    passivePerception: 10 + skills.perception.bonus + (itemCheckModes(sheet, { kind: "skill", skill: "perception" }).length ? 5 : 0),
     // Initiative is a Dexterity check, so an item's bonus to ability checks counts as well as one to Initiative.
     initiative: abilityModifiers.dex + (initiativeFeat ? proficiencyBonus : 0) + itemBonus(sheet, "initiative") + itemBonus(sheet, "ability-checks"),
-    speed: baseSpeed + speedBonusOf(sheet, parts) - (tooHeavy ? 10 : 0),
+    speed,
+    speeds: speedsWithItems(sheet, speed),
     senses: sensesOf(sheet, parts),
     resistances: resistancesOf(sheet, parts),
+    immunities: [...new Set(itemImmunities(sheet))].sort(),
     armorTraining: armorTrainingOf(sheet, parts),
     weaponProficiencies: [...parts.class.weapons, ...options.flatMap((option) => option.weaponProficiencies ?? [])],
     stealthDisadvantage: parts.armor?.stealthDisadvantage === true,

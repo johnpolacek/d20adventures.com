@@ -14,6 +14,7 @@ import { deriveSheet, trainedWith } from "./derive"
 import { criticalFrom, type OncePerTurn, usedThisTurn } from "./feature-rules"
 import type { ConditionChange } from "./harm"
 import { type BlockRider, blockRidersOnHit, blockRiderWords, chargeOf, noLargerThan, type RiderHeld, readRiders, STAT_BLOCK_RIDER } from "./hit-riders"
+import { itemTrainsWith, itemWeaponDamage } from "./item-effects"
 import { magicWeaponOf } from "./items"
 import { typesTaken } from "./monster-traits"
 import { shapeOf } from "./shape"
@@ -85,7 +86,8 @@ export function weaponAttack(sheet: Sheet, weaponId: string): Attack {
   const properties: readonly string[] = weapon.properties ?? []
   const natural: AbilityId = weapon.attackType === "ranged" ? "dex" : "str"
   const ability: AbilityId = properties.includes("finesse") ? (mods.dex > mods.str ? "dex" : "str") : natural
-  const trained = trainedWith(derived.weaponProficiencies, weapon)
+  // Bracers of Archery train their wearer with the Longbow and Shortbow (./item-effects).
+  const trained = trainedWith(derived.weaponProficiencies, weapon) || itemTrainsWith(sheet, weapon.id)
   // Fighting Style feats. Archery: +2 to attack rolls with Ranged weapons. Great Weapon Fighting: a 1 or 2 on a damage
   // die of a Melee weapon held in two hands counts as 3. The engine holds no hands, so it takes a Two-Handed weapon,
   // whose damage it rolls, and leaves a Versatile one, whose one-handed damage it rolls.
@@ -110,16 +112,18 @@ export function weaponAttack(sheet: Sheet, weaponId: string): Attack {
 
 /**
  * A hero's attack with the magic weapon they wield in place of a plain one: its name, and its bonus added to the attack
- * roll and to the first damage part. A Longsword +1 at +5 for 1d8 + 3 is "Longsword +1" at +6 for 1d8 + 4. A plain
- * weapon's attack is as it was.
+ * roll and to the first damage part. A Longsword +1 at +5 for 1d8 + 3 is "Longsword +1" at +6 for 1d8 + 4. A worn item's
+ * bonus to a weapon's damage is added to the same part: Bracers of Archery's 2 with a Longbow. A plain weapon's attack
+ * is otherwise as it was.
  */
 export function withMagicWeapon(sheet: Sheet, attack: Attack): Attack {
   const magic = magicWeaponOf(sheet, attack.id)
-  if (!magic) return attack
+  const added = (magic?.damage ?? 0) + itemWeaponDamage(sheet, attack.id)
+  if (!magic && !added) return attack
   const [part, ...rest] = attack.damage
   const own = part?.dice ? parseDice(part.dice) : undefined
-  const raised = !part ? [] : own ? [{ ...part, dice: signed(`${own.count}d${own.sides}`, own.bonus + magic.damage) }] : [{ ...part, amount: Math.max(0, (part.amount ?? 0) + magic.damage) }]
-  return { ...attack, name: magic.name, bonus: attack.bonus + magic.attack, damage: [...raised, ...rest] }
+  const raised = !part ? [] : own ? [{ ...part, dice: signed(`${own.count}d${own.sides}`, own.bonus + added) }] : [{ ...part, amount: Math.max(0, (part.amount ?? 0) + added) }]
+  return { ...attack, name: magic?.name ?? attack.name, bonus: attack.bonus + (magic?.attack ?? 0), damage: [...raised, ...rest] }
 }
 
 /** The mastery property a hero can use with a weapon: the weapon's own, when its kind is one their Weapon Mastery feature names. "vex", or none. */
@@ -359,7 +363,10 @@ function ownDefenses(character: Bearing): Defenses {
   // A hero in a Beast's shape has the stat block's defenses, and those a class feature gives while it lasts (./shape).
   const shape = shapeOf(character)
   if (shape) return { immunities: shape.immunities, resistances: [...new Set([...(shape.resistances ?? []), ...classResistances(character)])], vulnerabilities: shape.vulnerabilities }
-  if (character.sheet) return { resistances: [...new Set([...deriveSheet(character.sheet).resistances, ...classResistances(character)])] }
+  if (character.sheet) {
+    const derived = deriveSheet(character.sheet)
+    return { ...(derived.immunities.length ? { immunities: derived.immunities } : {}), resistances: [...new Set([...derived.resistances, ...classResistances(character)])] }
+  }
   const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
   return monster ? { immunities: monster.immunities, resistances: monster.resistances, vulnerabilities: monster.vulnerabilities } : {}
 }

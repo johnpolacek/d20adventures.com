@@ -12,7 +12,7 @@ import { applyStakes } from "../sheet/harm"
 import { legendaryActionsOf } from "../sheet/legendary-actions"
 import { attackWithReactions, ordered } from "../sheet/reactions"
 import { checkAdds, saveBonusFor, settleConcentration } from "../sheet/spell-effects"
-import { castAgain, castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
+import { type CastCost, castAgain, castCost, castSpell, isEngineSpell, spellById, withCastPaid } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -222,7 +222,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const spell = spellById.get(required.cast.spell)
       if (!spell) throw new Error(`"${required.cast.spell}" is not a spell.`)
       const again = required.cast.again === true
-      const cost = again ? undefined : castCost(args.character, spell.id, required.cast.ritual === true, required.cast.level)
+      const cost = again ? undefined : castCost(args.character, spell.id, required.cast.ritual === true, required.cast.level, required.cast.item === true)
       if (cost && "problem" in cost) throw new Error(cost.problem)
       const names = storyNames(args.turn.characters)
       // The spell as the caster's choices make it (Metamagic): Subtle Spell's casting draws no Counterspell.
@@ -245,11 +245,18 @@ export function createAdventureRollResultService(ports: GmPorts) {
         : undefined
       if (answered) turnCharacters = answered.characters
       const reacted = answered ? castAnswerBeats(by, answered, names) : []
+      // What paying for the cast comes to: an item's last charge may destroy it.
+      let paidFacts: string[] = []
+      const pay = <C extends (typeof turnCharacters)[number]>(character: C, paying: CastCost): C => {
+        const paid = withCastPaid(character, paying, rollDie)
+        paidFacts = paid.facts
+        return paid.character
+      }
       if (answered?.countered && cost) {
         // Countered: the action is spent and the cast is not made, and a slot is not expended.
-        turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? withCastSpent(character, costWhenCountered(cost.cost)) : character))
+        turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? pay(character, costWhenCountered(cost.cost)) : character))
         rolls = reacted
-        spellCast = { name: spell.name, facts: answered.facts }
+        spellCast = { name: spell.name, facts: [...answered.facts, ...paidFacts] }
         numbers = { natural: 0, bonus: 0, total: 0, against: 0, success: false }
       } else {
         const how = {
@@ -266,14 +273,15 @@ export function createAdventureRollResultService(ports: GmPorts) {
           cover: required.cast.cover,
           measured: required.cast.measured,
           floor,
+          ...(required.cast.item ? { item: true } : {}),
         }
         // A cast with the choices that ride it (Metamagic), each wrapped around the engine's own resolution.
         const cast = again
           ? castAgain({ ...how, spellId: spell.id })
           : resolveChosenCast({ choices: chosen, input: { ...how, spell, level: required.cast.level }, slot, resolve: (input) => castSpell(input) })
-        turnCharacters = cast.characters.map((character) => (character.id === args.characterId && cost ? withCastSpent(character, cost.cost) : character))
+        turnCharacters = cast.characters.map((character) => (character.id === args.characterId && cost ? pay(character, cost.cost) : character))
         rolls = [...reacted, ...castBeats(by, args.character, spell, cast, names)]
-        spellCast = { name: spell.name, facts: [...(answered?.facts ?? []), ...cast.facts], ...(isEngineSpell(spell) ? {} : { text: spell.description }) }
+        spellCast = { name: spell.name, facts: [...(answered?.facts ?? []), ...cast.facts, ...paidFacts], ...(isEngineSpell(spell) ? {} : { text: spell.description }) }
         struckIds = required.cast.targets
         const thrown = cast.attack?.roll
         numbers = thrown

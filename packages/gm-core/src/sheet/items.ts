@@ -5,6 +5,8 @@ import { magicItemRules } from "@d20/srd/magic-item-rules"
 import { magicItemById } from "@d20/srd/magic-items"
 import type { Bonus, MagicItem, MagicItemVariant } from "@d20/srd/schema/magic-items"
 import { skillById } from "@d20/srd/skills"
+import { damageTypeProblem, effectWords, itemArmorClass, readItem, toldText } from "./item-effects"
+import { chargesOf, itemUseProblems, itemUseWords, usedParts } from "./item-use"
 import type { OwnedItem, Sheet } from "./sheet"
 
 type BonusTarget = Bonus["to"]
@@ -99,7 +101,11 @@ export function bonusesRun(owned: OwnedItem): { to: BonusTarget; value: number }
  */
 export function itemBonus(sheet: Sheet, to: BonusTarget): number {
   if (to === "attack-rolls" || to === "damage-rolls") return 0
-  return (sheet.items ?? []).filter((owned) => isActive(sheet, owned)).reduce((sum, owned) => sum + bonusesRun(owned).reduce((total, bonus) => total + (bonus.to === to ? bonus.value : 0), 0), 0)
+  const typed = (sheet.items ?? [])
+    .filter((owned) => isActive(sheet, owned))
+    .reduce((sum, owned) => sum + bonusesRun(owned).reduce((total, bonus) => total + (bonus.to === to ? bonus.value : 0), 0), 0)
+  // Bracers of Defense's 2 to Armor Class with no armor and no Shield, a bonus the data types under a condition (./item-effects).
+  return typed + (to === "armor-class" ? itemArmorClass(sheet) : 0)
 }
 
 /**
@@ -121,7 +127,7 @@ const OTHER_EFFECTS = ["conditionalBonuses", "charges", "saves", "checks", "dama
 
 /**
  * Items whose typed fields are only bonuses, and whose text gives them more: Elven Chain's training, the Gloves of
- * Thievery being unseen, the Robe of the Archmagi's Armor Class and Magic Resistance, the Wand of the War Mage's
+ * Thievery being unseen, the Robe of the Archmagi's Armor Class, the Wand of the War Mage's
  * ignoring Half Cover.
  */
 const MORE_IN_TEXT = new Set(["elven-chain", "gloves-of-thievery", "robe-of-the-archmagi", "wand-of-the-war-mage-1-2-or-3"])
@@ -132,8 +138,21 @@ const MORE_IN_TEXT = new Set(["elven-chain", "gloves-of-thievery", "robe-of-the-
  * a Dragon is told). "told": the game master is told it all by its text, and it changes no number (Bag of Holding).
  */
 export function itemLabel(item: MagicItem): "run" | "partly run" | "told" {
+  // A potion drunk, and an item's spells cast with its charges and uses, are labelled by what the engine runs of them
+  // (./item-use), and the rest of the item by what follows, without the fields they account for.
+  const used = usedParts(item)
+  if (used) {
+    const rest = Object.fromEntries(Object.entries(item).filter(([key]) => !used.fields.includes(key as keyof MagicItem))) as MagicItem
+    const more = ["bonuses", "variants", ...OTHER_EFFECTS].some((field) => rest[field as keyof MagicItem] !== undefined) || MORE_IN_TEXT.has(item.id) || readItem(item).effects.length > 0
+    const labels = [used.label, ...(more ? [itemLabel(rest)] : [])]
+    return labels.every((label) => label === "run") ? "run" : labels.every((label) => label === "told") ? "told" : "partly run"
+  }
   const bonuses = typedBonuses(item, undefined)
   const ran = bonuses.filter((bonus) => runs(item, bonus.to))
+  // An item with no typed bonus whose text gives standing effects (./item-effects) is run in full when every sentence of
+  // its text is read: Gauntlets of Ogre Power. A sentence left unread is told: a Cloak of Elvenkind's Perception.
+  const read = readItem(item)
+  if (!ran.length && read.effects.length) return read.told.length ? "partly run" : "run"
   if (!ran.length) return "told"
   const more =
     ran.length < bonuses.length ||
@@ -216,6 +235,8 @@ export function itemProblems(sheet: Sheet, caster: Caster): string[] {
       if (wrong) problems.push(wrong)
     }
     if (owned.attuned && !item.attunement) problems.push(`${item.name} needs no Attunement`)
+    const damageType = damageTypeProblem(owned)
+    if (damageType) problems.push(damageType)
     if (owned.attuned) {
       const unmet = prerequisiteProblem(sheet, item, caster)
       if (unmet) problems.push(unmet)
@@ -226,6 +247,8 @@ export function itemProblems(sheet: Sheet, caster: Caster): string[] {
   if (new Set(attuned.map((owned) => owned.id)).size < attuned.length) problems.push("the hero is attuned to two copies of one magic item")
   const worn = items.filter((owned) => owned.base && magicItemById.get(owned.id)?.base && isWorn(sheet, owned) && baseKind(magicItemById.get(owned.id) as MagicItem) !== "ammunition")
   if (new Set(worn.map((owned) => owned.base)).size < worn.length) problems.push("two magic items stand for one weapon, armor or Shield the sheet holds")
+  // What the sheet keeps of the items used: counts, charges and uses (./item-use).
+  problems.push(...itemUseProblems(sheet))
   return problems
 }
 
@@ -260,7 +283,11 @@ export function endAttunement(sheet: Sheet, index: number, by: "choice" | "death
   return {
     sheet: {
       ...sheet,
-      items: (sheet.items ?? []).map((entry, at) => (at === index ? { id: entry.id, ...(entry.variant ? { variant: entry.variant } : {}), ...(entry.base ? { base: entry.base } : {}) } : entry)),
+      items: (sheet.items ?? []).map((entry, at) => {
+        if (at !== index) return entry
+        const { attuned: _, ...kept } = entry
+        return kept
+      }),
     },
   }
 }
@@ -290,6 +317,10 @@ export type ItemView = {
   attuned?: boolean
   /** A magic weapon, armor or Shield the hero does not hold or wear now. */
   unworn?: true
+  /** How many of a consumable the hero holds, where more than one. */
+  count?: number
+  /** An item's charges: how many it has and how many are left. */
+  charges?: { left: number; max: number }
 }
 
 const titled = (id: string) => id.replace(/(^|-)([a-z])/g, (_, dash: string, letter: string) => (dash ? " " : "") + letter.toUpperCase())
@@ -299,7 +330,7 @@ export function itemViews(sheet: Sheet): ItemView[] {
   return (sheet.items ?? []).flatMap((owned) => {
     const found = itemOf(owned)
     if (!found) return []
-    const gives = bonusWords(owned)
+    const gives = [bonusWords(owned), effectWords(owned)].filter(Boolean).join(", ") || undefined
     const rarity = found.variant?.rarity ?? found.item.rarity
     return [
       {
@@ -308,13 +339,15 @@ export function itemViews(sheet: Sheet): ItemView[] {
         kind: `${titled(rarity)} ${titled(found.item.category)}`,
         ...(needsAttunement(owned) ? { attuned: !!owned.attuned } : {}),
         ...(isWorn(sheet, owned) ? {} : { unworn: true as const }),
+        ...(owned.count ? { count: owned.count } : {}),
+        ...(chargesOf(owned) ? { charges: chargesOf(owned) } : {}),
       },
     ]
   })
 }
 
-// An item's text, cut to whole sentences within about 300 characters, for the game master.
-function textLine(item: MagicItem): string {
+/** An item's text, cut to whole sentences within about 300 characters, for the game master. */
+export function textLine(item: MagicItem): string {
   const flat = item.description.replace(/\s+/g, " ").trim()
   const sentences = flat.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [flat]
   let line = ""
@@ -341,15 +374,17 @@ export function itemWords(sheet: Sheet): string[] {
           : needsAttunement(owned)
             ? "attuned"
             : ""
-    const gives = bonusWords(owned)
+    const gives = [bonusWords(owned), effectWords(owned)].filter(Boolean).join(", ") || undefined
     const adds = gives ? ` ${isActive(sheet, owned) ? "The game adds" : "Once it works, the game adds"} ${gives}.` : ""
     const label = itemLabel(found.item)
     const told =
       label === "told"
         ? `The game does not run it, so it changes no number. Its text: "${textLine(found.item)}"`
         : label === "partly run"
-          ? `The game runs nothing more of it. Its text: "${textLine(found.item)}"`
+          ? `The game runs nothing more of it. Its text: "${(typedBonuses(found.item, undefined).some((bonus) => runs(found.item, bonus.to)) ? undefined : toldText(found.item)) ?? textLine(found.item)}"`
           : ""
-    return [`${itemName(owned)}${state ? `, ${state}` : ""}.${adds}${told ? ` ${told}` : ""}`]
+    // What the game runs of its use: a potion's count and what drinking it does, charges left, spells cast (./item-use).
+    const use = itemUseWords(sheet, owned)
+    return [`${itemName(owned)}${state ? `, ${state}` : ""}.${use ? ` ${use}` : ""}${adds}${told ? ` ${told}` : ""}`]
   })
 }

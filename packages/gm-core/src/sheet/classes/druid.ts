@@ -122,7 +122,7 @@ export function landsAid<T extends Aided>(args: {
     const [part] = rolled.parts
     for (const target of harmed) {
       const now = find(target.id) as T
-      const saved = rollSave({ target: now, ability: "con", dc, d20: args.d20, roll: args.roll, characters })
+      const saved = rollSave({ target: now, ability: "con", dc, d20: args.d20, roll: args.roll, characters, spell: false })
       saves.push(saved)
       const dealt = saved.success ? Math.floor(rolled.total / 2) : rolled.total
       const taken = damageTaken({ parts: [{ type: "necrotic", dice: [], bonus: dealt, total: dealt }], total: dealt }, defensesOf(now))

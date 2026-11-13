@@ -155,14 +155,12 @@ test("the sheet and the game master are told the items", () => {
   assert.match(words[2], /^Bag of Holding\. The game does not run it, so it changes no number\. Its text: "This bag has an interior space/)
 })
 
-test("of the 258 magic items, 6 are run, 31 run in part and 221 told", () => {
-  const counts: Record<string, number> = {}
-  for (const item of magicItems) counts[itemLabel(item)] = (counts[itemLabel(item)] ?? 0) + 1
+test("of the 258 magic items, 6 are run by their typed bonuses alone", () => {
   assert.equal(magicItems.length, 258)
-  assert.deepEqual(counts, { told: 221, run: 6, "partly run": 31 })
-  // Run: the +1, +2 or +3 weapon, armor and Shield, the Ring and Cloak of Protection, and the Stone of Good Luck.
+  // Run: the +1, +2 or +3 weapon, armor and Shield, the Ring and Cloak of Protection, and the Stone of Good Luck. The
+  // counts over all 258, with the items their text runs, are in ./item-effects.test.ts.
   assert.deepEqual(
-    magicItems.filter((item) => itemLabel(item) === "run").map((item) => item.id),
+    magicItems.filter((item) => itemLabel(item) === "run" && (item.bonuses || item.variants?.some((variant) => variant.bonuses))).map((item) => item.id),
     ["armor-1-2-or-3", "cloak-of-protection", "ring-of-protection", "shield-1-2-or-3", "stone-of-good-luck-luckstone", "weapon-1-2-or-3"]
   )
 })

@@ -8,7 +8,7 @@ import { areEnemies } from "../sheet/sides"
 import type { Floor } from "../sheet/space"
 import { settleConcentration } from "../sheet/spell-effects"
 import { castInSpace } from "../sheet/spell-space"
-import { againOf, castAgain, castCost, castSpell, spellById, withCastSpent } from "../sheet/spells"
+import { againOf, type CastCost, castAgain, castCost, castSpell, spellById, withCastPaid } from "../sheet/spells"
 import type { StoryBeat, StoryBy } from "../story/beats"
 import type { StoryNames } from "../story/render"
 import { castAnswerBeats, castBeats, concentrationBeat } from "../story/turn"
@@ -74,9 +74,16 @@ export async function useBonus(args: {
   const answered = paid ? reactionsToCast({ characters, casterId: actor.id, spell, targets, ask: args.ask, d20: args.d20, roll: args.roll }) : undefined
   if (answered) characters = answered.characters
   const reacted = answered ? castAnswerBeats(args.by, answered, args.names) : []
+  // What paying for the cast comes to: an item's last charge may destroy it.
+  let paidFacts: string[] = []
+  const pay = (character: TurnCharacter, cost: CastCost): TurnCharacter => {
+    const done = withCastPaid(character, cost, args.roll)
+    paidFacts = done.facts
+    return done.character
+  }
   if (answered?.countered && paid) {
-    characters = characters.map((character) => (character.id === actor.id ? withCastSpent(character, costWhenCountered(paid.cost)) : character))
-    return { characters, beats: reacted }
+    characters = characters.map((character) => (character.id === actor.id ? pay(character, costWhenCountered(paid.cost)) : character))
+    return { characters, beats: reacted, ...(paidFacts.length ? { fact: paidFacts.join(" ") } : {}) }
   }
   const how = {
     characters,
@@ -86,11 +93,12 @@ export async function useBonus(args: {
     roll: args.roll,
     ...(spaced && Object.keys(spaced.cover).length ? { cover: spaced.cover } : {}),
     ...(spaced?.measured ? { measured: true } : {}),
+    ...(paid?.cost.kind === "item" ? { item: true } : {}),
   }
-  // Cast at the slot it spends: a Healing Word from a level 2 slot heals as a level 2 casting.
-  const level = paid?.cost.kind === "slot" ? paid.cost.level : undefined
+  // Cast at the slot it spends: a Healing Word from a level 2 slot heals as a level 2 casting. One from an item at the item's level.
+  const level = paid?.cost.kind === "slot" || paid?.cost.kind === "item" ? paid.cost.level : undefined
   const cast = again ? castAgain({ ...how, spellId: spell.id }) : castSpell({ ...how, spell, level })
-  const spent = cast.characters.map((character) => (character.id === actor.id && paid ? withCastSpent(character, paid.cost) : character))
+  const spent = cast.characters.map((character) => (character.id === actor.id && paid ? pay(character, paid.cost) : character))
   // A caster the spell hurt saves to keep Concentration.
   const kept = settleConcentration({
     before: characters,
@@ -102,6 +110,6 @@ export async function useBonus(args: {
   return {
     characters: kept.characters,
     beats: [...reacted, ...castBeats(args.by, actor, spell, cast, args.names), ...kept.saves.map((save) => concentrationBeat(args.by, save, args.names))],
-    fact: [`${actor.name} casts ${spell.name} as a Bonus Action.`, ...cast.facts].join(" "),
+    fact: [`${actor.name} casts ${spell.name} as a Bonus Action.`, ...cast.facts, ...paidFacts].join(" "),
   }
 }

@@ -59,7 +59,8 @@ export const rollRequirementSchema = z.union([
       ritual: z.literal(true).optional().describe("Cast slowly as a Ritual, which spends no slot"),
       damageType: damageTypeIdSchema.optional().describe("For a spell that deals one of several damage types, the one chosen"),
       skill: skillIdSchema.optional().describe("For a spell cast for one skill (Guidance), the skill"),
-      level: z.number().int().min(1).max(9).optional().describe("The slot level it is cast at: the slot a hero spends, or the level an NPC's stat block prints"),
+      level: z.number().int().min(1).max(9).optional().describe("The slot level it is cast at: the slot a hero spends, the level an NPC's stat block prints, or the level a magic item casts it at"),
+      item: z.literal(true).optional().describe("Cast from a magic item the hero owns, which spends the item's charges or use in place of a slot"),
       cover: z
         .record(z.string(), z.enum(["half", "three-quarters"]))
         .optional()

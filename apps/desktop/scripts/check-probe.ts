@@ -37,7 +37,8 @@ type Probe = {
   mode?: string
   // A spell cast: its SRD id, everyone it is cast on, and whether as a Ritual.
   // `ritual: "either"` is for a Ritual spell cast with time to spare and no word of how: slowly or with a slot are both right.
-  cast?: { spell: string; targets?: string[]; ritual?: boolean | "either"; level?: number; again?: true }
+  // `item` is a spell cast from a magic item, spending its charges in place of a slot.
+  cast?: { spell: string; targets?: string[]; ritual?: boolean | "either"; level?: number; again?: true; item?: true }
   // A spell the hero already cast and still holds, at the slot it was cast at: Spiritual Weapon to use again.
   held?: { spell: string; slot: number }
   // Spell slots a character has already used, by character id.
@@ -131,10 +132,13 @@ async function run(probe: Probe): Promise<Graded> {
       )
     const everyone = stand([
       hero,
-      ...(probe.allies ?? []).map((ally) => ({
-        ...JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${ally}.json`), "utf8")),
-        type: "pc" as const,
-      })),
+      // An ally bears what the scene gives them too: a fallen one is at 0 hit points.
+      ...(probe.allies ?? []).map((ally) =>
+        bears({
+          ...JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${ally}.json`), "utf8")),
+          type: "pc" as const,
+        })
+      ),
       // Each NPC with the side the encounter marks them with, as the game gives it.
       ...encounter.npcRefs.map((ref) => bears({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const, ...(ref.side ? { side: ref.side } : {}) })),
     ])
@@ -181,6 +185,7 @@ async function run(probe: Probe): Promise<Graded> {
       if (probe.cast?.level && cast?.level !== probe.cast.level) faults.push(`cast with a level ${cast?.level ?? "no"} slot, wanted level ${probe.cast.level}`)
       // A spell held and used again, not cast anew.
       if (!!probe.cast?.again !== !!cast?.again) faults.push(`${cast?.again ? "used again" : "cast anew"}, wanted ${probe.cast?.again ? "used again" : "cast anew"}`)
+      if (!!probe.cast?.item !== !!cast?.item) faults.push(`cast ${cast?.item ? "from an item" : "with a slot"}, wanted ${probe.cast?.item ? "from an item" : "with a slot"}`)
     }
     const said = (bonus?: { feature: string; target?: string }) => (bonus ? `${bonus.feature}${bonus.target ? ` for ${bonus.target}` : ""}` : "none")
     if (said(reading.bonus) !== said(probe.bonus)) faults.push(`bonus action ${said(reading.bonus)}, wanted ${said(probe.bonus)}`)

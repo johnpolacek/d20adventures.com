@@ -4,6 +4,7 @@ import { monsterById } from "@d20/srd/monsters"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Check } from "./check"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
+import { itemConditionImmunities } from "./item-effects"
 import { packTacticsModes } from "./monster-traits"
 import type { Sheet } from "./sheet"
 import type { Side as Mark } from "./sides"
@@ -220,10 +221,18 @@ export const criticalWhenHit = (target: Afflicted, near: boolean): boolean => ne
 /** Whether a target's conditions give it Resistance to all damage. */
 export const resistsAllDamage = (target: Afflicted): boolean => borne(target).some((entry) => CONDITION_RULES[entry.id].resistsAllDamage)
 
-/** Whether a character cannot be given a condition: its stat block is immune to it, or a condition it bears shuts it out. */
+/**
+ * Whether a character cannot be given a condition: its stat block is immune to it, a condition it bears shuts it out, a
+ * spell on it does, or a magic item it wears does (a Periapt of Proof against Poison's Poisoned).
+ */
 export function immuneTo(character: Afflicted, id: ConditionId): boolean {
   const monster = character.type === "npc" ? monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
-  return !!monster?.conditionImmunities?.includes(id) || borne(character).some((entry) => CONDITION_RULES[entry.id].immuneTo?.includes(id)) || spellImmunities(character).includes(id)
+  return (
+    !!monster?.conditionImmunities?.includes(id) ||
+    borne(character).some((entry) => CONDITION_RULES[entry.id].immuneTo?.includes(id)) ||
+    spellImmunities(character).includes(id) ||
+    (!!character.sheet && itemConditionImmunities(character.sheet).includes(id))
+  )
 }
 
 const without = <T extends Afflicted>(character: T, keep: (entry: ConditionEntry) => boolean): T => {

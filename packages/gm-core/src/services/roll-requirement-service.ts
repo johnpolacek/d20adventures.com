@@ -11,6 +11,7 @@ import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, bonusRuleFor, usable } from "../sheet/features"
 import { chargedFeet, escapeFrom } from "../sheet/hit-riders"
+import { itemCastingWords } from "../sheet/item-use"
 import { itemWords } from "../sheet/items"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
@@ -258,6 +259,9 @@ export function createRollRequirementService(ports: GmPorts) {
       return label === "partly" ? `${kind}, the rest told by the game master` : kind
     }
     const casterLevel = character.sheet?.level ?? 1
+    // Spells a magic item casts, and those of them the hero can also cast by their own means.
+    const itemSpells = knownSpells.filter((known) => known.item)
+    const eitherWay = itemSpells.some((known) => !known.itemOnly)
     const spellLines = knownSpells.map((known) => {
       const limit = targetLimit(known.spell, known.spell.level, casterLevel)
       const long = longCasting(known.spell)
@@ -270,6 +274,8 @@ export function createRollRequirementService(ports: GmPorts) {
         ...(known.ritual ? [known.prepared ? "ritual" : "ritual only"] : []),
         ...(known.free > 0 ? [`${known.free} free`] : []),
         ...(known.atWill ? [known.selfOnly ? "at will on themselves with no slot" : "at will with no slot"] : []),
+        // A spell a magic item casts, with what it spends (../sheet/item-use).
+        ...(known.item ? [`${known.itemOnly ? "" : "or "}${itemCastingWords(known.item)}`] : []),
       ]
       return `${known.spell.id} (${known.spell.name}, ${notes.join(", ")})`
     })
@@ -403,7 +409,12 @@ ${
          : ""
      }
 ${shapeCasting}     A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
-     A spell marked "told by the game master" is cast all the same: "check" is "cast" with everyone it is cast on, and the game spends what it costs. The game master tells what it does from its text. One marked "the rest told by the game master" is rolled in part by the game, and the rest is told.
+${
+  itemSpells.length
+    ? `     A spell marked "from" a magic item is cast from it, and spends the item's charges or use in place of a slot. With too few left it cannot be cast. One whose charges raise its level is cast at the level the player names, in "slot", and at its lowest when they name none.${eitherWay ? ' A spell they can also cast with their own slots is cast from the item only when they say so, and then "item" is true.' : ""}
+`
+    : ""
+}     A spell marked "told by the game master" is cast all the same: "check" is "cast" with everyone it is cast on, and the game spends what it costs. The game master tells what it does from its text. One marked "the rest told by the game master" is rolled in part by the game, and the rest is told.
      Every cast sets "fight": true when a fight is on in the scene, false when it is not. A spell marked "takes" a minute or more "to cast" cannot be cast while a fight is on, and the game will say so.
      A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all is "arcana".
 
@@ -421,7 +432,7 @@ ${shapeCasting}     A cantrip spends nothing. Any other spell spends a slot of i
 10) Set what the roll puts at stake for hit points, in "harm". Most rolls put none, so leave it empty. Use it only when this roll's own outcome would wound or heal someone:
    - An act that hurts someone when it works: on "success", target them, kind "damage".
    - A save or a check against a hazard that hurts when it fails (a trap, a fall, poison, fire): on "failure", target the character's own id, kind "damage".
-   - A potion or a skill that heals: on "success", target who is healed, kind "healing".
+   - A skill that heals: on "success", target who is healed, kind "healing". A potion is never a check: one the character has is among Their Bonus Actions, and one that is not there is not drunk.
    - "size" is light, moderate, heavy or severe, and the game rolls its dice. A scratch is light, a solid blow is moderate, a bad fall or a strong blast is heavy, and severe is rare. When the encounter instructions print dice for it (4d6), put them in "dice" as printed and leave "size" out.
    - "target" is an id from Who Is Here, or the character's own id${self ? `, ${self}` : ""}. Damage takes a "type": fire, cold, poison, psychic, bludgeoning and so on.
    - An attack takes no "harm": its weapon sets the damage. Never use damage for fear, shame, a threat, or a fight not yet joined.
@@ -470,6 +481,8 @@ Action: "${action}"
       const checks = [...choices.flatMap(({ rule }) => (rule.check ? [rule.check] : [])), ...blockActions.map((entry) => entry.id), ...(freeable.length ? ["escape"] : [])]
       const chosen: Record<string, z.ZodType> = checks.length ? { check: z.enum([...rollPickSchema.shape.check.options, ...checks]).describe(rollPickSchema.shape.check.description ?? "") } : {}
       for (const { rule, values } of choices) chosen[rule.key] = rule.field(values)
+      // Whether a spell is cast from a magic item, asked only where the hero can cast one of them by their own means too.
+      if (eitherWay) chosen.item = z.boolean().optional().describe('For "cast": true when they cast a spell from the magic item Their Spells name for it, in place of their own slot')
       const schema = rollPickSchema.extend({
         ...chosen,
         spell: menu("spell", [...new Set([...knownSpells.map((known) => known.spell.id), ...held.map((entry) => entry.spell.id)])]),
@@ -543,7 +556,7 @@ Action: "${action}"
         // A slot named that the caster lacks, or below the spell's level, falls to the lowest that can pay.
         // Beside a Bonus Action that changes the hero (leaving Wild Shape's form), the spell is cast as it leaves them.
         const acting = usedRule?.becomes ? usedRule.becomes(character) : character
-        const cost = known && castCost(acting, known.spell.id, pick.ritual === true, pick.slot)
+        const cost = known && castCost(acting, known.spell.id, pick.ritual === true, pick.slot, pick.item === true)
         const paid = cost && !("problem" in cost) ? cost : undefined
         const spell = again?.spell ?? (paid ? known?.spell : undefined)
         if (!spell) {
@@ -565,7 +578,7 @@ Action: "${action}"
           return { roll: null, ...also }
         }
         // The slot the spell is cast at: the one it is held at, the one spent, or a stat block's printed level.
-        const slotLevel = again ? again.slot : paid?.cost.kind === "slot" ? paid.cost.level : (known?.castLevel ?? spell.level)
+        const slotLevel = again ? again.slot : paid?.cost.kind === "slot" || paid?.cost.kind === "item" ? paid.cost.level : (known?.castLevel ?? spell.level)
         const type = damageTypeIdSchema.safeParse(pick.damageType?.trim().toLowerCase())
         // The class's choices that ride a cast (Metamagic): each kept where it goes with the spell, and the spell as they
         // make it, for its range and how many it takes. A spell used again is not cast, and takes none.
@@ -621,11 +634,13 @@ Action: "${action}"
           ...(type.success ? { damageType: type.data } : {}),
           ...(forSkill.success ? { skill: forSkill.data } : {}),
           // The slot level spent, for a hero, or held. An NPC's stat block may print the level it casts at.
-          ...(again || paid?.cost.kind === "slot" || known?.castLevel ? { level: slotLevel } : {}),
+          ...(again || paid?.cost.kind === "slot" || known?.castLevel || (paid?.cost.kind === "item" && slotLevel > spell.level) ? { level: slotLevel } : {}),
+          // Cast from a magic item: the item's charges or use are spent, at the item's save DC where it states one.
+          ...(paid?.cost.kind === "item" ? { item: true as const } : {}),
           ...(again ? { again: true as const } : {}),
           ...(Object.keys(ridden).length ? { choices: ridden } : {}),
         }
-        const casting = spellcastingFor(acting, spell.id)
+        const casting = spellcastingFor(acting, spell.id, paid?.cost.kind === "item")
         if (spell.attack) {
           // A spell attack is the caster's to throw, against the first target's Armor Class.
           const target = everyone.find((other) => other.id === chosen[0])

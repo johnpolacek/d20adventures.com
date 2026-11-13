@@ -2790,5 +2790,114 @@
       "weapon": "shortsword",
       "target": "ancient-undead"
     }
+  },
+  {
+    "id": "potion-drink",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "items": [
+        {
+          "id": "potions-of-healing",
+          "variant": "Potion of Healing",
+          "count": 2
+        }
+      ]
+    },
+    "hitPointsOn": {
+      "branka-stoneveil": 4
+    },
+    "narrative": "Steel rings in the warehouse. The thug's cudgel has left Branka bloodied and breathing hard.",
+    "action": "I pull the cork on one of my healing potions and drink it down.",
+    "checks": ["none", "dodge", "disengage"],
+    "bonus": {
+      "feature": "potion-of-healing"
+    }
+  },
+  {
+    "id": "potion-for-fallen",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "items": [
+        {
+          "id": "potions-of-healing",
+          "variant": "Potion of Healing"
+        }
+      ]
+    },
+    "hitPointsOn": {
+      "branka-stoneveil": 0
+    },
+    "narrative": "Steel rings in the warehouse. The thug's cudgel has dropped Branka, and she lies senseless at Milos's feet.",
+    "action": "I kneel beside Branka and tip my potion of healing between her lips.",
+    "checks": ["none"],
+    "bonus": {
+      "feature": "potion-of-healing",
+      "target": "branka-stoneveil"
+    }
+  },
+  {
+    "id": "potion-none",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "hitPointsOn": {
+      "branka-stoneveil": 4
+    },
+    "narrative": "Steel rings in the warehouse. The thug's cudgel has left Branka bloodied and breathing hard.",
+    "action": "I grab a healing potion from my belt and drink it.",
+    "checks": ["none"],
+    "stakes": []
+  },
+  {
+    "id": "wand-of-missiles",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "items": [
+        {
+          "id": "wand-of-magic-missiles"
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I level the wand at the thug and spend three charges on a volley of missiles.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "magic-missile",
+      "targets": ["warehouse-thug"],
+      "level": 3,
+      "item": true
+    }
+  },
+  {
+    "id": "wand-or-slot",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "1749159962941",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "items": [
+        {
+          "id": "wand-of-magic-missiles"
+        }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I keep my own magic in reserve and fire my Wand of Magic Missiles at the thug.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "magic-missile",
+      "targets": ["warehouse-thug"],
+      "item": true
+    }
   }
 ]

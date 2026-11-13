@@ -11,6 +11,7 @@ import { conditionsAtEncounterEnd, exhaustionOf, withoutCondition } from "./cond
 import { type DeathSaves, withHealing } from "./death"
 import { casterOf, deriveSheet, sheetProblems } from "./derive"
 import { hitPointsOf, withHitPoints } from "./hit-points"
+import { itemsRested } from "./item-spend"
 import { attuneOnShortRest } from "./items"
 import type { Sheet } from "./sheet"
 import { spellcastingOf } from "./spells"
@@ -219,6 +220,12 @@ export function shortRest<T extends Rester>(character: T, options: { roll: (side
       facts.push(`${name} spends the rest with the ${attuning.attuned} and is now attuned to it.`)
     }
   }
+  // An item's uses that come back on a Short Rest (./item-spend).
+  if (rested.sheet) {
+    const items = itemsRested(rested.sheet, "short")
+    rested = { ...rested, sheet: items.sheet }
+    facts.push(...items.facts.map((fact) => fact.replace(/^The /, `${name}'s `)))
+  }
   if (!facts.length) facts.push(`${name} rests for an hour, and nothing spent comes back.`)
   return { character: rested, facts }
 }
@@ -227,12 +234,14 @@ export function shortRest<T extends Rester>(character: T, options: { roll: (side
  * A Long Rest by the SRD: at least 8 hours, most of them asleep. The character regains all hit points and every spent
  * Hit Point Die, every spell slot and every feature's uses whatever its recharge, Arcane Recovery among them, and an
  * NPC its day's casts. One level of Exhaustion goes. Temporary Hit Points end, and so do Concentration, which the
- * sleep breaks, and every spell that runs out within 8 hours.
+ * sleep breaks, and every spell that runs out within 8 hours. The engine keeps no clock, so the rest stands for the dawn:
+ * each magic item regains its charges as its data says, rolled with `roll`, and its uses that come back at dawn
+ * (./item-spend `itemsRested`).
  *
  * Thalbern at 3 of 11 with 1 Hit Die spent and a Hunter's Mark cast: "Thalbern finishes a Long Rest: 11 of 11 hit
  * points, every Hit Point Die, spell slot and feature use back."
  */
-export function longRest<T extends Rester>(character: T): RestResult<T> {
+export function longRest<T extends Rester>(character: T, options: { roll?: (sides: number) => number } = {}): RestResult<T> {
   const refused = unrested(character)
   if (refused) return { character, facts: [refused] }
   const name = character.name ?? "The character"
@@ -246,6 +255,11 @@ export function longRest<T extends Rester>(character: T): RestResult<T> {
     rested = withoutCondition(rested, "exhaustion").character
     const left = exhaustionOf(rested)
     facts.push(left ? `${name}'s Exhaustion falls to level ${left}.` : `${name} is no longer Exhausted.`)
+  }
+  if (rested.sheet) {
+    const items = itemsRested(rested.sheet, "long", options.roll)
+    rested = { ...rested, sheet: items.sheet }
+    facts.push(...items.facts.map((fact) => fact.replace(/^The /, `${name}'s `)))
   }
   return { character: rested, facts }
 }
@@ -266,7 +280,7 @@ export function partyRest<T extends Rester & { id: string }>(
   const rested: { id: string; facts: string[] }[] = []
   const after = characters.map((character) => {
     if (character.type !== "pc") return character
-    const result = kind === "long" ? longRest(character) : shortRest(character, { roll })
+    const result = kind === "long" ? longRest(character, { roll }) : shortRest(character, { roll })
     rested.push({ id: character.id, facts: result.facts })
     return result.character
   })

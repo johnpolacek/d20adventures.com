@@ -1,5 +1,5 @@
-// A hero's magic items, one line each: the name, what the rules add for it, and whether it is attuned. Shared by the
-// stage's character card and the site's character sheet.
+// A hero's magic items, one line each: the name and how many, what the rules add for it, charges left, and whether it
+// is attuned. Shared by the stage's character card and the site's character sheet.
 
 import type { ItemView } from "@d20/gm-core/sheet/items"
 import { cn } from "@/lib/utils"
@@ -13,8 +13,16 @@ export function MagicItems({ items, className }: { items: readonly ItemView[]; c
       <ul className="space-y-1.5">
         {items.map((item, index) => (
           <li key={`${index}:${item.name}`} className="flex flex-wrap items-baseline gap-x-2 text-xs leading-relaxed">
-            <span className="font-serif text-[13px] text-stage-cream">{item.name}</span>
+            <span className="font-serif text-[13px] text-stage-cream">
+              {item.name}
+              {item.count && <span className="text-stage-muted"> ×{item.count}</span>}
+            </span>
             <span className="text-stage-muted">{item.gives ?? item.kind}</span>
+            {item.charges && (
+              <span className="text-[10px] uppercase tracking-[0.14em] text-stage-muted">
+                {item.charges.left} of {item.charges.max} Charges
+              </span>
+            )}
             {item.attuned !== undefined && (
               <span className={cn("text-[10px] uppercase tracking-[0.14em]", item.attuned ? "text-stage-gold" : "text-stage-muted")}>{item.attuned ? "Attuned" : "Not Attuned"}</span>
             )}

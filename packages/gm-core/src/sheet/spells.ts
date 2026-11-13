@@ -14,6 +14,9 @@ import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, r
 import { deriveSheet, featuresOf, pickedFreeCasts, slotsAt } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { itemSaveModes } from "./item-effects"
+import { withItemCastSpent } from "./item-spend"
+import { type ItemCasting, type ItemCost, itemCastCost, itemCastingWords, itemSpellsOf } from "./item-use"
 import { itemBonus } from "./items"
 import { legendaryResistanceWords, type SaveStakes, spendsLegendaryResistance, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { magicSaveModes, typesTaken } from "./monster-traits"
@@ -34,6 +37,7 @@ import {
   withSpellEffect,
 } from "./spell-effects"
 import { endsBySpell } from "./spell-ends"
+import { spellLabel } from "./spell-labels"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
 
@@ -44,7 +48,8 @@ import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
  */
 
 export type Spellcasting = {
-  ability: AbilityId
+  /** None for a spell cast from an item by one who has no spellcasting ability. */
+  ability?: AbilityId
   /** What a target's saving throw must reach: 8, the Proficiency Bonus and the spellcasting ability modifier. */
   saveDc: number
   /** What is added to the d20 of a spell attack: the Proficiency Bonus and the spellcasting ability modifier. */
@@ -98,10 +103,29 @@ export function spellcastingOf(character: Roller): Spellcasting | undefined {
  * The spellcasting a character casts one spell with: their class's, or for a spell a feat gave them (Magic Initiate)
  * the ability that feat names, with the Proficiency Bonus, for its save DC and attack bonus. A Fighter with Magic
  * Initiate (Wizard) and Intelligence 10 casts its spells at DC 10 and +2.
+ *
+ * A spell cast from a magic item (`fromItem`, or one the hero has only from an item) takes the save DC and attack bonus
+ * the item states, and otherwise the caster's own: "If the user doesn't have a spellcasting ability, their spellcasting
+ * ability modifier is +0 for the item, and the user's Proficiency Bonus applies." A Fighter with Proficiency Bonus +2
+ * casts a Staff's spell at DC 10 and +2.
  */
-export function spellcastingFor(character: Slotted, spellId: string): Spellcasting | undefined {
+export function spellcastingFor(character: Slotted, spellId: string, fromItem = false): Spellcasting | undefined {
   const own = spellcastingOf(character)
-  const ability = spellsOf(character).find((known) => known.spell.id === spellId)?.ability
+  const known = spellsOf(character).find((entry) => entry.spell.id === spellId)
+  if (known?.item && (known.itemOnly || fromItem) && character.sheet) {
+    const proficiency = deriveSheet(character.sheet).proficiencyBonus
+    const modifier = own?.modifier ?? 0
+    return {
+      ...(own ? { ability: own.ability } : {}),
+      saveDc: known.item.saveDc ?? own?.saveDc ?? 8 + proficiency,
+      attackBonus: known.item.attackBonus ?? own?.attackBonus ?? proficiency,
+      modifier,
+      slots: own?.slots ?? [],
+      cantrips: own?.cantrips ?? 0,
+      prepared: own?.prepared ?? 0,
+    }
+  }
+  const ability = known?.ability
   if (!ability || !character.sheet) return own
   const derived = deriveSheet(character.sheet)
   const modifier = derived.abilityModifiers[ability]
@@ -121,144 +145,8 @@ export function classSpells(classId: string, upToLevel: number): string[] {
   return (classById.get(classId)?.spellcasting?.spellList ?? []).filter((entry) => entry.level <= upToLevel).flatMap((entry) => entry.spells)
 }
 
-/**
- * How much of a spell the engine runs. "run": it resolves all the spell does, and the game master tells it from the
- * rolls. "partly": it resolves the part its rules hold, and the game master is given the spell's text for the rest,
- * which changes no one's hit points or conditions. "told": it checks the spell can be cast, spends what it costs and
- * holds its Concentration, and the game master tells it from its text. A spell is told unless it is named below.
- */
-export type SpellLabel = "run" | "partly" | "told"
-
-/**
- * Spells the engine runs in full, each checked against its SRD 5.2.1 text. Light, sound and burning objects that no one
- * holds are the story's. Divine Smite and Searing Smite are cast with the attack they ride (./classes/paladin).
- */
-const RUN = new Set([
-  // Cantrips.
-  "acid-splash",
-  "eldritch-blast",
-  "fire-bolt",
-  "guidance",
-  "poison-spray",
-  "sacred-flame",
-  "sorcerous-burst",
-  "vicious-mockery",
-  // Level 1.
-  "animal-friendship",
-  "bane",
-  "bless",
-  "burning-hands",
-  "color-spray",
-  "cure-wounds",
-  "divine-smite",
-  "false-life",
-  "guiding-bolt",
-  "healing-word",
-  "heroism",
-  "inflict-wounds",
-  "mage-armor",
-  "magic-missile",
-  "ray-of-sickness",
-  "searing-smite",
-  "shield",
-  "shield-of-faith",
-  // Level 2.
-  "acid-arrow",
-  "aid",
-  "barkskin",
-  "blur",
-  "hold-person",
-  "invisibility",
-  "lesser-restoration",
-  "mirror-image",
-  "scorching-ray",
-  "shatter",
-  "spiritual-weapon",
-  // Level 3.
-  "counterspell",
-  "fireball",
-  "lightning-bolt",
-  "mass-healing-word",
-  "revivify",
-  "vampiric-touch",
-  // Levels 4 to 9: a save for half or healing, with nothing more.
-  "hold-monster",
-  "cone-of-cold",
-  "flame-strike",
-  "mass-cure-wounds",
-  "circle-of-death",
-])
-
-/**
- * Spells the engine runs in part. It rolls and applies what its rules hold, and the game master is given the spell's
- * text for the rest, which changes no one's hit points or conditions. What each leaves to the text: Chill Touch's bar
- * on healing, Shocking Grasp's bar on Opportunity Attacks, Ray of Frost's lost Speed, Starry Wisp's and Faerie Fire's
- * light against the Invisible, Charm Person's Advantage while it is fought, Chromatic Orb's leap, Command's words,
- * Dissonant Whispers' flight, Entangle's and Grease's ground, Grease's later falls, Hex's ability and its move, Hunter's
- * Mark's tracking and its move, Hideous Laughter's save on damage, Ice Knife's burst on those beside its target,
- * Sleep's shake awake, Thunderwave's push, Blindness/Deafness's Deafened, Mind Spike's tracking, Moonbeam's later
- * burns and its move, Shining Smite's light and its bar on the Invisible.
- */
-const PARTLY = new Set([
-  "chill-touch",
-  "ray-of-frost",
-  "shocking-grasp",
-  "starry-wisp",
-  "charm-person",
-  "chromatic-orb",
-  "command",
-  "dissonant-whispers",
-  "entangle",
-  "faerie-fire",
-  "grease",
-  "hex",
-  "hideous-laughter",
-  "hunters-mark",
-  "ice-knife",
-  "sleep",
-  "thunderwave",
-  "blindness-deafness",
-  "mind-spike",
-  "moonbeam",
-  "shining-smite",
-  "enthrall",
-  "heat-metal",
-  "magic-weapon",
-  "pass-without-trace",
-  "phantasmal-force",
-  "prayer-of-healing",
-  "ray-of-enfeeblement",
-  "suggestion",
-  "warding-bond",
-  "web",
-  "bestow-curse",
-  "fear",
-  "haste",
-  "hypnotic-pattern",
-  "sleet-storm",
-  "slow",
-  "spirit-guardians",
-  "stinking-cloud",
-  "wind-wall",
-  "beacon-of-hope",
-  "remove-curse",
-  "dispel-magic",
-])
-
-// Held as told for a fault the engine has, though their data is typed: Divine Favor would add its die to hits on its
-// caster, Goodberry makes no berries, Call Lightning strikes one creature once, Flame Blade and Produce Flame attack as
-// they are cast and deal nothing, Hellish Rebuke is never offered as a Reaction, Sanctuary has the one warded save,
-// Resistance's die is taken off no damage, and Ensnaring Strike has no hit to ride (./castableOnTurn). Above level 3 every spell
-// not named above, until the owner's fourth step.
-
-/** How much of a spell the engine runs (`SpellLabel`). */
-export const spellLabel = (spell: { id: string }): SpellLabel => (RUN.has(spell.id) ? "run" : PARTLY.has(spell.id) ? "partly" : "told")
-
-/** The spells named as run or partly run, by id, for the check that each is a spell of the SRD and named once. */
-export const namedSpellIds = (): string[] => [...RUN, ...PARTLY]
-
-/** Whether the engine resolves all a spell does. Any other is told by the game master from the spell's text, in full or in part. */
-export const isEngineSpell = (spell: { id: string }): boolean => spellLabel(spell) === "run"
+// How much of each spell the engine runs (./spell-labels).
+export { isEngineSpell, namedSpellIds, type SpellLabel, spellLabel } from "./spell-labels"
 
 /** The time a spell takes to cast when it is a minute or more, in words: "1 minute", "10 minutes", "1 hour". */
 export function longCasting(spell: Spell): string | undefined {
@@ -341,6 +229,10 @@ export type KnownSpell = {
   from?: string
   /** A stat block casts it as a Bonus Action, whatever its own casting time: a Priest's Bless by Divine Aid. */
   bonusAction?: true
+  /** A magic item the hero owns casts it, with what that costs (./item-use). The first item that does, in the order owned. */
+  item?: ItemCasting
+  /** The hero casts it only from that item, by no feature or slot of their own. */
+  itemOnly?: true
 }
 
 type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<string, number> }
@@ -349,7 +241,8 @@ type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<s
  * The spells a hero can cast, from the sheet: the cantrips known, the spells prepared, for a Wizard the Ritual spells
  * of the spellbook, and each Magic Initiate's two cantrips and its level 1 spell, always prepared, with one cast a Long
  * Rest that takes no slot (counted under `magic-initiate-<list>`), all cast with the ability the feat names. A cantrip
- * the species gives is cast with the sheet's `speciesSpellAbility` where it names one. A hero
+ * the species gives is cast with the sheet's `speciesSpellAbility` where it names one. The spells the hero's working
+ * magic items cast (./item-use `itemSpellsOf`), each with its item, beside or in place of their own casting. A hero
  * with no sheet has none. An NPC's are its stat block's.
  */
 export function spellsOf(character: Slotted): KnownSpell[] {
@@ -413,6 +306,14 @@ export function spellsOf(character: Slotted): KnownSpell[] {
     const held = found.findIndex((known) => known.spell.id === spell.id)
     if (held < 0) found.push({ spell, cantrip: false, prepared: counted === undefined, ritual: false, free: 0, ...how })
     else if (!found[held].useKey && !found[held].atWill) found[held] = { ...found[held], ...how }
+  }
+  // A spell a magic item casts: one the hero also casts by their own means keeps those, and gains the item's.
+  for (const casting of itemSpellsOf(sheet)) {
+    const spell = spellById.get(casting.spell)
+    const held = found.findIndex((known) => known.spell.id === casting.spell)
+    if (!spell) continue
+    if (held < 0) found.push({ spell, cantrip: false, prepared: false, ritual: false, free: 0, item: casting, itemOnly: true, ...(casting.selfOnly ? { selfOnly: true as const } : {}) })
+    else if (!found[held].item) found[held] = { ...found[held], item: casting }
   }
   return found
 }
@@ -492,13 +393,16 @@ export function spellWords(character: Slotted & { spells?: readonly { name: stri
           .map((entry) => `${entry.spell.name}${entry.selfOnly ? " (on themselves)" : ""}`)
           .join(", ")}`
       : "",
-    known.some((entry) => !entry.prepared && !entry.from) ? `Rituals from the spellbook, outside a fight: ${names(known.filter((entry) => !entry.prepared && !entry.from))}` : "",
+    known.some((entry) => !entry.prepared && !entry.from && !entry.itemOnly)
+      ? `Rituals from the spellbook, outside a fight: ${names(known.filter((entry) => !entry.prepared && !entry.from && !entry.itemOnly))}`
+      : "",
     known.some((entry) => !entry.prepared && entry.from)
       ? `Cast with no slot: ${known
           .filter((entry) => !entry.prepared && entry.from)
           .map((entry) => `${entry.spell.name} (${entry.free} left)`)
           .join(", ")}`
       : "",
+    known.some((entry) => entry.item) ? `From magic items, with no slot: ${known.flatMap((entry) => (entry.item ? [`${entry.spell.name} (${itemCastingWords(entry.item)})`] : [])).join(", ")}` : "",
     left.length ? `Spell slots left: ${slotWords(character)}` : "",
   ]
   return parts.filter(Boolean).join(". ")
@@ -531,22 +435,31 @@ export function slotFor(character: Slotted, spellLevel: number, slot?: number): 
   return index < 0 ? undefined : index + 1
 }
 
-/** What casting a spell spends: nothing for a cantrip or a Ritual, a feature's free cast, or a slot of the spell's level. */
-export type CastCost = { kind: "cantrip" } | { kind: "ritual" } | { kind: "free"; feature: string } | { kind: "slot"; level: number }
+/**
+ * What casting a spell spends: nothing for a cantrip or a Ritual, a feature's free cast, a slot of the spell's level, or
+ * a magic item's charges or use, at the level the item casts it (./item-use).
+ */
+export type CastCost = { kind: "cantrip" } | { kind: "ritual" } | { kind: "free"; feature: string } | { kind: "slot"; level: number } | ItemCost
 
 /**
  * Whether a hero can cast a spell now, and what it spends. A cantrip is free. A Ritual cast slowly (`ritual`) spends
  * nothing. A feature's free cast is used before a slot, unless a higher slot is named. Any other casting needs the
  * spell prepared and a slot: the level named in `slot` (upcasting), or the lowest left that can pay, its own level
- * first and then higher (./slotFor). `problem` says why not, for the game master.
+ * first and then higher (./slotFor). A spell cast from a magic item (`fromItem`, or one the hero casts only from an
+ * item) spends the item's charges or use in place of a slot, and `slot` is then the level asked for, where the item
+ * casts it at more than one. `problem` says why not, for the game master.
  */
-export function castCost(character: Slotted, spellId: string, ritual = false, slot?: number): { cost: CastCost; known: KnownSpell } | { problem: string } {
+export function castCost(character: Slotted, spellId: string, ritual = false, slot?: number, fromItem = false): { cost: CastCost; known: KnownSpell } | { problem: string } {
   const known = spellsOf(character).find((entry) => entry.spell.id === spellId)
   const name = spellById.get(spellId)?.name ?? spellId
   if (!known) return { problem: `${name} is not a spell ${character.name ?? "this character"} can cast.` }
   // A class feature that bars casting while it lasts (Rage) bars every spell, a cantrip too.
   const barred = classCastingBar(character)
   if (barred) return { problem: barred }
+  if (known.item && (known.itemOnly || fromItem)) {
+    const paid = itemCastCost(known.item, known.spell, slot)
+    return "problem" in paid ? paid : { cost: paid, known }
+  }
   if (known.cantrip) return { cost: { kind: "cantrip" }, known }
   // An invocation's spell cast at will spends nothing, as a cantrip does, unless a higher slot is named.
   if (known.atWill && !(character.sheet && slot !== undefined && slot > known.spell.level && slotFor(character, known.spell.level, slot) === slot)) return { cost: { kind: "cantrip" }, known }
@@ -571,7 +484,18 @@ export function withCastSpent<T extends Slotted>(character: T, cost: CastCost): 
     return { ...character, spellSlots: used }
   }
   if (cost.kind === "free") return { ...character, featureUses: { ...character.featureUses, [cost.feature]: (character.featureUses?.[cost.feature] ?? 0) + 1 } }
+  if (cost.kind === "item" && character.sheet) return { ...character, sheet: withItemCastSpent(character.sheet, cost).sheet }
   return character
+}
+
+/**
+ * A character with what a casting costs paid, and what happened in words: an item's last charge spent rolls its die
+ * with `roll`, and may destroy it (./item-spend `withChargesSpent`). Any other cost is `withCastSpent`.
+ */
+export function withCastPaid<T extends Slotted>(character: T, cost: CastCost, roll: (sides: number) => number): { character: T; facts: string[] } {
+  if (cost.kind !== "item" || !character.sheet) return { character: withCastSpent(character, cost), facts: [] }
+  const paid = withItemCastSpent(character.sheet, cost, roll)
+  return { character: { ...character, sheet: paid.sheet }, facts: paid.facts }
 }
 
 /** A saving throw a target made against a spell, as it fell. */
@@ -700,11 +624,13 @@ export function castSpell<T extends Castee>(args: {
   floor?: Floor
   /** The spell used again on a later turn, not cast: ./spells `castAgain`. */
   again?: boolean
+  /** Cast from a magic item, with the item's save DC and attack bonus where it states them (`spellcastingFor`). */
+  item?: boolean
 }): Cast<T> {
   const { spell } = args
   let characters = [...args.characters]
   const caster = characters.find((character) => character.id === args.casterId)
-  const casting = caster && spellcastingFor(caster, spell.id)
+  const casting = caster && spellcastingFor(caster, spell.id, args.item)
   if (!caster || !casting) throw new Error(`${caster?.name ?? "This character"} cannot cast spells.`)
   const level = caster.sheet?.level ?? 1
   const features = new Set(caster.sheet ? featuresOf(caster.sheet).map((feature) => feature.id) : [])
@@ -961,7 +887,8 @@ export function castSpell<T extends Castee>(args: {
       const dice = raised(healing.dice, healing.perSlot, above)
       const most = healsMost(target)
       const rolled = dice ? rollDamage([{ dice, type: "force" }], most ? (sides) => sides : args.roll) : undefined
-      const disciple = features.has(DISCIPLE_OF_LIFE) && spell.level >= 1 ? 2 + slot : 0
+      // Disciple of Life is for "a spell you cast with a spell slot", so not one cast from an item.
+      const disciple = features.has(DISCIPLE_OF_LIFE) && spell.level >= 1 && !args.item ? 2 + slot : 0
       const bonus = (rolled?.parts[0]?.bonus ?? 0) + (healing.modifier ? casting.modifier : 0) + (healing.perSlotAmount ?? 0) * above + disciple
       const amount = Math.max(0, (rolled?.parts[0]?.dice.reduce((sum, die) => sum + die, 0) ?? healing.amount ?? 0) + bonus)
       const healed = withHealing(target, amount)
@@ -1148,7 +1075,9 @@ function effectAmount(spell: Spell, slot: number): number | undefined {
  * of spells on them (Bless, Bane), Slow's −2 on Dexterity, and the Advantage and Disadvantage of their conditions,
  * actions and spells (Haste, Beacon of Hope), of their species against the conditions at stake (`against`: Fey
  * Ancestry on Charmed), and of the spell itself (`also`). A condition may fail it outright. A stat block's action
- * that is not magic (a breath weapon) passes `magical: false`, and Magic Resistance gives nothing against it.
+ * that is not magic (a breath weapon) passes `magical: false`, and Magic Resistance gives nothing against it. A
+ * magical effect that is not a spell (a Channel Divinity) passes `spell: false`, and a hero's worn item gives Advantage
+ * against spells alone gives nothing against it (./item-effects): a Mantle of Spell Resistance.
  *
  * A Legendary creature that fails may choose to succeed (./legendary-resistance), judged on `stakes`: what the failure
  * would cost it. A caller that gives no stakes is never answered so, and one that gives them spends the use when the
@@ -1169,6 +1098,8 @@ export function rollSave(args: {
   stakes?: SaveStakes
   /** False for an effect that is not magic, a breath weapon's: Magic Resistance gives nothing against it. */
   magical?: false
+  /** False for a magical effect that is not a spell, a Channel Divinity's. */
+  spell?: false
 }): SaveRoll {
   const { target, ability } = args
   const check: Check = { kind: "save", ability }
@@ -1179,6 +1110,7 @@ export function rollSave(args: {
     ...saveModesFromSpells(target, ability),
     ...speciesSaveModes(target, ability, args.against),
     ...(args.magical === false ? [] : magicSaveModes(target)),
+    ...itemSaveModes(target.sheet, args.against, args.magical === false ? "other" : args.spell === false ? "magic" : "spell"),
     ...classCheckModes(target, check),
     ...(args.also ?? []),
   ]

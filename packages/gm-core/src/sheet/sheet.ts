@@ -1,4 +1,4 @@
-import { abilityIdSchema, abilityIds, classIdSchema, idSchema, sizeSchema, skillIdSchema } from "@d20/srd"
+import { abilityIdSchema, abilityIds, classIdSchema, damageTypeIdSchema, idSchema, sizeSchema, skillIdSchema } from "@d20/srd"
 import { z } from "zod"
 
 const scoreSchema = z.number().int().min(1).max(30)
@@ -51,13 +51,26 @@ export type FeaturePick = z.infer<typeof featurePickSchema>
  * versions names the one owned (`variant: "+1"`). A magic weapon, armor or Shield names the equipment it is
  * (`base: "longsword"`), and it is the one wielded or worn whenever the sheet's `weapons`, `armor` or `shield` holds that
  * equipment: a Longsword +1 and `weapons: ["longsword"]` is one magic Longsword. `attuned` is set only on an item that
- * needs Attunement, once the hero is attuned to it. Each entry is one item. Checked by `sheetProblems` (./items).
+ * needs Attunement, once the hero is attuned to it. Each entry is one item, or for a consumable item (a potion) as many
+ * of one kind as `count` says. Checked by `sheetProblems` (./items).
+ *
+ * What the hero has used of it is kept on the entry too, by ./item-use: `count` falls as one is used and the entry goes
+ * at none, `spent` is the charges expended, and `used` the uses spent of a spell or property that comes back at dawn,
+ * by the spell's id or the property's name.
  */
 export const ownedItemSchema = z.strictObject({
   id: idSchema,
   variant: z.string().min(1).optional(),
   base: idSchema.optional(),
   attuned: z.literal(true).optional(),
+  /** The damage type the GM chose for an item that resists one: a Ring of Resistance's `"fire"` (./item-effects). */
+  damageType: damageTypeIdSchema.optional(),
+  /** How many of a consumable item the entry holds, where more than one. */
+  count: z.number().int().min(2).optional(),
+  /** The charges expended, where any are. */
+  spent: z.number().int().min(1).optional(),
+  /** Uses spent of what the item allows so many times a dawn, by spell id or property name. */
+  used: z.record(z.string(), z.number().int().min(1)).optional(),
 })
 export type OwnedItem = z.infer<typeof ownedItemSchema>
 
