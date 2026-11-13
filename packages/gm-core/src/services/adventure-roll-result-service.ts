@@ -3,7 +3,7 @@ import { afterRoll } from "../sheet/actions"
 import { type Strike, strikeFacts } from "../sheet/attack"
 import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { checkBonus, resolveCheck } from "../sheet/check"
-import { afterFelled, classCheckBonus, classConcentrationModes, type Featured, rescuedCheck, resolveChosenCast, shapedCast } from "../sheet/class-rules"
+import { afterFelled, classCheckBonus, classConcentrationModes, classD20Floor, classTotalFloor, type Featured, rescuedCheck, resolveChosenCast, shapedCast } from "../sheet/class-rules"
 import { d20Penalty, saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, deathSave } from "../sheet/death"
@@ -270,6 +270,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
           rules,
           damageType: required.cast.damageType,
           skill: required.cast.skill,
+          choice: required.cast.choice,
           cover: required.cast.cover,
           measured: required.cast.measured,
           floor,
@@ -329,6 +330,10 @@ export function createAdventureRollResultService(ports: GmPorts) {
         mode,
         fails: !!failedBy,
         adds: checkAdds(args.character, required.check, rollDie),
+        // Reliable Talent: a low die on a trained skill counts as a 10.
+        least: classD20Floor(args.character, required.check),
+        // Indomitable Might: a Strength check or save totals at least the Strength score.
+        leastTotal: classTotalFloor(args.character, required.check),
       })
       // A held Bardic Inspiration die is rolled on a failure it could turn into a success.
       const held = args.character.inspiration
@@ -337,7 +342,15 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // What the roller's class may still do for a failed check: a Fighter's Tactical Mind takes a d10, paid for with
       // Second Wind only when it then succeeds.
       const check = required.check
-      const minded = failedBy ? undefined : rescuedCheck({ character: args.character, check, result: lifted, roll: rollDie })
+      const minded = failedBy
+        ? undefined
+        : rescuedCheck({
+            character: args.character,
+            check,
+            result: lifted,
+            roll: rollDie,
+            staked: !!required.stakes?.some((stake) => stake.on === "failure" && stake.target === args.characterId && stake.kind !== "healing"),
+          })
       const result = minded?.result ?? lifted
       const after = minded?.after
       if (after) turnCharacters = turnCharacters.map((character) => (character.id === args.characterId ? after(character) : character))

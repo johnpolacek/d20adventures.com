@@ -1,8 +1,6 @@
 import type { AbilityId, ConditionId, DamageTypeId } from "@d20/srd"
 import type { Spell } from "@d20/srd/schema/spells"
-import { spellById } from "@d20/srd/spells"
-import { isDown } from "../utils/turn-actors"
-import { damageTaken, defensesOf, parseDice, rollDamage } from "./attack"
+import { damageTaken, defensesOf, rollDamage } from "./attack"
 import { checkBonus } from "./check"
 import { classConcentrationModes, roundStartRules } from "./class-rules"
 import { conditionName, withCondition } from "./conditions"
@@ -12,9 +10,10 @@ import { hitPointsOf } from "./hit-points"
 import { ridersAtRoundEnd } from "./hit-riders"
 import { legendaryResistanceWords, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { typesTaken } from "./monster-traits"
-import { areEnemies } from "./sides"
-import { type Point, placedOf, within } from "./space"
-import { AREA_SPELLS, type ConcentrationSave, endConcentration, settleConcentration, spellEnded } from "./spell-effects"
+import { rescueWords, withRescueSpent } from "./save-rules"
+import type { Point } from "./space"
+import { type ConcentrationSave, settleConcentration } from "./spell-effects"
+import { type RoundContext, roundRules } from "./spell-rules"
 import { type Castee, rollSave, type SaveRoll, spellcastingFor } from "./spells"
 import { recharged } from "./stat-block-actions"
 
@@ -23,16 +22,9 @@ import { recharged } from "./stat-block-actions"
  * "at the end of each of its turns" and "starts its turn there" both fall here, once a round, before the next round
  * begins (./death `atRoundStart`). Run it on every round within an encounter, and not when the story moves to another.
  *
- * - A save a spell's target repeats at the end of each of its turns, ending the spell on itself on a success: Hold
- *   Person, Blindness/Deafness, Ray of Enfeeblement, Slow, Hideous Laughter. Fear's, made only out of its caster's
- *   sight, is not.
- * - Searing Smite's 1d6 Fire as each of its target's turns begins, then a Constitution save that ends it on a success.
- * - Acid Arrow's 2d4 Acid at the end of its target's next turn, and 1d4 more for each slot level above 2.
- * - Spirit Guardians: each creature not of its caster's side within 15 feet of them makes a Wisdom save, taking 3d8
- *   Radiant damage, and 1d8 more for each slot level above 3, or half on a success. Its Speed is not halved.
- * - The areas that stay on the floor, for those still in them: Web's Dexterity save or Restrained, Stinking Cloud's
- *   Constitution save or Poisoned through the turn, and Sleet Storm's Dexterity save or Prone and their Concentration
- *   lost.
+ * What each spell does here is its own rules' `round` (./spell-rules), from the files of ./spell-mechanics, run for each
+ * character in the order the files are listed: a save repeated at the end of each turn, Sleep's second save, a burn
+ * as a turn starts, Acid Arrow's later burn, Spirit Guardians round its caster, and the areas that stay on the floor.
  *
  * `d20` throws each save and `roll` each damage die. Everyone comes back as it left them, with the saves, the harm,
  * the conditions given or ended, and what happened in words for the game master.
@@ -86,6 +78,10 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
       put(spent)
       tell(target.id, spell.name, legendaryResistanceWords(target.name, spent))
     }
+    if (thrown.rescued) {
+      put(withRescueSpent(find(target.id) ?? target, thrown.rescued))
+      tell(target.id, spell.name, rescueWords(target.name, thrown.rescued, thrown))
+    }
     return thrown
   }
   const verdict = (target: T, thrown: SaveRoll, spell: Spell, caster: T) =>
@@ -104,121 +100,25 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     const caster = find(by)
     return caster && !caster.dead && (!spell.duration.concentration || caster.concentration?.spell === spell.id) ? caster : undefined
   }
-
-  // Saves repeated at the end of each of the target's turns.
-  for (const was of args.characters) {
-    const held = new Map<string, string | undefined>()
-    for (const effect of was.spellEffects ?? []) held.set(effect.spell, effect.by)
-    for (const entry of was.conditions ?? []) if (entry.spell) held.set(entry.spell, entry.source)
-    for (const [id, by] of held) {
-      const spell = spellById.get(id)
-      const repeat = spell?.saves?.find((entry) => entry.when === "end-of-turn" && entry.onSuccess === "ends")
-      const target = find(was.id)
-      const caster = spell && holds(spell, by)
-      if (!spell || !repeat || NOT_REPEATED.has(id) || !target || target.dead || isDown(target) || !caster) continue
-      // Made to end the conditions the spell holds them in.
-      const held = target.conditions?.filter((entry) => entry.spell === id).map((entry) => entry.id) ?? []
-      const thrown = save(target, repeat.ability, caster, spell, held)
-      tell(target.id, spell.name, `${verdict(target, thrown, spell, caster)}${thrown.success ? `, and ${spell.name} ends on them` : ""}.`)
-      if (!thrown.success) continue
-      const ending = (find(was.id) as T).conditions?.filter((entry) => entry.spell === id).map((entry) => entry.id) ?? []
-      put(spellEnded(find(was.id) as T, (spellId) => spellId === id))
-      for (const condition of ending) conditions.push({ target: was.id, condition, ends: true })
-    }
+  const round: RoundContext = {
+    everyone: () => characters,
+    replace: (now) => {
+      characters = [...now] as T[]
+    },
+    find,
+    put: (after) => put(after as T),
+    hurt,
+    save: (target, ability, caster, spell, against) => save(target as T, ability, caster as T, spell, against),
+    verdict: (target, thrown, spell, caster) => verdict(target as T, thrown, spell, caster as T),
+    give: (target, id, spell, caster, span) => {
+      give(target as T, id, spell, caster as T, span)
+    },
+    tell,
+    standing,
+    holds,
+    conditions,
   }
-
-  // Sleep's second save at the end of the target's next turn, as its Incapacitated runs out: on a failure the target is
-  // Unconscious for as long as the spell lasts, and on a success the spell ends on it.
-  for (const was of args.characters) {
-    const entry = was.conditions?.find((held) => held.spell === "sleep" && held.id === "incapacitated" && held.turns === 1)
-    const target = find(was.id)
-    const spell = spellById.get("sleep")
-    const caster = spell && entry ? holds(spell, entry.source) : undefined
-    if (!spell || !caster || !target || target.dead) continue
-    const thrown = save(target, "wis", caster, spell, ["unconscious"])
-    tell(target.id, spell.name, `${verdict(target, thrown, spell, caster)}${thrown.success ? `, and ${spell.name} ends on them` : ""}.`)
-    if (thrown.success) {
-      put(spellEnded(target, (id) => id === spell.id))
-      conditions.push({ target: was.id, condition: "incapacitated", ends: true })
-    } else give(target, "unconscious", spell, caster, "lasting")
-  }
-
-  // A burn at the start of each of the target's turns, then a save that ends the spell on a success: Searing Smite's
-  // 1d6 Fire, and 1d6 more for each slot level above 1, held as the effect's `amount`.
-  for (const was of args.characters) {
-    for (const effect of was.spellEffects ?? []) {
-      const spell = spellById.get(effect.spell)
-      const repeat = spell?.saves?.find((entry) => entry.when === "start-of-turn" && entry.onSuccess === "ends" && !entry.appliesWhen)
-      const burn = spell?.damage?.find((entry) => entry.dice && entry.timing === "At the start of each of its turns" && !entry.trigger)
-      const caster = spell && repeat && burn ? holds(spell, effect.by) : undefined
-      if (!spell || !repeat || !burn?.dice || !caster || find(was.id)?.dead) continue
-      const base = parseDice(burn.dice)
-      const above = Math.max(0, (effect.amount ?? spell.level) - spell.level)
-      const amount = hurt(was.id, `${base.count + (burn.perSlot ? parseDice(burn.perSlot).count * above : 0)}d${base.sides}`, burn.types[0] as DamageTypeId)
-      tell(was.id, spell.name, `${caster.name}'s ${spell.name} burns ${was.name} for ${amount} ${burn.types[0]} damage.${standing(was.id)}`)
-      const target = find(was.id)
-      if (!target || target.dead || isDown(target)) continue
-      const thrown = save(target, repeat.ability, caster, spell)
-      tell(was.id, spell.name, `${verdict(target, thrown, spell, caster)}${thrown.success ? `, and ${spell.name} ends on them` : ""}.`)
-      if (thrown.success) put(spellEnded(find(was.id) as T, (id) => id === spell.id))
-    }
-  }
-
-  // Acid Arrow's burn at the end of its target's next turn.
-  for (const was of args.characters) {
-    const effect = was.spellEffects?.find((entry) => entry.spell === "acid-arrow" && entry.turns === 1)
-    const target = find(was.id)
-    const spell = spellById.get("acid-arrow")
-    if (!effect || !target || target.dead || !spell) continue
-    const amount = hurt(was.id, `${2 + Math.max(0, (effect.amount ?? spell.level) - spell.level)}d4`, "acid")
-    tell(target.id, spell.name, `Acid Arrow's acid burns ${target.name} again for ${amount} acid damage.${standing(was.id)}`)
-  }
-
-  // Spirit Guardians, round its caster.
-  for (const was of args.characters) {
-    const effect = was.spellEffects?.find((entry) => entry.spell === "spirit-guardians" && entry.by === was.id)
-    const spell = spellById.get("spirit-guardians")
-    const caster = find(was.id)
-    const at = caster && placedOf(caster)
-    if (!effect || !spell || !caster || !at || caster.concentration?.spell !== spell.id) continue
-    const area = spell.range.area?.size ?? 15
-    const above = Math.max(0, (effect.amount ?? spell.level) - spell.level)
-    for (const other of characters) {
-      const there = placedOf(other)
-      if (other.id === caster.id || !areEnemies(other, caster) || other.dead || !there || !within(at, there, area)) continue
-      const thrown = save(other, "wis", caster, spell)
-      const amount = hurt(other.id, `${3 + above}d8`, "radiant", (taken) => (thrown.success ? Math.floor(taken / 2) : taken))
-      tell(other.id, spell.name, `${verdict(other, thrown, spell, caster)} and takes ${amount} radiant damage.${standing(other.id)}`)
-    }
-  }
-
-  // The areas on the floor, for those still in them as their turn begins.
-  for (const was of args.characters) {
-    for (const effect of was.spellEffects ?? []) {
-      const spell = spellById.get(effect.spell)
-      const target = find(was.id)
-      const caster = spell && AREA_SPELLS.has(effect.spell) ? holds(spell, effect.by) : undefined
-      if (!spell || !caster || !target || target.dead || isDown(target)) continue
-      if (spell.id === "web" && target.conditions?.some((entry) => entry.id === "restrained" && entry.spell === "web")) continue
-      const ability = spell.saves?.[0]?.ability ?? "dex"
-      const thrown = save(target, ability, caster, spell, AREA_GIVES[spell.id] ?? [])
-      tell(target.id, spell.name, `${verdict(target, thrown, spell, caster)}.`)
-      if (thrown.success) continue
-      if (spell.id === "web") give(target, "restrained", spell, caster, "lasting")
-      if (spell.id === "stinking-cloud") {
-        give(target, "poisoned", spell, caster, "turn")
-        tell(target.id, spell.name, `${target.name} can take no action or Bonus Action this turn.`)
-      }
-      if (spell.id === "sleet-storm") {
-        give(find(was.id) as T, "prone", spell, caster, "turn")
-        if ((find(was.id) as T).concentration) {
-          const ended = endConcentration(characters, was.id)
-          characters = ended.characters
-          if (ended.ended) tell(target.id, spell.name, `${target.name} loses Concentration, and ${ended.ended} ends.`)
-        }
-      }
-    }
-  }
+  for (const rule of roundRules()) for (const was of args.characters) rule(round, was)
 
   return { characters, saves, harm, conditions, facts, told }
 }
@@ -257,19 +157,14 @@ export function roundTurns<T extends Castee & { position?: Point }>(args: {
   const regenerated = kept.characters.map((character) => regenerate(recharged(character, args.roll)))
   const regrown = regenerated.flatMap(({ character, fact, trait }) => (fact && trait ? [{ character: character.id, spell: trait, text: fact }] : []))
   const classed: RoundFact[] = []
+  // A class may have one repeat a save its hero's feature forced (Intimidating Presence), against that hero's DC.
+  const round = { everyone: regenerated.map(({ character }) => character), d20: args.d20, roll: args.roll }
   const characters = regenerated.map(({ character }) =>
     roundStartRules().reduce((now, rule) => {
-      const begun = rule(now)
+      const begun = rule(now, round)
       if (begun.told) classed.push({ character: now.id, spell: begun.told.name, text: begun.told.text })
       return begun.character
     }, character)
   )
   return { characters, told: [...ended.told, ...held.told, ...lost.filter((fact) => fact.character), ...regrown, ...classed], saves: kept.saves }
 }
-
-// Fear's repeated save is made only "If the creature ends its turn in a space where it doesn't have line of sight to
-// you": the engine does not read sight, so it is the game master's to tell.
-const NOT_REPEATED = new Set(["fear"])
-
-// The condition each area spell gives on a failed save as a turn begins in it, below: what the save is made to avoid.
-const AREA_GIVES: Record<string, readonly ConditionId[]> = { web: ["restrained"], "stinking-cloud": ["poisoned"], "sleet-storm": ["prone"] }

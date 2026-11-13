@@ -60,7 +60,7 @@ const optionOf = (options: LevelUpOptions, picks: Picks, feature: string) =>
   options.featureChoices?.find((entry) => entry.feature.id === feature)?.options.find((option) => option.id === picks.featureChoices[feature])
 
 /** The spells a Wizard may prepare from: those of the level's list that are in the spellbook, with what this level writes into it. */
-export function preparable(options: LevelUpOptions, book: readonly string[] | undefined, picks: Picks): (Named & { level: number })[] {
+export function preparable(options: LevelUpOptions, book: readonly string[] | undefined, picks: Picks): (Named & { level: number; list?: string })[] {
   const from = options.spells?.from ?? []
   if (!book) return from
   const pages = new Set([...book, ...picks.spellbook])
@@ -99,6 +99,22 @@ export function togglePick(offer: PicksOffer, picked: readonly FeaturePick[], op
   const same = (each: FeaturePick) => each.option === pick.option && each.cantrip === pick.cantrip && each.feat === pick.feat
   if (picked.some(same)) return picked.filter((each) => !same(each))
   return picked.length < offer.count ? [...picked, pick] : [...picked]
+}
+
+/**
+ * Whether a feature's spell picks fill its slots, each spell in one that takes its level (Mystic Arcanum's one of each
+ * level). Each goes to the narrowest slot that takes it. True for a feature whose picks are not spells.
+ */
+export function fillsSlots(offer: PicksOffer, picked: readonly FeaturePick[]): boolean {
+  if (!offer.slots) return true
+  const free = [...offer.slots].sort((a, b) => a.length - b.length)
+  for (const pick of picked) {
+    const level = offer.options.find((option) => option.id === pick.option)?.level
+    const index = free.findIndex((slot) => level !== undefined && slot.includes(level))
+    if (index < 0) return false
+    free.splice(index, 1)
+  }
+  return true
 }
 
 /** How many of the picks kept from before a feature's picks have dropped. */
@@ -143,6 +159,7 @@ export function missing(options: LevelUpOptions, picks: Picks, prepared?: readon
     const picked = picks.featurePicks[offer.feature.id] ?? []
     short(picked.length, offer.count, offer.feature.name.replace(/s$/, ""), offer.feature.name)
     if (replacedCount(offer, picked) > (offer.replace ? 1 : 0)) left.push(`${offer.feature.name}: ${offer.replace ? "only one" : "none"} of those held may be replaced`)
+    if (!fillsSlots(offer, picked)) left.push(`${offer.feature.name}: one spell of each level`)
   }
   if (options.cantrips) short(picks.cantrips.length, options.cantrips.count, "cantrip", "cantrips")
   if (options.spellbook) {

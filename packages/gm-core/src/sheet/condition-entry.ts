@@ -26,6 +26,11 @@ export const conditionEntrySchema = z.strictObject({
    * grapple ends. Ending the Grappled condition ends every one the same attack of the same holder gave (./hit-riders).
    */
   attack: z.string().optional(),
+  /**
+   * The class feature that gave it, by SRD id, with `source` the hero: a Rogue's Knock Out. That class's own rules end
+   * it: on a save repeated as the round turns, or when its bearer takes damage (./class-rules `endsOnDamage`).
+   */
+  feature: z.string().optional(),
   /** An Exhaustion level, 1 to 6. */
   level: z.number().int().min(1).max(6).optional(),
 })

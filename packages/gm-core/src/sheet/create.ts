@@ -28,7 +28,7 @@ export type HeroRecord = Required<Pick<PCTemplate, "race" | "archetype" | "attri
  */
 
 /**
- * The classes a hero can be made in: all twelve of the SRD, whose play the rules engine runs at levels 1 to 5. The
+ * The classes a hero can be made in: all twelve of the SRD, raised by levels to 20. The
  * menu, the pick a host receives (`creationPickSchema`) and its type hold to it.
  */
 export const CREATION_CLASSES = ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"] as const

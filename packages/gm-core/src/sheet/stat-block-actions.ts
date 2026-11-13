@@ -11,6 +11,7 @@ import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { legendaryResistanceWords, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { typesTaken } from "./monster-traits"
+import { damageOnSave, rescueWords, withRescueSpent } from "./save-rules"
 import { shapeOf } from "./shape"
 import { coverBonus } from "./space"
 import { type Cast, type Castee, rollSave, type SaveRoll, spellById } from "./spells"
@@ -372,17 +373,24 @@ export function useBlockAction<T extends Acting>(args: {
       put(spent)
       facts.push(legendaryResistanceWords(target.name, spent))
     }
+    if (thrown.rescued) {
+      put(withRescueSpent(find(id) ?? target, thrown.rescued))
+      facts.push(rescueWords(target.name, thrown.rescued, thrown))
+    }
     const verdict = `${target.name} ${thrown.success ? "SUCCEEDS on" : "FAILS"} the ${ABILITY_NAMES[action.ability]} saving throw against ${actor.name}'s ${action.name} (${thrown.total} against DC ${action.dc})`
     let words = `${verdict}.`
-    if (rolled && (!thrown.success || action.half)) {
+    // All, half or none, as the save and Evasion leave it (./save-rules).
+    const settled = (taken: number) => damageOnSave(target, { ability: action.ability, success: thrown.success, half: action.half }, taken)
+    const evaded = rolled ? settled(0).evaded : undefined
+    if (rolled && (!thrown.success || action.half) && !(thrown.success && evaded)) {
       const defenses = defensesOf(target)
-      const amount = thrown.success ? Math.floor(damageTaken(rolled, defenses) / 2) : damageTaken(rolled, defenses)
+      const amount = settled(damageTaken(rolled, defenses)).amount
       const struck = withDamage(find(id) as T, amount, { rules: args.rules, types: typesTaken(rolled, defenses) })
       put(afterHarm(struck.character))
       const [part] = rolled.parts
       harm.push({ target: id, kind: "damage", dice: part?.dice ?? [], sides: part?.sides, bonus: part?.bonus ?? 0, type: part?.type, amount })
-      words = `${verdict} and takes ${amount} ${part?.type ?? ""} damage. ${standing(find(id) as T, struck.fate)}`
-    } else if (rolled) words = `${verdict} and takes no damage.`
+      words = `${verdict} and takes ${amount} ${part?.type ?? ""} damage${evaded ? `, halved by ${evaded}` : ""}. ${standing(find(id) as T, struck.fate)}`
+    } else if (rolled) words = `${verdict} and takes no damage${evaded ? ` (${evaded})` : ""}.`
     facts.push(words.replace("  ", " "))
     if (thrown.success) continue
     for (const entry of action.conditions) {

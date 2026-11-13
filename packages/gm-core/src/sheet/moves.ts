@@ -31,13 +31,23 @@ export const moveBudget = (mover: Mover, others: readonly Other[] = [], dash = f
  * they are, or have no position.
  *
  * Thalbern, Speed 30, 45 feet from Reinhard: asked to close, he walks 30 feet and stands 15 from him. With Dash he
- * walks 40 and stands within 5.
+ * walks 40 and stands within 5. `extra` is feet a Bonus Action adds to a move that can be made at all (Instinctive
+ * Pounce).
  */
-export function takeMove(args: { floor: EncounterFloor; mover: Mover; others: readonly Other[]; ask?: MoveAsk; dash?: boolean; close?: { target: string; reach: number } }): Moved | undefined {
+export function takeMove(args: {
+  floor: EncounterFloor
+  mover: Mover
+  others: readonly Other[]
+  ask?: MoveAsk
+  dash?: boolean
+  close?: { target: string; reach: number }
+  extra?: number
+}): Moved | undefined {
   const from = args.mover.position
   if (!from) return undefined
   const ask = args.ask ?? {}
-  const budget = Math.min(moveBudget(args.mover, args.others, args.dash), ask.feet !== undefined && ask.feet > 0 ? ask.feet : Number.POSITIVE_INFINITY)
+  const own = moveBudget(args.mover, args.others, args.dash)
+  const budget = Math.min(own > 0 ? own + (args.extra ?? 0) : 0, ask.feet !== undefined && ask.feet > 0 ? ask.feet : Number.POSITIVE_INFINITY)
   if (budget <= 0) return undefined
   const standing = args.others.flatMap((other) => (other.position ? [other.position] : []))
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)

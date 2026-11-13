@@ -6,23 +6,25 @@ import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../s
 import { attacksOf } from "../sheet/attack"
 import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
 import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
-import { type ChoiceRule, choiceRules, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast } from "../sheet/class-rules"
+import { type ChoiceRule, choiceRules, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast, withAdvantageBarred } from "../sheet/class-rules"
 import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, bonusRuleFor, usable } from "../sheet/features"
 import { chargedFeet, escapeFrom } from "../sheet/hit-riders"
-import { itemCastingWords } from "../sheet/item-use"
-import { itemWords } from "../sheet/items"
+import { itemCastingWords, menuId } from "../sheet/item-use"
+import { itemName, itemWords } from "../sheet/items"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
 import { shapeOf } from "../sheet/shape"
+import type { OwnedItem } from "../sheet/sheet"
 import { areEnemies, type Side, sameSide, sideWord } from "../sheet/sides"
 import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spell-effects"
 import { endsThings } from "../sheet/spell-ends"
+import { type SpellChoice, spellRule } from "../sheet/spell-rules"
 import { castInSpace } from "../sheet/spell-space"
-import { againOf, castableOnTurn, castCost, longCasting, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellLabel, spellsOf, targetLimit } from "../sheet/spells"
+import { againOf, areasOf, castableOnTurn, castCost, longCasting, slotsLeft, slotWords, spellAttackModes, spellcastingFor, spellLabel, spellsOf, targetLimit } from "../sheet/spells"
 import { HARM_DICE, harmSizes, printedDiceSchema, type Stake } from "../sheet/stakes"
 import { combatStatsOf } from "../sheet/stat-block"
 import { blockActionsOf, blockActionWords } from "../sheet/stat-block-actions"
@@ -110,8 +112,11 @@ export type TurnReading = {
    * one more action, which the attack's `after` already counts. Each is applied as the reading is.
    */
   choices?: Record<string, true>
-  /** One of the roller's own Bonus Actions, used beside the action. A spell that takes several creatures names each in `targets`. */
-  bonus?: { feature: string; target?: string; targets?: string[] }
+  /**
+   * One of the roller's own Bonus Actions, used beside the action. A spell that takes several creatures names each in
+   * `targets`, and one that asks a choice has it in `choice` (Hex's ability).
+   */
+  bonus?: { feature: string; target?: string; targets?: string[]; choice?: string }
   /** Where the move took the roller before they acted, and the feet it used. */
   move?: Moved
   /** A rest the party takes, which the hero's turn is given to. */
@@ -194,6 +199,10 @@ export function createRollRequirementService(ports: GmPorts) {
     const freeable = [{ ...character, id: self ?? "" }, ...others.filter((other) => sameSide(other, character) && beside(other))].filter((other) =>
       other.turnEffects?.some((effect) => effect.id === "attached")
     )
+    // The magic items a hero may hand to another hero within 5 feet as their action, and who may take them (../sheet/loot).
+    const owned: readonly OwnedItem[] = "type" in character && character.type === "pc" ? (character.sheet?.items ?? []) : []
+    const takers = owned.length ? others.filter((other) => other.type === "pc" && "sheet" in other && !!other.sheet && sameSide(other, character) && beside(other)) : []
+    const givable = takers.length ? owned.map((entry) => ({ id: menuId(entry), name: itemName(entry) })) : []
     const conditions = conditionWords(character)
     const form = shapeOf(character)
     const attacks = attacksOf(character)
@@ -239,6 +248,13 @@ export function createRollRequirementService(ports: GmPorts) {
       (known) =>
         (known.spell.castingTime.unit === "bonus-action" || known.bonusAction) && !held.some((entry) => entry.spell.id === known.spell.id) && !("problem" in castCost(character, known.spell.id))
     )
+    // The spells of theirs that ask a choice as they are cast (../sheet/spell-rules `choice`): Hex's ability, Chromatic
+    // Orb's damage type. The read asks each in its field, and only where the caster has one.
+    const choosing = knownSpells.flatMap((known) => {
+      const asked = spellRule(known.spell.id)?.choice
+      return asked ? [{ spell: known.spell, asked }] : []
+    })
+    const spellChoices = [...new Set(choosing.flatMap(({ asked }) => (asked.field === "spellChoice" ? asked.values : [])))]
     const slots = slotsLeft(character)
     // What kind of spell each is, so the game master knows who it is cast on. One the game does not run is told by the
     // game master from its text, and one it runs in part has the rest told.
@@ -270,7 +286,8 @@ export function createRollRequirementService(ports: GmPorts) {
         spellKind(known.spell),
         ...(long ? [`takes ${long} to cast`] : []),
         // On a floor an area takes whoever stands in it, so its count is not the game master's to keep.
-        ...(mover && known.spell.range.area ? ["an area"] : limit > 1 ? [`up to ${limit} creatures`] : []),
+        // A spell that makes several areas (Meteor Swarm) is aimed at as many, one named for each.
+        ...(mover && known.spell.range.area ? [areasOf(known.spell) > 1 ? `${areasOf(known.spell)} areas, each centred on one named` : "an area"] : limit > 1 ? [`up to ${limit} creatures`] : []),
         ...(known.ritual ? [known.prepared ? "ritual" : "ritual only"] : []),
         ...(known.free > 0 ? [`${known.free} free`] : []),
         ...(known.atWill ? [known.selfOnly ? "at will on themselves with no slot" : "at will with no slot"] : []),
@@ -364,7 +381,7 @@ ${
      "hide": they get out of sight to strike or slip away unseen. The game rolls stealth for it and sets its difficulty, so give none.
      "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
      "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
-${freeable.length ? `     "escape": they give the turn to pulling off a creature attached to them or to an ally beside them, and nothing is rolled. "target" is the id of who is freed: ${freeable.map((other) => other.id).join(" or ")}.\n` : ""}     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
+${freeable.length ? `     "escape": they give the turn to pulling off a creature attached to them or to an ally beside them, and nothing is rolled. "target" is the id of who is freed: ${freeable.map((other) => other.id).join(" or ")}.\n` : ""}${givable.length ? `     "give": they give the turn to handing one of their magic items to a hero beside them to keep, in a fight or out of one, and nothing is rolled. "target" is the id of who takes it: ${takers.map((other) => other.id).join(" or ")}. "gives" is the item's id: ${givable.map((item) => `${item.id} (${item.name})`).join(", ")}. A potion given for an ally to drink now is its Bonus Action, not "give".\n` : ""}     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
    - BONUS ACTIONS: beside the action above, the character may use one of their own Bonus Actions in the same turn. Set "bonus" to its id only when their words plainly use it, and leave it out otherwise. One given to someone else takes "bonusTarget", that ally's id.
      Their Bonus Actions: ${
        [
@@ -406,6 +423,13 @@ ${
      Their Spells Held, already cast and still lasting, used again with no slot by "check" "cast" with its id and "targets" who it strikes: ${held
        .map((entry) => `${entry.spell.id} (${entry.spell.name}, ${spellKind(entry.spell)}, ${entry.takes === "action" ? "takes the action" : "a Bonus Action"})`)
        .join(", ")}. Using one again is not casting it anew.`
+         : ""
+     }${
+       choosing.length
+         ? `
+     Spell Choices: a spell here is cast with a choice the caster makes, given in its field beside "spell" or "bonus": ${choosing
+       .map(({ spell, asked }) => `${spell.id}, "${asked.field}" is ${asked.words}: ${asked.values.join(", ")}`)
+       .join("; ")}. When the player names none, choose what serves their aim.`
          : ""
      }
 ${shapeCasting}     A cantrip spends nothing. Any other spell spends a slot of its level, or a higher one when none of its level is left, and with none left it cannot be cast. When the player says they cast it with a higher slot, "slot" is that slot's level. A spell marked ritual may be cast slowly with "ritual" true, outside a fight only, and then spends nothing.
@@ -478,9 +502,26 @@ Action: "${action}"
           : rollPickSchema.shape[key]
       // The choices of the hero's class are on the menu only while the hero has them and can use them. One used as the
       // whole action is a check of the menu's own.
-      const checks = [...choices.flatMap(({ rule }) => (rule.check ? [rule.check] : [])), ...blockActions.map((entry) => entry.id), ...(freeable.length ? ["escape"] : [])]
+      const checks = [
+        ...choices.flatMap(({ rule }) => (rule.check ? [rule.check] : [])),
+        ...blockActions.map((entry) => entry.id),
+        ...(freeable.length ? ["escape"] : []),
+        ...(givable.length ? ["give"] : []),
+      ]
       const chosen: Record<string, z.ZodType> = checks.length ? { check: z.enum([...rollPickSchema.shape.check.options, ...checks]).describe(rollPickSchema.shape.check.description ?? "") } : {}
       for (const { rule, values } of choices) chosen[rule.key] = rule.field(values)
+      // Which magic item is handed over, asked only where the hero has one and a hero beside them to take it.
+      if (givable.length)
+        chosen.gives = z
+          .enum([...new Set(givable.map((item) => item.id))] as [string, ...string[]])
+          .optional()
+          .describe('For "give": the id of the magic item handed over')
+      // What a spell asks its caster to choose, asked only where they have such a spell (Spell Choices).
+      if (spellChoices.length)
+        chosen.spellChoice = z
+          .enum(spellChoices as [string, ...string[]])
+          .optional()
+          .describe('For a spell of Spell Choices that asks "spellChoice": what the caster chooses, from its values')
       // Whether a spell is cast from a magic item, asked only where the hero can cast one of them by their own means too.
       if (eitherWay) chosen.item = z.boolean().optional().describe('For "cast": true when they cast a spell from the magic item Their Spells name for it, in place of their own slot')
       const schema = rollPickSchema.extend({
@@ -516,11 +557,26 @@ Action: "${action}"
       const isPicked = (spell: { id: string; name: string }) => spell.id === pick.bonus?.trim() || spell.name.toLowerCase() === pick.bonus?.trim().toLowerCase()
       const quick = (pick.check === "cast" ? undefined : bonusSpells.find((known) => isPicked(known.spell))) ?? heldBonus.find((entry) => isPicked(entry.spell))
       const quickTargets = [...(pick.bonusTargets ?? []), ...(pick.bonusTarget ? [pick.bonusTarget] : [])]
+      // What a spell's caster chose for it, in the field its choice is asked in, where it is one of its values.
+      const choiceFor = (spell: { id: string }): string | undefined => {
+        const asked: SpellChoice | undefined = spellRule(spell.id)?.choice
+        const given = asked ? pick[asked.field] : undefined
+        const value = typeof given === "string" ? given.trim().toLowerCase() : undefined
+        return value && asked?.values.includes(value) ? value : undefined
+      }
+      const quickChoice = quick ? choiceFor(quick.spell) : undefined
       // What the reading carries beside its roll: a Bonus Action, the move, and a ruling of space.
       const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "choices"> = used
         ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
         : quick
-          ? { bonus: { feature: quick.spell.id, ...(quickTargets[0] ? { target: quickTargets[0] } : {}), ...(quickTargets.length > 1 ? { targets: [...new Set(quickTargets)] } : {}) } }
+          ? {
+              bonus: {
+                feature: quick.spell.id,
+                ...(quickTargets[0] ? { target: quickTargets[0] } : {}),
+                ...(quickTargets.length > 1 ? { targets: [...new Set(quickTargets)] } : {}),
+                ...(quickChoice ? { choice: quickChoice } : {}),
+              },
+            }
           : {}
       // The move, made before the action: to the place or the one named, or away from one. With Dash the whole turn is
       // movement. An attack in melee may close with its target instead, which is settled where the attack is.
@@ -528,7 +584,9 @@ Action: "${action}"
       // Dash, as the action or with a Bonus Action that moves as one (Cunning Action).
       const usedRule = bonusRuleFor(character, used?.id)
       const dash = pick.check === "dash" || !!usedRule?.dash
-      const moveFor = (close?: { target: string; reach: number }) => (mover && floor ? takeMove({ floor, mover, others, ask, dash, close }) : undefined)
+      // A Bonus Action that moves the hero beside their Speed (Instinctive Pounce with a Rage entered).
+      const extra = usedRule?.moveBonus?.(character)
+      const moveFor = (close?: { target: string; reach: number }) => (mover && floor ? takeMove({ floor, mover, others, ask, dash, close, ...(extra ? { extra } : {}) }) : undefined)
       const moved = (move: Moved | undefined) => {
         if (move) also.move = move
         else delete also.move
@@ -616,7 +674,7 @@ Action: "${action}"
         // strikes from where its force is, which the floor does not hold, so it is not measured.
         const touched = (shaped.spell.range.kind === "touch" || (shaped.spell.range.kind === "self" && spell.attack === "melee")) && chosen[0] !== self ? chosen[0] : undefined
         const stood = withMove(acting, moved(moveFor(touched ? { target: touched, reach: 5 } : undefined)))
-        const unplaced = again?.spell.id === "spiritual-weapon"
+        const unplaced = !!again?.unplaced
         const spaced = mover && floor && !unplaced && !(told && !chosen.length) ? castInSpace({ spell: shaped.spell, caster: { ...stood, id: mover.id }, everyone, named: chosen, floor }) : undefined
         if (spaced?.problem) {
           also.ruling = spaced.problem
@@ -633,6 +691,8 @@ Action: "${action}"
           ...(paid?.cost.kind === "ritual" ? { ritual: true as const } : {}),
           ...(type.success ? { damageType: type.data } : {}),
           ...(forSkill.success ? { skill: forSkill.data } : {}),
+          // What the caster chose for a spell that asks a choice (Spell Choices).
+          ...(choiceFor(spell) ? { choice: choiceFor(spell) } : {}),
           // The slot level spent, for a hero, or held. An NPC's stat block may print the level it casts at.
           ...(again || paid?.cost.kind === "slot" || known?.castLevel || (paid?.cost.kind === "item" && slotLevel > spell.level) ? { level: slotLevel } : {}),
           // Cast from a magic item: the item's charges or use are spent, at the item's save DC where it states one.
@@ -646,16 +706,17 @@ Action: "${action}"
           const target = everyone.find((other) => other.id === chosen[0])
           const armorClass = target && combatStatsOf(target)?.armorClass
           if (!target || armorClass === undefined || !casting) throw new Error(`${spell.name} has no one with an Armor Class to be cast at.`)
-          const picked = pick.mode ?? "normal"
           // The caster as the Bonus Action beside the cast leaves them, since it is applied first (Innate Sorcery).
           const caster = { ...stood, id: self ?? character.name, name: character.name, type: character.type ?? "pc" } as Featured
           const readied = used && usedRule ? (usedRule.use({ characters: [caster], actor: caster, action: used, roll: () => 1 }).characters[0] ?? caster) : caster
-          const typed = [
+          const found = [
             ...(self ? [...spellAttackModes({ ...readied, id: self }, { ...target, type: target.type ?? "npc" }, spell), ...attackModesFromSpells(character, target)] : []),
             // A ranged spell attack has Disadvantage with an enemy within 5 feet who is up and able to act.
             ...(spell.attack === "ranged" && pressed(stood) ? [{ mode: "disadvantage" as const, from: "Enemy Within 5 Feet" }] : []),
           ]
-          const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
+          // No Advantage at all against one whose feature bars it (Elusive).
+          const { picked, typed, barred } = withAdvantageBarred(target, pick.mode ?? "normal", found)
+          const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from), ...(barred ? [barred] : [])]
           const rollRequirement: ChosenRoll = {
             cast,
             rollType: spell.name,
@@ -709,10 +770,16 @@ Action: "${action}"
         const chosenModes: ModeSource[] = []
         // And what it adds to the roll (Sacred Weapon's Charisma modifier).
         let chosenBonus = 0
+        // The choices that give up the attack's Advantage as their price (Brutal Strike).
+        const forgo: string[] = []
         for (const { rule, values } of choices) {
           // One that takes the Bonus Action (a smite) is left out when the reading uses another.
           const value = rule.rides && !(rule.bonusAction && also.bonus) ? choiceValue(rule, values) : undefined
           if (value === undefined) continue
+          if (rule.forgoesAdvantage) {
+            if (!rule.forgoesAdvantage(stood, attack, also.choices)) continue
+            forgo.push(rule.key)
+          }
           if (rule.rides === "attack" && typeof value === "string") onAttack[rule.key] = value
           if (rule.rides === "turn") {
             also.choices = { ...also.choices, [rule.key]: true }
@@ -735,6 +802,7 @@ Action: "${action}"
           // A charge: how far the move ran straight at the one attacked, up to where it ended (../sheet/hit-riders).
           charged: also.move && acting.position && target.position ? chargedFeet(acting.position, also.move.path, target.position) : undefined,
           choices: onAttack,
+          ...(forgo.length ? { forgo } : {}),
           after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { actions, weapon: attack.id }) : undefined,
         })
         if ("ruling" in made) {
@@ -797,6 +865,15 @@ Action: "${action}"
       if (pick.check === "escape") {
         const freed = freeable.find((other) => other.id === pick.target?.trim()) ?? (freeable.length === 1 ? freeable[0] : undefined)
         const read: TakenAction | undefined = freed ? { action: "escape", target: freed.id } : undefined
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, action: read })
+        return { roll: null, ...(read ? { action: read } : {}), ...also }
+      }
+      // Handing a magic item to a hero beside them is the action, and nothing is rolled (../sheet/loot).
+      if (pick.check === "give") {
+        const to = takers.find((other) => other.id === pick.target?.trim()) ?? (takers.length === 1 ? takers[0] : undefined)
+        const handed = typeof pick.gives === "string" ? pick.gives.trim() : undefined
+        const item = givable.length === 1 ? 0 : givable.findIndex((entry) => entry.id === handed)
+        const read: TakenAction | undefined = to && item >= 0 ? { action: "give", target: to.id, item } : undefined
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, action: read })
         return { roll: null, ...(read ? { action: read } : {}), ...also }
       }

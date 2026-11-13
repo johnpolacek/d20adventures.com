@@ -169,6 +169,55 @@ const PICKED: Record<string, (cls: Class, level: number, feature: ClassFeature) 
   [WILD_SHAPE]: (_, level, feature) => beastShapesAt(feature, level)?.known ?? 0,
 }
 
+/** Mystic Arcanum (Warlock, level 11), whose picks are Warlock spells of levels 6 to 9. */
+export const MYSTIC_ARCANUM = "warlock-mystic-arcanum"
+
+/**
+ * Features whose picks are spells, by feature id: the spell lists they come from, the spell levels each pick may be at
+ * a class level (one entry for each pick), and whether the hero always has them prepared. Mystic Arcanum: a Warlock
+ * spell of level 6 at 11, of level 7 at 13, of 8 at 15 and of 9 at 17, cast once a Long Rest with no slot, and not
+ * prepared. Magical Discoveries (College of Lore, level 6): two spells of the Cleric, Druid or Wizard list, each a
+ * cantrip or of a level the Bard has slots for, always prepared. The SRD data types the Arcanum's levels, and the
+ * Discoveries' lists and count are in its text.
+ */
+const SPELL_PICKS: Record<string, { lists: readonly string[]; prepared: boolean; slots: (feature: ClassFeature, level: number) => number[][] }> = {
+  [MYSTIC_ARCANUM]: { lists: ["warlock"], prepared: false, slots: (feature, level) => (feature.spellLevels ?? []).filter((row) => row.level <= level).map((row) => [row.spellLevel]) },
+  "college-of-lore-magical-discoveries": {
+    lists: ["cleric", "druid", "wizard"],
+    prepared: true,
+    slots: (feature, level) => {
+      const cls = classById.get(feature.class)
+      const levels = Array.from({ length: (cls ? highestSlotLevel(cls, level) : 0) + 1 }, (_, spellLevel) => spellLevel)
+      return [levels, levels]
+    },
+  },
+}
+for (const id of Object.keys(SPELL_PICKS)) PICKED[id] = (_, level, feature) => SPELL_PICKS[id].slots(feature, level).length
+
+/** The spell levels each pick of a feature whose picks are spells may be at a class level, one entry a pick. None for another feature. */
+export const spellPickSlots = (feature: ClassFeature, level: number): number[][] | undefined => SPELL_PICKS[feature.id]?.slots(feature, level)
+
+/**
+ * Whether spells of these levels fill a feature's slots, each in one that takes its level. Each goes to the narrowest
+ * slot that takes it, which settles slots that are each of one level (Mystic Arcanum) or all alike (Magical Discoveries).
+ */
+export function fillsSpellSlots(slots: readonly (readonly number[])[], levels: readonly number[]): boolean {
+  const free = [...slots].sort((a, b) => a.length - b.length)
+  for (const level of levels) {
+    const index = free.findIndex((slot) => slot.includes(level))
+    if (index < 0) return false
+    free.splice(index, 1)
+  }
+  return true
+}
+
+/** Magical Secrets (Bard, level 10): the Bard's prepared spells may come from the Bard, Cleric, Druid and Wizard lists, by its text. */
+const MAGICAL_SECRETS = "bard-magical-secrets"
+const SECRET_LISTS = ["bard", "cleric", "druid", "wizard"]
+
+/** The spell lists a class's prepared spells come from: its own, or with Magical Secrets the Bard's four. */
+export const preparedLists = (cls: Class, features: readonly ClassFeature[]): string[] => (features.some((feature) => feature.id === MAGICAL_SECRETS) ? SECRET_LISTS : [cls.id])
+
 /** Whether a feature takes several options from its list, kept in `featurePicks`. */
 export const takesPicks = (feature: ClassFeature) => feature.id in PICKED
 
@@ -187,8 +236,20 @@ const recommendedForms = (feature: ClassFeature): string[] =>
  * Challenge Rating the Beast Shapes table allows, with no Fly Speed before the table allows one. The recommended forms
  * come first, then the strongest. A level 2 Druid may know a Wolf (1/4) and not an Ape (1/2) or a Giant Bat, which flies.
  */
-export function pickOptions(feature: ClassFeature, level: number): { id: string; name: string }[] {
+export function pickOptions(feature: ClassFeature, level: number): { id: string; name: string; level?: number }[] {
   if (feature.options) return feature.options.map((option) => ({ id: option.id, name: option.name }))
+  // A feature whose picks are spells: those of its lists at the levels its slots take, highest first.
+  const spells = SPELL_PICKS[feature.id]
+  if (spells) {
+    const levels = new Set(spells.slots(feature, level).flat())
+    const ids = new Set(spells.lists.flatMap((list) => (classById.get(list)?.spellcasting?.spellList ?? []).filter((entry) => levels.has(entry.level)).flatMap((entry) => entry.spells)))
+    return [...ids]
+      .flatMap((id) => {
+        const spell = spellById.get(id)
+        return spell ? [{ id, name: spell.name, level: spell.level }] : []
+      })
+      .sort((a, b) => b.level - a.level || a.name.localeCompare(b.name))
+  }
   const row = feature.id === WILD_SHAPE ? beastShapesAt(feature, level) : undefined
   if (!row) return []
   const first = recommendedForms(feature)
@@ -515,14 +576,20 @@ export function featuresOf(sheet: Sheet): ClassFeature[] {
   return lookup(sheet).parts?.features ?? []
 }
 
+/** The spells a sheet picked for a feature that keeps them always prepared: Magical Discoveries'. */
+const pickedPrepared = (sheet: Sheet, parts: Parts): string[] =>
+  parts.features.flatMap((feature) => (SPELL_PICKS[feature.id]?.prepared ? (sheet.featurePicks?.[feature.id] ?? []).map((pick) => pick.option) : []))
+
 /** As `alwaysPrepared`, from parts already looked up. A cantrip among them is known, so it is in `alwaysKnownOf`. */
 function alwaysPreparedOf(sheet: Sheet, parts: Parts): string[] {
-  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass)])].filter((id) => !isCantrip(id))
+  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass), ...pickedPrepared(sheet, parts)])].filter(
+    (id) => !isCantrip(id)
+  )
 }
 
-/** The cantrips a feature or the subclass gives with its always-prepared spells: a land's. They are not listed on the sheet. */
+/** The cantrips a feature or the subclass gives with its always-prepared spells: a land's, and a cantrip of Magical Discoveries. They are not listed on the sheet. */
 function alwaysKnownOf(sheet: Sheet, parts: Parts): string[] {
-  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass)])].filter(isCantrip)
+  return [...new Set([...parts.features.flatMap((feature) => feature.alwaysPrepared ?? []), ...subclassPrepared(sheet, parts.subclass), ...pickedPrepared(sheet, parts)])].filter(isCantrip)
 }
 
 /**
@@ -561,7 +628,11 @@ function spellProblems(sheet: Sheet, parts: Parts): string[] {
   for (const id of cantrips) if (!onList(id, 0, 0) && !extras.some((extra) => onSpellList(extra.spellList, id, 0, 0))) problems.push(`"${id}" is not a ${cls.name} cantrip`)
   const preparedAllowed = row?.preparedSpells ?? 0
   if (prepared.length !== preparedAllowed) problems.push(`${cls.name} prepares ${preparedAllowed} spells at level ${sheet.level}, and the sheet has ${prepared.length}`)
-  for (const id of prepared) if (!onList(id, 1, highest)) problems.push(`"${id}" is not a ${cls.name} spell of a level the sheet has slots for`)
+  // Magical Secrets lets a Bard prepare from three more lists.
+  const lists = preparedLists(cls, parts.features)
+  for (const id of prepared)
+    if (!lists.some((list) => onSpellList(list, id, 1, highest)))
+      problems.push(`"${id}" is not a ${lists.map((list) => classById.get(list)?.name ?? list).join(" or ")} spell of a level the sheet has slots for`)
   const always = alwaysPreparedOf(sheet, parts)
   for (const id of prepared) if (always.includes(id)) problems.push(`"${id}" is always prepared, so it is not listed among the prepared spells`)
   for (const id of cantrips) if (alwaysKnownOf(sheet, parts).includes(id)) problems.push(`"${id}" is always known, so it is not listed among the cantrips`)
@@ -810,6 +881,18 @@ function pickProblems(sheet: Sheet, parts: Parts): string[] {
     const wanted = picksAt(parts.class, sheet.level, feature)
     if (picks.length !== wanted) problems.push(`${feature.name} takes ${wanted} options at level ${sheet.level}, and the sheet has ${picks.length}`)
     const taken = new Set(picks.map((pick) => pick.option))
+    // Picks of spells (Mystic Arcanum) are each a spell of the feature's lists, taken once, that fill its slots.
+    const slots = spellPickSlots(feature, sheet.level)
+    if (slots) {
+      const from = pickOptions(feature, sheet.level)
+      const levels = picks.flatMap((pick) => from.find((option) => option.id === pick.option)?.level ?? [])
+      for (const pick of picks) if (!from.some((option) => option.id === pick.option)) problems.push(`"${pick.option}" is not a spell ${feature.name} may take at level ${sheet.level}`)
+      if (taken.size < picks.length) problems.push(`${feature.name} takes a spell twice`)
+      if (levels.length === picks.length && picks.length === slots.length && !fillsSpellSlots(slots, levels))
+        problems.push(`${feature.name} takes spells of levels ${slots.map((slot) => (slot.length > 1 ? `0 to ${Math.max(...slot)}` : slot[0])).join(", ")} at level ${sheet.level}`)
+      for (const pick of picks) if (pick.cantrip || pick.feat) problems.push(`${feature.name} takes a spell, and the pick names a cantrip or feat beside it`)
+      continue
+    }
     // Picks of options from elsewhere (Wild Shape's Beast forms) are each one of those, taken once.
     if (!feature.options) {
       const from = pickOptions(feature, sheet.level)
@@ -961,6 +1044,20 @@ export function casterOf(sheet: Sheet, known?: Parts): Caster {
   return { spellcaster }
 }
 
+/**
+ * The scores as a hero's features raise them past those the sheet keeps: Primal Champion raises Strength and
+ * Constitution by 4, and Body and Mind Dexterity and Wisdom, each to a maximum of 25. A score already above the
+ * maximum stays. The sheet keeps the scores its choices make, which an Ability Score Improvement reads.
+ */
+function raisedScores(sheet: Sheet, parts: Parts): Record<AbilityId, number> {
+  const scores = { ...sheet.abilityScores }
+  for (const feature of parts.features) {
+    const raise = feature.abilityIncrease
+    if (raise) for (const ability of raise.abilities) scores[ability] = Math.max(scores[ability], Math.min(raise.maximum, scores[ability] + raise.amount))
+  }
+  return scores
+}
+
 /** Work out the whole sheet from the choices on it. Throws when the class, species or background is unknown. */
 export function deriveSheet(sheet: Sheet): DerivedSheet {
   const { parts, problems } = lookup(sheet)
@@ -968,8 +1065,9 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
   const row = parts.class.levels[sheet.level - 1]
   const proficiencyBonus = row.proficiencyBonus
 
-  // The scores with the hero's magic items, which every modifier follows: Gauntlets of Ogre Power's Strength 19.
-  const abilityScores = scoresWithItems(sheet)
+  // The scores with the hero's own features, and then their magic items, which every modifier follows: Gauntlets of
+  // Ogre Power's Strength 19.
+  const abilityScores = scoresWithItems({ ...sheet, abilityScores: raisedScores(sheet, parts) })
   const abilityModifiers = Object.fromEntries(abilityIds.map((ability) => [ability, modifier(abilityScores[ability])])) as Record<AbilityId, number>
   const standing = standingOf(sheet, parts)
 

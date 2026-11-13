@@ -36,6 +36,8 @@ import type { SpellEffect } from "../turn-effect"
  * Sacred Weapon (Oath of Devotion, level 3): with the Attack action, a use of Channel Divinity imbues the Paladin's
  * Melee weapon for 10 minutes: the Charisma modifier, at least 1, is added to its attack rolls, and its hits deal
  * Radiant damage where that harms the target more than its own type.
+ * Aura of Protection (level 6): the Paladin and those of their side within 10 feet, 30 from level 18, add the
+ * Charisma modifier, at least 1, to their saving throws while the Paladin is not Incapacitated (../save-rules).
  */
 
 const LAY_ON_HANDS = "paladin-lay-on-hands"
@@ -305,4 +307,6 @@ export const paladin: ClassRules = {
     },
   ],
   turnEffects: [{ id: SMITE_MARK, span: 1 }],
+  // "a bonus to saving throws equal to your Charisma modifier (minimum bonus of +1)"
+  auras: [{ feature: "paladin-aura-of-protection", saveBonus: (bearer) => (bearer.sheet ? Math.max(1, deriveSheet(bearer.sheet).abilityModifiers.cha) : 0) }],
 }

@@ -2899,5 +2899,501 @@
       "targets": ["warehouse-thug"],
       "item": true
     }
+  },
+  {
+    "id": "give-potion",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "items": [
+        {
+          "id": "weapon-1-2-or-3",
+          "variant": "+1",
+          "base": "warhammer"
+        },
+        {
+          "id": "potions-of-healing",
+          "variant": "Potion of Healing",
+          "count": 2
+        }
+      ]
+    },
+    "narrative": "The warehouse is quiet after the fight. Ilya leans on a crate, catching her breath.",
+    "action": "I hand Ilya one of my healing potions to keep for later. “Hold on to this.”",
+    "checks": ["give"],
+    "takes": {
+      "target": "ilya-veles",
+      "item": 1
+    }
+  },
+  {
+    "id": "give-none",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "narrative": "The warehouse is quiet after the fight. Ilya leans on a crate, catching her breath.",
+    "action": "I hand Ilya my waterskin. “Drink, you look parched.”",
+    "checks": ["none"]
+  },
+  {
+    "id": "hex-on-wisdom",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "warlock",
+      "level": 5,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": { "str": 8, "dex": 16, "con": 14, "int": 12, "wis": 10, "cha": 17 },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          { "option": "pact-of-the-blade" },
+          { "option": "thirsting-blade" },
+          { "option": "eldritch-smite" },
+          { "option": "agonizing-blast", "cantrip": "eldritch-blast" },
+          { "option": "eldritch-mind" }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "enthrall", "vampiric-touch"],
+      "subclass": "fiend-patron",
+      "advancements": [{ "level": 4, "feat": "ability-score-improvement", "abilities": { "cha": 2 } }]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I lay a Hex on the thug, cursing his Wisdom, then slash at him with my longsword.",
+    "checks": ["attack"],
+    "attack": { "weapon": "longsword", "target": "warehouse-thug" },
+    "bonus": { "feature": "hex", "target": "warehouse-thug" },
+    "choice": "wis"
+  },
+  {
+    "id": "orb-of-cold",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "sorcerer",
+      "level": 5,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": { "str": 10, "dex": 13, "con": 16, "int": 8, "wis": 13, "cha": 17 },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost"],
+      "spells": ["burning-hands", "chromatic-orb", "ice-knife", "mind-spike", "phantasmal-force", "scorching-ray", "shatter", "fireball", "lightning-bolt"],
+      "advancements": [
+        { "level": 1, "feat": "magic-initiate", "spellList": "wizard", "spellAbility": "cha", "cantrips": ["ray-of-frost", "shocking-grasp"], "spell": "false-life" },
+        { "level": 4, "feat": "ability-score-improvement", "abilities": { "cha": 2 } }
+      ],
+      "featurePicks": { "sorcerer-metamagic": [{ "option": "transmuted-spell" }, { "option": "careful-spell" }] },
+      "subclass": "draconic-sorcery"
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I hurl a chromatic orb of freezing cold at the thug.",
+    "checks": ["cast"],
+    "cast": { "spell": "chromatic-orb", "targets": ["warehouse-thug"] },
+    "choice": "cold",
+    "choices": { "metamagic": false }
+  },
+  {
+    "id": "deafen-the-thug",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "ilya-veles",
+    "allies": ["branka-stoneveil"],
+    "sheet": { "level": 3, "subclass": "college-of-lore", "spells": ["charm-person", "healing-word", "sleep", "heroism", "blindness-deafness", "enhance-ability"] },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel and shouts for his friends outside.",
+    "action": "I point at the thug and cast Blindness/Deafness to deafen him, so he can't hear his friends' warnings.",
+    "checks": ["cast"],
+    "cast": { "spell": "blindness-deafness", "targets": ["warehouse-thug"] },
+    "choice": "deafened"
+  },
+  {
+    "id": "enhance-the-leap",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "ilya-veles",
+    "allies": ["branka-stoneveil"],
+    "sheet": { "level": 3, "subclass": "college-of-lore", "spells": ["charm-person", "healing-word", "sleep", "heroism", "blindness-deafness", "enhance-ability"] },
+    "narrative": "The thug has fled up a stack of crates. Branka gauges the leap to the next stack.",
+    "action": "I touch Branka and cast Enhance Ability to make her quick and nimble for the jump.",
+    "checks": ["cast"],
+    "cast": { "spell": "enhance-ability", "targets": ["branka-stoneveil"] },
+    "choice": "dex"
+  },
+  {
+    "id": "ward-from-fire",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "milos-radan",
+    "allies": ["branka-stoneveil"],
+    "sheet": {
+      "level": 5,
+      "subclass": "life-domain",
+      "spells": ["healing-word", "bless", "guiding-bolt", "shield-of-faith", "spiritual-weapon", "aid", "protection-from-energy", "revivify", "spirit-guardians"],
+      "advancements": [{ "level": 4, "feat": "ability-score-improvement", "abilities": { "wis": 2 } }]
+    },
+    "narrative": "A lantern shatters in the warehouse and flames race across the oil-soaked crates toward Branka.",
+    "action": "I touch Branka and cast Protection from Energy so the flames can't burn her.",
+    "checks": ["cast"],
+    "cast": { "spell": "protection-from-energy", "targets": ["branka-stoneveil"] },
+    "choice": "fire"
+  },
+  {
+    "id": "tactical-sap",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "level": 9,
+      "subclass": "champion",
+      "abilityScores": { "str": 20, "dex": 12, "con": 16, "int": 10, "wis": 12, "cha": 8 },
+      "featureChoices": { "fighter-fighting-style": "defense", "champion-additional-fighting-style": "archery" },
+      "weaponMasteries": ["warhammer", "battleaxe", "blowgun", "club"],
+      "advancements": [
+        { "level": 4, "feat": "ability-score-improvement", "abilities": { "str": 2 } },
+        { "level": 6, "feat": "ability-score-improvement", "abilities": { "str": 2 } },
+        { "level": 8, "feat": "ability-score-improvement", "abilities": { "dex": 2 } }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I crack my warhammer across the thug's cudgel arm so he can barely swing it back at me.",
+    "checks": ["attack"],
+    "attack": { "weapon": "warhammer", "target": "warehouse-thug" },
+    "choices": { "tactical": "sap" }
+  },
+  {
+    "id": "tactical-slow",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "level": 9,
+      "subclass": "champion",
+      "abilityScores": { "str": 20, "dex": 12, "con": 16, "int": 10, "wis": 12, "cha": 8 },
+      "featureChoices": { "fighter-fighting-style": "defense", "champion-additional-fighting-style": "archery" },
+      "weaponMasteries": ["warhammer", "battleaxe", "blowgun", "club"],
+      "advancements": [
+        { "level": 4, "feat": "ability-score-improvement", "abilities": { "str": 2 } },
+        { "level": 6, "feat": "ability-score-improvement", "abilities": { "str": 2 } },
+        { "level": 8, "feat": "ability-score-improvement", "abilities": { "dex": 2 } }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I smash my warhammer into the thug's knee so he can't run off.",
+    "checks": ["attack"],
+    "attack": { "weapon": "warhammer", "target": "warehouse-thug" },
+    "choices": { "tactical": "slow" }
+  },
+  {
+    "id": "tactical-plain",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "branka-stoneveil",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "level": 9,
+      "subclass": "champion",
+      "abilityScores": { "str": 20, "dex": 12, "con": 16, "int": 10, "wis": 12, "cha": 8 },
+      "featureChoices": { "fighter-fighting-style": "defense", "champion-additional-fighting-style": "archery" },
+      "weaponMasteries": ["warhammer", "battleaxe", "blowgun", "club"],
+      "advancements": [
+        { "level": 4, "feat": "ability-score-improvement", "abilities": { "str": 2 } },
+        { "level": 6, "feat": "ability-score-improvement", "abilities": { "str": 2 } },
+        { "level": 8, "feat": "ability-score-improvement", "abilities": { "dex": 2 } }
+      ]
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Branka with a cudgel.",
+    "action": "I bring my warhammer down on the thug.",
+    "checks": ["attack"],
+    "attack": { "weapon": "warhammer", "target": "warehouse-thug" },
+    "choices": { "tactical": false }
+  },
+  {
+    "id": "cunning-knock-out",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "sheet": {
+      "class": "rogue",
+      "level": 14,
+      "species": "halfling",
+      "background": "criminal",
+      "languages": ["halfling", "common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 20,
+        "con": 18,
+        "int": 15,
+        "wis": 10,
+        "cha": 8
+      },
+      "classSkills": ["acrobatics", "investigation", "athletics", "insight"],
+      "expertise": ["sleight-of-hand", "stealth", "acrobatics", "investigation"],
+      "armor": "leather-armor",
+      "weapons": ["dagger", "shortsword", "shortbow"],
+      "weaponMasteries": ["dagger", "shortsword"],
+      "subclass": "thief",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 10,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Reinhard stands at the water's edge with his back to the bushes, blade drawn, watching Gregor. He has not seen Poppen creep up behind him.",
+    "action": "I creep up behind Reinhard and crack him across the back of the head with my shortsword's pommel to knock him out cold.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortsword",
+      "target": "npcs-1749163978757"
+    },
+    "choices": {
+      "cunning": "knock-out",
+      "cunning2": false
+    }
+  },
+  {
+    "id": "cunning-two",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "sheet": {
+      "class": "rogue",
+      "level": 14,
+      "species": "halfling",
+      "background": "criminal",
+      "languages": ["halfling", "common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 20,
+        "con": 18,
+        "int": 15,
+        "wis": 10,
+        "cha": 8
+      },
+      "classSkills": ["acrobatics", "investigation", "athletics", "insight"],
+      "expertise": ["sleight-of-hand", "stealth", "acrobatics", "investigation"],
+      "armor": "leather-armor",
+      "weapons": ["dagger", "shortsword", "shortbow"],
+      "weaponMasteries": ["dagger", "shortsword"],
+      "subclass": "thief",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 10,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Reinhard draws his blade and comes at them across the bank. He has not seen Poppen in the bushes.",
+    "action": "I shoot Reinhard low in the leg to knock him off his feet, and in the same breath I throw a fistful of grit in his eyes to blind him.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortbow",
+      "target": "npcs-1749163978757"
+    },
+    "choices": {
+      "cunning": "trip",
+      "cunning2": "obscure"
+    }
+  },
+  {
+    "id": "cunning-stealth",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "sheet": {
+      "class": "rogue",
+      "level": 9,
+      "species": "halfling",
+      "background": "criminal",
+      "languages": ["halfling", "common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 20,
+        "con": 14,
+        "int": 15,
+        "wis": 10,
+        "cha": 8
+      },
+      "classSkills": ["acrobatics", "investigation", "athletics", "insight"],
+      "expertise": ["sleight-of-hand", "stealth", "acrobatics", "investigation"],
+      "armor": "leather-armor",
+      "weapons": ["dagger", "shortsword", "shortbow"],
+      "weaponMasteries": ["dagger", "shortsword"],
+      "subclass": "thief",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 1,
+            "con": 1
+          }
+        }
+      ]
+    },
+    "conditionsOn": {
+      "1749307435667": [
+        {
+          "id": "invisible"
+        }
+      ]
+    },
+    "narrative": "Poppen is hidden in the bushes. Reinhard draws his blade and comes at the others across the bank, with no idea where Poppen is.",
+    "action": "From my hiding place I put an arrow in Reinhard, careful to stay hidden in the bushes.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortbow",
+      "target": "npcs-1749163978757"
+    },
+    "choices": {
+      "cunning": "stealth-attack"
+    }
+  },
+  {
+    "id": "cunning-none",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749307435667",
+    "sheet": {
+      "class": "rogue",
+      "level": 14,
+      "species": "halfling",
+      "background": "criminal",
+      "languages": ["halfling", "common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 12,
+        "dex": 20,
+        "con": 18,
+        "int": 15,
+        "wis": 10,
+        "cha": 8
+      },
+      "classSkills": ["acrobatics", "investigation", "athletics", "insight"],
+      "expertise": ["sleight-of-hand", "stealth", "acrobatics", "investigation"],
+      "armor": "leather-armor",
+      "weapons": ["dagger", "shortsword", "shortbow"],
+      "weaponMasteries": ["dagger", "shortsword"],
+      "subclass": "thief",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "dex": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 10,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        }
+      ]
+    },
+    "narrative": "Reinhard draws his blade and comes at them across the bank. He has not seen Poppen in the bushes.",
+    "action": "I shoot Reinhard.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortbow",
+      "target": "npcs-1749163978757"
+    },
+    "choices": {
+      "cunning": false,
+      "cunning2": false
+    }
   }
 ]

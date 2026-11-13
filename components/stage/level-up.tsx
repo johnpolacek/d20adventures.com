@@ -144,9 +144,36 @@ function SpellOptions({
   )
 }
 
+// A feature's picks of spells, a row for each spell level. Slots of one level each (Mystic Arcanum) take one spell a
+// row, and slots that take any level (Magical Discoveries) take the feature's count across the rows.
+function SpellPicks({ offer, picked, onPick }: { offer: PicksOffer; picked: readonly FeaturePick[]; onPick: (picks: FeaturePick[]) => void }) {
+  const from = offer.options.map((option) => ({ ...option, level: option.level ?? 0 }))
+  const ids = picked.map((pick) => pick.option)
+  const levelOf = (id: string) => from.find((option) => option.id === id)?.level
+  if (!offer.slots?.every((slot) => slot.length === 1))
+    return <SpellOptions label={offer.feature.name} from={from} picked={ids} most={offer.count} onPick={(chosen) => onPick(chosen.map((option) => ({ option })))} />
+  return (
+    <div className="space-y-2">
+      {offer.slots.map(([level]) => (
+        <div key={level} className="flex gap-2">
+          <span className="w-12 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-stage-cream/60">Level {level}</span>
+          <Options
+            label={`${offer.feature.name}, level ${level}`}
+            from={from.filter((option) => option.level === level)}
+            picked={ids.filter((id) => levelOf(id) === level)}
+            most={1}
+            onPick={(chosen) => onPick([...ids.filter((id) => levelOf(id) !== level), ...chosen].map((option) => ({ option })))}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // A feature's picks of several from its list. An option whose prerequisite is not met shows it and cannot be picked.
 // One that works with a cantrip or gives a feat is picked once for each cantrip or feat taken under it.
 function FeaturePicks({ offer, picked, level, known, onPick }: { offer: PicksOffer; picked: readonly FeaturePick[]; level: number; known: readonly string[]; onPick: (picks: FeaturePick[]) => void }) {
+  if (offer.slots) return <SpellPicks offer={offer} picked={picked} onPick={onPick} />
   return (
     <div className="space-y-2">
       <fieldset className="m-0 flex min-w-0 flex-wrap gap-1.5 border-0 p-0">
@@ -260,6 +287,8 @@ export function LevelUp({
   const book = sheet.spellbook
   const toPick = spellsToPick(options, picks, sheet.spells)
   const toPrepare = preparable(options, book, picks).filter((spell) => !toPick.kept.has(spell.id))
+  // The lists the spells to prepare come from: the class's own, and those Magical Secrets adds.
+  const lists = [...new Set(toPrepare.map((spell) => spell.list ?? sheet.class))]
   const known = [...(sheet.cantrips ?? []), ...picks.cantrips]
   const take = async () => {
     const choices = toChoices(options, picks)
@@ -460,7 +489,23 @@ export function LevelUp({
                 ].join(", ")}
               </p>
             )}
-            <SpellOptions label="Prepared Spells" from={toPrepare} picked={picks.spells} most={toPick.count} onPick={(ids) => set({ spells: ids })} />
+            {lists.length > 1 ? (
+              <div className="space-y-3">
+                {lists.map((list) => (
+                  <Labeled key={list} label={`${sentence(list)} List`}>
+                    <SpellOptions
+                      label={`${sentence(list)} List`}
+                      from={toPrepare.filter((spell) => (spell.list ?? sheet.class) === list)}
+                      picked={picks.spells}
+                      most={toPick.count}
+                      onPick={(ids) => set({ spells: ids })}
+                    />
+                  </Labeled>
+                ))}
+              </div>
+            ) : (
+              <SpellOptions label="Prepared Spells" from={toPrepare} picked={picks.spells} most={toPick.count} onPick={(ids) => set({ spells: ids })} />
+            )}
           </Section>
         )}
 

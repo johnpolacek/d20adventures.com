@@ -27,7 +27,7 @@ import { hasFled, isDead, isDown } from "../utils/turn-actors"
 export async function useBonus(args: {
   characters: TurnCharacter[]
   actorId: string
-  bonus: { feature: string; target?: string; targets?: string[] }
+  bonus: { feature: string; target?: string; targets?: string[]; choice?: string }
   floor: () => Promise<Floor | undefined>
   ask: Ask
   d20: () => number
@@ -64,7 +64,7 @@ export async function useBonus(args: {
   // Who it is cast on: those named, or for a spell attack the only foe here, and otherwise the caster.
   const foes = everyone.filter((character) => areEnemies(character, actor) && !isDown(character))
   const named = bonus.targets ?? (bonus.target ? [bonus.target] : spell.attack ? (foes.length === 1 ? [foes[0].id] : []) : [actor.id])
-  const floor = again?.spell.id === "spiritual-weapon" ? undefined : await args.floor()
+  const floor = again?.unplaced ? undefined : await args.floor()
   const spaced = floor ? castInSpace({ spell, caster: actor, everyone, named, floor }) : undefined
   if (spaced?.problem || !named.length) {
     const problem = spaced?.problem ?? { name: "No One To Cast On", text: `${actor.name} has no one to cast ${spell.name} on.` }
@@ -94,6 +94,7 @@ export async function useBonus(args: {
     ...(spaced && Object.keys(spaced.cover).length ? { cover: spaced.cover } : {}),
     ...(spaced?.measured ? { measured: true } : {}),
     ...(paid?.cost.kind === "item" ? { item: true } : {}),
+    ...(bonus.choice ? { choice: bonus.choice } : {}),
   }
   // Cast at the slot it spends: a Healing Word from a level 2 slot heals as a level 2 casting. One from an item at the item's level.
   const level = paid?.cost.kind === "slot" || paid?.cost.kind === "item" ? paid.cost.level : undefined

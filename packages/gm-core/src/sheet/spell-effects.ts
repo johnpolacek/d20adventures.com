@@ -3,12 +3,12 @@ import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Check } from "./check"
-import type { ConditionEntry } from "./condition-entry"
 import type { ModeSource } from "./conditions"
 import { itemSaveModes } from "./item-effects"
-import type { Sheet } from "./sheet"
+import { answerDowned } from "./late-rules"
 import { speciesSaveModes } from "./species-traits"
-import type { Concentration, SpellEffect } from "./turn-effect"
+import { type Bearer, type Deflected, heldRule, spellRule } from "./spell-rules"
+import type { SpellEffect } from "./turn-effect"
 
 /**
  * Spells that last. A spell that goes on working after it is cast leaves an effect on each creature it took, by the
@@ -16,76 +16,21 @@ import type { Concentration, SpellEffect } from "./turn-effect"
  * dice added to or taken from attack rolls, saves or checks (Bless, Bane, Guidance), Armor Class (Shield of Faith,
  * Mage Armor), damage added to its caster's hits (Hunter's Mark), and Temporary Hit Points each turn (Heroism).
  *
- * Three spells change later attack rolls in words their data does not type. They are held here, each from its text.
+ * What a spell does while it lasts in words its data does not type is its own rules' `held` (./spell-rules), from the
+ * files of ./spell-mechanics: Faerie Fire's Advantage against its bearer, Slow's lost Armor Class.
  */
-const RIDERS: Record<string, { attacked?: "advantage" | "disadvantage"; attacks?: "disadvantage"; once?: true }> = {
-  // "The next attack roll made against it before the end of your next turn has Advantage."
-  "guiding-bolt": { attacked: "advantage", once: true },
-  // "Attack rolls against an affected creature or object have Advantage if the attacker can see it."
-  "faerie-fire": { attacked: "advantage" },
-  // Shining Smite: "Until the spell ends, ... attack rolls against it have Advantage". Its light and its bar on the
-  // Invisible condition are not read.
-  "shining-smite": { attacked: "advantage" },
-  // "It has Disadvantage on the next attack roll it makes before the end of its next turn."
-  "vicious-mockery": { attacks: "disadvantage", once: true },
-  // Blur: "any creature has Disadvantage on attack rolls against you." Blindsight and Truesight are not read.
-  blur: { attacked: "disadvantage" },
-}
 
-/**
- * Spells of levels 2 and 3 whose lasting effect the engine holds by name, from their text, where the typed data holds
- * no lasting value: the effect marks who is under the spell, and the rules below and in ./spell-rounds read it.
- */
-const HELD = new Set([
-  "mirror-image",
-  "haste",
-  "slow",
-  "beacon-of-hope",
-  "bestow-curse",
-  "ray-of-enfeeblement",
-  "phantasmal-force",
-  "web",
-  "stinking-cloud",
-  "sleet-storm",
-  "spirit-guardians",
-  "spiritual-weapon",
-  "vampiric-touch",
-  "heat-metal",
-])
-
-/** Spells whose effect marks those standing in an area that stays on the floor. A creature that moves is taken to have left it (`spellEffectsAfterMove`). */
-export const AREA_SPELLS = new Set(["web", "stinking-cloud", "sleet-storm"])
-
-/**
- * Spells whose effect is held by the caster alone, with the slot it was cast at as its `amount`: Spirit Guardians'
- * aura goes where they go, and the three a caster uses again on later turns (./spells `castAgain`).
- */
-export const CASTER_HELD = new Set(["spirit-guardians", "spiritual-weapon", "vampiric-touch", "heat-metal"])
+/** Whether the caster alone holds a spell's effect, with the slot it was cast at as its `amount`: Spirit Guardians. */
+export const heldByCaster = (spellId: string): boolean => !!heldRule(spellId)?.byCaster
 
 /** Whether a spell leaves an effect on those it takes. */
 export function lasts(spell: Spell): boolean {
-  return !!(spell.ac || spell.rollModifier || spell.hitPointMaximum || RIDERS[spell.id] || HELD.has(spell.id) || markOf(spell) || (spell.healing?.temporary && spell.healing.timing))
+  return !!(spell.ac || spell.rollModifier || spell.hitPointMaximum || heldRule(spell.id) || markOf(spell) || (spell.healing?.temporary && spell.healing.timing))
 }
 
 // Damage a spell adds to its caster's later hits on the one it marks: Hunter's Mark. A spell with a spell attack deals
 // its hit damage at the cast, so it is not a mark, and so does a spell cast right after a hit (a smite, ./classes/paladin).
 const markOf = (spell: Spell) => (spell.attack || spell.castingTime.trigger ? undefined : spell.damage?.find((entry) => entry.trigger === "hit" && !entry.timing && !entry.appliesWhen && entry.dice))
-
-type Bearer = {
-  id?: string
-  sheet?: Sheet
-  name?: string
-  type?: string
-  hitPoints?: number
-  healthPercent?: number
-  dead?: true
-  fled?: true
-  conditions?: readonly ConditionEntry[]
-  spellEffects?: readonly SpellEffect[]
-  concentration?: Concentration
-  tempHitPoints?: number
-  isComplete?: boolean
-}
 
 const effectsOf = (character: Bearer) => (character.spellEffects ?? []).flatMap((effect) => (spellById.get(effect.spell) ? [{ effect, spell: spellById.get(effect.spell) as Spell }] : []))
 
@@ -112,12 +57,10 @@ export function armorClassWithSpells(character: Bearer, armorClass: number, unar
   }
   // A floor on the Armor Class before bonuses: Barkskin's 17 "if its AC is lower than that".
   for (const { spell } of effectsOf(character)) if (spell.ac?.minimum !== undefined) total = Math.max(total, spell.ac.minimum)
-  for (const { spell } of effectsOf(character)) total += (spell.ac?.bonus ?? 0) - (ARMOR_LESS[spell.id] ?? 0)
+  // What a spell takes away, from its text (./spell-rules `armorClassLess`): Slow's 2.
+  for (const { spell } of effectsOf(character)) total += (spell.ac?.bonus ?? 0) - (heldRule(spell.id)?.armorClassLess ?? 0)
   return total
 }
-
-// Armor Class a spell takes away, from its text: Slow's "−2 penalty to AC and Dexterity saving throws".
-const ARMOR_LESS: Record<string, number> = { slow: 2 }
 
 /**
  * What a character's spells add to their Hit Point maximum: Aid's 5, and 5 more for each slot level above 2, held as
@@ -128,54 +71,68 @@ export const hitPointMaximumFromSpells = (character: Bearer): number =>
 
 /**
  * Advantage a character's spells give their own saving throw, each with the spell: Haste on Dexterity saves, Beacon of
- * Hope on Wisdom saves and Death Saving Throws ("death").
+ * Hope on Wisdom saves and Death Saving Throws ("death"), and what a spell gives the saves of one ability by its effect
+ * (`checkModesFromSpells`).
  */
 export function saveModesFromSpells(character: Bearer, ability: AbilityId | "death"): ModeSource[] {
-  return effectsOf(character).flatMap(({ spell }) => (SAVE_ADVANTAGE[spell.id]?.includes(ability) ? [{ mode: "advantage" as const, from: spell.name }] : []))
+  return [
+    ...effectsOf(character).flatMap(({ spell }) => (heldRule(spell.id)?.saveAdvantage?.includes(ability) ? [{ mode: "advantage" as const, from: spell.name }] : [])),
+    ...(ability === "death" ? [] : checkModesFromSpells(character, { kind: "save", ability })),
+  ]
 }
-const SAVE_ADVANTAGE: Record<string, readonly (AbilityId | "death")[]> = { haste: ["dex"], "beacon-of-hope": ["wis", "death"] }
 
-/** What a character's spells add to or take from a saving throw of one ability: Slow's −2 on Dexterity saves. */
-export const saveBonusFromSpells = (character: Bearer, ability: AbilityId): number => (ability === "dex" && effectsOf(character).some(({ spell }) => spell.id === "slow") ? -2 : 0)
+/**
+ * Advantage and Disadvantage a character's spells give one of their checks or saves by what was chosen as each was cast
+ * (./spell-rules `checkModes`): Enhance Ability's Advantage on checks with its ability, Hex's Disadvantage.
+ */
+export const checkModesFromSpells = (character: Bearer, check: Check): ModeSource[] => effectsOf(character).flatMap(({ effect, spell }) => heldRule(spell.id)?.checkModes?.(effect, check) ?? [])
+
+/** Whether a character's spells give their Initiative, a Dexterity check, Advantage and nothing Disadvantage: Enhance Ability on Dexterity. */
+export function initiativeAdvantageBySpell(character: Bearer): boolean {
+  const modes = checkModesFromSpells(character, { kind: "ability", ability: "dex" }).map((source) => source.mode)
+  return modes.includes("advantage") && !modes.includes("disadvantage")
+}
+
+/** Damage types a character resists while a spell is on them (./spell-rules `resistances`): Protection from Energy's chosen type. */
+export const spellResistances = (character: Bearer): DamageTypeId[] => [...new Set(effectsOf(character).flatMap(({ effect, spell }) => heldRule(spell.id)?.resistances?.(effect) ?? []))]
+
+/** What a character's spells add to or take from a saving throw of one ability, each spell once: Slow's −2 on Dexterity saves. */
+export const saveBonusFromSpells = (character: Bearer, ability: AbilityId): number =>
+  [...new Set(effectsOf(character).map(({ spell }) => spell.id))].reduce((sum, id) => sum + (heldRule(id)?.saveBonus?.[ability] ?? 0), 0)
 
 /**
  * The Advantage a character's spells, species and worn magic items give a check, when it is a saving throw: for a save
  * rolled outside ./spells `rollSave`, which is against no spell. `against` names the conditions the save is made to
- * avoid or end (Fey Ancestry on Charmed, a Periapt of Health on Poisoned).
+ * avoid or end (Fey Ancestry on Charmed, a Periapt of Health on Poisoned). An ability check takes what their spells give
+ * it (`checkModesFromSpells`).
  */
 export const saveModesFor = (character: Bearer, check: Check, against: readonly ConditionId[] = []): ModeSource[] =>
-  check.kind === "save" ? [...saveModesFromSpells(character, check.ability), ...speciesSaveModes(character, check.ability, against), ...itemSaveModes(character.sheet, against)] : []
+  check.kind === "save"
+    ? [...saveModesFromSpells(character, check.ability), ...speciesSaveModes(character, check.ability, against), ...itemSaveModes(character.sheet, against)]
+    : checkModesFromSpells(character, check)
 
 /** What a character's spells add to a check, when it is a saving throw: for a save rolled outside ./spells `rollSave`. */
 export const saveBonusFor = (character: Bearer, check: Check): number => (check.kind === "save" ? saveBonusFromSpells(character, check.ability) : 0)
 
 /** Whether a character's spells keep them from taking Reactions: Slow. */
-export const cannotReactBySpell = (character: Bearer): boolean => effectsOf(character).some(({ spell }) => spell.id === "slow")
+export const cannotReactBySpell = (character: Bearer): boolean => effectsOf(character).some(({ spell }) => !!heldRule(spell.id)?.noReactions)
 
 /** Whether a character's spells make every healing die count its most: Beacon of Hope. */
-export const healsMost = (character: Bearer): boolean => effectsOf(character).some(({ spell }) => spell.id === "beacon-of-hope")
+export const healsMost = (character: Bearer): boolean => effectsOf(character).some(({ spell }) => !!heldRule(spell.id)?.healsMost)
+
+/** Whether a character's spells keep a spell off them: Shield, "and you take no damage from Magic Missile". */
+export const wardedFrom = (character: Bearer, spell: Spell): boolean => effectsOf(character).some(({ spell: held }) => !!heldRule(held.id)?.wards?.(spell))
 
 /**
- * Whether a character's spells keep Magic Missile's darts off them: Shield, "and you take no damage from Magic Missile".
+ * A hit by an attack roll on one whose spell may take it in their place (Mirror Image's duplicates): the first of their
+ * spells that answers. `duplicates` is how many there were before the roll.
  */
-export const turnsMagicMissile = (character: Bearer): boolean => effectsOf(character).some(({ spell }) => spell.id === "shield")
-
-/**
- * Mirror Image against a hit by an attack roll: a d6 for each duplicate left, and on any 3 or higher a duplicate is hit
- * in place of its caster and destroyed. The spell ends with the last. An attacker who is Blinded is not fooled.
- * `duplicates` is how many were left before the roll.
- */
-export function mirrorImage<T extends Bearer>(target: T, attacker: Bearer, roll: (sides: number) => number): { character: T; deflected: boolean; dice: number[]; duplicates: number } {
-  const held = target.spellEffects?.find((effect) => effect.spell === "mirror-image")
-  const duplicates = held?.amount ?? 0
-  if (!held || duplicates < 1 || attacker.conditions?.some((entry) => entry.id === "blinded")) return { character: target, deflected: false, dice: [], duplicates }
-  const dice = Array.from({ length: duplicates }, () => roll(6))
-  if (!dice.some((die) => die >= 3)) return { character: target, deflected: false, dice, duplicates }
-  const character =
-    duplicates > 1
-      ? { ...target, spellEffects: (target.spellEffects ?? []).map((effect) => (effect === held ? { ...effect, amount: duplicates - 1 } : effect)) }
-      : strip(target, (effect) => effect === held)
-  return { character, deflected: true, dice, duplicates }
+export function deflectedHit<T extends Bearer>(target: T, attacker: Bearer, roll: (sides: number) => number): Deflected<T> {
+  for (const { spell } of effectsOf(target)) {
+    const answered = heldRule(spell.id)?.deflects?.(target, attacker, roll)
+    if (answered) return answered
+  }
+  return { character: target, deflected: false, dice: [], duplicates: 0 }
 }
 
 /** One die a lasting spell adds to a roll, or takes from it, as it fell. */
@@ -193,11 +150,11 @@ export function rollAdds(character: Bearer, kind: "attack-rolls" | "saving-throw
     // A check with one skill: Pass without Trace's +10 to Stealth, Enthrall's −10 to Perception.
     const forSkill = kind === "ability-checks" && !!skill && modifier.to.includes(`${skill}-checks`)
     if (!modifier.to.includes(kind) && !forSkill) continue
-    // Magic Weapon is the weapon's: it adds to weapon attacks, not to spell attacks.
-    if (spell.id === "magic-weapon" && options.spell) continue
-    // Guidance is for one skill, chosen as it is cast. Warding Bond's limit, within 60 feet of its caster, is not
-    // measured, nor Pass without Trace's aura, and Magic Weapon is taken to be the weapon its bearer attacks with.
-    if (modifier.appliesWhen && !forSkill && !UNMEASURED.has(spell.id) && (kind !== "ability-checks" || !effect.skill || effect.skill !== skill)) continue
+    const held = heldRule(spell.id)
+    // A weapon's spell (Magic Weapon) adds to weapon attacks, not to spell attacks.
+    if (held?.weapon && options.spell) continue
+    // Guidance is for one skill, chosen as it is cast. A limit the engine does not measure always holds (`unmeasured`).
+    if (modifier.appliesWhen && !forSkill && !held?.unmeasured && (kind !== "ability-checks" || !effect.skill || effect.skill !== skill)) continue
     const match = /^(\d+)d(\d+)$/.exec(modifier.dice ?? "")
     // Magic Weapon's bonus grows with the slot, and is held as the effect's `amount`.
     const amount = match ? Array.from({ length: Number(match[1]) }, () => roll(Number(match[2]))).reduce((sum, die) => sum + die, 0) : (effect.amount ?? modifier.amount ?? 0)
@@ -205,14 +162,13 @@ export function rollAdds(character: Bearer, kind: "attack-rolls" | "saving-throw
   }
   return found
 }
-const UNMEASURED = new Set(["warding-bond", "magic-weapon", "pass-without-trace"])
 
 /**
  * Damage a character's own spells add to their weapon hits: Magic Weapon's bonus to damage rolls, held as the effect's
  * `amount`. For ./attack, beside `markDamage`.
  */
 export function weaponDamageFromSpells(attacker: Bearer): { name: string; damage: { amount: number; type?: DamageTypeId } }[] {
-  return effectsOf(attacker).flatMap(({ effect, spell }) => (spell.id === "magic-weapon" ? [{ name: spell.name, damage: { amount: effect.amount ?? spell.rollModifier?.amount ?? 1 } }] : []))
+  return effectsOf(attacker).flatMap(({ effect, spell }) => (heldRule(spell.id)?.weapon ? [{ name: spell.name, damage: { amount: effect.amount ?? spell.rollModifier?.amount ?? 1 } }] : []))
 }
 
 /** The dice for a check or a save, from the check's kind. */
@@ -232,21 +188,21 @@ export function markDamage(attackerId: string | undefined, target: Bearer): { na
 export function attackModesFromSpells(attacker: Bearer, target: Bearer): ModeSource[] {
   const found: ModeSource[] = []
   for (const { spell } of effectsOf(target)) {
-    const side = RIDERS[spell.id]?.attacked
+    const side = heldRule(spell.id)?.attacked
     if (side) found.push({ mode: side, from: spell.name })
   }
-  for (const { spell } of effectsOf(attacker)) if (RIDERS[spell.id]?.attacks) found.push({ mode: "disadvantage", from: spell.name })
+  for (const { spell } of effectsOf(attacker)) if (heldRule(spell.id)?.attacks) found.push({ mode: "disadvantage", from: spell.name })
   return found
 }
 
 /** Everyone after an attack roll, with the spells it used up: one that is for the next attack only is spent by it. */
 export function afterAttackRoll<T extends Bearer>(characters: readonly T[], attackerId: string, targetId: string): T[] {
-  const once = (side: "attacked" | "attacks") => (effect: SpellEffect) => !!RIDERS[effect.spell]?.once && !!RIDERS[effect.spell]?.[side]
+  const once = (side: "attacked" | "attacks") => (effect: SpellEffect) => !!heldRule(effect.spell)?.once && !!heldRule(effect.spell)?.[side]
   return characters.map((character) => (character.id === targetId ? strip(character, once("attacked")) : character.id === attackerId ? strip(character, once("attacks")) : character))
 }
 
 /** Conditions a character cannot be given while a spell is on them: Heroism shuts out Frightened. */
-export const spellImmunities = (character: Bearer): ConditionId[] => ((character.spellEffects ?? []).some((effect) => effect.spell === "heroism") ? ["frightened"] : [])
+export const spellImmunities = (character: Bearer): ConditionId[] => [...new Set((character.spellEffects ?? []).flatMap((effect) => heldRule(effect.spell)?.immunities ?? []))]
 
 /**
  * A character's lasting spells as a round begins: each with a count of turns loses one, and one that runs out ends.
@@ -295,11 +251,8 @@ export function endConcentration<T extends Bearer>(characters: readonly T[], cas
   if (!caster || !held) return { characters: [...characters] }
   return {
     characters: characters.map((before) => {
-      // Haste's end: "the target is Incapacitated and has a Speed of 0 until the end of its next turn".
-      const lethargic = held === "haste" && !!before.spellEffects?.some((effect) => effect.spell === "haste" && effect.by === casterId)
-      const character = lethargic
-        ? { ...before, conditions: [...(before.conditions ?? []).filter((entry) => entry.id !== "incapacitated"), { id: "incapacitated" as const, turns: before.isComplete ? 2 : 1 }] }
-        : before
+      // What the spell's ending does to one it was on (./spell-rules `ended`): Haste's lethargy.
+      const character = spellRule(held)?.ended?.(before, casterId) ?? before
       const cleared = strip(character, (effect) => effect.spell === held && effect.by === casterId)
       const conditions = (cleared.conditions ?? []).filter((entry) => !(entry.spell === held && entry.source === casterId))
       const { conditions: _, ...rest } = cleared
@@ -324,7 +277,8 @@ export type ConcentrationSave = { character: string; spell: string; natural: num
  * Settle Concentration after something has happened: everyone as they were before it, and as they are now. A caster
  * who is now dead, down or Incapacitated loses it. One who lost hit points makes a Constitution saving throw against
  * 10 or half the damage, whichever is higher, and loses it on a failure. `save` gives a caster's Constitution save
- * bonus, and `d20` throws the die.
+ * bonus, and `d20` throws the die. Before that, a hero it dropped to 0 hit points may still stand by a class feature
+ * (../class-rules `afterDowned` through ./late-rules: Relentless Rage), told with the facts.
  */
 export function settleConcentration<T extends Bearer>(args: {
   before: readonly T[]
@@ -334,9 +288,10 @@ export function settleConcentration<T extends Bearer>(args: {
   modes?: (character: T) => readonly ModeSource[]
   d20: () => number
 }): { characters: T[]; saves: ConcentrationSave[]; facts: string[] } {
-  let characters = [...args.after]
+  const stood = answerDowned({ before: args.before, after: args.after, d20: args.d20 })
+  let characters = stood.characters
   const saves: ConcentrationSave[] = []
-  const facts: string[] = []
+  const facts: string[] = stood.told.map((told) => told.text)
   for (const was of args.before) {
     const now = characters.find((character) => character.id === was.id)
     if (!was.id || !now?.concentration) continue
@@ -359,22 +314,31 @@ export function settleConcentration<T extends Bearer>(args: {
       facts.push(`${now.name ?? "The caster"} loses Concentration, and ${spell} ends.`)
     }
   }
-  // A spell that ends on its bearer when they take damage: Hypnotic Pattern, Suggestion.
+  // A spell that ends on its bearer when they take damage (./spell-rules `endsOnDamage`): Hypnotic Pattern, Suggestion.
+  const endsOnDamage = (id: string) => !!spellRule(id)?.endsOnDamage
+  const spellsOn = (character: T) => [...new Set([...(character.spellEffects ?? []).map((effect) => effect.spell), ...(character.conditions ?? []).flatMap((entry) => entry.spell ?? [])])]
   for (const was of args.before) {
     const now = characters.find((character) => character.id === was.id)
     if (!now || (was.hitPoints ?? 0) <= (now.hitPoints ?? 0)) continue
-    const ended = [...new Set([...(now.spellEffects ?? []).map((effect) => effect.spell), ...(now.conditions ?? []).flatMap((entry) => entry.spell ?? [])])].filter((id) => ENDS_ON_DAMAGE.has(id))
+    const ended = spellsOn(now).filter(endsOnDamage)
     if (!ended.length) continue
-    characters = characters.map((character) => (character.id === was.id ? spellEnded(character, (id) => ENDS_ON_DAMAGE.has(id)) : character))
+    characters = characters.map((character) => (character.id === was.id ? spellEnded(character, endsOnDamage) : character))
     for (const id of ended) facts.push(`${now.name ?? "They"} took damage, and ${spellById.get(id)?.name ?? id} ends on them.`)
+  }
+  // What else damage to its bearer does, by the spell's own rules (./spell-rules `damaged`).
+  for (const was of args.before) {
+    const lost = (was.hitPoints ?? 0) - (characters.find((character) => character.id === was.id)?.hitPoints ?? 0)
+    if (lost <= 0) continue
+    for (const id of spellsOn(characters.find((character) => character.id === was.id) as T)) {
+      const bearer = characters.find((character) => character.id === was.id)
+      const answered = bearer && spellRule(id)?.damaged?.({ bearer, lost, d20: args.d20, characters })
+      if (!answered) continue
+      characters = characters.map((character) => (character.id === was.id ? answered.bearer : character))
+      facts.push(...answered.facts)
+    }
   }
   return { characters, saves, facts }
 }
-
-// Spells that end on a creature when it takes damage: "The spell ends for an affected creature if it takes any damage"
-// (Hypnotic Pattern), Sleep's "The spell ends on a target if it takes damage", and the Charmed of Suggestion, Charm Person
-// and Animal Friendship, "until you or your allies damage it", whoever deals it here.
-const ENDS_ON_DAMAGE = new Set(["hypnotic-pattern", "suggestion", "sleep", "charm-person", "animal-friendship"])
 
 /** A character with the effects and the conditions of the spells `gone` names taken off them, whoever cast them. */
 export function spellEnded<T extends Bearer>(character: T, gone: (spellId: string) => boolean): T {
@@ -386,8 +350,8 @@ export function spellEnded<T extends Bearer>(character: T, gone: (spellId: strin
 }
 
 /**
- * A character after they move: they have left the areas that stay on the floor (Web, Stinking Cloud, Sleet Storm), and
- * no longer bear their effect. A condition the area gave stays (Web's Restrained ends by breaking free). For the move
+ * A character after they move: they have left the areas that stay on the floor (./spell-rules `area`: Web, Stinking
+ * Cloud, Sleet Storm), and no longer bear their effect. A condition the area gave stays (Web's Restrained ends by breaking free). For the move
  * code (./moves), on a move of any length.
  */
-export const spellEffectsAfterMove = <T extends Bearer>(character: T): T => strip(character, (effect) => AREA_SPELLS.has(effect.spell))
+export const spellEffectsAfterMove = <T extends Bearer>(character: T): T => strip(character, (effect) => !!heldRule(effect.spell)?.area)

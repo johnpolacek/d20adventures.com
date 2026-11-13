@@ -3,7 +3,7 @@ import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { hitPointWords } from "../sheet/hit-points"
 import { sidesWords } from "../sheet/sides"
-import { movementBudgetOf } from "../sheet/space"
+import { moveBudget } from "../sheet/moves"
 import { spellWords } from "../sheet/spells"
 import { statBlockLines } from "../sheet/stat-block-actions"
 import { authoredText } from "../story/authored"
@@ -105,7 +105,7 @@ export function buildNpcActionContext({ turn, npc, encounterContext, sectionCont
     earlier ? `What ${npc.name} did in earlier rounds of this scene. None of these lines is said again, and an action that failed is not tried again the same way:\n${earlier}` : "",
     narrativeContext ? `Recent Narrative:\n${narrativeContext}` : "",
     standing
-      ? `Where Everyone Stands:\n${standing}\nThese places and distances are the game's own. ${npc.name} can move ${movementBudgetOf(npc)} feet on this turn before acting, and reaches 5 feet in melee unless a weapon says more. Plan what ${npc.name} can do from where they stand, and tell nothing that disagrees with these distances.`
+      ? `Where Everyone Stands:\n${standing}\nThese places and distances are the game's own. ${npc.name} can move ${moveBudget(npc, turn.characters)} feet on this turn before acting, and reaches 5 feet in melee unless a weapon says more. Plan what ${npc.name} can do from where they stand, and tell nothing that disagrees with these distances.`
       : "",
   ]
     .filter(Boolean)

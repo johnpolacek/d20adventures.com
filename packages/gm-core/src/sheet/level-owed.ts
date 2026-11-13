@@ -4,8 +4,8 @@ import type { Sheet } from "./sheet"
 // Whether a hero is owed a level, kept apart from the level's maths (./milestone) so a screen can ask without loading
 // the rules data.
 
-/** The highest level the engine's features run to. */
-export const LEVEL_CAP = 5
+/** The highest level a hero may reach: the SRD's 20. */
+export const LEVEL_CAP = 20
 
 export type Levelling = { type: string; name?: string; sheet?: Sheet; levelDue?: number; hitPoints?: number; healthPercent?: number; dead?: true }
 

@@ -3,6 +3,7 @@ import { monsterById } from "@d20/srd/monsters"
 import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
 import { type ActorLike, findCurrentActor, hasFled, isDown, isIncapacitated } from "../utils/turn-actors"
+import { attackModesFromActions } from "./actions"
 import {
   type Attack,
   againstArmorClass,
@@ -19,9 +20,9 @@ import {
   type Target,
   UNARMED_STRIKE,
 } from "./attack"
-import { type CheckResult, type RollMode, rollModes } from "./check"
-import { type Featured, hitRules, type Landed, type Reacted, reactionRules, turnEffectRule } from "./class-rules"
-import { cannotAttack, hasCondition } from "./conditions"
+import { type CheckResult, combineModes, type RollMode, rollModes } from "./check"
+import { type Featured, hitRules, type Landed, type Reacted, reactionRules, settledByClasses, turnEffectRule } from "./class-rules"
+import { attackModesFrom, cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
 import { withFeatureUsed, withUsedThisTurn } from "./feature-rules"
 import { releasedHolds } from "./hit-riders"
@@ -463,6 +464,8 @@ export function attackWithReactions<T extends InPlay>(args: {
   }
   const { target: struck, ...blow } = landBlow({ attacker, target, roll: args.roll, rules: args.rules, present: characters, turnOf, choices: args.choices, reduce, charged: args.charge }, rolled)
   put(blow.reduced ? withReaction(struck) : struck)
+  // What the attacker's class leaves on the one attacked once the roll hit or missed (Studied Attacks).
+  put(settledByClasses(attacker, characters.find((character) => character.id === args.targetId) as T, blow.roll.hit))
   // The once-a-turn features the blow used are marked on the attacker.
   for (const id of blow.used ?? []) put(withUsedThisTurn(characters.find((character) => character.id === args.attackerId) as T, id, turnOf))
   // And what rode on the hit spent of theirs: a Stunning Strike's Focus Point.
@@ -474,8 +477,55 @@ export function attackWithReactions<T extends InPlay>(args: {
   }
   // A grapple or an attachment ends as its holder drops (./hit-riders).
   characters = releasedHolds(characters).characters
+  // The classes' reactions once the blow has hurt: the one hit may strike back (a Berserker's Retaliation).
+  if (blow.taken > 0) characters = struckBack({ characters, hurtId: args.targetId, strikerId: args.attackerId, melee: rolled.attack.kind !== "ranged", taken: blow.taken, args, reactions })
   const after = characters.find((character) => character.id === args.targetId) as T
   return { characters, blow, target: after, reactions }
+}
+
+/**
+ * The one a blow hurt, striking back with a class's reaction (`strikesBack`) when `ask` says so: one attack at the
+ * attacker, who stands within 5 feet, with the Advantage and Disadvantage of the moment. Its reactions are pushed onto
+ * `reactions`, the strike first. One with no place on the floor is taken to stand within 5 feet of a melee attacker.
+ */
+function struckBack<T extends InPlay>(args: {
+  characters: T[]
+  hurtId: string
+  strikerId: string
+  melee: boolean
+  taken: number
+  args: Parameters<typeof attackWithReactions<T>>[0]
+  reactions: ReactionTaken[]
+}): T[] {
+  const hurt = args.characters.find((character) => character.id === args.hurtId)
+  const striker = args.characters.find((character) => character.id === args.strikerId)
+  if (!hurt || !striker || hurt.id === striker.id || !canReact(hurt) || isDown(striker) || striker.dead || striker.fled) return args.characters
+  const from = placedOf(hurt)
+  const at = placedOf(striker)
+  if (from && at ? !within(from, at, 5) : !args.melee) return args.characters
+  for (const rule of reactionRules()) {
+    if (!rule.strikesBack || !rule.has(hurt)) continue
+    const weapon = rule.strikesBack({ target: hurt as unknown as Featured, attacker: striker as unknown as Featured, taken: args.taken })
+    const attack = weapon ? attacksOf(hurt).find((entry) => entry.id === weapon) : undefined
+    if (!weapon || !attack) continue
+    const text = `${striker.name} hurts ${hurt.name} from within 5 feet. ${hurt.name} may strike back with ${attack.name}.`
+    if (!args.args.ask({ id: rule.id, to: hurt.id, from: striker.id, weapon: args.args.weapon, matters: true }, text)) continue
+    const mode = combineModes([...attackModesFrom(hurt, striker, true, args.characters), ...attackModesFromActions(hurt, striker, args.characters, attack)].map((source) => source.mode))
+    const back = attackWithReactions({
+      characters: args.characters.map((character) => (character.id === hurt.id ? withReaction(character) : character)),
+      attackerId: hurt.id,
+      targetId: striker.id,
+      weapon,
+      dice: Array.from({ length: mode === "normal" ? 1 : 2 }, () => args.args.roll(20)),
+      mode,
+      roll: args.args.roll,
+      rules: args.args.rules,
+      ask: args.args.ask,
+    })
+    args.reactions.push({ by: hurt.id, id: rule.id, name: rule.name, text: `${hurt.name} strikes back. ${strikeFacts(hurt.name, striker.name, back.blow)}` }, ...back.reactions)
+    return back.characters
+  }
+  return args.characters
 }
 
 /** An Opportunity Attack as a move was made: who made it, the blow, and the reactions that answered it. */

@@ -7,10 +7,10 @@ import { spellById } from "@d20/srd/spells"
 import { attackModesFromActions, checkModesFromActions } from "./actions"
 import { type AttackResult, type DamagePart, type DamageRoll, damageTaken, defensesOf, parseDice, resolveAttack, rollDamage } from "./attack"
 import { type Check, checkBonus, combineModes, type Roller, type RollMode } from "./check"
-import { classCastingBar, classCheckModes, classCreatedSlots, classSpellAttackModes, classSpellHits, classSpellSaveDc } from "./class-rules"
+import { classCastingBar, classCheckModes, classCreatedSlots, classSpellAttackModes, classSpellHits, classSpellSaveDc, classTotalFloor } from "./class-rules"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { attackModesFrom, checkModesFrom, conditionName, d20Penalty, saveFailedBy, withCondition } from "./conditions"
-import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, revived, withDamage, withHealing } from "./death"
+import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, withDamage, withHealing } from "./death"
 import { deriveSheet, featuresOf, pickedFreeCasts, slotsAt } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
@@ -20,26 +20,31 @@ import { type ItemCasting, type ItemCost, itemCastCost, itemCastingWords, itemSp
 import { itemBonus } from "./items"
 import { legendaryResistanceWords, type SaveStakes, spendsLegendaryResistance, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { magicSaveModes, typesTaken } from "./monster-traits"
+import { auraSaveBonus, damageOnSave, rescuedSave, rescueWords, withRescueSpent } from "./save-rules"
 import { type Cover, coverBonus, type Floor, isNear } from "./space"
 import { speciesSaveModes } from "./species-traits"
 import {
-  CASTER_HELD,
+  deflectedHit,
   healsMost,
+  heldByCaster,
   lasts,
-  mirrorImage,
   type RollAdd,
   rollAdds,
   saveBonusFromSpells,
   saveModesFromSpells,
   spellEnded,
-  turnsMagicMissile,
+  wardedFrom,
   withConcentration,
   withSpellEffect,
 } from "./spell-effects"
 import { endsBySpell } from "./spell-ends"
 import { spellLabel } from "./spell-labels"
+import { type CastContext, heldRule, spellRule } from "./spell-rules"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
+// Every spell mechanism file's rules, handed to ./spell-rules as they load. Last of the imports, so the files load once
+// the shared code they read has.
+import "./spell-mechanics"
 
 /**
  * Spellcasting by the SRD 5.2.1 rules, as pure functions. A spell's typed data decides what it does: a spell attack
@@ -167,32 +172,23 @@ export const castableOnTurn = (spell: Spell): boolean => spell.castingTime.unit 
  * How many creatures a spell takes. On a floor an area takes whoever stands in it (./spell-space). Where there is no
  * floor it takes as many as its size allows: a cone one for each 10 feet, a cube one for each 5 feet of its side, a sphere, cylinder or emanation one
  * for each 5 feet of its radius, a line one for each 30 feet, each rounded up. Magic Missile takes one for each dart.
- * Any other spell takes one. Cast with a slot above its level (`slot`), a spell takes the creatures its text adds for
- * each level above (Bless, Charm Person), and Magic Missile its extra darts.
+ * Any other spell takes one. A spell whose words count its creatures takes that many, and an area no more (./spell-rules
+ * `count`). Cast with a slot above its level (`slot`), a spell takes the creatures its text adds for each level above
+ * (Bless, Charm Person), and Magic Missile its extra darts.
  */
-// Spells whose text takes several creatures with no area: the count is in their words alone. Beacon of Hope takes "any
-// number", a wall of wind as many as stand along its 50 feet, and Slow "up to six" in its cube. Entangle's 20-foot
-// square, which its data holds no area for, takes four as a 20-foot cube would, and Mass Cure Wounds "up to six".
-const SEVERAL: Record<string, number> = {
-  bless: 3,
-  bane: 3,
-  aid: 3,
-  "prayer-of-healing": 5,
-  "mass-healing-word": 6,
-  "beacon-of-hope": 20,
-  "wind-wall": 10,
-  slow: 6,
-  entangle: 4,
-  "mass-cure-wounds": 6,
-}
-
 export function targetLimit(spell: Spell, slot = spell.level, casterLevel = 1): number {
   const above = Math.max(0, slot - spell.level)
   const area = spell.range.area
-  if (area) return Math.min(SEVERAL[spell.id] ?? Number.POSITIVE_INFINITY, Math.max(1, Math.ceil(area.size / (area.shape === "cone" ? 10 : area.shape === "line" ? 30 : 5))))
+  const rule = spellRule(spell.id)
+  const count = rule?.count
+  // A spell that makes several areas (Meteor Swarm's four) takes as many as each holds, for each.
+  if (area) return Math.min(count ?? Number.POSITIVE_INFINITY, Math.max(1, Math.ceil(area.size / (area.shape === "cone" ? 10 : area.shape === "line" ? 30 : 5))) * (rule?.areas ?? 1))
   if (spell.projectiles) return dartsOf(spell, slot, casterLevel)
-  return (SEVERAL[spell.id] ?? 1) + (spell.extraTargetsPerSlot ?? 0) * above
+  return (count ?? 1) + (spell.extraTargetsPerSlot ?? 0) * above
 }
+
+/** How many areas a spell makes, each centred on one named: one, or Meteor Swarm's four (./spell-rules `areas`). */
+export const areasOf = (spell: Spell): number => spellRule(spell.id)?.areas ?? 1
 
 /**
  * How many projectiles a spell makes: Magic Missile's three, and one more for each slot level above 1. A cantrip's
@@ -454,7 +450,7 @@ export function castCost(character: Slotted, spellId: string, ritual = false, sl
   const name = spellById.get(spellId)?.name ?? spellId
   if (!known) return { problem: `${name} is not a spell ${character.name ?? "this character"} can cast.` }
   // A class feature that bars casting while it lasts (Rage) bars every spell, a cantrip too.
-  const barred = classCastingBar(character)
+  const barred = classCastingBar(character) ?? spellRule(known.spell.id)?.barred?.(character, known.spell)
   if (barred) return { problem: barred }
   if (known.item && (known.itemOnly || fromItem)) {
     const paid = itemCastCost(known.item, known.spell, slot)
@@ -513,6 +509,13 @@ export type SaveRoll = {
   adds?: RollAdd[]
   /** The save failed, and the creature chose to succeed by Legendary Resistance (./legendary-resistance). The caller spends the use. */
   legendary?: true
+  /**
+   * The save failed, and a class feature of the hero's rerolled it (Indomitable, ./save-rules `rescuedSave`): the dice
+   * and total above are the new roll's, `first` the failed total. The caller spends the feature's use.
+   */
+  rescued?: { feature: string; name: string; first: number }
+  /** What auras of those near added to the save (Aura of Protection), already in `bonus`. */
+  auras?: string[]
 }
 /** A spell attack as it fell: the roll, and on a hit the damage dice and what the target lost. */
 export type SpellAttack = { target: string; roll: AttackResult; damage?: DamageRoll; taken: number; fate?: Fate; deflected?: true }
@@ -568,6 +571,34 @@ function spanOf(spell: Spell): ConditionSpan | undefined {
   if (duration.kind !== "timed") return duration.kind === "instantaneous" ? undefined : "lasting"
   if (duration.unit === "round") return (duration.amount ?? 1) <= 1 ? "turn" : "minute"
   return duration.unit === "minute" && (duration.amount ?? 1) <= 1 ? "minute" : "lasting"
+}
+
+// The words after a condition's name that say how long a spell gives it for, and the span each is. "For the duration"
+// is the spell's own (`spanOf`). "Until the end of your next turn" falls at the end of the bearer's next turn, as the
+// engine runs a round's turns together.
+const SPAN_WORDS: readonly (readonly [RegExp, ConditionSpan | "duration"])[] = [
+  [/^until the (end|start) of (its|their|the target’s|your) next turn/i, "turn"],
+  [/^until the end of the current turn/i, "turn"],
+  [/^for 1 minute\b/i, "minute"],
+  [/^for (\d+|ten) minutes|^for \d+ (hours?|days?)|^for 1 hour|^until you finish a (Long|Short) Rest/i, "lasting"],
+  [/^(\(your choice\) )?(for the duration|until the spell ends)/i, "duration"],
+]
+
+/**
+ * How long a spell's text gives one of its conditions for, where it says so beside the condition: Sunburst's Blinded
+ * "for 1 minute", Color Spray's "until the end of your next turn". None where the text says "for the duration" or
+ * nothing, and the spell's own duration holds.
+ */
+export function conditionSpanOf(spell: Spell, condition: ConditionId): ConditionSpan | undefined {
+  const name = conditionName(condition)
+  for (const sentence of spell.description.split(/(?<=\.)\s+/)) {
+    const named = new RegExp(`\\b${name}\\b[^.]*?\\bconditions?\\b\\s*`).exec(sentence)
+    if (!named) continue
+    const after = sentence.slice(named.index + named[0].length)
+    const found = SPAN_WORDS.find(([words]) => words.test(after))?.[1]
+    return found === "duration" ? undefined : found
+  }
+  return undefined
 }
 
 // How a character stands after a spell's harm, in words for the game master.
@@ -626,6 +657,8 @@ export function castSpell<T extends Castee>(args: {
   again?: boolean
   /** Cast from a magic item, with the item's save DC and attack bonus where it states them (`spellcastingFor`). */
   item?: boolean
+  /** What the caster chose for a spell that asks a choice (./spell-rules `choice`). Its first value, when none is. */
+  choice?: string
 }): Cast<T> {
   const { spell } = args
   let characters = [...args.characters]
@@ -639,9 +672,12 @@ export function castSpell<T extends Castee>(args: {
     characters = characters.map((character) => (character.id === after.id ? after : character))
   }
   const slot = Math.max(spell.level, args.level ?? spell.level)
-  const targets = [...new Set(args.targets)].filter((id) => find(id)).slice(0, args.measured && spell.range.area ? SEVERAL[spell.id] : targetLimit(spell, slot, level))
-  // Sacred Flame: "The target gains no benefit from Half Cover or Three-Quarters Cover for this save."
-  const covered = (id: string) => (spell.id === "sacred-flame" ? 0 : coverBonus(args.cover?.[id] ?? "none"))
+  const rule = spellRule(spell.id)
+  // What the caster chose, of the values the spell offers, or the first.
+  const choice = rule?.choice ? (args.choice && rule.choice.values.includes(args.choice) ? args.choice : rule.choice.values[0]) : undefined
+  const targets = [...new Set(args.targets)].filter((id) => find(id)).slice(0, args.measured && spell.range.area ? rule?.count : targetLimit(spell, slot, level))
+  // A spell whose one taken gains no benefit from cover (Sacred Flame).
+  const covered = (id: string) => (rule?.ignoresCover ? 0 : coverBonus(args.cover?.[id] ?? "none"))
   const saves: SaveRoll[] = []
   const harm: Harm[] = []
   const conditions: ConditionChange[] = []
@@ -649,10 +685,11 @@ export function castSpell<T extends Castee>(args: {
   const attacks: SpellAttack[] = []
   const done = (): Cast<T> => ({ characters, targets, ...(attacks[0] ? { attack: attacks[0] } : {}), ...(attacks.length > 1 ? { rays: attacks } : {}), saves, harm, conditions, facts })
 
-  // Casting a spell ends Invisibility on its caster: "The spell ends early immediately after the target ... casts a spell."
-  if (!args.again && caster.conditions?.some((entry) => entry.spell === "invisibility")) {
-    put(spellEnded(caster, (id) => id === "invisibility"))
-    facts.push(`${caster.name} casts a spell, and Invisibility ends on them.`)
+  // Casting a spell ends a spell on its caster that ends so (./spell-rules `endsOnCasting`): Invisibility, "The spell
+  // ends early immediately after the target ... casts a spell."
+  for (const id of args.again ? [] : [...new Set((caster.conditions ?? []).flatMap((entry) => entry.spell ?? []))].filter((id) => spellRule(id)?.endsOnCasting)) {
+    put(spellEnded(find(caster.id) as T, (held) => held === id))
+    facts.push(`${caster.name} casts a spell, and ${spellById.get(id)?.name ?? id} ends on them.`)
   }
   // A spell that takes Concentration is the one its caster now holds, and one held before ends.
   if (spell.duration.concentration && !args.again) characters = withConcentration(characters, caster.id, spell.id)
@@ -661,12 +698,10 @@ export function castSpell<T extends Castee>(args: {
 
   const typeOf = (types: readonly DamageTypeId[]) => (args.damageType && types.includes(args.damageType) ? args.damageType : types[0])
   // What the spell does as it takes effect, or, used again, what it does on a later turn. What it does under a stated
-  // condition, or as one option of several (Command's Grovel), is not dealt here. Heat Metal's burn falls on the one
-  // named, who is taken to hold or wear the metal. Blindness/Deafness gives Blinded, the caster's usual choice.
+  // condition, or as one option of several (Command's Grovel), is not dealt here, unless the spell's own rules take it
+  // (./spell-rules `applies`).
   const now = (part: { timing?: string; appliesWhen?: string; unless?: string; label?: string; condition?: ConditionId }) =>
-    args.again
-      ? !!part.timing && !part.label
-      : !part.timing && !part.label && (!part.appliesWhen || (spell.id === "heat-metal" && !("condition" in part)) || (spell.id === "blindness-deafness" && part.condition === "blinded"))
+    args.again ? !!part.timing && !part.label : !part.timing && !part.label && (!part.appliesWhen || !!rule?.applies?.(part, choice))
   // A spell with a second save to come holds its first condition only until that save: the bearer's next turn (Sleep).
   const span = spell.saves?.some((save) => save.when === "later") ? "turn" : spanOf(spell)
   // A spell cast with a slot above its own level adds what its text gives for each level above: damage and healing
@@ -701,9 +736,10 @@ export function castSpell<T extends Castee>(args: {
   const give = (id: string, condition: ConditionId) => {
     const target = find(id)
     if (!target) return
-    // A condition from a spell that is over at once lasts a turn: Ray of Sickness's Poisoned and Color Spray's Blinded,
-    // "until the end of your next turn".
-    const given = withCondition(target, { id: condition, source: caster.id, span: span ?? "turn", spell: spell.id }, { acted: !!target.isComplete })
+    // A condition lasts as long as the text gives it for (Sunburst's Blinded "for 1 minute"), or the spell's duration.
+    // One from a spell that is over at once lasts a turn: Ray of Sickness's Poisoned and Color Spray's Blinded, "until
+    // the end of your next turn".
+    const given = withCondition(target, { id: condition, source: caster.id, span: conditionSpanOf(spell, condition) ?? span ?? "turn", spell: spell.id }, { acted: !!target.isComplete })
     if (!given.given) {
       facts.push(`${target.name} cannot be ${conditionName(condition)} and is not.`)
       return
@@ -714,13 +750,29 @@ export function castSpell<T extends Castee>(args: {
   }
   // Potent Cantrip: a damaging cantrip that misses, or is saved against, still deals half its damage and nothing more.
   const potent = spell.level === 0 && features.has(POTENT_CANTRIP)
+  // The cast as the spell's own rules see it (./spell-rules).
+  const context: CastContext = {
+    spell,
+    caster,
+    casting,
+    slot,
+    again: !!args.again,
+    ...(choice ? { choice } : {}),
+    find: (id) => find(id),
+    put: (after) => put(after as T),
+    harm,
+    facts,
+    attacks,
+    roll: args.roll,
+    standing: (character) => standing(character, undefined),
+  }
 
-  // A creature the spell cannot take: Hold Person and Charm Person take a Humanoid, Animal Friendship a Beast.
+  // A creature the spell cannot take: Hold Person takes a Humanoid (./spell-rules `takes`).
   const takes = (id: string) => {
     const target = find(id)
-    const only = ONLY_OF_TYPE[spell.id]
-    if (!target || !only || creatureTypeOf(target) === only) return true
-    facts.push(`${target.name} is not a ${only === "humanoid" ? "Humanoid" : "Beast"}, so ${spell.name} does not take them.`)
+    const refused = target && rule?.takes?.(target, spell)
+    if (!refused) return true
+    facts.push(refused)
     return false
   }
   const taking = targets.filter(takes)
@@ -741,8 +793,8 @@ export function castSpell<T extends Castee>(args: {
       const roll = resolveAttack({ dice, bonus: casting.attackBonus - d20Penalty(caster), armorClass, mode, adds: rollAdds(caster, "attack-rolls", args.roll, undefined, { spell: true }) })
       let attack: SpellAttack = { target: target.id, roll, taken: 0 }
       const what = `${caster.name}'s ${spell.name}${rays > 1 ? ` (ray ${ray + 1} of ${rays})` : ""}`
-      // Mirror Image: a duplicate may take the hit.
-      const imaged = roll.hit ? mirrorImage(target, caster, args.roll) : undefined
+      // A spell on the target may take the hit in their place (Mirror Image's duplicates).
+      const imaged = roll.hit ? deflectedHit(target, caster, args.roll) : undefined
       if (imaged?.deflected) {
         put(imaged.character)
         attacks.push({ ...attack, deflected: true })
@@ -761,7 +813,7 @@ export function castSpell<T extends Castee>(args: {
           const plus = (given?.bonus ?? 0) + bonus
           const added = given && bonus ? `${given.count}d${given.sides}${plus ? ` ${plus < 0 ? "-" : "+"} ${Math.abs(plus)}` : ""}` : undefined
           const thrown = rollDamage(added ? [{ ...first, dice: added }, ...others] : parts, args.roll, roll.critical)
-          const rolled = spell.id === "sorcerous-burst" ? burst(thrown, casting.modifier, args.roll) : thrown
+          const rolled = rule?.hitDamage ? rule.hitDamage(thrown, context) : thrown
           const dealt = hurt(target.id, rolled, (taken) => taken, roll.critical)
           attack = { ...attack, damage: rolled, taken: dealt?.amount ?? 0, ...(dealt?.fate ? { fate: dealt.fate } : {}) }
         }
@@ -779,16 +831,10 @@ export function castSpell<T extends Castee>(args: {
           put({ ...struck, position: rider.to })
           facts.push(`${caster.name}'s ${rider.name} pushes ${struck.name} straight away from them.`)
         }
-        // Vampiric Touch: "you regain Hit Points equal to half the amount of Necrotic damage dealt".
-        if (spell.id === "vampiric-touch" && attack.taken > 1) {
-          const healer = find(caster.id) as T
-          const amount = Math.floor(attack.taken / 2)
-          put(withHealing(healer, amount))
-          harm.push({ target: caster.id, kind: "healing", dice: [], bonus: amount, amount })
-          facts.push(`${caster.name} regains ${amount} hit points. ${standing(find(caster.id) as T, undefined)}`)
-        }
-      } else if (parts.length && (HALF_ON_MISS.has(spell.id) || potent)) {
-        // Acid Arrow's splash on a miss, "half as much of the initial damage only", and a Potent Cantrip's half.
+        // What the hit does once its damage is dealt (Vampiric Touch's healing).
+        rule?.hit?.(context, attack)
+      } else if (parts.length && (rule?.halfOnMiss || potent)) {
+        // Half on a miss by the spell's words (Acid Arrow's splash), and a Potent Cantrip's half.
         const rolled = rollDamage(parts, args.roll)
         const dealt = hurt(target.id, rolled, (taken) => Math.floor(taken / 2))
         attack = { ...attack, damage: rolled, taken: dealt?.amount ?? 0, ...(dealt?.fate ? { fate: dealt.fate } : {}) }
@@ -804,7 +850,7 @@ export function castSpell<T extends Castee>(args: {
   }
 
   // Damage that needs no roll to land. Magic Missile's darts each roll their own dice and fall on the targets in turn.
-  // Heat Metal burns before the save it calls for. Shield keeps Magic Missile's darts off its bearer.
+  // Heat Metal burns before the save it calls for. A spell on a target may keep it off them (Shield against Magic Missile).
   const sure = spell.attack ? [] : (spell.damage ?? []).filter((entry) => now(entry) && !entry.trigger)
   if (sure.length && taking.length) {
     const darts = spell.projectiles ? dartsOf(spell, slot) : undefined
@@ -812,7 +858,7 @@ export function castSpell<T extends Castee>(args: {
     const lost = new Map<string, { amount: number; fate?: Fate; type: string }>()
     for (const id of falls) {
       const target = find(id)
-      if (spell.id === "magic-missile" && target && turnsMagicMissile(target)) continue
+      if (target && wardedFrom(target, spell)) continue
       const dealt = hurt(id, rollDamage(sure.map(partOf), args.roll), (taken) => taken)
       if (dealt) lost.set(id, { amount: (lost.get(id)?.amount ?? 0) + dealt.amount, fate: dealt.fate, type: dealt.type })
     }
@@ -822,12 +868,12 @@ export function castSpell<T extends Castee>(args: {
 
   // Each saving throw the spell calls for as it takes effect, made by every target. A save made only when a creature
   // enters an area or starts or ends its turn there is not made at the cast (Web, Spirit Guardians): ./spell-rounds
-  // makes it. Heat Metal's save follows its burn.
+  // makes it. A spell's own rules may say otherwise (./spell-rules `savedAtCast`): Heat Metal's save follows its burn.
   let rolledSaves = false
   for (const [index, save] of (spell.saves ?? []).entries()) {
     const linked = [...(spell.damage ?? []), ...(spell.conditions ?? [])].filter((entry) => entry.trigger === "failed-save" && entry.save === index)
-    const later = !!save.timing || (linked.length > 0 && linked.every((entry) => entry.timing) && !SAVE_AT_CAST.has(spell.id))
-    const made = args.again ? spell.id === "heat-metal" : (save.when === "initial" && !later) || (spell.id === "heat-metal" && save.when === "on-damage")
+    const later = !!save.timing || (linked.length > 0 && linked.every((entry) => entry.timing))
+    const made = rule?.savedAtCast ? rule.savedAtCast(save, !!args.again, later) : !args.again && save.when === "initial" && !later
     if (!made) continue
     rolledSaves = true
     const guarded = (spell.damage ?? []).filter((entry) => now(entry) && entry.trigger === "failed-save" && entry.save === index)
@@ -836,15 +882,28 @@ export function castSpell<T extends Castee>(args: {
     for (const id of taking) {
       const target = find(id)
       if (!target || target.dead) continue
-      if (spell.id === "sleep" && sleepless(target)) {
-        facts.push(`${target.name} does not sleep, so ${spell.name} does not take them.`)
+      // One who succeeds with no roll, by the spell's words (Sleep's creatures that don't sleep).
+      const passed = rule?.passes?.(target)
+      if (passed) {
+        facts.push(passed)
         continue
       }
       const against = (spell.conditions ?? []).filter((link) => link.trigger === "failed-save" && link.save === index).map((link) => link.condition)
       // What failing would cost: the conditions, and the damage beyond what a success still takes.
       const full = rolled ? damageTaken(rolled, defensesOf(target)) : 0
       const stakes = { conditions: against, damage: full - (half ? Math.floor(full / 2) : 0) }
-      const thrown = rollSave({ target, ability: save.ability, dc: casting.saveDc, d20: args.d20, roll: args.roll, characters, cover: covered(id), also: modesAgainst(spell, target), against, stakes })
+      const thrown = rollSave({
+        target,
+        ability: save.ability,
+        dc: casting.saveDc,
+        d20: args.d20,
+        roll: args.roll,
+        characters,
+        cover: covered(id),
+        also: rule?.saveModes?.(target) ?? [],
+        against,
+        stakes,
+      })
       saves.push(thrown)
       // A Legendary creature that chose to succeed has spent a use of Legendary Resistance, told before the rest.
       if (thrown.legendary) {
@@ -852,15 +911,23 @@ export function castSpell<T extends Castee>(args: {
         put(spent)
         facts.push(legendaryResistanceWords(target.name, spent))
       }
+      if (thrown.rescued) {
+        put(withRescueSpent(find(id) ?? target, thrown.rescued))
+        facts.push(rescueWords(target.name, thrown.rescued, thrown))
+      }
       const { success } = thrown
       const verdict = `${target.name} ${success ? "SUCCEEDS on" : "FAILS"} the saving throw against ${caster.name}'s ${spell.name} (${thrown.total} against DC ${casting.saveDc})`
-      if (rolled && (!success || half)) {
-        const dealt = hurt(id, rolled, (taken) => (success ? Math.floor(taken / 2) : taken))
-        facts.push(`${verdict} and takes ${dealt?.amount ?? 0} ${dealt?.type ?? ""} damage. ${standing(find(id) as T, dealt?.fate)}`.replace("  ", " "))
-      } else facts.push(`${verdict}${rolled ? " and takes no damage" : ""}.`)
+      // All, half or none, as the save and Evasion leave it (./save-rules).
+      const settled = (taken: number) => damageOnSave(target, { ability: save.ability, success, half }, taken)
+      const evaded = rolled ? settled(0).evaded : undefined
+      if (rolled && (!success || half) && !(success && evaded)) {
+        const dealt = hurt(id, rolled, (taken) => settled(taken).amount)
+        facts.push(`${verdict} and takes ${dealt?.amount ?? 0} ${dealt?.type ?? ""} damage${evaded ? `, halved by ${evaded}` : ""}. ${standing(find(id) as T, dealt?.fate)}`.replace("  ", " "))
+      } else facts.push(`${verdict}${rolled ? ` and takes no damage${evaded ? ` (${evaded})` : ""}` : ""}.`)
       if (!success) for (const link of spell.conditions ?? []) if (now(link) && link.trigger === "failed-save" && link.save === index) give(id, link.condition)
-      if (!success && spell.id === "heat-metal")
-        facts.push(`${target.name} must drop the burning metal if they can. If they do not, they have Disadvantage on attack rolls and ability checks until the start of ${caster.name}'s next turn.`)
+      // What the save does beyond the data, by the spell's own rules (Heat Metal's drop).
+      if (success) rule?.passedSave?.(context, target)
+      else rule?.failedSave?.(context, target)
     }
   }
 
@@ -871,18 +938,8 @@ export function castSpell<T extends Castee>(args: {
     for (const id of taking) {
       const target = find(id)
       if (!target) continue
-      // Revivify: "a creature that has died within the last minute ... revives with 1 Hit Point."
-      if (spell.id === "revivify") {
-        if (!target.dead) {
-          facts.push(`${target.name} is not dead, so Revivify does nothing.`)
-          continue
-        }
-        const { dead: _, ...alive } = target
-        put(revived({ ...alive, hitPoints: 0 } as T, healing.amount ?? 1))
-        harm.push({ target: id, kind: "healing", dice: [], bonus: healing.amount ?? 1, amount: healing.amount ?? 1 })
-        facts.push(`${target.name} returns to life with ${healing.amount ?? 1} hit point.`)
-        continue
-      }
+      // Healing in the spell's own words, in place of the data's (Revivify's return to life).
+      if (rule?.heals?.(context, target)) continue
       if (target.dead) continue
       const dice = raised(healing.dice, healing.perSlot, above)
       const most = healsMost(target)
@@ -930,10 +987,10 @@ export function castSpell<T extends Castee>(args: {
   }
 
   // A spell that lasts stays on those it took: everyone named, or only those who failed its save, or the one its spell
-  // attack hit. Spirit Guardians and the spells used again on later turns stay on their caster alone, with the slot.
+  // attack hit. One its caster holds alone (Spirit Guardians, the spells used again on later turns) stays on them, with the slot.
   if (lasts(spell) && !args.again) {
     const first = attacks[0]
-    const taken = CASTER_HELD.has(spell.id)
+    const taken = heldByCaster(spell.id)
       ? [caster.id]
       : rolledSaves
         ? saves.filter((save) => !save.success).map((save) => save.target)
@@ -957,6 +1014,7 @@ export function castSpell<T extends Castee>(args: {
           ...(turns ? { turns: turns + (target.isComplete ? 1 : 0) } : {}),
           ...(amount !== undefined ? { amount } : {}),
           ...(args.skill ? { skill: args.skill } : {}),
+          ...(choice ? { choice } : {}),
         })
       )
       facts.push(`${spell.name} is now on ${target.name}.`)
@@ -969,29 +1027,27 @@ export function castSpell<T extends Castee>(args: {
     }
   }
 
-  // Acid Arrow burns again at the end of the target's next turn (./spell-rounds), with the slot it was cast at.
-  if (spell.id === "acid-arrow" && attacks[0]?.roll.hit && !args.again) {
-    const target = find(attacks[0].target)
-    if (target && !target.dead) put(withSpellEffect(target, { spell: spell.id, by: caster.id, turns: target.isComplete ? 2 : 1, amount: slot }))
-  }
+  // What the spell's own rules leave once the rest is done (Acid Arrow's later burn).
+  if (!args.again) rule?.cast?.(context)
 
   return done()
 }
 
-// The spells a caster uses again on later turns while they last, and with what: "As a Bonus Action on your later turns"
-// (Spiritual Weapon, Heat Metal), "on each of your turns as a Magic action" (Vampiric Touch).
-const AGAIN: Record<string, "action" | "bonus-action"> = { "spiritual-weapon": "bonus-action", "heat-metal": "bonus-action", "vampiric-touch": "action" }
-
 /**
  * The spells a character may use again this turn, with no new slot: those they cast and still hold, each with the slot
- * it was cast at and what it takes, an action or a Bonus Action. For the turn's menu, beside the spells they can cast.
+ * it was cast at and what it takes, an action or a Bonus Action (./spell-rules `again`). For the turn's menu, beside the
+ * spells they can cast. `unplaced` is one whose force the floor does not hold, so it is not measured (Spiritual Weapon).
  */
-export function againOf(character: { id?: string; spellEffects?: readonly SpellEffect[]; concentration?: Concentration }): { spell: Spell; slot: number; takes: "action" | "bonus-action" }[] {
+export function againOf(character: {
+  id?: string
+  spellEffects?: readonly SpellEffect[]
+  concentration?: Concentration
+}): { spell: Spell; slot: number; takes: "action" | "bonus-action"; unplaced?: true }[] {
   return (character.spellEffects ?? []).flatMap((effect) => {
     const spell = spellById.get(effect.spell)
-    const takes = AGAIN[effect.spell]
-    if (!spell || !takes || effect.by !== character.id || character.concentration?.spell !== effect.spell) return []
-    return [{ spell, slot: effect.amount ?? spell.level, takes }]
+    const again = spellRule(effect.spell)?.again
+    if (!spell || !again || effect.by !== character.id || character.concentration?.spell !== effect.spell) return []
+    return [{ spell, slot: effect.amount ?? spell.level, takes: again.takes, ...(again.unplaced ? { unplaced: true as const } : {}) }]
   })
 }
 
@@ -1008,63 +1064,17 @@ export function castAgain<T extends Castee>(args: Omit<Parameters<typeof castSpe
   return castSpell({ ...rest, spell: held.spell, level: held.slot, again: true })
 }
 
-// The engine's own holdings of spell text, for the rules above.
+// The class features the rules above read.
 const POTENT_CANTRIP = "evoker-potent-cantrip"
 const DISCIPLE_OF_LIFE = "life-domain-disciple-of-life"
-// "On a miss, the arrow splashes the target with acid for half as much of the initial damage only."
-const HALF_ON_MISS = new Set(["acid-arrow"])
-// "Choose a Humanoid", "One Humanoid", "Target a Beast": the one creature type each spell takes.
-const ONLY_OF_TYPE: Record<string, "humanoid" | "beast"> = { "hold-person": "humanoid", "charm-person": "humanoid", "animal-friendship": "beast" }
-// Phantasmal Force's save decides at the cast whether the phantasm takes hold, though the damage it guards comes later.
-const SAVE_AT_CAST = new Set(["phantasmal-force"])
 
-/**
- * Sleep: "Creatures that don't sleep, such as elves, or that have Immunity to the Exhaustion condition automatically
- * succeed on saves against this spell." A hero is an elf by species, an NPC by the race it is written with.
- */
-function sleepless(character: Roller & { race?: string }): boolean {
-  if (character.sheet) return character.sheet.species === "elf"
-  if (/\b(elf|elven)\b/i.test(character.race ?? "") && !/half/i.test(character.race ?? "")) return true
-  return !!(character.type === "npc" && monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.conditionImmunities?.includes("exhaustion"))
-}
-
-/**
- * Sorcerous Burst: "If you roll an 8 on a d8 for this spell, you can roll another d8, and add it to the damage", as many
- * more d8s as the spellcasting ability modifier, and a d8 added this way that rolls an 8 adds another.
- */
-function burst(rolled: DamageRoll, modifier: number, roll: (sides: number) => number): DamageRoll {
-  const [first, ...rest] = rolled.parts
-  if (!first) return rolled
-  let owed = first.dice.filter((die) => die === 8).length
-  const more: number[] = []
-  while (owed > 0 && more.length < modifier) {
-    const die = roll(8)
-    more.push(die)
-    owed += die === 8 ? 0 : -1
-  }
-  const added = more.reduce((sum, die) => sum + die, 0)
-  return { parts: [{ ...first, dice: [...first.dice, ...more], total: first.total + added }, ...rest], total: rolled.total + added }
-}
-
-// A hero is of a playable species, every one of them a Humanoid. An NPC is of its stat block's type.
-function creatureTypeOf(character: Roller): string {
-  if (character.sheet || character.type !== "npc") return "humanoid"
-  return monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK)?.type ?? "humanoid"
-}
-
-// Advantage and Disadvantage a spell itself puts on a target's save: "A Construct has Disadvantage on the save" (Shatter).
-function modesAgainst(spell: Spell, target: Roller): { mode: "advantage" | "disadvantage"; from: string }[] {
-  if (spell.id !== "shatter" || target.sheet || target.type !== "npc") return []
-  return monsterById.get(target.statBlock ?? DEFAULT_STAT_BLOCK)?.type === "construct" ? [{ mode: "disadvantage", from: "Construct" }] : []
-}
-
-// The number a lasting effect holds: Aid's rise in hit points, Mirror Image's three duplicates, Magic Weapon's bonus
-// (+2 with a level 3 to 5 slot, +3 with level 6 or higher), and the slot of a spell its caster holds.
+// The number a lasting effect holds: Aid's rise in hit points, the number its own rules give by the slot (./spell-rules
+// `amount`: Mirror Image's three duplicates), and the slot of a spell its caster holds.
 function effectAmount(spell: Spell, slot: number): number | undefined {
   if (spell.hitPointMaximum) return (spell.hitPointMaximum.amount ?? 0) + (spell.hitPointMaximum.perSlotAmount ?? 0) * (slot - spell.level)
-  if (spell.id === "mirror-image") return 3
-  if (spell.id === "magic-weapon") return slot >= 6 ? 3 : slot >= 3 ? 2 : 1
-  if (CASTER_HELD.has(spell.id)) return slot
+  const held = heldRule(spell.id)
+  if (held?.amount) return held.amount(slot)
+  if (held?.byCaster) return slot
   return undefined
 }
 
@@ -1117,27 +1127,36 @@ export function rollSave(args: {
   const mode = combineModes(sources.map((source) => source.mode))
   const dice = Array.from({ length: mode === "normal" ? 1 : 2 }, () => args.d20())
   const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
-  // Cover adds to a Dexterity save.
-  const bonus = checkBonus(target, check) + (ability === "dex" ? (args.cover ?? 0) : 0) + saveBonusFromSpells(target, ability)
+  // Cover adds to a Dexterity save, and an aura of one near (Aura of Protection) to any save.
+  const aura = auraSaveBonus(target, args.characters)
+  const bonus = checkBonus(target, check) + (ability === "dex" ? (args.cover ?? 0) : 0) + saveBonusFromSpells(target, ability) + aura.amount
   // A lasting spell on the target adds its dice to the save, or takes them away.
   const adds = rollAdds(target, "saving-throws", args.roll)
-  const total = natural + bonus + adds.reduce((sum, add) => sum + add.amount, 0)
+  // A feature may let a score stand in for a lower total (Indomitable Might).
+  const total = Math.max(classTotalFloor(target, check) ?? 0, natural + bonus + adds.reduce((sum, add) => sum + add.amount, 0))
   const passed = !failedBy && total >= args.dc
   const legendary = !passed && !!args.stakes && spendsLegendaryResistance(target, args.stakes)
-  const success = passed || legendary
+  // A hero's class may still reroll a failed save against harm (Indomitable).
+  const rescue =
+    !passed && !legendary && !failedBy && args.stakes
+      ? rescuedSave({ character: target, ability, result: { dice, natural, bonus, total, dc: args.dc, success: false, mode, ...(adds.length ? { adds } : {}) }, stakes: args.stakes, d20: args.d20 })
+      : undefined
+  const success = passed || legendary || !!rescue?.result.success
   return {
     target: target.id,
     ability,
-    dice,
-    natural,
+    dice: rescue?.result.dice ?? dice,
+    natural: rescue?.result.natural ?? natural,
     bonus,
-    total,
+    total: rescue?.result.total ?? total,
     dc: args.dc,
     success,
     mode,
     ...(failedBy ? { failedBy } : {}),
-    ...(adds.length ? { adds } : {}),
+    ...((rescue?.result.adds ?? adds).length ? { adds: rescue?.result.adds ?? adds } : {}),
     ...(legendary ? { legendary: true as const } : {}),
+    ...(rescue ? { rescued: { feature: rescue.feature, name: rescue.name, first: total } } : {}),
+    ...(aura.from.length ? { auras: aura.from } : {}),
   }
 }
 

@@ -1,4 +1,4 @@
-// Dev-only: the level-up screen for each premade class at each level it can take, from the adventures' own sheets,
+// Dev-only: the level-up screen for each premade class at the levels it shows, from the adventures' own sheets,
 // and for a made hero of each class that has no premade.
 // Gated to development: notFound() elsewhere.
 
@@ -29,6 +29,10 @@ const MADE = [
   { name: "Warlock", class: "warlock", species: "tiefling", background: "acolyte" },
 ]
 
+// The levels the lab takes a hero to: each to 5, then those that bring a choice of their own (Magical Secrets at 10, a
+// Mystic Arcanum at 11, the Epic Boon at 19) and the capstones at 20.
+const SHOWN = [2, 3, 4, 5, 6, 10, 11, 17, 19, 20]
+
 export default function LevelUpPage() {
   if (!isDev()) notFound()
   const premade = HEROES.map((path) => JSON.parse(readFileSync(join(process.cwd(), "content/settings/realm-of-myr/adventures", path), "utf8")) as { name: string; image?: string; sheet: Sheet })
@@ -38,12 +42,14 @@ export default function LevelUpPage() {
     return "problems" in built ? [] : [{ name, image: undefined as string | undefined, sheet: built.sheet }]
   })
   const heroes = [...premade, ...made].map((hero) => {
-    // The hero at each level below the cap, by the choices that need no player.
+    // The hero raised by the choices that need no player, kept below each level the lab shows.
     const sheets = [hero.sheet]
-    while (sheets.length < LEVEL_CAP - 1) {
-      const taken = takeLevel({ type: "pc", sheet: sheets[sheets.length - 1], levelDue: LEVEL_CAP }, autoChoices(sheets[sheets.length - 1]))
+    let sheet = hero.sheet
+    while (sheet.level < LEVEL_CAP - 1) {
+      const taken = takeLevel({ type: "pc", sheet, levelDue: LEVEL_CAP }, autoChoices(sheet))
       if ("problems" in taken) break
-      sheets.push(taken.character.sheet)
+      sheet = taken.character.sheet
+      if (SHOWN.includes(sheet.level + 1)) sheets.push(sheet)
     }
     return { name: hero.name, image: hero.image, sheets }
   })

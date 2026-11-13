@@ -2,6 +2,7 @@ import type { Spell } from "@d20/srd/schema/spells"
 import { classSpellRange } from "./class-rules"
 import { areEnemies } from "./sides"
 import { BASE_REACH, between, type Cover, caughtIn, coverBetween, distance, type Floor, type Placed, placedOf, type Standing, spaceOf, within } from "./space"
+import { spellRule } from "./spell-rules"
 
 type Here = Standing & { id: string }
 
@@ -29,10 +30,22 @@ export type CastInSpace = {
 /** What falls where a spell would that is no spell: a stat block's breath, by its name and where it reaches (./stat-block-actions). */
 export type Aimed = { name: string; range: Spell["range"]; attack?: undefined }
 
+const FEET_IN_A_MILE = 5280
+
+/** How far a range reaches in feet: a range in feet, or in miles at 5,280 feet each. None for a range not measured so (Sight, Unlimited). */
+export const rangeFeet = (range: Spell["range"]): number | undefined =>
+  range.distance === undefined ? undefined : range.kind === "feet" ? range.distance : range.kind === "miles" ? range.distance * FEET_IN_A_MILE : undefined
+
+// A range in words: "60 feet", "1 mile".
+const rangeWords = (range: Spell["range"], feet: number): string =>
+  range.kind === "miles" && range.distance !== undefined ? `${range.distance} mile${range.distance === 1 ? "" : "s"}` : `${feet} feet`
+
 export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone: readonly Here[]; named: readonly string[]; floor: Floor }): CastInSpace {
   const { spell, caster, floor } = args
   const from = placedOf(caster)
   if (!from) return { targets: [...args.named], cover: {}, measured: false }
+  // A spell's own rules on its shape (./spell-rules): Meteor Swarm's four Spheres, Chain Lightning's leaps.
+  const rule = "level" in spell ? spellRule(spell.id) : undefined
   const placed = args.everyone.flatMap((other) => {
     const at = placedOf(other)
     return at ? [{ id: other.id, name: other.name ?? "them", type: other.type, ...at }] : []
@@ -69,35 +82,45 @@ export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone
       }
       return { targets: reached(from, caught).map((target) => target.id), cover, measured: true }
     }
-    // An area at a range, centred on the one named.
-    const aim = named[0]
+    // An area at a range, centred on the one named, or one on each of the first named where the spell makes several
+    // (./spell-rules `areas`). A centre out of range or past total cover makes no area. One caught by two is taken once.
+    const [aim] = named
     if (!aim) return none("No One In The Way", `${who} has no one to aim ${spell.name} at.`)
-    const apart = distance(from, aim)
-    if (range.distance !== undefined && !within(from, aim, range.distance))
-      return none("Out Of Range", `${who} is ${Math.round(apart)} feet from ${aim.name}, out of ${spell.name}'s range of ${range.distance} feet. The spell is not cast.`)
-    const centre: Placed = { at: aim.at, size: "Tiny" }
-    if (aim.id !== caster.id && coverBetween(floor.solids, from, centre) === "total")
-      return none("Total Cover", `${who} has no clear line to ${aim.name}: something solid stands between them. The spell is not cast.`)
-    const inside = placed.filter((other) =>
-      area.shape === "cube" ? Math.abs(other.at.x - aim.at.x) <= area.size / 2 + 1e-9 && Math.abs(other.at.y - aim.at.y) <= area.size / 2 + 1e-9 : between(aim.at, other.at) <= area.size + 1e-9
-    )
-    const chosen = area.selective ? inside.filter((other) => args.named.includes(other.id)) : inside
-    return { targets: reached(centre, chosen).map((target) => target.id), cover, measured: true }
+    const reach = rangeFeet(range)
+    const centres = named.slice(0, rule?.areas ?? 1)
+    const inRange = centres.filter((centre) => reach === undefined || within(from, centre, reach))
+    if (!inRange.length)
+      return none("Out Of Range", `${who} is ${Math.round(distance(from, aim))} feet from ${aim.name}, out of ${spell.name}'s range of ${rangeWords(range, reach ?? 0)}. The spell is not cast.`)
+    const clear = inRange.filter((centre) => centre.id === caster.id || coverBetween(floor.solids, from, { at: centre.at, size: "Tiny" }) !== "total")
+    if (!clear.length) return none("Total Cover", `${who} has no clear line to ${inRange[0].name}: something solid stands between them. The spell is not cast.`)
+    const taken = new Set<string>()
+    for (const centre of clear) {
+      const inside = placed.filter((other) =>
+        area.shape === "cube"
+          ? Math.abs(other.at.x - centre.at.x) <= area.size / 2 + 1e-9 && Math.abs(other.at.y - centre.at.y) <= area.size / 2 + 1e-9
+          : between(centre.at, other.at) <= area.size + 1e-9
+      )
+      const chosen = area.selective ? inside.filter((other) => args.named.includes(other.id)) : inside
+      for (const target of reached({ at: centre.at, size: "Tiny" }, chosen)) taken.add(target.id)
+    }
+    return { targets: [...taken], cover, measured: true }
   }
 
   // A spell on those named: each within its range, or the caster's touch, and not behind total cover. A melee spell
   // attack with a range of Self (Vampiric Touch, "one creature within reach") reaches as a touch does.
   const touch = range.kind === "touch" || (range.kind === "self" && spell.attack === "melee")
-  if (!touch && range.kind !== "feet") return { targets: [...args.named], cover: {}, measured: false }
+  if (!touch && rangeFeet(range) === undefined) return { targets: [...args.named], cover: {}, measured: false }
   // A class feature may lengthen the caster's own spell (Eldritch Spear).
-  const limit = touch ? BASE_REACH : (("level" in spell ? classSpellRange(caster, spell) : undefined) ?? range.distance ?? 0)
-  const near = named.filter((target) => target.id === caster.id || within(from, target, limit))
+  const limit = touch ? BASE_REACH : (("level" in spell ? classSpellRange(caster, spell) : undefined) ?? rangeFeet(range) ?? 0)
+  // Those after the first may need to stand near the first (./spell-rules `nearFirst`: Chain Lightning's 30 feet).
+  const leap = rule?.nearFirst
+  const near = named.filter((target, index) => (target.id === caster.id || within(from, target, limit)) && (leap === undefined || index === 0 || within(named[0], target, leap)))
   if (named.length && !near.length) {
     const [first] = named
     const what = touch ? "Reach" : "Range"
     return none(
       `Out Of ${what}`,
-      `${who} is ${Math.round(distance(from, first))} feet from ${first.name}, out of ${spell.name}'s ${touch ? "touch" : `range of ${limit} feet`}. The spell is not cast.`
+      `${who} is ${Math.round(distance(from, first))} feet from ${first.name}, out of ${spell.name}'s ${touch ? "touch" : `range of ${rangeWords(range, limit)}`}. The spell is not cast.`
     )
   }
   const clear = reached(from, near)

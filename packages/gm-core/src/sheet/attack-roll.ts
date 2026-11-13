@@ -3,7 +3,7 @@ import type { RequiredAttack, RequiredRoll } from "../validations/roll-requireme
 import { type Acting, attackModesFromActions, hideRoll } from "./actions"
 import { type Attack, attacksOf, averageDamage } from "./attack"
 import { combineModes, type RollMode } from "./check"
-import { type FollowRule, followRules } from "./class-rules"
+import { type FollowRule, followRules, withAdvantageBarred } from "./class-rules"
 import { attackModesFrom, cannotAttack, hasCondition, type ModeSource } from "./conditions"
 import { deriveSheet } from "./derive"
 import { attacksPerAction as attacksPerActionOf } from "./feature-rules"
@@ -47,6 +47,11 @@ export type AttackAsk = {
   charged?: number
   /** What class features the attacker chose for this attack, kept on it until the blow lands: a Cunning Strike's `cunning`. */
   choices?: Record<string, string>
+  /**
+   * The keys of `choices` that give up any Advantage on this roll as their price (Brutal Strike): the roll is made with
+   * none, and they are left off a roll that has Disadvantage.
+   */
+  forgo?: readonly string[]
   after?: After
 }
 
@@ -56,7 +61,8 @@ export type Ruling = { name: string; text: string }
 /**
  * The roll for one attack from where the attacker stands: out of reach or range, or through total cover, there is
  * none, and a ruling says why. Otherwise the Armor Class with cover, Long Range and an enemy within 5 feet for a ranged
- * attack, the conditions of the two, actions taken (Dodge, Help, Vex), lasting spells, and any feature's own.
+ * attack, the conditions of the two, actions taken (Dodge, Help, Vex), lasting spells, and any feature's own. A
+ * choice that forgoes Advantage (`forgo`) takes every Advantage off the roll, and is dropped where it has Disadvantage.
  */
 export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { ruling: Ruling } {
   const { character, target, attack, floor } = ask
@@ -100,8 +106,8 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
     ...(band === "long" ? [{ mode: "disadvantage" as const, from: "Long Range" }] : []),
     ...(crowded ? [{ mode: "disadvantage" as const, from: "Enemy Within 5 Feet" }] : []),
   ]
-  const picked = ask.mode ?? "normal"
-  const typed = [
+  const read = ask.mode ?? "normal"
+  const found = [
     ...attackModesFrom(character, target, feet === undefined ? attack.kind !== "ranged" : isNear(character, target, attack.kind), ask.present),
     ...attackModesFromActions(character, target, ask.present, attack),
     ...attackModesFromSpells(character, target),
@@ -109,7 +115,19 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
     ...spaced,
     ...(ask.modes ?? []),
   ]
-  const reasons = [...(picked !== "normal" && ask.reason?.trim() ? [ask.reason.trim()] : []), ...typed.map((source) => source.from)]
+  // A choice that forgoes Advantage goes only with a roll that has no Disadvantage, and takes every Advantage off it.
+  const forgone = (ask.forgo ?? []).filter((key) => ask.choices?.[key] !== undefined)
+  const hindered = read === "disadvantage" || found.some((source) => source.mode === "disadvantage")
+  const forgoes = forgone.length > 0 && !hindered
+  const choices = forgone.length && hindered ? Object.fromEntries(Object.entries(ask.choices ?? {}).filter(([key]) => !forgone.includes(key))) : ask.choices
+  // No Advantage at all against one whose feature bars it (Elusive).
+  const { picked, typed, barred: elusive } = withAdvantageBarred(target, forgoes && read === "advantage" ? "normal" : read, forgoes ? found.filter((source) => source.mode !== "advantage") : found)
+  const reasons = [
+    ...(picked !== "normal" && ask.reason?.trim() ? [ask.reason.trim()] : []),
+    ...typed.map((source) => source.from),
+    ...(forgoes ? ["Advantage Forgone"] : []),
+    ...(elusive ? [elusive] : []),
+  ]
   const counted = cover === "half" || cover === "three-quarters" ? cover : undefined
   return {
     roll: {
@@ -117,7 +135,7 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
         weapon: attack.id,
         target: target.id,
         ...(counted ? { cover: counted } : {}),
-        ...(ask.choices && Object.keys(ask.choices).length ? { choices: ask.choices } : {}),
+        ...(choices && Object.keys(choices).length ? { choices } : {}),
         // Kept only for an attack whose stat block gives a charge something (./hit-riders).
         ...(ask.charged && charges(attack) ? { charge: ask.charged } : {}),
       },

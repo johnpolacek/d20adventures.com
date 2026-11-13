@@ -10,6 +10,7 @@ import { hasFeature, usesLeft, withFeatureUsed } from "./feature-rules"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { legendaryResistanceWords, type SaveStakes, withLegendaryResistanceSpent } from "./legendary-resistance"
+import { rescueWords, withRescueSpent } from "./save-rules"
 import type { Sheet } from "./sheet"
 import { sameSide } from "./sides"
 import { placedOf, within } from "./space"
@@ -136,6 +137,10 @@ export function channelDivinity<T extends Channeled>(args: {
       const spent = withLegendaryResistanceSpent(find(target.id) ?? target)
       put(spent)
       facts.push(legendaryResistanceWords(target.name, spent))
+    }
+    if (rolled.rescued) {
+      put(withRescueSpent(find(target.id) ?? target, rolled.rescued))
+      facts.push(rescueWords(target.name, rolled.rescued, rolled))
     }
     return rolled
   }

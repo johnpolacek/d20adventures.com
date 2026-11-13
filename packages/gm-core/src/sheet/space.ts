@@ -144,18 +144,27 @@ export const SLOW_FEET = 10
  * The feet a character can move this turn. Speed loses 5 feet for each level of Exhaustion and 10 for the Slow
  * mastery, to no less than 0, and is 0 for one who cannot move. Dash adds that Speed again. Standing from Prone costs
  * half that Speed, rounded down, and one with a Speed of 0 cannot stand. A Speed of 30 with Dash, standing up, is
- * 30 + 30 − 15 = 45 feet.
+ * 30 + 30 − 15 = 45 feet. `reduced` is feet a class feature takes off the Speed besides (Hamstring Blow's 15).
  */
-export function movementBudget(args: { speed: number; cannotMove?: boolean; dash?: boolean; stands?: boolean; slowed?: boolean; halved?: boolean; exhaustion?: number }): number {
+export function movementBudget(args: {
+  speed: number
+  cannotMove?: boolean
+  dash?: boolean
+  stands?: boolean
+  slowed?: boolean
+  halved?: boolean
+  reduced?: number
+  exhaustion?: number
+}): number {
   if (args.cannotMove) return 0
   // A Speed halved (a Stunning Strike saved against) is halved first, rounded down: 30 becomes 15.
   const base = args.halved ? Math.floor(args.speed / 2) : args.speed
-  const speed = Math.max(0, base - (args.slowed ? SLOW_FEET : 0) - 5 * (args.exhaustion ?? 0))
+  const speed = Math.max(0, base - (args.slowed ? SLOW_FEET : 0) - (args.reduced ?? 0) - 5 * (args.exhaustion ?? 0))
   return Math.max(0, speed * (args.dash ? 2 : 1) - (args.stands ? Math.floor(speed / 2) : 0))
 }
 
 /** The feet a character can move this turn, read from the character: its Speed, whether it can move, and its Exhaustion. */
-export function movementBudgetOf(character: Afflicted & Roller, options: { dash?: boolean; stands?: boolean; slowed?: boolean; halved?: boolean } = {}): number {
+export function movementBudgetOf(character: Afflicted & Roller, options: { dash?: boolean; stands?: boolean; slowed?: boolean; halved?: boolean; reduced?: number } = {}): number {
   return movementBudget({ speed: speedOf(character) ?? 0, cannotMove: cannotMove(character), exhaustion: exhaustionOf(character), ...options })
 }
 

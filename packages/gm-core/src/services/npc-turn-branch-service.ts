@@ -250,6 +250,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
                 rules: args.rules,
                 damageType: casting.cast.damageType,
                 skill: casting.cast.skill,
+                choice: casting.cast.choice,
                 cover: casting.cast.cover,
                 measured: casting.cast.measured,
               }

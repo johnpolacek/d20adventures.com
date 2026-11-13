@@ -21,6 +21,10 @@ npcs:
     side: "none"
     behavior: "Road weary but happy to share her faith with anyone."
     initialInitiative: 0
+loot:
+  - id: "potions-of-healing"
+    variant: "Potion of Healing"
+    on: "leave"
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-road-to-kordavos/encounters/well-met/9e37fb3b-cf49-45f8-bc22-7d423e1b460e.png?t=1749868719243"
 ---
 
@@ -29,6 +33,8 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-r
 {actor: Dmitri Volkov} Among the travelers on the road to Kordavos rolls a well-kept caravan, its wagons laden with exotic goods and marked by a thriving import-export house, a few watchful guards alongside. At its head rides a man with neatly combed white hair and beard and a keen, smiling face that misses nothing.
 
 ## GM Notes
+
+As the road nears the gates, Dmitri presses a Potion of Healing on the party, a traveller's thanks for good company.
 
 Road gossip, which any of the three can pass on if the talk turns to news. A night or two ago a riverboat came down a quiet fork of the Mordava before dawn and tied up at an old smugglers' pier three miles from the city. Elves were seen there. There was a fight aboard, and a woman is said to have gone into the river. By sunrise the boat had cast off and gone on to Kordavos. Dmitri has also heard that relics of Old Valkara are changing hands in the city, and that the Blackthorn family is buying. None of them knows more than that. If the story so far tells of that night at the pier, the gossip follows what happened there, garbled as rumor is.
 

@@ -157,16 +157,27 @@ export type CheckResult = {
  * Resolve a check: the d20 plus the bonus against the target. Advantage keeps the higher of two dice and Disadvantage
  * the lower. A 20 or a 1 on the die has no special effect on a check or a save: only the total counts. `fails` is a
  * saving throw a condition makes the roller fail outright, whatever the dice show. `adds` are dice a lasting spell
- * adds or takes away, already rolled: Bless's d4.
+ * adds or takes away, already rolled: Bless's d4. `least` is the least the die that counts may be, where a feature
+ * raises it (Reliable Talent's 10): `natural` is then that, and `dice` keeps what fell. `leastTotal` is the least the
+ * total may be, where a feature lets a score stand in for it (Indomitable Might's Strength score).
  */
-export function resolveCheck(args: { dice: readonly number[]; bonus: number; dc: number; mode?: RollMode; fails?: boolean; adds?: readonly { from: string; amount: number }[] }): CheckResult {
+export function resolveCheck(args: {
+  dice: readonly number[]
+  bonus: number
+  dc: number
+  mode?: RollMode
+  fails?: boolean
+  adds?: readonly { from: string; amount: number }[]
+  least?: number
+  leastTotal?: number
+}): CheckResult {
   const mode = args.mode ?? "normal"
   const needed = mode === "normal" ? 1 : 2
   const dice = args.dice.slice(0, needed)
   if (dice.length < needed) throw new Error(`A roll with ${mode === "normal" ? "no Advantage or Disadvantage" : mode} takes ${needed} d20, and ${dice.length} came.`)
   for (const die of dice) if (!Number.isInteger(die) || die < 1 || die > 20) throw new Error(`${die} is not a d20 roll.`)
-  const natural = mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0]
-  const total = natural + args.bonus + (args.adds ?? []).reduce((sum, add) => sum + add.amount, 0)
+  const natural = Math.max(args.least ?? 1, mode === "advantage" ? Math.max(...dice) : mode === "disadvantage" ? Math.min(...dice) : dice[0])
+  const total = Math.max(args.leastTotal ?? 0, natural + args.bonus + (args.adds ?? []).reduce((sum, add) => sum + add.amount, 0))
   return { dice, natural, bonus: args.bonus, total, dc: args.dc, success: !args.fails && total >= args.dc, mode, ...(args.adds?.length ? { adds: [...args.adds] } : {}) }
 }
 

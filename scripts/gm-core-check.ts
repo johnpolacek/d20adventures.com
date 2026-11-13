@@ -607,6 +607,61 @@ function roundBudget() {
   assert.doesNotMatch(prompt("the-new-dawn", ["final-confrontation", "the-new-dawn"]), /Scene Pace/)
 }
 
+// An encounter's loot is carried as authored, and the compiler refuses loot that names no real item, a variant or
+// base the item does not take, or a transition the encounter does not have, each with an error finding.
+function lootFindings() {
+  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "welcome-to-kordavos")
+  assert.ok(definition)
+  const loot = `loot:
+  - id: "weapon-1-2-or-3"
+    variant: "+1"
+    base: "longsword"
+    on: "leave"
+    to: "through-the-halls"
+  - id: "potions-of-healing"
+    variant: "Potion of Healing"
+    count: 2
+    on: "enter"
+  - id: "sword-of-plenty"
+    on: "enter"
+  - id: "weapon-1-2-or-3"
+    variant: "+4"
+    base: "longsword"
+    on: "enter"
+  - id: "weapon-1-2-or-3"
+    variant: "+1"
+    base: "plate-armor"
+    on: "enter"
+  - id: "weapon-1-2-or-3"
+    variant: "+1"
+    base: "longsword"
+    on: "leave"
+    to: "the-new-dawn"
+  - id: "potions-of-healing"
+    variant: "Potion of Healing"
+    on: "later"
+`
+  const files = readLocalWikiAdventureSourceFiles(definition).map((file) =>
+    file.path.endsWith("/the-wine-cellar.md") ? { ...file, content: file.content.replace('type: "encounter"\n', `type: "encounter"\n${loot}`) } : file
+  )
+  const artifacts = compileAdventureSourceTree(files, { mode: "publish", contentVersion: definition.contentVersion, allowedAssetHosts: definition.assetHosts })
+  assert.deepEqual(
+    artifacts.validationReport.findings.filter((finding) => finding.code === "loot.invalid").map((finding) => [finding.severity, finding.sourceId, finding.message]),
+    [
+      ["error", "the-wine-cellar", 'Loot "sword-of-plenty": "sword-of-plenty" is not a magic item.'],
+      ["error", "the-wine-cellar", 'Loot "weapon-1-2-or-3": Weapon, +1, +2, or +3 comes as +1, +2, +3, and the sheet names "+4".'],
+      ["error", "the-wine-cellar", 'Loot "weapon-1-2-or-3": Plate Armor is not an item Weapon, +1, +2, or +3 can be.'],
+      ["error", "the-wine-cellar", 'Loot "weapon-1-2-or-3": the encounter has no transition to "the-new-dawn".'],
+      ["error", "the-wine-cellar", 'Loot "potions-of-healing": on Invalid option: expected one of "enter"|"leave".'],
+    ]
+  )
+  assert.equal(artifacts.validationReport.status, "blocked")
+  assert.deepEqual(artifacts.encounters["the-wine-cellar"].loot?.slice(0, 2), [
+    { id: "weapon-1-2-or-3", variant: "+1", base: "longsword", on: "leave", to: "through-the-halls" },
+    { id: "potions-of-healing", variant: "Potion of Healing", count: 2, on: "enter" },
+  ])
+}
+
 // A roll belongs to its round. The next round, in the same scene or the next, starts with none on any hero.
 function rollsEndWithTheRound() {
   const turn = { ...clone(fixture.initialState), id: "turn", encounterId: "the-wine-cellar" }
@@ -659,6 +714,7 @@ async function main() {
     npcTurnRules()
     await npcFixedOutcome()
     roundBudget()
+    lootFindings()
     rollsEndWithTheRound()
     await replayTurn()
     await characterPrompts()
@@ -669,7 +725,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, loot and its refusals, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {

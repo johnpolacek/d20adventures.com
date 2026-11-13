@@ -14,6 +14,7 @@ import {
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
 import { atRoundStart } from "../sheet/death"
+import { giveLoot, type LootGiven, lootDue } from "../sheet/loot"
 import { raisedTo } from "../sheet/milestone"
 import { placeCharacters, standingWords } from "../sheet/placement"
 import { partyRest, restName } from "../sheet/rest"
@@ -219,7 +220,16 @@ export function createAdvanceTurn(ports: GmPorts) {
       // before does not read it again: they know the place, and the round's own story has brought them back.
       const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters: opening }) : scene
       const intro = isTransition && !returning ? cleanStory(authoredStory(nextEncounter.sections.intro ?? "", nextScene), nextScene, { step: "intro" }) : []
-      const story = [...told, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...rested, ...intro]
+      // The loot due as the party moves on, the first time: what the encounter left gives on leaving it, and what the
+      // one entered gives on entering it (../sheet/loot). Each item goes to a hero by a plain rule, told as a fact
+      // after the round for the one left and after the intro for the one entered.
+      const due = isTransition
+        ? lootDue({
+            from: artifacts.encounters[turn.encounterId] ?? { id: turn.encounterId },
+            to: nextEncounter,
+            turns: [...allTurns.filter((row) => row._id !== turnId), { encounterId: turn.encounterId, order: currentTurnOrder }],
+          })
+        : undefined
       // The story ends at its last encounter, or when every hero is dead: no one is left to take a turn.
       const heroes = (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc")
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id) || (heroes.length > 0 && heroes.every(isDead))
@@ -228,12 +238,20 @@ export function createAdvanceTurn(ports: GmPorts) {
       const following = isFinalEncounter && artifacts.manifest.nextAdventureId ? await ports.content.loadWikiRuntime(settingId, artifacts.manifest.nextAdventureId).catch(() => undefined) : undefined
       const levelAfter = following?.artifacts.manifest.level ?? 1
       const companions: TurnCharacter[] = []
-      const characters = opening.map((character) => {
+      const levelled = opening.map((character) => {
         if (character.type !== "pc" || !character.sheet || isDead(character) || character.sheet.level >= levelAfter) return character
         const raised = raisedTo(character, levelAfter)
         if (raised.sheet && raised.sheet.level > character.sheet.level) companions.push(raised)
         return raised
       })
+      const leaving = giveLoot(levelled, due?.leaving ?? [])
+      const entering = giveLoot(leaving.characters, due?.entering ?? [])
+      const characters = entering.characters
+      const lootBeats = (step: "round" | "intro", { given, left }: { given: LootGiven[]; left: string[] }): StoryBeat[] => [
+        ...given.map(({ character, name, text }): StoryBeat => ({ kind: "feature", by: { step, character }, character, name, text })),
+        ...left.map((text): StoryBeat => ({ kind: "narration", by: { step }, text })),
+      ]
+      const story = [...told, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...lootBeats("round", leaving), ...rested, ...intro, ...lootBeats("intro", entering)]
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,
         expectedCurrentTurnId: turnId,
@@ -252,7 +270,13 @@ export function createAdvanceTurn(ports: GmPorts) {
         isFinalEncounter,
         knowledge,
       })
-      for (const companion of companions) if (companion.sheet) await ports.store.keepHero({ adventureId: turnData.adventureId, characterId: companion.id, sheet: companion.sheet })
+      // A hero is kept as they stand, for the adventures to come: one the AI took a level for, and every living hero who
+      // holds a magic item or held one in this adventure, so what they gained, drank or spent goes on with them.
+      const heldItems = (id: string) =>
+        [...allTurns.map((row) => row.characters), turn.characters, characters].some((cast) => (cast as TurnCharacter[]).some((each) => each.id === id && !!each.sheet?.items?.length))
+      for (const hero of characters)
+        if (hero.type === "pc" && hero.sheet && !isDead(hero) && (companions.some((companion) => companion.id === hero.id) || heldItems(hero.id)))
+          await ports.store.keepHero({ adventureId: turnData.adventureId, characterId: hero.id, sheet: hero.sheet })
       ports.narration.afterTurn(commitResult.turnId)
       return { status: "turn_advanced", turn: { ...turn, encounterId: nextEncounter.id, title: nextEncounter.title, story, characters, isFinalEncounter } }
     }

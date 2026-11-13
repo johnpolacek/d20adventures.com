@@ -69,6 +69,13 @@ const RUN = new Set([
   "flame-strike",
   "mass-cure-wounds",
   "circle-of-death",
+  // Counted and shaped (./spell-mechanics/shapes): Chain Lightning's four targets within 30 feet of the first, Meteor
+  // Swarm's four Spheres a mile off.
+  "chain-lightning",
+  "meteor-swarm",
+  // A choice kept on the spell (./spell-mechanics/choices): Blindness/Deafness's condition, Protection from Energy's type.
+  "blindness-deafness",
+  "protection-from-energy",
 ])
 
 /**
@@ -76,10 +83,11 @@ const RUN = new Set([
  * text for the rest, which changes no one's hit points or conditions. What each leaves to the text: Chill Touch's bar
  * on healing, Shocking Grasp's bar on Opportunity Attacks, Ray of Frost's lost Speed, Starry Wisp's and Faerie Fire's
  * light against the Invisible, Charm Person's Advantage while it is fought, Chromatic Orb's leap, Command's words,
- * Dissonant Whispers' flight, Entangle's and Grease's ground, Grease's later falls, Hex's ability and its move, Hunter's
+ * Dissonant Whispers' flight, Entangle's and Grease's ground, Grease's later falls, Hex's move, Hunter's
  * Mark's tracking and its move, Hideous Laughter's save on damage, Ice Knife's burst on those beside its target,
- * Sleep's shake awake, Thunderwave's push, Blindness/Deafness's Deafened, Mind Spike's tracking, Moonbeam's later
- * burns and its move, Shining Smite's light and its bar on the Invisible.
+ * Sleep's shake awake, Thunderwave's push, Mind Spike's tracking, Moonbeam's later
+ * burns and its move, Shining Smite's light and its bar on the Invisible, Sunburst's end of Darkness, Mass Suggestion's
+ * course of activity and its end when that is done, Enhance Ability's different ability for each target.
  */
 const PARTLY = new Set([
   "chill-touch",
@@ -99,7 +107,6 @@ const PARTLY = new Set([
   "ice-knife",
   "sleep",
   "thunderwave",
-  "blindness-deafness",
   "mind-spike",
   "moonbeam",
   "shining-smite",
@@ -125,6 +132,9 @@ const PARTLY = new Set([
   "beacon-of-hope",
   "remove-curse",
   "dispel-magic",
+  "mass-suggestion",
+  "sunburst",
+  "enhance-ability",
 ])
 
 // Held as told for a fault the engine has, though their data is typed: Divine Favor would add its die to hits on its

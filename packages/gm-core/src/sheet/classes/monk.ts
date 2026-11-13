@@ -42,6 +42,7 @@ import type { TurnEffect } from "../turn-effect"
  * Stunning Strike (level 5): once a turn, on a hit with a Monk weapon or an Unarmed Strike, a Focus Point for a
  * Constitution save. A failure is Stunned until the Monk's next turn. A success halves the target's Speed and gives the
  * next attack on it Advantage until then.
+ * Evasion (level 7): a Dexterity save for half damage takes none on a success and half on a failure (../save-rules).
  * Open Hand Technique (Warrior of the Open Hand, level 3): each hit of a Flurry of Blows may Addle (no Opportunity
  * Attacks) or Topple (a Dexterity save or Prone). Push is left told: a hit is resolved with no floor to push across.
  */
@@ -348,4 +349,5 @@ export const monk: ClassRules = {
     const restored = { ...character, featureUses: { ...uses, "monk-uncanny-metabolism": 1 } }
     return withHealing(restored as typeof restored & { type: string }, rolled + sheet.level)
   },
+  evasion: (character) => hasFeature(character, "monk-evasion"),
 }

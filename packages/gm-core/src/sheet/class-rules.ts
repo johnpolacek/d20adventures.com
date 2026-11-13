@@ -1,4 +1,4 @@
-import type { AbilityId, DamageTypeId } from "@d20/srd"
+import type { AbilityId, ConditionId, DamageTypeId } from "@d20/srd"
 import type { Spell } from "@d20/srd/schema/spells"
 import type { z } from "zod"
 import type { TurnReading } from "../services/roll-requirement-service"
@@ -8,9 +8,12 @@ import type { Attack, AttackResult, DamagePart, RolledAttack, Target } from "./a
 import type { InScene } from "./attack-roll"
 import { type Check, type CheckResult, checkBonus, type Roller } from "./check"
 import { classes } from "./classes"
+import type { ConditionEntry } from "./condition-entry"
 import type { ModeSource } from "./conditions"
 import type { DeathRules } from "./death"
 import type { ConditionChange, Harm } from "./harm"
+import { registerDowned, registerImmunities } from "./late-rules"
+import type { SaveStakes } from "./legendary-resistance"
 import type { Floor, Point } from "./space"
 import type { Cast, Castee, castSpell } from "./spells"
 import type { Concentration, SpellEffect, TurnEffect } from "./turn-effect"
@@ -53,16 +56,23 @@ export type ClassRules = {
   sees?: (character: Roller & { id: string }, other: Roller & { id: string }) => string | undefined
   /** What a Short Rest gives beyond the uses each feature's data brings back (Arcane Recovery). */
   shortRest?: <T extends Rested>(character: T) => { character: T; facts: string[] }
-  /** What happens to a character as a round within an encounter gives way to the next, told under `name`. */
-  roundStart?: <T extends Roller & { id: string }>(character: T) => { character: T; told?: { name: string; text: string } }
+  /**
+   * What happens to a character as a round within an encounter gives way to the next, told under `name`. `round` holds
+   * everyone as the round turns and the dice, for a save a feature has them repeat (Intimidating Presence's Frightened).
+   */
+  roundStart?: <T extends Roller & { id: string }>(character: T, round?: RoundTurn) => { character: T; told?: { name: string; text: string } }
   /** Damage types a hero resists while a feature lasts, beside the sheet's standing ones (Rage). Read where damage is taken (./attack `defensesOf`). */
   resistances?: (character: Bearing) => readonly DamageTypeId[]
   /** The ability a hero makes a check with in place of its own, where a feature lets them (Primal Knowledge). Read for the check's bonus (./check `checkBonus`). */
   checkAbility?: (character: Bearing, check: Check) => AbilityId | undefined
   /** Why a hero cannot cast a spell now, where a feature bars it (Rage). Read before any cast is paid for (./spells `castCost`). */
   castingBarred?: (character: Bearing) => string | undefined
-  /** What a hero's own attack roll against an enemy does to them, on any roll of their turn (Rage is extended). Applied after the roll (./actions `afterRoll`). */
-  attackRolled?: <T extends Bearing>(attacker: T, target: Bearing) => T
+  /**
+   * What a hero's own attack roll against an enemy does to them, on any roll of their turn (Rage is extended). `made`
+   * is the attack as it was asked, the damage it dealt and the floor, for one that moves them after it (a Cunning
+   * Strike's Withdraw). Applied after the roll (./actions `afterRoll`).
+   */
+  attackRolled?: <T extends Bearing & { position?: Point }>(attacker: T, target: Bearing & { position?: Point }, made?: AttackMade) => T
   /** How far in feet one of a hero's own spells reaches, where a feature lengthens it (Eldritch Spear). Read where a spell is measured (./spell-space `castInSpace`). */
   spellRange?: (caster: Roller, spell: Spell) => number | undefined
   /**
@@ -84,7 +94,95 @@ export type ClassRules = {
   spellAttackModes?: (character: Lasting, spell: Spell) => ModeSource[]
   /** Spell slots a feature has made beyond the class table's, by spell level, the first for level 1 (Font of Magic). Read in ./spells `slotsLeft`. */
   createdSlots?: (character: Rested) => readonly number[]
+  /**
+   * Whether a hero has Evasion: a Dexterity save for half damage takes none on a success and half on a failure, while
+   * they are not Incapacitated. Read through ./save-rules `damageOnSave`, which every save for half damage settles by.
+   */
+  evasion?: (character: Roller) => boolean
+  /**
+   * The least the d20 of a hero's own check counts as, where a feature raises it (Reliable Talent's 10 on a check with
+   * a skill they are trained in). Read for the read's check (../services/adventure-roll-result-service).
+   */
+  d20Floor?: (character: Roller, check: Check) => number | undefined
+  /** What may still save a hero's failed saving throw against harm (Indomitable). Read in ./spells `rollSave`, through ./save-rules `rescuedSave`. */
+  saves?: SaveRule[]
+  /** Auras a hero's features spread to those of their side near them (Aura of Protection). Read through ./save-rules. */
+  auras?: AuraRule[]
+  /**
+   * The mastery property a hero's attack uses in place of its weapon's own, where a feature replaces it for the attack
+   * (Tactical Master), by what was chosen with the attack. Read where a hit's mastery is applied (./actions `afterRoll`).
+   */
+  mastery?: (character: Roller, weaponId: string, choices: Readonly<Record<string, string>> | undefined) => string | undefined
+  /**
+   * What one of a hero's own attack rolls leaves on the one it was made against, once it has hit or missed (Studied
+   * Attacks). Read in ./reactions `attackWithReactions`, which every attack roll with a weapon passes.
+   */
+  attackSettled?: <T extends Bearing>(args: { attacker: Bearing & { id: string }; target: T; hit: boolean }) => T
+  /**
+   * A hero's Death Saving Throw as a feature changes it (Defy Death): Advantage on it, and the least die that counts as
+   * a 20. Read in ./death `atRoundStart` and `deathSave`.
+   */
+  deathSave?: (character: Roller) => { modes: ModeSource[]; twentyFrom?: number } | undefined
+  /** Conditions a hero cannot be given while a feature lasts (Mindless Rage's Charmed and Frightened). Read in ./conditions `immuneTo`. */
+  conditionImmunities?: (character: Bearing) => readonly ConditionId[]
+  /**
+   * The least the total of a hero's own check or save counts as, where a feature raises it (Indomitable Might's
+   * Strength score). Read for the read's check (../services/adventure-roll-result-service) and in ./spells `rollSave`.
+   */
+  totalFloor?: (character: Roller, check: Check) => number | undefined
+  /**
+   * What a feature does for a hero a roll or a round dropped to 0 hit points without killing them (Relentless Rage):
+   * `was` is how they stood before, `now` how they lie. Read in ./spell-effects `settleConcentration`, which every
+   * roll that harms is settled by, before Concentration is.
+   */
+  downed?: <T extends Felling>(args: { was: T; now: T; d20: () => number }) => { character: T; name: string; text: string } | undefined
+  /**
+   * The feature that keeps any attack roll against a hero from having Advantage now (Elusive), by name, or none. Read
+   * where an attack roll's Advantage and Disadvantage are settled (./attack-roll `attackRequirement`, and a spell attack
+   * in ../services/roll-requirement-service).
+   */
+  advantageBarred?: (target: Roller) => string | undefined
+  /** Whether a hero's own attack roll leaves their hiding's Invisible on them (Stealth Attack). Read in ./actions `afterRoll`. */
+  staysHidden?: (attacker: Bearing, made: AttackMade) => boolean
+  /** Whether a condition a class feature gave (`feature` on its entry) ends when its bearer takes damage (Knock Out). Read in ./death `withDamage`. */
+  endsOnDamage?: (entry: ConditionEntry) => boolean
+  /**
+   * Whether an item's charges about to be spent are kept, by a die a feature rolls (Use Magic Device's d6), with its
+   * words. Read in ./item-spend `withChargesSpent`.
+   */
+  keepsCharges?: (character: Roller, roll: (sides: number) => number) => { kept: boolean; text: string } | undefined
 }
+
+/** One of a hero's own attack rolls as it was made: what was asked (with the choices and the cover), the damage it dealt, and the floor. */
+export type AttackMade = { attack: { weapon: string; target: string; cover?: string; choices?: Record<string, string> }; dealt: number; floor?: Floor }
+
+/**
+ * A failed saving throw of the hero's own against harm, and what may still save it: the save as it then stands, the
+ * feature whose use it spends, and its name for the story. `stakes` is what the failure would cost. `d20` rolls a die
+ * for a reroll.
+ */
+export type SaveRule = (args: {
+  character: Roller & { featureUses?: Record<string, number> }
+  ability: AbilityId
+  result: CheckResult
+  stakes: SaveStakes
+  d20: () => number
+}) => { result: CheckResult; feature: string; name: string } | undefined
+
+/**
+ * An aura: a standing effect a hero's feature spreads to themselves and those of their side within its reach, while the
+ * hero is not Incapacitated. Its reach is the feature's typed Emanation (`area`), grown by the level (`areaSizeByLevel`).
+ * A creature in two of one feature's auras takes the better.
+ */
+export type AuraRule = {
+  /** The class feature it comes from, by SRD id. */
+  feature: string
+  /** What it adds to each saving throw of one it reaches (Aura of Protection's Charisma modifier). */
+  saveBonus?: (bearer: Roller) => number
+}
+
+/** A round as it turns, for `roundStart`: everyone here, and the dice. */
+export type RoundTurn = { everyone: readonly (Roller & { id: string; position?: Point })[]; d20: () => number; roll: (sides: number) => number }
 
 /** One a feature may be lasting on, with the spells and effects that last on them. */
 export type Lasting = Roller & { id?: string; spellEffects?: readonly SpellEffect[] }
@@ -150,6 +248,8 @@ export type BonusActionRule = {
   note?: string
   /** It moves as a Dash does: twice the Speed. */
   dash?: true
+  /** The feet more it lets the hero move this turn, beside their Speed (Instinctive Pounce's half Speed with a Rage entered). Read in ./moves `takeMove`. */
+  moveBonus?: (character: Roller) => number
   /** It cannot be taken with a move, and is dropped when the read moves the hero. */
   still?: true
   /** Advantage or Disadvantage it gives the turn's attack roll. */
@@ -226,6 +326,12 @@ export type ChoiceRule = {
   attackBonus?: (character: Roller, attack: Attack) => number
   /** It takes the turn's Bonus Action (a smite): the read leaves it out when the reading uses another. */
   bonusAction?: true
+  /**
+   * For a choice that rides the attack: whether it goes with the attack the read asks for, given up any Advantage on it
+   * as its price (Brutal Strike). `chosen` holds the choices of the turn read so far. The roll is then made with no
+   * Advantage, and the choice is left off a roll that has Disadvantage (./attack-roll `attackRequirement`).
+   */
+  forgoesAdvantage?: (character: Roller, attack: Attack, chosen: Readonly<Record<string, true>> | undefined) => boolean
 }
 
 /** A cast as a choice that rides it reads it: the spell, the level it takes effect at, the slot it spends if any, and the damage type picked. */
@@ -281,6 +387,12 @@ export type ReactionRule = {
     types: readonly DamageTypeId[]
     roll: (sides: number) => number
   }) => { taken: number; reaction: Reacted } | undefined
+  /**
+   * An answer once a blow has landed and dealt its damage: the one hit strikes back at the attacker with one attack, by
+   * the attack's id (Retaliation). Asked of the one hit while they can react, up and with the attacker within 5 feet.
+   * Read in ./reactions `attackWithReactions`.
+   */
+  strikesBack?: (args: { target: Featured; attacker: Featured; taken: number }) => string | undefined
   /** How the story tells damage this reaction cut, after the blow's damage: " Poppen halves it with Uncanny Dodge." */
   damageWords?: (target: string) => string
   /** An answer to another's check that succeeds (Cutting Words). Saving throws are not answered. */
@@ -373,8 +485,20 @@ export type TurnEffectRule = {
   checking?: (effect: TurnEffect, bearer: Roller & { id: string }, check: Check) => ModeSource[]
   /** Its bearer's Speed is halved while it holds (./actions `movementEffects`). */
   halvesSpeed?: true
-  /** It ends once an attack roll is made against its bearer: it is for the next attack only (./actions `afterRoll`). */
-  endsWhenAttacked?: true
+  /**
+   * It ends once an attack roll is made against its bearer: it is for the next attack only (./actions `afterRoll`).
+   * "by-others" ends it only on a roll by someone other than the one who gave it (Sundering Blow).
+   */
+  endsWhenAttacked?: true | "by-others"
+  /** What it adds to an attack roll against its bearer (Sundering Blow's 5). Of several such effects, the most counts. Read in ./attack `rollAttack`. */
+  attackedBonus?: (effect: TurnEffect, attacker: Roller & { id?: string }) => number
+  /** The feet it takes from its bearer's Speed while it holds (Hamstring Blow's 15). Of several, the most counts (./actions `movementEffects`). */
+  slowsBy?: number
+  /**
+   * Its bearer is pushed this many feet straight away from the one who gave it, as the attack roll that gave it is
+   * settled, and it ends (Forceful Blow). Read in ./actions `afterRoll`, which knows the floor's walls.
+   */
+  pushes?: number
   /** Its bearer makes no Opportunity Attacks while they bear it (./reactions `opportunityAttacks`). */
   barsOpportunityAttacks?: true
 }
@@ -385,6 +509,8 @@ export type CheckRule = (args: {
   check: Check
   result: CheckResult
   roll: (sides: number) => number
+  /** Whether failing costs the roller something the read put at stake on the roll: harm, or a condition. */
+  staked?: boolean
 }) => { result: CheckResult; after?: <T extends { featureUses?: Record<string, number> }>(character: T) => T } | undefined
 
 /** What a turn holds after the roll just made, kept on the roll's `after` (../validations/roll-requirement-schema). */
@@ -439,7 +565,55 @@ export const hitRules = (): HitRule[] => every("hits")
 export const hitRule = (id: string): HitRule | undefined => hitRules().find((rule) => rule.id === id)
 export const turnEffectRule = (id: string): TurnEffectRule | undefined => every("turnEffects").find((rule) => rule.id === id)
 export const checkRules = (): CheckRule[] => every("checks")
+export const saveRules = (): SaveRule[] => every("saves")
+export const auraRules = (): AuraRule[] => every("auras")
+/** Whether a hero's class gives them Evasion. */
+export const classEvasion = (character: Roller): boolean => !!character.sheet && classes().some((rules) => rules.evasion?.(character))
+/** The least the d20 of a hero's own check counts as by their class, or none. */
+export const classD20Floor = (character: Roller, check: Check): number | undefined =>
+  character.sheet ? classes().reduce<number | undefined>((most, rules) => Math.max(most ?? 0, rules.d20Floor?.(character, check) ?? 0) || undefined, undefined) : undefined
 export const followRules = (): FollowRule[] => every("follows")
+/** The mastery property a hero's class has their attack use in place of the weapon's own, or none. */
+export const classMastery = (character: Roller, weaponId: string, choices: Readonly<Record<string, string>> | undefined): string | undefined =>
+  character.sheet ? classes().reduce<string | undefined>((found, rules) => found ?? rules.mastery?.(character, weaponId, choices), undefined) : undefined
+/** The one an attack roll was made against, as the attacker's class features leave them once it hit or missed. */
+export const settledByClasses = <T extends Bearing>(attacker: Bearing & { id: string }, target: T, hit: boolean): T =>
+  attacker.sheet ? classes().reduce((now, rules) => rules.attackSettled?.({ attacker, target: now, hit }) ?? now, target) : target
+/** Advantage a hero's class gives their Death Saving Throw, and the least die that counts as a 20 (20 where none lowers it). */
+export function classDeathSave(character: Roller): { modes: ModeSource[]; twentyFrom: number } {
+  const found = character.sheet ? classes().flatMap((rules) => rules.deathSave?.(character) ?? []) : []
+  return { modes: found.flatMap((one) => one.modes), twentyFrom: Math.min(20, ...found.map((one) => one.twentyFrom ?? 20)) }
+}
+/** Conditions a hero's class features make them immune to for now. */
+export const classConditionImmunities = (character: Bearing): ConditionId[] => (character.sheet ? [...new Set(classes().flatMap((rules) => rules.conditionImmunities?.(character) ?? []))] : [])
+// ./conditions `immuneTo` reads them through ./late-rules, which loads no class file.
+registerImmunities((character) => classConditionImmunities(character as Bearing))
+// ./spell-effects `settleConcentration` answers those a roll dropped through it too.
+registerDowned((args) => afterDowned(args as unknown as Parameters<typeof afterDowned>[0]))
+/** The least the total of a hero's own check or save counts as by their class, or none. */
+export const classTotalFloor = (character: Roller, check: Check): number | undefined =>
+  character.sheet ? classes().reduce<number | undefined>((most, rules) => Math.max(most ?? 0, rules.totalFloor?.(character, check) ?? 0) || undefined, undefined) : undefined
+
+/**
+ * Everyone after the classes answer the heroes a roll or a round dropped to 0 hit points without killing them
+ * (Relentless Rage): each up in `before` and down, not dead, in `after`. Each answer comes with its words for the story.
+ */
+export function afterDowned<T extends Felling>(args: { before: readonly T[]; after: readonly T[]; d20: () => number }): { characters: T[]; told: { by: string; name: string; text: string }[] } {
+  const down = (character: Felling) => !!character.dead || character.hitPoints === 0 || character.healthPercent === 0
+  const told: { by: string; name: string; text: string }[] = []
+  const characters = args.after.map((now) => {
+    const was = args.before.find((one) => one.id === now.id)
+    if (!was || !now.sheet || now.dead || down(was) || !down(now)) return now
+    for (const rules of classes()) {
+      const answered = rules.downed?.({ was, now, d20: args.d20 })
+      if (!answered) continue
+      told.push({ by: now.id, name: answered.name, text: answered.text })
+      return answered.character
+    }
+    return now
+  })
+  return { characters, told }
+}
 
 /** What the classes may still do for one of a hero's own checks that failed: the first that answers, or none. */
 export function rescuedCheck(args: Parameters<CheckRule>[0]): ReturnType<CheckRule> {
@@ -473,8 +647,37 @@ export const classCheckBonus = (character: Bearing, check: Check): number => che
 export const classCastingBar = (character: Bearing): string | undefined =>
   character.sheet ? classes().reduce<string | undefined>((found, rules) => found ?? rules.castingBarred?.(character), undefined) : undefined
 /** An attacker after their own attack roll against an enemy, as each class's features take it. */
-export const afterClassAttackRoll = <T extends Bearing>(attacker: T, target: Bearing): T =>
-  attacker.sheet ? classes().reduce((now, rules) => rules.attackRolled?.(now, target) ?? now, attacker) : attacker
+export const afterClassAttackRoll = <T extends Bearing & { position?: Point }>(attacker: T, target: Bearing & { position?: Point }, made?: AttackMade): T =>
+  attacker.sheet ? classes().reduce((now, rules) => rules.attackRolled?.(now, target, made) ?? now, attacker) : attacker
+/** The feature that keeps any attack roll against a hero from having Advantage now (Elusive), by name, or none. */
+export const classAdvantageBar = (target: Roller): string | undefined =>
+  target.sheet ? classes().reduce<string | undefined>((found, rules) => found ?? rules.advantageBarred?.(target), undefined) : undefined
+/**
+ * An attack roll's Advantage taken away where the one attacked bars it (Elusive): the game master's read and the typed
+ * sources of Advantage are dropped, and the feature is named among the reasons. Disadvantage stands.
+ */
+export function withAdvantageBarred(
+  target: Roller,
+  picked: "advantage" | "disadvantage" | "normal",
+  typed: readonly ModeSource[]
+): { picked: "advantage" | "disadvantage" | "normal"; typed: ModeSource[]; barred?: string } {
+  const barred = classAdvantageBar(target)
+  if (!barred || (picked !== "advantage" && !typed.some((source) => source.mode === "advantage"))) return { picked, typed: [...typed] }
+  return { picked: picked === "advantage" ? "normal" : picked, typed: typed.filter((source) => source.mode !== "advantage"), barred }
+}
+/** Whether a hero's own attack roll leaves their hiding's Invisible on them (Stealth Attack). */
+export const classStaysHidden = (attacker: Bearing, made: AttackMade): boolean => !!attacker.sheet && classes().some((rules) => rules.staysHidden?.(attacker, made))
+/** A character with the conditions a class feature gave that end on damage taken off: Knock Out's Unconscious. */
+export function withDamageEndings<T extends { conditions?: readonly ConditionEntry[] }>(character: T): T {
+  const ends = (entry: ConditionEntry) => !!entry.feature && classes().some((rules) => rules.endsOnDamage?.(entry))
+  if (!character.conditions?.some(ends)) return character
+  const conditions = character.conditions.filter((entry) => !ends(entry))
+  const { conditions: _, ...rest } = character
+  return (conditions.length ? { ...rest, conditions } : rest) as T
+}
+/** Whether a hero's class keeps an item's charges about to be spent, by its die, with its words, or none. */
+export const classKeepsCharges = (character: Roller, roll: (sides: number) => number): { kept: boolean; text: string } | undefined =>
+  character.sheet ? classes().reduce<{ kept: boolean; text: string } | undefined>((found, rules) => found ?? rules.keepsCharges?.(character, roll), undefined) : undefined
 /** How far a hero's own spell reaches as their class lengthens it, or none where no feature does. */
 export const classSpellRange = (caster: Roller, spell: Spell): number | undefined =>
   caster.sheet ? classes().reduce<number | undefined>((found, rules) => found ?? rules.spellRange?.(caster, spell), undefined) : undefined

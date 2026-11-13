@@ -9,6 +9,11 @@ settingId: "realm-of-myr"
 adventureId: "welcome-to-kordavos"
 landmark: "kordavos/blackthorn-mansion"
 roundBudget: 3
+loot:
+  - id: "weapon-1-2-or-3"
+    variant: "+1"
+    base: "longsword"
+    on: "enter"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726695978966"
 ---
 

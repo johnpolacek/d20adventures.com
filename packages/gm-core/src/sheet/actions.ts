@@ -5,11 +5,12 @@ import { spellById } from "@d20/srd/spells"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { type Attack, masteryOf } from "./attack"
 import type { Check, Roller } from "./check"
-import { afterClassAttackRoll, classCheckBonus, turnEffectRule } from "./class-rules"
+import { afterClassAttackRoll, classCheckBonus, classMastery, classStaysHidden, turnEffectRule } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
 import { detached } from "./hit-riders"
+import { handOver } from "./loot"
 import { areEnemies, sameSide } from "./sides"
 import { type Floor, type Point, pushed, sizeOf, walkOver } from "./space"
 import { afterAttackRoll } from "./spell-effects"
@@ -29,8 +30,15 @@ import type { SpellEffect, TurnEffect } from "./turn-effect"
  * Dash and Disengage are taken and recorded. What they change is movement, which stage 6 of plans/srd-rules.md gives.
  * Escape, as a stat block's text gives it: a creature attached to one (a Stirge) is pulled off by them or by one within
  * 5 feet of them, and nothing is rolled (./hit-riders). Breaking a grapple is a check, which the read makes.
+ * Give: a hero hands one of their magic items, by its place in their items, to another hero within 5 feet (./loot).
  */
-export type TakenAction = { action: "dodge" } | { action: "help"; target: string; skill?: SkillId } | { action: "dash" } | { action: "disengage" } | { action: "escape"; target: string }
+export type TakenAction =
+  | { action: "dodge" }
+  | { action: "help"; target: string; skill?: SkillId }
+  | { action: "dash" }
+  | { action: "disengage" }
+  | { action: "escape"; target: string }
+  | { action: "give"; target: string; item: number }
 
 /** The Difficulty Class of the Hide action's Dexterity (Stealth) check. */
 export const HIDE_DC = 15
@@ -73,6 +81,7 @@ export function takeAction<T extends Acting>(characters: readonly T[], actorId: 
   if (taken.action === "dodge") return { characters: put(give(actor, { id: "dodging", by: actor.id, turns: 2 })), fact: `${actor.name} takes the Dodge action.` }
   if (taken.action === "dash") return { characters: [...characters], fact: `${actor.name} takes the Dash action.` }
   if (taken.action === "disengage") return { characters: [...characters], fact: `${actor.name} takes the Disengage action.` }
+  if (taken.action === "give") return handOver(characters, actor.id, taken.target, taken.item)
   if (taken.action === "escape") {
     const freed = characters.find((character) => character.id === taken.target)
     const holder = characters.find((character) => freed?.turnEffects?.some((effect) => effect.id === "attached" && effect.by === character.id))
@@ -114,7 +123,11 @@ export function attackModesFromActions(attacker: Acting, target: Acting, present
     if (effect.id === "vexed" && effect.by === attacker.id) found.push({ mode: "advantage", from: "Vex" })
     found.push(...(turnEffectRule(effect.id)?.against?.(effect, attacker, target) ?? []))
   }
-  for (const effect of attacker.turnEffects ?? []) if (holds(effect, all)) found.push(...(turnEffectRule(effect.id)?.attacking?.(effect, attacker, target, attack) ?? []))
+  for (const effect of attacker.turnEffects ?? []) {
+    if (!holds(effect, all)) continue
+    if (effect.id === "sapped") found.push({ mode: "disadvantage", from: "Sap" })
+    found.push(...(turnEffectRule(effect.id)?.attacking?.(effect, attacker, target, attack) ?? []))
+  }
   return found
 }
 
@@ -142,9 +155,10 @@ const drop = <T extends Acting>(character: T, gone: (effect: TurnEffect) => bool
 /**
  * Everyone after a roll is made, with what the roll used up and what it set up. Help is for the next roll only: an
  * attack on an enemy an ally Helped against spends it, as a check with the skill Helped spends that. One who makes an
- * attack roll is no longer hidden, so their Invisible ends. Vex: an attack that hits and deals damage with a weapon
- * whose Vex mastery the attacker has gives their next attack on that creature Advantage, and that attack spends it.
- * `dealt` is the damage an attack did, 0 for a miss.
+ * attack roll is no longer hidden, so their Invisible ends unless a class feature keeps it (Stealth Attack), and one
+ * Sapped has spent its Disadvantage on it. Vex: an attack that hits and deals damage with a weapon whose Vex mastery
+ * the attacker has gives their next attack on that creature Advantage, and that attack spends it. `dealt` is the
+ * damage an attack did, 0 for a miss.
  */
 export function afterRoll<T extends Acting & { conditions?: readonly ConditionEntry[]; position?: Point }>(
   everyone: readonly T[],
@@ -165,22 +179,29 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
     characters = afterAttackRoll(characters, rollerId, roll.attack.target)
     // What the weapon's mastery does to the one it hurt. Vex gives the attacker's next attack on them Advantage. Slow
     // takes 10 feet from their Speed until the attacker's next turn. Push sends one no bigger than Large 10 feet straight
-    // away, as far as the first solid thing.
-    const mastery = dealt > 0 ? masteryOf(roller, roll.attack.weapon) : undefined
+    // away, as far as the first solid thing. Sap gives them Disadvantage on their next attack roll before the attacker's
+    // next turn. A class feature may put another mastery in the weapon's place for the attack (Tactical Master).
+    const mastery = dealt > 0 ? (classMastery(roller, roll.attack.weapon, roll.attack.choices) ?? masteryOf(roller, roll.attack.weapon)) : undefined
     // What a class's features take from an attack roll against an enemy (a Rage is extended).
     const aimed = characters.find((character) => character.id === roll.attack.target)
     return characters.map((character) => {
       if (character.id === rollerId) {
-        const seen = withoutCondition(character, "invisible").character
-        return aimed && areEnemies(aimed, character) ? afterClassAttackRoll(seen, aimed) : seen
+        // The attack as it was made, for a class feature that keeps the attacker hidden or moves them after it.
+        const made = { attack: roll.attack, dealt, ...(floor ? { floor } : {}) }
+        const hidden = classStaysHidden(character, made) ? character : withoutCondition(character, "invisible").character
+        const seen = drop(hidden, (effect) => effect.id === "sapped")
+        return aimed && areEnemies(aimed, character) ? afterClassAttackRoll(seen, aimed, made) : seen
       }
       if (character.id !== roll.attack.target) return character
-      const spent = drop(
+      const dropped = drop(
         character,
-        (effect) => (effect.id === "vexed" && effect.by === rollerId) || (effect.id === "distracted" && effect.by !== rollerId && helpedBy(effect.by, roller)) || forNextAttack(effect)
+        (effect) => (effect.id === "vexed" && effect.by === rollerId) || (effect.id === "distracted" && effect.by !== rollerId && helpedBy(effect.by, roller)) || forNextAttack(rollerId)(effect)
       )
+      // A class's push the hit left on them (Forceful Blow): straight away from the one who gave it, and then it ends.
+      const spent = pushedByClass(dropped, characters, floor)
       if (mastery === "vex") return give(spent, { id: "vexed", by: rollerId, turns: 2 })
       if (mastery === "slow") return give(spent, { id: "slowed", by: rollerId, turns: 2 })
+      if (mastery === "sap") return give(spent, { id: "sapped", by: rollerId, turns: 2 })
       if (mastery === "push" && roller.position && spent.position && PUSHED_SIZES.includes(sizeOf(spent))) {
         const to = pushed(spent.position, roller.position, PUSH_FEET)
         return { ...spent, position: floor ? walkOver(floor.solids, spent.position, to, PUSH_FEET).at : to }
@@ -191,12 +212,32 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
   // Casting a spell gives a hidden caster away, as an attack does. A spell attack spends what was for the next attack only.
   if ("cast" in roll && spellById.get(roll.cast.spell)?.attack && roll.cast.targets[0]) {
     const aimed = roll.cast.targets[0]
-    characters = afterAttackRoll(characters, rollerId, aimed).map((character) => (character.id === aimed ? drop(character, forNextAttack) : character))
+    characters = afterAttackRoll(characters, rollerId, aimed).map((character) => (character.id === aimed ? drop(character, forNextAttack(rollerId)) : character))
   }
-  if ("cast" in roll) return characters.map((character) => (character.id === rollerId ? withoutCondition(character, "invisible").character : character))
+  if ("cast" in roll) {
+    const aimed = !!spellById.get(roll.cast.spell)?.attack
+    return characters.map((character) => (character.id === rollerId ? drop(withoutCondition(character, "invisible").character, (effect) => aimed && effect.id === "sapped") : character))
+  }
   if (!("check" in roll) || roll.check.kind !== "skill") return [...characters]
   const { skill } = roll.check
   return characters.map((character) => (character.id === rollerId ? drop(character, (effect) => effect.id === "helped" && effect.skill === skill) : character))
+}
+
+// A character pushed by the class turn effects on them that push (`pushes`), each straight away from its giver as far
+// as the first solid thing, with those effects ended.
+function pushedByClass<T extends Acting & { position?: Point }>(character: T, everyone: readonly T[], floor: Floor | undefined): T {
+  const pushes = (character.turnEffects ?? []).filter((effect) => turnEffectRule(effect.id)?.pushes)
+  if (!pushes.length) return character
+  let at = character.position
+  for (const effect of pushes) {
+    const from = everyone.find((other) => other.id === effect.by)?.position
+    const feet = turnEffectRule(effect.id)?.pushes ?? 0
+    if (!at || !from) continue
+    const to = pushed(at, from, feet)
+    at = floor ? walkOver(floor.solids, at, to, feet).at : to
+  }
+  const left = drop(character, (effect) => !!turnEffectRule(effect.id)?.pushes)
+  return at ? { ...left, position: at } : left
 }
 
 // The Push mastery: 10 feet, on a creature that is Large or smaller.
@@ -204,18 +245,26 @@ const PUSH_FEET = 10
 const PUSHED_SIZES: readonly string[] = ["Tiny", "Small", "Medium", "Large"]
 
 /** What a turn's effects do to a character's movement this turn: Slowed takes 10 feet from their Speed, and one who stood from Prone spent half of it. */
-export function movementEffects(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): { slowed: boolean; stands: boolean; halved: boolean } {
+export function movementEffects(character: { turnEffects?: readonly TurnEffect[] }, present?: readonly Acting[]): { slowed: boolean; stands: boolean; halved: boolean; reduced: number } {
   const held = (character.turnEffects ?? []).filter((effect) => holds(effect, present))
   return {
     slowed: held.some((effect) => effect.id === "slowed"),
     stands: held.some((effect) => effect.id === "stood"),
     // A class's turn effect that halves the Speed (a Stunning Strike saved against).
     halved: held.some((effect) => !!turnEffectRule(effect.id)?.halvesSpeed),
+    // Or takes feet off it (Hamstring Blow): the most of them counts.
+    reduced: Math.max(0, ...held.map((effect) => turnEffectRule(effect.id)?.slowsBy ?? 0)),
   }
 }
 
-// A class's turn effect that is for the next attack roll against its bearer only, which that roll spends.
-const forNextAttack = (effect: TurnEffect): boolean => !!turnEffectRule(effect.id)?.endsWhenAttacked
+// A class's turn effect that is for the next attack roll against its bearer only, which that roll spends: or the next
+// by another than the one who gave it.
+const forNextAttack =
+  (rollerId: string) =>
+  (effect: TurnEffect): boolean => {
+    const ends = turnEffectRule(effect.id)?.endsWhenAttacked
+    return ends === true || (ends === "by-others" && effect.by !== rollerId)
+  }
 
 /** What actions left on a character as a round begins: each lasts one round more, and then ends. */
 export function turnEffectsAtRoundStart<T extends { turnEffects?: readonly TurnEffect[] }>(character: T): T {
@@ -240,6 +289,7 @@ export function turnEffectWords(character: { turnEffects?: readonly TurnEffect[]
       if (effect.id === "dodging") return ["Dodging"]
       if (effect.id === "helped") return [`Helped with ${skillById.get(effect.skill ?? "stealth")?.name}`]
       if (effect.id === "vexed") return ["Vexed"]
+      if (effect.id === "sapped") return ["Sapped"]
       if (effect.id === "slowed") return ["Slowed"]
       if (effect.id === "attached") return ["Attached"]
       if (effect.id === "distracted") return ["Distracted"]

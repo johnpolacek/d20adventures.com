@@ -11,7 +11,7 @@ landmark: "kordavos/star-of-faelendar"
 roundBudget: 3
 npcs:
   - id: "forest-drake"
-    behavior: "Confused and enraged. Bites and tail-slaps the nearest targets, and takes to the warehouse roofs if pressed."
+    behavior: "Confused and enraged. When its Poison Breath is ready and two or more of its foes stand before it, breathes on them. Otherwise rends the nearest. Takes to the warehouse roofs if pressed."
   - id: "astrid-blackthorn"
     side: "party"
     behavior: "Fights beside the party and shields the fleeing dockworkers. Prefers to capture the drake alive."
@@ -38,7 +38,7 @@ This is a high-action combat encounter. The Forest Drake is confused and aggress
 
 ### Containing the Beast
 
-- **The Forest Drake:** Attacks with claw and jaw, its *Rend*. It may attempt to fly up to the roofs of warehouses if pressured.
+- **The Forest Drake:** Breathes its *Poison Breath* when it is ready and two or more of its foes stand before it. Otherwise it attacks with claw and jaw, its *Rend*. It may attempt to fly up to the roofs of warehouses if pressured.
 - **Astrid Blackthorn:** Fights alongside the players. She uses her bow to pin the creature's wings or distract it from vulnerable dockworkers.
 - **Objective:** The players don't necessarily need to kill the drake; they can use chains, magic, or heavy nets found on the docks to restrain it. Astrid will prioritize capture over killing if possible.
 

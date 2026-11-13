@@ -2,6 +2,7 @@ import type { DamageTypeId } from "@d20/srd"
 import { isDead, isDown, isDying, isIncapacitated } from "../utils/turn-actors"
 import { DEATH_SAVE, type RollRequirement } from "../validations/roll-requirement-schema"
 import { turnEffectsAtRoundStart } from "./actions"
+import { classDeathSave, withDamageEndings } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtRoundStart, d20Penalty, withCondition } from "./conditions"
 import { hitPointsOf, withHitPoints } from "./hit-points"
@@ -84,6 +85,9 @@ export function withDamage<T extends Mortal>(character: T, amount: number, optio
   if (!hitPoints) throw new Error(`${character.name ?? "A character"} has no sheet or stat block, so no hit points`)
   const dealt = Math.max(0, Math.round(amount))
   if (isDead(character) || dealt === 0) return { character }
+  // A condition a class feature gave that ends on any damage, Temporary Hit Points' among it: Knock Out's Unconscious.
+  const stirred = withDamageEndings(character)
+  if (stirred !== character) return withDamage(stirred, amount, options)
   if (options.types && !isRegenerationStopped(character) && stopsRegeneration(character, options.types)) {
     const { types: _, ...rest } = options
     return withDamage({ ...character, turnEffects: [...(character.turnEffects ?? []), regenerationStopped(character)] }, dealt, rest)
@@ -143,7 +147,8 @@ export type DeathSaveResult<T> = { character: T; natural: number; success: boole
  * A dying hero's Death Saving Throw: a d20 with no bonus. 10 or more is a success and less a failure. A 1 is two
  * failures, and a 20 brings the hero back to 1 hit point, conscious. Three successes make the hero Stable, Unconscious
  * at 0 with no more saves. Three failures kill, or where player death is off leave the hero Stable. Exhaustion takes
- * 2 off the roll for each level, and the 1 and the 20 are read off the die itself.
+ * 2 off the roll for each level, and the 1 and the 20 are read off the die itself. A class feature may count a lower die
+ * as a 20 (Defy Death's 18 to 20).
  */
 export function deathSave<T extends Mortal>(character: T, die: number, rules?: DeathRules): DeathSaveResult<T> {
   if (!isDying(character)) throw new Error(`${character.name ?? "The character"} is not dying, so makes no Death Saving Throw.`)
@@ -151,7 +156,8 @@ export function deathSave<T extends Mortal>(character: T, die: number, rules?: D
   const success = die - d20Penalty(character) >= DEATH_SAVE.difficulty
   const before = character.deathSaves ?? { successes: 0, failures: 0 }
   // A 20 wakes the hero and changes no save.
-  if (die === 20) return { character: revived(character, 1), natural: die, success, fate: "revived", saves: { successes: before.successes, failures: before.failures } }
+  if (die >= classDeathSave(character).twentyFrom)
+    return { character: revived(character, 1), natural: die, success, fate: "revived", saves: { successes: before.successes, failures: before.failures } }
   const saves = success ? { successes: Math.min(3, before.successes + 1), failures: before.failures } : { successes: before.successes, failures: Math.min(3, before.failures + (die === 1 ? 2 : 1)) }
   if (saves.successes >= 3) return { character: stable({ ...character, deathSaves: saves }), natural: die, success, fate: "stable", saves }
   if (saves.failures >= 3) {
@@ -198,7 +204,8 @@ type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: Ro
  * A character as a round begins. Their conditions lose a turn each, and those that run out end, as does what last
  * round's actions left on them. A dying hero's turn is
  * their Death Saving Throw, already asked for, so the roll card comes up on it. One who is down otherwise, or
- * Incapacitated, takes no turn. Everyone else has yet to act. Beacon of Hope gives a Death Saving Throw Advantage.
+ * Incapacitated, takes no turn. Everyone else has yet to act. Beacon of Hope gives a Death Saving Throw Advantage, as
+ * Defy Death does (./classes).
  */
 export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
   // One who was Prone and is not now has stood, which costs half their Speed this turn (./space).
@@ -207,8 +214,8 @@ export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
   const eased = turnEffectsAtRoundStart(risen)
   const stood: T = prone(before) && !prone(risen) ? { ...eased, turnEffects: [...(eased.turnEffects ?? []), { id: "stood" as const, by: before.id ?? "", turns: 1 }] } : eased
   const character = spellEffectsAtRoundStart(stood)
-  // Beacon of Hope gives the Death Saving Throw Advantage.
-  const helped = saveModesFromSpells(character, "death")
+  // Beacon of Hope gives the Death Saving Throw Advantage, and so may a class feature (Defy Death).
+  const helped = [...saveModesFromSpells(character, "death"), ...classDeathSave(character).modes]
   if (isDying(character))
     return {
       ...character,

@@ -4,6 +4,7 @@ import { monsterById } from "@d20/srd/monsters"
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { Check } from "./check"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
+import { featureImmunities } from "./late-rules"
 import { itemConditionImmunities } from "./item-effects"
 import { packTacticsModes } from "./monster-traits"
 import type { Sheet } from "./sheet"
@@ -223,7 +224,8 @@ export const resistsAllDamage = (target: Afflicted): boolean => borne(target).so
 
 /**
  * Whether a character cannot be given a condition: its stat block is immune to it, a condition it bears shuts it out, a
- * spell on it does, or a magic item it wears does (a Periapt of Proof against Poison's Poisoned).
+ * spell on it does, a magic item it wears does (a Periapt of Proof against Poison's Poisoned), or a class feature
+ * while it lasts (Mindless Rage's Charmed and Frightened).
  */
 export function immuneTo(character: Afflicted, id: ConditionId): boolean {
   const monster = character.type === "npc" ? monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) : undefined
@@ -231,7 +233,8 @@ export function immuneTo(character: Afflicted, id: ConditionId): boolean {
     !!monster?.conditionImmunities?.includes(id) ||
     borne(character).some((entry) => CONDITION_RULES[entry.id].immuneTo?.includes(id)) ||
     spellImmunities(character).includes(id) ||
-    (!!character.sheet && itemConditionImmunities(character.sheet).includes(id))
+    (!!character.sheet && itemConditionImmunities(character.sheet).includes(id)) ||
+    featureImmunities(character).includes(id)
   )
 }
 
@@ -250,7 +253,7 @@ const without = <T extends Afflicted>(character: T, keep: (entry: ConditionEntry
  */
 export function withCondition<T extends Afflicted>(
   character: T,
-  give: { id: ConditionId; source?: string; span?: ConditionSpan; spell?: string; attack?: string },
+  give: { id: ConditionId; source?: string; span?: ConditionSpan; spell?: string; attack?: string; feature?: string },
   options: { acted?: boolean } = {}
 ): { character: T; given: boolean; level?: number } {
   if (isDead(character) || immuneTo(character, give.id)) return { character, given: false }
@@ -268,6 +271,7 @@ export function withCondition<T extends Afflicted>(
     ...(turns ? { turns } : {}),
     ...(give.spell ? { spell: give.spell } : {}),
     ...(give.attack ? { attack: give.attack } : {}),
+    ...(give.feature ? { feature: give.feature } : {}),
   }
   return { character: { ...character, conditions: [...others, entry] }, given: true }
 }

@@ -193,6 +193,11 @@ export function castBeats(
       const name = target?.name ?? nameOf(names, save.target)
       beats.push({ kind: "feature", by, character: save.target, name: "Legendary Resistance", text: `${name} fails the saving throw and chooses to succeed instead.` })
     }
+    // A failed save a hero's feature rerolled (Indomitable), told as the fact it is.
+    if (save.rescued) {
+      const name = target?.name ?? nameOf(names, save.target)
+      beats.push({ kind: "feature", by, character: save.target, name: save.rescued.name, text: `${name} fails the saving throw and calls on ${save.rescued.name}.` })
+    }
   }
   return beats
 }

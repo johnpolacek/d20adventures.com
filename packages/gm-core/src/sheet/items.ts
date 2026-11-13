@@ -5,6 +5,7 @@ import { magicItemRules } from "@d20/srd/magic-item-rules"
 import { magicItemById } from "@d20/srd/magic-items"
 import type { Bonus, MagicItem, MagicItemVariant } from "@d20/srd/schema/magic-items"
 import { skillById } from "@d20/srd/skills"
+import { hasFeature } from "./feature-rules"
 import { damageTypeProblem, effectWords, itemArmorClass, readItem, toldText } from "./item-effects"
 import { chargesOf, itemUseProblems, itemUseWords, usedParts } from "./item-use"
 import type { OwnedItem, Sheet } from "./sheet"
@@ -27,6 +28,14 @@ type BonusTarget = Bonus["to"]
 const attunementRule = magicItemRules.find((rule) => rule.kind === "attunement")
 /** "You can be attuned to no more than three magic items at a time." */
 export const ATTUNEMENT_LIMIT = attunementRule && "maxItems" in attunementRule ? attunementRule.maxItems : 3
+/**
+ * The class features that raise how many magic items a hero can be attuned to at once, and to how many: a Thief's Use
+ * Magic Device, "You can attune to up to four magic items at once." The data types no number, so it is the text's.
+ */
+const ATTUNEMENT_RAISED: Readonly<Record<string, number>> = { "thief-use-magic-device": 4 }
+/** How many magic items a hero can be attuned to at once: three, or more where a class feature raises it. */
+export const attunementLimitOf = (sheet: Sheet): number =>
+  Math.max(ATTUNEMENT_LIMIT, ...Object.entries(ATTUNEMENT_RAISED).flatMap(([feature, limit]) => (hasFeature({ sheet }, feature) ? [limit] : [])))
 
 /** The item an entry names, with the variant it is where the item comes in several. None for an id the SRD lacks. */
 export function itemOf(owned: OwnedItem): { item: MagicItem; variant?: MagicItemVariant } | undefined {
@@ -186,7 +195,7 @@ export function bonusWords(owned: OwnedItem): string | undefined {
 export type Caster = { spellcaster: boolean }
 
 /** Why a hero cannot attune to an item, by what its data types: a class, or a spellcaster. None when they can. */
-function prerequisiteProblem(sheet: Sheet, item: MagicItem, caster: Caster): string | undefined {
+export function prerequisiteProblem(sheet: Sheet, item: MagicItem, caster: Caster): string | undefined {
   const attunement = item.attunement
   if (attunement?.classes && !attunement.classes.includes(sheet.class as ClassId))
     return `${item.name} is attuned only by ${attunement.restriction ?? attunement.classes.join(", ")}, and ${classById.get(sheet.class)?.name ?? sheet.class} is not one`
@@ -212,8 +221,27 @@ function baseProblem(item: MagicItem, baseId: string): string | undefined {
 }
 
 /**
+ * What is wrong with an item entry on its own: an item the SRD lacks, a version it does not come in, and a base that
+ * does not fit it or is missing.
+ */
+export function entryProblems(owned: Pick<OwnedItem, "id" | "variant" | "base">): string[] {
+  const item = magicItemById.get(owned.id)
+  if (!item) return [`"${owned.id}" is not a magic item`]
+  const problems: string[] = []
+  if (item.variants && !item.variants.some((variant) => variant.name === owned.variant))
+    problems.push(`${item.name} comes as ${item.variants.map((variant) => variant.name).join(", ")}, and the sheet names ${owned.variant ? `"${owned.variant}"` : "none"}`)
+  if (!item.variants && owned.variant) problems.push(`${item.name} comes in one version only`)
+  if (item.base && !owned.base) problems.push(`${item.name} needs the item it is, such as a Longsword or Plate Armor`)
+  if (owned.base) {
+    const wrong = baseProblem(item, owned.base)
+    if (wrong) problems.push(wrong)
+  }
+  return problems
+}
+
+/**
  * What is wrong with the magic items on a sheet: an item the SRD lacks, a version it does not come in, a base that
- * does not fit it or is missing, Attunement on an item that needs none, more than three attuned, two copies of one
+ * does not fit it or is missing, Attunement on an item that needs none, more than the hero's limit attuned (three, or four with Use Magic Device), two copies of one
  * item attuned, an attunement whose prerequisite the hero does not meet, and two items standing for one weapon,
  * armor or Shield the sheet holds.
  */
@@ -222,18 +250,8 @@ export function itemProblems(sheet: Sheet, caster: Caster): string[] {
   const items = sheet.items ?? []
   for (const owned of items) {
     const item = magicItemById.get(owned.id)
-    if (!item) {
-      problems.push(`"${owned.id}" is not a magic item`)
-      continue
-    }
-    if (item.variants && !item.variants.some((variant) => variant.name === owned.variant))
-      problems.push(`${item.name} comes as ${item.variants.map((variant) => variant.name).join(", ")}, and the sheet names ${owned.variant ? `"${owned.variant}"` : "none"}`)
-    if (!item.variants && owned.variant) problems.push(`${item.name} comes in one version only`)
-    if (item.base && !owned.base) problems.push(`${item.name} needs the item it is, such as a Longsword or Plate Armor`)
-    if (owned.base) {
-      const wrong = baseProblem(item, owned.base)
-      if (wrong) problems.push(wrong)
-    }
+    problems.push(...entryProblems(owned))
+    if (!item) continue
     if (owned.attuned && !item.attunement) problems.push(`${item.name} needs no Attunement`)
     const damageType = damageTypeProblem(owned)
     if (damageType) problems.push(damageType)
@@ -243,7 +261,8 @@ export function itemProblems(sheet: Sheet, caster: Caster): string[] {
     }
   }
   const attuned = items.filter((owned) => owned.attuned)
-  if (attuned.length > ATTUNEMENT_LIMIT) problems.push(`the hero is attuned to ${attuned.length} magic items, and can be attuned to no more than ${ATTUNEMENT_LIMIT}`)
+  const limit = attunementLimitOf(sheet)
+  if (attuned.length > limit) problems.push(`the hero is attuned to ${attuned.length} magic items, and can be attuned to no more than ${limit}`)
   if (new Set(attuned.map((owned) => owned.id)).size < attuned.length) problems.push("the hero is attuned to two copies of one magic item")
   const worn = items.filter((owned) => owned.base && magicItemById.get(owned.id)?.base && isWorn(sheet, owned) && baseKind(magicItemById.get(owned.id) as MagicItem) !== "ammunition")
   if (new Set(worn.map((owned) => owned.base)).size < worn.length) problems.push("two magic items stand for one weapon, armor or Shield the sheet holds")
@@ -255,7 +274,7 @@ export function itemProblems(sheet: Sheet, caster: Caster): string[] {
 /**
  * Attuning to an owned item, by its place in the sheet's items. Attunement takes a Short Rest spent with the item, so
  * this is made only as one ends. The sheet attuned, or why it cannot be: the item needs no Attunement or is attuned
- * already, three items are attuned, a copy of it is attuned, or its prerequisite is not met.
+ * already, as many items are attuned as the hero can hold, a copy of it is attuned, or its prerequisite is not met.
  */
 export function attune(sheet: Sheet, index: number, caster: Caster): { sheet: Sheet } | { problem: string } {
   const owned = sheet.items?.[index]
@@ -265,7 +284,8 @@ export function attune(sheet: Sheet, index: number, caster: Caster): { sheet: Sh
   if (!item.attunement) return { problem: `${name} needs no Attunement.` }
   if (owned.attuned) return { problem: `The hero is already attuned to ${name}.` }
   const attuned = (sheet.items ?? []).filter((entry) => entry.attuned)
-  if (attuned.length >= ATTUNEMENT_LIMIT) return { problem: `The hero is attuned to ${ATTUNEMENT_LIMIT} magic items already, and must end an Attunement first.` }
+  const limit = attunementLimitOf(sheet)
+  if (attuned.length >= limit) return { problem: `The hero is attuned to ${limit} magic items already, and must end an Attunement first.` }
   if (attuned.some((entry) => entry.id === owned.id)) return { problem: `The hero is already attuned to another ${item.name}.` }
   const unmet = prerequisiteProblem(sheet, item, caster)
   if (unmet) return { problem: `${unmet}.` }

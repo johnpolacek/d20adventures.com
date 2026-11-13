@@ -52,8 +52,9 @@ type Probe = {
   stakes?: Wanted[]
   // Stakes the roll must put, whatever else it puts with them.
   gives?: Wanted[]
-  // An action that takes no roll, as it should be read: who Help is for, and with which skill.
-  takes?: { target?: string; skills?: string[] }
+  // An action that takes no roll, as it should be read: who Help is for, and with which skill, or who is given which
+  // magic item, by its place in the hero's items.
+  takes?: { target?: string; skills?: string[]; item?: number }
   // The Bonus Action the hero also uses, and who it is given to. None for most.
   bonus?: { feature: string; target?: string }
   // Conditions someone in the scene already bears, by character id.
@@ -85,6 +86,8 @@ type Probe = {
   actor?: string
   // Uses of features already spent, by character id: a breath not yet recharged is { "Poison Breath": 1 }.
   usesOn?: Record<string, Record<string, number>>
+  // What the caster chooses for a spell that asks a choice, on the cast or the Bonus Action spell: Hex's "wis".
+  choice?: string
 }
 // A stake as a scene writes it: damage or healing, or a condition given ("condition") or ended ("end-condition").
 type Wanted = { on: string; target: string; kind: string; condition?: string }
@@ -189,9 +192,15 @@ async function run(probe: Probe): Promise<Graded> {
     }
     const said = (bonus?: { feature: string; target?: string }) => (bonus ? `${bonus.feature}${bonus.target ? ` for ${bonus.target}` : ""}` : "none")
     if (said(reading.bonus) !== said(probe.bonus)) faults.push(`bonus action ${said(reading.bonus)}, wanted ${said(probe.bonus)}`)
+    const chose = cast?.choice ?? reading.bonus?.choice
+    if (probe.choice && chose !== probe.choice) faults.push(`chose ${chose ?? "nothing"}, wanted ${probe.choice}`)
     if (probe.takes && reading.action?.action === "help") {
       if (probe.takes.target && reading.action.target !== probe.takes.target) faults.push(`help for ${reading.action.target}, wanted ${probe.takes.target}`)
       if (probe.takes.skills && !probe.takes.skills.includes(reading.action.skill ?? "none")) faults.push(`help with ${reading.action.skill ?? "no skill"}, wanted ${probe.takes.skills.join(" or ")}`)
+    }
+    if (probe.takes && reading.action?.action === "give") {
+      if (probe.takes.target && reading.action.target !== probe.takes.target) faults.push(`gives to ${reading.action.target}, wanted ${probe.takes.target}`)
+      if (probe.takes.item !== undefined && reading.action.item !== probe.takes.item) faults.push(`gives item ${reading.action.item}, wanted ${probe.takes.item}`)
     }
     if (!probe.checks.includes(picked)) faults.push(`check ${picked}, wanted ${probe.checks.join(" or ")}`)
     const surged = !!reading.choices?.surge

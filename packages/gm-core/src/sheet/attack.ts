@@ -7,7 +7,7 @@ import type { Monster } from "@d20/srd/schema/monsters"
 import { weaponPropertyById } from "@d20/srd/weapon-properties"
 import { isIncapacitated } from "../utils/turn-actors"
 import type { Roller, RollMode } from "./check"
-import { type Bearing, classAttack, classResistances, type Extra, type HitArgs, type HitRider, hitRule, hitRules, reactionRule } from "./class-rules"
+import { type Bearing, classAttack, classResistances, type Extra, type HitArgs, type HitRider, hitRule, hitRules, reactionRule, turnEffectRule } from "./class-rules"
 import { criticalWhenHit, d20Penalty, resistsAllDamage } from "./conditions"
 import { type DeathRules, type DeathSaves, type Fate, withDamage } from "./death"
 import { deriveSheet, trainedWith } from "./derive"
@@ -22,7 +22,7 @@ import type { Sheet } from "./sheet"
 import { sameSide } from "./sides"
 import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, within } from "./space"
 import { enduringTraitOf } from "./species-traits"
-import { markDamage, mirrorImage, rollAdds, weaponDamageFromSpells } from "./spell-effects"
+import { deflectedHit, markDamage, rollAdds, spellResistances, weaponDamageFromSpells } from "./spell-effects"
 import { combatStatsOf, DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { TurnEffect } from "./turn-effect"
 
@@ -361,14 +361,18 @@ export function defensesOf(character: Bearing): Defenses {
 
 function ownDefenses(character: Bearing): Defenses {
   // A hero in a Beast's shape has the stat block's defenses, and those a class feature gives while it lasts (./shape).
+  // Anyone has those a spell on them gives (Protection from Energy).
+  const spelled = spellResistances(character)
   const shape = shapeOf(character)
-  if (shape) return { immunities: shape.immunities, resistances: [...new Set([...(shape.resistances ?? []), ...classResistances(character)])], vulnerabilities: shape.vulnerabilities }
+  if (shape) return { immunities: shape.immunities, resistances: [...new Set([...(shape.resistances ?? []), ...classResistances(character), ...spelled])], vulnerabilities: shape.vulnerabilities }
   if (character.sheet) {
     const derived = deriveSheet(character.sheet)
-    return { ...(derived.immunities.length ? { immunities: derived.immunities } : {}), resistances: [...new Set([...derived.resistances, ...classResistances(character)])] }
+    return { ...(derived.immunities.length ? { immunities: derived.immunities } : {}), resistances: [...new Set([...derived.resistances, ...classResistances(character), ...spelled])] }
   }
   const monster = character.type === "npc" ? (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)) : undefined
-  return monster ? { immunities: monster.immunities, resistances: monster.resistances, vulnerabilities: monster.vulnerabilities } : {}
+  if (!monster) return {}
+  const resistances = spelled.length ? [...new Set([...(monster.resistances ?? []), ...spelled])] : monster.resistances
+  return { immunities: monster.immunities, resistances, vulnerabilities: monster.vulnerabilities }
 }
 
 /**
@@ -494,7 +498,7 @@ export function rollAttack(args: Omit<StrikeArgs<Target>, "rules" | "present">):
     bonus: attack.bonus,
     armorClass,
     mode: args.mode,
-    adds: rollAdds(args.attacker, "attack-rolls", args.roll),
+    adds: [...rollAdds(args.attacker, "attack-rolls", args.roll), ...attackedAdds(args.attacker, args.target)],
     criticalFrom: criticalFrom(args.attacker),
   })
   // A miss by no more than the die could add, and not on a 1, rolls a held Bardic Inspiration die.
@@ -503,6 +507,16 @@ export function rollAttack(args: Omit<StrikeArgs<Target>, "rules" | "present">):
   const lifted = inspired === undefined ? rolled : { ...rolled, total: rolled.total + inspired, hit: rolled.total + inspired >= armorClass }
   const roll = lifted.hit && !lifted.critical && criticalWhenHit(args.target, isNear(args.attacker, args.target, attack.kind)) ? { ...lifted, critical: true } : lifted
   return { attack, roll, ...(inspired === undefined ? {} : { inspired }) }
+}
+
+/** What a class's turn effects on the target add to an attack roll against them (Sundering Blow's 5): the most of each kind. */
+function attackedAdds(attacker: Roller & { id?: string }, target: Target): { from: string; amount: number }[] {
+  const best = new Map<string, number>()
+  for (const effect of target.turnEffects ?? []) {
+    const amount = turnEffectRule(effect.id)?.attackedBonus?.(effect, attacker) ?? 0
+    if (amount > 0) best.set(effect.id, Math.max(best.get(effect.id) ?? 0, amount))
+  }
+  return [...best].map(([id, amount]) => ({ from: turnEffectRule(id)?.words?.({ id, by: "", turns: 1 }) ?? id, amount }))
 }
 
 /** Whether an attack roll hits whatever the Armor Class: its die scored a Critical Hit, a 20 or a Champion's 19. */
@@ -538,8 +552,8 @@ export function landBlow<T extends Target>(
   const before = Math.min(stats.hitPointMaximum, Math.max(0, args.target.hitPoints ?? stats.hitPointMaximum))
   const spent = rolled.inspired === undefined ? {} : { inspired: rolled.inspired }
   if (!roll.hit) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: args.target, ...spent }
-  // Mirror Image: a duplicate may take the hit in the target's place, and is destroyed.
-  const imaged = mirrorImage(args.target, args.attacker, args.roll)
+  // A spell on the target may take the hit in their place (Mirror Image: a duplicate, which is destroyed).
+  const imaged = deflectedHit(args.target, args.attacker, args.roll)
   if (imaged.deflected) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: imaged.character, ...spent, deflected: true }
   // A feature's dice (Sneak Attack), and the attacker's own spell on this target (Hunter's Mark).
   // An ally of the attacker's stands within 5 feet of the target, on their feet and able to act. An ally is one on the

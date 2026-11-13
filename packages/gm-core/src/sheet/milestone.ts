@@ -71,8 +71,24 @@ const METAMAGIC_ORDER = [
  * by `METAMAGIC_ORDER`). An option that gives a feat gives the first the hero lacks. `known` is the hero's cantrips,
  * `held` their feats, and `level` the class level.
  */
-export function autoPicks(offer: PicksOffer, level: number, known: readonly string[], held: readonly string[]): FeaturePick[] {
+export function autoPicks(offer: PicksOffer, level: number, known: readonly string[], held: readonly string[], spells: readonly string[] = []): FeaturePick[] {
   const picks = [...offer.picked]
+  // A feature whose picks are spells fills each slot left with the first spell by `spellOrder` of a level it takes,
+  // that the hero has not already got (`spells`, their cantrips and prepared spells).
+  if (offer.slots) {
+    const levelOf = (id: string) => offer.options.find((option) => option.id === id)?.level ?? -1
+    const ranked = offer.options.filter((option) => !spells.includes(option.id)).sort((a, b) => spellOrder({ id: a.id, level: a.level }, { id: b.id, level: b.level }))
+    const free = [...offer.slots].sort((a, b) => a.length - b.length)
+    for (const pick of picks) {
+      const index = free.findIndex((slot) => slot.includes(levelOf(pick.option)))
+      if (index >= 0) free.splice(index, 1)
+    }
+    for (const slot of free) {
+      const next = ranked.find((option) => slot.includes(option.level ?? -1) && !picks.some((pick) => pick.option === option.id))
+      if (next) picks.push({ option: next.id })
+    }
+    return picks
+  }
   const runs = (id: string) => {
     const spell = spellById.get(id)
     return !!spell && spellLabel(spell) !== "told"
@@ -113,14 +129,15 @@ export function autoPicks(offer: PicksOffer, level: number, known: readonly stri
 
 /**
  * Choices for the next level that need no player: the ones an AI companion takes, and what Choose For Me fills in. The
- * class's subclass, an Ability Score Improvement into the class's main ability, the first of each other choice, and
- * the highest spells the engine resolves.
+ * class's subclass, an Ability Score Improvement into the class's main ability, the class's recommended Epic Boon at
+ * level 19 with its point in the same, the first of each other choice, and the highest spells the engine resolves.
  */
 export function autoChoices(sheet: Sheet): LevelUpChoices {
   const options = levelUpOptions(sheet)
   const choices: LevelUpChoices = {}
   if (options.subclass?.length) choices.subclass = options.subclass[0].id
 
+  // The feat the feature names or recommends, which the offer puts first: Ability Score Improvement, or an Epic Boon.
   const increase = options.feat?.feats.find((feat) => feat.abilityScoreIncrease)
   if (options.feat && increase?.abilityScoreIncrease) {
     const primary = classById.get(sheet.class)?.primaryAbility
@@ -128,7 +145,8 @@ export function autoChoices(sheet: Sheet): LevelUpChoices {
     const allowed = increase.abilityScoreIncrease.from
     const order = [...new Set<AbilityId>([...[...main].sort((a, b) => sheet.abilityScores[b] - sheet.abilityScores[a]), "con", ...abilityIds])].filter((ability) => allowed.includes(ability))
     const raised: Partial<Record<AbilityId, number>> = {}
-    let left = 2
+    // As many points as the feat's increase gives: 2 for Ability Score Improvement, 1 for an Epic Boon.
+    let left = Math.max(...increase.abilityScoreIncrease.choices.map((choice) => choice.count * choice.amount))
     for (const ability of order) {
       const room = Math.min(left, increase.abilityScoreIncrease.maximum - sheet.abilityScores[ability])
       if (room > 0) raised[ability] = room
@@ -157,8 +175,9 @@ export function autoChoices(sheet: Sheet): LevelUpChoices {
   if (options.cantrips) choices.cantrips = first([...options.cantrips.from].sort(spellOrder), options.cantrips.count)
   if (options.featurePicks) {
     const known = [...(sheet.cantrips ?? []), ...(choices.cantrips ?? [])]
-    const held = deriveSheet(sheet).feats
-    choices.featurePicks = Object.fromEntries(options.featurePicks.map((offer) => [offer.feature.id, autoPicks(offer, options.level, known, held)]))
+    const derived = deriveSheet(sheet)
+    const spells = [...derived.cantrips, ...derived.preparedSpells, ...(choices.cantrips ?? [])]
+    choices.featurePicks = Object.fromEntries(options.featurePicks.map((offer) => [offer.feature.id, autoPicks(offer, options.level, known, derived.feats, spells)]))
   }
   if (options.spellbook) {
     const from = [...options.spellbook.from].sort(spellOrder)
@@ -176,7 +195,9 @@ export function autoChoices(sheet: Sheet): LevelUpChoices {
       .flatMap((entry) => entry.options.find((option) => option.id === choices.featureChoices?.[entry.feature.id])?.prepares ?? [])
       .map((spell) => spell.id)
     const replaced = (sheet.spells ?? []).filter((id) => prepares.includes(id)).length
-    const from = options.spells.from.filter((entry) => (!book || book.has(entry.id)) && !prepares.includes(entry.id)).sort(spellOrder)
+    // A spell a feature's picks take now (Magical Discoveries) is always prepared, so it is not picked again.
+    const picked = Object.values(choices.featurePicks ?? {}).flatMap((picks) => picks.map((pick) => pick.option))
+    const from = options.spells.from.filter((entry) => (!book || book.has(entry.id)) && !prepares.includes(entry.id) && !picked.includes(entry.id)).sort(spellOrder)
     choices.spells = from.slice(0, options.spells.count + replaced).map((entry) => entry.id)
   }
   if (options.weaponMasteries) {

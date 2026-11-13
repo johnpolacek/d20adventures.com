@@ -32,6 +32,7 @@ export function storyRules(scene: StoryScene): string {
 - line: words one character says aloud. "text" holds only the spoken words, with no quote marks. "who": the speaker. "to": whom they speak to. "delivery": how, in a word or two.
 An action or line that no one else present could see or hear, such as a whisper, a word said low to one person, a note slipped across, or someone hidden acting unseen, has "private": true. Only its actor or speaker and whoever it is aimed at know of it. Leave it out for anything said or done in the open.
 Narration and action text never hold a listed character's words: every word a listed character says goes in a line. Someone not in the list, such as a guest in a crowd, has no lines: their words go in quote marks in the narration that shows them speaking. A beat is one or two sentences.
+Magic items come only from the game: the story never has anyone find, buy, craft or be given a magic item the game has not given, and never says an item does more than the game has told.
 Characters, by id: ${cast}.${places ? `\nPlaces, by id: ${places}.` : ""}
 Effects: ${EFFECT_KINDS.map((k) => `${k} (${EFFECTS[k]})`).join(", ")}.
 Elements: ${ELEMENTS.join(", ")}, or none for a weapon.

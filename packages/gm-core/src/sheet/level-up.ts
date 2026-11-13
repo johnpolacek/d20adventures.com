@@ -26,7 +26,9 @@ import {
   optionCantrips,
   pickOptions,
   picksAt,
+  preparedLists,
   sheetProblems,
+  spellPickSlots,
   subclassLevelOf,
   takesPicks,
   trainedWith,
@@ -65,6 +67,8 @@ export type ChoiceOffer = Named & { cantrips?: { count: number; from: Named[] };
  * option is picked again with another cantrip or feat.
  */
 export type PickOffer = Named & {
+  /** A spell's level, for a feature whose picks are spells (Mystic Arcanum). */
+  level?: number
   prerequisite?: { text: string; level?: number; option?: string }
   repeatable?: true
   cantrips?: Named[]
@@ -73,9 +77,10 @@ export type PickOffer = Named & {
 
 /**
  * A feature that takes several options from its list: how many it holds in all at the level, the options picked so
- * far, and whether one of those may be replaced at this level (Eldritch Invocations, Metamagic).
+ * far, and whether one of those may be replaced at this level (Eldritch Invocations, Metamagic). A feature whose picks
+ * are spells says the spell levels each pick may be, one entry a pick (`slots`): Mystic Arcanum's [[6], [7]] at 13.
  */
-export type PicksOffer = { feature: Named; count: number; picked: FeaturePick[]; replace: boolean; options: PickOffer[] }
+export type PicksOffer = { feature: Named; count: number; picked: FeaturePick[]; replace: boolean; options: PickOffer[]; slots?: number[][] }
 
 /** What the next level asks of a hero, and from what. A key is present only when the level asks for it. */
 export type LevelUpOptions = {
@@ -102,9 +107,10 @@ export type LevelUpOptions = {
   /**
    * Spells to prepare: how many to add, how many are prepared in all at the new level, the highest spell level the
    * hero has slots for, and the class's spells up to it that are not yet prepared. A spell now always prepared leaves
-   * the list (`dropped`) and is replaced. A Wizard prepares from the spellbook, with this level's additions.
+   * the list (`dropped`) and is replaced. A Wizard prepares from the spellbook, with this level's additions. A spell
+   * from another class's list, which Magical Secrets allows, names that list (`list`).
    */
-  spells?: { count: number; prepared: number; highestLevel: number; from: (Named & { level: number })[]; dropped?: Named[] }
+  spells?: { count: number; prepared: number; highestLevel: number; from: (Named & { level: number; list?: string })[]; dropped?: Named[] }
   /** Spells to add to a Wizard's spellbook: how many, of which `evocation` must be Evocation spells (Evocation Savant). */
   spellbook?: { count: number; evocation: number; highestLevel: number; from: (Named & { level: number; school: string })[] }
   /** More kinds of weapons to master, up to `count`, from the weapons the class is trained with. */
@@ -204,12 +210,14 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
 
   if (level === subclassLevelOf(cls)) options.subclass = cls.subclasses.flatMap((id) => (subclassById.get(id) ? [named(subclassById.get(id) as Named)] : []))
 
-  // Feats: an Ability Score Improvement gained at this level offers every feat the hero qualifies for.
+  // Feats: an Ability Score Improvement or an Epic Boon gained at this level offers every feat the hero qualifies for,
+  // the feature's own feat or its recommended one first, then the rest of its category.
   const granting = gained.find((feature) => grantsFeatByLevel(feature) && feature.levels.includes(level))
   if (granting) {
     const held = new Set(derived.feats)
     const offered = feats.filter((feat) => (!held.has(feat.id) || feat.repeatable) && !featPrerequisiteProblem(feat, level, sheet.abilityScores, featuresOf(next), !!cls.spellcasting))
-    offered.sort((a, b) => (a.id === granting.feat?.id ? -1 : b.id === granting.feat?.id ? 1 : 0))
+    const rank = (feat: Feat) => (feat.id === (granting.feat?.id ?? granting.feat?.recommended) ? 0 : feat.category === granting.feat?.category ? 1 : 2)
+    offered.sort((a, b) => rank(a) - rank(b))
     options.feat = {
       feature: named(granting),
       feats: offered.map((feat) =>
@@ -261,14 +269,18 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
     const kept = (sheet.spells ?? []).filter((id) => !always.includes(id))
     const prepared = cls.levels[level - 1]?.preparedSpells ?? 0
     const dropped = (sheet.spells ?? []).filter((id) => always.includes(id))
+    // The class's own list first, then the lists Magical Secrets adds, each spell once.
+    const lists = preparedLists(cls, featuresOf(next))
+    const listed = new Map<string, string>()
+    for (const list of lists) for (const id of listSpells(list, 1, highest)) if (!listed.has(id)) listed.set(id, list)
     if (prepared > kept.length)
       options.spells = {
         count: prepared - kept.length,
         prepared,
         highestLevel: highest,
-        from: listSpells(cls.id, 1, highest)
-          .filter((id) => !kept.includes(id) && !always.includes(id))
-          .map((id) => ({ ...spellNamed(id), level: spellById.get(id)?.level ?? 1 })),
+        from: [...listed]
+          .filter(([id]) => !kept.includes(id) && !always.includes(id))
+          .map(([id, list]) => ({ ...spellNamed(id), level: spellById.get(id)?.level ?? 1, ...(list !== cls.id ? { list } : {}) })),
         ...(dropped.length ? { dropped: dropped.map(spellNamed) } : {}),
       }
     const pages = bookSize(next) - bookSize(sheet)
@@ -301,14 +313,16 @@ export function levelUpOptions(sheet: Sheet): LevelUpOptions {
  */
 export function picksOffer(feature: ClassFeature, sheet: Sheet, picked: readonly FeaturePick[], replace: boolean): PicksOffer {
   const cls = classById.get(sheet.class)
+  const slots = spellPickSlots(feature, sheet.level)
   return {
     feature: named(feature),
     count: cls ? picksAt(cls, sheet.level, feature) : 0,
     picked: picked.map((pick) => ({ ...pick })),
     replace,
-    // Options from elsewhere (Wild Shape's Beast forms) are offered by name, with nothing more to them.
+    ...(slots ? { slots } : {}),
+    // Options from elsewhere are offered by name, with nothing more to them: Wild Shape's Beast forms, and a spell with its level.
     options: !feature.options
-      ? pickOptions(feature, sheet.level).map(named)
+      ? pickOptions(feature, sheet.level).map((option) => ({ ...named(option), ...(option.level !== undefined ? { level: option.level } : {}) }))
       : feature.options.map((option): PickOffer => {
           const need = cantripNeed(option)
           const grant = option.feat

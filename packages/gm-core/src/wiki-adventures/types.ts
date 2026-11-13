@@ -1,4 +1,5 @@
 import type { z } from "zod"
+import type { Loot } from "../sheet/loot"
 import type { Side } from "../sheet/sides"
 import type { npcSchema, pcTemplateSchema } from "../types/character"
 
@@ -24,6 +25,7 @@ export const validationFindingCodes = [
   "asset.url.invalid",
   "asset.url.unapproved",
   "link.target.missing",
+  "loot.invalid",
 ] as const
 
 export type ValidationFindingCode = (typeof validationFindingCodes)[number]
@@ -140,6 +142,8 @@ export type RuntimeEncounter = {
   roundBudget?: number
   // A rest the party takes as the encounter opens, the first time they come to it.
   rest?: "short" | "long"
+  // The magic items the encounter gives, and when: on entering it or on leaving it (../sheet/loot).
+  loot?: Loot[]
   validationStatus: "valid" | "draftOnly" | "blocked"
 }
 

@@ -1,6 +1,6 @@
 import { magicItemById } from "@d20/srd/magic-items"
 import { damageTaken, defensesOf, parseDice, rollDamage } from "./attack"
-import type { BonusAction, BonusActionRule, Featured, FeatureUse } from "./class-rules"
+import { type BonusAction, type BonusActionRule, classKeepsCharges, type Featured, type FeatureUse } from "./class-rules"
 import { withDamage, withHealing } from "./death"
 import type { Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
@@ -92,7 +92,8 @@ export function potionRule(character: { sheet?: Sheet }, id: string | undefined)
  * The sheet with an item's charges spent, by its place among the items. "If you expend the last charge, roll 1d20. On
  * a 1, the wand crumbles into ashes and is destroyed": where the data types it, the die is rolled with `roll` when the
  * last is spent, and an item destroyed or made plain is taken off the sheet. With no `roll` the die is not rolled. The
- * sheet after, and what happened in words. Spending more than are left is refused.
+ * sheet after, and what happened in words. Spending more than are left is refused. A class feature may keep them by a
+ * die rolled with `roll` (Use Magic Device).
  */
 export function withChargesSpent(sheet: Sheet, index: number, charges: number, roll?: (sides: number) => number): { sheet: Sheet; facts: string[] } {
   const owned = sheet.items?.[index]
@@ -100,6 +101,9 @@ export function withChargesSpent(sheet: Sheet, index: number, charges: number, r
   if (!owned || !held) throw new Error("The hero has no such item with charges.")
   if (charges > held.left) throw new Error(`${itemName(owned)} has ${held.left} charges left, fewer than ${charges}.`)
   if (charges < 1) return { sheet, facts: [] }
+  // A class feature may keep the charges by a die (Use Magic Device's d6, on a 6).
+  const kept = roll ? classKeepsCharges({ sheet }, roll) : undefined
+  if (kept?.kept) return { sheet, facts: [kept.text] }
   const spent = withEntry(sheet, index, withField(owned, "spent", (owned.spent ?? 0) + charges))
   const last = chargesData(owned)?.lastCharge
   if (held.left > charges || !last || !roll) return { sheet: spent, facts: [] }

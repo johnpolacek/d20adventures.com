@@ -13,6 +13,11 @@ npcs:
     behavior: "Cold fury. Leads the hunt and pushes the party on. Offers 500 gold each and a Blackthorn favor if they bargain."
   - id: "eamon"
     behavior: "Focused and quiet. Unravels the ward on the grate and warns that the Cowl will feel it break."
+loot:
+  - id: "potions-of-healing"
+    variant: "Potion of Healing (greater)"
+    each: true
+    on: "leave"
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726868134486"
 ---
 
@@ -40,7 +45,7 @@ A handful of Blackthorn house guards follow her with lanterns and drawn swords.
 
 ## GM Notes
 
-Astrid is driven by cold fury. If the players negotiate for a higher reward, she offers at once 500 gold per person, paid when they climb back out, plus a favor from the Blackthorn family in the future. She carries no purse to pay it here.
+Astrid is driven by cold fury. If the players negotiate for a higher reward, she offers at once 500 gold per person, paid when they climb back out, plus a favor from the Blackthorn family in the future. She carries no purse to pay it here. As the hunt goes down the stair she hands each hero a greater Potion of Healing from the Blackthorn stores, her reward begun.
 
 **What they know.** Astrid knows no names in the Covenant and does not know who waits below. She says so. Eamon is a wizard as well as a scholar. The Blackthorns hired him to judge Valkaran relics, and he kept his spellcraft quiet at the inn because a mild scholar hears more. He says no more of himself than that.
 

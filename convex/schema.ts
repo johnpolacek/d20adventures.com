@@ -262,7 +262,15 @@ export default defineSchema({
         specialAbilities: v.optional(v.array(v.string())),
         conditions: v.optional(
           v.array(
-            v.object({ id: v.string(), source: v.optional(v.string()), turns: v.optional(v.number()), level: v.optional(v.number()), spell: v.optional(v.string()), attack: v.optional(v.string()) })
+            v.object({
+              id: v.string(),
+              source: v.optional(v.string()),
+              turns: v.optional(v.number()),
+              level: v.optional(v.number()),
+              spell: v.optional(v.string()),
+              attack: v.optional(v.string()),
+              feature: v.optional(v.string()),
+            })
           )
         ),
         turnEffects: v.optional(v.array(v.object({ id: v.string(), by: v.string(), skill: v.optional(v.string()), turns: v.number() }))),
@@ -271,7 +279,9 @@ export default defineSchema({
         hitDiceUsed: v.optional(v.number()),
         // The level due to a hero who is below it. Only the engine writes it (packages/gm-core/src/sheet/milestone.ts).
         levelDue: v.optional(v.number()),
-        spellEffects: v.optional(v.array(v.object({ spell: v.string(), by: v.string(), turns: v.optional(v.number()), amount: v.optional(v.number()), skill: v.optional(v.string()) }))),
+        spellEffects: v.optional(
+          v.array(v.object({ spell: v.string(), by: v.string(), turns: v.optional(v.number()), amount: v.optional(v.number()), skill: v.optional(v.string()), choice: v.optional(v.string()) }))
+        ),
         concentration: v.optional(v.object({ spell: v.string() })),
         tempHitPoints: v.optional(v.number()),
         // The side an encounter marks an NPC as on: with the party, or a bystander. Unmarked is a foe.

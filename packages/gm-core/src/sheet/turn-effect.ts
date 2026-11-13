@@ -10,7 +10,8 @@ export type ActionId = (typeof actionIds)[number]
  * one who took the Dodge action. "helped" is on an ally given the Help action for a check, and "distracted" is on an
  * enemy an ally's attack was helped against. "vexed" is on a creature hit with a weapon whose Vex mastery the attacker
  * has: their next attack on it has Advantage. "slowed" is on a creature hit with a weapon whose Slow mastery the
- * attacker has: its Speed is 10 feet less. "stood" is on one who rose from Prone as their turn began, which costs half
+ * attacker has: its Speed is 10 feet less. "sapped" is on a creature hit with a weapon whose Sap mastery the attacker
+ * has: its own next attack roll has Disadvantage. "stood" is on one who rose from Prone as their turn began, which costs half
  * their Speed. "reacted" is on one who has taken their Reaction this round, by themselves: they take no other until the
  * next round begins. "savage-attacker" marks the feat used once a turn, on the attacker, with `by` the one whose turn
  * it was. "regeneration-stopped" is on a creature with Regeneration that took damage of a type that stops it (a
@@ -53,6 +54,8 @@ export const spellEffectSchema = z.strictObject({
   amount: z.number().int().optional(),
   /** Guidance: the skill it is for. */
   skill: skillIdSchema.optional(),
+  /** What its caster chose as they cast it, where the spell asks a choice: Protection from Energy's damage type, Hex's ability. */
+  choice: z.string().optional(),
 })
 export type SpellEffect = z.infer<typeof spellEffectSchema>
 
