@@ -444,7 +444,10 @@ export type ChoiceRule = {
   forgoesAdvantage?: (character: Roller, attack: Attack, chosen: Readonly<Record<string, true>> | undefined) => boolean
 }
 
-/** A cast as a choice that rides it reads it: the spell, the level it takes effect at, the slot it spends if any, and the damage type picked. */
+/**
+ * A cast as a choice that rides it reads it: the spell, the level it takes effect at, the slot it spends if any, and the
+ * damage type picked. `chosen` holds every choice riding the cast, where it is shaped (Sorcery Incarnate's two options).
+ */
 export type ChoiceCast = { spell: Spell; level: number; slot?: number; damageType?: DamageTypeId; chosen?: Readonly<Record<string, string | true>> }
 
 /** What a spell is cast with, as ./spells `castSpell` takes it. */

@@ -48,8 +48,8 @@ export const spellOrder = (a: { id: string; level?: number }, b: { id: string; l
 }
 
 /**
- * Metamagic in the order a pick that needs no player takes it: the options the engine runs at the cast first
- * (./classes/sorcerer), by how often each changes a fight, then the three it does not offer in play.
+ * Metamagic in the order a pick that needs no player takes it: the options the engine runs at the cast (./classes/sorcerer),
+ * by how often each changes a fight, then Quickened, which it does not offer in play.
  */
 const METAMAGIC_ORDER = [
   "twinned-spell",
@@ -59,9 +59,9 @@ const METAMAGIC_ORDER = [
   "seeking-spell",
   "distant-spell",
   "subtle-spell",
-  "quickened-spell",
   "empowered-spell",
   "extended-spell",
+  "quickened-spell",
 ]
 
 /**

@@ -6325,5 +6325,987 @@
     "choices": {
       "overchannel": false
     }
+  },
+  {
+    "id": "warlock-hurl-blade",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "warlock",
+      "level": 14,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 15,
+        "int": 12,
+        "wis": 10,
+        "cha": 20
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "lifedrinker"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "devouring-blade"
+          },
+          {
+            "option": "eldritch-mind"
+          },
+          {
+            "option": "armor-of-shadows"
+          },
+          {
+            "option": "fiendish-vigor"
+          }
+        ],
+        "warlock-mystic-arcanum": [
+          {
+            "option": "circle-of-death"
+          },
+          {
+            "option": "finger-of-death"
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray", "mage-hand"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "darkness", "vampiric-touch", "counterspell", "charm-monster", "dispel-magic", "hold-monster", "fear", "hypnotic-pattern"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 1,
+            "con": 1
+          }
+        }
+      ],
+      "featureChoices": {
+        "fiend-patron-fiendish-resilience": "acid"
+      }
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I cut the thug with my longsword and, as the blade bites, hurl him screaming through the Lower Planes.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longsword",
+      "target": "warehouse-thug"
+    },
+    "choices": {
+      "fiend-patron-hurl-through-hell": "hurl"
+    }
+  },
+  {
+    "id": "warlock-hurl-blast",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "warlock",
+      "level": 14,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 15,
+        "int": 12,
+        "wis": 10,
+        "cha": 20
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "lifedrinker"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "devouring-blade"
+          },
+          {
+            "option": "eldritch-mind"
+          },
+          {
+            "option": "armor-of-shadows"
+          },
+          {
+            "option": "fiendish-vigor"
+          }
+        ],
+        "warlock-mystic-arcanum": [
+          {
+            "option": "circle-of-death"
+          },
+          {
+            "option": "finger-of-death"
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray", "mage-hand"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "darkness", "vampiric-touch", "counterspell", "charm-monster", "dispel-magic", "hold-monster", "fear", "hypnotic-pattern"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 1,
+            "con": 1
+          }
+        }
+      ],
+      "featureChoices": {
+        "fiend-patron-fiendish-resilience": "acid"
+      }
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I blast the thug with eldritch blast and, where it strikes, cast him down through the hells.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "eldritch-blast",
+      "targets": ["warehouse-thug"]
+    },
+    "choices": {
+      "hurl-through-hell-cast": true
+    }
+  },
+  {
+    "id": "warlock-high-plain",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "warlock",
+      "level": 14,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 15,
+        "int": 12,
+        "wis": 10,
+        "cha": 20
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "lifedrinker"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "devouring-blade"
+          },
+          {
+            "option": "eldritch-mind"
+          },
+          {
+            "option": "armor-of-shadows"
+          },
+          {
+            "option": "fiendish-vigor"
+          }
+        ],
+        "warlock-mystic-arcanum": [
+          {
+            "option": "circle-of-death"
+          },
+          {
+            "option": "finger-of-death"
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray", "mage-hand"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "darkness", "vampiric-touch", "counterspell", "charm-monster", "dispel-magic", "hold-monster", "fear", "hypnotic-pattern"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 1,
+            "con": 1
+          }
+        }
+      ],
+      "featureChoices": {
+        "fiend-patron-fiendish-resilience": "acid"
+      }
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I slash at the thug with my longsword.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longsword",
+      "target": "warehouse-thug"
+    },
+    "choices": {
+      "fiend-patron-hurl-through-hell": false
+    }
+  },
+  {
+    "id": "warlock-arcanum",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "sheet": {
+      "class": "warlock",
+      "level": 14,
+      "species": "human",
+      "background": "criminal",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 8,
+        "dex": 16,
+        "con": 15,
+        "int": 12,
+        "wis": 10,
+        "cha": 20
+      },
+      "classSkills": ["deception", "intimidation"],
+      "otherSkills": ["acrobatics", "performance", "persuasion", "arcana"],
+      "featurePicks": {
+        "warlock-eldritch-invocations": [
+          {
+            "option": "pact-of-the-blade"
+          },
+          {
+            "option": "thirsting-blade"
+          },
+          {
+            "option": "lifedrinker"
+          },
+          {
+            "option": "agonizing-blast",
+            "cantrip": "eldritch-blast"
+          },
+          {
+            "option": "devouring-blade"
+          },
+          {
+            "option": "eldritch-mind"
+          },
+          {
+            "option": "armor-of-shadows"
+          },
+          {
+            "option": "fiendish-vigor"
+          }
+        ],
+        "warlock-mystic-arcanum": [
+          {
+            "option": "circle-of-death"
+          },
+          {
+            "option": "finger-of-death"
+          }
+        ]
+      },
+      "feats": ["skilled"],
+      "armor": "leather-armor",
+      "weapons": ["longsword", "dagger"],
+      "cantrips": ["chill-touch", "eldritch-blast", "poison-spray", "mage-hand"],
+      "spells": ["hex", "bane", "charm-person", "mind-spike", "darkness", "vampiric-touch", "counterspell", "charm-monster", "dispel-magic", "hold-monster", "fear", "hypnotic-pattern"],
+      "subclass": "fiend-patron",
+      "advancements": [
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 1,
+            "con": 1
+          }
+        }
+      ],
+      "featureChoices": {
+        "fiend-patron-fiendish-resilience": "acid"
+      }
+    },
+    "narrative": "Steel rings in the warehouse. The thug squares up to Cassia with a cudgel.",
+    "action": "I point at the thug and speak my patron's arcanum: a Finger of Death.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "finger-of-death",
+      "targets": ["warehouse-thug"]
+    },
+    "choices": {
+      "hurl-through-hell-cast": false
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Alaric and the thug square up to Cassia with drawn blades.",
+    "id": "sorcerer-empowered-fireball",
+    "sheet": {
+      "class": "sorcerer",
+      "level": 20,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 19,
+        "int": 8,
+        "wis": 13,
+        "cha": 21
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost", "shocking-grasp"],
+      "spells": [
+        "burning-hands",
+        "false-life",
+        "ice-knife",
+        "flame-blade",
+        "flaming-sphere",
+        "hold-person",
+        "phantasmal-force",
+        "fireball",
+        "lightning-bolt",
+        "vampiric-touch",
+        "fire-shield",
+        "vitriolic-sphere",
+        "cloudkill",
+        "cone-of-cold",
+        "insect-plague",
+        "chain-lightning",
+        "finger-of-death",
+        "incendiary-cloud",
+        "meteor-swarm",
+        "power-word-kill",
+        "sunburst",
+        "dominate-monster"
+      ],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        },
+        {
+          "level": 19,
+          "feat": "boon-of-dimensional-travel",
+          "abilities": {
+            "cha": 1
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "twinned-spell"
+          },
+          {
+            "option": "heightened-spell"
+          },
+          {
+            "option": "empowered-spell"
+          },
+          {
+            "option": "extended-spell"
+          },
+          {
+            "option": "seeking-spell"
+          },
+          {
+            "option": "distant-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery",
+      "featureChoices": {
+        "draconic-sorcery-elemental-affinity": "fire"
+      }
+    },
+    "action": "I hurl a fireball at Alaric and the thug, pouring raw force into it so the flames burn as hot as they can.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fireball",
+      "targets": ["scarface-alaric", "warehouse-thug"]
+    },
+    "choices": {
+      "empowered": true,
+      "metamagic": false
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Alaric and the thug square up to Cassia with drawn blades.",
+    "id": "sorcerer-incarnate-two",
+    "sheet": {
+      "class": "sorcerer",
+      "level": 20,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 19,
+        "int": 8,
+        "wis": 13,
+        "cha": 21
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost", "shocking-grasp"],
+      "spells": [
+        "burning-hands",
+        "false-life",
+        "ice-knife",
+        "flame-blade",
+        "flaming-sphere",
+        "hold-person",
+        "phantasmal-force",
+        "fireball",
+        "lightning-bolt",
+        "vampiric-touch",
+        "fire-shield",
+        "vitriolic-sphere",
+        "cloudkill",
+        "cone-of-cold",
+        "insect-plague",
+        "chain-lightning",
+        "finger-of-death",
+        "incendiary-cloud",
+        "meteor-swarm",
+        "power-word-kill",
+        "sunburst",
+        "dominate-monster"
+      ],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        },
+        {
+          "level": 19,
+          "feat": "boon-of-dimensional-travel",
+          "abilities": {
+            "cha": 1
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "twinned-spell"
+          },
+          {
+            "option": "heightened-spell"
+          },
+          {
+            "option": "empowered-spell"
+          },
+          {
+            "option": "extended-spell"
+          },
+          {
+            "option": "seeking-spell"
+          },
+          {
+            "option": "distant-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery",
+      "featureChoices": {
+        "draconic-sorcery-elemental-affinity": "fire"
+      }
+    },
+    "spellEffectsOn": {
+      "cassia-verane": [
+        {
+          "spell": "innate-sorcery",
+          "by": "cassia-verane",
+          "turns": 10
+        }
+      ]
+    },
+    "action": "With my sorcery already blazing, I twin a hold person so it grips both Alaric and the thug, and stretch it so it holds them twice as long.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "hold-person",
+      "targets": ["scarface-alaric", "warehouse-thug"]
+    },
+    "choices": {
+      "metamagic": "twinned-spell",
+      "secondMetamagic": "extended-spell"
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Alaric and the thug square up to Cassia with drawn blades.",
+    "id": "sorcerer-extended-hold",
+    "sheet": {
+      "class": "sorcerer",
+      "level": 20,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 19,
+        "int": 8,
+        "wis": 13,
+        "cha": 21
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost", "shocking-grasp"],
+      "spells": [
+        "burning-hands",
+        "false-life",
+        "ice-knife",
+        "flame-blade",
+        "flaming-sphere",
+        "hold-person",
+        "phantasmal-force",
+        "fireball",
+        "lightning-bolt",
+        "vampiric-touch",
+        "fire-shield",
+        "vitriolic-sphere",
+        "cloudkill",
+        "cone-of-cold",
+        "insect-plague",
+        "chain-lightning",
+        "finger-of-death",
+        "incendiary-cloud",
+        "meteor-swarm",
+        "power-word-kill",
+        "sunburst",
+        "dominate-monster"
+      ],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        },
+        {
+          "level": 19,
+          "feat": "boon-of-dimensional-travel",
+          "abilities": {
+            "cha": 1
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "twinned-spell"
+          },
+          {
+            "option": "heightened-spell"
+          },
+          {
+            "option": "empowered-spell"
+          },
+          {
+            "option": "extended-spell"
+          },
+          {
+            "option": "seeking-spell"
+          },
+          {
+            "option": "distant-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery",
+      "featureChoices": {
+        "draconic-sorcery-elemental-affinity": "fire"
+      }
+    },
+    "action": "I cast hold person on Alaric and stretch the spell so it holds him twice as long.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "hold-person",
+      "targets": ["scarface-alaric"]
+    },
+    "choices": {
+      "metamagic": "extended-spell",
+      "empowered": false
+    }
+  },
+  {
+    "adventure": "welcome-to-kordavos",
+    "encounter": "mystery-cargo",
+    "hero": "cassia-verane",
+    "allies": ["ilya-veles"],
+    "narrative": "Steel rings in the warehouse. Alaric and the thug square up to Cassia with drawn blades.",
+    "id": "sorcerer-dragon-wings",
+    "sheet": {
+      "class": "sorcerer",
+      "level": 20,
+      "species": "human",
+      "background": "sage",
+      "size": "Medium",
+      "languages": ["common-sign-language", "draconic"],
+      "abilityScores": {
+        "str": 10,
+        "dex": 13,
+        "con": 19,
+        "int": 8,
+        "wis": 13,
+        "cha": 21
+      },
+      "classSkills": ["intimidation", "persuasion"],
+      "otherSkills": ["deception", "performance", "acrobatics", "animal-handling"],
+      "feats": ["skilled"],
+      "weapons": ["spear", "dagger", "quarterstaff"],
+      "cantrips": ["acid-splash", "chill-touch", "fire-bolt", "poison-spray", "ray-of-frost", "shocking-grasp"],
+      "spells": [
+        "burning-hands",
+        "false-life",
+        "ice-knife",
+        "flame-blade",
+        "flaming-sphere",
+        "hold-person",
+        "phantasmal-force",
+        "fireball",
+        "lightning-bolt",
+        "vampiric-touch",
+        "fire-shield",
+        "vitriolic-sphere",
+        "cloudkill",
+        "cone-of-cold",
+        "insect-plague",
+        "chain-lightning",
+        "finger-of-death",
+        "incendiary-cloud",
+        "meteor-swarm",
+        "power-word-kill",
+        "sunburst",
+        "dominate-monster"
+      ],
+      "advancements": [
+        {
+          "level": 1,
+          "feat": "magic-initiate",
+          "spellList": "wizard",
+          "spellAbility": "cha",
+          "cantrips": ["ray-of-frost", "shocking-grasp"],
+          "spell": "false-life"
+        },
+        {
+          "level": 4,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 8,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 2
+          }
+        },
+        {
+          "level": 12,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "cha": 1,
+            "con": 1
+          }
+        },
+        {
+          "level": 16,
+          "feat": "ability-score-improvement",
+          "abilities": {
+            "con": 2
+          }
+        },
+        {
+          "level": 19,
+          "feat": "boon-of-dimensional-travel",
+          "abilities": {
+            "cha": 1
+          }
+        }
+      ],
+      "featurePicks": {
+        "sorcerer-metamagic": [
+          {
+            "option": "twinned-spell"
+          },
+          {
+            "option": "heightened-spell"
+          },
+          {
+            "option": "empowered-spell"
+          },
+          {
+            "option": "extended-spell"
+          },
+          {
+            "option": "seeking-spell"
+          },
+          {
+            "option": "distant-spell"
+          }
+        ]
+      },
+      "subclass": "draconic-sorcery",
+      "featureChoices": {
+        "draconic-sorcery-elemental-affinity": "fire"
+      }
+    },
+    "spellEffectsOn": {
+      "cassia-verane": [
+        {
+          "spell": "innate-sorcery",
+          "by": "cassia-verane",
+          "turns": 10
+        }
+      ]
+    },
+    "action": "I spread my dragon wings and hurl a fire bolt at the thug.",
+    "checks": ["cast"],
+    "cast": {
+      "spell": "fire-bolt",
+      "targets": ["warehouse-thug"]
+    },
+    "bonus": {
+      "feature": "draconic-sorcery-dragon-wings"
+    },
+    "choices": {
+      "metamagic": false,
+      "secondMetamagic": false,
+      "empowered": false
+    }
   }
 ]

@@ -131,9 +131,9 @@ test("Empowered Evocation adds Intelligence to one damage roll of a Wizard Evoca
   // Fire Bolt hits on a 15: 2d10 = 8 + 5 = 13.
   const bolt = castSpell({ characters: [at(10), ogre], casterId: "wynn", spell: spell("fire-bolt"), targets: ["ogre"], attackDice: [15], d20: () => 15, roll: fours })
   assert.equal(find(bolt.characters, "ogre").hitPoints, 68 - 13)
-  // Magic Missile's three darts roll apart, 1d4 + 1 = 5 each: none takes the bonus.
+  // Magic Missile's three darts roll apart, 1d4 + 1 = 5 each, and the first takes the bonus: 5 + 5 + 5 + 5 = 20.
   const missile = castSpell({ characters: [at(10), ogre], casterId: "wynn", spell: spell("magic-missile"), targets: ["ogre"], d20: () => 2, roll: fours })
-  assert.equal(find(missile.characters, "ogre").hitPoints, 68 - 15)
+  assert.equal(find(missile.characters, "ogre").hitPoints, 68 - 20)
 })
 
 test("Potent Cantrip's numbers are unchanged: half on a miss or a save, from level 3", () => {

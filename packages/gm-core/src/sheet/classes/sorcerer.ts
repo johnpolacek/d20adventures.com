@@ -3,18 +3,22 @@ import { classFeatureById } from "@d20/srd/class-features"
 import type { Spell } from "@d20/srd/schema/spells"
 import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
+import type { DamageRoll } from "../attack"
 import type { Roller } from "../check"
 import type { BonusActionRule, CastChoice, CastInput, ChoiceCast, ClassRules, Featured, Lasting, Rested } from "../class-rules"
 import { deriveSheet } from "../derive"
-import { featureUseCount, hasFeature, usesLeft, withFeatureUsed } from "../feature-rules"
+import { featureUseCount, hasFeature, usedThisTurn, usesLeft, withFeatureUsed, withUsedThisTurn } from "../feature-rules"
 import { areEnemies, sameSide } from "../sides"
 import { withSpellEffect } from "../spell-effects"
-import { type Cast, type Castee, slotsLeft, spellLabel, spellsOf, withCastSpent } from "../spells"
+import { type Cast, type Castee, conditionSpanOf, slotsLeft, spellLabel, spellsOf, withCastSpent } from "../spells"
 import type { SpellEffect, TurnEffect } from "../turn-effect"
 
 /**
- * The Sorcerer's features in play, levels 1 to 5. Draconic Resilience's hit points and Armor Class and the Draconic
- * Spells always prepared are the sheet's (../derive), and the Sorcerer casts through the same path as any caster.
+ * The Sorcerer's features in play, levels 1 to 20, with Draconic Sorcery. Draconic Resilience's hit points and Armor
+ * Class, Elemental Affinity's Resistance, the Draconic Spells always prepared, the later Ability Score Improvements and
+ * Metamagic options, and Dragon Companion's casting of Summon Dragon with no slot are the sheet's (../derive), and the
+ * Sorcerer casts through the same path as any caster. Summon Dragon is told, and so is Dragon Companion's casting of it
+ * with no Concentration. The Epic Boon is the feat's.
  *
  * Innate Sorcery: a Bonus Action, two uses a Long Rest. For 1 minute, kept as the lasting effect "innate-sorcery" for 10
  * rounds as Sacred Weapon is, the save DC of the Sorcerer's own class spells rises by 1 and their spell attacks have
@@ -23,37 +27,79 @@ import type { SpellEffect, TurnEffect } from "../turn-effect"
  * Creating a spell slot is a Bonus Action on the read's menu, a level at a time, at the cost and Sorcerer level of the
  * data's table. A created slot is kept on `featureUses` under "sorcerer-font-of-magic:slot-<level>" and counted beside
  * the table's slots (../spells `slotsLeft`) until a Long Rest clears it. Converting a slot to points takes no action, and
- * the engine does it by a plain rule: when a Metamagic option costs more points than are left, it expends the lowest
- * slot that covers the rest, never the slot the cast itself spends. The points it gives stop at the table's count.
- * Converting ahead of need gains nothing, so it is not offered alone.
+ * the engine does it by a plain rule: when Sorcery Points are owed and too few are left, it expends the lowest slot that
+ * covers the rest, never the slot the cast itself spends. The points it gives stop at the table's count. Converting
+ * ahead of need gains nothing, so it is not offered alone.
  * Metamagic (level 2): the options picked on the sheet (`featurePicks`) ride a spell cast as the action, one a spell,
- * each spending its Sorcery Points as the cast is resolved. Seeking Spell may go with another, as its text says, and is
- * spent only on a miss. Run: Careful (allies caught by its save are left out of it, which is what an automatic success
- * with no damage on a success is for a spell whose every effect rides that save), Distant (the range doubled, or 30
- * feet for a touch, where space is measured), Heightened (Disadvantage on one foe's save, only on a spell whose every
- * save is made as it is cast), Seeking, Subtle (no components, so no Counterspell can see it), Transmuted (the damage
- * type of the read's "damageType") and Twinned (the cast takes effect one level higher, and its slot is spent at its own).
- * Left off the menu: Empowered, whose reroll of chosen damage dice the cast cannot hand back before the damage is
- * dealt; Extended, since the engine keeps no clock past a fight's rounds and a rest, and has no tie between a doubled
- * spell and its Concentration's save; and Quickened, since a turn has no action left to give once the cast becomes a
- * Bonus Action.
+ * each spending its Sorcery Points as the cast is resolved. Seeking Spell and Empowered Spell may go with another, as
+ * their text says. Run: Careful (allies caught by its save are left out of it, which is what an automatic success with
+ * no damage on a success is for a spell whose every effect rides that save), Distant (the range doubled, or 30 feet for
+ * a touch, where space is measured), Empowered (below), Extended (below), Heightened (Disadvantage on one foe's save,
+ * only on a spell whose every save is made as it is cast), Seeking (spent only on a miss), Subtle (no components, so no
+ * Counterspell can see it), Transmuted (the damage type of the read's "damageType") and Twinned (the cast takes effect
+ * one level higher, and its slot is spent at its own).
+ * - Empowered Spell, by a plain rule: on the cast's first damage roll, the lowest dice that fell below their die's
+ *   average are rolled again, as many as the Charisma modifier (at least one), and the new rolls stand. With none below
+ *   the average nothing is rerolled and the point is kept.
+ * - Extended Spell: a spell of 1 minute or longer. What the engine counts of its minute in rounds, its effects and the
+ *   conditions that last as long as it does, is counted twice as long. A longer spell outlasts the fight already, and
+ *   the engine keeps no clock past a rest, so its doubling is told. While the Sorcerer concentrates on it they have
+ *   Advantage on saves to keep it, by the lasting mark "extended-spell", whose `choice` is the spell.
+ * - Quickened Spell is not offered. It would cast a spell of an action as the Bonus Action, which buys a turn either a
+ *   second spell or an action beside the spell. The read carries one cast a turn, and drops a spell cast with the Bonus
+ *   Action beside a spell cast with the action (../../services/roll-requirement-service), so the second spell has no way
+ *   in. A Bonus Action spell is cast by ../../services/bonus-action with no Metamagic riding it, so the other use, the
+ *   spell with an Attack or a Dash, would need that path to take a spell of an action and pay for it.
  * Sorcerous Restoration (level 5): as a Short Rest ends with Sorcery Points spent, the Sorcerer regains up to half their
  * Sorcerer level rounded down, once a Long Rest.
+ * Sorcery Incarnate (level 7): with no use of Innate Sorcery left, a Bonus Action of its own unleashes it for 2 Sorcery
+ * Points. While Innate Sorcery is on, a second Metamagic option rides the cast beside the first ("secondMetamagic"),
+ * another than the first. One that cannot be paid for is dropped, and the spell keeps the other's shape.
+ * Arcane Apotheosis (level 20): while Innate Sorcery is on, the first option paid for on each of the Sorcerer's turns
+ * costs no points, marked by the once-a-turn mark "arcane-apotheosis".
+ *
+ * Draconic Sorcery:
+ * - Elemental Affinity (level 6): the Charisma modifier is added to the cast's first damage roll that deals the type
+ *   chosen on the sheet, as the part of that type.
+ * - Dragon Wings (level 14): a Bonus Action, once a Long Rest, or for 3 Sorcery Points when the use is spent, puts on the
+ *   lasting effect "dragon-wings" for 1 hour: it outlasts a fight and ends with a rest. The floor is flat and has no
+ *   height, so a Fly Speed of 60 feet there is a move of 60 feet (./class-rules `speed`). Rough ground still costs
+ *   double, and flying over a foe's reach is the story's. Dismissing the wings is told.
  */
 
 const INNATE = "sorcerer-innate-sorcery"
 const FONT = "sorcerer-font-of-magic"
 const METAMAGIC = "sorcerer-metamagic"
 const RESTORATION = "sorcerer-sorcerous-restoration"
+const INCARNATE = "sorcerer-sorcery-incarnate"
+const APOTHEOSIS = "sorcerer-arcane-apotheosis"
+const AFFINITY = "draconic-sorcery-elemental-affinity"
+const WINGS = "draconic-sorcery-dragon-wings"
+
+// The marks of Metamagic kept on a character: Extended Spell's lasting one, and Empowered Spell's while its cast resolves.
+const EXTENDED = "extended-spell"
+const EMPOWERED = "empowered-spell"
 
 // Innate Sorcery lasts 1 minute: 10 rounds.
 const INNATE_ROUNDS = 10
 
+// Sorcery Incarnate's price, Dragon Wings' restoring and its Fly Speed, from the text (SRD 5.2.1, pages 66 and 70). The
+// data does not type them.
+const INCARNATE_POINTS = 2
+const WINGS_POINTS = 3
+const WINGS_SPEED = 60
+
 // Transmuted Spell's list: "Acid, Cold, Fire, Lightning, Poison, Thunder" (SRD 5.2.1, page 67). The data does not type it.
 const TRANSMUTABLE: readonly DamageTypeId[] = ["acid", "cold", "fire", "lightning", "poison", "thunder"]
 
+// Extended Spell's cap: "to a maximum duration of 24 hours", in minutes.
+const LONGEST = 24 * 60
+
 /** Whether a hero's Innate Sorcery is on: the lasting effect they gave themselves. */
 export const innateSorceryOn = (character: Lasting): boolean => !!character.spellEffects?.some((effect) => effect.spell === "innate-sorcery" && (!character.id || effect.by === character.id))
+
+/** Whether a hero's Dragon Wings are out: the lasting effect they gave themselves. */
+export const dragonWingsOut = (character: Lasting): boolean => !!character.spellEffects?.some((effect) => effect.spell === "dragon-wings" && (!character.id || effect.by === character.id))
 
 /** The key a created spell slot of a level is kept under, in `featureUses`. */
 export const createdSlotKey = (level: number): string => `${FONT}:slot-${level}`
@@ -90,12 +136,30 @@ export function paidPoints<T extends Rested>(character: T, cost: number, keep?: 
   return { character: withPointsSpent(withPointsSpent(withCastSpent(character, { kind: "slot", level }), -gained), cost), converted: level }
 }
 
-// Whether a hero could pay so many points now, by converting a slot if need be.
-const canPay = (character: Rested, cost: number, keep?: number) => !!paidPoints(character, cost, keep)
+// One who pays for a Metamagic option: a hero with points and slots, the lasting effects that say Innate Sorcery is on,
+// and the turn's marks.
+type Payer = Rested & Lasting & { turnEffects?: readonly TurnEffect[] }
+
+// Whether Arcane Apotheosis pays for the next option: Innate Sorcery is on and none has been free this turn. A
+// Metamagic option rides the Sorcerer's own cast, so the turn is theirs.
+const apotheosisFree = (character: Payer): boolean => hasFeature(character, APOTHEOSIS) && innateSorceryOn(character) && !usedThisTurn(character, APOTHEOSIS, character.id)
+
+/** A hero who pays for a Metamagic option: free by Arcane Apotheosis once a turn, or its Sorcery Points (`paidPoints`). */
+export function paidOption<T extends Payer>(character: T, id: string, keep?: number): { character: T; converted?: number; free?: true } | undefined {
+  if (apotheosisFree(character)) return { character: withUsedThisTurn(character, APOTHEOSIS, character.id), free: true }
+  return paidPoints(character, metamagicCost(id), keep)
+}
+
+// Whether a hero could pay for an option now, by converting a slot if need be.
+const canPay = (character: Payer, id: string, keep?: number) => !!paidOption(character, id, keep)
 
 // Facts of a payment, for the story.
-const paidWords = (name: string, cost: number, option: string, converted?: number) =>
-  `${converted ? `${name} expends a level ${converted} spell slot for Sorcery Points. ` : ""}${name} spends ${cost} Sorcery ${cost === 1 ? "Point" : "Points"} on ${option}`
+const paidWords = (name: string, id: string, paid: { converted?: number; free?: true }) => {
+  const title = classFeatureById.get(METAMAGIC)?.options?.find((entry) => entry.id === id)?.name ?? id
+  if (paid.free) return `${name} uses ${title} with no Sorcery Points spent, by Arcane Apotheosis`
+  const cost = metamagicCost(id)
+  return `${paid.converted ? `${name} expends a level ${paid.converted} spell slot for Sorcery Points. ` : ""}${name} spends ${cost} Sorcery ${cost === 1 ? "Point" : "Points"} on ${title}`
+}
 
 // Whether a spell's every save is made as it is cast, and nothing of it is saved against later: no area that stays.
 const savedAtCast = (spell: Spell): boolean =>
@@ -106,6 +170,17 @@ const savedAtCast = (spell: Spell): boolean =>
 
 // A Sorcerer spell: one their class casts, not one a feat gave them.
 const ownSpell = (character: Rested, spell: Spell): boolean => spellsOf(character).some((known) => known.spell.id === spell.id && !known.ability)
+
+// A spell's duration in minutes, where it is timed: none for one that is instantaneous, until dispelled or special.
+const minutesOf = (spell: Spell): number => {
+  const { duration } = spell
+  if (duration.kind !== "timed") return 0
+  const per = { round: 0.1, minute: 1, hour: 60, day: LONGEST } as Record<string, number>
+  return (duration.amount ?? 1) * (per[duration.unit ?? ""] ?? 0)
+}
+
+// A duration in minutes, in words: "2 minutes", "2 hours", "24 hours".
+const minutesWords = (minutes: number): string => (minutes >= 60 ? `${minutes / 60} hour${minutes === 60 ? "" : "s"}` : `${minutes} minute${minutes === 1 ? "" : "s"}`)
 
 /** A Metamagic option the engine runs: what it costs, the spells it fits, how it shapes the spell, and what it does as it resolves. */
 type Option = {
@@ -154,6 +229,46 @@ const OPTIONS: readonly Option[] = [
       spell: { ...spell, range: spell.range.kind === "touch" ? { kind: "feet", distance: 30 } : { ...spell.range, distance: (spell.range.distance ?? 0) * 2 } },
       level,
     }),
+  },
+  {
+    id: "extended-spell",
+    words: "it lasts twice as long, to no more than 24 hours, with Advantage on saves to keep Concentration on it",
+    fits: (_, { spell }) => minutesOf(spell) >= 1,
+    // What is counted of its minute in rounds is counted twice: its effects, and the conditions that last as it does.
+    // Those that run their own span (Color Spray's turn) are left alone.
+    apply: ({ input, caster, resolve }) => {
+      const { spell } = input
+      const cast = resolve(input)
+      const rounds = minutesOf(spell) * 10
+      const longer = <T extends Castee>(character: T): T => {
+        const spellEffects = character.spellEffects?.map((effect) =>
+          effect.spell === spell.id && effect.by === caster.id && (effect.turns ?? 0) >= rounds ? { ...effect, turns: (effect.turns ?? 0) + rounds } : effect
+        )
+        const conditions = character.conditions?.map((entry) =>
+          entry.spell === spell.id && entry.source === caster.id && (entry.turns ?? 0) >= rounds && !conditionSpanOf(spell, entry.id) ? { ...entry, turns: (entry.turns ?? 0) + rounds } : entry
+        )
+        return { ...character, ...(spellEffects ? { spellEffects } : {}), ...(conditions ? { conditions } : {}) }
+      }
+      let characters = cast.characters.map(longer)
+      // The mark that gives Advantage on saves to keep Concentration on it lasts as long as the spell's effects and
+      // conditions do, or with none counted in rounds, until its Concentration ends.
+      if (spell.duration.concentration) {
+        const turns = Math.max(
+          0,
+          ...characters.flatMap((character) => [
+            ...(character.spellEffects ?? []).flatMap((effect) => (effect.spell === spell.id && effect.by === caster.id ? [effect.turns ?? 0] : [])),
+            ...(character.conditions ?? []).flatMap((entry) => (entry.spell === spell.id && entry.source === caster.id ? [entry.turns ?? 0] : [])),
+          ])
+        )
+        characters = characters.map((character) =>
+          character.id === caster.id ? withSpellEffect(character, { spell: EXTENDED, by: caster.id, choice: spell.id, ...(turns ? { turns } : {}) }) : character
+        )
+      }
+      return {
+        cast: { ...cast, characters },
+        fact: `${spell.name} lasts ${minutesWords(Math.min(LONGEST, minutesOf(spell) * 2))}${spell.duration.concentration ? `, and ${caster.name} has Advantage on saves to keep Concentration on it` : ""}.`,
+      }
+    },
   },
   {
     id: "heightened-spell",
@@ -208,15 +323,15 @@ const OPTIONS: readonly Option[] = [
   },
 ]
 
-const option = (id: string | true): Option | undefined => OPTIONS.find((entry) => entry.id === id)
+const option = (id: string | true | undefined): Option | undefined => OPTIONS.find((entry) => entry.id === id)
 
-// Heightened Spell's mark on its one target, held only while the cast's saves are made.
-const mark = <T extends { turnEffects?: readonly TurnEffect[] }>(character: T, by: string): T => ({
+// Heightened Spell's mark on its one target, held only while the cast's saves are made, and Empowered Spell's on the caster.
+const mark = <T extends { turnEffects?: readonly TurnEffect[] }>(character: T, by: string, id = "heightened-spell"): T => ({
   ...character,
-  turnEffects: [...(character.turnEffects ?? []), { id: "heightened-spell", by, turns: 2 }],
+  turnEffects: [...(character.turnEffects ?? []), { id, by, turns: 2 }],
 })
-const unmark = <T extends { turnEffects?: readonly TurnEffect[] }>(character: T): T => {
-  const turnEffects = (character.turnEffects ?? []).filter((effect) => effect.id !== "heightened-spell")
+const unmark = <T extends { turnEffects?: readonly TurnEffect[] }>(character: T, id = "heightened-spell"): T => {
+  const turnEffects = (character.turnEffects ?? []).filter((effect) => effect.id !== id)
   const { turnEffects: _, ...rest } = character
   return (turnEffects.length ? { ...rest, turnEffects } : rest) as T
 }
@@ -224,34 +339,58 @@ const unmark = <T extends { turnEffects?: readonly TurnEffect[] }>(character: T)
 // The Metamagic options a hero picked, by id.
 const picked = (character: Roller): string[] => (hasFeature(character, METAMAGIC) ? (character.sheet?.featurePicks?.[METAMAGIC] ?? []).map((entry) => entry.option) : [])
 
-// The most a hero could pay now: their points, and the highest slot they could convert.
-const purse = (character: Rested): number => usesLeft(character, FONT) + Math.max(0, ...slotsLeft(character).map((count, index) => (count > 0 ? index + 1 : 0)))
+// The most a hero could pay now: their points and the highest slot they could convert, or any cost while Arcane
+// Apotheosis would pay it.
+const purse = (character: Payer): number =>
+  apotheosisFree(character) ? Number.POSITIVE_INFINITY : usesLeft(character, FONT) + Math.max(0, ...slotsLeft(character).map((count, index) => (count > 0 ? index + 1 : 0)))
 
-// A cast choice that pays its option's points as the cast resolves. One that cannot be paid then, or finds no one to
-// use itself on, is cast without it, as the spell is: its points are kept.
-function paying(id: (value: string | true) => string | undefined): CastChoice {
+// The choices that hold the options which shape a spell, the first before the second.
+const SHAPING = ["metamagic", "secondMetamagic"] as const
+
+// The options riding a cast that shape it, by the choice that holds each. The second is dropped when it is the first again.
+const riding = (choices: Readonly<Record<string, string | true>> | undefined): { key: string; id: string }[] =>
+  SHAPING.flatMap((key) => {
+    const value = choices?.[key]
+    return typeof value === "string" && option(value) && !(key === "secondMetamagic" && value === choices?.metamagic) ? [{ key, id: value }] : []
+  })
+
+// The spell and level of a cast as the options riding it make them, without the one held under `without`: what is cast
+// when that one is dropped. Each option shapes the spell from its data in turn, the first before the second.
+function shapedWithout<T extends Castee>(input: CastInput<T>, choices: Readonly<Record<string, string | true>> | undefined, without: string): Pick<CastInput<T>, "spell" | "level"> {
+  const ridden = riding(choices)
+  const spell = spellById.get(input.spell.id) ?? input.spell
+  const level = (input.level ?? spell.level) - ridden.filter((entry) => entry.id === "twinned-spell").length
+  let now: Pick<ChoiceCast, "spell" | "level"> = { spell, level }
+  for (const entry of ridden) if (entry.key !== without) now = option(entry.id)?.shape?.({ ...now, ...(input.damageType ? { damageType: input.damageType } : {}) }) ?? now
+  return { spell: now.spell, level: now.level }
+}
+
+// A cast choice under `key` that pays its option's points as the cast resolves. One that cannot be paid then, or finds no
+// one to use itself on, is cast without it, as the spell is with the other option's shape: its points are kept.
+function paying(key: (typeof SHAPING)[number]): CastChoice {
+  const chosenOf = (value: string | true, choices: Readonly<Record<string, string | true>> | undefined) =>
+    riding({ ...choices, [key]: value }).some((entry) => entry.key === key) ? option(value) : undefined
   return {
     fits: (caster, cast, value) => {
-      const chosen = option(id(value) ?? "")
-      return !!chosen && chosen.fits(caster, cast) && canPay(caster, metamagicCost(chosen.id), cast.slot)
+      const chosen = chosenOf(value, cast.chosen)
+      return !!chosen && chosen.fits(caster, cast) && canPay(caster, chosen.id, cast.slot)
     },
-    shape: (cast, value) => option(id(value) ?? "")?.shape?.(cast) ?? cast,
-    around: ({ input, value, slot, resolve }) => {
-      const chosen = option(id(value) ?? "")
+    shape: (cast, value) => chosenOf(value, cast.chosen)?.shape?.(cast) ?? cast,
+    around: ({ input, value, slot, choices, resolve }) => {
+      const chosen = chosenOf(value, choices)
       const caster = input.characters.find((character) => character.id === input.casterId)
-      const plain = () =>
-        resolve({ ...input, spell: spellById.get(input.spell.id) ?? input.spell, level: input.level === undefined ? undefined : input.level - (chosen?.id === "twinned-spell" ? 1 : 0) })
-      if (!chosen || !caster || !canPay(caster, metamagicCost(chosen.id), slot)) return plain()
+      const plain = () => resolve({ ...input, ...shapedWithout(input, choices, key) })
+      if (!chosen) return resolve(input)
+      if (!caster || !canPay(caster, chosen.id, slot)) return plain()
       const applied = chosen.apply ? chosen.apply({ input, caster, resolve }) : { cast: resolve(input) }
       if (!applied) return plain()
       const after = applied.cast.characters.find((character) => character.id === input.casterId)
-      const paid = after && paidPoints(after, metamagicCost(chosen.id), slot)
+      const paid = after && paidOption(after, chosen.id, slot)
       if (!paid) return plain()
-      const title = classFeatureById.get(METAMAGIC)?.options?.find((entry) => entry.id === chosen.id)?.name ?? chosen.id
       return {
         ...applied.cast,
         characters: applied.cast.characters.map((character) => (character.id === input.casterId ? paid.character : character)),
-        facts: [`${paidWords(caster.name, metamagicCost(chosen.id), title, paid.converted)}: ${chosen.words}.${applied.fact ? ` ${applied.fact}` : ""}`, ...applied.cast.facts],
+        facts: [`${paidWords(caster.name, chosen.id, paid)}: ${chosen.words}.${applied.fact ? ` ${applied.fact}` : ""}`, ...applied.cast.facts],
       }
     },
   }
@@ -259,24 +398,73 @@ function paying(id: (value: string | true) => string | undefined): CastChoice {
 
 /** Seeking Spell: a spell attack that misses is thrown again, for 1 Sorcery Point, and the new roll stands. One attack only, not a ray of several. */
 const seeking: CastChoice = {
-  fits: (caster, { spell, slot }) => !!spell.attack && !spell.projectiles && canPay(caster, metamagicCost("seeking-spell"), slot),
+  fits: (caster, { spell, slot }) => !!spell.attack && !spell.projectiles && canPay(caster, "seeking-spell", slot),
   around: ({ input, slot, resolve }) => {
     const first = resolve(input)
     if (!first.attack || first.attack.roll.hit || first.rays) return first
     const again = resolve({ ...input, attackDice: undefined })
     const caster = again.characters.find((character) => character.id === input.casterId)
-    const paid = caster && paidPoints(caster, metamagicCost("seeking-spell"), slot)
+    const paid = caster && paidOption(caster, "seeking-spell", slot)
     if (!caster || !paid) return first
     const missed = first.attack.roll
     return {
       ...again,
       characters: again.characters.map((character) => (character.id === input.casterId ? paid.character : character)),
       facts: [
-        `${caster.name}'s ${input.spell.name} misses (${missed.total} against Armor Class ${missed.armorClass}). ${paidWords(caster.name, metamagicCost("seeking-spell"), "Seeking Spell", paid.converted)} and rolls the d20 again.`,
+        `${caster.name}'s ${input.spell.name} misses (${missed.total} against Armor Class ${missed.armorClass}). ${paidWords(caster.name, "seeking-spell", paid)} and rolls the d20 again.`,
         ...again.facts,
       ],
     }
   },
+}
+
+// The words Empowered Spell's reroll starts with, by which its cast knows it was used.
+const EMPOWERED_WORDS = "Empowered Spell: "
+
+/**
+ * Empowered Spell: the caster is marked while the cast resolves, and the cast's first damage roll rerolls its lowest
+ * dice below average (`empoweredRoll`). The point is paid only when a die was rerolled.
+ */
+const empowered: CastChoice = {
+  fits: (caster, { spell, slot }) => spellLabel(spell) !== "told" && !!spell.damage?.length && canPay(caster, EMPOWERED, slot),
+  around: ({ input, slot, resolve }) => {
+    const cast = resolve({ ...input, characters: input.characters.map((character) => (character.id === input.casterId ? mark(character, input.casterId, EMPOWERED) : character)) })
+    const characters = cast.characters.map((character) => (character.id === input.casterId ? unmark(character, EMPOWERED) : character))
+    const caster = characters.find((character) => character.id === input.casterId)
+    if (!caster || !cast.facts.some((fact) => fact.startsWith(EMPOWERED_WORDS))) return { ...cast, characters }
+    const paid = paidOption(caster, EMPOWERED, slot)
+    if (!paid) return resolve(input)
+    return {
+      ...cast,
+      characters: characters.map((character) => (character.id === input.casterId ? paid.character : character)),
+      facts: [`${paidWords(caster.name, EMPOWERED, paid)}.`, ...cast.facts],
+    }
+  },
+}
+
+/**
+ * A damage roll with Empowered Spell's rerolls: the dice furthest below their die's average ((sides + 1) / 2) first, as
+ * many as `count`, each thrown again with `roll`, the new roll standing. None when no die fell below the average. 2d10
+ * that fell 1 and 6 with a count of 1 reroll the 1. 3d6 that fell 2, 2 and 4 with a count of 5 reroll both 2s.
+ */
+export function empoweredRoll(rolled: DamageRoll, count: number, roll: (sides: number) => number): { rolled: DamageRoll; from: number[]; to: number[] } | undefined {
+  const low = rolled.parts
+    .flatMap((part, at) => (part.sides ? part.dice.map((die, index) => ({ at, index, die, below: ((part.sides as number) + 1) / 2 - die })) : []))
+    .filter((entry) => entry.below > 0)
+    .sort((a, b) => b.below - a.below)
+    .slice(0, Math.max(1, count))
+  if (!low.length) return undefined
+  const to: number[] = []
+  const parts = rolled.parts.map((part, at) => {
+    const dice = part.dice.map((die, index) => {
+      if (!low.some((entry) => entry.at === at && entry.index === index)) return die
+      const again = roll(part.sides as number)
+      to.push(again)
+      return again
+    })
+    return { ...part, dice, total: Math.max(0, dice.reduce((sum, die) => sum + die, 0) + part.bonus) }
+  })
+  return { rolled: { parts, total: parts.reduce((sum, part) => sum + part.total, 0) }, from: low.map((entry) => entry.die), to }
 }
 
 // The menu line for a slot of a level made from Sorcery Points, a Bonus Action.
@@ -306,6 +494,17 @@ const createSlot = (level: number): BonusActionRule => ({
   },
 })
 
+// One who unleashes Innate Sorcery or spreads Dragon Wings: a hero with uses, and the lasting effects it is kept in.
+type Unleasher = Featured & { spellEffects?: readonly SpellEffect[] }
+
+// Innate Sorcery unleashed: its lasting effect, with what was spent for it before.
+const unleashed = (actor: Unleasher): Unleasher => withSpellEffect(actor, { spell: "innate-sorcery", by: actor.id, turns: INNATE_ROUNDS })
+const UNLEASHED_WORDS = "for 1 minute the save DC of their Sorcerer spells rises by 1, and they have Advantage on the attack rolls of Sorcerer spells."
+
+// Dragon Wings spread: its lasting effect, for 1 hour, which outlasts a fight and ends with a rest.
+const winged = (actor: Unleasher): Unleasher => withSpellEffect(actor, { spell: "dragon-wings", by: actor.id })
+const WINGED_WORDS = `For 1 hour they have a Fly Speed of ${WINGS_SPEED} feet, and move ${WINGS_SPEED} feet a turn over the ground.`
+
 export const sorcerer: ClassRules = {
   class: "sorcerer",
   bonusActions: [
@@ -315,27 +514,78 @@ export const sorcerer: ClassRules = {
       note: `${INNATE} is Innate Sorcery, for a Sorcerer who unleashes the magic within them, beside the action, when the player's words call for it: for 1 minute their spells' save DC rises by 1 and their spell attacks have Advantage.`,
       offer: (character) => !innateSorceryOn(character as Lasting),
       use: ({ characters, actor, action }) => {
-        const lasting = actor as Featured & { spellEffects?: readonly SpellEffect[] }
+        const lasting = actor as Unleasher
         if (innateSorceryOn(lasting)) return { characters }
-        const unleashed = withSpellEffect(withFeatureUsed(lasting, INNATE), { spell: "innate-sorcery", by: actor.id, turns: INNATE_ROUNDS })
+        const on = unleashed(withFeatureUsed(lasting, INNATE))
         return {
-          characters: characters.map((character) => (character.id === actor.id ? unleashed : character)),
+          characters: characters.map((character) => (character.id === actor.id ? on : character)),
+          use: { feature: action.id, name: action.name, fact: `${actor.name} unleashes their Innate Sorcery: ${UNLEASHED_WORDS}` },
+        }
+      },
+    },
+    // Sorcery Incarnate: Innate Sorcery with no use of it left, for 2 Sorcery Points.
+    {
+      id: "innate-sorcery-incarnate",
+      feature: INCARNATE,
+      name: "Innate Sorcery: Spend 2 Sorcery Points",
+      note: "innate-sorcery-incarnate is Innate Sorcery once its uses are spent, unleashed for 2 Sorcery Points, when the player's words call for it.",
+      offer: (character) => !innateSorceryOn(character as Lasting) && usesLeft(character as Rested, INNATE) === 0 && !!paidPoints(character as Rested, INCARNATE_POINTS),
+      use: ({ characters, actor, action }) => {
+        const paid = !innateSorceryOn(actor as Unleasher) && usesLeft(actor, INNATE) === 0 ? paidPoints(actor as Unleasher, INCARNATE_POINTS) : undefined
+        if (!paid) return { characters }
+        const on = unleashed(paid.character)
+        return {
+          characters: characters.map((character) => (character.id === actor.id ? on : character)),
           use: {
             feature: action.id,
-            name: action.name,
-            fact: `${actor.name} unleashes their Innate Sorcery: for 1 minute the save DC of their Sorcerer spells rises by 1, and they have Advantage on the attack rolls of Sorcerer spells.`,
+            name: "Sorcery Incarnate",
+            fact: `${paid.converted ? `${actor.name} expends a level ${paid.converted} spell slot for Sorcery Points. ` : ""}${actor.name} spends ${INCARNATE_POINTS} Sorcery Points to unleash their Innate Sorcery again: ${UNLEASHED_WORDS}`,
           },
         }
       },
     },
     ...[1, 2, 3, 4, 5].map(createSlot),
+    {
+      id: WINGS,
+      feature: WINGS,
+      note: `${WINGS} is Dragon Wings, for a Sorcerer who spreads draconic wings to fly, when the player's words call for it: a Fly Speed of ${WINGS_SPEED} feet for 1 hour. dragon-wings-restored is the same once its use is spent, for ${WINGS_POINTS} Sorcery Points.`,
+      offer: (character) => !dragonWingsOut(character as Lasting),
+      use: ({ characters, actor, action }) => {
+        if (dragonWingsOut(actor as Unleasher)) return { characters }
+        const on = winged(withFeatureUsed(actor as Unleasher, WINGS))
+        return {
+          characters: characters.map((character) => (character.id === actor.id ? on : character)),
+          use: { feature: action.id, name: action.name, fact: `${actor.name} spreads draconic wings. ${WINGED_WORDS}` },
+        }
+      },
+    },
+    // Dragon Wings with its use spent: 3 Sorcery Points restore it, and it is used at once.
+    {
+      id: "dragon-wings-restored",
+      feature: WINGS,
+      name: "Dragon Wings: Spend 3 Sorcery Points",
+      offer: (character) => !dragonWingsOut(character as Lasting) && usesLeft(character as Rested, WINGS) === 0 && !!paidPoints(character as Rested, WINGS_POINTS),
+      use: ({ characters, actor, action }) => {
+        const paid = !dragonWingsOut(actor as Unleasher) && usesLeft(actor, WINGS) === 0 ? paidPoints(actor as Unleasher, WINGS_POINTS) : undefined
+        if (!paid) return { characters }
+        const on = winged(paid.character)
+        return {
+          characters: characters.map((character) => (character.id === actor.id ? on : character)),
+          use: {
+            feature: action.id,
+            name: "Dragon Wings",
+            fact: `${paid.converted ? `${actor.name} expends a level ${paid.converted} spell slot for Sorcery Points. ` : ""}${actor.name} spends ${WINGS_POINTS} Sorcery Points and spreads draconic wings. ${WINGED_WORDS}`,
+          },
+        }
+      },
+    },
   ],
   choices: [
     {
       key: "metamagic",
       rides: "cast",
       offer: (character) => {
-        const most = purse(character as Rested)
+        const most = purse(character as Payer)
         const offered = picked(character).filter((id) => option(id) && metamagicCost(id) <= most)
         return offered.length ? offered : undefined
       },
@@ -349,17 +599,47 @@ export const sorcerer: ClassRules = {
           .enum(values as [string, ...string[]])
           .optional()
           .describe("For a cast: the Metamagic option the player's words shape the spell with"),
-      cast: paying((value) => (typeof value === "string" ? value : undefined)),
+      cast: paying("metamagic"),
+    },
+    // Sorcery Incarnate: while Innate Sorcery is on, a second option beside the first.
+    {
+      key: "secondMetamagic",
+      rides: "cast",
+      offer: (character) => {
+        if (!hasFeature(character, INCARNATE) || !innateSorceryOn(character as Lasting)) return undefined
+        const most = purse(character as Payer)
+        const offered = picked(character).filter((id) => option(id) && metamagicCost(id) <= most)
+        return offered.length > 1 ? offered : undefined
+      },
+      prompt: () =>
+        `   - SECOND METAMAGIC: while their Innate Sorcery is on, with "cast" and "metamagic", "secondMetamagic" is another of those options when the player's words shape the spell with two. Leave it out otherwise.
+`,
+      field: (values) =>
+        z
+          .enum(values as [string, ...string[]])
+          .optional()
+          .describe("For a cast with Metamagic, while Innate Sorcery is on: a second, other Metamagic option the player's words shape the spell with"),
+      cast: paying("secondMetamagic"),
     },
     {
       key: "seeking",
       rides: "cast",
-      offer: (character) => (picked(character).includes("seeking-spell") && metamagicCost("seeking-spell") <= purse(character as Rested) ? true : undefined),
+      offer: (character) => (picked(character).includes("seeking-spell") && metamagicCost("seeking-spell") <= purse(character as Payer) ? true : undefined),
       prompt: () =>
         `   - SEEKING SPELL: with "cast" of a spell attack, "seeking" is true when the player's words say they will guide the spell home if it misses. The game spends a Sorcery Point only on a miss, to roll the d20 again. Leave it out otherwise.
 `,
       field: () => z.boolean().optional().describe("True when the player's words guide a spell attack home with Seeking Spell if it misses"),
       cast: seeking,
+    },
+    {
+      key: "empowered",
+      rides: "cast",
+      offer: (character) => (picked(character).includes(EMPOWERED) && metamagicCost(EMPOWERED) <= purse(character as Payer) ? true : undefined),
+      prompt: () =>
+        `   - EMPOWERED SPELL: with "cast" of a spell that deals damage, "empowered" is true when the player's words pour more force into its damage. It may go beside "metamagic". The game rerolls its lowest damage dice and spends a Sorcery Point only when some fell below average. Leave it out otherwise.
+`,
+      field: () => z.boolean().optional().describe("True when the player's words pour more force into a spell's damage with Empowered Spell"),
+      cast: empowered,
     },
   ],
   turnEffects: [
@@ -368,6 +648,8 @@ export const sorcerer: ClassRules = {
       span: 2,
       checking: (_effect, _bearer, check) => (check.kind === "save" ? [{ mode: "disadvantage", from: "Heightened Spell" }] : []),
     },
+    { id: EMPOWERED, span: 1 },
+    { id: APOTHEOSIS, span: 1 },
   ],
   spellSaveDc: (character) => (hasFeature(character, INNATE) && innateSorceryOn(character) ? 1 : 0),
   spellAttackModes: (character, spell) => (hasFeature(character, INNATE) && innateSorceryOn(character) && ownSpell(character, spell) ? [{ mode: "advantage", from: "Innate Sorcery" }] : []),
@@ -375,6 +657,48 @@ export const sorcerer: ClassRules = {
     if (!hasFeature(character, FONT)) return []
     return [1, 2, 3, 4, 5].map((level) => character.featureUses?.[createdSlotKey(level)] ?? 0)
   },
+  // Empowered Spell's rerolls while its mark is on the caster, then Elemental Affinity's Charisma modifier, both on the
+  // cast's first damage roll.
+  spellDamageRolled: ({ caster, rolled, first, roll }) => {
+    if (!first || !caster.sheet) return undefined
+    const cha = deriveSheet(caster.sheet).abilityModifiers.cha
+    const facts: string[] = []
+    let now = rolled
+    if (caster.turnEffects?.some((effect) => effect.id === EMPOWERED)) {
+      const rerolled = empoweredRoll(now, cha, roll)
+      if (rerolled) {
+        now = rerolled.rolled
+        facts.push(
+          `${EMPOWERED_WORDS}${caster.name ?? "The Sorcerer"} rerolls ${rerolled.from.length} damage ${rerolled.from.length === 1 ? "die" : "dice"}, ${rerolled.from.join(", ")} becoming ${rerolled.to.join(", ")}.`
+        )
+      }
+    }
+    const type = hasFeature(caster, AFFINITY) ? caster.sheet.featureChoices?.[AFFINITY] : undefined
+    const at = type ? now.parts.findIndex((part) => part.type === type) : -1
+    if (at >= 0) {
+      const parts = now.parts.map((part, index) => (index === at ? { ...part, bonus: part.bonus + cha, total: Math.max(0, part.total + cha) } : part))
+      now = { parts, total: parts.reduce((sum, part) => sum + part.total, 0) }
+      facts.push(`Elemental Affinity adds ${cha} to the ${type} damage.`)
+    }
+    return facts.length ? { rolled: now, fact: facts.join(" ") } : undefined
+  },
+  // Extended Spell: Advantage on a save to keep Concentration on the spell it doubled.
+  concentrationModes: (character) => {
+    const held = (character as { concentration?: { spell: string } }).concentration?.spell
+    return held && character.spellEffects?.some((effect) => effect.spell === EXTENDED && effect.by === character.id && effect.choice === held) ? [{ mode: "advantage", from: "Extended Spell" }] : []
+  },
+  // A new spell that takes Concentration ends the one held before, and with it Extended Spell's mark.
+  spellCast: ({ caster, spell, characters }) =>
+    spell.duration.concentration && caster.spellEffects?.some((effect) => effect.spell === EXTENDED)
+      ? {
+          characters: characters.map((character) =>
+            character.id === caster.id ? { ...character, spellEffects: (character.spellEffects ?? []).filter((effect) => effect.spell !== EXTENDED) } : character
+          ),
+          facts: [],
+        }
+      : undefined,
+  // Dragon Wings: a Fly Speed of 60 feet while they are out, which over the flat floor is a move of 60 feet.
+  speed: (character) => (hasFeature(character, WINGS) && dragonWingsOut(character) ? WINGS_SPEED : undefined),
   // Sorcerous Restoration, as a Short Rest ends with Sorcery Points spent.
   shortRest: (character) => {
     const sheet = character.sheet

@@ -5,6 +5,7 @@ import type { Roller } from "./check"
 import { type Afflicted, cannotMove, exhaustionOf } from "./conditions"
 import { deriveSheet } from "./derive"
 import { speciesById } from "./house-species"
+import { featureSpeed } from "./late-rules"
 import { shapeOf } from "./shape"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 
@@ -132,7 +133,8 @@ export function speedOf(character: Roller): number | undefined {
   // A hero in a Beast's shape moves at the stat block's walking Speed (./shape).
   const shape = shapeOf(character)
   if (shape) return shape.speed.walk
-  if (character.sheet) return deriveSheet(character.sheet).speed
+  // A feature may give a Speed beyond their own while it lasts (Dragon Wings' Fly Speed), by ./late-rules.
+  if (character.sheet) return Math.max(deriveSheet(character.sheet).speed, featureSpeed(character) ?? 0)
   if (character.type !== "npc") return undefined
   return (monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK))?.speed.walk
 }

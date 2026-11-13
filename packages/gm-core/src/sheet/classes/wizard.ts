@@ -6,8 +6,8 @@ import type { CastChoice, ClassRules, Lasting } from "../class-rules"
 import { withDamage } from "../death"
 import { deriveSheet, SIGNATURE_SPELLS } from "../derive"
 import { hasFeature } from "../feature-rules"
-import { sameSide } from "../sides"
 import type { Sheet } from "../sheet"
+import { sameSide } from "../sides"
 import { spellLabel } from "../spells"
 import type { TurnEffect } from "../turn-effect"
 
@@ -32,9 +32,8 @@ import type { TurnEffect } from "../turn-effect"
  * - Sculpt Spells (level 6): of those the Wizard's Evocation spell takes, the Wizard's allies, in the order named, up to
  *   1 plus the level it is cast at, succeed on its saves at once and take none of its damage. A plain rule: the engine
  *   spares every ally it may. It reaches the saves made as the spell is cast, not those of a lasting area's later turns.
- * - Empowered Evocation (level 10): the Intelligence modifier added to one damage roll of a Wizard Evocation spell: its
- *   save's damage, its damage that needs no roll, or its attack's hit. A spell of several darts or rays rolls its damage
- *   once for each, and which one takes it is the Wizard's, so it is left to the story there.
+ * - Empowered Evocation (level 10): the Intelligence modifier added to one damage roll of a Wizard Evocation spell, the
+ *   first it rolls: Fireball's one roll for all, or the first of Magic Missile's darts.
  * - Overchannel (level 14): a choice that rides the cast of a Wizard spell with a slot of level 1 to 5 that deals
  *   damage: its damage dice as it is cast count at their highest. The first use a Long Rest costs nothing. Each after
  *   deals the Wizard 2d12 Necrotic for each level of the slot, 1d12 more a level for each use beyond the second, which
@@ -81,8 +80,6 @@ export function arcaneRecoveryOf(character: { sheet?: Sheet; spellSlots?: readon
 // A Wizard Evocation spell, for Empowered Evocation.
 const wizardEvocation = (spell: Spell): boolean => spell.school === "evocation" && spell.classes.includes("wizard")
 const intelligenceOf = (character: Roller): number => (character.sheet ? deriveSheet(character.sheet).abilityModifiers.int : 0)
-// Empowered Evocation reaches a spell that rolls its damage once: not one of several darts or rays.
-const empowered = (caster: Roller, spell: Spell): boolean => hasFeature(caster, EMPOWERED_EVOCATION) && wizardEvocation(spell) && !spell.projectiles
 
 /** The Necrotic dice Overchannel deals its Wizard for a slot of a level, once it has been used `before` times since a Long Rest: none for the first use. */
 export function overchannelDice(before: number, slot: number): number {
@@ -107,7 +104,9 @@ const overchannel: CastChoice = {
   around: ({ input, slot, resolve }) => {
     const caster = input.characters.find((character) => character.id === input.casterId)
     if (!caster || slot === undefined) return resolve(input)
-    const characters = input.characters.map((character) => (character.id === caster.id ? { ...character, turnEffects: [...(character.turnEffects ?? []), { id: OVERCHANNEL, by: caster.id, turns: 1 }] } : character))
+    const characters = input.characters.map((character) =>
+      character.id === caster.id ? { ...character, turnEffects: [...(character.turnEffects ?? []), { id: OVERCHANNEL, by: caster.id, turns: 1 }] } : character
+    )
     const cast = resolve({ ...input, characters })
     const before = (caster as { featureUses?: Record<string, number> }).featureUses?.[OVERCHANNEL] ?? 0
     const dice = overchannelDice(before, slot)
@@ -142,7 +141,8 @@ export const wizard: ClassRules = {
   ],
   turnEffects: [{ id: OVERCHANNEL, span: 1 }],
   halvesAvoided: (caster, spell) => spell.level === 0 && hasFeature(caster, POTENT_CANTRIP),
-  spellDamageMost: ({ caster, spell, slot }) => marked(caster as Lasting & { turnEffects?: readonly TurnEffect[] }) && hasFeature(caster, OVERCHANNEL) && slot !== undefined && slot <= 5 && spell.classes.includes("wizard"),
+  spellDamageMost: ({ caster, spell, slot }) =>
+    marked(caster as Lasting & { turnEffects?: readonly TurnEffect[] }) && hasFeature(caster, OVERCHANNEL) && slot !== undefined && slot <= 5 && spell.classes.includes("wizard"),
   spellSpares: ({ caster, spell, level, taken }) => {
     if (spell.school !== "evocation" || !hasFeature(caster, SCULPT_SPELLS)) return undefined
     const ids = taken
@@ -151,8 +151,14 @@ export const wizard: ClassRules = {
       .map((other) => other.id)
     return ids.length ? { ids, name: "Sculpt Spells" } : undefined
   },
-  spellDamage: ({ caster, spell, item }) => (!item && empowered(caster, spell) ? intelligenceOf(caster) : 0),
-  spellHit: ({ caster, spell }) => (empowered(caster, spell) ? { name: "Empowered Evocation", bonus: intelligenceOf(caster) } : undefined),
+  // Empowered Evocation, on the first damage roll of the cast.
+  spellDamageRolled: ({ caster, spell, rolled, first }) => {
+    const [part, ...rest] = rolled.parts
+    const bonus = intelligenceOf(caster)
+    if (!first || !part || !bonus || !hasFeature(caster, EMPOWERED_EVOCATION) || !wizardEvocation(spell)) return undefined
+    const total = Math.max(0, part.total + bonus)
+    return { rolled: { parts: [{ ...part, bonus: part.bonus + bonus, total }, ...rest], total: rolled.total - part.total + total } }
+  },
   shortRest: (character) => {
     // Signature Spells' casts come back on a Short Rest, each counted alone.
     const signature = Object.keys(character.featureUses ?? {}).filter((key) => key.startsWith(`${SIGNATURE_SPELLS}:`))
@@ -167,10 +173,7 @@ export const wizard: ClassRules = {
     const words = recovered.flatMap((count, index) => (count ? [`${count} level ${index + 1}`] : [])).join(" and ")
     return {
       character: { ...rest, featureUses: { ...rested.featureUses, [ARCANE_RECOVERY]: 1 }, ...(spellSlots.some((used) => used > 0) ? { spellSlots } : {}) } as unknown as typeof character,
-      facts: [
-        ...facts,
-        `${character.name ?? "The character"} uses Arcane Recovery and recovers ${words} spell ${recovered.reduce((sum, count) => sum + count, 0) === 1 ? "slot" : "slots"}.`,
-      ],
+      facts: [...facts, `${character.name ?? "The character"} uses Arcane Recovery and recovers ${words} spell ${recovered.reduce((sum, count) => sum + count, 0) === 1 ? "slot" : "slots"}.`],
     }
   },
 }

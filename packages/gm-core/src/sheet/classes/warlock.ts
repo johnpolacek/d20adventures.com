@@ -4,7 +4,7 @@ import { equipmentById } from "@d20/srd/equipment"
 import { monsterById } from "@d20/srd/monsters"
 import { z } from "zod"
 import type { RequiredFeature } from "../../validations/roll-requirement-schema"
-import { type Attack, defensesOf, parseDice, rollDamage, damageTaken, type Target } from "../attack"
+import { type Attack, damageTaken, defensesOf, parseDice, rollDamage } from "../attack"
 import { attackable, nearestEnemy } from "../attack-roll"
 import type { Roller } from "../check"
 import type { CastChoice, ClassRules, DieHolder, FollowRule, HitRider, SaveRule } from "../class-rules"
@@ -14,11 +14,13 @@ import { deriveSheet, trainedWith } from "../derive"
 import { featureUseCount, hasFeature, usedThisTurn, usesLeft, withFeatureUsed, withUsedThisTurn } from "../feature-rules"
 import type { Harm } from "../harm"
 import { hitPointsOf } from "../hit-points"
+import { withLegendaryResistanceSpent } from "../legendary-resistance"
 import { hitDiceOf, magicalCunningOf, withMagicalCunning } from "../rest"
 import { areEnemies } from "../sides"
 import { feetBetween, pushed, sizeOf, walkOver } from "../space"
 import { type Castee, rollSave, type SaveRoll, slotsLeft, spellcastingOf, withCastSpent } from "../spells"
 import { DEFAULT_STAT_BLOCK } from "../stat-block"
+import type { TurnEffect } from "../turn-effect"
 
 /**
  * The Warlock's features in play, levels 1 to 20. Pact Magic's slots and their return on a Short Rest are the sheet's
@@ -144,8 +146,139 @@ function pactSlot(character: Roller & { spellSlots?: readonly number[] }): numbe
   return levels.at(-1)
 }
 
+// An Eldritch Invocation's data, by id.
+const optionOf = (id: string) => classFeatureById.get(INVOCATIONS)?.options?.find((option) => option.id === id)
+
 // Magical Cunning used as the action, resolved with no throw.
 const cunningFeature = (): RequiredFeature => ({ feature: { id: CUNNING, targets: [] }, rollType: "Magical Cunning", difficulty: 0, modifier: 0, mode: "normal" })
+
+// Dark One's Own Luck's die, from its data: 1d10.
+const luckDie = (): number => Number(/d(\d+)/.exec(classFeatureById.get(OWN_LUCK)?.dice ?? "1d10")?.[1] ?? 10)
+
+/**
+ * Dark One's Own Luck on the read's own failed ability check or saving throw (`failedRollDie`): its d10, while a use is
+ * left, spent once it is rolled. Not on an attack roll.
+ */
+function ownLuckDie(character: DieHolder, test: "attack" | "check" | "save"): ReturnType<NonNullable<ClassRules["failedRollDie"]>> {
+  if (test === "attack" || !hasFeature(character, OWN_LUCK) || usesLeft(character, OWN_LUCK) < 1) return undefined
+  return { die: luckDie(), spend: (holder) => withFeatureUsed(holder, OWN_LUCK) }
+}
+
+/**
+ * Dark One's Own Luck on a failed save against harm the engine rolls (../save-rules `rescuedSave`): the d10 is added
+ * where it could turn the failure, while a use is left. A 6 on the die lifts a 12 against DC 15 to 18, a success.
+ */
+const ownLuckSave: SaveRule = ({ character, result, roll }) => {
+  const die = luckDie()
+  if (!roll || !hasFeature(character, OWN_LUCK) || usesLeft(character, OWN_LUCK) < 1 || result.dc - result.total > die) return undefined
+  const amount = roll(die)
+  const total = result.total + amount
+  const name = classFeatureById.get(OWN_LUCK)?.name ?? "Dark One's Own Luck"
+  return { result: { ...result, total, success: total >= result.dc, adds: [...(result.adds ?? []), { from: name, amount }] }, feature: OWN_LUCK, name }
+}
+
+/** The damage type of three that harms a target most, by its defenses: Necrotic first where they harm alike. */
+const harshest = (target: Roller | undefined, first: DamageTypeId = "necrotic"): DamageTypeId =>
+  target ? (["necrotic", "psychic", "radiant"] as const).reduce<DamageTypeId>((found, type) => (share(target, type) > share(target, found) ? type : found), first) : first
+
+// Whether a Warlock may hurl one through hell now: a use left, or a Pact Magic slot to restore it with, beyond `keep`
+// slots of a level held back for a cast (the slot of the spell it rides, not yet spent).
+function hurlReady(character: Roller & { featureUses?: Record<string, number>; spellSlots?: readonly number[] }, keep?: number): boolean {
+  if (!hasFeature(character, HURL)) return false
+  if (usesLeft(character, HURL) > 0) return true
+  const left = slotsLeft(character).map((count, index) => count - (keep === index + 1 ? 1 : 0))
+  return left.some((count) => count > 0)
+}
+
+/**
+ * A Warlock who has hurled one through hell with no use left, as the Pact Magic slot that restored it leaves them: the
+ * use spent past the count is paid for with the highest slot left, and the use is spent once.
+ */
+export function withHurlPaid<T extends Roller & { featureUses?: Record<string, number>; spellSlots?: readonly number[] }>(character: T): T {
+  const used = character.featureUses?.[HURL] ?? 0
+  if (!character.sheet || used <= featureUseCount(character.sheet, HURL)) return character
+  const slot = pactSlot(character)
+  if (!slot) return character
+  return { ...withCastSpent(character, { kind: "slot", level: slot }), featureUses: { ...character.featureUses, [HURL]: used - 1 } }
+}
+
+/** A creature hurled through hell, as it comes back: the save, the damage it took, and whether it was Incapacitated. */
+type Hurled<T> = { target: T; save: SaveRoll; taken: number; given: boolean; legendary: boolean }
+
+/**
+ * Hurl Through Hell on one hit: a Charisma save against the Warlock's spell save DC. On a failure 8d10 Psychic damage,
+ * none on a Fiend, and Incapacitated through the target's next turn. A Legendary creature that fails may choose to
+ * succeed, and spends the use. `d20` and `roll` throw the dice. An 8d10 of all 4s is 32.
+ */
+export function hurled<T extends Castee>(warlock: Roller & { id: string }, target: T, d20: () => number, roll: (sides: number) => number): Hurled<T> {
+  const feature = classFeatureById.get(HURL)
+  const kind = target.type === "npc" && !target.sheet ? monsterById.get(target.statBlock ?? DEFAULT_STAT_BLOCK)?.type : undefined
+  const fiend = !!kind && (feature?.damage?.notCreatureTypes ?? ["fiend"]).includes(kind)
+  const dice = feature?.damage?.dice ?? "8d10"
+  const rolled = fiend ? undefined : rollDamage([{ dice, type: "psychic" }], roll)
+  const dc = spellcastingOf(warlock)?.saveDc ?? 10
+  const stakes = { conditions: ["incapacitated" as const], ...(rolled ? { damage: rolled.total } : {}) }
+  const save = rollSave({ target, ability: "cha", dc, d20, roll, characters: [target], stakes, against: ["incapacitated"], spell: false })
+  if (save.legendary) return { target: withLegendaryResistanceSpent(target), save, taken: 0, given: false, legendary: true }
+  if (save.success) return { target, save, taken: 0, given: false, legendary: false }
+  const taken = rolled ? damageTaken(rolled, defensesOf(target)) : 0
+  const struck = taken ? withDamage(target, taken, { types: ["psychic"] }).character : target
+  const down = struck.dead || struck.hitPoints === 0
+  const incapacitated = down ? undefined : withCondition(struck, { id: "incapacitated", source: warlock.id, span: "turn", feature: HURL }, { acted: !!target.isComplete })
+  return { target: incapacitated?.given ? incapacitated.character : struck, save, taken, given: !!incapacitated?.given, legendary: false }
+}
+
+// Hurl Through Hell in the story's words, after the hit's.
+const hurlWords = (warlock: string, target: string, done: { success: boolean; total: number; dc: number; taken: number; given: boolean; legendary?: boolean }): string =>
+  done.success
+    ? ` ${warlock} tries to hurl ${target} through the Lower Planes, and ${target} ${done.legendary ? "chooses to succeed on the Charisma save (Legendary Resistance)" : `makes the Charisma save (${done.total} against DC ${done.dc})`} and stays.`
+    : ` ${warlock} hurls ${target} through the Lower Planes: ${target} fails the Charisma save (${done.total} against DC ${done.dc}), vanishes${done.taken ? `, takes ${done.taken} psychic damage` : ""}${done.given ? `, and is Incapacitated until the end of ${warlock}'s next turn, when they return to the space they left` : ""}.`
+
+/**
+ * Hurl Through Hell on a spell attack that hits, chosen with the cast (`HURL_CAST`): the first creature the spell's
+ * attacks hit, once the spell is resolved. It spends the use, or with none left the Pact Magic slot that restores it,
+ * beyond the slot the cast itself spends.
+ */
+const hurlCast: CastChoice = {
+  fits: (caster, { spell, slot }) => !!spell.attack && hurlReady(caster, slot),
+  around: ({ input, slot, resolve }) => {
+    const cast = resolve(input)
+    const caster = cast.characters.find((character) => character.id === input.casterId)
+    const hit = (cast.rays ?? (cast.attack ? [cast.attack] : [])).find((ray) => {
+      const struck = cast.characters.find((character) => character.id === ray.target)
+      return ray.roll.hit && struck && !struck.dead && struck.hitPoints !== 0
+    })
+    const target = hit && cast.characters.find((character) => character.id === hit.target)
+    if (!caster || !target || !hurlReady(caster, slot) || usedThisTurn(caster, HURL, caster.id)) return cast
+    const done = hurled(caster, target, input.d20, input.roll)
+    const spent = usesLeft(caster, HURL) > 0 ? withFeatureUsed(caster, HURL) : withCastSpent(caster, { kind: "slot", level: pactSlot(caster) ?? 1 })
+    const paid = withUsedThisTurn(spent, HURL, caster.id)
+    const harm: Harm[] = done.taken ? [{ target: target.id, kind: "damage", dice: [], bonus: 0, type: "psychic", amount: done.taken }] : []
+    return {
+      ...cast,
+      characters: cast.characters.map((character) => (character.id === caster.id ? paid : character.id === target.id ? done.target : character)),
+      saves: [...cast.saves, done.save],
+      harm: [...cast.harm, ...harm],
+      conditions: [...cast.conditions, ...(done.given ? [{ target: target.id, condition: "incapacitated" as const }] : [])],
+      facts: [...cast.facts, hurlWords(caster.name, target.name, { ...done.save, taken: done.taken, given: done.given, legendary: done.legendary }).trim()],
+    }
+  },
+}
+
+// The pact weapon's next attack of the Attack action, at the one just attacked where it still can be, else the nearest
+// enemy in reach: Thirsting Blade's second attack, and Devouring Blade's third.
+const pactFollow = (key: string, option: string): FollowRule => ({
+  key,
+  attack: true,
+  offer: (character) => hasInvocation(character, option) && !!pactWeaponOf(character),
+  next: ({ character, made, attack, struck, present, ask, rest }) => {
+    if (!attack || !("attack" in made) || attack.id !== pactWeaponOf(character)) return undefined
+    const reached = (other: (typeof present)[number]) => attackable(character, other) && ask(attack, other, {}) !== undefined
+    const same = present.find((other) => other.id === made.attack.target)
+    const target = same && reached(same) ? same : nearestEnemy(character, present.filter(reached))
+    return target && ask(attack, target, rest({ struck: [...new Set([...struck, target.id])] }))
+  },
+})
 
 export const warlock: ClassRules = {
   class: "warlock",
@@ -184,6 +317,25 @@ export const warlock: ClassRules = {
 `,
       field: () => z.enum(["smite"]).optional().describe("For an attack with the pact weapon: Eldritch Smite, spent if it hits"),
       rides: "attack",
+    },
+    {
+      key: HURL,
+      offer: (character) => (hurlReady(character) ? ["hurl"] : undefined),
+      prompt: () =>
+        `   - HURL THROUGH HELL: with an attack, "${HURL}" is "hurl" when the player's words try to send the target through the Lower Planes. The game rolls the target's save only if the attack hits, once a turn, and spends the feature's use or a Pact Magic spell slot. Leave it out otherwise.
+`,
+      field: () => z.enum(["hurl"]).optional().describe("For an attack: Hurl Through Hell on the target if it hits"),
+      rides: "attack",
+    },
+    {
+      key: HURL_CAST,
+      offer: (character) => (hurlReady(character) ? true : undefined),
+      prompt: () =>
+        `   - HURL THROUGH HELL WITH A SPELL: with "cast" of a spell that makes an attack roll, "${HURL_CAST}" is true when the player's words try to send the one it hits through the Lower Planes. The game rolls the save only on a hit, once a turn. Leave it out otherwise.
+`,
+      field: () => z.boolean().optional().describe("For a cast of a spell attack: Hurl Through Hell on the first creature it hits"),
+      rides: "cast",
+      cast: hurlCast,
     },
   ],
   attack: pactAttack,
@@ -225,23 +377,75 @@ export const warlock: ClassRules = {
         return characters.map((character) => (character.id === attackerId ? withCastSpent(character, { kind: "slot", level: slot }) : character))
       },
     },
-  ],
-  turnEffects: [{ id: SMITE, span: 1 }],
-  follows: [
     {
-      // Thirsting Blade: "you can attack twice with the weapon instead of once when you take the Attack action".
-      key: "thirsting-blade",
-      attack: true,
-      offer: (character) => hasInvocation(character, "thirsting-blade") && !!pactWeaponOf(character),
-      next: ({ character, made, attack, struck, present, ask, rest }) => {
-        if (!attack || !("attack" in made) || attack.id !== pactWeaponOf(character)) return undefined
-        const reached = (other: (typeof present)[number]) => attackable(character, other) && ask(attack, other, {}) !== undefined
-        const same = present.find((other) => other.id === made.attack.target)
-        const target = same && reached(same) ? same : nearestEnemy(character, present.filter(reached))
-        return target && ask(attack, target, rest({ struck: [...new Set([...struck, target.id])] }))
+      id: LIFEDRINKER,
+      // "Once per turn when you hit a creature with your pact weapon, you can deal an extra 1d6 Necrotic, Psychic, or Radiant damage (your choice)".
+      damage: ({ attacker, attack, target, turnOf }) => {
+        if (attack.id !== pactWeaponOf(attacker) || !hasInvocation(attacker, LIFEDRINKER) || usedThisTurn(attacker, LIFEDRINKER, turnOf)) return undefined
+        const dice = optionOf(LIFEDRINKER)?.damage?.dice ?? "1d6"
+        return { name: "Lifedrinker", damage: { dice, type: harshest(target) }, once: LIFEDRINKER }
+      },
+      // "And you can expend one of your Hit Point Dice to roll it and regain a number of Hit Points equal to the roll plus
+      // your Constitution modifier (minimum of 1 Hit Point)": spent by a plain rule, as a Short Rest spends one, while the
+      // Warlock is missing at least the die's average.
+      spills: ({ characters, attackerId, added, roll }) => {
+        const warlock = characters.find((character) => character.id === attackerId) as ((typeof characters)[number] & { hitDiceUsed?: number }) | undefined
+        const dice = warlock && hitDiceOf(warlock)
+        const now = warlock && hitPointsOf(warlock)
+        if (!warlock?.sheet || !added.includes("Lifedrinker") || !dice?.left || !now || now.maximum - now.current < (dice.die + 1) / 2) return undefined
+        const healed = Math.max(1, roll(dice.die) + deriveSheet(warlock.sheet).abilityModifiers.con)
+        const after = { ...withHealing(warlock, healed), hitDiceUsed: (warlock.hitDiceUsed ?? 0) + 1 }
+        const left = hitPointsOf(after)
+        return {
+          characters: characters.map((character) => (character.id === attackerId ? after : character)),
+          told: {
+            by: attackerId,
+            id: LIFEDRINKER,
+            name: "Lifedrinker",
+            text: `${warlock.name} spends a Hit Point Die with Lifedrinker and regains ${(left?.current ?? 0) - now.current} hit points, now ${left?.current} of ${left?.maximum}.`,
+          },
+        }
+      },
+    },
+    {
+      id: HURL,
+      // On a hit with an attack roll, chosen with the attack, once a turn: the save, the damage and the condition. The use is
+      // spent, or with none left the Pact Magic slot that restores it is spent as the roll is settled (`attackRolled`).
+      after: ({ attacker, target, choices, roll }) => {
+        const warlock = attacker as Roller & { id?: string; featureUses?: Record<string, number>; spellSlots?: readonly number[]; turnEffects?: readonly TurnEffect[] }
+        if (!choices?.[HURL] || !hurlReady(warlock) || usedThisTurn(warlock, HURL, undefined) || target.dead || target.hitPoints === 0) return undefined
+        const done = hurled({ ...warlock, id: warlock.id ?? "" }, target as unknown as Castee, () => roll(20), roll)
+        const rider: HitRider = { id: HURL, effect: done.legendary ? "legendary" : `hurled:${done.taken}:${done.given ? 1 : 0}`, save: done.save, took: !done.save.success }
+        return {
+          target: done.target as unknown as typeof target,
+          rider,
+          conditions: done.given ? [{ target: target.id ?? "", condition: "incapacitated" }] : [],
+          spends: HURL,
+          once: HURL,
+        }
+      },
+      words: (attacker, target, rider) => {
+        const [, taken, given] = rider.effect.split(":")
+        const save = rider.save ?? { success: true, total: 0, dc: 0 }
+        return hurlWords(attacker, target, { success: !rider.took, total: save.total, dc: save.dc, taken: Number(taken ?? 0), given: given === "1", legendary: rider.effect === "legendary" })
       },
     },
   ],
+  turnEffects: [
+    { id: SMITE, span: 1 },
+    { id: LIFEDRINKER, span: 1 },
+    { id: HURL, span: 1 },
+  ],
+  follows: [
+    // Thirsting Blade: "you can attack twice with the weapon instead of once when you take the Attack action". Devouring
+    // Blade: "The Extra Attack of your Thirsting Blade invocation confers two extra attacks rather than one."
+    pactFollow("thirsting-blade", "thirsting-blade"),
+    pactFollow("devouring-blade", "devouring-blade"),
+  ],
+  // A Hurl Through Hell made with no use left is paid for with a Pact Magic slot once the roll is settled.
+  attackRolled: (attacker) => withHurlPaid(attacker),
+  failedRollDie: ownLuckDie,
+  saves: [ownLuckSave],
   spellRange: (caster, spell) =>
     spell.level === 0 && spell.range.kind === "feet" && (spell.range.distance ?? 0) >= 10 && hasInvocation(caster, "eldritch-spear", spell.id)
       ? (spell.range.distance ?? 0) + SPEAR_FEET * (caster.sheet?.level ?? 1)

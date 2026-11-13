@@ -17,6 +17,7 @@ import {
   classSpellAttackModes,
   classSpellDamage,
   classSpellDamageMost,
+  classSpellDamageRolled,
   classSpellHealing,
   classSpellHits,
   classSpellSaveDc,
@@ -823,6 +824,16 @@ export function castSpell<T extends Castee>(args: {
   const added = args.again ? 0 : classSpellDamage({ caster, spell, item: !!args.item })
   // The dice its damage rolls as it is cast, at their highest where the caster's class says so (Overchannel).
   const damageRoll = !args.again && classSpellDamageMost({ caster, spell, slot: spent }) ? (sides: number) => sides : args.roll
+  // A damage roll once its dice have fallen, as the caster's class features change it before it is dealt (Elemental
+  // Affinity, Empowered Spell): the first roll of the cast is told so.
+  let damageRolls = 0
+  const damageOf = (parts: readonly DamagePart[], critical = false): DamageRoll => {
+    const rolled = rollDamage(parts, damageRoll, critical)
+    if (args.again) return rolled
+    const changed = classSpellDamageRolled({ caster: find(caster.id) ?? caster, spell, rolled, first: damageRolls++ === 0, roll: damageRoll })
+    facts.push(...changed.facts)
+    return changed.rolled
+  }
   const plus = (rolled: DamageRoll): DamageRoll => {
     const [first, ...rest] = rolled.parts
     if (!added || !first) return rolled
@@ -915,7 +926,7 @@ export function castSpell<T extends Castee>(args: {
           const given = first.dice ? parseDice(first.dice) : undefined
           const plus = (given?.bonus ?? 0) + bonus
           const added = given && bonus ? `${given.count}d${given.sides}${plus ? ` ${plus < 0 ? "-" : "+"} ${Math.abs(plus)}` : ""}` : undefined
-          const thrown = rollDamage(added ? [{ ...first, dice: added }, ...others] : parts, damageRoll, roll.critical)
+          const thrown = damageOf(added ? [{ ...first, dice: added }, ...others] : parts, roll.critical)
           const rolled = rule?.hitDamage ? rule.hitDamage(thrown, context) : thrown
           const dealt = hurt(target.id, rolled, (taken) => taken, roll.critical)
           attack = { ...attack, damage: rolled, taken: dealt?.amount ?? 0, ...(dealt?.fate ? { fate: dealt.fate } : {}) }
@@ -938,7 +949,7 @@ export function castSpell<T extends Castee>(args: {
         rule?.hit?.(context, attack)
       } else if (parts.length && (rule?.halfOnMiss || potent)) {
         // Half on a miss by the spell's words (Acid Arrow's splash), and a Potent Cantrip's half.
-        const rolled = rollDamage(parts, damageRoll)
+        const rolled = damageOf(parts)
         const dealt = hurt(target.id, rolled, (taken) => Math.floor(taken / 2))
         attack = { ...attack, damage: rolled, taken: dealt?.amount ?? 0, ...(dealt?.fate ? { fate: dealt.fate } : {}) }
         facts.push(
@@ -962,7 +973,7 @@ export function castSpell<T extends Castee>(args: {
     for (const id of falls) {
       const target = find(id)
       if (target && wardedFrom(target, spell)) continue
-      const dealt = hurt(id, plus(rollDamage(sure.map(partOf), damageRoll)), (taken) => taken)
+      const dealt = hurt(id, plus(damageOf(sure.map(partOf))), (taken) => taken)
       if (dealt) lost.set(id, { amount: (lost.get(id)?.amount ?? 0) + dealt.amount, fate: dealt.fate, type: dealt.type })
     }
     for (const id of new Set(falls)) if (!lost.has(id)) facts.push(`${find(id)?.name}'s Shield turns ${caster.name}'s ${spell.name} aside: no damage.`)
@@ -982,7 +993,7 @@ export function castSpell<T extends Castee>(args: {
     if (!made) continue
     rolledSaves = true
     const guarded = (spell.damage ?? []).filter((entry) => now(entry) && entry.trigger === "failed-save" && entry.save === index)
-    const rolled = guarded.length ? plus(rollDamage(guarded.map(partOf), damageRoll)) : undefined
+    const rolled = guarded.length ? plus(damageOf(guarded.map(partOf))) : undefined
     const half = guarded.some((entry) => (entry.onSuccess ?? save.onSuccess) === "half") || potent
     for (const id of taking) {
       const target = find(id)
