@@ -135,7 +135,8 @@ async function run(probe: Probe): Promise<Graded> {
         ...JSON.parse(readFileSync(join(here, `../../../content/settings/realm-of-myr/adventures/${probe.adventure}/characters/${ally}.json`), "utf8")),
         type: "pc" as const,
       })),
-      ...encounter.npcRefs.map((ref) => bears({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const })),
+      // Each NPC with the side the encounter marks them with, as the game gives it.
+      ...encounter.npcRefs.map((ref) => bears({ ...pack.artifacts.characterSheets.npcs[ref.id].sheet, type: "npc" as const, ...(ref.side ? { side: ref.side } : {}) })),
     ])
     // The one who acts: the hero, or the NPC the scene names.
     const standing = probe.actor ? everyone.find((character) => character.id === probe.actor) : everyone[0]

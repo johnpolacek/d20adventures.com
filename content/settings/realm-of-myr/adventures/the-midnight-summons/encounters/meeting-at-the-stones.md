@@ -11,6 +11,7 @@ adventureId: "the-midnight-summons"
 landmark: "valkarr-woods/standing-stones"
 npcs:
   - id: "wollandora"
+    side: "party"
     behavior: "Concerned about the missing relics, focused on getting Thalbern to investigate in the city."
     initialInitiative: 1
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png"

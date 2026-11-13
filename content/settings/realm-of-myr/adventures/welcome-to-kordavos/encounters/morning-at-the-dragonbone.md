@@ -11,8 +11,10 @@ landmark: "kordavos/dragonbone-inn"
 roundBudget: 2
 npcs:
   - id: "elara"
+    side: "none"
     behavior: "Distraught, determined, and responsible. Has a deep sense of duty to her community and the people she cares about. Knows only the facts about Joran in the scene's notes, and says she does not know the rest. Has no coin to offer."
   - id: "bram"
+    side: "none"
     behavior: "Kindly and protective of Elara. Vouches for the adventurers and offers them free lodging if they help find Joran. Makes the offer once."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726111833875"
 ---

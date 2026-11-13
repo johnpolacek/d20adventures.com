@@ -13,6 +13,7 @@ npcs:
   - id: "forest-drake"
     behavior: "Confused and enraged. Bites and tail-slaps the nearest targets, and takes to the warehouse roofs if pressed."
   - id: "astrid-blackthorn"
+    side: "party"
     behavior: "Fights beside the party and shields the fleeing dockworkers. Prefers to capture the drake alive."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726354341751"
 ---

@@ -11,6 +11,7 @@ landmark: "kordavos/dragonbone-inn"
 roundBudget: 1
 npcs:
   - id: "bram"
+    side: "none"
     behavior: "Hearty and welcoming, with a knack for making everyone feel at home. A bed is 2 silver a head with supper and breakfast, ale 2 copper a mug. Never changes a price and never haggles."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725037898828"
 ---

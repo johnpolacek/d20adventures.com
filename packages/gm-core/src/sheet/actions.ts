@@ -10,6 +10,7 @@ import type { ConditionEntry } from "./condition-entry"
 import { type Afflicted, cannotMove, type ModeSource, withoutCondition } from "./conditions"
 import { deriveSheet } from "./derive"
 import { detached } from "./hit-riders"
+import { areEnemies, sameSide } from "./sides"
 import { type Floor, type Point, pushed, sizeOf, walkOver } from "./space"
 import { afterAttackRoll } from "./spell-effects"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
@@ -80,8 +81,8 @@ export function takeAction<T extends Acting>(characters: readonly T[], actorId: 
   }
   const target = characters.find((character) => character.id === taken.target && character.id !== actor.id)
   if (!target) return { characters: [...characters] }
-  if (target.type === actor.type) {
-    // An ally: Advantage on their next check with a skill the helper is proficient in.
+  if (!areEnemies(target, actor)) {
+    // An ally, or a bystander helped with a task: Advantage on their next check with a skill the helper is proficient in.
     if (!taken.skill || !proficientIn(actor, taken.skill)) return { characters: [...characters] }
     return {
       characters: put(give(target, { id: "helped", by: actor.id, skill: taken.skill, turns: 2 })),
@@ -109,7 +110,7 @@ export function attackModesFromActions(attacker: Acting, target: Acting, present
     if (!holds(effect, all)) continue
     if (effect.id === "dodging" && !cannotMove(target)) found.push({ mode: "disadvantage", from: `${target.name} Dodging` })
     const helper = all.find((character) => character.id === effect.by)
-    if (effect.id === "distracted" && helper && helper.id !== attacker.id && helper.type === attacker.type) found.push({ mode: "advantage", from: `Help from ${helper.name}` })
+    if (effect.id === "distracted" && helper && helper.id !== attacker.id && sameSide(helper, attacker)) found.push({ mode: "advantage", from: `Help from ${helper.name}` })
     if (effect.id === "vexed" && effect.by === attacker.id) found.push({ mode: "advantage", from: "Vex" })
     found.push(...(turnEffectRule(effect.id)?.against?.(effect, attacker, target) ?? []))
   }
@@ -155,6 +156,11 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
   let characters: readonly T[] = everyone
   const roller = characters.find((character) => character.id === rollerId)
   if (!roller) return [...characters]
+  // Whether the one who Helped is on the roller's side.
+  const helpedBy = (id: string, of: T) => {
+    const helper = characters.find((other) => other.id === id)
+    return !!helper && sameSide(helper, of)
+  }
   if ("attack" in roll) {
     characters = afterAttackRoll(characters, rollerId, roll.attack.target)
     // What the weapon's mastery does to the one it hurt. Vex gives the attacker's next attack on them Advantage. Slow
@@ -166,15 +172,12 @@ export function afterRoll<T extends Acting & { conditions?: readonly ConditionEn
     return characters.map((character) => {
       if (character.id === rollerId) {
         const seen = withoutCondition(character, "invisible").character
-        return aimed && aimed.type !== character.type ? afterClassAttackRoll(seen, aimed) : seen
+        return aimed && areEnemies(aimed, character) ? afterClassAttackRoll(seen, aimed) : seen
       }
       if (character.id !== roll.attack.target) return character
       const spent = drop(
         character,
-        (effect) =>
-          (effect.id === "vexed" && effect.by === rollerId) ||
-          (effect.id === "distracted" && effect.by !== rollerId && characters.find((other) => other.id === effect.by)?.type === roller.type) ||
-          forNextAttack(effect)
+        (effect) => (effect.id === "vexed" && effect.by === rollerId) || (effect.id === "distracted" && effect.by !== rollerId && helpedBy(effect.by, roller)) || forNextAttack(effect)
       )
       if (mastery === "vex") return give(spent, { id: "vexed", by: rollerId, turns: 2 })
       if (mastery === "slow") return give(spent, { id: "slowed", by: rollerId, turns: 2 })

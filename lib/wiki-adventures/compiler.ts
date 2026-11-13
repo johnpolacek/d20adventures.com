@@ -1,4 +1,5 @@
 import { sheetProblems } from "@d20/gm-core/sheet/derive"
+import { SIDES } from "@d20/gm-core/sheet/sides"
 import { isStatBlock } from "@d20/gm-core/sheet/stat-block"
 import { z } from "zod"
 import { npcSchema, pcTemplateSchema } from "@/types/character"
@@ -52,6 +53,8 @@ const commonFrontmatterSchema = z.object({
           id: z.string().min(1),
           behavior: z.string().optional(),
           initialInitiative: z.number().optional(),
+          // "party" for one who fights beside the heroes here, "none" for a bystander. Unmarked is a foe.
+          side: z.enum(SIDES).optional(),
         }),
       ])
     )

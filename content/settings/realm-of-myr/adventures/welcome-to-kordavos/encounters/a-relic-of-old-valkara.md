@@ -11,6 +11,7 @@ landmark: "kordavos/auction-hall"
 roundBudget: 2
 npcs:
   - id: "auctioneer"
+    side: "none"
     behavior: "Builds drama around the map and runs the bidding by the numbers in the scene's notes. Calls going once, going twice when no one challenges the top bid. Takes no bid without coin shown. The map is the last lot of the night. Offers nothing after it."
   - id: "silverhand-representative"
     behavior: "Bids ten thousand gold on Silverhand's behalf, calm and final. Tops any other bid by five thousand at once, and never backs down."

@@ -7,6 +7,7 @@ import type { Roller } from "../check"
 import type { BonusActionRule, CastChoice, CastInput, ChoiceCast, ClassRules, Featured, Lasting, Rested } from "../class-rules"
 import { deriveSheet } from "../derive"
 import { featureUseCount, hasFeature, usesLeft, withFeatureUsed } from "../feature-rules"
+import { areEnemies, sameSide } from "../sides"
 import { withSpellEffect } from "../spell-effects"
 import { type Cast, type Castee, slotsLeft, spellLabel, spellsOf, withCastSpent } from "../spells"
 import type { SpellEffect, TurnEffect } from "../turn-effect"
@@ -131,7 +132,12 @@ const OPTIONS: readonly Option[] = [
     // damage leaves them out of it.
     apply: ({ input, caster, resolve }) => {
       const most = Math.max(1, caster.sheet ? deriveSheet(caster.sheet).abilityModifiers.cha : 1)
-      const spared = input.targets.filter((id) => id !== caster.id && input.characters.find((other) => other.id === id)?.type === caster.type).slice(0, most)
+      const spared = input.targets
+        .filter((id) => {
+          const other = input.characters.find((each) => each.id === id)
+          return id !== caster.id && !!other && sameSide(other, caster)
+        })
+        .slice(0, most)
       if (!spared.length) return undefined
       const names = spared.map((id) => input.characters.find((other) => other.id === id)?.name ?? id)
       return {
@@ -153,11 +159,11 @@ const OPTIONS: readonly Option[] = [
     id: "heightened-spell",
     words: "one foe it takes has Disadvantage on its save",
     fits: (_, { spell }) => spellLabel(spell) !== "told" && savedAtCast(spell),
-    // The first of those it takes who is of the other side. Its saves are all made now, so the mark is taken off after.
+    // The first of those it takes who is the caster's enemy (../sides). Its saves are all made now, so the mark is taken off after.
     apply: ({ input, caster, resolve }) => {
       const foe = input.targets.find((id) => {
         const other = input.characters.find((each) => each.id === id)
-        return other && other.type !== caster.type && !other.dead
+        return other && areEnemies(other, caster) && !other.dead
       })
       if (!foe) return undefined
       const marked = input.characters.map((other) => (other.id === foe ? mark(other, caster.id) : other))

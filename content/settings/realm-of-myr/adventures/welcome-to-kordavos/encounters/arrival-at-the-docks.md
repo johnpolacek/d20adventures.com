@@ -11,10 +11,12 @@ landmark: "kordavos/the-quay"
 roundBudget: 2
 npcs:
   - id: "loric-windrider"
+    side: "none"
     behavior: "Gruff but fair. He’s a hard worker and expects the same from others. Deeply loyal to his friends."
   - id: "tor-marros"
     behavior: "Huge, slow-spoken dock hand. Backs Loric and bristles at anyone who pushes him, but never swings first."
   - id: "petra-velan"
+    side: "none"
     behavior: "Sharp-eyed dock hand with a pipe and a limp. Wary of the guard and the noble houses, but talks to anyone Loric trusts."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726345480155"
 ---

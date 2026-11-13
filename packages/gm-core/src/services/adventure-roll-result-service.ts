@@ -28,7 +28,7 @@ import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narr
 import { hasFled, isDead, isDown } from "../utils/turn-actors"
 import { DEATH_SAVE, isAttackRoll, isCastRoll, isDeathSaveRoll, isFeatureRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules } from "../wiki-adventures/player-safety"
-import { legendaryAfterHero } from "./legendary-action-service"
+import { legendaryAfterTurn } from "./legendary-action-service"
 
 export function getEncounterInstructionsFromPlan(plan: AdventurePlan, encounterId: string): string {
   for (const section of plan.sections) {
@@ -167,7 +167,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // The hero's turn is over: a Legendary creature may act on it, told after the turn's own story (../sheet/legendary-actions).
     const afterTurn = async (done: { story: StoryBeat[]; characters: TurnCharacter[] }) => {
       if (!done.characters.some((character) => legendaryActionsOf(character))) return done
-      const acted = legendaryAfterHero({ characters: done.characters, heroId: args.characterId, floor: await ports.content.floor?.(args.turn.encounterId), rules })
+      const acted = legendaryAfterTurn({ characters: done.characters, endedId: args.characterId, floor: await ports.content.floor?.(args.turn.encounterId), rules })
       return { story: [...done.story, ...acted.beats], characters: acted.characters }
     }
     if (isDeathSaveRoll(required)) {

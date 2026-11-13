@@ -10,6 +10,7 @@ import { withCondition } from "../conditions"
 import { deriveSheet, trainedWith } from "../derive"
 import { hasFeature, usedThisTurn } from "../feature-rules"
 import { magicalCunningOf, withMagicalCunning } from "../rest"
+import { areEnemies } from "../sides"
 import { feetBetween, pushed, sizeOf, walkOver } from "../space"
 import { slotsLeft, withCastSpent } from "../spells"
 
@@ -228,7 +229,7 @@ export const warlock: ClassRules = {
   },
   concentrationModes: (character) => (hasInvocation(character, "eldritch-mind") ? [{ mode: "advantage", from: "Eldritch Mind" }] : []),
   felled: ({ character, felled, by }) => {
-    if (!hasFeature(character, BLESSING) || felled.type === character.type) return undefined
+    if (!hasFeature(character, BLESSING) || !areEnemies(felled, character)) return undefined
     const near = feetBetween(character, felled)
     if (by !== character.id && (near === undefined || near > BLESSING_FEET)) return undefined
     const amount = Math.max(1, charisma(character) + (character.sheet?.level ?? 1))

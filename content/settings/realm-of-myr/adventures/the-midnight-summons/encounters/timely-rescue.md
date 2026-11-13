@@ -11,6 +11,7 @@ adventureId: "the-midnight-summons"
 landmark: "valkarr-woods/tree-line"
 npcs:
   - id: "wollandora"
+    side: "party"
     behavior: "Protective of Thalbern, focused on getting to the meeting."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/timely-rescue.png"
 ---

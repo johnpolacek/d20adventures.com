@@ -1,7 +1,7 @@
 import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { afterHarm } from "../sheet/death"
-import { withLegendaryActionsRegained } from "../sheet/legendary-actions"
+import { legendaryActionsOf, withLegendaryActionsRegained } from "../sheet/legendary-actions"
 import { standingWords } from "../sheet/placement"
 import { ordered, type PendingReaction, REACTION_WAIT } from "../sheet/reactions"
 import { authoredText } from "../story/authored"
@@ -14,6 +14,7 @@ import type { AdventurePlan } from "../types/adventure-plan"
 import { isAiControlledPc, isDown, isDying } from "../utils/turn-actors"
 import { gmNotesWithRules, type SafetyRules } from "../wiki-adventures/player-safety"
 import { createAiPcTurnService } from "./ai-pc-turn-service"
+import { legendaryAfterTurn } from "./legendary-action-service"
 import { createNpcTurnBranchService, handleSkipPassNpcTurn, type NpcRollInfo, type NpcTurnBranchResult } from "./npc-turn-branch-service"
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "./npc-turn-effects-service"
 import { buildNpcActionContext, buildNpcActionPrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
@@ -512,10 +513,15 @@ export function createNpcTurnService(ports: GmPorts) {
         )
       )
 
+      // The NPC's turn is over: a Legendary creature may act on it, told after the turn's own story (../sheet/legendary-actions).
+      const ended = result.updatedCharacters.map(afterHarm)
+      const legendary = ended.some((character) => legendaryActionsOf(character))
+        ? legendaryAfterTurn({ characters: ended, endedId: npc.id, floor: await ports.content.floor?.(turn.encounterId), rules: { playerDeath: rules?.playerDeath } })
+        : { characters: ended, beats: [] }
       const turnPatch = buildNpcTurnUpdatePatch({
         turn,
-        beatsToAppend: result.beatsToAppend,
-        updatedCharacters: result.updatedCharacters.map(afterHarm),
+        beatsToAppend: [...result.beatsToAppend, ...legendary.beats],
+        updatedCharacters: legendary.characters,
       })
 
       console.log(

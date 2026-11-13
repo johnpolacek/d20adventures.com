@@ -12,6 +12,7 @@ import { hitPointsOf } from "./hit-points"
 import { ridersAtRoundEnd } from "./hit-riders"
 import { legendaryResistanceWords, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { typesTaken } from "./monster-traits"
+import { areEnemies } from "./sides"
 import { type Point, placedOf, within } from "./space"
 import { AREA_SPELLS, type ConcentrationSave, endConcentration, settleConcentration, spellEnded } from "./spell-effects"
 import { type Castee, rollSave, type SaveRoll, spellcastingFor } from "./spells"
@@ -184,7 +185,7 @@ export function spellsAtRoundEnd<T extends Castee & { position?: Point }>(args: 
     const above = Math.max(0, (effect.amount ?? spell.level) - spell.level)
     for (const other of characters) {
       const there = placedOf(other)
-      if (other.id === caster.id || other.type === caster.type || other.dead || !there || !within(at, there, area)) continue
+      if (other.id === caster.id || !areEnemies(other, caster) || other.dead || !there || !within(at, there, area)) continue
       const thrown = save(other, "wis", caster, spell)
       const amount = hurt(other.id, `${3 + above}d8`, "radiant", (taken) => (thrown.success ? Math.floor(taken / 2) : taken))
       tell(other.id, spell.name, `${verdict(other, thrown, spell, caster)} and takes ${amount} radiant damage.${standing(other.id)}`)

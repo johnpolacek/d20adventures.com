@@ -93,10 +93,13 @@ export function buildLocalWikiTurnCharacters(args: {
     // their lasting conditions, the spells that outlast a minute, and what they have spent, as a hero does.
     const was = args.existingNpcs?.find((npc) => npc.id === sheet.id)
     if (was && isDead(was)) continue
+    // Its side is this encounter's mark alone (../sheet/sides).
+    const { side: _, ...unsided } = sheet
     const npc = {
-      ...sheet,
+      ...unsided,
       id: sheet.id,
       type: "npc" as const,
+      ...(npcRef.side ? { side: npcRef.side } : {}),
       // An encounter may fix an NPC's place in the order. Otherwise it rolls with its stat block's bonus.
       initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollInitiative({ type: "npc", statBlock: sheet.statBlock, sheet: sheet.sheet }, rollD20()),
       hasReplied: false,

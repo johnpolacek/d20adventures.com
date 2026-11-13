@@ -10,8 +10,10 @@ adventureId: "welcome-to-kordavos"
 landmark: "kordavos/forgotten-temple"
 npcs:
   - id: "astrid-blackthorn"
+    side: "party"
     behavior: "Awed and wary, blade still drawn. Wants whoever killed her brother."
   - id: "eamon"
+    side: "party"
     behavior: "Fascinated by the silver runes. Reads the story of the Key of Ilmarin if asked."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726955916736"
 ---

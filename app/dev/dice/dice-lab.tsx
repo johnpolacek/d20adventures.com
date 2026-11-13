@@ -10,6 +10,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react"
 import { D20Shape, D20Solid } from "@/components/stage/d20"
 import { Pill } from "@/components/stage/hud"
 import { cn } from "@/lib/utils"
+import { ItemLooks } from "./item-looks"
 import { RollLooks } from "./roll-looks"
 
 const SECONDS = 1.2
@@ -144,6 +145,7 @@ export function DiceLab() {
           </Take>
         </div>
         <RollLooks />
+        <ItemLooks />
       </div>
     </main>
   )

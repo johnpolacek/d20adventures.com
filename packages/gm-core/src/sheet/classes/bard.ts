@@ -4,6 +4,7 @@ import type { ClassRules, Featured } from "../class-rules"
 import { hasCondition } from "../conditions"
 import { hasFeature, usesLeft, withFeatureUsed } from "../feature-rules"
 import { canReact, withReaction } from "../reactions"
+import { areEnemies, sameSide } from "../sides"
 import { distance, placedOf, type Standing } from "../space"
 import { slotsLeft, withCastSpent } from "../spells"
 
@@ -48,13 +49,13 @@ export type CuttingWords = { bard: string; die: number }
 type Reactor = Parameters<typeof canReact>[0] & { featureUses?: Record<string, number>; spellSlots?: readonly number[] }
 
 /**
- * The Bards who may answer a creature's roll with Cutting Words: a College of Lore Bard of the other side from the
- * roller, who can react, can see them, stands within 60 feet of them where both stand on a floor, and has a Bardic
+ * The Bards who may answer a creature's roll with Cutting Words: a College of Lore Bard who is the roller's enemy
+ * (../sides), who can react, can see them, stands within 60 feet of them where both stand on a floor, and has a Bardic
  * Inspiration use left or a spell slot to buy one with (Font of Inspiration). Each comes with their die.
  */
 export function cuttingWordsFrom<T extends Reactor>(characters: readonly T[], roller: Standing & { id: string }): (CuttingWords & { reactor: T })[] {
   return characters.flatMap((bard) => {
-    if (bard.id === roller.id || bard.type === roller.type || !bard.sheet || !hasFeature(bard, "college-of-lore-cutting-words")) return []
+    if (bard.id === roller.id || !areEnemies(bard, roller) || !bard.sheet || !hasFeature(bard, "college-of-lore-cutting-words")) return []
     if (!canReact(bard) || hasCondition(bard, "blinded") || hasCondition(roller, "invisible") || !inspirationUse(bard)) return []
     const from = placedOf(bard)
     const at = placedOf(roller)
@@ -84,7 +85,7 @@ export const bard: ClassRules = {
       buys: (character) => inspirationUse(character)?.slot,
       // It goes to another creature on the bard's side who is not dead. One who holds a die takes the new one in its place.
       use: ({ characters, actor, action, target: given }) => {
-        const target = characters.find((character) => character.id === given && character.id !== actor.id && character.type === actor.type && !character.dead)
+        const target = characters.find((character) => character.id === given && character.id !== actor.id && sameSide(character, actor) && !character.dead)
         const die = dieOf({ class: actor.sheet?.class ?? "bard", level: actor.sheet?.level ?? 1 })
         if (!target || !die) return { characters }
         const bought = action.slot ? ` with a level ${action.slot} spell slot` : ""

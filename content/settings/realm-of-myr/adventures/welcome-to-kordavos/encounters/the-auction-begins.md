@@ -11,6 +11,7 @@ landmark: "kordavos/auction-hall"
 roundBudget: 2
 npcs:
   - id: "auctioneer"
+    side: "none"
     behavior: "Smooth showman who runs the bidding briskly. Sells only the lots in the scene's notes, in order. Keeps order in the room and says nothing of where the goods come from."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726455716232"
 ---

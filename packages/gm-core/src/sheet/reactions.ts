@@ -25,6 +25,7 @@ import { cannotAttack, hasCondition } from "./conditions"
 import type { DeathRules } from "./death"
 import { withFeatureUsed, withUsedThisTurn } from "./feature-rules"
 import { releasedHolds } from "./hit-riders"
+import { areEnemies } from "./sides"
 import { type Cover, opportunityAttackers, type Point, placedOf, type Standing, sizeOf, type Watcher, within } from "./space"
 import { cannotReactBySpell, spellEffectsAfterMove, withSpellEffect } from "./spell-effects"
 import { type CastCost, castCost, spellsOf, withCastSpent } from "./spells"
@@ -71,7 +72,7 @@ export function opportunityWeapon(character: Standing): Attack | undefined {
 }
 
 /**
- * Who may make an Opportunity Attack on a move, and with which attack. One of the other kind, hero or NPC, who can
+ * Who may make an Opportunity Attack on a move, and with which attack. An enemy of the mover (./sides), who can
  * react, can see the mover, is not Charmed by them, and whose reach the move leaves. No one may when the mover took the
  * Disengage action, Teleports, or is moved without their own movement. A Bandit beside a hero who walks 20 feet away
  * may, with its Scimitar. The same Bandit Blinded, or with its Reaction spent, may not.
@@ -96,7 +97,7 @@ export function opportunityAttacks<T extends Reactor>(args: {
         other,
         weapon: weapon.id,
         reach: meleeReachOf(other),
-        hostile: other.type !== mover.type,
+        hostile: areEnemies(other, mover),
         // A class's turn effect may bar them (Open Hand Technique's Addle).
         canReact: canReact(other) && !cannotAttack(other, mover) && !(other.turnEffects ?? []).some((effect) => turnEffectRule(effect.id)?.barsOpportunityAttacks),
         seesMover: !hasCondition(other, "blinded") && !hasCondition(mover, "invisible"),

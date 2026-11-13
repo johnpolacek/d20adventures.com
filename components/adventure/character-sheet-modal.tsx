@@ -2,6 +2,7 @@
 
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { useState } from "react"
+import { MagicItems } from "@/components/stage/magic-items"
 import { StandingOrders } from "@/components/stage/reaction-card"
 import { heroReactions, type StandingOrders as Orders } from "@/components/stage/reaction-view"
 import { DeathSaveMarks } from "@/components/stage/roll-parts"
@@ -188,6 +189,8 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
                 </div>
               </div>
             )}
+
+            {sheet && <MagicItems items={sheet.items} />}
 
             {sheet && onOrders && (
               <StandingOrders key={character.name} rows={heroReactions(sheet.reactions, character.standingOrders)} onChange={(changed) => onOrders({ ...character.standingOrders, ...changed })} />

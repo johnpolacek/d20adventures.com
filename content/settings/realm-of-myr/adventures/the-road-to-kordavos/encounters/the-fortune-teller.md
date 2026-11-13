@@ -10,6 +10,7 @@ adventureId: "the-road-to-kordavos"
 landmark: "kordavos/marquis-road"
 npcs:
   - id: "npcs-1749870598631"
+    side: "none"
     initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-road-to-kordavos/encounters/the-fortune-teller/49675791-4402-4dff-a8d1-bc260a638c03.png?t=1749923016928"
 ---

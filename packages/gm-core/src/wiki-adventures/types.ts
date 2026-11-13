@@ -1,4 +1,5 @@
 import type { z } from "zod"
+import type { Side } from "../sheet/sides"
 import type { npcSchema, pcTemplateSchema } from "../types/character"
 
 export const wikiContentTypes = ["setting", "adventure", "encounter", "npc", "location", "premadeCharacter", "faction", "item", "asset"] as const
@@ -129,7 +130,8 @@ export type RuntimeEncounter = {
   locationId?: string
   // City map place, "map/place", resolved against content/settings/{settingId}/maps/{map}.json. See scripts/city-map-check.ts.
   landmarkId?: string
-  npcRefs: Array<{ id: string; behavior?: string; initialInitiative?: number }>
+  // `side`: the NPC's side in this encounter, "party" or "none" (a bystander). None is a foe (../sheet/sides).
+  npcRefs: Array<{ id: string; behavior?: string; initialInitiative?: number; side?: Side }>
   sections: Record<string, string>
   summary?: string
   typedLinks: RuntimeLink[]

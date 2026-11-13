@@ -14,6 +14,7 @@ import { skillById } from "@d20/srd/skills"
 import { spellById } from "@d20/srd/spells"
 import { subclassById } from "@d20/srd/subclasses"
 import { grantedSkills, type SpeciesEntry, speciesById } from "./house-species"
+import { type Caster, itemBonus, itemProblems } from "./items"
 import type { Advancement, Sheet } from "./sheet"
 
 type ArmorTraining = "light" | "medium" | "heavy" | "shields"
@@ -895,6 +896,7 @@ export function sheetProblems(sheet: Sheet): string[] {
   if (sheet.shield && !training.includes("shields")) problems.push(`${cls.name} has no training with Shields`)
 
   problems.push(...originProblems(sheet, parts))
+  problems.push(...itemProblems(sheet, casterOf(sheet, parts)))
 
   for (const trait of parts.species.traits) {
     if (!trait.choice) continue
@@ -929,6 +931,21 @@ export function sheetProblems(sheet: Sheet): string[] {
   return problems
 }
 
+/**
+ * Whether a sheet's hero is a Spellcaster, for an item's Attunement: one who casts a spell by their traits or
+ * features, a class's Spellcasting or Pact Magic, a species' cantrip, or a feat's spells. A magic item's spells do not count.
+ */
+export function casterOf(sheet: Sheet, known?: Parts): Caster {
+  const parts = known ?? lookup(sheet).parts
+  if (!parts) return { spellcaster: false }
+  const spellcaster =
+    !!parts.class.spellcasting ||
+    (sheet.cantrips?.length ?? 0) > 0 ||
+    speciesCantripsOf(sheet, parts).length > 0 ||
+    (sheet.advancements ?? []).some((entry) => !!entry.cantrips?.length || !!entry.spell)
+  return { spellcaster }
+}
+
 /** Work out the whole sheet from the choices on it. Throws when the class, species or background is unknown. */
 export function deriveSheet(sheet: Sheet): DerivedSheet {
   const { parts, problems } = lookup(sheet)
@@ -942,7 +959,8 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
   const savingThrows = Object.fromEntries(
     abilityIds.map((ability) => {
       const proficient = parts.class.savingThrows.includes(ability) || standing.some((source) => source.savingThrowProficiencies?.includes(ability))
-      return [ability, { bonus: abilityModifiers[ability] + (proficient ? proficiencyBonus : 0), proficient }]
+      // A worn item's bonus to every saving throw: a Ring of Protection's 1.
+      return [ability, { bonus: abilityModifiers[ability] + (proficient ? proficiencyBonus : 0) + itemBonus(sheet, "saving-throws"), proficient }]
     })
   ) as DerivedSheet["savingThrows"]
 
@@ -963,11 +981,15 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
       const ability = skillById.get(skill)?.ability as AbilityId
       const has = proficient.has(skill)
       const expertise = has && expertSkills.has(skill)
-      return [skill, { bonus: abilityModifiers[ability] + (has ? proficiencyBonus : jack) + (expertise ? proficiencyBonus : 0) + optionBonus(skill), proficient: has, expertise }]
+      // A worn item's bonus to ability checks, or to this skill's: a Stone of Good Luck's 1, the Gloves of Thievery's 5.
+      const items = itemBonus(sheet, "ability-checks") + itemBonus(sheet, `${skill}-checks`)
+      return [skill, { bonus: abilityModifiers[ability] + (has ? proficiencyBonus : jack) + (expertise ? proficiencyBonus : 0) + optionBonus(skill) + items, proficient: has, expertise }]
     })
   ) as DerivedSheet["skills"]
 
-  const { armorClass, from } = armorClassOf(sheet, parts, abilityModifiers)
+  // Worn magic items add to the Armor Class: magic armor's and a magic Shield's bonus, a Ring of Protection's 1.
+  const { armorClass: worn, from } = armorClassOf(sheet, parts, abilityModifiers)
+  const armorClass = worn + itemBonus(sheet, "armor-class")
   const initiativeFeat = parts.feats.some((feat) => feat.benefits?.some((benefit) => benefit.initiativeBonus === "proficiency-bonus"))
   const tooHeavy = parts.armor?.strengthRequired !== undefined && sheet.abilityScores.str < parts.armor.strengthRequired
   const chosen = chosenOptions(sheet, parts)
@@ -985,7 +1007,8 @@ export function deriveSheet(sheet: Sheet): DerivedSheet {
     savingThrows,
     skills,
     passivePerception: 10 + skills.perception.bonus,
-    initiative: abilityModifiers.dex + (initiativeFeat ? proficiencyBonus : 0),
+    // Initiative is a Dexterity check, so an item's bonus to ability checks counts as well as one to Initiative.
+    initiative: abilityModifiers.dex + (initiativeFeat ? proficiencyBonus : 0) + itemBonus(sheet, "initiative") + itemBonus(sheet, "ability-checks"),
     speed: baseSpeed + speedBonusOf(sheet, parts) - (tooHeavy ? 10 : 0),
     senses: sensesOf(sheet, parts),
     resistances: resistancesOf(sheet, parts),

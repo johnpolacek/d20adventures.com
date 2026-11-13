@@ -138,7 +138,7 @@ test("three uses a round, all regained as its own turn begins", () => {
   assert.equal(legendaryActionsOf({ ...thalbern, statBlock: "adult-red-dragon" }), undefined)
 })
 
-test("after a hero's turn the dragon Pounces; not after its own, an NPC's, or while Incapacitated", () => {
+test("after another creature's turn the dragon Pounces; not after its own, or while Incapacitated", () => {
   // No floor: the Rend reaches Thalbern. The d20 falls 15: 15 + 14 = 29 hits his Armor Class of 15. Rend deals 1d10 +
   // 8 Slashing and 2d4 Fire: with every die a 2, 10 + 4 = 14, more than his 11 hit points. He drops to 0. One use of 3
   // is spent.
@@ -150,10 +150,19 @@ test("after a hero's turn the dragon Pounces; not after its own, an NPC's, or wh
   assert.equal(pounce.blow?.roll.total, 29)
   assert.equal(after.characters.find((character) => character.id === "thalbern")?.hitPoints, 0)
   assert.equal(after.characters.find((character) => character.id === "dragon")?.featureUses?.[LEGENDARY_ACTIONS], 1)
-  // After its own turn, or an NPC's, it takes none.
+  // After its own turn it takes none.
   assert.equal(legendaryActionsAfter({ characters: [thalbern, dragon], endedId: "dragon", d20: falls(), roll: twos, ask: no }).taken.length, 0)
+  // "Immediately after another creature's turn": after an NPC's too, a Bandit's, it Pounces on Thalbern, its one enemy
+  // here, by the same dice. A bystander beside it is never taken.
   const bandit: Character = { id: "bandit", name: "Bandit", type: "npc", statBlock: "bandit", hitPoints: 11 }
-  assert.equal(legendaryActionsAfter({ characters: [thalbern, dragon, bandit], endedId: "bandit", d20: falls(), roll: twos, ask: no }).taken.length, 0)
+  const merchant = { id: "merchant", name: "Merchant", type: "npc", statBlock: "commoner", hitPoints: 4, side: "none" as const }
+  const afterNpc = legendaryActionsAfter({ characters: [merchant, thalbern, dragon, bandit], endedId: "bandit", d20: falls(15), roll: twos, ask: no })
+  assert.deepEqual(
+    afterNpc.taken.map((taken) => [taken.name, taken.target]),
+    [["Pounce", "thalbern"]]
+  )
+  // With only the bystander here, it has no enemy and takes none.
+  assert.equal(legendaryActionsAfter({ characters: [merchant, dragon], endedId: "merchant", d20: falls(), roll: twos, ask: no }).taken.length, 0)
   // Stunned carries Incapacitated: none.
   const stunned = { ...dragon, conditions: [{ id: "stunned" as const }] }
   assert.equal(legendaryActionsAfter({ characters: [thalbern, stunned], endedId: "thalbern", d20: falls(), roll: twos, ask: no }).taken.length, 0)

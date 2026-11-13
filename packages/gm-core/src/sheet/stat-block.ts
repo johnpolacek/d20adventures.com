@@ -1,6 +1,7 @@
 import { monsterById } from "@d20/srd/monsters"
 import type { Shape } from "../types/character"
 import { deriveSheet } from "./derive"
+import { itemBonus } from "./items"
 import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
 import { armorClassWithSpells, hitPointMaximumFromSpells } from "./spell-effects"
@@ -22,8 +23,10 @@ export function combatStatsOf(character: { type?: string; sheet?: Sheet; statBlo
     // In a Beast's shape the hero keeps their own hit points and takes the stat block's Armor Class (./shape).
     const shape = shapeOf(character)
     if (shape) return { hitPointMaximum: derived.hitPointMaximum + hitPointMaximumFromSpells(character), armorClass: armorClassWithSpells(character, shape.ac), from: shape.name }
-    // Spells that last change Armor Class: Shield of Faith adds 2, and Mage Armor sets 13 and Dexterity for one in no armor.
-    const armorClass = armorClassWithSpells(character, derived.armorClass, character.sheet.armor ? undefined : { dexterityModifier: derived.abilityModifiers.dex })
+    // Spells that last change Armor Class: Shield of Faith adds 2, and Mage Armor sets 13 and Dexterity for one in no
+    // armor. What worn items add (a Ring of Protection's 1) stays on top of Mage Armor's.
+    const unarmored = { dexterityModifier: derived.abilityModifiers.dex + itemBonus(character.sheet, "armor-class") }
+    const armorClass = armorClassWithSpells(character, derived.armorClass, character.sheet.armor ? undefined : unarmored)
     return { hitPointMaximum: derived.hitPointMaximum + hitPointMaximumFromSpells(character), armorClass, from: derived.armorClassFrom }
   }
   if (character.type !== "npc") return undefined

@@ -13,6 +13,7 @@ npcs:
   - id: "covenant-assassin"
     behavior: "Strikes once with a poisoned blade, then goes over the balcony by rope and is gone into the dark garden. Takes no further turn and is not seen again in this scene."
   - id: "thaddeus-blackthorn"
+    side: "none"
     behavior: "Poisoned and dying. Gasps a few words to whoever reaches him, then dies. Nothing saves him. His last words call for his sister Astrid. He confesses nothing about Mikhail Antonov or the Key."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726789587556"
 ---

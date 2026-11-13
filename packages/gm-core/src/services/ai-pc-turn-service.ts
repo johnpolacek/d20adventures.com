@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { GmPorts, Llm } from "../ports"
+import { itemWords } from "../sheet/items"
 import { spellWords } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
@@ -21,7 +22,13 @@ import { createLegendaryActionService } from "./legendary-action-service"
 function characterSheet(character: TurnCharacter): string {
   const spells = spellWords(character)
   return `Name: ${character.name}
-${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${spells ? `Spells: ${spells}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}`
+${character.archetype ? `Class/Archetype: ${character.archetype}\n` : ""}${character.race ? `Race: ${character.race}\n` : ""}${character.personality ? `Personality: ${character.personality}\n` : ""}${character.background ? `Background: ${character.background}\n` : ""}${character.motivation ? `Motivation: ${character.motivation}\n` : ""}${character.behavior ? `How they act: ${character.behavior}\n` : ""}${character.appearance ? `Appearance: ${character.appearance}\n` : ""}${character.specialAbilities?.length ? `Special Abilities: ${character.specialAbilities.join(", ")}\n` : ""}${spells ? `Spells: ${spells}\n` : ""}${character.skills?.length ? `Skills: ${character.skills.join(", ")}\n` : ""}${character.equipment?.length ? `Equipment: ${character.equipment.map((e) => e.name).join(", ")}\n` : ""}${
+  character.sheet?.items?.length
+    ? `Magic Items:\n${itemWords(character.sheet)
+        .map((line) => `- ${line}\n`)
+        .join("")}`
+    : ""
+}`
 }
 
 function buildAiPcIntentPrompt(

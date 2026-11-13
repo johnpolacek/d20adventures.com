@@ -14,9 +14,11 @@ import { deriveSheet, trainedWith } from "./derive"
 import { criticalFrom, type OncePerTurn, usedThisTurn } from "./feature-rules"
 import type { ConditionChange } from "./harm"
 import { type BlockRider, blockRidersOnHit, blockRiderWords, chargeOf, noLargerThan, type RiderHeld, readRiders, STAT_BLOCK_RIDER } from "./hit-riders"
+import { magicWeaponOf } from "./items"
 import { typesTaken } from "./monster-traits"
 import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
+import { sameSide } from "./sides"
 import { BASE_REACH, type Cover, coverBonus, isNear, placedOf, type Standing, within } from "./space"
 import { enduringTraitOf } from "./species-traits"
 import { markDamage, mirrorImage, rollAdds, weaponDamageFromSpells } from "./spell-effects"
@@ -106,6 +108,20 @@ export function weaponAttack(sheet: Sheet, weaponId: string): Attack {
   }
 }
 
+/**
+ * A hero's attack with the magic weapon they wield in place of a plain one: its name, and its bonus added to the attack
+ * roll and to the first damage part. A Longsword +1 at +5 for 1d8 + 3 is "Longsword +1" at +6 for 1d8 + 4. A plain
+ * weapon's attack is as it was.
+ */
+export function withMagicWeapon(sheet: Sheet, attack: Attack): Attack {
+  const magic = magicWeaponOf(sheet, attack.id)
+  if (!magic) return attack
+  const [part, ...rest] = attack.damage
+  const own = part?.dice ? parseDice(part.dice) : undefined
+  const raised = !part ? [] : own ? [{ ...part, dice: signed(`${own.count}d${own.sides}`, own.bonus + magic.damage) }] : [{ ...part, amount: Math.max(0, (part.amount ?? 0) + magic.damage) }]
+  return { ...attack, name: magic.name, bonus: attack.bonus + magic.attack, damage: [...raised, ...rest] }
+}
+
 /** The mastery property a hero can use with a weapon: the weapon's own, when its kind is one their Weapon Mastery feature names. "vex", or none. */
 export function masteryOf(character: Roller, weaponId: string): string | undefined {
   if (!character.sheet?.weaponMasteries?.includes(weaponId)) return undefined
@@ -136,8 +152,9 @@ function baseAttacks(character: Roller): Attack[] {
   if (shape) return blockAttacks(shape)
   if (character.sheet) {
     const sheet = character.sheet
-    // A class feature may change the attack: Martial Arts' die and Dexterity (./classes).
-    return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => classAttack(character, weaponAttack(sheet, weapon)))
+    // A class feature may change the attack: Martial Arts' die and Dexterity (./classes). A magic weapon's bonus is
+    // added after it, so no feature's own working leaves it out.
+    return [...(sheet.weapons ?? []), UNARMED_STRIKE].map((weapon) => withMagicWeapon(sheet, classAttack(character, weaponAttack(sheet, weapon))))
   }
   if (character.type !== "npc") return []
   const monster = monsterById.get(character.statBlock ?? DEFAULT_STAT_BLOCK) ?? monsterById.get(DEFAULT_STAT_BLOCK)
@@ -518,8 +535,8 @@ export function landBlow<T extends Target>(
   const imaged = mirrorImage(args.target, args.attacker, args.roll)
   if (imaged.deflected) return { attack, roll, taken: 0, hitPoints: { before, after: before, maximum: stats.hitPointMaximum }, target: imaged.character, ...spent, deflected: true }
   // A feature's dice (Sneak Attack), and the attacker's own spell on this target (Hunter's Mark).
-  // An ally of the attacker's stands within 5 feet of the target, on their feet and able to act. An ally is one of the
-  // attacker's own kind, a hero for a hero.
+  // An ally of the attacker's stands within 5 feet of the target, on their feet and able to act. An ally is one on the
+  // attacker's side (./sides): a hero, or an NPC with the party, for a hero.
   const beside = placedOf(args.target)
   const allyBeside =
     !!beside &&
@@ -529,7 +546,7 @@ export function landBlow<T extends Target>(
         !!at &&
         other.id !== args.attacker.id &&
         other.id !== args.target.id &&
-        other.type === args.attacker.type &&
+        sameSide(other, args.attacker) &&
         (other.hitPoints ?? 1) > 0 &&
         !other.dead &&
         !other.fled &&

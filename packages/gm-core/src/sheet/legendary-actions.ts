@@ -20,10 +20,10 @@ import { spellEffectsAfterMove } from "./spell-effects"
  * Incapacitated. The uses spent are kept on the character in `featureUses` under "Legendary Actions". The engine knows
  * no lair, so it counts the plain number, and the lair's is told only.
  *
- * The engine takes them by a plain rule, with no model call: after a hero's turn, while a use is left, the option that
- * is an attack on the nearest hero in reach, else one that moves toward the nearest and attacks if that brings it in
- * reach, else none. It costs no model call a turn and cannot stall play. The rule answers a hero's turn only: after an
- * NPC's turn none is taken, since the engine cannot tell an NPC friend of the party from a foe of the creature.
+ * The engine takes them by a plain rule, with no model call: after the turn of any creature but itself, while a use is
+ * left, the option that is an attack on the nearest enemy in reach, else one that moves toward the nearest enemy and
+ * attacks if that brings it in reach, else none. Its enemies are those the encounter puts on the other side
+ * (./sides), so a bystander is never taken. It costs no model call a turn and cannot stall play.
  *
  * Each block's options are read from its words by a strict reader, since the data types only what they cast, save or
  * deal. Every option of 5.2.1 costs one use, so no cost is read. An option that casts a spell, forces a save, or uses
@@ -169,8 +169,8 @@ function bestAttack(legend: Legend, option: LegendaryOption, target: Legend, pre
 }
 
 /**
- * The Legendary Actions taken right after a hero's turn ends: each Legendary creature that can, in Initiative order,
- * takes one by the plain rule above. None after an NPC's turn, so none after a creature's own. A Walk moves up to half
+ * The Legendary Actions taken right after a creature's turn ends: each Legendary creature that can, in Initiative
+ * order, takes one by the plain rule above. None after a creature's own turn. A Walk moves up to half
  * its walking Speed toward the nearest enemy and draws Opportunity Attacks unless the option says it does not; a
  * Teleport goes straight toward them, through anything, to a point that is not solid. The attack is then made at the
  * nearest enemy it reaches, with the reactions that answer it. Every reaction is answered by `ask`. Everyone comes back
@@ -188,7 +188,7 @@ export function legendaryActionsAfter<T extends Legend>(args: {
   let characters = [...args.characters]
   const taken: LegendaryTaken[] = []
   const ended = characters.find((character) => character.id === args.endedId)
-  if (!ended || ended.type !== "pc") return { characters, taken }
+  if (!ended) return { characters, taken }
   const find = (id: string) => characters.find((character) => character.id === id) as T
   const put = (changed: T) => {
     characters = characters.map((character) => (character.id === changed.id ? changed : character))

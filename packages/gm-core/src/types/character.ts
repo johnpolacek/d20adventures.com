@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { conditionEntrySchema } from "../sheet/condition-entry"
 import { sheetSchema } from "../sheet/sheet"
+import { SIDES } from "../sheet/sides"
 import { concentrationSchema, featureUsesSchema, inspirationSchema, positionSchema, spellEffectSchema, standingOrdersSchema, turnEffectSchema } from "../sheet/turn-effect"
 
 // Equipment item schema and type
@@ -133,6 +134,9 @@ export const npcSchema = baseCharacterSchema.extend({
   attributes: attributesSchema.partial().optional(),
   // The SRD stat block the NPC uses for hit points and Armor Class: "guard", "owlbear". None means a Commoner.
   statBlock: z.string().optional(),
+  // Which side the encounter puts them on: "party" fights beside the heroes, "none" is a bystander. None is a foe.
+  // The encounter's mark gives it as the NPC enters, and it holds for that encounter only (../sheet/sides).
+  side: z.enum(SIDES).optional(),
 })
 
 export type NPC = z.infer<typeof npcSchema>

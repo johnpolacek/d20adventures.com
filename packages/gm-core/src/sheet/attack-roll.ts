@@ -10,6 +10,7 @@ import { attacksPerAction as attacksPerActionOf } from "./feature-rules"
 import { riderBars } from "./hit-riders"
 import { multiattackAfter } from "./multiattack"
 import { shapeOf } from "./shape"
+import { areEnemies } from "./sides"
 import { attackReach, type Cover, coverBetween, coverBonus, type Floor, feetBetween, greaterCover, isNear, placedOf, type Standing, within } from "./space"
 import { attackModesFromSpells } from "./spell-effects"
 import { combatStatsOf } from "./stat-block"
@@ -93,7 +94,7 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
     !!from &&
     others.some((other) => {
       const at = placedOf(other)
-      return !!at && other.type !== character.type && !isDown(other) && !isIncapacitated(other) && within(from, at, 5)
+      return !!at && areEnemies(other, character) && !isDown(other) && !isIncapacitated(other) && within(from, at, 5)
     })
   const spaced: ModeSource[] = [
     ...(band === "long" ? [{ mode: "disadvantage" as const, from: "Long Range" }] : []),
@@ -143,8 +144,8 @@ function featModes(attacker: InScene, target: InScene): ModeSource[] {
 // Whether one can still be attacked: another, up, here, and not one the attacker is Charmed by.
 const standing = (attacker: InScene, other: InScene): boolean => other.id !== attacker.id && !isDown(other) && !hasFled(other) && !cannotAttack(attacker, other)
 
-/** Whether one is an enemy the attacker can still attack: of the other side, up, here, and not one they are Charmed by. */
-export const attackable = (attacker: InScene, other: InScene): boolean => other.type !== attacker.type && standing(attacker, other)
+/** Whether one is an enemy the attacker can still attack: of the other side (./sides), up, here, and not one they are Charmed by. A bystander is not. */
+export const attackable = (attacker: InScene, other: InScene): boolean => areEnemies(attacker, other) && standing(attacker, other)
 
 /**
  * The roll a turn asks for after one is resolved, or none when the turn is done. What it still holds is on the roll
@@ -159,10 +160,9 @@ export const attackable = (attacker: InScene, other: InScene): boolean => other.
  * - A Hide taken with Cunning Action, and any other follow-up of a class's: the roll, after the rest.
  *
  * An attack of the action or the Multiattack goes at the same target, or once that one is down or out of the weapon's
- * reach or range, at the nearest enemy the weapon reaches from where the attacker stands, with no move. With none, the
- * rest is lost. Where the turn's first attack was at one of the attacker's own kind, an NPC at an NPC as one who fights
- * beside the heroes does, the rest go at that one alone: the engine does not know which other NPC is their foe, and a
- * hero is not. The player throws each d20 as they throw the first.
+ * reach or range, at the nearest enemy the weapon reaches from where the attacker stands, with no move (./sides): an
+ * NPC who fights beside the heroes goes on to the nearest foe, as a hero does, and a bystander is never taken. With
+ * none, the rest is lost. The player throws each d20 as they throw the first.
  */
 export function followingRoll(args: { character: InScene; made: RequiredRoll; present: readonly InScene[]; floor?: Floor }): RequiredRoll | undefined {
   const { character, made } = args
@@ -193,12 +193,10 @@ export function followingRoll(args: { character: InScene; made: RequiredRoll; pr
       const target =
         same && reached(same)
           ? same
-          : first && first.type === character.type
-            ? undefined
-            : nearestEnemy(
-                character,
-                args.present.filter((other) => attackable(character, other) && reached(other))
-              )
+          : nearestEnemy(
+              character,
+              args.present.filter((other) => attackable(character, other) && reached(other))
+            )
       return target && best(from, target, tidy(rest))
     }
     // The rest of the Attack action, with the same weapon.

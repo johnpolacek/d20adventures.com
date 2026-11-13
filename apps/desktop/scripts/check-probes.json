@@ -2726,5 +2726,69 @@
         "condition": "grappled"
       }
     ]
+  },
+  {
+    "id": "ally-nearer-than-the-dead",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "big-empty",
+    "hero": "branka-stoneveil",
+    "floor": true,
+    "at": {
+      "branka-stoneveil": [0, 0],
+      "astrid-blackthorn": [5, 0],
+      "ancient-undead": [0, 10],
+      "ancient-undead-2": [30, 30],
+      "ancient-undead-3": [-30, 30]
+    },
+    "narrative": "Three skeletal warriors claw up out of the grey dust. Astrid is at Branka's shoulder, sword drawn, and the nearest of the dead lurches in.",
+    "action": "I smash the nearest of the dead with my warhammer.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "warhammer",
+      "target": "ancient-undead"
+    }
+  },
+  {
+    "id": "ally-beside-no-target",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "big-empty",
+    "hero": "branka-stoneveil",
+    "floor": true,
+    "at": {
+      "branka-stoneveil": [0, 0],
+      "astrid-blackthorn": [5, 0],
+      "ancient-undead": [0, 5],
+      "ancient-undead-2": [30, 30],
+      "ancient-undead-3": [-30, 30]
+    },
+    "narrative": "The dead are up. One of them is on Branka, and Astrid fights at her side.",
+    "action": "I swing my warhammer!",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "warhammer",
+      "target": "ancient-undead"
+    }
+  },
+  {
+    "id": "ally-strikes-the-dead",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "big-empty",
+    "hero": "branka-stoneveil",
+    "actor": "astrid-blackthorn",
+    "floor": true,
+    "at": {
+      "astrid-blackthorn": [0, 0],
+      "branka-stoneveil": [5, 0],
+      "ancient-undead": [0, 5],
+      "ancient-undead-2": [30, 30],
+      "ancient-undead-3": [-30, 30]
+    },
+    "narrative": "Three skeletal warriors claw up out of the grey dust. Branka stands at Astrid's shoulder, and the nearest of the dead lurches in.",
+    "action": "Astrid cuts at the nearest of the dead with her sword.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "shortsword",
+      "target": "ancient-undead"
+    }
   }
 ]

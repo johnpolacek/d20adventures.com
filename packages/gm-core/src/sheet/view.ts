@@ -13,6 +13,7 @@ import { deriveSheet, grantsFeatByLevel, keptChoiceOf, keptOptions, pickOptions 
 import { featureUseCount } from "./feature-rules"
 import type { HitPoints } from "./hit-points"
 import { speciesById } from "./house-species"
+import { type ItemView, itemViews } from "./items"
 import { reactionsOf } from "./reactions"
 import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
@@ -67,6 +68,8 @@ export type SheetView = {
   reactions: ReactionId[]
   // Left out for a class with no Spellcasting.
   spellcasting?: SheetSpellcasting
+  /** The magic items the hero owns, in the order owned. */
+  items: ItemView[]
   /** The Beast form the hero is in, by name: "Wolf". Left out in their own shape. Armor Class and Speed are then the form's. */
   form?: string
 }
@@ -202,6 +205,7 @@ export function sheetView(sheet: Sheet, hitPoints?: number, spellSlots?: readonl
     resistances: derived.resistances.map(titled),
     features,
     reactions: reactionsOf({ id: "", type: "pc", sheet }),
+    items: itemViews(sheet),
     ...(spellcasting ? { spellcasting } : {}),
     ...(form ? { form: form.name } : {}),
   }

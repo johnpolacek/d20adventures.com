@@ -1,5 +1,6 @@
 import type { Spell } from "@d20/srd/schema/spells"
 import { classSpellRange } from "./class-rules"
+import { areEnemies } from "./sides"
 import { BASE_REACH, between, type Cover, caughtIn, coverBetween, distance, type Floor, type Placed, placedOf, type Standing, spaceOf, within } from "./space"
 
 type Here = Standing & { id: string }
@@ -55,9 +56,9 @@ export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone
 
   if (range.area) {
     const area = range.area
-    // The caster's own area: around them, or from them toward the one named. With no one named it points at the nearest of the other side.
+    // The caster's own area: around them, or from them toward the one named. With no one named it points at the nearest enemy (./sides).
     if (range.kind === "self") {
-      const aim = named.find((other) => other.id !== caster.id) ?? [...others].filter((other) => other.type !== caster.type).sort((a, b) => between(from.at, a.at) - between(from.at, b.at))[0]
+      const aim = named.find((other) => other.id !== caster.id) ?? [...others].filter((other) => areEnemies(other, caster)).sort((a, b) => between(from.at, a.at) - between(from.at, b.at))[0]
       const directed = area.shape === "cone" || area.shape === "cube" || area.shape === "line"
       if (directed && !aim) return none("No One In The Way", `${who} has no one to aim ${spell.name} at.`)
       const caught = caughtIn(area, from.at, aim?.at ?? from.at, others, spaceOf(from.size))

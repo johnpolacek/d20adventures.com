@@ -11,10 +11,12 @@ import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, bonusRuleFor, usable } from "../sheet/features"
 import { chargedFeet, escapeFrom } from "../sheet/hit-riders"
+import { itemWords } from "../sheet/items"
 import { type MoveAsk, type Moved, moveBudget, takeMove, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
 import { shapeOf } from "../sheet/shape"
+import { areEnemies, type Side, sameSide, sideWord } from "../sheet/sides"
 import { attackReach, coverBonus, feetBetween, placedOf, within } from "../sheet/space"
 import { attackModesFromSpells, saveBonusFor, saveModesFor } from "../sheet/spell-effects"
 import { endsThings } from "../sheet/spell-ends"
@@ -89,7 +91,10 @@ const rollPickSchema = z.object({
 
 // Someone the roller could attack: anyone else in the scene who is still up.
 type Present = Pick<TurnCharacter, "id" | "name"> &
-  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "spellEffects" | "isComplete" | "position">> & { statBlock?: string }
+  Partial<Pick<TurnCharacter, "type" | "sheet" | "hitPoints" | "healthPercent" | "dead" | "fled" | "conditions" | "turnEffects" | "spellEffects" | "isComplete" | "position">> & {
+    statBlock?: string
+    side?: Side
+  }
 
 /** What the game master reads a character's move as: a roll the engine asks for, an action that takes none, or neither. */
 export type TurnReading = {
@@ -185,7 +190,7 @@ export function createRollRequirementService(ports: GmPorts) {
       const feet = mover ? feetBetween(mover, other) : undefined
       return feet === undefined || attackReach({ distance: feet, reach: 5 }) !== "out"
     }
-    const freeable = [{ ...character, id: self ?? "" }, ...others.filter((other) => other.type === character.type && beside(other))].filter((other) =>
+    const freeable = [{ ...character, id: self ?? "" }, ...others.filter((other) => sameSide(other, character) && beside(other))].filter((other) =>
       other.turnEffects?.some((effect) => effect.id === "attached")
     )
     const conditions = conditionWords(character)
@@ -281,6 +286,12 @@ export function createRollRequirementService(ports: GmPorts) {
       casts ? `Spellcasting ability: ${abilityById.get(casts)?.name}` : undefined,
       character.skills && character.skills.length > 0 ? `Skills: ${character.skills.join(", ")}` : undefined,
       character.equipment && character.equipment.length > 0 ? `Equipment: ${character.equipment.map((e) => `${e.name}${e.description ? ` (${e.description})` : ""}`).join(", ")}` : undefined,
+      // The magic items the hero owns, each with what the game runs of it and the text of what it does not (../sheet/items).
+      character.sheet?.items?.length
+        ? `Magic Items:\n${itemWords(character.sheet)
+            .map((line) => `- ${line}`)
+            .join("\n")}`
+        : undefined,
       character.specialAbilities && character.specialAbilities.length > 0 ? `Special Abilities: ${character.specialAbilities.join(", ")}` : undefined,
       character.background ? `Background: ${character.background}` : undefined,
       character.personality ? `Personality: ${character.personality}` : undefined,
@@ -336,7 +347,7 @@ ${MENU("save")}
    - Picking a lock or disarming a trap is "dexterity".
    - ATTACKS: when the character attacks a creature with a weapon, their fists or a natural weapon, "check" is "attack". "weapon" is the id of one of their own attacks and "target" is the id of who they attack, both from the lists below. The game rolls against the target's Armor Class and rolls the damage, so an attack takes no "difficulty". Never read an attack as a strength or dexterity check. An attack always gives both "weapon" and "target".
      Their attacks: ${attackWords(attacks)}.
-${becoming.length ? `     With a Bonus Action that changes their shape, an attack the same turn is made in the new shape with one of its attacks: ${becoming.map((entry) => `with ${entry.id}, ${attackWords(entry.attacks)}`).join("; ")}.\n` : ""}     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), ...sees(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
+${becoming.length ? `     With a Bonus Action that changes their shape, an attack the same turn is made in the new shape with one of its attacks: ${becoming.map((entry) => `with ${entry.id}, ${attackWords(entry.attacks)}`).join("; ")}.\n` : ""}     Who Is Here: ${targets.map((other) => `${other.id} (${[other.name, sideWord(other), isDown(other) ? "down at 0 hit points" : "", conditionWords(other), feetAway(other), ...sees(other)].filter(Boolean).join(", ")})`).join(", ") || "no one they could attack"}.
      If they name a weapon they do not have, pick the closest of their own attacks. If who they attack is not in Who Is Here, "check" is "none". Drawing, readying or resting a hand on a weapon is not an attack.
 ${
   "type" in character && character.type === "pc"
@@ -518,7 +529,7 @@ Action: "${action}"
           !!from &&
           others.some((other) => {
             const at = placedOf(other)
-            return !!at && other.type !== character.type && !isDown(other) && !isIncapacitated(other) && within(from, at, 5)
+            return !!at && areEnemies(other, character) && !isDown(other) && !isIncapacitated(other) && within(from, at, 5)
           })
         )
       }

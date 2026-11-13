@@ -13,6 +13,7 @@ npcs:
   - id: "astrid-blackthorn"
     behavior: "Gracious hostess on display. Introduces Aelindor, then works the room, glancing at the party now and then."
   - id: "aelindor"
+    side: "none"
     behavior: "Serene elven bard of Faelendar. Performs the Song of the Eldertree and answers politely, his attention on his music. Stops for no one: asked to, he smiles and plays on."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726622649291"
 ---

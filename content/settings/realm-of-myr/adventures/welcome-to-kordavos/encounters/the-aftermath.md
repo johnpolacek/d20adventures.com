@@ -13,6 +13,7 @@ npcs:
   - id: "astrid-blackthorn"
     behavior: "Composed and noble again after the fight. Grateful to the party, quietly furious at the sabotage, and sizing up how useful they could be."
   - id: "petra-velan"
+    side: "none"
     behavior: "Blunt dock hand with a limp and a pipe. Shows anyone who asks the melted cage and says plainly what she saw."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726360716968"
 ---

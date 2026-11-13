@@ -6,9 +6,11 @@
 // spell save DC, spell attack bonus, the slots of each level left as marks, and the spells they can cast. A hero the
 // player plays shows their standing orders for reactions.
 
+import type { ItemView } from "@d20/gm-core/sheet/items"
 import type { SheetSpellcasting } from "@d20/gm-core/sheet/view"
 import { cn } from "@/lib/utils"
 import { eyebrow, panel } from "./hud"
+import { MagicItems } from "./magic-items"
 import { StandingOrders } from "./reaction-card"
 import type { Order, OrderRow, ReactionId } from "./reaction-view"
 import { DeathSaveMarks } from "./roll-parts"
@@ -28,6 +30,8 @@ export interface CardInfo {
   spellcasting?: SheetSpellcasting
   // A hero the player plays: each reaction they have and the order they follow for it.
   reactions?: OrderRow[]
+  // A hero's magic items, from their sheet.
+  items?: readonly ItemView[]
   lines?: string[]
   details?: Array<{ label: string; items: string[] }>
 }
@@ -60,6 +64,7 @@ export function CharacterCard({
       {info.standing && <StandingRow standing={info.standing} />}
       {info.conditions && <p className="mb-2.5 font-serif text-[13px] text-stage-cream italic">{info.conditions}</p>}
       {info.spellcasting && <Spellcasting casting={info.spellcasting} />}
+      {info.items && <MagicItems items={info.items} className="mt-4 mb-2.5" />}
       {info.reactions && onOrders && <StandingOrders key={info.id} rows={info.reactions} compact={compact} className="mt-4 mb-2.5" onChange={onOrders} />}
       {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
       {info.details?.map((section) => (

@@ -11,6 +11,7 @@ import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { legendaryResistanceWords, type SaveStakes, withLegendaryResistanceSpent } from "./legendary-resistance"
 import type { Sheet } from "./sheet"
+import { sameSide } from "./sides"
 import { placedOf, within } from "./space"
 import { type Cast, rollSave, type SaveRoll, spellcastingOf } from "./spells"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
@@ -207,8 +208,8 @@ export function channelDivinity<T extends Channeled>(args: {
       return !!hitPoints && hitPoints.current * 2 <= hitPoints.maximum
     }
     const named = args.targets.map(find).filter(bloodied)
-    // With none named, the Cleric's own side, the most hurt first.
-    const chosen = named.length ? named : characters.filter((other) => other.type === cleric.type && bloodied(other)).sort((a, b) => (hitPointsOf(a)?.current ?? 0) - (hitPointsOf(b)?.current ?? 0))
+    // With none named, the Cleric's own side (../sides), the most hurt first.
+    const chosen = named.length ? named : characters.filter((other) => sameSide(other, cleric) && bloodied(other)).sort((a, b) => (hitPointsOf(a)?.current ?? 0) - (hitPointsOf(b)?.current ?? 0))
     for (const target of chosen) {
       const hitPoints = hitPointsOf(target)
       if (!hitPoints || pool < 1) continue

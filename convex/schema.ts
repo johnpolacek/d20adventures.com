@@ -274,6 +274,8 @@ export default defineSchema({
         spellEffects: v.optional(v.array(v.object({ spell: v.string(), by: v.string(), turns: v.optional(v.number()), amount: v.optional(v.number()), skill: v.optional(v.string()) }))),
         concentration: v.optional(v.object({ spell: v.string() })),
         tempHitPoints: v.optional(v.number()),
+        // The side an encounter marks an NPC as on: with the party, or a bystander. Unmarked is a foe.
+        side: v.optional(v.union(v.literal("party"), v.literal("none"))),
         shape: v.optional(v.object({ form: v.string(), hours: v.number() })),
         position: v.optional(v.object({ x: v.number(), y: v.number() })),
         standingOrders: v.optional(v.record(v.string(), v.string())),

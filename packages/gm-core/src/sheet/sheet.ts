@@ -47,6 +47,21 @@ export const featurePickSchema = z.strictObject({ option: idSchema, cantrip: idS
 export type FeaturePick = z.infer<typeof featurePickSchema>
 
 /**
+ * A magic item the hero owns, by SRD id: `{ id: "ring-of-protection", attuned: true }`. An item that comes in several
+ * versions names the one owned (`variant: "+1"`). A magic weapon, armor or Shield names the equipment it is
+ * (`base: "longsword"`), and it is the one wielded or worn whenever the sheet's `weapons`, `armor` or `shield` holds that
+ * equipment: a Longsword +1 and `weapons: ["longsword"]` is one magic Longsword. `attuned` is set only on an item that
+ * needs Attunement, once the hero is attuned to it. Each entry is one item. Checked by `sheetProblems` (./items).
+ */
+export const ownedItemSchema = z.strictObject({
+  id: idSchema,
+  variant: z.string().min(1).optional(),
+  base: idSchema.optional(),
+  attuned: z.literal(true).optional(),
+})
+export type OwnedItem = z.infer<typeof ownedItemSchema>
+
+/**
  * What a player chooses for a character. Everything else on a character sheet (hit points, Armor Class, saves, skill
  * bonuses) is worked out from this and the SRD data by `deriveSheet`, so no bonus is ever stored.
  */
@@ -108,6 +123,8 @@ export const sheetSchema = z.strictObject({
   weaponMasteries: z.array(idSchema).optional(),
   /** The choices of each level that have no other home: an Ability Score Improvement's feat and raises, and the like. */
   advancements: z.array(advancementSchema).optional(),
+  /** The magic items the hero owns, in the order they were gained. */
+  items: z.array(ownedItemSchema).optional(),
 })
 export type Sheet = z.infer<typeof sheetSchema>
 

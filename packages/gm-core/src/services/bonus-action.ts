@@ -4,6 +4,7 @@ import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm } from "../sheet/death"
 import { useBonusAction } from "../sheet/features"
 import type { Ask } from "../sheet/reactions"
+import { areEnemies } from "../sheet/sides"
 import type { Floor } from "../sheet/space"
 import { settleConcentration } from "../sheet/spell-effects"
 import { castInSpace } from "../sheet/spell-space"
@@ -61,7 +62,7 @@ export async function useBonus(args: {
   const paid = cost && !("problem" in cost) ? cost : undefined
   const everyone = characters.filter((character) => !isDead(character) && !hasFled(character))
   // Who it is cast on: those named, or for a spell attack the only foe here, and otherwise the caster.
-  const foes = everyone.filter((character) => character.type !== actor.type && !isDown(character))
+  const foes = everyone.filter((character) => areEnemies(character, actor) && !isDown(character))
   const named = bonus.targets ?? (bonus.target ? [bonus.target] : spell.attack ? (foes.length === 1 ? [foes[0].id] : []) : [actor.id])
   const floor = again?.spell.id === "spiritual-weapon" ? undefined : await args.floor()
   const spaced = floor ? castInSpace({ spell, caster: actor, everyone, named, floor }) : undefined

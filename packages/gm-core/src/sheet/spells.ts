@@ -14,6 +14,7 @@ import { afterHarm, type DeathRules, type DeathSaves, enduredWords, type Fate, r
 import { deriveSheet, featuresOf, pickedFreeCasts, slotsAt } from "./derive"
 import type { ConditionChange, Harm } from "./harm"
 import { hitPointsOf } from "./hit-points"
+import { itemBonus } from "./items"
 import { legendaryResistanceWords, type SaveStakes, spendsLegendaryResistance, withLegendaryResistanceSpent } from "./legendary-resistance"
 import { magicSaveModes, typesTaken } from "./monster-traits"
 import { type Cover, coverBonus, type Floor, isNear } from "./space"
@@ -83,9 +84,9 @@ export function spellcastingOf(character: Roller): Spellcasting | undefined {
   const modifier = derived.abilityModifiers[cls.spellcasting.ability]
   return {
     ability: cls.spellcasting.ability,
-    // A feature may raise it while it lasts (Innate Sorcery).
-    saveDc: 8 + derived.proficiencyBonus + modifier + classSpellSaveDc(character),
-    attackBonus: derived.proficiencyBonus + modifier,
+    // A feature may raise it while it lasts (Innate Sorcery), and a worn item raises both (the Robe of the Archmagi's 2).
+    saveDc: 8 + derived.proficiencyBonus + modifier + classSpellSaveDc(character) + itemBonus(sheet, "spell-save-dc"),
+    attackBonus: derived.proficiencyBonus + modifier + itemBonus(sheet, "spell-attack-rolls"),
     modifier,
     slots: slotsAt(cls, sheet.level),
     cantrips: row?.cantrips ?? 0,
@@ -106,8 +107,8 @@ export function spellcastingFor(character: Slotted, spellId: string): Spellcasti
   const modifier = derived.abilityModifiers[ability]
   return {
     ability,
-    saveDc: 8 + derived.proficiencyBonus + modifier,
-    attackBonus: derived.proficiencyBonus + modifier,
+    saveDc: 8 + derived.proficiencyBonus + modifier + itemBonus(character.sheet, "spell-save-dc"),
+    attackBonus: derived.proficiencyBonus + modifier + itemBonus(character.sheet, "spell-attack-rolls"),
     modifier,
     slots: own?.slots ?? [],
     cantrips: own?.cantrips ?? 0,

@@ -2,6 +2,7 @@ import { monsterById } from "@d20/srd/monsters"
 import type { Spell } from "@d20/srd/schema/spells"
 import { hasCondition } from "./conditions"
 import { type Ask, canReact, type ReactionOffer, type ReactionTaken, shieldAgainstMagicMissile, withReaction } from "./reactions"
+import { areEnemies, type Sided, sameSide } from "./sides"
 import { placedOf, type Standing, within } from "./space"
 import { type CastCost, type Castee, castCost, rollSave, type SaveRoll, spellcastingOf, withCastSpent } from "./spells"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
@@ -38,13 +39,13 @@ export function counterspellCost(counterer: Counterer): CastCost | undefined {
 }
 
 /**
- * Whether one may counter a casting: they are of the other side, hero against NPC, can take a Reaction (Slow forbids
+ * Whether one may counter a casting: they are the caster's enemy (./sides), can take a Reaction (Slow forbids
  * it), can see the one casting (not Blinded, and the caster not Invisible), stand within 60 feet of them where both have
  * a place on the floor, and can pay for it. Every spell the SRD prints has a Verbal, Somatic or Material component, so
  * every casting can be seen.
  */
 export function canCounter(counterer: Counterer, caster: Castee & Standing, spell: Spell): boolean {
-  if (counterer.id === caster.id || counterer.type === caster.type || !canReact(counterer)) return false
+  if (counterer.id === caster.id || !areEnemies(counterer, caster) || !canReact(counterer)) return false
   const { verbal, somatic, material } = spell.components
   if (!verbal && !somatic && !material) return false
   if (hasCondition(counterer, "blinded") || hasCondition(caster, "invisible")) return false
@@ -60,15 +61,21 @@ const counterSpellcasting = (counterer: Counterer) => spellcastingOf(counterer)
 /**
  * Whether a counter matters, for a standing order of "when it matters". A cantrip never does: it is not worth a level 3
  * spell. A spell of level 3 or higher always does. Any other matters when it would harm one of the counterer's side:
- * it has a spell attack, a save, damage or a condition, and one of those it is aimed at is of the counterer's kind. A
+ * it has a spell attack, a save, damage or a condition, and one of those it is aimed at is on the counterer's side. A
  * Mage's Fireball at the heroes matters to Lyra, and its Healing Word on its own ally does not.
  */
-export function counterspellMatters(args: { counterer: { type: string }; spell: Spell; targets: readonly string[]; characters: readonly { id: string; type: string }[] }): boolean {
+export function counterspellMatters(args: { counterer: Sided; spell: Spell; targets: readonly string[]; characters: readonly (Sided & { id: string })[] }): boolean {
   const { spell } = args
   if (spell.level === 0) return false
   if (spell.level >= 3) return true
   const harmful = !!(spell.attack || spell.saves || spell.damage || spell.conditions)
-  return harmful && args.targets.some((id) => args.characters.find((character) => character.id === id)?.type === args.counterer.type)
+  return (
+    harmful &&
+    args.targets.some((id) => {
+      const target = args.characters.find((character) => character.id === id)
+      return !!target && sameSide(target, args.counterer)
+    })
+  )
 }
 
 /** The offer of Counterspell, in the shape the turn flow asks with (./reactions). `weapon` holds the spell being cast. */

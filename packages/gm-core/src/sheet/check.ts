@@ -9,8 +9,10 @@ import type { Shape } from "../types/character"
 import type { ConditionEntry } from "./condition-entry"
 import { d20Penalty } from "./conditions"
 import { deriveSheet } from "./derive"
+import { itemBonus } from "./items"
 import { shapedModifiers, shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
+import type { Side } from "./sides"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
 import type { SpellEffect } from "./turn-effect"
 
@@ -35,6 +37,8 @@ export type Roller = {
   id?: string
   name?: string
   type?: string
+  /** An NPC's side in the encounter, when it is marked (./sides). */
+  side?: Side
   sheet?: Sheet
   statBlock?: string
   conditions?: readonly ConditionEntry[]
@@ -91,7 +95,8 @@ function baseBonus(character: Roller, check: Check, instead?: AbilityId): number
         ? derived.skills[check.skill].bonus - derived.abilityModifiers[checkAbility(check)] + mods[instead ?? checkAbility(check)]
         : check.kind === "save"
           ? derived.savingThrows[check.ability].bonus - derived.abilityModifiers[check.ability] + mods[check.ability]
-          : mods[check.ability]
+          : // A worn item's bonus to every ability check: a Stone of Good Luck's 1.
+            mods[check.ability] + itemBonus(character.sheet, "ability-checks")
     const printed = !shape ? undefined : check.kind === "skill" ? shape.skills?.[check.skill] : check.kind === "save" ? shape.abilities[check.ability].save : undefined
     return Math.max(own, printed ?? own)
   }

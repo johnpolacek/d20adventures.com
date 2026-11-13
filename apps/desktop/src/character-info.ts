@@ -49,6 +49,7 @@ export function characterInfo(character: TurnCharacter, portrait: string | undef
     ...(standing ? { standing } : {}),
     ...(conditions ? { conditions } : {}),
     ...(sheet?.spellcasting ? { spellcasting: sheet.spellcasting } : {}),
+    ...(sheet?.items.length ? { items: sheet.items } : {}),
     ...(reactions?.length ? { reactions } : {}),
     details: [
       ...(sheet ? sheetDetails(sheet, character.hitDiceUsed) : []),

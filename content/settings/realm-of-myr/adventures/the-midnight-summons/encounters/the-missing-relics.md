@@ -11,6 +11,7 @@ adventureId: "the-midnight-summons"
 landmark: "valkarr-woods/standing-stones"
 npcs:
   - id: "wollandora"
+    side: "party"
     behavior: "Focused on getting Thalbern to agree to investigate in the city. Once she has answered him she asks, once: \"The hour is late and the trail grows cold. Will you take on this task?\" Then she waits for his answer and does not ask again."
     initialInitiative: 20
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/meeting-at-the-stones.png"

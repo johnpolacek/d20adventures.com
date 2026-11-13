@@ -7,6 +7,7 @@ import type { ConditionEntry } from "./condition-entry"
 import type { ModeSource } from "./conditions"
 import { shapeOf } from "./shape"
 import type { Sheet } from "./sheet"
+import { sameSide } from "./sides"
 import { type Point, placedOf, within } from "./space"
 import type { TurnEffect } from "./turn-effect"
 
@@ -59,8 +60,8 @@ type Packed = Bearer & { id?: string; hitPoints?: number; healthPercent?: number
 
 /**
  * Pack Tactics' Advantage on an attack roll: "if at least one of the [attacker]'s allies is within 5 feet of the
- * creature and the ally doesn't have the Incapacitated condition". An ally is one of the attacker's own kind, hero or
- * NPC, as Sneak Attack reads it (./attack). One at 0 hit points is Unconscious, so Incapacitated. Distance is read from
+ * creature and the ally doesn't have the Incapacitated condition". An ally is one on the attacker's side (./sides), as
+ * Sneak Attack reads it (./attack): a hero or an NPC with the party for a party's wolf, a foe for a foe's. One at 0 hit points is Unconscious, so Incapacitated. Distance is read from
  * positions: with no floor, no ally is known to be beside the target and the trait gives nothing.
  */
 export function packTacticsModes(attacker: Packed, target: Packed, present: readonly Packed[] | undefined): ModeSource[] {
@@ -69,7 +70,7 @@ export function packTacticsModes(attacker: Packed, target: Packed, present: read
   if (!trait || !beside) return []
   const ally = (present ?? []).some((other) => {
     const at = placedOf(other)
-    return !!at && other.id !== attacker.id && other.id !== target.id && other.type === attacker.type && !isDown(other) && !hasFled(other) && !isIncapacitated(other) && within(at, beside, 5)
+    return !!at && other.id !== attacker.id && other.id !== target.id && sameSide(other, attacker) && !isDown(other) && !hasFled(other) && !isIncapacitated(other) && within(at, beside, 5)
   })
   return ally ? [{ mode: "advantage", from: trait.name }] : []
 }

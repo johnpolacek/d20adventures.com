@@ -9,8 +9,9 @@ import { shortRestRules } from "./class-rules"
 import type { ConditionEntry } from "./condition-entry"
 import { conditionsAtEncounterEnd, exhaustionOf, withoutCondition } from "./conditions"
 import { type DeathSaves, withHealing } from "./death"
-import { deriveSheet, sheetProblems } from "./derive"
+import { casterOf, deriveSheet, sheetProblems } from "./derive"
 import { hitPointsOf, withHitPoints } from "./hit-points"
+import { attuneOnShortRest } from "./items"
 import type { Sheet } from "./sheet"
 import { spellcastingOf } from "./spells"
 import type { Concentration, Inspiration, SpellEffect, TurnEffect } from "./turn-effect"
@@ -153,7 +154,8 @@ function unrested(character: Rester): string | undefined {
  * maximum by the die's average or more and dice remain. Each class feature regains its uses as its data says: all of
  * them when it recharges on a Short Rest (Action Surge, Bardic Inspiration from level 5), one when a Long Rest feature
  * regains one on a Short Rest (Second Wind, Channel Divinity). A Warlock regains every Pact Magic slot. A Wizard's
- * Arcane Recovery takes back slots once a Long Rest. An NPC's uses that are not a class feature's, a day's casts, stay spent. `roll` throws one die of the size given.
+ * Arcane Recovery takes back slots once a Long Rest. An NPC's uses that are not a class feature's, a day's casts, stay spent. A hero
+ * attunes to one magic item they own, the first in the order owned that needs it, while fewer than three are attuned. `roll` throws one die of the size given.
  *
  * Thalbern, a level 1 Ranger with Constitution 13 (+1) at 3 of 11, is 8 short, more than a d10's 5.5: a 9 and his +1
  * make 10, back to 11, "Thalbern spends 1 Hit Point Die and regains 8 hit points, now 11 of 11."
@@ -208,6 +210,14 @@ export function shortRest<T extends Rester>(character: T, options: { roll: (side
     const given = rule(rested)
     rested = given.character
     facts.push(...given.facts)
+  }
+  // The rest spent with an item the hero owns and is not attuned to: the first that can be, in the order owned (./items).
+  if (rested.sheet) {
+    const attuning = attuneOnShortRest(rested.sheet, casterOf(rested.sheet))
+    if (attuning.attuned) {
+      rested = { ...rested, sheet: attuning.sheet }
+      facts.push(`${name} spends the rest with the ${attuning.attuned} and is now attuned to it.`)
+    }
   }
   if (!facts.length) facts.push(`${name} rests for an hour, and nothing spent comes back.`)
   return { character: rested, facts }

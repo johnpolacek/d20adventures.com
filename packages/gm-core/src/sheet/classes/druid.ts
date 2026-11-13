@@ -8,6 +8,7 @@ import { afterHarm, enduredWords, type Fate, withDamage, withHealing } from "../
 import { hasFeature, usesLeft, withFeatureUsed } from "../feature-rules"
 import type { Harm } from "../harm"
 import { hitPointsOf } from "../hit-points"
+import { sameSide } from "../sides"
 import { placedOf, within } from "../space"
 import { type Cast, rollSave, type SaveRoll, slotsLeft, spellcastingOf } from "../spells"
 import { formAtRoundStart, formBarsCasting, WILD_RESURGENCE, WILD_SHAPE, wildShapeActions, wildShapeUse, withWildShapeSpent } from "./wild-shape"
@@ -109,7 +110,7 @@ export function landsAid<T extends Aided>(args: {
       ? healedNamed
       : healedNamed
         ? undefined
-        : characters.filter((other) => here(other) && other.type === druid.type && at && placedOf(other) && inSphere(other) && missing(other) > 0).sort((a, b) => missing(b) - missing(a))[0]
+        : characters.filter((other) => here(other) && sameSide(other, druid) && at && placedOf(other) && inSphere(other) && missing(other) > 0).sort((a, b) => missing(b) - missing(a))[0]
 
   const dice = aidDice(druid.sheet.level)
   const saves: SaveRoll[] = []

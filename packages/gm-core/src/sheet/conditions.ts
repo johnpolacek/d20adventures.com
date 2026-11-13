@@ -6,6 +6,7 @@ import type { Check } from "./check"
 import { CONDITION_SPANS, type ConditionEntry, type ConditionSpan } from "./condition-entry"
 import { packTacticsModes } from "./monster-traits"
 import type { Sheet } from "./sheet"
+import type { Side as Mark } from "./sides"
 import type { Point } from "./space"
 import { spellImmunities } from "./spell-effects"
 import { DEFAULT_STAT_BLOCK } from "./stat-block"
@@ -91,6 +92,8 @@ export type Afflicted = {
   id?: string
   name?: string
   type?: string
+  /** An NPC's side in the encounter, when it is marked (./sides). */
+  side?: Mark
   statBlock?: string
   hitPoints?: number
   healthPercent?: number
