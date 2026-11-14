@@ -284,7 +284,7 @@ function CardFlow({ roll, answer, actor }: { roll: CardRoll; answer: (dice: numb
   const [key, setKey] = useState(0)
   const mode: CardMode = { kind: "roll", roll, made, resolving: Boolean(made && !result), ...(result ? { result } : {}) }
   return (
-    <div className="relative h-[380px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+    <div className="relative h-[600px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
       <Pill
         className="absolute top-3 left-3 z-40"
         onClick={() => {

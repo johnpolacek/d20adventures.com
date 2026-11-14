@@ -110,51 +110,33 @@ export function rattle() {
   }
 }
 
-// A short note: a sine with a quieter octave above it, so it rings like a small bell.
-function note(c: AudioContext, t: number, freq: number, length: number, peak: number, type: OscillatorType = "sine") {
-  for (const [mult, share] of [
-    [1, 1],
-    [2, 0.25],
-  ]) {
-    const o = c.createOscillator()
-    o.type = type
-    o.frequency.value = freq * mult
-    o.connect(envelope(c, t, peak * share, length, 0.01))
-    o.start(t)
-    o.stop(t + length + 0.05)
-  }
+// A soft, low thud with no pitch to it: a short fall from `from` Hz, and a breath of low noise under it.
+function thud(c: AudioContext, t: number, peak: number, from = 150) {
+  const o = c.createOscillator()
+  o.frequency.setValueAtTime(from, t)
+  o.frequency.exponentialRampToValueAtTime(from * 0.45, t + 0.14)
+  o.connect(envelope(c, t, peak, 0.16, 0.006))
+  o.start(t)
+  o.stop(t + 0.24)
+  const src = c.createBufferSource()
+  src.buffer = noise(c)
+  const low = c.createBiquadFilter()
+  low.type = "lowpass"
+  low.frequency.value = 420
+  src.connect(low).connect(envelope(c, t, peak * 0.5, 0.07, 0.004))
+  src.start(t, Math.random() * 0.5, 0.12)
 }
 
+// The verdict's cue, kept subtle: never a chime. Lower and quieter for a failure, and two for a critical success.
 export type Verdict = "success" | "failure" | "critical-success" | "critical-failure"
 export function verdict(kind: Verdict) {
   const c = audio()
   if (!c) return
   const t = c.currentTime + 0.02
-  if (kind === "success") {
-    note(c, t, 392, 0.45, 0.22)
-    note(c, t + 0.11, 587.3, 0.7, 0.22)
-  } else if (kind === "failure") {
-    note(c, t, 220, 0.3, 0.2, "triangle")
-    note(c, t + 0.16, 174.6, 0.6, 0.2, "triangle")
-  } else if (kind === "critical-success") {
-    for (const [i, f] of [523.3, 659.3, 784, 1046.5].entries()) note(c, t + i * 0.075, f, 0.9 - i * 0.1, 0.17)
-    // A shimmer over the chord.
-    const src = c.createBufferSource()
-    src.buffer = noise(c)
-    const high = c.createBiquadFilter()
-    high.type = "highpass"
-    high.frequency.value = 6000
-    src.connect(high).connect(envelope(c, t + 0.2, 0.05, 0.9, 0.15))
-    src.start(t + 0.2, 0, 1.2)
-  } else {
-    // A dull thud, and a low, sour fall under it.
-    const thud = c.createOscillator()
-    thud.frequency.setValueAtTime(90, t)
-    thud.frequency.exponentialRampToValueAtTime(38, t + 0.35)
-    thud.connect(envelope(c, t, 0.5, 0.4, 0.004))
-    thud.start(t)
-    thud.stop(t + 0.5)
-    note(c, t + 0.05, 146.8, 0.9, 0.1, "triangle")
-    note(c, t + 0.05, 207.7, 0.9, 0.08, "triangle")
-  }
+  if (kind === "success") thud(c, t, 0.3)
+  else if (kind === "failure") thud(c, t, 0.22, 110)
+  else if (kind === "critical-success") {
+    thud(c, t, 0.34)
+    thud(c, t + 0.13, 0.26, 190)
+  } else thud(c, t, 0.3, 90)
 }

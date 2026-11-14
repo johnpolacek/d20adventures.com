@@ -8,18 +8,21 @@
 import { type ReactNode, type RefObject, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
-// Short landscape screens (phones on their side) get compact variants.
-export function useCompact() {
-  const [compact, setCompact] = useState(false)
+function useMedia(query: string) {
+  const [matches, setMatches] = useState(false)
   useEffect(() => {
-    const mq = matchMedia("(max-height: 520px)")
-    const sync = () => setCompact(mq.matches)
+    const mq = matchMedia(query)
+    const sync = () => setMatches(mq.matches)
     sync()
     mq.addEventListener("change", sync)
     return () => mq.removeEventListener("change", sync)
-  }, [])
-  return compact
+  }, [query])
+  return matches
 }
+// Short landscape screens (phones on their side) get compact variants.
+export const useCompact = () => useMedia("(max-height: 520px)")
+// Screens too short for a tall card keep a dice roll's die beside its words.
+export const useShort = () => useMedia("(max-height: 700px)")
 
 export const eyebrow = "font-sans text-[9px] font-medium uppercase tracking-[0.26em] text-stage-gold"
 export const panel = "stage-grain rounded-md border border-stage-line/25 bg-stage-panel/95 shadow-[0_20px_50px_#0006,inset_0_1px_0_#f0d6b214,inset_0_0_60px_#0000004d] backdrop-blur-xl"

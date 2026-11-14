@@ -201,6 +201,19 @@ export function marginText(roll: RollView): string {
   return margin === 0 ? `exactly the ${label}` : margin > 0 ? `beat the ${label} by ${margin}` : `missed by ${-margin}`
 }
 
+/**
+ * What the d20 has to show, said before the roll: "Roll 8 or Higher to Hit". It counts the roll's own modifier and
+ * nothing else, so a die a lasting spell adds or takes away can still change the verdict. An attack hits on a 20
+ * whatever the Armor Class and misses on a 1. Nothing when every face succeeds, or none can.
+ */
+export function rollNeed(ask: RollAsk): { number: number; words: string } | null {
+  const need = ask.dc - (ask.modifier ?? 0)
+  const goal = ask.kind === "attack" ? "Hit" : "Succeed"
+  const number = ask.kind === "attack" ? Math.min(20, Math.max(2, need)) : need
+  if (number < 2 || number > 20) return null
+  return { number, words: number === 20 ? `to ${goal}` : `or Higher to ${goal}` }
+}
+
 export const signedTerm = (n: number) => `${n < 0 ? "minus" : "plus"} ${Math.abs(n)}`
 
 /**
