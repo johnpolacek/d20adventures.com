@@ -1,0 +1,40 @@
+{
+  "id": "branka",
+  "name": "Branka Stoneveil",
+  "role": "Dwarf Fighter",
+  "cast": ["branka", "branka-stoneveil"],
+  "party": true,
+  "height": 1.38,
+  "front": "front.webp",
+  "source": {
+    "generator": "Tripo H3.1 on fal",
+    "triangles": 58120,
+    "cost": 0.6,
+    "made": "2026-11-14"
+  },
+  "rig": {
+    "bones": 18,
+    "weights": "heat"
+  },
+  "clips": ["Idle", "Walk", "Hit"],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 58120,
+      "megabytes": 2.93,
+      "texture": 2048
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 20000,
+      "megabytes": 1.14,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 0.43,
+      "texture": 512
+    }
+  ]
+}

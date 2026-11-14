@@ -1,0 +1,29 @@
+{
+  "height": 1.82,
+  "front": "apose-front.png",
+  "back": "apose-back.png",
+  "joints": {
+    "hips": [448, 468],
+    "spine": [448, 371],
+    "chest": [448, 266],
+    "neck": [448, 162],
+    "head": [448, 128],
+    "headTop": [448, 12],
+    "upperarmL": [550, 198],
+    "forearmL": [611, 341],
+    "handL": [668, 463],
+    "handTipL": [686, 553],
+    "upperarmR": [348, 202],
+    "forearmR": [283, 344],
+    "handR": [215, 466],
+    "handTipR": [190, 564],
+    "thighL": [505, 477],
+    "shinL": [529, 698],
+    "footL": [538, 907],
+    "toeL": [561, 989],
+    "thighR": [390, 474],
+    "shinR": [373, 703],
+    "footR": [360, 924],
+    "toeR": [334, 992]
+  }
+}

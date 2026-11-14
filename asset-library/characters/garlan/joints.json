@@ -1,0 +1,29 @@
+{
+  "height": 1.94,
+  "front": "garlan-apose-front.png",
+  "back": "garlan-apose-back.png",
+  "joints": {
+    "hips": [432, 520],
+    "spine": [432, 420],
+    "chest": [432, 300],
+    "neck": [432, 172],
+    "head": [432, 120],
+    "headTop": [432, 12],
+    "upperarmL": [515, 228],
+    "forearmL": [598, 352],
+    "handL": [660, 468],
+    "handTipL": [688, 560],
+    "upperarmR": [350, 228],
+    "forearmR": [272, 352],
+    "handR": [208, 472],
+    "handTipR": [172, 560],
+    "thighL": [472, 530],
+    "shinL": [520, 705],
+    "footL": [530, 930],
+    "toeL": [545, 985],
+    "thighR": [392, 530],
+    "shinR": [338, 705],
+    "footR": [335, 930],
+    "toeR": [318, 985]
+  }
+}

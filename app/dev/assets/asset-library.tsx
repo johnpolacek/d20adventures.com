@@ -3,7 +3,7 @@
 // The asset library's page. It opens as a grid: characters or places, under the adventure they belong to, narrowed by
 // a search or a filter. A card opens the asset itself:
 //   - a character with a 3D figure stands in a lit room, at any detail level and in any clip the game plays
-//     (lab/stage-art/clips.ts), and one without shows its card;
+//     (asset-library/clips.ts), and one without shows its card;
 //   - a place is shown by the stage's own dev pages, in a frame: a variant, empty or with one of its scenes, as the
 //     stage shows it or as an isometric cut-away.
 
@@ -12,13 +12,16 @@ import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
-import { figureClips, isRigged } from "@/lab/stage-art/clips"
+import { figureClips, isRigged } from "@/asset-library/clips"
 
 export interface Figure {
   id: string
+  // The cast ids its character goes by, and whether it is one of the party.
+  cast?: string[]
+  party?: boolean
   name: string
   height: number
-  source: { generator: string; model: string; triangles: number; cost: number; made: string }
+  source: { generator: string; triangles: number; cost: number; made: string }
   rig: { bones: number; weights: string }
   clips: string[]
   lods: { file: string; triangles: number; megabytes: number; texture: number }[]
@@ -58,7 +61,7 @@ export interface Place {
 type Params = Record<string, string | undefined>
 type Tab = "characters" | "environments"
 
-const BASE = "/stage-lab/figures"
+const BASE = "/dev/assets/file/characters"
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
 const PANEL = "space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm"
 const count = (n: number) => n.toLocaleString("en-US")

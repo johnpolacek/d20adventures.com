@@ -1,0 +1,15 @@
+{
+  "id": "milos",
+  "name": "Milos Radan",
+  "role": "Human Cleric",
+  "cast": ["milos", "milos-radan"],
+  "height": 1.8,
+  "card": {
+    "front": "/stage/fixtures/welcome-to-kordavos/milos-front.webp",
+    "back": "/stage/fixtures/welcome-to-kordavos/milos-back.webp"
+  },
+  "who": "Milos Radan, a lean older human cleric with cropped grey hair and a short grey beard, in an undyed hooded wool robe with a holy symbol on a cord",
+  "stow": "The staff is strapped upright along his back.",
+  "arms": 45,
+  "party": true
+}

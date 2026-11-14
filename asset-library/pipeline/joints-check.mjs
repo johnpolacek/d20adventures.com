@@ -1,11 +1,11 @@
-// A character's joints file drawn over its A-pose front, to check the marks by eye.
+// A character's joints drawn over its A-pose front, to check them by eye before paying for a model.
 //
-//   node lab/stage-art/joints.mjs branka [out.jpg]
+//   node asset-library/pipeline/joints-check.mjs asset-library/characters/branka [out.jpg]
 import { readFile } from "node:fs/promises"
 import sharp from "sharp"
 
-const [id, out = `lab/stage-art/raw/${id}-joints.jpg`] = process.argv.slice(2)
-const spec = JSON.parse(await readFile(`lab/stage-art/figures/${id}.json`, "utf8"))
+const [dir, out = `${dir}/joints.jpg`] = process.argv.slice(2)
+const spec = JSON.parse(await readFile(`${dir}/joints.json`, "utf8"))
 const J = spec.joints
 const BONES = [
   ["hips", "spine"],
@@ -24,7 +24,7 @@ const BONES = [
     [`foot${s}`, `toe${s}`],
   ]),
 ] // prettier-ignore
-const file = `lab/stage-art/raw/${spec.front ?? `${id}-apose-front.png`}`
+const file = `${dir}/apose-front.png`
 const { width, height } = await sharp(file).metadata()
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
 ${BONES.map(([a, b]) => `<line x1="${J[a][0]}" y1="${J[a][1]}" x2="${J[b][0]}" y2="${J[b][1]}" stroke="#00e5ff" stroke-width="3"/>`).join("")}

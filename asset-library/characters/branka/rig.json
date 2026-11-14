@@ -1,0 +1,46 @@
+{
+  "name": "branka-rig",
+  "source": "branka-tripo-model.glb",
+  "height": 1.38,
+  "sourceTriangles": 58120,
+  "weldedPoints": 6895,
+  "quarterTurns": 3,
+  "weights": {
+    "solve": "heat",
+    "standIn": {
+      "points": 16544,
+      "skins": 2,
+      "weighted": 1.0
+    },
+    "patched": 0,
+    "unweighted": 0,
+    "mostBonesOnAPoint": 4
+  },
+  "bones": ["root", "hips", "spine", "chest", "neck", "head", "upperarmL", "forearmL", "handL", "upperarmR", "forearmR", "handR", "thighL", "shinL", "footL", "thighR", "shinR", "footR"],
+  "lods": [
+    {
+      "file": "branka-rig-lod0.glb",
+      "megabytes": 2.93,
+      "triangles": 58120,
+      "texture": 2048,
+      "joints": 18,
+      "turnedAtRest": []
+    },
+    {
+      "file": "branka-rig-lod1.glb",
+      "megabytes": 1.14,
+      "triangles": 20000,
+      "texture": 1024,
+      "joints": 18,
+      "turnedAtRest": []
+    },
+    {
+      "file": "branka-rig-lod2.glb",
+      "megabytes": 0.43,
+      "triangles": 6000,
+      "texture": 512,
+      "joints": 18,
+      "turnedAtRest": []
+    }
+  ]
+}

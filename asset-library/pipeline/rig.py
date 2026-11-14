@@ -1,8 +1,8 @@
 # Rigs a generated character in headless Blender: one skeleton for every character, weights that follow the body, and
 # lighter copies for far cameras.
 #
-#   /Applications/Blender.app/Contents/MacOS/Blender -b -P lab/stage-art/rig.py -- \
-#       public/stage-lab/garlan-tripo-model.glb lab/stage-art/figures/garlan.json public/stage-lab garlan-rig
+#   D=asset-library/characters/garlan
+#   /Applications/Blender.app/Contents/MacOS/Blender -b -P asset-library/pipeline/rig.py -- $D/source.glb $D/joints.json $D .
 #
 # In:  an unrigged GLB standing in an A-pose, and the character's height with its joints on the front painting the
 #      model was made from, in that painting's pixels (figures/<id>.json, the file figure.ts reads).
@@ -45,6 +45,10 @@ TAIL = {
 LODS = [(None, 2048), (20000, 1024), (6000, 512)]
 
 src, spec_file, out_dir, name = sys.argv[sys.argv.index("--") + 1 :][:4]
+# A name of "." is a character's own folder: the copies are lod0.glb and on, and the report rig.json.
+prefix = "" if name == "." else f"{name}-"
+if name == ".":
+    name = os.path.basename(os.path.abspath(out_dir))
 spec = json.load(open(spec_file))
 H = float(spec["height"])
 
@@ -300,7 +304,7 @@ for i, (triangles, width) in enumerate(LODS):
     copy.select_set(True)
     rig.select_set(True)
     bpy.context.view_layer.objects.active = copy
-    path = os.path.join(out_dir, f"{name}-lod{i}.glb")
+    path = os.path.join(out_dir, f"{prefix}lod{i}.glb")
     bpy.ops.export_scene.gltf(
         filepath=path,
         export_format="GLB",
@@ -338,5 +342,5 @@ report = {
     "bones": BONES,
     "lods": made,
 }
-json.dump(report, open(os.path.join(out_dir, f"{name}.json"), "w"), indent=2)
+json.dump(report, open(os.path.join(out_dir, f"{name}.json" if prefix else "rig.json"), "w"), indent=2)
 print("RIG " + json.dumps(report))

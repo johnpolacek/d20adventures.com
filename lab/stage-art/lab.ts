@@ -6,7 +6,7 @@
 import type { Stage } from "@d20/stage"
 import * as THREE from "three"
 import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
-import { figureClips, isRigged } from "./clips"
+import { figureClips, isRigged } from "../../asset-library/clips"
 
 export interface Projector {
   position: number[]
@@ -720,6 +720,55 @@ export function castRings(stage: Stage, chosen: string[]) {
       alive = false
       group.removeFromParent()
       ring.dispose()
+    },
+  }
+}
+
+// A soft patch of shade on the ground under every crowd member. A card throws a sliver of a shadow, as thin as it is,
+// so from above the crowd looks pasted on. The cast's own cards have had such a patch all along (standees.ts).
+export function crowdShade(stage: Stage, strength = 0.4) {
+  const people = stage.crowd.people as { x: number; y?: number; z: number; s?: number; cf?: number }[]
+  const cv = document.createElement("canvas")
+  cv.width = cv.height = 64
+  const g = cv.getContext("2d") as CanvasRenderingContext2D
+  const fall = g.createRadialGradient(32, 32, 2, 32, 32, 32)
+  fall.addColorStop(0, "#fff")
+  fall.addColorStop(0.55, "#777")
+  fall.addColorStop(1, "#000")
+  g.fillStyle = fall
+  g.fillRect(0, 0, 64, 64)
+  const map = new THREE.CanvasTexture(cv)
+  const geo = new THREE.PlaneGeometry(1, 1)
+  geo.rotateX(-Math.PI / 2)
+  const mat = new THREE.MeshBasicMaterial({ color: "#000", alphaMap: map, transparent: true, opacity: strength, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
+  const mesh = new THREE.InstancedMesh(geo, mat, Math.max(1, people.length))
+  mesh.name = "lab:crowd-shade"
+  mesh.frustumCulled = false
+  mesh.renderOrder = 1
+  stage.scene.add(mesh)
+  const at = new THREE.Object3D()
+  let alive = true
+  const tick = () => {
+    if (!alive) return
+    people.forEach((p, i) => {
+      // Someone faded out of the camera's way takes their shade with them.
+      const size = 0.95 * (p.s ?? 1) * (1 - (p.cf ?? 0))
+      at.position.set(p.x, (p.y ?? 0) + 0.025, p.z)
+      at.scale.set(size, 1, size * 0.8)
+      at.updateMatrix()
+      mesh.setMatrixAt(i, at.matrix)
+    })
+    mesh.instanceMatrix.needsUpdate = true
+    requestAnimationFrame(tick)
+  }
+  tick()
+  return {
+    stop: () => {
+      alive = false
+      mesh.removeFromParent()
+      geo.dispose()
+      mat.dispose()
+      map.dispose()
     },
   }
 }

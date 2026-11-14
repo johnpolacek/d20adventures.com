@@ -1,0 +1,4 @@
+# Made by the pipeline, and too heavy for git: models, sheets and check pictures. The small files beside them are kept.
+characters/*/*.glb
+characters/*/*.png
+characters/*/*.jpg

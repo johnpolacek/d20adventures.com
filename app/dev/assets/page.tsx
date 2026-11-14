@@ -6,7 +6,7 @@
 //   /dev/assets?env=realm-of-myr/dragonbone-inn&view=iso -> a place, as the stage shows it or as an isometric cut-away
 //
 // Characters are the cast of every staging (packages/stage/src/stagings) and the player hero looks (public/stage/heroes).
-// One with a folder on the shelf (public/stage-lab/figures, filled by lab/stage-art/library.ts) has a 3D figure.
+// One with a figure in the workspace (asset-library/characters, built by `pnpm assets <id>`) has a 3D figure.
 // Places are the built sets (packages/stage/src/sets), a place's variants kept together.
 //
 // Gated to development: notFound() elsewhere.
@@ -39,11 +39,14 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
   if (!isDev()) notFound()
   const pub = path.join(process.cwd(), "public")
 
+  // A figure goes by every cast id its character has: Branka is `branka` at the gates and `branka-stoneveil` at the inn.
   const figures = new Map<string, Figure>()
-  const shelf = path.join(pub, "stage-lab/figures")
+  const shelf = path.join(process.cwd(), "asset-library/characters")
   for (const id of await readdir(shelf).catch(() => [] as string[])) {
     const text = await readFile(path.join(shelf, id, "figure.json"), "utf8").catch(() => null)
-    if (text) figures.set(id, JSON.parse(text) as Figure)
+    if (!text) continue
+    const figure = JSON.parse(text) as Figure
+    for (const cast of figure.cast ?? [id]) figures.set(cast, figure)
   }
 
   // The cast of every staging, each person once, under the adventure they first appear in.

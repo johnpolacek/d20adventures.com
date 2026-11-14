@@ -1,0 +1,15 @@
+{
+  "id": "lyra",
+  "name": "Lyra Silvanus",
+  "role": "Asterian Arcanist",
+  "cast": ["lyra"],
+  "height": 1.7,
+  "card": {
+    "front": "/stage/fixtures/covert-cargo/lyra-front.webp",
+    "back": "/stage/fixtures/covert-cargo/lyra-back.webp"
+  },
+  "who": "Lyra Silvanus, a slight young arcanist woman with short black hair and round spectacles, in a long teal coat",
+  "stow": "The book is put away in the satchel at her hip, whose strap stays across her chest.",
+  "arms": 40,
+  "party": true
+}

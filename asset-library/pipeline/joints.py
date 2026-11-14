@@ -1,11 +1,10 @@
 # Finds a character's joints on its A-pose front, so the joints file needs no hand.
 #
-#   uv run --python 3.12 --with mediapipe==0.10.14 --with numpy --with pillow lab/stage-art/joints.py branka 1.38 [--write] [--force]
+#   uv run --python 3.12 --with mediapipe==0.10.14 --with numpy --with pillow asset-library/pipeline/joints.py asset-library/characters/branka 1.38 [--write] [--force]
 #
-# In:  lab/stage-art/raw/<id>-apose-front.png, a photoreal figure on flat grey (character.ts sheet).
-# Out: the joints as figures/<id>.json has them, printed. With --write, lab/stage-art/figures/<id>.json is written,
-#      unless one is already there (--force replaces it). When one is there, how far each found joint lies from its
-#      mark is printed, in centimetres.
+# In:  <folder>/apose-front.png, a photoreal figure on flat grey (the pose sheet).
+# Out: the joints, printed. With --write, <folder>/joints.json is written, unless one is already there (--force
+#      replaces it). When one is there, how far each found joint lies from it is printed, in centimetres.
 #
 # A pose model finds shoulders, elbows, wrists, hips, knees, ankles and toes. The trunk and the head are placed between
 # them by fixed shares, and the top of the head is the top of the figure against the grey.
@@ -19,9 +18,9 @@ import numpy as np
 from PIL import Image
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
-ident, height = args[0], float(args[1])
-here = os.path.dirname(os.path.abspath(__file__))
-file = f"{here}/raw/{ident}-apose-front.png"
+folder, height = args[0].rstrip("/"), float(args[1])
+ident = os.path.basename(folder)
+file = f"{folder}/apose-front.png"
 image = np.asarray(Image.open(file).convert("RGB"))
 H, W = image.shape[:2]
 
@@ -64,9 +63,9 @@ for name in ("hips", "spine", "chest", "neck", "head", "headTop"):
     J[name][0] = (shoulders[0] + pelvis[0]) / 2
 
 order = ["hips", "spine", "chest", "neck", "head", "headTop"] + [f"{part}{side}" for side in "LR" for part in ("upperarm", "forearm", "hand", "handTip")] + [f"{part}{side}" for side in "LR" for part in ("thigh", "shin", "foot", "toe")]
-out = {"height": height, "front": f"{ident}-apose-front.png", "back": f"{ident}-apose-back.png", "joints": {k: [int(round(J[k][0])), int(round(J[k][1]))] for k in order}}
+out = {"height": height, "front": "apose-front.png", "back": "apose-back.png", "joints": {k: [int(round(J[k][0])), int(round(J[k][1]))] for k in order}}
 
-target = f"{here}/figures/{ident}.json"
+target = f"{folder}/joints.json"
 report = {"id": ident, "leastSure": round(float(seen), 2)}
 if os.path.exists(target):
     marked = json.load(open(target))["joints"]

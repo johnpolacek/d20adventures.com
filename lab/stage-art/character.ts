@@ -1,55 +1,13 @@
-// Character spike: what a 3D generator needs before it can build a cast member. `sheet` has the Codex CLI, on the owner's
-// ChatGPT subscription, redraw a standee as a photoreal figure in an A-pose, front and back side by side, and splits it.
-// A generator and a rig both want arms clear of the body and nothing held, which the standees' story poses are not.
+// Character spike, 2026-11-10: a cast member as a rigged figure from Meshy 7.1, the generator first tried. Kept for the
+// comparison. Characters are now made in the asset library: `pnpm assets <id>` (asset-library/pipeline/build.ts).
 //
-//   node --import tsx lab/stage-art/character.ts sheet garlan "Garlan Ironfist, sergeant of the Kordavos gate watch" [--stow="The sword stays sheathed at the hip."] [--arms=45]
-//   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts model garlan 1.94
-//   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts tripo garlan 1.94
+//   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts model garlan 1.94   # paid: $1.52 on fal
 //
-// Reads public/stage/fixtures/welcome-to-kordavos/<id>-front.webp and -back.webp. Writes raw/<id>-sheet.png, and
-// raw/<id>-apose-front.png and -back.png, with copies in ~/Desktop/kordavos-gate-spike.
+// Reads raw/<id>-apose-front.png. Writes public/stage-lab/<id>-*.glb and the whole answer to raw/<id>-meshy.json.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import sharp from "sharp"
-import { codexPaint, DESKTOP, dataUri, dirs, fal, fetchBuffer, jpeg, PUB, RAW } from "./gen"
-
-const FIXTURES = "public/stage/fixtures/welcome-to-kordavos"
-
-// `stow` says where what the card's hands hold goes, since a generator fuses anything held into the arm:
-// "The sword stays sheathed at the hip." Arms stand further out for a bulky outfit, so a sleeve clears the hip.
-const prompt = (
-  who: string,
-  stow: string,
-  arms: number
-) => `The attached images are the front and the back of a painted game character: ${who}. Make one landscape reference sheet of the SAME person as a photorealistic costume photograph, for building a 3D model.
-
-Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles: on the left the front view, on the right the back view from directly behind with no face visible.
-
-Pose, in both views: standing straight, feet a little apart, both arms held out from the body at about ${arms} degrees with a clear gap of background between each arm and the body, hands open with fingers apart, palms toward the thighs. Nothing in the hands. ${stow} Neutral face, mouth closed, looking straight ahead.
-
-Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.
-
-Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
-
-async function sheet(id: string, who: string, stow: string, arms: number) {
-  const images = [
-    await jpeg(await sharp(`${FIXTURES}/${id}-front.webp`).flatten({ background: "#808080" }).toBuffer(), 1536),
-    await jpeg(await sharp(`${FIXTURES}/${id}-back.webp`).flatten({ background: "#808080" }).toBuffer(), 1536),
-  ]
-  const png = await codexPaint(`character sheet ${id}`, prompt(who, stow, arms), images)
-  const { width = 0, height = 0 } = await sharp(png).metadata()
-  await writeFile(`${RAW}/${id}-sheet.png`, png)
-  const half = Math.floor(width / 2)
-  for (const [view, left] of [
-    ["front", 0],
-    ["back", half],
-  ] as const) {
-    await sharp(png).extract({ left, top: 0, width: half, height }).png().toFile(`${RAW}/${id}-apose-${view}.png`)
-    await sharp(png).extract({ left, top: 0, width: half, height }).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${id}-apose-${view}.jpg`)
-  }
-  await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${id}-sheet.jpg`)
-  console.log(`${RAW}/${id}-sheet.png ${width}x${height}`)
-}
+import { DESKTOP, dataUri, dirs, fal, fetchBuffer, PUB, RAW } from "./gen"
 
 // `model` sends the A-pose front to Meshy 7.1 on fal: a textured mesh, a rig, and an idle, in one paid call ($1.52 on
 // 2026-11-10). The whole response is kept in raw/, so a finished run is read again and not paid for again.
@@ -92,58 +50,12 @@ async function model(id: string, height: number) {
   if (res.thumbnail?.url) await writeFile(`${DESKTOP}/${id}-model-thumb.png`, await fetchBuffer(res.thumbnail.url))
 }
 
-// `tripo` sends the same A-pose front to Tripo H3.1 on fal with detailed geometry and textures ($0.60 on 2026-11-14). The
-// model comes back unrigged, for rig.py. With --meshy-rig, Meshy rigs it too and gives it an idle ($0.32), for comparing.
-// Both responses are kept in raw/ and read again.
-type Tripo = { model_mesh?: MeshyFile; model_urls?: { glb?: MeshyFile; pbr_model?: MeshyFile }; rendered_image?: MeshyFile }
-
-async function tripo(id: string, height: number) {
-  const kept = async <T>(file: string, make: () => Promise<T>) => {
-    const had = await readFile(file, "utf8").then(
-      (t) => JSON.parse(t) as T,
-      () => null
-    )
-    if (had) return had
-    const res = await make()
-    await writeFile(file, JSON.stringify(res, null, 2))
-    return res
-  }
-  const mesh = await kept<Tripo>(`${RAW}/${id}-tripo.json`, async () =>
-    fal<Tripo>(`character tripo ${id}`, "tripo3d/h3.1/image-to-3d", {
-      image_url: dataUri(await sharp(`${RAW}/${id}-apose-front.png`).png().toBuffer()),
-      texture: true,
-      pbr: true,
-      texture_quality: "detailed",
-      geometry_quality: "detailed",
-      face_limit: 60000,
-    })
-  )
-  const url = mesh.model_urls?.pbr_model?.url ?? mesh.model_urls?.glb?.url ?? mesh.model_mesh?.url
-  if (!url) throw new Error("Tripo returned no model")
-  const save = async (name: string, from: string) => {
-    const buf = await fetchBuffer(from)
-    await writeFile(`${PUB}/${id}-tripo-${name}.glb`, buf)
-    console.log(`${PUB}/${id}-tripo-${name}.glb ${(buf.length / 1e6).toFixed(1)} MB`)
-  }
-  await save("model", url)
-  if (mesh.rendered_image?.url) await writeFile(`${DESKTOP}/${id}-tripo-thumb.png`, await fetchBuffer(mesh.rendered_image.url))
-  if (!process.argv.includes("--meshy-rig")) return
-  const rig = await kept<Meshy>(`${RAW}/${id}-tripo-rig.json`, () =>
-    fal<Meshy>(`character tripo rig ${id}`, "fal-ai/meshy/rigging", { model_url: url, height_meters: height, enable_animation: true, animation_action_id: 0 })
-  )
-  if (rig.rigged_character_glb?.url) await save("rigged", rig.rigged_character_glb.url)
-  if (rig.animation_glb?.url) await save("idle", rig.animation_glb.url)
-}
-
 async function main() {
   const [cmd, id, who] = process.argv.slice(2).filter((a) => !a.startsWith("--"))
   await dirs()
   await mkdir(DESKTOP, { recursive: true })
-  const flag = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3)
-  if (cmd === "sheet" && id && who) return sheet(id, who, flag("stow") ?? "Weapons stay sheathed at the hip or strapped flat against the back.", Number(flag("arms") ?? 40))
   if (cmd === "model" && id) return model(id, Number(who) || 1.8)
-  if (cmd === "tripo" && id) return tripo(id, Number(who) || 1.8)
-  console.log('usage: character.ts sheet <id> "<who they are>" | model <id> <height in metres> | tripo <id> <height in metres>')
+  console.log("usage: character.ts model <id> <height in metres>")
 }
 main().catch((err) => {
   console.error(String(err instanceof Error ? err.message : err))

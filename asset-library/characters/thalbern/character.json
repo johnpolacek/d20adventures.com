@@ -1,0 +1,15 @@
+{
+  "id": "thalbern",
+  "name": "Thalbern",
+  "role": "Ranger of the Valkarr Woods",
+  "cast": ["thalbern"],
+  "height": 1.82,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp"
+  },
+  "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
+  "stow": "The bow is slung across his back beside the quiver, and both blades stay sheathed at his hips.",
+  "arms": 40,
+  "party": true
+}

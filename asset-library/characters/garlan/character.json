@@ -1,0 +1,15 @@
+{
+  "id": "garlan",
+  "name": "Garlan Ironfist",
+  "role": "Sergeant of the Gate Watch",
+  "cast": ["garlan"],
+  "height": 1.94,
+  "card": {
+    "front": "/stage/fixtures/welcome-to-kordavos/garlan-front.webp",
+    "back": "/stage/fixtures/welcome-to-kordavos/garlan-back.webp"
+  },
+  "who": "Garlan Ironfist, a broad, bearded human sergeant of the gate watch",
+  "stow": "The sword stays sheathed at the hip.",
+  "arms": 40,
+  "party": false
+}

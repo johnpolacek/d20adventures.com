@@ -1,0 +1,46 @@
+{
+  "name": "garlan-rig",
+  "source": "garlan-tripo-model.glb",
+  "height": 1.94,
+  "sourceTriangles": 59102,
+  "weldedPoints": 5387,
+  "quarterTurns": 3,
+  "weights": {
+    "solve": "heat",
+    "standIn": {
+      "points": 11788,
+      "skins": 29,
+      "weighted": 1.0
+    },
+    "patched": 0,
+    "unweighted": 0,
+    "mostBonesOnAPoint": 4
+  },
+  "bones": ["root", "hips", "spine", "chest", "neck", "head", "upperarmL", "forearmL", "handL", "upperarmR", "forearmR", "handR", "thighL", "shinL", "footL", "thighR", "shinR", "footR"],
+  "lods": [
+    {
+      "file": "garlan-rig-lod0.glb",
+      "megabytes": 3.26,
+      "triangles": 59102,
+      "texture": 2048,
+      "joints": 18,
+      "turnedAtRest": []
+    },
+    {
+      "file": "garlan-rig-lod1.glb",
+      "megabytes": 1.25,
+      "triangles": 19999,
+      "texture": 1024,
+      "joints": 18,
+      "turnedAtRest": []
+    },
+    {
+      "file": "garlan-rig-lod2.glb",
+      "megabytes": 0.46,
+      "triangles": 5999,
+      "texture": 512,
+      "joints": 18,
+      "turnedAtRest": []
+    }
+  ]
+}

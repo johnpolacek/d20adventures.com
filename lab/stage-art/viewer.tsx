@@ -12,7 +12,9 @@
 //   &paint=0                         no brush filter over the frame
 //   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
 //   &figure=<castId>:<file>[:yaw[:clip]]  /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee. Several, joined by commas.
+//                                    `@garlan` or `@garlan/lod2` for <file> is a figure from the asset library (asset-library/characters).
 //                                    A figure from rig.py plays the written clips: Idle, Walk or Hit. __lab.figures[castId].play(name) changes it.
+//   &shade=0.4                       a soft patch of shade on the ground under every crowd member
 //   &figenv=0.55                     how brightly a figure reflects its own lit room: 0 leaves it to the stage's sky
 //   &cards=1                        /stage-lab/cards/<castId>-front.webp and -back.webp in place of each standee's art
 //   &fill=1                         (b) paint runs on over surfaces no painting saw, in place of the bare set
@@ -30,9 +32,9 @@
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
+import { withLook } from "../../asset-library/looks"
 import { iso, isoSet } from "./iso"
-import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, castRings, drift, pano, projectPaintings } from "./lab"
-import { withLook } from "./looks"
+import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, castRings, crowdShade, drift, pano, projectPaintings } from "./lab"
 
 type Params = Record<string, string | undefined>
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
@@ -60,6 +62,7 @@ export function LabViewer({ params }: { params: Params }) {
       const staging = structuredClone(await STAGINGS[stagingKey]()) as { set: string; cast?: { id: string; art?: { front: string; back?: string } }[] }
       // &look=<shot>: the set's isometric look (looks.ts), under whatever else the address gives.
       const { params: q, look } = withLook(params, staging.set)
+      if (look?.cast) staging.cast = [...(staging.cast ?? []), ...(look.cast as NonNullable<typeof staging.cast>)]
       // &cards=1: each cast member's repainted card, where one has been made. The spec takes page blobs, not /stage-lab paths.
       if (q.cards) {
         const blob = async (url: string) => {
@@ -178,7 +181,14 @@ export function LabViewer({ params }: { params: Params }) {
       // &figure=<castId>:<file>[:yaw]: /stage-lab/<file>.glb, a rigged 3D figure, in place of that cast member's standee.
       for (const one of q.figure?.split(",") ?? []) {
         const [castId, file, yaw, clip] = one.split(":")
-        const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw), clip, env: num(q.figenv) })
+        // `@garlan` or `@garlan/lod2` is a figure from the asset library. Anything else is a file in /stage-lab.
+        const url = file.startsWith("@") ? `/dev/assets/file/characters/${file.slice(1).split("/")[0]}/${file.split("/")[1] ?? "lod0"}.glb` : `/stage-lab/${file}.glb`
+        // A figure that is not there yet, or will not load, leaves its card standing.
+        const f = await addFigure(st, url, castId, { yaw: num(yaw), clip, env: num(q.figenv) }).catch((error) => {
+          console.warn(`[lab] no figure for ${castId}: ${error instanceof Error ? error.message : error}`)
+          return null
+        })
+        if (!f) continue
         stops.push(f.stop)
         lab.figure = { triangles: f.triangles, clips: f.clips }
         lab.figures = { ...(lab.figures as object), [castId]: { play: f.play, pose: f.pose, clips: f.clips, triangles: f.triangles } }
@@ -220,6 +230,8 @@ export function LabViewer({ params }: { params: Params }) {
         })
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }
+      // &shade=0.4: a soft patch of shade under every crowd member, that dark.
+      if (num(q.shade)) stops.push(crowdShade(st, num(q.shade)).stop)
       // &rings=id,id or &rings=party: a ring on the ground under each cast member, gold under the named ones.
       if (q.rings) {
         const party = (staging as { shots?: Record<string, { subjects?: string[] }> }).shots?.party?.subjects ?? []
