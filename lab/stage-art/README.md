@@ -394,3 +394,16 @@ node lab/stage-art/strip.mjs lab/stage-art/raw/captures rig-Walk 8 ~/Desktop/d20
 - Not done: the clips scored by blind judges, a second character to prove the clips carry over, joints found without a hand-marked file, the figures lit as the cards are (they read dark), an attack, the copies swapped by distance.
 
 Skills copied from github.com/MengTo/Skills at 3cc9345, MIT, into `.agents/skills`: `game-dev-character-model`, `build-rigged-game-assets`, `workflow-score-to-target`, `3d-wood-lighting-scorecard`. Their demos and previews are left out.
+
+## Asset library, 2026-11-14
+
+`/dev/assets` lists the figures on the shelf and shows one in a lit room, at each detail level and in each clip.
+
+```sh
+node --import tsx lab/stage-art/library.ts add garlan garlan-rig "Garlan Ironfist" "Sergeant of the Gate Watch" --generator="Tripo H3.1 on fal" --cost=0.6
+open "http://localhost:3057/dev/assets?id=garlan&lod=0&clip=Walk"
+```
+
+- The shelf is `public/stage-lab/figures/<id>/`: `figure.json`, three copies and the A-pose front it was made from. It is not in git, like the rest of `public/stage-lab`.
+- Seen close, the 6,000 triangle copy has a tear across the face and crumpled armour. It holds at the inn's distance only.
+- Not done: where shipped figures live, a card picture from the model itself, props and monsters.
