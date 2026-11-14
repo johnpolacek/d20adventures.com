@@ -6,6 +6,7 @@
 import type { Stage } from "@d20/stage"
 import * as THREE from "three"
 import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
+import { figureClips, isRigged } from "./clips"
 
 export interface Projector {
   position: number[]
@@ -595,7 +596,8 @@ export async function addSplat(stage: Stage, base: string, o: { gain?: number; y
 
 // Character spike: a rigged, animated glTF figure in place of a cast member's standee, at their spot and facing, scaled
 // to their height. It casts and takes the sun's shadow and plays its first clip on its own clock.
-export async function addFigure(stage: Stage, url: string, castId: string, o: { yaw?: number; keep?: boolean } = {}) {
+// A figure rigged by rig.py carries the shared skeleton and no clips: it plays the written ones (clips.ts), `clip` or Idle.
+export async function addFigure(stage: Stage, url: string, castId: string, o: { yaw?: number; keep?: boolean; clip?: string } = {}) {
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js")
   const s = stage.standees.items.get(castId)
   if (!s) throw new Error(`No cast member ${castId}`)
@@ -624,16 +626,37 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
   // The standee's own update shows it again every frame, so its group is pinned hidden.
   if (!o.keep) Object.defineProperty(s.grp, "visible", { get: () => false, set: () => {} })
   const mixer = new THREE.AnimationMixer(root)
-  if (gltf.animations[0]) mixer.clipAction(gltf.animations[0]).play()
+  const clips = gltf.animations.length || !isRigged(root) ? gltf.animations : figureClips(root, box.max.y - box.min.y)
+  const first = clips.find((c) => c.name === o.clip) ?? clips[0]
+  let playing = first ? mixer.clipAction(first).play() : null
+  // Another clip by name, eased into over a fifth of a second.
+  const play = (name: string) => {
+    const next = clips.find((c) => c.name === name)
+    if (!next) return false
+    held = false
+    const action = mixer.clipAction(next).reset().play()
+    if (playing && playing !== action) playing.crossFadeTo(action, 0.2, false)
+    playing = action
+    return true
+  }
   let last = performance.now()
   let alive = true
+  // A clip held at one moment, for a capture: the figure stops playing until `play` is called.
+  let held = false
+  const pose = (name: string, seconds: number) => {
+    if (!play(name) || !playing) return false
+    held = true
+    playing.time = seconds
+    mixer.update(0)
+    return true
+  }
   const tick = (now: number) => {
     if (!alive) return
-    mixer.update(Math.min(0.1, (now - last) / 1000))
+    if (!held) mixer.update(Math.min(0.1, (now - last) / 1000))
     place()
     last = now
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
-  return { root, mixer, triangles, clips: gltf.animations.map((a) => `${a.name} ${a.duration.toFixed(1)}s`), stop: () => (alive = false) }
+  return { root, mixer, triangles, play, pose, clips: clips.map((a) => `${a.name} ${a.duration.toFixed(1)}s`), stop: () => (alive = false) }
 }

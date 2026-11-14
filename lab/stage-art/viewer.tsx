@@ -11,7 +11,8 @@
 //   &cast=off                        hide cast, crowd and effects (for plates)
 //   &paint=0                         no brush filter over the frame
 //   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
-//   &figure=<castId>:<file>[:yaw]    /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee. Several, joined by commas.
+//   &figure=<castId>:<file>[:yaw[:clip]]  /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee. Several, joined by commas.
+//                                    A figure from rig.py plays the written clips: Idle, Walk or Hit. __lab.figures[castId].play(name) changes it.
 //   &cards=1                        /stage-lab/cards/<castId>-front.webp and -back.webp in place of each standee's art
 //   &fill=1                         (b) paint runs on over surfaces no painting saw, in place of the bare set
 //   &bare=1                         (b) those surfaces in flat magenta
@@ -143,10 +144,11 @@ export function LabViewer({ params }: { params: Params }) {
       w.__lab = lab
       // &figure=<castId>:<file>[:yaw]: /stage-lab/<file>.glb, a rigged 3D figure, in place of that cast member's standee.
       for (const one of params.figure?.split(",") ?? []) {
-        const [castId, file, yaw] = one.split(":")
-        const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw) })
+        const [castId, file, yaw, clip] = one.split(":")
+        const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw), clip })
         stops.push(f.stop)
         lab.figure = { triangles: f.triangles, clips: f.clips }
+        lab.figures = { ...(lab.figures as object), [castId]: { play: f.play, pose: f.pose, clips: f.clips, triangles: f.triangles } }
       }
       // &dummy=x,z: a person-sized solid at that spot, standing in for a 3D character, to see its shadow on the paint.
       const dummy = params.dummy?.split(",").map(Number)

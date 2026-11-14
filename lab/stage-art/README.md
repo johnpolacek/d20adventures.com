@@ -364,3 +364,33 @@ node --import tsx lab/stage-art/capture.ts --name=iso --tier=ultra --view "--q=$
 - Both figures hold up at this distance, beside the photograph cards.
 - Meshy's rig on the Tripo mesh ($0.32) stretched a black sheet out of his waist in the idle. Meshy's idle 0 still turns its own figure's back.
 - Not done: a figure that animates cleanly, a second character, the set's look scored against a target, the desktop app.
+
+## Rigged figures, 2026-11-14
+
+One skeleton for every character, built in headless Blender 5.3, and clips written once as turns.
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender -b -P lab/stage-art/rig.py -- public/stage-lab/garlan-tripo-model.glb lab/stage-art/figures/garlan.json public/stage-lab garlan-rig
+S="staging=welcome-to-kordavos/the-dragonbone-inn&paint=0&iso=45,35,40,3.6&isoat=3,-0.95&isolight=1.4,0.3,1.8"
+node --import tsx lab/stage-art/capture.ts --name=rig --tier=high "--q=$S&figure=beric:garlan-rig-lod0:16:Walk" --poses=beric:Walk:8
+node lab/stage-art/strip.mjs lab/stage-art/raw/captures rig-Walk 8 ~/Desktop/d20-iso-spike/rig-Walk-strip.jpg 640 1100 692 80
+```
+
+- `rig.py` takes an unrigged A-pose GLB and the joints `figure.ts` already reads, marked on the front painting. It writes three copies with no clips: 59,102, 20,000 and 6,000 triangles, at 3.3, 1.3 and 0.5 MB, from a 16 MB source. About 5 seconds.
+- The skeleton is `figure.ts`'s: 18 bones, the same names, every bone square to the world at rest. `clips.ts` writes Idle, Walk and Hit for it, and they play on any figure it rigs.
+- Weights are solved by Blender's heat method on a stand-in, the mesh remade as one closed outer skin, and handed to the real mesh. No black sheet at the waist, and the tabard follows the legs.
+- Tripo faces its figure down x, not z. `rig.py` turns it by its arms and its boots. Before that the skeleton lay across the body and the solve still reported success: the report's numbers do not show a wrong skeleton, the strips do.
+- Fourteen of him in the inn, high tier at DPR 1.5, on the owner's M3 with 8 GB:
+
+| Cast | Frames a second | Triangles drawn |
+|---|---|---|
+| Cards | 60 | 0.30 M |
+| 6,000 triangle figures | 60 | 0.55 M |
+| 20,000 | 55 | 1.14 M |
+| 59,102 | 40 | 2.78 M |
+
+- A figure's triangles are drawn three times: once for the picture and once for each of two shadow maps.
+- The ultra tier was not measured with figures: free memory fell to 21% on the cards run.
+- Not done: the clips scored by blind judges, a second character to prove the clips carry over, joints found without a hand-marked file, the figures lit as the cards are (they read dark), an attack, the copies swapped by distance.
+
+Skills copied from github.com/MengTo/Skills at 3cc9345, MIT, into `.agents/skills`: `game-dev-character-model`, `build-rigged-game-assets`, `workflow-score-to-target`, `3d-wood-lighting-scorecard`. Their demos and previews are left out.

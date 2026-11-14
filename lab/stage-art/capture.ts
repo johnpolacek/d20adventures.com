@@ -97,7 +97,9 @@ async function main() {
     console.log(`${name}-depth ${JSON.stringify(stats)}, ${name}-rgb`)
   }
   const shots =
-    (pano || arg("glide") || arg("eval") || process.argv.includes("--view")) && !only ? [] : (await ev<string[]>("Object.keys(window.__stage.shots)")).filter((s) => !only || only.includes(s))
+    (pano || arg("glide") || arg("eval") || arg("poses") || process.argv.includes("--view")) && !only
+      ? []
+      : (await ev<string[]>("Object.keys(window.__stage.shots)")).filter((s) => !only || only.includes(s))
   // --eval=<expression>: its value, printed. For looking inside the page.
   if (arg("eval")) console.log(JSON.stringify(await ev(arg("eval") as string)))
   // --glide=from,to[,ms]: the eased move between two shots, caught part way, as <name>-glide.png. Turns motion on.
@@ -127,6 +129,20 @@ async function main() {
     if (process.argv.includes("--camera")) await writeFile(`${OUT}/${name}-view.json`, JSON.stringify(await ev("window.__lab.camera()")))
     await record(`${name}-view`)
     console.log(`${name}-view`)
+  }
+  // --poses=<castId>:<clip>:<count>: that figure's clip held at `count` moments across it, from the page's free viewpoint,
+  // as <name>-<clip>-<i>.png. For looking at a movement frame by frame.
+  const poses = arg("poses")?.split(":")
+  if (poses) {
+    const [castId, clip, count] = [poses[0], poses[1], Number(poses[2] ?? 8)]
+    await ev("window.__stage.shot(window.__lab.view, { instant: true })")
+    const seconds = await ev<number>(`parseFloat(window.__lab.figures[${JSON.stringify(castId)}].clips.find(c => c.startsWith(${JSON.stringify(`${clip} `)})).split(' ')[1])`)
+    for (let i = 0; i < count; i++) {
+      await ev(`window.__lab.figures[${JSON.stringify(castId)}].pose(${JSON.stringify(clip)}, ${(i / count) * seconds})`)
+      await delay(350)
+      await writeFile(`${OUT}/${name}-${clip}-${i}.png`, await pull("window.__stage.capture()"))
+    }
+    console.log(`${name}-${clip} x${count}`)
   }
   for (const shot of shots) {
     await ev(`window.__stage.shot(${JSON.stringify(shot)}, { instant: true })`)
