@@ -67,10 +67,7 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
           if (callout === "shown") setCallout("leaving")
           onClick()
         }}
-        className={cn(
-          "stage-brass grid h-10 w-10 place-items-center rounded-full border-2 transition-[filter,border-color]",
-          active ? "border-stage-gold" : "border-stage-gold/70 hover:border-stage-gold"
-        )}
+        className="stage-brass grid h-10 w-10 place-items-center rounded-full border-0 transition-[filter]"
       >
         <ThumbsUpDownSolid />
       </button>
