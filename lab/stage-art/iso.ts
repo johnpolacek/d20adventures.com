@@ -13,6 +13,8 @@
 // cut away, nothing above it is unless `top` says so, and the set's own sun lights it.
 //   /dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kordavos&tier=high&paint=0&iso=-35,35,60,20&isobox=-14,-4,16,24&isohide=awning
 // &isohide=type,type leaves those parts of the set out: an awning over the people, as a ceiling would be.
+// &isosky=9fc0ff gives the fill a sky colour. &isolamps=x,y,z,intensity,distance;... adds warm lamps.
+// &rings=id,id or &rings=party marks where the cast stand, the named ones in gold (lab.ts castRings).
 
 import type { Stage } from "@d20/stage"
 import * as THREE from "three"
@@ -32,6 +34,9 @@ export interface IsoOptions {
   key?: number
   // The surround's colour at its middle and at its edge.
   surround?: string[]
+  // The fill light's sky colour, and lamps as x, y, z, intensity, distance.
+  sky?: string
+  lamps?: number[][]
 }
 
 // The set's limits on a camera the player drives, lifted: this one stands outside the walls.
@@ -131,7 +136,14 @@ export function iso(stage: Stage, o: IsoOptions) {
       stage.renderer.toneMappingExposure = exposure
     }
   } else stage.renderer.toneMappingExposure = s.set.atmosphere.exposure * (o.gain ?? 1)
-  if (o.ambient) stage.scene.add(new THREE.HemisphereLight("#ffe6c8", "#4a3626", o.ambient))
+  // The fill is warm unless a sky colour is given: a cool one sets the shadows against the sun, as daylight does.
+  if (o.ambient) stage.scene.add(new THREE.HemisphereLight(o.sky ?? "#ffe6c8", o.sky ? "#5a4a3c" : "#4a3626", o.ambient))
+  // Lamps of the look's own: a pool of light about a brazier or a lantern, which the set leaves to its paintings.
+  for (const [x, y, z, intensity = 20, distance = 8] of o.lamps ?? []) {
+    const lamp = new THREE.PointLight("#ffab5e", intensity, distance, 1.6)
+    lamp.position.set(x, y, z)
+    stage.scene.add(lamp)
+  }
   if (o.key) {
     const key = new THREE.DirectionalLight("#dfe6ff", o.key)
     const from = az + THREE.MathUtils.degToRad(70)

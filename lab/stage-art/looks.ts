@@ -14,12 +14,14 @@ export interface Look {
 
 export const LOOKS: Record<string, Look> = {
   "realm-of-myr/kordavos-south-gate": {
-    params: { paint: "0", isobox: "-46,-16,46,34", isohide: "awning", isolight: "1.12,0.1", bloom: "on" },
+    // A cool fill sets the shadows against the low sun, the brazier and the post lantern throw a pool of their own
+    // about the checkpoint, and rings mark the cast out of the crowd.
+    params: { paint: "0", isobox: "-46,-16,46,34", isohide: "awning", isolight: "1.06,0.22", isosky: "9db8e8", isolamps: "3.9,1.3,11.6,38,9;4.3,2.3,12.1,16,7", rings: "party", bloom: "on" },
     // Setts a hand across, not stones a pace across, and dirtier: from above the square is mostly ground.
     materials: { ground: { stones: 0.2, relief: 0.03, grime: 0.8, variance: 0.45 } },
     shots: {
       // The whole gatehouse on its board.
-      wide: { iso: "-35,30,170,34", isoat: "0,6,13" },
+      wide: { iso: "-35,30,190,38", isoat: "0,6,17" },
       // The checkpoint and the head of the queue, where the scene is played.
       play: { iso: "-35,35,70,9", isoat: "2,16" },
     },

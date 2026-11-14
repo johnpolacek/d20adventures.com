@@ -31,7 +31,7 @@
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
 import { iso, isoSet } from "./iso"
-import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, drift, pano, projectPaintings } from "./lab"
+import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, castRings, drift, pano, projectPaintings } from "./lab"
 import { withLook } from "./looks"
 
 type Params = Record<string, string | undefined>
@@ -215,8 +215,15 @@ export function LabViewer({ params }: { params: Params }) {
           gain,
           ambient,
           key,
+          sky: q.isosky ? `#${q.isosky.replace("#", "")}` : undefined,
+          lamps: q.isolamps?.split(";").map((l) => l.split(",").map(Number)),
         })
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
+      }
+      // &rings=id,id or &rings=party: a ring on the ground under each cast member, gold under the named ones.
+      if (q.rings) {
+        const party = (staging as { shots?: Record<string, { subjects?: string[] }> }).shots?.party?.subjects ?? []
+        stops.push(castRings(st, q.rings === "party" ? party : q.rings.split(",")).stop)
       }
       // &drift=<metres>[,<seconds>]: the camera sways that far about where it stands. Needs motion on.
       const sway = q.drift?.split(",").map(Number)

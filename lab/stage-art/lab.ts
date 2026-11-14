@@ -688,3 +688,38 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
   requestAnimationFrame(tick)
   return { root, mixer, triangles, play, pose, clips: clips.map((a) => `${a.name} ${a.duration.toFixed(1)}s`), stop: () => (alive = false) }
 }
+
+// A ring on the ground under each cast member, as a game marks who can be chosen: gold under `chosen`, pale under the
+// rest. From high and far a person is a few dozen pixels, and a crowd of them hides the ones that matter.
+export function castRings(stage: Stage, chosen: string[]) {
+  const group = new THREE.Group()
+  group.name = "lab:rings"
+  const ring = new THREE.RingGeometry(0.4, 0.5, 40)
+  ring.rotateX(-Math.PI / 2)
+  const rings = stage.cast.map((c) => {
+    const gold = chosen.includes(c.id)
+    const mesh = new THREE.Mesh(ring, new THREE.MeshBasicMaterial({ color: gold ? "#ffd27a" : "#f1e6d2", transparent: true, opacity: gold ? 0.95 : 0.55, depthWrite: false, toneMapped: false }))
+    mesh.scale.setScalar(Math.max(0.7, c.height / 1.75))
+    mesh.renderOrder = 2
+    group.add(mesh)
+    return { c, mesh }
+  })
+  stage.scene.add(group)
+  let alive = true
+  const tick = () => {
+    if (!alive) return
+    for (const { c, mesh } of rings) {
+      mesh.position.set(c.x, (c.y ?? 0) + 0.04, c.z)
+      mesh.visible = stage.isOnStage(c.id)
+    }
+    requestAnimationFrame(tick)
+  }
+  tick()
+  return {
+    stop: () => {
+      alive = false
+      group.removeFromParent()
+      ring.dispose()
+    },
+  }
+}
