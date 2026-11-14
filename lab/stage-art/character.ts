@@ -4,6 +4,7 @@
 //
 //   node --import tsx lab/stage-art/character.ts sheet garlan "Garlan Ironfist, sergeant of the Kordavos gate watch"
 //   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts model garlan 1.94
+//   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts tripo garlan 1.94
 //
 // Reads public/stage/fixtures/welcome-to-kordavos/<id>-front.webp and -back.webp. Writes raw/<id>-sheet.png, and
 // raw/<id>-apose-front.png and -back.png, with copies in ~/Desktop/kordavos-gate-spike.
@@ -87,13 +88,55 @@ async function model(id: string, height: number) {
   if (res.thumbnail?.url) await writeFile(`${DESKTOP}/${id}-model-thumb.png`, await fetchBuffer(res.thumbnail.url))
 }
 
+// `tripo` sends the same A-pose front to Tripo H3.1 on fal with detailed geometry and textures ($0.60 on 2026-11-14), and
+// has Meshy rig what comes back and give it the same idle ($0.32). Both responses are kept in raw/ and read again.
+type Tripo = { model_mesh?: MeshyFile; model_urls?: { glb?: MeshyFile; pbr_model?: MeshyFile }; rendered_image?: MeshyFile }
+
+async function tripo(id: string, height: number) {
+  const kept = async <T>(file: string, make: () => Promise<T>) => {
+    const had = await readFile(file, "utf8").then(
+      (t) => JSON.parse(t) as T,
+      () => null
+    )
+    if (had) return had
+    const res = await make()
+    await writeFile(file, JSON.stringify(res, null, 2))
+    return res
+  }
+  const mesh = await kept<Tripo>(`${RAW}/${id}-tripo.json`, async () =>
+    fal<Tripo>(`character tripo ${id}`, "tripo3d/h3.1/image-to-3d", {
+      image_url: dataUri(await sharp(`${RAW}/${id}-apose-front.png`).png().toBuffer()),
+      texture: true,
+      pbr: true,
+      texture_quality: "detailed",
+      geometry_quality: "detailed",
+      face_limit: 60000,
+    })
+  )
+  const url = mesh.model_urls?.pbr_model?.url ?? mesh.model_urls?.glb?.url ?? mesh.model_mesh?.url
+  if (!url) throw new Error("Tripo returned no model")
+  const save = async (name: string, from: string) => {
+    const buf = await fetchBuffer(from)
+    await writeFile(`${PUB}/${id}-tripo-${name}.glb`, buf)
+    console.log(`${PUB}/${id}-tripo-${name}.glb ${(buf.length / 1e6).toFixed(1)} MB`)
+  }
+  await save("model", url)
+  if (mesh.rendered_image?.url) await writeFile(`${DESKTOP}/${id}-tripo-thumb.png`, await fetchBuffer(mesh.rendered_image.url))
+  const rig = await kept<Meshy>(`${RAW}/${id}-tripo-rig.json`, () =>
+    fal<Meshy>(`character tripo rig ${id}`, "fal-ai/meshy/rigging", { model_url: url, height_meters: height, enable_animation: true, animation_action_id: 0 })
+  )
+  if (rig.rigged_character_glb?.url) await save("rigged", rig.rigged_character_glb.url)
+  if (rig.animation_glb?.url) await save("idle", rig.animation_glb.url)
+}
+
 async function main() {
   const [cmd, id, who] = process.argv.slice(2)
   await dirs()
   await mkdir(DESKTOP, { recursive: true })
   if (cmd === "sheet" && id && who) return sheet(id, who)
   if (cmd === "model" && id) return model(id, Number(who) || 1.8)
-  console.log('usage: character.ts sheet <id> "<who they are>" | model <id> <height in metres>')
+  if (cmd === "tripo" && id) return tripo(id, Number(who) || 1.8)
+  console.log('usage: character.ts sheet <id> "<who they are>" | model <id> <height in metres> | tripo <id> <height in metres>')
 }
 main().catch((err) => {
   console.error(String(err instanceof Error ? err.message : err))

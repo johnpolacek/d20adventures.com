@@ -168,7 +168,7 @@ export function LabViewer({ params }: { params: Params }) {
       if (params.iso) {
         const [azimuth = 45, elevation = 35, distance = 40, fov = 24] = params.iso.split(",").map(Number)
         const [gain, ambient, key] = (params.isolight ?? "").split(",").map((v) => num(v))
-        lab.view = iso(st, { azimuth, elevation, distance, fov, room: num(params.room), top: num(params.top), gain, ambient, key })
+        lab.view = iso(st, { azimuth, elevation, distance, fov, room: num(params.room), top: num(params.top), at: params.isoat?.split(",").map(Number), gain, ambient, key })
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }
       // &drift=<metres>[,<seconds>]: the camera sways that far about where it stands. Needs motion on.

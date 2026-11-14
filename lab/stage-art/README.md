@@ -346,3 +346,21 @@ Toggles in the panel switch each spike. `?clip=thalbern-h3-idle` plays the H3 lo
 | `lab.ts`, `viewer.tsx` | The three changes, applied to a running Stage, and the lab page at `app/dev/stage-lab`. |
 
 Generated assets in `public/stage-lab/` and raw outputs in `raw/` are not committed. The scripts regenerate them, with new model output each time.
+
+## Isometric spike, 2026-11-14
+
+The Dragonbone Inn as a lit cut-away seen from high and far, as built, with no paintings. Ultra tier, 1350x900 CSS at DPR 2.
+
+```sh
+S="staging=welcome-to-kordavos/the-dragonbone-inn"
+open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&iso=45,35,40,17&isolight=1.4,0.3,1.8"
+node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts tripo garlan 1.94   # paid: $0.92 on fal
+node --import tsx lab/stage-art/capture.ts --name=iso --tier=ultra --view "--q=$S&paint=0&iso=45,35,40,5.5&isoat=5.2,2.6&isolight=1.4,0.3,1.8&figure=bram:garlan-tripo-model,milos-radan:garlan-model"
+```
+
+- `iso.ts` cuts the two near walls, the ceiling and everything outside the room, and lights the room's own lamps. The set's spec is untouched.
+- The cut is made twice: on the renderer for the view, and on the built set's materials so that what is cut throws no shadow.
+- Tripo H3.1 on fal made Garlan from the same A-pose front Meshy had: $0.60 with detailed geometry and textures, 59,102 triangles, 16 MB, about 3 minutes. Sharper armour and emblem than Meshy 7.1's, and a face nearer the sheet.
+- Both figures hold up at this distance, beside the photograph cards.
+- Meshy's rig on the Tripo mesh ($0.32) stretched a black sheet out of his waist in the idle. Meshy's idle 0 still turns its own figure's back.
+- Not done: a figure that animates cleanly, a second character, the set's look scored against a target, the desktop app.

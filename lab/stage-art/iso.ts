@@ -5,7 +5,7 @@
 // &iso=azimuth,elevation,distance,fov: where the camera stands about the room's middle, in degrees and metres. Azimuth 0
 // looks from +z, 90 from +x. The two walls on the camera's side, the ceiling and everything outside the room are cut
 // away, the room's own lamps are lit as if the camera stood inside, and the sky gives way to a dark surround.
-// &room=1 picks another of the set's rooms. &top=2.4 cuts the walls lower.
+// &room=1 picks another of the set's rooms. &top=2.4 cuts the walls lower. &isoat=x,z looks at that spot, not the middle.
 // &isolight=gain,ambient,key: the room's exposure times `gain`, a soft light from all round, and a key light from above
 // the camera's left that comes in where the roof was and throws shadows.
 
@@ -19,6 +19,7 @@ export interface IsoOptions {
   fov: number
   room?: number
   top?: number
+  at?: number[]
   gain?: number
   ambient?: number
   key?: number
@@ -43,7 +44,7 @@ export function iso(stage: Stage, o: IsoOptions) {
   const [x0, y0, z0, x1, y1, z1] = room.box
   const az = THREE.MathUtils.degToRad(o.azimuth)
   const el = THREE.MathUtils.degToRad(o.elevation)
-  const target = new THREE.Vector3((x0 + x1) / 2, 0.6, (z0 + z1) / 2)
+  const target = new THREE.Vector3(o.at?.[0] ?? (x0 + x1) / 2, 0.6, o.at?.[1] ?? (z0 + z1) / 2)
   const position = new THREE.Vector3(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az)).multiplyScalar(o.distance).add(target)
 
   // What is kept: from just inside the near walls to the far walls' outer faces, floor slab to the cut height.
