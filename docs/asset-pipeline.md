@@ -108,6 +108,8 @@ In the library, alone in a lit room:
 http://localhost:3057/dev/assets?id=garlan&lod=0&clip=Walk
 ```
 
+The folder name in step 5 must be the character's cast id. That is how the library joins the figure to the character, and marks its card 3D.
+
 As frame strips, which is how a movement is judged:
 
 ```sh
@@ -150,6 +152,17 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-dragonbone-i
 
 - `iso=azimuth,elevation,distance,lens`. `lab/stage-art/iso.ts` cuts the two near walls, the ceiling and everything outside the room, and lights the room's own lamps.
 - 13 of the 41 sets have a room. The other 28 are outdoors or open, and have no isometric view yet.
+
+## The asset library
+
+`/dev/assets` is every character and every place in one page.
+
+- Two tabs, Characters and Environments. Each is a grid of cards under the adventure it belongs to, with a search and a filter for what has a 3D figure or an isometric view.
+- Characters are the cast of every staging, each person once, and the player hero looks. 151 on 2026-11-14, one of them in 3D.
+- Environments are the 41 sets as 34 places. A place keeps its variants together: the inn, and the inn at dawn.
+- A character opens as its figure, with detail and clip pills, or as its card. A place opens in the stage's own page, by variant, by scene, and as built or as a cut-away.
+- A place's picture is one of its paintings, or else the art of a scene set there. It is not a render of the set.
+- The page reads the stagings, the sets and the shelf each time it loads. There is no index to keep.
 
 ## Where things are
 

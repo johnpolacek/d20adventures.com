@@ -1,8 +1,11 @@
 "use client"
 
-// The asset library's page: the shelf down the left, and the chosen figure standing in a lit room on the right, at any of
-// its detail levels and in any of its clips. The figure plays the clips the game will (lab/stage-art/clips.ts).
-// A built set is shown by the stage's own dev pages, in a frame: as the stage shows it, or as an isometric cut-away.
+// The asset library's page. It opens as a grid: characters or places, under the adventure they belong to, narrowed by
+// a search or a filter. A card opens the asset itself:
+//   - a character with a 3D figure stands in a lit room, at any detail level and in any clip the game plays
+//     (lab/stage-art/clips.ts), and one without shows its card;
+//   - a place is shown by the stage's own dev pages, in a frame: a variant, empty or with one of its scenes, as the
+//     stage shows it or as an isometric cut-away.
 
 import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
@@ -11,20 +14,27 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { figureClips, isRigged } from "@/lab/stage-art/clips"
 
-export interface Asset {
+export interface Figure {
   id: string
-  kind: string
   name: string
-  role: string
-  status: string
   height: number
-  front: string
   source: { generator: string; model: string; triangles: number; cost: number; made: string }
   rig: { bones: number; weights: string }
   clips: string[]
   lods: { file: string; triangles: number; megabytes: number; texture: number }[]
 }
-
+export interface Character {
+  id: string
+  name: string
+  role: string
+  height: number
+  // The adventure they first appear in, or the player heroes.
+  group: string
+  front: string
+  back: string | null
+  scenes: number
+  figure: Figure | null
+}
 export interface Environment {
   key: string
   title: string
@@ -36,25 +46,36 @@ export interface Environment {
   room: [number, number] | null
   stagings: string[]
 }
+export interface Place {
+  id: string
+  location: string
+  title: string
+  picture: string | null
+  groups: string[]
+  variants: Environment[]
+}
+
+type Params = Record<string, string | undefined>
+type Tab = "characters" | "environments"
 
 const BASE = "/stage-lab/figures"
-const SMALL = new Set(["a", "an", "and", "at", "for", "in", "of", "on", "or", "the", "to", "with"])
-// Title case, as names read in the game: small words stay small unless they open the name.
+const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
+const PANEL = "space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm"
+const count = (n: number) => n.toLocaleString("en-US")
+const SMALL = new Set(["a", "an", "and", "at", "by", "for", "in", "of", "on", "or", "the", "to", "with"])
+// Title case, as names read in the game: small words stay small unless they open the name or follow a colon.
 const named = (s: string) =>
   s
+    .replaceAll("-", " ")
     .split(" ")
-    .map((w, i) => (i > 0 && SMALL.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1)))
+    .map((w, i, all) => (i > 0 && !all[i - 1].endsWith(":") && SMALL.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1)))
     .join(" ")
+const scene = (staging: string) => named(staging.split("/")[1] ?? staging)
+const scenes = (n: number) => `${n} ${n === 1 ? "Scene" : "Scenes"}`
 // The lens that fits a room seen from 40 metres.
 const lens = (room: [number, number]) => Math.round(THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan((Math.hypot(...room) * 0.52) / 40)), 8, 40))
-const frame = (e: Environment, view: string) =>
-  view === "iso" && e.room && e.stagings[0]
-    ? `/dev/stage-lab?staging=${e.stagings[0]}&tier=balanced&paint=0&iso=45,35,40,${lens(e.room)}&isolight=1.4,0.3,1.8&panel=0`
-    : `/dev/stage?set=${e.key}&staging=none&tier=balanced&panel=0`
-const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
-const title = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase())
-const count = (n: number) => n.toLocaleString("en-US")
 
+// ── A figure in a lit room ──
 interface Room {
   renderer: THREE.WebGLRenderer
   scene: THREE.Scene
@@ -64,8 +85,7 @@ interface Room {
   mixer: THREE.AnimationMixer | null
   clips: THREE.AnimationClip[]
   action: THREE.AnimationAction | null
-  // The asset in the room, so a change of detail keeps the camera and the moment in the clip.
-  shown: string | null
+  framed: boolean
 }
 
 function discard(root: THREE.Object3D) {
@@ -79,23 +99,16 @@ function discard(root: THREE.Object3D) {
   })
 }
 
-export function AssetLibrary({ assets, environments, params }: { assets: Asset[]; environments: Environment[]; params: Record<string, string | undefined> }) {
+function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
   const host = useRef<HTMLDivElement>(null)
   const room = useRef<Room | null>(null)
-  const [id, setId] = useState(assets.find((a) => a.id === params.id)?.id ?? assets[0]?.id ?? null)
-  const asset = assets.find((a) => a.id === id) ?? null
-  const [lod, setLod] = useState(Math.min(Number(params.lod) || 0, Math.max(0, (asset?.lods.length ?? 1) - 1)))
-  const [clip, setClip] = useState(params.clip && asset?.clips.includes(params.clip) ? params.clip : (asset?.clips[0] ?? ""))
+  const [lod, setLod] = useState(Math.min(Number(params.lod) || 0, figure.lods.length - 1))
+  const [clip, setClip] = useState(params.clip && figure.clips.includes(params.clip) ? params.clip : (figure.clips[0] ?? ""))
   const [turning, setTurning] = useState(params.turn === "1")
   const [fps, setFps] = useState(0)
   const [loading, setLoading] = useState(false)
-  const kinds = [...new Set(assets.map((a) => a.kind))]
-  const [envKey, setEnvKey] = useState(environments.find((e) => e.key === params.env)?.key ?? null)
-  const env = environments.find((e) => e.key === envKey) ?? null
-  const [view, setView] = useState(params.view === "iso" ? "iso" : "stage")
-  const canIso = !!env?.room && !!env.stagings[0]
 
-  // The room: made once, and kept while assets come and go.
+  // The room: made when a figure is opened, and kept while its detail and its clip change.
   useEffect(() => {
     const el = host.current
     if (!el) return
@@ -129,7 +142,7 @@ export function AssetLibrary({ assets, environments, params }: { assets: Asset[]
     controls.maxPolarAngle = Math.PI * 0.52
     controls.minDistance = 0.6
     controls.maxDistance = 12
-    const r: Room = { renderer, scene, camera, controls, figure: null, mixer: null, clips: [], action: null, shown: null }
+    const r: Room = { renderer, scene, camera, controls, figure: null, mixer: null, clips: [], action: null, framed: false }
     room.current = r
     const size = () => {
       renderer.setSize(el.clientWidth, el.clientHeight, false)
@@ -180,19 +193,18 @@ export function AssetLibrary({ assets, environments, params }: { assets: Asset[]
     }
   }, [])
 
-  // The figure: loaded when the asset or its detail level changes.
+  // The figure: loaded when its detail level changes. The camera and the moment in the clip are kept.
   useEffect(() => {
     const r = room.current
-    if (!r || !asset) return
-    const file = asset.lods[lod]?.file
-    if (!file) return
+    const file = figure.lods[lod]?.file
+    if (!r || !file) return
     let stale = false
     setLoading(true)
     new GLTFLoader()
-      .loadAsync(`${BASE}/${asset.id}/${file}`)
+      .loadAsync(`${BASE}/${figure.id}/${file}`)
       .then((gltf) => {
         if (stale) return discard(gltf.scene)
-        const at = r.shown === asset.id ? (r.action?.time ?? 0) : 0
+        const at = r.action?.time ?? 0
         if (r.figure) {
           r.scene.remove(r.figure)
           discard(r.figure)
@@ -216,12 +228,12 @@ export function AssetLibrary({ assets, environments, params }: { assets: Asset[]
           r.action = r.mixer.clipAction(next).play()
           r.action.time = at
         }
-        if (r.shown !== asset.id) {
+        if (!r.framed) {
           r.controls.target.set(0, tall * 0.5, 0)
           r.camera.position.set(tall * 0.8, tall * 0.72, tall * 2.25)
-          r.shown = asset.id
+          r.framed = true
         }
-        ;(window as unknown as { __assets: { ready?: string } }).__assets.ready = `${asset.id}/${file}`
+        ;(window as unknown as { __assets: { ready?: string } }).__assets.ready = `${figure.id}/${file}`
         setLoading(false)
       })
       .catch((error) => {
@@ -232,7 +244,7 @@ export function AssetLibrary({ assets, environments, params }: { assets: Asset[]
       stale = true
     }
     // The clip is changed below without loading again.
-  }, [asset, lod])
+  }, [figure, lod])
 
   useEffect(() => {
     const r = room.current
@@ -251,136 +263,304 @@ export function AssetLibrary({ assets, environments, params }: { assets: Asset[]
 
   // The address keeps what is shown, so a view can be opened again.
   useEffect(() => {
-    if (envKey) return void history.replaceState(null, "", `/dev/assets?env=${envKey}&view=${view}`)
-    if (!id) return
-    const q = new URLSearchParams({ id, lod: String(lod), clip })
+    const q = new URLSearchParams({ id: figure.id, lod: String(lod), clip })
     if (turning) q.set("turn", "1")
     history.replaceState(null, "", `/dev/assets?${q}`)
-  }, [id, lod, clip, turning, envKey, view])
+  }, [figure, lod, clip, turning])
 
-  const pick = (a: Asset) => {
-    setEnvKey(null)
-    setId(a.id)
-    setLod((l) => Math.min(l, a.lods.length - 1))
-    setClip((c) => (a.clips.includes(c) ? c : (a.clips[0] ?? "")))
-  }
-  const level = asset?.lods[lod]
-
+  const level = figure.lods[lod]
   return (
-    <div className="fixed inset-0 z-[100] flex overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
-      <aside className="flex w-[248px] shrink-0 flex-col border-r border-[#e6c89626] bg-[#0e0a06]">
-        <div className="px-3 pt-3 pb-2 text-[14px] tracking-[0.06em] text-[#f2c97a]">Asset Library</div>
-        <div className="min-h-0 flex-1 overflow-y-auto pb-3">
-          {kinds.map((kind) => (
-            <div key={kind}>
-              <div className="px-3 pt-2 pb-1 text-[10px] tracking-[0.14em] uppercase opacity-50">
-                {title(kind)}s · {assets.filter((a) => a.kind === kind).length}
-              </div>
-              {assets
-                .filter((a) => a.kind === kind)
-                .map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() => pick(a)}
-                    className={`flex w-full items-center gap-2.5 px-3 py-1.5 text-left ${a.id === id && !env ? "bg-[#f2c97a1f]" : "hover:bg-[#f2c97a0d]"}`}
-                  >
-                    {/* biome-ignore lint/performance/noImgElement: a dev page's local file */}
-                    <img src={`${BASE}/${a.id}/${a.front}`} alt="" className="h-14 w-9 rounded-sm object-cover object-top" />
-                    <span className="min-w-0">
-                      <span className={`block truncate text-[13px] ${a.id === id && !env ? "text-[#f2c97a]" : ""}`}>{a.name}</span>
-                      <span className="block truncate text-[10px] opacity-60">{a.role}</span>
-                      <span className="block font-mono text-[9px] opacity-50">
-                        {title(a.status)} · {a.lods.length} Levels
-                      </span>
-                    </span>
-                  </button>
-                ))}
-            </div>
-          ))}
-          <div className="px-3 pt-3 pb-1 text-[10px] tracking-[0.14em] uppercase opacity-50">Environments · {environments.length}</div>
-          {environments.map((e) => (
-            <button
-              key={e.key}
-              type="button"
-              onClick={() => setEnvKey(e.key)}
-              className={`flex w-full items-center gap-2.5 px-3 py-1 text-left ${e.key === envKey ? "bg-[#f2c97a1f]" : "hover:bg-[#f2c97a0d]"}`}
-            >
-              {e.picture ? (
-                // biome-ignore lint/performance/noImgElement: a dev page's local file
-                <img src={e.picture} alt="" loading="lazy" className="h-8 w-12 shrink-0 rounded-sm object-cover" />
-              ) : (
-                <span className="h-8 w-12 shrink-0 rounded-sm border border-[#e6c8961f] bg-[#1a140e]" />
-              )}
-              <span className="min-w-0">
-                <span className={`block truncate text-[12px] ${e.key === envKey ? "text-[#f2c97a]" : ""}`}>{named(e.title)}</span>
-                <span className="block font-mono text-[9px] opacity-50">
-                  {e.objects} Parts · {e.stagings.length} Scenes{e.paintings ? ` · ${e.paintings} Paintings` : ""}
-                </span>
-              </span>
+    <>
+      <div ref={host} className="absolute inset-0" />
+      <div className={`absolute top-14 left-3 ${PANEL}`}>
+        <div className="flex items-center gap-1">
+          <span className="w-10 opacity-60">Detail</span>
+          {figure.lods.map((l, i) => (
+            <button key={l.file} type="button" className={pill(i === lod)} onClick={() => setLod(i)}>
+              {count(l.triangles)}
             </button>
           ))}
         </div>
-      </aside>
-      <main className="relative min-w-0 flex-1">
-        <div ref={host} className="absolute inset-0" />
-        {env && (
-          <>
-            <iframe key={frame(env, view)} src={frame(env, view)} title={env.title} className="absolute inset-0 z-10 h-full w-full border-0 bg-[#0d0b09]" />
-            <div className="absolute top-3 right-3 z-20 space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm">
-              <div className="text-[15px] text-[#f2c97a]">{named(env.title)}</div>
-              <div className="flex items-center gap-1">
-                <span className="w-10 opacity-60">View</span>
-                <button type="button" className={pill(view === "stage" || !canIso)} onClick={() => setView("stage")}>
-                  Stage
-                </button>
-                {canIso && (
-                  <button type="button" className={pill(view === "iso")} onClick={() => setView("iso")}>
-                    Isometric
-                  </button>
-                )}
-              </div>
-              <div className="font-mono text-[10px] opacity-75">
-                {env.objects} parts · {env.shots} shots · {env.paintings} paintings · {env.stagings.length} scenes
-                {env.room ? ` · ${env.room[0].toFixed(1)} × ${env.room[1].toFixed(1)} m` : ""}
-              </div>
-              <div className="font-mono text-[10px] opacity-55">{env.key}</div>
-            </div>
-          </>
-        )}
-        {asset && !env && (
-          <div className="absolute top-3 left-3 space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm">
-            <div className="text-[15px] text-[#f2c97a]">{asset.name}</div>
-            <div className="flex items-center gap-1">
-              <span className="w-10 opacity-60">Detail</span>
-              {asset.lods.map((l, i) => (
-                <button key={l.file} type="button" className={pill(i === lod)} onClick={() => setLod(i)}>
-                  {count(l.triangles)}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-10 opacity-60">Clip</span>
-              {asset.clips.map((c) => (
-                <button key={c} type="button" className={pill(c === clip)} onClick={() => setClip(c)}>
-                  {c}
-                </button>
-              ))}
-              <button type="button" className={`ml-2 ${pill(turning)}`} onClick={() => setTurning((t) => !t)}>
-                Turntable
-              </button>
-            </div>
-            {level && (
-              <div className="font-mono text-[10px] opacity-75">
-                {count(level.triangles)} tris · {level.megabytes} MB · {level.texture} px · {asset.rig.bones} bones · {asset.height} m · {loading ? "…" : `${fps} fps`}
-              </div>
-            )}
-            <div className="font-mono text-[10px] opacity-55">
-              {asset.source.generator} · {count(asset.source.triangles)} tris · ${asset.source.cost.toFixed(2)} · {asset.source.made}
-            </div>
+        <div className="flex items-center gap-1">
+          <span className="w-10 opacity-60">Clip</span>
+          {figure.clips.map((c) => (
+            <button key={c} type="button" className={pill(c === clip)} onClick={() => setClip(c)}>
+              {c}
+            </button>
+          ))}
+          <button type="button" className={`ml-2 ${pill(turning)}`} onClick={() => setTurning((t) => !t)}>
+            Turntable
+          </button>
+        </div>
+        {level && (
+          <div className="font-mono text-[10px] opacity-75">
+            {count(level.triangles)} tris · {level.megabytes} MB · {level.texture} px · {figure.rig.bones} bones · {figure.height} m · {loading ? "…" : `${fps} fps`}
           </div>
         )}
-      </main>
+        <div className="font-mono text-[10px] opacity-55">
+          {figure.source.generator} · {count(figure.source.triangles)} tris · ${figure.source.cost.toFixed(2)} · {figure.source.made}
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ── A character: its figure, or its card ──
+function CharacterView({ character, params }: { character: Character; params: Params }) {
+  const [as, setAs] = useState(character.figure && params.as !== "card" ? "figure" : "card")
+  useEffect(() => {
+    if (as === "card") history.replaceState(null, "", `/dev/assets?id=${character.id}&as=card`)
+  }, [as, character])
+  return (
+    <>
+      {as === "figure" && character.figure ? (
+        <FigureRoom figure={character.figure} params={params} />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center gap-10 p-10">
+          {[character.front, character.back].map(
+            (src) =>
+              src && (
+                // biome-ignore lint/performance/noImgElement: a dev page's local file
+                <img key={src} src={src} alt="" className="max-h-full min-h-0 max-w-[42%] object-contain" />
+              )
+          )}
+        </div>
+      )}
+      <div className={`absolute top-3 right-3 ${PANEL}`}>
+        <div className="text-[15px] text-[#f2c97a]">{named(character.name)}</div>
+        <div className="opacity-70">{named(character.role)}</div>
+        {character.figure && (
+          <div className="flex items-center gap-1">
+            <button type="button" className={pill(as === "figure")} onClick={() => setAs("figure")}>
+              Figure
+            </button>
+            <button type="button" className={pill(as === "card")} onClick={() => setAs("card")}>
+              Card
+            </button>
+          </div>
+        )}
+        <div className="font-mono text-[10px] opacity-75">
+          {character.height ? `${character.height} m · ` : ""}
+          {scenes(character.scenes).toLowerCase()} · {character.figure ? "3D figure" : "card only"}
+        </div>
+        <div className="font-mono text-[10px] opacity-55">{character.id}</div>
+      </div>
+    </>
+  )
+}
+
+// ── A place: one of its variants, empty or with a scene, in the stage's own page ──
+function PlaceView({ place, params }: { place: Place; params: Params }) {
+  const [key, setKey] = useState(place.variants.find((v) => v.key === params.env)?.key ?? place.variants[0].key)
+  const env = place.variants.find((v) => v.key === key) ?? place.variants[0]
+  const [staging, setStaging] = useState(params.scene && env.stagings.includes(params.scene) ? params.scene : null)
+  const [view, setView] = useState(params.view === "iso" ? "iso" : "stage")
+  // The cut-away is the lab's, which shows a set through one of its scenes.
+  const iso = view === "iso" && !!env.room && !!env.stagings[0]
+  const src = iso
+    ? `/dev/stage-lab?staging=${staging ?? env.stagings[0]}&tier=balanced&paint=0&iso=45,35,40,${lens(env.room as [number, number])}&isolight=1.4,0.3,1.8&panel=0${staging ? "" : "&cast=off"}`
+    : staging
+      ? `/dev/stage?staging=${staging}&tier=balanced&panel=0`
+      : `/dev/stage?set=${env.key}&staging=none&tier=balanced&panel=0`
+  useEffect(() => {
+    history.replaceState(null, "", `/dev/assets?env=${env.key}&view=${view}${staging ? `&scene=${staging}` : ""}`)
+  }, [env, view, staging])
+  return (
+    <>
+      <iframe key={src} src={src} title={env.title} className="absolute inset-0 h-full w-full border-0 bg-[#0d0b09]" />
+      <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
+        <div className="text-[15px] text-[#f2c97a]">{named(env.title)}</div>
+        {place.variants.length > 1 && (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="w-12 opacity-60">Variant</span>
+            {place.variants.map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                className={pill(v.key === env.key)}
+                onClick={() => {
+                  setKey(v.key)
+                  setStaging(null)
+                }}
+              >
+                {v.key === place.id ? "Base" : named(v.key.slice(place.id.length + 1))}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex items-center gap-1">
+          <span className="w-12 opacity-60">View</span>
+          <button type="button" className={pill(!iso)} onClick={() => setView("stage")}>
+            Stage
+          </button>
+          {env.room && env.stagings[0] && (
+            <button type="button" className={pill(iso)} onClick={() => setView("iso")}>
+              Isometric
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="w-12 opacity-60">Scene</span>
+          <button type="button" className={pill(!staging)} onClick={() => setStaging(null)}>
+            Empty
+          </button>
+          {env.stagings.map((s) => (
+            <button key={s} type="button" className={pill(s === staging)} onClick={() => setStaging(s)}>
+              {scene(s)}
+            </button>
+          ))}
+        </div>
+        <div className="font-mono text-[10px] opacity-75">
+          {env.objects} parts · {env.shots} shots · {env.paintings} paintings
+          {env.room ? ` · ${env.room[0].toFixed(1)} × ${env.room[1].toFixed(1)} m` : ""}
+        </div>
+        <div className="font-mono text-[10px] opacity-55">{env.key}</div>
+      </div>
+    </>
+  )
+}
+
+// ── The library ──
+export function AssetLibrary({ characters, places, groups, params }: { characters: Character[]; places: Place[]; groups: string[]; params: Params }) {
+  const [open, setOpen] = useState<{ character: Character } | { place: Place } | null>(() => {
+    const character = characters.find((c) => c.id === params.id)
+    const place = places.find((p) => p.variants.some((v) => v.key === params.env))
+    return character ? { character } : place ? { place } : null
+  })
+  const [tab, setTab] = useState<Tab>(params.tab === "environments" || (open && "place" in open) ? "environments" : "characters")
+  const [group, setGroup] = useState(params.group && groups.includes(params.group) ? params.group : "all")
+  const [q, setQ] = useState(params.q ?? "")
+  const [only, setOnly] = useState(params.only === "1")
+  // What the first address asked for is used once: a card opened later starts from its own defaults.
+  const [first, setFirst] = useState(true)
+  const asked = first ? params : {}
+
+  useEffect(() => {
+    if (open) return
+    const p = new URLSearchParams({ tab })
+    if (group !== "all") p.set("group", group)
+    if (q) p.set("q", q)
+    if (only) p.set("only", "1")
+    history.replaceState(null, "", `/dev/assets?${p}`)
+  }, [open, tab, group, q, only])
+
+  const words = q.trim().toLowerCase()
+  const shownCharacters = characters.filter((c) => (!only || c.figure) && (!words || `${c.name} ${c.role} ${c.id}`.toLowerCase().includes(words)))
+  const shownPlaces = places.filter((p) => (!only || p.variants.some((v) => v.room)) && (!words || `${p.title} ${p.variants.map((v) => v.key).join(" ")}`.toLowerCase().includes(words)))
+  const inGroup = (g: string) => (tab === "characters" ? shownCharacters.filter((c) => c.group === g).length : shownPlaces.filter((p) => p.groups.includes(g)).length)
+  const sections = groups.filter((g) => (group === "all" || group === g) && inGroup(g) > 0)
+  const total = tab === "characters" ? shownCharacters.length : shownPlaces.length
+  const groupName = (g: string) => (g === "heroes" ? "Player Heroes" : g === "unused" ? "Not in a Scene" : named(g))
+
+  if (open)
+    return (
+      <div className="fixed inset-0 z-[100] overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
+        {"character" in open ? <CharacterView character={open.character} params={asked} /> : <PlaceView place={open.place} params={asked} />}
+        <button
+          type="button"
+          className="absolute top-3 left-3 z-10 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-1.5 text-[12px] text-[#f2c97a] backdrop-blur-sm hover:border-[#f2c97a99]"
+          onClick={() => {
+            setFirst(false)
+            setOpen(null)
+          }}
+        >
+          ← {tab === "characters" ? "Characters" : "Environments"}
+        </button>
+      </div>
+    )
+
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
+      <header className="shrink-0 space-y-2 border-b border-[#e6c89626] bg-[#0e0a06] px-5 pt-3 pb-2.5">
+        <div className="flex items-center gap-5">
+          <div className="text-[15px] tracking-[0.06em] text-[#f2c97a]">Asset Library</div>
+          <div className="flex gap-1 text-[12px]">
+            {(["characters", "environments"] as const).map((t) => (
+              <button key={t} type="button" className={`rounded px-2.5 py-1 ${tab === t ? "bg-[#f2c97a26] text-[#f2c97a]" : "opacity-70 hover:opacity-100"}`} onClick={() => setTab(t)}>
+                {t === "characters" ? `Characters · ${characters.length}` : `Environments · ${places.length}`}
+              </button>
+            ))}
+          </div>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search"
+            aria-label="Search"
+            className="ml-auto w-56 rounded border border-[#e6c89640] bg-transparent px-2 py-1 text-[12px] outline-none placeholder:opacity-40 focus:border-[#f2c97a99]"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-1 text-[11px]">
+          <button type="button" className={pill(group === "all")} onClick={() => setGroup("all")}>
+            All · {total}
+          </button>
+          {groups
+            .filter((g) => inGroup(g) > 0 || g === group)
+            .map((g) => (
+              <button key={g} type="button" className={pill(group === g)} onClick={() => setGroup(g)}>
+                {groupName(g)} · {inGroup(g)}
+              </button>
+            ))}
+          <button type="button" className={`ml-3 ${pill(only)}`} onClick={() => setOnly((o) => !o)}>
+            {tab === "characters" ? `3D · ${characters.filter((c) => c.figure).length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => v.room)).length}`}
+          </button>
+        </div>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8">
+        {sections.map((g) => (
+          <section key={g}>
+            <h2 className="pt-5 pb-2 text-[11px] tracking-[0.14em] uppercase opacity-55">
+              {groupName(g)} · {inGroup(g)}
+            </h2>
+            {tab === "characters" ? (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(118px,1fr))] gap-2.5">
+                {shownCharacters
+                  .filter((c) => c.group === g)
+                  .map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setOpen({ character: c })}
+                      className="group relative rounded-md border border-[#e6c8961f] bg-[#14100b] p-2 text-left hover:border-[#f2c97a99]"
+                    >
+                      {/* biome-ignore lint/performance/noImgElement: a dev page's local file */}
+                      <img src={c.front} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
+                      {c.figure && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">3D</span>}
+                      <span className="mt-1.5 block truncate text-[12px] group-hover:text-[#f2c97a]">{named(c.name)}</span>
+                      <span className="block truncate text-[10px] opacity-55">{named(c.role)}</span>
+                    </button>
+                  ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3">
+                {shownPlaces
+                  .filter((p) => p.groups.includes(g))
+                  .map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setOpen({ place: p })}
+                      className="group relative overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
+                    >
+                      {p.picture ? (
+                        // biome-ignore lint/performance/noImgElement: a dev page's local file
+                        <img src={p.picture} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
+                      ) : (
+                        <span className="block aspect-[3/2] w-full bg-[#1a140e]" />
+                      )}
+                      {p.variants.some((v) => v.room) && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">ISO</span>}
+                      <span className="block px-2.5 pt-1.5 text-[12.5px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
+                      <span className="block px-2.5 pb-2 font-mono text-[9.5px] opacity-55">
+                        {p.variants.length > 1 ? `${p.variants.length} Variants · ` : ""}
+                        {scenes(p.variants.reduce((n, v) => n + v.stagings.length, 0))}
+                        {p.variants.some((v) => v.paintings) ? " · Painted" : ""}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            )}
+          </section>
+        ))}
+      </div>
     </div>
   )
 }
