@@ -68,7 +68,7 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
           onClick()
         }}
         className={cn(
-          "stage-brass feedback-glow grid h-10 w-10 place-items-center rounded-full border-2 transition-[filter,border-color]",
+          "stage-brass grid h-10 w-10 place-items-center rounded-full border-2 transition-[filter,border-color]",
           active ? "border-stage-gold" : "border-stage-gold/70 hover:border-stage-gold"
         )}
       >
