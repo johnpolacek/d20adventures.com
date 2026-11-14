@@ -24,6 +24,7 @@
 //   &plain=1                        a painted set as built, without its paintings, for a new painting's plate
 //   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
+//   &look=wide|play                  the set's isometric look and one of its shots (looks.ts), in place of the switches below
 //   &iso=az,el,dist,fov              a room as a lit cut-away seen from high and far (iso.ts), with &room, &top and &isolight.
 //                                    Out of doors, &isobox=x0,z0,x1,z1[,top] is the ground to keep, and &isohide=type,type leaves parts out.
 
@@ -31,6 +32,7 @@ import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
 import { iso, isoSet } from "./iso"
 import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, drift, pano, projectPaintings } from "./lab"
+import { withLook } from "./looks"
 
 type Params = Record<string, string | undefined>
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
@@ -56,8 +58,10 @@ export function LabViewer({ params }: { params: Params }) {
       const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
       const stagingKey = params.staging ?? "the-midnight-summons/meeting-at-the-stones"
       const staging = structuredClone(await STAGINGS[stagingKey]()) as { set: string; cast?: { id: string; art?: { front: string; back?: string } }[] }
+      // &look=<shot>: the set's isometric look (looks.ts), under whatever else the address gives.
+      const { params: q, look } = withLook(params, staging.set)
       // &cards=1: each cast member's repainted card, where one has been made. The spec takes page blobs, not /stage-lab paths.
-      if (params.cards) {
+      if (q.cards) {
         const blob = async (url: string) => {
           const res = await fetch(url)
           return res.ok ? URL.createObjectURL(await res.blob()) : null
@@ -71,10 +75,14 @@ export function LabViewer({ params }: { params: Params }) {
       }
       const set = structuredClone(await SETS[staging.set]()) as { objects: { type: string }[]; backdrops?: unknown[]; painted?: unknown }
       // A set the engine paints itself is shown as built for the lab's own projection, a splat, or a plate (&plain=1).
-      if (params.project || params.splat || params.plain) delete set.painted
-      if (params.iso) isoSet(set)
+      if (q.project || q.splat || q.plain) delete set.painted
+      if (q.iso) isoSet(set)
+      for (const [name, change] of Object.entries(look?.materials ?? {})) {
+        const materials = (set as { materials?: Record<string, object> }).materials
+        if (materials?.[name]) Object.assign(materials[name], change)
+      }
       // &isobox: the scattered crowd keeps to the kept ground. Each scatter's area is cut to it, and thinned to match.
-      const ground = params.iso ? params.isobox?.split(",").map(Number) : undefined
+      const ground = q.iso ? q.isobox?.split(",").map(Number) : undefined
       if (ground && ground.length >= 4) {
         const crowd = (set as { crowd?: { groups?: { type: string; area?: number[]; count?: number }[] } }).crowd
         for (const g of crowd?.groups ?? []) {
@@ -89,18 +97,18 @@ export function LabViewer({ params }: { params: Params }) {
         if (crowd?.groups) crowd.groups = crowd.groups.filter((g) => g.type !== "scatter" || (g.count ?? 0) >= 1)
       }
       // &isohide=type,type: parts of the set left out of the cut-away, as a ceiling is.
-      if (params.isohide) {
-        const hide = params.isohide.split(",")
+      if (q.isohide) {
+        const hide = q.isohide.split(",")
         set.objects = set.objects.filter((o) => !hide.includes(o.type))
       }
       // The engine now draws the set's own backdrop: the spike's replaces it.
-      if (params.backdrop) {
+      if (q.backdrop) {
         set.objects = set.objects.filter((o) => o.type !== "mountain")
         set.backdrops = []
       }
-      const tier = TIERS.includes(params.tier as TierName) ? (params.tier as TierName) : "balanced"
+      const tier = TIERS.includes(q.tier as TierName) ? (q.tier as TierName) : "balanced"
       // &crowd=1: the crowd's repainted atlas, /stage-lab/crowd, in place of the setting's own.
-      const crowdLibrary = params.crowd
+      const crowdLibrary = q.crowd
         ? async () => {
             const base = "/stage-lab/crowd"
             return {
@@ -111,54 +119,54 @@ export function LabViewer({ params }: { params: Params }) {
           }
         : undefined
       // From high and far the whole crowd is past the distance where cards give way to pegs, so every one is a card.
-      const flags = params.iso ? { cardRadius: 500 } : undefined
-      st = await createStage({ container, set, staging, tier, flags, motion: params.motion !== "0", onProgress: setStatus, crowdLibrary })
+      const flags = q.iso ? { cardRadius: 500, ...(q.bloom ? { bloom: q.bloom === "on" } : {}), ...(q.brush ? { brush: Number(q.brush) } : {}) } : undefined
+      st = await createStage({ container, set, staging, tier, flags, motion: q.motion !== "0", onProgress: setStatus, crowdLibrary })
       if (cancelled) return st.dispose()
       const lab: Record<string, unknown> = {
         camera: () => cameraOf(st as Stage),
         pano: (pos: [number, number, number], kind: "color" | "depth", width?: number) => pano(st as Stage, pos, kind, width),
       }
-      if (params.backdrop)
+      if (q.backdrop)
         lab.backdrop = await addBackdrop(st, {
-          url: `/stage-lab/${params.backdrop}`,
-          arc: num(params.arc) ?? 130,
-          yaw: num(params.yaw),
-          bottom: num(params.bottom),
-          top: num(params.top),
-          gain: num(params.gain),
-          sat: num(params.sat),
-          haze: num(params.haze),
+          url: `/stage-lab/${q.backdrop}`,
+          arc: num(q.arc) ?? 130,
+          yaw: num(q.yaw),
+          bottom: num(q.bottom),
+          top: num(q.top),
+          gain: num(q.gain),
+          sat: num(q.sat),
+          haze: num(q.haze),
         })
-      if (params.project) {
+      if (q.project) {
         // One name, or several joined by commas: each is a painting and the camera it was painted for.
         // &clear=1 adds each painting's cloth-free twin, /stage-lab/<name>-clear.png, where one has been made.
         const list = await Promise.all(
-          params.project.split(",").map(async (name) => ({
+          q.project.split(",").map(async (name) => ({
             url: `/stage-lab/${name}.png`,
             cam: await (await fetch(`/stage-lab/${name}.json`)).json(),
-            clear: params.clear && (await fetch(`/stage-lab/${name}-clear.png`, { method: "HEAD" })).ok ? `/stage-lab/${name}-clear.png` : undefined,
+            clear: q.clear && (await fetch(`/stage-lab/${name}-clear.png`, { method: "HEAD" })).ok ? `/stage-lab/${name}-clear.png` : undefined,
           }))
         )
         lab.project = await projectPaintings(st, list, {
-          fade: num(params.fade),
-          gain: num(params.pgain),
-          sat: num(params.psat),
-          shadows: num(params.shadows),
-          fill: num(params.fill),
-          bare: num(params.bare),
-          clearing: !!params.clear,
-          cloth: params.cloth !== "off",
+          fade: num(q.fade),
+          gain: num(q.pgain),
+          sat: num(q.psat),
+          shadows: num(q.shadows),
+          fill: num(q.fill),
+          bare: num(q.bare),
+          clearing: !!q.clear,
+          cloth: q.cloth !== "off",
         })
       }
-      if (params.splat) lab.splat = await addSplat(st, `/stage-lab/${params.splat}`, { gain: num(params.sgain), yaw: num(params.syaw), scale: num(params.sscale) })
-      if (params.animate) {
-        const a = await animateStandee(st, params.animate, `/stage-lab/${params.clip ?? `${params.animate}-idle`}`)
+      if (q.splat) lab.splat = await addSplat(st, `/stage-lab/${q.splat}`, { gain: num(q.sgain), yaw: num(q.syaw), scale: num(q.sscale) })
+      if (q.animate) {
+        const a = await animateStandee(st, q.animate, `/stage-lab/${q.clip ?? `${q.animate}-idle`}`)
         stops.push(a.stop)
         lab.video = a.video
       }
       // &paint=0: no brush filter over the frame, for photoreal art.
-      if (params.paint === "0") Object.defineProperty((st as unknown as { pipeline: { paint: object } }).pipeline.paint, "strength", { get: () => 0, set: () => {} })
-      if (params.cast === "off") {
+      if (q.paint === "0") Object.defineProperty((st as unknown as { pipeline: { paint: object } }).pipeline.paint, "strength", { get: () => 0, set: () => {} })
+      if (q.cast === "off") {
         st.standees.group.visible = false
         st.crowd.group.visible = false
         // Flames and smoke stay live over a painting, so a plate leaves them out.
@@ -168,15 +176,15 @@ export function LabViewer({ params }: { params: Params }) {
       w.__stage = st
       w.__lab = lab
       // &figure=<castId>:<file>[:yaw]: /stage-lab/<file>.glb, a rigged 3D figure, in place of that cast member's standee.
-      for (const one of params.figure?.split(",") ?? []) {
+      for (const one of q.figure?.split(",") ?? []) {
         const [castId, file, yaw, clip] = one.split(":")
-        const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw), clip, env: num(params.figenv) })
+        const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw), clip, env: num(q.figenv) })
         stops.push(f.stop)
         lab.figure = { triangles: f.triangles, clips: f.clips }
         lab.figures = { ...(lab.figures as object), [castId]: { play: f.play, pose: f.pose, clips: f.clips, triangles: f.triangles } }
       }
       // &dummy=x,z: a person-sized solid at that spot, standing in for a 3D character, to see its shadow on the paint.
-      const dummy = params.dummy?.split(",").map(Number)
+      const dummy = q.dummy?.split(",").map(Number)
       if (dummy?.length === 2) {
         const THREE = await import("three")
         const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 1.2, 6, 16), new THREE.MeshStandardMaterial({ color: "#8a8478", roughness: 0.8 }))
@@ -185,25 +193,25 @@ export function LabViewer({ params }: { params: Params }) {
         st.scene.add(body)
       }
       // &view=x,y,z,tx,ty,tz[,fov]: a free viewpoint, shown on load and kept as __lab.view for capture.ts --view.
-      const view = params.view?.split(",").map(Number)
+      const view = q.view?.split(",").map(Number)
       if (view && view.length >= 6) {
         lab.view = { position: view.slice(0, 3), target: view.slice(3, 6), fov: view[6] ?? 60, label: "View" }
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }
-      if (params.shot) st.shot(params.shot, { instant: true })
+      if (q.shot) st.shot(q.shot, { instant: true })
       // &iso=azimuth,elevation,distance,fov: the room cut open and seen from outside. Kept as __lab.view, as &view is.
-      if (params.iso) {
-        const [azimuth = 45, elevation = 35, distance = 40, fov = 24] = params.iso.split(",").map(Number)
-        const [gain, ambient, key] = (params.isolight ?? "").split(",").map((v) => num(v))
+      if (q.iso) {
+        const [azimuth = 45, elevation = 35, distance = 40, fov = 24] = q.iso.split(",").map(Number)
+        const [gain, ambient, key] = (q.isolight ?? "").split(",").map((v) => num(v))
         lab.view = iso(st, {
           azimuth,
           elevation,
           distance,
           fov,
-          room: num(params.room),
-          top: num(params.top),
-          at: params.isoat?.split(",").map(Number),
-          box: params.isobox?.split(",").map(Number),
+          room: num(q.room),
+          top: num(q.top),
+          at: q.isoat?.split(",").map(Number),
+          box: q.isobox?.split(",").map(Number),
           gain,
           ambient,
           key,
@@ -211,7 +219,7 @@ export function LabViewer({ params }: { params: Params }) {
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }
       // &drift=<metres>[,<seconds>]: the camera sways that far about where it stands. Needs motion on.
-      const sway = params.drift?.split(",").map(Number)
+      const sway = q.drift?.split(",").map(Number)
       if (sway?.[0]) stops.push(drift(st, sway[0], sway[1] || 8).stop)
       setShots(Object.entries(st.shots).map(([k, s]) => [k, s.label]))
       setActive(st.activeShot)
