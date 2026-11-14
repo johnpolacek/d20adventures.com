@@ -3,8 +3,6 @@
 // Feedback from inside the game: a brass button in the top bar, a callout that points at it once per session, the
 // panel it opens, and the rating row on an adventure's closing panel.
 
-import { ThumbsUpDownIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { Star, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { type FeedbackDraft, MAX_SCREENSHOTS, SCREENSHOT_TYPES, screenshotProblem } from "@/lib/feedback/shared"
@@ -74,7 +72,7 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
           active ? "border-stage-gold" : "border-stage-gold/70 hover:border-stage-gold"
         )}
       >
-        <HugeiconsIcon icon={ThumbsUpDownIcon} size={22} strokeWidth={1.8} aria-hidden="true" />
+        <ThumbsUpDownSolid />
       </button>
       {callout !== "hidden" && (
         <div
@@ -315,5 +313,15 @@ export function FeedbackPanel({
         </>
       )}
     </section>
+  )
+}
+
+/** Hugeicons' thumbs up/down outline, filled so the button reads quieter. */
+function ThumbsUpDownSolid() {
+  return (
+    <svg width={22} height={22} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth={1} strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 6.5L10.0064 6.47879C10.8313 6.47879 11.5 7.15986 11.5 8C11.5 8.6125 11.4162 9.22201 11.251 9.81094L10.8595 11.5055C10.5283 12.6861 9.46888 13.5 8.26339 13.5H6.4C5.1888 13.5 3.9568 13.1294 3.17618 12.7318C2.7092 12.4939 2.5 11.9842 2.5 11.4601V8C2.5 7.38889 3.23934 6.3303 4.3 5.25C5.13094 4.40367 5.33855 3.65501 5.42085 3.10548C5.47346 2.75421 5.75113 2.5 6.1 2.5C6.7 2.5 7.6 3.16667 7.6 4.33333C7.6 5.5 7.3 5.88889 7 6.5Z" />
+      <path d="M17 17.5L13.9936 17.5212C13.1687 17.5212 12.5 16.8401 12.5 16C12.5 15.3875 12.5838 14.778 12.749 14.1891L13.1405 12.4945C13.4717 11.3139 14.5311 10.5 15.7366 10.5H17.6C18.8112 10.5 20.0432 10.8706 20.8238 11.2682C21.2908 11.5061 21.5 12.0158 21.5 12.5399V16C21.5 16.6111 20.7607 17.6697 19.7 18.75C18.8691 19.5963 18.6615 20.345 18.5791 20.8945C18.5265 21.2458 18.2489 21.5 17.9 21.5C17.3 21.5 16.4 20.8333 16.4 19.6667C16.4 18.5 16.7 18.1111 17 17.5Z" />
+    </svg>
   )
 }
