@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/stage/:path*", destination: `${cdn}/stage/:path*` },
       { source: "/stage-lab/:path*", destination: `${cdn}/stage-lab/:path*` },
+      // The asset library's figures (`pnpm assets:sync`), which /settings/<setting>/assets loads.
+      { source: "/asset-library/:path*", destination: `${cdn}/asset-library/:path*` },
       // Any image the deploy does not carry: the backgrounds, and old images kept only in the bucket.
       { source: "/images/:path*", destination: `${cdn}/images/:path*` },
       // Guests' heroes painted by a host's image CLI. Same origin, so the stage can read them as textures.

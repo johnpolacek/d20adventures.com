@@ -1,67 +1,33 @@
 "use client"
 
-// The asset library's page. It opens as a grid: characters or places, under the adventure they belong to, narrowed by
-// a search or a filter. A card opens the asset itself:
+// The asset library's page, shared by the workspace's own (/dev/assets) and the one anyone can open
+// (/settings/<setting>/assets). It opens as a home: the party, then every character or place as a grid under the
+// adventure it belongs to, narrowed by a search or a filter. A card opens the asset itself:
 //   - a character with a 3D figure stands in a lit room, at any detail level and in any clip the game plays
 //     (asset-library/clips.ts), and one without shows its card;
-//   - a place is shown by the stage's own dev pages, in a frame: a variant, empty or with one of its scenes, as the
-//     stage shows it or as an isometric cut-away.
+//   - a place shows its picture. In the workspace it is shown live by the stage's own dev pages, in a frame: a variant,
+//     empty or with one of its scenes, as the stage shows it or as an isometric cut-away.
 
-import { useEffect, useRef, useState } from "react"
+import { createContext, useContext, useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
-import { figureClips, isRigged } from "@/asset-library/clips"
+import { figureClips, isRigged } from "../clips"
+import type { Character, Figure, Library, Place } from "../types"
 
-export interface Figure {
-  id: string
-  // The cast ids its character goes by, and whether it is one of the party.
-  cast?: string[]
-  party?: boolean
-  name: string
-  height: number
-  source: { generator: string; triangles: number; cost: number; made: string }
-  rig: { bones: number; weights: string }
-  clips: string[]
-  lods: { file: string; triangles: number; megabytes: number; texture: number }[]
+// Where a page of the library lives, where its figures' files are served from, and whether the stage's dev pages are
+// there to show a place live.
+export interface LibraryConfig {
+  home: string
+  files: string
+  live: boolean
 }
-export interface Character {
-  id: string
-  name: string
-  role: string
-  height: number
-  // The adventure they first appear in, or the player heroes.
-  group: string
-  front: string
-  back: string | null
-  scenes: number
-  figure: Figure | null
-}
-export interface Environment {
-  key: string
-  title: string
-  objects: number
-  shots: number
-  paintings: number
-  picture: string | null
-  // The first room's width and depth in metres, when the set has one to cut open.
-  room: [number, number] | null
-  stagings: string[]
-}
-export interface Place {
-  id: string
-  location: string
-  title: string
-  picture: string | null
-  groups: string[]
-  variants: Environment[]
-}
+const Config = createContext<LibraryConfig>({ home: "/dev/assets", files: "/dev/assets/file/characters", live: true })
 
 type Params = Record<string, string | undefined>
 type Tab = "characters" | "environments"
 
-const BASE = "/dev/assets/file/characters"
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
 const PANEL = "space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm"
 const count = (n: number) => n.toLocaleString("en-US")
@@ -103,6 +69,7 @@ function discard(root: THREE.Object3D) {
 }
 
 function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
+  const config = useContext(Config)
   const host = useRef<HTMLDivElement>(null)
   const room = useRef<Room | null>(null)
   const [lod, setLod] = useState(Math.min(Number(params.lod) || 0, figure.lods.length - 1))
@@ -204,7 +171,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
     let stale = false
     setLoading(true)
     new GLTFLoader()
-      .loadAsync(`${BASE}/${figure.id}/${file}`)
+      .loadAsync(`${config.files}/${figure.id}/${file}`)
       .then((gltf) => {
         if (stale) return discard(gltf.scene)
         const at = r.action?.time ?? 0
@@ -247,7 +214,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
       stale = true
     }
     // The clip is changed below without loading again.
-  }, [figure, lod])
+  }, [figure, lod, config.files])
 
   useEffect(() => {
     const r = room.current
@@ -266,10 +233,10 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
 
   // The address keeps what is shown, so a view can be opened again.
   useEffect(() => {
-    const q = new URLSearchParams({ id: figure.id, lod: String(lod), clip })
+    const q = new URLSearchParams({ id: figure.cast?.[0] ?? figure.id, lod: String(lod), clip })
     if (turning) q.set("turn", "1")
-    history.replaceState(null, "", `/dev/assets?${q}`)
-  }, [figure, lod, clip, turning])
+    history.replaceState(null, "", `${config.home}?${q}`)
+  }, [figure, lod, clip, turning, config.home])
 
   const level = figure.lods[lod]
   return (
@@ -310,10 +277,11 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
 
 // ── A character: its figure, or its card ──
 function CharacterView({ character, params }: { character: Character; params: Params }) {
+  const config = useContext(Config)
   const [as, setAs] = useState(character.figure && params.as !== "card" ? "figure" : "card")
   useEffect(() => {
-    if (as === "card") history.replaceState(null, "", `/dev/assets?id=${character.id}&as=card`)
-  }, [as, character])
+    if (as === "card") history.replaceState(null, "", `${config.home}?id=${character.id}&as=card`)
+  }, [as, character, config.home])
   return (
     <>
       {as === "figure" && character.figure ? (
@@ -323,7 +291,7 @@ function CharacterView({ character, params }: { character: Character; params: Pa
           {[character.front, character.back].map(
             (src) =>
               src && (
-                // biome-ignore lint/performance/noImgElement: a dev page's local file
+                // biome-ignore lint/performance/noImgElement: card art served as it is
                 <img key={src} src={src} alt="" className="max-h-full min-h-0 max-w-[42%] object-contain" />
               )
           )}
@@ -346,14 +314,14 @@ function CharacterView({ character, params }: { character: Character; params: Pa
           {character.height ? `${character.height} m · ` : ""}
           {scenes(character.scenes).toLowerCase()} · {character.figure ? "3D figure" : "card only"}
         </div>
-        <div className="font-mono text-[10px] opacity-55">{character.id}</div>
       </div>
     </>
   )
 }
 
-// ── A place: one of its variants, empty or with a scene, in the stage's own page ──
+// ── A place: its picture, and in the workspace one of its variants live in the stage's own page ──
 function PlaceView({ place, params }: { place: Place; params: Params }) {
+  const config = useContext(Config)
   const [key, setKey] = useState(place.variants.find((v) => v.key === params.env)?.key ?? place.variants[0].key)
   const env = place.variants.find((v) => v.key === key) ?? place.variants[0]
   const [staging, setStaging] = useState(params.scene && env.stagings.includes(params.scene) ? params.scene : null)
@@ -366,11 +334,17 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
       ? `/dev/stage?staging=${staging}&tier=balanced&panel=0`
       : `/dev/stage?set=${env.key}&staging=none&tier=balanced&panel=0`
   useEffect(() => {
-    history.replaceState(null, "", `/dev/assets?env=${env.key}&view=${view}${staging ? `&scene=${staging}` : ""}`)
-  }, [env, view, staging])
+    history.replaceState(null, "", `${config.home}?env=${env.key}${config.live ? `&view=${view}${staging ? `&scene=${staging}` : ""}` : ""}`)
+  }, [env, view, staging, config])
+  const picture = env.picture ?? place.picture
   return (
     <>
-      <iframe key={src} src={src} title={env.title} className="absolute inset-0 h-full w-full border-0 bg-[#0d0b09]" />
+      {config.live ? (
+        <iframe key={src} src={src} title={env.title} className="absolute inset-0 h-full w-full border-0 bg-[#0d0b09]" />
+      ) : picture ? (
+        // biome-ignore lint/performance/noImgElement: scene art served as it is
+        <img src={picture} alt="" className="absolute inset-0 h-full w-full object-contain" />
+      ) : null}
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
         <div className="text-[15px] text-[#f2c97a]">{named(env.title)}</div>
         {place.variants.length > 1 && (
@@ -391,42 +365,47 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
             ))}
           </div>
         )}
-        <div className="flex items-center gap-1">
-          <span className="w-12 opacity-60">View</span>
-          <button type="button" className={pill(!iso)} onClick={() => setView("stage")}>
-            Stage
-          </button>
-          {env.room && env.stagings[0] && (
-            <button type="button" className={pill(iso)} onClick={() => setView("iso")}>
-              Isometric
-            </button>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-1">
-          <span className="w-12 opacity-60">Scene</span>
-          <button type="button" className={pill(!staging)} onClick={() => setStaging(null)}>
-            Empty
-          </button>
-          {env.stagings.map((s) => (
-            <button key={s} type="button" className={pill(s === staging)} onClick={() => setStaging(s)}>
-              {scene(s)}
-            </button>
-          ))}
-        </div>
+        {config.live && (
+          <>
+            <div className="flex items-center gap-1">
+              <span className="w-12 opacity-60">View</span>
+              <button type="button" className={pill(!iso)} onClick={() => setView("stage")}>
+                Stage
+              </button>
+              {env.room && env.stagings[0] && (
+                <button type="button" className={pill(iso)} onClick={() => setView("iso")}>
+                  Isometric
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="w-12 opacity-60">Scene</span>
+              <button type="button" className={pill(!staging)} onClick={() => setStaging(null)}>
+                Empty
+              </button>
+              {env.stagings.map((s) => (
+                <button key={s} type="button" className={pill(s === staging)} onClick={() => setStaging(s)}>
+                  {scene(s)}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {!config.live && env.stagings.length > 0 && <div className="opacity-70">{env.stagings.map(scene).join(" · ")}</div>}
         <div className="font-mono text-[10px] opacity-75">
           {env.objects} parts · {env.shots} shots · {env.paintings} paintings
           {env.room ? ` · ${env.room[0].toFixed(1)} × ${env.room[1].toFixed(1)} m` : ""}
         </div>
-        <div className="font-mono text-[10px] opacity-55">{env.key}</div>
       </div>
     </>
   )
 }
 
 // ── The library ──
-export function AssetLibrary({ characters, places, groups, params }: { characters: Character[]; places: Place[]; groups: string[]; params: Params }) {
+export function AssetLibrary({ library, config, params }: { library: Library; config: LibraryConfig; params: Params }) {
+  const { characters, places, groups } = library
   const [open, setOpen] = useState<{ character: Character } | { place: Place } | null>(() => {
-    const character = characters.find((c) => c.id === params.id)
+    const character = params.id ? characters.find((c) => c.id === params.id || c.figure?.cast?.includes(params.id as string) || c.figure?.id === params.id) : undefined
     const place = places.find((p) => p.variants.some((v) => v.key === params.env))
     return character ? { character } : place ? { place } : null
   })
@@ -440,12 +419,13 @@ export function AssetLibrary({ characters, places, groups, params }: { character
 
   useEffect(() => {
     if (open) return
-    const p = new URLSearchParams({ tab })
+    const p = new URLSearchParams()
+    if (tab !== "characters") p.set("tab", tab)
     if (group !== "all") p.set("group", group)
     if (q) p.set("q", q)
     if (only) p.set("only", "1")
-    history.replaceState(null, "", `/dev/assets?${p}`)
-  }, [open, tab, group, q, only])
+    history.replaceState(null, "", `${config.home}${p.size ? `?${p}` : ""}`)
+  }, [open, tab, group, q, only, config.home])
 
   const words = q.trim().toLowerCase()
   const shownCharacters = characters.filter((c) => (!only || c.figure) && (!words || `${c.name} ${c.role} ${c.id}`.toLowerCase().includes(words)))
@@ -454,116 +434,163 @@ export function AssetLibrary({ characters, places, groups, params }: { character
   const sections = groups.filter((g) => (group === "all" || group === g) && inGroup(g) > 0)
   const total = tab === "characters" ? shownCharacters.length : shownPlaces.length
   const groupName = (g: string) => (g === "heroes" ? "Player Heroes" : g === "unused" ? "Not in a Scene" : named(g))
+  const figured = characters.filter((c) => c.figure)
+  const party = figured.filter((c) => c.figure?.party)
+  const others = figured.filter((c) => !c.figure?.party)
+  const home = !words && !only && group === "all" && tab === "characters"
 
   if (open)
     return (
-      <div className="fixed inset-0 z-[100] overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
-        {"character" in open ? <CharacterView character={open.character} params={asked} /> : <PlaceView place={open.place} params={asked} />}
-        <button
-          type="button"
-          className="absolute top-3 left-3 z-10 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-1.5 text-[12px] text-[#f2c97a] backdrop-blur-sm hover:border-[#f2c97a99]"
-          onClick={() => {
-            setFirst(false)
-            setOpen(null)
-          }}
-        >
-          ← {tab === "characters" ? "Characters" : "Environments"}
-        </button>
-      </div>
+      <Config.Provider value={config}>
+        <div className="fixed inset-0 z-[100] overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
+          {"character" in open ? <CharacterView character={open.character} params={asked} /> : <PlaceView place={open.place} params={asked} />}
+          <button
+            type="button"
+            className="absolute top-3 left-3 z-10 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-1.5 text-[12px] text-[#f2c97a] backdrop-blur-sm hover:border-[#f2c97a99]"
+            onClick={() => {
+              setFirst(false)
+              setOpen(null)
+            }}
+          >
+            ← Asset Library
+          </button>
+        </div>
+      </Config.Provider>
     )
 
+  const figureCard = (c: Character, wide: boolean) => (
+    <button
+      key={c.id}
+      type="button"
+      onClick={() => setOpen({ character: c })}
+      className={`group shrink-0 rounded-lg border border-[#e6c8962e] bg-gradient-to-b from-[#1c1610] to-[#120e09] p-3 text-left transition-colors hover:border-[#f2c97a] ${wide ? "w-[172px]" : "w-[132px]"}`}
+    >
+      {/* biome-ignore lint/performance/noImgElement: a thumbnail served as it is */}
+      <img src={`${config.files}/${c.figure?.id}/${c.figure?.front}`} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
+      <span className={`mt-2 block truncate font-display group-hover:text-[#f2c97a] ${wide ? "text-[15px]" : "text-[13px]"}`}>{named(c.name)}</span>
+      <span className="block truncate text-[11px] opacity-60">{named(c.figure?.role ?? c.role)}</span>
+    </button>
+  )
+
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
-      <header className="shrink-0 space-y-2 border-b border-[#e6c89626] bg-[#0e0a06] px-5 pt-3 pb-2.5">
-        <div className="flex items-center gap-5">
-          <div className="text-[15px] tracking-[0.06em] text-[#f2c97a]">Asset Library</div>
-          <div className="flex gap-1 text-[12px]">
-            {(["characters", "environments"] as const).map((t) => (
-              <button key={t} type="button" className={`rounded px-2.5 py-1 ${tab === t ? "bg-[#f2c97a26] text-[#f2c97a]" : "opacity-70 hover:opacity-100"}`} onClick={() => setTab(t)}>
-                {t === "characters" ? `Characters · ${characters.length}` : `Environments · ${places.length}`}
-              </button>
-            ))}
+    <Config.Provider value={config}>
+      <div className="min-h-screen bg-[#0d0b09] pt-12 font-serif text-[#e9dcc3]">
+        <div className="mx-auto max-w-[1500px] px-5 pb-16 sm:px-8">
+          <div className="pt-10 pb-7 text-center">
+            <div className="text-[11px] tracking-[0.32em] uppercase opacity-60">{library.settingName}</div>
+            <h1 className="mt-2 font-display text-[34px] leading-tight tracking-[0.04em] text-[#f2c97a] sm:text-[44px]">Asset Library</h1>
+            <div className="mt-3 text-[13px] opacity-70">
+              {figured.length} Figures in 3D · {characters.length} Characters · {places.length} Places
+            </div>
           </div>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search"
-            aria-label="Search"
-            className="ml-auto w-56 rounded border border-[#e6c89640] bg-transparent px-2 py-1 text-[12px] outline-none placeholder:opacity-40 focus:border-[#f2c97a99]"
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-1 text-[11px]">
-          <button type="button" className={pill(group === "all")} onClick={() => setGroup("all")}>
-            All · {total}
-          </button>
-          {groups
-            .filter((g) => inGroup(g) > 0 || g === group)
-            .map((g) => (
-              <button key={g} type="button" className={pill(group === g)} onClick={() => setGroup(g)}>
-                {groupName(g)} · {inGroup(g)}
+
+          {home && party.length > 0 && (
+            <section className="pb-4">
+              <h2 className="pb-3 text-center text-[11px] tracking-[0.24em] uppercase opacity-55">The Party</h2>
+              <div className="flex flex-wrap justify-center gap-3">{party.map((c) => figureCard(c, true))}</div>
+            </section>
+          )}
+          {home && others.length > 0 && (
+            <section className="pt-4 pb-2">
+              <h2 className="pb-3 text-center text-[11px] tracking-[0.24em] uppercase opacity-55">Also in 3D</h2>
+              <div className="flex flex-wrap justify-center gap-3">{others.map((c) => figureCard(c, false))}</div>
+            </section>
+          )}
+
+          <div className="sticky top-12 z-20 -mx-5 mt-6 space-y-2 border-y border-[#e6c89626] bg-[#0e0a06f2] px-5 py-2.5 backdrop-blur-sm sm:-mx-8 sm:px-8">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <div className="flex gap-1 text-[13px]">
+                {(["characters", "environments"] as const).map((t) => (
+                  <button key={t} type="button" className={`rounded px-2.5 py-1 ${tab === t ? "bg-[#f2c97a26] text-[#f2c97a]" : "opacity-70 hover:opacity-100"}`} onClick={() => setTab(t)}>
+                    {t === "characters" ? `Characters · ${characters.length}` : `Places · ${places.length}`}
+                  </button>
+                ))}
+              </div>
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search"
+                aria-label="Search"
+                className="ml-auto w-56 rounded border border-[#e6c89640] bg-transparent px-2 py-1 text-[12px] outline-none placeholder:opacity-40 focus:border-[#f2c97a99]"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-1 text-[11px]">
+              <button type="button" className={pill(group === "all")} onClick={() => setGroup("all")}>
+                All · {total}
               </button>
-            ))}
-          <button type="button" className={`ml-3 ${pill(only)}`} onClick={() => setOnly((o) => !o)}>
-            {tab === "characters" ? `3D · ${characters.filter((c) => c.figure).length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => v.room)).length}`}
-          </button>
+              {groups
+                .filter((g) => inGroup(g) > 0 || g === group)
+                .map((g) => (
+                  <button key={g} type="button" className={pill(group === g)} onClick={() => setGroup(g)}>
+                    {groupName(g)} · {inGroup(g)}
+                  </button>
+                ))}
+              {(tab === "characters" || config.live) && (
+                <button type="button" className={`ml-3 ${pill(only)}`} onClick={() => setOnly((o) => !o)}>
+                  {tab === "characters" ? `3D · ${figured.length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => v.room)).length}`}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {sections.map((g) => (
+            <section key={g}>
+              <h2 className="pt-6 pb-2 text-[11px] tracking-[0.14em] uppercase opacity-55">
+                {groupName(g)} · {inGroup(g)}
+              </h2>
+              {tab === "characters" ? (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(118px,1fr))] gap-2.5">
+                  {shownCharacters
+                    .filter((c) => c.group === g)
+                    .map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setOpen({ character: c })}
+                        className="group relative rounded-md border border-[#e6c8961f] bg-[#14100b] p-2 text-left hover:border-[#f2c97a99]"
+                      >
+                        {/* biome-ignore lint/performance/noImgElement: card art served as it is */}
+                        <img src={c.front} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
+                        {c.figure && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">3D</span>}
+                        <span className="mt-1.5 block truncate text-[12px] group-hover:text-[#f2c97a]">{named(c.name)}</span>
+                        <span className="block truncate text-[10px] opacity-55">{named(c.role)}</span>
+                      </button>
+                    ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3">
+                  {shownPlaces
+                    .filter((p) => p.groups.includes(g))
+                    .map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setOpen({ place: p })}
+                        className="group relative overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
+                      >
+                        {p.picture ? (
+                          // biome-ignore lint/performance/noImgElement: scene art served as it is
+                          <img src={p.picture} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
+                        ) : (
+                          <span className="block aspect-[3/2] w-full bg-[#1a140e]" />
+                        )}
+                        {config.live && p.variants.some((v) => v.room) && (
+                          <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">ISO</span>
+                        )}
+                        <span className="block px-2.5 pt-1.5 text-[12.5px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
+                        <span className="block px-2.5 pb-2 font-mono text-[9.5px] opacity-55">
+                          {p.variants.length > 1 ? `${p.variants.length} Variants · ` : ""}
+                          {scenes(p.variants.reduce((n, v) => n + v.stagings.length, 0))}
+                          {p.variants.some((v) => v.paintings) ? " · Painted" : ""}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              )}
+            </section>
+          ))}
         </div>
-      </header>
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8">
-        {sections.map((g) => (
-          <section key={g}>
-            <h2 className="pt-5 pb-2 text-[11px] tracking-[0.14em] uppercase opacity-55">
-              {groupName(g)} · {inGroup(g)}
-            </h2>
-            {tab === "characters" ? (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(118px,1fr))] gap-2.5">
-                {shownCharacters
-                  .filter((c) => c.group === g)
-                  .map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setOpen({ character: c })}
-                      className="group relative rounded-md border border-[#e6c8961f] bg-[#14100b] p-2 text-left hover:border-[#f2c97a99]"
-                    >
-                      {/* biome-ignore lint/performance/noImgElement: a dev page's local file */}
-                      <img src={c.front} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
-                      {c.figure && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">3D</span>}
-                      <span className="mt-1.5 block truncate text-[12px] group-hover:text-[#f2c97a]">{named(c.name)}</span>
-                      <span className="block truncate text-[10px] opacity-55">{named(c.role)}</span>
-                    </button>
-                  ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3">
-                {shownPlaces
-                  .filter((p) => p.groups.includes(g))
-                  .map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setOpen({ place: p })}
-                      className="group relative overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
-                    >
-                      {p.picture ? (
-                        // biome-ignore lint/performance/noImgElement: a dev page's local file
-                        <img src={p.picture} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
-                      ) : (
-                        <span className="block aspect-[3/2] w-full bg-[#1a140e]" />
-                      )}
-                      {p.variants.some((v) => v.room) && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">ISO</span>}
-                      <span className="block px-2.5 pt-1.5 text-[12.5px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
-                      <span className="block px-2.5 pb-2 font-mono text-[9.5px] opacity-55">
-                        {p.variants.length > 1 ? `${p.variants.length} Variants · ` : ""}
-                        {scenes(p.variants.reduce((n, v) => n + v.stagings.length, 0))}
-                        {p.variants.some((v) => v.paintings) ? " · Painted" : ""}
-                      </span>
-                    </button>
-                  ))}
-              </div>
-            )}
-          </section>
-        ))}
       </div>
-    </div>
+    </Config.Provider>
   )
 }

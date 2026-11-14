@@ -2,3 +2,6 @@
 characters/*/*.glb
 characters/*/*.png
 characters/*/*.jpg
+
+# The page's index, written and uploaded by `pnpm assets:sync`.
+library.json

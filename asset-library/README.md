@@ -13,11 +13,27 @@ Written 2026-11-14. None of this ships in the game yet.
 | The clips every figure plays | `asset-library/clips.ts` | yes |
 | The isometric look of a set | `asset-library/looks.ts` | yes |
 | Scorecards | `asset-library/scorecards/` | yes |
-| The page | `app/dev/assets/` | yes |
+| The page | `asset-library/ui/library.tsx`, shown at `/dev/assets` and `/settings/<setting>/assets` | yes |
+| What the page lists | `asset-library/library.ts` | yes |
 | The stage's isometric view, which the page frames | `lab/stage-art/` (`iso.ts`, `viewer.tsx`, `lab.ts`, `capture.ts`) | yes |
 | Sets and stagings | `packages/stage/src/sets`, `stagings` | yes |
 
 Models, sheets and check pictures are too heavy for git and are left out by `asset-library/.gitignore`. A character's brief, joints, reports and thumbnail are kept.
+
+## Sharing it
+
+Anyone with the link can open the library: `https://d20adventures.com/settings/realm-of-myr/assets`. It is left out of search.
+
+```sh
+pnpm assets:sync          # publish: upload what changed, then the index
+pnpm assets:sync --dry    # list what would upload
+```
+
+- The public bucket gets what the page shows, under `asset-library/characters/<id>/`: the rigged copies, the thumbnail and `figure.json`. The site serves them at `/asset-library/...`.
+- The private bucket gets what a character was made from, under the same path: the brief, the sheets, the joints, the generator's answer, the source model and the rig's report. That is the backup.
+- `library.json` is the page's index, every character and place gathered from the repo. It is uploaded last and read from the bucket, so a sync shows on the site within a minute, with no deploy.
+- Anything the page can load, a visitor can download. The rigged models are public files.
+- The public page shows a place as its picture. The live stage and the isometric view are on the workspace's own page only, `/dev/assets`.
 
 ## One command
 
