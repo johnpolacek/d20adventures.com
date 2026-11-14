@@ -3,6 +3,7 @@
 // Characters are the cast of every staging (packages/stage/src/stagings) and the player hero looks (public/stage/heroes).
 // One with a figure in the workspace (asset-library/characters, built by `pnpm assets <id>`) has a 3D figure.
 // Places are the built sets (packages/stage/src/sets), a place's variants kept together.
+// Pictures are the setting's own (named in its data, in the data bucket) and the art under public/stage.
 //
 // This reads the disk, so it runs on a developer's machine: the dev page calls it on every load, and `pnpm assets:sync`
 // writes what it returns to library.json, which the public page reads.
@@ -10,8 +11,9 @@
 import { existsSync } from "node:fs"
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { SETS, STAGINGS } from "@d20/stage/sets"
-import type { Character, Environment, Figure, Library, Place } from "./types"
+import type { Character, Environment, Figure, Library, Picture, Place } from "./types"
 
 interface SetSpec {
   title: string
@@ -24,6 +26,36 @@ interface SetSpec {
 interface StagingSpec {
   set?: string
   cast?: { id: string; name: string; role: string; height: number; art?: { front?: string; back?: string } }[]
+}
+
+const PICTURE = /\.(webp|jpe?g|png)$/i
+const words = (s: string) => s.replace(PICTURE, "").replaceAll("-", " ")
+
+// Every picture under a folder of public/, as a site path, in name order.
+async function under(pub: string, dir: string): Promise<string[]> {
+  const entries = await readdir(path.join(pub, dir), { withFileTypes: true }).catch(() => [])
+  const nested = await Promise.all(entries.map((e) => (e.isDirectory() ? under(pub, `${dir}/${e.name}`) : PICTURE.test(e.name) ? [`/${dir}/${e.name}`] : [])))
+  return nested.flat().sort()
+}
+
+// The setting's own pictures are named in its data, which lives in the data bucket. Read once for the life of the
+// process: the dev page gathers the library on every load.
+let settingPictures: Promise<Picture[]> | null = null
+function fromSetting(setting: string): Promise<Picture[]> {
+  settingPictures ??= (async () => {
+    const { AWS_BUCKET_DATA, AWS_REGION, AWS_KEY, AWS_SECRET } = process.env
+    if (!AWS_BUCKET_DATA || !AWS_REGION || !AWS_KEY || !AWS_SECRET) return []
+    const s3 = new S3Client({ region: AWS_REGION, credentials: { accessKeyId: AWS_KEY, secretAccessKey: AWS_SECRET } })
+    const res = await s3.send(new GetObjectCommand({ Bucket: AWS_BUCKET_DATA, Key: `settings/${setting}/setting-data.json` })).catch(() => null)
+    const data = res?.Body ? (JSON.parse(await res.Body.transformToString()) as { name?: string; image?: string; locations?: { name: string; image?: string }[] }) : null
+    if (!data) return []
+    const site = (image: string) => (image.startsWith("http") ? image : `/${image.replace(/^\//, "")}`)
+    return [
+      ...(data.image ? [{ src: site(data.image), title: data.name ?? setting, kind: "Setting" }] : []),
+      ...(data.locations ?? []).filter((l) => l.image).map((l) => ({ src: site(l.image as string), title: l.name, kind: "Setting" })),
+    ]
+  })()
+  return settingPictures
 }
 
 const HEROES = "heroes"
@@ -115,6 +147,25 @@ export async function buildLibrary(root = process.cwd()): Promise<Library> {
   }
   places.sort((a, b) => a.title.localeCompare(b.title))
 
+  // Pictures, by kind. A place's title stands for its set's folder of paintings.
+  const titles = new Map(environments.map((e) => [e.key.split("/")[1], e.title]))
+  const pictures: Picture[] = [
+    ...(await fromSetting(setting)),
+    ...(await under(pub, "stage/realm")).map((src) => ({ src, title: words(path.basename(src)), kind: "Setting" })),
+    ...(await under(pub, "stage/covers")).map((src) => ({ src, title: words(path.basename(src)), kind: "Adventure Covers" })),
+    ...(await under(pub, "stage/art")).map((src) => ({ src, title: words(path.basename(src)), kind: "Scene Art", of: src.split("/")[3] })),
+    ...(await under(pub, "stage/maps")).map((src) => ({ src, title: words(path.basename(src)), kind: "Maps", of: src.split("/")[3] })),
+    ...(await under(pub, "stage/portraits")).map((src) => ({ src, title: words(path.basename(src)), kind: "Portraits" })),
+    ...(await under(pub, "stage/paintings")).map((src) => ({
+      src,
+      title: `${titles.get(src.split("/")[3]) ?? words(src.split("/")[3])}: ${words(path.basename(src))}`,
+      kind: "Set Paintings",
+      of: src.split("/")[3],
+    })),
+    ...(await under(pub, "images/app/backgrounds")).map((src) => ({ src, title: words(path.basename(src)), kind: "Backgrounds" })),
+  ]
+  const kinds = [...new Set(pictures.map((p) => p.kind))]
+
   const groups = [...adventures, HEROES, UNUSED].filter((g) => characters.some((c) => c.group === g) || places.some((p) => p.groups.includes(g)))
-  return { setting, settingName: "The Realm of Myr", characters, places, groups }
+  return { setting, settingName: "The Realm of Myr", characters, places, groups, pictures, kinds }
 }

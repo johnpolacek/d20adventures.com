@@ -14,7 +14,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { figureClips, isRigged } from "../clips"
-import type { Character, Figure, Library, Place } from "../types"
+import type { Character, Figure, Library, Picture, Place } from "../types"
 
 // Where a page of the library lives, where its figures' files are served from, and whether the stage's dev pages are
 // there to show a place live.
@@ -26,7 +26,7 @@ export interface LibraryConfig {
 const Config = createContext<LibraryConfig>({ home: "/dev/assets", files: "/dev/assets/file/characters", live: true })
 
 type Params = Record<string, string | undefined>
-type Tab = "characters" | "environments"
+type Tab = "characters" | "environments" | "images"
 
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
 const PANEL = "space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm"
@@ -401,16 +401,61 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
   )
 }
 
+// ── A picture, whole ──
+function PictureView({ picture }: { picture: Picture }) {
+  const config = useContext(Config)
+  useEffect(() => {
+    history.replaceState(null, "", `${config.home}?img=${encodeURIComponent(picture.src)}`)
+  }, [picture, config.home])
+  return (
+    <>
+      {/* biome-ignore lint/performance/noImgElement: art served as it is */}
+      <img src={picture.src} alt="" className="absolute inset-0 h-full w-full object-contain p-4 pt-14" />
+      <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
+        <div className="text-[15px] text-[#f2c97a]">{named(picture.title)}</div>
+        <div className="opacity-70">
+          {picture.kind}
+          {picture.of ? ` · ${named(picture.of)}` : ""}
+        </div>
+        <a href={picture.src} target="_blank" rel="noreferrer" className={`inline-block ${pill(false)}`}>
+          Open Original
+        </a>
+      </div>
+    </>
+  )
+}
+
+// How a kind of picture is laid out in the grid: the narrowest a card may be, and its shape.
+const SHAPES: Record<string, [number, string]> = {
+  Setting: [280, "aspect-[16/9]"],
+  "Adventure Covers": [170, "aspect-[3/4]"],
+  "Scene Art": [260, "aspect-[2/1]"],
+  Maps: [230, "aspect-square"],
+  Portraits: [112, "aspect-[5/6]"],
+  "Set Paintings": [240, "aspect-[3/2]"],
+  Backgrounds: [240, "aspect-[16/9]"],
+}
+
 // ── The library ──
 export function AssetLibrary({ library, config, params }: { library: Library; config: LibraryConfig; params: Params }) {
   const { characters, places, groups } = library
-  const [open, setOpen] = useState<{ character: Character } | { place: Place } | null>(() => {
+  const pictures = library.pictures ?? []
+  const kinds = library.kinds ?? []
+  const [open, setOpen] = useState<{ character: Character } | { place: Place } | { picture: Picture } | null>(() => {
+    const picture = params.img ? pictures.find((p) => p.src === params.img) : undefined
+    if (picture) return { picture }
     const character = params.id ? characters.find((c) => c.id === params.id || c.figure?.cast?.includes(params.id as string) || c.figure?.id === params.id) : undefined
     const place = places.find((p) => p.variants.some((v) => v.key === params.env))
     return character ? { character } : place ? { place } : null
   })
-  const [tab, setTab] = useState<Tab>(params.tab === "environments" || (open && "place" in open) ? "environments" : "characters")
-  const [group, setGroup] = useState(params.group && groups.includes(params.group) ? params.group : "all")
+  const [tab, setTab] = useState<Tab>(params.tab === "images" || (open && "picture" in open) ? "images" : params.tab === "environments" || (open && "place" in open) ? "environments" : "characters")
+  // The filter is an adventure for characters and places, and a kind for pictures.
+  const [group, setGroup] = useState(params.group && [...groups, ...kinds].includes(params.group) ? params.group : "all")
+  const show = (t: Tab) => {
+    setTab(t)
+    setGroup("all")
+    setOnly(false)
+  }
   const [q, setQ] = useState(params.q ?? "")
   const [only, setOnly] = useState(params.only === "1")
   // What the first address asked for is used once: a card opened later starts from its own defaults.
@@ -430,10 +475,16 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   const words = q.trim().toLowerCase()
   const shownCharacters = characters.filter((c) => (!only || c.figure) && (!words || `${c.name} ${c.role} ${c.id}`.toLowerCase().includes(words)))
   const shownPlaces = places.filter((p) => (!only || p.variants.some((v) => v.room)) && (!words || `${p.title} ${p.variants.map((v) => v.key).join(" ")}`.toLowerCase().includes(words)))
-  const inGroup = (g: string) => (tab === "characters" ? shownCharacters.filter((c) => c.group === g).length : shownPlaces.filter((p) => p.groups.includes(g)).length)
-  const sections = groups.filter((g) => (group === "all" || group === g) && inGroup(g) > 0)
-  const total = tab === "characters" ? shownCharacters.length : shownPlaces.length
-  const groupName = (g: string) => (g === "heroes" ? "Player Heroes" : g === "unused" ? "Not in a Scene" : named(g))
+  const shownPictures = pictures.filter((p) => !words || `${p.title} ${p.kind} ${p.of ?? ""}`.toLowerCase().includes(words))
+  const inGroup = (g: string) =>
+    tab === "characters"
+      ? shownCharacters.filter((c) => c.group === g).length
+      : tab === "environments"
+        ? shownPlaces.filter((p) => p.groups.includes(g)).length
+        : shownPictures.filter((p) => p.kind === g).length
+  const sections = (tab === "images" ? kinds : groups).filter((g) => (group === "all" || group === g) && inGroup(g) > 0)
+  const total = tab === "characters" ? shownCharacters.length : tab === "environments" ? shownPlaces.length : shownPictures.length
+  const groupName = (g: string) => (tab === "images" ? g : g === "heroes" ? "Player Heroes" : g === "unused" ? "Not in a Scene" : named(g))
   const figured = characters.filter((c) => c.figure)
   const party = figured.filter((c) => c.figure?.party)
   const others = figured.filter((c) => !c.figure?.party)
@@ -443,7 +494,13 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
     return (
       <Config.Provider value={config}>
         <div className="fixed inset-0 z-[100] overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
-          {"character" in open ? <CharacterView character={open.character} params={asked} /> : <PlaceView place={open.place} params={asked} />}
+          {"character" in open ? (
+            <CharacterView character={open.character} params={asked} />
+          ) : "place" in open ? (
+            <PlaceView place={open.place} params={asked} />
+          ) : (
+            <PictureView picture={open.picture} />
+          )}
           <button
             type="button"
             className="absolute top-3 left-3 z-10 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-1.5 text-[12px] text-[#f2c97a] backdrop-blur-sm hover:border-[#f2c97a99]"
@@ -480,7 +537,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
             <div className="text-[11px] tracking-[0.32em] uppercase opacity-60">{library.settingName}</div>
             <h1 className="mt-2 font-display text-[34px] leading-tight tracking-[0.04em] text-[#f2c97a] sm:text-[44px]">Asset Library</h1>
             <div className="mt-3 text-[13px] opacity-70">
-              {figured.length} Figures in 3D · {characters.length} Characters · {places.length} Places
+              {figured.length} Figures in 3D · {characters.length} Characters · {places.length} Places · {pictures.length} Images
             </div>
           </div>
 
@@ -500,9 +557,9 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
           <div className="sticky top-12 z-20 -mx-5 mt-6 space-y-2 border-y border-[#e6c89626] bg-[#0e0a06f2] px-5 py-2.5 backdrop-blur-sm sm:-mx-8 sm:px-8">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
               <div className="flex gap-1 text-[13px]">
-                {(["characters", "environments"] as const).map((t) => (
-                  <button key={t} type="button" className={`rounded px-2.5 py-1 ${tab === t ? "bg-[#f2c97a26] text-[#f2c97a]" : "opacity-70 hover:opacity-100"}`} onClick={() => setTab(t)}>
-                    {t === "characters" ? `Characters · ${characters.length}` : `Places · ${places.length}`}
+                {(["characters", "environments", "images"] as const).map((t) => (
+                  <button key={t} type="button" className={`rounded px-2.5 py-1 ${tab === t ? "bg-[#f2c97a26] text-[#f2c97a]" : "opacity-70 hover:opacity-100"}`} onClick={() => show(t)}>
+                    {t === "characters" ? `Characters · ${characters.length}` : t === "environments" ? `Places · ${places.length}` : `Images · ${pictures.length}`}
                   </button>
                 ))}
               </div>
@@ -518,14 +575,14 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
               <button type="button" className={pill(group === "all")} onClick={() => setGroup("all")}>
                 All · {total}
               </button>
-              {groups
+              {(tab === "images" ? kinds : groups)
                 .filter((g) => inGroup(g) > 0 || g === group)
                 .map((g) => (
                   <button key={g} type="button" className={pill(group === g)} onClick={() => setGroup(g)}>
                     {groupName(g)} · {inGroup(g)}
                   </button>
                 ))}
-              {(tab === "characters" || config.live) && (
+              {(tab === "characters" || (tab === "environments" && config.live)) && (
                 <button type="button" className={`ml-3 ${pill(only)}`} onClick={() => setOnly((o) => !o)}>
                   {tab === "characters" ? `3D · ${figured.length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => v.room)).length}`}
                 </button>
@@ -554,6 +611,24 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                         {c.figure && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">3D</span>}
                         <span className="mt-1.5 block truncate text-[12px] group-hover:text-[#f2c97a]">{named(c.name)}</span>
                         <span className="block truncate text-[10px] opacity-55">{named(c.role)}</span>
+                      </button>
+                    ))}
+                </div>
+              ) : tab === "images" ? (
+                <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${(SHAPES[g] ?? [240])[0]}px, 1fr))` }}>
+                  {shownPictures
+                    .filter((p) => p.kind === g)
+                    .map((p) => (
+                      <button
+                        key={p.src}
+                        type="button"
+                        onClick={() => setOpen({ picture: p })}
+                        className="group overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
+                      >
+                        {/* biome-ignore lint/performance/noImgElement: art served as it is */}
+                        <img src={p.src} alt="" loading="lazy" decoding="async" className={`${(SHAPES[g] ?? [0, "aspect-[3/2]"])[1]} w-full object-cover`} />
+                        <span className="block truncate px-2.5 pt-1.5 text-[12px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
+                        <span className="block truncate px-2.5 pb-2 text-[10px] opacity-55">{p.of ? named(p.of) : g}</span>
                       </button>
                     ))}
                 </div>

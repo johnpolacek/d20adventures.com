@@ -68,7 +68,7 @@ async function main() {
   if (await put(AWS_BUCKET_PUBLIC as string, "asset-library/library.json", true)) files++
   const figures = library.characters.filter((c) => c.figure).length
   console.log(
-    `${files} files, ${(bytes / 1e6).toFixed(1)} MB ${dry ? "would upload" : "uploaded"}. library.json: ${figures} figures, ${library.characters.length} characters, ${library.places.length} places.`
+    `${files} files, ${(bytes / 1e6).toFixed(1)} MB ${dry ? "would upload" : "uploaded"}. library.json: ${figures} figures, ${library.characters.length} characters, ${library.places.length} places, ${library.pictures.length} pictures.`
   )
 }
 main().catch((err) => {

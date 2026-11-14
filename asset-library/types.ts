@@ -45,10 +45,21 @@ export interface Place {
   groups: string[]
   variants: Environment[]
 }
+// A picture: the setting's own, an adventure's cover, a scene's art, a map, a portrait, a set's painting.
+export interface Picture {
+  src: string
+  title: string
+  kind: string
+  // What it belongs to within its kind: an adventure, a map's region, a set.
+  of?: string
+}
 export interface Library {
   setting: string
   settingName: string
   characters: Character[]
   places: Place[]
   groups: string[]
+  pictures: Picture[]
+  // The kinds of picture, in the order they are shown.
+  kinds: string[]
 }

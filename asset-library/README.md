@@ -210,6 +210,7 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 - Characters are the cast of every staging, each person once, and the player hero looks. A card is marked 3D when its cast id is in a character's `cast`.
 - Environments are the 41 sets as 34 places. A place keeps its variants together: the inn, and the inn at dawn.
 - A character opens as its figure, with detail and clip pills, or as its card. A place opens in the stage's own page, by variant, by scene, and as built or as a cut-away.
+- A third tab, Images, holds every picture by kind: the setting's own, adventure covers, scene art, maps, portraits, set paintings and backgrounds. They are gathered from `public/stage` and from the setting's data in the data bucket. Nothing is copied: the page shows them where the site already serves them.
 - A place's picture is one of its paintings, or else the art of a scene set there. It is not a render of the set.
 - The page reads the stagings, the sets and the shelf each time it loads. There is no index to keep.
 

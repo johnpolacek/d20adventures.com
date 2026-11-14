@@ -2,9 +2,7 @@
   "id": "thalbern",
   "name": "Thalbern",
   "role": "Ranger of the Valkarr Woods",
-  "cast": [
-    "thalbern"
-  ],
+  "cast": ["thalbern"],
   "party": true,
   "height": 1.82,
   "front": "front.webp",
@@ -18,11 +16,7 @@
     "bones": 18,
     "weights": "heat"
   },
-  "clips": [
-    "Idle",
-    "Walk",
-    "Hit"
-  ],
+  "clips": ["Idle", "Walk", "Hit"],
   "lods": [
     {
       "file": "lod0.glb",
