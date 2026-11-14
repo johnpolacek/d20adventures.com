@@ -11,7 +11,7 @@
 //   &cast=off                        hide cast, crowd and effects (for plates)
 //   &paint=0                         no brush filter over the frame
 //   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
-//   &figure=<castId>:<file>[:yaw]    /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee
+//   &figure=<castId>:<file>[:yaw]    /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee. Several, joined by commas.
 //   &cards=1                        /stage-lab/cards/<castId>-front.webp and -back.webp in place of each standee's art
 //   &fill=1                         (b) paint runs on over surfaces no painting saw, in place of the bare set
 //   &bare=1                         (b) those surfaces in flat magenta
@@ -22,9 +22,11 @@
 //   &plain=1                        a painted set as built, without its paintings, for a new painting's plate
 //   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
+//   &iso=az,el,dist,fov              a room as a lit cut-away seen from high and far (iso.ts), with &room, &top and &isolight
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
+import { iso, isoSet } from "./iso"
 import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, drift, pano, projectPaintings } from "./lab"
 
 type Params = Record<string, string | undefined>
@@ -66,6 +68,7 @@ export function LabViewer({ params }: { params: Params }) {
       const set = structuredClone(await SETS[staging.set]()) as { objects: { type: string }[]; backdrops?: unknown[]; painted?: unknown }
       // A set the engine paints itself is shown as built for the lab's own projection, a splat, or a plate (&plain=1).
       if (params.project || params.splat || params.plain) delete set.painted
+      if (params.iso) isoSet(set)
       // The engine now draws the set's own backdrop: the spike's replaces it.
       if (params.backdrop) {
         set.objects = set.objects.filter((o) => o.type !== "mountain")
@@ -139,8 +142,8 @@ export function LabViewer({ params }: { params: Params }) {
       w.__stage = st
       w.__lab = lab
       // &figure=<castId>:<file>[:yaw]: /stage-lab/<file>.glb, a rigged 3D figure, in place of that cast member's standee.
-      if (params.figure) {
-        const [castId, file, yaw] = params.figure.split(":")
+      for (const one of params.figure?.split(",") ?? []) {
+        const [castId, file, yaw] = one.split(":")
         const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw) })
         stops.push(f.stop)
         lab.figure = { triangles: f.triangles, clips: f.clips }
@@ -161,6 +164,13 @@ export function LabViewer({ params }: { params: Params }) {
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }
       if (params.shot) st.shot(params.shot, { instant: true })
+      // &iso=azimuth,elevation,distance,fov: the room cut open and seen from outside. Kept as __lab.view, as &view is.
+      if (params.iso) {
+        const [azimuth = 45, elevation = 35, distance = 40, fov = 24] = params.iso.split(",").map(Number)
+        const [gain, ambient, key] = (params.isolight ?? "").split(",").map((v) => num(v))
+        lab.view = iso(st, { azimuth, elevation, distance, fov, room: num(params.room), top: num(params.top), gain, ambient, key })
+        st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
+      }
       // &drift=<metres>[,<seconds>]: the camera sways that far about where it stands. Needs motion on.
       const sway = params.drift?.split(",").map(Number)
       if (sway?.[0]) stops.push(drift(st, sway[0], sway[1] || 8).stop)
