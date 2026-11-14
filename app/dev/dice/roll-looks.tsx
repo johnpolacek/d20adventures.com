@@ -500,6 +500,23 @@ export function RollLooks() {
             answer={(dice) => ({ ...ATTACK_ASK, dc: 15, mode: "disadvantage", dice, reasons: ["Poisoned"], ...hitOrMiss(Math.min(...dice), 15) })}
           />
         </Box>
+        <Box title="Card · Contest">
+          <CardFlow
+            actor={actor}
+            roll={{ kind: "check", skill: "Athletics", dc: 14, modifier: 5, versus: { name: "Owlbear", skill: "Athletics", natural: 9, modifier: 5 } }}
+            answer={(dice) => ({
+              kind: "check",
+              character: actor.name,
+              check: "Athletics",
+              modifier: 5,
+              dc: 14,
+              natural: dice[0],
+              total: dice[0] + 5,
+              success: dice[0] + 5 >= 14,
+              versus: "the Owlbear's 14",
+            })}
+          />
+        </Box>
         <Box title="1 · Card · Spell Attack, Answered with Damage">
           <CardFlow
             actor={PARTY[3]}

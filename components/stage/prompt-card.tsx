@@ -102,8 +102,9 @@ function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[];
   )
 }
 
-// A d20 in the stage's colours: a real 3D die that tumbles while the number over its face stays upright and flips in
-// place, slowing as it settles; it lands on `land` when given and reports the natural roll. The GM's die rolls itself.
+// A d20 in the stage's colours: a real 3D die with its numbers on its faces, which turns slowly until it is thrown,
+// then tumbles and comes to rest on its roll; it lands on `land` when given and reports the natural roll. The GM's die
+// rolls itself.
 // The second die of a pair rolls with the first: `onStart` says one was thrown and `go` throws the other. A `dropped`
 // die, the one not kept, dims once it lands.
 function D20({
@@ -125,8 +126,9 @@ function D20({
   onStart?: () => void
   dropped?: boolean
 }) {
-  const [shown, setShown] = useState<number | null>(null)
-  const [rolling, setRolling] = useState(false)
+  // The face the die is rolling to, picked as it is thrown, and whether it has landed.
+  const [face, setFace] = useState<number | null>(null)
+  const [done, setDone] = useState(false)
   const [tumble, setTumble] = useState(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const started = useRef(false)
@@ -142,26 +144,18 @@ function D20({
     if (started.current) return
     started.current = true
     onStart?.()
-    setRolling(true)
+    const n = land ?? 1 + Math.floor(Math.random() * 20)
+    setFace(n)
+    const settle = () => {
+      setDone(true)
+      hush.current()
+      onRoll(n)
+    }
+    // With reduced motion the die shows its face at once.
+    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return settle()
     setTumble((k) => k + 1)
     hush.current = rattle()
-    let elapsed = 0
-    let delay = 45
-    const tick = () => {
-      elapsed += delay
-      if (elapsed >= 1200) {
-        const n = land ?? 1 + Math.floor(Math.random() * 20)
-        setShown(n)
-        setRolling(false)
-        hush.current()
-        onRoll(n)
-        return
-      }
-      setShown(1 + Math.floor(Math.random() * 20))
-      delay *= 1.13
-      timer.current = setTimeout(tick, delay)
-    }
-    tick()
+    timer.current = setTimeout(settle, 1200)
   }
   // The GM's die rolls once, shortly after the card appears.
   useEffect(() => {
@@ -172,7 +166,7 @@ function D20({
   useEffect(() => {
     if (go) roll()
   }, [go])
-  const done = shown !== null && !rolling
+  const rolling = face !== null && !done
   return (
     <button
       type="button"
@@ -186,18 +180,8 @@ function D20({
         compact ? "h-16 w-16" : "h-[92px] w-[92px]"
       )}
     >
-      <D20Solid size={compact ? 64 : 92} roll={tumble} className="absolute inset-0" />
-      <span
-        key={shown ?? "roll"}
-        className={cn(
-          "relative font-serif leading-none text-stage-parchment [text-shadow:0_1px_3px_#000d]",
-          rolling ? "d20-flip" : done && "d20-land",
-          done && dropped && "line-through decoration-2",
-          shown === null ? cn("font-sans tracking-[0.2em]", compact ? "text-[8px]" : "text-[10px]") : compact ? "text-base" : "text-[24px]"
-        )}
-      >
-        {shown ?? "ROLL"}
-      </span>
+      <D20Solid size={compact ? 64 : 92} roll={tumble} numbered face={face ?? undefined} idle={face === null && !disabled} className={cn("absolute inset-0", done && "die-land")} />
+      {face === null && !auto && <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-[7px]" : "-bottom-3.5")}>Roll</span>}
     </button>
   )
 }
