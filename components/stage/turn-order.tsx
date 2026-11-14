@@ -142,7 +142,12 @@ export function TurnOrder({
               {s?.kind === "wound" && (
                 <span
                   aria-hidden="true"
-                  className={cn("font-sans tracking-[0.12em] uppercase leading-none [text-shadow:0_1px_3px_#000]", compact ? "mt-0.5 text-[6px]" : "mt-1 text-[8px]")}
+                  // Unhurt goes unsaid. It keeps its room, so the portrait does not shift at the first wound.
+                  className={cn(
+                    "font-sans tracking-[0.12em] uppercase leading-none [text-shadow:0_1px_3px_#000]",
+                    compact ? "mt-0.5 text-[6px]" : "mt-1 text-[8px]",
+                    s.word === "Unhurt" && "invisible"
+                  )}
                   style={{ color: WOUND_TONE[s.word] }}
                 >
                   {s.word}
