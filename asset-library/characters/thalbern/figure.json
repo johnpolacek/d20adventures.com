@@ -1,0 +1,46 @@
+{
+  "id": "thalbern",
+  "name": "Thalbern",
+  "role": "Ranger of the Valkarr Woods",
+  "cast": [
+    "thalbern"
+  ],
+  "party": true,
+  "height": 1.82,
+  "front": "front.webp",
+  "source": {
+    "generator": "Tripo H3.1 on fal",
+    "triangles": 56500,
+    "cost": 0.6,
+    "made": "2026-11-14"
+  },
+  "rig": {
+    "bones": 18,
+    "weights": "heat"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 56500,
+      "megabytes": 2.75,
+      "texture": 2048
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 20000,
+      "megabytes": 1.08,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 0.4,
+      "texture": 512
+    }
+  ]
+}

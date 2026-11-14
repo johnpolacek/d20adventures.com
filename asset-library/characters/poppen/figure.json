@@ -1,0 +1,46 @@
+{
+  "id": "poppen",
+  "name": "Poppen Quickfoot",
+  "role": "Halfling Rogue",
+  "cast": [
+    "poppen"
+  ],
+  "party": true,
+  "height": 1.06,
+  "front": "front.webp",
+  "source": {
+    "generator": "Tripo H3.1 on fal",
+    "triangles": 57496,
+    "cost": 0.6,
+    "made": "2026-11-14"
+  },
+  "rig": {
+    "bones": 18,
+    "weights": "heat"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 57496,
+      "megabytes": 3.23,
+      "texture": 2048
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19999,
+      "megabytes": 1.26,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5999,
+      "megabytes": 0.47,
+      "texture": 512
+    }
+  ]
+}
