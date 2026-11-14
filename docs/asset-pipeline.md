@@ -42,7 +42,7 @@ node --import tsx lab/stage-art/character.ts sheet garlan "Garlan Ironfist, a br
 
 ### 2. Joints file
 
-`lab/stage-art/figures/<id>.json`: the character's height in metres, and 21 points marked on the A-pose front, in its pixels.
+`lab/stage-art/figures/<id>.json`: the character's height in metres, and 22 points marked on the A-pose front, in its pixels.
 
 ```json
 { "height": 1.94, "joints": { "hips": [432, 520], "headTop": [432, 12], "upperarmL": [515, 228], "toeL": [545, 985] } }
