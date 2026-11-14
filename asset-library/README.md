@@ -199,6 +199,11 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 
 ## Known faults
 
+- Standing, every figure holds its arms the same 15 degrees out. That suits Garlan's armour and is too wide for Lyra, Thalbern and Milos. The arms want fitting to each body, until they clear it.
+- Thalbern's bow is slung on his back and reaches down past his hip. The rig gave its lower end to his thigh, so it follows his leg.
+- Milos's staff was on his back on the sheet. His model was made from the front, so he has none.
+- The crowd is 16 pictures, mirrored and tinted. Near the play they repeat.
+
 - The 6,000 triangle copy is coarse up close, with small nicks at the hairline. It no longer tears. It is for a room's distance.
 - A figure reflects a lit room of its own in the stage, so its metal does not go dark. This is in the lab's loader only, not the game's.
 - A model made from the front alone has an invented back. Branka's has no shield on it.
@@ -209,6 +214,7 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 
 Owner, 2026-11-14: only the party is made in 3D for now. The party is Branka, Thalbern, Lyra, Poppen and Milos the cleric. A brief with `"party": true` is one of them. Everyone else stays a card.
 
+- All five were built on 2026-11-14 for $0.60 each, and each rig's report was clean on its first run. Idle, Walk and Hit play on all of them unchanged.
 - At the Gates the scene's own party is Branka, Cassia, Yeva and Milos. The Gates' look (`looks.ts`) stands Lyra where Cassia is and Poppen where Yeva is, and adds Thalbern beside them. The staging itself is unchanged.
 
 ## Not built

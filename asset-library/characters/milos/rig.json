@@ -1,0 +1,65 @@
+{
+  "name": "milos",
+  "source": "source.glb",
+  "height": 1.8,
+  "sourceTriangles": 58936,
+  "weldedPoints": 6005,
+  "quarterTurns": 3,
+  "weights": {
+    "solve": "heat",
+    "standIn": {
+      "points": 11188,
+      "skins": 3,
+      "weighted": 1.0
+    },
+    "patched": 0,
+    "unweighted": 0,
+    "mostBonesOnAPoint": 4
+  },
+  "bones": [
+    "root",
+    "hips",
+    "spine",
+    "chest",
+    "neck",
+    "head",
+    "upperarmL",
+    "forearmL",
+    "handL",
+    "upperarmR",
+    "forearmR",
+    "handR",
+    "thighL",
+    "shinL",
+    "footL",
+    "thighR",
+    "shinR",
+    "footR"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "megabytes": 2.98,
+      "triangles": 58936,
+      "texture": 2048,
+      "joints": 18,
+      "turnedAtRest": []
+    },
+    {
+      "file": "lod1.glb",
+      "megabytes": 1.14,
+      "triangles": 20000,
+      "texture": 1024,
+      "joints": 18,
+      "turnedAtRest": []
+    },
+    {
+      "file": "lod2.glb",
+      "megabytes": 0.42,
+      "triangles": 6000,
+      "texture": 512,
+      "joints": 18,
+      "turnedAtRest": []
+    }
+  ]
+}
