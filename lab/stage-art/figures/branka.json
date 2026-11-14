@@ -1,0 +1,29 @@
+{
+  "height": 1.38,
+  "front": "branka-apose-front.png",
+  "back": "branka-apose-back.png",
+  "joints": {
+    "hips": [385, 570],
+    "spine": [385, 450],
+    "chest": [385, 330],
+    "neck": [385, 240],
+    "head": [385, 198],
+    "headTop": [385, 12],
+    "upperarmL": [520, 300],
+    "forearmL": [590, 410],
+    "handL": [655, 525],
+    "handTipL": [680, 625],
+    "upperarmR": [255, 300],
+    "forearmR": [185, 410],
+    "handR": [118, 525],
+    "handTipR": [85, 625],
+    "thighL": [445, 600],
+    "shinL": [488, 800],
+    "footL": [500, 940],
+    "toeL": [515, 985],
+    "thighR": [328, 600],
+    "shinR": [300, 800],
+    "footR": [290, 940],
+    "toeR": [275, 985]
+  }
+}

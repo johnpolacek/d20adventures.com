@@ -32,8 +32,12 @@ This Mac has 8 GB. Run one heavy job at a time. A capture at the ultra tier take
 ### 1. A-pose sheet
 
 ```sh
-node --import tsx lab/stage-art/character.ts sheet garlan "Garlan Ironfist, a broad, bearded human sergeant of the gate watch"
+node --import tsx lab/stage-art/character.ts sheet branka "Branka Stoneveil, a stout, broad dwarf fighter woman with red braided hair" \
+  "--stow=The sword stays sheathed at her left hip, the warhammer hangs from her belt, and the round shield is slung flat on her back." --arms=45
 ```
+
+- `--stow` says where what the card's hands hold goes. A generator fuses anything held into the arm.
+- `--arms` is how far out the arms stand, 40 unless given. Use 45 for a bulky outfit, so a sleeve clears the hip.
 
 - In: the character's standee front and back, `public/stage/fixtures/welcome-to-kordavos/<id>-front.webp` and `-back.webp`. That folder is fixed in the script today.
 - Out: `lab/stage-art/raw/<id>-sheet.png`, split into `<id>-apose-front.png` and `<id>-apose-back.png`.
@@ -51,6 +55,8 @@ node --import tsx lab/stage-art/character.ts sheet garlan "Garlan Ironfist, a br
 - Points: `hips`, `spine`, `chest`, `neck`, `head`, `headTop`, and for each side `upperarm`, `forearm`, `hand`, `handTip`, `thigh`, `shin`, `foot`, `toe`.
 - `L` is the character's left, which is the right of the picture.
 - This is marked by hand. Finding the points from the picture is not built.
+- `node lab/stage-art/joints.mjs <id>` draws the marks over the picture, as `raw/<id>-joints.jpg`. Look at it before paying for step 3.
+- The head point is the jaw line and the neck point the collar. Knees and hips hide under skirts and boot cuffs: place them where the leg must bend.
 
 ### 3. Image to 3D
 
@@ -60,6 +66,7 @@ node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.
 
 - Out: `public/stage-lab/<id>-tripo-model.glb`, about 59,000 triangles and 16 MB, unrigged. This is the source. Nothing overwrites it.
 - The response is kept in `raw/<id>-tripo.json`. Running the command again reads it and does not pay again.
+- `HTTP 403 ... Exhausted balance` means the fal account is empty. Top it up at fal.ai/dashboard/billing. Nothing was charged.
 - `--meshy-rig` also has Meshy rig it ($0.32), for comparing. We do not use that rig: it stretched a sheet out of Garlan's waist.
 - Tripo H3.1 beat Meshy 7.1 on the same picture: sharper armour, a face nearer the sheet, half the price.
 

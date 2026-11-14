@@ -2,7 +2,7 @@
 // ChatGPT subscription, redraw a standee as a photoreal figure in an A-pose, front and back side by side, and splits it.
 // A generator and a rig both want arms clear of the body and nothing held, which the standees' story poses are not.
 //
-//   node --import tsx lab/stage-art/character.ts sheet garlan "Garlan Ironfist, sergeant of the Kordavos gate watch"
+//   node --import tsx lab/stage-art/character.ts sheet garlan "Garlan Ironfist, sergeant of the Kordavos gate watch" [--stow="The sword stays sheathed at the hip."] [--arms=45]
 //   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts model garlan 1.94
 //   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.ts tripo garlan 1.94
 //
@@ -15,24 +15,28 @@ import { codexPaint, DESKTOP, dataUri, dirs, fal, fetchBuffer, jpeg, PUB, RAW } 
 
 const FIXTURES = "public/stage/fixtures/welcome-to-kordavos"
 
+// `stow` says where what the card's hands hold goes, since a generator fuses anything held into the arm:
+// "The sword stays sheathed at the hip." Arms stand further out for a bulky outfit, so a sleeve clears the hip.
 const prompt = (
-  who: string
+  who: string,
+  stow: string,
+  arms: number
 ) => `The attached images are the front and the back of a painted game character: ${who}. Make one landscape reference sheet of the SAME person as a photorealistic costume photograph, for building a 3D model.
 
 Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles: on the left the front view, on the right the back view from directly behind with no face visible.
 
-Pose, in both views: standing straight, feet a little apart, both arms held out from the body at about 40 degrees, hands open with fingers apart, palms toward the thighs. Nothing in the hands. The sword stays sheathed at the hip. Neutral face, mouth closed, looking straight ahead.
+Pose, in both views: standing straight, feet a little apart, both arms held out from the body at about ${arms} degrees with a clear gap of background between each arm and the body, hands open with fingers apart, palms toward the thighs. Nothing in the hands. ${stow} Neutral face, mouth closed, looking straight ahead.
 
-Keep his face, hair and beard, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: forged and worn steel with brass trim, woven wool, riveted mail, oiled leather, real skin and hair.
+Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.
 
 Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
 
-async function sheet(id: string, who: string) {
+async function sheet(id: string, who: string, stow: string, arms: number) {
   const images = [
     await jpeg(await sharp(`${FIXTURES}/${id}-front.webp`).flatten({ background: "#808080" }).toBuffer(), 1536),
     await jpeg(await sharp(`${FIXTURES}/${id}-back.webp`).flatten({ background: "#808080" }).toBuffer(), 1536),
   ]
-  const png = await codexPaint(`character sheet ${id}`, prompt(who), images)
+  const png = await codexPaint(`character sheet ${id}`, prompt(who, stow, arms), images)
   const { width = 0, height = 0 } = await sharp(png).metadata()
   await writeFile(`${RAW}/${id}-sheet.png`, png)
   const half = Math.floor(width / 2)
@@ -135,7 +139,8 @@ async function main() {
   const [cmd, id, who] = process.argv.slice(2).filter((a) => !a.startsWith("--"))
   await dirs()
   await mkdir(DESKTOP, { recursive: true })
-  if (cmd === "sheet" && id && who) return sheet(id, who)
+  const flag = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3)
+  if (cmd === "sheet" && id && who) return sheet(id, who, flag("stow") ?? "Weapons stay sheathed at the hip or strapped flat against the back.", Number(flag("arms") ?? 40))
   if (cmd === "model" && id) return model(id, Number(who) || 1.8)
   if (cmd === "tripo" && id) return tripo(id, Number(who) || 1.8)
   console.log('usage: character.ts sheet <id> "<who they are>" | model <id> <height in metres> | tripo <id> <height in metres>')

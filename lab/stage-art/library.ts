@@ -2,6 +2,9 @@
 //
 //   node --import tsx lab/stage-art/library.ts add garlan garlan-rig "Garlan Ironfist" "Sergeant of the Gate Watch" --generator="Tripo H3.1 on fal" --cost=0.6
 //
+// <id> is the character's cast id, which is how /dev/assets joins the figure to the character. --sheet=<name> names the
+// sheet when it was painted under another: raw/<name>-apose-front.png.
+//
 // In:  what rig.py wrote for <rig> (public/stage-lab/<rig>.json and its -lod copies) and the A-pose front the model was
 //      made from (raw/<id>-apose-front.png).
 // Out: public/stage-lab/figures/<id>/figure.json, lod0.glb, lod1.glb, lod2.glb and front.webp.
@@ -32,7 +35,10 @@ async function add() {
     await copyFile(`${PUB}/${lod.file}`, `${dir}/lod${i}.glb`)
     lods.push({ file: `lod${i}.glb`, triangles: lod.triangles, megabytes: lod.megabytes, texture: lod.texture })
   }
-  await sharp(`${RAW}/${id}-apose-front.png`).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)
+  await sharp(`${RAW}/${flag("sheet") ?? id}-apose-front.png`)
+    .resize({ height: 640 })
+    .webp({ quality: 85 })
+    .toFile(`${dir}/front.webp`)
   const figure = {
     id,
     kind: "character",
@@ -55,4 +61,4 @@ if (cmd === "add" && id && rig && name)
     console.error(String(err instanceof Error ? err.message : err))
     process.exit(1)
   })
-else console.log('usage: library.ts add <id> <rig> "<name>" "<role>" [--generator=] [--cost=]')
+else console.log('usage: library.ts add <id> <rig> "<name>" "<role>" [--generator=] [--cost=] [--sheet=]')
