@@ -41,7 +41,8 @@ export function LabViewer({ params }: { params: Params }) {
   const [status, setStatus] = useState("Loading")
   const [shots, setShots] = useState<[string, string | undefined][]>([])
   const [active, setActive] = useState<string | null>(null)
-  const [hidden, setHidden] = useState(false)
+  // &panel=0 starts with the panel put away, as h does: for a page that frames this one.
+  const [hidden, setHidden] = useState(params.panel === "0")
 
   useEffect(() => {
     const container = ref.current

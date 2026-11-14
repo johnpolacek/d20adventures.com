@@ -45,7 +45,8 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
   const [title, setTitle] = useState("")
   const [shots, setShots] = useState<[string, string | undefined][]>([])
   const [stats, setStats] = useState<StageStats | null>(null)
-  const [hidden, setHidden] = useState(false)
+  // &panel=0 starts with the panel put away, as h does: for a page that frames this one.
+  const [hidden, setHidden] = useState(params.panel === "0")
   // Everything below the shot buttons sits in a collapsed section; whether it was left open is remembered per browser.
   const [more, setMore] = useState(false)
   useEffect(() => {

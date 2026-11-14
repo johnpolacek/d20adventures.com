@@ -88,8 +88,9 @@ async function model(id: string, height: number) {
   if (res.thumbnail?.url) await writeFile(`${DESKTOP}/${id}-model-thumb.png`, await fetchBuffer(res.thumbnail.url))
 }
 
-// `tripo` sends the same A-pose front to Tripo H3.1 on fal with detailed geometry and textures ($0.60 on 2026-11-14), and
-// has Meshy rig what comes back and give it the same idle ($0.32). Both responses are kept in raw/ and read again.
+// `tripo` sends the same A-pose front to Tripo H3.1 on fal with detailed geometry and textures ($0.60 on 2026-11-14). The
+// model comes back unrigged, for rig.py. With --meshy-rig, Meshy rigs it too and gives it an idle ($0.32), for comparing.
+// Both responses are kept in raw/ and read again.
 type Tripo = { model_mesh?: MeshyFile; model_urls?: { glb?: MeshyFile; pbr_model?: MeshyFile }; rendered_image?: MeshyFile }
 
 async function tripo(id: string, height: number) {
@@ -122,6 +123,7 @@ async function tripo(id: string, height: number) {
   }
   await save("model", url)
   if (mesh.rendered_image?.url) await writeFile(`${DESKTOP}/${id}-tripo-thumb.png`, await fetchBuffer(mesh.rendered_image.url))
+  if (!process.argv.includes("--meshy-rig")) return
   const rig = await kept<Meshy>(`${RAW}/${id}-tripo-rig.json`, () =>
     fal<Meshy>(`character tripo rig ${id}`, "fal-ai/meshy/rigging", { model_url: url, height_meters: height, enable_animation: true, animation_action_id: 0 })
   )
@@ -130,7 +132,7 @@ async function tripo(id: string, height: number) {
 }
 
 async function main() {
-  const [cmd, id, who] = process.argv.slice(2)
+  const [cmd, id, who] = process.argv.slice(2).filter((a) => !a.startsWith("--"))
   await dirs()
   await mkdir(DESKTOP, { recursive: true })
   if (cmd === "sheet" && id && who) return sheet(id, who)
