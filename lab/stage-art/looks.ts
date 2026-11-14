@@ -17,8 +17,9 @@ export const LOOKS: Record<string, Look> = {
     // A cool fill sets the shadows against the low sun, the brazier and the post lantern throw a pool of their own
     // about the checkpoint, and rings mark the cast out of the crowd.
     params: { paint: "0", isobox: "-46,-16,46,34", isohide: "awning", isolight: "1.06,0.22", isosky: "9db8e8", isolamps: "3.9,1.3,11.6,38,9;4.3,2.3,12.1,16,7", rings: "party", bloom: "on" },
-    // Setts a hand across, not stones a pace across, and dirtier: from above the square is mostly ground.
-    materials: { ground: { stones: 0.2, relief: 0.03, grime: 0.8, variance: 0.45 } },
+    // Setts a hand across, not stones a pace across, and dirtier: from above the square is mostly ground. The worn
+    // tracks across it are left off: from above they read as painted lines.
+    materials: { ground: { stones: 0.2, relief: 0.03, grime: 0.8, variance: 0.45, roads: false } },
     shots: {
       // The whole gatehouse on its board.
       wide: { iso: "-35,30,190,38", isoat: "0,6,17" },
