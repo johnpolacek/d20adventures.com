@@ -311,9 +311,11 @@ export function CityMapPanel({ map, trail, compact, onClose }: { map: CityMap; t
           <h2 className="font-serif text-xl">{below ? underground.name : (district?.name ?? map.name)}</h2>
           <p className="text-xs text-stage-muted">You are at {placeName(map, here)}</p>
         </div>
-        <Pill active={view === "all"} onClick={() => setView("all")}>
-          {map.name}
-        </Pill>
+        {(map.districts.length > 0 || underground) && (
+          <Pill active={view === "all"} onClick={() => setView("all")}>
+            {map.name}
+          </Pill>
+        )}
         {map.districts.map((d) => (
           <Pill key={d.id} active={view === d.id} onClick={() => setView(d.id)}>
             {d.name}
