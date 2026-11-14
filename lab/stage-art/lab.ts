@@ -596,8 +596,22 @@ export async function addSplat(stage: Stage, base: string, o: { gain?: number; y
 
 // Character spike: a rigged, animated glTF figure in place of a cast member's standee, at their spot and facing, scaled
 // to their height. It casts and takes the sun's shadow and plays its first clip on its own clock.
+// The room a figure reflects: one for each renderer, made the first time a figure asks.
+const figureRooms = new WeakMap<THREE.WebGLRenderer, THREE.Texture>()
+async function figureRoom(stage: Stage) {
+  const had = figureRooms.get(stage.renderer)
+  if (had) return had
+  const { RoomEnvironment } = await import("three/addons/environments/RoomEnvironment.js")
+  const pmrem = new THREE.PMREMGenerator(stage.renderer)
+  const made = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+  pmrem.dispose()
+  figureRooms.set(stage.renderer, made)
+  return made
+}
+
 // A figure rigged by rig.py carries the shared skeleton and no clips: it plays the written ones (clips.ts), `clip` or Idle.
-export async function addFigure(stage: Stage, url: string, castId: string, o: { yaw?: number; keep?: boolean; clip?: string } = {}) {
+// `env` is how brightly it reflects its room: 0 leaves it to the stage's own sky.
+export async function addFigure(stage: Stage, url: string, castId: string, o: { yaw?: number; keep?: boolean; clip?: string; env?: number } = {}) {
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js")
   const s = stage.standees.items.get(castId)
   if (!s) throw new Error(`No cast member ${castId}`)
@@ -615,11 +629,25 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
   }
   place()
   let triangles = 0
+  // A generated figure is real metal and leather, which shows by what it reflects. The stage's own sky is kept dim for
+  // its painted cards, so a figure in it goes dark. Each figure reflects a plain lit room of its own instead, dimmer
+  // indoors, and its metal is kept a little short of a mirror so that some of the stage's light still colours it.
+  const rooms = (stage as unknown as { set: { rooms?: { box: number[] }[] } }).set.rooms ?? []
+  const indoors = rooms.some(({ box: b }) => s.cast.x > b[0] && s.cast.x < b[3] && s.cast.z > b[2] && s.cast.z < b[5])
+  const shine = o.env ?? (indoors ? 0.3 : 0.55)
+  const room = shine > 0 ? await figureRoom(stage) : null
   root.traverse((m) => {
     if (!(m instanceof THREE.Mesh)) return
     m.castShadow = m.receiveShadow = true
     m.frustumCulled = false
     triangles += (m.geometry.index?.count ?? m.geometry.attributes.position.count) / 3
+    for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+      if (!room || !(mat instanceof THREE.MeshStandardMaterial)) continue
+      mat.envMap = room
+      mat.envMapIntensity = shine
+      mat.metalness = Math.min(mat.metalness, 0.8)
+      mat.roughness = Math.max(mat.roughness, 0.4)
+    }
   })
   root.name = "lab:figure"
   stage.scene.add(root)

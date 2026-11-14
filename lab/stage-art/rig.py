@@ -79,6 +79,18 @@ for o in list(bpy.context.scene.objects):
         bpy.data.objects.remove(o, do_unlink=True)
 body.name = name
 
+# A glTF mesh comes apart along every edge of its texture layout: a third of a generated figure's points are such
+# doubles. Thinned as it is, each side of a seam is thinned on its own and the seams open into tears, across a face as
+# anywhere. Welded first, the mesh is one skin again and keeps its texture layout on its corners.
+weld = bmesh.new()
+weld.from_mesh(body.data)
+before = len(weld.verts)
+bmesh.ops.remove_doubles(weld, verts=weld.verts, dist=1e-5)
+welded = before - len(weld.verts)
+weld.to_mesh(body.data)
+weld.free()
+body.data.update()
+
 # A generator faces its figure whichever way it likes. Arms held out make the figure widest from side to side, and
 # its boots reach forward of its shins: turned so that side to side is x and forward is -y.
 co = coords(body.data)
@@ -320,6 +332,7 @@ report = {
     "source": os.path.basename(src),
     "height": H,
     "sourceTriangles": source_triangles,
+    "weldedPoints": welded,
     "quarterTurns": quarter,
     "weights": {"solve": solve, "standIn": stand_in, "patched": patched, "unweighted": unweighted, "mostBonesOnAPoint": most},
     "bones": BONES,

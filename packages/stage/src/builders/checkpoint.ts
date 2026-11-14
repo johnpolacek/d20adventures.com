@@ -43,7 +43,8 @@ function rope(b: Sink, mat: THREE.Material, a: [number, number, number], c: [num
   b.add(g, mat, null, { uv: "keep" })
   g.dispose()
 }
-// Brass-knobbed stanchions every few metres with a sagging rope between them.
+// Rough-cut stakes every few metres with a slack hemp rope tied between them: a line marked out by a town watch, not
+// by a theatre. Each stake leans a little its own way, by where it stands.
 export const ropeLine = defineBuilder(
   z
     .object({
@@ -59,17 +60,15 @@ export const ropeLine = defineBuilder(
     const n = Math.min(200, Math.max(1, Math.round(Math.hypot(x1 - x0, z1 - z0) / p.spacing)))
     const pts: [number, number][] = []
     for (let i = 0; i <= n; i++) pts.push([x0 + ((x1 - x0) * i) / n, z0 + ((z1 - z0) * i) / n])
-    for (const [x, zz] of pts) {
-      cyl(b, M.pole, x, 0, zz, 0.055, 0.045, 1.02, 6, { uv: "keep" })
-      b.add(
-        G("knob", () => new THREE.SphereGeometry(1, 8, 6)),
-        M.bronze,
-        M4(x, 1.05, zz, 0, 0.06, 0.06, 0.06),
-        { uv: "keep" }
-      )
-      cyl(b, M.iron, x, 0, zz, 0.16, 0.14, 0.05, 8, { uv: "keep" })
-    }
-    for (let i = 0; i < pts.length - 1; i++) rope(b, M.queueRope, [pts[i][0], 0.98, pts[i][1]], [pts[i + 1][0], 0.98, pts[i + 1][1]])
+    const lean = (x: number, zz: number, k: number) => Math.sin(x * 12.9898 + zz * 78.233 + k) * 0.035
+    const tops = pts.map(([x, zz]) => [x + lean(x, zz, 0), 1.04, zz + lean(x, zz, 1.7)] as [number, number, number])
+    pts.forEach(([x, zz], i) => {
+      beam(b, M.pole, [x, 0, zz], tops[i], 0.06, 5)
+      // The rope's turns about the stake, a hand below its top.
+      const [tx, , tz] = tops[i]
+      cyl(b, M.queueRope, x + (tx - x) * 0.9, 0.9, zz + (tz - zz) * 0.9, 0.078, 0.078, 0.09, 6, { uv: "keep" })
+    })
+    for (let i = 0; i < pts.length - 1; i++) rope(b, M.queueRope, [tops[i][0], 0.95, tops[i][2]], [tops[i + 1][0], 0.95, tops[i + 1][2]], 0.2)
   }
 )
 

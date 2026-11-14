@@ -13,6 +13,7 @@
 //   &view=x,y,z,tx,ty,tz[,fov]       a free viewpoint
 //   &figure=<castId>:<file>[:yaw[:clip]]  /stage-lab/<file>.glb, a rigged 3D figure, in place of that standee. Several, joined by commas.
 //                                    A figure from rig.py plays the written clips: Idle, Walk or Hit. __lab.figures[castId].play(name) changes it.
+//   &figenv=0.55                     how brightly a figure reflects its own lit room: 0 leaves it to the stage's sky
 //   &cards=1                        /stage-lab/cards/<castId>-front.webp and -back.webp in place of each standee's art
 //   &fill=1                         (b) paint runs on over surfaces no painting saw, in place of the bare set
 //   &bare=1                         (b) those surfaces in flat magenta
@@ -23,7 +24,8 @@
 //   &plain=1                        a painted set as built, without its paintings, for a new painting's plate
 //   &dummy=x,z                       a person-sized solid there, to see a 3D figure's shadow
 //   &splat=<name>                    /stage-lab/<name>.spz, a Marble splat world, in place of the built set (&sgain, &syaw, &sscale)
-//   &iso=az,el,dist,fov              a room as a lit cut-away seen from high and far (iso.ts), with &room, &top and &isolight
+//   &iso=az,el,dist,fov              a room as a lit cut-away seen from high and far (iso.ts), with &room, &top and &isolight.
+//                                    Out of doors, &isobox=x0,z0,x1,z1[,top] is the ground to keep, and &isohide=type,type leaves parts out.
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
@@ -71,6 +73,26 @@ export function LabViewer({ params }: { params: Params }) {
       // A set the engine paints itself is shown as built for the lab's own projection, a splat, or a plate (&plain=1).
       if (params.project || params.splat || params.plain) delete set.painted
       if (params.iso) isoSet(set)
+      // &isobox: the scattered crowd keeps to the kept ground. Each scatter's area is cut to it, and thinned to match.
+      const ground = params.iso ? params.isobox?.split(",").map(Number) : undefined
+      if (ground && ground.length >= 4) {
+        const crowd = (set as { crowd?: { groups?: { type: string; area?: number[]; count?: number }[] } }).crowd
+        for (const g of crowd?.groups ?? []) {
+          if (g.type !== "scatter" || !g.area || !g.count) continue
+          const [a0, b0, a1, b1] = g.area
+          const cut = [Math.max(a0, ground[0]), Math.max(b0, ground[1]), Math.min(a1, ground[2]), Math.min(b1, ground[3])]
+          const share = (Math.max(0, cut[2] - cut[0]) * Math.max(0, cut[3] - cut[1])) / Math.max(1e-6, (a1 - a0) * (b1 - b0))
+          g.area = share > 0 ? cut : [ground[0], ground[1], ground[0] + 0.01, ground[1] + 0.01]
+          g.count = Math.round(g.count * share)
+        }
+        // A scatter left with nobody is taken out: the set's spec wants at least one person in each.
+        if (crowd?.groups) crowd.groups = crowd.groups.filter((g) => g.type !== "scatter" || (g.count ?? 0) >= 1)
+      }
+      // &isohide=type,type: parts of the set left out of the cut-away, as a ceiling is.
+      if (params.isohide) {
+        const hide = params.isohide.split(",")
+        set.objects = set.objects.filter((o) => !hide.includes(o.type))
+      }
       // The engine now draws the set's own backdrop: the spike's replaces it.
       if (params.backdrop) {
         set.objects = set.objects.filter((o) => o.type !== "mountain")
@@ -88,7 +110,9 @@ export function LabViewer({ params }: { params: Params }) {
             }
           }
         : undefined
-      st = await createStage({ container, set, staging, tier, motion: params.motion !== "0", onProgress: setStatus, crowdLibrary })
+      // From high and far the whole crowd is past the distance where cards give way to pegs, so every one is a card.
+      const flags = params.iso ? { cardRadius: 500 } : undefined
+      st = await createStage({ container, set, staging, tier, flags, motion: params.motion !== "0", onProgress: setStatus, crowdLibrary })
       if (cancelled) return st.dispose()
       const lab: Record<string, unknown> = {
         camera: () => cameraOf(st as Stage),
@@ -146,7 +170,7 @@ export function LabViewer({ params }: { params: Params }) {
       // &figure=<castId>:<file>[:yaw]: /stage-lab/<file>.glb, a rigged 3D figure, in place of that cast member's standee.
       for (const one of params.figure?.split(",") ?? []) {
         const [castId, file, yaw, clip] = one.split(":")
-        const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw), clip })
+        const f = await addFigure(st, `/stage-lab/${file}.glb`, castId, { yaw: num(yaw), clip, env: num(params.figenv) })
         stops.push(f.stop)
         lab.figure = { triangles: f.triangles, clips: f.clips }
         lab.figures = { ...(lab.figures as object), [castId]: { play: f.play, pose: f.pose, clips: f.clips, triangles: f.triangles } }
@@ -171,7 +195,19 @@ export function LabViewer({ params }: { params: Params }) {
       if (params.iso) {
         const [azimuth = 45, elevation = 35, distance = 40, fov = 24] = params.iso.split(",").map(Number)
         const [gain, ambient, key] = (params.isolight ?? "").split(",").map((v) => num(v))
-        lab.view = iso(st, { azimuth, elevation, distance, fov, room: num(params.room), top: num(params.top), at: params.isoat?.split(",").map(Number), gain, ambient, key })
+        lab.view = iso(st, {
+          azimuth,
+          elevation,
+          distance,
+          fov,
+          room: num(params.room),
+          top: num(params.top),
+          at: params.isoat?.split(",").map(Number),
+          box: params.isobox?.split(",").map(Number),
+          gain,
+          ambient,
+          key,
+        })
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }
       // &drift=<metres>[,<seconds>]: the camera sways that far about where it stands. Needs motion on.

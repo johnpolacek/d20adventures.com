@@ -340,8 +340,8 @@
     },
     "queueRope": {
       "type": "plain",
-      "color": "#a8323a",
-      "roughness": 0.7
+      "color": "#9c8458",
+      "roughness": 0.95
     },
     "straw": {
       "type": "wood",

@@ -8,6 +8,11 @@
 // &room=1 picks another of the set's rooms. &top=2.4 cuts the walls lower. &isoat=x,z looks at that spot, not the middle.
 // &isolight=gain,ambient,key: the room's exposure times `gain`, a soft light from all round, and a key light from above
 // the camera's left that comes in where the roof was and throws shadows.
+//
+// Out of doors there is no room, so the ground to keep is given: &isobox=x0,z0,x1,z1[,top]. Everything outside it is
+// cut away, nothing above it is unless `top` says so, and the set's own sun lights it.
+//   /dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kordavos&tier=high&paint=0&iso=-35,35,60,20&isobox=-14,-4,16,24&isohide=awning
+// &isohide=type,type leaves those parts of the set out: an awning over the people, as a ceiling would be.
 
 import type { Stage } from "@d20/stage"
 import * as THREE from "three"
@@ -18,6 +23,8 @@ export interface IsoOptions {
   distance: number
   fov: number
   room?: number
+  // Open ground to keep, x0, z0, x1, z1 and optionally a height to cut at, in place of a room.
+  box?: number[]
   top?: number
   at?: number[]
   gain?: number
@@ -39,16 +46,18 @@ export function iso(stage: Stage, o: IsoOptions) {
     lightRoom: (dt: number) => void
     collide: () => void
   }
-  const room = s.set.rooms[o.room ?? 0]
-  if (!room) throw new Error("The set has no room to cut open")
-  const [x0, y0, z0, x1, y1, z1] = room.box
+  const open = o.box && o.box.length >= 4 ? o.box : null
+  const room = open ? null : s.set.rooms[o.room ?? 0]
+  if (!open && !room) throw new Error("The set has no room to cut open: give the ground to keep, &isobox=x0,z0,x1,z1")
+  const [x0, y0, z0, x1, y1, z1] = open ? [open[0], 0, open[1], open[2], open[4] ?? Number.NaN, open[3]] : (room as { box: number[] }).box
   const az = THREE.MathUtils.degToRad(o.azimuth)
   const el = THREE.MathUtils.degToRad(o.elevation)
   const target = new THREE.Vector3(o.at?.[0] ?? (x0 + x1) / 2, 0.6, o.at?.[1] ?? (z0 + z1) / 2)
   const position = new THREE.Vector3(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az)).multiplyScalar(o.distance).add(target)
 
   // What is kept: from just inside the near walls to the far walls' outer faces, floor slab to the cut height.
-  const WALL = 0.36
+  // Open ground has no walls to cut or to keep: it is kept edge to edge, and as high as it goes.
+  const WALL = open ? 0 : 0.36
   const sx = Math.sin(az) >= 0 ? 1 : -1
   const sz = Math.cos(az) >= 0 ? 1 : -1
   const nearX = sx > 0 ? x1 : x0
@@ -56,16 +65,11 @@ export function iso(stage: Stage, o: IsoOptions) {
   const nearZ = sz > 0 ? z1 : z0
   const farZ = sz > 0 ? z0 : z1
   // The near walls carry studs and rails that stand proud of them, so the cut is a hand's width inside the room.
-  const TRIM = 0.14
+  const TRIM = open ? 0 : 0.14
   const keep = (n: [number, number, number], at: number) => new THREE.Plane(new THREE.Vector3(...n), at)
-  const planes = [
-    keep([-sx, 0, 0], sx * nearX - TRIM),
-    keep([sx, 0, 0], -sx * farX + WALL),
-    keep([0, 0, -sz], sz * nearZ - TRIM),
-    keep([0, 0, sz], -sz * farZ + WALL),
-    keep([0, -1, 0], o.top ?? y1 - 0.56),
-    keep([0, 1, 0], -y0 - 0.3),
-  ]
+  const planes = [keep([-sx, 0, 0], sx * nearX - TRIM), keep([sx, 0, 0], -sx * farX + WALL), keep([0, 0, -sz], sz * nearZ - TRIM), keep([0, 0, sz], -sz * farZ + WALL), keep([0, 1, 0], 0.3 - y0)]
+  const top = o.top ?? (open ? y1 : y1 - 0.56)
+  if (Number.isFinite(top)) planes.push(keep([0, -1, 0], top))
   stage.renderer.clippingPlanes = planes
   // The renderer's own planes are left out of shadow maps, so the built set's materials carry them too: what is cut
   // away throws no shadow, and the key light comes in where the roof was.
@@ -84,18 +88,20 @@ export function iso(stage: Stage, o: IsoOptions) {
   const fog = stage.scene.fog as THREE.FogExp2 | null
   if (fog) fog.density = 0
 
-  // The room's lamps come up when the camera is inside it. This camera never is, so the stage is told it stands in the middle.
-  const light = s.lightRoom.bind(stage)
-  const inside = new THREE.Vector3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2)
-  const held = new THREE.Vector3()
-  const exposure = (room.exposure ?? s.set.atmosphere.exposure) * (o.gain ?? 1)
-  s.lightRoom = (dt) => {
-    held.copy(stage.camera.position)
-    stage.camera.position.copy(inside)
-    light(dt)
-    stage.camera.position.copy(held)
-    stage.renderer.toneMappingExposure = exposure
-  }
+  const inside = new THREE.Vector3((x0 + x1) / 2, open ? 2 : (y0 + y1) / 2, (z0 + z1) / 2)
+  if (room) {
+    // The room's lamps come up when the camera is inside it. This camera never is, so the stage is told it stands in the middle.
+    const light = s.lightRoom.bind(stage)
+    const held = new THREE.Vector3()
+    const exposure = ((room as { exposure?: number }).exposure ?? s.set.atmosphere.exposure) * (o.gain ?? 1)
+    s.lightRoom = (dt) => {
+      held.copy(stage.camera.position)
+      stage.camera.position.copy(inside)
+      light(dt)
+      stage.camera.position.copy(held)
+      stage.renderer.toneMappingExposure = exposure
+    }
+  } else stage.renderer.toneMappingExposure = s.set.atmosphere.exposure * (o.gain ?? 1)
   if (o.ambient) stage.scene.add(new THREE.HemisphereLight("#ffe6c8", "#4a3626", o.ambient))
   if (o.key) {
     const key = new THREE.DirectionalLight("#dfe6ff", o.key)

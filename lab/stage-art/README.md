@@ -417,3 +417,22 @@ Branka Stoneveil, a dwarf of 1.38 m, through the pipeline in docs/asset-pipeline
 - Idle, Walk and Hit play on her unchanged. The clips carry over to a body with short legs and a long trunk.
 - Her cloak filled the gaps beside her arms on the sheet. The arms came out free of it all the same.
 - Not looked at: her back and the shield slung there, and her face at the two lighter levels.
+
+## The Gates, 2026-11-14
+
+The Gates of Kordavos as an isometric scene, as built and with no paintings.
+
+```sh
+G="staging=welcome-to-kordavos/the-gates-of-kordavos&paint=0&isobox=-36,-14,36,30&isohide=awning"
+open "http://localhost:3057/dev/stage-lab?$G&tier=high&iso=-35,35,70,24&isoat=1,10"
+open "http://localhost:3057/dev/stage-lab?$G&tier=high&iso=-35,35,70,9&isoat=2,16&figure=garlan:garlan-rig-lod0:0:Idle,branka:branka-rig-lod0:0:Idle"
+```
+
+- `&isobox` keeps a stretch of open ground and cuts the rest, where a room would be cut open. The scattered crowd is thinned to it. From this far every crowd member is a card.
+- The awning over the checkpoint hid the sergeant from above, as a ceiling would: `&isohide=awning` leaves it out.
+- The queue's brass stanchions and red rope are now rough stakes with slack hemp rope, in the builder and in both sets that colour it. The painted Gates still show whatever their paintings show.
+- Figures: each reflects a plain lit room of its own, dimmer indoors, and its metal is held a little short of a mirror. Before, armour went dark under the stage's dim sky.
+- The light copy's torn face was the mesh, not the thinning: a glTF mesh is split along its texture seams, a third of its points doubled. `rig.py` welds it first.
+- `joints.py` finds the joints with a pose model. On Garlan and Branka they lay 4 to 6 cm from the hand marks on average, and Branka rigged from them walks cleanly.
+- Seen from behind, Branka has no shield: the model was made from her front alone.
+- Not done: the Gates in the asset library, the party's other three in 3D, the queue walking, figures swapped for the game's own loader.

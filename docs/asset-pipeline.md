@@ -9,13 +9,15 @@ Results and measurements are in [lab/stage-art/README.md](../lab/stage-art/READM
 | Step | Tool | Time | Cost | By hand? |
 |---|---|---|---|---|
 | 1. A-pose sheet | Codex CLI image tool | 2 min | free | no |
-| 2. Joints file | a text editor | 10 min | free | yes |
+| 2. Joints file | a pose model, `joints.py` | 10 sec | free | a look |
 | 3. Image to 3D | Tripo H3.1 on fal | 3 min | $0.60 | no |
 | 4. Rig and detail levels | headless Blender | 5 sec | free | no |
 | 5. Shelve | `library.ts` | 1 sec | free | no |
 | 6. Review | `/dev/assets`, frame strips | 5 min | free | yes |
 
-One character is about $0.60 and twenty minutes. Step 2 is the only step that does not yet run on its own.
+One character is about $0.60 and ten minutes. Every step runs on its own. Steps 2 and 6 want a look.
+
+Step 3 is the only one that costs money. Do not run it for a batch of characters without the owner's say.
 
 ## What you need
 
@@ -46,17 +48,19 @@ node --import tsx lab/stage-art/character.ts sheet branka "Branka Stoneveil, a s
 
 ### 2. Joints file
 
-`lab/stage-art/figures/<id>.json`: the character's height in metres, and 22 points marked on the A-pose front, in its pixels.
+`lab/stage-art/figures/<id>.json`: the character's height in metres, and 22 points on the A-pose front, in its pixels.
 
-```json
-{ "height": 1.94, "joints": { "hips": [432, 520], "headTop": [432, 12], "upperarmL": [515, 228], "toeL": [545, 985] } }
+```sh
+uv run --python 3.12 --with mediapipe==0.10.14 --with numpy --with pillow lab/stage-art/joints.py branka 1.38 --write
+node lab/stage-art/joints.mjs branka
 ```
 
-- Points: `hips`, `spine`, `chest`, `neck`, `head`, `headTop`, and for each side `upperarm`, `forearm`, `hand`, `handTip`, `thigh`, `shin`, `foot`, `toe`.
-- `L` is the character's left, which is the right of the picture.
-- This is marked by hand. Finding the points from the picture is not built.
-- `node lab/stage-art/joints.mjs <id>` draws the marks over the picture, as `raw/<id>-joints.jpg`. Look at it before paying for step 3.
-- The head point is the jaw line and the neck point the collar. Knees and hips hide under skirts and boot cuffs: place them where the leg must bend.
+- `joints.py` finds them with a pose model. Shoulders, elbows, wrists, hips, knees, ankles and toes are the model's. The trunk and head are placed between them, and the top of the head is the top of the figure against the grey.
+- `joints.mjs` draws them over the picture, as `raw/<id>-joints.jpg`. Look at it before paying for step 3.
+- Points: `hips`, `spine`, `chest`, `neck`, `head`, `headTop`, and for each side `upperarm`, `forearm`, `hand`, `handTip`, `thigh`, `shin`, `foot`, `toe`. `L` is the character's left, the right of the picture.
+- Checked on two characters. The found joints lay 4 to 6 cm from the hand marks on average, 14 cm at worst, and Branka rigged from them walks cleanly. The hand marks were a guess too: the found shoulders and knees look nearer the truth.
+- A file already there is kept. `--force` replaces it. With one there, the script prints how far each found joint is from its mark.
+- It expects a person. It has not been tried on a monster or a beast.
 
 ### 3. Image to 3D
 
@@ -79,6 +83,7 @@ node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/character.
 
 What `rig.py` does, in order:
 
+1. Welds the mesh. A glTF mesh comes apart along every seam of its texture, and thinned like that the seams tear open.
 1. Turns the model to face forward. A generator faces its figure whichever way it likes. Tripo's faces sideways.
 2. Stands it on the ground at its height.
 3. Builds the skeleton from the joints file: 18 bones, the same names and parents for every character.
@@ -158,7 +163,14 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-dragonbone-i
 ```
 
 - `iso=azimuth,elevation,distance,lens`. `lab/stage-art/iso.ts` cuts the two near walls, the ceiling and everything outside the room, and lights the room's own lamps.
-- 13 of the 41 sets have a room. The other 28 are outdoors or open, and have no isometric view yet.
+- 13 of the 41 sets have a room. Out of doors the ground to keep is given, and parts that roof the people over are left out:
+
+```
+http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kordavos&tier=high&paint=0&iso=-35,35,70,24&isoat=1,10&isobox=-36,-14,36,30&isohide=awning
+```
+
+- `isobox=x0,z0,x1,z1`. Everything outside it is cut, the scattered crowd is kept inside it, and the set's own sun lights it.
+- The Gates are the only outdoor set framed this way so far. The library does not yet offer it.
 
 ## The asset library
 
@@ -186,14 +198,14 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-dragonbone-i
 
 ## Known faults
 
-- The 6,000 triangle copy has a tear across the face and crumpled armour up close. It holds at a room's distance only.
-- Figures read darker than the cards beside them in the stage. They are not lit as cards are.
+- The 6,000 triangle copy is coarse up close, with small nicks at the hairline. It no longer tears. It is for a room's distance.
+- A figure reflects a lit room of its own in the stage, so its metal does not go dark. This is in the lab's loader only, not the game's.
+- A model made from the front alone has an invented back. Branka's has no shield on it.
 - The walk is on the spot and has not been scored by anyone but its author.
 - Fourteen figures at 59,000 triangles each drop the high tier from 60 to 40 frames a second on an M3. At 6,000 they cost nothing.
 
 ## Not built
 
-- Joints found from the picture, so step 2 needs no hand.
 - One command that runs steps 1 to 5.
 - Sheets for characters outside `welcome-to-kordavos`.
 - An attack, a fall and a talk clip.
