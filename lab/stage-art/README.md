@@ -407,3 +407,13 @@ open "http://localhost:3057/dev/assets?id=garlan&lod=0&clip=Walk"
 - The shelf is `public/stage-lab/figures/<id>/`: `figure.json`, three copies and the A-pose front it was made from. It is not in git, like the rest of `public/stage-lab`.
 - Seen close, the 6,000 triangle copy has a tear across the face and crumpled armour. It holds at the inn's distance only.
 - Not done: where shipped figures live, a card picture from the model itself, props and monsters.
+
+## A second figure, 2026-11-14
+
+Branka Stoneveil, a dwarf of 1.38 m, through the pipeline in docs/asset-pipeline.md.
+
+- Sheet 1 minute and free, joints marked by hand, Tripo $0.60 in 2 minutes 40, rig 8 seconds. 58,121 triangles, and copies of 2.9, 1.2 and 0.5 MB.
+- The rig's report was clean on the first run: heat solve, nothing unweighted, no bone turned at rest.
+- Idle, Walk and Hit play on her unchanged. The clips carry over to a body with short legs and a long trunk.
+- Her cloak filled the gaps beside her arms on the sheet. The arms came out free of it all the same.
+- Not looked at: her back and the shield slung there, and her face at the two lighter levels.

@@ -1,6 +1,6 @@
 # Asset pipeline
 
-How a 3D asset is made for the isometric stage, from a painting to something that walks in a scene. Written 2026-11-14, from one character taken all the way through (Garlan Ironfist). Everything here is a spike in `lab/stage-art`. None of it ships in the game yet.
+How a 3D asset is made for the isometric stage, from a painting to something that walks in a scene. Written 2026-11-14, from two characters taken all the way through (Garlan Ironfist and Branka Stoneveil). Everything here is a spike in `lab/stage-art`. None of it ships in the game yet.
 
 Results and measurements are in [lab/stage-art/README.md](../lab/stage-art/README.md). This page is the how.
 
@@ -139,7 +139,7 @@ Look for: hands or arms through the body, torn mesh at the armpits and elbows, f
 
 - A clip reads two things from the figure: how far out its arms were modelled, so standing arms hang the same on everyone, and where its hips rest.
 - To add one, add an entry to `WRITTEN` with a name, a length and a pose for each moment. It then shows as a pill in the library for every figure.
-- Only Garlan has played them. A second body has not proved they carry over.
+- Garlan and Branka play them unchanged: a tall man and a dwarf of 1.38 m.
 
 ## Environments
 
@@ -165,7 +165,7 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-dragonbone-i
 `/dev/assets` is every character and every place in one page.
 
 - Two tabs, Characters and Environments. Each is a grid of cards under the adventure it belongs to, with a search and a filter for what has a 3D figure or an isometric view.
-- Characters are the cast of every staging, each person once, and the player hero looks. 151 on 2026-11-14, one of them in 3D.
+- Characters are the cast of every staging, each person once, and the player hero looks. 151 on 2026-11-14, two of them in 3D.
 - Environments are the 41 sets as 34 places. A place keeps its variants together: the inn, and the inn at dawn.
 - A character opens as its figure, with detail and clip pills, or as its card. A place opens in the stage's own page, by variant, by scene, and as built or as a cut-away.
 - A place's picture is one of its paintings, or else the art of a scene set there. It is not a render of the set.
