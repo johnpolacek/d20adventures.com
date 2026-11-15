@@ -5,8 +5,8 @@
 // anyone. A positive turn about z lifts the left arm and lowers the right. A positive turn about x takes a hanging limb
 // back, and a negative one forward.
 //
-// Two things are read from the figure itself: how far out its arms were modelled, so that standing they hang the same
-// on everyone, and where its hips rest, since a walk moves them.
+// Three things are read from the figure itself: how far out its arms were modelled, how far out they must hang to
+// clear its own body, and where its hips rest, since a walk moves them.
 
 import * as THREE from "three"
 
@@ -21,6 +21,14 @@ const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
 const FPS = 30
 // Degrees a standing arm hangs out from straight down.
 const HANG = 15
+// How far out each arm was modelled, and how far out it hangs when standing: the least that clears this body, which
+// rig.py measures and leaves on the skeleton. A figure rigged before that hangs at HANG.
+interface Arms {
+  L: number
+  R: number
+  hangL: number
+  hangR: number
+}
 
 interface Pose {
   turns: Record<string, Q>
@@ -30,12 +38,12 @@ interface Pose {
 interface Written {
   name: string
   seconds: number
-  pose: (t: number, arm: { L: number; R: number }) => Pose
+  pose: (t: number, arm: Arms) => Pose
 }
 
-const standing = (arm: { L: number; R: number }, sway: { armL?: number; armR?: number; swingL?: number; swingR?: number; elbowL?: number; elbowR?: number } = {}) => ({
-  upperarmL: turn(about(X, sway.swingL ?? 0), about(Z, -(arm.L - HANG) + (sway.armL ?? 0))),
-  upperarmR: turn(about(X, sway.swingR ?? 0), about(Z, arm.R - HANG - (sway.armR ?? 0))),
+const standing = (arm: Arms, sway: { armL?: number; armR?: number; swingL?: number; swingR?: number; elbowL?: number; elbowR?: number } = {}) => ({
+  upperarmL: turn(about(X, sway.swingL ?? 0), about(Z, -(arm.L - arm.hangL) + (sway.armL ?? 0))),
+  upperarmR: turn(about(X, sway.swingR ?? 0), about(Z, arm.R - arm.hangR - (sway.armR ?? 0))),
   forearmL: about(X, -9 + (sway.elbowL ?? 0)),
   forearmR: about(X, -9 + (sway.elbowR ?? 0)),
 })
@@ -117,7 +125,11 @@ export function figureClips(root: THREE.Object3D, height: number): THREE.Animati
     const elbow = bone(`forearm${side}`)?.position
     return elbow ? THREE.MathUtils.radToDeg(Math.atan2(Math.abs(elbow.x), -elbow.y)) : 35
   }
-  const arm = { L: out("L"), R: out("R") }
+  let fitted: { hangL?: number; hangR?: number } = {}
+  root.traverse((o) => {
+    if (typeof o.userData.hangL === "number") fitted = o.userData
+  })
+  const arm: Arms = { L: out("L"), R: out("R"), hangL: fitted.hangL ?? HANG, hangR: fitted.hangR ?? HANG }
   const hips = bone("hips")?.position.clone() ?? new THREE.Vector3()
   const size = height / 1.8
   return WRITTEN.map((w) => {

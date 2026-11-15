@@ -2,7 +2,10 @@
   "id": "milos",
   "name": "Milos Radan",
   "role": "Human Cleric",
-  "cast": ["milos", "milos-radan"],
+  "cast": [
+    "milos",
+    "milos-radan"
+  ],
   "party": true,
   "height": 1.8,
   "front": "front.webp",
@@ -16,7 +19,11 @@
     "bones": 18,
     "weights": "heat"
   },
-  "clips": ["Idle", "Walk", "Hit"],
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit"
+  ],
   "lods": [
     {
       "file": "lod0.glb",
@@ -36,5 +43,6 @@
       "megabytes": 0.42,
       "texture": 512
     }
-  ]
+  ],
+  "thumb": "thumb.webp"
 }

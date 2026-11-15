@@ -256,6 +256,98 @@ hand.layers_vgroup_select_src = "ALL"
 hand.layers_vgroup_select_dst = "NAME"
 bpy.ops.object.modifier_apply(modifier=hand.name)
 bpy.data.objects.remove(proxy, do_unlink=True)
+
+# ── Two things read off the weighted body ──
+G = {g.index: g.name for g in body.vertex_groups}
+P = coords(body.data)
+N = len(P)
+W = {b: np.zeros(N, dtype=np.float32) for b in BONES[1:]}
+for v in body.data.vertices:
+    for g in v.groups:
+        W[G[g.group]][v.index] = g.weight
+leg = {side: W[f"thigh{side}"] + W[f"shin{side}"] + W[f"foot{side}"] for side in "LR"}
+armw = {side: W[f"upperarm{side}"] + W[f"forearm{side}"] + W[f"hand{side}"] for side in "LR"}
+
+
+def off_line(a, b):
+    """How far each point of the body lies from the line between two joints."""
+    a, b = np.array(a), np.array(b)
+    t = np.clip(((P - a) @ (b - a)) / max(1e-9, float((b - a) @ (b - a))), 0, 1)
+    return np.linalg.norm(P - (a + t[:, None] * (b - a)), axis=1)
+
+
+# Slung gear: a bow, a scabbard, a staff. The mesh is one fused skin, so the end of a bow that hangs past the hip took
+# the thigh's weights and swung with the leg. A thin thing that hangs from the belt line, well clear of the leg it was
+# given to, follows the hips instead. A cloak or a skirt is wide, and is left to the legs.
+slung = 0
+legs = leg["L"] + leg["R"]
+clear = np.minimum.reduce([off_line(at[f"{a}{side}"], at[f"{b}{side}"]) for side in "LR" for a, b in (("thigh", "shin"), ("shin", "foot"), ("foot", "toe"))])
+loose_of_leg = (legs > 0.5) & (clear > 0.075 * H)
+if loose_of_leg.any():
+    part = bmesh.new()
+    part.from_mesh(body.data)
+    part.verts.ensure_lookup_table()
+    done = np.zeros(N, dtype=bool)
+    for start in np.flatnonzero(loose_of_leg):
+        if done[start]:
+            continue
+        piece, stack = [], [int(start)]
+        done[start] = True
+        while stack:
+            i = stack.pop()
+            piece.append(i)
+            for e in part.verts[i].link_edges:
+                j = e.other_vert(part.verts[i]).index
+                if loose_of_leg[j] and not done[j]:
+                    done[j] = True
+                    stack.append(j)
+        Q = P[piece]
+        thin = max(np.ptp(Q[:, 0]), np.ptp(Q[:, 1])) < 0.1 * H
+        if len(piece) >= 5 and thin and Q[:, 2].max() > at["hips"].z - 0.15 * H:
+            for i in piece:
+                moved = sum(W[f"{b}{side}"][i] for side in "LR" for b in ("thigh", "shin", "foot"))
+                for side in "LR":
+                    for b in ("thigh", "shin", "foot"):
+                        body.vertex_groups[f"{b}{side}"].add([i], 0.0, "REPLACE")
+                body.vertex_groups["hips"].add([i], float(W["hips"][i] + moved), "REPLACE")
+            slung += len(piece)
+    part.free()
+
+# How far out a hanging arm must stand to clear this body, each side: the least angle from straight down at which the
+# forearm and the hand pass clear of what hangs at the hips beside them. A lean figure's arms hang close, and an
+# armoured one's stand out. It is measured on the bulk of each, not its outermost point: a strap end or a hilt that a
+# hand brushes is nothing, and an arm held wide for it reads as a doll's. Never wider than 22 degrees.
+WIDEST = 22.0
+hang = {}
+body_points = (armw["L"] + armw["R"]) < 0.2
+for side, sg in (("L", 1.0), ("R", -1.0)):
+    S, E = at[f"upperarm{side}"], at[f"forearm{side}"]
+    rest = float(np.degrees(np.arctan2(abs(E.x - S.x), S.z - E.z)))
+    lower = (W[f"forearm{side}"] + W[f"hand{side}"]) > 0.5
+    A = P[lower]
+    hang[side] = round(min(rest, WIDEST), 1)
+    if len(A) < 10:
+        continue
+    r = np.hypot(A[:, 0] - S.x, A[:, 2] - S.z)
+    phi = np.arctan2(sg * (A[:, 0] - S.x), -(A[:, 2] - S.z))
+    near = body_points & (np.abs(P[:, 1] - A[:, 1].mean()) < 0.05 * H)
+    B = P[near]
+    for angle in np.arange(7.0, min(rest, WIDEST) + 0.01, 1.0):
+        turned = phi - np.radians(rest - angle)
+        # How far out each point of the arm stands on its own side, and how high.
+        ax, az = r * np.sin(turned) + sg * S.x, S.z - r * np.cos(turned)
+        gap = np.inf
+        for z0 in np.arange(az.min(), az.max(), 0.02 * H):
+            band = (az >= z0) & (az < z0 + 0.02 * H)
+            wall = B[(B[:, 2] >= z0) & (B[:, 2] < z0 + 0.02 * H)]
+            if band.sum() >= 4 and len(wall) >= 4:
+                gap = min(gap, float(np.percentile(ax[band], 15) - np.percentile(sg * wall[:, 0], 85)))
+        if gap >= 0:
+            hang[side] = round(float(angle), 1)
+            break
+# The clips read these from the skeleton (asset-library/clips.ts).
+rig["hangL"], rig["hangR"] = hang["L"], hang["R"]
+
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
 # A point the stand-in's weights missed is patched the same way, so nothing is left behind.
@@ -315,6 +407,7 @@ for i, (triangles, width) in enumerate(LODS):
         export_image_format="WEBP",
         export_image_quality=85,
         export_tangents=False,
+        export_extras=True,
     )
     g = read_glb(path)
     joints = [g["nodes"][j] for j in g["skins"][0]["joints"]]
@@ -339,6 +432,8 @@ report = {
     "weldedPoints": welded,
     "quarterTurns": quarter,
     "weights": {"solve": solve, "standIn": stand_in, "patched": patched, "unweighted": unweighted, "mostBonesOnAPoint": most},
+    "slungPoints": slung,
+    "hang": hang,
     "bones": BONES,
     "lods": made,
 }

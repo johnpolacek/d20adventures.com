@@ -123,6 +123,8 @@ async function shelve(dir: string, b: Brief) {
     party: !!b.party,
     height: b.height,
     front: "front.webp",
+    // The figure's own picture, once thumbs.ts has taken one. A rig made again wants it taken again.
+    ...(existsSync(`${dir}/thumb.webp`) ? { thumb: "thumb.webp" } : {}),
     source: { generator: MODEL.name, triangles: rig.sourceTriangles, cost: MODEL.cost, made: before?.source?.made ?? new Date().toISOString().slice(0, 10) },
     rig: { bones: rig.bones.length, weights: rig.weights.solve },
     clips: CLIPS,

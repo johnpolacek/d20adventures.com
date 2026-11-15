@@ -2,7 +2,10 @@
   "id": "branka",
   "name": "Branka Stoneveil",
   "role": "Dwarf Fighter",
-  "cast": ["branka", "branka-stoneveil"],
+  "cast": [
+    "branka",
+    "branka-stoneveil"
+  ],
   "party": true,
   "height": 1.38,
   "front": "front.webp",
@@ -16,7 +19,11 @@
     "bones": 18,
     "weights": "heat"
   },
-  "clips": ["Idle", "Walk", "Hit"],
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit"
+  ],
   "lods": [
     {
       "file": "lod0.glb",
@@ -36,5 +43,6 @@
       "megabytes": 0.43,
       "texture": 512
     }
-  ]
+  ],
+  "thumb": "thumb.webp"
 }

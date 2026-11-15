@@ -54,6 +54,7 @@
     "pw:headless": "playwright test",
     "db:admin": "open https://dashboard.convex.dev",
     "assets": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/build.ts",
+    "assets:thumbs": "tsx asset-library/pipeline/thumbs.ts",
     "assets:sync": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/sync.ts",
     "stage:check": "tsx scripts/stage-check.ts",
     "stage:plans": "tsx scripts/stage-plans.ts",

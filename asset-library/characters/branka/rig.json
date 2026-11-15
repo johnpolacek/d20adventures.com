@@ -1,6 +1,6 @@
 {
-  "name": "branka-rig",
-  "source": "branka-tripo-model.glb",
+  "name": "branka",
+  "source": "source.glb",
   "height": 1.38,
   "sourceTriangles": 58120,
   "weldedPoints": 6895,
@@ -16,10 +16,34 @@
     "unweighted": 0,
     "mostBonesOnAPoint": 4
   },
-  "bones": ["root", "hips", "spine", "chest", "neck", "head", "upperarmL", "forearmL", "handL", "upperarmR", "forearmR", "handR", "thighL", "shinL", "footL", "thighR", "shinR", "footR"],
+  "slungPoints": 24,
+  "hang": {
+    "L": 12.0,
+    "R": 11.0
+  },
+  "bones": [
+    "root",
+    "hips",
+    "spine",
+    "chest",
+    "neck",
+    "head",
+    "upperarmL",
+    "forearmL",
+    "handL",
+    "upperarmR",
+    "forearmR",
+    "handR",
+    "thighL",
+    "shinL",
+    "footL",
+    "thighR",
+    "shinR",
+    "footR"
+  ],
   "lods": [
     {
-      "file": "branka-rig-lod0.glb",
+      "file": "lod0.glb",
       "megabytes": 2.93,
       "triangles": 58120,
       "texture": 2048,
@@ -27,7 +51,7 @@
       "turnedAtRest": []
     },
     {
-      "file": "branka-rig-lod1.glb",
+      "file": "lod1.glb",
       "megabytes": 1.14,
       "triangles": 20000,
       "texture": 1024,
@@ -35,7 +59,7 @@
       "turnedAtRest": []
     },
     {
-      "file": "branka-rig-lod2.glb",
+      "file": "lod2.glb",
       "megabytes": 0.43,
       "triangles": 6000,
       "texture": 512,

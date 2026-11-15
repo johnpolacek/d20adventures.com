@@ -523,7 +523,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
       className={`group shrink-0 rounded-lg border border-[#e6c8962e] bg-gradient-to-b from-[#1c1610] to-[#120e09] p-3 text-left transition-colors hover:border-[#f2c97a] ${wide ? "w-[172px]" : "w-[132px]"}`}
     >
       {/* biome-ignore lint/performance/noImgElement: a thumbnail served as it is */}
-      <img src={`${config.files}/${c.figure?.id}/${c.figure?.front}`} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
+      <img src={`${config.files}/${c.figure?.id}/${c.figure?.thumb ?? c.figure?.front}`} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
       <span className={`mt-2 block truncate font-display group-hover:text-[#f2c97a] ${wide ? "text-[15px]" : "text-[13px]"}`}>{named(c.name)}</span>
       <span className="block truncate text-[11px] opacity-60">{named(c.figure?.role ?? c.role)}</span>
     </button>

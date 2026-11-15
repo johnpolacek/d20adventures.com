@@ -9,6 +9,8 @@ export interface Figure {
   role?: string
   height: number
   front: string
+  // A picture of the figure itself, when one has been taken. `front` is the pose sheet it was made from.
+  thumb?: string
   source: { generator: string; triangles: number; cost: number; made: string }
   rig: { bones: number; weights: string }
   clips: string[]

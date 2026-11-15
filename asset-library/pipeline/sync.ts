@@ -20,7 +20,7 @@ import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s
 import { buildLibrary } from "../library"
 
 const ROOT = "asset-library/characters"
-const PUBLIC = ["lod0.glb", "lod1.glb", "lod2.glb", "front.webp", "figure.json"]
+const PUBLIC = ["lod0.glb", "lod1.glb", "lod2.glb", "front.webp", "thumb.webp", "figure.json"]
 const PRIVATE = ["character.json", "sheet.png", "apose-front.png", "apose-back.png", "joints.json", "tripo.json", "source.glb", "rig.json"]
 const TYPES: Record<string, string> = { ".glb": "model/gltf-binary", ".webp": "image/webp", ".png": "image/png", ".json": "application/json" }
 // A figure is rebuilt under the same name, so caches stay short.

@@ -144,6 +144,14 @@ The report cannot see a skeleton that lies across the body. The first Garlan pas
 
 `figure.json` and `front.webp` are what `/dev/assets` reads. A character with a `figure.json` has a 3D mark on its card.
 
+### 5b. Card picture
+
+```sh
+pnpm assets:thumbs            # every figure, or name some
+```
+
+Takes each figure's picture from the library's own page, as `thumb.webp`, for its card. It wants the dev server and Chrome with remote debugging, as captures do. Take it again after a rig is made again. Without one, a card shows the grey pose sheet.
+
 ### 6. Review
 
 In the library, alone in a lit room:
@@ -216,8 +224,8 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 
 ## Known faults
 
-- Standing, every figure holds its arms the same 15 degrees out. That suits Garlan's armour and is too wide for Lyra, Thalbern and Milos. The arms want fitting to each body, until they clear it.
-- Thalbern's bow is slung on his back and reaches down past his hip. The rig gave its lower end to his thigh, so it follows his leg.
+- Arms are fitted to each body: `rig.py` finds the least angle at which a hanging forearm and hand clear what is at the hip, 7 to 22 degrees, and leaves it on the skeleton for the clips. Lyra's free arm hangs at 7, Garlan's sword arm at 22. Milos's palms face forward, as they were modelled.
+- Slung gear follows the hips: a thin thing hanging from the belt line, clear of the leg whose weights it was given. Thalbern's bow had 760 such points. Its tip still drifts a little.
 - Milos's staff was on his back on the sheet. His model was made from the front, so he has none.
 - The crowd is 16 pictures, mirrored and tinted. Near the play they repeat.
 

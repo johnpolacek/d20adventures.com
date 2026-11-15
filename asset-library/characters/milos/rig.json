@@ -16,7 +16,31 @@
     "unweighted": 0,
     "mostBonesOnAPoint": 4
   },
-  "bones": ["root", "hips", "spine", "chest", "neck", "head", "upperarmL", "forearmL", "handL", "upperarmR", "forearmR", "handR", "thighL", "shinL", "footL", "thighR", "shinR", "footR"],
+  "slungPoints": 20,
+  "hang": {
+    "L": 12.0,
+    "R": 16.0
+  },
+  "bones": [
+    "root",
+    "hips",
+    "spine",
+    "chest",
+    "neck",
+    "head",
+    "upperarmL",
+    "forearmL",
+    "handL",
+    "upperarmR",
+    "forearmR",
+    "handR",
+    "thighL",
+    "shinL",
+    "footL",
+    "thighR",
+    "shinR",
+    "footR"
+  ],
   "lods": [
     {
       "file": "lod0.glb",
