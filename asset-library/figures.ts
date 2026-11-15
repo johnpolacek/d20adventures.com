@@ -103,7 +103,7 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
 export function castRings(stage: Stage, chosen: string[]) {
   const group = new THREE.Group()
   group.name = "lab:rings"
-  const ring = new THREE.RingGeometry(0.4, 0.5, 40)
+  const ring = new THREE.RingGeometry(0.475, 0.5, 48)
   ring.rotateX(-Math.PI / 2)
   const rings = stage.cast.map((c) => {
     const gold = chosen.includes(c.id)

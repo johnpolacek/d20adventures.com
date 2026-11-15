@@ -16,7 +16,6 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { figureClips, isRigged } from "../clips"
-import { LOOKS } from "../looks"
 import { hasIso } from "../scene"
 import type { Character, Figure, Library, Picture, Place } from "../types"
 import { type Nav, Scene } from "./scene"
@@ -330,7 +329,7 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
   // It opens on its first encounter, where that encounter opens. "empty" in the address is the set alone.
   const [staging, setStaging] = useState(params.scene === "empty" ? null : params.scene && env.stagings.includes(params.scene) ? params.scene : (env.stagings[0] ?? null))
   const canCut = hasIso(env.key, env.room)
-  const [view, setView] = useState(params.view === "stage" || params.view === "iso" ? params.view : LOOKS[env.key] ? "iso" : "stage")
+  const [view, setView] = useState(params.view === "stage" ? "stage" : "iso")
   const cut = view === "iso" && canCut
   // Where the camera can jump to in the scene now showing, and where it last went.
   const [nav, setNav] = useState<Nav | null>(null)
@@ -368,11 +367,11 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
         {canCut && (
           <div className="flex items-center gap-1">
             <span className="w-12 opacity-60">View</span>
-            <button type="button" className={pill(!cut)} onClick={() => setView("stage")}>
-              Stage
-            </button>
             <button type="button" className={pill(cut)} onClick={() => setView("iso")}>
               Isometric
+            </button>
+            <button type="button" className={pill(!cut)} onClick={() => setView("stage")}>
+              Stage
             </button>
           </div>
         )}
