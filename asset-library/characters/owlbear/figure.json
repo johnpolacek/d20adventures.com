@@ -1,0 +1,47 @@
+{
+  "id": "owlbear",
+  "name": "Owlbear",
+  "role": "Beast of the Midnight Summons",
+  "cast": [
+    "owlbear"
+  ],
+  "party": false,
+  "height": 3.3,
+  "front": "front.webp",
+  "source": {
+    "generator": "Tripo H3.1 on fal",
+    "triangles": 59378,
+    "cost": 0.6,
+    "made": "2026-11-15"
+  },
+  "rig": {
+    "bones": 18,
+    "weights": "heat"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 59378,
+      "megabytes": 2.93,
+      "texture": 2048
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 20000,
+      "megabytes": 1.12,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 0.41,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

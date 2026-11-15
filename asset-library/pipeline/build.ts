@@ -44,6 +44,8 @@ interface Brief {
   // How far out the arms stand, in degrees: 40, or 45 for a bulky outfit.
   arms: number
   party?: boolean
+  // A beast that stands upright on two legs, painted as an animal and not a person in costume.
+  creature?: boolean
 }
 
 const args = process.argv.slice(2)
@@ -52,7 +54,20 @@ const [id] = args.filter((a) => !a.startsWith("--"))
 const redo = (flag("redo") ?? "").split(",")
 const made = (dir: string, file: string, step: string) => existsSync(`${dir}/${file}`) && !redo.includes(step)
 
-const prompt = (
+const creaturePrompt = (
+  b: Brief
+) => `The attached images are the front and the back of a painted game creature: ${b.who}. Make one landscape reference sheet of the SAME creature as a photorealistic studio photograph of a living animal, for building a 3D model. It is a real creature, not a person in a costume.
+
+Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles of the feet: on the left the front view, on the right the back view from directly behind with no face visible.
+
+Pose, in both views: standing upright on its two hind legs, body straight, feet apart with a clear gap of background between the legs, both arms hanging down and held out from the body at about ${b.arms} degrees with a clear gap of background between each arm and the body all the way down, claws open and spread, pointing at the ground. Nothing in the claws. ${b.stow} Calm, neutral expression, mouth closed, looking straight ahead. Not on all fours, not crouching, not rearing with the arms raised.
+
+Keep this creature's head, colouring, markings, build and proportions. Render it as real fur, feathers, skin, claws and horn.
+
+Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
+
+const prompt = (b: Brief) => (b.creature ? creaturePrompt(b) : personPrompt(b))
+const personPrompt = (
   b: Brief
 ) => `The attached images are the front and the back of a painted game character: ${b.who}. Make one landscape reference sheet of the SAME person as a photorealistic costume photograph, for building a 3D model.
 

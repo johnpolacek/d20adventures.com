@@ -1,0 +1,70 @@
+{
+  "name": "owlbear",
+  "source": "source.glb",
+  "height": 3.3,
+  "sourceTriangles": 59378,
+  "weldedPoints": 5679,
+  "quarterTurns": 3,
+  "weights": {
+    "solve": "heat",
+    "standIn": {
+      "points": 14382,
+      "skins": 7,
+      "weighted": 1.0
+    },
+    "patched": 0,
+    "unweighted": 0,
+    "mostBonesOnAPoint": 4
+  },
+  "slungPoints": 0,
+  "hang": {
+    "L": 11.0,
+    "R": 12.0
+  },
+  "bones": [
+    "root",
+    "hips",
+    "spine",
+    "chest",
+    "neck",
+    "head",
+    "upperarmL",
+    "forearmL",
+    "handL",
+    "upperarmR",
+    "forearmR",
+    "handR",
+    "thighL",
+    "shinL",
+    "footL",
+    "thighR",
+    "shinR",
+    "footR"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "megabytes": 2.93,
+      "triangles": 59378,
+      "texture": 2048,
+      "joints": 18,
+      "turnedAtRest": []
+    },
+    {
+      "file": "lod1.glb",
+      "megabytes": 1.12,
+      "triangles": 20000,
+      "texture": 1024,
+      "joints": 18,
+      "turnedAtRest": []
+    },
+    {
+      "file": "lod2.glb",
+      "megabytes": 0.41,
+      "triangles": 6000,
+      "texture": 512,
+      "joints": 18,
+      "turnedAtRest": []
+    }
+  ]
+}

@@ -124,9 +124,9 @@ export const LOOKS: Record<string, Look> = {
       isohaze: "0.12",
       // A pool of moonlight under each of the set's two shafts, and a faint one over the trail between them.
       isolamps: "8,6,-8.5,70,15,a9c4ff;-4.2,6,-1.4,50,13,a9c4ff;0,9,5,60,22,a9c4ff",
-      // A wood seen from above is all canopy. The trees over the trail to the south are left out, and one that stood
-      // between that side and the clearing, so the views from there see the ground.
-      isoclear: "6.5,22,4;6,4,2.5;4,14,5;5,30,7",
+      // A wood seen from above is all canopy. The trees over the trail to the south are left out, one that stood
+      // between that side and the clearing, and one whose leaves hung across the owlbear's face.
+      isoclear: "6.5,22,4;6,4,2.5;4,14,5;5,30,7;9,-2,2.5",
       figenv: "0.12",
       rings: "thalbern,wollandora",
       bloom: "on",

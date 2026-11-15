@@ -108,6 +108,9 @@ boots = co[co[:, 2] < low + 0.04 * tall]
 shins = co[(co[:, 2] > low + 0.15 * tall) & (co[:, 2] < low + 0.3 * tall)]
 if boots[:, 1].mean() > shins[:, 1].mean():
     quarter += 2
+# A robe to the ankles has no shins to read, and the figure can come out facing backward: its knees then bend the
+# wrong way. "turn" in the joints file is quarter turns added to the guess. 2 turns it about.
+quarter += int(spec.get("turn", 0))
 body.data.transform(Matrix.Rotation(quarter * np.pi / 2, 4, "Z"))
 body.data.update()
 

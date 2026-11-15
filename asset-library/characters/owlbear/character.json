@@ -1,0 +1,15 @@
+{
+  "id": "owlbear",
+  "name": "Owlbear",
+  "role": "Beast of the Midnight Summons",
+  "cast": ["owlbear"],
+  "height": 3.3,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/owlbear-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/owlbear-back.webp"
+  },
+  "who": "an owlbear, a huge beast with the heavy body, thick limbs and clawed paws of a giant bear, covered in shaggy slate-blue fur with a few old pink scars, and the head of a great horned owl with tall ear tufts, a pale facial disc, amber eyes and a hooked grey beak",
+  "stow": "The fur lies close to the limbs, so the outline of each arm and each leg stands clear of the body.",
+  "arms": 40,
+  "creature": true
+}

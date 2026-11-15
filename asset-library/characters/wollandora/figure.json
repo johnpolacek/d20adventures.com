@@ -1,0 +1,47 @@
+{
+  "id": "wollandora",
+  "name": "Wollandora",
+  "role": "Elven druid of the Standing Stones",
+  "cast": [
+    "wollandora"
+  ],
+  "party": false,
+  "height": 1.86,
+  "front": "front.webp",
+  "source": {
+    "generator": "Tripo H3.1 on fal",
+    "triangles": 59316,
+    "cost": 0.6,
+    "made": "2026-11-15"
+  },
+  "rig": {
+    "bones": 18,
+    "weights": "heat"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 59316,
+      "megabytes": 3.07,
+      "texture": 2048
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 20000,
+      "megabytes": 1.24,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 0.49,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

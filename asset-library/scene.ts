@@ -45,7 +45,7 @@ type Vec = [number, number, number]
 interface SetLike {
   objects: { type: string; id?: string; at?: number[]; clear?: number[][]; item?: { type: string }; items?: { item: { type: string } }[] }[]
   rooms?: { box: number[] }[]
-  materials?: Record<string, object>
+  materials?: Record<string, { type?: string }>
   crowd?: { groups?: { type: string; area?: number[]; count?: number; density?: { rect: number[] }[]; face?: { toward?: number[] } }[] }
   painted?: unknown
   camera?: Record<string, unknown>
@@ -225,6 +225,23 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
 
   // What is built, as the engine keeps it: where no one can stand, and how high each thing stands.
   const solid = (stage as unknown as { footprints: Parameters<typeof onFootprint>[0] }).footprints
+  // What the footprints do not know: a tree's crown. A footprint is a trunk, and a wood is mostly leaves, so a camera
+  // sent to look at someone from among them sees only leaves. The stage keeps no geometry to test a line against, so a
+  // crown is taken to be as wide as the builders make one at their widest: from a seventh of the way up the tree, four
+  // tenths of its height out, drawn in toward the top. Whether one lies on the line from an eye to a point.
+  const wooded = set.objects.some((p) => [p, p.item, ...(p.items ?? []).map((i) => i.item)].some((i) => i?.type === "tree"))
+  const crowns = wooded ? (solid as { kind: string; x: number; z: number; r: number; height?: number }[]).filter((f) => f.kind === "circle" && f.r < 2 && (f.height ?? 0) >= 8) : []
+  const veiled = (eye: Vec, to: Vec) => {
+    const len = Math.hypot(to[0] - eye[0], to[1] - eye[1], to[2] - eye[2])
+    for (const f of crowns) {
+      const h = f.height as number
+      for (let d = 0; d < len - 0.9; d += 0.4) {
+        const [x, y, z] = [eye[0] + ((to[0] - eye[0]) * d) / len, eye[1] + ((to[1] - eye[1]) * d) / len, eye[2] + ((to[2] - eye[2]) * d) / len]
+        if (y > h * 0.15 && y < h * 1.05 && Math.hypot(x - f.x, z - f.z) < h * 0.42 * Math.sqrt(Math.max(0, 1 - ((y - h * 0.15) / (h * 0.9)) ** 2))) return true
+      }
+    }
+    return false
+  }
   // Face to face with one of the cast: in front of them, from the first side where nothing built and no other cast
   // member stands in the way.
   const front = (id: string, label: string, instant = false) => {
@@ -241,9 +258,13 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
         return along < 0.2 || along > dist + 0.4 || Math.abs((m.x - c.x) * dz - (m.z - c.z) * dx) > 0.5
       })
     }
-    const turn = ([0, 18, -18, 36, -36, 54, -54, 72, -72].find((d) => clear((d * Math.PI) / 180)) ?? 0) * (Math.PI / 180)
     const target: Vec = [c.x, (c.y ?? 0) + h * 0.5, c.z]
-    const position: Vec = [target[0] + Math.cos(up) * Math.sin(c.ry + turn) * dist, target[1] + Math.sin(up) * dist, target[2] + Math.cos(up) * Math.cos(c.ry + turn) * dist]
+    const eye = (turn: number): Vec => [target[0] + Math.cos(up) * Math.sin(c.ry + turn) * dist, target[1] + Math.sin(up) * dist, target[2] + Math.cos(up) * Math.cos(c.ry + turn) * dist]
+    const turns = [0, 18, -18, 36, -36, 54, -54, 72, -72].map((d) => (d * Math.PI) / 180).filter(clear)
+    // Of the sides nothing built is on, the first that no leaves hang across. Their head is looked for as well as their waist.
+    const head: Vec = [c.x, (c.y ?? 0) + h * 0.92, c.z]
+    const turn = turns.find((t) => !veiled(eye(t), target) && !veiled(eye(t), head)) ?? turns[0] ?? 0
+    const position = eye(turn)
     stage.shot({ position, target, fov: 34, label } as Parameters<Stage["shot"]>[0], { instant })
   }
 
@@ -344,16 +365,26 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
           const along = (m.x - x) * dx + (m.z - z) * dz
           if (along > 0.4 && along < dist && Math.abs((m.x - x) * dz - (m.z - z) * dx) < reach && m.top > 0.5 + rise * along) cost += m.cost
         }
-        return cost
+        return { cost, eye: [cx, cy, cz] as Vec }
       }
-      let best = { a: facing, e: 7, score: Infinity }
+      const views: { a: number; e: number; score: number; eye: Vec }[] = []
       for (const e of [7, 11, 16, 22, 30])
         for (const turn of [25, -25, 0, 45, -45, 65, -65, 90, -90]) {
           const a = facing + (turn * Math.PI) / 180
+          const { cost, eye } = inTheWay(a, (e * Math.PI) / 180)
           // A view from the side shows no one's face, so it has to be much the clearest to be taken.
-          const score = inTheWay(a, (e * Math.PI) / 180) + (Math.abs(turn) >= 80 ? 4 : Math.abs(Math.abs(turn) - 25) / 30) + (e - 7) / 5
-          if (score < best.score) best = { a, e, score }
+          views.push({ a, e, eye, score: cost + (Math.abs(turn) >= 80 ? 4 : Math.abs(Math.abs(turn) - 25) / 30) + (e - 7) / 5 })
         }
+      // A crown across the line to anyone counts as a wall does. The best views are tried first, and the first with
+      // none crossed is taken.
+      views.sort((p, q) => p.score - q.score)
+      let best = views[0]
+      let least = Number.POSITIVE_INFINITY
+      for (const v of views.slice(0, 16)) {
+        const crossed = who.reduce((n, c) => n + (veiled(v.eye, [c.x, (c.y ?? 0) + c.height * 0.5, c.z]) ? 2.5 : 0) + (veiled(v.eye, [c.x, (c.y ?? 0) + c.height * 0.92, c.z]) ? 1.5 : 0), 0)
+        if (v.score + crossed < least) [best, least] = [v, v.score + crossed]
+        if (least <= v.score) break
+      }
       from([x, y, z], (best.a * 180) / Math.PI, best.e, dist, lensOf, label, instant)
     }
     const on = (ids: string[], label: string, instant: boolean) => {
@@ -361,7 +392,8 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       if (!who.length) return
       const [x, z] = [who.reduce((n, c) => n + c.x, 0) / who.length, who.reduce((n, c) => n + c.z, 0) / who.length]
       const far = Math.max(...who.map((c) => Math.hypot(c.x - x, c.z - z)))
-      if (q.isowhole) level(who, x, z, far + 1.1, label, instant)
+      // Room for the tallest of them from head to foot: an owlbear stands 3.3 m.
+      if (q.isowhole) level(who, x, z, Math.max(far + 1.1, Math.max(...who.map((c) => c.height)) * 0.6), label, instant)
       else down(x, z, far + 1.7, label, instant)
     }
     const looks = look ? look.shots : { wide: {} as Record<string, string> }
