@@ -186,6 +186,9 @@ export const gatehouse = defineBuilder(
       medallion: z.boolean().default(true),
       statues: z.boolean().default(true),
       portcullis: z.boolean().default(true),
+      // How high off the ground the portcullis hangs when it is let down: a grille across the whole arch with that
+      // much room to walk under. Left out, it is raised and only its teeth show.
+      portcullisGap: size(40).optional(),
       doors: z.boolean().default(true),
       lamp: z.boolean().default(true),
       keep: z.boolean().default(true),
@@ -323,17 +326,20 @@ export const gatehouse = defineBuilder(
       flame(lamp, M, 0, 0.5, 0, 1.2, 1.3)
     }
     if (p.portcullis) {
-      // Portcullis, raised: only its teeth show beneath the vault.
+      // Portcullis. Raised, only its teeth show beneath the vault. Let down, its bars cross the whole arch to a heavy
+      // foot rail, teeth below it.
+      const B = p.portcullisGap ?? SP
       for (let x = -R + 0.6; x < R; x += 0.8) {
         const t = SP + Math.sqrt(Math.max(0, R * R - x * x))
-        if (t < SP + 1) continue
-        box(b, M.iron, x, SP + 0.4 + (t - SP) / 2, -2.4, 0.18, t - SP, 0.24)
-        b.add(cone(4), M.iron, M4(x, SP - 0.2, -2.4, 0, 0.16, 1.5, 0.16, Math.PI), { uv: "keep" })
+        if (t < B + 1) continue
+        box(b, M.iron, x, B + 0.4 + (t - B) / 2, -2.4, 0.18, t - B, 0.24)
+        b.add(cone(4), M.iron, M4(x, B - 0.2, -2.4, 0, 0.16, 1.5, 0.16, Math.PI), { uv: "keep" })
       }
-      for (let y = SP + 1.3; y < SP + R; y += 1.4) {
-        const hw = Math.sqrt(Math.max(0, R * R - (y - SP) ** 2)) - 0.2
+      for (let y = B + 1.3; y < SP + R; y += 1.4) {
+        const hw = (y <= SP ? R : Math.sqrt(Math.max(0, R * R - (y - SP) ** 2))) - 0.2
         if (hw > 0.5) box(b, M.iron, 0, y, -2.4, hw * 2, 0.16, 0.28)
       }
+      if (B < SP) box(b, M.iron, 0, B + 0.5, -2.4, (R - 0.2) * 2, 0.34, 0.34)
     }
     if (p.doors) {
       // Great doors swung back against the passage walls.

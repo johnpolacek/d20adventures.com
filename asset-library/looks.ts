@@ -58,12 +58,16 @@ export const LOOKS: Record<string, Look> = {
     // The festival square lies 112 metres up the street from the gate: its own set says so, with a painted gate at
     // that distance behind it. Here the two are one place, and the plain roofs that stood in for the square give way.
     join: [{ set: "realm-of-myr/kordavos-harvest-square", at: [0, -112], leave: ["groundDisc", "archScreen", "skyline", "farTown", "dome"] }],
-    edit: { "inner-gate": null, "city-blocks": { exclude: [[-64, -172, 64, -40]] } },
+    // Between the two the portcullis is let most of the way down: an iron grille across the arch, with room to walk
+    // under it.
+    edit: { "inner-gate": null, "city-blocks": { exclude: [[-64, -172, 64, -40]] }, "great-gate": { portcullisGap: 3.4 } },
     shots: {
       // The whole gatehouse on its board.
       wide: { iso: "-35,30,190,38", isoat: "0,6,17" },
       // The checkpoint and the head of the queue, where the scene is played.
       play: { iso: "-35,35,70,9", isoat: "2,16" },
+      // The grille from the line.
+      gate: { iso: "-10,10,75,34", isoat: "0,-3,14" },
       // The square inside the walls, seen from over the street that leads up to it from the gate.
       festival: { iso: "0,45,80,40", isoat: "0,-112" },
       // Both at once: the line outside the gate, the street through it, and the square.
