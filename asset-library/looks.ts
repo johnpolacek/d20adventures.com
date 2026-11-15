@@ -82,26 +82,25 @@ export const LOOKS: Record<string, Look> = {
   },
   // The three places of The Midnight Summons: a wood at night, twice, and the ranger's home the morning after. A night
   // set carries a light on its camera, which flattens a wide view, so most of it is put out (isofill) and the light
-  // comes from where the story has it: the moon, low and cool, and a pool of it where the canopy opens. A figure
-  // reflects less of its own lit room at night (figenv), or it glows.
+  // is the moon's alone: the set's own, and a second cool light from above that throws the trees' shadows. No lamps
+  // and no shafts: the owner turned down pools and beams of light as spotlights, 2026-11-15, and asked for a darker
+  // wood. A figure reflects less of its own lit room at night (figenv), or it glows.
   "realm-of-myr/old-standing-stones": {
     params: {
       paint: "0",
       isobox: "-16,-14,10,16",
       isowhole: "1",
-      isolight: "1.35,0.14",
+      isolight: "0.9,0.06,0.5",
       isosky: "7f9cd0",
       isofill: "0.25",
       // More of the set's haze than a town keeps: the far bank is bare ground, and the valley wants its distance.
       isohaze: "0.7",
-      // Moonlight pooled in the circle.
-      isolamps: "-1.3,7.5,0.4,55,17,9db8ff",
-      figenv: "0.18",
+      figenv: "0.15",
       rings: "thalbern,wollandora",
       bloom: "on",
     },
     // Grass a shade nearer the moon's colour: lit from above it went a daylight green.
-    materials: { grass: { tip: "#4a7458" }, grassTall: { tip: "#557a5c" } },
+    materials: { grass: { tip: "#3f6650" }, grassTall: { tip: "#4a6c54" }, ground: { grass: "#2f4f33", moss: "#3a5c30" } },
     open: "arrival",
     shots: {
       // From the path, at the height of the grass, looking up at the tallest stone with the moon over the valley.
@@ -117,23 +116,23 @@ export const LOOKS: Record<string, Look> = {
       paint: "0",
       isobox: "-14,-18,14,22",
       isowhole: "1",
-      isolight: "1.7,0.2,0.9",
+      isolight: "1.15,0.08,0.6",
       isosky: "7f9cd0",
       isofill: "0.3",
       // The set's haze is a night wood's, thick at ten paces. From farther off it is a wall.
       isohaze: "0.12",
-      // A pool of moonlight under each of the set's two shafts, and a faint one over the trail between them.
-      isolamps: "8,6,-8.5,70,15,a9c4ff;-4.2,6,-1.4,50,13,a9c4ff;0,9,5,60,22,a9c4ff",
       // A wood seen from above is all canopy. The trees over the trail to the south are left out, one that stood
       // between that side and the clearing, and one whose leaves hung across the owlbear's face.
       isoclear: "6.5,22,4;6,4,2.5;4,14,5;5,30,7;9,-2,2.5",
-      figenv: "0.12",
+      figenv: "0.1",
       rings: "thalbern,wollandora",
       bloom: "on",
     },
+    // The set's two shafts of light are left out.
+    edit: { "clearing-shaft": null, "oak-shaft": null },
     open: "arrival",
     shots: {
-      // From the trail, low, looking up the great oak into the moon's shaft, with the clearing beyond the fallen log.
+      // From the trail, low, looking up the great oak against the moon, with the clearing beyond the fallen log.
       arrival: { iso: "9,-17.6,20.2,62", isoat: "0.5,0,7" },
       // Back down the trail and above head height: the oak, the trail and the clearing.
       wide: { iso: "6,14,44,36", isoat: "0.5,1,2.5" },
