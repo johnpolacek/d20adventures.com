@@ -1,5 +1,5 @@
 {
-  "name": "wollandora",
+  "name": "ORM_638420de-d1cb-4eaf-9b75-ec14b3c2f51b",
   "source": "source.glb",
   "height": 1.86,
   "sourceTriangles": 58916,
@@ -30,7 +30,8 @@
   "faceFromSheet": {
     "triangles": 2369,
     "texels": 445674,
-    "sheetMiddle": 510.0
+    "sheetMiddle": 510.0,
+    "close": true
   },
   "bones": [
     "root",
@@ -55,7 +56,7 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "megabytes": 4.97,
+      "megabytes": 5.0,
       "triangles": 58916,
       "texture": 2048,
       "colour": 4096,

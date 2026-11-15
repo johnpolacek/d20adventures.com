@@ -117,8 +117,9 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
   root.updateWorldMatrix(true, true)
   root.getWorldQuaternion(own)
   const tall = local(bone("head") ?? chest).y - ground
-  // Where the wrist goes: forward of the shoulder and out, at the height of the chest, as one leans on a staff.
-  const reach = local(upper).add(new THREE.Vector3(side * 0.12, -0.1, 0.15).multiplyScalar(tall))
+  // Where the wrist goes: out from the shoulder and forward of it, at the height of the chest, as her card holds it.
+  // The elbow hangs under it at her side, so the forearm rises to the hand. Level, it is an arm stuck out sideways.
+  const reach = local(upper).add(new THREE.Vector3(side * 0.1, -0.085, 0.15).multiplyScalar(tall))
   // A fist's staff is drawn in where the fist comes, at the height the wrist is sent to.
   const prop = staff(held.length, palm.fist ? reach.y - ground : -1)
   prop.traverse((m) => {
@@ -126,8 +127,12 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
   })
   root.add(prop)
   const [alongUpper, alongFore] = [fore.position.clone().normalize(), hand.position.clone().normalize()]
-  const pole = new THREE.Vector3(side * 0.45, -1, -0.55).normalize()
+  const pole = new THREE.Vector3(side * 0.12, -1, -0.3).normalize()
   let foot: THREE.Vector3 | null = null
+  // The way the staff stands, foot to hand: the fist is turned to it, and it is found again from the fist.
+  const stand = new THREE.Vector3(0, 1, 0)
+  // A fist as it was modelled: the way it points, the way its palm faces, and across them, toward its thumb.
+  const modelled = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(palm.along, palm.normal, palm.along.clone().cross(palm.normal)))
 
   const update = () => {
     root.updateWorldMatrix(true, false)
@@ -155,6 +160,15 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
     const flat = (v: THREE.Vector3) => v.addScaledVector(level, -v.dot(level))
     const [now, want] = [flat(facing()), flat(new THREE.Vector3(-side, 0, 0))]
     if (now.lengthSq() > 1e-6 && want.lengthSq() > 1e-6) fore.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(alongFore, Math.atan2(level.dot(now.clone().cross(want)), now.dot(want))))
+    if (palm.fist) {
+      // A fist grips along its knuckles, thumb uppermost. The forearm comes to a staff at whatever slope the elbow
+      // gives it, so the wrist takes up the difference: the fist is turned until the staff runs through it, pointing
+      // as near the forearm's way as that allows.
+      const thumb = stand.clone().multiplyScalar(-side)
+      const points = level.clone().addScaledVector(stand, -level.dot(stand)).normalize()
+      const gripped = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(points, thumb.clone().cross(points), thumb))
+      hand.quaternion.copy(upperTurn.clone().multiply(fore.quaternion).invert().multiply(gripped).multiply(modelled.clone().invert()))
+    }
     fore.updateWorldMatrix(false, true)
     const handTurn = upperTurn.clone().multiply(fore.quaternion).multiply(hand.quaternion)
     // An open hand takes it against the palm, under the knuckles. A fist has it through its middle.
@@ -162,9 +176,12 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
     const grip = local(hand).addScaledVector(palm.along.clone().applyQuaternion(handTurn), alongHand).addScaledVector(palm.normal.clone().applyQuaternion(handTurn), outOfPalm)
     // Planted where it first stood, a hand's width farther from the feet than the hand is: it leans in a little.
     foot ??= new THREE.Vector3(grip.x + side * 0.03, ground, grip.z + 0.05)
+    stand.copy(grip).sub(foot).normalize()
     prop.position.copy(foot)
-    prop.quaternion.setFromUnitVectors(Y, grip.clone().sub(foot).normalize())
+    prop.quaternion.setFromUnitVectors(Y, stand)
   }
+  // Twice, so the fist has turned to the staff it stands on.
+  update()
   update()
   return {
     prop,

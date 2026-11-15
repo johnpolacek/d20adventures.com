@@ -192,7 +192,8 @@ Look for: hands or arms through the body, torn mesh at the armpits and elbows, f
 The owner, 2026-11-15, of Wollandora without her staff: "I was expecting to see Wollandora holding her staff like she does in the card image." A figure should hold what its card holds.
 
 - `props.ts` builds the prop in code and stands it on the ground beside the figure. A staff is the one prop so far: two stems wound about each other, an eye at the head, a vine up the lower half.
-- That arm is bent to it each frame, after the clip has moved the figure: the wrist is sent forward of the shoulder at chest height, the elbow found from the arm's two lengths, and the forearm rolled until the palm faces across the body.
+- That arm is bent to it each frame, after the clip has moved the figure: the wrist is sent out and forward of the shoulder at chest height, the elbow found under it from the arm's two lengths, and the fist turned at the wrist until the staff runs through it, thumb uppermost.
+- Where the hand goes is most of whether it looks held. Close in front of the shoulder the arm folds like a wing, and the owner called it "completely unnatural". Lower and farther out, with the forearm level, it is an arm stuck out sideways. Right is where her card has it: the hand at the chest, the elbow hanging at her side, the forearm rising to the hand.
 - The hand is modelled closed. `"fist": true` in `holds` has the sheet paint that hand as a fist, knuckles forward, and the staff stands through its middle, drawn in narrow where the fist comes. The first try bent an open hand's mesh shut, and the owner's answer was "her hand on the staff does not look right": from her own side the fingers lay flat like a fan. A hand is one bone, and bending its mesh is not a grip.
 - A fist is a ball, with no flat to tell its palm by. Its palm is taken to be behind it, as the sheet paints it.
 - The staff stays planted and turns on its foot as the hand sways, so Idle, Walk and Hit all hold it with nothing written for it.
@@ -213,6 +214,14 @@ Then the face is taken from the sheet. A generator makes its figure from the she
 - The sheet is lined up with the head by the top of the figure and the middle of its crown. On Wollandora it landed true. If eyes come out doubled, the head is off the sheet: look at `faceFromSheet` in `rig.json`.
 - It fades out where the head turns away from the sheet, so cheeks seen from the side keep the generator's paint, and the join can show as a faint patch.
 - The six figures made before 2026-11-15 have not had it.
+
+`"face": "close"` goes further, and is what Wollandora has. The owner, of the sheet's face on the model: "could we make the face even better?" The sheet's face is 130 pixels across, and it showed.
+
+- `face.py crop` cuts the head from the sheet and enlarges it four times. The image tool paints that again as a sharp photograph of the same head (`face.png`), free.
+- It is another picture, with its eyes a little elsewhere, and the model is the sheet's shape. `face.py warp` finds the same 468 points on both faces and pulls the close head onto the sheet's, triangle by triangle. `apose-face.png` is the sheet's head at four times the size with the close head's detail.
+- `rig.py` paints the head from that. Under the face it also smooths the generator's own relief and shine, which were a second face a little out of place: eyelids that glinted, a second lip line.
+- `--redo=face` does all of it again on a model already made. It costs nothing.
+- Look at `head-crop.png`, `face.png` and `apose-face.png` side by side first. If the close head is another person, paint it again.
 
 ### A beast
 

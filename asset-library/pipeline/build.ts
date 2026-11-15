@@ -51,7 +51,9 @@ interface Brief {
   sheet?: "front"
   // "sheet" has the rig lay the sheet's own pixels back onto the front of the head (rig.py): a generator paints a
   // face again from memory, and softer.
-  face?: "sheet"
+  // "close" goes further: the head is painted again on its own, five times the size, and fitted back onto the
+  // sheet's (face.py) before the rig paints from it.
+  face?: "sheet" | "close"
   // A beast that stands upright on two legs, painted as an animal and not a person in costume.
   creature?: boolean
 }
@@ -97,6 +99,13 @@ Pose${b.sheet === "front" ? "" : ", in both views"}: standing straight, feet a l
 Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.${b.sheet === "front" ? " The face is in sharp focus and finely detailed: clear eyes, a natural closed mouth, real skin." : ""}
 
 Lighting: soft, even, shadowless studio light from the front${b.sheet === "front" ? "" : ", the same in both views"}, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
+
+// The head alone, enlarged. It must stay the same head, feature for feature: it is fitted back onto the sheet's.
+const facePrompt = `The attached image is a small, soft crop of a studio photograph: one person's head, seen from directly in front on a grey background. Make one square image that is the SAME photograph of the SAME head at far higher resolution, as if the original had been taken with a much better camera.
+
+Keep everything where it is: the same framing and crop, the head the same size and in the same place, the same face, expression, eyes, brows, nose, mouth, ears, hair and whatever is worn in the hair, the same soft even light, the same grey background. Change no proportion and move no feature.
+
+Add only what a sharper photograph would show: skin texture and pores, freckles, eyelashes, the detail of the irises with a small catch light, the lines of the lips, single hairs. Natural skin, not retouched, not shiny. Mouth closed. No text.`
 
 function run(label: string, command: string, argv: string[]) {
   const r = spawnSync(command, argv, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
@@ -201,6 +210,15 @@ async function build(b: Brief) {
     say("joints", `found, least sure ${last(out, "JOINTS")?.leastSure}`)
   }
   run("joints check", "node", ["asset-library/pipeline/joints-check.mjs", dir])
+  if (b.face === "close") {
+    if (made(dir, "apose-face.png", "face")) say("face", "kept")
+    else {
+      const python = (mode: string) => run(`face ${mode}`, "uv", ["run", "--quiet", "--python", "3.12", "--with", "mediapipe==0.10.14", "--with", "numpy", "asset-library/pipeline/face.py", mode, dir])
+      python("crop")
+      await writeFile(`${dir}/face.png`, await codexPaint(`character face ${b.id}`, facePrompt, [await jpeg(await sharp(`${dir}/head-crop.png`).toBuffer(), 1536)], "square 1:1"))
+      say("face", `painted close and fitted: ${JSON.stringify(last(python("warp"), "FACE"))}`)
+    }
+  }
   const cached = existsSync(`${dir}/tripo.json`) && !redo.includes("model")
   if (made(dir, "source.glb", "model")) say("model", "kept")
   else if (!args.includes("--pay") && !cached) return say("model", `not made: it costs $${MODEL.cost.toFixed(2)} on ${MODEL.name}. Look at ${dir}/joints.jpg, then run again with --pay`)
@@ -208,7 +226,7 @@ async function build(b: Brief) {
     await model(dir, b)
     say("model", cached ? "fetched again from the kept answer, no charge" : `made, $${MODEL.cost.toFixed(2)}`)
   }
-  if (made(dir, "lod0.glb", "rig") && !redo.includes("model") && !redo.includes("joints")) say("rig", "kept")
+  if (made(dir, "lod0.glb", "rig") && !redo.includes("model") && !redo.includes("joints") && !redo.includes("face")) say("rig", "kept")
   else {
     type Report = { weights?: { solve: string; unweighted: number }; lods?: { triangles: number; megabytes: number; joints: number; turnedAtRest: string[] }[] }
     const report = last(run("rig", BLENDER, ["-b", "-P", "asset-library/pipeline/rig.py", "--", `${dir}/source.glb`, `${dir}/joints.json`, dir, "."]), "RIG") as Report | null

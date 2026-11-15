@@ -404,12 +404,24 @@ for m in body.data.materials:
 # on the sheet comes back soft, with muddy eyes. The model is the sheet's shape seen from in front, so the sheet's own
 # pixels can be laid back onto whatever of the head faces forward. `"face": "sheet"` in the brief asks for it.
 painted = None
-if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face") == "sheet" and colour:
-    sheet = bpy.data.images.load(os.path.join(os.path.dirname(os.path.abspath(spec_file)), spec["front"]))
-    sw, sh = sheet.size
-    S = np.empty(sw * sh * 4, dtype=np.float32)
-    sheet.pixels.foreach_get(S)
-    S = S.reshape(sh, sw, 4)[::-1]  # top row first, as the joints are counted
+if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face") in ("sheet", "close") and colour:
+    beside = os.path.dirname(os.path.abspath(spec_file))
+
+    def picture(file):
+        loaded = bpy.data.images.load(os.path.join(beside, file))
+        w, h = loaded.size
+        a = np.empty(w * h * 4, dtype=np.float32)
+        loaded.pixels.foreach_get(a)
+        bpy.data.images.remove(loaded)
+        return a.reshape(h, w, 4)[::-1], w, h  # top row first, as the joints are counted
+
+    S, sw, sh = picture(spec["front"])
+    # The head painted close and fitted to the sheet (face.py), if there is one: the sheet's head, several times the
+    # size. Inside its rectangle the head is painted from it, and the face's own relief is smoothed under the paint.
+    close = json.load(open(os.path.join(beside, "face.json"))) if os.path.exists(os.path.join(beside, "apose-face.png")) else None
+    if close:
+        F, fw, fh = picture("apose-face.png")
+    patches = []
     # Where the head's middle is across the sheet: the middle of the figure in its topmost rows.
     grey = np.median(np.concatenate([S[:12, :12, :3].reshape(-1, 3), S[:12, -12:, :3].reshape(-1, 3)]), axis=0)
     figure_mask = np.abs(S[:, :, :3] - grey).sum(axis=2) > 0.19
@@ -461,6 +473,20 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         ix, iy = sx.astype(np.int32), sy.astype(np.int32)
         fx, fy = (sx - ix)[..., None], (sy - iy)[..., None]
         seen = (S[iy, ix, :3] * (1 - fx) + S[iy, ix + 1, :3] * fx) * (1 - fy) + (S[iy + 1, ix, :3] * (1 - fx) + S[iy + 1, ix + 1, :3] * fx) * fy
+        oval = None
+        if close:
+            cx0, cy0, cx1, cy1 = close["rect"]
+            # Eased in over the rectangle's edge, so no line shows where the close head begins.
+            edge = np.clip(np.minimum.reduce([sx - cx0, cx1 - sx, sy - cy0, cy1 - sy]) / 6.0, 0, 1)[..., None]
+            qx = np.clip((sx - cx0) * close["scale"], 0, fw - 1.001)
+            qy = np.clip((sy - cy0) * close["scale"], 0, fh - 1.001)
+            jx, jy = qx.astype(np.int32), qy.astype(np.int32)
+            gx2, gy2 = (qx - jx)[..., None], (qy - jy)[..., None]
+            near = (F[jy, jx, :3] * (1 - gx2) + F[jy, jx + 1, :3] * gx2) * (1 - gy2) + (F[jy + 1, jx, :3] * (1 - gx2) + F[jy + 1, jx + 1, :3] * gx2) * gy2
+            seen = seen * (1 - edge) + near * edge
+            if "face" in close:
+                ox, oy, rx, ry = close["face"]
+                oval = np.clip(1.15 - ((sx - ox) / rx) ** 2 - ((sy - oy) / ry) ** 2, 0, 1) ** 0.5
         # Most where the head looks straight out of the sheet, none where it turns away, and eased in above the neck.
         turn = np.clip((facing[k] - 0.12) / 0.4, 0, 1) ** 1.5
         rise = np.clip((P[..., 2] - neck) / (0.025 * H), 0, 1)
@@ -469,11 +495,41 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         w = (turn * rise * inside * on_figure)[..., None]
         patch = T[y0 : y1 + 1, x0 : x1 + 1, :3]
         T[y0 : y1 + 1, x0 : x1 + 1, :3] = patch * (1 - w) + seen * w
+        if oval is not None:
+            patches.append((y0, y1, x0, x1, w * oval[..., None]))
         texels += int(inside.sum())
     image.pixels.foreach_set(T.reshape(-1))
     image.update()
-    painted = {"triangles": int(head.sum()), "texels": texels, "sheetMiddle": float(middle)}
+    painted = {"triangles": int(head.sum()), "texels": texels, "sheetMiddle": float(middle), "close": bool(close)}
     del S, T
+    # Under a face painted from a picture, the generator's own relief and shine are a second face a little out of
+    # place: eyelids that glint, a second lip line. They are smoothed away where the face is, and left in the hair.
+    others = set()
+    for m in body.data.materials:
+        for node in m.node_tree.nodes if m and m.use_nodes else []:
+            if node.type == "TEX_IMAGE" and node.image and node.image.name not in colour:
+                others.add(node.image.name)
+    for name in sorted(others) if patches else []:
+        other = bpy.data.images[name]
+        if tuple(other.size) != (tw, th):
+            continue
+        R = np.empty(tw * th * 4, dtype=np.float32)
+        other.pixels.foreach_get(R)
+        R = R.reshape(th, tw, 4)
+        tone = np.median(R[::64, ::64, :3].reshape(-1, 3), axis=0)
+        relief = tone[2] > 0.8 and abs(tone[0] - 0.5) < 0.15 and abs(tone[1] - 0.5) < 0.15
+        for y0, y1, x0, x1, w in patches:
+            patch = R[y0 : y1 + 1, x0 : x1 + 1, :3]
+            if relief:
+                # A flat normal, most of the way.
+                R[y0 : y1 + 1, x0 : x1 + 1, :3] = patch * (1 - 0.85 * w) + np.array([0.5, 0.5, 1.0], dtype=np.float32) * 0.85 * w
+            else:
+                # glTF keeps roughness in green and metal in blue: skin is neither wet nor metal.
+                R[y0 : y1 + 1, x0 : x1 + 1, 1:2] = patch[..., 1:2] * (1 - w) + 0.6 * w
+                R[y0 : y1 + 1, x0 : x1 + 1, 2:3] = patch[..., 2:3] * (1 - w)
+        other.pixels.foreach_set(R.reshape(-1))
+        other.update()
+        del R
 
 made = []
 for i, (triangles, width, colour_width) in enumerate(LODS):
