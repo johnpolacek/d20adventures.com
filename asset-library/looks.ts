@@ -19,8 +19,6 @@ export interface Look {
   join?: { set: string; at: [number, number]; leave: string[] }[]
   // Changes to this set's own parts by id, for this view alone: null leaves one out.
   edit?: Record<string, Record<string, unknown> | null>
-  // Crowd left out of this view: walkers on these paths, and anyone scattered inside these rects (x, z, wide, deep, yaw).
-  crowd?: { noWalkers?: string[]; avoid?: number[][] }
   shots: Record<string, Record<string, string>>
 }
 
@@ -60,18 +58,12 @@ export const LOOKS: Record<string, Look> = {
     // The festival square lies 112 metres up the street from the gate: its own set says so, with a painted gate at
     // that distance behind it. Here the two are one place, and the plain roofs that stood in for the square give way.
     join: [{ set: "realm-of-myr/kordavos-harvest-square", at: [0, -112], leave: ["groundDisc", "archScreen", "skyline", "farTown", "dome"] }],
-    // Between the two the great doors are shut, with a wicket in one leaf for those the sergeant lets in. Nobody
-    // walks out through the doors, and nobody stands in them.
-    edit: { "inner-gate": null, "city-blocks": { exclude: [[-64, -172, 64, -40]] }, "great-gate": { shut: true } },
-    crowd: { noWalkers: ["exit"], avoid: [[0, -9.5, 26, 1.8, 0]] },
+    edit: { "inner-gate": null, "city-blocks": { exclude: [[-64, -172, 64, -40]] } },
     shots: {
       // The whole gatehouse on its board.
       wide: { iso: "-35,30,190,38", isoat: "0,6,17" },
       // The checkpoint and the head of the queue, where the scene is played.
       play: { iso: "-35,35,70,9", isoat: "2,16" },
-      // The shut doors from the line, and the wicket in them from just inside the checkpoint.
-      gate: { iso: "-10,10,75,34", isoat: "0,-9,14" },
-      wicket: { iso: "-20,14,16,34", isoat: "1.4,-8,1.8" },
       // The square inside the walls, seen from over the street that leads up to it from the gate.
       festival: { iso: "0,45,80,40", isoat: "0,-112" },
       // Both at once: the line outside the gate, the street through it, and the square.

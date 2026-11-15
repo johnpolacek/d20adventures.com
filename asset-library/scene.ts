@@ -43,7 +43,7 @@ interface SetLike {
   objects: { type: string; id?: string }[]
   rooms?: { box: number[] }[]
   materials?: Record<string, object>
-  crowd?: { avoid?: { rects?: number[][] }; groups?: { path?: unknown; type: string; area?: number[]; count?: number; density?: { rect: number[] }[]; face?: { toward?: number[] } }[] }
+  crowd?: { groups?: { type: string; area?: number[]; count?: number; density?: { rect: number[] }[]; face?: { toward?: number[] } }[] }
   painted?: unknown
   camera?: Record<string, unknown>
 }
@@ -198,10 +198,6 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
           ...(g.face?.toward ? { face: { ...g.face, toward: [g.face.toward[0] + dx, g.face.toward[1] + dz] } } : {}),
         })
       }
-    }
-    if (look?.crowd && set.crowd) {
-      set.crowd.groups = set.crowd.groups?.filter((g) => !(g.type === "walkers" && look.crowd?.noWalkers?.includes(g.path as string)))
-      set.crowd.avoid = { ...set.crowd.avoid, rects: [...(set.crowd.avoid?.rects ?? []), ...(look.crowd.avoid ?? [])] }
     }
     for (const [id, change] of Object.entries(look?.edit ?? {})) {
       if (!change) set.objects = set.objects.filter((p) => p.id !== id)
