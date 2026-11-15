@@ -9,7 +9,7 @@
 import type { Stage } from "@d20/stage"
 import { onFootprint } from "@d20/stage/spec/walk"
 import { addFigure, castRings, crowdShade } from "./figures"
-import { iso, isoSet } from "./iso"
+import { iso, isoLamps, isoSet } from "./iso"
 import { LOOKS } from "./looks"
 
 export interface SceneOptions {
@@ -43,7 +43,7 @@ export interface Scene {
 
 type Vec = [number, number, number]
 interface SetLike {
-  objects: { type: string; id?: string }[]
+  objects: { type: string; id?: string; at?: number[]; clear?: number[][]; item?: { type: string }; items?: { item: { type: string } }[] }[]
   rooms?: { box: number[] }[]
   materials?: Record<string, object>
   crowd?: { groups?: { type: string; area?: number[]; count?: number; density?: { rect: number[] }[]; face?: { toward?: number[] } }[] }
@@ -183,6 +183,15 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       if (set.crowd?.groups) set.crowd.groups = set.crowd.groups.filter((g) => g.type !== "scatter" || (g.count ?? 0) >= 1)
     }
     if (q.isohide) set.objects = set.objects.filter((p) => !q.isohide.split(",").includes(p.type))
+    // Trees left out where they would stand between the people and where the place is seen from, as an awning is: a
+    // wood seen from above is all canopy. Circles of x,z,r, which a tree set by hand is dropped from and a scattered
+    // wood keeps clear of. A scatter holds 256 circles at most.
+    const glade = q.isoclear?.split(";").map((c) => c.split(",").map(Number))
+    if (glade) {
+      const trees = (p: SetLike["objects"][number]) => [p.item, ...(p.items ?? []).map((i) => i.item)].some((i) => i?.type === "tree")
+      set.objects = set.objects.filter((p) => !(p.type === "tree" && p.at && glade.some(([x, z, r]) => Math.hypot(p.at![0] - x, p.at![1] - z) < r)))
+      for (const p of set.objects) if (p.type === "scatter" && trees(p)) p.clear = [...(p.clear ?? []), ...glade].slice(0, 256)
+    }
     for (const [name, change] of Object.entries(look?.materials ?? {})) if (set.materials?.[name]) Object.assign(set.materials[name], change)
     // Sets that share this one's world are built into it where they stand: their parts as one group, moved there, and
     // their scattered crowds with them. A material both sets name keeps this set's.
@@ -259,7 +268,9 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       ambient: ambient || undefined,
       key: key || undefined,
       sky: q.isosky ? `#${q.isosky.replace("#", "")}` : undefined,
-      lamps: q.isolamps?.split(";").map((l) => l.split(",").map(Number)),
+      lamps: isoLamps(q.isolamps),
+      fill: q.isofill ? Number(q.isofill) : undefined,
+      haze: q.isohaze ? Number(q.isohaze) : undefined,
     })
     stage.shot(view as Parameters<Stage["shot"]>[0], { instant: true })
     // Cast members with a figure in the library stand as figures: the look's own choices first, then anyone else.
@@ -268,7 +279,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       const stand = { ...Object.fromEntries((staging.cast ?? []).filter((c) => o.figures[c.id]).map((c) => [c.id, o.figures[c.id]])), ...(look?.figures ?? {}) }
       await Promise.all(
         Object.entries(stand).map(async ([cast, character]) => {
-          const f = await addFigure(stage, `${o.files}/${character}/lod1.glb`, cast, { clip: "Idle" }).catch(() => null)
+          const f = await addFigure(stage, `${o.files}/${character}/lod1.glb`, cast, { clip: "Idle", env: q.figenv ? Number(q.figenv) : undefined }).catch(() => null)
           if (f) stops.push(f.stop)
         })
       )

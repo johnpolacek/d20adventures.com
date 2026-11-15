@@ -32,7 +32,7 @@
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
-import { iso, isoSet } from "../../asset-library/iso"
+import { iso, isoLamps, isoSet } from "../../asset-library/iso"
 import { withLook } from "../../asset-library/looks"
 import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, castRings, crowdShade, drift, pano, projectPaintings } from "./lab"
 
@@ -226,7 +226,9 @@ export function LabViewer({ params }: { params: Params }) {
           ambient,
           key,
           sky: q.isosky ? `#${q.isosky.replace("#", "")}` : undefined,
-          lamps: q.isolamps?.split(";").map((l) => l.split(",").map(Number)),
+          lamps: isoLamps(q.isolamps),
+          fill: q.isofill ? Number(q.isofill) : undefined,
+          haze: q.isohaze ? Number(q.isohaze) : undefined,
         })
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }
