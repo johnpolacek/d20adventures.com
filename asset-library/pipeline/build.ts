@@ -45,7 +45,9 @@ interface Brief {
   arms: number
   party?: boolean
   // What it holds, built in its hand when it is shown (props.ts) and left off the sheet: { what: "staff", hand: "R", length: 2.1 }.
-  holds?: { what: "staff"; hand: "L" | "R"; length: number; fist?: boolean }
+  // `palm` is the way a fist's palm faces on the model, if not in toward the thigh as an open hand's does: "front"
+  // or "back". Hide the staff and look at the bare fist before saying.
+  holds?: { what: "staff"; hand: "L" | "R"; length: number; fist?: boolean; palm?: "front" | "back" }
   // "front" paints the front view alone, upright and at full size: half as many pixels again on a face as the sheet
   // of two views gives. The model is made from the front alone, so the back view was only ever a reference.
   sheet?: "front"

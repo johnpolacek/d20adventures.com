@@ -9,7 +9,7 @@
 // it on the skeleton, as it leaves how far the arms hang.
 
 import * as THREE from "three"
-import { relaxHands } from "./clips"
+import { type Palm, relaxHands } from "./clips"
 
 const Y = new THREE.Vector3(0, 1, 0)
 const RADIUS = 0.019
@@ -89,6 +89,45 @@ function staff(length: number, held = -1) {
   return group
 }
 
+// A closed hand is made a hand that holds: its skin is moved off the line the staff takes through it, out to the
+// staff's own width, so the fingers and the thumb lie round the staff and nothing of the staff shows through them. A
+// fist with a pole pushed through it reads as a fist (the owner, 2026-11-15: "it needs to be holding the staff").
+// Done once, in the mesh as it was modelled.
+function wrap(root: THREE.Object3D, side: "L" | "R", palm: Palm, [along, out]: [number, number]) {
+  if (root.userData.wrapped) return
+  root.userData.wrapped = true
+  const WIDE = RADIUS * 1.4
+  const axis = palm.along.clone().cross(palm.normal).normalize()
+  root.traverse((o) => {
+    if (!(o instanceof THREE.SkinnedMesh)) return
+    const { position: pos, skinIndex: si, skinWeight: sw } = o.geometry.attributes
+    const bone = o.skeleton.bones.findIndex((b) => b.name === `hand${side}`)
+    if (!pos || !si || !sw || bone < 0) return
+    const wrist = new THREE.Vector3().setFromMatrixPosition(o.skeleton.boneInverses[bone].clone().invert())
+    const through = wrist.clone().addScaledVector(palm.along, along).addScaledVector(palm.normal, out)
+    const p = new THREE.Vector3()
+    const off = new THREE.Vector3()
+    for (let v = 0; v < pos.count; v++) {
+      let w = 0
+      for (let k = 0; k < 4; k++) if (si.getComponent(v, k) === bone) w += sw.getComponent(v, k)
+      if (w < 0.3) continue
+      p.fromBufferAttribute(pos, v).applyMatrix4(o.bindMatrix)
+      off.copy(p).sub(through)
+      const up = off.dot(axis)
+      off.addScaledVector(axis, -up)
+      const from = off.length()
+      if (from >= WIDE || from < 1e-5) continue
+      p.copy(through)
+        .addScaledVector(axis, up)
+        .addScaledVector(off, WIDE / from)
+        .applyMatrix4(o.bindMatrixInverse)
+      pos.setXYZ(v, p.x, p.y, p.z)
+    }
+    // The normals are left as they were: made again, they would crease the whole body along its texture's seams.
+    pos.needsUpdate = true
+  })
+}
+
 // What the skeleton says the figure holds: "staff:R:2.1".
 export function heldBy(root: THREE.Object3D) {
   let text = ""
@@ -127,6 +166,12 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
   })
   root.add(prop)
   const [alongUpper, alongFore] = [fore.position.clone().normalize(), hand.position.clone().normalize()]
+  // Where in the hand it is held, along the hand from the wrist and out of the palm. An open hand takes it against
+  // the palm, under the knuckles. A closed one has it inside the curl of its fingers: well along the hand and a little
+  // to the palm's side. The middle of a closed hand is nearer the wrist than that, and a staff set there stands
+  // against the heel of the hand with the fingers closed on nothing.
+  const seat: [number, number] = palm.fist ? [palm.length * 0.6, Math.max(palm.middle[1], 0) + 0.012] : [palm.length * 0.47, RADIUS * 1.9]
+  if (palm.fist) wrap(root, held.hand, palm, seat)
   const pole = new THREE.Vector3(side * 0.12, -1, -0.3).normalize()
   let foot: THREE.Vector3 | null = null
   // The way the staff stands, foot to hand: the fist is turned to it, and it is found again from the fist.
@@ -186,10 +231,7 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
     }
     fore.updateWorldMatrix(false, true)
     const handTurn = upperTurn.clone().multiply(fore.quaternion).multiply(hand.quaternion)
-    // An open hand takes it against the palm, under the knuckles. A fist has it inside the curl of its fingers:
-    // well along the hand and a little to the palm's side. The middle of the fist is nearer the wrist than that, and
-    // a staff set there stands against the heel of the hand with the fingers closed on nothing.
-    const [alongHand, outOfPalm] = palm.fist ? [palm.length * 0.6, Math.max(palm.middle[1], 0) + 0.012] : [palm.length * 0.47, RADIUS * 1.9]
+    const [alongHand, outOfPalm] = seat
     const grip = local(hand).addScaledVector(palm.along.clone().applyQuaternion(handTurn), alongHand).addScaledVector(palm.normal.clone().applyQuaternion(handTurn), outOfPalm)
     // Planted where it first stood, a hand's width farther from the feet than the hand is: it leans in a little.
     foot ??= new THREE.Vector3(grip.x + side * 0.03, ground, grip.z + 0.05)

@@ -192,10 +192,12 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
   // The hand that holds something, "staff:R:2.1" on the skeleton (rig.py), and whether it was modelled as a fist.
   let grips = ""
   let fist = false
+  let facing = ""
   root.traverse((o) => {
     if (typeof o.userData.holds !== "string") return
     grips = o.userData.holds.split(":")[1] ?? ""
     fist = o.userData.holds.split(":")[3] === "fist"
+    facing = o.userData.holds.split(":")[4] ?? ""
   })
   root.traverse((o) => {
     if (!(o instanceof THREE.SkinnedMesh)) return
@@ -223,19 +225,16 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
       // Along the hand, out of its palm or its back, and across it.
       const h = centre.clone().sub(W).normalize()
       const closed = fist && grips === side
-      // Open or closed, a hand is thinnest from its back to its palm.
-      const n = axes(pts, centre)[2]
+      // An open hand is thinnest from its back to its palm. A fist is a ball, and no measure of its shape says which
+      // side its palm is: guesses from its shape, and from what the sheet seemed to show, were wrong three times. A
+      // generator makes a fist as it makes the open hand beside it, palm turned in toward the thigh and thumb to the
+      // front, whatever the sheet asked. That was settled by hiding the staff and looking at the bare fist from above.
+      // `"palm"` in holds says otherwise, for a model that comes differently: "front" or "back", the way it faces.
+      const thigh = new THREE.Vector3(side === "L" ? -1 : 1, -1, 0)
+      const n = closed ? (facing === "front" ? new THREE.Vector3(0, 0, 1) : facing === "back" ? new THREE.Vector3(0, 0, -1) : thigh.clone()) : axes(pts, centre)[2]
       n.addScaledVector(h, -n.dot(h)).normalize()
-      if (closed) {
-        // A fist's fingers are curled onto its palm, so most of it lies to the palm's side of the line the forearm
-        // makes. Which way a generator turns a fist is its own affair: the sheet's "knuckles forward" was not kept.
-        const arm = W.clone().sub(fore.at).normalize()
-        const beside = centre.clone().sub(W)
-        beside.addScaledVector(arm, -beside.dot(arm))
-        if (beside.dot(n) < 0) n.negate()
-      }
       // The palm is the face turned in and down: the sheet a figure is modelled from holds its palms toward the thighs.
-      else if (n.dot(new THREE.Vector3(side === "L" ? -1 : 1, -1, 0)) < 0) n.negate()
+      if (!closed && n.dot(thigh) < 0) n.negate()
       const across = new THREE.Vector3().crossVectors(h, n)
       const L = Math.max(...pts.map((p) => p.clone().sub(W).dot(h)))
       const along = pts.map((p) => p.clone().sub(W).dot(h) / L)

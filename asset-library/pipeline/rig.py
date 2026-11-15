@@ -355,7 +355,7 @@ rig["hangL"], rig["hangR"] = hang["L"], hang["R"]
 brief_file = os.path.join(out_dir, "character.json")
 holds = (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("holds")
 if holds:
-    rig["holds"] = f"{holds['what']}:{holds.get('hand', 'R')}:{holds.get('length', 2)}" + (":fist" if holds.get("fist") else "")
+    rig["holds"] = f"{holds['what']}:{holds.get('hand', 'R')}:{holds.get('length', 2)}" + (":fist" if holds.get("fist") else "") + (f":{holds['palm']}" if holds.get("palm") else "")
 
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
