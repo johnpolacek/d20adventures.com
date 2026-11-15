@@ -193,7 +193,8 @@ The owner, 2026-11-15, of Wollandora without her staff: "I was expecting to see 
 
 - `props.ts` builds the prop in code and stands it on the ground beside the figure. A staff is the one prop so far: two stems wound about each other, an eye at the head, a vine up the lower half.
 - That arm is bent to it each frame, after the clip has moved the figure: the wrist is sent forward of the shoulder at chest height, the elbow found from the arm's two lengths, and the forearm rolled until the palm faces across the body.
-- The hand is closed about it. `relaxHands` bends that hand's fingers much further and lays them together. From outside and in front it reads as a fist on the staff. From her own side the fingers lie flat like a fan: a hand is one bone, and bending its mesh is not a grip. A hand modelled closed needs a new model.
+- The hand is modelled closed. `"fist": true` in `holds` has the sheet paint that hand as a fist, knuckles forward, and the staff stands through its middle, drawn in narrow where the fist comes. The first try bent an open hand's mesh shut, and the owner's answer was "her hand on the staff does not look right": from her own side the fingers lay flat like a fan. A hand is one bone, and bending its mesh is not a grip.
+- A fist is a ball, with no flat to tell its palm by. Its palm is taken to be behind it, as the sheet paints it.
 - The staff stays planted and turns on its foot as the hand sways, so Idle, Walk and Hit all hold it with nothing written for it.
 - `rig.py` reads `holds` from the brief and leaves it on the skeleton. After changing it, run `--redo=rig`.
 - The staff is built, not modelled from her card, so it is a plainer staff than the painted one. The thumb does not wrap.
@@ -205,7 +206,13 @@ The owner, 2026-11-15: "her face is not good". It was the middle detail level, 2
 - A scene with three figures or fewer stands them at full detail.
 - Full detail keeps the generator's own 4096 colour. Figures rigged before 2026-11-15 have 2048: `--redo=rig` on each brings them up, then `pnpm assets:thumbs` and `pnpm assets:sync`.
 
-What is left is the generator's: a mouth a little off, a seam on a cheek. A better face is a new model.
+Then the face is taken from the sheet. A generator makes its figure from the sheet's front view and paints it again from memory: a face that was sharp on the sheet comes back soft, with muddy eyes. A second model of Wollandora, made from a better sheet, had worse eyes than the first. The model is the sheet's shape seen from in front, so `rig.py` lays the sheet's own pixels back onto whatever of the head looks forward:
+
+- `"face": "sheet"` in the brief asks for it. It is free, and `--redo=rig` does it on a model already made.
+- `"sheet": "front"` paints the front view alone, upright, 1024 by 1536. A face gets half as many pixels again as on the sheet of two views. The back view was only ever a reference: the model is made from the front.
+- The sheet is lined up with the head by the top of the figure and the middle of its crown. On Wollandora it landed true. If eyes come out doubled, the head is off the sheet: look at `faceFromSheet` in `rig.json`.
+- It fades out where the head turns away from the sheet, so cheeks seen from the side keep the generator's paint, and the join can show as a faint patch.
+- The six figures made before 2026-11-15 have not had it.
 
 ### A beast
 
@@ -338,7 +345,8 @@ Joining the three into one wood was weighed and left alone. The trail's own mark
 - Milos's staff was on his back on the sheet. His model was made from the front, so he has none.
 - The crowd is 16 pictures, mirrored and tinted. Near the play they repeat.
 - Hands are one bone each. `relaxHands` curls and closes the fingers a little, and the arms still stand out from the body. A hand cannot grip, point or rest on a belt.
-- Wollandora: a thin strap at her hip sticks out sideways for part of the walk, and her skirt stretches between her legs as they part. Her 1.86 m is measured to the top of her wreath.
+- Wollandora is her second model. The first is kept in the private bucket's history and at `~/Desktop/d20-asset-library/wollandora-first/`. Her skirt stretches between her legs as they part, and her 1.86 m is measured to the top of her wreath.
+- Her rig's report says 512 bones on a point, where 4 is the most there can be. The copies carry 18 joints and move rightly, so it is the count that is wrong, and nobody has found why.
 - By day the modelled trees' trunks look like smooth clay. The bark's relief does not show.
 - The modelled trees stand still. The set's own swayed.
 - The owlbear moves as a person does. See A beast.
@@ -355,7 +363,7 @@ Joining the three into one wood was weighed and left alone. The trail's own mark
 
 Owner, 2026-11-14: only the party is made in 3D for now. The party is Branka, Thalbern, Lyra, Poppen and Milos the cleric. A brief with `"party": true` is one of them. Everyone else stays a card.
 
-Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made in 3D as well, one model each at $0.60. A second try at either needs a new yes. Both were built that day, each on its first model, $1.20 in all.
+Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made in 3D as well, one model each at $0.60. A second try at either needs a new yes. Both were built that day, each on its first model. The owner then cleared a second Wollandora, for her face and her grip on the staff: $1.80 in all.
 
 - All five were built on 2026-11-14 for $0.60 each, and each rig's report was clean on its first run. Idle, Walk and Hit play on all of them unchanged.
 - At the Gates the scene's own party is Branka, Cassia, Yeva and Milos. The Gates' look (`looks.ts`) stands Lyra where Cassia is and Poppen where Yeva is, and adds Thalbern beside them. The staging itself is unchanged.

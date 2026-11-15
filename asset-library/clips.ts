@@ -174,6 +174,10 @@ export interface Palm {
   along: THREE.Vector3
   normal: THREE.Vector3
   length: number
+  // Modelled closed, as a fist: what it holds stands through its middle, and its fingers are left as they are.
+  fist?: boolean
+  // Where the middle of the hand lies from the wrist, along the hand and out of its palm.
+  middle: [number, number]
 }
 
 // A generated figure's hands come as they were modelled: flat, fingers straight and spread wide, turned out at the
@@ -185,10 +189,13 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
   if (had) return had
   const out: ReturnType<typeof relaxHands> = { wristL: new THREE.Quaternion(), wristR: new THREE.Quaternion(), palm: {} }
   root.userData.hands = out
-  // The hand that holds something, "staff:R:2.1" on the skeleton (rig.py).
+  // The hand that holds something, "staff:R:2.1" on the skeleton (rig.py), and whether it was modelled as a fist.
   let grips = ""
+  let fist = false
   root.traverse((o) => {
-    if (typeof o.userData.holds === "string") grips = o.userData.holds.split(":")[1] ?? ""
+    if (typeof o.userData.holds !== "string") return
+    grips = o.userData.holds.split(":")[1] ?? ""
+    fist = o.userData.holds.split(":")[3] === "fist"
   })
   root.traverse((o) => {
     if (!(o instanceof THREE.SkinnedMesh)) return
@@ -215,16 +222,18 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
       const centre = pts.reduce((n, p) => n.add(p), new THREE.Vector3()).divideScalar(pts.length)
       // Along the hand, out of its palm or its back, and across it.
       const h = centre.clone().sub(W).normalize()
-      const n = axes(pts, centre)[2]
+      const closed = fist && grips === side
+      // A fist is a ball, with no flat to find a palm by. The sheet paints it knuckles forward, so its palm is behind.
+      const n = closed ? new THREE.Vector3(0, 0, -1) : axes(pts, centre)[2]
       n.addScaledVector(h, -n.dot(h)).normalize()
       // The palm is the face turned in and down: the sheet a figure is modelled from holds its palms toward the thighs.
-      if (n.dot(new THREE.Vector3(side === "L" ? -1 : 1, -1, 0)) < 0) n.negate()
+      if (!closed && n.dot(new THREE.Vector3(side === "L" ? -1 : 1, -1, 0)) < 0) n.negate()
       const across = new THREE.Vector3().crossVectors(h, n)
       const L = Math.max(...pts.map((p) => p.clone().sub(W).dot(h)))
       const along = pts.map((p) => p.clone().sub(W).dot(h) / L)
       const off = centre.clone().sub(W).dot(n)
-      out.palm[side] = { along: h.clone(), normal: n.clone(), length: L }
-      for (let m = 0; m < ids.length; m++) {
+      out.palm[side] = { along: h.clone(), normal: n.clone(), length: L, fist: closed, middle: [centre.clone().sub(W).dot(h), off] }
+      for (let m = 0; m < (closed ? 0 : ids.length); m++) {
         const [v, t, p] = [ids[m], along[m], pts[m]]
         // Drawn together, then bent at each line from the fingertips back.
         p.addScaledVector(across, -(grips === side ? 0.68 : 0.4) * smooth(0.42, 0.9, t) * p.clone().sub(W).dot(across))

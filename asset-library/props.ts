@@ -16,7 +16,7 @@ const RADIUS = 0.019
 
 // A druid's staff: two old stems wound about each other, parting at the head into an eye and closing over it, with a
 // vine up the lower half. It stands on its foot at the origin, `length` tall.
-function staff(length: number) {
+function staff(length: number, held = -1) {
   const group = new THREE.Group()
   group.name = "prop:staff"
   const eye = 0.26
@@ -27,8 +27,9 @@ function staff(length: number) {
     for (let i = 0; i <= 80; i++) {
       const t = i / 80
       const a = t * TURNS * 2 * Math.PI + phase
-      // The two stems lie closer at the foot, and the whole staff is a little crooked.
-      const out = RADIUS * (0.6 + 0.45 * t)
+      // The two stems lie closer at the foot, and closest where a fist holds them: a staff as wide as the hand that
+      // grips it shows through the knuckles. The whole staff is a little crooked.
+      const out = RADIUS * (0.6 + 0.45 * t) * (held < 0 ? 1 : 1 - 0.72 * Math.exp(-(((t * shaft - held) / 0.09) ** 2)))
       points.push(new THREE.Vector3(0.012 * Math.sin(t * 5.2) + out * Math.cos(a), t * shaft, 0.01 * Math.sin(t * 3.4 + 1) + out * Math.sin(a)))
     }
     const top = points[points.length - 1]
@@ -109,12 +110,6 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
   if (!chest || !upper || !fore || !hand || !palm) return null
   // The figure's left is +x, so its right hand is at -x and turns its palm toward +x.
   const side = held.hand === "L" ? 1 : -1
-  const prop = staff(held.length)
-  prop.traverse((m) => {
-    if (m instanceof THREE.Mesh) m.castShadow = m.receiveShadow = true
-  })
-  root.add(prop)
-
   // Everything below is in the figure's own space: its root may be turned, moved and scaled by whoever stands it.
   const own = new THREE.Quaternion()
   const local = (o: THREE.Object3D) => root.worldToLocal(o.getWorldPosition(new THREE.Vector3()))
@@ -124,6 +119,12 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
   const tall = local(bone("head") ?? chest).y - ground
   // Where the wrist goes: forward of the shoulder and out, at the height of the chest, as one leans on a staff.
   const reach = local(upper).add(new THREE.Vector3(side * 0.12, -0.1, 0.15).multiplyScalar(tall))
+  // A fist's staff is drawn in where the fist comes, at the height the wrist is sent to.
+  const prop = staff(held.length, palm.fist ? reach.y - ground : -1)
+  prop.traverse((m) => {
+    if (m instanceof THREE.Mesh) m.castShadow = m.receiveShadow = true
+  })
+  root.add(prop)
   const [alongUpper, alongFore] = [fore.position.clone().normalize(), hand.position.clone().normalize()]
   const pole = new THREE.Vector3(side * 0.45, -1, -0.55).normalize()
   let foot: THREE.Vector3 | null = null
@@ -156,9 +157,9 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
     if (now.lengthSq() > 1e-6 && want.lengthSq() > 1e-6) fore.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(alongFore, Math.atan2(level.dot(now.clone().cross(want)), now.dot(want))))
     fore.updateWorldMatrix(false, true)
     const handTurn = upperTurn.clone().multiply(fore.quaternion).multiply(hand.quaternion)
-    const grip = local(hand)
-      .addScaledVector(palm.along.clone().applyQuaternion(handTurn), palm.length * 0.47)
-      .addScaledVector(palm.normal.clone().applyQuaternion(handTurn), RADIUS * 1.9)
+    // An open hand takes it against the palm, under the knuckles. A fist has it through its middle.
+    const [alongHand, outOfPalm] = palm.fist ? palm.middle : [palm.length * 0.47, RADIUS * 1.9]
+    const grip = local(hand).addScaledVector(palm.along.clone().applyQuaternion(handTurn), alongHand).addScaledVector(palm.normal.clone().applyQuaternion(handTurn), outOfPalm)
     // Planted where it first stood, a hand's width farther from the feet than the hand is: it leans in a little.
     foot ??= new THREE.Vector3(grip.x + side * 0.03, ground, grip.z + 0.05)
     prop.position.copy(foot)

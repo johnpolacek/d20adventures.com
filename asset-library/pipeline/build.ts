@@ -45,7 +45,13 @@ interface Brief {
   arms: number
   party?: boolean
   // What it holds, built in its hand when it is shown (props.ts) and left off the sheet: { what: "staff", hand: "R", length: 2.1 }.
-  holds?: { what: "staff"; hand: "L" | "R"; length: number }
+  holds?: { what: "staff"; hand: "L" | "R"; length: number; fist?: boolean }
+  // "front" paints the front view alone, upright and at full size: half as many pixels again on a face as the sheet
+  // of two views gives. The model is made from the front alone, so the back view was only ever a reference.
+  sheet?: "front"
+  // "sheet" has the rig lay the sheet's own pixels back onto the front of the head (rig.py): a generator paints a
+  // face again from memory, and softer.
+  face?: "sheet"
   // A beast that stands upright on two legs, painted as an animal and not a person in costume.
   creature?: boolean
 }
@@ -69,17 +75,28 @@ Keep this creature's head, colouring, markings, build and proportions. Render it
 Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
 
 const prompt = (b: Brief) => (b.creature ? creaturePrompt(b) : personPrompt(b))
+// A hand that holds something (props.ts) is painted closed, so the model has a fist for the prop to stand in. Bending
+// an open hand's mesh shut does not make a grip.
+const hands = (b: Brief) => {
+  if (!b.holds?.fist) return "hands open with fingers apart, palms toward the thighs. Nothing in the hands."
+  const [own, seen, other] = b.holds.hand === "R" ? ["right", "left", "left"] : ["left", "right", "right"]
+  return `Their own ${own} hand, on the ${seen} of the picture in the front view, is closed in a firm fist with the knuckles forward, the fingers curled tight and the thumb wrapped over them, as if gripping a thick pole that is not there. Their ${other} hand is open with fingers apart, palm toward the thigh. Nothing in either hand.`
+}
+const views = (b: Brief) =>
+  b.sheet === "front"
+    ? "One full-body view from directly in front, upright and centred, filling the frame's height from the top of the head to the soles."
+    : "Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles: on the left the front view, on the right the back view from directly behind with no face visible."
 const personPrompt = (
   b: Brief
-) => `The attached images are the front and the back of a painted game character: ${b.who}. Make one landscape reference sheet of the SAME person as a photorealistic costume photograph, for building a 3D model.
+) => `The attached images are the front and the back of a painted game character: ${b.who}. Make one ${b.sheet === "front" ? "portrait picture" : "landscape reference sheet"} of the SAME person as a photorealistic costume photograph, for building a 3D model.
 
-Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles: on the left the front view, on the right the back view from directly behind with no face visible.
+${views(b)}
 
-Pose, in both views: standing straight, feet a little apart, both arms held out from the body at about ${b.arms} degrees with a clear gap of background between each arm and the body, hands open with fingers apart, palms toward the thighs. Nothing in the hands. ${b.stow} Neutral face, mouth closed, looking straight ahead.
+Pose${b.sheet === "front" ? "" : ", in both views"}: standing straight, feet a little apart, both arms held out from the body at about ${b.arms} degrees with a clear gap of background between each arm and the body, ${hands(b)} ${b.stow} Neutral face, mouth closed, looking straight ahead.
 
-Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.
+Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.${b.sheet === "front" ? " The face is in sharp focus and finely detailed: clear eyes, a natural closed mouth, real skin." : ""}
 
-Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
+Lighting: soft, even, shadowless studio light from the front${b.sheet === "front" ? "" : ", the same in both views"}, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
 
 function run(label: string, command: string, argv: string[]) {
   const r = spawnSync(command, argv, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
@@ -93,12 +110,16 @@ const last = (out: string, tag: string) => {
 
 async function sheet(dir: string, b: Brief) {
   const card = async (file: string) => jpeg(await sharp(`public${file}`).flatten({ background: "#808080" }).toBuffer(), 1536)
-  const png = await codexPaint(`character sheet ${b.id}`, prompt(b), [await card(b.card.front), await card(b.card.back)])
+  const front = b.sheet === "front"
+  const png = await codexPaint(`character sheet ${b.id}`, prompt(b), [await card(b.card.front), await card(b.card.back)], front ? "portrait 2:3" : "landscape 3:2")
   const { width = 0, height = 0 } = await sharp(png).metadata()
   await writeFile(`${dir}/sheet.png`, png)
-  const half = Math.floor(width / 2)
-  await sharp(png).extract({ left: 0, top: 0, width: half, height }).png().toFile(`${dir}/apose-front.png`)
-  await sharp(png).extract({ left: half, top: 0, width: half, height }).png().toFile(`${dir}/apose-back.png`)
+  if (front) await writeFile(`${dir}/apose-front.png`, png)
+  else {
+    const half = Math.floor(width / 2)
+    await sharp(png).extract({ left: 0, top: 0, width: half, height }).png().toFile(`${dir}/apose-front.png`)
+    await sharp(png).extract({ left: half, top: 0, width: half, height }).png().toFile(`${dir}/apose-back.png`)
+  }
   await mkdir(DESKTOP, { recursive: true })
   await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${b.id}-sheet.jpg`)
 }

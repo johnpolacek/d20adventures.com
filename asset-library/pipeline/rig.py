@@ -355,7 +355,7 @@ rig["hangL"], rig["hangR"] = hang["L"], hang["R"]
 brief_file = os.path.join(out_dir, "character.json")
 holds = (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("holds")
 if holds:
-    rig["holds"] = f"{holds['what']}:{holds.get('hand', 'R')}:{holds.get('length', 2)}"
+    rig["holds"] = f"{holds['what']}:{holds.get('hand', 'R')}:{holds.get('length', 2)}" + (":fist" if holds.get("fist") else "")
 
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
@@ -398,6 +398,82 @@ for m in body.data.materials:
             if node.type == "TEX_IMAGE" and node.image:
                 colour.add(node.image.name)
             trail += [link.from_node for socket in node.inputs for link in socket.links]
+
+# ── The face, from the sheet ──
+# A generator makes its figure from the sheet's front view and then paints it again from memory: a face that was sharp
+# on the sheet comes back soft, with muddy eyes. The model is the sheet's shape seen from in front, so the sheet's own
+# pixels can be laid back onto whatever of the head faces forward. `"face": "sheet"` in the brief asks for it.
+painted = None
+if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face") == "sheet" and colour:
+    sheet = bpy.data.images.load(os.path.join(os.path.dirname(os.path.abspath(spec_file)), spec["front"]))
+    sw, sh = sheet.size
+    S = np.empty(sw * sh * 4, dtype=np.float32)
+    sheet.pixels.foreach_get(S)
+    S = S.reshape(sh, sw, 4)[::-1]  # top row first, as the joints are counted
+    # Where the head's middle is across the sheet: the middle of the figure in its topmost rows.
+    grey = np.median(np.concatenate([S[:12, :12, :3].reshape(-1, 3), S[:12, -12:, :3].reshape(-1, 3)]), axis=0)
+    figure_mask = np.abs(S[:, :, :3] - grey).sum(axis=2) > 0.19
+    crown_rows = figure_mask[int(top) : int(top + 0.07 * (bottom - top))]
+    across = np.flatnonzero(crown_rows.any(axis=0))
+    middle = (across.min() + across.max()) / 2 if len(across) else centre
+    image = bpy.data.images[sorted(colour)[0]]
+    tw, th = image.size
+    T = np.empty(tw * th * 4, dtype=np.float32)
+    image.pixels.foreach_get(T)
+    T = T.reshape(th, tw, 4)
+    mesh = body.data
+    mesh.calc_loop_triangles()
+    n = len(mesh.loop_triangles)
+    tri_loops = np.empty(n * 3, dtype=np.int32)
+    tri_verts = np.empty(n * 3, dtype=np.int32)
+    tri_normal = np.empty(n * 3, dtype=np.float32)
+    mesh.loop_triangles.foreach_get("loops", tri_loops)
+    mesh.loop_triangles.foreach_get("vertices", tri_verts)
+    mesh.loop_triangles.foreach_get("normal", tri_normal)
+    uvs = np.empty(len(mesh.loops) * 2, dtype=np.float32)
+    mesh.uv_layers.active.data.foreach_get("uv", uvs)
+    uvs = uvs.reshape(-1, 2)[tri_loops].reshape(n, 3, 2) * np.array([tw, th], dtype=np.float32)
+    V = coords(mesh)[tri_verts].reshape(n, 3, 3)
+    facing = -tri_normal.reshape(n, 3)[:, 1]
+    # The head, from the neck up, and only what looks forward.
+    neck = at["neck"].z
+    head = (V[:, :, 2].min(axis=1) > neck) & (facing > 0.12)
+    texels = 0
+    for k in np.flatnonzero(head):
+        (u0, v0), (u1, v1), (u2, v2) = uvs[k]
+        x0, x1 = int(np.floor(min(u0, u1, u2))) - 1, int(np.ceil(max(u0, u1, u2))) + 1
+        y0, y1 = int(np.floor(min(v0, v1, v2))) - 1, int(np.ceil(max(v0, v1, v2))) + 1
+        x0, y0, x1, y1 = max(x0, 0), max(y0, 0), min(x1, tw - 1), min(y1, th - 1)
+        area = (u1 - u0) * (v2 - v0) - (u2 - u0) * (v1 - v0)
+        if abs(area) < 1e-6 or x1 < x0 or y1 < y0:
+            continue
+        gx, gy = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
+        b1 = ((gx - u0) * (v2 - v0) - (u2 - u0) * (gy - v0)) / area
+        b2 = ((u1 - u0) * (gy - v0) - (gx - u0) * (v1 - v0)) / area
+        b0 = 1 - b1 - b2
+        # A texel's width past each edge is painted too, or the seams show as the old colour.
+        inside = (b0 > -0.6 / max(1.0, abs(area) ** 0.5)) & (b1 > -0.6 / max(1.0, abs(area) ** 0.5)) & (b2 > -0.6 / max(1.0, abs(area) ** 0.5))
+        if not inside.any():
+            continue
+        P = b0[..., None] * V[k, 0] + b1[..., None] * V[k, 1] + b2[..., None] * V[k, 2]
+        sx = np.clip(middle + P[..., 0] / px, 0, sw - 1.001)
+        sy = np.clip(bottom - P[..., 2] / px, 0, sh - 1.001)
+        ix, iy = sx.astype(np.int32), sy.astype(np.int32)
+        fx, fy = (sx - ix)[..., None], (sy - iy)[..., None]
+        seen = (S[iy, ix, :3] * (1 - fx) + S[iy, ix + 1, :3] * fx) * (1 - fy) + (S[iy + 1, ix, :3] * (1 - fx) + S[iy + 1, ix + 1, :3] * fx) * fy
+        # Most where the head looks straight out of the sheet, none where it turns away, and eased in above the neck.
+        turn = np.clip((facing[k] - 0.12) / 0.4, 0, 1) ** 1.5
+        rise = np.clip((P[..., 2] - neck) / (0.025 * H), 0, 1)
+        # Never the sheet's grey: a point of the model that falls outside the painted figure keeps its own colour.
+        on_figure = figure_mask[iy, ix] & figure_mask[iy + 1, ix + 1]
+        w = (turn * rise * inside * on_figure)[..., None]
+        patch = T[y0 : y1 + 1, x0 : x1 + 1, :3]
+        T[y0 : y1 + 1, x0 : x1 + 1, :3] = patch * (1 - w) + seen * w
+        texels += int(inside.sum())
+    image.pixels.foreach_set(T.reshape(-1))
+    image.update()
+    painted = {"triangles": int(head.sum()), "texels": texels, "sheetMiddle": float(middle)}
+    del S, T
 
 made = []
 for i, (triangles, width, colour_width) in enumerate(LODS):
@@ -459,6 +535,7 @@ report = {
     "slungPoints": slung,
     "hang": hang,
     "holds": holds or None,
+    "faceFromSheet": painted,
     "bones": BONES,
     "lods": made,
 }
