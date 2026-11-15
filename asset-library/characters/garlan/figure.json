@@ -8,6 +8,7 @@
   "party": false,
   "height": 1.94,
   "front": "front.webp",
+  "thumb": "thumb.webp",
   "source": {
     "generator": "Tripo H3.1 on fal",
     "triangles": 59102,
@@ -27,7 +28,7 @@
     {
       "file": "lod0.glb",
       "triangles": 59102,
-      "megabytes": 3.26,
+      "megabytes": 5.25,
       "texture": 2048
     },
     {
@@ -42,6 +43,5 @@
       "megabytes": 0.46,
       "texture": 512
     }
-  ],
-  "thumb": "thumb.webp"
+  ]
 }

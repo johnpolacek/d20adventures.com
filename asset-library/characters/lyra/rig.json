@@ -1,5 +1,5 @@
 {
-  "name": "lyra",
+  "name": "ORM_293a1604-292c-447e-b8c3-ea59f7a01579",
   "source": "source.glb",
   "height": 1.7,
   "sourceTriangles": 57475,
@@ -14,12 +14,25 @@
     },
     "patched": 0,
     "unweighted": 0,
-    "mostBonesOnAPoint": 4
+    "mostBonesOnAPoint": 512
   },
   "slungPoints": 9,
   "hang": {
     "L": 7.0,
     "R": 15.0
+  },
+  "holds": null,
+  "tunnel": null,
+  "faceFromSheet": {
+    "triangles": 2953,
+    "texels": 706625,
+    "sheetMiddle": 420.5,
+    "close": true,
+    "fitted": true,
+    "noseSlipMm": [
+      0.0,
+      0.0
+    ]
   },
   "bones": [
     "root",
@@ -44,17 +57,19 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "megabytes": 2.64,
+      "megabytes": 3.65,
       "triangles": 57475,
       "texture": 2048,
+      "colour": 4096,
       "joints": 18,
       "turnedAtRest": []
     },
     {
       "file": "lod1.glb",
-      "megabytes": 1.06,
+      "megabytes": 1.07,
       "triangles": 19999,
       "texture": 1024,
+      "colour": 1024,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -63,6 +78,7 @@
       "megabytes": 0.41,
       "triangles": 5999,
       "texture": 512,
+      "colour": 512,
       "joints": 18,
       "turnedAtRest": []
     }

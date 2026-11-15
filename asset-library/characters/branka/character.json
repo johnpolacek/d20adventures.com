@@ -11,5 +11,6 @@
   "who": "Branka Stoneveil, a stout, broad dwarf fighter woman with red braided hair",
   "stow": "The sword stays sheathed at her left hip, the warhammer hangs from her belt, and the round shield is slung flat on her back.",
   "arms": 45,
-  "party": true
+  "party": true,
+  "face": "close"
 }

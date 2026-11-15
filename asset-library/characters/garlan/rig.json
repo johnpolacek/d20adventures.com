@@ -1,5 +1,5 @@
 {
-  "name": "garlan",
+  "name": "ORM_7e54ad50-f392-44da-8977-727c72e9eef5",
   "source": "source.glb",
   "height": 1.94,
   "sourceTriangles": 59102,
@@ -14,12 +14,25 @@
     },
     "patched": 0,
     "unweighted": 0,
-    "mostBonesOnAPoint": 4
+    "mostBonesOnAPoint": 512
   },
   "slungPoints": 0,
   "hang": {
     "L": 22.0,
     "R": 18.0
+  },
+  "holds": null,
+  "tunnel": null,
+  "faceFromSheet": {
+    "triangles": 2412,
+    "texels": 501011,
+    "sheetMiddle": 432.5,
+    "close": true,
+    "fitted": true,
+    "noseSlipMm": [
+      0.0,
+      0.0
+    ]
   },
   "bones": [
     "root",
@@ -44,9 +57,10 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "megabytes": 3.26,
+      "megabytes": 5.25,
       "triangles": 59102,
       "texture": 2048,
+      "colour": 4096,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -55,6 +69,7 @@
       "megabytes": 1.25,
       "triangles": 19999,
       "texture": 1024,
+      "colour": 1024,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -63,6 +78,7 @@
       "megabytes": 0.46,
       "triangles": 5999,
       "texture": 512,
+      "colour": 512,
       "joints": 18,
       "turnedAtRest": []
     }

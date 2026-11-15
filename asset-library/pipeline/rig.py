@@ -512,7 +512,8 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         bpy.data.images.remove(loaded)
         return a.reshape(h, w, 4)[::-1], w, h  # top row first, as the joints are counted
 
-    S, sw, sh = picture(spec["front"])
+    # The first figures' joints files name the sheet as it was once called, with the figure's name before it.
+    S, sw, sh = picture(spec["front"] if os.path.exists(os.path.join(beside, spec["front"])) else "apose-front.png")
     # The head painted close and fitted to the sheet (face.py), if there is one: the sheet's head, several times the
     # size. Inside its rectangle the head is painted from it, and the face's own relief is smoothed under the paint.
     close = json.load(open(os.path.join(beside, "face.json"))) if os.path.exists(os.path.join(beside, "apose-face.png")) else None

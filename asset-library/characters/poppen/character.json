@@ -11,5 +11,6 @@
   "who": "Poppen Quickfoot, a small, sturdy halfling rogue with curly ginger hair and large pointed ears, in a patchwork waistcoat with full sleeves",
   "stow": "The dagger stays sheathed at his belt.",
   "arms": 45,
-  "party": true
+  "party": true,
+  "face": "close"
 }

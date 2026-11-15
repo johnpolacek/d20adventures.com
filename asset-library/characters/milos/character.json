@@ -11,5 +11,6 @@
   "who": "Milos Radan, a lean older human cleric with cropped grey hair and a short grey beard, in an undyed hooded wool robe with a holy symbol on a cord",
   "stow": "The staff is strapped upright along his back.",
   "arms": 45,
-  "party": true
+  "party": true,
+  "face": "close"
 }

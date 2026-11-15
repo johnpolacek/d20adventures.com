@@ -11,5 +11,6 @@
   "who": "Lyra Silvanus, a slight young arcanist woman with short black hair and round spectacles, in a long teal coat",
   "stow": "The book is put away in the satchel at her hip, whose strap stays across her chest.",
   "arms": 40,
-  "party": true
+  "party": true,
+  "face": "close"
 }

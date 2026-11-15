@@ -1,5 +1,5 @@
 {
-  "name": "milos",
+  "name": "ORM_7aa03649-9e57-44b6-8b94-429920056132",
   "source": "source.glb",
   "height": 1.8,
   "sourceTriangles": 58936,
@@ -14,12 +14,25 @@
     },
     "patched": 0,
     "unweighted": 0,
-    "mostBonesOnAPoint": 4
+    "mostBonesOnAPoint": 512
   },
   "slungPoints": 20,
   "hang": {
     "L": 12.0,
     "R": 16.0
+  },
+  "holds": null,
+  "tunnel": null,
+  "faceFromSheet": {
+    "triangles": 2346,
+    "texels": 664557,
+    "sheetMiddle": 406.0,
+    "close": true,
+    "fitted": true,
+    "noseSlipMm": [
+      0.0,
+      0.0
+    ]
   },
   "bones": [
     "root",
@@ -44,9 +57,10 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "megabytes": 2.98,
+      "megabytes": 4.74,
       "triangles": 58936,
       "texture": 2048,
+      "colour": 4096,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -55,6 +69,7 @@
       "megabytes": 1.14,
       "triangles": 20000,
       "texture": 1024,
+      "colour": 1024,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -63,6 +78,7 @@
       "megabytes": 0.42,
       "triangles": 6000,
       "texture": 512,
+      "colour": 512,
       "joints": 18,
       "turnedAtRest": []
     }

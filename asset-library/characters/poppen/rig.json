@@ -1,5 +1,5 @@
 {
-  "name": "poppen",
+  "name": "ORM_fe385290-df00-4abf-add6-615ebb3f6126",
   "source": "source.glb",
   "height": 1.06,
   "sourceTriangles": 57496,
@@ -14,12 +14,25 @@
     },
     "patched": 0,
     "unweighted": 0,
-    "mostBonesOnAPoint": 4
+    "mostBonesOnAPoint": 512
   },
   "slungPoints": 7,
   "hang": {
     "L": 16.0,
     "R": 12.0
+  },
+  "holds": null,
+  "tunnel": null,
+  "faceFromSheet": {
+    "triangles": 4172,
+    "texels": 773385,
+    "sheetMiddle": 443.5,
+    "close": true,
+    "fitted": true,
+    "noseSlipMm": [
+      0.0,
+      0.0
+    ]
   },
   "bones": [
     "root",
@@ -44,17 +57,19 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "megabytes": 3.23,
+      "megabytes": 5.57,
       "triangles": 57496,
       "texture": 2048,
+      "colour": 4096,
       "joints": 18,
       "turnedAtRest": []
     },
     {
       "file": "lod1.glb",
-      "megabytes": 1.26,
+      "megabytes": 1.27,
       "triangles": 19999,
       "texture": 1024,
+      "colour": 1024,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -63,6 +78,7 @@
       "megabytes": 0.47,
       "triangles": 5999,
       "texture": 512,
+      "colour": 512,
       "joints": 18,
       "turnedAtRest": []
     }
