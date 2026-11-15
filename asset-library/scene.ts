@@ -152,8 +152,9 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
   delete set.painted
   if (staging) staging.painted = false
 
-  // The cut-away's switches: the look's, or a room seen from a corner.
-  const first = look ? Object.keys(look.shots)[0] : ""
+  // The cut-away's switches: the look's, or a room seen from a corner. The look's wide view is the one the views on
+  // people are taken from, wherever the scene opens.
+  const first = look ? (look.shots.wide ? "wide" : Object.keys(look.shots)[0]) : ""
   const q: Record<string, string> = !o.iso
     ? {}
     : look
