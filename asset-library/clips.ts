@@ -28,6 +28,9 @@ interface Arms {
   R: number
   hangL: number
   hangR: number
+  // The turn that brings each hand into line with its forearm (relaxHands).
+  wristL: Q
+  wristR: Q
 }
 
 interface Pose {
@@ -44,8 +47,11 @@ interface Written {
 const standing = (arm: Arms, sway: { armL?: number; armR?: number; swingL?: number; swingR?: number; elbowL?: number; elbowR?: number } = {}) => ({
   upperarmL: turn(about(X, sway.swingL ?? 0), about(Z, -(arm.L - arm.hangL) + (sway.armL ?? 0))),
   upperarmR: turn(about(X, sway.swingR ?? 0), about(Z, arm.R - arm.hangR - (sway.armR ?? 0))),
-  forearmL: about(X, -9 + (sway.elbowL ?? 0)),
-  forearmR: about(X, -9 + (sway.elbowR ?? 0)),
+  // No two arms hang alike.
+  forearmL: about(X, -15 + (sway.elbowL ?? 0)),
+  forearmR: about(X, -10 + (sway.elbowR ?? 0)),
+  handL: arm.wristL,
+  handR: arm.wristR,
 })
 
 const wave = (t: number, T: number, phase = 0, times = 1) => Math.sin((2 * Math.PI * times * t) / T + phase)
@@ -115,6 +121,123 @@ const WRITTEN: Written[] = [
   },
 ]
 
+// The axes of a cloud of points, longest first: the eigenvectors of its covariance, by Jacobi's turns.
+function axes(points: THREE.Vector3[], centre: THREE.Vector3) {
+  const a = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ]
+  for (const p of points) {
+    const d = [p.x - centre.x, p.y - centre.y, p.z - centre.z]
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) a[i][j] += d[i] * d[j]
+  }
+  const v = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+  ]
+  for (let sweep = 0; sweep < 12; sweep++)
+    for (const [i, j] of [
+      [0, 1],
+      [0, 2],
+      [1, 2],
+    ]) {
+      if (Math.abs(a[i][j]) < 1e-12) continue
+      const th = 0.5 * Math.atan2(2 * a[i][j], a[j][j] - a[i][i])
+      const [c, sn] = [Math.cos(th), Math.sin(th)]
+      for (let k = 0; k < 3; k++) [a[k][i], a[k][j]] = [c * a[k][i] - sn * a[k][j], sn * a[k][i] + c * a[k][j]]
+      for (let k = 0; k < 3; k++) [a[i][k], a[j][k]] = [c * a[i][k] - sn * a[j][k], sn * a[i][k] + c * a[j][k]]
+      for (let k = 0; k < 3; k++) [v[k][i], v[k][j]] = [c * v[k][i] - sn * v[k][j], sn * v[k][i] + c * v[k][j]]
+    }
+  return [0, 1, 2].sort((i, j) => a[j][j] - a[i][i]).map((i) => new THREE.Vector3(v[0][i], v[1][i], v[2][i]))
+}
+
+const smooth = (a: number, b: number, t: number) => {
+  const u = clamp01((t - a) / (b - a))
+  return u * u * (3 - 2 * u)
+}
+// Where the fingers bend, as shares of the hand's length from the wrist, and how far, in degrees.
+const KNUCKLES: [number, number][] = [
+  [0.46, 14],
+  [0.68, 22],
+  [0.86, 16],
+]
+
+// A generated figure's hands come as they were modelled: flat, fingers straight and spread wide, turned out at the
+// wrist. The skeleton has one bone to a hand, so the fingers are bent in the mesh itself, once: curled a little toward
+// the palm at three lines and drawn together. What a bone can do is left to the clips: the hand brought into line with
+// the forearm.
+export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"> {
+  const had = root.userData.hands as ReturnType<typeof relaxHands> | undefined
+  if (had) return had
+  const out = { wristL: new THREE.Quaternion(), wristR: new THREE.Quaternion() }
+  root.userData.hands = out
+  root.traverse((o) => {
+    if (!(o instanceof THREE.SkinnedMesh)) return
+    const { position: pos, normal: nor, skinIndex: si, skinWeight: sw } = o.geometry.attributes
+    if (!pos || !si || !sw) return
+    const joint = (name: string) => {
+      const i = o.skeleton.bones.findIndex((b) => b.name === name)
+      return i < 0 ? null : { i, at: new THREE.Vector3().setFromMatrixPosition(o.skeleton.boneInverses[i].clone().invert()) }
+    }
+    for (const side of ["L", "R"] as const) {
+      const [hand, fore] = [joint(`hand${side}`), joint(`forearm${side}`)]
+      if (!hand || !fore) continue
+      const W = hand.at
+      const ids: number[] = []
+      const pts: THREE.Vector3[] = []
+      for (let v = 0; v < pos.count; v++) {
+        let w = 0
+        for (let k = 0; k < 4; k++) if (si.getComponent(v, k) === hand.i) w += sw.getComponent(v, k)
+        if (w <= 0.5) continue
+        ids.push(v)
+        pts.push(new THREE.Vector3().fromBufferAttribute(pos, v).applyMatrix4(o.bindMatrix))
+      }
+      if (pts.length < 40) continue
+      const centre = pts.reduce((n, p) => n.add(p), new THREE.Vector3()).divideScalar(pts.length)
+      // Along the hand, out of its palm or its back, and across it.
+      const h = centre.clone().sub(W).normalize()
+      const n = axes(pts, centre)[2]
+      n.addScaledVector(h, -n.dot(h)).normalize()
+      // The palm is the face turned in and down: the sheet a figure is modelled from holds its palms toward the thighs.
+      if (n.dot(new THREE.Vector3(side === "L" ? -1 : 1, -1, 0)) < 0) n.negate()
+      const across = new THREE.Vector3().crossVectors(h, n)
+      const L = Math.max(...pts.map((p) => p.clone().sub(W).dot(h)))
+      const along = pts.map((p) => p.clone().sub(W).dot(h) / L)
+      const off = centre.clone().sub(W).dot(n)
+      for (let m = 0; m < ids.length; m++) {
+        const [v, t, p] = [ids[m], along[m], pts[m]]
+        // Drawn together, then bent at each line from the fingertips back.
+        p.addScaledVector(across, -0.4 * smooth(0.42, 0.9, t) * p.clone().sub(W).dot(across))
+        const normal = nor ? new THREE.Vector3().fromBufferAttribute(nor, v).transformDirection(o.bindMatrix) : null
+        for (const [line, most] of [...KNUCKLES].reverse()) {
+          const angle = THREE.MathUtils.degToRad(most) * smooth(line - 0.07, line + 0.07, t)
+          if (!angle) continue
+          const hinge = W.clone()
+            .addScaledVector(h, line * L)
+            .addScaledVector(n, off)
+          p.sub(hinge).applyAxisAngle(across, angle).add(hinge)
+          normal?.applyAxisAngle(across, angle)
+        }
+        p.applyMatrix4(o.bindMatrixInverse)
+        pos.setXYZ(v, p.x, p.y, p.z)
+        if (nor && normal) {
+          normal.transformDirection(o.bindMatrixInverse)
+          nor.setXYZ(v, normal.x, normal.y, normal.z)
+        }
+      }
+      pos.needsUpdate = true
+      if (nor) nor.needsUpdate = true
+      // The hand in line with the forearm, most of the way.
+      const f = W.clone().sub(fore.at).normalize()
+      const bend = Math.min(THREE.MathUtils.degToRad(40), 0.8 * h.angleTo(f))
+      out[`wrist${side}`].setFromAxisAngle(new THREE.Vector3().crossVectors(h, f).normalize(), bend)
+    }
+  })
+  return out
+}
+
 // Whether a loaded model carries the shared skeleton.
 export const isRigged = (root: THREE.Object3D) => !!root.getObjectByName("hips") && !!root.getObjectByName("upperarmL")
 
@@ -129,7 +252,7 @@ export function figureClips(root: THREE.Object3D, height: number): THREE.Animati
   root.traverse((o) => {
     if (typeof o.userData.hangL === "number") fitted = o.userData
   })
-  const arm: Arms = { L: out("L"), R: out("R"), hangL: fitted.hangL ?? HANG, hangR: fitted.hangR ?? HANG }
+  const arm: Arms = { L: out("L"), R: out("R"), hangL: fitted.hangL ?? HANG, hangR: fitted.hangR ?? HANG, ...relaxHands(root) }
   const hips = bone("hips")?.position.clone() ?? new THREE.Vector3()
   const size = height / 1.8
   return WRITTEN.map((w) => {

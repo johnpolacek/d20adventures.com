@@ -7,6 +7,7 @@
 // the library stand as figures. A set with a room and no look is cut open about that room.
 
 import type { Stage } from "@d20/stage"
+import { onFootprint } from "@d20/stage/spec/walk"
 import { addFigure, castRings, crowdShade } from "./figures"
 import { iso, isoSet } from "./iso"
 import { LOOKS } from "./looks"
@@ -211,13 +212,18 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
   const stage = await createStage({ container, set, staging: staging?.set === o.set ? staging : null, tier: "auto", flags, onProgress: o.onProgress })
   stops.push(() => stage.dispose())
 
-  // Face to face with one of the cast: in front of them, from the first side no other cast member stands in the way.
+  // What is built, as the engine keeps it: where no one can stand, and how high each thing stands.
+  const solid = (stage as unknown as { footprints: Parameters<typeof onFootprint>[0] }).footprints
+  // Face to face with one of the cast: in front of them, from the first side where nothing built and no other cast
+  // member stands in the way.
   const front = (id: string, label: string, instant = false) => {
     const c = stage.cast.find((m) => m.id === id)
     if (!c) return
     const [h, dist, up] = [c.height, c.height * 2.15, (6 * Math.PI) / 180]
     const clear = (turn: number) => {
       const [dx, dz] = [Math.sin(c.ry + turn), Math.cos(c.ry + turn)]
+      // The line from their waist out to the camera.
+      for (let d = 0.35; d <= dist * Math.cos(up); d += 0.1) if (onFootprint(solid, c.x + dx * d, c.z + dz * d, (c.y ?? 0) + h * 0.5 + Math.tan(up) * d - 0.25)) return false
       return stage.cast.every((m) => {
         if (m === c) return true
         const along = (m.x - c.x) * dx + (m.z - c.z) * dz
@@ -275,17 +281,75 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       const position: Vec = [target[0] + Math.cos(e) * Math.sin(a) * dist, target[1] + Math.sin(e) * dist, target[2] + Math.cos(e) * Math.cos(a) * dist]
       stage.shot({ position, target, fov: lensOf, label } as Parameters<Stage["shot"]>[0], { instant })
     }
-    // On people: close enough to fill the frame with them, from the side the cut-away is seen from.
+    // On people in a cut-away: close enough to fill the frame with them, from the side the cut-away is seen from.
     const LENS = 10
-    const on = (ids: string[], label: string, instant: boolean) => {
-      const who = stage.cast.filter((c) => ids.includes(c.id))
-      if (!who.length) return
-      const [x, z] = [who.reduce((n, c) => n + c.x, 0) / who.length, who.reduce((n, c) => n + c.z, 0) / who.length]
-      const reach = Math.max(...who.map((c) => Math.hypot(c.x - x, c.z - z))) + 1.7
+    const down = (x: number, z: number, reach: number, label: string, instant: boolean) => {
       // A group too wide for that lens from where the cut-away stands is seen through a wider one.
       const far = (reach * 1.15) / Math.tan((LENS * Math.PI) / 360)
       const wide = far > distance ? (2 * Math.atan((reach * 1.15) / distance) * 180) / Math.PI : LENS
       from([x, 0.95, z], azimuth, elevation, Math.min(distance, far), wide, label, instant)
+    }
+    // On people in a whole place: from near eye level, on the side their faces are, and from wherever about there the
+    // fewest others stand in the way. People who face each other are seen from the side.
+    const EYE = 30
+    const level = (who: typeof stage.cast, x: number, z: number, reach: number, label: string, instant: boolean) => {
+      // A group too wide to stand back from is seen through a wider lens, and only then from farther.
+      const half = (lensOf: number) => Math.tan((lensOf * Math.PI) / 360)
+      const lensOf = Math.min(58, Math.max(EYE, (2 * Math.atan((reach * 1.2) / 16) * 180) / Math.PI))
+      const dist = Math.max(4.5, (reach * 1.2) / half(lensOf))
+      const [fx, fz] = [who.reduce((n, c) => n + Math.sin(c.ry), 0) / who.length, who.reduce((n, c) => n + Math.cos(c.ry), 0) / who.length]
+      let facing = Math.atan2(fx, fz)
+      if (Math.hypot(fx, fz) < 0.35) {
+        const [sxx, sxz, szz] = who.reduce((n, c) => [n[0] + (c.x - x) ** 2, n[1] + (c.x - x) * (c.z - z), n[2] + (c.z - z) ** 2], [0, 0, 0])
+        const across = 0.5 * Math.atan2(2 * sxz, szz - sxx) + Math.PI / 2
+        const base = (azimuth * Math.PI) / 180
+        facing = Math.cos(across - base) >= 0 ? across : across + Math.PI
+      }
+      const y = Math.max(...who.map((c) => c.height)) * 0.55
+      const others = [
+        ...stage.cast.filter((c) => !who.includes(c)).map((c) => ({ x: c.x, z: c.z, top: c.height, cost: 3 })),
+        ...stage.crowd.people.map((p) => ({ x: p.x, z: p.z, top: 1.7 * p.s, cost: 0.3 })),
+      ]
+      const inTheWay = (a: number, e: number) => {
+        const [dx, dz, rise] = [Math.sin(a), Math.cos(a), Math.tan(e)]
+        const [cx, cy, cz] = [x + Math.cos(e) * dx * dist, y + Math.sin(e) * dist, z + Math.cos(e) * dz * dist]
+        // The camera inside something built, or something built between it and anyone's waist.
+        let cost = onFootprint(solid, cx, cz, cy - 0.3) ? 12 : 0
+        for (const c of who) {
+          const [lx, lz, waist] = [c.x - cx, c.z - cz, (c.y ?? 0) + c.height * 0.5]
+          const len = Math.hypot(lx, lz)
+          for (let d = 0.3; d < len - 0.35; d += 0.1)
+            if (onFootprint(solid, cx + (lx * d) / len, cz + (lz * d) / len, cy + ((waist - cy) * d) / len)) {
+              cost += 2.5
+              break
+            }
+        }
+        // One of them behind another.
+        for (let i = 0; i < who.length; i++) for (let j = i + 1; j < who.length; j++) if (Math.abs((who[i].x - who[j].x) * dz - (who[i].z - who[j].z) * dx) < 0.55) cost += 3
+        // Someone is seen over when the line to the group's knees clears their head.
+        for (const m of others) {
+          const along = (m.x - x) * dx + (m.z - z) * dz
+          if (along > 0.4 && along < dist && Math.abs((m.x - x) * dz - (m.z - z) * dx) < reach && m.top > 0.5 + rise * along) cost += m.cost
+        }
+        return cost
+      }
+      let best = { a: facing, e: 7, score: Infinity }
+      for (const e of [7, 11, 16, 22, 30])
+        for (const turn of [25, -25, 0, 45, -45, 65, -65, 90, -90]) {
+          const a = facing + (turn * Math.PI) / 180
+          // A view from the side shows no one's face, so it has to be much the clearest to be taken.
+          const score = inTheWay(a, (e * Math.PI) / 180) + (Math.abs(turn) >= 80 ? 4 : Math.abs(Math.abs(turn) - 25) / 30) + (e - 7) / 5
+          if (score < best.score) best = { a, e, score }
+        }
+      from([x, y, z], (best.a * 180) / Math.PI, best.e, dist, lensOf, label, instant)
+    }
+    const on = (ids: string[], label: string, instant: boolean) => {
+      const who = stage.cast.filter((c) => ids.includes(c.id))
+      if (!who.length) return
+      const [x, z] = [who.reduce((n, c) => n + c.x, 0) / who.length, who.reduce((n, c) => n + c.z, 0) / who.length]
+      const far = Math.max(...who.map((c) => Math.hypot(c.x - x, c.z - z)))
+      if (q.isowhole) level(who, x, z, far + 1.1, label, instant)
+      else down(x, z, far + 1.7, label, instant)
     }
     const looks = look ? look.shots : { wide: {} as Record<string, string> }
     const groups = Object.entries(staging?.shots ?? {}).filter(([k, s]) => (s.subjects || s.subject) && !looks[k])
