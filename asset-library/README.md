@@ -345,7 +345,7 @@ Joining the three into one wood was weighed and left alone. The trail's own mark
 - Milos's staff was on his back on the sheet. His model was made from the front, so he has none.
 - The crowd is 16 pictures, mirrored and tinted. Near the play they repeat.
 - Hands are one bone each. `relaxHands` curls and closes the fingers a little, and the arms still stand out from the body. A hand cannot grip, point or rest on a belt.
-- Wollandora is her second model. The first is kept in the private bucket's history and at `~/Desktop/d20-asset-library/wollandora-first/`. Her skirt stretches between her legs as they part, and her 1.86 m is measured to the top of her wreath.
+- Wollandora is her second model. The first is kept at `~/Desktop/d20-asset-library/wollandora-first/`, on the owner's Mac alone: the sync wrote the second over it in both buckets. Her skirt stretches between her legs as they part, and her 1.86 m is measured to the top of her wreath.
 - Her rig's report says 512 bones on a point, where 4 is the most there can be. The copies carry 18 joints and move rightly, so it is the count that is wrong, and nobody has found why.
 - By day the modelled trees' trunks look like smooth clay. The bark's relief does not show.
 - The modelled trees stand still. The set's own swayed.
