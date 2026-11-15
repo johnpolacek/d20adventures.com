@@ -1,0 +1,707 @@
+{
+ "units": "ez-tree units; pivot at trunk foot; +Y up",
+ "textures": "textures/<species>-bark-{color,normal,roughness}.jpg and textures/<species>-leaves.png",
+ "barkUV": "u wraps around circumference, v runs along branch length; texel aspect kept square (dead bark texture is 1024x2048, UVs account for it)",
+ "variants": [
+  {
+   "name": "oak1",
+   "kind": "oak",
+   "species": "oak",
+   "leaves": "oak",
+   "note": "big old forest oak",
+   "files": [
+    "oak1-lod0.glb",
+    "oak1-lod1.glb",
+    "oak1-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 16590,
+     "bark": 8670,
+     "leaves": 7920
+    },
+    {
+     "total": 6594,
+     "bark": 2634,
+     "leaves": 3960
+    },
+    {
+     "total": 1518,
+     "bark": 528,
+     "leaves": 990
+    }
+   ],
+   "height": 132.67,
+   "crownWidth": 79.96,
+   "widthToHeight": 0.6,
+   "lowestBranchShare": 0.4,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.639
+  },
+  {
+   "name": "oak2",
+   "kind": "oak",
+   "species": "oak",
+   "leaves": "oak",
+   "note": "big old oak, few heavy crooked limbs",
+   "files": [
+    "oak2-lod0.glb",
+    "oak2-lod1.glb",
+    "oak2-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 13134,
+     "bark": 6930,
+     "leaves": 6204
+    },
+    {
+     "total": 5192,
+     "bark": 2088,
+     "leaves": 3104
+    },
+    {
+     "total": 1199,
+     "bark": 423,
+     "leaves": 776
+    }
+   ],
+   "height": 125.84,
+   "crownWidth": 94.97,
+   "widthToHeight": 0.75,
+   "lowestBranchShare": 0.33,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.362
+  },
+  {
+   "name": "oak3",
+   "kind": "oak",
+   "species": "oak",
+   "leaves": "oak",
+   "note": "forked trunk, two leaders",
+   "files": [
+    "oak3-lod0.glb",
+    "oak3-lod1.glb",
+    "oak3-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 7920,
+     "bark": 3960,
+     "leaves": 3960
+    },
+    {
+     "total": 3148,
+     "bark": 1168,
+     "leaves": 1980
+    },
+    {
+     "total": 696,
+     "bark": 200,
+     "leaves": 496
+    }
+   ],
+   "height": 139.39,
+   "crownWidth": 61.21,
+   "widthToHeight": 0.44,
+   "lowestBranchShare": 0.39,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.854
+  },
+  {
+   "name": "oak4",
+   "kind": "oak",
+   "species": "oak",
+   "leaves": "oak",
+   "note": "leaning, crown pulled to one side",
+   "files": [
+    "oak4-lod0.glb",
+    "oak4-lod1.glb",
+    "oak4-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 11192,
+     "bark": 6132,
+     "leaves": 5060
+    },
+    {
+     "total": 4344,
+     "bark": 1812,
+     "leaves": 2532
+    },
+    {
+     "total": 1012,
+     "bark": 378,
+     "leaves": 634
+    }
+   ],
+   "height": 119.9,
+   "crownWidth": 73.77,
+   "widthToHeight": 0.62,
+   "lowestBranchShare": 0.46,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.15
+  },
+  {
+   "name": "oak5",
+   "kind": "oak",
+   "species": "oak",
+   "leaves": "oak",
+   "note": "open-grown wide oak for clearings",
+   "files": [
+    "oak5-lod0.glb",
+    "oak5-lod1.glb",
+    "oak5-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 15208,
+     "bark": 5704,
+     "leaves": 9504
+    },
+    {
+     "total": 4602,
+     "bark": 1434,
+     "leaves": 3168
+    },
+    {
+     "total": 2040,
+     "bark": 852,
+     "leaves": 1188
+    }
+   ],
+   "height": 102.88,
+   "crownWidth": 102.28,
+   "widthToHeight": 0.99,
+   "lowestBranchShare": 0.16,
+   "alphaTest": 0.5,
+   "barkTileWorld": 3.579
+  },
+  {
+   "name": "pine1",
+   "kind": "pine",
+   "species": "pine",
+   "leaves": "pine",
+   "note": "tall spruce, bare lower trunk",
+   "files": [
+    "pine1-lod0.glb",
+    "pine1-lod1.glb",
+    "pine1-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 10048,
+     "bark": 5440,
+     "leaves": 4608
+    },
+    {
+     "total": 3528,
+     "bark": 1224,
+     "leaves": 2304
+    },
+    {
+     "total": 1032,
+     "bark": 456,
+     "leaves": 576
+    }
+   ],
+   "height": 117.64,
+   "crownWidth": 41.17,
+   "widthToHeight": 0.35,
+   "lowestBranchShare": 0.41,
+   "alphaTest": 0.3,
+   "barkTileWorld": 4.135
+  },
+  {
+   "name": "pine2",
+   "kind": "pine",
+   "species": "pine",
+   "leaves": "pine",
+   "note": "tall Scots-pine form: long bare trunk, small upswept crown",
+   "files": [
+    "pine2-lod0.glb",
+    "pine2-lod1.glb",
+    "pine2-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 8124,
+     "bark": 3924,
+     "leaves": 4200
+    },
+    {
+     "total": 3468,
+     "bark": 1368,
+     "leaves": 2100
+    },
+    {
+     "total": 1174,
+     "bark": 648,
+     "leaves": 526
+    }
+   ],
+   "height": 192.71,
+   "crownWidth": 85.78,
+   "widthToHeight": 0.45,
+   "lowestBranchShare": 0.5,
+   "alphaTest": 0.3,
+   "barkTileWorld": 6.843
+  },
+  {
+   "name": "pine3",
+   "kind": "pine",
+   "species": "pine",
+   "leaves": "pine",
+   "note": "ragged old spruce: gaps, broken limbs, crooked top",
+   "files": [
+    "pine3-lod0.glb",
+    "pine3-lod1.glb",
+    "pine3-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 5332,
+     "bark": 2752,
+     "leaves": 2580
+    },
+    {
+     "total": 2004,
+     "bark": 712,
+     "leaves": 1292
+    },
+    {
+     "total": 642,
+     "bark": 318,
+     "leaves": 324
+    }
+   ],
+   "height": 107.79,
+   "crownWidth": 33.94,
+   "widthToHeight": 0.31,
+   "lowestBranchShare": 0.36,
+   "alphaTest": 0.3,
+   "barkTileWorld": 3.791
+  },
+  {
+   "name": "pine4",
+   "kind": "pine",
+   "species": "pine",
+   "leaves": "pine",
+   "note": "young spruce, branches to the ground",
+   "files": [
+    "pine4-lod0.glb",
+    "pine4-lod1.glb",
+    "pine4-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 5528,
+     "bark": 2952,
+     "leaves": 2576
+    },
+    {
+     "total": 2072,
+     "bark": 784,
+     "leaves": 1288
+    },
+    {
+     "total": 614,
+     "bark": 292,
+     "leaves": 322
+    }
+   ],
+   "height": 47.74,
+   "crownWidth": 28.95,
+   "widthToHeight": 0.61,
+   "lowestBranchShare": 0.07,
+   "alphaTest": 0.3,
+   "barkTileWorld": 1.656
+  },
+  {
+   "name": "ash1",
+   "kind": "ash",
+   "species": "ash",
+   "leaves": "ash",
+   "note": "tall forest ash",
+   "files": [
+    "ash1-lod0.glb",
+    "ash1-lod1.glb",
+    "ash1-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 16270,
+     "bark": 8350,
+     "leaves": 7920
+    },
+    {
+     "total": 6498,
+     "bark": 2538,
+     "leaves": 3960
+    },
+    {
+     "total": 1494,
+     "bark": 504,
+     "leaves": 990
+    }
+   ],
+   "height": 130.68,
+   "crownWidth": 68.82,
+   "widthToHeight": 0.53,
+   "lowestBranchShare": 0.43,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.534
+  },
+  {
+   "name": "ash2",
+   "kind": "ash",
+   "species": "ash",
+   "leaves": "ash",
+   "note": "ash with one-sided crown (grew toward a gap)",
+   "files": [
+    "ash2-lod0.glb",
+    "ash2-lod1.glb",
+    "ash2-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 10422,
+     "bark": 5538,
+     "leaves": 4884
+    },
+    {
+     "total": 4118,
+     "bark": 1674,
+     "leaves": 2444
+    },
+    {
+     "total": 960,
+     "bark": 348,
+     "leaves": 612
+    }
+   ],
+   "height": 129.17,
+   "crownWidth": 72.64,
+   "widthToHeight": 0.56,
+   "lowestBranchShare": 0.37,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.475
+  },
+  {
+   "name": "ash3",
+   "kind": "ash",
+   "species": "ash",
+   "leaves": "ash",
+   "note": "slim ash, slight lean, thin airy crown",
+   "files": [
+    "ash3-lod0.glb",
+    "ash3-lod1.glb",
+    "ash3-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 12628,
+     "bark": 7508,
+     "leaves": 5120
+    },
+    {
+     "total": 4840,
+     "bark": 2280,
+     "leaves": 2560
+    },
+    {
+     "total": 1096,
+     "bark": 456,
+     "leaves": 640
+    }
+   ],
+   "height": 131.97,
+   "crownWidth": 64.88,
+   "widthToHeight": 0.49,
+   "lowestBranchShare": 0.47,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.6
+  },
+  {
+   "name": "aspen1",
+   "kind": "aspen",
+   "species": "aspen",
+   "leaves": "aspen",
+   "note": "tall slender birch-barked aspen",
+   "files": [
+    "aspen1-lod0.glb",
+    "aspen1-lod1.glb",
+    "aspen1-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 13052,
+     "bark": 7200,
+     "leaves": 5852
+    },
+    {
+     "total": 4900,
+     "bark": 1972,
+     "leaves": 2928
+    },
+    {
+     "total": 1812,
+     "bark": 1080,
+     "leaves": 732
+    }
+   ],
+   "height": 133.39,
+   "crownWidth": 45.69,
+   "widthToHeight": 0.34,
+   "lowestBranchShare": 0.45,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.676
+  },
+  {
+   "name": "aspen2",
+   "kind": "aspen",
+   "species": "aspen",
+   "leaves": "aspen",
+   "note": "crooked leaning birch, drooping limbs",
+   "files": [
+    "aspen2-lod0.glb",
+    "aspen2-lod1.glb",
+    "aspen2-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 12436,
+     "bark": 7200,
+     "leaves": 5236
+    },
+    {
+     "total": 4592,
+     "bark": 1972,
+     "leaves": 2620
+    },
+    {
+     "total": 1736,
+     "bark": 1080,
+     "leaves": 656
+    }
+   ],
+   "height": 120.18,
+   "crownWidth": 70.5,
+   "widthToHeight": 0.59,
+   "lowestBranchShare": 0.38,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.241
+  },
+  {
+   "name": "dead1",
+   "kind": "dead",
+   "species": "dead",
+   "leaves": null,
+   "note": "bare gnarled dead oak",
+   "files": [
+    "dead1-lod0.glb",
+    "dead1-lod1.glb",
+    "dead1-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 2815,
+     "bark": 2815,
+     "leaves": 0
+    },
+    {
+     "total": 794,
+     "bark": 794,
+     "leaves": 0
+    },
+    {
+     "total": 357,
+     "bark": 357,
+     "leaves": 0
+    }
+   ],
+   "height": 107.89,
+   "crownWidth": 53.03,
+   "widthToHeight": 0.49,
+   "lowestBranchShare": 0.29,
+   "alphaTest": null,
+   "barkTileWorld": 3.85
+  },
+  {
+   "name": "dead2",
+   "kind": "dead",
+   "species": "dead",
+   "leaves": null,
+   "note": "snag with broken top and a few stubs",
+   "files": [
+    "dead2-lod0.glb",
+    "dead2-lod1.glb",
+    "dead2-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 565,
+     "bark": 565,
+     "leaves": 0
+    },
+    {
+     "total": 180,
+     "bark": 180,
+     "leaves": 0
+    },
+    {
+     "total": 92,
+     "bark": 92,
+     "leaves": 0
+    }
+   ],
+   "height": 76.21,
+   "crownWidth": 17.4,
+   "widthToHeight": 0.23,
+   "lowestBranchShare": 0.43,
+   "alphaTest": null,
+   "barkTileWorld": 2.694
+  },
+  {
+   "name": "dead3",
+   "kind": "dead",
+   "species": "oak",
+   "leaves": "oak",
+   "note": "half-dead oak: bare dead limbs, thin crown",
+   "files": [
+    "dead3-lod0.glb",
+    "dead3-lod1.glb",
+    "dead3-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 9387,
+     "bark": 7295,
+     "leaves": 2092
+    },
+    {
+     "total": 3261,
+     "bark": 2213,
+     "leaves": 1048
+    },
+    {
+     "total": 727,
+     "bark": 465,
+     "leaves": 262
+    }
+   ],
+   "height": 127.01,
+   "crownWidth": 69.85,
+   "widthToHeight": 0.55,
+   "lowestBranchShare": 0.38,
+   "alphaTest": 0.5,
+   "barkTileWorld": 4.415
+  },
+  {
+   "name": "bush1",
+   "kind": "bush",
+   "species": "ash",
+   "leaves": "ash",
+   "note": "broadleaf shrub",
+   "files": [
+    "bush1-lod0.glb",
+    "bush1-lod1.glb",
+    "bush1-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 13872,
+     "bark": 8880,
+     "leaves": 4992
+    },
+    {
+     "total": 5484,
+     "bark": 2988,
+     "leaves": 2496
+    },
+    {
+     "total": 1020,
+     "bark": 396,
+     "leaves": 624
+    }
+   ],
+   "height": 26.83,
+   "crownWidth": 34.05,
+   "widthToHeight": 1.27,
+   "lowestBranchShare": 0,
+   "alphaTest": 0.5,
+   "barkTileWorld": 0.905
+  },
+  {
+   "name": "bush2",
+   "kind": "bush",
+   "species": "aspen",
+   "leaves": "aspen",
+   "note": "loose shrub",
+   "files": [
+    "bush2-lod0.glb",
+    "bush2-lod1.glb",
+    "bush2-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 5288,
+     "bark": 3352,
+     "leaves": 1936
+    },
+    {
+     "total": 2018,
+     "bark": 1050,
+     "leaves": 968
+    },
+    {
+     "total": 776,
+     "bark": 534,
+     "leaves": 242
+    }
+   ],
+   "height": 30.14,
+   "crownWidth": 29.84,
+   "widthToHeight": 0.99,
+   "lowestBranchShare": 0,
+   "alphaTest": 0.5,
+   "barkTileWorld": 1.026
+  },
+  {
+   "name": "sapling1",
+   "kind": "sapling",
+   "species": "oak",
+   "leaves": "oak",
+   "note": "oak sapling, 3 to 5 m class",
+   "files": [
+    "sapling1-lod0.glb",
+    "sapling1-lod1.glb",
+    "sapling1-lod2.glb"
+   ],
+   "triangles": [
+    {
+     "total": 6806,
+     "bark": 3206,
+     "leaves": 3600
+    },
+    {
+     "total": 2958,
+     "bark": 1158,
+     "leaves": 1800
+    },
+    {
+     "total": 738,
+     "bark": 288,
+     "leaves": 450
+    }
+   ],
+   "height": 50.32,
+   "crownWidth": 33.68,
+   "widthToHeight": 0.67,
+   "lowestBranchShare": 0.33,
+   "alphaTest": 0.5,
+   "barkTileWorld": 1.76
+  }
+ ]
+}

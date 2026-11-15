@@ -3,8 +3,9 @@
 // A set's trees are built from code: tapered sticks for limbs and balls of leaf cards for crowns. They are quick and
 // they read from the game's fixed cameras, under its paintings. Under a camera that goes anywhere they read as
 // lollipops (the owner, 2026-11-15). A look can ask for modelled trees instead: grown branch by branch, with crowns of
-// cards that are each a photograph of a leafy twig, as a game's trees are made. public/stage/trees holds them, and its
-// README says where they came from.
+// cards that are each a photograph of a leafy twig, as a game's trees are made. public/stage/trees holds them: twenty
+// shapes of six kinds, each in three weights, with one set of bark and leaf pictures to a species. trees.json there
+// lists them, and its README says where they came from.
 //
 // The set is not changed. Every tree in it is still built, where and as tall as the set says, so the engine keeps its
 // footprints: what blocks a walk, a camera and a sight line stays as it was. Its trees are only given materials of
@@ -15,23 +16,24 @@ import type { Stage } from "@d20/stage"
 import * as THREE from "three"
 
 export interface TreeSwap {
-  // Where the models are served from, as <files>/<kind>-lod<0|1|2>.glb.
+  // Where the models are served from: trees.json, the shapes it lists and their pictures.
   files: string
-  // The kinds of model, and the share of the wood each takes.
+  // The kinds of tree, and the share of the wood each takes. A kind has several shapes, and each tree is one of them.
   kinds: Record<string, number>
   // Where the scene is played, x and z, and how far out the heavy and the middle weights reach, in metres.
   near: [number, number]
   rings: [number, number]
-  // A tree set by hand, by its id in the set, and the kind that stands for it.
+  // A tree set by hand, by its id in the set, and the shape or the kind that stands for it.
   hero?: Record<string, string>
-  // A colour a kind's leaves are multiplied by: the birch's twigs were photographed in autumn. `*` is every kind's:
-  // leaves photographed by day are too bright for a night. `bark` is every trunk's: under a full sun the oak's bark
-  // goes the orange of clay.
+  // Shapes left out of this wood: one grown in the open has no place in a close one.
+  without?: string[]
+  // A species whose leaves are another's: the aspen's own were photographed in autumn, gold.
+  leaves?: Record<string, string>
+  // A colour a species' leaves are multiplied by. `*` is every species': leaves photographed by day are too bright
+  // for a night. `bark` is every trunk's.
   tint?: Record<string, string>
-  // How much taller a model stands than the tree it replaces: an old wood's crowns begin well overhead. And how
-  // broad it stands for its height: a model grown in the open is as wide as it is tall, and a wood of those is a roof.
+  // How much taller a model stands than the tree it replaces: an old wood's crowns begin well overhead.
   taller?: number
-  slim?: number
   // Beyond this many metres from where the scene is played, the share of trees that are stood at all. In haze the
   // far wood only has to close the horizon.
   thin?: [number, number]
@@ -56,6 +58,17 @@ interface Trunk {
   z: number
   r: number
   height?: number
+}
+// A shape, as trees.json lists it: its kind, whose bark and leaves it wears, its three files from heavy to light, and
+// its height in its own units.
+interface Shape {
+  name: string
+  kind: string
+  species: string
+  leaves?: string
+  files: string[]
+  height: number
+  alphaTest?: number
 }
 
 // The materials a built tree is made of (packages/stage/src/builders/forest.ts).
@@ -86,105 +99,150 @@ const chance = (x: number, z: number, salt: number) => {
 // Once the stage is built: the built trees go out of sight and a model stands on each one's footprint.
 export async function standTrees(stage: Stage, footprints: unknown, set: SetLike, swap: TreeSwap) {
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js")
+  const listed = ((await (await fetch(`${swap.files}/trees.json`)).json()) as { variants: Shape[] }).variants.filter((v) => !swap.without?.includes(v.name))
   stage.world.traverse((m) => {
     if (m.name.startsWith(`static:${OWN}`)) m.visible = false
   })
-  // A trunk is a round footprint as tall as a tree: a rock or a bush is round and low.
   const away = (t: Trunk) => Math.hypot(t.x - swap.near[0], t.z - swap.near[1])
+  // A trunk is a round footprint as tall as a tree: a rock or a bush is round and low.
   const trunks = (footprints as Trunk[])
     .filter((f) => f.kind === "circle" && f.r < 2.5 && (f.height ?? 0) >= 5)
     .filter((t) => !swap.thin || away(t) < swap.thin[0] || chance(t.x, t.z, 6) < swap.thin[1])
-  const heroes: { at: number[]; kind: string }[] = []
+  const heroes: { at: number[]; shape: string }[] = []
   trees(set.objects, (t) => {
-    if (t.id && t.at && swap.hero?.[t.id]) heroes.push({ at: t.at, kind: swap.hero[t.id] })
+    if (t.id && t.at && swap.hero?.[t.id]) heroes.push({ at: t.at, shape: swap.hero[t.id] })
   })
-  const shares = Object.entries(swap.kinds)
+  const shares = Object.entries(swap.kinds).filter(([kind]) => listed.some((v) => v.kind === kind))
   const whole = shares.reduce((n, [, share]) => n + share, 0)
-  const pick = (x: number, z: number) => {
+  const ofKind = (kind: string) => listed.filter((v) => v.kind === kind)
+  // A kind's shapes are not all one size: a young spruce stands under an old one. Each is as tall, beside its kind's
+  // middle height, as it was grown.
+  const middle = (kind: string) => {
+    const tall = ofKind(kind)
+      .map((v) => v.height)
+      .sort((a, b) => a - b)
+    return tall[Math.floor(tall.length / 2)] ?? 1
+  }
+  const pick = (x: number, z: number): Shape => {
     const hero = heroes.find((h) => Math.hypot(h.at[0] - x, h.at[1] - z) < 0.2)
-    if (hero) return hero.kind
+    const named = hero && (listed.find((v) => v.name === hero.shape) ?? ofKind(hero.shape)[0])
+    if (named) return named
     let n = chance(x, z, 1) * whole
-    for (const [kind, share] of shares) if ((n -= share) <= 0) return kind
-    return shares[0][0]
+    let kind = shares[0][0]
+    for (const [k, share] of shares) {
+      kind = k
+      if ((n -= share) <= 0) break
+    }
+    const shapes = ofKind(kind)
+    return shapes[Math.floor(chance(x, z, 7) * shapes.length) % shapes.length]
   }
-  // Each tree's kind and weight.
-  const stands = new Map<string, Trunk[]>()
+  // Each tree's shape and weight.
+  const stands = new Map<string, { shape: Shape; weight: number; where: Trunk[] }>()
   for (const t of trunks) {
-    const far = away(t)
-    const key = `${pick(t.x, t.z)}-lod${far < swap.rings[0] ? 0 : far < swap.rings[1] ? 1 : 2}`
-    stands.set(key, [...(stands.get(key) ?? []), t])
+    const shape = pick(t.x, t.z)
+    const weight = away(t) < swap.rings[0] ? 0 : away(t) < swap.rings[1] ? 1 : 2
+    const key = `${shape.name}-${weight}`
+    const stand = stands.get(key) ?? { shape, weight, where: [] }
+    stand.where.push(t)
+    stands.set(key, stand)
   }
+
+  // One bark and one leaf material to a species, whatever the shape or the weight.
+  const pictures = new THREE.TextureLoader()
+  const picture = (file: string, colour: boolean) => {
+    const map = pictures.load(`${swap.files}/textures/${file}`)
+    map.flipY = false
+    map.wrapS = map.wrapT = THREE.RepeatWrapping
+    map.anisotropy = 4
+    if (colour) map.colorSpace = THREE.SRGBColorSpace
+    return map
+  }
+  const materials = new Map<string, THREE.MeshStandardMaterial>()
+  const bark = (species: string) => {
+    const had = materials.get(`bark:${species}`)
+    if (had) return had
+    const made = new THREE.MeshStandardMaterial({
+      map: picture(`${species}-bark-color.jpg`, true),
+      normalMap: picture(`${species}-bark-normal.jpg`, false),
+      roughnessMap: picture(`${species}-bark-roughness.jpg`, false),
+      roughness: 1,
+      metalness: 0,
+    })
+    made.normalScale.setScalar(1.6)
+    if (swap.tint?.bark) made.color.multiply(new THREE.Color(swap.tint.bark))
+    materials.set(`bark:${species}`, made)
+    return made
+  }
+  const leaves = (shape: Shape) => {
+    const species = swap.leaves?.[shape.leaves ?? shape.species] ?? shape.leaves ?? shape.species
+    const key = `leaves:${species}:${shape.species}`
+    const had = materials.get(key)
+    if (had) return had
+    // Cut out, never blended: blended cards sort wrongly against each other and against the haze.
+    const made = new THREE.MeshStandardMaterial({ map: picture(`${species}-leaves.png`, true), alphaTest: shape.alphaTest ?? 0.5, side: THREE.DoubleSide, roughness: 0.85, metalness: 0 })
+    for (const tint of [swap.tint?.["*"], swap.tint?.[shape.species]]) if (tint) made.color.multiply(new THREE.Color(tint))
+    materials.set(key, made)
+    return made
+  }
+
   const group = new THREE.Group()
   group.name = "lab:trees"
-  const made: { geometry: THREE.BufferGeometry; material: THREE.Material }[] = []
+  const made: THREE.BufferGeometry[] = []
   const at = new THREE.Object3D()
-  // Each weight of a kind comes with its own copy of the same bark and leaf pictures. One copy is kept for each
-  // kind, and the rest are let go before they reach the graphics card.
-  const shared = new Map<string, THREE.MeshStandardMaterial>()
-  const pictures = (m: THREE.MeshStandardMaterial) => [m.map, m.normalMap, m.roughnessMap, m.metalnessMap, m.alphaMap]
-  // One file at a time: a dozen models decoded at once is a spike of memory for nothing.
-  for (const [key, where] of [...stands].sort(([a], [b]) => a.localeCompare(b))) {
-    {
-      const gltf = await new GLTFLoader().loadAsync(`${swap.files}/${key}.glb`)
-      const model = gltf.scene
-      model.updateMatrixWorld(true)
-      const box = new THREE.Box3().setFromObject(model)
-      const tall = Math.max(1e-3, box.max.y - box.min.y)
-      const [kind, weight] = key.split("-lod")
-      model.traverse((m) => {
-        if (!(m instanceof THREE.Mesh)) return
-        const geometry = m.geometry.clone().applyMatrix4(m.matrixWorld).translate(0, -box.min.y, 0)
-        const own = m.material as THREE.MeshStandardMaterial
-        const leafy = own.alphaTest > 0 || own.transparent
-        const kept = shared.get(`${kind}:${leafy}`)
-        if (kept) {
-          for (const map of pictures(own)) map?.dispose()
-          own.dispose()
-        } else {
-          shared.set(`${kind}:${leafy}`, own)
-          if (leafy) {
-            // Cut out, never blended: blended cards sort wrongly against each other and against the haze.
-            own.transparent = false
-            own.alphaTest = own.alphaTest || 0.4
-            own.side = THREE.DoubleSide
-            for (const tint of [swap.tint?.["*"], swap.tint?.[kind]]) if (tint) own.color.multiply(new THREE.Color(tint))
-          } else if (swap.tint?.bark) own.color.multiply(new THREE.Color(swap.tint.bark))
-        }
-        const material = kept ?? own
-        const mesh = new THREE.InstancedMesh(geometry, material, where.length)
-        mesh.name = `lab:trees:${key}:${leafy ? "leaves" : "bark"}`
-        // Shadows are dear: every leaf card is drawn again for each light that throws them. The near trees throw
-        // theirs whole, the middle ones their trunks' alone, and the far ones none.
-        mesh.castShadow = weight === "0" || (weight === "1" && !leafy)
-        mesh.receiveShadow = true
-        where.forEach((t, i) => {
-          const size = ((t.height as number) * (swap.taller ?? 1)) / tall
-          at.position.set(t.x, 0, t.z)
-          at.rotation.set(0, chance(t.x, t.z, 2) * Math.PI * 2, 0)
-          // No two as broad as each other.
-          const broad = size * (swap.slim ?? 1)
-          at.scale.set(broad * (0.9 + 0.25 * chance(t.x, t.z, 3)), size, broad * (0.9 + 0.25 * chance(t.x, t.z, 4)))
-          at.updateMatrix()
-          mesh.setMatrixAt(i, at.matrix)
-          // Nor as light: leaves a little darker or paler, tree by tree.
-          if (leafy) mesh.setColorAt(i, new THREE.Color().setScalar(0.72 + 0.4 * chance(t.x, t.z, 5)))
-        })
-        mesh.instanceMatrix.needsUpdate = true
-        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
-        mesh.computeBoundingSphere()
-        made.push({ geometry, material })
-        group.add(mesh)
+  const tone = new THREE.Color()
+  const build = async ({ shape, weight, where }: { shape: Shape; weight: number; where: Trunk[] }) => {
+    const model = (await new GLTFLoader().loadAsync(`${swap.files}/${shape.files[weight]}`)).scene
+    model.updateMatrixWorld(true)
+    const grown = shape.height / middle(shape.kind)
+    model.traverse((m) => {
+      if (!(m instanceof THREE.Mesh)) return
+      const leafy = /leaves/i.test(m.name) || /leaves/i.test((m.material as THREE.Material).name)
+      const geometry = m.geometry.clone().applyMatrix4(m.matrixWorld)
+      const mesh = new THREE.InstancedMesh(geometry, leafy ? leaves(shape) : bark(shape.species), where.length)
+      mesh.name = `lab:trees:${shape.name}:${weight}:${leafy ? "leaves" : "bark"}`
+      // Shadows are dear: every leaf card is drawn again for each light that throws them. The near trees throw
+      // theirs whole, the middle ones their trunks' alone, and the far ones none.
+      mesh.castShadow = weight === 0 || (weight === 1 && !leafy)
+      mesh.receiveShadow = true
+      where.forEach((t, i) => {
+        // As tall as the tree it replaces, times how its shape was grown beside its kind: never under a third of it.
+        const size = ((t.height as number) * (swap.taller ?? 1) * THREE.MathUtils.clamp(grown, 0.34, 1.35)) / shape.height
+        at.position.set(t.x, 0, t.z)
+        // Turned any way, and a little off the plumb: no two stand alike.
+        const lean = chance(t.x, t.z, 8) * 0.07
+        const toward = chance(t.x, t.z, 9) * Math.PI * 2
+        at.rotation.set(Math.cos(toward) * lean, chance(t.x, t.z, 2) * Math.PI * 2, Math.sin(toward) * lean, "YXZ")
+        at.scale.set(size * (0.86 + 0.3 * chance(t.x, t.z, 3)), size * (0.92 + 0.16 * chance(t.x, t.z, 10)), size * (0.86 + 0.3 * chance(t.x, t.z, 4)))
+        at.updateMatrix()
+        mesh.setMatrixAt(i, at.matrix)
+        // Nor of one colour: leaves a little darker, paler, yellower or bluer, tree by tree, and bark darker or paler.
+        const light = 0.7 + 0.42 * chance(t.x, t.z, 5)
+        const warm = leafy ? 0.14 * (chance(t.x, t.z, 11) - 0.5) : 0
+        mesh.setColorAt(i, tone.setRGB(light * (1 + warm), light, light * (1 - warm * 1.6)))
       })
-    }
+      mesh.instanceMatrix.needsUpdate = true
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+      mesh.computeBoundingSphere()
+      made.push(geometry)
+      group.add(mesh)
+    })
   }
+  // A few files at a time: sixty decoded at once is a spike of memory for nothing.
+  const queue = [...stands.values()]
+  await Promise.all(
+    Array.from({ length: 6 }, async () => {
+      for (let next = queue.pop(); next; next = queue.pop()) await build(next)
+    })
+  )
   stage.scene.add(group)
   return {
     count: trunks.length,
+    shapes: new Set([...stands.values()].map((s) => s.shape.name)).size,
     stop: () => {
       group.removeFromParent()
-      for (const { geometry, material } of made) {
-        geometry.dispose()
-        for (const map of pictures(material as THREE.MeshStandardMaterial)) map?.dispose()
+      for (const geometry of made) geometry.dispose()
+      for (const material of materials.values()) {
+        for (const map of [material.map, material.normalMap, material.roughnessMap]) map?.dispose()
         material.dispose()
       }
     },

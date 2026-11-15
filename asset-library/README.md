@@ -193,7 +193,7 @@ The owner, 2026-11-15, of Wollandora without her staff: "I was expecting to see 
 
 - `props.ts` builds the prop in code and stands it on the ground beside the figure. A staff is the one prop so far: two stems wound about each other, an eye at the head, a vine up the lower half.
 - That arm is bent to it each frame, after the clip has moved the figure: the wrist is sent forward of the shoulder at chest height, the elbow found from the arm's two lengths, and the forearm rolled until the palm faces across the body.
-- The hand is closed about it. `relaxHands` bends that hand's fingers three times as far.
+- The hand is closed about it. `relaxHands` bends that hand's fingers much further and lays them together. From outside and in front it reads as a fist on the staff. From her own side the fingers lie flat like a fan: a hand is one bone, and bending its mesh is not a grip. A hand modelled closed needs a new model.
 - The staff stays planted and turns on its foot as the hand sways, so Idle, Walk and Hit all hold it with nothing written for it.
 - `rig.py` reads `holds` from the brief and leaves it on the skeleton. After changing it, run `--redo=rig`.
 - The staff is built, not modelled from her card, so it is a plainer staff than the painted one. The thumb does not wrap.
@@ -303,16 +303,19 @@ The owner, 2026-11-15, of the trail: "the trees are of low quality, there must b
 
 A look can ask for modelled trees with `trees` (`trees.ts`). All three places of The Midnight Summons do.
 
-- The models are in `public/stage/trees`, with a README of where each came from: an oak, a dead oak, a pine and a birch, grown branch by branch by ez-tree, with crowns of cards that are each a photograph of a leafy twig. That, and real branching, is where the difference comes from.
+- The models are in `public/stage/trees`, with a README of where each came from: twenty shapes of six kinds (oak, pine, ash, aspen, dead, and a sapling and two bushes), grown branch by branch by ez-tree, with crowns of cards that are each a photograph of a leafy twig. That, and real branching, is where the difference comes from.
+- The first set was four shapes, and the owner's answer was "the trees are better but there needs to be way more variety". From far off every tree of a kind was one silhouette. Variety has to be in the branching: a broken limb, a one-sided crown, a snapped top, a fork, a lean. Each tree is also turned, tilted a little, and made broader, taller, darker or yellower than its neighbour.
 - The set is not changed. Its trees are still built, so the engine keeps their footprints. They are given materials of their own and put out of sight, and a model is stood on each footprint, as tall as the tree it replaces times `taller`.
-- `slim` matters most. A model grown in the open is as wide as it is tall, and a wood of those is a roof no camera sees through. 0.62 to 0.7 gives forest-grown trees.
-- `rings` are how far the heavy and the middle weights reach from `near`, where the scene is played. `thin` stands only a share of the trees beyond a distance. `kinds` is the mix, and `hero` names a hand-set tree's kind.
+- Grow forest trees. A model grown in the open is as wide as it is tall, and a wood of those is a roof no camera sees through. The shapes here have crowns that start a third to half way up and are half as wide as the tree is tall. `without` leaves a shape out of a wood, and `leaves` gives a species another's leaf card.
+- A sapling's leaves hang at the height of an eye. The stones have none, so the views on people there stay clear.
+- `rings` are how far the heavy and the middle weights reach from `near`, where the scene is played. `thin` stands only a share of the trees beyond a distance. `kinds` is the mix, and `hero` names a hand-set tree's shape or kind.
 - Shadows are the cost. The near trees throw theirs whole, the middle ones their trunks' alone, the far ones none. A second shadow-casting light (`isolight`'s third number) draws every leaf again: the trail has none.
-- Each file carries its own copy of the same pictures. One copy is kept for each kind.
-- `tint` darkens leaves for a night (`*`), greens the birch, and greys bark by day (`bark`).
+- The files are geometry alone, and one bark and one leaf material serve a species. About 380 trees in the trail come to 700,000 triangles.
+- `tint` darkens leaves for a night (`*`), lightens a species, and greys bark (`bark`).
+- Under a canopy the horizon is black. A set's night sky is a bright blue down to the ground, and between trunks it showed as a band of daylight. The owner, 2026-11-15: "it should be almost black as the forest canopy blocks all the light". A look's `atmosphere` changes its set's sky, haze and light from all round: the trail's sky and haze go to black at the horizon, and `isohaze` is raised so the far wood fades into it.
 - Run `pnpm stage:sync public/stage/trees` after changing the files.
 
-What it is not: a big-budget game's trees. No free source ships those. Leaves have no light through them, one twig picture serves a whole species, nothing sways in the wind, and by day the trunks read as smooth clay. Far trees are full models, not flat stand-ins, so a place with these is heavier than one without.
+What it is not: a big-budget game's trees. No free source ships those. Leaves have no light through them, one twig picture serves a whole species, nothing sways in the wind, and by day the bark is still plain. The built bushes and ferns are still the set's own.
 
 Joining the three into one wood was weighed and left alone. The trail's own marks put the stones north up the deer trail and the home south, but no set gives a distance, as the festival square does for the Gates. The Gates' join pays because the arch frames the square. Here nothing of one place shows from another: it is night, the haze is thick, and a hundred metres of trunks stand between. The home is by day and cannot share a sky with the other two. Each set's scattered wood would also plant trees in the other's clearing and river, so every scatter would need its own clearings written. If it is ever wanted, join the trail and the stones only.
 
