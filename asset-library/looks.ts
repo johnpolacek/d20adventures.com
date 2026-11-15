@@ -21,6 +21,8 @@ export interface Look {
   join?: { set: string; at: [number, number]; leave: string[] }[]
   // Changes to this set's own parts by id, for this view alone: null leaves one out.
   edit?: Record<string, Record<string, unknown> | null>
+  // Changes to the set's atmosphere, for this view alone: its sky's colours, its haze, its light from all round.
+  atmosphere?: Record<string, Record<string, unknown> | number | string>
   // Modelled trees stood where the set's own are built (trees.ts).
   trees?: TreeSwap
   shots: Record<string, Record<string, string>>
@@ -130,11 +132,11 @@ export const LOOKS: Record<string, Look> = {
       paint: "0",
       isobox: "-14,-18,14,22",
       isowhole: "1",
-      isolight: "1.25,0.1",
+      isolight: "1.25,0.08",
       isosky: "7f9cd0",
       isofill: "0.3",
-      // The set's haze is a night wood's, thick at ten paces. From farther off it is a wall.
-      isohaze: "0.12",
+      // Enough of the set's haze that the far wood goes into the dark, and not so much that the near one does.
+      isohaze: "0.38",
       // A wood seen from above is all canopy. The trees over the trail to the south are left out, one that stood
       // between that side and the clearing, and one whose leaves hung across the owlbear's face.
       isoclear: "6.5,22,5;6,4,3;3,13,6;4,22,7;5,31,8;9,-2,2.5",
@@ -144,6 +146,11 @@ export const LOOKS: Record<string, Look> = {
     },
     // The set's two shafts of light are left out.
     edit: { "clearing-shaft": null, "oak-shaft": null },
+    // Under a canopy nothing is lit at the height of the eye. The set's sky is a bright blue down to the ground, which
+    // showed between the trunks as a band of daylight (the owner, 2026-11-15: "it should be almost black as the forest
+    // canopy blocks all the light"). Here the sky goes to black at the horizon, the haze is black, and the far wood
+    // fades into it. Overhead it stays a night sky with a moon.
+    atmosphere: { sky: { horizon: "#020408", mid: "#0a1424", gain: 0.3 }, fog: { color: "#020408" }, hemisphere: { intensity: 0.24 } },
     // An old wood: oaks, pines, a few birches, and the dead among them.
     trees: {
       files: "/stage/trees",
@@ -154,7 +161,7 @@ export const LOOKS: Record<string, Look> = {
       slim: 0.62,
       kinds: { oak: 0.46, pine: 0.34, deadoak: 0.1, birch: 0.1 },
       hero: { "great-oak": "oak" },
-      tint: { "*": "#8a93a0", birch: "#a9b874" },
+      tint: { "*": "#8a93a0", birch: "#a9b874", bark: "#6f6a64" },
     },
     open: "arrival",
     shots: {

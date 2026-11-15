@@ -59,6 +59,8 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
       mat.envMapIntensity = shine
       mat.metalness = Math.min(mat.metalness, 0.8)
       mat.roughness = Math.max(mat.roughness, 0.4)
+      // A generated skin shines like wax and its relief is cut too deep: both catch a low light as streaks on a face.
+      mat.normalScale.setScalar(0.7)
     }
   })
   root.name = "lab:figure"

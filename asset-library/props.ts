@@ -157,8 +157,8 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
     fore.updateWorldMatrix(false, true)
     const handTurn = upperTurn.clone().multiply(fore.quaternion).multiply(hand.quaternion)
     const grip = local(hand)
-      .addScaledVector(palm.along.clone().applyQuaternion(handTurn), palm.length * 0.5)
-      .addScaledVector(palm.normal.clone().applyQuaternion(handTurn), RADIUS + 0.014)
+      .addScaledVector(palm.along.clone().applyQuaternion(handTurn), palm.length * 0.47)
+      .addScaledVector(palm.normal.clone().applyQuaternion(handTurn), RADIUS * 1.9)
     // Planted where it first stood, a hand's width farther from the feet than the hand is: it leans in a little.
     foot ??= new THREE.Vector3(grip.x + side * 0.03, ground, grip.z + 0.05)
     prop.position.copy(foot)

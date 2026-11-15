@@ -50,6 +50,7 @@ interface SetLike {
   crowd?: { groups?: { type: string; area?: number[]; count?: number; density?: { rect: number[] }[]; face?: { toward?: number[] } }[] }
   painted?: unknown
   camera?: Record<string, unknown>
+  atmosphere?: Record<string, unknown>
 }
 interface StagingLike {
   set: string
@@ -194,6 +195,8 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       for (const p of set.objects) if (p.type === "scatter" && trees(p)) p.clear = [...(p.clear ?? []), ...glade].slice(0, 256)
     }
     for (const [name, change] of Object.entries(look?.materials ?? {})) if (set.materials?.[name]) Object.assign(set.materials[name], change)
+    for (const [name, change] of Object.entries(look?.atmosphere ?? {}))
+      if (set.atmosphere) set.atmosphere[name] = typeof change === "object" ? { ...(set.atmosphere[name] as object), ...change } : change
     // Sets that share this one's world are built into it where they stand: their parts as one group, moved there, and
     // their scattered crowds with them. A material both sets name keeps this set's.
     for (const j of look?.join ?? []) {

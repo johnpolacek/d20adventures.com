@@ -165,9 +165,9 @@ const KNUCKLES: [number, number][] = [
 ]
 // A hand that holds something (props.ts) is closed about it.
 const GRIP: [number, number][] = [
-  [0.44, 62],
-  [0.66, 74],
-  [0.85, 48],
+  [0.4, 80],
+  [0.6, 86],
+  [0.8, 24],
 ]
 // A hand as it was modelled, in the figure's own space: the way it points, the way its palm faces, and its length.
 export interface Palm {
@@ -227,7 +227,7 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
       for (let m = 0; m < ids.length; m++) {
         const [v, t, p] = [ids[m], along[m], pts[m]]
         // Drawn together, then bent at each line from the fingertips back.
-        p.addScaledVector(across, -0.4 * smooth(0.42, 0.9, t) * p.clone().sub(W).dot(across))
+        p.addScaledVector(across, -(grips === side ? 0.68 : 0.4) * smooth(0.42, 0.9, t) * p.clone().sub(W).dot(across))
         const normal = nor ? new THREE.Vector3().fromBufferAttribute(nor, v).transformDirection(o.bindMatrix) : null
         for (const [line, most] of [...(grips === side ? GRIP : KNUCKLES)].reverse()) {
           const angle = THREE.MathUtils.degToRad(most) * smooth(line - 0.07, line + 0.07, t)
