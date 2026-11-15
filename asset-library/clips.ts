@@ -223,11 +223,19 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
       // Along the hand, out of its palm or its back, and across it.
       const h = centre.clone().sub(W).normalize()
       const closed = fist && grips === side
-      // A fist is a ball, with no flat to find a palm by. The sheet paints it knuckles forward, so its palm is behind.
-      const n = closed ? new THREE.Vector3(0, 0, -1) : axes(pts, centre)[2]
+      // Open or closed, a hand is thinnest from its back to its palm.
+      const n = axes(pts, centre)[2]
       n.addScaledVector(h, -n.dot(h)).normalize()
+      if (closed) {
+        // A fist's fingers are curled onto its palm, so most of it lies to the palm's side of the line the forearm
+        // makes. Which way a generator turns a fist is its own affair: the sheet's "knuckles forward" was not kept.
+        const arm = W.clone().sub(fore.at).normalize()
+        const beside = centre.clone().sub(W)
+        beside.addScaledVector(arm, -beside.dot(arm))
+        if (beside.dot(n) < 0) n.negate()
+      }
       // The palm is the face turned in and down: the sheet a figure is modelled from holds its palms toward the thighs.
-      if (!closed && n.dot(new THREE.Vector3(side === "L" ? -1 : 1, -1, 0)) < 0) n.negate()
+      else if (n.dot(new THREE.Vector3(side === "L" ? -1 : 1, -1, 0)) < 0) n.negate()
       const across = new THREE.Vector3().crossVectors(h, n)
       const L = Math.max(...pts.map((p) => p.clone().sub(W).dot(h)))
       const along = pts.map((p) => p.clone().sub(W).dot(h) / L)

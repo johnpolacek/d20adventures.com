@@ -28,10 +28,14 @@
     "fist": true
   },
   "faceFromSheet": {
-    "triangles": 2369,
-    "texels": 445674,
+    "triangles": 2390,
+    "texels": 450510,
     "sheetMiddle": 510.0,
-    "close": true
+    "close": true,
+    "noseSlipMm": [
+      4.9,
+      1.8
+    ]
   },
   "bones": [
     "root",

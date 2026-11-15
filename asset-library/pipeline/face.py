@@ -108,5 +108,7 @@ cv2.imwrite(f"{folder}/apose-face.png", np.clip(out, 0, 255).astype(np.uint8))
 # Where the face lies on the sheet, as an oval: its middle and its half width and half height, in the sheet's pixels.
 x0, y0 = spec["rect"][:2]
 spec["face"] = [float(x0 + middle[0] / K), float(y0 + middle[1] / K), float(np.ptp(hull[:, 0]) / 2 / K), float(np.ptp(hull[:, 1]) / 2 / K)]
+# The tip of the nose on the sheet: the one point of a face a model's shape gives away, to set the paint by (rig.py).
+spec["nose"] = [float(x0 + A[4][0] / K), float(y0 + A[4][1] / K)]
 json.dump(spec, open(f"{folder}/face.json", "w"), indent=2)
 print("FACE " + json.dumps({"size": [W, H], "eyesApart": round(float(np.linalg.norm(A[33] - A[263])), 1), "closeEyesApart": round(float(np.linalg.norm(B[33] - B[263])), 1)}))

@@ -155,24 +155,41 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
     const upperTurn = within.clone().multiply(upper.quaternion)
     const level = wrist.clone().sub(elbow).normalize()
     fore.quaternion.setFromUnitVectors(alongFore, level.clone().applyQuaternion(upperTurn.clone().invert()))
-    // The forearm is rolled about itself until the palm faces across the body, so the staff stands in the closed hand.
-    const facing = () => palm.normal.clone().applyQuaternion(upperTurn.clone().multiply(fore.quaternion).multiply(hand.quaternion))
-    const flat = (v: THREE.Vector3) => v.addScaledVector(level, -v.dot(level))
-    const [now, want] = [flat(facing()), flat(new THREE.Vector3(-side, 0, 0))]
-    if (now.lengthSq() > 1e-6 && want.lengthSq() > 1e-6) fore.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(alongFore, Math.atan2(level.dot(now.clone().cross(want)), now.dot(want))))
     if (palm.fist) {
       // A fist grips along its knuckles, thumb uppermost. The forearm comes to a staff at whatever slope the elbow
-      // gives it, so the wrist takes up the difference: the fist is turned until the staff runs through it, pointing
-      // as near the forearm's way as that allows.
+      // gives it, so the fist is turned until the staff runs through it, pointing as near the forearm's way as that
+      // allows. `modelled` has its third axis toward the thumb of a right hand, and away from a left's.
       const thumb = stand.clone().multiplyScalar(-side)
       const points = level.clone().addScaledVector(stand, -level.dot(stand)).normalize()
       const gripped = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(points, thumb.clone().cross(points), thumb))
-      hand.quaternion.copy(upperTurn.clone().multiply(fore.quaternion).invert().multiply(gripped).multiply(modelled.clone().invert()))
+      const turnHand = upperTurn.clone().multiply(fore.quaternion).invert().multiply(gripped).multiply(modelled.clone().invert())
+      // What of that turn is a roll about the forearm is mostly the forearm's to make, as an arm's two bones make it,
+      // and the rest is the wrist's. Read off the turn itself, it is steady from frame to frame: a roll found by
+      // comparing two directions spins when they come near the forearm's own. One bone carries a whole forearm, so
+      // all of the roll at the elbow would wring the sleeve there: it is shared, most above and some at the wrist.
+      const about = turnHand.x * alongFore.x + turnHand.y * alongFore.y + turnHand.z * alongFore.z
+      const roll = new THREE.Quaternion(alongFore.x * about, alongFore.y * about, alongFore.z * about, turnHand.w)
+      if (roll.lengthSq() > 1e-8) {
+        roll.normalize()
+        if (roll.w < 0) roll.set(-roll.x, -roll.y, -roll.z, -roll.w)
+        const above = new THREE.Quaternion().slerp(roll, 0.6)
+        fore.quaternion.multiply(above)
+        turnHand.premultiply(above.clone().invert())
+      }
+      hand.quaternion.copy(turnHand)
+    } else {
+      // The forearm is rolled about itself until the palm faces across the body, so the staff stands in the hand.
+      const facing = palm.normal.clone().applyQuaternion(upperTurn.clone().multiply(fore.quaternion).multiply(hand.quaternion))
+      const flat = (v: THREE.Vector3) => v.addScaledVector(level, -v.dot(level))
+      const [now, want] = [flat(facing), flat(new THREE.Vector3(-side, 0, 0))]
+      if (now.lengthSq() > 1e-6 && want.lengthSq() > 1e-6) fore.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(alongFore, Math.atan2(level.dot(now.clone().cross(want)), now.dot(want))))
     }
     fore.updateWorldMatrix(false, true)
     const handTurn = upperTurn.clone().multiply(fore.quaternion).multiply(hand.quaternion)
-    // An open hand takes it against the palm, under the knuckles. A fist has it through its middle.
-    const [alongHand, outOfPalm] = palm.fist ? palm.middle : [palm.length * 0.47, RADIUS * 1.9]
+    // An open hand takes it against the palm, under the knuckles. A fist has it inside the curl of its fingers:
+    // well along the hand and a little to the palm's side. The middle of the fist is nearer the wrist than that, and
+    // a staff set there stands against the heel of the hand with the fingers closed on nothing.
+    const [alongHand, outOfPalm] = palm.fist ? [palm.length * 0.6, Math.max(palm.middle[1], 0) + 0.012] : [palm.length * 0.47, RADIUS * 1.9]
     const grip = local(hand).addScaledVector(palm.along.clone().applyQuaternion(handTurn), alongHand).addScaledVector(palm.normal.clone().applyQuaternion(handTurn), outOfPalm)
     // Planted where it first stood, a hand's width farther from the feet than the hand is: it leans in a little.
     foot ??= new THREE.Vector3(grip.x + side * 0.03, ground, grip.z + 0.05)

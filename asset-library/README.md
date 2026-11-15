@@ -195,7 +195,9 @@ The owner, 2026-11-15, of Wollandora without her staff: "I was expecting to see 
 - That arm is bent to it each frame, after the clip has moved the figure: the wrist is sent out and forward of the shoulder at chest height, the elbow found under it from the arm's two lengths, and the fist turned at the wrist until the staff runs through it, thumb uppermost.
 - Where the hand goes is most of whether it looks held. Close in front of the shoulder the arm folds like a wing, and the owner called it "completely unnatural". Lower and farther out, with the forearm level, it is an arm stuck out sideways. Right is where her card has it: the hand at the chest, the elbow hanging at her side, the forearm rising to the hand.
 - The hand is modelled closed. `"fist": true` in `holds` has the sheet paint that hand as a fist, knuckles forward, and the staff stands through its middle, drawn in narrow where the fist comes. The first try bent an open hand's mesh shut, and the owner's answer was "her hand on the staff does not look right": from her own side the fingers lay flat like a fan. A hand is one bone, and bending its mesh is not a grip.
-- A fist is a ball, with no flat to tell its palm by. Its palm is taken to be behind it, as the sheet paints it.
+- Which way a generator turns a fist is its own affair. The sheet asked for knuckles forward and the model came otherwise, so the thumb was not on top. `relaxHands` reads the fist itself: it is thinnest from back to palm, and most of it lies to the palm's side of the forearm's line, since the fingers are curled onto the palm.
+- The staff stands inside the curl of the fingers, six tenths of the way along the hand. The middle of the fist is nearer the wrist, and a staff set there stands against the heel of the hand.
+- The roll that brings the thumb up is read off the fist's turn and shared: most on the forearm, some at the wrist. Found by comparing two directions it spun from frame to frame, and all of it on the one forearm bone wrung the sleeve at the elbow.
 - The staff stays planted and turns on its foot as the hand sways, so Idle, Walk and Hit all hold it with nothing written for it.
 - `rig.py` reads `holds` from the brief and leaves it on the skeleton. After changing it, run `--redo=rig`.
 - The staff is built, not modelled from her card, so it is a plainer staff than the painted one. The thumb does not wrap.
@@ -220,7 +222,9 @@ Then the face is taken from the sheet. A generator makes its figure from the she
 - `face.py crop` cuts the head from the sheet and enlarges it four times. The image tool paints that again as a sharp photograph of the same head (`face.png`), free.
 - It is another picture, with its eyes a little elsewhere, and the model is the sheet's shape. `face.py warp` finds the same 468 points on both faces and pulls the close head onto the sheet's, triangle by triangle. `apose-face.png` is the sheet's head at four times the size with the close head's detail.
 - `rig.py` paints the head from that. Under the face it also smooths the generator's own relief and shine, which were a second face a little out of place: eyelids that glinted, a second lip line.
-- `--redo=face` does all of it again on a model already made. It costs nothing.
+- A model is not quite the sheet's shape. Wollandora's nose stood 5 mm to one side of the sheet's, and a nose painted beside a nose is two noses (the owner: "a weird double image of the nose"). The tip of the model's nose is the point of its face farthest forward, and `face.py` records the sheet's. The paint is moved by the difference, and `rig.json` says how far (`noseSlipMm`). Over 15 mm it is left alone as a wrong point.
+- Inside the face everything on its front is painted, however it is turned. The underside of the nose looks down, and left to the generator it kept a second pair of nostrils.
+- `--redo=face` paints the close head again, which makes another face. To fit and rig again with the one there is: `face.py warp <folder>`, then `--redo=rig`. Neither costs anything.
 - Look at `head-crop.png`, `face.png` and `apose-face.png` side by side first. If the close head is another person, paint it again.
 
 ### A beast

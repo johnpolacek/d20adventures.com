@@ -450,6 +450,30 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
     # The head, from the neck up, and only what looks forward.
     neck = at["neck"].z
     head = (V[:, :, 2].min(axis=1) > neck) & (facing > 0.12)
+    # A model is not quite the sheet's shape: its nose may stand a few millimetres from where the sheet has it, and a
+    # nose painted beside a nose is two noses (the owner, 2026-11-15: "a weird double image of the nose"). The tip of
+    # the model's nose is the point of its face farthest forward, and the sheet's is known (face.py). The paint is
+    # moved by the difference, over the face.
+    slip = np.zeros(2, dtype=np.float32)
+    face_front = None
+    if close and "face" in close and "nose" in close:
+        ox, oy, rx, ry = close["face"]
+        C = V.mean(axis=1)
+        csx, csy = middle + C[:, 0] / px, bottom - C[:, 2] / px
+        core = (((csx - ox) / rx) ** 2 + ((csy - oy) / ry) ** 2 < 0.36) & (V[:, :, 2].min(axis=1) > neck)
+        if core.any():
+            tip = V[core].reshape(-1, 3)
+            tip = tip[np.argmin(tip[:, 1])]
+            face_front = float(tip[1])
+            found = np.array([close["nose"][0] - (middle + tip[0] / px), close["nose"][1] - (bottom - tip[2] / px)], dtype=np.float32)
+            # Further than a centimetre and a half is not a slip but a wrong point: left alone.
+            if np.hypot(*found) * px < 0.015:
+                slip = found
+            # Within the face, everything on its front is painted, however it is turned: the underside of the nose
+            # looks down, and left to the generator it kept a second pair of nostrils. The back of the head lies
+            # behind the same oval, and is told from the face by how far back it is.
+            near = (((csx - ox) / rx) ** 2 + ((csy - oy) / ry) ** 2 < 1.0) & (V[:, :, 1].min(axis=1) < face_front + 0.06 * H / 1.8) & (facing > -0.7)
+            head = head | (near & (V[:, :, 2].min(axis=1) > neck))
     texels = 0
     for k in np.flatnonzero(head):
         (u0, v0), (u1, v1), (u2, v2) = uvs[k]
@@ -468,8 +492,17 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         if not inside.any():
             continue
         P = b0[..., None] * V[k, 0] + b1[..., None] * V[k, 1] + b2[..., None] * V[k, 2]
-        sx = np.clip(middle + P[..., 0] / px, 0, sw - 1.001)
-        sy = np.clip(bottom - P[..., 2] / px, 0, sh - 1.001)
+        sx = middle + P[..., 0] / px
+        sy = bottom - P[..., 2] / px
+        within = None
+        if face_front is not None:
+            # How far out of the face's oval each point is: 0 at its middle, 1 at its edge.
+            out_of = ((sx - ox) / rx) ** 2 + ((sy - oy) / ry) ** 2
+            moved = np.clip(1.7 - out_of, 0, 1)
+            sx, sy = sx + slip[0] * moved, sy + slip[1] * moved
+            within = np.clip(1.15 - out_of, 0, 1) ** 0.5
+        sx = np.clip(sx, 0, sw - 1.001)
+        sy = np.clip(sy, 0, sh - 1.001)
         ix, iy = sx.astype(np.int32), sy.astype(np.int32)
         fx, fy = (sx - ix)[..., None], (sy - iy)[..., None]
         seen = (S[iy, ix, :3] * (1 - fx) + S[iy, ix + 1, :3] * fx) * (1 - fy) + (S[iy + 1, ix, :3] * (1 - fx) + S[iy + 1, ix + 1, :3] * fx) * fy
@@ -489,6 +522,8 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
                 oval = np.clip(1.15 - ((sx - ox) / rx) ** 2 - ((sy - oy) / ry) ** 2, 0, 1) ** 0.5
         # Most where the head looks straight out of the sheet, none where it turns away, and eased in above the neck.
         turn = np.clip((facing[k] - 0.12) / 0.4, 0, 1) ** 1.5
+        if within is not None and P[..., 1].min() < face_front + 0.06 * H / 1.8:
+            turn = np.maximum(turn, within)
         rise = np.clip((P[..., 2] - neck) / (0.025 * H), 0, 1)
         # Never the sheet's grey: a point of the model that falls outside the painted figure keeps its own colour.
         on_figure = figure_mask[iy, ix] & figure_mask[iy + 1, ix + 1]
@@ -500,7 +535,7 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         texels += int(inside.sum())
     image.pixels.foreach_set(T.reshape(-1))
     image.update()
-    painted = {"triangles": int(head.sum()), "texels": texels, "sheetMiddle": float(middle), "close": bool(close)}
+    painted = {"triangles": int(head.sum()), "texels": texels, "sheetMiddle": float(middle), "close": bool(close), "noseSlipMm": [round(float(v * px * 1000), 1) for v in slip]}
     del S, T
     # Under a face painted from a picture, the generator's own relief and shine are a second face a little out of
     # place: eyelids that glint, a second lip line. They are smoothed away where the face is, and left in the hair.
