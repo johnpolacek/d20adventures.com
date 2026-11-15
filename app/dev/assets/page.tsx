@@ -1,6 +1,7 @@
 // Dev-only asset library: the workspace's own page, read from the disk on every load.
 //
-//   /dev/assets                                          -> the library's home
+//   /dev/assets                                          -> the library's home: its places
+//   /dev/assets?tab=characters                           -> the party, then every character
 //   /dev/assets?tab=environments&group=covert-cargo      -> the places of one adventure
 //   /dev/assets?id=garlan&lod=1&clip=Walk                -> a character: its 3D figure at a detail level and in a clip, or its card
 //   /dev/assets?env=realm-of-myr/dragonbone-inn&view=iso -> a place, as the stage shows it or as an isometric cut-away

@@ -2,9 +2,9 @@
 
 // The asset library's page, shared by the workspace's own (/dev/assets) and the one anyone can open
 // (/settings/<setting>/assets). One bar stays under the site's header wherever the visitor is: the library's name, its
-// tabs and a search, then the filters of a grid or the way back from an asset. It opens as a home: the party, then every
-// character or place as a grid under the adventure it belongs to, narrowed by a search or a filter. A card opens the
-// asset itself, in the frame below the bar:
+// tabs and a search, then the filters of a grid or the way back from an asset. It opens on the places, each under the
+// adventure it belongs to, and the characters open on the party. A grid is narrowed by a search or a filter. A card
+// opens the asset itself, in the frame below the bar:
 //   - a character with a 3D figure stands in a lit room, at any detail level and in any clip the game plays
 //     (asset-library/clips.ts), and one without shows its card;
 //   - a place is assembled and live (scene.ts): a variant, with one of its encounters as that encounter opens or
@@ -31,6 +31,8 @@ const Config = createContext<LibraryConfig & { figures: Record<string, string> }
 
 type Params = Record<string, string | undefined>
 type Tab = "characters" | "environments" | "images"
+// The tabs in the order they are shown: the library opens on the first.
+const TABS = ["environments", "characters", "images"] as const
 
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
 const PANEL = "space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm"
@@ -463,7 +465,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
     const place = places.find((p) => p.variants.some((v) => v.key === params.env))
     return character ? { character } : place ? { place } : null
   })
-  const [tab, setTab] = useState<Tab>(params.tab === "images" || (open && "picture" in open) ? "images" : params.tab === "environments" || (open && "place" in open) ? "environments" : "characters")
+  const [tab, setTab] = useState<Tab>(open ? ("picture" in open ? "images" : "place" in open ? "environments" : "characters") : (TABS.find((t) => t === params.tab) ?? TABS[0]))
   // The filter is an adventure for characters and places, and a kind for pictures.
   const [group, setGroup] = useState(params.group && [...groups, ...kinds].includes(params.group) ? params.group : "all")
   // Where the grid was when a card was opened, to come back to.
@@ -519,7 +521,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   useEffect(() => {
     if (open) return
     const p = new URLSearchParams()
-    if (tab !== "characters") p.set("tab", tab)
+    if (tab !== TABS[0]) p.set("tab", tab)
     if (group !== "all") p.set("group", group)
     if (q) p.set("q", q)
     if (only) p.set("only", "1")
@@ -554,7 +556,9 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   const figured = characters.filter((c) => c.figure)
   const party = figured.filter((c) => c.figure?.party)
   const others = figured.filter((c) => !c.figure?.party)
-  const home = !words && !only && group === "all" && tab === "characters"
+  // Nothing narrowed: the first tab opens under the library's title, and the characters under the party.
+  const whole = !words && !only && group === "all"
+  const home = whole && tab === "characters"
   // Which character's figure stands for a cast id, for a scene.
   const provided = useMemo(
     () => ({ ...config, figures: Object.fromEntries(characters.flatMap((c) => (c.figure ? (c.figure.cast ?? [c.id]).map((id) => [id, c.figure?.id as string]) : []))) }),
@@ -596,7 +600,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                   className="font-display text-[15px] tracking-[0.04em] text-[#f2c97a] hover:text-[#ffe0a3]"
                   onClick={() => {
                     setQ("")
-                    setTab("characters")
+                    setTab(TABS[0])
                     setOnly(false)
                     pick("all")
                   }}
@@ -604,7 +608,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                   Asset Library
                 </button>
                 <div className="order-3 flex w-full gap-1 text-[13px] sm:order-2 sm:w-auto">
-                  {(["characters", "environments", "images"] as const).map((t) => (
+                  {TABS.map((t) => (
                     <button
                       key={t}
                       type="button"
@@ -672,7 +676,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
         </div>
 
         <div className={open ? "hidden" : "mx-auto max-w-[1500px] px-5 pb-16 sm:px-8"}>
-          {home && (
+          {whole && tab === TABS[0] && (
             <div className="pt-10 pb-7 text-center">
               <h1 className="font-display text-[34px] leading-tight tracking-[0.04em] text-[#f2c97a] sm:text-[44px]">{library.settingName}</h1>
               <div className="mt-3 text-[13px] opacity-70">
