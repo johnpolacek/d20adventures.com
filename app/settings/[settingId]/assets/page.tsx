@@ -2,7 +2,8 @@
 //
 // It shows what `pnpm assets:sync` last published to the public bucket under asset-library/: the index, library.json,
 // and the figures, which next.config.ts rewrites /asset-library/... to. A sync shows here within a minute, with no
-// deploy. The page is left out of search.
+// deploy. A place is assembled in the visitor's browser from the sets and stagings this deploy carries. The page is
+// left out of search.
 
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
@@ -17,5 +18,5 @@ export default async function SettingAssets(props: { params: Promise<{ settingId
   const res = cdn ? await fetch(`${cdn}/asset-library/library.json`, { next: { revalidate: 60 } }).catch(() => null) : null
   const library = res?.ok ? ((await res.json()) as Library) : null
   if (!library || library.setting !== settingId) notFound()
-  return <AssetLibrary library={library} config={{ home: `/settings/${settingId}/assets`, files: "/asset-library/characters", live: false }} params={await props.searchParams} />
+  return <AssetLibrary library={library} config={{ home: `/settings/${settingId}/assets`, files: "/asset-library/characters" }} params={await props.searchParams} />
 }

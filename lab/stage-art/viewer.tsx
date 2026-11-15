@@ -32,8 +32,8 @@
 
 import type { Stage, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
+import { iso, isoSet } from "../../asset-library/iso"
 import { withLook } from "../../asset-library/looks"
-import { iso, isoSet } from "./iso"
 import { addBackdrop, addFigure, addSplat, animateStandee, cameraOf, castRings, crowdShade, drift, pano, projectPaintings } from "./lab"
 
 type Params = Record<string, string | undefined>

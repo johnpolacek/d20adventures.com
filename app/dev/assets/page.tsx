@@ -16,5 +16,5 @@ import { isDev } from "@/lib/auth-utils"
 
 export default async function AssetsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   if (!isDev()) notFound()
-  return <AssetLibrary library={await buildLibrary()} config={{ home: "/dev/assets", files: "/dev/assets/file/characters", live: true }} params={await searchParams} />
+  return <AssetLibrary library={await buildLibrary()} config={{ home: "/dev/assets", files: "/dev/assets/file/characters" }} params={await searchParams} />
 }

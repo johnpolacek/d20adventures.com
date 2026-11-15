@@ -15,7 +15,8 @@ Written 2026-11-14. None of this ships in the game yet.
 | Scorecards | `asset-library/scorecards/` | yes |
 | The page | `asset-library/ui/library.tsx`, shown at `/dev/assets` and `/settings/<setting>/assets` | yes |
 | What the page lists | `asset-library/library.ts` | yes |
-| The stage's isometric view, which the page frames | `lab/stage-art/` (`iso.ts`, `viewer.tsx`, `lab.ts`, `capture.ts`) | yes |
+| A live scene: the cut-away, figures in a stage | `asset-library/scene.ts`, `iso.ts`, `figures.ts` | yes |
+| The stage lab, for captures and spikes | `lab/stage-art/` (`viewer.tsx`, `lab.ts`, `capture.ts`) | yes |
 | Sets and stagings | `packages/stage/src/sets`, `stagings` | yes |
 
 Models, sheets and check pictures are too heavy for git and are left out by `asset-library/.gitignore`. A character's brief, joints, reports and thumbnail are kept.
@@ -33,7 +34,10 @@ pnpm assets:sync --dry    # list what would upload
 - The private bucket gets what a character was made from, under the same path: the brief, the sheets, the joints, the generator's answer, the source model and the rig's report. That is the backup.
 - `library.json` is the page's index, every character and place gathered from the repo. It is uploaded last and read from the bucket, so a sync shows on the site within a minute, with no deploy.
 - Anything the page can load, a visitor can download. The rigged models are public files.
-- The public page shows a place as its picture. The live stage and the isometric view are on the workspace's own page only, `/dev/assets`.
+- A place is assembled live in the visitor's browser, on the public page as in the workspace (`scene.ts`): pick a variant, an encounter or the empty set, and Stage or Isometric. The camera is the visitor's: drag to turn, scroll to zoom, right-drag to slide. Shots along the bottom jump it to the game's own framings.
+  - Stage is the set as built, with the cast where the encounter opens. A painted set's paintings are left out, since they hold the camera to fixed points.
+  - Isometric is the set's look (`looks.ts`), or its room cut open. Cast members with a figure in the library stand as figures, at the middle detail level.
+  - The sets and stagings come with the deploy, so a new set shows after a push, not after a sync.
 
 ## One command
 
@@ -200,7 +204,7 @@ http://localhost:3057/dev/assets?env=realm-of-myr/dragonbone-inn&view=iso
 http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-dragonbone-inn&tier=high&paint=0&iso=45,35,40,17&isolight=1.4,0.3,1.8
 ```
 
-- `iso=azimuth,elevation,distance,lens`. `lab/stage-art/iso.ts` cuts the two near walls, the ceiling and everything outside the room, and lights the room's own lamps.
+- `iso=azimuth,elevation,distance,lens`. `asset-library/iso.ts` cuts the two near walls, the ceiling and everything outside the room, and lights the room's own lamps.
 - 13 of the 41 sets have a room. Out of doors the ground to keep is given, and parts that roof the people over are left out:
 
 ```
@@ -249,5 +253,4 @@ Owner, 2026-11-14: only the party is made in 3D for now. The party is Branka, Th
 - Blind scoring of looks and movement (`workflow-score-to-target`).
 - A home for shipped figures. About 5 MB a character is too heavy for git at 120 characters.
 - Props and monsters.
-- The stage's isometric view moved out of `lab/stage-art`.
 - Running a step from the page itself.

@@ -5,25 +5,27 @@
 // adventure it belongs to, narrowed by a search or a filter. A card opens the asset itself:
 //   - a character with a 3D figure stands in a lit room, at any detail level and in any clip the game plays
 //     (asset-library/clips.ts), and one without shows its card;
-//   - a place shows its picture. In the workspace it is shown live by the stage's own dev pages, in a frame: a variant,
-//     empty or with one of its scenes, as the stage shows it or as an isometric cut-away.
+//   - a place is assembled and live (scene.ts): a variant, with one of its encounters as that encounter opens or
+//     empty, as the stage shows it or as an isometric cut-away, with a camera the visitor moves.
 
-import { createContext, useContext, useEffect, useRef, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { figureClips, isRigged } from "../clips"
+import { LOOKS } from "../looks"
+import { hasIso } from "../scene"
 import type { Character, Figure, Library, Picture, Place } from "../types"
+import { Scene } from "./scene"
 
-// Where a page of the library lives, where its figures' files are served from, and whether the stage's dev pages are
-// there to show a place live.
+// Where a page of the library lives, and where its figures' files are served from.
 export interface LibraryConfig {
   home: string
   files: string
-  live: boolean
 }
-const Config = createContext<LibraryConfig>({ home: "/dev/assets", files: "/dev/assets/file/characters", live: true })
+// And, for a scene, which character's figure stands for a cast id.
+const Config = createContext<LibraryConfig & { figures: Record<string, string> }>({ home: "/dev/assets", files: "/dev/assets/file/characters", figures: {} })
 
 type Params = Record<string, string | undefined>
 type Tab = "characters" | "environments" | "images"
@@ -41,9 +43,6 @@ const named = (s: string) =>
     .join(" ")
 const scene = (staging: string) => named(staging.split("/")[1] ?? staging)
 const scenes = (n: number) => `${n} ${n === 1 ? "Scene" : "Scenes"}`
-// The lens that fits a room seen from 40 metres.
-const lens = (room: [number, number]) => Math.round(THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan((Math.hypot(...room) * 0.52) / 40)), 8, 40))
-
 // ── A figure in a lit room ──
 interface Room {
   renderer: THREE.WebGLRenderer
@@ -319,32 +318,22 @@ function CharacterView({ character, params }: { character: Character; params: Pa
   )
 }
 
-// ── A place: its picture, and in the workspace one of its variants live in the stage's own page ──
+// ── A place, assembled and live: a variant, empty or with one of its encounters, as the stage shows it or cut open ──
 function PlaceView({ place, params }: { place: Place; params: Params }) {
   const config = useContext(Config)
   const [key, setKey] = useState(place.variants.find((v) => v.key === params.env)?.key ?? place.variants[0].key)
   const env = place.variants.find((v) => v.key === key) ?? place.variants[0]
-  const [staging, setStaging] = useState(params.scene && env.stagings.includes(params.scene) ? params.scene : null)
-  const [view, setView] = useState(params.view === "iso" ? "iso" : "stage")
-  // The cut-away is the lab's, which shows a set through one of its scenes.
-  const iso = view === "iso" && !!env.room && !!env.stagings[0]
-  const src = iso
-    ? `/dev/stage-lab?staging=${staging ?? env.stagings[0]}&tier=balanced&paint=0&iso=45,35,40,${lens(env.room as [number, number])}&isolight=1.4,0.3,1.8&panel=0${staging ? "" : "&cast=off"}`
-    : staging
-      ? `/dev/stage?staging=${staging}&tier=balanced&panel=0`
-      : `/dev/stage?set=${env.key}&staging=none&tier=balanced&panel=0`
+  // It opens on its first encounter, where that encounter opens. "empty" in the address is the set alone.
+  const [staging, setStaging] = useState(params.scene === "empty" ? null : params.scene && env.stagings.includes(params.scene) ? params.scene : (env.stagings[0] ?? null))
+  const canCut = hasIso(env.key, env.room)
+  const [view, setView] = useState(params.view === "stage" || params.view === "iso" ? params.view : LOOKS[env.key] ? "iso" : "stage")
+  const cut = view === "iso" && canCut
   useEffect(() => {
-    history.replaceState(null, "", `${config.home}?env=${env.key}${config.live ? `&view=${view}${staging ? `&scene=${staging}` : ""}` : ""}`)
-  }, [env, view, staging, config])
-  const picture = env.picture ?? place.picture
+    history.replaceState(null, "", `${config.home}?env=${env.key}&view=${cut ? "iso" : "stage"}&scene=${staging ?? "empty"}`)
+  }, [env, cut, staging, config.home])
   return (
     <>
-      {config.live ? (
-        <iframe key={src} src={src} title={env.title} className="absolute inset-0 h-full w-full border-0 bg-[#0d0b09]" />
-      ) : picture ? (
-        // biome-ignore lint/performance/noImgElement: scene art served as it is
-        <img src={picture} alt="" className="absolute inset-0 h-full w-full object-contain" />
-      ) : null}
+      <Scene set={env.key} staging={staging} iso={cut} files={config.files} figures={config.figures} />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
         <div className="text-[15px] text-[#f2c97a]">{named(env.title)}</div>
         {place.variants.length > 1 && (
@@ -357,7 +346,7 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
                 className={pill(v.key === env.key)}
                 onClick={() => {
                   setKey(v.key)
-                  setStaging(null)
+                  setStaging(v.stagings[0] ?? null)
                 }}
               >
                 {v.key === place.id ? "Base" : named(v.key.slice(place.id.length + 1))}
@@ -365,37 +354,33 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
             ))}
           </div>
         )}
-        {config.live && (
-          <>
-            <div className="flex items-center gap-1">
-              <span className="w-12 opacity-60">View</span>
-              <button type="button" className={pill(!iso)} onClick={() => setView("stage")}>
-                Stage
-              </button>
-              {env.room && env.stagings[0] && (
-                <button type="button" className={pill(iso)} onClick={() => setView("iso")}>
-                  Isometric
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-1">
-              <span className="w-12 opacity-60">Scene</span>
-              <button type="button" className={pill(!staging)} onClick={() => setStaging(null)}>
-                Empty
-              </button>
-              {env.stagings.map((s) => (
-                <button key={s} type="button" className={pill(s === staging)} onClick={() => setStaging(s)}>
-                  {scene(s)}
-                </button>
-              ))}
-            </div>
-          </>
+        {canCut && (
+          <div className="flex items-center gap-1">
+            <span className="w-12 opacity-60">View</span>
+            <button type="button" className={pill(!cut)} onClick={() => setView("stage")}>
+              Stage
+            </button>
+            <button type="button" className={pill(cut)} onClick={() => setView("iso")}>
+              Isometric
+            </button>
+          </div>
         )}
-        {!config.live && env.stagings.length > 0 && <div className="opacity-70">{env.stagings.map(scene).join(" · ")}</div>}
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="w-12 opacity-60">Scene</span>
+          {env.stagings.map((s) => (
+            <button key={s} type="button" className={pill(s === staging)} onClick={() => setStaging(s)}>
+              {scene(s)}
+            </button>
+          ))}
+          <button type="button" className={pill(!staging)} onClick={() => setStaging(null)}>
+            Empty
+          </button>
+        </div>
         <div className="font-mono text-[10px] opacity-75">
           {env.objects} parts · {env.shots} shots · {env.paintings} paintings
           {env.room ? ` · ${env.room[0].toFixed(1)} × ${env.room[1].toFixed(1)} m` : ""}
         </div>
+        <div className="text-[10px] opacity-55">Drag to turn · scroll to zoom · right-drag to slide</div>
       </div>
     </>
   )
@@ -474,7 +459,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
 
   const words = q.trim().toLowerCase()
   const shownCharacters = characters.filter((c) => (!only || c.figure) && (!words || `${c.name} ${c.role} ${c.id}`.toLowerCase().includes(words)))
-  const shownPlaces = places.filter((p) => (!only || p.variants.some((v) => v.room)) && (!words || `${p.title} ${p.variants.map((v) => v.key).join(" ")}`.toLowerCase().includes(words)))
+  const shownPlaces = places.filter((p) => (!only || p.variants.some((v) => hasIso(v.key, v.room))) && (!words || `${p.title} ${p.variants.map((v) => v.key).join(" ")}`.toLowerCase().includes(words)))
   const shownPictures = pictures.filter((p) => !words || `${p.title} ${p.kind} ${p.of ?? ""}`.toLowerCase().includes(words))
   const inGroup = (g: string) =>
     tab === "characters"
@@ -489,10 +474,15 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   const party = figured.filter((c) => c.figure?.party)
   const others = figured.filter((c) => !c.figure?.party)
   const home = !words && !only && group === "all" && tab === "characters"
+  // Which character's figure stands for a cast id, for a scene.
+  const provided = useMemo(
+    () => ({ ...config, figures: Object.fromEntries(characters.flatMap((c) => (c.figure ? (c.figure.cast ?? [c.id]).map((id) => [id, c.figure?.id as string]) : []))) }),
+    [config, characters]
+  )
 
   if (open)
     return (
-      <Config.Provider value={config}>
+      <Config.Provider value={provided}>
         <div className="fixed inset-0 z-[100] overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
           {"character" in open ? (
             <CharacterView character={open.character} params={asked} />
@@ -530,7 +520,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   )
 
   return (
-    <Config.Provider value={config}>
+    <Config.Provider value={provided}>
       <div className="min-h-screen bg-[#0d0b09] pt-12 font-serif text-[#e9dcc3]">
         <div className="mx-auto max-w-[1500px] px-5 pb-16 sm:px-8">
           <div className="pt-10 pb-7 text-center">
@@ -582,9 +572,9 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                     {groupName(g)} · {inGroup(g)}
                   </button>
                 ))}
-              {(tab === "characters" || (tab === "environments" && config.live)) && (
+              {tab !== "images" && (
                 <button type="button" className={`ml-3 ${pill(only)}`} onClick={() => setOnly((o) => !o)}>
-                  {tab === "characters" ? `3D · ${figured.length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => v.room)).length}`}
+                  {tab === "characters" ? `3D · ${figured.length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => hasIso(v.key, v.room))).length}`}
                 </button>
               )}
             </div>
@@ -649,7 +639,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                         ) : (
                           <span className="block aspect-[3/2] w-full bg-[#1a140e]" />
                         )}
-                        {config.live && p.variants.some((v) => v.room) && (
+                        {p.variants.some((v) => hasIso(v.key, v.room)) && (
                           <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">ISO</span>
                         )}
                         <span className="block px-2.5 pt-1.5 text-[12.5px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
