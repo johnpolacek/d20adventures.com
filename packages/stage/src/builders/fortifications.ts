@@ -187,6 +187,8 @@ export const gatehouse = defineBuilder(
       statues: z.boolean().default(true),
       portcullis: z.boolean().default(true),
       doors: z.boolean().default(true),
+      // The great doors shut, with a wicket standing open in one leaf: the way in for one at a time.
+      shut: z.boolean().default(false),
       lamp: z.boolean().default(true),
       keep: z.boolean().default(true),
       banner: matName.default("bannerCity"),
@@ -335,7 +337,34 @@ export const gatehouse = defineBuilder(
         if (hw > 0.5) box(b, M.iron, 0, y, -2.4, hw * 2, 0.16, 0.28)
       }
     }
-    if (p.doors) {
+    if (p.doors && p.shut) {
+      // Great doors shut across the passage, boarded up into the arch above a transom, with a wicket in the east leaf
+      // where the admitted walk through. Its own small door stands open into the city.
+      const Z = -9.5
+      const H = R - 0.2
+      const [w0, w1, wh] = [0.3, 2.5, 3.3]
+      const n = Math.round((2 * H) / 0.84)
+      const step = (2 * H) / n
+      for (let i = 0; i < n; i++) {
+        const x = -H + (i + 0.5) * step
+        const top = SP + Math.sqrt(Math.max(0, R * R - x * x))
+        const foot = x > w0 && x < w1 ? wh : 0
+        box(b, M.door, x, (foot + 24) / 2, Z, step - 0.03, 24 - foot, 0.55)
+        if (top > 24.4) box(b, M.door, x, (24.4 + top) / 2, Z - 0.1, step - 0.03, top - 24.4, 0.4)
+      }
+      for (const face of [-1, 1]) {
+        const zz = Z + face * 0.32
+        box(b, M.iron, 0, 24.2, zz, 2 * H, 0.5, 0.16)
+        box(b, M.iron, 0, 12, zz, 0.22, 24, 0.14)
+        for (const y of [7.5, 13, 18.5, 23]) for (const s of [-1, 1]) box(b, M.iron, (s * H) / 2, y, zz, H - 0.5, 0.38, 0.12)
+        box(b, M.iron, -H / 2, 2, zz, H - 0.5, 0.38, 0.12)
+        box(b, M.iron, (w1 + H) / 2 + 0.1, 2, zz, H - w1 - 0.5, 0.38, 0.12)
+        // The wicket's iron frame.
+        for (const x of [w0, w1]) box(b, M.iron, x, wh / 2, zz, 0.2, wh, 0.14)
+        box(b, M.iron, (w0 + w1) / 2, wh + 0.1, zz, w1 - w0 + 0.2, 0.2, 0.14)
+      }
+      box(b, M.door, w1 - 0.1, wh / 2, Z - 0.3 - (w1 - w0) / 2, 0.14, wh - 0.1, w1 - w0 - 0.1)
+    } else if (p.doors) {
       // Great doors swung back against the passage walls.
       for (const s of [-1, 1]) {
         const f = new Frame(b, M4(s * (R - 0.35), 0, -8, s * (Math.PI / 2)))
@@ -343,6 +372,8 @@ export const gatehouse = defineBuilder(
         for (const y of [2, 7.5, 13, 18.5, 23]) f.box(M.iron, 0, y, 0.32, 12.8, 0.38, 0.12)
         for (let i = 0; i < 50; i++) f.sphere(M.iron, rand(-6, 6), rand.pick([2, 7.5, 13, 18.5]), 0.4, 0.09)
       }
+    }
+    if (p.doors) {
       for (const s of [-1, 1])
         for (const zz of [-3, -13, -23]) {
           const f = new Frame(b, M4(s * (R - 0.2), 7.5, zz, -s * (Math.PI / 2)))
