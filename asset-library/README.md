@@ -268,6 +268,8 @@ A set with a room gets an Isometric view for nothing. A set out of doors gets on
 
 Owner, 2026-11-14: only the party is made in 3D for now. The party is Branka, Thalbern, Lyra, Poppen and Milos the cleric. A brief with `"party": true` is one of them. Everyone else stays a card.
 
+Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made in 3D as well, one model each at $0.60. A second try at either needs a new yes.
+
 - All five were built on 2026-11-14 for $0.60 each, and each rig's report was clean on its first run. Idle, Walk and Hit play on all of them unchanged.
 - At the Gates the scene's own party is Branka, Cassia, Yeva and Milos. The Gates' look (`looks.ts`) stands Lyra where Cassia is and Poppen where Yeva is, and adds Thalbern beside them. The staging itself is unchanged.
 
@@ -277,7 +279,7 @@ Owner, 2026-11-14: only the party is made in 3D for now. The party is Branka, Th
 - Detail levels swapped by distance in the stage.
 - Blind scoring of looks and movement (`workflow-score-to-target`).
 - A home for shipped figures. About 5 MB a character is too heavy for git at 120 characters.
-- Props and monsters. The skeleton is a person's: 18 bones, found by a pose model that expects a person. The owlbear of The Midnight Summons has no way through the pipeline yet.
+- Props and monsters. The skeleton is a person's: 18 bones, found by a pose model that expects a person. The owlbear of The Midnight Summons stands upright, 3.3 m tall, with a person's limbs, so the skeleton may fit it as it is. What is untried: a pose sheet of a beast with its arms down and out, the pose model on a beast (its joints can be put in `joints.json` by hand), and the clips on a body that shape. A beast on four legs has no way through yet.
 - Looks for the other outdoor places. 26 of the 41 sets have neither a room nor a look, so they have no Isometric view.
 - Any of it in the game itself.
 - Running a step from the page itself.
