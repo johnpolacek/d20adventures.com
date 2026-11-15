@@ -8,7 +8,7 @@
 //   - a place is assembled and live (scene.ts): a variant, with one of its encounters as that encounter opens or
 //     empty, as the stage shows it or as an isometric cut-away, with a camera the visitor moves.
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
@@ -17,7 +17,7 @@ import { figureClips, isRigged } from "../clips"
 import { LOOKS } from "../looks"
 import { hasIso } from "../scene"
 import type { Character, Figure, Library, Picture, Place } from "../types"
-import { Scene } from "./scene"
+import { type Nav, Scene } from "./scene"
 
 // Where a page of the library lives, and where its figures' files are served from.
 export interface LibraryConfig {
@@ -328,12 +328,19 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
   const canCut = hasIso(env.key, env.room)
   const [view, setView] = useState(params.view === "stage" || params.view === "iso" ? params.view : LOOKS[env.key] ? "iso" : "stage")
   const cut = view === "iso" && canCut
+  // Where the camera can jump to in the scene now showing, and where it last went.
+  const [nav, setNav] = useState<Nav | null>(null)
+  const [at, setAt] = useState("")
+  const onNav = useCallback((n: Nav | null) => {
+    setNav(n)
+    setAt(n?.open ?? "")
+  }, [])
   useEffect(() => {
     history.replaceState(null, "", `${config.home}?env=${env.key}&view=${cut ? "iso" : "stage"}&scene=${staging ?? "empty"}`)
   }, [env, cut, staging, config.home])
   return (
     <>
-      <Scene set={env.key} staging={staging} iso={cut} files={config.files} figures={config.figures} />
+      <Scene set={env.key} staging={staging} iso={cut} files={config.files} figures={config.figures} onNav={onNav} onPick={setAt} />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
         <div className="text-[15px] text-[#f2c97a]">{named(env.title)}</div>
         {place.variants.length > 1 && (
@@ -376,11 +383,32 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
             Empty
           </button>
         </div>
+        {[false, true].map((cast) => {
+          const row = nav?.shots.filter((s) => !!s.cast === cast) ?? []
+          return row.length ? (
+            <div key={String(cast)} className="flex flex-wrap items-center gap-1">
+              <span className="w-12 opacity-60">{cast ? "Cast" : "Camera"}</span>
+              {row.map((s) => (
+                <button
+                  key={s.key}
+                  type="button"
+                  className={pill(s.key === at)}
+                  onClick={() => {
+                    nav?.go(s.key)
+                    setAt(s.key)
+                  }}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          ) : null
+        })}
         <div className="font-mono text-[10px] opacity-75">
           {env.objects} parts · {env.shots} shots · {env.paintings} paintings
           {env.room ? ` · ${env.room[0].toFixed(1)} × ${env.room[1].toFixed(1)} m` : ""}
         </div>
-        <div className="text-[10px] opacity-55">Drag to turn · scroll to zoom · right-drag to slide</div>
+        <div className="text-[10px] opacity-55">Drag to turn · scroll to zoom · right-drag to slide · W A S D to fly · click a character</div>
       </div>
     </>
   )

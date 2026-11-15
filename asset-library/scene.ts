@@ -20,6 +20,8 @@ export interface SceneOptions {
   files: string
   figures: Record<string, string>
   onProgress?: (status: string) => void
+  // A cast member was clicked in the scene, and the camera has gone to them.
+  onPick?: (shot: string) => void
 }
 // A place to send the camera: one of the place's own views, or a member of the cast.
 export interface Spot {
@@ -63,6 +65,82 @@ const lens = (w: number, d: number) => Math.round(Math.min(40, Math.max(8, (2 * 
 // Whether a set has a cut-away to show: a look of its own, or a room to cut open.
 export const hasIso = (set: string, room: unknown) => !!LOOKS[set] || !!room
 
+// A camera that goes anywhere: no walls stop it, it looks from any height, the wheel moves it toward what the pointer
+// is on, and W A S D or the arrows fly it, with Q and E for down and up and Shift for speed.
+function roam(stage: Stage) {
+  const c = stage.controls
+  if (!c) return () => {}
+  ;(stage as unknown as { collide: () => void }).collide = () => {}
+  c.maxPolarAngle = Math.PI * 0.97
+  c.minDistance = 0.4
+  c.maxDistance = 900
+  c.zoomToCursor = true
+  const free = () => {
+    c.minPolarAngle = 0
+  }
+  c.addEventListener("start", free)
+  const KEYS: Record<string, Vec> = {
+    KeyW: [0, 0, 1],
+    ArrowUp: [0, 0, 1],
+    KeyS: [0, 0, -1],
+    ArrowDown: [0, 0, -1],
+    KeyD: [1, 0, 0],
+    ArrowRight: [1, 0, 0],
+    KeyA: [-1, 0, 0],
+    ArrowLeft: [-1, 0, 0],
+    KeyE: [0, 1, 0],
+    KeyQ: [0, -1, 0],
+  }
+  const held = new Set<string>()
+  let fast = false
+  const down = (e: KeyboardEvent) => {
+    fast = e.shiftKey
+    if (!KEYS[e.code] || e.metaKey || e.ctrlKey || e.altKey || (e.target as HTMLElement | null)?.closest?.("input, textarea, select")) return
+    e.preventDefault()
+    if (!held.size) c.dispatchEvent({ type: "start" } as never)
+    held.add(e.code)
+  }
+  const up = (e: KeyboardEvent) => {
+    fast = e.shiftKey
+    held.delete(e.code)
+  }
+  const blur = () => held.clear()
+  window.addEventListener("keydown", down)
+  window.addEventListener("keyup", up)
+  window.addEventListener("blur", blur)
+  let last = performance.now()
+  let frame = requestAnimationFrame(function fly(now) {
+    frame = requestAnimationFrame(fly)
+    const dt = Math.min(0.1, (now - last) / 1000)
+    last = now
+    if (!held.size) return
+    const cam = stage.camera
+    const [px, py, pz] = [cam.position.x, cam.position.y, cam.position.z]
+    // Forward is the way the camera looks, kept level. Looking straight down, it is the top of the frame.
+    let [fx, fz] = [c.target.x - px, c.target.z - pz]
+    if (Math.hypot(fx, fz) < 1e-3) [fx, fz] = [-Math.sin(cam.rotation.z), -Math.cos(cam.rotation.z)]
+    const n = Math.hypot(fx, fz) || 1
+    ;[fx, fz] = [fx / n, fz / n]
+    const pace = Math.min(40, Math.max(2.5, Math.hypot(c.target.x - px, c.target.y - py, c.target.z - pz) * 0.25)) * (fast ? 3 : 1) * dt
+    let [mx, my, mz] = [0, 0, 0]
+    for (const k of held) {
+      const [side, rise, ahead] = KEYS[k]
+      mx += (fx * ahead - fz * side) * pace
+      my += rise * pace
+      mz += (fz * ahead + fx * side) * pace
+    }
+    cam.position.set(px + mx, py + my, pz + mz)
+    c.target.set(c.target.x + mx, c.target.y + my, c.target.z + mz)
+  })
+  return () => {
+    cancelAnimationFrame(frame)
+    c.removeEventListener("start", free)
+    window.removeEventListener("keydown", down)
+    window.removeEventListener("keyup", up)
+    window.removeEventListener("blur", blur)
+  }
+}
+
 export async function openScene(container: HTMLElement, o: SceneOptions): Promise<Scene> {
   const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
   const set = structuredClone(await SETS[o.set]()) as SetLike
@@ -84,11 +162,12 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
         ? { iso: `45,35,40,${lens(room[3] - room[0], room[5] - room[2])}`, isolight: "1.4,0.3,1.8", paint: "0" }
         : {}
   const cut = !!q.iso
+  // The visitor's camera goes anywhere, in either view.
+  isoSet(set)
   if (cut) {
-    isoSet(set)
     // The scattered crowd keeps to the ground that is kept: each scatter is cut to it and thinned to match.
     const ground = nums(q.isobox)
-    if (ground && ground.length >= 4) {
+    if (ground && ground.length >= 4 && !q.isowhole) {
       for (const g of set.crowd?.groups ?? []) {
         if (g.type !== "scatter" || !g.area || !g.count) continue
         const [a0, b0, a1, b1] = g.area
@@ -108,6 +187,25 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
   const stage = await createStage({ container, set, staging: staging?.set === o.set ? staging : null, tier: "auto", flags, onProgress: o.onProgress })
   stops.push(() => stage.dispose())
 
+  // Face to face with one of the cast: in front of them, from the first side no other cast member stands in the way.
+  const front = (id: string, label: string, instant = false) => {
+    const c = stage.cast.find((m) => m.id === id)
+    if (!c) return
+    const [h, dist, up] = [c.height, c.height * 2.15, (6 * Math.PI) / 180]
+    const clear = (turn: number) => {
+      const [dx, dz] = [Math.sin(c.ry + turn), Math.cos(c.ry + turn)]
+      return stage.cast.every((m) => {
+        if (m === c) return true
+        const along = (m.x - c.x) * dx + (m.z - c.z) * dz
+        return along < 0.2 || along > dist + 0.4 || Math.abs((m.x - c.x) * dz - (m.z - c.z) * dx) > 0.5
+      })
+    }
+    const turn = ([0, 18, -18, 36, -36, 54, -54, 72, -72].find((d) => clear((d * Math.PI) / 180)) ?? 0) * (Math.PI / 180)
+    const target: Vec = [c.x, (c.y ?? 0) + h * 0.5, c.z]
+    const position: Vec = [target[0] + Math.cos(up) * Math.sin(c.ry + turn) * dist, target[1] + Math.sin(up) * dist, target[2] + Math.cos(up) * Math.cos(c.ry + turn) * dist]
+    stage.shot({ position, target, fov: 34, label } as Parameters<Stage["shot"]>[0], { instant })
+  }
+
   // In a cut-away a cast member goes by the name of the figure standing there.
   const people = stage.cast.map((c) => ({ key: `cast:${c.id}`, label: cut && look?.figures?.[c.id] ? title(look.figures[c.id]) : short(c.name), cast: true }))
   let shots: Spot[]
@@ -124,6 +222,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       fov,
       at: nums(q.isoat),
       box: nums(q.isobox),
+      whole: !!q.isowhole,
       gain: gain || undefined,
       ambient: ambient || undefined,
       key: key || undefined,
@@ -175,7 +274,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
     ]
     go = (shot, instant = false) => {
       const label = shots.find((s) => s.key === shot)?.label ?? ""
-      if (shot.startsWith("cast:")) return on([shot.slice(5)], label, instant)
+      if (shot.startsWith("cast:")) return front(shot.slice(5), label, instant)
       if (shot === "on:*")
         return on(
           stage.cast.map((c) => c.id),
@@ -199,14 +298,31 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
     open = staging?.shot ?? Object.keys(stage.shots)[0] ?? ""
     if (open) stage.shot(open, { instant: true })
     shots = [...Object.entries(stage.shots).map(([k, s]) => ({ key: k, label: s.label ?? title(k) })), ...people]
-    // On one of the cast: from a little off the way they face, at their own height.
-    go = (shot) => {
-      const c = shot.startsWith("cast:") && stage.cast.find((m) => m.id === shot.slice(5))
-      if (!c) return void stage.shot(shot)
-      const h = c.height
-      stage.shot({ subject: c.id, distance: Math.max(2.2, h * 1.5), angle: 24, height: h * 0.86, lookHeight: h * 0.66, fov: 46, label: c.name })
-    }
+    go = (shot) => (shot.startsWith("cast:") ? front(shot.slice(5), shots.find((s) => s.key === shot)?.label ?? "") : void stage.shot(shot))
   }
+
+  stops.push(roam(stage))
+  // A click on one of the cast, and not a drag of the camera, goes to them.
+  let pressed: [number, number, number] | null = null
+  const press = (e: PointerEvent) => {
+    pressed = [e.clientX, e.clientY, performance.now()]
+  }
+  const release = (e: PointerEvent) => {
+    const [x, y, t] = pressed ?? [0, 0, 0]
+    pressed = null
+    if (!t || Math.hypot(e.clientX - x, e.clientY - y) > 5 || performance.now() - t > 500) return
+    const r = stage.renderer.domElement.getBoundingClientRect()
+    const id = stage.pick(e.clientX - r.left, e.clientY - r.top)
+    if (!id || !shots.some((s) => s.key === `cast:${id}`)) return
+    go(`cast:${id}`)
+    o.onPick?.(`cast:${id}`)
+  }
+  container.addEventListener("pointerdown", press)
+  container.addEventListener("pointerup", release)
+  stops.push(() => {
+    container.removeEventListener("pointerdown", press)
+    container.removeEventListener("pointerup", release)
+  })
   return {
     stage,
     shots,

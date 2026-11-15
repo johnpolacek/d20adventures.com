@@ -27,6 +27,8 @@ export interface IsoOptions {
   room?: number
   // Open ground to keep, x0, z0, x1, z1 and optionally a height to cut at, in place of a room.
   box?: number[]
+  // The whole set under its own sky, with nothing cut away and no board: `box` then only says where its middle is.
+  whole?: boolean
   top?: number
   at?: number[]
   gain?: number
@@ -42,7 +44,7 @@ export interface IsoOptions {
 // The set's limits on a camera the player drives, lifted: this one stands outside the walls.
 export function isoSet<T extends { camera?: Record<string, unknown>; painted?: unknown }>(set: T): T {
   delete set.painted
-  set.camera = { ...set.camera, min: [-500, -20, -500], max: [500, 500, 500], maxDistance: 500, far: 600 }
+  set.camera = { ...set.camera, min: [-500, -20, -500], max: [500, 500, 500], maxDistance: 500, far: Math.max(600, Number(set.camera?.far) || 0) }
   return set
 }
 
@@ -62,65 +64,71 @@ export function iso(stage: Stage, o: IsoOptions) {
   const target = new THREE.Vector3(o.at?.[0] ?? (x0 + x1) / 2, o.at?.[2] ?? 0.6, o.at?.[1] ?? (z0 + z1) / 2)
   const position = new THREE.Vector3(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az)).multiplyScalar(o.distance).add(target)
 
-  // What is kept: from just inside the near walls to the far walls' outer faces, floor slab to the cut height.
-  // Open ground has no walls to cut or to keep: it is kept edge to edge, and as high as it goes.
-  const WALL = open ? 0 : 0.36
-  const sx = Math.sin(az) >= 0 ? 1 : -1
-  const sz = Math.cos(az) >= 0 ? 1 : -1
-  const nearX = sx > 0 ? x1 : x0
-  const farX = sx > 0 ? x0 : x1
-  const nearZ = sz > 0 ? z1 : z0
-  const farZ = sz > 0 ? z0 : z1
-  // The near walls carry studs and rails that stand proud of them, so the cut is a hand's width inside the room.
-  const TRIM = open ? 0 : 0.14
-  const keep = (n: [number, number, number], at: number) => new THREE.Plane(new THREE.Vector3(...n), at)
-  const planes = [keep([-sx, 0, 0], sx * nearX - TRIM), keep([sx, 0, 0], -sx * farX + WALL), keep([0, 0, -sz], sz * nearZ - TRIM), keep([0, 0, sz], -sz * farZ + WALL)]
-  const top = o.top ?? (open ? y1 : y1 - 0.56)
-  if (Number.isFinite(top)) planes.push(keep([0, -1, 0], top))
-  stage.renderer.clippingPlanes = planes
-  // The renderer's own planes are left out of shadow maps, so the built set's materials carry them too: what is cut
-  // away throws no shadow, and the key light comes in where the roof was.
-  stage.renderer.localClippingEnabled = true
-  stage.world.traverse((c) => {
-    if (!(c instanceof THREE.Mesh)) return
-    for (const m of Array.isArray(c.material) ? c.material : [c.material]) {
-      m.clippingPlanes = planes
-      m.clipShadows = true
-      m.needsUpdate = true
-    }
-  })
+  if (!o.whole) {
+    // What is kept: from just inside the near walls to the far walls' outer faces, floor slab to the cut height.
+    // Open ground has no walls to cut or to keep: it is kept edge to edge, and as high as it goes.
+    const WALL = open ? 0 : 0.36
+    const sx = Math.sin(az) >= 0 ? 1 : -1
+    const sz = Math.cos(az) >= 0 ? 1 : -1
+    const nearX = sx > 0 ? x1 : x0
+    const farX = sx > 0 ? x0 : x1
+    const nearZ = sz > 0 ? z1 : z0
+    const farZ = sz > 0 ? z0 : z1
+    // The near walls carry studs and rails that stand proud of them, so the cut is a hand's width inside the room.
+    const TRIM = open ? 0 : 0.14
+    const keep = (n: [number, number, number], at: number) => new THREE.Plane(new THREE.Vector3(...n), at)
+    const planes = [keep([-sx, 0, 0], sx * nearX - TRIM), keep([sx, 0, 0], -sx * farX + WALL), keep([0, 0, -sz], sz * nearZ - TRIM), keep([0, 0, sz], -sz * farZ + WALL)]
+    const top = o.top ?? (open ? y1 : y1 - 0.56)
+    if (Number.isFinite(top)) planes.push(keep([0, -1, 0], top))
+    stage.renderer.clippingPlanes = planes
+    // The renderer's own planes are left out of shadow maps, so the built set's materials carry them too: what is cut
+    // away throws no shadow, and the key light comes in where the roof was.
+    stage.renderer.localClippingEnabled = true
+    stage.world.traverse((c) => {
+      if (!(c instanceof THREE.Mesh)) return
+      for (const m of Array.isArray(c.material) ? c.material : [c.material]) {
+        m.clippingPlanes = planes
+        m.clipShadows = true
+        m.needsUpdate = true
+      }
+    })
 
-  // What is kept stands on a slab with sides of its own, as a model stands on its board: the ground's cut edge alone
-  // reads as a sheet of paper. Nothing is cut from below, so the slab shows.
-  const edge = [
-    Math.min(nearX - sx * TRIM, farX - sx * WALL),
-    Math.max(nearX - sx * TRIM, farX - sx * WALL),
-    Math.min(nearZ - sz * TRIM, farZ - sz * WALL),
-    Math.max(nearZ - sz * TRIM, farZ - sz * WALL),
-  ]
-  const floor = open ? -0.02 : y0 + 0.28
-  const deep = Math.max(0.9, Math.hypot(edge[1] - edge[0], edge[3] - edge[2]) * 0.035)
-  const board = new THREE.Mesh(new THREE.BoxGeometry(edge[1] - edge[0] - 0.02, deep, edge[3] - edge[2] - 0.02), new THREE.MeshStandardMaterial({ color: "#2e231b", roughness: 1 }))
-  board.position.set((edge[0] + edge[1]) / 2, floor - deep / 2, (edge[2] + edge[3]) / 2)
-  board.receiveShadow = true
-  board.name = "lab:board"
-  stage.scene.add(board)
+    // What is kept stands on a slab with sides of its own, as a model stands on its board: the ground's cut edge alone
+    // reads as a sheet of paper. Nothing is cut from below, so the slab shows.
+    const edge = [
+      Math.min(nearX - sx * TRIM, farX - sx * WALL),
+      Math.max(nearX - sx * TRIM, farX - sx * WALL),
+      Math.min(nearZ - sz * TRIM, farZ - sz * WALL),
+      Math.max(nearZ - sz * TRIM, farZ - sz * WALL),
+    ]
+    const floor = open ? -0.02 : y0 + 0.28
+    const deep = Math.max(0.9, Math.hypot(edge[1] - edge[0], edge[3] - edge[2]) * 0.035)
+    const board = new THREE.Mesh(new THREE.BoxGeometry(edge[1] - edge[0] - 0.02, deep, edge[3] - edge[2] - 0.02), new THREE.MeshStandardMaterial({ color: "#2e231b", roughness: 1 }))
+    board.position.set((edge[0] + edge[1]) / 2, floor - deep / 2, (edge[2] + edge[3]) / 2)
+    board.receiveShadow = true
+    board.name = "lab:board"
+    stage.scene.add(board)
 
-  // Behind it, a dark surround that is a little lighter at the middle, so the model does not float in a void.
-  s.sky.visible = false
-  const cv = document.createElement("canvas")
-  cv.width = cv.height = 512
-  const g = cv.getContext("2d") as CanvasRenderingContext2D
-  const glow = g.createRadialGradient(256, 236, 20, 256, 256, 380)
-  glow.addColorStop(0, o.surround?.[0] ?? "#33231a")
-  glow.addColorStop(1, o.surround?.[1] ?? "#0a0706")
-  g.fillStyle = glow
-  g.fillRect(0, 0, 512, 512)
-  const backdrop = new THREE.CanvasTexture(cv)
-  backdrop.colorSpace = THREE.SRGBColorSpace
-  stage.scene.background = backdrop
-  const fog = stage.scene.fog as THREE.FogExp2 | null
-  if (fog) fog.density = 0
+    // Behind it, a dark surround that is a little lighter at the middle, so the model does not float in a void.
+    s.sky.visible = false
+    const cv = document.createElement("canvas")
+    cv.width = cv.height = 512
+    const g = cv.getContext("2d") as CanvasRenderingContext2D
+    const glow = g.createRadialGradient(256, 236, 20, 256, 256, 380)
+    glow.addColorStop(0, o.surround?.[0] ?? "#33231a")
+    glow.addColorStop(1, o.surround?.[1] ?? "#0a0706")
+    g.fillStyle = glow
+    g.fillRect(0, 0, 512, 512)
+    const backdrop = new THREE.CanvasTexture(cv)
+    backdrop.colorSpace = THREE.SRGBColorSpace
+    stage.scene.background = backdrop
+    const fog = stage.scene.fog as THREE.FogExp2 | null
+    if (fog) fog.density = 0
+  } else {
+    // Seen from this far, the set's own haze would wash the square out: most of it is lifted.
+    const haze = stage.scene.fog as THREE.FogExp2 | null
+    if (haze) haze.density *= 0.3
+  }
 
   const inside = new THREE.Vector3((x0 + x1) / 2, open ? 2 : (y0 + y1) / 2, (z0 + z1) / 2)
   if (room) {

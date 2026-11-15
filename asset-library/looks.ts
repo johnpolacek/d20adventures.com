@@ -24,6 +24,8 @@ export const LOOKS: Record<string, Look> = {
     params: {
       paint: "0",
       isobox: "-46,-16,46,34",
+      // The whole square under its sky, edge to edge, and not a model on a board.
+      isowhole: "1",
       isohide: "awning",
       isolight: "1.06,0.22",
       isosky: "9db8e8",
