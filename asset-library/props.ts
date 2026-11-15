@@ -13,6 +13,8 @@ import { type Palm, relaxHands } from "./clips"
 
 const Y = new THREE.Vector3(0, 1, 0)
 const RADIUS = 0.019
+// How wide the staff is where a closed hand holds it, from its middle: a hand closes on about three centimetres.
+const GRIP = 0.0155
 
 // A druid's staff: two old stems wound about each other, parting at the head into an eye and closing over it, with a
 // vine up the lower half. It stands on its foot at the origin, `length` tall.
@@ -40,7 +42,21 @@ function staff(length: number, held = -1) {
       [0.004, 0.25, 0],
     ])
       points.push(new THREE.Vector3(top.x * 0.3 + side * x, shaft + y, z))
-    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, "centripetal"), 300, RADIUS, 8, false)
+    return slim(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, "centripetal"), 300, RADIUS, 8, false))
+  }
+  // Worn thin where the hand has held it: drawn in toward its middle line there, to the width a hand closes on.
+  const slim = <T extends THREE.BufferGeometry>(made: T) => {
+    if (held < 0) return made
+    const at = made.attributes.position
+    for (let i = 0; i < at.count; i++) {
+      const y = at.getY(i)
+      const t = y / shaft
+      const [cx, cz] = [0.012 * Math.sin(t * 5.2), 0.01 * Math.sin(t * 3.4 + 1)]
+      const most = Math.hypot(at.getX(i) - cx, at.getZ(i) - cz)
+      const want = most + (Math.min(most, GRIP * 0.94) - most) * Math.exp(-(((y - held) / 0.085) ** 2))
+      if (most > 1e-6) at.setXYZ(i, cx + ((at.getX(i) - cx) * want) / most, y, cz + ((at.getZ(i) - cz) * want) / most)
+    }
+    return made
   }
   // Bark: long streaks down the length, as light and as dents.
   const bark = (light: boolean) => {
@@ -85,7 +101,7 @@ function staff(length: number, held = -1) {
     const a = -t * 4.3 * 2 * Math.PI
     vine.push(new THREE.Vector3(0.012 * Math.sin(t * 5.2) + RADIUS * 1.75 * Math.cos(a), t * shaft, 0.01 * Math.sin(t * 3.4 + 1) + RADIUS * 1.75 * Math.sin(a)))
   }
-  group.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vine), 220, 0.0036, 5, false), new THREE.MeshStandardMaterial({ color: "#2f3a22", roughness: 0.9 })))
+  group.add(new THREE.Mesh(slim(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vine), 220, 0.0036, 5, false)), new THREE.MeshStandardMaterial({ color: "#2f3a22", roughness: 0.9 })))
   return group
 }
 
@@ -96,7 +112,7 @@ function staff(length: number, held = -1) {
 function wrap(root: THREE.Object3D, side: "L" | "R", palm: Palm, [along, out]: [number, number]) {
   if (root.userData.wrapped) return
   root.userData.wrapped = true
-  const WIDE = RADIUS * 1.4
+  const WIDE = GRIP * 1.06
   const axis = palm.along.clone().cross(palm.normal).normalize()
   root.traverse((o) => {
     if (!(o instanceof THREE.SkinnedMesh)) return
@@ -105,6 +121,8 @@ function wrap(root: THREE.Object3D, side: "L" | "R", palm: Palm, [along, out]: [
     if (!pos || !si || !sw || bone < 0) return
     const wrist = new THREE.Vector3().setFromMatrixPosition(o.skeleton.boneInverses[bone].clone().invert())
     const through = wrist.clone().addScaledVector(palm.along, along).addScaledVector(palm.normal, out)
+    const before = (pos.array as Float32Array).slice()
+    const moved = new Uint8Array(pos.count)
     const p = new THREE.Vector3()
     const off = new THREE.Vector3()
     for (let v = 0; v < pos.count; v++) {
@@ -117,6 +135,7 @@ function wrap(root: THREE.Object3D, side: "L" | "R", palm: Palm, [along, out]: [
       off.addScaledVector(axis, -up)
       const from = off.length()
       if (from >= WIDE || from < 1e-5) continue
+      moved[v] = 1
       p.copy(through)
         .addScaledVector(axis, up)
         .addScaledVector(off, WIDE / from)
@@ -125,6 +144,24 @@ function wrap(root: THREE.Object3D, side: "L" | "R", palm: Palm, [along, out]: [
     }
     // The normals are left as they were: made again, they would crease the whole body along its texture's seams.
     pos.needsUpdate = true
+    // Where the staff comes into the hand and goes out of it, the skin that lay across its way is taken out: the
+    // hollow at the top of a closed hand, between the thumb and the first finger, and the one under the little
+    // finger. Left in, the staff runs through skin. Only skin that faced along the staff: the hand's sides stay whole.
+    const index = o.geometry.index
+    if (!index) return
+    const line = axis.clone().transformDirection(o.bindMatrixInverse)
+    const corner = (i: number) => new THREE.Vector3(before[i * 3], before[i * 3 + 1], before[i * 3 + 2])
+    const kept: number[] = []
+    for (let f = 0; f < index.count; f += 3) {
+      const [a, b, c] = [index.getX(f), index.getX(f + 1), index.getX(f + 2)]
+      if (moved[a] && moved[b] && moved[c]) {
+        const [pa, pb, pc] = [corner(a), corner(b), corner(c)]
+        const faces = pb.sub(pa).cross(pc.sub(pa)).normalize()
+        if (Math.abs(faces.dot(line)) > 0.45) continue
+      }
+      kept.push(a, b, c)
+    }
+    if (kept.length < index.count) o.geometry.setIndex(kept)
   })
 }
 
