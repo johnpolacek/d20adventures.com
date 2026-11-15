@@ -20,6 +20,8 @@ export interface Look {
   // Changes to this set's own parts by id, for this view alone: null leaves one out.
   edit?: Record<string, Record<string, unknown> | null>
   shots: Record<string, Record<string, string>>
+  // The shot a scene with a cast opens on, if not `play`.
+  open?: string
 }
 
 export const LOOKS: Record<string, Look> = {
@@ -61,7 +63,11 @@ export const LOOKS: Record<string, Look> = {
     // Between the two the portcullis is let most of the way down: an iron grille across the arch, with room to walk
     // under it.
     edit: { "inner-gate": null, "city-blocks": { exclude: [[-64, -172, 64, -40]] }, "great-gate": { portcullisGap: 3.4 } },
+    open: "arrival",
     shots: {
+      // From the back of the line, low and wide, looking up at the gate over everyone: what it is to arrive. It is
+      // the game's own opening shot of the place.
+      arrival: { iso: "2.7,-25.7,95.5,72", isoat: "0,0,44" },
       // The whole gatehouse on its board.
       wide: { iso: "-35,30,190,38", isoat: "0,6,17" },
       // The checkpoint and the head of the queue, where the scene is played.

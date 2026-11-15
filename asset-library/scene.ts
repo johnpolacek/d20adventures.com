@@ -314,8 +314,17 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       from([at?.[0] ?? centre[0], at?.[2] ?? 0.6, at?.[1] ?? centre[2]], az, el, dist, lensOf, label, instant)
     }
     // With a cast, it opens where the scene is played, close enough to see them.
-    open = people.length ? (looks.play ? "play" : groups.some(([k]) => k === "party") ? "on:party" : people.length > 1 ? "on:*" : people[0].key) : Object.keys(looks)[0]
-    if (open !== Object.keys(looks)[0]) go(open, true)
+    open = people.length
+      ? look?.open && looks[look.open]
+        ? look.open
+        : looks.play
+          ? "play"
+          : groups.some(([k]) => k === "party")
+            ? "on:party"
+            : people.length > 1
+              ? "on:*"
+              : people[0].key
+      : Object.keys(looks)[0]
   } else {
     // Where the encounter opens, or the set's first shot.
     open = staging?.shot ?? Object.keys(stage.shots)[0] ?? ""
@@ -325,6 +334,8 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
   }
 
   stops.push(roam(stage))
+  // The cut-away's own limits on the camera are lifted by now, so its opening view can look up from the ground.
+  if (cut) go(open, true)
   // A click on one of the cast, and not a drag of the camera, goes to them.
   let pressed: [number, number, number] | null = null
   const press = (e: PointerEvent) => {
