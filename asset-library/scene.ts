@@ -40,10 +40,10 @@ export interface Scene {
 
 type Vec = [number, number, number]
 interface SetLike {
-  objects: { type: string }[]
+  objects: { type: string; id?: string }[]
   rooms?: { box: number[] }[]
   materials?: Record<string, object>
-  crowd?: { groups?: { type: string; area?: number[]; count?: number }[] }
+  crowd?: { groups?: { type: string; area?: number[]; count?: number; density?: { rect: number[] }[]; face?: { toward?: number[] } }[] }
   painted?: unknown
   camera?: Record<string, unknown>
 }
@@ -180,6 +180,29 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
     }
     if (q.isohide) set.objects = set.objects.filter((p) => !q.isohide.split(",").includes(p.type))
     for (const [name, change] of Object.entries(look?.materials ?? {})) if (set.materials?.[name]) Object.assign(set.materials[name], change)
+    // Sets that share this one's world are built into it where they stand: their parts as one group, moved there, and
+    // their scattered crowds with them. A material both sets name keeps this set's.
+    for (const j of look?.join ?? []) {
+      const other = structuredClone(await SETS[j.set]()) as SetLike
+      const [dx, dz] = j.at
+      const children = other.objects.filter((p) => !j.leave.includes(p.type)).map(({ id: _, ...p }) => p)
+      set.objects.push({ type: "group", id: `join-${j.set.split("/").pop()}`, at: [dx, 0, dz], children } as SetLike["objects"][number])
+      set.materials = { ...other.materials, ...set.materials }
+      const moved = (r: number[]) => [r[0] + dx, r[1] + dz, r[2] + dx, r[3] + dz]
+      for (const g of other.crowd?.groups ?? []) {
+        if (g.type !== "scatter" || !g.area) continue
+        set.crowd?.groups?.push({
+          ...g,
+          area: moved(g.area),
+          ...(g.density ? { density: g.density.map((d) => ({ ...d, rect: moved(d.rect) })) } : {}),
+          ...(g.face?.toward ? { face: { ...g.face, toward: [g.face.toward[0] + dx, g.face.toward[1] + dz] } } : {}),
+        })
+      }
+    }
+    for (const [id, change] of Object.entries(look?.edit ?? {})) {
+      if (!change) set.objects = set.objects.filter((p) => p.id !== id)
+      else Object.assign(set.objects.find((p) => p.id === id) ?? {}, change)
+    }
     if (staging && look?.cast) staging.cast = [...(staging.cast ?? []), ...(look.cast as { id: string }[])]
   }
 
