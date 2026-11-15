@@ -21,10 +21,17 @@ export interface SceneOptions {
   figures: Record<string, string>
   onProgress?: (status: string) => void
 }
+// A place to send the camera: one of the place's own views, or a member of the cast.
+export interface Spot {
+  key: string
+  label: string
+  cast?: boolean
+}
 export interface Scene {
   stage: Stage
-  // Shots to jump between: the game's own, or the look's.
-  shots: [string, string][]
+  // Views to jump between, then the cast: the first is where the scene opens.
+  shots: Spot[]
+  open: string
   go: (shot: string) => void
   stop: () => void
 }
@@ -41,12 +48,15 @@ interface SetLike {
 interface StagingLike {
   set: string
   shot?: string
+  shots?: Record<string, { subject?: string; subjects?: string[]; label?: string }>
   cast?: { id: string }[]
   painted?: boolean
 }
 
 const nums = (s: string | undefined) => s?.split(",").map(Number)
 const title = (s: string) => s.replace(/(^|-)(\w)/g, (_, dash: string, c: string) => `${dash ? " " : ""}${c.toUpperCase()}`)
+// A first name, or all of "The bard".
+const short = (name: string) => (/^(the|an?)\s/i.test(name) ? name : name.split(" ")[0])
 // The lens that fits a room seen from 40 metres.
 const lens = (w: number, d: number) => Math.round(Math.min(40, Math.max(8, (2 * Math.atan((Math.hypot(w, d) * 0.52) / 40) * 180) / Math.PI)))
 
@@ -98,8 +108,11 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
   const stage = await createStage({ container, set, staging: staging?.set === o.set ? staging : null, tier: "auto", flags, onProgress: o.onProgress })
   stops.push(() => stage.dispose())
 
-  let shots: [string, string][]
-  let go: (shot: string) => void
+  // In a cut-away a cast member goes by the name of the figure standing there.
+  const people = stage.cast.map((c) => ({ key: `cast:${c.id}`, label: cut && look?.figures?.[c.id] ? title(look.figures[c.id]) : short(c.name), cast: true }))
+  let shots: Spot[]
+  let open: string
+  let go: (shot: string, instant?: boolean) => void
   if (cut) {
     if (q.paint === "0") Object.defineProperty((stage as unknown as { pipeline: { paint: object } }).pipeline.paint, "strength", { get: () => 0, set: () => {} })
     const [azimuth = 45, elevation = 35, distance = 40, fov = 24] = nums(q.iso) ?? []
@@ -131,28 +144,73 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       if (q.rings) stops.push(castRings(stage, q.rings.split(",")).stop)
     }
     if (Number(q.shade)) stops.push(crowdShade(stage, Number(q.shade)).stop)
-    // Another of the look's shots is the same cut-away from another place: the camera glides there.
+
+    // Every view is the same cut-away from another place: the camera glides there.
     const centre = view.target as Vec
-    shots = look ? Object.keys(look.shots).map((k) => [k, title(k)]) : []
-    go = (shot) => {
-      const s = look?.shots[shot]
-      const [az = 45, el = 35, dist = 40, lensOf = 24] = nums(s?.iso) ?? []
-      const at = nums(s?.isoat)
-      const target: Vec = [at?.[0] ?? centre[0], at?.[2] ?? 0.6, at?.[1] ?? centre[2]]
+    const from = (target: Vec, az: number, el: number, dist: number, lensOf: number, label: string, instant: boolean) => {
       const [a, e] = [(az * Math.PI) / 180, (el * Math.PI) / 180]
       const position: Vec = [target[0] + Math.cos(e) * Math.sin(a) * dist, target[1] + Math.sin(e) * dist, target[2] + Math.cos(e) * Math.cos(a) * dist]
-      if (s) stage.shot({ position, target, fov: lensOf, label: title(shot) } as Parameters<Stage["shot"]>[0])
+      stage.shot({ position, target, fov: lensOf, label } as Parameters<Stage["shot"]>[0], { instant })
     }
+    // On people: close enough to fill the frame with them, from the side the cut-away is seen from.
+    const LENS = 10
+    const on = (ids: string[], label: string, instant: boolean) => {
+      const who = stage.cast.filter((c) => ids.includes(c.id))
+      if (!who.length) return
+      const [x, z] = [who.reduce((n, c) => n + c.x, 0) / who.length, who.reduce((n, c) => n + c.z, 0) / who.length]
+      const reach = Math.max(...who.map((c) => Math.hypot(c.x - x, c.z - z))) + 1.7
+      // A group too wide for that lens from where the cut-away stands is seen through a wider one.
+      const far = (reach * 1.15) / Math.tan((LENS * Math.PI) / 360)
+      const wide = far > distance ? (2 * Math.atan((reach * 1.15) / distance) * 180) / Math.PI : LENS
+      from([x, 0.95, z], azimuth, elevation, Math.min(distance, far), wide, label, instant)
+    }
+    const looks = look ? look.shots : { wide: {} as Record<string, string> }
+    const groups = Object.entries(staging?.shots ?? {}).filter(([k, s]) => (s.subjects || s.subject) && !looks[k])
+    shots = [
+      ...Object.keys(looks).map((k) => ({ key: k, label: title(k) })),
+      { key: "overhead", label: "Overhead" },
+      ...(people.length > 1 ? [{ key: "on:*", label: "Everyone" }] : []),
+      ...groups.map(([k, s]) => ({ key: `on:${k}`, label: s.label ?? title(k) })),
+      ...people,
+    ]
+    go = (shot, instant = false) => {
+      const label = shots.find((s) => s.key === shot)?.label ?? ""
+      if (shot.startsWith("cast:")) return on([shot.slice(5)], label, instant)
+      if (shot === "on:*")
+        return on(
+          stage.cast.map((c) => c.id),
+          label,
+          instant
+        )
+      const group = shot.startsWith("on:") && staging?.shots?.[shot.slice(3)]
+      if (group) return on(group.subjects ?? (group.subject ? [group.subject] : []), label, instant)
+      if (shot === "overhead") return from([centre[0], 0, centre[2]], 0, 84, distance, fov, label, instant)
+      const s = looks[shot]
+      if (!s) return
+      const [az = azimuth, el = elevation, dist = distance, lensOf = fov] = nums(s.iso) ?? []
+      const at = nums(s.isoat)
+      from([at?.[0] ?? centre[0], at?.[2] ?? 0.6, at?.[1] ?? centre[2]], az, el, dist, lensOf, label, instant)
+    }
+    // With a cast, it opens where the scene is played, close enough to see them.
+    open = people.length ? (looks.play ? "play" : groups.some(([k]) => k === "party") ? "on:party" : people.length > 1 ? "on:*" : people[0].key) : Object.keys(looks)[0]
+    if (open !== Object.keys(looks)[0]) go(open, true)
   } else {
     // Where the encounter opens, or the set's first shot.
-    const open = staging?.shot ?? Object.keys(stage.shots)[0]
+    open = staging?.shot ?? Object.keys(stage.shots)[0] ?? ""
     if (open) stage.shot(open, { instant: true })
-    shots = Object.entries(stage.shots).map(([k, s]) => [k, s.label ?? title(k)])
-    go = (shot) => void stage.shot(shot)
+    shots = [...Object.entries(stage.shots).map(([k, s]) => ({ key: k, label: s.label ?? title(k) })), ...people]
+    // On one of the cast: from a little off the way they face, at their own height.
+    go = (shot) => {
+      const c = shot.startsWith("cast:") && stage.cast.find((m) => m.id === shot.slice(5))
+      if (!c) return void stage.shot(shot)
+      const h = c.height
+      stage.shot({ subject: c.id, distance: Math.max(2.2, h * 1.5), angle: 24, height: h * 0.86, lookHeight: h * 0.66, fov: 46, label: c.name })
+    }
   }
   return {
     stage,
     shots,
+    open,
     go,
     stop: () => {
       for (const stop of stops.reverse()) stop()

@@ -4,15 +4,17 @@
 // Drag to turn the camera, scroll or pinch to move in and out, and drag with two fingers or the right button to slide.
 
 import { useEffect, useRef, useState } from "react"
-import type { Scene as Opened, SceneOptions } from "../scene"
+import type { Scene as Opened, SceneOptions, Spot } from "../scene"
 
-const pill = "rounded border border-[#e6c89640] bg-[#0e0a06b0] px-2 py-0.5 text-[11px] text-[#e9dcc3] backdrop-blur-sm hover:border-[#f2c97a] hover:text-[#f2c97a]"
+const pill = (on: boolean) =>
+  `rounded border px-2.5 py-1 text-[12px] backdrop-blur-sm hover:border-[#f2c97a] hover:text-[#f2c97a] ${on ? "border-[#f2c97a] bg-[#f2c97a26] text-[#f2c97a]" : "border-[#e6c89640] bg-[#0e0a06b0] text-[#e9dcc3]"}`
 
 export function Scene(props: Omit<SceneOptions, "onProgress">) {
   const host = useRef<HTMLDivElement>(null)
   const scene = useRef<Opened | null>(null)
   const [status, setStatus] = useState<string | null>("Loading")
-  const [shots, setShots] = useState<[string, string][]>([])
+  const [shots, setShots] = useState<Spot[]>([])
+  const [at, setAt] = useState("")
   const { set, staging, iso, files, figures } = props
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export function Scene(props: Omit<SceneOptions, "onProgress">) {
         if (gone) return opened.stop()
         scene.current = opened
         setShots(opened.shots)
+        setAt(opened.open)
         await opened.stage.firstFrame
         if (!gone) setStatus(null)
       })
@@ -47,12 +50,28 @@ export function Scene(props: Omit<SceneOptions, "onProgress">) {
       <div ref={host} className="absolute inset-0" />
       {status && <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[13px] text-[#e9dcc3] opacity-70">{status}</div>}
       {!status && shots.length > 1 && (
-        <div className="absolute right-3 bottom-3 left-3 flex flex-wrap items-center justify-center gap-1">
-          {shots.map(([key, label]) => (
-            <button key={key} type="button" className={pill} onClick={() => scene.current?.go(key)}>
-              {label}
-            </button>
-          ))}
+        <div className="absolute right-3 bottom-3 left-3 space-y-1.5">
+          {[false, true].map((cast) => {
+            const row = shots.filter((s) => !!s.cast === cast)
+            return row.length ? (
+              <div key={String(cast)} className="flex flex-wrap items-center justify-center gap-1">
+                <span className="w-10 text-right text-[10px] tracking-[0.14em] text-[#e9dcc3] uppercase [text-shadow:0_1px_3px_#000]">{cast ? "Cast" : "View"}</span>
+                {row.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    className={pill(s.key === at)}
+                    onClick={() => {
+                      scene.current?.go(s.key)
+                      setAt(s.key)
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            ) : null
+          })}
         </div>
       )}
     </>
