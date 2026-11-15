@@ -470,6 +470,18 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   const sections = (tab === "images" ? kinds : groups).filter((g) => (group === "all" || group === g) && inGroup(g) > 0)
   const total = tab === "characters" ? shownCharacters.length : tab === "environments" ? shownPlaces.length : shownPictures.length
   const groupName = (g: string) => (tab === "images" ? g : g === "heroes" ? "Player Heroes" : g === "unused" ? "Not in a Scene" : named(g))
+  // An adventure's places in the order the story reaches them, a run for each chapter.
+  const chapters = (g: string) => {
+    const first = (p: Place) => p.story?.[g]?.order ?? Number.MAX_SAFE_INTEGER
+    const runs: { chapter: string; places: Place[] }[] = []
+    for (const p of shownPlaces.filter((p) => p.groups.includes(g)).sort((a, b) => first(a) - first(b))) {
+      const chapter = p.story?.[g]?.chapter ?? ""
+      const last = runs.at(-1)
+      if (last?.chapter === chapter) last.places.push(p)
+      else runs.push({ chapter, places: [p] })
+    }
+    return runs
+  }
   const figured = characters.filter((c) => c.figure)
   const party = figured.filter((c) => c.figure?.party)
   const others = figured.filter((c) => !c.figure?.party)
@@ -623,34 +635,41 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                     ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3">
-                  {shownPlaces
-                    .filter((p) => p.groups.includes(g))
-                    .map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setOpen({ place: p })}
-                        className="group relative overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
-                      >
-                        {p.picture ? (
-                          // biome-ignore lint/performance/noImgElement: scene art served as it is
-                          <img src={p.picture} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
-                        ) : (
-                          <span className="block aspect-[3/2] w-full bg-[#1a140e]" />
-                        )}
-                        {p.variants.some((v) => hasIso(v.key, v.room)) && (
-                          <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">ISO</span>
-                        )}
-                        <span className="block px-2.5 pt-1.5 text-[12.5px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
-                        <span className="block px-2.5 pb-2 font-mono text-[9.5px] opacity-55">
-                          {p.variants.length > 1 ? `${p.variants.length} Variants · ` : ""}
-                          {scenes(p.variants.reduce((n, v) => n + v.stagings.length, 0))}
-                          {p.variants.some((v) => v.paintings) ? " · Painted" : ""}
-                        </span>
-                      </button>
-                    ))}
-                </div>
+                chapters(g).map(({ chapter, places: run }, i, all) => (
+                  <div key={chapter}>
+                    {all.length > 1 && chapter && (
+                      <h3 className={`${i ? "pt-5" : "pt-1"} pb-2 font-display text-[15px] tracking-[0.03em] text-[#f2c97a]`}>
+                        {named(chapter)} <span className="font-serif text-[11px] text-[#e9dcc3] opacity-55">· {run.length}</span>
+                      </h3>
+                    )}
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3">
+                      {run.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setOpen({ place: p })}
+                          className="group relative overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
+                        >
+                          {p.picture ? (
+                            // biome-ignore lint/performance/noImgElement: scene art served as it is
+                            <img src={p.picture} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
+                          ) : (
+                            <span className="block aspect-[3/2] w-full bg-[#1a140e]" />
+                          )}
+                          {p.variants.some((v) => hasIso(v.key, v.room)) && (
+                            <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">ISO</span>
+                          )}
+                          <span className="block px-2.5 pt-1.5 text-[12.5px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
+                          <span className="block px-2.5 pb-2 font-mono text-[9.5px] opacity-55">
+                            {p.variants.length > 1 ? `${p.variants.length} Variants · ` : ""}
+                            {scenes(p.variants.reduce((n, v) => n + v.stagings.length, 0))}
+                            {p.variants.some((v) => v.paintings) ? " · Painted" : ""}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))
               )}
             </section>
           ))}

@@ -45,6 +45,8 @@ export interface Place {
   title: string
   picture: string | null
   groups: string[]
+  // Where it first comes up in each adventure it is in: the encounter's order, and the chapter that encounter is in.
+  story?: Record<string, { order: number; chapter: string }>
   variants: Environment[]
 }
 // A picture: the setting's own, an adventure's cover, a scene's art, a map, a portrait, a set's painting.

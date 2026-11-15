@@ -2,7 +2,8 @@
 //
 // Characters are the cast of every staging (packages/stage/src/stagings) and the player hero looks (public/stage/heroes).
 // One with a figure in the workspace (asset-library/characters, built by `pnpm assets <id>`) has a 3D figure.
-// Places are the built sets (packages/stage/src/sets), a place's variants kept together.
+// Places are the built sets (packages/stage/src/sets), a place's variants kept together, each placed in its adventure's
+// story by the encounters played there (content/settings/<setting>/adventures).
 // Pictures are the setting's own (named in its data, in the data bucket) and the art under public/stage.
 //
 // This reads the disk, so it runs on a developer's machine: the dev page calls it on every load, and `pnpm assets:sync`
@@ -56,6 +57,14 @@ function fromSetting(setting: string): Promise<Picture[]> {
     ]
   })()
   return settingPictures
+}
+
+// Where an encounter falls in its adventure, as its page says: its order, and the chapter it is in.
+async function told(root: string, setting: string, staging: string): Promise<{ order: number; chapter: string } | null> {
+  const [adventure, encounter] = staging.split("/")
+  const text = await readFile(path.join(root, "content/settings", setting, "adventures", adventure, "encounters", `${encounter}.md`), "utf8").catch(() => null)
+  const order = Number(text?.match(/^moduleOrder:\s*(\d+)/m)?.[1])
+  return Number.isFinite(order) ? { order, chapter: text?.match(/^sectionTitle:\s*"(.*)"/m)?.[1] ?? "" } : null
 }
 
 const HEROES = "heroes"
@@ -144,6 +153,12 @@ export async function buildLibrary(root = process.cwd()): Promise<Library> {
     p.picture = p.variants.find((v) => v.picture)?.picture ?? null
     const groups = [...new Set(p.variants.flatMap((v) => v.stagings.map((s) => s.split("/")[0])))]
     p.groups = groups.length ? groups : [UNUSED]
+    p.story = {}
+    for (const staging of p.variants.flatMap((v) => v.stagings)) {
+      const at = await told(root, setting, staging)
+      const adventure = staging.split("/")[0]
+      if (at && at.order < (p.story[adventure]?.order ?? Number.POSITIVE_INFINITY)) p.story[adventure] = at
+    }
   }
   places.sort((a, b) => a.title.localeCompare(b.title))
 
