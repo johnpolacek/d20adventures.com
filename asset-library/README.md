@@ -2,7 +2,7 @@
 
 The workspace for the game's 3D assets: every character's files, the pipeline that makes them, the clips they play and the isometric looks of the places they stand in. The page that shows it all is `/dev/assets` in the workspace and `/settings/<setting>/assets` on the site.
 
-Written 2026-11-14, brought up to date 2026-11-15. None of this ships in the game yet: the game's own sets, stagings and paintings are untouched by anything here.
+Written 2026-11-14, brought up to date 2026-11-15, the second time after The Midnight Summons got its looks and its two figures. None of this ships in the game yet: the game's own sets, stagings and paintings are untouched by anything here.
 
 ## Where things are
 
@@ -97,6 +97,8 @@ This Mac has 8 GB. Run one heavy job at a time. A capture at the ultra tier take
 - `cast` is every id the character goes by in the stagings. Branka is `branka` at the gates and `branka-stoneveil` at the inn. It is how the library marks a card 3D.
 - `stow` says where what the card's hands hold goes. A generator fuses anything held into the arm.
 - `arms` is how far out the arms stand. Use 45 for a bulky outfit, so a sleeve clears the hip.
+- `"creature": true` is for a beast that stands upright. Its sheet is then asked for as a living animal, not a person in costume. See A beast, below.
+- A staff has nowhere good to go. Held, it fuses into the arm. On the back, it is lost, since the model is made from the front. Wollandora's `stow` leaves hers out of the picture.
 
 ### 1. Pose sheet
 
@@ -110,8 +112,9 @@ This Mac has 8 GB. Run one heavy job at a time. A capture at the ultra tier take
 - `joints.py` finds 22 points on the A-pose front with a pose model. Shoulders, elbows, wrists, hips, knees, ankles and toes are the model's. The trunk and head are placed between them, and the top of the head is the top of the figure against the grey.
 - `joints.jpg` is the points drawn over the picture. Look at it before paying for step 3.
 - Checked against hand marks on two characters: 4 to 6 cm off on average, 14 cm at worst, and the found shoulders and knees looked nearer the truth.
-- It expects a person. It has not been tried on a monster or a beast.
-- To move a point, edit `joints.json` and run `--redo=rig`.
+- It expects a person. On the owlbear it was sure of nothing (`leastSure` 0.08): arms and hips came out near, the head and the legs wrong. See A beast.
+- A robe to the ground hides the legs. On Wollandora the ankles were found up at the hem and were moved down to the boots by hand, and the knees are a guess.
+- To move a point, edit `joints.json` and run `--redo=rig`. `--redo=joints` writes the file again and loses the edit.
 
 ### 3. Model
 
@@ -143,6 +146,8 @@ What `rig.py` does, in order:
 | `lods[].joints` | `18` | An extra joint means points with no weights. |
 
 The report cannot see a skeleton that lies across the body. The first Garlan passed every number with his skeleton sideways. Only the frame strips in step 6 showed it.
+
+Nor can it see a figure rigged back to front. The rig tells front from back by the boots reaching forward of the shins, and a robe to the ankles has no shins. Wollandora passed every number facing backward: in the library she showed her back, and in the walk her knees bent the wrong way. `"turn": 2` in her `joints.json` turns her about. It is quarter turns added to the rig's own guess. Look at the first strip of every robed figure.
 
 ### 5. Shelf
 
@@ -180,6 +185,24 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 
 Look for: hands or arms through the body, torn mesh at the armpits and elbows, feet on the floor, the face at each detail level, and the figure facing the way its cast member does.
 
+### A beast
+
+The owlbear was the first, on 2026-11-15: 3.3 m, upright, with a person's limbs. It went through for $0.60 on the first try, on the same 18 bones, and Idle, Walk and Hit play on it. What it took:
+
+1. `"creature": true` in the brief, and a `who` that describes the animal. The sheet came back right the first time: upright, feet apart, arms down and out at 40 degrees, claws open, mouth closed. The card's own pose, reared with arms raised, is what the prompt rules out.
+2. The joints by hand. The pose model's guess is worth keeping for the arms alone. All 22 points were placed on `apose-front.png` and redrawn with `joints-check.mjs` until the lines lay inside every limb. `headTop` is the tips of the ear tufts, since it sets the scale. `L` is the figure's own left, the picture's right.
+3. Nothing else. The rig's report was clean: heat solve, no loose points, 18 joints, arms hanging at 11 and 12 degrees. Paws read as boots for telling front from back.
+
+What looks wrong on it, said plainly:
+
+- The walk is a man's walk on a bear: upright, quick and light, with a man's swinging arms. A beast of that size wants to be slow, heavy and hunched.
+- It stands calm with its arms down. The card rears and roars. There is no clip for that, and none for an attack.
+- It is slate grey. The card is a deep blue. The sheet lost the colour, and the model follows the sheet.
+- One ear tuft came out shorter than the other.
+- `relaxHands` treats its claws as fingers and curls them. Nothing looks torn from two metres. Nobody has looked closer.
+
+Still untried: a beast on four legs, wings, a tail. The skeleton has no bones for any of them.
+
 ## Clips
 
 `asset-library/clips.ts` holds Idle, Walk and Hit. They are written as turns per bone, not recorded, and no character owns them. The skeleton has one bone to a hand and a generated figure's fingers come straight and spread, so `relaxHands` bends them in the mesh once, when a figure loads: curled a little toward the palm and drawn together, with the hand brought into line with the forearm. The files on disk are not changed.
@@ -215,7 +238,7 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 
 ### A look for a place
 
-A set with a room gets an Isometric view for nothing. A set out of doors gets one when it has a look: an entry in `asset-library/looks.ts` under the set's key. Two sets have one so far, the Gates and the Dragonbone Inn. The Gates' entry is the one to copy.
+A set with a room gets an Isometric view for nothing. A set out of doors gets one when it has a look: an entry in `asset-library/looks.ts` under the set's key. Five sets have one so far: the Gates, the Dragonbone Inn, and the three places of The Midnight Summons. The Gates' entry is the one to copy for a town by day, and the Valkarr trail's for a wood at night.
 
 | Field | What it is |
 |---|---|
@@ -228,13 +251,31 @@ A set with a room gets an Isometric view for nothing. A set out of doors gets on
 | `edit` | Changes to the set's parts by id, for this view alone. `null` leaves a part out. |
 | `join` | Other sets that stand in the same world, each with where its middle falls in this one and the part types to leave out. |
 
-- `params`: `isowhole: "1"` keeps the whole set under its own sky, and is what an outdoor place wants. Without it the place is a model on a board, cut to `isobox`. `paint: "0"` turns the painterly pass off. `isolight: "gain,ambient,key"`, `isosky`, and `isolamps` (`x,y,z,strength,reach` joined by `;`) light it. `isohide` leaves out part types that roof people over. `rings` are the cast ids ringed in gold. `shade` darkens the ground under the crowd. `bloom: "on"`.
+- `params`: `isowhole: "1"` keeps the whole set under its own sky, and is what an outdoor place wants. Without it the place is a model on a board, cut to `isobox`. `paint: "0"` turns the painterly pass off. `isolight: "gain,ambient,key"`, `isosky`, and `isolamps` (`x,y,z,strength,reach` and, if not a flame's, a colour, joined by `;`) light it. `isohide` leaves out part types that roof people over. `rings` are the cast ids ringed in gold. `shade` darkens the ground under the crowd. `bloom: "on"`. Four more are for night and for woods, below: `isofill`, `isohaze`, `figenv` and `isoclear`.
 - A shot's camera stands at the point looked at, plus the distance along the azimuth and elevation. A negative elevation looks up from below that point: the Gates' `arrival` looks at a point 44 m up the gate from 2.6 m off the ground.
 - The first shot named `wide` is the place's base view. A look needs one.
 - Open on drama. The owner's call, 2026-11-15: a low, wide view that looks up at the place is "dramatic and great", and a high view looking down at the ground is "underwhelming". Give every place an `arrival` like it, set `open: "arrival"`, and keep a look-down `play` for seeing who stands where.
 - The views on people (Everyone, and the staging's own group shots) and the front view of each cast member are worked out, not written. They need nothing in the look.
 - To find a camera: open the place, fly to the view, and run `__place.view()` in the browser's console. It answers with the camera as a shot is written, `iso` and `isoat`, ready to paste. `__place.stage` is the stage itself.
-- A painted set's paintings are left out of both views, so a painted set shows as built. All three sets of The Midnight Summons are painted and out of doors, with no look yet.
+- A painted set's paintings are left out of both views, so a painted set shows as built.
+
+### A wood, and a night
+
+The three places of The Midnight Summons were the first woods and the first night sets to get a look, on 2026-11-15. What they taught:
+
+- A night set carries a light on its camera (`atmosphere.fill`), for the game's close shots. From a wide view it lights the near grass and nothing else, and the place goes flat. `isofill: "0.25"` leaves a quarter of it.
+- Light a night from where the story has light. The set's moon is the key. Add a cool lamp where the canopy opens: `isolamps: "-1.3,7.5,0.4,55,17,9db8ff"` is moonlight pooled in the stone circle, and the trail has one under each of its two shafts of light. Keep `ambient` low, 0.14 to 0.2. More than that and the wood reads as an overcast day.
+- `isohaze` is the share of the set's own haze a whole place keeps, 0.3 if not given. A night wood's haze is thick at ten paces and a wall from forty: the trail keeps 0.12. The stones keep 0.7, to put distance into the valley and veil the bare far bank.
+- `figenv` is how much a figure reflects of its own lit room, 0.55 out of doors if not given. At night that makes a figure glow. 0.12 to 0.18 sits it in the place.
+- A wood seen from above is all canopy, so a look-down `play` shows leaves. `isoclear: "x,z,r;..."` leaves out the trees inside those circles: a tree set by hand is dropped, and a scattered wood keeps clear. Clear the side the views look from and no more. A scatter makes up its number elsewhere, so a few trees move.
+- To find which tree is in the way, list the trunks: `__place.stage.footprints.filter(f => f.kind === "circle" && f.height > 8)` in the console gives each tree's place and height.
+- The arrival shot does the most. A wood has no gate to look up at, so look up at its tallest thing against the sky: the tallest stone with the moon beside it, the great oak under its shaft of light, the cottage under its oak. Tilt up until the ground is the bottom quarter of the frame.
+- `materials` can take the daylight out of grass: lit from above by a lamp, the stones' grass went a lawn's green until its tips were moved toward the moon's colour.
+- The views on people know trunks from the engine's footprints, and not leaves: the stage keeps no geometry to test a sight line against. A crown is estimated from each trunk's height (`scene.ts`), and a view with a crown across it is passed over. It is an estimate: a low branch can still cross a face.
+- The automatic Overhead view is canopy in a wood. It is left in, since a place may have a clearing.
+- The ranger's home is the morning after, by day, though its two scenes belong to the same adventure. The set's own sun lights it, as at the Gates.
+
+Joining the three into one wood was weighed and left alone. The trail's own marks put the stones north up the deer trail and the home south, but no set gives a distance, as the festival square does for the Gates. The Gates' join pays because the arch frames the square. Here nothing of one place shows from another: it is night, the haze is thick, and a hundred metres of trunks stand between. The home is by day and cannot share a sky with the other two. Each set's scattered wood would also plant trees in the other's clearing and river, so every scatter would need its own clearings written. If it is ever wanted, join the trail and the stones only.
 
 ## The page
 
@@ -255,8 +296,10 @@ A set with a room gets an Isometric view for nothing. A set out of doors gets on
 - Milos's staff was on his back on the sheet. His model was made from the front, so he has none.
 - The crowd is 16 pictures, mirrored and tinted. Near the play they repeat.
 - Hands are one bone each. `relaxHands` curls and closes the fingers a little, and the arms still stand out from the body. A hand cannot grip, point or rest on a belt.
+- Wollandora: a thin strap at her hip sticks out sideways for part of the walk, her skirt stretches between her legs as they part, and she has no staff. Her 1.86 m is measured to the top of her wreath.
+- The owlbear moves as a person does. See A beast.
 - The visitor's camera passes through walls and floors.
-- Of 34 places, the Gates alone have been looked over in every view. Phones have not been tried.
+- Of 34 places, the Gates and the three places of The Midnight Summons have been looked over in every view. Phones have not been tried.
 
 - The 6,000 triangle copy is coarse up close, with small nicks at the hairline. It no longer tears. It is for a room's distance.
 - A figure reflects a lit room of its own in the stage, so its metal does not go dark. This is in the lab's loader only, not the game's.
@@ -268,7 +311,7 @@ A set with a room gets an Isometric view for nothing. A set out of doors gets on
 
 Owner, 2026-11-14: only the party is made in 3D for now. The party is Branka, Thalbern, Lyra, Poppen and Milos the cleric. A brief with `"party": true` is one of them. Everyone else stays a card.
 
-Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made in 3D as well, one model each at $0.60. A second try at either needs a new yes.
+Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made in 3D as well, one model each at $0.60. A second try at either needs a new yes. Both were built that day, each on its first model, $1.20 in all.
 
 - All five were built on 2026-11-14 for $0.60 each, and each rig's report was clean on its first run. Idle, Walk and Hit play on all of them unchanged.
 - At the Gates the scene's own party is Branka, Cassia, Yeva and Milos. The Gates' look (`looks.ts`) stands Lyra where Cassia is and Poppen where Yeva is, and adds Thalbern beside them. The staging itself is unchanged.
@@ -279,7 +322,9 @@ Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made
 - Detail levels swapped by distance in the stage.
 - Blind scoring of looks and movement (`workflow-score-to-target`).
 - A home for shipped figures. About 5 MB a character is too heavy for git at 120 characters.
-- Props and monsters. The skeleton is a person's: 18 bones, found by a pose model that expects a person. The owlbear of The Midnight Summons stands upright, 3.3 m tall, with a person's limbs, so the skeleton may fit it as it is. What is untried: a pose sheet of a beast with its arms down and out, the pose model on a beast (its joints can be put in `joints.json` by hand), and the clips on a body that shape. A beast on four legs has no way through yet.
-- Looks for the other outdoor places. 26 of the 41 sets have neither a room nor a look, so they have no Isometric view.
+- Props, and monsters that do not stand as a person does. An upright beast goes through as it is (A beast). A beast on four legs has no way through yet.
+- Clips for a beast: a heavy walk, a rear and a roar.
+- Looks for the other outdoor places. 23 of the 41 sets have neither a room nor a look, so they have no Isometric view.
+- The three places of The Midnight Summons joined into one wood, as the Gates join the festival square. Not done, on purpose: see below.
 - Any of it in the game itself.
 - Running a step from the page itself.
