@@ -11,5 +11,6 @@
   "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
   "stow": "The bow is slung across his back beside the quiver, and both blades stay sheathed at his hips.",
   "arms": 40,
-  "party": true
+  "party": true,
+  "face": "close"
 }

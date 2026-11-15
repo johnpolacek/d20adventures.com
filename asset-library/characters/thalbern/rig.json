@@ -1,5 +1,5 @@
 {
-  "name": "thalbern",
+  "name": "ORM_e202dc28-f3bd-4b16-86e8-17db8699e81f",
   "source": "source.glb",
   "height": 1.82,
   "sourceTriangles": 56500,
@@ -14,12 +14,25 @@
     },
     "patched": 0,
     "unweighted": 0,
-    "mostBonesOnAPoint": 4
+    "mostBonesOnAPoint": 512
   },
   "slungPoints": 760,
   "hang": {
     "L": 8.0,
     "R": 10.0
+  },
+  "holds": null,
+  "tunnel": null,
+  "faceFromSheet": {
+    "triangles": 2974,
+    "texels": 514977,
+    "sheetMiddle": 470.5,
+    "close": true,
+    "fitted": true,
+    "noseSlipMm": [
+      0.0,
+      0.0
+    ]
   },
   "bones": [
     "root",
@@ -44,17 +57,19 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "megabytes": 2.75,
+      "megabytes": 4.19,
       "triangles": 56500,
       "texture": 2048,
+      "colour": 4096,
       "joints": 18,
       "turnedAtRest": []
     },
     {
       "file": "lod1.glb",
-      "megabytes": 1.08,
+      "megabytes": 1.09,
       "triangles": 20000,
       "texture": 1024,
+      "colour": 1024,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -63,6 +78,7 @@
       "megabytes": 0.4,
       "triangles": 6000,
       "texture": 512,
+      "colour": 512,
       "joints": 18,
       "turnedAtRest": []
     }

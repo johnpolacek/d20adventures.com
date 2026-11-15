@@ -222,7 +222,7 @@ Then the face is taken from the sheet. A generator makes its figure from the she
 - `"sheet": "front"` paints the front view alone, upright, 1024 by 1536. A face gets half as many pixels again as on the sheet of two views. The back view was only ever a reference: the model is made from the front.
 - The sheet is lined up with the head by the top of the figure and the middle of its crown. On Wollandora it landed true. If eyes come out doubled, the head is off the sheet: look at `faceFromSheet` in `rig.json`.
 - It fades out where the head turns away from the sheet, so cheeks seen from the side keep the generator's paint, and the join can show as a faint patch.
-- The six figures made before 2026-11-15 have not had it.
+- Thalbern has had it too, on the model he already had, for nothing: his face had been waxy, with pale eyes. Branka, Garlan, Lyra, Milos, Poppen and the owlbear have not. `"face": "close"` in the brief and `--redo=face` does it, and the owlbear's would want a beast's face found, which the face model may not do.
 
 `"face": "close"` goes further, and is what Wollandora has. The owner, of the sheet's face on the model: "could we make the face even better?" The sheet's face is 130 pixels across, and it showed.
 
