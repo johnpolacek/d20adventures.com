@@ -36,6 +36,8 @@ export interface Scene {
   shots: Spot[]
   open: string
   go: (shot: string) => void
+  // Where the camera is now, as a look's shot is written: for finding a view by flying to it.
+  view: () => string
   stop: () => void
 }
 
@@ -422,11 +424,18 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
     container.removeEventListener("pointerdown", press)
     container.removeEventListener("pointerup", release)
   })
+  const view = () => {
+    const at = stage.controls?.target ?? stage.camera.getWorldDirection(stage.camera.position.clone()).multiplyScalar(10).add(stage.camera.position)
+    const d = stage.camera.position.clone().sub(at)
+    const [deg, r] = [(n: number) => (n * 180) / Math.PI, (n: number) => Math.round(n * 10) / 10]
+    return `iso: "${r(deg(Math.atan2(d.x, d.z)))},${r(deg(Math.asin(d.y / d.length())))},${r(d.length())},${r(stage.camera.fov)}", isoat: "${r(at.x)},${r(at.z)},${r(at.y)}"`
+  }
   return {
     stage,
     shots,
     open,
     go,
+    view,
     stop: () => {
       for (const stop of stops.reverse()) stop()
     },

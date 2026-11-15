@@ -37,6 +37,8 @@ export function Scene(props: Omit<SceneOptions, "onProgress" | "onPick"> & { onN
         if (gone) return
         setStatus(null)
         onNav({ shots: opened.shots, open: opened.open, go: opened.go })
+        // For whoever is finding a view for a look: `__place.view()` in the console is the camera as a shot is written.
+        ;(window as unknown as { __place?: unknown }).__place = { stage: opened.stage, view: opened.view }
       })
       .catch((error) => {
         console.error(error)

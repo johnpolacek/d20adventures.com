@@ -1,8 +1,8 @@
 # Asset library
 
-The workspace for the game's 3D assets: every character's files, the pipeline that makes them, the clips they play and the isometric looks of the places they stand in. The page that shows it all is `/dev/assets`.
+The workspace for the game's 3D assets: every character's files, the pipeline that makes them, the clips they play and the isometric looks of the places they stand in. The page that shows it all is `/dev/assets` in the workspace and `/settings/<setting>/assets` on the site.
 
-Written 2026-11-14. None of this ships in the game yet.
+Written 2026-11-14, brought up to date 2026-11-15. None of this ships in the game yet: the game's own sets, stagings and paintings are untouched by anything here.
 
 ## Where things are
 
@@ -212,26 +212,51 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 ```
 
 - `isobox=x0,z0,x1,z1`. Everything outside it is cut, the scattered crowd is kept inside it, and the set's own sun lights it.
-- The Gates are the only outdoor set framed this way so far. The library does not yet offer it.
+
+### A look for a place
+
+A set with a room gets an Isometric view for nothing. A set out of doors gets one when it has a look: an entry in `asset-library/looks.ts` under the set's key. Two sets have one so far, the Gates and the Dragonbone Inn. The Gates' entry is the one to copy.
+
+| Field | What it is |
+|---|---|
+| `params` | Switches for every view of the place. See below. |
+| `shots` | The Camera pills, in order. Each is `iso: "azimuth,elevation,distance,lens"` and `isoat: "x,z,y"`, the point looked at. |
+| `open` | The shot a scene with a cast opens on. Without it, `play`. |
+| `figures` | A cast id, and the library character who stands there. A cast member whose own id has a figure needs no entry. |
+| `cast` | Cast members added to the scene for this view, written as a staging writes them. |
+| `materials` | Changes to the set's materials, for this view alone. |
+| `edit` | Changes to the set's parts by id, for this view alone. `null` leaves a part out. |
+| `join` | Other sets that stand in the same world, each with where its middle falls in this one and the part types to leave out. |
+
+- `params`: `isowhole: "1"` keeps the whole set under its own sky, and is what an outdoor place wants. Without it the place is a model on a board, cut to `isobox`. `paint: "0"` turns the painterly pass off. `isolight: "gain,ambient,key"`, `isosky`, and `isolamps` (`x,y,z,strength,reach` joined by `;`) light it. `isohide` leaves out part types that roof people over. `rings` are the cast ids ringed in gold. `shade` darkens the ground under the crowd. `bloom: "on"`.
+- A shot's camera stands at the point looked at, plus the distance along the azimuth and elevation. A negative elevation looks up from below that point: the Gates' `arrival` looks at a point 44 m up the gate from 2.6 m off the ground.
+- The first shot named `wide` is the place's base view. A look needs one.
+- Open on drama. The owner's call, 2026-11-15: a low, wide view that looks up at the place is "dramatic and great", and a high view looking down at the ground is "underwhelming". Give every place an `arrival` like it, set `open: "arrival"`, and keep a look-down `play` for seeing who stands where.
+- The views on people (Everyone, and the staging's own group shots) and the front view of each cast member are worked out, not written. They need nothing in the look.
+- To find a camera: open the place, fly to the view, and run `__place.view()` in the browser's console. It answers with the camera as a shot is written, `iso` and `isoat`, ready to paste. `__place.stage` is the stage itself.
+- A painted set's paintings are left out of both views, so a painted set shows as built. All three sets of The Midnight Summons are painted and out of doors, with no look yet.
 
 ## The page
 
 `/dev/assets` is every character and every place in one page.
 
-- Two tabs, Characters and Environments. Each is a grid of cards under the adventure it belongs to, with a search and a filter for what has a 3D figure or an isometric view.
+- Three tabs: Places, Characters and Images. Places and Characters are grids of cards under the adventure each belongs to, with a search and a filter for what has a 3D figure or an Isometric view.
 - Characters are the cast of every staging, each person once, and the player hero looks. A card is marked 3D when its cast id is in a character's `cast`.
-- Environments are the 41 sets as 34 places. A place keeps its variants together: the inn, and the inn at dawn.
-- A character opens as its figure, with detail and clip pills, or as its card. A place opens in the stage's own page, by variant, by scene, and as built or as a cut-away.
-- A third tab, Images, holds every picture by kind: the setting's own, adventure covers, scene art, maps, portraits, set paintings and backgrounds. They are gathered from `public/stage` and from the setting's data in the data bucket. Nothing is copied: the page shows them where the site already serves them.
+- Places are the 41 sets as 34 places. A place keeps its variants together: the inn, and the inn at dawn.
+- A character opens as its figure, with detail and clip pills, or as its card. A place opens live in the page, edge to edge, by variant and by scene. Isometric comes first and is what a place opens in when it has one. Stage is the other view.
+- Images holds every picture by kind: the setting's own, adventure covers, scene art, maps, portraits, set paintings and backgrounds. They are gathered from `public/stage` and from the setting's data in the data bucket. Nothing is copied: the page shows them where the site already serves them.
 - A place's picture is one of its paintings, or else the art of a scene set there. It is not a render of the set.
 - The page reads the stagings, the sets and the shelf each time it loads. There is no index to keep.
 
 ## Known faults
 
-- Arms are fitted to each body: `rig.py` finds the least angle at which a hanging forearm and hand clear what is at the hip, 7 to 22 degrees, and leaves it on the skeleton for the clips. Lyra's free arm hangs at 7, Garlan's sword arm at 22. Milos's palms face forward, as they were modelled.
+- Arms are fitted to each body: `rig.py` finds the least angle at which a hanging forearm and hand clear what is at the hip, 7 to 22 degrees, and leaves it on the skeleton for the clips. Lyra's free arm hangs at 7, Garlan's sword arm at 22. Milos holds one hand open to the side, as he was modelled.
 - Slung gear follows the hips: a thin thing hanging from the belt line, clear of the leg whose weights it was given. Thalbern's bow had 760 such points. Its tip still drifts a little.
 - Milos's staff was on his back on the sheet. His model was made from the front, so he has none.
 - The crowd is 16 pictures, mirrored and tinted. Near the play they repeat.
+- Hands are one bone each. `relaxHands` curls and closes the fingers a little, and the arms still stand out from the body. A hand cannot grip, point or rest on a belt.
+- The visitor's camera passes through walls and floors.
+- Of 34 places, the Gates alone have been looked over in every view. Phones have not been tried.
 
 - The 6,000 triangle copy is coarse up close, with small nicks at the hairline. It no longer tears. It is for a room's distance.
 - A figure reflects a lit room of its own in the stage, so its metal does not go dark. This is in the lab's loader only, not the game's.
@@ -252,5 +277,7 @@ Owner, 2026-11-14: only the party is made in 3D for now. The party is Branka, Th
 - Detail levels swapped by distance in the stage.
 - Blind scoring of looks and movement (`workflow-score-to-target`).
 - A home for shipped figures. About 5 MB a character is too heavy for git at 120 characters.
-- Props and monsters.
+- Props and monsters. The skeleton is a person's: 18 bones, found by a pose model that expects a person. The owlbear of The Midnight Summons has no way through the pipeline yet.
+- Looks for the other outdoor places. 26 of the 41 sets have neither a room nor a look, so they have no Isometric view.
+- Any of it in the game itself.
 - Running a step from the page itself.
