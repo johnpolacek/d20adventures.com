@@ -11,6 +11,7 @@ import { onFootprint } from "@d20/stage/spec/walk"
 import { addFigure, castRings, crowdShade } from "./figures"
 import { iso, isoLamps, isoSet } from "./iso"
 import { LOOKS } from "./looks"
+import { markBuiltTrees, standTrees } from "./trees"
 
 export interface SceneOptions {
   // The set, `<setting>/<id>`, and the encounter staged in it, if any.
@@ -219,12 +220,16 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
     if (staging && look?.cast) staging.cast = [...(staging.cast ?? []), ...(look.cast as { id: string }[])]
   }
 
+  // Where a look asks for modelled trees, the set's own are built apart, to be put out of sight (trees.ts).
+  const wood = cut ? look?.trees : undefined
+  if (wood) markBuiltTrees(set)
   const flags = cut ? { cardRadius: 500, ...(q.bloom ? { bloom: q.bloom === "on" } : {}) } : undefined
   const stage = await createStage({ container, set, staging: staging?.set === o.set ? staging : null, tier: "auto", flags, onProgress: o.onProgress })
   stops.push(() => stage.dispose())
 
   // What is built, as the engine keeps it: where no one can stand, and how high each thing stands.
   const solid = (stage as unknown as { footprints: Parameters<typeof onFootprint>[0] }).footprints
+  if (wood) stops.push((await standTrees(stage, solid, set, wood)).stop)
   // What the footprints do not know: a tree's crown. A footprint is a trunk, and a wood is mostly leaves, so a camera
   // sent to look at someone from among them sees only leaves. The stage keeps no geometry to test a line against, so a
   // crown is taken to be as wide as the builders make one at their widest: from a seventh of the way up the tree, four

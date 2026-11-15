@@ -12,6 +12,8 @@ Written 2026-11-14, brought up to date 2026-11-15, the second time after The Mid
 | The pipeline | `asset-library/pipeline/` | yes |
 | The clips every figure plays | `asset-library/clips.ts` | yes |
 | The isometric look of a set | `asset-library/looks.ts` | yes |
+| What a figure holds | `asset-library/props.ts` | yes |
+| Modelled trees for a look | `asset-library/trees.ts`, files in `public/stage/trees` | yes |
 | Scorecards | `asset-library/scorecards/` | yes |
 | The page | `asset-library/ui/library.tsx`, shown at `/dev/assets` and `/settings/<setting>/assets` | yes |
 | What the page lists | `asset-library/library.ts` | yes |
@@ -36,7 +38,7 @@ pnpm assets:sync --dry    # list what would upload
 - Anything the page can load, a visitor can download. The rigged models are public files.
 - A place is assembled live in the visitor's browser, on the public page as in the workspace (`scene.ts`): pick a variant, an encounter or the empty set, and Stage or Isometric. The camera is the visitor's and goes anywhere: drag to turn, scroll to move toward the pointer, right-drag to slide, W A S D to fly (Q and E for down and up, Shift for speed). The card at the top right holds every jump: Camera (the game's own framings in Stage, and Wide, Overhead, Everyone and the encounter's groups in Isometric), then Cast, which stands the camera in front of that person, as a click on them does. Out of doors a look can ask for the whole set under its sky (`isowhole`), and not a model on a board. A look can also `join` other sets that stand in the same world, each at its place in this one: the Gates join the festival square, 112 metres up the street. The game's own sets are untouched by it. Between the two the portcullis is let most of the way down (`portcullisGap` on the gatehouse): an iron grille across the arch, with room to walk under. A scene with a cast opens close on them. In a whole place the views on people (Everyone and the encounter's groups) stand near eye level on the side their faces are, wherever about there nothing built and the fewest others are in the way. In a cut-away room they look down from where the room is seen.
   - Stage is the set as built, with the cast where the encounter opens. A painted set's paintings are left out, since they hold the camera to fixed points.
-  - Isometric is the set's look (`looks.ts`), or its room cut open. Cast members with a figure in the library stand as figures, at the middle detail level.
+  - Isometric is the set's look (`looks.ts`), or its room cut open. Cast members with a figure in the library stand as figures: at full detail when three or fewer stand in the scene, at the middle level when more do.
   - The sets and stagings come with the deploy, so a new set shows after a push, not after a sync.
 
 ## One command
@@ -98,7 +100,7 @@ This Mac has 8 GB. Run one heavy job at a time. A capture at the ultra tier take
 - `stow` says where what the card's hands hold goes. A generator fuses anything held into the arm.
 - `arms` is how far out the arms stand. Use 45 for a bulky outfit, so a sleeve clears the hip.
 - `"creature": true` is for a beast that stands upright. Its sheet is then asked for as a living animal, not a person in costume. See A beast, below.
-- A staff has nowhere good to go. Held, it fuses into the arm. On the back, it is lost, since the model is made from the front. Wollandora's `stow` leaves hers out of the picture.
+- A staff has nowhere good to go on the sheet. Held, it fuses into the arm. On the back, it is lost, since the model is made from the front. So it is left off the sheet (`stow`) and given back when the figure is shown: `"holds": { "what": "staff", "hand": "R", "length": 2.1 }`. See What a figure holds.
 
 ### 1. Pose sheet
 
@@ -134,7 +136,7 @@ What `rig.py` does, in order:
 3. Builds the skeleton from the joints: 18 bones, the same names and parents for every character.
 4. Solves the weights on a stand-in, the mesh remade as one closed outer skin, and hands them to the real mesh.
 5. Sets every bone square to the world at rest, so a clip written once plays on anyone.
-6. Writes three copies: the mesh as it came, 20,000 triangles and 6,000 triangles, with 2048, 1024 and 512 pixel textures.
+6. Writes three copies: the mesh as it came, 20,000 triangles and 6,000 triangles, with 2048, 1024 and 512 pixel textures. The first keeps its colour at 4096, as the generator made it: a face is a hundred pixels of a 2048 texture.
 
 `build.ts` reads `rig.json` and says `LOOK AT rig.json` when any of these is off:
 
@@ -184,6 +186,26 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 ```
 
 Look for: hands or arms through the body, torn mesh at the armpits and elbows, feet on the floor, the face at each detail level, and the figure facing the way its cast member does.
+
+### What a figure holds
+
+The owner, 2026-11-15, of Wollandora without her staff: "I was expecting to see Wollandora holding her staff like she does in the card image." A figure should hold what its card holds.
+
+- `props.ts` builds the prop in code and stands it on the ground beside the figure. A staff is the one prop so far: two stems wound about each other, an eye at the head, a vine up the lower half.
+- That arm is bent to it each frame, after the clip has moved the figure: the wrist is sent forward of the shoulder at chest height, the elbow found from the arm's two lengths, and the forearm rolled until the palm faces across the body.
+- The hand is closed about it. `relaxHands` bends that hand's fingers three times as far.
+- The staff stays planted and turns on its foot as the hand sways, so Idle, Walk and Hit all hold it with nothing written for it.
+- `rig.py` reads `holds` from the brief and leaves it on the skeleton. After changing it, run `--redo=rig`.
+- The staff is built, not modelled from her card, so it is a plainer staff than the painted one. The thumb does not wrap.
+
+### Faces
+
+The owner, 2026-11-15: "her face is not good". It was the middle detail level, 20,000 triangles and a 1024 texture, seen from a metre. Two things changed, both free:
+
+- A scene with three figures or fewer stands them at full detail.
+- Full detail keeps the generator's own 4096 colour. Figures rigged before 2026-11-15 have 2048: `--redo=rig` on each brings them up, then `pnpm assets:thumbs` and `pnpm assets:sync`.
+
+What is left is the generator's: a mouth a little off, a seam on a cheek. A better face is a new model.
 
 ### A beast
 
@@ -264,7 +286,7 @@ A set with a room gets an Isometric view for nothing. A set out of doors gets on
 The three places of The Midnight Summons were the first woods and the first night sets to get a look, on 2026-11-15. What they taught:
 
 - A night set carries a light on its camera (`atmosphere.fill`), for the game's close shots. From a wide view it lights the near grass and nothing else, and the place goes flat. `isofill: "0.25"` leaves a quarter of it.
-- Light a night from where the story has light. The set's moon is the key. Add a cool lamp where the canopy opens: `isolamps: "-1.3,7.5,0.4,55,17,9db8ff"` is moonlight pooled in the stone circle, and the trail has one under each of its two shafts of light. Keep `ambient` low, 0.14 to 0.2. More than that and the wood reads as an overcast day.
+- Light a night with the moon alone, and keep it dark. The first looks pooled moonlight under lamps and kept the trail's two shafts of light. The owner, 2026-11-15: "i don't like the spotlight effect of light, just remove", and "it should be darker in the forest". So no lamps, the shafts left out by the look's `edit`, a gain near 1 and `ambient` at 0.06 to 0.1. `isolamps` still takes a colour, for a place that has a real lamp.
 - `isohaze` is the share of the set's own haze a whole place keeps, 0.3 if not given. A night wood's haze is thick at ten paces and a wall from forty: the trail keeps 0.12. The stones keep 0.7, to put distance into the valley and veil the bare far bank.
 - `figenv` is how much a figure reflects of its own lit room, 0.55 out of doors if not given. At night that makes a figure glow. 0.12 to 0.18 sits it in the place.
 - A wood seen from above is all canopy, so a look-down `play` shows leaves. `isoclear: "x,z,r;..."` leaves out the trees inside those circles: a tree set by hand is dropped, and a scattered wood keeps clear. Clear the side the views look from and no more. A scatter makes up its number elsewhere, so a few trees move.
@@ -274,6 +296,23 @@ The three places of The Midnight Summons were the first woods and the first nigh
 - The views on people know trunks from the engine's footprints, and not leaves: the stage keeps no geometry to test a sight line against. A crown is estimated from each trunk's height (`scene.ts`), and a view with a crown across it is passed over. It is an estimate: a low branch can still cross a face.
 - The automatic Overhead view is canopy in a wood. It is left in, since a place may have a clearing.
 - The ranger's home is the morning after, by day, though its two scenes belong to the same adventure. The set's own sun lights it, as at the Gates.
+
+### Trees
+
+The owner, 2026-11-15, of the trail: "the trees are of low quality, there must be a better source or approach to rendering these to get triple A quality". A set's trees are built from code, sticks and balls of leaf cards, and under a free camera they read as lollipops.
+
+A look can ask for modelled trees with `trees` (`trees.ts`). All three places of The Midnight Summons do.
+
+- The models are in `public/stage/trees`, with a README of where each came from: an oak, a dead oak, a pine and a birch, grown branch by branch by ez-tree, with crowns of cards that are each a photograph of a leafy twig. That, and real branching, is where the difference comes from.
+- The set is not changed. Its trees are still built, so the engine keeps their footprints. They are given materials of their own and put out of sight, and a model is stood on each footprint, as tall as the tree it replaces times `taller`.
+- `slim` matters most. A model grown in the open is as wide as it is tall, and a wood of those is a roof no camera sees through. 0.62 to 0.7 gives forest-grown trees.
+- `rings` are how far the heavy and the middle weights reach from `near`, where the scene is played. `thin` stands only a share of the trees beyond a distance. `kinds` is the mix, and `hero` names a hand-set tree's kind.
+- Shadows are the cost. The near trees throw theirs whole, the middle ones their trunks' alone, the far ones none. A second shadow-casting light (`isolight`'s third number) draws every leaf again: the trail has none.
+- Each file carries its own copy of the same pictures. One copy is kept for each kind.
+- `tint` darkens leaves for a night (`*`), greens the birch, and greys bark by day (`bark`).
+- Run `pnpm stage:sync public/stage/trees` after changing the files.
+
+What it is not: a big-budget game's trees. No free source ships those. Leaves have no light through them, one twig picture serves a whole species, nothing sways in the wind, and by day the trunks read as smooth clay. Far trees are full models, not flat stand-ins, so a place with these is heavier than one without.
 
 Joining the three into one wood was weighed and left alone. The trail's own marks put the stones north up the deer trail and the home south, but no set gives a distance, as the festival square does for the Gates. The Gates' join pays because the arch frames the square. Here nothing of one place shows from another: it is night, the haze is thick, and a hundred metres of trunks stand between. The home is by day and cannot share a sky with the other two. Each set's scattered wood would also plant trees in the other's clearing and river, so every scatter would need its own clearings written. If it is ever wanted, join the trail and the stones only.
 
@@ -296,7 +335,9 @@ Joining the three into one wood was weighed and left alone. The trail's own mark
 - Milos's staff was on his back on the sheet. His model was made from the front, so he has none.
 - The crowd is 16 pictures, mirrored and tinted. Near the play they repeat.
 - Hands are one bone each. `relaxHands` curls and closes the fingers a little, and the arms still stand out from the body. A hand cannot grip, point or rest on a belt.
-- Wollandora: a thin strap at her hip sticks out sideways for part of the walk, her skirt stretches between her legs as they part, and she has no staff. Her 1.86 m is measured to the top of her wreath.
+- Wollandora: a thin strap at her hip sticks out sideways for part of the walk, and her skirt stretches between her legs as they part. Her 1.86 m is measured to the top of her wreath.
+- By day the modelled trees' trunks look like smooth clay. The bark's relief does not show.
+- The modelled trees stand still. The set's own swayed.
 - The owlbear moves as a person does. See A beast.
 - The visitor's camera passes through walls and floors.
 - Of 34 places, the Gates and the three places of The Midnight Summons have been looked over in every view. Phones have not been tried.

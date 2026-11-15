@@ -25,6 +25,9 @@ const TYPES: Record<string, string> = {
   ".mp3": "audio/mpeg",
   ".mp4": "video/mp4",
   ".glb": "model/gltf-binary",
+  // A licence notice and a note of sources, kept beside the files they cover.
+  ".txt": "text/plain; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
 }
 // Art is sometimes repainted under the same name, so caches stay short.
 const CACHE = "public, max-age=300"

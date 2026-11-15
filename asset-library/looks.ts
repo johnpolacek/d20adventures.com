@@ -6,6 +6,8 @@
 // `params` are the stage lab's own switches (lab/stage-art/viewer.tsx), given to every shot. A shot adds its camera. Whatever the address
 // gives itself wins over both. `materials` changes the set's materials for this view alone: the game's set is untouched.
 
+import type { TreeSwap } from "./trees"
+
 export interface Look {
   params: Record<string, string>
   materials?: Record<string, Record<string, unknown>>
@@ -19,6 +21,8 @@ export interface Look {
   join?: { set: string; at: [number, number]; leave: string[] }[]
   // Changes to this set's own parts by id, for this view alone: null leaves one out.
   edit?: Record<string, Record<string, unknown> | null>
+  // Modelled trees stood where the set's own are built (trees.ts).
+  trees?: TreeSwap
   shots: Record<string, Record<string, string>>
   // The shot a scene with a cast opens on, if not `play`.
   open?: string
@@ -101,6 +105,16 @@ export const LOOKS: Record<string, Look> = {
     },
     // Grass a shade nearer the moon's colour: lit from above it went a daylight green.
     materials: { grass: { tip: "#3f6650" }, grassTall: { tip: "#4a6c54" }, ground: { grass: "#2f4f33", moss: "#3a5c30" } },
+    trees: {
+      files: "/stage/trees",
+      near: [-1.3, 0.4],
+      rings: [18, 40],
+      thin: [70, 0.45],
+      taller: 1.4,
+      slim: 0.66,
+      kinds: { oak: 0.56, pine: 0.2, deadoak: 0.14, birch: 0.1 },
+      tint: { "*": "#8a93a0", birch: "#a9b874" },
+    },
     open: "arrival",
     shots: {
       // From the path, at the height of the grass, looking up at the tallest stone with the moon over the valley.
@@ -116,20 +130,32 @@ export const LOOKS: Record<string, Look> = {
       paint: "0",
       isobox: "-14,-18,14,22",
       isowhole: "1",
-      isolight: "1.15,0.08,0.6",
+      isolight: "1.25,0.1",
       isosky: "7f9cd0",
       isofill: "0.3",
       // The set's haze is a night wood's, thick at ten paces. From farther off it is a wall.
       isohaze: "0.12",
       // A wood seen from above is all canopy. The trees over the trail to the south are left out, one that stood
       // between that side and the clearing, and one whose leaves hung across the owlbear's face.
-      isoclear: "6.5,22,4;6,4,2.5;4,14,5;5,30,7;9,-2,2.5",
+      isoclear: "6.5,22,5;6,4,3;3,13,6;4,22,7;5,31,8;9,-2,2.5",
       figenv: "0.1",
       rings: "thalbern,wollandora",
       bloom: "on",
     },
     // The set's two shafts of light are left out.
     edit: { "clearing-shaft": null, "oak-shaft": null },
+    // An old wood: oaks, pines, a few birches, and the dead among them.
+    trees: {
+      files: "/stage/trees",
+      near: [1, 1],
+      rings: [16, 38],
+      thin: [62, 0.4],
+      taller: 1.5,
+      slim: 0.62,
+      kinds: { oak: 0.46, pine: 0.34, deadoak: 0.1, birch: 0.1 },
+      hero: { "great-oak": "oak" },
+      tint: { "*": "#8a93a0", birch: "#a9b874" },
+    },
     open: "arrival",
     shots: {
       // From the trail, low, looking up the great oak against the moon, with the clearing beyond the fallen log.
@@ -144,6 +170,18 @@ export const LOOKS: Record<string, Look> = {
   "realm-of-myr/thalberns-forest-home": {
     // The trees over the path are left out, so the cottage is seen from down it.
     params: { paint: "0", isobox: "-14,-14,14,22", isowhole: "1", isolight: "1.05,0.2", isosky: "9db8e8", isoclear: "0,14,7;0.5,22,8;2,30,8", rings: "thalbern", bloom: "on" },
+    // The same wood by day. The oak at the door is the set's own tallest tree.
+    trees: {
+      files: "/stage/trees",
+      near: [0, -3],
+      rings: [18, 40],
+      thin: [60, 0.5],
+      taller: 1.25,
+      slim: 0.7,
+      kinds: { oak: 0.45, pine: 0.35, birch: 0.2 },
+      hero: { "front-oak": "oak" },
+      tint: { birch: "#b9c47a", bark: "#8a8078" },
+    },
     open: "arrival",
     shots: {
       // From the path, low, looking up at the cottage under its oak.
