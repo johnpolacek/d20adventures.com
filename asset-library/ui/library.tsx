@@ -16,6 +16,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { figureClips, isRigged } from "../clips"
+import { holdProps } from "../props"
 import { hasIso } from "../scene"
 import type { Character, Figure, Library, Picture, Place } from "../types"
 import { type Nav, Scene } from "./scene"
@@ -56,6 +57,8 @@ interface Room {
   mixer: THREE.AnimationMixer | null
   clips: THREE.AnimationClip[]
   action: THREE.AnimationAction | null
+  // What the figure holds (props.ts), moved with it each frame.
+  carried: ReturnType<typeof holdProps>
   framed: boolean
 }
 
@@ -114,7 +117,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
     controls.maxPolarAngle = Math.PI * 0.52
     controls.minDistance = 0.6
     controls.maxDistance = 12
-    const r: Room = { renderer, scene, camera, controls, figure: null, mixer: null, clips: [], action: null, framed: false }
+    const r: Room = { renderer, scene, camera, controls, figure: null, mixer: null, clips: [], action: null, carried: null, framed: false }
     room.current = r
     const size = () => {
       renderer.setSize(el.clientWidth, el.clientHeight, false)
@@ -132,6 +135,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
       raf = requestAnimationFrame(tick)
       if (document.hidden) return void (last = now)
       r.mixer?.update(Math.min(0.1, (now - last) / 1000))
+      r.carried?.update()
       last = now
       controls.update()
       renderer.render(scene, camera)
@@ -194,6 +198,8 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
         r.figure = root
         r.mixer = new THREE.AnimationMixer(root)
         r.clips = gltf.animations.length ? gltf.animations : isRigged(root) ? figureClips(root, tall) : []
+        // What it holds, stood beside it once its height is known: a staff is taller than its bearer.
+        r.carried = isRigged(root) ? holdProps(root, box.min.y) : null
         r.action = null
         const next = r.clips.find((c) => c.name === clip) ?? r.clips[0]
         if (next) {

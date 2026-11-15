@@ -44,6 +44,8 @@ interface Brief {
   // How far out the arms stand, in degrees: 40, or 45 for a bulky outfit.
   arms: number
   party?: boolean
+  // What it holds, built in its hand when it is shown (props.ts) and left off the sheet: { what: "staff", hand: "R", length: 2.1 }.
+  holds?: { what: "staff"; hand: "L" | "R"; length: number }
   // A beast that stands upright on two legs, painted as an animal and not a person in costume.
   creature?: boolean
 }

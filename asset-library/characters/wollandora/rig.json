@@ -14,12 +14,17 @@
     },
     "patched": 0,
     "unweighted": 0,
-    "mostBonesOnAPoint": 4
+    "mostBonesOnAPoint": 512
   },
   "slungPoints": 385,
   "hang": {
     "L": 21.0,
     "R": 18.0
+  },
+  "holds": {
+    "what": "staff",
+    "hand": "R",
+    "length": 2.1
   },
   "bones": [
     "root",
@@ -44,9 +49,10 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "megabytes": 3.07,
+      "megabytes": 4.55,
       "triangles": 59316,
       "texture": 2048,
+      "colour": 4096,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -55,6 +61,7 @@
       "megabytes": 1.24,
       "triangles": 20000,
       "texture": 1024,
+      "colour": 1024,
       "joints": 18,
       "turnedAtRest": []
     },
@@ -63,6 +70,7 @@
       "megabytes": 0.49,
       "triangles": 6000,
       "texture": 512,
+      "colour": 512,
       "joints": 18,
       "turnedAtRest": []
     }

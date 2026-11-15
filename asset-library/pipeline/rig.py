@@ -41,8 +41,9 @@ TAIL = {
     "thighL": "shinL", "shinL": "footL", "footL": "toeL",
     "thighR": "shinR", "shinR": "footR", "footR": "toeR",
 }  # fmt: skip
-# Triangles and texture width for each copy. The first keeps the mesh as it came.
-LODS = [(None, 2048), (20000, 1024), (6000, 512)]
+# Triangles and texture width for each copy, and the width of its colour. The first keeps the mesh as it came, and
+# its colour as it came too, 4096 across: a face is a hundred pixels of a 2048 texture, and the camera goes up to it.
+LODS = [(None, 2048, 4096), (20000, 1024, 1024), (6000, 512, 512)]
 
 src, spec_file, out_dir, name = sys.argv[sys.argv.index("--") + 1 :][:4]
 # A name of "." is a character's own folder: the copies are lod0.glb and on, and the report rig.json.
@@ -350,6 +351,11 @@ for side, sg in (("L", 1.0), ("R", -1.0)):
             break
 # The clips read these from the skeleton (asset-library/clips.ts).
 rig["hangL"], rig["hangR"] = hang["L"], hang["R"]
+# What the brief says the figure holds, for the prop built in its hand (asset-library/props.ts): "staff:R:2.1".
+brief_file = os.path.join(out_dir, "character.json")
+holds = (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("holds")
+if holds:
+    rig["holds"] = f"{holds['what']}:{holds.get('hand', 'R')}:{holds.get('length', 2)}"
 
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
@@ -380,8 +386,21 @@ def read_glb(path):
         return json.loads(f.read(size))
 
 
+# The images that colour the body: whatever feeds the base colour of its materials.
+colour = set()
+for m in body.data.materials:
+    if not m or not m.use_nodes:
+        continue
+    for shader in [n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED"]:
+        trail = [link.from_node for link in shader.inputs["Base Color"].links]
+        while trail:
+            node = trail.pop()
+            if node.type == "TEX_IMAGE" and node.image:
+                colour.add(node.image.name)
+            trail += [link.from_node for socket in node.inputs for link in socket.links]
+
 made = []
-for i, (triangles, width) in enumerate(LODS):
+for i, (triangles, width, colour_width) in enumerate(LODS):
     copy = body.copy()
     copy.data = body.data.copy()
     copy.name = f"{name}-lod{i}"
@@ -393,8 +412,9 @@ for i, (triangles, width) in enumerate(LODS):
         bpy.ops.object.modifier_move_to_index(modifier=thin.name, index=0)
         bpy.ops.object.modifier_apply(modifier=thin.name)
     for img in bpy.data.images:
-        if img.size[0] > width:
-            img.scale(width, max(1, round(img.size[1] * width / img.size[0])))
+        most = colour_width if img.name in colour else width
+        if img.size[0] > most:
+            img.scale(most, max(1, round(img.size[1] * most / img.size[0])))
     bpy.ops.object.select_all(action="DESELECT")
     copy.select_set(True)
     rig.select_set(True)
@@ -408,7 +428,7 @@ for i, (triangles, width) in enumerate(LODS):
         export_skins=True,
         export_yup=True,
         export_image_format="WEBP",
-        export_image_quality=85,
+        export_image_quality=92 if i == 0 else 85,
         export_tangents=False,
         export_extras=True,
     )
@@ -421,6 +441,7 @@ for i, (triangles, width) in enumerate(LODS):
             "megabytes": round(os.path.getsize(path) / 1e6, 2),
             "triangles": sum(len(p.vertices) - 2 for p in copy.data.polygons),
             "texture": width,
+            "colour": colour_width,
             "joints": len(joints),
             "turnedAtRest": turned,
         }
@@ -437,6 +458,7 @@ report = {
     "weights": {"solve": solve, "standIn": stand_in, "patched": patched, "unweighted": unweighted, "mostBonesOnAPoint": most},
     "slungPoints": slung,
     "hang": hang,
+    "holds": holds or None,
     "bones": BONES,
     "lods": made,
 }

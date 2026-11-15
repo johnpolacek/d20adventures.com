@@ -4,6 +4,7 @@
 import type { Stage } from "@d20/stage"
 import * as THREE from "three"
 import { figureClips, isRigged } from "./clips"
+import { holdProps } from "./props"
 
 // The room a figure reflects: one for each renderer, made the first time a figure asks.
 const figureRooms = new WeakMap<THREE.WebGLRenderer, THREE.Texture>()
@@ -37,6 +38,8 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
     root.rotation.y = THREE.MathUtils.degToRad(o.yaw ?? 0) + s.cast.ry
   }
   place()
+  // What it holds is stood beside it before it is lit, so the prop is lit as the figure is.
+  const carried = isRigged(root) ? holdProps(root, box.min.y) : null
   let triangles = 0
   // A generated figure is real metal and leather, which shows by what it reflects. The stage's own sky is kept dim for
   // its painted cards, so a figure in it goes dark. Each figure reflects a plain lit room of its own instead, dimmer
@@ -85,11 +88,13 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
     held = true
     playing.time = seconds
     mixer.update(0)
+    carried?.update()
     return true
   }
   const tick = (now: number) => {
     if (!alive) return
     if (!held) mixer.update(Math.min(0.1, (now - last) / 1000))
+    carried?.update()
     place()
     last = now
     requestAnimationFrame(tick)

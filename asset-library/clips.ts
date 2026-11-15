@@ -163,16 +163,33 @@ const KNUCKLES: [number, number][] = [
   [0.68, 22],
   [0.86, 16],
 ]
+// A hand that holds something (props.ts) is closed about it.
+const GRIP: [number, number][] = [
+  [0.44, 62],
+  [0.66, 74],
+  [0.85, 48],
+]
+// A hand as it was modelled, in the figure's own space: the way it points, the way its palm faces, and its length.
+export interface Palm {
+  along: THREE.Vector3
+  normal: THREE.Vector3
+  length: number
+}
 
 // A generated figure's hands come as they were modelled: flat, fingers straight and spread wide, turned out at the
 // wrist. The skeleton has one bone to a hand, so the fingers are bent in the mesh itself, once: curled a little toward
 // the palm at three lines and drawn together. What a bone can do is left to the clips: the hand brought into line with
 // the forearm.
-export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"> {
+export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"> & { palm: { L?: Palm; R?: Palm } } {
   const had = root.userData.hands as ReturnType<typeof relaxHands> | undefined
   if (had) return had
-  const out = { wristL: new THREE.Quaternion(), wristR: new THREE.Quaternion() }
+  const out: ReturnType<typeof relaxHands> = { wristL: new THREE.Quaternion(), wristR: new THREE.Quaternion(), palm: {} }
   root.userData.hands = out
+  // The hand that holds something, "staff:R:2.1" on the skeleton (rig.py).
+  let grips = ""
+  root.traverse((o) => {
+    if (typeof o.userData.holds === "string") grips = o.userData.holds.split(":")[1] ?? ""
+  })
   root.traverse((o) => {
     if (!(o instanceof THREE.SkinnedMesh)) return
     const { position: pos, normal: nor, skinIndex: si, skinWeight: sw } = o.geometry.attributes
@@ -206,12 +223,13 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
       const L = Math.max(...pts.map((p) => p.clone().sub(W).dot(h)))
       const along = pts.map((p) => p.clone().sub(W).dot(h) / L)
       const off = centre.clone().sub(W).dot(n)
+      out.palm[side] = { along: h.clone(), normal: n.clone(), length: L }
       for (let m = 0; m < ids.length; m++) {
         const [v, t, p] = [ids[m], along[m], pts[m]]
         // Drawn together, then bent at each line from the fingertips back.
         p.addScaledVector(across, -0.4 * smooth(0.42, 0.9, t) * p.clone().sub(W).dot(across))
         const normal = nor ? new THREE.Vector3().fromBufferAttribute(nor, v).transformDirection(o.bindMatrix) : null
-        for (const [line, most] of [...KNUCKLES].reverse()) {
+        for (const [line, most] of [...(grips === side ? GRIP : KNUCKLES)].reverse()) {
           const angle = THREE.MathUtils.degToRad(most) * smooth(line - 0.07, line + 0.07, t)
           if (!angle) continue
           const hinge = W.clone()
@@ -252,7 +270,8 @@ export function figureClips(root: THREE.Object3D, height: number): THREE.Animati
   root.traverse((o) => {
     if (typeof o.userData.hangL === "number") fitted = o.userData
   })
-  const arm: Arms = { L: out("L"), R: out("R"), hangL: fitted.hangL ?? HANG, hangR: fitted.hangR ?? HANG, ...relaxHands(root) }
+  const { wristL, wristR } = relaxHands(root)
+  const arm: Arms = { L: out("L"), R: out("R"), hangL: fitted.hangL ?? HANG, hangR: fitted.hangR ?? HANG, wristL, wristR }
   const hips = bone("hips")?.position.clone() ?? new THREE.Vector3()
   const size = height / 1.8
   return WRITTEN.map((w) => {

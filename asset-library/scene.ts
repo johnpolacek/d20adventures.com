@@ -298,9 +298,12 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
     // One that will not load leaves its card standing.
     if (staging) {
       const stand = { ...Object.fromEntries((staging.cast ?? []).filter((c) => o.figures[c.id]).map((c) => [c.id, o.figures[c.id]])), ...(look?.figures ?? {}) }
+      // A few figures stand at their full detail, since the camera goes right up to a face. A crowd of them stands at
+      // the middle level: fourteen at full detail cost a third of the frame rate.
+      const detail = Object.keys(stand).length <= 3 ? "lod0" : "lod1"
       await Promise.all(
         Object.entries(stand).map(async ([cast, character]) => {
-          const f = await addFigure(stage, `${o.files}/${character}/lod1.glb`, cast, { clip: "Idle", env: q.figenv ? Number(q.figenv) : undefined }).catch(() => null)
+          const f = await addFigure(stage, `${o.files}/${character}/${detail}.glb`, cast, { clip: "Idle", env: q.figenv ? Number(q.figenv) : undefined }).catch(() => null)
           if (f) stops.push(f.stop)
         })
       )
