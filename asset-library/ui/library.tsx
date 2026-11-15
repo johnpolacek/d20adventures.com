@@ -1,14 +1,16 @@
 "use client"
 
 // The asset library's page, shared by the workspace's own (/dev/assets) and the one anyone can open
-// (/settings/<setting>/assets). It opens as a home: the party, then every character or place as a grid under the
-// adventure it belongs to, narrowed by a search or a filter. A card opens the asset itself:
+// (/settings/<setting>/assets). One bar stays under the site's header wherever the visitor is: the library's name, its
+// tabs and a search, then the filters of a grid or the way back from an asset. It opens as a home: the party, then every
+// character or place as a grid under the adventure it belongs to, narrowed by a search or a filter. A card opens the
+// asset itself, in the frame below the bar:
 //   - a character with a 3D figure stands in a lit room, at any detail level and in any clip the game plays
 //     (asset-library/clips.ts), and one without shows its card;
 //   - a place is assembled and live (scene.ts): a variant, with one of its encounters as that encounter opens or
 //     empty, as the stage shows it or as an isometric cut-away, with a camera the visitor moves.
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
@@ -241,7 +243,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
   return (
     <>
       <div ref={host} className="absolute inset-0" />
-      <div className={`absolute top-14 left-3 ${PANEL}`}>
+      <div className={`absolute top-3 left-3 ${PANEL}`}>
         <div className="flex items-center gap-1">
           <span className="w-10 opacity-60">Detail</span>
           {figure.lods.map((l, i) => (
@@ -423,7 +425,7 @@ function PictureView({ picture }: { picture: Picture }) {
   return (
     <>
       {/* biome-ignore lint/performance/noImgElement: art served as it is */}
-      <img src={picture.src} alt="" className="absolute inset-0 h-full w-full object-contain p-4 pt-14" />
+      <img src={picture.src} alt="" className="absolute inset-0 h-full w-full object-contain p-4" />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
         <div className="text-[15px] text-[#f2c97a]">{named(picture.title)}</div>
         <div className="opacity-70">
@@ -464,16 +466,55 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   const [tab, setTab] = useState<Tab>(params.tab === "images" || (open && "picture" in open) ? "images" : params.tab === "environments" || (open && "place" in open) ? "environments" : "characters")
   // The filter is an adventure for characters and places, and a kind for pictures.
   const [group, setGroup] = useState(params.group && [...groups, ...kinds].includes(params.group) ? params.group : "all")
+  // Where the grid was when a card was opened, to come back to.
+  const left = useRef(0)
+  const back = useRef(0)
+  const view = (o: NonNullable<typeof open>) => {
+    left.current = window.scrollY
+    setOpen(o)
+  }
+  const close = useCallback((where = left.current) => {
+    back.current = where
+    setFirst(false)
+    setOpen(null)
+  }, [])
   const show = (t: Tab) => {
     setTab(t)
-    setGroup("all")
+    pick("all")
     setOnly(false)
+  }
+  const pick = (g: string) => {
+    setGroup(g)
+    if (open) close(0)
+    else window.scrollTo(0, 0)
   }
   const [q, setQ] = useState(params.q ?? "")
   const [only, setOnly] = useState(params.only === "1")
   // What the first address asked for is used once: a card opened later starts from its own defaults.
   const [first, setFirst] = useState(true)
   const asked = first ? params : {}
+  // The bar sits under the site's header, which is taller for a visitor who is signed out.
+  const [top, setTop] = useState<number>()
+  useEffect(() => {
+    const header = document.querySelector("header")
+    if (!header) return
+    const measure = () => setTop(header.getBoundingClientRect().bottom)
+    const watch = new ResizeObserver(measure)
+    watch.observe(header)
+    measure()
+    return () => watch.disconnect()
+  }, [])
+  const was = useRef(!!open)
+  useLayoutEffect(() => {
+    if (was.current && !open) window.scrollTo(0, back.current)
+    was.current = !!open
+  }, [open])
+  useEffect(() => {
+    if (!open) return
+    const key = (e: KeyboardEvent) => e.key === "Escape" && close()
+    window.addEventListener("keydown", key)
+    return () => window.removeEventListener("keydown", key)
+  }, [open, close])
 
   useEffect(() => {
     if (open) return
@@ -520,36 +561,11 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
     [config, characters]
   )
 
-  if (open)
-    return (
-      <Config.Provider value={provided}>
-        <div className="fixed inset-0 z-[100] overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
-          {"character" in open ? (
-            <CharacterView character={open.character} params={asked} />
-          ) : "place" in open ? (
-            <PlaceView place={open.place} params={asked} />
-          ) : (
-            <PictureView picture={open.picture} />
-          )}
-          <button
-            type="button"
-            className="absolute top-3 left-3 z-10 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-1.5 text-[12px] text-[#f2c97a] backdrop-blur-sm hover:border-[#f2c97a99]"
-            onClick={() => {
-              setFirst(false)
-              setOpen(null)
-            }}
-          >
-            ← Asset Library
-          </button>
-        </div>
-      </Config.Provider>
-    )
-
   const figureCard = (c: Character, wide: boolean) => (
     <button
       key={c.id}
       type="button"
-      onClick={() => setOpen({ character: c })}
+      onClick={() => view({ character: c })}
       className={`group shrink-0 rounded-lg border border-[#e6c8962e] bg-gradient-to-b from-[#1c1610] to-[#120e09] p-3 text-left transition-colors hover:border-[#f2c97a] ${wide ? "w-[172px]" : "w-[132px]"}`}
     >
       {/* biome-ignore lint/performance/noImgElement: a thumbnail served as it is */}
@@ -559,17 +575,111 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
     </button>
   )
 
+  // What is open, and the group it is filed under.
+  const shown = !open
+    ? null
+    : "character" in open
+      ? { name: open.character.name, group: open.character.group }
+      : "place" in open
+        ? { name: open.place.title, group: open.place.groups.includes(group) ? group : open.place.groups[0] }
+        : { name: open.picture.title, group: open.picture.kind }
+
   return (
     <Config.Provider value={provided}>
-      <div className="min-h-screen bg-[#0d0b09] pt-12 font-serif text-[#e9dcc3]">
-        <div className="mx-auto max-w-[1500px] px-5 pb-16 sm:px-8">
-          <div className="pt-10 pb-7 text-center">
-            <div className="text-[11px] tracking-[0.32em] uppercase opacity-60">{library.settingName}</div>
-            <h1 className="mt-2 font-display text-[34px] leading-tight tracking-[0.04em] text-[#f2c97a] sm:text-[44px]">Asset Library</h1>
-            <div className="mt-3 text-[13px] opacity-70">
-              {figured.length} Figures in 3D · {characters.length} Characters · {places.length} Places · {pictures.length} Images
+      <div className="min-h-screen bg-[#0d0b09] pt-12 font-serif text-[#e9dcc3]" style={{ paddingTop: top }}>
+        <div className={open ? "fixed inset-x-0 top-12 bottom-0 z-20 flex flex-col bg-[#0d0b09]" : "contents"} style={{ top }}>
+          <div className={`border-b border-[#e6c89626] bg-[#0e0a06f2] backdrop-blur-sm ${open ? "shrink-0" : "sticky top-12 z-20"}`} style={open ? undefined : { top }}>
+            <div className="mx-auto max-w-[1500px] space-y-2 px-5 py-2.5 sm:px-8">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <button
+                  type="button"
+                  className="font-display text-[15px] tracking-[0.04em] text-[#f2c97a] hover:text-[#ffe0a3]"
+                  onClick={() => {
+                    setQ("")
+                    setTab("characters")
+                    setOnly(false)
+                    pick("all")
+                  }}
+                >
+                  Asset Library
+                </button>
+                <div className="order-3 flex w-full gap-1 text-[13px] sm:order-2 sm:w-auto">
+                  {(["characters", "environments", "images"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      className={`rounded px-2.5 py-1 ${tab === t ? "bg-[#f2c97a26] text-[#f2c97a]" : "opacity-70 hover:opacity-100"}`}
+                      onClick={() => (t === tab && open ? close() : show(t))}
+                    >
+                      {t === "characters" ? `Characters · ${characters.length}` : t === "environments" ? `Places · ${places.length}` : `Images · ${pictures.length}`}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  value={q}
+                  onChange={(e) => {
+                    setQ(e.target.value)
+                    if (open) close(0)
+                  }}
+                  placeholder="Search"
+                  aria-label="Search"
+                  className="order-2 min-w-0 flex-1 rounded border border-[#e6c89640] bg-transparent px-2 py-1 text-[12px] outline-none placeholder:opacity-40 focus:border-[#f2c97a99] sm:order-3 sm:ml-auto sm:w-56 sm:flex-none"
+                />
+              </div>
+              {shown ? (
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <button type="button" className={pill(false)} onClick={() => close()}>
+                    ← Back
+                  </button>
+                  <button type="button" className="ml-1.5 opacity-70 hover:text-[#f2c97a] hover:opacity-100" onClick={() => pick(shown.group)}>
+                    {groupName(shown.group)}
+                  </button>
+                  <span className="opacity-40">/</span>
+                  <span className="text-[#f2c97a]">{named(shown.name)}</span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-1 text-[11px]">
+                  <button type="button" className={pill(group === "all")} onClick={() => pick("all")}>
+                    All · {total}
+                  </button>
+                  {(tab === "images" ? kinds : groups)
+                    .filter((g) => inGroup(g) > 0 || g === group)
+                    .map((g) => (
+                      <button key={g} type="button" className={pill(group === g)} onClick={() => pick(g)}>
+                        {groupName(g)} · {inGroup(g)}
+                      </button>
+                    ))}
+                  {tab !== "images" && (
+                    <button type="button" className={`ml-3 ${pill(only)}`} onClick={() => setOnly((o) => !o)}>
+                      {tab === "characters" ? `3D · ${figured.length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => hasIso(v.key, v.room))).length}`}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+          {open && (
+            <div className="relative min-h-0 flex-1 overflow-hidden">
+              {"character" in open ? (
+                <CharacterView character={open.character} params={asked} />
+              ) : "place" in open ? (
+                <PlaceView place={open.place} params={asked} />
+              ) : (
+                <PictureView picture={open.picture} />
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className={open ? "hidden" : "mx-auto max-w-[1500px] px-5 pb-16 sm:px-8"}>
+          {home && (
+            <div className="pt-10 pb-7 text-center">
+              <h1 className="font-display text-[34px] leading-tight tracking-[0.04em] text-[#f2c97a] sm:text-[44px]">{library.settingName}</h1>
+              <div className="mt-3 text-[13px] opacity-70">
+                {figured.length} Figures in 3D · {characters.length} Characters · {places.length} Places · {pictures.length} Images
+              </div>
+            </div>
+          )}
 
           {home && party.length > 0 && (
             <section className="pb-4">
@@ -584,42 +694,6 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
             </section>
           )}
 
-          <div className="sticky top-12 z-20 -mx-5 mt-6 space-y-2 border-y border-[#e6c89626] bg-[#0e0a06f2] px-5 py-2.5 backdrop-blur-sm sm:-mx-8 sm:px-8">
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              <div className="flex gap-1 text-[13px]">
-                {(["characters", "environments", "images"] as const).map((t) => (
-                  <button key={t} type="button" className={`rounded px-2.5 py-1 ${tab === t ? "bg-[#f2c97a26] text-[#f2c97a]" : "opacity-70 hover:opacity-100"}`} onClick={() => show(t)}>
-                    {t === "characters" ? `Characters · ${characters.length}` : t === "environments" ? `Places · ${places.length}` : `Images · ${pictures.length}`}
-                  </button>
-                ))}
-              </div>
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search"
-                aria-label="Search"
-                className="ml-auto w-56 rounded border border-[#e6c89640] bg-transparent px-2 py-1 text-[12px] outline-none placeholder:opacity-40 focus:border-[#f2c97a99]"
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-1 text-[11px]">
-              <button type="button" className={pill(group === "all")} onClick={() => setGroup("all")}>
-                All · {total}
-              </button>
-              {(tab === "images" ? kinds : groups)
-                .filter((g) => inGroup(g) > 0 || g === group)
-                .map((g) => (
-                  <button key={g} type="button" className={pill(group === g)} onClick={() => setGroup(g)}>
-                    {groupName(g)} · {inGroup(g)}
-                  </button>
-                ))}
-              {tab !== "images" && (
-                <button type="button" className={`ml-3 ${pill(only)}`} onClick={() => setOnly((o) => !o)}>
-                  {tab === "characters" ? `3D · ${figured.length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => hasIso(v.key, v.room))).length}`}
-                </button>
-              )}
-            </div>
-          </div>
-
           {sections.map((g) => (
             <section key={g}>
               <h2 className="pt-6 pb-2 text-[11px] tracking-[0.14em] uppercase opacity-55">
@@ -633,7 +707,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                       <button
                         key={c.id}
                         type="button"
-                        onClick={() => setOpen({ character: c })}
+                        onClick={() => view({ character: c })}
                         className="group relative rounded-md border border-[#e6c8961f] bg-[#14100b] p-2 text-left hover:border-[#f2c97a99]"
                       >
                         {/* biome-ignore lint/performance/noImgElement: card art served as it is */}
@@ -652,7 +726,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                       <button
                         key={p.src}
                         type="button"
-                        onClick={() => setOpen({ picture: p })}
+                        onClick={() => view({ picture: p })}
                         className="group overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
                       >
                         {/* biome-ignore lint/performance/noImgElement: art served as it is */}
@@ -675,7 +749,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                         <button
                           key={p.id}
                           type="button"
-                          onClick={() => setOpen({ place: p })}
+                          onClick={() => view({ place: p })}
                           className="group relative overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
                         >
                           {p.picture ? (
