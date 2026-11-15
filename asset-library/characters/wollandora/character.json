@@ -2,7 +2,9 @@
   "id": "wollandora",
   "name": "Wollandora",
   "role": "Elven druid of the Standing Stones",
-  "cast": ["wollandora"],
+  "cast": [
+    "wollandora"
+  ],
   "height": 1.86,
   "card": {
     "front": "/stage/fixtures/the-midnight-summons/wollandora-front.webp",
@@ -15,7 +17,8 @@
     "what": "staff",
     "hand": "R",
     "length": 2.1,
-    "fist": true
+    "rod": true,
+    "thick": 5
   },
   "sheet": "front",
   "face": "close"

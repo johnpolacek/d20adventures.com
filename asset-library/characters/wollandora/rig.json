@@ -1,40 +1,52 @@
 {
-  "name": "ORM_638420de-d1cb-4eaf-9b75-ec14b3c2f51b",
+  "name": "ORM_9cf5e32f-8db0-45ce-869a-52dcbeb8e179",
   "source": "source.glb",
   "height": 1.86,
-  "sourceTriangles": 58916,
-  "weldedPoints": 10286,
+  "sourceTriangles": 57514,
+  "weldedPoints": 12149,
   "quarterTurns": 3,
   "weights": {
     "solve": "heat",
     "standIn": {
-      "points": 10768,
-      "skins": 4,
+      "points": 11958,
+      "skins": 13,
       "weighted": 1.0
     },
     "patched": 0,
     "unweighted": 0,
     "mostBonesOnAPoint": 512
   },
-  "slungPoints": 8,
+  "slungPoints": 332,
   "hang": {
-    "L": 7.0,
-    "R": 8.0
+    "L": 19.0,
+    "R": 22.0
   },
   "holds": {
     "what": "staff",
     "hand": "R",
     "length": 2.1,
-    "fist": true
+    "rod": true,
+    "thick": 5
+  },
+  "tunnel": {
+    "faces": 199,
+    "wideCm": 6.3,
+    "longCm": 20.9,
+    "runs": [
+      0.01,
+      -0.01,
+      1.0
+    ]
   },
   "faceFromSheet": {
-    "triangles": 2390,
-    "texels": 450510,
-    "sheetMiddle": 510.0,
+    "triangles": 2598,
+    "texels": 315144,
+    "sheetMiddle": 497.0,
     "close": true,
+    "fitted": true,
     "noseSlipMm": [
-      4.9,
-      1.8
+      0.0,
+      0.0
     ]
   },
   "bones": [
@@ -60,8 +72,8 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "megabytes": 5.0,
-      "triangles": 58916,
+      "megabytes": 4.75,
+      "triangles": 57514,
       "texture": 2048,
       "colour": 4096,
       "joints": 18,
@@ -69,8 +81,8 @@
     },
     {
       "file": "lod1.glb",
-      "megabytes": 1.31,
-      "triangles": 20000,
+      "megabytes": 1.33,
+      "triangles": 19993,
       "texture": 1024,
       "colour": 1024,
       "joints": 18,
@@ -78,8 +90,8 @@
     },
     {
       "file": "lod2.glb",
-      "megabytes": 0.52,
-      "triangles": 6000,
+      "megabytes": 0.54,
+      "triangles": 5994,
       "texture": 512,
       "colour": 512,
       "joints": 18,

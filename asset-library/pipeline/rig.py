@@ -124,6 +124,96 @@ shift = np.array([crown[:, 0].mean(), (waist[:, 1].min() + waist[:, 1].max()) / 
 co = (co - shift) * k
 body.data.vertices.foreach_set("co", co.reshape(-1))
 body.data.update()
+
+# ── What the sheet painted in flat blue is cut out ──
+# A hand that holds something is painted closed round a short blue rod (build.ts), so the generator models fingers and
+# a thumb round something. Blue is nothing else on a figure. Every face the texture colours blue is taken out, which
+# leaves the hand with a way through it, and the rod's own line and width are kept for the prop that goes there.
+brief_path = os.path.join(out_dir, "character.json")
+brief = json.load(open(brief_path)) if os.path.exists(brief_path) else {}
+tunnel = None
+if (brief.get("holds") or {}).get("rod"):
+    painted_by = None
+    for m in body.data.materials:
+        for shader in [n for n in (m.node_tree.nodes if m and m.use_nodes else []) if n.type == "BSDF_PRINCIPLED"]:
+            trail = [link.from_node for link in shader.inputs["Base Color"].links]
+            while trail and painted_by is None:
+                node = trail.pop()
+                if node.type == "TEX_IMAGE" and node.image:
+                    painted_by = node.image
+                trail += [link.from_node for socket in node.inputs for link in socket.links]
+    if painted_by is not None:
+        tw, th = painted_by.size
+        T = np.empty(tw * th * 4, dtype=np.float32)
+        painted_by.pixels.foreach_get(T)
+        T = T.reshape(th, tw, 4)
+        top_channel = np.maximum(T[..., 0], T[..., 1])
+        blue = (T[..., 2] > 0.4) & (T[..., 2] > 1.7 * top_channel)
+        cut = bmesh.new()
+        cut.from_mesh(body.data)
+        uv = cut.loops.layers.uv.active
+
+        def is_blue(u, v):
+            return bool(blue[min(th - 1, max(0, int((v % 1.0) * th))), min(tw - 1, max(0, int((u % 1.0) * tw)))])
+
+        gone = []
+        for f in cut.faces:
+            at_uv = [loop[uv].uv for loop in f.loops]
+            cu, cv = sum(q.x for q in at_uv) / len(at_uv), sum(q.y for q in at_uv) / len(at_uv)
+            if is_blue(cu, cv) + sum(is_blue(cu + (q.x - cu) * 0.6, cv + (q.y - cv) * 0.6) for q in at_uv) >= 2:
+                gone.append(f)
+        if len(gone) >= 20:
+            pts = np.array([v.co[:] for f in gone for v in f.verts], dtype=np.float64)
+            middle = pts.mean(axis=0)
+            runs = np.linalg.eigh(np.cov((pts - middle).T))[1][:, -1]
+            if runs[2] < 0:
+                runs = -runs
+            along_rod = (pts - middle) @ runs
+            from_line = np.linalg.norm((pts - middle) - np.outer(along_rod, runs), axis=1)
+            bmesh.ops.delete(cut, geom=gone, context="FACES")
+            bmesh.ops.delete(cut, geom=[v for v in cut.verts if not v.link_faces], context="VERTS")
+            cut.to_mesh(body.data)
+            tunnel = {"middle": middle, "runs": runs, "wide": float(np.percentile(from_line, 75)), "faces": len(gone), "long": float(np.ptp(along_rod))}
+        cut.free()
+        body.data.update()
+        if tunnel:
+            # What blue is left is a fringe on the fingers beside the rod: it takes the colour of the skin about it.
+            fringe = (T[..., 2] > 0.3) & (T[..., 2] > 1.25 * top_channel)
+            spread = fringe.copy()
+            for _ in range(6):
+                grown = spread.copy()
+                grown[1:, :] |= spread[:-1, :]
+                grown[:-1, :] |= spread[1:, :]
+                grown[:, 1:] |= spread[:, :-1]
+                grown[:, :-1] |= spread[:, 1:]
+                spread = grown
+            about = spread & ~fringe
+            if about.any():
+                T[fringe, :3] = np.median(T[about][:, :3], axis=0)
+            # And the rod's blue was in the light on the hand that held it: the skin about it came out lilac. Skin is
+            # never bluer than it is green, so on what lies close about the rod's line the blue is brought under.
+            close_by = bmesh.new()
+            close_by.from_mesh(body.data)
+            uv = close_by.loops.layers.uv.active
+            for f in close_by.faces:
+                c = np.array(f.calc_center_median()[:]) - tunnel["middle"]
+                along_c = float(c @ tunnel["runs"])
+                if abs(along_c) > 0.17 or np.linalg.norm(c - along_c * tunnel["runs"]) > 0.15:
+                    continue
+                us = [loop[uv].uv.x % 1.0 for loop in f.loops]
+                vs = [loop[uv].uv.y % 1.0 for loop in f.loops]
+                x0, x1 = max(0, int(min(us) * tw) - 1), min(tw, int(max(us) * tw) + 2)
+                y0, y1 = max(0, int(min(vs) * th) - 1), min(th, int(max(vs) * th) + 2)
+                if x1 - x0 > 400 or y1 - y0 > 400:
+                    continue
+                patch = T[y0:y1, x0:x1, :3]
+                cast = patch[..., 2] > 0.9 * patch[..., 1]
+                patch[..., 2] = np.where(cast, np.minimum(patch[..., 2], patch[..., 1] * 0.84), patch[..., 2])
+            close_by.free()
+            painted_by.pixels.foreach_set(T.reshape(-1))
+            painted_by.update()
+        del T
+    co = coords(body.data)
 source_triangles = sum(len(p.vertices) - 2 for p in body.data.polygons)
 
 # ── Joints: across and up from the painting, depth from the middle of the mesh there ──
@@ -355,7 +445,14 @@ rig["hangL"], rig["hangR"] = hang["L"], hang["R"]
 brief_file = os.path.join(out_dir, "character.json")
 holds = (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("holds")
 if holds:
-    rig["holds"] = f"{holds['what']}:{holds.get('hand', 'R')}:{holds.get('length', 2)}" + (":fist" if holds.get("fist") else "") + (f":{holds['palm']}" if holds.get("palm") else "")
+    rig["holds"] = f"{holds['what']}:{holds.get('hand', 'R')}:{holds.get('length', 2)}" + (":rod" if holds.get("rod") else ":fist" if holds.get("fist") else "") + (f":{holds['palm']}" if holds.get("palm") else "")
+if tunnel:
+    # The middle of the grip is where the wrist is along the rod, not the rod's own middle: more of a rod may show at
+    # one end. Written as glTF has it, y up, since that is where it is read (props.ts).
+    wrist_at = np.array(at[f"hand{(holds or {}).get('hand', 'R')}"][:])
+    grip_at = tunnel["middle"] + tunnel["runs"] * float((wrist_at - tunnel["middle"]) @ tunnel["runs"])
+    as_gltf = lambda v: [float(v[0]), float(v[2]), float(-v[1])]
+    rig["tunnel"] = as_gltf(grip_at) + as_gltf(tunnel["runs"]) + [tunnel["wide"]]
 
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
@@ -419,8 +516,15 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
     # The head painted close and fitted to the sheet (face.py), if there is one: the sheet's head, several times the
     # size. Inside its rectangle the head is painted from it, and the face's own relief is smoothed under the paint.
     close = json.load(open(os.path.join(beside, "face.json"))) if os.path.exists(os.path.join(beside, "apose-face.png")) else None
+    # A model's head is not the sheet's head: its eyes and mouth may lie a centimetre from the sheet's, and a face laid
+    # on by the sheet's measure then has two brows and a smeared nose (the third Wollandora). So the model's own face
+    # is drawn out flat, as the sheet sees it (head-own.png, below), face.py finds its features and pulls the close
+    # head onto them (apose-face-fit.png), and the rig is run again and paints from that. Fitted, nothing slips.
+    fitted = bool(close) and "fitFace" in close and os.path.exists(os.path.join(beside, "apose-face-fit.png"))
     if close:
-        F, fw, fh = picture("apose-face.png")
+        F, fw, fh = picture("apose-face-fit.png" if fitted else "apose-face.png")
+        if fitted:
+            close["face"] = close["fitFace"]
     patches = []
     # Where the head's middle is across the sheet: the middle of the figure in its topmost rows.
     grey = np.median(np.concatenate([S[:12, :12, :3].reshape(-1, 3), S[:12, -12:, :3].reshape(-1, 3)]), axis=0)
@@ -456,6 +560,41 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
     # moved by the difference, over the face.
     slip = np.zeros(2, dtype=np.float32)
     face_front = None
+    if close:
+        # The model's own face, flat, in the close head's frame: every triangle of the head that looks forward, drawn
+        # where the sheet would see it with the colour the generator gave it, nearest in front.
+        cx0, cy0, cx1, cy1 = close["rect"]
+        Kc = close["scale"]
+        ow, oh = (cx1 - cx0) * Kc, (cy1 - cy0) * Kc
+        own = np.tile(grey.astype(np.float32), (oh, ow, 1))
+        deep = np.full((oh, ow), np.inf, dtype=np.float32)
+        for k in np.flatnonzero((V[:, :, 2].min(axis=1) > neck - 0.03) & (facing > 0.02)):
+            qx = (middle + V[k, :, 0] / px - cx0) * Kc
+            qy = (bottom - V[k, :, 2] / px - cy0) * Kc
+            x0, x1 = max(0, int(np.floor(qx.min()))), min(ow - 1, int(np.ceil(qx.max())))
+            y0, y1 = max(0, int(np.floor(qy.min()))), min(oh - 1, int(np.ceil(qy.max())))
+            area = (qx[1] - qx[0]) * (qy[2] - qy[0]) - (qx[2] - qx[0]) * (qy[1] - qy[0])
+            if abs(area) < 1e-6 or x1 < x0 or y1 < y0:
+                continue
+            gx, gy = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
+            b1 = ((gx - qx[0]) * (qy[2] - qy[0]) - (qx[2] - qx[0]) * (gy - qy[0])) / area
+            b2 = ((qx[1] - qx[0]) * (gy - qy[0]) - (gx - qx[0]) * (qy[1] - qy[0])) / area
+            b0 = 1 - b1 - b2
+            far = b0 * V[k, 0, 1] + b1 * V[k, 1, 1] + b2 * V[k, 2, 1]
+            hit = (b0 >= -0.02) & (b1 >= -0.02) & (b2 >= -0.02) & (far < deep[y0 : y1 + 1, x0 : x1 + 1])
+            if not hit.any():
+                continue
+            tu = np.clip((b0 * uvs[k, 0, 0] + b1 * uvs[k, 1, 0] + b2 * uvs[k, 2, 0]).astype(np.int32), 0, tw - 1)
+            tv = np.clip((b0 * uvs[k, 0, 1] + b1 * uvs[k, 1, 1] + b2 * uvs[k, 2, 1]).astype(np.int32), 0, th - 1)
+            own[y0 : y1 + 1, x0 : x1 + 1][hit] = T[tv, tu, :3][hit]
+            deep[y0 : y1 + 1, x0 : x1 + 1][hit] = far[hit]
+        drawn = bpy.data.images.new("head-own", ow, oh)
+        drawn.pixels.foreach_set(np.concatenate([own[::-1], np.ones((oh, ow, 1), dtype=np.float32)], axis=2).reshape(-1))
+        drawn.filepath_raw = os.path.join(beside, "head-own.png")
+        drawn.file_format = "PNG"
+        drawn.save()
+        bpy.data.images.remove(drawn)
+        del own, deep
     if close and "face" in close and "nose" in close:
         ox, oy, rx, ry = close["face"]
         C = V.mean(axis=1)
@@ -466,8 +605,8 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
             tip = tip[np.argmin(tip[:, 1])]
             face_front = float(tip[1])
             found = np.array([close["nose"][0] - (middle + tip[0] / px), close["nose"][1] - (bottom - tip[2] / px)], dtype=np.float32)
-            # Further than a centimetre and a half is not a slip but a wrong point: left alone.
-            if np.hypot(*found) * px < 0.015:
+            # Further than a centimetre and a half is not a slip but a wrong point: left alone. Fitted, there is none.
+            if not fitted and np.hypot(*found) * px < 0.015:
                 slip = found
             # Within the face, everything on its front is painted, however it is turned: the underside of the nose
             # looks down, and left to the generator it kept a second pair of nostrils. The back of the head lies
@@ -535,7 +674,7 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         texels += int(inside.sum())
     image.pixels.foreach_set(T.reshape(-1))
     image.update()
-    painted = {"triangles": int(head.sum()), "texels": texels, "sheetMiddle": float(middle), "close": bool(close), "noseSlipMm": [round(float(v * px * 1000), 1) for v in slip]}
+    painted = {"triangles": int(head.sum()), "texels": texels, "sheetMiddle": float(middle), "close": bool(close), "fitted": fitted, "noseSlipMm": [round(float(v * px * 1000), 1) for v in slip]}
     del S, T
     # Under a face painted from a picture, the generator's own relief and shine are a second face a little out of
     # place: eyelids that glint, a second lip line. They are smoothed away where the face is, and left in the hair.
@@ -626,6 +765,7 @@ report = {
     "slungPoints": slung,
     "hang": hang,
     "holds": holds or None,
+    "tunnel": {"faces": tunnel["faces"], "wideCm": round(tunnel["wide"] * 200, 1), "longCm": round(tunnel["long"] * 100, 1), "runs": [round(float(v), 2) for v in tunnel["runs"]]} if tunnel else None,
     "faceFromSheet": painted,
     "bones": BONES,
     "lods": made,

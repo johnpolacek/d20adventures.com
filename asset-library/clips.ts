@@ -196,7 +196,7 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
   root.traverse((o) => {
     if (typeof o.userData.holds !== "string") return
     grips = o.userData.holds.split(":")[1] ?? ""
-    fist = o.userData.holds.split(":")[3] === "fist"
+    fist = ["fist", "rod"].includes(o.userData.holds.split(":")[3])
     facing = o.userData.holds.split(":")[4] ?? ""
   })
   root.traverse((o) => {

@@ -1,31 +1,31 @@
 {
   "model_mesh": {
-    "url": "https://v3b.fal.media/files/b/0ab29dac/kyBK0FYnUMCsGkznrCGUr_model.glb",
+    "url": "https://v3b.fal.media/files/b/0ab29fa1/VvyE4cMUdaeakNcnTa0GR_model.glb",
     "content_type": "model/gltf-binary",
     "file_name": "model.glb",
-    "file_size": 13625864
+    "file_size": 11049040
   },
   "model_urls": {
     "glb": {
-      "url": "https://v3b.fal.media/files/b/0ab29dac/kyBK0FYnUMCsGkznrCGUr_model.glb",
+      "url": "https://v3b.fal.media/files/b/0ab29fa1/VvyE4cMUdaeakNcnTa0GR_model.glb",
       "content_type": "model/gltf-binary",
       "file_name": "model.glb",
-      "file_size": 13625864
+      "file_size": 11049040
     },
     "fbx": null,
     "base_model": null,
     "pbr_model": {
-      "url": "https://v3b.fal.media/files/b/0ab29dac/kyBK0FYnUMCsGkznrCGUr_model.glb",
+      "url": "https://v3b.fal.media/files/b/0ab29fa1/VvyE4cMUdaeakNcnTa0GR_model.glb",
       "content_type": "model/gltf-binary",
       "file_name": "model.glb",
-      "file_size": 13625864
+      "file_size": 11049040
     }
   },
   "rendered_image": {
-    "url": "https://v3b.fal.media/files/b/0ab29dac/rWMO4tWiDLZw5bUvUveHw_preview.png",
+    "url": "https://v3b.fal.media/files/b/0ab29fa2/EIRRmzy1Chu5-5OdqkzPz_preview.png",
     "content_type": "image/png",
     "file_name": "preview.png",
-    "file_size": 113800
+    "file_size": 116662
   },
-  "task_id": "638420de-d1cb-4eaf-9b75-ec14b3c2f51b"
+  "task_id": "9cf5e32f-8db0-45ce-869a-52dcbeb8e179"
 }

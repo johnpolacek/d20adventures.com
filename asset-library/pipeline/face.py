@@ -49,6 +49,62 @@ if mode == "crop":
     sys.exit(0)
 
 spec = json.load(open(f"{folder}/face.json"))
+
+
+def pulled(picture, have, want, size):
+    """A picture of a face pulled so that its points lie on another face's: whole, by size, turn and place, and the face
+    itself triangle by triangle."""
+    w, h = size
+    M, _ = cv2.estimateAffinePartial2D(have, want, method=cv2.LMEDS)
+    whole = cv2.warpAffine(picture, M, (w, h), flags=cv2.INTER_LANCZOS4, borderMode=cv2.BORDER_REFLECT)
+    fine = whole.copy()
+    tris = cv2.Subdiv2D((0, 0, w, h))
+    inside = [(i, p) for i, p in enumerate(want) if 0 <= p[0] < w and 0 <= p[1] < h]
+    for _, p in inside:
+        tris.insert((float(p[0]), float(p[1])))
+    index = {(round(float(p[0]), 2), round(float(p[1]), 2)): i for i, p in inside}
+    for t in tris.getTriangleList():
+        ids = [index.get((round(float(t[k]), 2), round(float(t[k + 1]), 2))) for k in (0, 2, 4)]
+        if None in ids:
+            continue
+        dst, src = want[ids], have[ids]
+        x, y, bw, bh = cv2.boundingRect(dst)
+        if bw < 1 or bh < 1:
+            continue
+        to = cv2.getAffineTransform(src, dst - np.array([x, y], dtype=np.float32))
+        patch = cv2.warpAffine(picture, to, (bw, bh), flags=cv2.INTER_LANCZOS4, borderMode=cv2.BORDER_REFLECT)
+        mask = np.zeros((bh, bw), dtype=np.uint8)
+        cv2.fillConvexPoly(mask, np.int32(np.round(dst - np.array([x, y]))), 255, lineType=cv2.LINE_AA)
+        x0, y0, x1, y1 = max(x, 0), max(y, 0), min(x + bw, w), min(y + bh, h)
+        m = (mask[y0 - y : y1 - y, x0 - x : x1 - x, None] / 255.0).astype(np.float32)
+        fine[y0:y1, x0:x1] = (fine[y0:y1, x0:x1] * (1 - m) + patch[y0 - y : y1 - y, x0 - x : x1 - x] * m).astype(np.uint8)
+    hull = cv2.convexHull(want).reshape(-1, 2)
+    mid = hull.mean(axis=0)
+    mask = np.zeros((h, w), dtype=np.float32)
+    cv2.fillConvexPoly(mask, np.int32(mid + (hull - mid) * 0.96), 1.0, lineType=cv2.LINE_AA)
+    mask = cv2.GaussianBlur(mask, (0, 0), w * 0.012)[..., None]
+    return np.clip(whole.astype(np.float32) * (1 - mask) + fine.astype(np.float32) * mask, 0, 255).astype(np.uint8), hull, mid
+
+
+if mode == "fit":
+    # The close head, already the sheet's, pulled onto the model's own face as the rig drew it out (head-own.png).
+    own = cv2.imread(f"{folder}/head-own.png")
+    sharp = cv2.imread(f"{folder}/apose-face.png")
+    A, B = (points(own) if own is not None else None), points(sharp)
+    if A is None or B is None:
+        spec.pop("fitFace", None)
+        json.dump(spec, open(f"{folder}/face.json", "w"), indent=2)
+        print("FACE " + json.dumps({"fitted": False, "why": "no face found in the model's own" if A is None else "no face found in the close head"}))
+        sys.exit(0)
+    out, hull, mid = pulled(sharp, B, A, (own.shape[1], own.shape[0]))
+    cv2.imwrite(f"{folder}/apose-face-fit.png", out)
+    x0, y0 = spec["rect"][:2]
+    spec["fitFace"] = [float(x0 + mid[0] / K), float(y0 + mid[1] / K), float(np.ptp(hull[:, 0]) / 2 / K), float(np.ptp(hull[:, 1]) / 2 / K)]
+    json.dump(spec, open(f"{folder}/face.json", "w"), indent=2)
+    moved = np.linalg.norm(A - B, axis=1) / K
+    print("FACE " + json.dumps({"fitted": True, "movedPxMean": round(float(moved.mean()), 1), "movedPxMost": round(float(moved.max()), 1)}))
+    sys.exit(0)
+
 crop = cv2.imread(f"{folder}/head-crop.png")
 close = cv2.imread(f"{folder}/face.png")
 H, W = crop.shape[:2]

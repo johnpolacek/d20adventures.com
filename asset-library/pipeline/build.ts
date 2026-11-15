@@ -47,7 +47,12 @@ interface Brief {
   // What it holds, built in its hand when it is shown (props.ts) and left off the sheet: { what: "staff", hand: "R", length: 2.1 }.
   // `palm` is the way a fist's palm faces on the model, if not in toward the thigh as an open hand's does: "front"
   // or "back". Hide the staff and look at the bare fist before saying.
-  holds?: { what: "staff"; hand: "L" | "R"; length: number; fist?: boolean; palm?: "front" | "back" }
+  // `rod` has the sheet paint that hand closed round a short rod in flat blue, a colour nothing else on a figure is.
+  // The model then has fingers and a thumb made round something, and the rig cuts the blue out (rig.py), leaving a
+  // hand with a way through it for the prop. A fist made round nothing has no way through.
+  // `thick` is how wide the rod is, in centimetres: as wide as the prop is where it is held, or the hand is modelled
+  // round something thinner than what it holds.
+  holds?: { what: "staff"; hand: "L" | "R"; length: number; fist?: boolean; rod?: boolean; thick?: number; palm?: "front" | "back" }
   // "front" paints the front view alone, upright and at full size: half as many pixels again on a face as the sheet
   // of two views gives. The model is made from the front alone, so the back view was only ever a reference.
   sheet?: "front"
@@ -82,6 +87,11 @@ const prompt = (b: Brief) => (b.creature ? creaturePrompt(b) : personPrompt(b))
 // A hand that holds something (props.ts) is painted closed, so the model has a fist for the prop to stand in. Bending
 // an open hand's mesh shut does not make a grip.
 const hands = (b: Brief) => {
+  if (b.holds?.rod) {
+    const [own, seen, other] = b.holds.hand === "R" ? ["right", "left", "left"] : ["left", "right", "right"]
+    const thick = b.holds.thick ?? 5
+    return `Their own ${own} hand, on the ${seen} of the picture, holds a short, thick, straight rod upright, as one holds a heavy walking staff: a relaxed, natural grip with the four fingers wrapped round the rod side by side and the thumb wrapped round it the other way. The rod is VERY THICK: ${thick} centimetres across, as thick as a drinks can or a stair rail post, plainly thicker than their own wrist and about two thirds as wide as the back of their hand. The hand is opened wide round it: the fingers reach only about two thirds of the way round, and a clear gap of blue shows between the fingertips and the tip of the thumb. The rod stands vertical and sticks out about a hand's width above the hand and a hand's width below it, and no more. It is a plain smooth cylinder in flat, pure, saturated blue (#0000ff) with no shading, no highlights and no texture: it is a marker to be cut out later, so it must be exactly that blue and nothing else in the picture may be blue. Their ${other} hand is open and relaxed with fingers apart, palm toward the thigh. Nothing else in either hand.`
+  }
   if (!b.holds?.fist) return "hands open with fingers apart, palms toward the thighs. Nothing in the hands."
   const [own, seen, other] = b.holds.hand === "R" ? ["right", "left", "left"] : ["left", "right", "right"]
   return `Their own ${own} hand, on the ${seen} of the picture in the front view, is closed in a firm fist with the knuckles forward, the fingers curled tight and the thumb wrapped over them, as if gripping a thick pole that is not there. Their ${other} hand is open with fingers apart, palm toward the thigh. Nothing in either hand.`
@@ -234,6 +244,12 @@ async function build(b: Brief) {
     const report = last(run("rig", BLENDER, ["-b", "-P", "asset-library/pipeline/rig.py", "--", `${dir}/source.glb`, `${dir}/joints.json`, dir, "."]), "RIG") as Report | null
     const bad = report?.weights?.solve !== "heat" || report.weights.unweighted || report.lods?.some((l) => l.joints !== 18 || l.turnedAtRest.length)
     say("rig", `${bad ? "LOOK AT rig.json: " : ""}${report?.weights?.solve} solve, ${report?.lods?.map((l) => `${l.triangles} tris ${l.megabytes} MB`).join(", ")}`)
+    // A face painted close is fitted to the model's own face, which the rig has just drawn out, and rigged again.
+    if (b.face === "close" && existsSync(`${dir}/apose-face.png`) && existsSync(`${dir}/head-own.png`)) {
+      const fit = last(run("face fit", "uv", ["run", "--quiet", "--python", "3.12", "--with", "mediapipe==0.10.14", "--with", "numpy", "asset-library/pipeline/face.py", "fit", dir]), "FACE")
+      if (fit?.fitted) run("rig", BLENDER, ["-b", "-P", "asset-library/pipeline/rig.py", "--", `${dir}/source.glb`, `${dir}/joints.json`, dir, "."])
+      say("face", `fitted to the model's own: ${JSON.stringify(fit)}`)
+    }
   }
   await shelve(dir, b)
   say("shelf", `on the shelf: /dev/assets?id=${b.cast[0]}`)

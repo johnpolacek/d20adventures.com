@@ -18,7 +18,10 @@ const GRIP = 0.0155
 
 // A druid's staff: two old stems wound about each other, parting at the head into an eye and closing over it, with a
 // vine up the lower half. It stands on its foot at the origin, `length` tall.
-function staff(length: number, held = -1) {
+// `held` is the height a closed hand takes it at, where it is drawn in to the hand's width. `wide` is for a hand made
+// round a rod (rig.py): the staff is that wide from foot to eye, and nothing of it is drawn in.
+function staff(length: number, held = -1, wide = 0) {
+  const TUBE = wide ? wide * 0.6 : RADIUS
   const group = new THREE.Group()
   group.name = "prop:staff"
   const eye = 0.26
@@ -31,7 +34,7 @@ function staff(length: number, held = -1) {
       const a = t * TURNS * 2 * Math.PI + phase
       // The two stems lie closer at the foot, and closest where a fist holds them: a staff as wide as the hand that
       // grips it shows through the knuckles. The whole staff is a little crooked.
-      const out = RADIUS * (0.6 + 0.45 * t) * (held < 0 ? 1 : 1 - 0.72 * Math.exp(-(((t * shaft - held) / 0.09) ** 2)))
+      const out = wide ? wide * 0.4 : RADIUS * (0.6 + 0.45 * t) * (held < 0 ? 1 : 1 - 0.72 * Math.exp(-(((t * shaft - held) / 0.09) ** 2)))
       points.push(new THREE.Vector3(0.012 * Math.sin(t * 5.2) + out * Math.cos(a), t * shaft, 0.01 * Math.sin(t * 3.4 + 1) + out * Math.sin(a)))
     }
     const top = points[points.length - 1]
@@ -42,11 +45,11 @@ function staff(length: number, held = -1) {
       [0.004, 0.25, 0],
     ])
       points.push(new THREE.Vector3(top.x * 0.3 + side * x, shaft + y, z))
-    return slim(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, "centripetal"), 300, RADIUS, 8, false))
+    return slim(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, "centripetal"), 300, TUBE, 8, false))
   }
   // Worn thin where the hand has held it: drawn in toward its middle line there, to the width a hand closes on.
   const slim = <T extends THREE.BufferGeometry>(made: T) => {
-    if (held < 0) return made
+    if (held < 0 || wide) return made
     const at = made.attributes.position
     for (let i = 0; i < at.count; i++) {
       const y = at.getY(i)
@@ -91,7 +94,7 @@ function staff(length: number, held = -1) {
   }
   const wood = new THREE.MeshStandardMaterial({ map: bark(true), bumpMap: bark(false), bumpScale: 1.6, roughness: 0.9, metalness: 0 })
   group.add(new THREE.Mesh(stem(0, 1), wood), new THREE.Mesh(stem(Math.PI, -1), wood))
-  const knot = new THREE.Mesh(new THREE.SphereGeometry(RADIUS * 1.35, 12, 8), wood)
+  const knot = new THREE.Mesh(new THREE.SphereGeometry(TUBE * 1.35, 12, 8), wood)
   knot.position.set(0, shaft + 0.25, 0)
   knot.scale.set(1, 0.8, 1)
   group.add(knot)
@@ -99,7 +102,9 @@ function staff(length: number, held = -1) {
   for (let i = 0; i <= 70; i++) {
     const t = 0.1 + (i / 70) * 0.62
     const a = -t * 4.3 * 2 * Math.PI
-    vine.push(new THREE.Vector3(0.012 * Math.sin(t * 5.2) + RADIUS * 1.75 * Math.cos(a), t * shaft, 0.01 * Math.sin(t * 3.4 + 1) + RADIUS * 1.75 * Math.sin(a)))
+    vine.push(
+      new THREE.Vector3(0.012 * Math.sin(t * 5.2) + (wide ? wide * 1.06 : RADIUS * 1.75) * Math.cos(a), t * shaft, 0.01 * Math.sin(t * 3.4 + 1) + (wide ? wide * 1.06 : RADIUS * 1.75) * Math.sin(a))
+    )
   }
   group.add(new THREE.Mesh(slim(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(vine), 220, 0.0036, 5, false)), new THREE.MeshStandardMaterial({ color: "#2f3a22", roughness: 0.9 })))
   return group
@@ -165,6 +170,17 @@ function wrap(root: THREE.Object3D, side: "L" | "R", palm: Palm, [along, out]: [
   })
 }
 
+// The way through a hand made round a rod, as rig.py left it on the skeleton: a point in the middle of the grip, the
+// way the rod ran, upward, and how wide it was from its middle. In the figure's own space, as it was modelled.
+function wayThrough(root: THREE.Object3D) {
+  let found: number[] | null = null
+  root.traverse((o) => {
+    if (Array.isArray(o.userData.tunnel) && o.userData.tunnel.length >= 7) found = o.userData.tunnel as number[]
+  })
+  const t = found as number[] | null
+  return t ? { at: new THREE.Vector3(t[0], t[1], t[2]), runs: new THREE.Vector3(t[3], t[4], t[5]).normalize(), wide: t[6] } : null
+}
+
 // What the skeleton says the figure holds: "staff:R:2.1".
 export function heldBy(root: THREE.Object3D) {
   let text = ""
@@ -193,11 +209,17 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
   root.updateWorldMatrix(true, true)
   root.getWorldQuaternion(own)
   const tall = local(bone("head") ?? chest).y - ground
+  const way = wayThrough(root)
+  // Where that hand's bone lay when the figure was modelled, to carry the way through it along with the hand.
+  const rest = local(hand)
   // Where the wrist goes: out from the shoulder and forward of it, at the height of the chest, as her card holds it.
   // The elbow hangs under it at her side, so the forearm rises to the hand. Level, it is an arm stuck out sideways.
-  const reach = local(upper).add(new THREE.Vector3(side * 0.1, -0.085, 0.15).multiplyScalar(tall))
+  // A hand made round a rod holds it as the sheet had it: the arm let down and a little out, the hand at the hip and
+  // the staff planted beside her. The hand and the forearm keep nearly the angle they were modelled at, so the wrist
+  // is hardly bent. Held high, that wrist would be bent back on itself.
+  const reach = local(upper).add(new THREE.Vector3(...(way ? [side * 0.15, -0.3, 0.13] : [side * 0.1, -0.085, 0.15])).multiplyScalar(tall))
   // A fist's staff is drawn in where the fist comes, at the height the wrist is sent to.
-  const prop = staff(held.length, palm.fist ? reach.y - ground : -1)
+  const prop = staff(held.length, palm.fist && !way ? reach.y - ground : -1, way ? way.wide * 0.97 : 0)
   prop.traverse((m) => {
     if (m instanceof THREE.Mesh) m.castShadow = m.receiveShadow = true
   })
@@ -208,7 +230,7 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
   // to the palm's side. The middle of a closed hand is nearer the wrist than that, and a staff set there stands
   // against the heel of the hand with the fingers closed on nothing.
   const seat: [number, number] = palm.fist ? [palm.length * 0.6, Math.max(palm.middle[1], 0) + 0.012] : [palm.length * 0.47, RADIUS * 1.9]
-  if (palm.fist) wrap(root, held.hand, palm, seat)
+  if (palm.fist && !way) wrap(root, held.hand, palm, seat)
   const pole = new THREE.Vector3(side * 0.12, -1, -0.3).normalize()
   let foot: THREE.Vector3 | null = null
   // The way the staff stands, foot to hand: the fist is turned to it, and it is found again from the fist.
@@ -237,14 +259,23 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
     const upperTurn = within.clone().multiply(upper.quaternion)
     const level = wrist.clone().sub(elbow).normalize()
     fore.quaternion.setFromUnitVectors(alongFore, level.clone().applyQuaternion(upperTurn.clone().invert()))
-    if (palm.fist) {
+    let turnHand: THREE.Quaternion | null = null
+    if (way) {
+      // The hand was modelled round a rod, so the rod's line through it is the staff's. The hand is turned the least
+      // that brings that line to the way the staff stands.
+      const foreTurn = upperTurn.clone().multiply(fore.quaternion)
+      const swing = new THREE.Quaternion().setFromUnitVectors(way.runs.clone().applyQuaternion(foreTurn), stand)
+      turnHand = foreTurn.clone().invert().multiply(swing).multiply(foreTurn)
+    } else if (palm.fist) {
       // A fist grips along its knuckles, thumb uppermost. The forearm comes to a staff at whatever slope the elbow
       // gives it, so the fist is turned until the staff runs through it, pointing as near the forearm's way as that
       // allows. `modelled` has its third axis toward the thumb of a right hand, and away from a left's.
       const thumb = stand.clone().multiplyScalar(-side)
       const points = level.clone().addScaledVector(stand, -level.dot(stand)).normalize()
       const gripped = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(points, thumb.clone().cross(points), thumb))
-      const turnHand = upperTurn.clone().multiply(fore.quaternion).invert().multiply(gripped).multiply(modelled.clone().invert())
+      turnHand = upperTurn.clone().multiply(fore.quaternion).invert().multiply(gripped).multiply(modelled.clone().invert())
+    }
+    if (turnHand) {
       // What of that turn is a roll about the forearm is mostly the forearm's to make, as an arm's two bones make it,
       // and the rest is the wrist's. Read off the turn itself, it is steady from frame to frame: a roll found by
       // comparing two directions spins when they come near the forearm's own. One bone carries a whole forearm, so
@@ -269,7 +300,9 @@ export function holdProps(root: THREE.Object3D, ground = 0) {
     fore.updateWorldMatrix(false, true)
     const handTurn = upperTurn.clone().multiply(fore.quaternion).multiply(hand.quaternion)
     const [alongHand, outOfPalm] = seat
-    const grip = local(hand).addScaledVector(palm.along.clone().applyQuaternion(handTurn), alongHand).addScaledVector(palm.normal.clone().applyQuaternion(handTurn), outOfPalm)
+    const grip = way
+      ? local(hand).add(way.at.clone().sub(rest).applyQuaternion(handTurn))
+      : local(hand).addScaledVector(palm.along.clone().applyQuaternion(handTurn), alongHand).addScaledVector(palm.normal.clone().applyQuaternion(handTurn), outOfPalm)
     // Planted where it first stood, a hand's width farther from the feet than the hand is: it leans in a little.
     foot ??= new THREE.Vector3(grip.x + side * 0.03, ground, grip.z + 0.05)
     stand.copy(grip).sub(foot).normalize()
