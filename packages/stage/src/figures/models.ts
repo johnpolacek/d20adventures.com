@@ -4,7 +4,7 @@ import type { MaskSource } from "../render/character-mask"
 import { DRAW, figureClips, IN_HAND, isRigged, MOVE_NAMES, STRIKE, shooting, swinging } from "./clips"
 import { holdProps } from "./props"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
-import { pointAlong, reachArm, standUpright, type Weapon, weaponIn } from "./weapons"
+import { bowAim, heldBow, pointAlong, reachArm, standUpright, turnHandTo, type Weapon, weaponIn } from "./weapons"
 
 // A cast member as a rigged, animated glTF figure in place of their standee (the `figures` flag, one figure so far: an
 // experiment for the owner to judge against the cards). The standee stays built underneath: it keeps who is down and
@@ -181,6 +181,10 @@ export class Models {
     }
     // The weapons its moves need, seated in its hands at rest and hidden till a move shows them.
     const weapons = new Map<string, Weapon>()
+    // A bow through a hand made round a rod is carried at all times.
+    const kept = rigged ? heldBow(root) : null
+    const keptBow = kept ? weaponIn(root, "bow", kept.hand, kept) : null
+    if (keptBow) weapons.set("bow", keptBow)
     if (rigged)
       for (const clip of Object.values(spec.moves ?? {})) {
         const need = clip ? IN_HAND[clip] : undefined
@@ -291,7 +295,7 @@ export class Models {
     const action = m.actions.get(clip)
     if (!action) return null
     if (m.move && m.move.action !== action) m.move.action.setEffectiveWeight(0)
-    for (const w of m.weapons.values()) w.group.visible = false
+    for (const w of m.weapons.values()) w.group.visible = w.held
     const need = IN_HAND[clip]
     const weapon = need ? (m.weapons.get(need.what) ?? null) : null
     if (weapon) weapon.group.visible = true
@@ -372,10 +376,21 @@ export class Models {
     // The arrow's line runs back from the bow hand, level, past the jaw.
     const anchor = new THREE.Vector3(head.x - 0.04, bowWrist.y - 0.02, head.z - 0.04)
     const nock = bowWrist.clone().add(new THREE.Vector3(-0.08, -0.04, -0.3))
-    const drawWrist = nock.clone().lerp(anchor, draw).add(new THREE.Vector3(0, 0.05 * after, -0.2 * after))
+    const drawWrist = nock
+      .clone()
+      .lerp(anchor, draw)
+      .add(new THREE.Vector3(0, 0.05 * after, -0.2 * after))
     reachArm(root, "R", drawWrist, new THREE.Vector3(-0.4, 0.35, -1), raise * v)
     if (mv.weapon) {
-      standUpright(mv.weapon, new THREE.Vector3(0, 0, 1).applyQuaternion(root.getWorldQuaternion(new THREE.Quaternion())))
+      const ahead = new THREE.Vector3(0, 0, 1).applyQuaternion(root.getWorldQuaternion(new THREE.Quaternion()))
+      // A bow held through the hand is aimed by turning the hand; one put in an open hand is turned itself. A hand made
+      // round a rod as one holds a staff has the rod nearly along the forearm, so the bow is aimed broadside on and
+      // canted to the side as archers do, which bends the wrist least (bowAim).
+      if (mv.weapon.held) {
+        const loose = new THREE.Quaternion()
+        mv.weapon.group.getWorldQuaternion(loose)
+        turnHandTo(mv.weapon, loose.clone().slerp(bowAim(loose, ahead), raise * v))
+      } else standUpright(mv.weapon, ahead)
       const t = mv.t
       mv.weapon.draw(t < DRAW[0] || t >= DRAW[2] ? 0 : Math.min(1, (t - DRAW[0]) / (DRAW[1] - DRAW[0])))
     }
@@ -430,7 +445,7 @@ export class Models {
         if (!mv.held) mv.t += step
         if (!mv.held && (mv.t >= d || down || !motion)) {
           mv.action.setEffectiveWeight(0)
-          if (mv.weapon) mv.weapon.group.visible = false
+          if (mv.weapon && !mv.weapon.held) mv.weapon.group.visible = false
           m.move = null
           m.aim = null
         } else {

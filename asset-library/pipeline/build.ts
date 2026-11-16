@@ -45,6 +45,8 @@ interface Brief {
   arms: number
   party?: boolean
   // What it holds, built in its hand when it is shown (props.ts) and left off the sheet: { what: "staff", hand: "R", length: 2.1 }.
+  // A bow through a hand made round a rod is carried at all times (packages/stage/src/figures/weapons.ts): { what:
+  // "bow", hand: "L", length: 1.44, rod: true }.
   // `palm` is the way a fist's palm faces on the model, if not in toward the thigh as an open hand's does: "front"
   // or "back". Hide the staff and look at the bare fist before saying.
   // `rod` has the sheet paint that hand closed round a short rod in flat blue, a colour nothing else on a figure is.
@@ -52,7 +54,7 @@ interface Brief {
   // hand with a way through it for the prop. A fist made round nothing has no way through.
   // `thick` is how wide the rod is, in centimetres: as wide as the prop is where it is held, or the hand is modelled
   // round something thinner than what it holds.
-  holds?: { what: "staff"; hand: "L" | "R"; length: number; fist?: boolean; rod?: boolean; thick?: number; palm?: "front" | "back" }
+  holds?: { what: "staff" | "bow"; hand: "L" | "R"; length: number; fist?: boolean; rod?: boolean; thick?: number; palm?: "front" | "back" }
   // "front" paints the front view alone, upright and at full size: half as many pixels again on a face as the sheet
   // of two views gives. The model is made from the front alone, so the back view was only ever a reference.
   sheet?: "front"

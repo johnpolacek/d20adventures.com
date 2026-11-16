@@ -2,6 +2,7 @@
 // member, and a patch of shade under each crowd member. The asset library's scenes and the stage lab both use them.
 
 import type { Stage } from "@d20/stage"
+import { heldBow, weaponIn } from "@d20/stage/figures/weapons"
 import * as THREE from "three"
 import { figureClips, isRigged } from "./clips"
 import { holdProps } from "./props"
@@ -40,6 +41,9 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
   place()
   // What it holds is stood beside it before it is lit, so the prop is lit as the figure is.
   const carried = isRigged(root) ? holdProps(root, box.min.y) : null
+  // A bow through a hand made round a rod, carried as the game carries it (packages/stage/src/figures/weapons.ts).
+  const kept = isRigged(root) ? heldBow(root) : null
+  if (kept) weaponIn(root, "bow", kept.hand, kept)
   let triangles = 0
   // A generated figure is real metal and leather, which shows by what it reflects. The stage's own sky is kept dim for
   // its painted cards, so a figure in it goes dark. Each figure reflects a plain lit room of its own instead, dimmer

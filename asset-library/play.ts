@@ -15,7 +15,6 @@ import { LOOKS, type Look } from "./looks"
 import { FIGURE_FILES, MOVES, SHIPPED } from "./shipped"
 import { markBuiltTrees, standTrees } from "./trees"
 
-
 const nums = (s: string | undefined) => s?.split(",").map(Number)
 
 interface Part {

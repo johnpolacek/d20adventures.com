@@ -172,7 +172,7 @@ function wrap(root: THREE.Object3D, side: "L" | "R", palm: Palm, [along, out]: [
 
 // The way through a hand made round a rod, as rig.py left it on the skeleton: a point in the middle of the grip, the
 // way the rod ran, upward, and how wide it was from its middle. In the figure's own space, as it was modelled.
-function wayThrough(root: THREE.Object3D) {
+export function wayThrough(root: THREE.Object3D) {
   let found: number[] | null = null
   root.traverse((o) => {
     if (Array.isArray(o.userData.tunnel) && o.userData.tunnel.length >= 7) found = o.userData.tunnel as number[]

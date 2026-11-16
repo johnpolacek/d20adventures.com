@@ -271,7 +271,8 @@ The owner, 2026-11-16, of the owlbear fight: Thalbern should use his sword or bo
 - Which move a character makes is in `asset-library/shipped.ts` (`MOVES`): Thalbern cuts, shoots and dodges, the owlbear claws, and Wollandora dodges.
 - His weapons are part of his mesh, a bow slung on his back and blades in their sheaths, and cannot be drawn. So `weapons.ts` builds a sword and a bow in code and puts them in his hand only while Swing or Shoot plays. The ones on his back stay where they are.
 - Turns written per bone did not hold a bow up or bring a hand to the jaw: the bow lay along the arm and the drawing hand went above the head. So, as with Wollandora's staff, the arms in Shoot and Swing are solved to points after the clip. In Shoot the bow arm reaches straight out at the target and the drawing hand comes to the jaw. In Swing the hand goes over and behind the shoulder, then forward and down. The bow is stood upright in the world and the blade pointed, whatever the hand is doing. The rest of the body, the legs, the twist and the lunge, is the clip's.
-- The hands are not closed on the sword or the bow. They were modelled open. A Thalbern made with hands round a rod, like the third Wollandora, would hold them ($0.60).
+- The hands are not closed on the sword or the bow. They were modelled open.
+- A hand made round a rod holds the bow for real, as Wollandora's holds her staff. The owner, 2026-11-16, chose Thalbern's bow hand for it, at $0.60. His brief has `"holds": { "what": "bow", "hand": "L", "rod": true }`, no bow on his back, and the front sheet. `heldBow` and `weaponIn` (`weapons.ts`) put the bow through the way the rig cuts in that hand, as thick as the rod was, and keep it there at all times, in the game and on this page. A hand made round a rod as one holds a staff has the rod nearly along the forearm. So to aim, the hand is turned by the least amount that brings the bow broadside on to the target, canted up to 30 degrees to the side (`bowAim`). The wrist still bends. This was checked on Wollandora's rod hand with a bow put through it, not yet on Thalbern, whose new model is not built.
 - The dodge is a duck behind raised arms, not a roll.
 - `models.pose(id, clip, seconds, toward)` holds a move at one moment, for captures.
 
@@ -411,10 +412,31 @@ The owner, 2026-11-16: The Midnight Summons is played entirely in the new 3D pip
 
 Owner, 2026-11-14: only the party is made in 3D for now. The party is Branka, Thalbern, Lyra, Poppen and Milos the cleric. A brief with `"party": true` is one of them. Everyone else stays a card.
 
+Owner, 2026-11-16: a second Thalbern, his bow hand made round a rod, for $0.60. It is built on the owner's Mac, with the steps under Rebuilding Thalbern.
+
 Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made in 3D as well, one model each at $0.60. A second try at either needs a new yes. Both were built that day, each on its first model. The owner then cleared a second Wollandora, for her face and her grip on the staff, and a third, with her hand modelled round a rod: $2.40 in all.
 
 - All five were built on 2026-11-14 for $0.60 each, and each rig's report was clean on its first run. Idle, Walk and Hit play on all of them unchanged.
 - At the Gates the scene's own party is Branka, Cassia, Yeva and Milos. The Gates' look (`looks.ts`) stands Lyra where Cassia is and Poppen where Yeva is, and adds Thalbern beside them. The staging itself is unchanged.
+
+## Rebuilding Thalbern
+
+On the Mac, from the repository. The free steps first, and stop before the model:
+
+```sh
+cp -R asset-library/characters/thalbern ~/Desktop/d20-asset-library/thalbern-first
+pnpm assets thalbern --redo=sheet,joints,face,model
+```
+
+`model` is named so the run stops there, saying what it costs. Without it the old model would be rigged again with the new joints, and the figures on disk overwritten. Look at `sheet.png`: the left hand closed round a flat blue rod, no bow on his back. Then look at `joints.jpg`, and at `head-crop.png`, `face.png` and `apose-face.png` side by side. Then pay:
+
+```sh
+pnpm assets thalbern --redo=model --pay
+pnpm assets:thumbs thalbern
+pnpm assets:sync
+```
+
+Look at `rig.json` for `holds` and `tunnel`, and at him in the library with the Shoot clip, before the sync. The desktop app takes the new figure at its next `prepare:runtime`.
 
 ## Not built
 
