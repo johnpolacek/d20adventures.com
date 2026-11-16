@@ -275,6 +275,8 @@ The owner, 2026-11-16, of the owlbear fight: Thalbern should use his sword or bo
 - A hand made round a rod holds the bow for real, as Wollandora's holds her staff. The owner, 2026-11-16, chose Thalbern's bow hand for it, at $0.60. His brief has `"holds": { "what": "bow", "hand": "L", "rod": true }`, no bow on his back, and the front sheet. `heldBow` and `weaponIn` (`weapons.ts`) put the bow through the way the rig cuts in that hand, as thick as the rod was, and keep it there at all times, in the game and on this page. A hand made round a rod as one holds a staff has the rod nearly along the forearm. So to aim, the hand is turned by the least amount that brings the bow broadside on to the target, canted up to 30 degrees to the side (`bowAim`). The wrist still bends. This was checked on Wollandora's rod hand with a bow put through it, not yet on Thalbern, whose new model is not built.
 - The dodge is a duck behind raised arms, not a roll.
 - `models.pose(id, clip, seconds, toward)` holds a move at one moment, for captures.
+- The weapons and the arms are done in one place, `packages/stage/src/figures/fight.ts`, which the game's figures and the library's character page both use, so the page shows a move as the game plays it. The page offers every move as a clip for any rigged figure.
+- A bow can be in either hand: Shoot reaches out with whichever hand holds it. The clip still turns the body for a bow in the left.
 
 ## Environments
 

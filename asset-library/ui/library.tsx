@@ -10,12 +10,13 @@
 //   - a place is assembled and live (scene.ts): a variant, with one of its encounters as that encounter opens or
 //     empty, as the stage shows it or as an isometric cut-away, with a camera the visitor moves.
 
+import { type Armed, arm } from "@d20/stage/figures/fight"
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
-import { figureClips, isRigged } from "../clips"
+import { figureClips, isRigged, MOVE_NAMES } from "../clips"
 import { holdProps } from "../props"
 import { hasIso } from "../scene"
 import type { Character, Figure, Library, Picture, Place } from "../types"
@@ -59,6 +60,8 @@ interface Room {
   action: THREE.AnimationAction | null
   // What the figure holds (props.ts), moved with it each frame.
   carried: ReturnType<typeof holdProps>
+  // Its weapons, and its arms put where a fight move needs them (packages/stage/src/figures/fight.ts), as the game does.
+  armed: Armed | null
   framed: boolean
 }
 
@@ -78,7 +81,9 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
   const host = useRef<HTMLDivElement>(null)
   const room = useRef<Room | null>(null)
   const [lod, setLod] = useState(Math.min(Number(params.lod) || 0, figure.lods.length - 1))
-  const [clip, setClip] = useState(params.clip && figure.clips.includes(params.clip) ? params.clip : (figure.clips[0] ?? ""))
+  // The clips its shelf lists, and the fight moves every rigged figure plays as well.
+  const clips = useMemo(() => [...new Set([...figure.clips, ...(figure.clips.length ? MOVE_NAMES : [])])], [figure.clips])
+  const [clip, setClip] = useState(params.clip && clips.includes(params.clip) ? params.clip : (clips[0] ?? ""))
   const [turning, setTurning] = useState(params.turn === "1")
   const [fps, setFps] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -117,7 +122,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
     controls.maxPolarAngle = Math.PI * 0.52
     controls.minDistance = 0.6
     controls.maxDistance = 12
-    const r: Room = { renderer, scene, camera, controls, figure: null, mixer: null, clips: [], action: null, carried: null, framed: false }
+    const r: Room = { renderer, scene, camera, controls, figure: null, mixer: null, clips: [], action: null, carried: null, armed: null, framed: false }
     room.current = r
     const size = () => {
       renderer.setSize(el.clientWidth, el.clientHeight, false)
@@ -136,6 +141,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
       if (document.hidden) return void (last = now)
       r.mixer?.update(Math.min(0.1, (now - last) / 1000))
       r.carried?.update()
+      if (r.action) r.armed?.after(r.action.getClip().name, r.action.time, r.action.getEffectiveWeight())
       last = now
       controls.update()
       renderer.render(scene, camera)
@@ -200,11 +206,14 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
         r.clips = gltf.animations.length ? gltf.animations : isRigged(root) ? figureClips(root, tall) : []
         // What it holds, stood beside it once its height is known: a staff is taller than its bearer.
         r.carried = isRigged(root) ? holdProps(root, box.min.y) : null
+        r.armed?.dispose()
+        r.armed = isRigged(root) ? arm(root, MOVE_NAMES, tall) : null
         r.action = null
         const next = r.clips.find((c) => c.name === clip) ?? r.clips[0]
         if (next) {
           r.action = r.mixer.clipAction(next).play()
           r.action.time = at
+          r.armed?.show(next.name)
         }
         if (!r.framed) {
           r.controls.target.set(0, tall * 0.5, 0)
@@ -231,6 +240,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
     const action = r.mixer.clipAction(next).reset().play()
     if (r.action && r.action !== action) r.action.crossFadeTo(action, 0.2, false)
     r.action = action
+    r.armed?.show(clip)
   }, [clip])
 
   useEffect(() => {
@@ -261,7 +271,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
         </div>
         <div className="flex items-center gap-1">
           <span className="w-10 opacity-60">Clip</span>
-          {figure.clips.map((c) => (
+          {clips.map((c) => (
             <button key={c} type="button" className={pill(c === clip)} onClick={() => setClip(c)}>
               {c}
             </button>
