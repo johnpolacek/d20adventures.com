@@ -70,8 +70,11 @@ interface Model {
 // Albedo is graded toward the set palette as a card's is. On a painted set a card shows its art unlit, since a
 // photograph carries its own light. A model carries none, so it keeps the engine's shading there and takes only the
 // painted set's tint (Painted.flatFigures, `lit`).
-function figureMaterial(src: Mat, shared: SharedUniforms, ownLight: boolean): Mat {
+// A figure rigged by the asset library is not graded: its dark leather would take the grade's umber and read orange.
+// It is shown as the library shows it, under the set's light and haze.
+function figureMaterial(src: Mat, shared: SharedUniforms, ownLight: boolean, grade = true): Mat {
   const m = src.clone()
+  if (!grade) return stageMaterial(m, shared, "figure-rigged")
   return stageMaterial(m, shared, ownLight ? "figure-own" : "figure", (s) => {
     s.uniforms.uWarmth = shared.warmth
     s.fragmentShader = s.fragmentShader
@@ -194,7 +197,7 @@ export class Models {
       o.userData.castId = cast.id
       const src = o.material as Mat
       if (!materials.has(src)) {
-        const made = figureMaterial(src, this.shared, !!spec.ownLight)
+        const made = figureMaterial(src, this.shared, !!spec.ownLight, !rigged)
         // A generated figure is real metal and leather, which shows by what it reflects. The stage's sky is kept dim
         // for its cards, so it reflects a lit room of its own, and its metal is kept a little short of a mirror.
         if (room && spec.env) {
