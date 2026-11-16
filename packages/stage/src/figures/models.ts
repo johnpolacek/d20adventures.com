@@ -1,9 +1,10 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
-import { figureClips, isRigged } from "./clips"
+import { DRAW, figureClips, IN_HAND, isRigged, STRIKE } from "./clips"
 import { holdProps } from "./props"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
+import { type Weapon, weaponIn } from "./weapons"
 
 // A cast member as a rigged, animated glTF figure in place of their standee (the `figures` flag, one figure so far: an
 // experiment for the owner to judge against the cards). The standee stays built underneath: it keeps who is down and
@@ -15,7 +16,8 @@ import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
 //
 // A figure rigged by the asset library (asset-library/pipeline/rig.py) carries the shared skeleton and no clips. It
 // plays the written ones (clips.ts), Idle, Walk and Hit unless the spec names others, walks while its cast member
-// does, and holds what its skeleton says it holds (props.ts).
+// does, and holds what its skeleton says it holds (props.ts). In a fight it plays its moves (`act`): a cut, a shot, a
+// swipe, a dodge, turned toward whoever it is aimed at, with the sword or bow the move needs in its hand (weapons.ts).
 
 export interface FigureSpec {
   model: string
@@ -27,6 +29,9 @@ export interface FigureSpec {
   // How brightly the figure reflects a plain lit room of its own, so its metal and leather read: 0, or none, leaves
   // it to the stage's sky. A night wants little, or the figure glows.
   env?: number
+  // The moves it makes in a fight, by the clip each plays: a blow struck close, a shot from afar, getting out of the
+  // way. One it has none for, it does not make.
+  moves?: { melee?: string; ranged?: string; dodge?: string }
   // Nodes of the model left out: the weapons and shields a pack ships on every character.
   hide?: string[]
   // Seconds of idle per second: a short idle loop reads as bouncing at full speed.
@@ -51,6 +56,13 @@ interface Model {
   hit: THREE.AnimationAction | null
   fall: THREE.AnimationAction | null
   walk: THREE.AnimationAction | null
+  // The move it is making, once through, and the way it turns to make it.
+  move: { action: THREE.AnimationAction; t: number; weapon: Weapon | null; held?: boolean } | null
+  aim: number | null
+  // Its moves' clips, held: `update` runs them through once.
+  actions: Map<string, THREE.AnimationAction>
+  // Weapons a move puts in its hand, by name.
+  weapons: Map<string, Weapon>
   // What it holds, bent to its hand after each frame's clip.
   carried: { update: () => void; dispose: () => void } | null
   // Seconds into the hit clip, or null when not struck; seconds into the fall clip, 0 standing.
@@ -167,6 +179,15 @@ export class Models {
       // Stood beside it before its materials are made, so the prop is lit as the figure is.
       carried = holdProps(root, bind.min.y)
     }
+    // The weapons its moves need, seated in its hands at rest and hidden till a move shows them.
+    const weapons = new Map<string, Weapon>()
+    if (rigged)
+      for (const clip of Object.values(spec.moves ?? {})) {
+        const need = clip ? IN_HAND[clip] : undefined
+        if (!need || weapons.has(need.what)) continue
+        const made = weaponIn(root, need.what, need.hand)
+        if (made) weapons.set(need.what, made)
+      }
     const mixer = new THREE.AnimationMixer(root)
     const action = (name: string | undefined, held: boolean) => {
       const clip = name ? THREE.AnimationClip.findByName(animations, name) : null
@@ -183,6 +204,11 @@ export class Models {
     const hit = action(spec.hit, true)
     const fall = action(spec.fall, true)
     const walk = action(spec.walk, false)
+    const actions = new Map<string, THREE.AnimationAction>()
+    for (const clip of Object.values(spec.moves ?? {})) {
+      const a = clip && !actions.has(clip) ? action(clip, true) : null
+      if (clip && a) actions.set(clip, a)
+    }
     walk?.setEffectiveWeight(0)
     mixer.update(0)
     carried?.update()
@@ -234,6 +260,10 @@ export class Models {
       fall,
       walk,
       carried,
+      move: null,
+      aim: null,
+      actions,
+      weapons,
       hitT: null,
       fallT,
       yaw: null,
@@ -245,6 +275,36 @@ export class Models {
       base: mats.map((m) => m.color.clone()),
       triangles,
     })
+  }
+  // The clip a figure plays for a kind of move, if it has one.
+  moveFor(id: string, kind: "melee" | "ranged" | "dodge") {
+    const m = this.on ? this.items.get(id) : undefined
+    const clip = m?.spec.moves?.[kind]
+    return clip && m?.actions.has(clip) ? clip : null
+  }
+  // Plays a move once, turned toward `toward` while it plays. Resolves to the seconds until it lands (clips.ts
+  // STRIKE), or null when the figure is not standing, or has no such clip.
+  act(id: string, clip: string, toward?: { x: number; z: number }) {
+    const m = this.on ? this.items.get(id) : undefined
+    if (!m || this.standees.down.has(id) || this.standees.offstage.has(id)) return null
+    const action = m.actions.get(clip)
+    if (!action) return null
+    if (m.move && m.move.action !== action) m.move.action.setEffectiveWeight(0)
+    for (const w of m.weapons.values()) w.group.visible = false
+    const need = IN_HAND[clip]
+    const weapon = need ? (m.weapons.get(need.what) ?? null) : null
+    if (weapon) weapon.group.visible = true
+    m.move = { action, t: 0, weapon }
+    const c = m.cast
+    m.aim = toward && Math.hypot(toward.x - c.x, toward.z - c.z) > 0.2 ? Math.atan2(toward.x - c.x, toward.z - c.z) : null
+    return STRIKE[clip] ?? 0
+  }
+  // A move held at one moment, for a capture: it stays there until another move or `act` replaces it.
+  pose(id: string, clip: string, seconds: number, toward?: { x: number; z: number }) {
+    if (this.act(id, clip, toward) === null) return false
+    const m = this.items.get(id) as Model
+    if (m.move) Object.assign(m.move, { t: seconds, held: true })
+    return true
   }
   hit(id: string, color: string, strength = 1) {
     const m = this.items.get(id)
@@ -307,10 +367,27 @@ export class Models {
         if (m.hitT >= d) m.hitT = null
         else h = Math.min(1, m.hitT / 0.06, (d - m.hitT) / 0.2)
       } else m.hitT = null
+      // A move runs once through, eased in and out, over whatever else the figure is doing. Falling ends it.
+      let v = 0
+      const mv = m.move
+      if (mv) {
+        const d = mv.action.getClip().duration
+        if (!mv.held) mv.t += step
+        if (!mv.held && (mv.t >= d || down || !motion)) {
+          mv.action.setEffectiveWeight(0)
+          if (mv.weapon) mv.weapon.group.visible = false
+          m.move = null
+          m.aim = null
+        } else {
+          v = mv.held ? 1 : Math.min(1, mv.t / 0.12, (d - mv.t) / 0.18)
+          mv.action.time = mv.t
+          mv.action.setEffectiveWeight((1 - f) * (1 - h) * v)
+        }
+      }
       // Walking takes over from standing as the cast member sets off, and gives way again as they stop.
       const w = m.walk ? c.walk : 0
-      m.idle?.setEffectiveWeight((1 - f) * (1 - h) * (1 - w))
-      m.walk?.setEffectiveWeight((1 - f) * (1 - h) * w)
+      m.idle?.setEffectiveWeight((1 - f) * (1 - h) * (1 - v) * (1 - w))
+      m.walk?.setEffectiveWeight((1 - f) * (1 - h) * (1 - v) * w)
       if (m.hit) {
         m.hit.time = m.hitT ?? 0
         m.hit.setEffectiveWeight((1 - f) * h)
@@ -321,6 +398,11 @@ export class Models {
       }
       m.mixer.update(step)
       m.carried?.update()
+      // The string drawn back with the hand, and loosed.
+      if (m.move?.weapon?.what === "bow") {
+        const t = m.move.t
+        m.move.weapon.draw(t < DRAW[0] || t >= DRAW[2] ? 0 : Math.min(1, (t - DRAW[0]) / (DRAW[1] - DRAW[0])))
+      }
       m.root.position.set(c.x, (c.y ?? 0) + m.lift, c.z)
       // A model with no fall clip is tipped onto its back, as a card is.
       // Which face shows is settled as a card's is: the back past 100 degrees off its facing, the front again under 80.
@@ -334,6 +416,7 @@ export class Models {
         const seen = m.side ? wrap(off - Math.PI) : off
         want = c.ry + Math.sign(seen) * Math.max(0, Math.abs(seen) - THREE.MathUtils.degToRad(m.spec.turn))
       } else if (m.yaw !== null && (down || m.fallT > 0)) want = m.yaw
+      else if (m.aim !== null) want = m.aim
       m.yaw = m.yaw === null || !motion ? want : m.yaw + wrap(want - m.yaw) * (1 - Math.exp(-dt * 4.5))
       m.root.rotation.set(m.fall ? 0 : -(m.fallT / length) * (Math.PI / 2 - 0.04), m.yaw, 0, "YXZ")
       m.root.visible = !this.standees.offstage.has(c.id)
@@ -353,6 +436,7 @@ export class Models {
     for (const m of this.items.values()) {
       m.mixer.stopAllAction()
       m.carried?.dispose()
+      for (const w of m.weapons.values()) w.dispose()
       for (const mesh of m.meshes) mesh.geometry.dispose()
       for (const mat of m.materials) {
         mat.map?.dispose()

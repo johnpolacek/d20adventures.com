@@ -37,6 +37,7 @@ const castMember = z
         hit: z.string().max(80).optional(),
         fall: z.string().max(80).optional(),
         walk: z.string().max(80).optional(),
+        moves: z.object({ melee: z.string().max(80).optional(), ranged: z.string().max(80).optional(), dodge: z.string().max(80).optional() }).strict().optional(),
         env: num(0, 2).optional(),
         hide: z.array(z.string().max(80)).max(40).optional(),
         pace: num(0.1, 4).optional(),

@@ -1,4 +1,6 @@
-// Clips for every rigged figure (rig.py): Idle, Walk and Hit, written as turns, as figure.ts writes its own.
+// Clips for every rigged figure (rig.py): Idle, Walk and Hit, written as turns, as figure.ts writes its own. And the
+// moves of a fight, played once when a figure attacks or is missed (models.ts): Swing, a sword's cut; Shoot, a bow
+// drawn, held and loosed; Dodge, a duck and a step aside; Claw, a beast's swipe; and Roar.
 //
 // The skeleton is the same in every character: the same bone names, and every bone square to the world at rest, x the
 // figure's left, y up and z the way it faces. So a clip is a turn per bone in its parent's frame, and it plays on
@@ -116,6 +118,141 @@ const WRITTEN: Written[] = [
           thighR: about(X, 2 * e),
         },
         lift: [0, 0, -0.035 * e],
+      }
+    },
+  },
+]
+
+// The moment in each move that lands, in seconds: the cut, the loosing of the arrow, the swipe. An attack's effect
+// starts there (stage.ts).
+export const STRIKE: Record<string, number> = { Swing: 0.45, Shoot: 1.05, Claw: 0.5 }
+// What each move has in hand while it plays (weapons.ts): the prop's name and the hand it is in.
+export const IN_HAND: Record<string, { what: "sword" | "bow"; hand: "L" | "R" }> = { Swing: { what: "sword", hand: "R" }, Shoot: { what: "bow", hand: "L" } }
+// The bowstring is drawn to the other hand over this span of Shoot, and loosed at its end.
+export const DRAW: [number, number, number] = [0.3, 0.7, STRIKE.Shoot]
+
+// Rises from 0 to 1 over a to b, holds, and falls to 0 over c to d.
+const span = (t: number, a: number, b: number, c: number, d: number) => smooth(a, b, t) * (1 - smooth(c, d, t))
+
+const MOVES: Written[] = [
+  {
+    // A cut from over the right shoulder, down and across, with a step in on the left foot.
+    name: "Swing",
+    seconds: 1.05,
+    pose: (t, arm) => {
+      const w = span(t, 0, 0.32, 0.36, 0.48)
+      const k = span(t, 0.36, 0.5, 0.62, 1.05)
+      return {
+        turns: {
+          ...standing(arm, { armL: 22 * (w + k), swingL: 18 * k, elbowL: -20 * (w + k), swingR: -150 * w - 60 * k, armR: 28 * w - 8 * k, elbowR: -55 * w - 12 * k }),
+          hips: about(Y, -12 * w + 14 * k),
+          spine: turn(about(X, -6 * w + 14 * k), about(Y, -8 * w + 8 * k)),
+          chest: turn(about(X, -4 * w + 8 * k), about(Y, -22 * w + 28 * k)),
+          head: turn(about(X, 6 * k), about(Y, 18 * w - 20 * k)),
+          thighL: about(X, -30 * k),
+          shinL: about(X, 26 * k),
+          footL: about(X, 4 * k),
+          thighR: about(X, 14 * k),
+          shinR: about(X, 14 * k),
+          footR: about(X, -12 * k),
+        },
+        lift: [0, -0.05 * k, 0.11 * k],
+      }
+    },
+  },
+  {
+    // The bow raised in the left hand and the body turned side on, the string drawn to the jaw, held, and loosed, the
+    // right hand flying back; then the bow lowered. The left arm is rolled so that the bow stands upright.
+    name: "Shoot",
+    seconds: 1.75,
+    pose: (t, arm) => {
+      const r = span(t, 0, 0.32, 1.3, 1.75)
+      const d = span(t, DRAW[0], DRAW[1], STRIKE.Shoot, STRIKE.Shoot + 0.06)
+      const after = span(t, STRIKE.Shoot, STRIKE.Shoot + 0.1, 1.3, 1.75)
+      const raiseL = (93 - arm.hangL) * r
+      const raiseR = (88 - arm.hangR) * r
+      return {
+        turns: {
+          upperarmL: turn(about(Z, -(arm.L - arm.hangL) + raiseL), about(Y, 90 * r)),
+          forearmL: about(X, -15 + 10 * r),
+          handL: arm.wristL,
+          upperarmR: turn(about(X, 22 * after), about(Z, arm.R - arm.hangR - raiseR)),
+          forearmR: about(X, -10 - 70 * r - 80 * d + 40 * after),
+          handR: arm.wristR,
+          hips: about(Y, -28 * r),
+          spine: about(Y, -22 * r),
+          chest: turn(about(Y, -30 * r), about(X, -3 * r)),
+          neck: about(Y, 36 * r),
+          head: turn(about(Y, 36 * r), about(Z, -6 * r)),
+          thighL: about(Z, 9 * r),
+          thighR: about(Z, -9 * r),
+        },
+      }
+    },
+  },
+  {
+    // Down and aside, to the figure's left, arms up before the face, and back up again.
+    name: "Dodge",
+    seconds: 0.9,
+    pose: (t, arm) => {
+      const e = Math.sin(Math.PI * clamp01(t / 0.9) ** 0.6) ** 1.2
+      return {
+        turns: {
+          ...standing(arm, { swingL: -55 * e, swingR: -55 * e, elbowL: -70 * e, elbowR: -75 * e, armL: 8 * e, armR: 4 * e }),
+          hips: about(Z, -4 * e),
+          spine: turn(about(X, 12 * e), about(Z, -12 * e)),
+          chest: turn(about(X, 12 * e), about(Y, -10 * e)),
+          head: about(X, 8 * e),
+          thighL: turn(about(Z, 14 * e), about(X, -50 * e)),
+          shinL: about(X, 78 * e),
+          footL: about(X, -28 * e),
+          thighR: about(X, -44 * e),
+          shinR: about(X, 72 * e),
+          footR: about(X, -28 * e),
+        },
+        lift: [0.16 * e, -0.2 * e, -0.04 * e],
+      }
+    },
+  },
+  {
+    // A beast's swipe: the right arm thrown up and back, then raked down and across, the body lunging after it.
+    name: "Claw",
+    seconds: 1.15,
+    pose: (t, arm) => {
+      const w = span(t, 0, 0.36, 0.4, 0.52)
+      const k = span(t, 0.4, 0.55, 0.68, 1.15)
+      return {
+        turns: {
+          ...standing(arm, { armR: 95 * w + 15 * k, swingR: -35 * w - 85 * k, elbowR: -55 * w - 20 * k, armL: 25 * (w + k), swingL: -20 * k, elbowL: -35 * (w + k) }),
+          hips: about(Y, -10 * w + 12 * k),
+          spine: turn(about(X, -8 * w + 16 * k), about(Y, -10 * w + 10 * k)),
+          chest: turn(about(X, -6 * w + 12 * k), about(Y, -20 * w + 30 * k)),
+          head: about(X, -8 * w + 12 * k),
+          thighL: about(X, -22 * k),
+          shinL: about(X, 20 * k),
+          thighR: about(X, 10 * k),
+          shinR: about(X, 12 * k),
+        },
+        lift: [0, -0.04 * k, 0.14 * k],
+      }
+    },
+  },
+  {
+    // Reared back with the arms up and out, the head thrown up, shaking with it.
+    name: "Roar",
+    seconds: 1.9,
+    pose: (t, arm) => {
+      const r = span(t, 0, 0.45, 1.35, 1.9)
+      const shake = Math.sin(2 * Math.PI * 7 * t) * r * smooth(0.4, 0.55, t)
+      return {
+        turns: {
+          ...standing(arm, { armL: 70 * r, armR: 70 * r, swingL: -30 * r, swingR: -30 * r, elbowL: -45 * r, elbowR: -45 * r }),
+          spine: about(X, -10 * r),
+          chest: turn(about(X, -12 * r), about(Y, 3 * shake)),
+          neck: about(X, -10 * r),
+          head: turn(about(X, -18 * r), about(Z, 3 * shake)),
+        },
+        lift: [0, 0.03 * r, -0.04 * r],
       }
     },
   },
@@ -290,7 +427,7 @@ export function figureClips(root: THREE.Object3D, height: number): THREE.Animati
   const arm: Arms = { L: out("L"), R: out("R"), hangL: fitted.hangL ?? HANG, hangR: fitted.hangR ?? HANG, wristL, wristR }
   const hips = bone("hips")?.position.clone() ?? new THREE.Vector3()
   const size = height / 1.8
-  return WRITTEN.map((w) => {
+  return [...WRITTEN, ...MOVES].map((w) => {
     const frames = Math.round(w.seconds * FPS)
     const times = Array.from({ length: frames + 1 }, (_, i) => (i / frames) * w.seconds)
     const poses = times.map((t) => w.pose(t === w.seconds ? 0 : t, arm))

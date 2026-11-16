@@ -12,7 +12,7 @@
 import type { Flags, Stage } from "@d20/stage"
 import { iso, isoLamps } from "./iso"
 import { LOOKS, type Look } from "./looks"
-import { FIGURE_FILES, SHIPPED } from "./shipped"
+import { FIGURE_FILES, MOVES, SHIPPED } from "./shipped"
 import { markBuiltTrees, standTrees } from "./trees"
 
 
@@ -121,7 +121,7 @@ export function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Look) {
   const env = q.figenv ? Number(q.figenv) : 0.55
   for (const c of cast) {
     const character = figureOf(c.id)
-    if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env }
+    if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...(MOVES[character] ? { moves: MOVES[character] } : {}) }
   }
   const flags: Partial<Flags> = { figures: true, ...(q.paint === "0" ? { brush: 0 } : {}), ...(q.bloom ? { bloom: q.bloom === "on" } : {}) }
   return {

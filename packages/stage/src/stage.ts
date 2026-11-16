@@ -1398,8 +1398,29 @@ export class Stage {
   }
   // An attack or spell from one cast member at another, or at a place, or about themselves with no target. A miss lands
   // beside the target and strikes nobody. Resolves when it has played. With motion off it does not play.
-  effect(kind: EffectKind, from: string, to?: string | [number, number], element?: Element, { miss = false } = {}): Promise<void> {
-    if (!this.motion) return Promise.resolve()
+  // A figure (models.ts) that has a move for it makes it first, turned toward the target: a cut for a blade or a blow,
+  // a shot for an arrow. The effect starts as the move lands. A figure an attack misses gets out of its way.
+  async effect(kind: EffectKind, from: string, to?: string | [number, number], element?: Element, { miss = false } = {}): Promise<void> {
+    if (!this.motion) return
+    const range = kind === "arrow" ? "ranged" : kind === "slash" || kind === "impact" ? "melee" : null
+    const move = range ? this.models.moveFor(from, range) : null
+    const toward = typeof to === "string" ? (this.cast.some((c) => c.id === to) ? this.castAt(to) : undefined) : to ? this.point(to) : undefined
+    const lands = move ? this.models.act(from, move, toward) : null
+    if (lands) await new Promise((r) => setTimeout(r, lands * 1000))
+    if (miss && typeof to === "string") {
+      const dodge = this.models.moveFor(to, "dodge")
+      if (dodge) this.models.act(to, dodge, this.castAt(from))
+    }
+    return this.fire(kind, from, to, element, miss)
+  }
+  // A figure's move by its clip's name, such as a roar, turned toward a cast member or a place. Resolves to the seconds
+  // until it lands, or null when the cast member is no figure or has no such clip.
+  act(id: string, clip: string, toward?: string | [number, number]) {
+    if (!this.motion) return null
+    const at = typeof toward === "string" ? this.castAt(toward) : toward ? this.point(toward) : undefined
+    return this.models.act(id, clip, at)
+  }
+  private fire(kind: EffectKind, from: string, to: string | [number, number] | undefined, element: Element | undefined, miss: boolean): Promise<void> {
     const start = this.chest(from)
     let end = to === undefined ? undefined : this.endOf(to)
     if (end && miss) {
