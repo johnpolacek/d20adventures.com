@@ -263,6 +263,18 @@ Still untried: a beast on four legs, wings, a tail. The skeleton has no bones fo
 - To add one, add an entry to `WRITTEN` with a name, a length and a pose for each moment. It then shows as a pill in the library for every figure.
 - Garlan and Branka play them unchanged: a tall man and a dwarf of 1.38 m.
 
+### A fight
+
+The owner, 2026-11-16, of the owlbear fight: Thalbern should use his sword or bow, or roll out of the way. The moves are in the same file: Swing, Shoot, Dodge, Claw and Roar, and every rigged figure carries all five.
+
+- The game plays them (`packages/stage/src/figures/models.ts`, `act`). When the story's action has an `arrow`, the attacker plays its ranged move. A `slash` or an `impact` plays its melee move. It turns to face the target, and the effect starts as the move lands (`STRIKE` in `clips.ts`). A figure that the attack misses plays its dodge. `stage.act(id, "Roar")` plays any move by name. Nothing calls Roar on its own yet.
+- Which move a character makes is in `asset-library/shipped.ts` (`MOVES`): Thalbern cuts, shoots and dodges, the owlbear claws, and Wollandora dodges.
+- His weapons are part of his mesh, a bow slung on his back and blades in their sheaths, and cannot be drawn. So `weapons.ts` builds a sword and a bow in code and puts them in his hand only while Swing or Shoot plays. The ones on his back stay where they are.
+- Turns written per bone did not hold a bow up or bring a hand to the jaw: the bow lay along the arm and the drawing hand went above the head. So, as with Wollandora's staff, the arms in Shoot and Swing are solved to points after the clip. In Shoot the bow arm reaches straight out at the target and the drawing hand comes to the jaw. In Swing the hand goes over and behind the shoulder, then forward and down. The bow is stood upright in the world and the blade pointed, whatever the hand is doing. The rest of the body, the legs, the twist and the lunge, is the clip's.
+- The hands are not closed on the sword or the bow. They were modelled open. A Thalbern made with hands round a rod, like the third Wollandora, would hold them ($0.60).
+- The dodge is a duck behind raised arms, not a roll.
+- `models.pose(id, clip, seconds, toward)` holds a move at one moment, for captures.
+
 ## Environments
 
 Environments are not generated. They are built from code, and 41 exist.
@@ -406,14 +418,14 @@ Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made
 
 ## Not built
 
-- An attack, a fall and a talk clip.
+- A fall and a talk clip. A roll.
 - Detail levels swapped by distance in the stage.
 - Blind scoring of looks and movement (`workflow-score-to-target`).
 - A home for shipped figures. About 5 MB a character is too heavy for git at 120 characters.
 - Props, and monsters that do not stand as a person does. An upright beast goes through as it is (A beast). A beast on four legs has no way through yet.
-- Clips for a beast: a heavy walk, a rear and a roar.
+- A heavy walk for a beast. Its Claw and Roar are written, but it still walks as a person does.
 - Looks for the other outdoor places. 23 of the 41 sets have neither a room nor a look, so they have no Isometric view.
 - The three places of The Midnight Summons joined into one wood, as the Gates join the festival square. Not done, on purpose: see below.
 - Any place but The Midnight Summons in the game. The Gates and the inn have looks, not marked `play`.
-- An attack and a roar for the owlbear in the game: it is struck and falls as anyone does.
+- The owlbear's Roar played by the story on its own.
 - Running a step from the page itself.
