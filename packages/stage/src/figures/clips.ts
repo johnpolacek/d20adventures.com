@@ -191,11 +191,13 @@ const MOVES: Written[] = [
           upperarmR: turn(about(X, 22 * after), about(Z, arm.R - arm.hangR - raiseR)),
           forearmR: about(X, -10 - 70 * r - 80 * d + 40 * after),
           handR: arm.wristR,
-          hips: about(Y, -28 * r),
-          spine: about(Y, -22 * r),
-          chest: turn(about(Y, -30 * r), about(X, -3 * r)),
-          neck: about(Y, 36 * r),
-          head: turn(about(Y, 36 * r), about(Z, -6 * r)),
+          // Half turned, not side on: side on, the drawing shoulder stands behind the chin and the drawing arm folds
+          // shut, which a mesh modelled with its arms down cannot take.
+          hips: about(Y, -12 * r),
+          spine: about(Y, -12 * r),
+          chest: turn(about(Y, -16 * r), about(X, -3 * r)),
+          neck: about(Y, 18 * r),
+          head: turn(about(Y, 20 * r), about(Z, -6 * r)),
           thighL: about(Z, 9 * r),
           thighR: about(Z, -9 * r),
         },

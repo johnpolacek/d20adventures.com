@@ -277,6 +277,7 @@ The owner, 2026-11-16, of the owlbear fight: Thalbern should use his sword or bo
 - `models.pose(id, clip, seconds, toward)` holds a move at one moment, for captures.
 - The weapons and the arms are done in one place, `packages/stage/src/figures/fight.ts`, which the game's figures and the library's character page both use, so the page shows a move as the game plays it. The page offers every move as a clip for any rigged figure.
 - A bow can be in either hand: Shoot reaches out with whichever hand holds it. The clip still turns the body for a bow in the left.
+- The owner, 2026-11-16, of the new Thalbern drawing: "he does some weird warping". Drawn to the jaw with the body turned side on, as an archer stands, the drawing shoulder is behind the chin. The arm then rose to 126 degrees from hanging, the elbow 17 cm over the shoulder, folded to 37 degrees. A mesh modelled with its arms 40 degrees down crumples at the shoulder and the elbow at that. Now the body turns half as far and the string is drawn to under the chin: 83 to 90 degrees, the elbow at or under the shoulder, through the whole shot. The hand also no longer flies back after the loose, which raised the arm again.
 
 ## Environments
 

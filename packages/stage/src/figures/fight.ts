@@ -47,7 +47,7 @@ export function arm(root: THREE.Object3D, moves: string[], height: number): Arme
     const other = side === "L" ? "R" : "L"
     // The figure's own +x is its left.
     const sx = side === "L" ? 1 : -1
-    const { raise, draw, after } = shooting(t)
+    const { raise, draw } = shooting(t)
     root.updateWorldMatrix(true, true)
     const [shoulder, head, hand, fore] = [at(`upperarm${side}`), at("head"), at(`hand${side}`), at(`forearm${side}`)]
     if (!shoulder || !head || !hand || !fore) return
@@ -55,14 +55,15 @@ export function arm(root: THREE.Object3D, moves: string[], height: number): Arme
     const reach = (shoulder.distanceTo(fore) + fore.distanceTo(hand)) * 0.97
     const bowWrist = shoulder.clone().add(new THREE.Vector3(0, 0.03 * size, reach))
     reachArm(root, side, bowWrist, new THREE.Vector3(sx, -0.6, 0), raise * v)
-    // The arrow's line runs back from the bow hand, level, past the jaw.
-    const anchor = new THREE.Vector3(head.x - 0.04 * size * sx, bowWrist.y - 0.02 * size, head.z - 0.04 * size)
+    // The arrow's line runs back from the bow hand to under the chin, on the drawing side. Drawn farther, to the jaw,
+    // the drawing elbow rises over the shoulder and the arm folds shut, and a mesh modelled with its arms down crumples
+    // at the shoulder and the elbow.
+    const anchor = new THREE.Vector3(head.x - 0.07 * size * sx, bowWrist.y - 0.08 * size, head.z + 0.1 * size)
     const nock = bowWrist.clone().add(new THREE.Vector3(-0.08 * sx, -0.04, -0.3).multiplyScalar(size))
-    const drawWrist = nock
-      .clone()
-      .lerp(anchor, draw)
-      .add(new THREE.Vector3(0, 0.05 * after, -0.2 * after).multiplyScalar(size))
-    reachArm(root, other, drawWrist, new THREE.Vector3(-0.4 * sx, 0.35, -1), raise * v)
+    // Once loosed, the hand stays where it was, and the arm comes down with the bow. Flung back past the chin, the
+    // drawing arm has to straighten and rise over the shoulder to follow it.
+    const drawWrist = nock.clone().lerp(anchor, t >= DRAW[2] ? 1 : draw)
+    reachArm(root, other, drawWrist, new THREE.Vector3(-1 * sx, 0.1, -0.7), raise * v)
     if (!bow) return
     // A bow held through the hand is aimed by turning the hand; one put in an open hand is turned itself. A hand made
     // round a rod as one holds a staff has the rod nearly along the forearm, so the bow is aimed broadside on and
