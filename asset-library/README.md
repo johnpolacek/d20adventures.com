@@ -2,7 +2,7 @@
 
 The workspace for the game's 3D assets: every character's files, the pipeline that makes them, the clips they play and the isometric looks of the places they stand in. The page that shows it all is `/dev/assets` in the workspace and `/settings/<setting>/assets` on the site.
 
-Written 2026-11-14, brought up to date 2026-11-15, the second time after The Midnight Summons got its looks and its two figures. None of this ships in the game yet: the game's own sets, stagings and paintings are untouched by anything here.
+Written 2026-11-14, brought up to date 2026-11-15, the second time after The Midnight Summons got its looks and its two figures, and on 2026-11-16 when The Midnight Summons began to play in them. The game's own sets, stagings and paintings are untouched by anything here: a look the game plays in changes a copy of its set as it is built (Played in the game, below).
 
 ## Where things are
 
@@ -10,9 +10,10 @@ Written 2026-11-14, brought up to date 2026-11-15, the second time after The Mid
 |---|---|---|
 | A character, all of it | `asset-library/characters/<id>/` | the small files |
 | The pipeline | `asset-library/pipeline/` | yes |
-| The clips every figure plays | `asset-library/clips.ts` | yes |
+| The clips every figure plays | `packages/stage/src/figures/clips.ts`, re-exported by `asset-library/clips.ts` | yes |
 | The isometric look of a set | `asset-library/looks.ts` | yes |
-| What a figure holds | `asset-library/props.ts` | yes |
+| What a figure holds | `packages/stage/src/figures/props.ts`, re-exported by `asset-library/props.ts` | yes |
+| A look played in the game | `asset-library/play.ts`, the figures it ships in `shipped.ts` | yes |
 | Modelled trees for a look | `asset-library/trees.ts`, files in `public/stage/trees` | yes |
 | Scorecards | `asset-library/scorecards/` | yes |
 | The page | `asset-library/ui/library.tsx`, shown at `/dev/assets` and `/settings/<setting>/assets` | yes |
@@ -348,6 +349,18 @@ What it is not: a big-budget game's trees. No free source ships those. Leaves ha
 
 Joining the three into one wood was weighed and left alone. The trail's own marks put the stones north up the deer trail and the home south, but no set gives a distance, as the festival square does for the Gates. The Gates' join pays because the arch frames the square. Here nothing of one place shows from another: it is night, the haze is thick, and a hundred metres of trunks stand between. The home is by day and cannot share a sky with the other two. Each set's scattered wood would also plant trees in the other's clearing and river, so every scatter would need its own clearings written. If it is ever wanted, join the trail and the stones only.
 
+## Played in the game
+
+The owner, 2026-11-16: The Midnight Summons is played entirely in the new 3D pipeline, on the site and in the desktop app, hosted and joined. No painted sets and no card figures.
+
+- A look with `play: true` (`looks.ts`) is the one the game plays its set in. The three places of The Midnight Summons have it.
+- `components/stage/use-stage.ts` is where both the site and the app make their stage. For a played look it builds the set from the look (`play.ts`, `builtPlay`): paintings left out, the look's materials, sky, haze, cleared ground and part edits, then its light (`iso.ts` with `keepCamera`) and its modelled trees once built.
+- The camera stays the game's: its shots, the story's aims and its walls. The library's free camera, rings and views stay in the library. The light's direction is taken from the look's `wide` shot.
+- Each cast member whose id is in `SHIPPED` (`shipped.ts`), or named in the look's `figures`, gets a `figure` in the staging and the stage's `figures` flag is on. That is the game's own figures path, `packages/stage/src/figures/models.ts`. A rigged figure with no clips plays the written ones, blends Walk in while its cast member walks, holds what its skeleton says, flashes when struck and is tipped over when down. `figenv` sets how much of a lit room it reflects. Three or fewer figures stand at full detail.
+- One with no figure shows as its card, and the console says who. In The Midnight Summons there is none: its cast is Thalbern, Wollandora and the owlbear, and a hosted game of it seats only Thalbern, since it takes no guest's own hero.
+- The site serves figures from the public bucket at `/asset-library/characters/<id>/`. The desktop app bundles `SHIPPED` at the same path: `apps/desktop/scripts/build-runtime.ts` copies the library's own files when they are on the machine, else fetches the published ones (`D20_FIGURES_FROM` names another site) and keeps them in `node_modules/.cache/d20-figures`. A figure added to a played look goes into `SHIPPED`, and is synced (`pnpm assets:sync`) before it is played.
+- Staging asset URLs now take `/asset-library/characters/...` beside `/stage/...`.
+
 ## The page
 
 `/dev/assets` is every character and every place in one page.
@@ -401,5 +414,6 @@ Owner, 2026-11-15: for The Midnight Summons, Wollandora and the owlbear are made
 - Clips for a beast: a heavy walk, a rear and a roar.
 - Looks for the other outdoor places. 23 of the 41 sets have neither a room nor a look, so they have no Isometric view.
 - The three places of The Midnight Summons joined into one wood, as the Gates join the festival square. Not done, on purpose: see below.
-- Any of it in the game itself.
+- Any place but The Midnight Summons in the game. The Gates and the inn have looks, not marked `play`.
+- An attack and a roar for the owlbear in the game: it is struck and falls as anyone does.
 - Running a step from the page itself.
