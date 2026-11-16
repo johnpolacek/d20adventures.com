@@ -1,4 +1,5 @@
-import { cp, mkdir, rm, writeFile } from "node:fs/promises"
+import { existsSync } from "node:fs"
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -7,6 +8,7 @@ import { adventureList } from "../runtime/game"
 
 const require = createRequire(import.meta.url)
 const { loadLocalWikiAdventureRuntime } = require("../../../lib/wiki-adventures/local-runtime.ts")
+const { SHIPPED } = require("../../../asset-library/shipped.ts") as typeof import("../../../asset-library/shipped")
 const { CATALOG } = require("../../../lib/store/catalog.ts") as typeof import("../../../lib/store/catalog")
 const app = fileURLToPath(new URL("../", import.meta.url))
 const root = resolve(app, "../..")
@@ -44,6 +46,40 @@ await cp(resolve(root, "public/stage"), resolve(app, "public/stage"), { recursiv
 for (const name of ["backgrounds", "art"]) await cp(resolve(root, `public/images/app/${name}`), resolve(app, `public/images/app/${name}`), { recursive: true })
 // The header's logo.
 await cp(resolve(root, "public/images/d20.jpg"), resolve(app, "public/images/d20.jpg"))
+// The figures the played looks stand (asset-library/play.ts), at the path the site serves them from. They are not in
+// git: the asset library's own copy is taken when it is here, else the published one, kept between builds.
+const FIGURE_SITE = process.env.D20_FIGURES_FROM ?? "https://d20adventures.com"
+const cache = resolve(root, "node_modules/.cache/d20-figures")
+const missing: string[] = []
+for (const id of SHIPPED)
+  for (const lod of ["lod0", "lod1"]) {
+    const name = `${id}/${lod}.glb`
+    const to = resolve(app, `public/asset-library/characters/${name}`)
+    await mkdir(resolve(to, ".."), { recursive: true })
+    const own = resolve(root, `asset-library/characters/${name}`)
+    if (existsSync(own)) {
+      await cp(own, to)
+      continue
+    }
+    const kept = resolve(cache, name)
+    const tag = existsSync(`${kept}.etag`) ? (await readFile(`${kept}.etag`, "utf8")).trim() : ""
+    try {
+      const res = await fetch(`${FIGURE_SITE}/asset-library/characters/${name}`, { headers: tag && existsSync(kept) ? { "If-None-Match": tag } : {} })
+      if (res.status !== 304) {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        await mkdir(resolve(kept, ".."), { recursive: true })
+        await writeFile(kept, Buffer.from(await res.arrayBuffer()))
+        await writeFile(`${kept}.etag`, res.headers.get("etag") ?? "")
+      }
+    } catch (error) {
+      if (!existsSync(kept)) {
+        missing.push(`${name} (${error instanceof Error ? error.message : error})`)
+        continue
+      }
+    }
+    await cp(kept, to)
+  }
+if (missing.length) console.warn(`No figure bundled for ${missing.join(", ")}: those cast members show as cards.`)
 // The host worker runs beside the app while it hosts a website game.
 await build({
   entryPoints: [resolve(app, "runtime/host-main.ts")],
@@ -54,4 +90,4 @@ await build({
   format: "cjs",
   define: { "process.env.NODE_ENV": '"production"' },
 })
-console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, and Stageview assets.`)
+console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, Stageview assets, and the figures of ${SHIPPED.join(", ")}.`)

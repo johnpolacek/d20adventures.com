@@ -11,6 +11,7 @@ import { onFootprint } from "@d20/stage/spec/walk"
 import { addFigure, castRings, crowdShade } from "./figures"
 import { iso, isoLamps, isoSet } from "./iso"
 import { LOOKS } from "./looks"
+import { applyLook, editLook } from "./play"
 import { markBuiltTrees, standTrees } from "./trees"
 
 export interface SceneOptions {
@@ -184,19 +185,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       }
       if (set.crowd?.groups) set.crowd.groups = set.crowd.groups.filter((g) => g.type !== "scatter" || (g.count ?? 0) >= 1)
     }
-    if (q.isohide) set.objects = set.objects.filter((p) => !q.isohide.split(",").includes(p.type))
-    // Trees left out where they would stand between the people and where the place is seen from, as an awning is: a
-    // wood seen from above is all canopy. Circles of x,z,r, which a tree set by hand is dropped from and a scattered
-    // wood keeps clear of. A scatter holds 256 circles at most.
-    const glade = q.isoclear?.split(";").map((c) => c.split(",").map(Number))
-    if (glade) {
-      const trees = (p: SetLike["objects"][number]) => [p.item, ...(p.items ?? []).map((i) => i.item)].some((i) => i?.type === "tree")
-      set.objects = set.objects.filter((p) => !(p.type === "tree" && p.at && glade.some(([x, z, r]) => Math.hypot(p.at![0] - x, p.at![1] - z) < r)))
-      for (const p of set.objects) if (p.type === "scatter" && trees(p)) p.clear = [...(p.clear ?? []), ...glade].slice(0, 256)
-    }
-    for (const [name, change] of Object.entries(look?.materials ?? {})) if (set.materials?.[name]) Object.assign(set.materials[name], change)
-    for (const [name, change] of Object.entries(look?.atmosphere ?? {}))
-      if (set.atmosphere) set.atmosphere[name] = typeof change === "object" ? { ...(set.atmosphere[name] as object), ...change } : change
+    applyLook(set, look, q)
     // Sets that share this one's world are built into it where they stand: their parts as one group, moved there, and
     // their scattered crowds with them. A material both sets name keeps this set's.
     for (const j of look?.join ?? []) {
@@ -216,10 +205,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
         })
       }
     }
-    for (const [id, change] of Object.entries(look?.edit ?? {})) {
-      if (!change) set.objects = set.objects.filter((p) => p.id !== id)
-      else Object.assign(set.objects.find((p) => p.id === id) ?? {}, change)
-    }
+    editLook(set, look)
     if (staging && look?.cast) staging.cast = [...(staging.cast ?? []), ...(look.cast as { id: string }[])]
   }
 

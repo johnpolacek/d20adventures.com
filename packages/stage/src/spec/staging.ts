@@ -4,15 +4,15 @@ import { deg, idName, num, size, vec2, vec3 } from "../builders/types"
 // Staging spec v1 (`d20.stage.staging`), minimal for phase 2: which set, who stands where, and the shots that frame
 // them. Scripts, ambient loops and beats come later (Stageview phases 3–4).
 
-// Art must come from this app (`/stage/...`), the project's asset bucket, or a blob URL the page made itself (a hero's
+// Art must come from this app (`/stage/...`, or a figure of the asset library at `/asset-library/characters/...`), the project's asset bucket, or a blob URL the page made itself (a hero's
 // art painted on the player's machine); a staging never points players' browsers at an arbitrary host.
 const ASSET_HOSTS = [/^https:\/\/[a-z0-9-]+\.s3\.[a-z0-9-]+\.amazonaws\.com\//, /^https:\/\/[a-z0-9-]+\.s3\.amazonaws\.com\//]
 export const assetUrl = z
   .string()
   .max(1000)
   .refine(
-    (u) => /^\/stage\/[A-Za-z0-9/_.-]+$/.test(u) || /^blob:[a-z]+:\/\/[A-Za-z0-9.:-]+\/[a-f0-9-]+$/.test(u) || ASSET_HOSTS.some((re) => re.test(u)),
-    "asset URLs must be /stage/… paths, page blobs or the asset bucket"
+    (u) => /^\/(stage|asset-library\/characters)\/[A-Za-z0-9/_.-]+$/.test(u) || /^blob:[a-z]+:\/\/[A-Za-z0-9.:-]+\/[a-f0-9-]+$/.test(u) || ASSET_HOSTS.some((re) => re.test(u)),
+    "asset URLs must be /stage/… or /asset-library/characters/… paths, page blobs or the asset bucket"
   )
 
 // Where to look: degrees, another cast member, a mark, or a point.
@@ -27,13 +27,17 @@ const castMember = z
     art: z.object({ front: assetUrl, back: assetUrl.optional(), portrait: assetUrl.optional() }).strict(),
     // A rigged, animated glTF figure shown in place of the card while the stage's `figures` flag is on: its clips by
     // name, the nodes left out (a pack's spare weapons and shields), and how fast the idle plays. `ownLight` and
-    // `turn` are for a figure built from the character's paintings (figures/models.ts says what they do).
+    // `turn` are for a figure built from the character's paintings, `walk` plays while they walk, and `env` is how
+    // much of a lit room it reflects (figures/models.ts says what they do). A figure rigged by the asset library needs
+    // no clip names: it plays the written ones.
     figure: z
       .object({
         model: assetUrl,
         idle: z.string().max(80).optional(),
         hit: z.string().max(80).optional(),
         fall: z.string().max(80).optional(),
+        walk: z.string().max(80).optional(),
+        env: num(0, 2).optional(),
         hide: z.array(z.string().max(80)).max(40).optional(),
         pace: num(0.1, 4).optional(),
         ownLight: z.boolean().optional(),

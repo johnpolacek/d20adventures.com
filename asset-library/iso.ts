@@ -45,6 +45,8 @@ export interface IsoOptions {
   fill?: number
   // The share of the set's own haze a whole place keeps, 0.3 unless given: a night wood wants less, a far valley more.
   haze?: number
+  // The camera is the game's: its walls and its limits are left as they are.
+  keepCamera?: boolean
 }
 
 // Lamps as an address writes them: x,y,z,intensity,distance[,colour] joined by ";".
@@ -181,10 +183,12 @@ export function iso(stage: Stage, o: IsoOptions) {
     key.shadow.radius = 3
     stage.scene.add(key, key.target)
   }
-  s.collide = () => {}
-  if (stage.controls) {
-    stage.controls.maxPolarAngle = Math.PI * 0.45
-    stage.controls.minDistance = 6
+  if (!o.keepCamera) {
+    s.collide = () => {}
+    if (stage.controls) {
+      stage.controls.maxPolarAngle = Math.PI * 0.45
+      stage.controls.minDistance = 6
+    }
   }
   return { position: position.toArray(), target: target.toArray(), fov: o.fov, label: "Isometric" }
 }

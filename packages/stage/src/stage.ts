@@ -357,7 +357,7 @@ export class Stage {
     this.cast = resolveCast(set, staging)
     this.standees = new Standees(this.cast, this.shared, maxAnisotropy)
     this.world.add(this.standees.group)
-    this.models = new Models(this.cast, this.shared, this.standees)
+    this.models = new Models(this.cast, this.shared, this.standees, renderer)
     this.world.add(this.models.group)
     this.effects = new Effects({ hit: (id, color, strength) => this.hit(id, color, strength), camera: this.camera })
     this.world.add(this.effects.group)

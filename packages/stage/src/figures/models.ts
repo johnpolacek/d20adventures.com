@@ -1,6 +1,8 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
+import { figureClips, isRigged } from "./clips"
+import { holdProps } from "./props"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
 
 // A cast member as a rigged, animated glTF figure in place of their standee (the `figures` flag, one figure so far: an
@@ -10,12 +12,21 @@ import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
 // The figure stands where the cast member does, faces the way they face (a glTF figure faces +z, as yaw 0 does here)
 // and is scaled so the top of it in its idle pose is their height. It breathes on its idle clip, flinches on its hit
 // clip with the same flash a card takes, and falls on its fall clip, where a card is put down unseen.
+//
+// A figure rigged by the asset library (asset-library/pipeline/rig.py) carries the shared skeleton and no clips. It
+// plays the written ones (clips.ts), Idle, Walk and Hit unless the spec names others, walks while its cast member
+// does, and holds what its skeleton says it holds (props.ts).
 
 export interface FigureSpec {
   model: string
   idle?: string
   hit?: string
   fall?: string
+  // Played, blended in, while the cast member walks.
+  walk?: string
+  // How brightly the figure reflects a plain lit room of its own, so its metal and leather read: 0, or none, leaves
+  // it to the stage's sky. A night wants little, or the figure glows.
+  env?: number
   // Nodes of the model left out: the weapons and shields a pack ships on every character.
   hide?: string[]
   // Seconds of idle per second: a short idle loop reads as bouncing at full speed.
@@ -39,6 +50,9 @@ interface Model {
   idle: THREE.AnimationAction | null
   hit: THREE.AnimationAction | null
   fall: THREE.AnimationAction | null
+  walk: THREE.AnimationAction | null
+  // What it holds, bent to its hand after each frame's clip.
+  carried: { update: () => void; dispose: () => void } | null
   // Seconds into the hit clip, or null when not struck; seconds into the fall clip, 0 standing.
   hitT: number | null
   fallT: number
@@ -75,10 +89,12 @@ export class Models {
   // Called when figures have arrived or left, so the stage can list them for the character mask and the painted set.
   onChange: (() => void) | null = null
 
+  private room: Promise<THREE.Texture> | null = null
   constructor(
     private cast: CastMember[],
     private shared: SharedUniforms,
-    private standees: Standees
+    private standees: Standees,
+    private renderer?: THREE.WebGLRenderer
   ) {
     this.group.name = "models"
   }
@@ -112,19 +128,45 @@ export class Models {
     await Promise.all(
       wanted.map(async (c) => {
         try {
-          this.make(c, c.figure as FigureSpec, await loader.loadAsync((c.figure as FigureSpec).model))
+          const spec = c.figure as FigureSpec
+          const gltf = await loader.loadAsync(spec.model)
+          this.make(c, spec, gltf, spec.env && this.renderer ? await this.lit() : null)
         } catch (error) {
           console.warn(`[stage] figure for ${c.id} failed, showing the standee`, error)
         }
       })
     )
   }
-  private make(cast: CastMember, spec: FigureSpec, gltf: { scene: THREE.Group; animations: THREE.AnimationClip[] }) {
+  // The plain lit room a figure reflects, made once for the stage.
+  private lit() {
+    this.room ??= import("three/addons/environments/RoomEnvironment.js").then(({ RoomEnvironment }) => {
+      const pmrem = new THREE.PMREMGenerator(this.renderer as THREE.WebGLRenderer)
+      const made = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+      pmrem.dispose()
+      return made
+    })
+    return this.room
+  }
+  private make(cast: CastMember, given: FigureSpec, gltf: { scene: THREE.Group; animations: THREE.AnimationClip[] }, room: THREE.Texture | null) {
     const root = gltf.scene
-    for (const name of spec.hide ?? []) root.getObjectByName(name)?.removeFromParent()
+    for (const name of given.hide ?? []) root.getObjectByName(name)?.removeFromParent()
+    // A rigged figure with no clips of its own plays the written ones, which are measured on it as it was modelled.
+    const rigged = !gltf.animations.length && isRigged(root)
+    let animations = gltf.animations
+    let carried: Model["carried"] = null
+    // How tall it stands, as modelled: what it holds may stand taller than it does.
+    let bind: THREE.Box3 | null = null
+    const spec = rigged ? { idle: "Idle", hit: "Hit", walk: "Walk", ...given } : given
+    if (rigged) {
+      root.updateMatrixWorld(true)
+      bind = new THREE.Box3().setFromObject(root)
+      animations = figureClips(root, bind.max.y - bind.min.y)
+      // Stood beside it before its materials are made, so the prop is lit as the figure is.
+      carried = holdProps(root, bind.min.y)
+    }
     const mixer = new THREE.AnimationMixer(root)
     const action = (name: string | undefined, held: boolean) => {
-      const clip = name ? THREE.AnimationClip.findByName(gltf.animations, name) : null
+      const clip = name ? THREE.AnimationClip.findByName(animations, name) : null
       if (!clip) return null
       const a = mixer.clipAction(clip)
       // A held clip is posed by hand (update sets its time), so it never runs on its own.
@@ -137,7 +179,10 @@ export class Models {
     idle?.setEffectiveTimeScale(spec.pace ?? 1)
     const hit = action(spec.hit, true)
     const fall = action(spec.fall, true)
+    const walk = action(spec.walk, false)
+    walk?.setEffectiveWeight(0)
     mixer.update(0)
+    carried?.update()
     const meshes: THREE.Mesh[] = []
     const materials = new Map<THREE.Material, Mat>()
     let triangles = 0
@@ -148,7 +193,20 @@ export class Models {
       o.frustumCulled = false
       o.userData.castId = cast.id
       const src = o.material as Mat
-      if (!materials.has(src)) materials.set(src, figureMaterial(src, this.shared, !!spec.ownLight))
+      if (!materials.has(src)) {
+        const made = figureMaterial(src, this.shared, !!spec.ownLight)
+        // A generated figure is real metal and leather, which shows by what it reflects. The stage's sky is kept dim
+        // for its cards, so it reflects a lit room of its own, and its metal is kept a little short of a mirror.
+        if (room && spec.env) {
+          made.envMap = room
+          made.envMapIntensity = spec.env
+          made.metalness = Math.min(made.metalness, 0.8)
+          made.roughness = Math.max(made.roughness, 0.4)
+          // A generated skin shines like wax and its relief is cut too deep: both catch a low light as streaks.
+          made.normalScale.setScalar(0.7)
+        }
+        materials.set(src, made)
+      }
       o.material = materials.get(src) as Mat
       triangles += (o.geometry.index?.count ?? o.geometry.attributes.position.count) / 3
       meshes.push(o)
@@ -156,7 +214,7 @@ export class Models {
     for (const src of materials.keys()) src.dispose()
     // Measured as posed, skinning and all: a bind pose with the arms out is not how tall the figure stands.
     root.updateMatrixWorld(true)
-    const box = new THREE.Box3().setFromObject(root, true)
+    const box = bind ?? new THREE.Box3().setFromObject(root, true)
     const scale = cast.height / Math.max(box.max.y - box.min.y, 1e-3)
     root.scale.setScalar(scale)
     root.name = `model:${cast.id}`
@@ -171,6 +229,8 @@ export class Models {
       idle,
       hit,
       fall,
+      walk,
+      carried,
       hitT: null,
       fallT,
       yaw: null,
@@ -244,7 +304,10 @@ export class Models {
         if (m.hitT >= d) m.hitT = null
         else h = Math.min(1, m.hitT / 0.06, (d - m.hitT) / 0.2)
       } else m.hitT = null
-      m.idle?.setEffectiveWeight((1 - f) * (1 - h))
+      // Walking takes over from standing as the cast member sets off, and gives way again as they stop.
+      const w = m.walk ? c.walk : 0
+      m.idle?.setEffectiveWeight((1 - f) * (1 - h) * (1 - w))
+      m.walk?.setEffectiveWeight((1 - f) * (1 - h) * w)
       if (m.hit) {
         m.hit.time = m.hitT ?? 0
         m.hit.setEffectiveWeight((1 - f) * h)
@@ -254,6 +317,7 @@ export class Models {
         m.fall.setEffectiveWeight(f)
       }
       m.mixer.update(step)
+      m.carried?.update()
       m.root.position.set(c.x, (c.y ?? 0) + m.lift, c.z)
       // A model with no fall clip is tipped onto its back, as a card is.
       // Which face shows is settled as a card's is: the back past 100 degrees off its facing, the front again under 80.
@@ -285,6 +349,7 @@ export class Models {
   dispose() {
     for (const m of this.items.values()) {
       m.mixer.stopAllAction()
+      m.carried?.dispose()
       for (const mesh of m.meshes) mesh.geometry.dispose()
       for (const mat of m.materials) {
         mat.map?.dispose()

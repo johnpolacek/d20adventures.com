@@ -28,6 +28,8 @@ export interface Look {
   shots: Record<string, Record<string, string>>
   // The shot a scene with a cast opens on, if not `play`.
   open?: string
+  // The game plays the set in this look, built, and not in its paintings (play.ts).
+  play?: boolean
 }
 
 export const LOOKS: Record<string, Look> = {
@@ -92,6 +94,7 @@ export const LOOKS: Record<string, Look> = {
   // and no shafts: the owner turned down pools and beams of light as spotlights, 2026-11-15, and asked for a darker
   // wood. A figure reflects less of its own lit room at night (figenv), or it glows.
   "realm-of-myr/old-standing-stones": {
+    play: true,
     params: {
       paint: "0",
       isobox: "-16,-14,10,16",
@@ -130,6 +133,7 @@ export const LOOKS: Record<string, Look> = {
     },
   },
   "realm-of-myr/valkarr-forest-trail": {
+    play: true,
     params: {
       paint: "0",
       isobox: "-14,-18,14,22",
@@ -178,6 +182,7 @@ export const LOOKS: Record<string, Look> = {
   },
   // The morning after, so the set's own sun and sky light it, as the Gates'.
   "realm-of-myr/thalberns-forest-home": {
+    play: true,
     // The trees over the path are left out, so the cottage is seen from down it.
     params: { paint: "0", isobox: "-14,-14,14,22", isowhole: "1", isolight: "1.05,0.2", isosky: "9db8e8", isoclear: "0,14,7;0.5,22,8;2,30,8", rings: "thalbern", bloom: "on" },
     // The same wood by day. The oak at the door is the set's own tallest tree.
