@@ -176,3 +176,18 @@ export function standUpright(w: Weapon, ahead: THREE.Vector3) {
   w.group.quaternion.copy(parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(world))
   w.group.updateWorldMatrix(false, true)
 }
+
+// A weapon turned in the world so that its length (+y) runs the way `dir` points, its flat kept as level as that allows.
+export function pointAlong(w: Weapon, dir: THREE.Vector3) {
+  const parent = w.group.parent
+  if (!parent) return
+  const y = dir.clone().normalize()
+  const x = new THREE.Vector3(0, 1, 0).cross(y)
+  if (x.lengthSq() < 1e-6) x.set(1, 0, 0)
+  x.normalize()
+  const z = new THREE.Vector3().crossVectors(x, y)
+  const world = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z))
+  parent.updateWorldMatrix(true, false)
+  w.group.quaternion.copy(parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(world))
+  w.group.updateWorldMatrix(false, true)
+}

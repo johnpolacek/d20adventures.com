@@ -137,6 +137,9 @@ export const DRAW: [number, number, number] = [0.3, 0.7, STRIKE.Shoot]
 const span = (t: number, a: number, b: number, c: number, d: number) => smooth(a, b, t) * (1 - smooth(c, d, t))
 // How far into Shoot the bow is raised, the string drawn, and the hand flown back after the loosing, each 0 to 1. The
 // arms are put where these say by models.ts as well, after the clip.
+// How far into Swing the sword is wound back over the shoulder, and how far it has come through (0 to 1), and how much
+// of the arm models.ts puts where those say.
+export const swinging = (t: number) => ({ wound: span(t, 0, 0.3, 0.36, 0.5), through: smooth(0.36, 0.52, t), arm: span(t, 0, 0.28, 0.66, 1.05) })
 export const shooting = (t: number) => ({
   raise: span(t, 0, 0.32, 1.3, 1.75),
   draw: span(t, DRAW[0], DRAW[1], STRIKE.Shoot, STRIKE.Shoot + 0.06),

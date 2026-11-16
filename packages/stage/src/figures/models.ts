@@ -1,10 +1,10 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
-import { DRAW, figureClips, IN_HAND, isRigged, MOVE_NAMES, STRIKE, shooting } from "./clips"
+import { DRAW, figureClips, IN_HAND, isRigged, MOVE_NAMES, STRIKE, shooting, swinging } from "./clips"
 import { holdProps } from "./props"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
-import { reachArm, standUpright, type Weapon, weaponIn } from "./weapons"
+import { pointAlong, reachArm, standUpright, type Weapon, weaponIn } from "./weapons"
 
 // A cast member as a rigged, animated glTF figure in place of their standee (the `figures` flag, one figure so far: an
 // experiment for the owner to judge against the cards). The standee stays built underneath: it keeps who is down and
@@ -380,6 +380,30 @@ export class Models {
       mv.weapon.draw(t < DRAW[0] || t >= DRAW[2] ? 0 : Math.min(1, (t - DRAW[0]) / (DRAW[1] - DRAW[0])))
     }
   }
+  // A cut, put right after the clip: the sword hand from over and behind the right shoulder, the blade laid back, down
+  // through in front of the chest and across, the blade come over and pointing ahead and down.
+  private swing(m: Model, v: number) {
+    const mv = m.move
+    if (!mv) return
+    const { wound, through, arm } = swinging(mv.t)
+    const root = m.root
+    root.updateWorldMatrix(true, true)
+    const shoulder = root.getObjectByName("upperarmR")
+    if (!shoulder) return
+    const s = root.worldToLocal(shoulder.getWorldPosition(new THREE.Vector3()))
+    const size = m.cast.height / 1.8 / root.scale.y
+    // The figure's own +z is ahead, +x its left.
+    const back = new THREE.Vector3(0.02, 0.32, -0.16).multiplyScalar(size)
+    const ahead = new THREE.Vector3(0.24, -0.08, 0.5).multiplyScalar(size)
+    const wrist = s.clone().add(back.clone().lerp(ahead, through))
+    reachArm(root, "R", wrist, new THREE.Vector3(-1, -0.4, -0.2), arm * v)
+    if (mv.weapon) {
+      const laid = new THREE.Vector3(-0.15, -0.35, -1).lerp(new THREE.Vector3(0.15, -0.4, 1), through)
+      const turned = root.getWorldQuaternion(new THREE.Quaternion())
+      // Before the wind-up has the blade, it rises from where the hand had it.
+      if (wound + through > 0.05) pointAlong(mv.weapon, laid.normalize().applyQuaternion(turned))
+    }
+  }
   // With motion off the figure holds its pose, and a fall or a rise is put at its end. A flash still fades.
   update(dt: number, motion: boolean, camera: THREE.Camera) {
     if (!this.on) return
@@ -430,6 +454,7 @@ export class Models {
       m.mixer.update(step)
       m.carried?.update()
       if (m.move?.clip === "Shoot") this.shoot(m, v)
+      if (m.move?.clip === "Swing") this.swing(m, v)
       m.root.position.set(c.x, (c.y ?? 0) + m.lift, c.z)
       // A model with no fall clip is tipped onto its back, as a card is.
       // Which face shows is settled as a card's is: the back past 100 degrees off its facing, the front again under 80.
