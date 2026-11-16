@@ -1,10 +1,10 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
-import { DRAW, figureClips, IN_HAND, isRigged, STRIKE } from "./clips"
+import { DRAW, figureClips, IN_HAND, isRigged, MOVE_NAMES, STRIKE, shooting } from "./clips"
 import { holdProps } from "./props"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
-import { type Weapon, weaponIn } from "./weapons"
+import { reachArm, standUpright, type Weapon, weaponIn } from "./weapons"
 
 // A cast member as a rigged, animated glTF figure in place of their standee (the `figures` flag, one figure so far: an
 // experiment for the owner to judge against the cards). The standee stays built underneath: it keeps who is down and
@@ -57,7 +57,7 @@ interface Model {
   fall: THREE.AnimationAction | null
   walk: THREE.AnimationAction | null
   // The move it is making, once through, and the way it turns to make it.
-  move: { action: THREE.AnimationAction; t: number; weapon: Weapon | null; held?: boolean } | null
+  move: { clip: string; action: THREE.AnimationAction; t: number; weapon: Weapon | null; held?: boolean } | null
   aim: number | null
   // Its moves' clips, held: `update` runs them through once.
   actions: Map<string, THREE.AnimationAction>
@@ -205,7 +205,8 @@ export class Models {
     const fall = action(spec.fall, true)
     const walk = action(spec.walk, false)
     const actions = new Map<string, THREE.AnimationAction>()
-    for (const clip of Object.values(spec.moves ?? {})) {
+    // Every written move, for a rigged figure: its own fight moves pick among them, and a roar is asked for by name.
+    for (const clip of [...Object.values(spec.moves ?? {}), ...(rigged ? MOVE_NAMES : [])]) {
       const a = clip && !actions.has(clip) ? action(clip, true) : null
       if (clip && a) actions.set(clip, a)
     }
@@ -294,7 +295,7 @@ export class Models {
     const need = IN_HAND[clip]
     const weapon = need ? (m.weapons.get(need.what) ?? null) : null
     if (weapon) weapon.group.visible = true
-    m.move = { action, t: 0, weapon }
+    m.move = { clip, action, t: 0, weapon }
     const c = m.cast
     m.aim = toward && Math.hypot(toward.x - c.x, toward.z - c.z) > 0.2 ? Math.atan2(toward.x - c.x, toward.z - c.z) : null
     return STRIKE[clip] ?? 0
@@ -349,6 +350,36 @@ export class Models {
       m.side = null
     }
   }
+  // A shot, put right after the clip: the bow arm straight out ahead at the height of the shoulder, the drawing hand
+  // brought from beside it back to the jaw, the bow upright and facing the way the figure does, and the string drawn
+  // back with the hand and loosed. A clip turns each bone alone, and a bow held so has to come out level.
+  private shoot(m: Model, v: number) {
+    const mv = m.move
+    if (!mv) return
+    const { raise, draw, after } = shooting(mv.t)
+    const root = m.root
+    root.updateWorldMatrix(true, true)
+    const at = (name: string) => {
+      const o = root.getObjectByName(name)
+      return o ? root.worldToLocal(o.getWorldPosition(new THREE.Vector3())) : null
+    }
+    const [shoulderL, shoulderR, head, handL, foreL] = [at("upperarmL"), at("upperarmR"), at("head"), at("handL"), at("forearmL")]
+    if (!shoulderL || !shoulderR || !head || !handL || !foreL) return
+    // The figure's own +z is ahead: it is turned to face its target.
+    const reach = (shoulderL.distanceTo(foreL) + foreL.distanceTo(handL)) * 0.97
+    const bowWrist = shoulderL.clone().add(new THREE.Vector3(0, 0.03, reach))
+    reachArm(root, "L", bowWrist, new THREE.Vector3(1, -0.6, 0), raise * v)
+    // The arrow's line runs back from the bow hand, level, past the jaw.
+    const anchor = new THREE.Vector3(head.x - 0.04, bowWrist.y - 0.02, head.z - 0.04)
+    const nock = bowWrist.clone().add(new THREE.Vector3(-0.08, -0.04, -0.3))
+    const drawWrist = nock.clone().lerp(anchor, draw).add(new THREE.Vector3(0, 0.05 * after, -0.2 * after))
+    reachArm(root, "R", drawWrist, new THREE.Vector3(-0.4, 0.35, -1), raise * v)
+    if (mv.weapon) {
+      standUpright(mv.weapon, new THREE.Vector3(0, 0, 1).applyQuaternion(root.getWorldQuaternion(new THREE.Quaternion())))
+      const t = mv.t
+      mv.weapon.draw(t < DRAW[0] || t >= DRAW[2] ? 0 : Math.min(1, (t - DRAW[0]) / (DRAW[1] - DRAW[0])))
+    }
+  }
   // With motion off the figure holds its pose, and a fall or a rise is put at its end. A flash still fades.
   update(dt: number, motion: boolean, camera: THREE.Camera) {
     if (!this.on) return
@@ -398,11 +429,7 @@ export class Models {
       }
       m.mixer.update(step)
       m.carried?.update()
-      // The string drawn back with the hand, and loosed.
-      if (m.move?.weapon?.what === "bow") {
-        const t = m.move.t
-        m.move.weapon.draw(t < DRAW[0] || t >= DRAW[2] ? 0 : Math.min(1, (t - DRAW[0]) / (DRAW[1] - DRAW[0])))
-      }
+      if (m.move?.clip === "Shoot") this.shoot(m, v)
       m.root.position.set(c.x, (c.y ?? 0) + m.lift, c.z)
       // A model with no fall clip is tipped onto its back, as a card is.
       // Which face shows is settled as a card's is: the back past 100 degrees off its facing, the front again under 80.

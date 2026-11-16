@@ -126,6 +126,8 @@ const WRITTEN: Written[] = [
 // The moment in each move that lands, in seconds: the cut, the loosing of the arrow, the swipe. An attack's effect
 // starts there (stage.ts).
 export const STRIKE: Record<string, number> = { Swing: 0.45, Shoot: 1.05, Claw: 0.5 }
+// Every move a rigged figure can be made to play (models.ts act).
+export const MOVE_NAMES = ["Swing", "Shoot", "Dodge", "Claw", "Roar"]
 // What each move has in hand while it plays (weapons.ts): the prop's name and the hand it is in.
 export const IN_HAND: Record<string, { what: "sword" | "bow"; hand: "L" | "R" }> = { Swing: { what: "sword", hand: "R" }, Shoot: { what: "bow", hand: "L" } }
 // The bowstring is drawn to the other hand over this span of Shoot, and loosed at its end.
@@ -133,6 +135,13 @@ export const DRAW: [number, number, number] = [0.3, 0.7, STRIKE.Shoot]
 
 // Rises from 0 to 1 over a to b, holds, and falls to 0 over c to d.
 const span = (t: number, a: number, b: number, c: number, d: number) => smooth(a, b, t) * (1 - smooth(c, d, t))
+// How far into Shoot the bow is raised, the string drawn, and the hand flown back after the loosing, each 0 to 1. The
+// arms are put where these say by models.ts as well, after the clip.
+export const shooting = (t: number) => ({
+  raise: span(t, 0, 0.32, 1.3, 1.75),
+  draw: span(t, DRAW[0], DRAW[1], STRIKE.Shoot, STRIKE.Shoot + 0.06),
+  after: span(t, STRIKE.Shoot, STRIKE.Shoot + 0.1, 1.3, 1.75),
+})
 
 const MOVES: Written[] = [
   {
@@ -144,7 +153,9 @@ const MOVES: Written[] = [
       const k = span(t, 0.36, 0.5, 0.62, 1.05)
       return {
         turns: {
-          ...standing(arm, { armL: 22 * (w + k), swingL: 18 * k, elbowL: -20 * (w + k), swingR: -150 * w - 60 * k, armR: 28 * w - 8 * k, elbowR: -55 * w - 12 * k }),
+          ...standing(arm, { armL: 22 * (w + k), swingL: 18 * k, elbowL: -20 * (w + k), swingR: -165 * w - 60 * k, armR: 20 * w - 8 * k, elbowR: -75 * w - 12 * k }),
+          // The wrist cocked back over the shoulder, then thrown over so the blade comes down and forward.
+          handR: turn(about(X, -25 * w + 60 * k), arm.wristR),
           hips: about(Y, -12 * w + 14 * k),
           spine: turn(about(X, -6 * w + 14 * k), about(Y, -8 * w + 8 * k)),
           chest: turn(about(X, -4 * w + 8 * k), about(Y, -22 * w + 28 * k)),
@@ -166,9 +177,7 @@ const MOVES: Written[] = [
     name: "Shoot",
     seconds: 1.75,
     pose: (t, arm) => {
-      const r = span(t, 0, 0.32, 1.3, 1.75)
-      const d = span(t, DRAW[0], DRAW[1], STRIKE.Shoot, STRIKE.Shoot + 0.06)
-      const after = span(t, STRIKE.Shoot, STRIKE.Shoot + 0.1, 1.3, 1.75)
+      const { raise: r, draw: d, after } = shooting(t)
       const raiseL = (93 - arm.hangL) * r
       const raiseR = (88 - arm.hangR) * r
       return {
@@ -206,7 +215,7 @@ const MOVES: Written[] = [
           thighL: turn(about(Z, 14 * e), about(X, -50 * e)),
           shinL: about(X, 78 * e),
           footL: about(X, -28 * e),
-          thighR: about(X, -44 * e),
+          thighR: turn(about(Z, -10 * e), about(X, -44 * e)),
           shinR: about(X, 72 * e),
           footR: about(X, -28 * e),
         },

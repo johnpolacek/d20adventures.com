@@ -130,3 +130,49 @@ export function weaponIn(root: THREE.Object3D, what: "sword" | "bow", hand: "L" 
     },
   }
 }
+
+// The arm of `side` brought to reach its wrist to `wrist`, its elbow bent out toward `pole`, both in the figure's own
+// space, over whatever pose the clip gave it by `weight`. Two bones and their lengths: the elbow lies where they meet,
+// on the side of the line from shoulder to wrist that the pole is (as props.ts bends the arm that holds a staff).
+export function reachArm(root: THREE.Object3D, side: "L" | "R", wrist: THREE.Vector3, pole: THREE.Vector3, weight: number) {
+  const [chest, upper, fore, hand] = ["chest", `upperarm${side}`, `forearm${side}`, `hand${side}`].map((n) => root.getObjectByName(n))
+  if (!chest || !upper || !fore || !hand || weight <= 0) return
+  root.updateWorldMatrix(true, true)
+  const own = root.getWorldQuaternion(new THREE.Quaternion()).invert()
+  const local = (o: THREE.Object3D) => root.worldToLocal(o.getWorldPosition(new THREE.Vector3()))
+  const turned = (o: THREE.Object3D) => own.clone().multiply(o.getWorldQuaternion(new THREE.Quaternion()))
+  const s = local(upper)
+  const [a, b] = [s.distanceTo(local(fore)), local(fore).distanceTo(local(hand))]
+  const to = wrist.clone().sub(s)
+  const d = THREE.MathUtils.clamp(to.length(), Math.abs(a - b) + 1e-3, a + b - 1e-3)
+  to.normalize()
+  const along = (a * a + d * d - b * b) / (2 * a * d)
+  const off = pole.clone().addScaledVector(to, -pole.dot(to)).normalize()
+  const elbow = s
+    .clone()
+    .addScaledVector(to, a * along)
+    .addScaledVector(off, a * Math.sqrt(Math.max(0, 1 - along * along)))
+  const within = turned(chest)
+  const wantUpper = new THREE.Quaternion().setFromUnitVectors(fore.position.clone().normalize(), elbow.clone().sub(s).normalize().applyQuaternion(within.clone().invert()))
+  upper.quaternion.slerp(wantUpper, weight)
+  upper.updateWorldMatrix(false, true)
+  const upperTurn = within.clone().multiply(upper.quaternion)
+  const reached = local(fore)
+  const wantFore = new THREE.Quaternion().setFromUnitVectors(hand.position.clone().normalize(), wrist.clone().sub(reached).normalize().applyQuaternion(upperTurn.invert()))
+  fore.quaternion.slerp(wantFore, weight)
+  fore.updateWorldMatrix(false, true)
+}
+
+// A weapon turned in the world, whatever its hand is doing: upright, with its front (+z) the way `ahead` points, level.
+export function standUpright(w: Weapon, ahead: THREE.Vector3) {
+  const parent = w.group.parent
+  if (!parent) return
+  const z = ahead.clone().setY(0).normalize()
+  if (z.lengthSq() < 1e-6) return
+  const y = new THREE.Vector3(0, 1, 0)
+  const x = new THREE.Vector3().crossVectors(y, z)
+  const world = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z))
+  parent.updateWorldMatrix(true, false)
+  w.group.quaternion.copy(parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(world))
+  w.group.updateWorldMatrix(false, true)
+}
