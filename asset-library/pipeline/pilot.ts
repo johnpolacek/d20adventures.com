@@ -27,6 +27,7 @@ import { type Accessor, type Document, NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
 import sharp from "sharp"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
+import { facing } from "./facing"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
 const RIG = { endpoint: "meshy/rigging/multi-animation", cost: 0.2, clip: 0.12 }
@@ -269,6 +270,14 @@ async function rodinHyper(brief: Brief) {
     say("model", `made, $${RODIN.cost.toFixed(2)}`)
   } else say("model", "kept")
   if (!model.model_mesh?.url) throw new Error(`No model in ${dir}/pilot-model.json`)
+  // Hyper3D's rigging does not turn a model. One that faces another way is not sent, so the rig is not paid for.
+  const source = await fetched(model.model_mesh, "model")
+  const at = source ? await facing(source) : null
+  say("faces", at ? `${at.faces}, widest along ${at.wide}, toes ${at.toes.join(", ")}` : "not known")
+  if (!rig && !args.includes("--facing=ok") && !(at?.faces === "+z" && at.wide === "x")) {
+    say("rig", `not made: the rigger wants the model facing +z. Look at ${dir}/pilot/model.glb, and run again with --pay --facing=ok if it does`)
+    return null
+  }
   if (!rig) {
     rig = await fal<HyperAnswer>(`pilot rig ${id}`, HYPER.endpoint, {
       model_url: model.model_mesh.url,

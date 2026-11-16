@@ -93,6 +93,8 @@ export async function fal<T>(label: string, endpoint: string, input: Record<stri
   const sub = await fetch(`https://queue.fal.run/${endpoint}`, { method: "POST", headers, body: JSON.stringify(input) })
   if (!sub.ok) throw new Error(`${label}: HTTP ${sub.status} ${scrub(await sub.text(), key)}`)
   const { status_url, response_url } = (await sub.json()) as { status_url: string; response_url: string }
+  // Kept from the start: a job that is paid for and then lost to a dropped poll can still be fetched from here.
+  await log(`${label} ${endpoint} submitted ${response_url}`)
   for (let i = 0; i < 240; i++) {
     await new Promise((r) => setTimeout(r, 5000))
     const s = (await (await fetch(status_url, { headers })).json()) as { status: string }
