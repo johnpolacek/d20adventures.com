@@ -81,8 +81,9 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
   const host = useRef<HTMLDivElement>(null)
   const room = useRef<Room | null>(null)
   const [lod, setLod] = useState(Math.min(Number(params.lod) || 0, figure.lods.length - 1))
-  // The clips its shelf lists, and the fight moves every rigged figure plays as well.
-  const clips = useMemo(() => [...new Set([...figure.clips, ...(figure.clips.length ? MOVE_NAMES : [])])], [figure.clips])
+  // The clips its shelf lists, and the fight moves every figure rigged by rig.py plays as well. One rigged elsewhere
+  // (pipeline/pilot.ts) carries its own clips and no others.
+  const clips = useMemo(() => (figure.rig.weights === "meshy" ? figure.clips : [...new Set([...figure.clips, ...(figure.clips.length ? MOVE_NAMES : [])])]), [figure.clips, figure.rig.weights])
   const [clip, setClip] = useState(params.clip && clips.includes(params.clip) ? params.clip : (clips[0] ?? ""))
   const [turning, setTurning] = useState(params.turn === "1")
   const [fps, setFps] = useState(0)

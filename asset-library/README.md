@@ -441,6 +441,19 @@ pnpm assets:sync
 
 Look at `rig.json` for `holds` and `tunnel`, and at him in the library with the Shoot clip, before the sync. The desktop app takes the new figure at its next `prepare:runtime`.
 
+## A pilot: rigged by Meshy, moved by captured motion
+
+The owner, 2026-11-16, of the rod-hand Thalbern drawing a bow: "now his hand looks merged into his chest". Rig.py's skeleton has 18 bones, one to a hand and none to twist an arm. A mesh weighted to it crumples when an arm is raised past level or folded. And every move here is turns written by hand, judged from screenshots. The pilot tries another way on one figure, `thalbern-pilot`, and leaves Thalbern as he is.
+
+- `pnpm assets thalbern-pilot` paints its sheet (build.ts, free) and stops before the model. Do not give it `--pay`: that is build.ts's model and rig.
+- `pnpm assets:pilot thalbern-pilot --pay` (`pipeline/pilot.ts`): Tripo H3.1 on fal, the same quality as now, turned to face as the sheet does (`orientation: "align_image"`), $0.60. Then Meshy's rigging on fal (`meshy/rigging/multi-animation`): a Mixamo skeleton with fingers, and seven clips from Meshy's library of 680, $0.20 and $0.12 a clip, $1.04. A walk comes free. The answers are kept (`pilot-model.json`, `pilot-rig.json`), so running it again costs nothing.
+- Meshy sends each clip as its own model. They are merged into `lod0.glb` under the names the game plays: Idle (0), Walk, Shoot (224, Archery Shot), Swing (219, Right Hand Sword Slash), Dodge (158, Roll Dodge), Sidestep (156, Stand Dodge), Hit (178, Hit Reaction), Fall (187, Knock Down). Each plays on the spot: the hips keep their rise and fall and lose their way across the ground.
+- The library page shows it at `/dev/assets?id=thalbern-pilot`, with its own clips and not the written moves. The game loads a figure with its clips inside through `models.ts` as it is, but no weapon is put in its hands yet (`fight.ts` knows rig.py's bones alone), so it shoots and cuts with nothing.
+- Its face is the generator's, without the sheet's paint (rig.py), and it has one detail level.
+- Not tried: a model made from several views. fal's `tripo3d/h3.1/multiview-to-3d` reads its pictures in the order front, left, back and right, so a front and a back cannot be sent without a left. Neither fal's nor Tripo's docs say whether "left" is the figure's own left. Tripo's own API (`openapi.tripo3d.com`, a separate key) takes views by name, and rigs to Mixamo, VRM, Unity or Unreal skeletons for $0.25 (`/v3/animations/rig`).
+- Prices, 2026-11-16: fal's pages for each endpoint. Tripo H3.1, image or multiview: $0.20 without texture, $0.30 standard, $0.40 HD, and $0.20 more for detailed geometry, so $0.60 as the pipeline asks for it. Meshy rigging: $0.20, and $0.12 a clip. Hyper3D rigging on fal: $0.20, with beasts, but it wants the model facing +z already. fal has no Tripo rigging.
+- Mixamo's own site rigs and animates for free, but has no API, and its terms forbid handing out the raw character and animation files. This library serves its models publicly, so it is not used.
+
 ## Not built
 
 - A fall and a talk clip. A roll.

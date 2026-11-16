@@ -1,0 +1,15 @@
+{
+  "id": "thalbern-pilot",
+  "name": "Thalbern (pilot)",
+  "role": "Ranger of the Valkarr Woods, rigged by Meshy",
+  "cast": [],
+  "height": 1.82,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp"
+  },
+  "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
+  "stow": "He has no bow: it is left out of the picture entirely, and nothing is slung across his back but the quiver. Both blades stay sheathed at his hips.",
+  "arms": 40,
+  "sheet": "front"
+}
