@@ -296,12 +296,8 @@ async function rodinHyper(brief: Brief) {
   if (!all) throw new Error(`No rigged model in ${dir}/pilot-rig.json`)
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
   const doc = await io.read(all)
-  const roleOf = new Map<string, string>()
-  Object.entries(picks).forEach(([role, stock], i) => {
-    roleOf.set(stock, role)
-    const named = rig?.animations?.[i]?.action_id
-    if (named) roleOf.set(named, role)
-  })
+  // A clip comes back under its stock name, and in the stock's order, not the order asked for.
+  const roleOf = new Map(Object.entries(picks).map(([role, stock]) => [stock, role]))
   const made: string[] = []
   for (const anim of doc.getRoot().listAnimations()) {
     const role = roleOf.get(anim.getName()) ?? [...roleOf.entries()].find(([stock]) => anim.getName().includes(stock))?.[1]

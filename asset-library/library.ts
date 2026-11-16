@@ -75,12 +75,14 @@ export async function buildLibrary(root = process.cwd()): Promise<Library> {
 
   // A figure goes by every cast id its character has: Branka is `branka` at the gates and `branka-stoneveil` at the inn.
   const figures = new Map<string, Figure>()
+  const shelved: Figure[] = []
   const shelf = path.join(root, "asset-library/characters")
   for (const id of (await readdir(shelf).catch(() => [] as string[])).sort()) {
     const text = await readFile(path.join(shelf, id, "figure.json"), "utf8").catch(() => null)
     if (!text) continue
     const figure = JSON.parse(text) as Figure
     for (const cast of figure.cast ?? [id]) figures.set(cast, figure)
+    shelved.push(figure)
   }
 
   // The cast of every staging, each person once, under the adventure they first appear in. Someone a figure already
@@ -104,6 +106,23 @@ export async function buildLibrary(root = process.cwd()): Promise<Library> {
         if (figure) shown.set(figure, person)
       }
     }
+  }
+  // A figure no cast member stands for, a pilot of another way to make one, is listed on its own under its brief's card.
+  for (const figure of shelved) {
+    if (shown.has(figure) || people.has(figure.id)) continue
+    const brief = JSON.parse(await readFile(path.join(shelf, figure.id, "character.json"), "utf8").catch(() => "{}")) as { card?: { front?: string; back?: string } }
+    if (!brief.card?.front) continue
+    people.set(figure.id, {
+      id: figure.id,
+      name: figure.name,
+      role: figure.role ?? "",
+      height: figure.height,
+      group: UNUSED,
+      front: brief.card.front,
+      back: brief.card.back ?? null,
+      scenes: 0,
+      figure,
+    })
   }
   const looks = (await readdir(path.join(pub, "stage/heroes")).catch(() => [] as string[])).filter((f) => f.endsWith("-front.webp")).map((f) => f.replace("-front.webp", ""))
   for (const id of looks.sort())
