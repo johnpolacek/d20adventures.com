@@ -13,56 +13,179 @@ import * as THREE from "three"
 import { relaxHands } from "./clips"
 import { wayThrough } from "./props"
 
-const metal = () => new THREE.MeshStandardMaterial({ color: "#c9ccd0", metalness: 0.85, roughness: 0.32 })
-const leather = () => new THREE.MeshStandardMaterial({ color: "#3a2a1e", roughness: 0.85 })
-const wood = () => new THREE.MeshStandardMaterial({ color: "#5a3c22", roughness: 0.7 })
+const steel = () => new THREE.MeshStandardMaterial({ color: "#d9dce1", metalness: 1, roughness: 0.2 })
+const iron = () => new THREE.MeshStandardMaterial({ color: "#8d8b88", metalness: 1, roughness: 0.42 })
+const leather = () => new THREE.MeshStandardMaterial({ color: "#2b2019", roughness: 0.78 })
+const wood = () => new THREE.MeshStandardMaterial({ color: "#6a4526", roughness: 0.52 })
+const horn = () => new THREE.MeshStandardMaterial({ color: "#d8cdb4", roughness: 0.45 })
+const cord = () => new THREE.MeshStandardMaterial({ color: "#e4dcc6", roughness: 0.9 })
+const feather = () => new THREE.MeshStandardMaterial({ color: "#cfc8b8", roughness: 0.95, side: THREE.DoubleSide })
 
-// A plain arming sword along +y from the middle of its grip: grip, a guard across +x, a blade with a point, a pommel.
+// Rings of points joined into a skin, each ring going round the same way, and lit as flat faces: steel and shaped
+// wood show their edges.
+function skin(rings: number[][][]) {
+  const [count, around] = [rings.length, rings[0].length]
+  const index: number[] = []
+  for (let i = 0; i < count - 1; i++)
+    for (let k = 0; k < around; k++) {
+      const [a, b] = [i * around + k, i * around + ((k + 1) % around)]
+      index.push(a, a + around, b, b, a + around, b + around)
+    }
+  const g = new THREE.BufferGeometry()
+  g.setAttribute("position", new THREE.Float32BufferAttribute(rings.flat(2), 3))
+  g.setIndex(index)
+  const faceted = g.toNonIndexed()
+  faceted.computeVertexNormals()
+  g.dispose()
+  return faceted
+}
+
+// A grip bound in a cord under leather: ribbed, a little fuller at its middle, along +y about the origin.
+function wrapped(long: number, radius: number) {
+  const points: THREE.Vector2[] = []
+  for (let i = 0; i <= 44; i++) {
+    const u = i / 44
+    points.push(new THREE.Vector2(radius * (1 + 0.09 * Math.sin(Math.PI * u)) + 0.0011 * Math.sin(u * Math.PI * 2 * 11), (u - 0.5) * long))
+  }
+  return new THREE.Mesh(new THREE.LatheGeometry(points, 14), leather())
+}
+
+// An arming sword along +y from the middle of its grip: a wrapped grip, a guard across +x that rises a little to its
+// ends, a blade of six faces with a flat down its middle that draws in to a point, and a wheel pommel.
 export function sword() {
   const g = new THREE.Group()
   g.name = "weapon:sword"
-  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.016, 0.16, 10), leather())
-  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.022, 0.03), metal())
-  guard.position.y = 0.09
-  const shape = new THREE.Shape()
-  const [w, l] = [0.022, 0.78]
-  shape.moveTo(-w, 0)
-  shape.lineTo(w, 0)
-  shape.lineTo(w * 0.8, l - 0.1)
-  shape.lineTo(0, l)
-  shape.lineTo(-w * 0.8, l - 0.1)
-  shape.closePath()
-  const blade = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 0.006, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.004, bevelSegments: 1 }), metal())
-  blade.geometry.translate(0, 0, -0.003)
-  blade.position.y = 0.1
-  const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.024, 12, 8), metal())
-  pommel.position.y = -0.095
-  g.add(grip, guard, blade, pommel)
+  const [long, wide, thick] = [0.78, 0.024, 0.0052]
+  const rings: number[][][] = []
+  for (let i = 0; i <= 16; i++) {
+    const u = i / 16
+    // Nearly straight for most of its length, then drawn in to the point. The flat runs out before the point does.
+    const w = wide * (u < 0.74 ? 1 - 0.2 * (u / 0.74) : 0.8 * (1 - ((u - 0.74) / 0.26) ** 1.5))
+    const t = thick * (1 - 0.6 * u)
+    const flat = 0.42 * Math.min(1, Math.max(0, (0.8 - u) / 0.18))
+    const y = u * long
+    rings.push([
+      [w, y, 0],
+      [w * flat, y, t],
+      [-w * flat, y, t],
+      [-w, y, 0],
+      [-w * flat, y, -t],
+      [w * flat, y, -t],
+    ])
+  }
+  const blade = new THREE.Mesh(skin(rings), steel())
+  blade.position.y = 0.092
+  const arms = new THREE.CatmullRomCurve3([-0.105, -0.06, 0, 0.06, 0.105].map((x) => new THREE.Vector3(x, 0.09 + 0.9 * x * x, 0)))
+  const guard = new THREE.Mesh(new THREE.TubeGeometry(arms, 20, 0.0085, 8), iron())
+  guard.scale.z = 1.3
+  const block = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.024, 0.026), iron())
+  block.position.y = 0.09
+  const ends = [-0.105, 0.105].map((x) => {
+    const end = new THREE.Mesh(new THREE.SphereGeometry(0.0115, 10, 8), iron())
+    end.position.set(x, 0.09 + 0.9 * x * x, 0)
+    return end
+  })
+  const grip = wrapped(0.15, 0.0142)
+  // A wheel: a disc with its rim cut back, flat to the blade's flat, and the tang's end peened over it.
+  const wheel = new THREE.Mesh(
+    new THREE.LatheGeometry(
+      [0, 0.017, 0.026, 0.026, 0.017, 0].map((r, i) => new THREE.Vector2(r, [-0.009, -0.009, -0.004, 0.004, 0.009, 0.009][i])),
+      20
+    ),
+    iron()
+  )
+  wheel.rotation.x = Math.PI / 2
+  wheel.position.y = -0.1
+  const peen = new THREE.Mesh(new THREE.SphereGeometry(0.006, 8, 6), iron())
+  peen.position.y = -0.128
+  g.add(blade, guard, block, ...ends, grip, wheel, peen)
   return { group: g, update: () => {} }
 }
 
-// A recurve-less longbow standing along +y from its grip, bowed toward +z, its string on -z. `draw` pulls the string's
-// middle to a point in the bow's own space, or lets it go straight.
+// A longbow standing along +y from its grip, bowed toward +z, its string on -z: limbs of shaped wood that thin to
+// horn tips turned a little forward, and a wrapped grip. `draw` pulls the string's middle to a point in the bow's own
+// space, with an arrow on it that lies past the grip, or lets it go straight, the arrow gone.
 export function bow(length = 1.44, thick = 0.02) {
   const g = new THREE.Group()
   g.name = "weapon:bow"
   const [half, depth] = [length / 2, length * 0.11]
-  // The limbs curve back from the grip, so the tips stand `depth` behind it.
-  const arc = new THREE.CatmullRomCurve3([-1, -0.6, -0.25, 0, 0.25, 0.6, 1].map((u) => new THREE.Vector3(0, u * half, -depth * u * u)))
-  const limbs = new THREE.Mesh(new THREE.TubeGeometry(arc, 40, 0.014, 6), wood())
-  const handle = new THREE.Mesh(new THREE.CylinderGeometry(thick, thick, 0.1, 10), leather())
-  const tips = [new THREE.Vector3(0, half, -depth), new THREE.Vector3(0, -half, -depth)]
-  const string = new THREE.BufferGeometry().setFromPoints([tips[0], tips[0].clone().lerp(tips[1], 0.5), tips[1]])
-  const line = new THREE.Line(string, new THREE.LineBasicMaterial({ color: "#e8e0cc" }))
-  g.add(limbs, handle, line)
+  // The limbs curve back from the grip, so the tips stand `depth` behind it, and turn forward again at their ends.
+  const at = (u: number) => new THREE.Vector3(0, u * half, -depth * u * u + (Math.abs(u) > 0.84 ? (Math.abs(u) - 0.84) ** 2 * depth * 14 : 0))
+  const rings: number[][][] = []
+  for (let i = 0; i <= 48; i++) {
+    const u = -1 + (2 * i) / 48
+    const [here, ahead] = [
+      at(u),
+      at(u + 0.01)
+        .sub(at(u - 0.01))
+        .normalize(),
+    ]
+    // Across the limb is the bow's own x. Square to that and to the way the limb runs is its thickness: a flat belly
+    // and a rounded back.
+    const out = new THREE.Vector3(1, 0, 0).cross(ahead).normalize()
+    const [wide, deep] = [0.0165 * (1 - 0.6 * Math.abs(u) ** 1.4), 0.0125 * (1 - 0.55 * Math.abs(u))]
+    const ring: number[][] = []
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * Math.PI * 2
+      const p = here
+        .clone()
+        .addScaledVector(new THREE.Vector3(1, 0, 0), Math.cos(a) * wide)
+        .addScaledVector(out, Math.sin(a) * deep * (Math.sin(a) > 0 ? 1 : 0.55))
+      ring.push([p.x, p.y, p.z])
+    }
+    rings.push(ring)
+  }
+  const limbs = new THREE.Mesh(skin(rings), wood())
+  const handle = wrapped(0.13, thick * 0.96)
+  const tips = [at(1), at(-1)]
+  const nocks = tips.map((tip, i) => {
+    const nock = new THREE.Mesh(new THREE.ConeGeometry(0.0085, 0.036, 8), horn())
+    nock.position.copy(tip)
+    nock.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      at(i ? -1 : 1)
+        .sub(at(i ? -0.98 : 0.98))
+        .normalize()
+    )
+    return nock
+  })
+  // The string as two lengths, from each tip to where it is held, turned and stretched as it is drawn.
   const rest = tips[0].clone().lerp(tips[1], 0.5)
-  const at = string.attributes.position as THREE.BufferAttribute
+  const lengths = tips.map(() => new THREE.Mesh(new THREE.CylinderGeometry(0.0017, 0.0017, 1, 5), cord()))
+  const arrow = new THREE.Group()
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.0036, 0.0036, 0.74, 6), new THREE.MeshStandardMaterial({ color: "#b8935f", roughness: 0.6 }))
+  shaft.position.y = 0.37
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.0085, 0.04, 6), steel())
+  head.position.y = 0.76
+  const vanes = [0, 1, 2].map((k) => {
+    const vane = new THREE.Mesh(new THREE.PlaneGeometry(0.022, 0.1), feather())
+    vane.position.set(Math.cos((k * 2 * Math.PI) / 3) * 0.013, 0.075, Math.sin((k * 2 * Math.PI) / 3) * 0.013)
+    vane.rotation.y = -(k * 2 * Math.PI) / 3
+    return vane
+  })
+  arrow.add(shaft, head, ...vanes)
+  arrow.visible = false
+  g.add(limbs, handle, ...nocks, ...lengths, arrow)
+  const up = new THREE.Vector3(0, 1, 0)
+  const lay = (mid: THREE.Vector3) => {
+    for (const [i, piece] of lengths.entries()) {
+      const run = mid.clone().sub(tips[i])
+      piece.position.copy(tips[i]).addScaledVector(run, 0.5)
+      piece.scale.y = run.length()
+      piece.quaternion.setFromUnitVectors(up, run.normalize())
+    }
+  }
+  lay(rest)
   return {
     group: g,
     update: (to: THREE.Vector3 | null, share: number) => {
       const mid = to ? rest.clone().lerp(to, share) : rest
-      at.setXYZ(1, mid.x, mid.y, mid.z)
-      at.needsUpdate = true
+      lay(mid)
+      // An arrow on the string once it is drawn clear of where it rests, lying past the grip on the side of the hand.
+      arrow.visible = !!to && share > 0 && mid.distanceTo(rest) > 0.04
+      if (!arrow.visible) return
+      arrow.position.copy(mid)
+      arrow.quaternion.setFromUnitVectors(up, new THREE.Vector3(thick * 0.9, 0.012, 0).sub(mid).normalize())
     },
   }
 }
