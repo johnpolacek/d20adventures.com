@@ -11,7 +11,7 @@
   "thumb": "thumb.webp",
   "source": {
     "generator": "Tripo H3.1 on fal",
-    "triangles": 56500,
+    "triangles": 58069,
     "cost": 0.6,
     "made": "2026-11-14"
   },
@@ -27,20 +27,20 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "triangles": 56500,
-      "megabytes": 4.19,
+      "triangles": 58069,
+      "megabytes": 4.63,
       "texture": 2048
     },
     {
       "file": "lod1.glb",
-      "triangles": 20000,
-      "megabytes": 1.09,
+      "triangles": 19999,
+      "megabytes": 1.12,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 6000,
-      "megabytes": 0.4,
+      "megabytes": 0.41,
       "texture": 512
     }
   ]
