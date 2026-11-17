@@ -172,6 +172,8 @@ In the library, alone in a lit room:
 http://localhost:3057/dev/assets?id=thalbern&lod=0&clip=Walk
 ```
 
+A clip can be held and walked through a frame at a time, to catch the moment a fault shows. The Time row has a step back, Pause, a step forward, a slider through the clip and PNG, which saves the frame as it stands under the figure, the clip and the moment. K or Space holds and lets go. The arrows, or comma and full stop, step one frame of thirty a second, and ten with Shift. A held moment is in the address, `at=2.9` in seconds, so a fault can be sent as a link.
+
 As frame strips, which is how a movement is judged:
 
 ```sh

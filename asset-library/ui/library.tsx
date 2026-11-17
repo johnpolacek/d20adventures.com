@@ -47,6 +47,8 @@ const named = (s: string) =>
     .map((w, i, all) => (i > 0 && !all[i - 1].endsWith(":") && SMALL.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1)))
     .join(" ")
 const scene = (staging: string) => named(staging.split("/")[1] ?? staging)
+// A step of a held clip, in frames a second.
+const FRAMES = 30
 const scenes = (n: number) => `${n} ${n === 1 ? "Scene" : "Scenes"}`
 // ── A figure in a lit room ──
 interface Room {
@@ -89,6 +91,12 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
   )
   const [clip, setClip] = useState(params.clip && clips.includes(params.clip) ? params.clip : (clips[0] ?? ""))
   const [turning, setTurning] = useState(params.turn === "1")
+  // The moment a clip is held at, in seconds, or null while it plays. The address keeps it: `at=1.2`.
+  const [held, setHeld] = useState<number | null>(params.at ? Number(params.at) || 0 : null)
+  const holding = useRef(held)
+  holding.current = held
+  const scrub = useRef<HTMLInputElement>(null)
+  const clock = useRef<HTMLSpanElement>(null)
   const [fps, setFps] = useState(0)
   const [loading, setLoading] = useState(false)
 
@@ -146,6 +154,12 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
       r.mixer?.update(Math.min(0.1, (now - last) / 1000))
       r.carried?.update()
       if (r.action) r.armed?.after(r.action.getClip().name, r.action.time, r.action.getEffectiveWeight())
+      if (r.action && scrub.current && clock.current) {
+        const long = r.action.getClip().duration
+        scrub.current.max = String(long)
+        scrub.current.value = String(r.action.time)
+        clock.current.textContent = `${r.action.time.toFixed(2)} / ${long.toFixed(2)} s · ${Math.round(r.action.time * FRAMES)}`
+      }
       last = now
       controls.update()
       renderer.render(scene, camera)
@@ -190,7 +204,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
       .loadAsync(`${config.files}/${figure.id}/${file}`)
       .then((gltf) => {
         if (stale) return discard(gltf.scene)
-        const at = r.action?.time ?? 0
+        const at = r.action?.time ?? holding.current ?? 0
         if (r.figure) {
           r.scene.remove(r.figure)
           discard(r.figure)
@@ -217,6 +231,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
         if (next) {
           r.action = r.mixer.clipAction(next).play()
           r.action.time = at
+          r.action.paused = holding.current !== null
           r.armed?.show(next.name)
         }
         if (!r.framed) {
@@ -245,7 +260,58 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
     if (r.action && r.action !== action) r.action.crossFadeTo(action, 0.2, false)
     r.action = action
     r.armed?.show(clip)
+    // A held figure stays held, at the start of the clip it is given.
+    if (holding.current !== null) {
+      action.paused = true
+      setHeld(0)
+    }
   }, [clip])
+
+  // The clip held at a moment, or let go. A step past either end comes round to the other.
+  const hold = useCallback((to: (time: number, long: number) => number) => {
+    const action = room.current?.action
+    if (!action) return
+    const long = action.getClip().duration
+    const time = to(action.time, long)
+    action.paused = true
+    action.time = long ? Math.min(long - 1e-4, ((time % long) + long) % long) : 0
+    setHeld(Math.round(action.time * 1000) / 1000)
+  }, [])
+  const toggle = useCallback(() => {
+    const action = room.current?.action
+    if (!action) return
+    if (!action.paused) return hold((time) => time)
+    action.paused = false
+    setHeld(null)
+  }, [hold])
+  const step = useCallback((frames: number) => hold((time) => time + frames / FRAMES), [hold])
+  // K or Space holds and lets go. The arrows, or comma and full stop, step a frame, and ten with Shift.
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      const on = (e.target as HTMLElement).tagName
+      if (e.metaKey || e.ctrlKey || e.altKey || ["INPUT", "TEXTAREA", "SELECT"].includes(on)) return
+      if (e.key === "k" || (e.key === " " && on !== "BUTTON")) toggle()
+      else if (e.key === "ArrowRight" || e.key === "." || e.key === ">") step(e.shiftKey ? 10 : 1)
+      else if (e.key === "ArrowLeft" || e.key === "," || e.key === "<") step(e.shiftKey ? -10 : -1)
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener("keydown", key)
+    return () => window.removeEventListener("keydown", key)
+  }, [toggle, step])
+  // The frame as it stands, saved under the figure, the clip and the moment.
+  const save = useCallback(async () => {
+    const r = room.current
+    if (!r) return
+    r.renderer.render(r.scene, r.camera)
+    const blob = await new Promise<Blob | null>((done) => r.renderer.domElement.toBlob(done, "image/png"))
+    if (!blob) return
+    const link = document.createElement("a")
+    link.href = URL.createObjectURL(blob)
+    link.download = `${figure.id}-${r.action?.getClip().name ?? "still"}-${(r.action?.time ?? 0).toFixed(2)}.png`
+    link.click()
+    URL.revokeObjectURL(link.href)
+  }, [figure.id])
 
   useEffect(() => {
     if (!room.current) return
@@ -257,8 +323,9 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
   useEffect(() => {
     const q = new URLSearchParams({ id: figure.cast?.[0] ?? figure.id, lod: String(lod), clip })
     if (turning) q.set("turn", "1")
+    if (held !== null) q.set("at", String(held))
     history.replaceState(null, "", `${config.home}?${q}`)
-  }, [figure, lod, clip, turning, config.home])
+  }, [figure, lod, clip, turning, held, config.home])
 
   const level = figure.lods[lod]
   return (
@@ -282,6 +349,23 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
           ))}
           <button type="button" className={`ml-2 ${pill(turning)}`} onClick={() => setTurning((t) => !t)}>
             Turntable
+          </button>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-10 opacity-60">Time</span>
+          <button type="button" aria-label="Back a frame" className={pill(false)} onClick={() => step(-1)}>
+            ‹
+          </button>
+          <button type="button" className={`w-12 ${pill(held !== null)}`} onClick={toggle}>
+            {held === null ? "Pause" : "Play"}
+          </button>
+          <button type="button" aria-label="Forward a frame" className={pill(false)} onClick={() => step(1)}>
+            ›
+          </button>
+          <input ref={scrub} type="range" aria-label="Moment" min={0} step={0.001} defaultValue={0} className="mx-1 w-44 accent-[#f2c97a]" onChange={(e) => hold(() => Number(e.target.value))} />
+          <span ref={clock} className="w-32 font-mono text-[10px] opacity-75" />
+          <button type="button" className={pill(false)} onClick={save}>
+            PNG
           </button>
         </div>
         {level && (
