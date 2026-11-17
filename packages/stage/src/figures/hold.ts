@@ -11,7 +11,7 @@
 import * as THREE from "three"
 import { IN_HAND } from "./clips"
 import type { Armed } from "./fight"
-import { heldBy, staff } from "./props"
+import { heldBy, staff, wayThrough } from "./props"
 import { sword as armingSword, bow as longbow, type Weapon } from "./weapons"
 
 // The clips a weapon shows in, beside the game's own two: the library's other sword clips.
@@ -234,12 +234,18 @@ export function carry(root: THREE.Object3D, ground: number) {
   const wrist = h.wrist
   const atRest = turned(wrist).invert()
   // The hand as it was modelled, in its own space: along the fingers, toward the thumb, and where the staff lies in it.
-  const [alongHand, acrossHand] = [h.along.clone().applyQuaternion(own.clone().invert()).applyQuaternion(atRest), h.across.clone().applyQuaternion(own.clone().invert()).applyQuaternion(atRest)]
+  // A hand modelled closed round a rod (pilot.ts) holds the staff where the rod was and the way it ran, thumb
+  // uppermost as the sheet painted it. Its fingers are left as modelled: the rigger laid their bones straight through
+  // the fist, so a clip that curls them would pull it apart.
+  const way = wayThrough(root)
+  const runs = way?.runs.clone().transformDirection(root.matrixWorld)
+  const [fingers, thumbward] = runs ? [h.along.clone().addScaledVector(runs, -h.along.dot(runs)).normalize(), runs] : [h.along, h.across]
+  const [alongHand, acrossHand] = [fingers.clone().applyQuaternion(own.clone().invert()).applyQuaternion(atRest), thumbward.clone().applyQuaternion(own.clone().invert()).applyQuaternion(atRest)]
   const modelled = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(alongHand, acrossHand, alongHand.clone().cross(acrossHand)))
-  const seat = wrist.worldToLocal(h.knuckle.clone().addScaledVector(h.along, -0.012).addScaledVector(h.palm, 0.03))
+  const seat = wrist.worldToLocal(way ? root.localToWorld(way.at.clone()) : h.knuckle.clone().addScaledVector(h.along, -0.012).addScaledVector(h.palm, 0.03))
   const alongFore = wrist.position.clone().normalize()
   const upperRest = upper.quaternion.clone()
-  const prop = staff(held.length, local(upper).y + reach.y - ground)
+  const prop = way ? staff(held.length, -1, way.wide * 0.97) : staff(held.length, local(upper).y + reach.y - ground)
   prop.traverse((m) => {
     if (m instanceof THREE.Mesh) m.castShadow = m.receiveShadow = true
   })
@@ -297,7 +303,7 @@ export function carry(root: THREE.Object3D, ground: number) {
       wrist.quaternion.copy(clip[2].slerp(wrist.quaternion, weight))
     }
     half?.quaternion.copy(upperRest).slerp(upper.quaternion, 0.5)
-    close(h, GRIP, weight)
+    close(h, GRIP, way ? 0 : weight)
     upper.parent?.updateWorldMatrix(false, true)
     const grip = root.worldToLocal(wrist.localToWorld(seat.clone()))
     // Planted where it first stood, a hand's width farther from the feet than the hand is: it leans in a little.

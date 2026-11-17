@@ -671,6 +671,260 @@ function helpers(doc: Document) {
   return moved
 }
 
+// The sheet of a figure that holds something may paint that hand closed round a short rod in flat blue (build.ts), so
+// the model has a fist made round something. As rig.py does for its own figures, every face the texture colours blue
+// is taken out, with whatever the cut leaves loose inside the hand, and the rod's line and width are kept for the prop
+// that goes there (packages/stage/src/figures/props.ts wayThrough). Null for a model with no blue on it.
+async function unrod(doc: Document) {
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, uv, idx] = [prim.getAttribute("POSITION"), prim.getAttribute("TEXCOORD_0"), prim.getIndices()]
+      const image = prim.getMaterial()?.getBaseColorTexture()?.getImage()
+      if (!pos || !uv || !idx || !image) continue
+      const { data, info } = await sharp(image).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+      const blue = (u: number, v: number) => {
+        const x = Math.min(info.width - 1, Math.floor((u - Math.floor(u)) * info.width))
+        const y = Math.min(info.height - 1, Math.floor((v - Math.floor(v)) * info.height))
+        const o = (y * info.width + x) * 3
+        return data[o + 2] > 102 && data[o + 2] > 1.7 * Math.max(data[o], data[o + 1]) ? 1 : 0
+      }
+      const faces = idx.getCount() / 3
+      const corners = (f: number) => [idx.getScalar(f * 3), idx.getScalar(f * 3 + 1), idx.getScalar(f * 3 + 2)]
+      const at = (i: number) => pos.getElement(i, [0, 0, 0])
+      const gone = new Uint8Array(faces)
+      const rod: number[][] = []
+      for (let f = 0; f < faces; f++) {
+        const q = corners(f).map((i) => uv.getElement(i, [0, 0]))
+        const c = [(q[0][0] + q[1][0] + q[2][0]) / 3, (q[0][1] + q[1][1] + q[2][1]) / 3]
+        if (blue(c[0], c[1]) + q.reduce((n, p) => n + blue(c[0] + (p[0] - c[0]) * 0.6, c[1] + (p[1] - c[1]) * 0.6), 0) < 2) continue
+        gone[f] = 1
+        for (const i of corners(f)) rod.push(at(i))
+      }
+      if (rod.length < 60) continue
+      const middle = [0, 1, 2].map((k) => rod.reduce((sum, p) => sum + p[k], 0) / rod.length)
+      // The way the rod runs: the line its points are spread widest along, upward.
+      const cov = [0, 1, 2].map((a) => [0, 1, 2].map((b) => rod.reduce((sum, p) => sum + (p[a] - middle[a]) * (p[b] - middle[b]), 0)))
+      let runs = [0.2, 1, 0.2]
+      for (let i = 0; i < 60; i++) {
+        const next = cov.map((row) => row[0] * runs[0] + row[1] * runs[1] + row[2] * runs[2])
+        const long = Math.hypot(...next) || 1
+        runs = next.map((v) => v / long)
+      }
+      if (runs[1] < 0) runs = runs.map((v) => -v)
+      const along = (p: number[]) => (p[0] - middle[0]) * runs[0] + (p[1] - middle[1]) * runs[1] + (p[2] - middle[2]) * runs[2]
+      const off = (p: number[]) => {
+        const a = along(p)
+        return Math.hypot(p[0] - middle[0] - a * runs[0], p[1] - middle[1] - a * runs[1], p[2] - middle[2] - a * runs[2])
+      }
+      const wide = rod.map(off).sort((a, b) => a - b)[Math.floor(rod.length * 0.75)]
+      const ends = rod.map(along)
+      const [low, high] = [Math.min(...ends), Math.max(...ends)]
+      // What the cut leaves joined to nothing, inside where the rod was: its ends, which are not always blue.
+      const place = new Map<string, number>()
+      const of = new Int32Array(pos.getCount())
+      for (let i = 0; i < of.length; i++) {
+        const key = at(i)
+          .map((v) => v.toFixed(5))
+          .join(",")
+        of[i] = place.get(key) ?? place.size
+        if (of[i] === place.size) place.set(key, of[i])
+      }
+      const up = Int32Array.from({ length: place.size }, (_, i) => i)
+      const top = (i: number) => {
+        while (up[i] !== i) {
+          up[i] = up[up[i]]
+          i = up[i]
+        }
+        return i
+      }
+      for (let f = 0; f < faces; f++) {
+        if (gone[f]) continue
+        const [a, b, c] = corners(f).map((i) => top(of[i]))
+        up[b] = a
+        up[top(c)] = a
+      }
+      const sizes = new Map<number, number>()
+      const within = new Map<number, boolean>()
+      for (let f = 0; f < faces; f++) {
+        if (gone[f]) continue
+        const part = top(of[idx.getScalar(f * 3)])
+        sizes.set(part, (sizes.get(part) ?? 0) + 1)
+        const inside = corners(f).every((i) => along(at(i)) > low - 0.03 && along(at(i)) < high + 0.03 && off(at(i)) < wide * 1.6)
+        within.set(part, (within.get(part) ?? true) && inside)
+      }
+      const body = [...sizes].sort((a, b) => b[1] - a[1])[0]?.[0]
+      let loose = 0
+      const left: number[] = []
+      const grip: number[] = []
+      for (let f = 0; f < faces; f++) {
+        if (gone[f]) continue
+        const part = top(of[idx.getScalar(f * 3)])
+        if (part !== body && within.get(part)) {
+          loose++
+          continue
+        }
+        left.push(...corners(f))
+        // The fingers about the rod are where the grip is along it: more of a rod may show at one end.
+        for (const i of corners(f)) if (off(at(i)) < wide * 1.8 && along(at(i)) > low && along(at(i)) < high) grip.push(along(at(i)))
+      }
+      const made = idx.getArray()
+      if (!made) continue
+      idx.setArray(made instanceof Uint16Array ? Uint16Array.from(left) : Uint32Array.from(left))
+      const mid = grip.length ? grip.reduce((sum, a) => sum + a, 0) / grip.length : 0
+      return { at: middle.map((v, k) => v + runs[k] * mid), runs, wide, faces: rod.length / 3, loose }
+    }
+  return null
+}
+
+// What blue is left is a fringe on the fingers beside the rod: it takes the colour of the skin about it, as rig.py has
+// it. After the face is painted, since that brings the textures in again.
+async function unblue() {
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
+  const doc = await io.read(`${dir}/lod0.glb`)
+  let changed = 0
+  for (const texture of new Set(
+    doc
+      .getRoot()
+      .listMaterials()
+      .map((m) => m.getBaseColorTexture())
+  )) {
+    const image = texture?.getImage()
+    if (!texture || !image) continue
+    const { data, info } = await sharp(image).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+    const [w, h] = [info.width, info.height]
+    const fringe = new Uint8Array(w * h)
+    let some = 0
+    for (let i = 0; i < w * h; i++)
+      if (data[i * 3 + 2] > 77 && data[i * 3 + 2] > 1.25 * Math.max(data[i * 3], data[i * 3 + 1])) {
+        fringe[i] = 1
+        some++
+      }
+    if (!some) continue
+    let spread = fringe.slice()
+    for (let pass = 0; pass < Math.round((6 * w) / 2048); pass++) {
+      const grown = spread.slice()
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++) {
+          const i = y * w + x
+          if (spread[i]) continue
+          if ((x > 0 && spread[i - 1]) || (x < w - 1 && spread[i + 1]) || (y > 0 && spread[i - w]) || (y < h - 1 && spread[i + w])) grown[i] = 1
+        }
+      spread = grown
+    }
+    const tones = [0, 1, 2].map(() => new Uint32Array(256))
+    let about = 0
+    for (let i = 0; i < w * h; i++)
+      if (spread[i] && !fringe[i]) {
+        about++
+        for (let k = 0; k < 3; k++) tones[k][data[i * 3 + k]]++
+      }
+    if (!about) continue
+    const skin = tones.map((t) => {
+      let seen = 0
+      return t.findIndex((n) => (seen += n) >= about / 2)
+    })
+    for (let i = 0; i < w * h; i++) if (fringe[i]) for (let k = 0; k < 3; k++) data[i * 3 + k] = skin[k]
+    // And the rod's blue was in the light on the hand that held it: the skin about it came out lilac. Skin is never
+    // bluer than it is green, so on what lies close about the rod's line the blue is brought under.
+    const way = doc
+      .getRoot()
+      .listNodes()
+      .map((n) => n.getExtras().tunnel)
+      .find((t): t is number[] => Array.isArray(t) && t.length >= 7)
+    for (const prim of way
+      ? doc
+          .getRoot()
+          .listMeshes()
+          .flatMap((m) => m.listPrimitives())
+          .filter((p) => p.getMaterial()?.getBaseColorTexture() === texture)
+      : []) {
+      const [pos, uv, idx] = [prim.getAttribute("POSITION"), prim.getAttribute("TEXCOORD_0"), prim.getIndices()]
+      if (!way || !pos || !uv || !idx) continue
+      for (let f = 0; f < idx.getCount(); f += 3) {
+        const corners = [idx.getScalar(f), idx.getScalar(f + 1), idx.getScalar(f + 2)]
+        const c = [0, 1, 2].map((k) => corners.reduce((sum, i) => sum + pos.getElement(i, [0, 0, 0])[k], 0) / 3 - way[k])
+        const along = c[0] * way[3] + c[1] * way[4] + c[2] * way[5]
+        if (Math.abs(along) > 0.17 || Math.hypot(c[0] - along * way[3], c[1] - along * way[4], c[2] - along * way[5]) > 0.15) continue
+        const at = corners.map((i) => uv.getElement(i, [0, 0]).map((v) => v - Math.floor(v)))
+        const [x0, x1] = [Math.max(0, Math.floor(Math.min(...at.map((q) => q[0])) * w) - 1), Math.min(w, Math.ceil(Math.max(...at.map((q) => q[0])) * w) + 2)]
+        const [y0, y1] = [Math.max(0, Math.floor(Math.min(...at.map((q) => q[1])) * h) - 1), Math.min(h, Math.ceil(Math.max(...at.map((q) => q[1])) * h) + 2)]
+        if (x1 - x0 > w / 5 || y1 - y0 > h / 5) continue
+        for (let y = y0; y < y1; y++)
+          for (let x = x0; x < x1; x++) {
+            const o = (y * w + x) * 3
+            if (data[o + 2] > 0.9 * data[o + 1]) data[o + 2] = Math.min(data[o + 2], Math.round(data[o + 1] * 0.84))
+          }
+      }
+    }
+    const out = sharp(data, { raw: { width: w, height: h, channels: 3 } })
+    texture.setImage(await (texture.getMimeType() === "image/webp" ? out.webp({ quality: 92 }) : out.png()).toBuffer())
+    changed += some
+  }
+  if (changed) await io.write(`${dir}/lod0.glb`, doc)
+  return changed
+}
+
+// A point the rigger gave wholly to a bone that nothing joined to it has any share in: one left out of the skinning,
+// which the file then gives to its first bone, the hips. It stays where the hips are while the hand it is part of
+// moves away, and draws a spike from one to the other. It takes the shares of the points it is joined to.
+function strays(doc: Document) {
+  let patched = 0
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, J, W, idx] = [prim.getAttribute("POSITION"), prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0"), prim.getIndices()]
+      if (!pos || !J || !W || !idx) continue
+      const place = new Map<string, number>()
+      const of = new Int32Array(pos.getCount())
+      for (let i = 0; i < of.length; i++) {
+        const key = pos
+          .getElement(i, [0, 0, 0])
+          .map((v) => v.toFixed(5))
+          .join(",")
+        of[i] = place.get(key) ?? place.size
+        if (of[i] === place.size) place.set(key, of[i])
+      }
+      const joined = Array.from({ length: place.size }, () => new Set<number>())
+      for (let f = 0; f < idx.getCount(); f += 3) {
+        const [a, b, c] = [of[idx.getScalar(f)], of[idx.getScalar(f + 1)], of[idx.getScalar(f + 2)]]
+        for (const [x, y] of [
+          [a, b],
+          [b, c],
+          [c, a],
+        ])
+          if (x !== y) {
+            joined[x].add(y)
+            joined[y].add(x)
+          }
+      }
+      const shares = Array.from({ length: place.size }, () => new Map<number, number>())
+      for (let i = 0; i < of.length; i++) {
+        const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+        for (let k = 0; k < 4; k++) if (w[k] > 0) shares[of[i]].set(j[k], Math.max(shares[of[i]].get(j[k]) ?? 0, w[k]))
+      }
+      for (let i = 0; i < of.length; i++) {
+        const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+        const k = w.indexOf(Math.max(...w))
+        if (w[k] < 0.99 || !joined[of[i]].size) continue
+        const about = new Map<number, number>()
+        for (const n of joined[of[i]]) for (const [bone, share] of shares[n]) about.set(bone, (about.get(bone) ?? 0) + share)
+        if ((about.get(j[k]) ?? 0) > 0.01) continue
+        const top = [...about].sort((x, y) => y[1] - x[1]).slice(0, 4)
+        const total = top.reduce((sum, [, share]) => sum + share, 0)
+        if (!total) continue
+        J.setElement(
+          i,
+          [0, 1, 2, 3].map((n) => top[n]?.[0] ?? 0)
+        )
+        W.setElement(
+          i,
+          [0, 1, 2, 3].map((n) => (top[n]?.[1] ?? 0) / total)
+        )
+        patched++
+      }
+    }
+  return patched
+}
+
 // One normal for every place on the mesh. Rodin's comes apart along every edge of its texture layout with a normal to
 // each side, a median of 63 degrees apart, and is lit as flat shards: an ear, a nose and hair cut from card. rig.py
 // welds its own models for the same reason.
@@ -1064,6 +1318,10 @@ async function rodinHyper(brief: Brief) {
     made.push(anim.getName())
   }
   inPlace(doc)
+  const way = brief.holds ? await unrod(doc) : null
+  if (way) say("rod", `${way.faces} blue faces cut from the hand and ${way.loose} left loose by it, a way ${(way.wide * 200).toFixed(1)} cm wide`)
+  const stray = strays(doc)
+  if (stray) say("strays", `${stray} points the rigger left out of the skinning given the shares of those about them`)
   smooth(doc)
   // A brief that borrows its clips has no use for the rigger's stand-ins, a gun fired for a bow shot and a throw for
   // a cut: they are taken out, keys and all, and the borrowed ones go by the names the game plays.
@@ -1104,13 +1362,24 @@ async function rodinHyper(brief: Brief) {
     ?.listJoints()
     .find((j) => /hips$/i.test(j.getName()))
   if (brief.holds && hips) {
-    hips.setExtras({ ...hips.getExtras(), holds: `${brief.holds.what}:${brief.holds.hand ?? "R"}:${brief.holds.length ?? 2}` })
+    hips.setExtras({
+      ...hips.getExtras(),
+      holds: `${brief.holds.what}:${brief.holds.hand ?? "R"}:${brief.holds.length ?? 2}${way ? ":rod" : ""}`,
+      ...(way ? { tunnel: [...way.at, ...way.runs, way.wide] } : {}),
+    })
     say("holds", `a ${brief.holds.what} in the ${brief.holds.hand === "L" ? "left" : "right"} hand, ${brief.holds.length ?? 2} m`)
   }
   await io.write(`${dir}/lod0.glb`, doc)
   const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
-  return { clips: made, rest: all, generator: `Rodin Gen-2.5 on fal, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`, weights: "hyper3d", cost: RODIN.cost + HYPER.cost }
+  return {
+    rod: !!way,
+    clips: made,
+    rest: all,
+    generator: `Rodin Gen-2.5 on fal, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`,
+    weights: "hyper3d",
+    cost: RODIN.cost + HYPER.cost,
+  }
 }
 
 async function main() {
@@ -1123,6 +1392,7 @@ async function main() {
   say("merge", `${dir}/lod0.glb with ${made.clips.join(", ")}`)
   const painted = await face(brief, made.rest)
   if (painted) say("face", `the sheet's, ${painted.fitted ? "fitted to the model's own" : "not fitted"}, ${painted.texels} texels`)
+  if ("rod" in made && made.rod) say("rod", `${await unblue()} texels of blue beside it given the colour of the skin`)
 
   const lods = await thin()
   say("lods", lods.map((l) => `${l.file} ${l.triangles} triangles, ${l.megabytes} MB`).join(", "))
