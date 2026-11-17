@@ -34,13 +34,19 @@
     "Q Block",
     "Q Roll",
     "Q Hit",
-    "Q Fall"
+    "Q Fall",
+    "Q Draw",
+    "Q Hold",
+    "Q Loose",
+    "Q Dodge Left",
+    "Q Dodge Back",
+    "Q Strafe"
   ],
   "lods": [
     {
       "file": "lod0.glb",
       "triangles": 0,
-      "megabytes": 6.96,
+      "megabytes": 7.24,
       "texture": 0
     }
   ]

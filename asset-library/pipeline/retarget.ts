@@ -1,5 +1,7 @@
 // A clip from another skeleton, played on a figure's own: the moves of Quaternius's Universal Animation Library (CC0,
 // quaternius.itch.io/universal-animation-library and -2) on a skeleton of Mixamo's names, as Meshy rigs one.
+// Mesh2Motion's clips (github.com/Mesh2Motion/mesh2motion-app, CC0) are on the same skeleton, one clip to a file, and
+// have what the library's free tier lacks: a bow drawn and loosed, dodges and strafes.
 //
 // The two skeletons agree on nothing but the body they stand for: their bones have other names, lie along other axes,
 // and the library rests with its arms straight out where a generated figure rests with them 40 degrees down. So no
@@ -54,48 +56,45 @@ function resting(node: Node): { turn: Quat; at: Vec } {
 
 // What a clip has a node at, at a time: its keys read between, or the node's rest where the clip leaves it alone.
 function reader(clip: Animation) {
-  const keys = new Map<Node, Record<string, { times: number[]; values: number[]; size: number; step: boolean; cubic: boolean }>>()
+  const keys = new Map<Node, Record<string, { times: number[]; at: (i: number) => number[]; step: boolean }>>()
   for (const ch of clip.listChannels()) {
     const [node, sampler] = [ch.getTargetNode(), ch.getSampler()]
     const [input, output] = [sampler?.getInput(), sampler?.getOutput()]
     if (!node || !sampler || !input || !output) continue
+    // A cubic key is three values, its own in the middle: the curve between is read as a straight line. Read by
+    // element, since a file may keep its turns as whole numbers to be scaled (Mesh2Motion's are 16 bits).
+    const cubic = sampler.getInterpolation() === "CUBICSPLINE"
     const of = keys.get(node) ?? {}
-    of[ch.getTargetPath() ?? ""] = {
-      times: Array.from(input.getArray() ?? []),
-      values: Array.from(output.getArray() ?? []),
-      size: output.getElementSize(),
-      step: sampler.getInterpolation() === "STEP",
-      cubic: sampler.getInterpolation() === "CUBICSPLINE",
-    }
+    of[ch.getTargetPath() ?? ""] = { times: Array.from(input.getArray() ?? []), at: (i) => output.getElement(cubic ? i * 3 + 1 : i, []), step: sampler.getInterpolation() === "STEP" }
     keys.set(node, of)
   }
   return (node: Node, path: "rotation" | "translation", time: number): number[] => {
     const k = keys.get(node)?.[path]
     if (!k?.times.length) return path === "rotation" ? node.getRotation() : node.getTranslation()
-    // A cubic key is three values, its own in the middle. The curve between is read as a straight line.
-    const value = (i: number) => k.values.slice((k.cubic ? i * 3 + 1 : i) * k.size, (k.cubic ? i * 3 + 2 : i + 1) * k.size)
     let i = k.times.findIndex((t) => t > time)
-    if (i === 0) return value(0)
-    if (i < 0) return value(k.times.length - 1)
+    if (i === 0) return k.at(0)
+    if (i < 0) return k.at(k.times.length - 1)
     i--
-    const [a, b] = [value(i), value(i + 1)]
+    const [a, b] = [k.at(i), k.at(i + 1)]
     const share = k.step ? 0 : (time - k.times[i]) / (k.times[i + 1] - k.times[i] || 1)
     return path === "rotation" ? qmix(a, b, share) : a.map((v, n) => v + (b[n] - v) * share)
   }
 }
 
-// The clip of that name in the library, added to the figure under the name it is to be played by. Returns how long
-// it is in seconds, or null when the library has no such clip or the figure no such skeleton.
-export function retarget(figure: Document, library: Document, clip: string, as: string): number | null {
+// The clip of that name in the library, or its first when none is named, added to the figure under the name it is to
+// be played by. Returns how long it is in seconds, or null when the library has no such clip or the figure no such
+// skeleton.
+export function retarget(figure: Document, library: Document, clip: string | undefined, as: string): number | null {
   const source = library
     .getRoot()
     .listAnimations()
-    .find((a) => a.getName() === clip)
+    .find((a) => !clip || a.getName() === clip)
+  // The library's bones by name whatever their capitals: Quaternius has `Head` where Mesh2Motion has `head`.
   const bone = (doc: Document, name: string, prefixed: boolean) =>
     doc
       .getRoot()
       .listNodes()
-      .find((n) => (prefixed ? new RegExp(`(^|:)${name}$`).test(n.getName()) : n.getName() === name))
+      .find((n) => (prefixed ? new RegExp(`(^|:)${name}$`).test(n.getName()) : n.getName().toLowerCase() === name.toLowerCase()))
   const joints = figure.getRoot().listSkins()[0]?.listJoints() ?? []
   const pairs = new Map<Node, Node>()
   for (const [ours, theirs] of Object.entries(BONES)) {

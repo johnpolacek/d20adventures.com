@@ -20,9 +20,11 @@
 // paints the close head (it stops before build.ts's own model). `--redo=face` paints again.
 //
 // A brief with "borrowed" has clips from another skeleton's library copied onto the figure's own (retarget.ts), free:
-// { "Q Swing": "ual1:Sword_Attack" } is the clip Sword_Attack of asset-library/moves/ual1.glb, played as Q Swing.
-// The libraries are Quaternius's Universal Animation Library 1 and 2, CC0, each pack's Unreal-Godot file without
-// root motion (UAL1_Standard.glb, UAL2_Standard.glb) put there as ual1.glb and ual2.glb. They are not kept in git.
+// { "Q Swing": "ual1:Sword_Attack" } is the clip Sword_Attack of asset-library/moves/ual1.glb, played as Q Swing,
+// and { "Q Shoot": "m2m/bow" } the one clip of asset-library/moves/m2m/bow.glb. The libraries are not kept in git:
+//   ual1.glb, ual2.glb   Quaternius's Universal Animation Library 1 and 2, CC0: each pack's Unreal-Godot file
+//                        without root motion (UAL1_Standard.glb, UAL2_Standard.glb)
+//   m2m/                 Mesh2Motion's clips, CC0: static/assets/human/animations of its repository
 //
 // Writes, in asset-library/characters/<id>/:
 //   pilot-model.json, pilot-rig.json   the generators' answers. With them there, nothing is paid for again.
@@ -39,6 +41,7 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
 import { type Accessor, type Document, NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions"
 import sharp from "sharp"
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
 import { type Quat, qall, qinv, qmul, qup } from "./quat"
@@ -295,10 +298,13 @@ async function merge(rigged: string, clips: [string, string][], to: string, borr
   for (const [name, from] of Object.entries(borrowed)) {
     const [library, clip] = from.split(":")
     const file = `asset-library/moves/${library}.glb`
-    if (!libraries.has(library) && existsSync(file)) libraries.set(library, await io.read(file))
+    // Mesh2Motion packs its clips with meshopt.
+    await MeshoptDecoder.ready
+    if (!libraries.has(library) && existsSync(file))
+      libraries.set(library, await new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.decoder": MeshoptDecoder }).read(file))
     const source = libraries.get(library)
     const long = source ? retarget(base, source, clip, name) : null
-    if (long === null) say("borrow", `${name}: ${source ? `no clip ${clip} in ${file}, or no skeleton to play it` : `no ${file}`}`)
+    if (long === null) say("borrow", `${name}: ${source ? `no clip ${clip ?? ""} in ${file}, or no skeleton to play it` : `no ${file}`}`)
     else made.push(name)
   }
   await io.write(to, base)

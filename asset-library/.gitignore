@@ -4,7 +4,7 @@ characters/*/*.png
 characters/*/*.jpg
 characters/*/pilot/
 # Clip libraries from elsewhere (pipeline/retarget.ts): each is fetched from its maker, as the pilot's header says.
-moves/*.glb
+moves/
 
 # The page's index, written and uploaded by `pnpm assets:sync`.
 library.json
