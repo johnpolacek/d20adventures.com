@@ -9,6 +9,9 @@
 // back in an A-pose ($0.40), rigged by Hyper3D with its stock clips ($0.20). Run without --pay first: it lists the
 // stock clips (free) and keeps the ones it picks in pilot-picks.json, to look over before paying.
 //
+// A brief with "body": "<id>" (thalbern-rodin-meshy) makes no model: it takes that figure's, and its sheet, and pays
+// for Meshy's rig and clips alone ($1.04). Hyper3D's stock has no bow and no sword, and Meshy's library has both.
+//
 // What it answers, against the figures rig.py makes: whether a shoulder and an elbow keep their shape when an arm is
 // raised and folded, whether a hand can close, and whether captured motion reads better than written turns.
 //
@@ -47,8 +50,8 @@ const args = process.argv.slice(2)
 const [id] = args.filter((a) => !a.startsWith("--"))
 const pay = args.includes("--pay")
 const dir = `asset-library/characters/${id}`
-const say = (step: string, text: string) => console.log(`${id.padEnd(16)}${step.padEnd(8)}${text}`)
-const cost = MODEL.cost + RIG.cost + RIG.clip * CLIPS.length
+const say = (step: string, text: string) => console.log(`${id.padEnd(15)} ${step.padEnd(8)}${text}`)
+const rigCost = RIG.cost + RIG.clip * CLIPS.length
 
 type Remote = { url?: string } | null | undefined
 type ModelAnswer = { model_urls?: { pbr_model?: Remote; glb?: Remote }; model_mesh?: Remote }
@@ -143,7 +146,12 @@ interface Brief {
   who: string
   // Who makes it: Tripo then Meshy (the default), or Rodin then Hyper3D's rigging.
   maker?: "rodin"
+  // A figure whose model and sheet this one takes in place of its own. Meshy's rig and clips alone are paid for.
+  body?: string
 }
+
+// Where a figure's sheet and model are: its own folder, or the folder of the figure it takes them from.
+const home = (brief: Brief) => (brief.body ? `asset-library/characters/${brief.body}` : dir)
 
 // What came back, fetched again from the kept answers at no charge.
 async function fetched(remote: Remote, name: string) {
@@ -153,14 +161,20 @@ async function fetched(remote: Remote, name: string) {
   return existsSync(file) ? file : null
 }
 
-// Tripo's model turned to face as the sheet does, rigged by Meshy to a Mixamo skeleton with fingers, with clips from
-// Meshy's library merged into it. Returns the clips it has.
+// Tripo's model turned to face as the sheet does, or another figure's model, rigged by Meshy to a Mixamo skeleton
+// with fingers, with clips from Meshy's library merged into it. Returns the clips it has.
 async function tripoMeshy(brief: Brief) {
-  let model = await kept<ModelAnswer>(`${dir}/pilot-model.json`)
+  const from = home(brief)
+  let model = await kept<ModelAnswer>(`${from}/pilot-model.json`)
   let rig = await kept<RigAnswer>(`${dir}/pilot-rig.json`)
-  const owed = (model ? 0 : MODEL.cost) + (rig ? 0 : RIG.cost + RIG.clip * CLIPS.length)
+  if (brief.body && !model) throw new Error(`No model in ${from}/pilot-model.json: make ${brief.body} first`)
+  // Who made the model, and for how much: this run, or the run that made the figure it is taken from.
+  const body = brief.body ? ((await kept<Brief>(`${from}/character.json`)) ?? brief) : brief
+  const maker = body.maker === "rodin" ? { name: "Rodin Gen-2.5 on fal", cost: RODIN.cost } : { name: "Tripo H3.1 on fal", cost: MODEL.cost }
+  const owed = (model ? 0 : MODEL.cost) + (rig ? 0 : rigCost)
   if (owed > 0 && !pay) {
-    say("cost", `$${owed.toFixed(2)} to make: the model $${MODEL.cost.toFixed(2)}, the rig and ${CLIPS.length} clips $${(RIG.cost + RIG.clip * CLIPS.length).toFixed(2)}. Run again with --pay`)
+    const had = model ? `the model kept${brief.body ? ` from ${brief.body}` : ""}` : `the model $${MODEL.cost.toFixed(2)}`
+    say("cost", `$${owed.toFixed(2)} to make: ${had}, the rig and ${CLIPS.length} clips $${rigCost.toFixed(2)}. Run again with --pay`)
     return null
   }
   if (!model) {
@@ -189,7 +203,7 @@ async function tripoMeshy(brief: Brief) {
       animation_action_ids: CLIPS.map(([, action]) => action),
     })
     await writeFile(`${dir}/pilot-rig.json`, `${JSON.stringify(rig, null, 2)}\n`)
-    say("rig", `made, $${(RIG.cost + RIG.clip * CLIPS.length).toFixed(2)}`)
+    say("rig", `made, $${rigCost.toFixed(2)}`)
   } else say("rig", "kept")
 
   const rigged = await fetched(rig.rigged_character_glb, "rigged")
@@ -203,7 +217,7 @@ async function tripoMeshy(brief: Brief) {
   }
   const walk = await fetched(rig.basic_animations?.walking_glb, "Walk")
   if (walk) clips.splice(1, 0, ["Walk", walk])
-  return { clips: await merge(rigged, clips, `${dir}/lod0.glb`), generator: "Tripo H3.1 on fal, rigged by Meshy", weights: "meshy", cost }
+  return { clips: await merge(rigged, clips, `${dir}/lod0.glb`), generator: `${maker.name}, rigged by Meshy`, weights: "meshy", cost: maker.cost + rigCost }
 }
 
 const RODIN = { endpoint: "fal-ai/hyper3d/rodin/v2.5", cost: 0.4 }
@@ -314,7 +328,8 @@ async function rodinHyper(brief: Brief) {
 async function main() {
   if (!id) throw new Error("Name a character: pnpm assets:pilot <id>")
   const brief = JSON.parse(await readFile(`${dir}/character.json`, "utf8")) as Brief
-  if (!existsSync(`${dir}/apose-front.png`)) throw new Error(`No sheet: run pnpm assets ${id} first, and look at ${dir}/sheet.png`)
+  const sheet = `${home(brief)}/apose-front.png`
+  if (!existsSync(sheet)) throw new Error(`No sheet: run pnpm assets ${brief.body ?? id} first, and look at ${home(brief)}/sheet.png`)
   const made = brief.maker === "rodin" ? await rodinHyper(brief) : await tripoMeshy(brief)
   if (!made) return
   say("merge", `${dir}/lod0.glb with ${made.clips.join(", ")}`)
@@ -332,7 +347,7 @@ async function main() {
     clips: made.clips,
     lods: [{ file: "lod0.glb", triangles: 0, megabytes, texture: 0 }],
   }
-  await sharp(`${dir}/apose-front.png`).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)
+  await sharp(sheet).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)
   await writeFile(`${dir}/figure.json`, `${JSON.stringify({ id, ...figure }, null, 2)}\n`)
   say("shelf", `on the shelf: /dev/assets?id=${id}`)
 }

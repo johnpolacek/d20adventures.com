@@ -1,0 +1,13 @@
+{
+  "id": "thalbern-rodin-meshy",
+  "name": "Thalbern (Rodin body, Meshy moves)",
+  "role": "Ranger of the Valkarr Woods, made by Rodin and rigged by Meshy",
+  "cast": [],
+  "height": 1.82,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp"
+  },
+  "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
+  "body": "thalbern-rodin"
+}
