@@ -25,13 +25,21 @@
     "Hit",
     "Fall",
     "Guard",
-    "Point"
+    "Point",
+    "Q Idle",
+    "Q Walk",
+    "Q Swing",
+    "Q Roll",
+    "Q Hit",
+    "Q Fall",
+    "Q Shoot",
+    "Q Dodge Left"
   ],
   "lods": [
     {
       "file": "lod0.glb",
       "triangles": 0,
-      "megabytes": 6.72,
+      "megabytes": 7.12,
       "texture": 0
     }
   ]

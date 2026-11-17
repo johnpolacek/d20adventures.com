@@ -12,5 +12,15 @@
   "stow": "He has no bow: it is left out of the picture entirely, and nothing is slung across his back but the quiver. Both blades stay sheathed at his hips.",
   "arms": 40,
   "maker": "rodin",
-  "face": "close"
+  "face": "close",
+  "borrowed": {
+    "Q Idle": "ual1:Idle_Loop",
+    "Q Walk": "ual1:Walk_Loop",
+    "Q Swing": "ual1:Sword_Attack",
+    "Q Roll": "ual1:Roll",
+    "Q Hit": "ual1:Hit_Chest",
+    "Q Fall": "ual1:Death01",
+    "Q Shoot": "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6",
+    "Q Dodge Left": "m2m/dodge-left"
+  }
 }

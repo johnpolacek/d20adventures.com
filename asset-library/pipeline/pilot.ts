@@ -242,6 +242,34 @@ function smooth(doc: Document) {
     }
 }
 
+// A brief's borrowed clips copied onto the figure (retarget.ts). Returns the names of those that could be played.
+async function borrow(base: Document, borrowed: Record<string, string> = {}) {
+  const made: string[] = []
+  const libraries = new Map<string, Document>()
+  // Mesh2Motion packs its clips with meshopt.
+  await MeshoptDecoder.ready
+  const library = async (name: string) => {
+    const file = `asset-library/moves/${name}.glb`
+    if (!libraries.has(name) && existsSync(file)) libraries.set(name, await new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.decoder": MeshoptDecoder }).read(file))
+    return libraries.get(name)
+  }
+  for (const [name, from] of Object.entries(borrowed)) {
+    // "ual1:Sword_Attack", "m2m/bow-pull", and parts of clips one after another: "m2m/bow-pull@0-1.5 > m2m/bow-release".
+    const parts = await Promise.all(
+      from.split(">").map(async (part) => {
+        const [spec, cut] = part.trim().split("@")
+        const [file, clip] = spec.split(":")
+        const [start, end] = (cut ?? "").split("-").map(Number)
+        return { library: await library(file), clip, from: cut ? start : undefined, to: cut ? end : undefined }
+      })
+    )
+    const long = parts.every((part) => part.library) ? retarget(base, parts as Part[], name) : null
+    if (long === null) say("borrow", `${name}: ${from} cannot be played. Its file is not under asset-library/moves, or it has no such clip`)
+    else made.push(name)
+  }
+  return made
+}
+
 // The rigged model, with the clip of each clip file copied in under its name. Channels are matched to the model's
 // bones by name: every file is the same rig.
 async function merge(rigged: string, clips: [string, string][], to: string, borrowed: Record<string, string> = {}) {
@@ -296,28 +324,7 @@ async function merge(rigged: string, clips: [string, string][], to: string, borr
   smooth(base)
   say("plates", `${plates(base)} points on top of the shoulders given to one bone or the other`)
   for (const [name, [share, of]] of Object.entries(UPRIGHT)) if (made.includes(name)) upright(base, name, share, of)
-  const libraries = new Map<string, Document>()
-  // Mesh2Motion packs its clips with meshopt.
-  await MeshoptDecoder.ready
-  const library = async (name: string) => {
-    const file = `asset-library/moves/${name}.glb`
-    if (!libraries.has(name) && existsSync(file)) libraries.set(name, await new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.decoder": MeshoptDecoder }).read(file))
-    return libraries.get(name)
-  }
-  for (const [name, from] of Object.entries(borrowed)) {
-    // "ual1:Sword_Attack", "m2m/bow-pull", and parts of clips one after another: "m2m/bow-pull@0-1.5 > m2m/bow-release".
-    const parts = await Promise.all(
-      from.split(">").map(async (part) => {
-        const [spec, cut] = part.trim().split("@")
-        const [file, clip] = spec.split(":")
-        const [start, end] = (cut ?? "").split("-").map(Number)
-        return { library: await library(file), clip, from: cut ? start : undefined, to: cut ? end : undefined }
-      })
-    )
-    const long = parts.every((part) => part.library) ? retarget(base, parts as Part[], name) : null
-    if (long === null) say("borrow", `${name}: ${from} cannot be played. Its file is not under asset-library/moves, or it has no such clip`)
-    else made.push(name)
-  }
+  made.push(...(await borrow(base, borrowed)))
   await io.write(to, base)
   return made
 }
@@ -549,6 +556,7 @@ async function rodinHyper(brief: Brief) {
   }
   inPlace(doc)
   smooth(doc)
+  made.push(...(await borrow(doc, brief.borrowed)))
   await io.write(`${dir}/lod0.glb`, doc)
   const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
