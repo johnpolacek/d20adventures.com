@@ -56,6 +56,13 @@ for (const [side, s] of [
   PALM[`${side}Hand`] = [`${side}HandMiddle1`, `${side}HandIndex1`, `${side}HandPinky1`]
 }
 const FRAMES = 30
+// How far a finger goes from how the figure's own was modelled toward how the library's is held. The library's
+// mannequin walks and stands with its fists shut. Shut as tight on a generated hand, whose fingers are thicker and one
+// skin with its palm, they sink into it and the hand is a stub (the owner, 2026-11-16: "stubby and a little garbled").
+// Half way was still a fist. A fifth of the way is the hand as it was modelled, hung a little closed, with the
+// library's own stir in it. A weapon's grip is not this: it is set on the hand that holds it.
+const CURL = 0.2
+const FINGER = /Hand(Thumb|Index|Middle|Ring|Pinky)\d$/
 
 // A node's turn and place in the world at rest, its parents' above it.
 function resting(node: Node): { turn: Quat; at: Vec } {
@@ -183,8 +190,11 @@ function take(figure: Document, { library, clip, from, to }: Part): Take | null 
       const restOf = pair && rest.get(pair)
       // As far from its lined-up rest as the library's bone is from its own.
       const now = pair && restOf ? qall(theirs(pair).turn, qinv(restOf.turn), lined.get(joint) as Quat) : qmul(parent, joint.getRotation() as Quat)
-      world.set(joint, now)
-      turns.get(joint)?.set(qmul(qinv(parent), now), i * 4)
+      // A finger is eased back toward its own rest, and the bones below it follow what it was given.
+      const local = qmul(qinv(parent), now)
+      const eased = pair && FINGER.test(joint.getName()) ? qmix(joint.getRotation(), local, CURL) : local
+      world.set(joint, eased === local ? now : qmul(parent, eased))
+      turns.get(joint)?.set(eased, i * 4)
     }
     const at = theirs(pelvis).at
     const moved = qturn(qinv(above), [(at[0] - pelvisRest[0]) * tall, (at[1] - pelvisRest[1]) * tall, (at[2] - pelvisRest[2]) * tall])
