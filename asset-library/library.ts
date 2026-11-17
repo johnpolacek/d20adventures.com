@@ -70,7 +70,8 @@ async function told(root: string, setting: string, staging: string): Promise<{ o
 const HEROES = "heroes"
 const UNUSED = "unused"
 
-export async function buildLibrary(root = process.cwd()): Promise<Library> {
+// `leave` names characters left off the shelf: what is published leaves out a figure tried and not kept (sync.ts).
+export async function buildLibrary(root = process.cwd(), leave: string[] = []): Promise<Library> {
   const pub = path.join(root, "public")
 
   // A figure goes by every cast id its character has: Branka is `branka` at the gates and `branka-stoneveil` at the inn.
@@ -78,7 +79,7 @@ export async function buildLibrary(root = process.cwd()): Promise<Library> {
   const shelved: Figure[] = []
   const shelf = path.join(root, "asset-library/characters")
   for (const id of (await readdir(shelf).catch(() => [] as string[])).sort()) {
-    const text = await readFile(path.join(shelf, id, "figure.json"), "utf8").catch(() => null)
+    const text = leave.includes(id) ? null : await readFile(path.join(shelf, id, "figure.json"), "utf8").catch(() => null)
     if (!text) continue
     const figure = JSON.parse(text) as Figure
     for (const cast of figure.cast ?? [id]) figures.set(cast, figure)

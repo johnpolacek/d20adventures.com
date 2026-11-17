@@ -29,9 +29,12 @@ Models, sheets and check pictures are too heavy for git and are left out by `ass
 Anyone with the link can open the library: `https://d20adventures.com/settings/realm-of-myr/assets`. It is left out of search.
 
 ```sh
-pnpm assets:sync          # publish: upload what changed, then the index
-pnpm assets:sync --dry    # list what would upload
+pnpm assets:sync                  # publish: upload what changed, then the index
+pnpm assets:sync --dry            # list what would upload
+pnpm assets:sync thalbern-rodin   # one character's files, then the index
 ```
+
+- A figure that takes another's body (`body` in its brief: a rig or clips tried on a model already made) is a trial. It stays in the workspace: a sync does not upload it and the published index leaves it out.
 
 - The public bucket gets what the page shows, under `asset-library/characters/<id>/`: the rigged copies, the thumbnail and `figure.json`. The site serves them at `/asset-library/...`.
 - The private bucket gets what a character was made from, under the same path: the brief, the sheets, the joints, the generator's answer, the source model and the rig's report. That is the backup.

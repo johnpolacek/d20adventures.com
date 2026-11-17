@@ -1,8 +1,12 @@
 // Publishes the asset library: what its public page shows goes to the public bucket, and what it was made from goes
 // to the private one, as a backup.
 //
-//   pnpm assets:sync          # write library.json, then upload what changed
-//   pnpm assets:sync --dry    # list what would upload
+//   pnpm assets:sync                  # write library.json, then upload what changed
+//   pnpm assets:sync --dry            # list what would upload
+//   pnpm assets:sync thalbern-rodin   # that character's files alone, and the index
+//
+// A figure that takes another's body (its brief's `body`: a rig or a set of clips tried on a model already made, see
+// pilot.ts) is a trial, kept in the workspace. It is not published and the index leaves it out.
 //
 // Public bucket, under asset-library/characters/<id>/: the rigged copies, the thumbnail and figure.json. The site
 // serves them at /asset-library/... (next.config.ts), which is what /settings/<setting>/assets loads.
@@ -21,7 +25,11 @@ import { buildLibrary } from "../library"
 
 const ROOT = "asset-library/characters"
 const PUBLIC = ["lod0.glb", "lod1.glb", "lod2.glb", "front.webp", "thumb.webp", "figure.json"]
-const PRIVATE = ["character.json", "sheet.png", "apose-front.png", "apose-back.png", "joints.json", "tripo.json", "source.glb", "rig.json"]
+const PRIVATE = [
+  ...["character.json", "sheet.png", "apose-front.png", "apose-back.png", "joints.json", "tripo.json", "source.glb", "rig.json"],
+  // A figure pilot.ts made: the generators' answers, the model as it came and as it was rigged.
+  ...["pilot-model.json", "pilot-rig.json", "pilot-picks.json", "pilot/model.glb", "pilot/rigged-all.glb"],
+]
 const TYPES: Record<string, string> = { ".glb": "model/gltf-binary", ".webp": "image/webp", ".png": "image/png", ".json": "application/json" }
 // A figure is rebuilt under the same name, so caches stay short.
 const CACHE = "public, max-age=300"
@@ -45,13 +53,21 @@ async function put(bucket: string, file: string, open: boolean) {
 }
 
 async function main() {
-  const library = await buildLibrary()
+  const named = process.argv.slice(2).filter((a) => !a.startsWith("--"))
+  const all = (await readdir(ROOT)).sort()
+  const trials: string[] = []
+  for (const id of all) {
+    const brief = existsSync(`${ROOT}/${id}/character.json`) ? (JSON.parse(await readFile(`${ROOT}/${id}/character.json`, "utf8")) as { body?: string }) : null
+    if (brief?.body) trials.push(id)
+  }
+  for (const id of named) if (!all.includes(id) || trials.includes(id)) throw new Error(`${id} is ${all.includes(id) ? "a trial on another's body, and is not published" : "no character"}`)
+  const library = await buildLibrary(process.cwd(), trials)
   if (!dry) await writeFile("asset-library/library.json", `${JSON.stringify(library)}\n`)
   let files = 0
   let bytes = 0
-  for (const id of (await readdir(ROOT)).sort()) {
+  for (const id of named.length ? named : all) {
     // Only a finished character is published: one with a figure on the shelf.
-    if (!existsSync(`${ROOT}/${id}/figure.json`)) continue
+    if (trials.includes(id) || !existsSync(`${ROOT}/${id}/figure.json`)) continue
     for (const [names, bucket, open] of [
       [PUBLIC, AWS_BUCKET_PUBLIC, true],
       [PRIVATE, AWS_BUCKET_DATA, false],
