@@ -438,6 +438,8 @@ interface Brief {
   body?: string
   // Clips copied from another skeleton's library, each by the name it is played by: "ual1:Sword_Attack".
   borrowed?: Record<string, string>
+  // How Hyper3D shares the skin among its bones: "core" unless said.
+  skinning?: "core" | "shell"
 }
 
 // Where a figure's sheet and model are: its own folder, or the folder of the figure it takes them from.
@@ -573,8 +575,10 @@ type RodinAnswer = { model_mesh?: Remote }
 // Rodin's model from the sheet's front and back, in an A-pose, rigged by Hyper3D with its stock clips, each renamed
 // to the name the game plays it by. Returns the clips it has.
 async function rodinHyper(brief: Brief) {
-  const views = ["apose-front.png", "apose-back.png"].filter((f) => existsSync(`${dir}/${f}`))
-  let picks = await kept<Record<string, string>>(`${dir}/pilot-picks.json`)
+  // A brief with a body takes that figure's sheet, model and picks, and is rigged again on its own.
+  const from = home(brief)
+  const views = ["apose-front.png", "apose-back.png"].filter((f) => existsSync(`${from}/${f}`))
+  let picks = await kept<Record<string, string>>(`${from}/pilot-picks.json`)
   if (!picks) {
     const { animations } = await fal<{ animations: Stock[] }>(`pilot stock ${id}`, HYPER.list, { category: "human" })
     picks = {}
@@ -592,19 +596,19 @@ async function rodinHyper(brief: Brief) {
       .map(([role, at]) => `${role}: ${at}`)
       .join(", ") || "none found"
   )
-  let model = await kept<RodinAnswer>(`${dir}/pilot-model.json`)
+  let model = await kept<RodinAnswer>(`${from}/pilot-model.json`)
   let rig = await kept<HyperAnswer>(`${dir}/pilot-rig.json`)
+  if (brief.body && !model) throw new Error(`No model in ${from}/pilot-model.json: make ${brief.body} first`)
+  const skinning = brief.skinning ?? "core"
   const owed = (model ? 0 : RODIN.cost) + (rig ? 0 : HYPER.cost)
   if (owed > 0 && !pay) {
-    say(
-      "cost",
-      `$${owed.toFixed(2)} to make: the model $${RODIN.cost.toFixed(2)} from ${views.length} views, the rig and its clips $${HYPER.cost.toFixed(2)}. Look over ${dir}/pilot-picks.json, then run again with --pay`
-    )
+    const had = model ? `the model kept${brief.body ? ` from ${brief.body}` : ""}` : `the model $${RODIN.cost.toFixed(2)} from ${views.length} views`
+    say("cost", `$${owed.toFixed(2)} to make: ${had}, the rig (${skinning} skinning) and its clips $${HYPER.cost.toFixed(2)}. Look over ${from}/pilot-picks.json, then run again with --pay`)
     return null
   }
   if (!model) {
     model = await fal<RodinAnswer>(`pilot model ${id}`, RODIN.endpoint, {
-      image_urls: await Promise.all(views.map(async (f) => dataUri(await sharp(`${dir}/${f}`).png().toBuffer()))),
+      image_urls: await Promise.all(views.map(async (f) => dataUri(await sharp(`${from}/${f}`).png().toBuffer()))),
       prompt: brief.who,
       tier: "Gen-2.5-High",
       quality_mesh_option: "50K Triangle",
@@ -615,7 +619,7 @@ async function rodinHyper(brief: Brief) {
     await writeFile(`${dir}/pilot-model.json`, `${JSON.stringify(model, null, 2)}\n`)
     say("model", `made, $${RODIN.cost.toFixed(2)}`)
   } else say("model", "kept")
-  if (!model.model_mesh?.url) throw new Error(`No model in ${dir}/pilot-model.json`)
+  if (!model.model_mesh?.url) throw new Error(`No model in ${from}/pilot-model.json`)
   // Hyper3D's rigging does not turn a model. One that faces another way is not sent, so the rig is not paid for.
   const source = await fetched(model.model_mesh, "model")
   const at = source ? await facing(source) : null
@@ -628,8 +632,10 @@ async function rodinHyper(brief: Brief) {
     rig = await fal<HyperAnswer>(`pilot rig ${id}`, HYPER.endpoint, {
       model_url: model.model_mesh.url,
       bone_template: "human",
-      image_url: dataUri(await sharp(`${dir}/apose-front.png`).png().toBuffer()),
-      skinning_method: "core",
+      image_url: dataUri(await sharp(`${from}/apose-front.png`).png().toBuffer()),
+      // "core" gathers a bone's pull about the skeleton, "for precise humanoid joints". "shell" "favors smooth weights
+      // on the visible mesh" (fal's words for both).
+      skinning_method: skinning,
       animation_presets: Object.values(picks),
       in_place: true,
       geometry_file_format: "glb",
@@ -666,12 +672,13 @@ async function rodinHyper(brief: Brief) {
     }
     made.length = 0
   }
-  say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
+  // `--spread=off` leaves the shares as the rigger gave them, to measure one rigging against another.
+  if (!args.includes("--spread=off")) say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
   made.push(...(await borrow(doc, brief.borrowed)))
   await io.write(`${dir}/lod0.glb`, doc)
   const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
-  return { clips: made, rest: all, generator: "Rodin Gen-2.5 on fal, rigged by Hyper3D", weights: "hyper3d", cost: RODIN.cost + HYPER.cost }
+  return { clips: made, rest: all, generator: `Rodin Gen-2.5 on fal, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`, weights: "hyper3d", cost: RODIN.cost + HYPER.cost }
 }
 
 async function main() {
