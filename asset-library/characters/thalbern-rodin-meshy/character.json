@@ -21,9 +21,7 @@
     "Q Roll": "ual1:Roll",
     "Q Hit": "ual1:Hit_Chest",
     "Q Fall": "ual1:Death01",
-    "Q Draw": "m2m/bow-pull",
-    "Q Hold": "m2m/bow-pull-hold",
-    "Q Loose": "m2m/bow-release",
+    "Q Shoot": "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6",
     "Q Dodge Left": "m2m/dodge-left",
     "Q Dodge Back": "m2m/dodge-back",
     "Q Strafe": "m2m/strafe-left"

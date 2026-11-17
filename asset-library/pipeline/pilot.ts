@@ -21,7 +21,9 @@
 //
 // A brief with "borrowed" has clips from another skeleton's library copied onto the figure's own (retarget.ts), free:
 // { "Q Swing": "ual1:Sword_Attack" } is the clip Sword_Attack of asset-library/moves/ual1.glb, played as Q Swing,
-// and { "Q Shoot": "m2m/bow" } the one clip of asset-library/moves/m2m/bow.glb. The libraries are not kept in git:
+// and { "Q Dodge": "m2m/dodge-left" } the one clip of asset-library/moves/m2m/dodge-left.glb. Parts of clips can be
+// played one after another, each cut by seconds: "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6". The libraries are not
+// kept in git:
 //   ual1.glb, ual2.glb   Quaternius's Universal Animation Library 1 and 2, CC0: each pack's Unreal-Godot file
 //                        without root motion (UAL1_Standard.glb, UAL2_Standard.glb)
 //   m2m/                 Mesh2Motion's clips, CC0: static/assets/human/animations of its repository
@@ -45,7 +47,7 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
 import { type Quat, qall, qinv, qmul, qup } from "./quat"
-import { retarget } from "./retarget"
+import { type Part, retarget } from "./retarget"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
 const RIG = { endpoint: "meshy/rigging/multi-animation", cost: 0.2, clip: 0.12 }
@@ -295,16 +297,25 @@ async function merge(rigged: string, clips: [string, string][], to: string, borr
   say("plates", `${plates(base)} points on top of the shoulders given to one bone or the other`)
   for (const [name, [share, of]] of Object.entries(UPRIGHT)) if (made.includes(name)) upright(base, name, share, of)
   const libraries = new Map<string, Document>()
+  // Mesh2Motion packs its clips with meshopt.
+  await MeshoptDecoder.ready
+  const library = async (name: string) => {
+    const file = `asset-library/moves/${name}.glb`
+    if (!libraries.has(name) && existsSync(file)) libraries.set(name, await new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.decoder": MeshoptDecoder }).read(file))
+    return libraries.get(name)
+  }
   for (const [name, from] of Object.entries(borrowed)) {
-    const [library, clip] = from.split(":")
-    const file = `asset-library/moves/${library}.glb`
-    // Mesh2Motion packs its clips with meshopt.
-    await MeshoptDecoder.ready
-    if (!libraries.has(library) && existsSync(file))
-      libraries.set(library, await new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.decoder": MeshoptDecoder }).read(file))
-    const source = libraries.get(library)
-    const long = source ? retarget(base, source, clip, name) : null
-    if (long === null) say("borrow", `${name}: ${source ? `no clip ${clip ?? ""} in ${file}, or no skeleton to play it` : `no ${file}`}`)
+    // "ual1:Sword_Attack", "m2m/bow-pull", and parts of clips one after another: "m2m/bow-pull@0-1.5 > m2m/bow-release".
+    const parts = await Promise.all(
+      from.split(">").map(async (part) => {
+        const [spec, cut] = part.trim().split("@")
+        const [file, clip] = spec.split(":")
+        const [start, end] = (cut ?? "").split("-").map(Number)
+        return { library: await library(file), clip, from: cut ? start : undefined, to: cut ? end : undefined }
+      })
+    )
+    const long = parts.every((part) => part.library) ? retarget(base, parts as Part[], name) : null
+    if (long === null) say("borrow", `${name}: ${from} cannot be played. Its file is not under asset-library/moves, or it has no such clip`)
     else made.push(name)
   }
   await io.write(to, base)

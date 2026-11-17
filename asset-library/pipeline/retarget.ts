@@ -11,15 +11,22 @@
 //
 // The hips are carried as the library's are, scaled by how tall the two stand at the hip. Nothing is done for feet
 // that slide or hands that miss: the limbs are other lengths.
+//
+// A hand is lined up whole, by the way its fingers run and the way its palm faces, and each finger by the way it
+// points. A finger curls about the line across its knuckles, and that line is the hand's own: lined up by the forearm
+// alone, with the palm a part turn off the library's, the fingers of a fist closed sideways through each other (the
+// owner, 2026-11-16: "the hands look garbled").
 
 import type { Animation, Document, Node } from "@gltf-transform/core"
-import { type Quat, qall, qbetween, qinv, qmix, qmul, qturn, type Vec } from "./quat"
+import { type Quat, qall, qbetween, qframe, qinv, qmix, qmul, qturn, type Vec } from "./quat"
 
 // The library's bone for each of the figure's, by Mixamo's name without its prefix.
 const BONES: Record<string, string> = { Hips: "pelvis", Spine: "spine_01", Spine1: "spine_02", Spine2: "spine_03", Neck: "neck_01", Head: "Head" }
 // A limb's bone, and the bone it reaches to: the two skeletons are lined up by the way each of these points at rest.
 // Every other bone keeps how it sat on its parent, as the trunk does, where the two only place their joints apart.
 const REACH: Record<string, string> = {}
+// A hand, and the three knuckles that give its frame: the middle one it runs to, and the two it lies across.
+const PALM: Record<string, [string, string, string]> = {}
 for (const [side, s] of [
   ["Left", "l"],
   ["Right", "r"],
@@ -42,7 +49,11 @@ for (const [side, s] of [
     ["Ring", "ring"],
     ["Pinky", "pinky"],
   ])
-    for (const i of [1, 2, 3]) BONES[`${side}Hand${finger}${i}`] = `${f}_0${i}_${s}`
+    for (const i of [1, 2, 3]) {
+      BONES[`${side}Hand${finger}${i}`] = `${f}_0${i}_${s}`
+      if (i < 3) REACH[`${side}Hand${finger}${i}`] = `${side}Hand${finger}${i + 1}`
+    }
+  PALM[`${side}Hand`] = [`${side}HandMiddle1`, `${side}HandIndex1`, `${side}HandPinky1`]
 }
 const FRAMES = 30
 
@@ -81,10 +92,15 @@ function reader(clip: Animation) {
   }
 }
 
-// The clip of that name in the library, or its first when none is named, added to the figure under the name it is to
-// be played by. Returns how long it is in seconds, or null when the library has no such clip or the figure no such
-// skeleton.
-export function retarget(figure: Document, library: Document, clip: string | undefined, as: string): number | null {
+// A clip of a library, its first when none is named, or the part of it between two times in seconds.
+export type Part = { library: Document; clip?: string; from?: number; to?: number }
+type Take = { hips: Node; count: number; turns: Map<Node, Float32Array<ArrayBuffer>>; places: Float32Array<ArrayBuffer> }
+// How long one part is eased into from the one before it, in frames.
+const EASE = 3
+
+// A part as the figure plays it, frame by frame: each bone's turn on its parent, and where the hips are. Null when
+// the library has no such clip or the figure no such skeleton.
+function take(figure: Document, { library, clip, from, to }: Part): Take | null {
   const source = library
     .getRoot()
     .listAnimations()
@@ -104,28 +120,38 @@ export function retarget(figure: Document, library: Document, clip: string | und
   const [hips, pelvis] = [bone(figure, "Hips", true), bone(library, "pelvis", false)]
   if (!source || !hips || !pelvis || pairs.size < 20) return null
 
-  // The figure's rest with its limbs pointed as the library's: each limb bone turned the least way that lines it up,
-  // and every bone below it keeping how it sat on its parent.
+  // The figure's rest with its limbs pointed as the library's. A bone starts from the turn its parent was given, so it
+  // keeps how it sat on it, and a limb's bone is then turned the least way further that lines it up. A hand is lined
+  // up whole.
   const lined = new Map<Node, Quat>()
   const by = new Map<Node, Quat>()
+  const span = (a: Node, b: Node) => {
+    const [from, to] = [resting(a).at, resting(b).at]
+    return [to[0] - from[0], to[1] - from[1], to[2] - from[2]]
+  }
   for (const joint of joints) {
     const name = joint.getName().replace(/^.*:/, "")
-    const [to, theirs] = [REACH[name] ? bone(figure, REACH[name], true) : null, pairs.get(joint)]
-    const theirTo = to ? pairs.get(to) : null
+    const theirs = pairs.get(joint)
     const up = joint.getParentNode()
     let turn = (up && by.get(up)) || ([0, 0, 0, 1] as Quat)
-    if (to && theirs && theirTo) {
-      const [a, b, c, d] = [resting(joint).at, resting(to).at, resting(theirs).at, resting(theirTo).at]
-      turn = qbetween([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [d[0] - c[0], d[1] - c[1], d[2] - c[2]])
-    }
+    const palm = (PALM[name] ?? []).map((knuckle) => bone(figure, knuckle, true))
+    const theirPalm = palm.map((knuckle) => knuckle && pairs.get(knuckle))
+    const to = REACH[name] ? bone(figure, REACH[name], true) : null
+    const theirTo = to ? pairs.get(to) : null
+    if (theirs && palm.length === 3 && palm.every(Boolean) && theirPalm.every(Boolean)) {
+      const [middle, index, pinky] = palm as Node[]
+      const [theirMiddle, theirIndex, theirPinky] = theirPalm as Node[]
+      turn = qmul(qframe(span(theirs, theirMiddle), span(theirPinky, theirIndex)), qinv(qframe(span(joint, middle), span(pinky, index))))
+    } else if (to && theirs && theirTo) turn = qmul(qbetween(qturn(turn, span(joint, to)), span(theirs, theirTo)), turn)
     by.set(joint, turn)
     lined.set(joint, qmul(turn, resting(joint).turn))
   }
 
   const read = reader(source)
   const long = Math.max(...source.listSamplers().map((s) => s.getInput()?.getMax([0])[0] ?? 0))
-  const count = Math.max(2, Math.ceil(long * FRAMES) + 1)
-  const times = Float32Array.from({ length: count }, (_, i) => Math.min(long, i / FRAMES))
+  const [start, end] = [Math.min(long, from ?? 0), Math.min(long, to ?? long)]
+  const count = Math.max(2, Math.ceil((end - start) * FRAMES) + 1)
+  const times = Float32Array.from({ length: count }, (_, i) => Math.min(end, start + i / FRAMES))
   const turns = new Map(joints.filter((j) => pairs.has(j)).map((j) => [j, new Float32Array(count * 4)]))
   const places = new Float32Array(count * 3)
   // The library's bones at a time, each in the world: its parents' turns above its own.
@@ -165,6 +191,34 @@ export function retarget(figure: Document, library: Document, clip: string | und
     places.set([hipsRest[0] + moved[0], hipsRest[1] + moved[1], hipsRest[2] + moved[2]], i * 3)
   }
 
+  return { hips, count, turns, places }
+}
+
+// The parts, one after another, added to the figure as one clip under the name it is to be played by. Each part
+// after the first is eased into from where the one before it stopped: Mesh2Motion's bow is drawn in one clip and
+// loosed in another, and the second is little more than where the arm is thrown to. Returns how long the clip is in
+// seconds, or null when a part cannot be played.
+export function retarget(figure: Document, parts: Part[], as: string): number | null {
+  const takes = parts.map((part) => take(figure, part))
+  if (!takes.length || takes.some((t) => !t)) return null
+  const [first, ...rest] = takes as Take[]
+  const count = first.count + rest.reduce((sum, t) => sum + t.count, 0)
+  const times = Float32Array.from({ length: count }, (_, i) => i / FRAMES)
+  const turns = new Map([...first.turns.keys()].map((joint) => [joint, new Float32Array(count * 4)]))
+  const places = new Float32Array(count * 3)
+  let at = 0
+  for (const [n, part] of (takes as Take[]).entries()) {
+    for (let i = 0; i < part.count; i++, at++) {
+      // How much of this frame is the part's own, and how much where the last part stopped.
+      const own = n && i < EASE ? (i + 1) / (EASE + 1) : 1
+      for (const [joint, all] of turns) {
+        const turn = part.turns.get(joint)?.subarray(i * 4, i * 4 + 4)
+        if (turn) all.set(own < 1 ? qmix(all.subarray((at - i - 1) * 4, (at - i) * 4), turn, own) : turn, at * 4)
+      }
+      for (let k = 0; k < 3; k++) places[at * 3 + k] = own < 1 ? places[(at - i - 1) * 3 + k] * (1 - own) + part.places[i * 3 + k] * own : part.places[i * 3 + k]
+    }
+  }
+
   const buffer = figure.getRoot().listBuffers()[0] ?? figure.createBuffer()
   const input = figure.createAccessor().setType("SCALAR").setArray(times).setBuffer(buffer)
   const made = figure.createAnimation(as)
@@ -182,6 +236,6 @@ export function retarget(figure: Document, library: Document, clip: string | und
     made.addSampler(sampler).addChannel(figure.createAnimationChannel().setTargetNode(node).setTargetPath(path).setSampler(sampler))
   }
   for (const [joint, values] of turns) add(joint, "rotation", values)
-  add(hips, "translation", places)
-  return long
+  add(first.hips, "translation", places)
+  return (count - 1) / FRAMES
 }

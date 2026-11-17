@@ -18,12 +18,12 @@ export const qturn = ([x, y, z, w]: Quat, v: number[]): Vec => {
 }
 // Where a turn takes straight up.
 export const qup = (q: Quat) => qturn(q, [0, 1, 0])
-export const qunit = (q: number[]): Quat => {
+export const qunit = (q: ArrayLike<number>): Quat => {
   const long = Math.hypot(q[0], q[1], q[2], q[3]) || 1
   return [q[0] / long, q[1] / long, q[2] / long, q[3] / long]
 }
 // The turn between two, a share of the way, by the short way round.
-export const qmix = (a: number[], b: number[], share: number): Quat => {
+export const qmix = (a: ArrayLike<number>, b: ArrayLike<number>, share: number): Quat => {
   const s = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3] < 0 ? -share : share
   return qunit([a[0] * (1 - share) + b[0] * s, a[1] * (1 - share) + b[1] * s, a[2] * (1 - share) + b[2] * s, a[3] * (1 - share) + b[3] * s])
 }
@@ -36,4 +36,31 @@ export const qbetween = (from: number[], to: number[]): Quat => {
   const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
   if (dot < -0.999999) return Math.abs(a[0]) < 0.9 ? qunit([0, -a[2], a[1], 0]) : qunit([-a[2], 0, a[0], 0])
   return qunit([a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0], 1 + dot])
+}
+// The turn that stands a hand's own frame in the world: along its fingers, across its knuckles, and out of its palm.
+export const qframe = (along: number[], across: number[]): Quat => {
+  const unit = (v: number[]) => {
+    const long = Math.hypot(v[0], v[1], v[2]) || 1
+    return [v[0] / long, v[1] / long, v[2] / long]
+  }
+  const cross = (a: number[], b: number[]) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+  const x = unit(along)
+  const z = unit(cross(x, across))
+  const y = cross(z, x)
+  // The three as the columns of a turn, and that turn as a quaternion.
+  const trace = x[0] + y[1] + z[2]
+  if (trace > 0) {
+    const s = Math.sqrt(trace + 1) * 2
+    return qunit([(y[2] - z[1]) / s, (z[0] - x[2]) / s, (x[1] - y[0]) / s, s / 4])
+  }
+  if (x[0] > y[1] && x[0] > z[2]) {
+    const s = Math.sqrt(1 + x[0] - y[1] - z[2]) * 2
+    return qunit([s / 4, (y[0] + x[1]) / s, (z[0] + x[2]) / s, (y[2] - z[1]) / s])
+  }
+  if (y[1] > z[2]) {
+    const s = Math.sqrt(1 + y[1] - x[0] - z[2]) * 2
+    return qunit([(y[0] + x[1]) / s, s / 4, (z[1] + y[2]) / s, (z[0] - x[2]) / s])
+  }
+  const s = Math.sqrt(1 + z[2] - x[0] - y[1]) * 2
+  return qunit([(z[0] + x[2]) / s, (z[1] + y[2]) / s, s / 4, (x[1] - y[0]) / s])
 }
