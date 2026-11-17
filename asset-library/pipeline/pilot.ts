@@ -46,7 +46,7 @@ import sharp from "sharp"
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
-import { type Quat, qall, qinv, qmul, qup } from "./quat"
+import { type Quat, qall, qinv, qmix, qmul, qup } from "./quat"
 import { type Part, retarget } from "./retarget"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
@@ -307,6 +307,106 @@ function spread(doc: Document, reach: number, passes: number) {
 // worst of it was crushed to an eighth and is now crushed to a fifth. Wider and more (0.2 m and 16, 0.24 m and 32)
 // stretched it further, to 6.7 times from 4.6. No setting stretched it less: that is the one skin, not the shares.
 const SPREAD = { reach: 0.16, passes: 8 }
+
+// A bone at each shoulder that turns part of the way the arm does, and the skin between arm and trunk hung on it.
+// Skin shared between two bones is put a share of the way between where each would carry it, along a straight line:
+// with the arm turned far from the trunk that line cuts inside the shoulder, and the shoulder caves in. With a bone
+// between, each share spans half the turn and the line cuts half as deep. The bone is the arm's own at rest, a child
+// of the collarbone as the arm is, so nothing moves until a clip plays, and every clip is given its keys: no player
+// has to know of it. What the arm holds at the shoulder becomes the half bone's, wholly at the joint and less with
+// every step down the arm, so a plate over the shoulder rides half the arm's turn and the sleeve under it the whole.
+//
+// Measured on thalbern-rodin (armcheck.ts, the same edges before and after): the skin where arm meets trunk is crushed
+// half as far, to 2.8 times from 5.3 in the sword cut and to 3.7 from 7.0 in the bow shot, and stretched a little
+// less, 3.9 times from 4.6. It is not stretched much less at any setting tried, shares of 0.35 to 0.65 and reaches of
+// 0.35 to 1.3: the worst of it is three edges in the armpit, where the arm hangs against the ribs at rest.
+const HALF = 0.5
+// How far down the upper arm the half bone's hold reaches, as a share of the arm's length: to the elbow.
+const CAP = 1
+function helpers(doc: Document) {
+  const skin = doc.getRoot().listSkins()[0]
+  const bind = skin?.getInverseBindMatrices()
+  if (!skin || !bind) return 0
+  const joints = skin.listJoints()
+  const buffer = doc.getRoot().listBuffers()[0] ?? doc.createBuffer()
+  const binds = [...(bind.getArray() ?? [])]
+  const made: { arm: number; half: number; chain: Set<number>; from: number[]; along: number[]; long: number }[] = []
+  for (const side of ["Left", "Right"]) {
+    const arm = joints.findIndex((j) => new RegExp(`(^|:)${side}Arm$`).test(j.getName()))
+    const node = joints[arm]
+    const up = node?.getParentNode()
+    if (!node || !up) continue
+    const half = doc.createNode(`${node.getName()}Half`).setTranslation(node.getTranslation()).setRotation(node.getRotation()).setScale(node.getScale())
+    up.addChild(half)
+    skin.addJoint(half)
+    binds.push(...binds.slice(arm * 16, arm * 16 + 16))
+    const chain = new Set<number>()
+    node.traverse((n) => {
+      if (joints.includes(n)) chain.add(joints.indexOf(n))
+    })
+    const [from, to] = [
+      node.getWorldMatrix().slice(12, 15),
+      joints
+        .find((j) => new RegExp(`(^|:)${side}ForeArm$`).test(j.getName()))
+        ?.getWorldMatrix()
+        .slice(12, 15) ?? [0, 0, 0],
+    ]
+    const along = [0, 1, 2].map((k) => to[k] - from[k])
+    made.push({ arm, half: joints.length + made.length, chain, from, along, long: Math.hypot(...along) ** 2 })
+    const rest = node.getRotation()
+    for (const anim of doc.getRoot().listAnimations()) {
+      const sampler = anim
+        .listChannels()
+        .find((c) => c.getTargetNode() === node && c.getTargetPath() === "rotation")
+        ?.getSampler()
+      const [input, output] = [sampler?.getInput(), sampler?.getOutput()]
+      if (!sampler || !input || !output) continue
+      if (sampler.getInterpolation() === "CUBICSPLINE") throw new Error(`${anim.getName()}: a helper bone's keys are made from plain keys, and these are splines`)
+      const values = new Float32Array(output.getCount() * 4)
+      for (let i = 0; i < output.getCount(); i++) values.set(qmix(rest, output.getElement(i, [0, 0, 0, 0]), HALF), i * 4)
+      const keys = doc.createAnimationSampler().setInput(input).setOutput(doc.createAccessor().setType("VEC4").setArray(values).setBuffer(buffer)).setInterpolation(sampler.getInterpolation())
+      anim.addSampler(keys).addChannel(doc.createAnimationChannel().setTargetNode(half).setTargetPath("rotation").setSampler(keys))
+    }
+  }
+  bind.setArray(new Float32Array(binds))
+  let moved = 0
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, J, W] = [prim.getAttribute("POSITION"), prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0")]
+      if (!pos || !J || !W) continue
+      for (let i = 0; i < J.getCount(); i++) {
+        const [p, j, w] = [pos.getElement(i, [0, 0, 0]), J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+        const shares = new Map<number, number>()
+        for (const [k, bone] of j.entries()) if (w[k] > 0) shares.set(bone, (shares.get(bone) ?? 0) + w[k])
+        let changed = false
+        for (const { arm, half, from, along, long } of made) {
+          const a = shares.get(arm) ?? 0
+          if (!a) continue
+          // How far down the upper arm the point lies: 0 at the shoulder, 1 at the elbow.
+          const down = (along[0] * (p[0] - from[0]) + along[1] * (p[1] - from[1]) + along[2] * (p[2] - from[2])) / long
+          const t = Math.max(0, Math.min(1, down / CAP))
+          const given = a * (1 - t * t * (3 - 2 * t))
+          if (given < 1e-4) continue
+          shares.set(half, given)
+          shares.set(arm, a - given)
+          changed = true
+        }
+        if (!changed) continue
+        const top = [...shares].sort((x, y) => y[1] - x[1]).slice(0, 4)
+        const total = top.reduce((sum, [, share]) => sum + share, 0) || 1
+        J.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => top[k]?.[0] ?? 0)
+        )
+        W.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => (top[k]?.[1] ?? 0) / total)
+        )
+        moved++
+      }
+    }
+  return moved
+}
 
 // One normal for every place on the mesh. Rodin's comes apart along every edge of its texture layout with a normal to
 // each side, a median of 63 degrees apart, and is lit as flat shards: an ear, a nose and hair cut from card. rig.py
@@ -675,6 +775,8 @@ async function rodinHyper(brief: Brief) {
   // `--spread=off` leaves the shares as the rigger gave them, to measure one rigging against another.
   if (!args.includes("--spread=off")) say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
   made.push(...(await borrow(doc, brief.borrowed)))
+  // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
+  if (!args.includes("--helpers=off")) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
   await io.write(`${dir}/lod0.glb`, doc)
   const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))

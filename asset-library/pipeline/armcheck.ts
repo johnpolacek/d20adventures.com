@@ -4,6 +4,8 @@
 //
 //   pnpm assets:arms thalbern-rodin-meshy             every clip
 //   pnpm assets:arms thalbern-rodin-meshy "Q Shoot"   the clips named, by comma
+//   pnpm assets:arms thalbern-rodin --parts=before.glb   each point's part read from another rigging of the same mesh,
+//                                                       so the same edges are measured before and after a change
 //
 // The limits are those of MengTo's game-dev-combat-animation skill (github.com/MengTo/Skills, MIT), found on rigs
 // with no bones to twist an arm, as these are:
@@ -17,7 +19,7 @@
 // is pulled out after the arm.
 
 import { readFile } from "node:fs/promises"
-import { type Node, NodeIO } from "@gltf-transform/core"
+import { type Accessor, type Node, NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
 import { reader } from "./retarget"
 
@@ -51,7 +53,9 @@ const local = (t: number[], [x, y, z, w]: number[], s: number[]): Mat => [
 const angle = (a: number[], b: number[]) => (Math.acos(Math.max(-1, Math.min(1, (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (Math.hypot(...a) * Math.hypot(...b) || 1)))) * 180) / Math.PI
 
 async function main() {
-  const [id, only] = process.argv.slice(2)
+  const [id, only] = process.argv.slice(2).filter((a) => !a.startsWith("--"))
+  const parts = process.argv.find((a) => a.startsWith("--parts="))?.slice(8)
+  const where = process.argv.includes("--where")
   if (!id) throw new Error("Name a character: pnpm assets:arms <id> [clip,clip]")
   const dir = `asset-library/characters/${id}`
   const doc = await new NodeIO().registerExtensions(ALL_EXTENSIONS).read(`${dir}/${(JSON.parse(await readFile(`${dir}/figure.json`, "utf8")) as { lods: { file: string }[] }).lods[0].file}`)
@@ -67,21 +71,36 @@ async function main() {
   const [pos, J, W, index] = [prim?.getAttribute("POSITION"), prim?.getAttribute("JOINTS_0"), prim?.getAttribute("WEIGHTS_0"), prim?.getIndices()]
   if (!pos || !J || !W || !bind) throw new Error(`No skinned mesh in ${dir}`)
 
-  // Which part of which arm a point belongs to: the bone that pulls on it most.
-  const part = new Map<number, string>()
-  for (const side of ["Left", "Right"]) {
-    part.set(bone(`${side}Arm`), `${side} upper arm`)
-    part.set(bone(`${side}ForeArm`), `${side} forearm`)
-    for (const [i, joint] of joints.entries()) if (new RegExp(`(^|:)${side}Hand`).test(joint.getName())) part.set(i, `${side} hand`)
-  }
+  // Which part of which arm a point belongs to: the bone that pulls on it most, in this rigging or the one named.
   const count = pos.getCount()
-  const of: (string | null)[] = []
-  const pulls: [number[], number[]][] = []
-  for (let i = 0; i < count; i++) {
-    const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
-    pulls.push([j, w])
-    of.push(part.get(j[w.indexOf(Math.max(...w))]) ?? null)
+  const partsOf = (named: Node[], Jn: Accessor, Wn: Accessor) => {
+    const part = new Map<number, string>()
+    for (const side of ["Left", "Right"]) {
+      for (const [i, joint] of named.entries()) {
+        if (new RegExp(`(^|:)${side}Arm$`).test(joint.getName())) part.set(i, `${side} upper arm`)
+        else if (new RegExp(`(^|:)${side}ForeArm$`).test(joint.getName())) part.set(i, `${side} forearm`)
+        else if (new RegExp(`(^|:)${side}Hand`).test(joint.getName())) part.set(i, `${side} hand`)
+      }
+    }
+    return Array.from({ length: count }, (_, i) => {
+      const [j, w] = [Jn.getElement(i, [0, 0, 0, 0]), Wn.getElement(i, [0, 0, 0, 0])]
+      return part.get(j[w.indexOf(Math.max(...w))]) ?? null
+    })
   }
+  let of: (string | null)[] = partsOf(joints, J, W)
+  if (parts) {
+    const other = await new NodeIO().registerExtensions(ALL_EXTENSIONS).read(parts)
+    const mesh = other
+      .getRoot()
+      .listMeshes()
+      .flatMap((m) => m.listPrimitives())
+      .find((p) => p.getAttribute("JOINTS_0"))
+    const [Jo, Wo] = [mesh?.getAttribute("JOINTS_0"), mesh?.getAttribute("WEIGHTS_0")]
+    if (!Jo || !Wo || Jo.getCount() !== count) throw new Error(`${parts} is not this mesh: ${Jo?.getCount()} points against ${count}`)
+    of = partsOf(other.getRoot().listSkins()[0]?.listJoints() ?? [], Jo, Wo)
+  }
+  const pulls: [number[], number[]][] = []
+  for (let i = 0; i < count; i++) pulls.push([J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])])
   // The edges of each part, each once, and of each shoulder: an upper arm's point joined to one of the trunk's.
   const edges = new Map<string, [number, number, number][]>()
   const seen = new Set<number>()
@@ -119,6 +138,7 @@ async function main() {
     const read = reader(clip)
     const long = Math.max(...clip.listSamplers().map((s) => s.getInput()?.getMax([0])[0] ?? 0))
     const worst: Record<string, { value: number; at: number }> = {}
+    const lies: Record<string, string> = {}
     const note = (key: string, value: number, at: number, least = false) => {
       if (!worst[key] || (least ? value < worst[key].value : value > worst[key].value)) worst[key] = { value, at }
     }
@@ -155,6 +175,19 @@ async function main() {
             return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) / bound
           })
           .sort((a, b) => a - b)
+        // Where the worst of a shoulder lies at its worst moment, from the joint as the figure rests.
+        if (where && name.endsWith("shoulder") && ratios[Math.floor(ratios.length * 0.99)] > (worst[`${name} stretch`]?.value ?? 0)) {
+          const joint = joints[bone(`${name.split(" ")[0]}Arm`)].getWorldMatrix().slice(12, 15)
+          const least = ratios[Math.floor(ratios.length * 0.99)]
+          const bad = list.filter(([a, b, bound]) => {
+            const [x, y] = [posed.get(a) as number[], posed.get(b) as number[]]
+            return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) / bound >= least
+          })
+          const mids = bad.map(([a, b]) => [0, 1, 2].map((k) => ((rest(a)[k] + rest(b)[k]) / 2 - joint[k]) * 100))
+          const mean = (k: number) => (mids.reduce((sum, m) => sum + m[k], 0) / mids.length).toFixed(1)
+          lies[name] =
+            `${name}: ${bad.length} edges of ${list.length}, ${Math.round((mids.filter((m) => m[1] < 0).length / mids.length) * 100)}% below the joint, on average ${mean(0)} cm across, ${mean(1)} up, ${mean(2)} forward, at rest ${((bad.reduce((sum, e) => sum + e[2], 0) / bad.length) * 1000).toFixed(1)} mm long`
+        }
         note(`${name} stretch`, ratios[Math.floor(ratios.length * 0.99)], time)
         note(`${name} crush`, 1 / Math.max(1e-6, ratios[Math.floor(ratios.length * 0.01)]), time)
       }
@@ -193,6 +226,7 @@ async function main() {
         skinOf("shoulder")
       )
     }
+    for (const line of Object.values(lies)) console.log(`    ${line}`)
   }
   console.log(bad.length ? `\n${bad.length} over a limit:\n${bad.map((b) => `  ${b}`).join("\n")}` : "\nNothing over a limit.")
 }
