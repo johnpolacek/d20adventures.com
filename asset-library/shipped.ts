@@ -1,10 +1,10 @@
 // The figures the game ships, where they are served from: every one a cast member of a played look needs (play.ts).
 // The desktop app bundles these (apps/desktop/scripts/build-runtime.ts).
 export const FIGURE_FILES = "/asset-library/characters"
-// A cast member, and the character (asset-library/characters) who stands for them. Thalbern and Wollandora are the
-// pilot's figures: Rodin's model rigged by Hyper3D, with fingers and borrowed clips (pipeline/pilot.ts). The ones
-// rig.py made are kept beside them as `thalbern` and `wollandora`, and a look can still name one (looks.ts `figures`).
-export const SHIPPED: Record<string, string> = { thalbern: "thalbern-rodin", wollandora: "wollandora-rodin", owlbear: "owlbear" }
+// A cast member, and the character (asset-library/characters) who stands for them. All three are the pilot's figures:
+// Rodin's model rigged by Hyper3D, with fingers and borrowed clips (pipeline/pilot.ts). The ones rig.py made are kept
+// beside them as `thalbern`, `wollandora` and `owlbear`, and a look can still name one (looks.ts `figures`).
+export const SHIPPED: Record<string, string> = { thalbern: "thalbern-rodin", wollandora: "wollandora-rodin", owlbear: "owlbear-rodin" }
 
 // What the game is told of a character's figure, beside where its model is (packages/stage/src/figures/models.ts).
 export interface Plays {
@@ -26,7 +26,8 @@ export const PLAYS: Record<string, Plays> = {
   wollandora: { moves: { dodge: "Dodge" } },
   owlbear: { moves: { melee: "Claw" } },
   "wollandora-rodin": { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { dodge: "Sidestep" } },
-  // Not stood yet: its model is still to be made (pipeline/pilot.ts, the owner's to pay for).
-  "owlbear-rodin": { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { melee: "Claw" } },
+  // The owlbear stands and walks hunched, as a beast does (its brief's Idle Heavy and Walk Heavy), and its swipe lands
+  // as the right paw comes through fastest.
+  "owlbear-rodin": { idle: "Idle Heavy", walk: "Walk Heavy", hit: "Hit", fall: "Fall", moves: { melee: "Claw" }, lands: { Claw: 0.6 } },
   "thalbern-rodin": { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { melee: "Swing", ranged: "Shoot", dodge: "Sidestep" }, lands: { Swing: 0.4, Shoot: 1.5 } },
 }

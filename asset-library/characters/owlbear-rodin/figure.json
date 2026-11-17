@@ -1,0 +1,52 @@
+{
+  "id": "owlbear-rodin",
+  "name": "Owlbear",
+  "role": "Beast of the Midnight Summons",
+  "cast": [
+    "owlbear"
+  ],
+  "party": false,
+  "height": 3.3,
+  "front": "front.webp",
+  "source": {
+    "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
+    "triangles": 50000,
+    "cost": 0.6,
+    "made": "2026-11-17"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit",
+    "Fall",
+    "Claw",
+    "Roar",
+    "Idle Heavy",
+    "Walk Heavy",
+    "Claw Hook"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 50000,
+      "megabytes": 7.46,
+      "texture": 2048
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19998,
+      "megabytes": 1.71,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5998,
+      "megabytes": 0.91,
+      "texture": 512
+    }
+  ]
+}

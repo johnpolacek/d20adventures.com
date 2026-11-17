@@ -1145,6 +1145,18 @@ async function thin() {
   await MeshoptSimplifier.ready
   const megabytes = async (file: string) => Math.round(((await stat(`${dir}/${file}`)).size / 1048576) * 100) / 100
   const full = await io.read(`${dir}/lod0.glb`)
+  // A figure with no face painted on still has the generator's textures as PNG, 13 MB of an owlbear's 18: they are
+  // packed as a painted figure's are, at their own size.
+  if (
+    full
+      .getRoot()
+      .listTextures()
+      .some((t) => t.getMimeType() === "image/png")
+  ) {
+    full.createExtension(EXTTextureWebP).setRequired(true)
+    await full.transform(textureCompress({ encoder: sharp, targetFormat: "webp", quality: 92 }))
+    await io.write(`${dir}/lod0.glb`, full)
+  }
   const rows = [{ file: "lod0.glb", triangles: triangles(full), megabytes: await megabytes("lod0.glb"), texture: widest(full) }]
   for (const [file, most, texture] of LODS) {
     const doc = await io.read(`${dir}/lod0.glb`)
