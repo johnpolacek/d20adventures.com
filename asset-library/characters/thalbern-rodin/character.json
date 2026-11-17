@@ -1,8 +1,9 @@
 {
   "id": "thalbern-rodin",
-  "name": "Thalbern (Rodin pilot)",
-  "role": "Ranger of the Valkarr Woods, made by Rodin and rigged by Hyper3D",
-  "cast": [],
+  "name": "Thalbern",
+  "role": "Ranger of the Valkarr Woods",
+  "cast": ["thalbern"],
+  "party": true,
   "height": 1.82,
   "card": {
     "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",

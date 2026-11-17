@@ -62,6 +62,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
     if (!container) return
     let cancelled = false
     let stage: Stage | null = null
+    let undress: (() => void) | null = null
     let interval: ReturnType<typeof setInterval> | null = null
     ;(async () => {
       const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
@@ -73,11 +74,24 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
       const set = await SETS[key]()
       if (cancelled) return
       const tier = TIERS.includes(params.tier as TierName) ? (params.tier as TierName) : "auto"
-      stage = await createStage({ container, set, staging: stagedSet === key ? staging : null, tier, flags: flagsFrom(params), motion: params.motion !== "0", onProgress: setStatus })
+      // &look=play: the game's own stage in the set's played look, as components/stage/use-stage.ts builds it.
+      const { builtPlay, playedLook } = await import("@/asset-library/play")
+      const look = params.look === "play" && stagedSet === key ? playedLook(key) : null
+      const built = look ? builtPlay(set, staging, look) : null
+      stage = await createStage({
+        container,
+        set: built?.set ?? set,
+        staging: built?.staging ?? (stagedSet === key ? staging : null),
+        tier,
+        flags: { ...built?.flags, ...flagsFrom(params) },
+        motion: params.motion !== "0",
+        onProgress: setStatus,
+      })
       if (cancelled) {
         stage.dispose()
         return
       }
+      if (built) undress = await built.dress(stage)
       stageRef.current = stage
       if (params.shot) stage.shot(params.shot, { instant: true })
       ;(window as unknown as { __stage?: Stage }).__stage = stage
@@ -94,6 +108,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
     return () => {
       cancelled = true
       if (interval) clearInterval(interval)
+      undress?.()
       stage?.dispose()
       stageRef.current = null
       ;(window as unknown as { __stage?: Stage }).__stage = undefined

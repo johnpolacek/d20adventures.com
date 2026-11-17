@@ -18,6 +18,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ path: s
   // Nothing outside the workspace, and only the kinds of file a page shows.
   if (!file.startsWith(root + path.sep) || !type) return new Response("Not found", { status: 404 })
   const body = await readFile(file).catch(() => null)
+  // The game asks for its figures here in development (next.config.ts). One this workspace has not built is the
+  // published one.
+  const cdn = process.env.CLOUDFRONT_DOMAIN
+  if (!body && cdn) {
+    const sent = await fetch(`${cdn}/asset-library/${path.relative(root, file).split(path.sep).join("/")}`).catch(() => null)
+    if (sent?.ok) return new Response(sent.body, { headers: { "Content-Type": type, "Cache-Control": "no-store" } })
+  }
   if (!body) return new Response("Not found", { status: 404 })
   return new Response(new Uint8Array(body), { headers: { "Content-Type": type, "Cache-Control": "no-store" } })
 }

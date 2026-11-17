@@ -33,6 +33,8 @@ export interface FigureSpec {
   // The moves it makes in a fight, by the clip each plays: a blow struck close, a shot from afar, getting out of the
   // way. One it has none for, it does not make.
   moves?: { melee?: string; ranged?: string; dodge?: string }
+  // When each of its own clips lands, in seconds into it. A written clip's is in clips.ts (STRIKE).
+  lands?: Record<string, number>
   // Nodes of the model left out: the weapons and shields a pack ships on every character.
   hide?: string[]
   // Seconds of idle per second: a short idle loop reads as bouncing at full speed.
@@ -83,8 +85,9 @@ interface Model {
 // Albedo is graded toward the set palette as a card's is. On a painted set a card shows its art unlit, since a
 // photograph carries its own light. A model carries none, so it keeps the engine's shading there and takes only the
 // painted set's tint (Painted.flatFigures, `lit`).
-// A figure rigged by the asset library is not graded: its dark leather would take the grade's umber and read orange.
-// It is shown as the library shows it, under the set's light and haze.
+// A figure the asset library made, rigged by rig.py or with fingers under Mixamo's names (hold.ts), is not graded: its
+// dark leather would take the grade's umber and read orange. It is shown as the library shows it, under the set's
+// light and haze.
 function figureMaterial(src: Mat, shared: SharedUniforms, ownLight: boolean, grade = true): Mat {
   const m = src.clone()
   if (!grade) return stageMaterial(m, shared, "figure-rigged")
@@ -182,6 +185,7 @@ export class Models {
     }
     // The weapons its moves need, seated in its hands at rest and hidden till a move shows them. A figure that brings
     // its own clips and has fingers holds them in a closed hand (hold.ts).
+    const hands = !rigged && fingered(root)
     const armed =
       rigged && bind
         ? arm(
@@ -189,7 +193,7 @@ export class Models {
             Object.values(spec.moves ?? {}).filter((c): c is string => !!c),
             bind.max.y - bind.min.y
           )
-        : fingered(root)
+        : hands
           ? wield(root)
           : null
     const mixer = new THREE.AnimationMixer(root)
@@ -228,7 +232,7 @@ export class Models {
       o.userData.castId = cast.id
       const src = o.material as Mat
       if (!materials.has(src)) {
-        const made = figureMaterial(src, this.shared, !!spec.ownLight, !rigged)
+        const made = figureMaterial(src, this.shared, !!spec.ownLight, !rigged && !hands)
         // A generated figure is real metal and leather, which shows by what it reflects. The stage's sky is kept dim
         // for its cards, so it reflects a lit room of its own, and its metal is kept a little short of a mirror.
         if (room && spec.env) {
@@ -299,7 +303,7 @@ export class Models {
     m.move = { clip, action, t: 0 }
     const c = m.cast
     m.aim = toward && Math.hypot(toward.x - c.x, toward.z - c.z) > 0.2 ? Math.atan2(toward.x - c.x, toward.z - c.z) : null
-    return STRIKE[clip] ?? 0
+    return m.spec.lands?.[clip] ?? STRIKE[clip] ?? 0
   }
   // A move held at one moment, for a capture: it stays there until another move or `act` replaces it.
   pose(id: string, clip: string, seconds: number, toward?: { x: number; z: number }) {

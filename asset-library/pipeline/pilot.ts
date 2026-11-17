@@ -32,6 +32,7 @@
 //   pilot-model.json, pilot-rig.json   the generators' answers. With them there, nothing is paid for again.
 //   pilot/                             what came back: the rigged model, and one model per clip
 //   lod0.glb                           the rigged model with every clip in it, each by the name the game plays it by
+//   lod1.glb, lod2.glb                 the same with fewer triangles and smaller textures, for a crowd and for far off
 //   figure.json                        for the library page: /dev/assets?id=<id>
 //
 // Each clip is made to play on the spot: the hips keep their height and lose their way across the ground, since the
@@ -42,6 +43,8 @@ import { existsSync } from "node:fs"
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
 import { type Accessor, type Document, type Node, NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions"
+import { simplify, textureCompress, weld } from "@gltf-transform/functions"
+import { MeshoptSimplifier } from "meshoptimizer"
 import sharp from "sharp"
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
@@ -861,6 +864,42 @@ async function face(brief: Brief, rest: string) {
   return painted.faceFromSheet
 }
 
+// The lighter copies, as rig.py makes them for its figures: the game stands the middle one when more than three
+// figures share a scene (play.ts), and the desktop app bundles it. Skin, skeleton and clips are lod0's own.
+const LODS: [file: string, triangles: number, texture: number][] = [
+  ["lod1.glb", 20000, 1024],
+  ["lod2.glb", 6000, 512],
+]
+const triangles = (doc: Document) =>
+  doc
+    .getRoot()
+    .listMeshes()
+    .flatMap((m) => m.listPrimitives())
+    .reduce((sum, p) => sum + (p.getIndices()?.getCount() ?? p.getAttribute("POSITION")?.getCount() ?? 0) / 3, 0)
+const widest = (doc: Document) =>
+  Math.max(
+    0,
+    ...doc
+      .getRoot()
+      .listTextures()
+      .map((t) => t.getSize()?.[0] ?? 0)
+  )
+async function thin() {
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
+  await MeshoptSimplifier.ready
+  const megabytes = async (file: string) => Math.round(((await stat(`${dir}/${file}`)).size / 1048576) * 100) / 100
+  const full = await io.read(`${dir}/lod0.glb`)
+  const rows = [{ file: "lod0.glb", triangles: triangles(full), megabytes: await megabytes("lod0.glb"), texture: widest(full) }]
+  for (const [file, most, texture] of LODS) {
+    const doc = await io.read(`${dir}/lod0.glb`)
+    const ratio = Math.min(1, most / Math.max(1, triangles(doc)))
+    await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio, error: 0.02 }), textureCompress({ encoder: sharp, resize: [texture, texture], targetFormat: "webp", quality: 85 }))
+    await io.write(`${dir}/${file}`, doc)
+    rows.push({ file, triangles: triangles(doc), megabytes: await megabytes(file), texture: widest(doc) })
+  }
+  return rows
+}
+
 // Tripo's model turned to face as the sheet does, or another figure's model, rigged by Meshy to a Mixamo skeleton
 // with fingers, with clips from Meshy's library merged into it. Returns the clips it has.
 async function tripoMeshy(brief: Brief) {
@@ -1073,7 +1112,8 @@ async function main() {
   const painted = await face(brief, made.rest)
   if (painted) say("face", `the sheet's, ${painted.fitted ? "fitted to the model's own" : "not fitted"}, ${painted.texels} texels`)
 
-  const megabytes = Math.round(((await stat(`${dir}/lod0.glb`)).size / 1048576) * 100) / 100
+  const lods = await thin()
+  say("lods", lods.map((l) => `${l.file} ${l.triangles} triangles, ${l.megabytes} MB`).join(", "))
   const figure = {
     name: brief.name,
     role: brief.role,
@@ -1081,10 +1121,10 @@ async function main() {
     party: !!brief.party,
     height: brief.height,
     front: "front.webp",
-    source: { generator: made.generator, triangles: 0, cost: Math.round(made.cost * 100) / 100, made: new Date().toISOString().slice(0, 10) },
+    source: { generator: made.generator, triangles: lods[0].triangles, cost: Math.round(made.cost * 100) / 100, made: new Date().toISOString().slice(0, 10) },
     rig: { bones: 0, weights: made.weights },
     clips: made.clips,
-    lods: [{ file: "lod0.glb", triangles: 0, megabytes, texture: 0 }],
+    lods,
   }
   await sharp(sheet).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)
   await writeFile(`${dir}/figure.json`, `${JSON.stringify({ id, ...figure }, null, 2)}\n`)

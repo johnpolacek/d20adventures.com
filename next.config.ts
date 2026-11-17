@@ -16,8 +16,12 @@ const nextConfig: NextConfig = {
   // Local files win when present, so dev serves public/ as before.
   async rewrites() {
     const cdn = process.env.CLOUDFRONT_DOMAIN
-    if (!cdn) return []
+    // In development a figure is the workspace's own copy (asset-library/characters, not in git), so the one just
+    // built is the one that plays. One that is not here is sent for from the bucket (app/dev/assets/file).
+    const own = process.env.NODE_ENV === "development" ? [{ source: "/asset-library/characters/:path*", destination: "/dev/assets/file/characters/:path*" }] : []
+    if (!cdn) return own
     return [
+      ...own,
       { source: "/stage/:path*", destination: `${cdn}/stage/:path*` },
       { source: "/stage-lab/:path*", destination: `${cdn}/stage-lab/:path*` },
       // The asset library's figures (`pnpm assets:sync`), which /settings/<setting>/assets loads.

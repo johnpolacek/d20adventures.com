@@ -29,7 +29,7 @@ const castMember = z
     // name, the nodes left out (a pack's spare weapons and shields), and how fast the idle plays. `ownLight` and
     // `turn` are for a figure built from the character's paintings, `walk` plays while they walk, and `env` is how
     // much of a lit room it reflects (figures/models.ts says what they do). A figure rigged by the asset library needs
-    // no clip names: it plays the written ones.
+    // no clip names: it plays the written ones. One with clips of its own says when each move `lands`, in seconds.
     figure: z
       .object({
         model: assetUrl,
@@ -37,7 +37,11 @@ const castMember = z
         hit: z.string().max(80).optional(),
         fall: z.string().max(80).optional(),
         walk: z.string().max(80).optional(),
-        moves: z.object({ melee: z.string().max(80).optional(), ranged: z.string().max(80).optional(), dodge: z.string().max(80).optional() }).strict().optional(),
+        moves: z
+          .object({ melee: z.string().max(80).optional(), ranged: z.string().max(80).optional(), dodge: z.string().max(80).optional() })
+          .strict()
+          .optional(),
+        lands: z.record(z.string().max(80), num(0, 10)).optional(),
         env: num(0, 2).optional(),
         hide: z.array(z.string().max(80)).max(40).optional(),
         pace: num(0.1, 4).optional(),

@@ -12,7 +12,7 @@
 import type { Flags, Stage } from "@d20/stage"
 import { iso, isoLamps } from "./iso"
 import { LOOKS, type Look } from "./looks"
-import { FIGURE_FILES, MOVES, SHIPPED } from "./shipped"
+import { FIGURE_FILES, PLAYS, SHIPPED } from "./shipped"
 import { markBuiltTrees, standTrees } from "./trees"
 
 const nums = (s: string | undefined) => s?.split(",").map(Number)
@@ -113,14 +113,14 @@ export function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Look) {
   editLook(set, look)
   if (look.trees) markBuiltTrees(set)
   const cast = staging.cast ?? []
-  const figureOf = (id: string) => look.figures?.[id] ?? (SHIPPED.includes(id) ? id : undefined)
+  const figureOf = (id: string) => look.figures?.[id] ?? SHIPPED[id]
   // A few figures stand at their full detail, since the camera goes right up to a face. A crowd of them stands at the
   // middle level: fourteen at full detail cost a third of the frame rate.
   const detail = cast.filter((c) => figureOf(c.id)).length <= 3 ? "lod0" : "lod1"
   const env = q.figenv ? Number(q.figenv) : 0.55
   for (const c of cast) {
     const character = figureOf(c.id)
-    if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...(MOVES[character] ? { moves: MOVES[character] } : {}) }
+    if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...PLAYS[character] }
   }
   const flags: Partial<Flags> = { figures: true, ...(q.paint === "0" ? { brush: 0 } : {}), ...(q.bloom ? { bloom: q.bloom === "on" } : {}) }
   return {

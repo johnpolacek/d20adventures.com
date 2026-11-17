@@ -1,14 +1,16 @@
 {
   "id": "thalbern-rodin",
-  "name": "Thalbern (Rodin pilot)",
-  "role": "Ranger of the Valkarr Woods, made by Rodin and rigged by Hyper3D",
-  "cast": [],
-  "party": false,
+  "name": "Thalbern",
+  "role": "Ranger of the Valkarr Woods",
+  "cast": [
+    "thalbern"
+  ],
+  "party": true,
   "height": 1.82,
   "front": "front.webp",
   "source": {
     "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
-    "triangles": 0,
+    "triangles": 50000,
     "cost": 0.6,
     "made": "2026-11-17"
   },
@@ -33,9 +35,21 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "triangles": 0,
+      "triangles": 50000,
       "megabytes": 5.78,
-      "texture": 0
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19988,
+      "megabytes": 1.84,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 1.06,
+      "texture": 512
     }
   ]
 }

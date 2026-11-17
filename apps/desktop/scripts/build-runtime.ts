@@ -51,7 +51,7 @@ await cp(resolve(root, "public/images/d20.jpg"), resolve(app, "public/images/d20
 const FIGURE_SITE = process.env.D20_FIGURES_FROM ?? "https://d20adventures.com"
 const cache = resolve(root, "node_modules/.cache/d20-figures")
 const missing: string[] = []
-for (const id of SHIPPED)
+for (const id of new Set(Object.values(SHIPPED)))
   for (const lod of ["lod0", "lod1"]) {
     const name = `${id}/${lod}.glb`
     const to = resolve(app, `public/asset-library/characters/${name}`)
@@ -90,4 +90,4 @@ await build({
   format: "cjs",
   define: { "process.env.NODE_ENV": '"production"' },
 })
-console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, Stageview assets, and the figures of ${SHIPPED.join(", ")}.`)
+console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, Stageview assets, and the figures of ${Object.values(SHIPPED).join(", ")}.`)
