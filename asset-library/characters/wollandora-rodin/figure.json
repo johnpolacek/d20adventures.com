@@ -1,0 +1,50 @@
+{
+  "id": "wollandora-rodin",
+  "name": "Wollandora",
+  "role": "Elven druid of the Standing Stones",
+  "cast": [
+    "wollandora"
+  ],
+  "party": false,
+  "height": 1.86,
+  "front": "front.webp",
+  "source": {
+    "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
+    "triangles": 49786,
+    "cost": 0.6,
+    "made": "2026-11-17"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Cast",
+    "Staff Idle"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 49786,
+      "megabytes": 7.71,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19982,
+      "megabytes": 1.68,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5999,
+      "megabytes": 0.84,
+      "texture": 512
+    }
+  ]
+}
