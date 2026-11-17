@@ -89,6 +89,119 @@ function inPlace(doc: Document, rest?: number[]) {
     }
 }
 
+type Quat = [number, number, number, number]
+const qmul = (a: Quat, b: Quat): Quat => [
+  a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+  a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+  a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+  a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
+]
+const qinv = (q: Quat): Quat => [-q[0], -q[1], -q[2], q[3]]
+const qall = (...q: Quat[]) => q.reduce(qmul)
+// Where a turn takes straight up.
+const qup = ([x, y, z, w]: Quat) => [2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x)]
+
+// The clips a figure stands and walks in, and how much of their stoop is taken out.
+const UPRIGHT: Record<string, number> = { Idle: 0.85, Walk: 0.85 }
+
+// A clip's stoop taken out: Meshy's Idle tips the chest 30 degrees forward of how the figure was modelled and its Walk
+// 13, and a chest in armour then reads as hollow (the owner, 2026-11-16: "the chest seems slightly concave or flat").
+// The chest is turned back toward its attitude at rest by one turn for the whole clip, at the first joint of the
+// spine, so the breathing and the stride stay. The head and the upper arms keep the way they pointed.
+function upright(doc: Document, name: string, share: number) {
+  const anim = doc
+    .getRoot()
+    .listAnimations()
+    .find((a) => a.getName() === name)
+  const bone = (end: string) =>
+    doc
+      .getRoot()
+      .listNodes()
+      .find((n) => new RegExp(`(^|:)${end}$`).test(n.getName()))
+  const turns = (end: string) => {
+    const node = bone(end)
+    const out = anim
+      ?.listChannels()
+      .find((ch) => ch.getTargetNode() === node && ch.getTargetPath() === "rotation")
+      ?.getSampler()
+      ?.getOutput()
+    return node ? { rest: node.getRotation() as Quat, out, at: (i: number) => (out ? out.getElement(i, [0, 0, 0, 1]) : node.getRotation()) as Quat } : null
+  }
+  const [hips, spine, spine1, spine2, neck] = ["Hips", "Spine", "Spine1", "Spine2", "Neck"].map(turns)
+  const arms = ["Left", "Right"].map((side) => [turns(`${side}Shoulder`), turns(`${side}Arm`)] as const)
+  const frames = spine?.out?.getCount() ?? 0
+  const moved = [neck, ...arms.map(([, arm]) => arm)]
+  if (!hips || !spine?.out || !spine1 || !spine2 || !frames || moved.some((b) => b?.out?.getCount() !== frames) || [hips, spine1, spine2].some((b) => b.out && b.out.getCount() !== frames))
+    return say("upright", `${name}: left as it came, its spine is not keyed frame for frame`)
+  // The chest's turn in the hips, and where its up points, against the same at rest.
+  const chest = (i: number) => qall(spine.at(i), spine1.at(i), spine2.at(i))
+  const rest = qinv(qall(hips.rest, spine.rest, spine1.rest, spine2.rest))
+  const mean = [0, 0, 0]
+  for (let i = 0; i < frames; i++) {
+    const up = qup(qall(hips.at(i), chest(i), rest))
+    for (let k = 0; k < 3; k++) mean[k] += up[k] / frames
+  }
+  const tilt = Math.atan2(Math.hypot(mean[0], mean[2]), mean[1])
+  if (tilt * share < 0.035) return say("upright", `${name}: stands ${Math.round((tilt * 180) / Math.PI)}° off, left`)
+  // About the level line square to the way it leans, back by a share of the lean.
+  const lean = Math.hypot(mean[0], mean[2])
+  const half = (-tilt * share) / 2
+  const back: Quat = [(mean[2] / lean) * Math.sin(half), 0, (-mean[0] / lean) * Math.sin(half), Math.cos(half)]
+  for (let i = 0; i < frames; i++) {
+    const [h, c] = [hips.at(i), chest(i)]
+    // The turn back as each bone's parent has it.
+    const undo = qall(qinv(c), qinv(h), qinv(back), h, c)
+    neck?.out?.setElement(i, qmul(undo, neck.at(i)))
+    for (const [shoulder, arm] of arms) if (shoulder && arm?.out) arm.out.setElement(i, qall(qinv(shoulder.at(i)), undo, shoulder.at(i), arm.at(i)))
+    spine.out.setElement(i, qall(qinv(h), back, h, spine.at(i)))
+  }
+  say("upright", `${name}: stood ${Math.round((tilt * 180) / Math.PI)}° off, ${Math.round((tilt * share * 180) / Math.PI)}° taken out`)
+}
+
+// A shoulder plate made to hold its shape. A rigger shares the top of a shoulder between the collarbone and the upper
+// arm by degrees, which suits skin. Over armour it pulls the cap of a pauldron out after the arm into a wing (the
+// owner, 2026-11-16: "the arms do weird things"). On top of each shoulder the share is made steep: a point mostly the
+// collarbone's becomes all the collarbone's, one mostly the arm's all the arm's, and the turn is taken in a narrow band
+// between, as a plate hinges on its strap. Under the arm the shares are left as they came.
+function plates(doc: Document) {
+  const skin = doc.getRoot().listSkins()[0]
+  const joints = skin?.listJoints() ?? []
+  let changed = 0
+  for (const side of ["Left", "Right"]) {
+    const arm = joints.findIndex((j) => new RegExp(`(^|:)${side}Arm$`).test(j.getName()))
+    if (arm < 0) continue
+    const at = joints[arm].getWorldMatrix().slice(12, 15)
+    for (const mesh of doc.getRoot().listMeshes())
+      for (const prim of mesh.listPrimitives()) {
+        const [pos, J, W] = [prim.getAttribute("POSITION"), prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0")]
+        if (!pos || !J || !W) continue
+        for (let i = 0; i < pos.getCount(); i++) {
+          const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+          const slot = j.findIndex((b, k) => b === arm && w[k] > 0)
+          const total = w[0] + w[1] + w[2] + w[3]
+          if (slot < 0 || !total) continue
+          const share = w[slot] / total
+          if (share <= 0.02 || share >= 0.98) continue
+          // From a hand's width under the joint and up: the top of the shoulder, and not the armpit. Taken lower, to
+          // 16 cm under, the sleeve met the chest in a row of teeth when the arm went back.
+          const top = Math.min(1, Math.max(0, (pos.getElement(i, [0, 0, 0])[1] - at[1] + 0.11) / 0.08))
+          const t = Math.min(1, Math.max(0, (share - PLATE[0]) / (PLATE[1] - PLATE[0])))
+          const steep = share + top * (t * t * (3 - 2 * t) - share)
+          if (Math.abs(steep - share) < 1e-4) continue
+          const rest = (1 - steep) / (1 - share)
+          W.setElement(
+            i,
+            w.map((v, k) => (k === slot ? steep : (v / total) * rest))
+          )
+          changed++
+        }
+      }
+  }
+  return changed
+}
+// The shares of the upper arm between which a shoulder plate turns: under the first it is the collarbone's alone.
+const PLATE = [0.35, 0.65]
+
 // One normal for every place on the mesh. Rodin's comes apart along every edge of its texture layout with a normal to
 // each side, a median of 63 degrees apart, and is lit as flat shards: an ear, a nose and hair cut from card. rig.py
 // welds its own models for the same reason.
@@ -171,6 +284,8 @@ async function merge(rigged: string, clips: [string, string][], to: string) {
     made.push(name)
   }
   smooth(base)
+  say("plates", `${plates(base)} points on top of the shoulders given to one bone or the other`)
+  for (const [name, share] of Object.entries(UPRIGHT)) if (made.includes(name)) upright(base, name, share)
   await io.write(to, base)
   return made
 }
