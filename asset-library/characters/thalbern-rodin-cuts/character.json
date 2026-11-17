@@ -1,0 +1,25 @@
+{
+  "id": "thalbern-rodin-cuts",
+  "name": "Thalbern (Rodin pilot, sword cuts tried)",
+  "role": "Ranger of the Valkarr Woods, the Rodin pilot with every free sword cut, to choose one by",
+  "cast": [],
+  "height": 1.82,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp"
+  },
+  "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
+  "maker": "rodin",
+  "body": "thalbern-rodin",
+  "borrowed": {
+    "Idle": "ual1:Sword_Idle",
+    "Cut now": "ual1:Sword_Attack",
+    "Cut A": "ual2:Sword_Regular_A > ual2:Sword_Regular_A_Rec",
+    "Cut B": "ual2:Sword_Regular_B > ual2:Sword_Regular_B_Rec",
+    "Cut C": "ual2:Sword_Regular_C",
+    "Cut Dash": "ual2:Sword_Dash",
+    "Cut Slash": "m2m/one-hand-slash-combo",
+    "Cut Stab": "m2m/dagger-stab",
+    "Cut Hook": "ual2:Melee_Hook > ual2:Melee_Hook_Rec"
+  }
+}

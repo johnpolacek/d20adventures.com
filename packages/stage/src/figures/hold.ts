@@ -16,9 +16,12 @@ import { sword as armingSword, bow as longbow, type Weapon } from "./weapons"
 const HOLDS: Record<string, { what: "sword" | "bow"; hand: "L" | "R" }> = {
   ...IN_HAND,
   Combo: { what: "sword", hand: "R" },
+  Thrust: { what: "sword", hand: "R" },
   Block: { what: "sword", hand: "R" },
   "Sword Idle": { what: "sword", hand: "R" },
 }
+// A clip tried for the sword cut goes by "Cut" and a name of its own (the pilot's audition figure).
+const holds = (clip: string) => HOLDS[clip] ?? (clip.startsWith("Cut ") ? HOLDS.Swing : undefined)
 // When a clip lets the string go, in seconds: the draw of the borrowed shot is cut there (the figure's brief).
 const LOOSED: Record<string, number> = { Shoot: 1.5 }
 const FINGERS = ["Index", "Middle", "Ring", "Pinky"]
@@ -176,13 +179,13 @@ export function wield(root: THREE.Object3D): Armed {
   return {
     weapons,
     show: (clip) => {
-      const need = clip ? HOLDS[clip] : undefined
+      const need = clip ? holds(clip) : undefined
       shown = need ? (weapons.get(need.what) ?? null) : null
       for (const w of weapons.values()) w.group.visible = w === shown
       return shown
     },
     after: (clip, t) => {
-      const need = HOLDS[clip]
+      const need = holds(clip)
       const weapon = need ? weapons.get(need.what) : null
       const h = need ? hands[need.hand] : null
       if (!weapon || !h || weapon !== shown) return

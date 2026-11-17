@@ -1,0 +1,38 @@
+{
+  "id": "thalbern-rodin-cuts",
+  "name": "Thalbern (Rodin pilot, sword cuts tried)",
+  "role": "Ranger of the Valkarr Woods, the Rodin pilot with every free sword cut, to choose one by",
+  "cast": [],
+  "party": false,
+  "height": 1.82,
+  "front": "front.webp",
+  "source": {
+    "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
+    "triangles": 0,
+    "cost": 0.6,
+    "made": "2026-11-17"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Cut now",
+    "Cut A",
+    "Cut B",
+    "Cut C",
+    "Cut Dash",
+    "Cut Slash",
+    "Cut Stab",
+    "Cut Hook"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 0,
+      "megabytes": 5.61,
+      "texture": 0
+    }
+  ]
+}
