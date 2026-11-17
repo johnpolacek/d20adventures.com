@@ -11,6 +11,7 @@
 //     empty, as the stage shows it or as an isometric cut-away, with a camera the visitor moves.
 
 import { type Armed, arm } from "@d20/stage/figures/fight"
+import { fingered, wield } from "@d20/stage/figures/hold"
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
@@ -225,7 +226,7 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
         // What it holds, stood beside it once its height is known: a staff is taller than its bearer.
         r.carried = isRigged(root) ? holdProps(root, box.min.y) : null
         r.armed?.dispose()
-        r.armed = isRigged(root) ? arm(root, MOVE_NAMES, tall) : null
+        r.armed = isRigged(root) ? arm(root, MOVE_NAMES, tall) : fingered(root) ? wield(root) : null
         r.action = null
         const next = r.clips.find((c) => c.name === clip) ?? r.clips[0]
         if (next) {

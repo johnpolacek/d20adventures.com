@@ -18,7 +18,7 @@ const leather = () => new THREE.MeshStandardMaterial({ color: "#3a2a1e", roughne
 const wood = () => new THREE.MeshStandardMaterial({ color: "#5a3c22", roughness: 0.7 })
 
 // A plain arming sword along +y from the middle of its grip: grip, a guard across +x, a blade with a point, a pommel.
-function sword() {
+export function sword() {
   const g = new THREE.Group()
   g.name = "weapon:sword"
   const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.016, 0.16, 10), leather())
@@ -43,7 +43,7 @@ function sword() {
 
 // A recurve-less longbow standing along +y from its grip, bowed toward +z, its string on -z. `draw` pulls the string's
 // middle to a point in the bow's own space, or lets it go straight.
-function bow(length = 1.44, thick = 0.02) {
+export function bow(length = 1.44, thick = 0.02) {
   const g = new THREE.Group()
   g.name = "weapon:bow"
   const [half, depth] = [length / 2, length * 0.11]
