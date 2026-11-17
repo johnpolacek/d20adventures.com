@@ -9,5 +9,17 @@
     "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp"
   },
   "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
-  "body": "thalbern-rodin"
+  "body": "thalbern-rodin",
+  "borrowed": {
+    "Q Idle": "ual1:Idle_Loop",
+    "Q Sword Idle": "ual1:Sword_Idle",
+    "Q Walk": "ual1:Walk_Loop",
+    "Q Swing": "ual1:Sword_Attack",
+    "Q Swing A": "ual2:Sword_Regular_A",
+    "Q Combo": "ual2:Sword_Regular_Combo",
+    "Q Block": "ual2:Sword_Block",
+    "Q Roll": "ual1:Roll",
+    "Q Hit": "ual1:Hit_Chest",
+    "Q Fall": "ual1:Death01"
+  }
 }

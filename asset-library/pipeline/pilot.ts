@@ -19,6 +19,11 @@
 // rig.py does, onto the model as its rigger left it, and the textures go into lod0.glb. Before it, `pnpm assets <id>`
 // paints the close head (it stops before build.ts's own model). `--redo=face` paints again.
 //
+// A brief with "borrowed" has clips from another skeleton's library copied onto the figure's own (retarget.ts), free:
+// { "Q Swing": "ual1:Sword_Attack" } is the clip Sword_Attack of asset-library/moves/ual1.glb, played as Q Swing.
+// The libraries are Quaternius's Universal Animation Library 1 and 2, CC0, each pack's Unreal-Godot file without
+// root motion (UAL1_Standard.glb, UAL2_Standard.glb) put there as ual1.glb and ual2.glb. They are not kept in git.
+//
 // Writes, in asset-library/characters/<id>/:
 //   pilot-model.json, pilot-rig.json   the generators' answers. With them there, nothing is paid for again.
 //   pilot/                             what came back: the rigged model, and one model per clip
@@ -36,6 +41,8 @@ import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions"
 import sharp from "sharp"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
+import { type Quat, qall, qinv, qmul, qup } from "./quat"
+import { retarget } from "./retarget"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
 const RIG = { endpoint: "meshy/rigging/multi-animation", cost: 0.2, clip: 0.12 }
@@ -88,18 +95,6 @@ function inPlace(doc: Document, rest?: number[]) {
       out.setArray(a)
     }
 }
-
-type Quat = [number, number, number, number]
-const qmul = (a: Quat, b: Quat): Quat => [
-  a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
-  a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
-  a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
-  a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
-]
-const qinv = (q: Quat): Quat => [-q[0], -q[1], -q[2], q[3]]
-const qall = (...q: Quat[]) => q.reduce(qmul)
-// Where a turn takes straight up.
-const qup = ([x, y, z, w]: Quat) => [2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x)]
 
 // How much of a clip's stoop is taken out. The clips a figure stands and walks in lose one lean, the same all through.
 // A clip that acts, and crouches and rises as it goes, loses a share of whatever lean each frame has.
@@ -244,7 +239,7 @@ function smooth(doc: Document) {
 
 // The rigged model, with the clip of each clip file copied in under its name. Channels are matched to the model's
 // bones by name: every file is the same rig.
-async function merge(rigged: string, clips: [string, string][], to: string) {
+async function merge(rigged: string, clips: [string, string][], to: string, borrowed: Record<string, string> = {}) {
   // Every extension a generator may write: textures in WebP, transforms, materials.
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
   const base = await io.read(rigged)
@@ -296,6 +291,16 @@ async function merge(rigged: string, clips: [string, string][], to: string) {
   smooth(base)
   say("plates", `${plates(base)} points on top of the shoulders given to one bone or the other`)
   for (const [name, [share, of]] of Object.entries(UPRIGHT)) if (made.includes(name)) upright(base, name, share, of)
+  const libraries = new Map<string, Document>()
+  for (const [name, from] of Object.entries(borrowed)) {
+    const [library, clip] = from.split(":")
+    const file = `asset-library/moves/${library}.glb`
+    if (!libraries.has(library) && existsSync(file)) libraries.set(library, await io.read(file))
+    const source = libraries.get(library)
+    const long = source ? retarget(base, source, clip, name) : null
+    if (long === null) say("borrow", `${name}: ${source ? `no clip ${clip} in ${file}, or no skeleton to play it` : `no ${file}`}`)
+    else made.push(name)
+  }
   await io.write(to, base)
   return made
 }
@@ -311,6 +316,8 @@ interface Brief {
   maker?: "rodin"
   // A figure whose model and sheet this one takes in place of its own. Meshy's rig and clips alone are paid for.
   body?: string
+  // Clips copied from another skeleton's library, each by the name it is played by: "ual1:Sword_Attack".
+  borrowed?: Record<string, string>
 }
 
 // Where a figure's sheet and model are: its own folder, or the folder of the figure it takes them from.
@@ -422,7 +429,7 @@ async function tripoMeshy(brief: Brief) {
   }
   const walk = await fetched(rig.basic_animations?.walking_glb, "Walk")
   if (walk) clips.splice(1, 0, ["Walk", walk])
-  return { clips: await merge(rigged, clips, `${dir}/lod0.glb`), rest: rigged, generator: `${maker.name}, rigged by Meshy`, weights: "meshy", cost: maker.cost + rigCost }
+  return { clips: await merge(rigged, clips, `${dir}/lod0.glb`, brief.borrowed), rest: rigged, generator: `${maker.name}, rigged by Meshy`, weights: "meshy", cost: maker.cost + rigCost }
 }
 
 const RODIN = { endpoint: "fal-ai/hyper3d/rodin/v2.5", cost: 0.4 }
