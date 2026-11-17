@@ -540,6 +540,8 @@ interface Brief {
   borrowed?: Record<string, string>
   // How Hyper3D shares the skin among its bones: "core" unless said.
   skinning?: "core" | "shell"
+  // False to leave out the bones between arm and trunk, for a figure kept to measure against.
+  helpers?: boolean
 }
 
 // Where a figure's sheet and model are: its own folder, or the folder of the figure it takes them from.
@@ -776,7 +778,7 @@ async function rodinHyper(brief: Brief) {
   if (!args.includes("--spread=off")) say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
   made.push(...(await borrow(doc, brief.borrowed)))
   // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
-  if (!args.includes("--helpers=off")) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
+  if (!args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
   await io.write(`${dir}/lod0.glb`, doc)
   const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
