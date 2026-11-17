@@ -308,6 +308,178 @@ function spread(doc: Document, reach: number, passes: number) {
 // stretched it further, to 6.7 times from 4.6. No setting stretched it less: that is the one skin, not the shares.
 const SPREAD = { reach: 0.16, passes: 8 }
 
+// A bow shot drawn to the jaw. A shot copied from another skeleton can end with the string hand out at the chest and
+// well to the side, the arrow lying across the body: here the hand that draws is brought in under the jaw and the
+// hand that holds the bow up level with it, so the arrow runs from the face to the mark. Each hand is moved by one
+// fixed step, none of it before the hands begin to part and all of it at the full draw (`until`, in seconds) and
+// after, so the shot keeps its shape and its loose. Each arm is then bent to reach: its elbow stays on the side it
+// was, and the drawing arm's is set a little under the arrow and behind it. Measures are in centimetres of the
+// figure's height.
+//
+// The drawing arm is set from its elbow. The elbow goes straight back from the shoulder, away from the mark, and so
+// far under the arrow that the arm is raised no more than the skin bears (armcheck.ts: 105 degrees). The hand is then
+// where the forearm reaches the arrow's line beside the face: on a figure with short arms that is under the ear and
+// not at the chin, with the elbow bent as far as it goes.
+//
+// What is set beside the face is the knuckle the string and the arrow's nock are drawn from (hold.ts), not the wrist:
+// the knuckle lies some 7 cm inside the wrist of a hand drawn up like this, and an arrow set by the wrist ran
+// through the cheek.
+const DRAW = { bowUnder: 3, side: 9.5, under: 0, elbowUnder: 12, elbowOut: 2, elbowMost: 150 }
+function draw(doc: Document, name: string, until: number, tall: number, bow: "Left" | "Right" = "Left") {
+  const clip = doc
+    .getRoot()
+    .listAnimations()
+    .find((a) => a.getName() === name)
+  const joints = doc.getRoot().listSkins()[0]?.listJoints() ?? []
+  const find = (bone: string) => joints.find((j) => new RegExp(`(^|:)${bone}$`).test(j.getName()))
+  const y = doc
+    .getRoot()
+    .listMeshes()
+    .flatMap((m) => m.listPrimitives())
+    .map((p) => p.getAttribute("POSITION"))
+    .find((p) => !!p)
+  const head = find("Head")
+  if (!clip || !head || !y) return null
+  const cm = (y.getMax([0, 0, 0])[1] - y.getMin([0, 0, 0])[1]) / (tall * 100)
+  const read = reader(clip)
+  type V = number[]
+  const add = (a: V, b: V, by = 1) => a.map((v, k) => v + b[k] * by)
+  const dot = (a: V, b: V) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+  const unit = (a: V) => a.map((v) => v / (Math.hypot(...a) || 1))
+  const posed = (node: Node | null, time: number): { q: Quat; p: V } => {
+    if (!node) return { q: [0, 0, 0, 1], p: [0, 0, 0] }
+    const up = posed(node.getParentNode(), time)
+    const wide = node.getParentNode()?.getWorldScale() ?? [1, 1, 1]
+    const moved = qturn(
+      up.q,
+      (read(node, "translation", time) as V).map((v, k) => v * wide[k])
+    )
+    return { q: qmul(up.q, read(node, "rotation", time) as Quat), p: add(up.p, moved) }
+  }
+  const sides = [bow, bow === "Left" ? "Right" : "Left"].map((side) => {
+    const [arm, fore, hand] = [find(`${side}Arm`), find(`${side}ForeArm`), find(`${side}Hand`)]
+    const keys = (node?: Node) =>
+      clip
+        .listChannels()
+        .find((c) => c.getTargetNode() === node && c.getTargetPath() === "rotation")
+        ?.getSampler()
+    return { arm, fore, hand, armKeys: keys(arm), foreKeys: keys(fore) }
+  })
+  const input = sides[0].armKeys?.getInput()
+  if (!input || sides.some((s) => !s.arm || !s.fore || !s.hand || !s.armKeys?.getOutput() || !s.foreKeys?.getOutput())) return null
+  // Every frame as the clip has it, read before any of it is changed.
+  const frames = Array.from({ length: input.getCount() }, (_, i) => {
+    const time = input.getScalar(i)
+    return {
+      time,
+      head: posed(head, time).p,
+      arms: sides.map((s) => ({ above: posed(s.arm?.getParentNode() ?? null, time).q, at: [s.arm, s.fore, s.hand].map((n) => posed(n as Node, time).p) })),
+    }
+  })
+  const apart = frames.map((f) => Math.hypot(...add(f.arms[0].at[2], f.arms[1].at[2], -1)))
+  const full = frames.reduce((last, f, i) => (f.time <= until ? i : last), 0)
+  const least = apart.slice(0, full + 1).indexOf(Math.min(...apart.slice(0, full + 1)))
+  const share = frames.map((_, i) => {
+    if (i <= least) return 0
+    if (i >= full) return 1
+    const t = Math.max(0, Math.min(1, (apart[i] - apart[least]) / (apart[full] - apart[least] || 1)))
+    return t * t * (3 - 2 * t)
+  })
+  // Where the hands should be at the full draw: the mark is where the bow hand is from the head, flat on the ground.
+  const at = frames[full]
+  const aim = unit([at.arms[0].at[2][0] - at.head[0], 0, at.arms[0].at[2][2] - at.head[2]])
+  const side = [aim[2], 0, -aim[0]].map((v) => v * (bow === "Left" ? -1 : 1))
+  const bowTo = [at.arms[0].at[2][0], at.head[1] - DRAW.bowUnder * cm, at.arms[0].at[2][2]]
+  const [from, elbowWas, wristWas] = at.arms[1].at
+  const [upper, lower] = [Math.hypot(...add(elbowWas, from, -1)), Math.hypot(...add(wristWas, elbowWas, -1)) * 0.995]
+  const level = at.head[1] - DRAW.under * cm
+  const [rise, out] = [level - DRAW.elbowUnder * cm - from[1], DRAW.elbowOut * cm]
+  const elbowTo = add(add(add(from, side, out), [0, 1, 0], rise), aim, -Math.sqrt(Math.max(0, upper * upper - rise * rise - out * out)))
+  const beside = add(at.head, side, DRAW.side * cm)
+  beside[1] = level
+  // The wrist, for the knuckle to lie on the arrow's line beside the face: `knuckle` is how far the knuckle is from
+  // the wrist, found by bending the arm and looking, a few times over.
+  let knuckle: V = [0, 0, 0]
+  const wristTo = () => {
+    const line = add(beside, knuckle, -1)
+    const gap = add(line, elbowTo, -1)
+    return add(line, aim, -dot(gap, aim) + Math.sqrt(Math.max(0, dot(gap, aim) ** 2 - (dot(gap, gap) - lower * lower))))
+  }
+  const steps = [add(bowTo, at.arms[0].at[2], -1), add(wristTo(), wristWas, -1)]
+  // Each arm bent to reach at the full draw, and the turn that takes it there kept: a share of that turn is given to
+  // every frame. Bending each frame to reach on its own swings the elbow over the shoulder as the hand passes it.
+  const bend = (n: number): [Quat, Quat] => {
+    const [root, elbow, wrist] = at.arms[n].at
+    const [l1, l2] = [Math.hypot(...add(elbow, root, -1)), Math.hypot(...add(wrist, elbow, -1))]
+    const want = add(wrist, steps[n])
+    const reach = Math.max(Math.abs(l1 - l2) + 1e-4, Math.min((l1 + l2) * 0.985, Math.hypot(...add(want, root, -1))))
+    const toward = unit(add(want, root, -1))
+    const to = add(root, toward, reach)
+    // The elbow: on the circle both bones allow, to the side its hint lies.
+    const reachOut = add(n === 1 ? elbowTo : elbow, root, -1)
+    const off = unit(add(reachOut, toward, -dot(reachOut, toward)))
+    const along = (l1 * l1 - l2 * l2 + reach * reach) / (2 * reach)
+    const bent = add(add(root, toward, along), off, Math.sqrt(Math.max(0, l1 * l1 - along * along)))
+    // The upper arm's turn as the world has it, and the forearm's as the upper arm has it: the elbow then bends
+    // steadily further, and never back through itself.
+    const [armOut, foreOut] = [sides[n].armKeys?.getOutput(), sides[n].foreKeys?.getOutput()]
+    const armTurn = qbetween(unit(add(elbow, root, -1)), unit(add(bent, root, -1)))
+    if (!armOut || !foreOut) return [armTurn, [0, 0, 0, 1] as Quat]
+    const armWas = qmul(at.arms[n].above, armOut.getElement(full, [0, 0, 0, 1]) as Quat)
+    const foreOwn = foreOut.getElement(full, [0, 0, 0, 1]) as Quat
+    const foreNow = qmul(qbetween(unit(add(wrist, elbow, -1)), unit(add(to, bent, -1))), qmul(armWas, foreOwn))
+    return [armTurn, qmul(qmul(qinv(qmul(armTurn, armWas)), foreNow), qinv(foreOwn))]
+  }
+  const [hand, first] = [sides[1].hand, find(`${bow === "Left" ? "Right" : "Left"}HandMiddle1`)]
+  const [armKeys, foreKeys] = [sides[1].armKeys?.getOutput(), sides[1].foreKeys?.getOutput()]
+  if (hand && first && armKeys && foreKeys) {
+    const wide = hand.getWorldScale()
+    const reach = first.getTranslation().map((v, k) => v * wide[k])
+    const own = [armKeys, foreKeys].map((keys) => keys.getElement(full, [0, 0, 0, 1]) as Quat)
+    for (let pass = 0; pass < 6; pass++) {
+      const [armTurn, foreTurn] = bend(1)
+      const arm = qmul(armTurn, qmul(at.arms[1].above, own[0]))
+      knuckle = qturn(qall(arm, foreTurn, own[1], read(hand, "rotation", at.time) as Quat), reach)
+      steps[1] = add(wristTo(), wristWas, -1)
+    }
+  }
+  const turns = sides.map((_, n) => bend(n))
+  const still: Quat = [0, 0, 0, 1]
+  for (const [i, frame] of frames.entries()) {
+    if (!share[i]) continue
+    for (const [n, s] of sides.entries()) {
+      const [armOut, foreOut] = [s.armKeys?.getOutput(), s.foreKeys?.getOutput()]
+      if (!armOut || !foreOut) continue
+      const armWas = qmul(frame.arms[n].above, armOut.getElement(i, [0, 0, 0, 1]) as Quat)
+      const armNow = qmul(qmix(still, turns[n][0], share[i]), armWas)
+      armOut.setElement(i, qmul(qinv(frame.arms[n].above), armNow))
+      // The elbow bent no further than the skin bears: the clip's own bend and the draw's together can fold it shut.
+      const [upperLine, foreLine] = [unit(s.fore?.getTranslation() ?? [0, 1, 0]), unit(s.hand?.getTranslation() ?? [0, 1, 0])]
+      const own = qmul(qmix(still, turns[n][1], share[i]), foreOut.getElement(i, [0, 0, 0, 1]) as Quat)
+      const line = qturn(own, foreLine)
+      const most = (DRAW.elbowMost * Math.PI) / 180
+      const bend = Math.acos(Math.max(-1, Math.min(1, dot(upperLine, line))))
+      const across = unit(add(line, upperLine, -dot(line, upperLine)))
+      const kept =
+        bend > most
+          ? qmul(
+              qbetween(
+                line,
+                add(
+                  upperLine.map((v) => v * Math.cos(most)),
+                  across,
+                  Math.sin(most)
+                )
+              ),
+              own
+            )
+          : own
+      foreOut.setElement(i, kept)
+    }
+  }
+  return steps.map((step) => Math.hypot(...step) / cm)
+}
+
 // An arm kept from being raised past a limit in a clip, in degrees up from hanging as the chest has it. The limit is
 // come to gently: from twenty degrees under it the arm gives up more and more of its lift and never passes it, so a
 // cut still rises and falls and has no flat top. The forearm and hand keep their own turns and come down with it.
@@ -628,6 +800,8 @@ interface Brief {
   borrowed?: Record<string, string>
   // How Hyper3D shares the skin among its bones: "core" unless said.
   skinning?: "core" | "shell"
+  // The bow shots drawn to the jaw, and when each is at its full draw, in seconds: { "Shoot": { "until": 1.5 } }.
+  drawn?: Record<string, { until: number }>
   // The most an arm is raised in a clip, in degrees up from hanging: { "Swing": 85 }.
   eased?: Record<string, number>
   // False to leave out the bones between arm and trunk, for a figure kept to measure against.
@@ -872,6 +1046,10 @@ async function rodinHyper(brief: Brief) {
   // `--spread=off` leaves the shares as the rigger gave them, to measure one rigging against another.
   if (!args.includes("--spread=off")) say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
   made.push(...(await borrow(doc, brief.borrowed)))
+  for (const [name, { until }] of Object.entries(brief.drawn ?? {})) {
+    const moved = draw(doc, name, until, brief.height ?? 1.8)
+    say("draw", moved ? `${name}: the bow hand moved ${moved[0].toFixed(0)} cm and the string hand ${moved[1].toFixed(0)} cm at the full draw` : `${name}: no such clip, or no arms to it`)
+  }
   for (const [name, limit] of Object.entries(brief.eased ?? {})) {
     const most = ease(doc, name, limit)
     say("ease", most === null ? `${name}: no such clip` : `${name}: an arm was raised ${most.toFixed(0)}°, and is kept under ${limit}°`)

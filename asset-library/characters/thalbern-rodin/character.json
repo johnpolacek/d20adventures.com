@@ -29,5 +29,10 @@
   },
   "eased": {
     "Swing": 85
+  },
+  "drawn": {
+    "Shoot": {
+      "until": 1.5
+    }
   }
 }
