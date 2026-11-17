@@ -14,6 +14,7 @@ import {
   conditionsAtRoundStart,
   conditionsOf,
   conditionWords,
+  isHidden,
   saveFailedBy,
   withCondition,
   withoutCondition,
@@ -203,6 +204,15 @@ test("a new encounter ends the conditions of a fight's moment and keeps the last
   // A condition from a spell that outlasts a minute goes on: Charm Person's hour. One counted in turns ends.
   const charmed = { id: "charmed" as const, source: "lyra", spell: "charm-person" }
   assert.deepEqual(conditionsAtEncounterEnd(thalbern(charmed, { id: "charmed", source: "lyra" }, { id: "incapacitated", spell: "sleep", turns: 9 })).conditions, [charmed])
+  // Hidden by the Hide action: still hidden where the next encounter is on the same set, and out of hiding on another.
+  const hidden = thalbern({ id: "invisible" })
+  assert.equal(isHidden(hidden), true)
+  assert.deepEqual(conditionsAtEncounterEnd(hidden, { sameSet: true }).conditions, [{ id: "invisible" }])
+  assert.equal(conditionsAtEncounterEnd(hidden).conditions, undefined)
+  // Invisible from a class feature is no Hide, and ends with the encounter on the same set too.
+  const veiled = thalbern({ id: "invisible", feature: "natures-veil", turns: 1 })
+  assert.equal(isHidden(veiled), false)
+  assert.equal(conditionsAtEncounterEnd(veiled, { sameSet: true }).conditions, undefined)
 })
 
 test("a roll's stakes give a condition and end one, and the story is told what happened", () => {

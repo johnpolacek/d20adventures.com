@@ -1,9 +1,29 @@
+import type { Size } from "@d20/srd"
 import { isAway } from "../utils/turn-actors"
 import { movementEffects } from "./actions"
 import type { Afflicted } from "./conditions"
 import { floorAreas, floorInPlay, roughGround, sightBlocked } from "./floor-areas"
 import type { EncounterFloor } from "./placement"
-import { between, movementBudgetOf, moveToward, type Point, pushed, type Standing, sizeOf, solidAt, standingRoom, stopShortFor, walk, walkOver } from "./space"
+import {
+  BASE_REACH,
+  between,
+  heightOf,
+  movementBudgetOf,
+  moveToward,
+  type Point,
+  pushed,
+  type Rough,
+  type Solid,
+  type Standing,
+  sizeOf,
+  solidAt,
+  spaceOf,
+  spanThrough,
+  standingRoom,
+  stopShortFor,
+  walk,
+  walkOver,
+} from "./space"
 import type { TurnEffect } from "./turn-effect"
 
 /** Where a move is read as going: to a named place or to someone, by id, or straight away from someone, and no farther than some feet. */
@@ -18,7 +38,8 @@ export type Moved = { at: Point; feet: number; path: Point[]; teleport?: true }
 type Mover = Afflicted & Standing & { turnEffects?: readonly TurnEffect[] }
 type Other = Standing & { id: string }
 
-const rounded = (point: Point): Point => ({ x: Math.round(point.x * 100) / 100, y: Math.round(point.y * 100) / 100 })
+// To the hundredth of a foot, with no -0 from a point worked out by sine and cosine.
+const rounded = (point: Point): Point => ({ x: Math.round(point.x * 100) / 100 + 0, y: Math.round(point.y * 100) / 100 + 0 })
 
 /**
  * The feet a character can move this turn: their Speed, less 10 when Slowed and half when they stood from Prone as the
@@ -37,6 +58,10 @@ export const moveBudget = (mover: Mover, others: readonly Other[] = [], dash = f
  * Thalbern, Speed 30, 45 feet from Reinhard: asked to close, he walks 30 feet and stands 15 from him. With Dash he
  * walks 40 and stands within 5. `extra` is feet a Bonus Action adds to a move that can be made at all (Instinctive
  * Pounce).
+ *
+ * `hide` is the Hide action, taken out of sight of the enemies it names by id. A hider goes to the place named when the
+ * move reaches it, and else into the nearest cover their move reaches (`coverToHide`). None when no cover is in reach,
+ * or they are in cover already.
  */
 export function takeMove(args: {
   floor: EncounterFloor
@@ -46,6 +71,7 @@ export function takeMove(args: {
   dash?: boolean
   close?: { target: string; reach: number }
   extra?: number
+  hide?: { from: readonly string[] }
 }): Moved | undefined {
   const from = args.mover.position
   if (!from) return undefined
@@ -61,6 +87,24 @@ export function takeMove(args: {
   const rough = roughGround(floorAreas(everyone))
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)
   const place = ask.to ? args.floor.places.find((entry) => entry.id === ask.to) : undefined
+  if (args.hide) {
+    // The place named, when the move gets them all the way there: the story said they hide there.
+    const there = place ? walk(floor, from, place.at, budget, { others: standing, rough }) : undefined
+    const reached = there && there.used >= 0.5 && between(there.at, place?.at ?? from) <= BASE_REACH / 2 ? there : undefined
+    const hid =
+      reached ??
+      coverToHide({
+        floor,
+        from,
+        size: sizeOf(args.mover),
+        budget,
+        standing,
+        rough,
+        enemies: args.others.flatMap((other) => (args.hide?.from.includes(other.id) && other.position && !isAway(other) ? [other.position] : [])),
+        areas: floorAreas(everyone),
+      })
+    return hid ? { at: rounded(hid.at), feet: Math.round(hid.used), path: hid.path.map(rounded) } : undefined
+  }
   const toward = someone(ask.to) ?? (!place && !ask.away ? someone(args.close?.target) : undefined)
   const fleeing = !place && !toward ? someone(ask.away) : undefined
   let walked: ReturnType<typeof walk> | undefined
@@ -71,6 +115,79 @@ export function takeMove(args: {
   } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough })
   if (!walked || walked.used < 0.5) return undefined
   return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded) }
+}
+
+// What hides one who crouches behind it: a solid thing at least half as tall as they stand, or a wall to the ceiling.
+const hidesCrouched = (solid: Solid, size: Size): boolean => solid.top === undefined || solid.top >= heightOf(size) / 2
+
+// Feet from a point to a solid thing's edge, 0 on it.
+function toEdge(solid: Solid, point: Point): number {
+  if (solid.kind === "circle") return Math.max(0, between(solid, point) - solid.radius)
+  const dx = point.x - solid.x
+  const dy = point.y - solid.y
+  const cos = Math.cos(solid.turn)
+  const sin = Math.sin(solid.turn)
+  return Math.hypot(Math.max(0, Math.abs(dx * cos - dy * sin) - solid.halfWidth), Math.max(0, Math.abs(dx * sin + dy * cos) - solid.halfDepth))
+}
+
+// Whether one at a spot is out of sight of a viewer: an area that hides is between them, or a solid thing is. A thing as
+// tall as they stand hides them wherever it is on the line. A lower one that hides them crouched does so only on their
+// half of it, as cover is read (./space `coverBetween`).
+const outOfSight = (solids: readonly Solid[], areas: ReturnType<typeof floorAreas>, viewer: Point, spot: Point, size: Size): boolean =>
+  sightBlocked(areas, viewer, spot) ||
+  solids.some((solid) => {
+    if (toEdge(solid, viewer) === 0 || !hidesCrouched(solid, size)) return false
+    const span = spanThrough(solid, viewer, spot)
+    return !!span && (solid.top === undefined || solid.top >= heightOf(size) || span[0] >= 0.5)
+  })
+
+const ROUND = 16
+const FAR = 1000
+
+/**
+ * Where one taking the Hide action goes to hide, when no place they reach is named: behind a solid thing that hides
+ * them crouched, half their height or taller, out of sight of every enemy at `enemies`. A named place within 5 feet of
+ * such a thing comes first, nearest first, since the set means people to stand there. Then a spot hugging such a thing,
+ * the nearest first, a space clear of anyone. Each must be one the move reaches in full. None when they stand in such
+ * cover already, or none is in reach.
+ *
+ * Thalbern at (-3.9, 41) on the forest trail, Speed 30, no enemy placed: the mossy boulders, 3½ feet tall and 11 feet
+ * off, are cover, and he walks to them.
+ */
+export function coverToHide(args: {
+  floor: EncounterFloor
+  from: Point
+  size: Size
+  budget: number
+  standing: readonly Point[]
+  rough: readonly Rough[]
+  enemies: readonly Point[]
+  areas: ReturnType<typeof floorAreas>
+}): { at: Point; used: number; path: Point[] } | undefined {
+  const { floor, from, size, budget } = args
+  const hiding = floor.solids.filter((solid) => hidesCrouched(solid, size) && toEdge(solid, from) <= budget)
+  const hidden = (spot: Point) => args.enemies.every((enemy) => outOfSight(floor.solids, args.areas, enemy, spot, size))
+  const against = (spot: Point) => hiding.some((solid) => toEdge(solid, spot) <= BASE_REACH)
+  if (against(from) && hidden(from)) return undefined
+  const clear = (spot: Point) => !solidAt(floor.solids, spot) && args.standing.every((other) => between(other, spot) >= BASE_REACH - 1e-6) && hidden(spot)
+  const near = (spots: Point[]) => spots.filter((spot) => between(from, spot) <= budget && clear(spot)).sort((a, b) => between(from, a) - between(from, b))
+  const places = near(floor.places.map((place) => place.at).filter(against))
+  // Round each thing, a half space off its edge.
+  const hug = spaceOf(size) / 2
+  const hugging = near(
+    hiding.flatMap((solid) =>
+      Array.from({ length: ROUND }, (_, index) => {
+        const way = { x: Math.sin((index * 2 * Math.PI) / ROUND), y: Math.cos((index * 2 * Math.PI) / ROUND) }
+        const edge = solid.kind === "circle" ? solid.radius : (spanThrough(solid, solid, { x: solid.x + way.x * FAR, y: solid.y + way.y * FAR })?.[1] ?? 0) * FAR
+        return { x: solid.x + way.x * (edge + hug), y: solid.y + way.y * (edge + hug) }
+      })
+    )
+  )
+  for (const spot of [...places, ...hugging]) {
+    const walked = walk(floor, from, spot, budget, { others: args.standing, rough: args.rough })
+    if (walked.used >= 0.5 && between(walked.at, spot) <= 1) return walked
+  }
+  return undefined
 }
 
 /**

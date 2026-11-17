@@ -432,7 +432,7 @@ ${
 `
     : ""
 }   - ACTIONS OF A FIGHT, only while a fight is on and only when it is the whole of what the character does this turn:
-     "hide": they get out of sight to strike or slip away unseen. The game rolls stealth for it and sets its difficulty, so give none.
+     "hide": they get out of sight to strike or slip away unseen, in a fight or out of one: a player who says they hide is "hide". The game rolls stealth for it and sets its difficulty, so give none.
      "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
      "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
 ${freeable.length ? `     "escape": they give the turn to pulling off a creature attached to them or to an ally beside them, and nothing is rolled. "target" is the id of who is freed: ${freeable.map((other) => other.id).join(" or ")}.\n` : ""}${givable.length ? `     "give": they give the turn to handing one of their magic items to a hero beside them to keep, in a fight or out of one, and nothing is rolled. "target" is the id of who takes it: ${takers.map((other) => other.id).join(" or ")}. "gives" is the item's id: ${givable.map((item) => `${item.id} (${item.name})`).join(", ")}. A potion given for an ally to drink now is its Bonus Action, not "give".\n` : ""}     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
@@ -547,6 +547,7 @@ ${
     ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10.
    - They can move ${moveBudget(mover, others)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
+   - A "hide" goes into cover: when the action names a place they hide at, "moveTo" is that place. When it names none, leave it out and the game finds the nearest cover.
 ${leapers.length ? `   - ${leapers.join(" and ")} ${leapers.length > 1 ? "teleport" : "teleports"} them: cast it, and "moveTo" or "moveAway" is where it takes them. The game puts them there with no walk, and that is their move this turn.\n` : ""}   - Never refuse or change an action because of distance. The game settles reach and range itself.
    - A spell marked "an area" takes whoever stands in it, friend or foe: in "targets" give the one it is aimed at first, and for a spell that picks its creatures, each one picked.
    - The game reads cover from the walls and furniture of the place. Set "cover" only for something the story put between the two that the place does not hold.
@@ -686,11 +687,14 @@ Action: "${action}"
         (spell) => !!spell && !!spellRule(spell.id)?.teleports
       )
       const leap = leaping && spellRule(leaping.id)?.teleports
+      // The Hide action goes into cover before its Stealth roll: to the place named, or the nearest cover in reach, out
+      // of sight of the enemies who stand on the floor and can look (../sheet/moves `coverToHide`).
+      const hide = pick.check === "hide" ? { from: others.filter((other) => areEnemies(other, character) && !isDown(other) && !isIncapacitated(other)).map((other) => other.id) } : undefined
       const moveFor = (close?: { target: string; reach: number }) =>
         mover && floor
           ? leaping && leap
             ? takeTeleport({ floor, mover, others, ask, feet: leap.feet ?? rangeFeet(leaping.range) ?? 0, sees: !!leap.sees })
-            : takeMove({ floor, mover, others, ask, dash, close, ...(extra ? { extra } : {}) })
+            : takeMove({ floor, mover, others, ask, dash, close, ...(extra ? { extra } : {}), ...(hide ? { hide } : {}) })
           : undefined
       const moved = (move: Moved | undefined) => {
         if (move) also.move = move

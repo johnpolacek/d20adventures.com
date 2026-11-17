@@ -8377,5 +8377,31 @@
       "spell": "mind-spike",
       "targets": ["warehouse-thug"]
     }
+  },
+  {
+    "id": "trail-hide",
+    "adventure": "the-midnight-summons",
+    "encounter": "broken-silence",
+    "hero": "thalbern",
+    "floor": true,
+    "action": "Thalbern hides.",
+    "checks": ["hide"],
+    "dcs": [15],
+    "moved": {
+      "feet": [8, 14]
+    }
+  },
+  {
+    "id": "trail-hide-in-the-ferns",
+    "adventure": "the-midnight-summons",
+    "encounter": "broken-silence",
+    "hero": "thalbern",
+    "floor": true,
+    "action": "Thalbern sinks low into the thick ferns beside the trail and holds utterly still.",
+    "checks": ["hide"],
+    "dcs": [15],
+    "moved": {
+      "feet": [13, 18]
+    }
   }
 ]

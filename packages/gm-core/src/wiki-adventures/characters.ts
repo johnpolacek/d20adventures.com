@@ -24,6 +24,8 @@ export function buildLocalWikiTurnCharacters(args: {
   sheetsByCharacterId?: Record<string, PCTemplate>
   // The NPCs of the encounter just left. One who is in this encounter too comes as they left it.
   existingNpcs?: TurnCharacter[]
+  // The encounter just left is on the same set as this one: one hidden there stays hidden (../sheet/conditions).
+  sameSet?: boolean
 }): TurnCharacter[] {
   const characters: TurnCharacter[] = []
 
@@ -57,7 +59,7 @@ export function buildLocalWikiTurnCharacters(args: {
     hero.initiative = rollInitiative(hero, rollD20(), rollD20())
     // The conditions of the fight they left are over, and the lasting ones come with them.
     const was = carried as Partial<TurnCharacter> | undefined
-    const kept = was ? conditionsAtEncounterEnd({ conditions: was.conditions }).conditions : undefined
+    const kept = was ? conditionsAtEncounterEnd({ conditions: was.conditions }, { sameSet: args.sameSet }).conditions : undefined
     // A spell that lasts longer than a minute comes along, with its caster's Concentration. The rest end with the encounter.
     const lasting = was ? spellEffectsAtEncounterEnd({ spellEffects: was.spellEffects, concentration: was.concentration }) : undefined
     // Spent spell slots, feature uses and Hit Point Dice stay spent, and Temporary Hit Points stay until a hit takes
@@ -117,7 +119,7 @@ export function buildLocalWikiTurnCharacters(args: {
     // A day's casts stay spent, and Temporary Hit Points stay, until a Long Rest.
     characters.push({
       ...withHitPoints(npc, was.hitPoints),
-      conditions: conditionsAtEncounterEnd({ conditions: was.conditions }).conditions,
+      conditions: conditionsAtEncounterEnd({ conditions: was.conditions }, { sameSet: args.sameSet }).conditions,
       spellEffects: lasting.spellEffects,
       concentration: lasting.concentration,
       featureUses: was.featureUses,
@@ -144,7 +146,7 @@ export function buildLocalWikiTurnCharacters(args: {
       initiative: after ? (caster?.initiative ?? 0) : rollInitiative({ type: "npc", statBlock: (summoned as { statBlock?: string }).statBlock }, rollD20()),
       hasReplied: false,
       isComplete: false,
-      conditions: conditionsAtEncounterEnd({ conditions: summoned.conditions }).conditions,
+      conditions: conditionsAtEncounterEnd({ conditions: summoned.conditions }, { sameSet: args.sameSet }).conditions,
       spellEffects: lasting.spellEffects,
       concentration: lasting.concentration,
       turnEffects: undefined,

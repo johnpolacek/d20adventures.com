@@ -1,6 +1,6 @@
 import type { TurnRecord } from "@d20/gm-core"
 import { turnEffectsAtEncounterEnd } from "@d20/gm-core/sheet/actions"
-import { conditionsAtEncounterEnd, conditionWords, withoutCondition } from "@d20/gm-core/sheet/conditions"
+import { conditionsAtEncounterEnd, conditionWords, isHidden, withoutCondition } from "@d20/gm-core/sheet/conditions"
 import { atRoundStart } from "@d20/gm-core/sheet/death"
 import { inspirationAtEncounterEnd } from "@d20/gm-core/sheet/features"
 import { spellEffectsAtEncounterEnd } from "@d20/gm-core/sheet/spell-effects"
@@ -143,8 +143,9 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
     const kept = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
     // A new encounter ends the conditions of a fight's moment, what its actions left and a held Bardic Inspiration die.
     // The lasting conditions come along. Spell slots, feature uses and Hit Point Dice stay spent, and Temporary Hit
-    // Points stay, until a rest (@d20/gm-core/sheet/rest).
-    const c = args.encounterChanged ? spellEffectsAtEncounterEnd(inspirationAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept)))) : kept
+    // Points stay, until a rest (@d20/gm-core/sheet/rest). One hidden stays hidden where the core kept them so, on the
+    // same set.
+    const c = args.encounterChanged ? spellEffectsAtEncounterEnd(inspirationAtEncounterEnd(turnEffectsAtEncounterEnd(conditionsAtEncounterEnd(kept, { sameSet: isHidden(next) })))) : kept
     if (!c.deathSaves) delete c.deathSaves
     // A dying hero's turn is their Death Saving Throw. The dead, the Stable and the fled take none. One away for now
     // (a spell's demiplane) has their spells counted down as anyone's, and takes no turn till they are back.

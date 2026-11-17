@@ -178,6 +178,13 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     const carry = (encounterChanged: boolean) => nextCharacterState({ current: [worn], next: [worn], remembered: {}, updates: [], encounterChanged }).characters[0].conditions
     assert.deepEqual(carry(true), [{ id: "poisoned" }])
     assert.deepEqual(carry(false), [{ id: "prone", turns: 1 }, { id: "poisoned" }])
+    // Hidden by the Hide action: still hidden where the core kept them so on the next encounter, the same set, and out
+    // of hiding where it did not.
+    const hid = { ...byId(t.store, t.pc.id), conditions: [{ id: "invisible" as const }] }
+    const { conditions: _, ...shown } = hid
+    const hidden = (next: typeof hid) => nextCharacterState({ current: [hid], next: [next], remembered: {}, updates: [], encounterChanged: true }).characters[0].conditions
+    assert.deepEqual(hidden(hid), [{ id: "invisible" }])
+    assert.equal(hidden(shown as typeof hid), undefined)
   } finally {
     t.close()
   }

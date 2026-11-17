@@ -170,6 +170,10 @@ export function createAdvanceTurn(ports: GmPorts) {
       const nextEncounter = artifacts.encounters[transition.nextEncounterId]
       if (!nextEncounter) throw new Error(`Next encounter ${transition.nextEncounterId} missing from wiki artifacts`)
       const isTransition = transition.nextEncounterId !== turn.encounterId
+      // A new encounter puts everyone where its floor stages them. Within one, each stays where they stand.
+      const floor = isTransition ? await ports.content.floor?.(nextEncounter.id) : undefined
+      // Whether the next encounter is on the same set: the scene goes on, and one hidden stays hidden.
+      const sameSet = !!floor?.set && floorNow?.set === floor.set
       const nextCharacters = isTransition
         ? buildLocalWikiTurnCharacters({
             artifacts,
@@ -181,6 +185,7 @@ export function createAdvanceTurn(ports: GmPorts) {
               .map((character) => ({ userId: character.userId ?? adventure.ownerId, characterId: character.id, controlledBy: character.controlledBy })),
             existingPlayerCharacters: (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc"),
             existingNpcs: (turn.characters as TurnCharacter[]).filter((character) => character.type === "npc"),
+            sameSet,
           })
         : (turn.characters as TurnCharacter[])
             // One away for now (../utils/turn-actors `isAway`) stays: they come back as their spell ends.
@@ -190,15 +195,11 @@ export function createAdvanceTurn(ports: GmPorts) {
       // Entering the rescue encounter brings every hero who is down but not dead back to 1 hit point. Then a dying
       // hero's turn is their Death Saving Throw.
       const rescuing = isTransition && artifacts.manifest.rescue?.encounterId === nextEncounter.id
-      // A new encounter puts everyone where its floor stages them. Within one, each stays where they stand.
-      const floor = isTransition ? await ports.content.floor?.(nextEncounter.id) : undefined
       // Where the next encounter is on the same set, the scene goes on: those it stages where the last one did stay
       // where they stood.
       const positions = (characters: readonly TurnCharacter[]) => new Map(characters.flatMap((character) => (character.position ? [[character.id, character.position] as const] : [])))
       const stayed =
-        floor?.set && floorNow?.set === floor.set
-          ? { staged: positions(placeCharacters(turn.characters as TurnCharacter[], floorNow)), standing: positions(turn.characters as TurnCharacter[]) }
-          : undefined
+        floor && floorNow && sameSet ? { staged: positions(placeCharacters(turn.characters as TurnCharacter[], floorNow)), standing: positions(turn.characters as TurnCharacter[]) } : undefined
       const standing = floor ? placeCharacters(nextCharacters, floor, stayed) : isTransition ? nextCharacters.map(({ position: _, ...rest }) => rest as TurnCharacter) : nextCharacters
       const returning = allTurns.some((row) => row.encounterId === nextEncounter.id)
       // A rest the adventure marks on the encounter is taken as it opens, the first time the party comes to it, and

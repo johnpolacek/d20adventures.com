@@ -487,6 +487,22 @@ async function npcFixedOutcome() {
   assert.deepEqual(await readAction("Thalbern sprints for the gangway.", ranger, at(45)), { roll: null, action: { action: "dash" }, move: { at: { x: 0, y: 50 }, feet: 50, path: [{ x: 0, y: 50 }] } })
   answer = { check: "none", moveAway: "owlbear", moveFeet: 10 }
   assert.deepEqual((await readAction("Thalbern backs off.", ranger, at(8))).move, { at: { x: -10, y: 0 }, feet: 10, path: [{ x: -10, y: 0 }] })
+  // Hide goes into cover before its Stealth roll, with Invisible at stake. An 8-foot pillar 2 feet across at (10, 0)
+  // and the Owlbear at 45: he walks to its far side from the Owlbear, (10 - 1 - 2.5, 0). Out of a fight it is Hide too.
+  // The read is told a Hide may name its place.
+  answer = { check: "hide" }
+  const pillar = { ...floor, solids: [{ kind: "circle" as const, x: 10, y: 0, radius: 1, top: 8 }] }
+  const hid = await readAction("Hide", ranger, { ...at(45), floor: pillar })
+  assert.deepEqual(
+    [hid.move, hid.roll?.rollType, hid.roll && "stakes" in hid.roll ? hid.roll.stakes : undefined],
+    [{ at: { x: 6.5, y: 0 }, feet: 7, path: [{ x: 6.5, y: 0 }] }, "Hide (Stealth)", [{ on: "success", target: "thalbern", kind: "condition", condition: "invisible", span: "lasting" }]]
+  )
+  assert.match(prompts.at(-1) ?? "", /"hide": they get out of sight to strike or slip away unseen, in a fight or out of one/)
+  assert.match(prompts.at(-1) ?? "", /A "hide" goes into cover: when the action names a place they hide at, "moveTo" is that place/)
+  // A place named that the move reaches is where he hides, cover or not: the gangway, 50 feet off, is past his 30, so
+  // he goes behind the pillar.
+  answer = { check: "hide", moveTo: "gangway" }
+  assert.deepEqual((await readAction("Thalbern hides by the gangway.", ranger, { ...at(45), floor: pillar })).move?.at, { x: 6.5, y: 0 })
   // Cover. A 4-foot crate, 4 feet across, 20 feet along the line and nearer the Owlbear, hides 4 of its 10 feet:
   // none. A 6-foot one hides 6 of 10: half cover, and Armor Class 13 is 15. A wall to the ceiling is total cover: no
   // shot. Cover the game master names beside what the floor holds is taken when it is the greater.

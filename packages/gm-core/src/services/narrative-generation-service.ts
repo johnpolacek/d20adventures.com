@@ -37,9 +37,10 @@ The player's words for ${character.name}: """${playerInput.slice(0, 2000)}"""
 
 Rules:
 - Third person, present tense. Every action is "who": "${character.id}", and every spoken word is a line by "${character.id}".
-- Keep every action the player gave, in the player's own words where they can stand. Add nothing the player did not say: no appearance, no description of gear, no scenery, no outcome.
+- Keep every action the player gave, in the player's own words where they can stand. Add no action, appearance or description of gear the player did not give, and never an outcome: the game decides what comes of it.
 - Spoken words go in lines exactly as the player wrote them, fixing only spelling and punctuation. Give no lines when the player gave no words.
-- One action sentence, or two when the player gave more than one action, at most 10 words longer than the player's own. A minimal action ("attack", "hide") becomes one plain sentence, naming a weapon or target from the story only when it needs one.
+- One action sentence, or two when the player gave more than one action. A sentence the player wrote out stays at most 10 words longer than their own, with no scenery added.
+- A bare action of a word or two ("attack", "hide", "look around") becomes one sentence of 8 to 16 words that shows how the hero sets about it, in the voice of the recent story. It may name a weapon the hero carries, a target the story has set before them, or one thing the recent story or the places below already hold, and nothing else. It names the hero, shows the attempt and stops before whether it works. "hide" in a wine cellar might become "${character.name} ducks behind the stacked casks and goes still."
 - Keep the player's intent exactly, even when it deceives, threatens, steals or is cruel.
 - Name the target with "to", and the effect of an attack or spell the hero makes, when the player's action shows one.
 - Never mention game mechanics, dice or rules.

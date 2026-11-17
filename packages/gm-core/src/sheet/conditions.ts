@@ -317,6 +317,16 @@ export function conditionsAtRoundStart<T extends Afflicted>(character: T): T {
 /**
  * A character as the story moves on to another encounter: the conditions of a fight's moment are over, and the lasting
  * ones stay. So does one given by a spell that lasts longer than a minute: Charm Person's hour goes on into the next scene.
+ * One hidden by the Hide action (`isHidden`) stays hidden only where the next encounter is on the same set (`sameSet`):
+ * the scene goes on round them. On another set they have come out of hiding to get there.
  */
-export const conditionsAtEncounterEnd = <T extends Afflicted>(character: T): T =>
-  character.conditions?.length ? without(character, (entry) => !CONDITION_RULES[entry.id].passes || (entry.spell !== undefined && entry.turns === undefined)) : character
+export const conditionsAtEncounterEnd = <T extends Afflicted>(character: T, options: { sameSet?: boolean } = {}): T =>
+  character.conditions?.length
+    ? without(character, (entry) => !CONDITION_RULES[entry.id].passes || (entry.spell !== undefined && entry.turns === undefined) || (!!options.sameSet && hiddenEntry(entry)))
+    : character
+
+// Invisible from the Hide action: given by no spell and no class feature (Nature's Veil).
+const hiddenEntry = (entry: ConditionEntry): boolean => entry.id === "invisible" && entry.spell === undefined && entry.feature === undefined
+
+/** Whether a character is hidden by the Hide action: Invisible, and not by a spell or a class feature. */
+export const isHidden = (character: Afflicted): boolean => !!character.conditions?.some(hiddenEntry)

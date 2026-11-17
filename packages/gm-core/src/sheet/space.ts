@@ -522,6 +522,9 @@ export const coverBonus = (cover: Cover): number => (cover === "half" ? 2 : cove
 // How tall a creature of a size stands, in feet, for judging how much of it a solid thing hides. The SRD gives no table: these are ours.
 const HEIGHT: Record<Size, number> = { Tiny: 2, Small: 3.5, Medium: 6, Large: 10, Huge: 16, Gargantuan: 24 }
 
+/** How tall a creature of a size stands, in feet: a Medium one 6. */
+export const heightOf = (size: Size = "Medium"): number => HEIGHT[size]
+
 /**
  * The cover a target has from an attacker, read along the straight line between them. A solid thing on the line that
  * stands as tall as the target, or to the ceiling, is total cover. A lower one covers by its height against the
