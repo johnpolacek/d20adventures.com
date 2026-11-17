@@ -1,5 +1,5 @@
 ---
-moduleOrder: 7
+moduleOrder: 8
 sceneTitle: "Path Through The Dark Forest"
 sectionTitle: "Journey to the Standing Stones"
 id: "back-home"

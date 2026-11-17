@@ -8403,5 +8403,14 @@
     "moved": {
       "feet": [13, 18]
     }
+  },
+  {
+    "id": "prowl-sneak-past",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "action": "Thalbern creeps away up the deer trail toward the stones, keeping low and out of the owlbear's sight.",
+    "checks": ["stealth"],
+    "dcs": [15]
   }
 ]

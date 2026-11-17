@@ -1,5 +1,5 @@
 ---
-moduleOrder: 6
+moduleOrder: 7
 sceneTitle: "Path Through The Dark Forest"
 sectionTitle: "Journey to the Standing Stones"
 id: "preparing-for-the-city"

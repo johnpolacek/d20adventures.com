@@ -152,3 +152,27 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
     rmSync(dir, { recursive: true, force: true })
   }
 })
+
+test("a hidden Thalbern watches the Owlbear come out, and acts before it does", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "d20-prowls-"))
+  const store = new LocalStore(join(dir, "save.sqlite"), transitionsOf(packs))
+  const gm = (next: string): Llm => ({
+    generateText: unused,
+    generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: next, beats: [{ kind: "narration", text: `Thalbern goes on to ${next}.` }], adventurePatch: {} }) }),
+  })
+  try {
+    await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
+    for (const c of store.current().characters) c.hasReplied = c.isComplete = true
+    store.save()
+    await game(store, packs, gm("the-owlbear-prowls"))({ kind: "continue", turnId: store.current()._id })
+    assert.equal(store.current().encounterId, "the-owlbear-prowls")
+    const scene = sceneFor("the-owlbear-prowls")
+    assert.ok(scene)
+    for (const c of store.current().characters) assert.equal(castIdFor(scene.staging.cast, c), c.id)
+    assert.ok(store.current().characters.some((c) => c.type === "npc" && c.id === "owlbear"))
+    assert.equal(findCurrentActor(store.current().characters)?.id, "thalbern")
+  } finally {
+    store.close()
+    rmSync(dir, { recursive: true, force: true })
+  }
+})

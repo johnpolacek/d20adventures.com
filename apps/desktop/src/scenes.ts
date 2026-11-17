@@ -55,6 +55,7 @@ import meetingAtTheStones from "@d20/stage/stagings/the-midnight-summons/meeting
 import owlbearConfrontation from "@d20/stage/stagings/the-midnight-summons/owlbear-confrontation.json"
 import preparingForTheCity from "@d20/stage/stagings/the-midnight-summons/preparing-for-the-city.json"
 import theMissingRelics from "@d20/stage/stagings/the-midnight-summons/the-missing-relics.json"
+import theOwlbearProwls from "@d20/stage/stagings/the-midnight-summons/the-owlbear-prowls.json"
 import timelyRescue from "@d20/stage/stagings/the-midnight-summons/timely-rescue.json"
 import theFortuneTeller from "@d20/stage/stagings/the-road-to-kordavos/the-fortune-teller.json"
 import theGatesAhead from "@d20/stage/stagings/the-road-to-kordavos/the-gates-ahead.json"
@@ -598,6 +599,13 @@ export const SCENES: Record<string, Scene> = {
     staging: brokenSilence,
     location: "Valkarr woods",
     where: "Thalbern walks a deer trail through the Valkarr woods at night toward the Old Standing Stones.",
+    party: ["thalbern"],
+  },
+  "the-owlbear-prowls": {
+    set: forestSet,
+    staging: theOwlbearProwls,
+    location: "Valkarr woods",
+    where: "Thalbern hides in cover beside the deer trail as an owlbear comes out of the tree line onto the trail ahead, unaware of him.",
     party: ["thalbern"],
   },
   "owlbear-confrontation": {

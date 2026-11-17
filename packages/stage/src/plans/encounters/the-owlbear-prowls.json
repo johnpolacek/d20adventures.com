@@ -1,0 +1,9 @@
+{
+  "encounterId": "the-owlbear-prowls",
+  "set": "realm-of-myr/valkarr-forest-trail",
+  "location": "Valkarr woods",
+  "where": "Thalbern hides in cover beside the deer trail as an owlbear comes out of the tree line onto the trail ahead, unaware of him.",
+  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": -1.2, "z": 12.5 }, { "id": "owlbear", "name": "Owlbear", "x": 2, "z": -5.4 }],
+  "party": [{ "id": "thalbern", "x": -1.2, "z": 12.5 }],
+  "spare": []
+}

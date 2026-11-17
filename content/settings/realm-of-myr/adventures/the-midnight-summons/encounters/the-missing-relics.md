@@ -1,5 +1,5 @@
 ---
-moduleOrder: 5
+moduleOrder: 6
 sceneTitle: "Path Through The Dark Forest"
 sectionTitle: "Journey to the Standing Stones"
 id: "the-missing-relics"

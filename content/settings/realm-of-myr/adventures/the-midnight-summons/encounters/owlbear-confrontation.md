@@ -1,5 +1,5 @@
 ---
-moduleOrder: 2
+moduleOrder: 3
 sceneTitle: "Path Through The Dark Forest"
 sectionTitle: "Journey to the Standing Stones"
 id: "owlbear-confrontation"

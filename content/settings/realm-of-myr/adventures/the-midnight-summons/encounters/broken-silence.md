@@ -26,13 +26,13 @@ Tonight a red squirrel came to his hidden home with a note in the hand of Wollan
 
 If Thalbern investigates, call for an easy Perception check, DC 10. On a success he knows a large creature is approaching quickly. On 18 or higher he knows it is an Owlbear.
 
-A successful Perception roll reveals the threat, but it does not complete the encounter. If Thalbern investigates, advances, stands his ground, readies a weapon, or otherwise does not successfully hide or evade after detecting the creature, transition to owlbear-confrontation so the Owlbear enters the active encounter as an NPC.
+A successful Perception roll reveals the threat, but it does not complete the encounter. If Thalbern successfully hides, evades or withdraws, transition to the-owlbear-prowls: the Owlbear comes out onto the trail without knowing he is there. If he fails a roll, does nothing, or investigates, advances, stands his ground, readies a weapon, or otherwise does not successfully hide or evade after detecting the creature, transition to owlbear-confrontation so the Owlbear enters the active encounter as an NPC.
 
-If combat ensues and Thalbern falls to 0 hit points, Wollandora appears and drives off the Owlbear. If he avoids or defeats the Owlbear, or Wollandora saves him, he goes on to the Old Standing Stones.
+If combat ensues and Thalbern falls to 0 hit points, Wollandora appears and drives off the Owlbear.
 
 ## Transitions
 
-- To [[encounter:meeting-at-the-stones]] when If Thalbern successfully rolls to hide or evade and can avoid the Owlbear, go to meeting-at-the-stones.
+- To [[encounter:the-owlbear-prowls]] when Thalbern successfully rolls to hide, evade or withdraw before the creature arrives.
 - To [[encounter:owlbear-confrontation]] when If Thalbern fails any dice roll (including stealth, perception, or any other check) or does nothing requiring a roll, advance to owlbear-confrontation. Also, if Thalbern detects the approaching creature but does not successfully hide, evade, or withdraw, advance to owlbear-confrontation so the Owlbear enters the encounter.
 - To [[encounter:timely-rescue]] when Thalbern falls to 0 hit points, Wollandora appears and drives off the Owlbear: go to timely-rescue.
 

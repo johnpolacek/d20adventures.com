@@ -1,5 +1,5 @@
 ---
-moduleOrder: 3
+moduleOrder: 4
 sceneTitle: "Path Through The Dark Forest"
 sectionTitle: "Journey to the Standing Stones"
 id: "timely-rescue"

@@ -28,7 +28,7 @@ function main() {
   assert.equal(contentRef.planId, MIDNIGHT_SUMMONS_PLAN_ID)
   assert.equal(artifacts.validationReport.status, "passed")
   assert.equal(artifacts.manifest.startEncounterId, "broken-silence")
-  assert.equal(Object.keys(artifacts.encounters).length, 7)
+  assert.equal(Object.keys(artifacts.encounters).length, 8)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).includes("thalbern"), true)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).includes("wollandora"), true)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).includes("owlbear"), true)
@@ -45,6 +45,20 @@ function main() {
       (transition) => transition.fromEncounterId === "broken-silence" && transition.toEncounterId === "owlbear-confrontation" && transition.condition.includes("detects the approaching creature")
     ),
     true
+  )
+  // A hero who hides from the Owlbear watches it come out, rather than skipping straight to the stones.
+  const fromBrokenSilence = artifacts.graph.encounterTransitions.filter((transition) => transition.fromEncounterId === "broken-silence").map((transition) => transition.toEncounterId)
+  assert.deepEqual(fromBrokenSilence.sort(), ["owlbear-confrontation", "the-owlbear-prowls", "timely-rescue"])
+  assert.deepEqual(
+    artifacts.graph.encounterTransitions
+      .filter((transition) => transition.fromEncounterId === "the-owlbear-prowls")
+      .map((transition) => transition.toEncounterId)
+      .sort(),
+    ["meeting-at-the-stones", "timely-rescue"]
+  )
+  assert.deepEqual(
+    artifacts.encounters["the-owlbear-prowls"].npcRefs.map((npc) => [npc.id, npc.initialInitiative]),
+    [["owlbear", 0]]
   )
   assert.equal(isMidnightFinalEncounter(artifacts, "preparing-for-the-city"), true)
   assert.equal(isMidnightFinalEncounter(artifacts, "back-home"), true)
