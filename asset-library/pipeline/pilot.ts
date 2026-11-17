@@ -15,6 +15,10 @@
 // What it answers, against the figures rig.py makes: whether a shoulder and an elbow keep their shape when an arm is
 // raised and folded, whether a hand can close, and whether captured motion reads better than written turns.
 //
+// A brief with "face": "close", or one whose body has it, gets the sheet's face painted on, free: paint.py paints as
+// rig.py does, onto the model as its rigger left it, and the textures go into lod0.glb. Before it, `pnpm assets <id>`
+// paints the close head (it stops before build.ts's own model). `--redo=face` paints again.
+//
 // Writes, in asset-library/characters/<id>/:
 //   pilot-model.json, pilot-rig.json   the generators' answers. With them there, nothing is paid for again.
 //   pilot/                             what came back: the rigged model, and one model per clip
@@ -24,16 +28,18 @@
 // Each clip is made to play on the spot: the hips keep their height and lose their way across the ground, since the
 // stage moves a cast member itself.
 
+import { execFileSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
 import { type Accessor, type Document, NodeIO } from "@gltf-transform/core"
-import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
+import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions"
 import sharp from "sharp"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
 const RIG = { endpoint: "meshy/rigging/multi-animation", cost: 0.2, clip: 0.12 }
+const BLENDER = process.env.BLENDER || "/Applications/Blender.app/Contents/MacOS/Blender"
 // Meshy's library (https://docs.meshy.ai/en/api/animation-library), by the name the game plays each by. The walk
 // comes with every rig, free.
 const CLIPS: [string, number][] = [
@@ -65,20 +71,51 @@ async function kept<T>(file: string) {
   return existsSync(file) ? (JSON.parse(await readFile(file, "utf8")) as T) : null
 }
 
-// The hips' way across the ground taken out of a clip, so it plays where the cast member stands.
-function inPlace(doc: Document) {
+// The hips' way across the ground taken out of a clip, so it plays where the cast member stands: over the place the
+// hips rest at. Not where the clip begins, which Meshy's Knock Down does a metre and a half behind the figure.
+function inPlace(doc: Document, rest?: number[]) {
   for (const anim of doc.getRoot().listAnimations())
     for (const ch of anim.listChannels()) {
       if (ch.getTargetPath() !== "translation" || !/hips$/i.test(ch.getTargetNode()?.getName() ?? "")) continue
       const out = ch.getSampler()?.getOutput()
       const a = out?.getArray()
       if (!out || !a || out.getElementSize() !== 3) continue
-      const [x0, z0] = [a[0], a[2]]
+      const [x0, , z0] = rest ?? ch.getTargetNode()?.getTranslation() ?? [a[0], 0, a[2]]
       for (let i = 0; i < a.length; i += 3) {
         a[i] = x0
         a[i + 2] = z0
       }
       out.setArray(a)
+    }
+}
+
+// One normal for every place on the mesh. Rodin's comes apart along every edge of its texture layout with a normal to
+// each side, a median of 63 degrees apart, and is lit as flat shards: an ear, a nose and hair cut from card. rig.py
+// welds its own models for the same reason.
+function smooth(doc: Document) {
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, nor] = [prim.getAttribute("POSITION"), prim.getAttribute("NORMAL")]
+      if (!pos || !nor) continue
+      const sums = new Map<string, [number, number, number]>()
+      const keys: string[] = []
+      const [p, n] = [
+        [0, 0, 0],
+        [0, 0, 0],
+      ]
+      for (let i = 0; i < pos.getCount(); i++) {
+        pos.getElement(i, p)
+        nor.getElement(i, n)
+        const key = p.map((v) => v.toFixed(5)).join(",")
+        keys.push(key)
+        const sum = sums.get(key) ?? [0, 0, 0]
+        sums.set(key, [sum[0] + n[0], sum[1] + n[1], sum[2] + n[2]])
+      }
+      for (let i = 0; i < keys.length; i++) {
+        const [x, y, z] = sums.get(keys[i]) ?? [0, 0, 0]
+        const long = Math.hypot(x, y, z)
+        if (long > 1e-6) nor.setElement(i, [x / long, y / long, z / long])
+      }
     }
 }
 
@@ -105,7 +142,7 @@ async function merge(rigged: string, clips: [string, string][], to: string) {
   const made: string[] = []
   for (const [name, file] of clips) {
     const doc = await io.read(file)
-    inPlace(doc)
+    inPlace(doc, [...nodes.entries()].find(([bone]) => /hips$/i.test(bone))?.[1].getTranslation())
     const source = doc.getRoot().listAnimations()[0]
     if (!source) {
       say("merge", `${name}: no clip in ${file}`)
@@ -133,6 +170,7 @@ async function merge(rigged: string, clips: [string, string][], to: string) {
     if (missed) say("merge", `${name}: ${missed} channels had no bone of that name, left out`)
     made.push(name)
   }
+  smooth(base)
   await io.write(to, base)
   return made
 }
@@ -159,6 +197,48 @@ async function fetched(remote: Remote, name: string) {
   const file = `${dir}/pilot/${name}.glb`
   if (!existsSync(file) && remote?.url) await writeFile(file, await fetchBuffer(remote.url))
   return existsSync(file) ? file : null
+}
+
+// A step run outside, Blender or Python: what its line beginning with the tag reports.
+function report<T>(command: string, argv: string[], tag: string) {
+  const out = execFileSync(command, argv, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64 << 20 })
+  const line = out.split("\n").findLast((l) => l.startsWith(`${tag} `))
+  return line ? (JSON.parse(line.slice(tag.length + 1)) as T) : null
+}
+
+// The sheet's face on the model, when the sheet's brief asks for one and face.py has made the close head: painted,
+// fitted to the model's own face as that painting drew it out, and painted again, as build.ts does with rig.py. The
+// textures then go into lod0.glb in place of the generator's. Returns what was painted.
+async function face(brief: Brief, rest: string) {
+  const from = home(brief)
+  if ((await kept<{ face?: string }>(`${from}/character.json`))?.face !== "close" || !existsSync(`${from}/apose-face.png`)) return null
+  const out = `${dir}/pilot/paint`
+  type Painted = { faceFromSheet?: { texels: number; fitted: boolean } | null }
+  let painted = await kept<Painted>(`${out}/paint.json`)
+  if (!painted || args.some((a) => a.startsWith("--redo=") && a.includes("face"))) {
+    const paint = () => report<Painted>(BLENDER, ["-b", "-P", "asset-library/pipeline/paint.py", "--", rest, from, out], "PAINT")
+    painted = paint()
+    const fit = report<{ fitted?: boolean }>(
+      "uv",
+      ["run", "--quiet", "--python", "3.12", "--with", "mediapipe==0.10.14", "--with", "numpy", "asset-library/pipeline/face.py", "fit", from, "--eyes=painted"],
+      "FACE"
+    )
+    if (fit?.fitted) painted = paint()
+    if (!painted?.faceFromSheet) return null
+    await writeFile(`${out}/paint.json`, `${JSON.stringify(painted, null, 2)}\n`)
+  }
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
+  const doc = await io.read(`${dir}/lod0.glb`)
+  doc.createExtension(EXTTextureWebP).setRequired(true)
+  for (const m of doc.getRoot().listMaterials())
+    for (const [kind, texture] of [
+      ["colour", m.getBaseColorTexture()],
+      ["normal", m.getNormalTexture()],
+      ["rough", m.getMetallicRoughnessTexture()],
+    ] as const)
+      if (texture && existsSync(`${out}/${kind}.png`)) texture.setImage(await sharp(`${out}/${kind}.png`).webp({ quality: 92 }).toBuffer()).setMimeType("image/webp")
+  await io.write(`${dir}/lod0.glb`, doc)
+  return painted.faceFromSheet
 }
 
 // Tripo's model turned to face as the sheet does, or another figure's model, rigged by Meshy to a Mixamo skeleton
@@ -217,7 +297,7 @@ async function tripoMeshy(brief: Brief) {
   }
   const walk = await fetched(rig.basic_animations?.walking_glb, "Walk")
   if (walk) clips.splice(1, 0, ["Walk", walk])
-  return { clips: await merge(rigged, clips, `${dir}/lod0.glb`), generator: `${maker.name}, rigged by Meshy`, weights: "meshy", cost: maker.cost + rigCost }
+  return { clips: await merge(rigged, clips, `${dir}/lod0.glb`), rest: rigged, generator: `${maker.name}, rigged by Meshy`, weights: "meshy", cost: maker.cost + rigCost }
 }
 
 const RODIN = { endpoint: "fal-ai/hyper3d/rodin/v2.5", cost: 0.4 }
@@ -319,10 +399,11 @@ async function rodinHyper(brief: Brief) {
     made.push(anim.getName())
   }
   inPlace(doc)
+  smooth(doc)
   await io.write(`${dir}/lod0.glb`, doc)
   const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
-  return { clips: made, generator: "Rodin Gen-2.5 on fal, rigged by Hyper3D", weights: "hyper3d", cost: RODIN.cost + HYPER.cost }
+  return { clips: made, rest: all, generator: "Rodin Gen-2.5 on fal, rigged by Hyper3D", weights: "hyper3d", cost: RODIN.cost + HYPER.cost }
 }
 
 async function main() {
@@ -333,6 +414,8 @@ async function main() {
   const made = brief.maker === "rodin" ? await rodinHyper(brief) : await tripoMeshy(brief)
   if (!made) return
   say("merge", `${dir}/lod0.glb with ${made.clips.join(", ")}`)
+  const painted = await face(brief, made.rest)
+  if (painted) say("face", `the sheet's, ${painted.fitted ? "fitted to the model's own" : "not fitted"}, ${painted.texels} texels`)
 
   const megabytes = Math.round(((await stat(`${dir}/lod0.glb`)).size / 1048576) * 100) / 100
   const figure = {

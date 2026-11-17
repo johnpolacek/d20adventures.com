@@ -11,5 +11,6 @@
   "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
   "stow": "He has no bow: it is left out of the picture entirely, and nothing is slung across his back but the quiver. Both blades stay sheathed at his hips.",
   "arms": 40,
-  "maker": "rodin"
+  "maker": "rodin",
+  "face": "close"
 }

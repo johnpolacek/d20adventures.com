@@ -527,6 +527,10 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         if fitted:
             close["face"] = close["fitFace"]
     patches = []
+    # paint.py, which runs this painting on a model another rigger rigged, asks for the face alone. Such a model has
+    # hair, a scarf and a quiver of its own that do not lie where the sheet has them, and the sheet laid over them is
+    # a second scarf beside the first.
+    only_face = bool(globals().get("ONLY_FACE"))
     # Where the head's middle is across the sheet: the middle of the figure in its topmost rows.
     grey = np.median(np.concatenate([S[:12, :12, :3].reshape(-1, 3), S[:12, -12:, :3].reshape(-1, 3)]), axis=0)
     figure_mask = np.abs(S[:, :, :3] - grey).sum(axis=2) > 0.19
@@ -614,6 +618,9 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
             # behind the same oval, and is told from the face by how far back it is.
             near = (((csx - ox) / rx) ** 2 + ((csy - oy) / ry) ** 2 < 1.0) & (V[:, :, 1].min(axis=1) < face_front + 0.06 * H / 1.8) & (facing > -0.7)
             head = head | (near & (V[:, :, 2].min(axis=1) > neck))
+            if only_face:
+                # A little past the oval's edge, where the paint fades out.
+                head = (((csx - ox) / rx) ** 2 + ((csy - oy) / ry) ** 2 < 1.3) & (V[:, :, 1].min(axis=1) < face_front + 0.06 * H / 1.8) & (facing > -0.7) & (V[:, :, 2].min(axis=1) > neck)
     texels = 0
     for k in np.flatnonzero(head):
         (u0, v0), (u1, v1), (u2, v2) = uvs[k]
@@ -664,6 +671,8 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         turn = np.clip((facing[k] - 0.12) / 0.4, 0, 1) ** 1.5
         if within is not None and P[..., 1].min() < face_front + 0.06 * H / 1.8:
             turn = np.maximum(turn, within)
+        if only_face:
+            turn = within if within is not None else 0.0
         rise = np.clip((P[..., 2] - neck) / (0.025 * H), 0, 1)
         # Never the sheet's grey: a point of the model that falls outside the painted figure keeps its own colour.
         on_figure = figure_mask[iy, ix] & figure_mask[iy + 1, ix + 1]

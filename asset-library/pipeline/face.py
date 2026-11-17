@@ -9,8 +9,12 @@
 # close head is pulled onto the sheet's by the 468 points a face model finds in both, triangle by triangle, and what
 # comes out is the sheet's head, four times the size, with the close head's detail where the sheet's features are.
 #
+#   uv run ... asset-library/pipeline/face.py fit asset-library/characters/wollandora [--eyes=painted]
+#
 # crop: <folder>/head-crop.png, the sheet's head enlarged, and face.json, where it was cut from.
 # warp: <folder>/apose-face.png, for rig.py to paint the head from, in place of the sheet.
+# fit:  <folder>/apose-face-fit.png, that head pulled onto the model's own face as rig.py drew it out (head-own.png).
+#       --eyes=painted keeps each eye as open as it was painted, for a model whose own are shut.
 
 import json
 import sys
@@ -86,6 +90,12 @@ def pulled(picture, have, want, size):
     return np.clip(whole.astype(np.float32) * (1 - mask) + fine.astype(np.float32) * mask, 0, 255).astype(np.uint8), hull, mid
 
 
+# The rim of each eye, among the face model's 468 points.
+EYES = (
+    [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246],
+    [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398],
+)
+
 if mode == "fit":
     # The close head, already the sheet's, pulled onto the model's own face as the rig drew it out (head-own.png).
     own = cv2.imread(f"{folder}/head-own.png")
@@ -96,6 +106,13 @@ if mode == "fit":
         json.dump(spec, open(f"{folder}/face.json", "w"), indent=2)
         print("FACE " + json.dumps({"fitted": False, "why": "no face found in the model's own" if A is None else "no face found in the close head"}))
         sys.exit(0)
+    if "--eyes=painted" in sys.argv:
+        # A model can come with its eyes all but shut (Rodin's Thalbern), and an eye pulled onto those lids is a slit.
+        # Each eye is set where the model's is, and keeps the opening it was painted with.
+        M, _ = cv2.estimateAffinePartial2D(B, A, method=cv2.LMEDS)
+        placed = B @ M[:, :2].T + M[:, 2]
+        for eye in EYES:
+            A[eye] = placed[eye] - placed[eye].mean(axis=0) + A[eye].mean(axis=0)
     out, hull, mid = pulled(sharp, B, A, (own.shape[1], own.shape[0]))
     cv2.imwrite(f"{folder}/apose-face-fit.png", out)
     x0, y0 = spec["rect"][:2]
