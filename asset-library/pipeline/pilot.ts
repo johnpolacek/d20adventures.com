@@ -215,6 +215,99 @@ function plates(doc: Document) {
 // The share of the upper arm under which a point on top of a shoulder is the collarbone's alone.
 const PLATE = 0.25
 
+// The bones' shares about each shoulder spread over a wider band of skin. A rigger hands the skin from the trunk to
+// the arm across a few centimetres, and when the arm is raised or thrown back all of that turn is taken there: the
+// skin where arm meets trunk was stretched four and five times its length at rest. Each point within reach of a
+// shoulder joint takes some of the mean of its neighbours' shares, most at the joint and none at the reach's edge,
+// pass after pass, so the turn is shared out by more skin.
+function spread(doc: Document, reach: number, passes: number) {
+  const joints = doc.getRoot().listSkins()[0]?.listJoints() ?? []
+  const centres = ["Left", "Right"]
+    .map((side) =>
+      joints
+        .find((j) => new RegExp(`(^|:)${side}Arm$`).test(j.getName()))
+        ?.getWorldMatrix()
+        .slice(12, 15)
+    )
+    .filter((c) => !!c)
+  let moved = 0
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, J, W, index] = [prim.getAttribute("POSITION"), prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0"), prim.getIndices()]
+      if (!pos || !J || !W || !centres.length) continue
+      // Points at one position are one place: the mesh comes apart along its texture's edges, and the skin does not.
+      const places = new Map<string, number>()
+      const of: number[] = []
+      const at: number[][] = []
+      for (let i = 0; i < pos.getCount(); i++) {
+        const p = pos.getElement(i, [0, 0, 0])
+        const key = p.map((v) => v.toFixed(5)).join(",")
+        if (!places.has(key)) {
+          places.set(key, at.length)
+          at.push(p)
+        }
+        of.push(places.get(key) as number)
+      }
+      const pull = at.map((p) => {
+        const far = Math.min(...centres.map((c) => Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2])))
+        const t = Math.max(0, 1 - far / reach)
+        return t * t * (3 - 2 * t)
+      })
+      const beside = at.map(() => new Set<number>())
+      const corners = index ? index.getCount() : pos.getCount()
+      for (let t = 0; t < corners; t += 3) {
+        const [a, b, c] = [0, 1, 2].map((k) => of[index ? index.getScalar(t + k) : t + k])
+        if (!pull[a] && !pull[b] && !pull[c]) continue
+        for (const [x, y] of [
+          [a, b],
+          [b, c],
+          [c, a],
+        ])
+          if (x !== y) {
+            beside[x].add(y)
+            beside[y].add(x)
+          }
+      }
+      let shares = at.map(() => new Map<number, number>())
+      for (let i = 0; i < pos.getCount(); i++) {
+        const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+        const mine = shares[of[i]]
+        if (!mine.size) for (const [k, bone] of j.entries()) if (w[k] > 0) mine.set(bone, (mine.get(bone) ?? 0) + w[k])
+      }
+      for (let pass = 0; pass < passes; pass++)
+        shares = shares.map((own, p) => {
+          if (!pull[p] || !beside[p].size) return own
+          const next = new Map<number, number>()
+          const take = 0.5 * pull[p]
+          for (const [bone, w] of own) next.set(bone, w * (1 - take))
+          for (const q of beside[p]) for (const [bone, w] of shares[q]) next.set(bone, (next.get(bone) ?? 0) + (w * take) / beside[p].size)
+          return next
+        })
+      for (let i = 0; i < pos.getCount(); i++) {
+        if (!pull[of[i]]) continue
+        // The four bones that pull hardest, their shares made to add to one.
+        const top = [...shares[of[i]]].sort((a, b) => b[1] - a[1]).slice(0, 4)
+        const total = top.reduce((sum, [, w]) => sum + w, 0) || 1
+        J.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => top[k]?.[0] ?? 0)
+        )
+        W.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => (top[k]?.[1] ?? 0) / total)
+        )
+        moved++
+      }
+    }
+  return moved
+}
+
+// How far from a shoulder joint the shares are spread, in metres, and how many times over. Measured on thalbern-rodin
+// (armcheck.ts), this much crushes the skin less where arm meets trunk and stretches it no more: in the sword cut the
+// worst of it was crushed to an eighth and is now crushed to a fifth. Wider and more (0.2 m and 16, 0.24 m and 32)
+// stretched it further, to 6.7 times from 4.6. No setting stretched it less: that is the one skin, not the shares.
+const SPREAD = { reach: 0.16, passes: 8 }
+
 // One normal for every place on the mesh. Rodin's comes apart along every edge of its texture layout with a normal to
 // each side, a median of 63 degrees apart, and is lit as flat shards: an ear, a nose and hair cut from card. rig.py
 // welds its own models for the same reason.
@@ -573,6 +666,7 @@ async function rodinHyper(brief: Brief) {
     }
     made.length = 0
   }
+  say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
   made.push(...(await borrow(doc, brief.borrowed)))
   await io.write(`${dir}/lod0.glb`, doc)
   const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
