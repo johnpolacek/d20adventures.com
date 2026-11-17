@@ -16,7 +16,6 @@ import { sword as armingSword, bow as longbow, type Weapon } from "./weapons"
 const HOLDS: Record<string, { what: "sword" | "bow"; hand: "L" | "R" }> = {
   ...IN_HAND,
   Combo: { what: "sword", hand: "R" },
-  Thrust: { what: "sword", hand: "R" },
   Block: { what: "sword", hand: "R" },
   "Sword Idle": { what: "sword", hand: "R" },
 }

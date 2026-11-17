@@ -25,7 +25,6 @@
     "Sidestep",
     "Hit",
     "Fall",
-    "Thrust",
     "Sword Idle",
     "Block",
     "Combo",
@@ -35,7 +34,7 @@
     {
       "file": "lod0.glb",
       "triangles": 0,
-      "megabytes": 5.83,
+      "megabytes": 5.78,
       "texture": 0
     }
   ]

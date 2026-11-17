@@ -4,6 +4,8 @@
 //
 //   pnpm assets:arms thalbern-rodin-meshy             every clip
 //   pnpm assets:arms thalbern-rodin-meshy "Q Shoot"   the clips named, by comma
+//   pnpm assets:arms thalbern-rodin Swing --trace       where each upper arm points, every tenth of a second
+//   pnpm assets:arms thalbern-rodin Swing --where       where the worst-stretched skin of each shoulder lies
 //   pnpm assets:arms thalbern-rodin --parts=before.glb   each point's part read from another rigging of the same mesh,
 //                                                       so the same edges are measured before and after a change
 //
@@ -56,6 +58,7 @@ async function main() {
   const [id, only] = process.argv.slice(2).filter((a) => !a.startsWith("--"))
   const parts = process.argv.find((a) => a.startsWith("--parts="))?.slice(8)
   const where = process.argv.includes("--where")
+  const trace = process.argv.includes("--trace")
   if (!id) throw new Error("Name a character: pnpm assets:arms <id> [clip,clip]")
   const dir = `asset-library/characters/${id}`
   const doc = await new NodeIO().registerExtensions(ALL_EXTENSIONS).read(`${dir}/${(JSON.parse(await readFile(`${dir}/figure.json`, "utf8")) as { lods: { file: string }[] }).lods[0].file}`)
@@ -202,6 +205,16 @@ async function main() {
         note(`${side} elbow most`, angle(upper, fore), time)
         note(`${side} elbow least`, angle(upper, fore), time, true)
         note(`${side} raise`, angle(upper, down), time)
+        // Where the upper arm points as the chest has it: how far out to its own side, down and forward.
+        if (trace && f % 3 === 0) {
+          const axis = (k: number) => [0, 1, 2].map((r) => chest[r] * chestRest[k] + chest[4 + r] * chestRest[4 + k] + chest[8 + r] * chestRest[8 + k])
+          const long = Math.hypot(...upper) || 1
+          const along = (v: number[]) => ((upper[0] * v[0] + upper[1] * v[1] + upper[2] * v[2]) / long).toFixed(2).padStart(6)
+          const out = axis(0).map((v) => v * (at(`${side}Arm`)[0] - at("Spine2")[0] > 0 === (side === "Left") ? (side === "Left" ? 1 : -1) : side === "Left" ? 1 : -1))
+          console.log(
+            `    ${time.toFixed(2)} ${side.padEnd(5)} raised ${angle(upper, down).toFixed(0).padStart(3)}°, elbow ${angle(upper, fore).toFixed(0).padStart(3)}°, points out ${along(out)} down ${along(down)} forward ${along(axis(2))}`
+          )
+        }
       }
     }
     for (const side of ["Left", "Right"]) {

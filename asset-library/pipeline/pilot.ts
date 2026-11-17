@@ -46,7 +46,7 @@ import sharp from "sharp"
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
-import { type Quat, qall, qinv, qmix, qmul, qup } from "./quat"
+import { type Quat, qall, qinv, qmix, qmul, qturn, qup } from "./quat"
 import { type Part, retarget } from "./retarget"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
@@ -307,6 +307,38 @@ function spread(doc: Document, reach: number, passes: number) {
 // worst of it was crushed to an eighth and is now crushed to a fifth. Wider and more (0.2 m and 16, 0.24 m and 32)
 // stretched it further, to 6.7 times from 4.6. No setting stretched it less: that is the one skin, not the shares.
 const SPREAD = { reach: 0.16, passes: 8 }
+
+// Each shoulder joint moved up by so many centimetres of the figure's height, down if less than none, with the skin
+// bound as it was and the elbow left where it is: to measure whether a rigger set the joint too high or too low
+// (`--shoulder=-3`).
+function lift(doc: Document, cm: number, tall: number) {
+  const skin = doc.getRoot().listSkins()[0]
+  const bind = skin?.getInverseBindMatrices()
+  const y = doc
+    .getRoot()
+    .listMeshes()
+    .flatMap((m) => m.listPrimitives())
+    .map((p) => p.getAttribute("POSITION"))
+    .find((p) => !!p)
+  if (!skin || !bind || !y) return
+  const by = (cm / 100 / tall) * (y.getMax([0, 0, 0])[1] - y.getMin([0, 0, 0])[1])
+  const joints = skin.listJoints()
+  for (const side of ["Left", "Right"]) {
+    const arm = joints.findIndex((j) => new RegExp(`(^|:)${side}Arm$`).test(j.getName()))
+    const node = joints[arm]
+    const up = node?.getParentNode()
+    if (!node || !up) continue
+    const [above, own] = [up.getWorldRotation() as Quat, node.getWorldRotation() as Quat]
+    const [wide, mine] = [up.getWorldScale(), node.getWorldScale()]
+    const there = qturn(qinv(above), [0, by, 0])
+    node.setTranslation(node.getTranslation().map((v, k) => v + there[k] / wide[k]) as [number, number, number])
+    const back = qturn(qinv(own), [0, by, 0])
+    for (const child of node.listChildren()) child.setTranslation(child.getTranslation().map((v, k) => v - back[k] / mine[k]) as [number, number, number])
+    const m = bind.getElement(arm, new Array(16).fill(0))
+    for (let r = 0; r < 3; r++) m[12 + r] -= m[4 + r] * by
+    bind.setElement(arm, m)
+  }
+}
 
 // A bone at each shoulder that turns part of the way the arm does, and the skin between arm and trunk hung on it.
 // Skin shared between two bones is put a share of the way between where each would carry it, along a straight line:
@@ -773,6 +805,11 @@ async function rodinHyper(brief: Brief) {
       anim.dispose()
     }
     made.length = 0
+  }
+  const raise = Number(args.find((a) => a.startsWith("--shoulder="))?.slice(11) ?? 0)
+  if (raise) {
+    lift(doc, raise, brief.height ?? 1.8)
+    say("shoulder", `each joint moved ${raise} cm up`)
   }
   // `--spread=off` leaves the shares as the rigger gave them, to measure one rigging against another.
   if (!args.includes("--spread=off")) say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
