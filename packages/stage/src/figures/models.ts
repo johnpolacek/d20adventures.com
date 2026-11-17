@@ -3,7 +3,7 @@ import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
 import { figureClips, isRigged, MOVE_NAMES, STRIKE } from "./clips"
 import { type Armed, arm } from "./fight"
-import { fingered, wield } from "./hold"
+import { carry, fingered, wield } from "./hold"
 import { holdProps } from "./props"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
 
@@ -67,7 +67,7 @@ interface Model {
   // The weapons its moves put in its hands, and its arms put where a move needs them (fight.ts).
   armed: Armed | null
   // What it holds, bent to its hand after each frame's clip.
-  carried: { update: () => void; dispose: () => void } | null
+  carried: { update: (weight?: number) => void; dispose: () => void } | null
   // Seconds into the hit clip, or null when not struck; seconds into the fall clip, 0 standing.
   hitT: number | null
   fallT: number
@@ -196,6 +196,10 @@ export class Models {
         : hands
           ? wield(root)
           : null
+    // A staff, for a figure with fingers whose skeleton says it carries one: stood before its materials are made too,
+    // and after its weapons are seated, which want the hand as it was modelled.
+    const staff = hands ? carry(root, new THREE.Box3().setFromObject(root, true).min.y) : null
+    if (staff) carried = staff
     const mixer = new THREE.AnimationMixer(root)
     const action = (name: string | undefined, held: boolean) => {
       const clip = name ? THREE.AnimationClip.findByName(animations, name) : null
@@ -252,8 +256,14 @@ export class Models {
     })
     for (const src of materials.keys()) src.dispose()
     // Measured as posed, skinning and all: a bind pose with the arms out is not how tall the figure stands.
+    // Without what is in its hands: a staff stands taller than its bearer, and a sword put away in a hand that holds
+    // a staff points over its head.
+    const inHand = [...(armed?.weapons.values() ?? [])].map((w) => w.group).concat(staff ? [staff.prop] : [])
+    const from = inHand.map((g) => g.parent)
+    if (!bind) for (const g of inHand) g.removeFromParent()
     root.updateMatrixWorld(true)
     const box = bind ?? new THREE.Box3().setFromObject(root, true)
+    if (!bind) for (const [i, g] of inHand.entries()) from[i]?.add(g)
     const scale = cast.height / Math.max(box.max.y - box.min.y, 1e-3)
     root.scale.setScalar(scale)
     root.name = `model:${cast.id}`
@@ -404,7 +414,7 @@ export class Models {
         m.fall.setEffectiveWeight(f)
       }
       m.mixer.update(step)
-      m.carried?.update()
+      m.carried?.update(1 - f)
       if (m.move) m.armed?.after(m.move.clip, m.move.t, v)
       m.root.position.set(c.x, (c.y ?? 0) + m.lift, c.z)
       // A model with no fall clip is tipped onto its back, as a card is.

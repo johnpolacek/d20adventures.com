@@ -11,7 +11,7 @@
 //     empty, as the stage shows it or as an isometric cut-away, with a camera the visitor moves.
 
 import { type Armed, arm } from "@d20/stage/figures/fight"
-import { fingered, wield } from "@d20/stage/figures/hold"
+import { carry, fingered, wield } from "@d20/stage/figures/hold"
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
@@ -62,7 +62,7 @@ interface Room {
   clips: THREE.AnimationClip[]
   action: THREE.AnimationAction | null
   // What the figure holds (props.ts), moved with it each frame.
-  carried: ReturnType<typeof holdProps>
+  carried: { update: (weight?: number) => void; dispose: () => void } | null
   // Its weapons, and its arms put where a fight move needs them (packages/stage/src/figures/fight.ts), as the game does.
   armed: Armed | null
   framed: boolean
@@ -153,7 +153,8 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
       raf = requestAnimationFrame(tick)
       if (document.hidden) return void (last = now)
       r.mixer?.update(Math.min(0.1, (now - last) / 1000))
-      r.carried?.update()
+      // A staff is let fall as its bearer goes down: the game says how far down, and here the fall's own clip does.
+      r.carried?.update(r.action?.getClip().name === "Fall" ? Math.max(0, 1 - r.action.time / 0.5) : 1)
       if (r.action) r.armed?.after(r.action.getClip().name, r.action.time, r.action.getEffectiveWeight())
       if (r.action && scrub.current && clock.current) {
         const long = r.action.getClip().duration
@@ -227,6 +228,8 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
         r.carried = isRigged(root) ? holdProps(root, box.min.y) : null
         r.armed?.dispose()
         r.armed = isRigged(root) ? arm(root, MOVE_NAMES, tall) : fingered(root) ? wield(root) : null
+        // A staff in a hand with fingers, stood after the weapons are seated: they want the hand as it was modelled.
+        if (!isRigged(root) && fingered(root)) r.carried = carry(root, box.min.y)
         r.action = null
         const next = r.clips.find((c) => c.name === clip) ?? r.clips[0]
         if (next) {

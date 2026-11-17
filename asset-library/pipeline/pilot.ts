@@ -803,6 +803,8 @@ interface Brief {
   borrowed?: Record<string, string>
   // How Hyper3D shares the skin among its bones: "core" unless said.
   skinning?: "core" | "shell"
+  // What it carries at all times, a staff: left on the skeleton for the prop built in its hand (hold.ts `carry`).
+  holds?: { what: string; hand?: "L" | "R"; length?: number }
   // The bow shots drawn to the jaw, and when each is at its full draw, in seconds: { "Shoot": { "until": 1.5 } }.
   drawn?: Record<string, { until: number }>
   // The most an arm is raised in a clip, in degrees up from hanging: { "Swing": 85 }.
@@ -1095,6 +1097,16 @@ async function rodinHyper(brief: Brief) {
   }
   // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
   if (!args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
+  // What the brief says it carries, as rig.py leaves it on its skeleton: "staff:R:2.1".
+  const hips = doc
+    .getRoot()
+    .listSkins()[0]
+    ?.listJoints()
+    .find((j) => /hips$/i.test(j.getName()))
+  if (brief.holds && hips) {
+    hips.setExtras({ ...hips.getExtras(), holds: `${brief.holds.what}:${brief.holds.hand ?? "R"}:${brief.holds.length ?? 2}` })
+    say("holds", `a ${brief.holds.what} in the ${brief.holds.hand === "L" ? "left" : "right"} hand, ${brief.holds.length ?? 2} m`)
+  }
   await io.write(`${dir}/lod0.glb`, doc)
   const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))

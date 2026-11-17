@@ -2,7 +2,7 @@
 // member, and a patch of shade under each crowd member. The asset library's scenes and the stage lab both use them.
 
 import type { Stage } from "@d20/stage"
-import { fingered, wield } from "@d20/stage/figures/hold"
+import { carry, fingered, wield } from "@d20/stage/figures/hold"
 import { heldBow, weaponIn } from "@d20/stage/figures/weapons"
 import * as THREE from "three"
 import { figureClips, isRigged } from "./clips"
@@ -40,12 +40,13 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
     root.rotation.y = THREE.MathUtils.degToRad(o.yaw ?? 0) + s.cast.ry
   }
   place()
-  // What it holds is stood beside it before it is lit, so the prop is lit as the figure is.
-  const carried = isRigged(root) ? holdProps(root, box.min.y) : null
   // A bow through a hand made round a rod, carried as the game carries it (packages/stage/src/figures/weapons.ts).
   const kept = isRigged(root) ? heldBow(root) : null
   // A figure with clips of its own and fingers holds its weapons in a closed hand, as the game arms it (models.ts).
   const armed = !isRigged(root) && fingered(root) ? wield(root) : null
+  // What it holds is stood beside it before it is lit, so the prop is lit as the figure is. A staff in a hand with
+  // fingers is stood after the weapons are seated, which want the hand as it was modelled.
+  const carried = isRigged(root) ? holdProps(root, box.min.y) : fingered(root) ? carry(root, box.min.y) : null
   if (kept) weaponIn(root, "bow", kept.hand, kept)
   let triangles = 0
   // A generated figure is real metal and leather, which shows by what it reflects. The stage's own sky is kept dim for
@@ -106,14 +107,14 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
     action.reset().play()
     action.time = seconds
     mixer.update(0)
-    carried?.update()
+    carried?.update(playing?.getClip().name === "Fall" ? Math.max(0, 1 - playing.time / 0.5) : 1)
     wielded()
     return true
   }
   const tick = (now: number) => {
     if (!alive) return
     if (!held) mixer.update(Math.min(0.1, (now - last) / 1000))
-    carried?.update()
+    carried?.update(playing?.getClip().name === "Fall" ? Math.max(0, 1 - playing.time / 0.5) : 1)
     wielded()
     place()
     last = now

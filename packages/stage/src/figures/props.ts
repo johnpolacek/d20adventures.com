@@ -20,7 +20,7 @@ const GRIP = 0.0155
 // vine up the lower half. It stands on its foot at the origin, `length` tall.
 // `held` is the height a closed hand takes it at, where it is drawn in to the hand's width. `wide` is for a hand made
 // round a rod (rig.py): the staff is that wide from foot to eye, and nothing of it is drawn in.
-function staff(length: number, held = -1, wide = 0) {
+export function staff(length: number, held = -1, wide = 0) {
   const TUBE = wide ? wide * 0.6 : RADIUS
   const group = new THREE.Group()
   group.name = "prop:staff"
