@@ -2,6 +2,7 @@
 // member, and a patch of shade under each crowd member. The asset library's scenes and the stage lab both use them.
 
 import type { Stage } from "@d20/stage"
+import { fingered, wield } from "@d20/stage/figures/hold"
 import { heldBow, weaponIn } from "@d20/stage/figures/weapons"
 import * as THREE from "three"
 import { figureClips, isRigged } from "./clips"
@@ -43,6 +44,8 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
   const carried = isRigged(root) ? holdProps(root, box.min.y) : null
   // A bow through a hand made round a rod, carried as the game carries it (packages/stage/src/figures/weapons.ts).
   const kept = isRigged(root) ? heldBow(root) : null
+  // A figure with clips of its own and fingers holds its weapons in a closed hand, as the game arms it (models.ts).
+  const armed = !isRigged(root) && fingered(root) ? wield(root) : null
   if (kept) weaponIn(root, "bow", kept.hand, kept)
   let triangles = 0
   // A generated figure is real metal and leather, which shows by what it reflects. The stage's own sky is kept dim for
@@ -75,6 +78,7 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
   const clips = gltf.animations.length || !isRigged(root) ? gltf.animations : figureClips(root, box.max.y - box.min.y)
   const first = clips.find((c) => c.name === o.clip) ?? clips[0]
   let playing = first ? mixer.clipAction(first).play() : null
+  armed?.show(first?.name ?? null)
   // Another clip by name, eased into over a fifth of a second.
   const play = (name: string) => {
     const next = clips.find((c) => c.name === name)
@@ -83,7 +87,11 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
     const action = mixer.clipAction(next).reset().play()
     if (playing && playing !== action) playing.crossFadeTo(action, 0.2, false)
     playing = action
+    armed?.show(name)
     return true
+  }
+  const wielded = () => {
+    if (playing) armed?.after(playing.getClip().name, playing.time, 1)
   }
   let last = performance.now()
   let alive = true
@@ -92,21 +100,49 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
   const pose = (name: string, seconds: number) => {
     if (!play(name) || !playing) return false
     held = true
-    playing.time = seconds
+    // Held whole: the ease from the clip before would never finish with the mixer stopped.
+    const action = playing
+    mixer.stopAllAction()
+    action.reset().play()
+    action.time = seconds
     mixer.update(0)
     carried?.update()
+    wielded()
     return true
   }
   const tick = (now: number) => {
     if (!alive) return
     if (!held) mixer.update(Math.min(0.1, (now - last) / 1000))
     carried?.update()
+    wielded()
     place()
     last = now
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
-  return { root, mixer, triangles, play, pose, clips: clips.map((a) => `${a.name} ${a.duration.toFixed(1)}s`), stop: () => (alive = false) }
+  return {
+    root,
+    mixer,
+    triangles,
+    play,
+    pose,
+    clips: clips.map((a) => `${a.name} ${a.duration.toFixed(1)}s`),
+    // What it holds and where, for a check that a weapon is in the scene: null when it is not armed here.
+    held: () =>
+      armed
+        ? [...armed.weapons.values()].map((w) => {
+            const [at, wide] = [w.group.getWorldPosition(new THREE.Vector3()), w.group.getWorldScale(new THREE.Vector3())]
+            return `${w.what} ${w.group.visible ? "shown" : "hidden"}, ${(w.group.position.length() * 100).toFixed(0)} cm from the ${w.group.parent?.name}, at ${at
+              .toArray()
+              .map((v) => v.toFixed(2))
+              .join(" ")}, ${wide.x.toFixed(2)} times its size`
+          })
+        : null,
+    stop: () => {
+      alive = false
+      armed?.dispose()
+    },
+  }
 }
 
 // A ring on the ground under each cast member, as a game marks who can be chosen: gold under `chosen`, pale under the

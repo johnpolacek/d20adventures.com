@@ -191,7 +191,7 @@ export function LabViewer({ params }: { params: Params }) {
         if (!f) continue
         stops.push(f.stop)
         lab.figure = { triangles: f.triangles, clips: f.clips }
-        lab.figures = { ...(lab.figures as object), [castId]: { play: f.play, pose: f.pose, clips: f.clips, triangles: f.triangles } }
+        lab.figures = { ...(lab.figures as object), [castId]: { play: f.play, pose: f.pose, clips: f.clips, triangles: f.triangles, held: f.held } }
       }
       // &dummy=x,z: a person-sized solid at that spot, standing in for a 3D character, to see its shadow on the paint.
       const dummy = q.dummy?.split(",").map(Number)

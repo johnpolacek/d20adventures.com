@@ -3,6 +3,7 @@ import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
 import { figureClips, isRigged, MOVE_NAMES, STRIKE } from "./clips"
 import { type Armed, arm } from "./fight"
+import { fingered, wield } from "./hold"
 import { holdProps } from "./props"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
 
@@ -179,7 +180,8 @@ export class Models {
       // Stood beside it before its materials are made, so the prop is lit as the figure is.
       carried = holdProps(root, bind.min.y)
     }
-    // The weapons its moves need, seated in its hands at rest and hidden till a move shows them.
+    // The weapons its moves need, seated in its hands at rest and hidden till a move shows them. A figure that brings
+    // its own clips and has fingers holds them in a closed hand (hold.ts).
     const armed =
       rigged && bind
         ? arm(
@@ -187,7 +189,9 @@ export class Models {
             Object.values(spec.moves ?? {}).filter((c): c is string => !!c),
             bind.max.y - bind.min.y
           )
-        : null
+        : fingered(root)
+          ? wield(root)
+          : null
     const mixer = new THREE.AnimationMixer(root)
     const action = (name: string | undefined, held: boolean) => {
       const clip = name ? THREE.AnimationClip.findByName(animations, name) : null

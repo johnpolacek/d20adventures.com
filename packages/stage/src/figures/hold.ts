@@ -119,10 +119,9 @@ export function wield(root: THREE.Object3D): Armed {
     g.traverse((m) => {
       if (m instanceof THREE.Mesh) m.castShadow = m.receiveShadow = true
     })
-    // Placed in the world, then handed to the wrist to carry.
-    const scene = root.parent ?? root
-    scene.add(g)
-    scene.updateWorldMatrix(true, true)
+    // Placed in the world, then handed to the wrist to carry. It has no parent till then, so where it is put is where
+    // it is in the world: under the figure's root, a figure already stood at its spot on a stage would carry it as far
+    // from its hand as the spot is from the middle of the stage.
     h.wrist.attach(g)
     g.visible = false
     const weapon: Weapon = {
