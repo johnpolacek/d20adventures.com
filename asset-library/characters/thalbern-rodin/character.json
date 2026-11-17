@@ -26,5 +26,8 @@
     "Block": "ual2:Sword_Block",
     "Combo": "ual2:Sword_Regular_Combo",
     "Strafe": "m2m/strafe-left"
+  },
+  "eased": {
+    "Swing": 85
   }
 }

@@ -40,14 +40,14 @@
 import { execFileSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
-import { type Accessor, type Document, NodeIO } from "@gltf-transform/core"
+import { type Accessor, type Document, type Node, NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions"
 import sharp from "sharp"
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
-import { type Quat, qall, qinv, qmix, qmul, qturn, qup } from "./quat"
-import { type Part, retarget } from "./retarget"
+import { type Quat, qall, qbetween, qinv, qmix, qmul, qturn, qup } from "./quat"
+import { type Part, reader, retarget } from "./retarget"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
 const RIG = { endpoint: "meshy/rigging/multi-animation", cost: 0.2, clip: 0.12 }
@@ -307,6 +307,62 @@ function spread(doc: Document, reach: number, passes: number) {
 // worst of it was crushed to an eighth and is now crushed to a fifth. Wider and more (0.2 m and 16, 0.24 m and 32)
 // stretched it further, to 6.7 times from 4.6. No setting stretched it less: that is the one skin, not the shares.
 const SPREAD = { reach: 0.16, passes: 8 }
+
+// An arm kept from being raised past a limit in a clip, in degrees up from hanging as the chest has it. The limit is
+// come to gently: from twenty degrees under it the arm gives up more and more of its lift and never passes it, so a
+// cut still rises and falls and has no flat top. The forearm and hand keep their own turns and come down with it.
+// The skin of a shoulder made in one piece with its plates is at its worst with the arm out level or higher.
+function ease(doc: Document, name: string, limit: number) {
+  const clip = doc
+    .getRoot()
+    .listAnimations()
+    .find((a) => a.getName() === name)
+  const joints = doc.getRoot().listSkins()[0]?.listJoints() ?? []
+  const find = (bone: string) => joints.find((j) => new RegExp(`(^|:)${bone}$`).test(j.getName()))
+  const chest = find("Spine2")
+  if (!clip || !chest) return null
+  const read = reader(clip)
+  // A bone's turn in the world at a moment: its own on its parent's, to the top.
+  const turned = (node: Node | null, time: number): Quat => {
+    if (!node) return [0, 0, 0, 1]
+    const up = node.getParentNode()
+    const own = read(node, "rotation", time) as Quat
+    return up ? qmul(turned(up, time), own) : own
+  }
+  const chestRest = chest.getWorldRotation() as Quat
+  const knee = limit - 20
+  let most = 0
+  for (const side of ["Left", "Right"]) {
+    const [arm, fore] = [find(`${side}Arm`), find(`${side}ForeArm`)]
+    const sampler = clip
+      .listChannels()
+      .find((c) => c.getTargetNode() === arm && c.getTargetPath() === "rotation")
+      ?.getSampler()
+    const [input, output] = [sampler?.getInput(), sampler?.getOutput()]
+    if (!arm || !fore || !input || !output) continue
+    for (let i = 0; i < output.getCount(); i++) {
+      const time = input.getScalar(i)
+      const above = turned(arm.getParentNode(), time)
+      const own = output.getElement(i, [0, 0, 0, 1]) as Quat
+      const along = qturn(qmul(above, own), fore.getTranslation())
+      const long = Math.hypot(...along) || 1
+      const u = along.map((v) => v / long)
+      const down = qturn(qmul(turned(chest, time), qinv(chestRest)), [0, -1, 0])
+      const cos = Math.max(-1, Math.min(1, u[0] * down[0] + u[1] * down[1] + u[2] * down[2]))
+      const raised = (Math.acos(cos) * 180) / Math.PI
+      most = Math.max(most, raised)
+      if (raised <= knee) continue
+      const to = knee + (limit - knee) * (1 - Math.exp(-(raised - knee) / (limit - knee)))
+      // The arm's line turned toward the chest's down by what it gives up.
+      const across = [0, 1, 2].map((k) => down[k] - cos * u[k])
+      const wide = Math.hypot(...across) || 1
+      const by = ((raised - to) * Math.PI) / 180
+      const lowered = [0, 1, 2].map((k) => u[k] * Math.cos(by) + (across[k] / wide) * Math.sin(by))
+      output.setElement(i, qall(qinv(above), qbetween(u, lowered), above, own))
+    }
+  }
+  return most
+}
 
 // Each shoulder joint moved up by so many centimetres of the figure's height, down if less than none, with the skin
 // bound as it was and the elbow left where it is: to measure whether a rigger set the joint too high or too low
@@ -572,6 +628,8 @@ interface Brief {
   borrowed?: Record<string, string>
   // How Hyper3D shares the skin among its bones: "core" unless said.
   skinning?: "core" | "shell"
+  // The most an arm is raised in a clip, in degrees up from hanging: { "Swing": 85 }.
+  eased?: Record<string, number>
   // False to leave out the bones between arm and trunk, for a figure kept to measure against.
   helpers?: boolean
 }
@@ -814,6 +872,10 @@ async function rodinHyper(brief: Brief) {
   // `--spread=off` leaves the shares as the rigger gave them, to measure one rigging against another.
   if (!args.includes("--spread=off")) say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
   made.push(...(await borrow(doc, brief.borrowed)))
+  for (const [name, limit] of Object.entries(brief.eased ?? {})) {
+    const most = ease(doc, name, limit)
+    say("ease", most === null ? `${name}: no such clip` : `${name}: an arm was raised ${most.toFixed(0)}°, and is kept under ${limit}°`)
+  }
   // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
   if (!args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
   await io.write(`${dir}/lod0.glb`, doc)
