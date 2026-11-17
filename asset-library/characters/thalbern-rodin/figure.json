@@ -22,24 +22,19 @@
     "Shoot",
     "Swing",
     "Dodge",
+    "Sidestep",
     "Hit",
     "Fall",
-    "Guard",
-    "Point",
-    "Q Idle",
-    "Q Walk",
-    "Q Swing",
-    "Q Roll",
-    "Q Hit",
-    "Q Fall",
-    "Q Shoot",
-    "Q Dodge Left"
+    "Sword Idle",
+    "Block",
+    "Combo",
+    "Strafe"
   ],
   "lods": [
     {
       "file": "lod0.glb",
       "triangles": 0,
-      "megabytes": 7.12,
+      "megabytes": 5.75,
       "texture": 0
     }
   ]

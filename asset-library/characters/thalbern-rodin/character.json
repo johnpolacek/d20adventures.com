@@ -14,13 +14,17 @@
   "maker": "rodin",
   "face": "close",
   "borrowed": {
-    "Q Idle": "ual1:Idle_Loop",
-    "Q Walk": "ual1:Walk_Loop",
-    "Q Swing": "ual1:Sword_Attack",
-    "Q Roll": "ual1:Roll",
-    "Q Hit": "ual1:Hit_Chest",
-    "Q Fall": "ual1:Death01",
-    "Q Shoot": "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6",
-    "Q Dodge Left": "m2m/dodge-left"
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Shoot": "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6",
+    "Swing": "ual1:Sword_Attack",
+    "Dodge": "ual1:Roll",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01",
+    "Sword Idle": "ual1:Sword_Idle",
+    "Block": "ual2:Sword_Block",
+    "Combo": "ual2:Sword_Regular_Combo",
+    "Strafe": "m2m/strafe-left"
   }
 }

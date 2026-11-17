@@ -559,9 +559,23 @@ async function rodinHyper(brief: Brief) {
   }
   inPlace(doc)
   smooth(doc)
+  // A brief that borrows its clips has no use for the rigger's stand-ins, a gun fired for a bow shot and a throw for
+  // a cut: they are taken out, keys and all, and the borrowed ones go by the names the game plays.
+  if (Object.keys(brief.borrowed ?? {}).length) {
+    for (const anim of doc.getRoot().listAnimations()) {
+      for (const sampler of anim.listSamplers()) {
+        sampler.getInput()?.dispose()
+        sampler.getOutput()?.dispose()
+        sampler.dispose()
+      }
+      for (const channel of anim.listChannels()) channel.dispose()
+      anim.dispose()
+    }
+    made.length = 0
+  }
   made.push(...(await borrow(doc, brief.borrowed)))
   await io.write(`${dir}/lod0.glb`, doc)
-  const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Hit", "Fall"]
+  const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
   return { clips: made, rest: all, generator: "Rodin Gen-2.5 on fal, rigged by Hyper3D", weights: "hyper3d", cost: RODIN.cost + HYPER.cost }
 }
