@@ -214,7 +214,8 @@ export class Models {
     const walk = action(spec.walk, false)
     const actions = new Map<string, THREE.AnimationAction>()
     // Every written move, for a rigged figure: its own fight moves pick among them, and a roar is asked for by name.
-    for (const clip of [...Object.values(spec.moves ?? {}), ...(rigged ? MOVE_NAMES : [])]) {
+    // A figure with clips of its own has whichever of those names it brings.
+    for (const clip of [...Object.values(spec.moves ?? {}), ...MOVE_NAMES]) {
       const a = clip && !actions.has(clip) ? action(clip, true) : null
       if (clip && a) actions.set(clip, a)
     }

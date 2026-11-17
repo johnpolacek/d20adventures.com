@@ -1,0 +1,27 @@
+{
+  "id": "owlbear-rodin",
+  "name": "Owlbear",
+  "role": "Beast of the Midnight Summons",
+  "cast": ["owlbear"],
+  "height": 3.3,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/owlbear-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/owlbear-back.webp"
+  },
+  "who": "an owlbear, a huge beast with the heavy body, thick limbs and clawed paws of a giant bear, covered in shaggy slate-blue fur with a few old pink scars, and the head of a great horned owl with tall ear tufts, a pale facial disc, amber eyes and a hooked grey beak",
+  "stow": "The fur lies close to the limbs, so the outline of each arm and each leg stands clear of the body.",
+  "arms": 40,
+  "creature": true,
+  "maker": "rodin",
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "m2m/walk-large",
+    "Claw": "ual2:Zombie_Scratch",
+    "Roar": "m2m/zombie-yell",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01",
+    "Idle Heavy": "ual2:Zombie_Idle_Loop",
+    "Walk Heavy": "ual2:Zombie_Walk_Fwd_Loop",
+    "Claw Hook": "ual2:Melee_Hook > ual2:Melee_Hook_Rec"
+  }
+}

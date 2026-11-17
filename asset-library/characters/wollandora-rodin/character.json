@@ -1,0 +1,26 @@
+{
+  "id": "wollandora-rodin",
+  "name": "Wollandora",
+  "role": "Elven druid of the Standing Stones",
+  "cast": ["wollandora"],
+  "height": 1.86,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/wollandora-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/wollandora-back.webp"
+  },
+  "who": "Wollandora, a tall, slender elven druid woman with long pale silver hair braided at the crown under a wreath of ivy and autumn leaves, pointed ears, deep green eyes and light freckles, in a ragged layered moss-green and brown robe tied with a wide leather sash, a tattered dark green hooded mantle trailing ivy, and worn brown boots",
+  "stow": "She has no staff: it is left out of the picture entirely. The mantle hangs behind her shoulders and the sleeves hang from the arms alone, so nothing of the cloth bridges the gap between an arm and the body. The sleeves end at the wrists, so both hands are bare and clear of cloth.",
+  "arms": 45,
+  "sheet": "front",
+  "maker": "rodin",
+  "face": "close",
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "m2m/walk-female",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01",
+    "Cast": "ual1:Spell_Simple_Enter > ual1:Spell_Simple_Shoot > ual1:Spell_Simple_Exit",
+    "Staff Idle": "m2m/polearm-idle"
+  }
+}

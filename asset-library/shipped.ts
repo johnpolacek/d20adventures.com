@@ -25,5 +25,8 @@ export const PLAYS: Record<string, Plays> = {
   thalbern: { moves: { melee: "Swing", ranged: "Shoot", dodge: "Dodge" } },
   wollandora: { moves: { dodge: "Dodge" } },
   owlbear: { moves: { melee: "Claw" } },
+  // Not stood yet: their models are still to be made (pipeline/pilot.ts, the owner's to pay for).
+  "wollandora-rodin": { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { dodge: "Sidestep" } },
+  "owlbear-rodin": { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { melee: "Claw" } },
   "thalbern-rodin": { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { melee: "Swing", ranged: "Shoot", dodge: "Sidestep" }, lands: { Swing: 0.4, Shoot: 1.5 } },
 }
