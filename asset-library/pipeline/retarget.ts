@@ -73,7 +73,7 @@ function resting(node: Node): { turn: Quat; at: Vec } {
 }
 
 // What a clip has a node at, at a time: its keys read between, or the node's rest where the clip leaves it alone.
-function reader(clip: Animation) {
+export function reader(clip: Animation) {
   const keys = new Map<Node, Record<string, { times: number[]; at: (i: number) => number[]; step: boolean }>>()
   for (const ch of clip.listChannels()) {
     const [node, sampler] = [ch.getTargetNode(), ch.getSampler()]

@@ -168,11 +168,15 @@ function upright(doc: Document, name: string, share: number, of: "whole" | "each
   say("upright", `${name}: stood ${Math.round((most * 180) / Math.PI)}° off${of === "each" ? " at most" : ""}, ${Math.round((most * share * 180) / Math.PI)}° taken out`)
 }
 
-// A shoulder plate made to hold its shape. A rigger shares the top of a shoulder between the collarbone and the upper
-// arm by degrees, which suits skin. Over armour it pulls the cap of a pauldron out after the arm into a wing (the
-// owner, 2026-11-16: "the arms do weird things"). On top of each shoulder the share is made steep: a point mostly the
-// collarbone's becomes all the collarbone's, one mostly the arm's all the arm's, and the turn is taken in a narrow band
-// between, as a plate hinges on its strap. Under the arm the shares are left as they came.
+// The top of a shoulder kept from going after the arm. A rigger shares the top of a shoulder between the collarbone
+// and the upper arm by degrees, which suits skin. Over armour the least share pulls the cap of a pauldron out after
+// the arm as a wing, and the quiver behind it (the owner, 2026-11-16: "the arms do weird things"). On top of each
+// shoulder a quarter is taken off the arm's share and what is left spread over the rest: a point the arm barely
+// pulled is let go, and no point is given a share far from its neighbour's. Under the arm the shares are left as
+// they came.
+// The first try made the share steep, all the collarbone's under 35% and all the arm's over 65%. The cap held, but
+// the turn was taken in a narrow band, and measured (armcheck.ts) the skin there was crushed to an eighth in a walk
+// and the upper arm stretched half as far again in every move.
 function plates(doc: Document) {
   const skin = doc.getRoot().listSkins()[0]
   const joints = skin?.listJoints() ?? []
@@ -195,8 +199,7 @@ function plates(doc: Document) {
           // From a hand's width under the joint and up: the top of the shoulder, and not the armpit. Taken lower, to
           // 16 cm under, the sleeve met the chest in a row of teeth when the arm went back.
           const top = Math.min(1, Math.max(0, (pos.getElement(i, [0, 0, 0])[1] - at[1] + 0.11) / 0.08))
-          const t = Math.min(1, Math.max(0, (share - PLATE[0]) / (PLATE[1] - PLATE[0])))
-          const steep = share + top * (t * t * (3 - 2 * t) - share)
+          const steep = share + top * (Math.max(0, (share - PLATE) / (1 - PLATE)) - share)
           if (Math.abs(steep - share) < 1e-4) continue
           const rest = (1 - steep) / (1 - share)
           W.setElement(
@@ -209,8 +212,8 @@ function plates(doc: Document) {
   }
   return changed
 }
-// The shares of the upper arm between which a shoulder plate turns: under the first it is the collarbone's alone.
-const PLATE = [0.35, 0.65]
+// The share of the upper arm under which a point on top of a shoulder is the collarbone's alone.
+const PLATE = 0.25
 
 // One normal for every place on the mesh. Rodin's comes apart along every edge of its texture layout with a normal to
 // each side, a median of 63 degrees apart, and is lit as flat shards: an ear, a nose and hair cut from card. rig.py

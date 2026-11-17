@@ -1,0 +1,203 @@
+// Whether a figure's arms hold together through its clips, measured and not looked at: how far each elbow bends, how
+// high each arm is raised, and how far the skin over each arm is stretched and crushed, on the skinned mesh itself,
+// at every frame.
+//
+//   pnpm assets:arms thalbern-rodin-meshy             every clip
+//   pnpm assets:arms thalbern-rodin-meshy "Q Shoot"   the clips named, by comma
+//
+// The limits are those of MengTo's game-dev-combat-animation skill (github.com/MengTo/Skills, MIT), found on rigs
+// with no bones to twist an arm, as these are:
+//   the elbow bends between 10 and 152 degrees, a straight arm being 0
+//   no arm is raised past 105 degrees from hanging
+//   of the edges of the skin over each part of an arm, the worst hundredth is stretched at most twice its length at
+//   rest, and crushed to no less than a third of it
+// A clip made for one skeleton can break these on another and still look right on its own.
+//
+// The shoulder is measured as a part of its own: the edges that join the upper arm to the trunk, where a pauldron
+// is pulled out after the arm.
+
+import { readFile } from "node:fs/promises"
+import { type Node, NodeIO } from "@gltf-transform/core"
+import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
+import { reader } from "./retarget"
+
+const LIMITS = { elbow: [10, 152], raise: 105, stretch: 2, crush: 3 }
+const FRAMES = 30
+type Mat = number[]
+
+const mul = (a: Mat, b: Mat): Mat => {
+  const out = new Array(16).fill(0)
+  for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) out[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k]
+  return out
+}
+const local = (t: number[], [x, y, z, w]: number[], s: number[]): Mat => [
+  (1 - 2 * (y * y + z * z)) * s[0],
+  2 * (x * y + w * z) * s[0],
+  2 * (x * z - w * y) * s[0],
+  0,
+  2 * (x * y - w * z) * s[1],
+  (1 - 2 * (x * x + z * z)) * s[1],
+  2 * (y * z + w * x) * s[1],
+  0,
+  2 * (x * z + w * y) * s[2],
+  2 * (y * z - w * x) * s[2],
+  (1 - 2 * (x * x + y * y)) * s[2],
+  0,
+  t[0],
+  t[1],
+  t[2],
+  1,
+]
+const angle = (a: number[], b: number[]) => (Math.acos(Math.max(-1, Math.min(1, (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (Math.hypot(...a) * Math.hypot(...b) || 1)))) * 180) / Math.PI
+
+async function main() {
+  const [id, only] = process.argv.slice(2)
+  if (!id) throw new Error("Name a character: pnpm assets:arms <id> [clip,clip]")
+  const dir = `asset-library/characters/${id}`
+  const doc = await new NodeIO().registerExtensions(ALL_EXTENSIONS).read(`${dir}/${(JSON.parse(await readFile(`${dir}/figure.json`, "utf8")) as { lods: { file: string }[] }).lods[0].file}`)
+  const skin = doc.getRoot().listSkins()[0]
+  const joints = skin.listJoints()
+  const bind = skin.getInverseBindMatrices()
+  const bone = (name: string) => joints.findIndex((j) => new RegExp(`(^|:)${name}$`).test(j.getName()))
+  const prim = doc
+    .getRoot()
+    .listMeshes()
+    .flatMap((m) => m.listPrimitives())
+    .find((p) => p.getAttribute("JOINTS_0"))
+  const [pos, J, W, index] = [prim?.getAttribute("POSITION"), prim?.getAttribute("JOINTS_0"), prim?.getAttribute("WEIGHTS_0"), prim?.getIndices()]
+  if (!pos || !J || !W || !bind) throw new Error(`No skinned mesh in ${dir}`)
+
+  // Which part of which arm a point belongs to: the bone that pulls on it most.
+  const part = new Map<number, string>()
+  for (const side of ["Left", "Right"]) {
+    part.set(bone(`${side}Arm`), `${side} upper arm`)
+    part.set(bone(`${side}ForeArm`), `${side} forearm`)
+    for (const [i, joint] of joints.entries()) if (new RegExp(`(^|:)${side}Hand`).test(joint.getName())) part.set(i, `${side} hand`)
+  }
+  const count = pos.getCount()
+  const of: (string | null)[] = []
+  const pulls: [number[], number[]][] = []
+  for (let i = 0; i < count; i++) {
+    const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+    pulls.push([j, w])
+    of.push(part.get(j[w.indexOf(Math.max(...w))]) ?? null)
+  }
+  // The edges of each part, each once, and of each shoulder: an upper arm's point joined to one of the trunk's.
+  const edges = new Map<string, [number, number, number][]>()
+  const seen = new Set<number>()
+  const rest = (i: number) => pos.getElement(i, [0, 0, 0])
+  const corners = index ? index.getCount() : count
+  for (let t = 0; t < corners; t += 3) {
+    const tri = [0, 1, 2].map((k) => (index ? index.getScalar(t + k) : t + k))
+    for (const [a, b] of [
+      [tri[0], tri[1]],
+      [tri[1], tri[2]],
+      [tri[2], tri[0]],
+    ]) {
+      const key = Math.min(a, b) * count + Math.max(a, b)
+      if (seen.has(key)) continue
+      seen.add(key)
+      const [pa, pb] = [of[a], of[b]]
+      const name = pa && pa === pb ? pa : pa?.endsWith("upper arm") && !pb ? pa.replace("upper arm", "shoulder") : pb?.endsWith("upper arm") && !pa ? pb.replace("upper arm", "shoulder") : null
+      if (!name) continue
+      const [x, y] = [rest(a), rest(b)]
+      const long = Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2])
+      if (long > 1e-5) (edges.get(name) ?? edges.set(name, []).get(name))?.push([a, b, long])
+    }
+  }
+  const used = [...new Set([...edges.values()].flatMap((list) => list.flatMap((edge) => edge.slice(0, 2))))]
+  const binds = joints.map((_, i) => bind.getElement(i, new Array(16).fill(0)))
+
+  const clips = doc
+    .getRoot()
+    .listAnimations()
+    .filter((a) => !only || only.split(",").includes(a.getName()))
+  const bad: string[] = []
+  console.log(`${id}: ${count} points, ${used.length} on the arms, ${[...edges.entries()].map(([name, list]) => `${name} ${list.length}`).join(", ")}`)
+  console.log("clip".padEnd(14), "side ", "elbow°    ", "raise°", " upper arm     ", "forearm        ", "hand           ", "shoulder        stretch x, crush x, and when")
+  for (const clip of clips) {
+    const read = reader(clip)
+    const long = Math.max(...clip.listSamplers().map((s) => s.getInput()?.getMax([0])[0] ?? 0))
+    const worst: Record<string, { value: number; at: number }> = {}
+    const note = (key: string, value: number, at: number, least = false) => {
+      if (!worst[key] || (least ? value < worst[key].value : value > worst[key].value)) worst[key] = { value, at }
+    }
+    for (let f = 0; f <= Math.ceil(long * FRAMES); f++) {
+      const time = Math.min(long, f / FRAMES)
+      const memo = new Map<Node, Mat>()
+      const world = (node: Node): Mat => {
+        const had = memo.get(node)
+        if (had) return had
+        const up = node.getParentNode()
+        const own = local(read(node, "translation", time), read(node, "rotation", time), node.getScale())
+        const now = up ? mul(world(up), own) : own
+        memo.set(node, now)
+        return now
+      }
+      const skinned = joints.map((joint, i) => mul(world(joint), binds[i]))
+      const at = (name: string) => world(joints[bone(name)]).slice(12, 15)
+      const posed = new Map<number, number[]>()
+      for (const i of used) {
+        const [j, w] = pulls[i]
+        const p = rest(i)
+        const out = [0, 0, 0]
+        for (let k = 0; k < 4; k++) {
+          if (!w[k]) continue
+          const m = skinned[j[k]]
+          for (let r = 0; r < 3; r++) out[r] += w[k] * (m[r] * p[0] + m[4 + r] * p[1] + m[8 + r] * p[2] + m[12 + r])
+        }
+        posed.set(i, out)
+      }
+      for (const [name, list] of edges) {
+        const ratios = list
+          .map(([a, b, bound]) => {
+            const [x, y] = [posed.get(a) as number[], posed.get(b) as number[]]
+            return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) / bound
+          })
+          .sort((a, b) => a - b)
+        note(`${name} stretch`, ratios[Math.floor(ratios.length * 0.99)], time)
+        note(`${name} crush`, 1 / Math.max(1e-6, ratios[Math.floor(ratios.length * 0.01)]), time)
+      }
+      // Straight down as the chest has it: the chest's own turn since rest, on the world's down.
+      const chest = world(joints[bone("Spine2")])
+      const chestRest = joints[bone("Spine2")].getWorldMatrix()
+      const down = [0, 1, 2].map((r) => -(chest[r] * chestRest[1] + chest[4 + r] * chestRest[5] + chest[8 + r] * chestRest[9]))
+      for (const side of ["Left", "Right"]) {
+        const [shoulder, elbow, wrist] = [at(`${side}Arm`), at(`${side}ForeArm`), at(`${side}Hand`)]
+        const upper = [0, 1, 2].map((k) => elbow[k] - shoulder[k])
+        const fore = [0, 1, 2].map((k) => wrist[k] - elbow[k])
+        note(`${side} elbow most`, angle(upper, fore), time)
+        note(`${side} elbow least`, angle(upper, fore), time, true)
+        note(`${side} raise`, angle(upper, down), time)
+      }
+    }
+    for (const side of ["Left", "Right"]) {
+      const v = (key: string) => worst[`${side} ${key}`] ?? { value: 0, at: 0 }
+      const skinOf = (name: string) => {
+        const [s, c] = [v(`${name} stretch`), v(`${name} crush`)]
+        const over = s.value > LIMITS.stretch || c.value > LIMITS.crush
+        if (over) bad.push(`${clip.getName()} ${side} ${name}: stretched ${s.value.toFixed(1)}x at ${s.at.toFixed(2)} s, crushed ${c.value.toFixed(1)}x at ${c.at.toFixed(2)} s`)
+        return `${s.value.toFixed(1)} ${c.value.toFixed(1)}${over ? ` !${(s.value > LIMITS.stretch ? s : c).at.toFixed(2)}` : ""}`.padEnd(15)
+      }
+      const [least, most, raise] = [v("elbow least"), v("elbow most"), v("raise")]
+      if (most.value > LIMITS.elbow[1]) bad.push(`${clip.getName()} ${side} elbow bent ${most.value.toFixed(0)}° at ${most.at.toFixed(2)} s`)
+      if (raise.value > LIMITS.raise) bad.push(`${clip.getName()} ${side} arm raised ${raise.value.toFixed(0)}° at ${raise.at.toFixed(2)} s`)
+      console.log(
+        (side === "Left" ? clip.getName() : "").padEnd(14),
+        side.padEnd(5),
+        `${least.value.toFixed(0)}-${most.value.toFixed(0)}${most.value > LIMITS.elbow[1] ? "!" : ""}`.padEnd(10),
+        `${raise.value.toFixed(0)}${raise.value > LIMITS.raise ? "!" : ""}`.padEnd(6),
+        skinOf("upper arm"),
+        skinOf("forearm"),
+        skinOf("hand"),
+        skinOf("shoulder")
+      )
+    }
+  }
+  console.log(bad.length ? `\n${bad.length} over a limit:\n${bad.map((b) => `  ${b}`).join("\n")}` : "\nNothing over a limit.")
+}
+
+main().catch((err) => {
+  console.error(err instanceof Error ? err.message : err)
+  process.exit(1)
+})
