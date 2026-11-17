@@ -1,0 +1,41 @@
+{
+  "id": "thalbern-rodin-shell",
+  "name": "Thalbern (Rodin pilot, shell skinning)",
+  "role": "Ranger of the Valkarr Woods, Rodin's model rigged by Hyper3D with shell skinning",
+  "cast": [],
+  "party": false,
+  "height": 1.82,
+  "front": "front.webp",
+  "source": {
+    "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D with shell skinning",
+    "triangles": 0,
+    "cost": 0.6,
+    "made": "2026-11-17"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Shoot",
+    "Swing",
+    "Dodge",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Sword Idle",
+    "Block",
+    "Combo",
+    "Strafe"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 0,
+      "megabytes": 5.75,
+      "texture": 0
+    }
+  ]
+}
