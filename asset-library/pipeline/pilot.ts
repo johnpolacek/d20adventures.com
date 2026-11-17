@@ -101,14 +101,17 @@ const qall = (...q: Quat[]) => q.reduce(qmul)
 // Where a turn takes straight up.
 const qup = ([x, y, z, w]: Quat) => [2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x)]
 
-// The clips a figure stands and walks in, and how much of their stoop is taken out.
-const UPRIGHT: Record<string, number> = { Idle: 0.85, Walk: 0.85 }
+// How much of a clip's stoop is taken out. The clips a figure stands and walks in lose one lean, the same all through.
+// A clip that acts, and crouches and rises as it goes, loses a share of whatever lean each frame has.
+const UPRIGHT: Record<string, [share: number, of: "whole" | "each"]> = { Idle: [0.85, "whole"], Walk: [0.85, "whole"], Swing: [0.55, "each"] }
 
 // A clip's stoop taken out: Meshy's Idle tips the chest 30 degrees forward of how the figure was modelled and its Walk
 // 13, and a chest in armour then reads as hollow (the owner, 2026-11-16: "the chest seems slightly concave or flat").
 // The chest is turned back toward its attitude at rest by one turn for the whole clip, at the first joint of the
 // spine, so the breathing and the stride stay. The head and the upper arms keep the way they pointed.
-function upright(doc: Document, name: string, share: number) {
+// Meshy's sword cut begins in a crouch with the chest 55 degrees over, arms hung wide (the owner: "this looks bad"):
+// there a share of each frame's own lean is taken out, so the cut still winds up and comes down, from nearer upright.
+function upright(doc: Document, name: string, share: number, of: "whole" | "each") {
   const anim = doc
     .getRoot()
     .listAnimations()
@@ -142,20 +145,27 @@ function upright(doc: Document, name: string, share: number) {
     for (let k = 0; k < 3; k++) mean[k] += up[k] / frames
   }
   const tilt = Math.atan2(Math.hypot(mean[0], mean[2]), mean[1])
-  if (tilt * share < 0.035) return say("upright", `${name}: stands ${Math.round((tilt * 180) / Math.PI)}° off, left`)
-  // About the level line square to the way it leans, back by a share of the lean.
-  const lean = Math.hypot(mean[0], mean[2])
-  const half = (-tilt * share) / 2
-  const back: Quat = [(mean[2] / lean) * Math.sin(half), 0, (-mean[0] / lean) * Math.sin(half), Math.cos(half)]
+  if (of === "whole" && tilt * share < 0.035) return say("upright", `${name}: stands ${Math.round((tilt * 180) / Math.PI)}° off, left`)
+  // About the level line square to the way an up leans, back by a share of the lean.
+  const righting = (up: number[]): Quat => {
+    const lean = Math.hypot(up[0], up[2])
+    if (lean < 1e-6) return [0, 0, 0, 1]
+    const half = (-Math.atan2(lean, up[1]) * share) / 2
+    return [(up[2] / lean) * Math.sin(half), 0, (-up[0] / lean) * Math.sin(half), Math.cos(half)]
+  }
+  let most = 0
   for (let i = 0; i < frames; i++) {
     const [h, c] = [hips.at(i), chest(i)]
+    const up = of === "each" ? qup(qall(h, c, rest)) : mean
+    most = Math.max(most, Math.atan2(Math.hypot(up[0], up[2]), up[1]))
+    const back = righting(up)
     // The turn back as each bone's parent has it.
     const undo = qall(qinv(c), qinv(h), qinv(back), h, c)
     neck?.out?.setElement(i, qmul(undo, neck.at(i)))
     for (const [shoulder, arm] of arms) if (shoulder && arm?.out) arm.out.setElement(i, qall(qinv(shoulder.at(i)), undo, shoulder.at(i), arm.at(i)))
     spine.out.setElement(i, qall(qinv(h), back, h, spine.at(i)))
   }
-  say("upright", `${name}: stood ${Math.round((tilt * 180) / Math.PI)}° off, ${Math.round((tilt * share * 180) / Math.PI)}° taken out`)
+  say("upright", `${name}: stood ${Math.round((most * 180) / Math.PI)}° off${of === "each" ? " at most" : ""}, ${Math.round((most * share * 180) / Math.PI)}° taken out`)
 }
 
 // A shoulder plate made to hold its shape. A rigger shares the top of a shoulder between the collarbone and the upper
@@ -285,7 +295,7 @@ async function merge(rigged: string, clips: [string, string][], to: string) {
   }
   smooth(base)
   say("plates", `${plates(base)} points on top of the shoulders given to one bone or the other`)
-  for (const [name, share] of Object.entries(UPRIGHT)) if (made.includes(name)) upright(base, name, share)
+  for (const [name, [share, of]] of Object.entries(UPRIGHT)) if (made.includes(name)) upright(base, name, share, of)
   await io.write(to, base)
   return made
 }
