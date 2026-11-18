@@ -1,7 +1,7 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
-import { figureClips, isRigged, MOVE_NAMES, STRIKE } from "./clips"
+import { crouchClip, figureClips, isRigged, MOVE_NAMES, STRIKE } from "./clips"
 import { type Armed, arm } from "./fight"
 import { carry, fingered, wield } from "./hold"
 import { holdProps } from "./props"
@@ -59,6 +59,9 @@ interface Model {
   hit: THREE.AnimationAction | null
   fall: THREE.AnimationAction | null
   walk: THREE.AnimationAction | null
+  // The crouch (clips.ts), laid over the rest, and how far into it the figure is, 0 standing to 1 low.
+  crouch: THREE.AnimationAction | null
+  lowT: number
   // The move it is making, once through, and the way it turns to make it.
   move: { clip: string; action: THREE.AnimationAction; t: number; held?: boolean } | null
   aim: number | null
@@ -169,6 +172,8 @@ export class Models {
   private make(cast: CastMember, given: FigureSpec, gltf: { scene: THREE.Group; animations: THREE.AnimationClip[] }, room: THREE.Texture | null) {
     const root = gltf.scene
     for (const name of given.hide ?? []) root.getObjectByName(name)?.removeFromParent()
+    // Measured on the figure as it was modelled, before anything poses it.
+    const low = crouchClip(root)
     // A rigged figure with no clips of its own plays the written ones, which are measured on it as it was modelled.
     const rigged = !gltf.animations.length && isRigged(root)
     let animations = gltf.animations
@@ -224,6 +229,9 @@ export class Models {
       if (clip && a) actions.set(clip, a)
     }
     walk?.setEffectiveWeight(0)
+    const crouch = low ? mixer.clipAction(low, undefined, THREE.AdditiveAnimationBlendMode) : null
+    crouch?.play()
+    crouch?.setEffectiveWeight(0)
     mixer.update(0)
     carried?.update()
     const meshes: THREE.Mesh[] = []
@@ -279,6 +287,8 @@ export class Models {
       hit,
       fall,
       walk,
+      crouch,
+      lowT: this.standees.low.has(cast.id) ? 1 : 0,
       carried,
       move: null,
       aim: null,
@@ -329,10 +339,15 @@ export class Models {
     this.hits.set(id, { color: new THREE.Color(color), strength: THREE.MathUtils.clamp(strength, 0, 1.5), t: 0 })
     m.hitT = 0
   }
-  // Put down, or stood up, at once: for someone already down when the scene shows, and with motion off.
+  // Put down, or stood up, at once: for someone already down when the scene shows, and with motion off. And put low,
+  // or up, at once.
   settle(id: string) {
     const m = this.items.get(id)
     if (m) m.fallT = this.standees.down.has(id) ? (m.fall?.getClip().duration ?? 1) : 0
+  }
+  settleLow(id: string) {
+    const m = this.items.get(id)
+    if (m) m.lowT = this.standees.low.has(id) ? 1 : 0
   }
   // The figures, for a ray to pick from. A skinned mesh keeps the bounds of the pose it was first picked in, so they
   // are dropped here and worked out again from the pose it is in now.
@@ -413,6 +428,11 @@ export class Models {
         m.fall.time = m.fallT
         m.fall.setEffectiveWeight(f)
       }
+      // Low, as someone hidden keeps, once they have stopped walking: a walk to cover is walked upright, then they sink.
+      // They come up quicker than they go down.
+      const lowWant = this.standees.low.has(c.id) && !down && !c.walking ? 1 - c.walk : 0
+      m.lowT = motion ? THREE.MathUtils.clamp(m.lowT + THREE.MathUtils.clamp(lowWant - m.lowT, -dt * 3, dt * 1.8), 0, 1) : lowWant
+      m.crouch?.setEffectiveWeight((1 - f) * THREE.MathUtils.smootherstep(m.lowT, 0, 1))
       m.mixer.update(step)
       m.carried?.update(1 - f)
       if (m.move) m.armed?.after(m.move.clip, m.move.t, v)

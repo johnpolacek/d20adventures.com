@@ -423,6 +423,91 @@ export function relaxHands(root: THREE.Object3D): Pick<Arms, "wristL" | "wristR"
   return out
 }
 
+// Crouch: low on the heels behind cover, as someone hidden keeps. The left foot is planted ahead, the right knee down
+// near the ground on the ball of the foot, the back bent over and the head up to watch, the arms in over the knees.
+// It is held, not played: a turn per bone, in its parent's frame, laid over whatever the figure is doing (models.ts).
+// So it plays on the shared skeleton and on a figure that brings its own clips (Mixamo's bone names), whose bones are
+// not square to the world: each turn is carried into the bone's own frame as it was modelled.
+const CROUCH: Record<string, Q> = {
+  spine: about(X, 16),
+  chest: about(X, 12),
+  neck: about(X, -10),
+  head: about(X, -16),
+  upperarmL: about(X, -28),
+  upperarmR: about(X, -22),
+  forearmL: about(X, -40),
+  forearmR: about(X, -46),
+  thighL: turn(about(Z, 7), about(X, -82)),
+  shinL: about(X, 104),
+  footL: about(X, -22),
+  thighR: turn(about(Z, -7), about(X, -48)),
+  shinR: about(X, 118),
+  footR: about(X, -45),
+}
+// The bones each part of the crouch turns: the shared skeleton's, or Mixamo's, where the chest is two bones sharing it.
+const PARTS: Record<string, string[][]> = {
+  hips: [["hips"], ["Hips"]],
+  spine: [["spine"], ["Spine"]],
+  chest: [["chest"], ["Spine1", "Spine2"]],
+  neck: [["neck"], ["Neck"]],
+  head: [["head"], ["Head"]],
+  upperarmL: [["upperarmL"], ["LeftArm"]],
+  upperarmR: [["upperarmR"], ["RightArm"]],
+  forearmL: [["forearmL"], ["LeftForeArm"]],
+  forearmR: [["forearmR"], ["RightForeArm"]],
+  thighL: [["thighL"], ["LeftUpLeg"]],
+  thighR: [["thighR"], ["RightUpLeg"]],
+  shinL: [["shinL"], ["LeftLeg"]],
+  shinR: [["shinR"], ["RightLeg"]],
+  footL: [["footL"], ["LeftFoot"]],
+  footR: [["footR"], ["RightFoot"]],
+}
+
+// The crouch for one figure, as it stands modelled: an additive clip (each turn is laid over the pose under it, and the
+// hips are lowered by as much as the bent legs are shorter), or null for a figure without legs to bend. Read from the
+// model before anything poses it.
+export function crouchClip(root: THREE.Object3D): THREE.AnimationClip | null {
+  root.updateMatrixWorld(true)
+  const which = PARTS.hips.findIndex(([hips], i) => !!root.getObjectByName(hips) && !!root.getObjectByName(PARTS.thighL[i][0]))
+  if (which < 0) return null
+  const bones = (part: string) => PARTS[part][which].map((n) => root.getObjectByName(n)).filter((b): b is THREE.Object3D => !!b)
+  const at = (o: THREE.Object3D) => new THREE.Vector3().setFromMatrixPosition(o.matrixWorld)
+  const tracks: THREE.KeyframeTrack[] = []
+  for (const [part, want] of Object.entries(CROUCH)) {
+    const list = bones(part)
+    // Shared by the bones of a part, as the chest is.
+    const share = new THREE.Quaternion().slerp(want, 1 / Math.max(1, list.length))
+    for (const b of list) {
+      const rest = b.getWorldQuaternion(new THREE.Quaternion())
+      const d = rest.clone().invert().multiply(share).multiply(rest)
+      tracks.push(new THREE.QuaternionKeyframeTrack(`${b.name}.quaternion`, [0, 1], [...d.toArray(), ...d.toArray()]))
+    }
+  }
+  // How far the hips come down: as far as the leg that reaches lowest is shorter bent than standing. And back, by about
+  // as far as the feet come forward, so the figure sits over its feet.
+  const [hips] = bones("hips")
+  const legs = (["L", "R"] as const).flatMap((side) => {
+    const [thigh, shin, foot] = [`thigh${side}`, `shin${side}`, `foot${side}`].map((p) => bones(p)[0])
+    if (!thigh || !shin || !foot) return []
+    const [t, s, f] = [at(thigh), at(shin), at(foot)]
+    const [lt, ls] = [t.distanceTo(s), s.distanceTo(f)]
+    const a = new THREE.Euler().setFromQuaternion(CROUCH[`thigh${side}`], "XYZ").x
+    const b = a + new THREE.Euler().setFromQuaternion(CROUCH[`shin${side}`], "XYZ").x
+    return [{ rest: t.y - f.y, down: lt * Math.cos(a) + ls * Math.cos(b), ahead: -lt * Math.sin(a) - ls * Math.sin(b) }]
+  })
+  if (hips?.parent && legs.length) {
+    const drop = Math.min(...legs.map((l) => l.rest)) - Math.max(...legs.map((l) => l.down))
+    const back = legs.reduce((n, l) => n + l.ahead, 0) / legs.length
+    const from = at(hips)
+    const to = from.clone().add(new THREE.Vector3(0, -Math.max(0, drop), -back))
+    const inverse = hips.parent.matrixWorld.clone().invert()
+    const d = to.applyMatrix4(inverse).sub(from.applyMatrix4(inverse))
+    tracks.push(new THREE.VectorKeyframeTrack(`${hips.name}.position`, [0, 1], [...d.toArray(), ...d.toArray()]))
+  }
+  if (!tracks.length) return null
+  return new THREE.AnimationClip("Crouch", 1, tracks, THREE.AdditiveAnimationBlendMode)
+}
+
 // Whether a loaded model carries the shared skeleton.
 export const isRigged = (root: THREE.Object3D) => !!root.getObjectByName("hips") && !!root.getObjectByName("upperarmL")
 

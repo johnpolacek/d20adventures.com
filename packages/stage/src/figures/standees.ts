@@ -160,7 +160,8 @@ export const PALETTE_GRADE = /* glsl */ ` { vec3 c = diffuseColor.rgb; float l =
    c += vec3(.04, .016, -.01) * (1.0 - smoothstep(0.0, .55, l)) * uWarmth; c = mix(c, c * c * (3.0 - 2.0 * c), .18);
    diffuseColor.rgb = c; }`
 
-type BackUniforms = { uMapB: THREE.IUniform<THREE.Texture | null>; uBack: THREE.IUniform<number> }
+// `uLow` is how see-through a card is, 0 to 1: a card kept low (hidden) shows stippled, as a figure crouches.
+type BackUniforms = { uMapB: THREE.IUniform<THREE.Texture | null>; uBack: THREE.IUniform<number>; uLow: THREE.IUniform<number> }
 
 // Grade toward the set palette: warmed with umber in the shadows (unless the set grades neutral), painted saturation down about 13%, and the brightest painted
 // metal eased toward the world's values (highlights lose a little chroma and peak brightness); mid-tones, and with them the
@@ -173,7 +174,7 @@ function standeeMaterial(shared: SharedUniforms, back: BackUniforms) {
     Object.assign(s.uniforms, back)
     s.uniforms.uWarmth = shared.warmth
     s.fragmentShader = s.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform sampler2D uMapB; uniform float uBack, uWarmth;")
+      .replace("#include <common>", "#include <common>\nuniform sampler2D uMapB; uniform float uBack, uWarmth, uLow;")
       .replace(
         "#include <map_fragment>",
         `#ifdef USE_MAP
@@ -185,6 +186,7 @@ function standeeMaterial(shared: SharedUniforms, back: BackUniforms) {
  }
  diffuseColor *= sampledDiffuseColor;
 #endif
+ if (uLow > .001 && uLow * .55 > fract(.5 + 52.9829189 * fract(dot(gl_FragCoord.xy, vec2(.06711056, .00583715))))) discard;
  vec3 cardArt = diffuseColor.rgb;
 ${PALETTE_GRADE}`
       )
@@ -253,6 +255,8 @@ export class Standees {
   replaced = new Set<string>()
   // Cast members lying where they fell. The card tips back onto the ground.
   down = new Set<string>()
+  // Cast members kept low, as someone hidden is (Stage.setLow): a figure crouches, a card shows stippled.
+  low = new Set<string>()
   // Cast members just struck: a flash of colour on the card and a shake, fading over about half a second.
   private hits = new Map<string, { t: number; color: THREE.Color; strength: number }>()
 
@@ -274,6 +278,11 @@ export class Standees {
       s.side = null
     }
   }
+  // Low, or up, at once.
+  settleLow(id: string) {
+    const s = this.items.get(id)
+    if (s) s.bu.uLow.value = this.low.has(id) ? 1 : 0
+  }
   hit(id: string, color: string, strength = 1) {
     if (this.items.has(id)) this.hits.set(id, { t: 0, color: new THREE.Color(color), strength: THREE.MathUtils.clamp(strength, 0, 1.5) })
   }
@@ -292,7 +301,7 @@ export class Standees {
     const grp = new THREE.Group()
     const geo = new THREE.PlaneGeometry(1, 1)
     geo.translate(0, 0.5, 0)
-    const bu: BackUniforms = { uMapB: { value: null }, uBack: { value: 0 } }
+    const bu: BackUniforms = { uMapB: { value: null }, uBack: { value: 0 }, uLow: { value: 0 } }
     const mat = standeeMaterial(this.shared, bu)
     const depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, alphaTest: 0.5, side: THREE.DoubleSide })
     const mesh = new THREE.Mesh(geo, mat)
@@ -423,6 +432,7 @@ export class Standees {
       }
       // The card is as wide as the art it shows; the shadow caster and the relief follow whichever view dominates.
       s.bu.uBack.value = s.back
+      s.bu.uLow.value += ((this.low.has(c.id) ? 1 : 0) - s.bu.uLow.value) * Math.min(1, dt * 4)
       if (s.loaded) s.mesh.scale.x = c.height * (s.mapB ? THREE.MathUtils.lerp(s.aspect, s.aspectB, s.back) : s.aspect)
       const showB = !!s.mapB && s.back > 0.5
       const nm = (showB ? s.normalB : s.normal) ?? null

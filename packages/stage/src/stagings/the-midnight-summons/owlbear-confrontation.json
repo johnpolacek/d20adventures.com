@@ -58,5 +58,6 @@
       "label": "Owlbear"
     }
   },
-  "shot": "standoff"
+  "shot": "standoff",
+  "exits": [{ "cast": "owlbear", "via": ["treeLine"], "to": [12, -9], "pace": "hurry" }]
 }

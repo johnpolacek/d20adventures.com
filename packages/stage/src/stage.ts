@@ -117,7 +117,9 @@ const STEEPEST_ORBIT = Math.PI * 0.28
 // standing, and sliding one along with a bob reads as a cut-out pushed across the frame. So the crowd stands where
 // it is, and a cast member who has somewhere to go is put there while the picture dips for a moment, as it does when
 // a painted set's camera cuts. A fall is put the same way, a struck figure flashes without shaking, and a line of
-// people (a loop) holds still. The walking is all still here, behind this one switch.
+// people (a loop) holds still. The walking is all still here, behind this one switch. A rigged 3D figure is no card: it
+// walks on its own legs, so it is seen to walk, as it is seen to fall (owner, 2026-11-18: "can we make the pcs and
+// npcs actually move on the scene as they do the action for their round").
 const PEOPLE_STILL = true
 // A painted set's drift: on arriving at a point the camera starts a little off it (see driftIn) and a touch wide, and over these
 // seconds comes to rest, easing all the way. It ends this much closer than the view it was given, never wider, so a
@@ -900,8 +902,8 @@ export class Stage {
       c.z = p.z
       return Promise.resolve()
     }
-    // Nobody is seen to walk (see PEOPLE_STILL).
-    if (PEOPLE_STILL) {
+    // No card is seen to walk (see PEOPLE_STILL).
+    if (this.still(id)) {
       return new Promise<void>((resolve) => {
         this.moves.set(id, { tx: p.x, tz: p.z, speed, resolve, unseen: true })
         this.putUnseen(id)
@@ -976,6 +978,25 @@ export class Stage {
   isDown(id: string) {
     return this.standees.down.has(id)
   }
+  // Keep a cast member low, as someone hidden is: a figure sinks into a crouch once it has stopped walking and stays
+  // there, and a card, which has no knees, shows see-through. Standing again undoes it. `instant` skips the sinking, for
+  // someone already hidden when the scene is shown.
+  setLow(id: string, low: boolean, instant = false) {
+    this.member(id)
+    if (low) this.standees.low.add(id)
+    else this.standees.low.delete(id)
+    if (instant) {
+      this.standees.settleLow(id)
+      this.models.settleLow(id)
+    }
+  }
+  isLow(id: string) {
+    return this.standees.low.has(id)
+  }
+  // Whether a cast member is put where they go unseen rather than walked there: a card is (PEOPLE_STILL), a figure is not.
+  private still(id: string) {
+    return PEOPLE_STILL && !this.models.active(id)
+  }
   // Place a cast member instantly (setting up a beat sequence).
   placeCast(id: string, at: string | [number, number], facing?: string | [number, number] | number) {
     const c = this.member(id)
@@ -1028,7 +1049,7 @@ export class Stage {
     for (const [id, m] of this.moves) {
       if (m.unseen) continue
       const c = this.member(id)
-      if (PEOPLE_STILL) {
+      if (this.still(id)) {
         this.putUnseen(id)
         continue
       }

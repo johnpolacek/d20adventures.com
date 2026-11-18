@@ -143,7 +143,8 @@ export const stagingSpecSchema = z
     // is one straight line or one doorway, so a way off a boat needs its turns named. The paragraph is seen from `shot` (a set
     // or staging shot) when given: frame the floor, since a shot on the character looks over someone lying down.
     // Narration without the phrase, such as a later round's, finds them already gone or down. An exit with no `when`
-    // only says how that cast member leaves when the game takes them out of the encounter.
+    // only says how that cast member leaves when the game takes them out of the encounter. `pace` is how they go, a run
+    // (`hurry`) unless it says otherwise: a beast that loses interest walks off.
     exits: z
       .array(
         z
@@ -157,6 +158,7 @@ export const stagingSpecSchema = z
               .optional(),
             lands: z.union([idName, vec2]).optional(),
             shot: idName.optional(),
+            pace: z.enum(["walk", "hurry", "sneak"]).optional(),
           })
           .strict()
       )

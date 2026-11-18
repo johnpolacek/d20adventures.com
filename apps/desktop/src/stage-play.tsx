@@ -1,3 +1,4 @@
+import { isHidden } from "@d20/gm-core/sheet/conditions"
 import { levelOwed } from "@d20/gm-core/sheet/level-owed"
 import type { LevelUpChoices } from "@d20/gm-core/sheet/level-up"
 import { metres } from "@d20/gm-core/sheet/space"
@@ -50,8 +51,27 @@ const story = (turn: { story: StoryBeat[] } | undefined, originals = false): Par
 // Where a labelled paragraph puts the camera: on someone, on two people facing off, or on a place on the set.
 type Aim = { pair: [string, string] } | { place: string } | { subject: string }
 type View = Aim | null
-// How fast someone comes on, in metres a second, by the pace the story gives their entrance.
+// How fast someone comes on or goes off, in metres a second, by the pace the story gives their entrance or the staging
+// their exit.
 const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
+// Whether a character is kept low on the stage: hidden by the Hide action, or about to roll for it, having gone to cover.
+const keptLow = (c: Character) => isHidden(c) || c.rollRequired?.rollType === "Hide (Stealth)"
+// A way off for someone who leaves with no exit of their own: about ten metres away from the heroes, or as near that way
+// as the set lets them walk six metres or more. Null when nothing does.
+function wayOff(stage: Stage, id: string, heroes: string[]): [number, number] | null {
+  const me = stage.castAt(id)
+  const party = heroes.filter((h) => h !== id && stage.isOnStage(h)).map((h) => stage.castAt(h))
+  const cx = party.reduce((n, c) => n + c.x, 0) / Math.max(1, party.length)
+  const cz = party.reduce((n, c) => n + c.z, 0) / Math.max(1, party.length)
+  // Away from the heroes, or with none, the way they face.
+  const away = party.length && Math.hypot(me.x - cx, me.z - cz) > 0.1 ? Math.atan2(me.x - cx, me.z - cz) : me.ry
+  for (const off of [0, 30, -30, 60, -60, 90, -90, 135, -135]) {
+    const a = away + (off * Math.PI) / 180
+    const hit = stage.reach(id, { x: me.x + Math.sin(a) * 10, z: me.z + Math.cos(a) * 10 }, 10)
+    if (hit.distance >= 6) return [hit.x, hit.z]
+  }
+  return null
+}
 // The shot for an aim, framed on where everyone stands now.
 function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string | null {
   if ("subject" in aim) return { subject: aim.subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }
@@ -384,6 +404,9 @@ export function StagePlay(props: {
   // Whose turn the top of the screen names: while the story is read, whoever the paragraph's turn belongs to, and no one
   // for an intro or the end of a round. A hero's turn that is told while the next one is played is still theirs.
   const tellerId = reading ? paragraphs[paragraph]?.beats[0]?.by.character : undefined
+  // The view the paragraph being read takes, for a walk that ends after the camera was set.
+  const viewNow = useRef<View>(null)
+  viewNow.current = reading ? (beats[paragraph]?.view ?? null) : null
   const spotlit = reading ? shown?.characters.find((c) => c.id === tellerId) : actor
   // Everyone who speaks in the paragraph gets a bubble, and the first speaker a portrait plate.
   const speech = useMemo(
@@ -454,10 +477,12 @@ export function StagePlay(props: {
   }, [stage, cues, spots, reading, paragraph])
   // Who the game has taken out of this encounter, by cast id: the dead and those who fled. A round is built without
   // them, so each character's last appearance in the encounter says how they left.
+  // While the end of the last round is told on the old scene, that is the encounter, and the turn that closes it can
+  // say who left in it.
   const gone = useMemo(() => {
     const out = new Map<string, "dead" | "fled">()
-    if (!stage || !save || !turn) return out
-    const rounds = save.turns.filter((t) => t.encounterId === turn.encounterId).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    if (!stage || !save || !turn || !shown) return out
+    const rounds = save.turns.filter((t) => t.encounterId === shown.encounterId).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     for (const t of rounds)
       for (const c of t.characters) {
         const id = castIdFor(stage.cast, c)
@@ -467,16 +492,27 @@ export function StagePlay(props: {
         else if (hasFled(c)) out.set(id, "fled")
         else out.delete(id)
       }
+    if (shown !== turn)
+      for (const c of turn.characters) {
+        const id = castIdFor(stage.cast, c)
+        if (id && isDead(c)) out.set(id, "dead")
+        else if (id && hasFled(c)) out.set(id, "fled")
+      }
     return out
-  }, [stage, save, turn])
+  }, [stage, save, turn, shown])
   // Someone who goes while the turn is being told leaves at the paragraph that came with the news: the first new one
   // that names them. Anyone already gone when the turn was opened is simply not there.
   const [leftAt, setLeftAt] = useState<Record<string, number>>({})
   const leaving = useRef<{ turn?: string; paragraphs: number; out: Set<string> }>({ paragraphs: 0, out: new Set() })
+  // The turn, and the scene it is told on: the end of the last round on the old one, then its own.
+  const leavingKey = `${turn?._id}:${shown?.encounterId}`
   useEffect(() => {
     const old = leaving.current
-    const sameTurn = old.turn === turn?._id
+    const now = leavingKey
+    const sameTurn = old.turn === now
     const fresh = sameTurn ? [...gone.keys()].filter((id) => !old.out.has(id)) : []
+    // A turn that opens on the end of the last round tells there how someone still on the old scene left it.
+    const closingOut = !sameTurn && shown !== turn && closing > 0 && stage ? [...gone.keys()].filter((id) => stage.isOnStage(id)) : []
     setLeftAt((was) => {
       if (sameTurn && !fresh.length) return was
       const next = sameTurn ? { ...was } : {}
@@ -486,23 +522,41 @@ export function StagePlay(props: {
         const named = paragraphs.findIndex((p, i) => i >= old.paragraphs && p.beats.some(involves(id)))
         next[id] = named >= 0 ? named : Math.min(old.paragraphs, Math.max(0, text.length - 1))
       }
+      for (const id of closingOut) {
+        const named = paragraphs.findIndex((p, i) => i < closing && p.beats.some(involves(id)))
+        if (named >= 0) next[id] = named
+      }
       return next
     })
-    leaving.current = { turn: turn?._id, paragraphs: text.length, out: new Set(gone.keys()) }
-  }, [gone, text, turn?._id, stage])
+    leaving.current = { turn: now, paragraphs: text.length, out: new Set(gone.keys()) }
+  }, [gone, text, leavingKey, shown, turn, stage, closing])
   // Exits, the mirror of entrances: a fall or a run the staging ties to the narration, and anyone the game has taken
   // out. They stay until their paragraph. Then a runner makes for their way out and is gone, and the rest lie down.
   const exits = useMemo(() => {
     const authored = stage?.staging?.exits ?? []
-    const out = new Map<string, { run: boolean; to?: string | [number, number]; via?: (string | [number, number])[]; lands?: string | [number, number]; shot?: string; at: number }>()
+    type Exit = { run: boolean; to?: string | [number, number]; via?: (string | [number, number])[]; lands?: string | [number, number]; shot?: string; speed: number; at: number }
+    const out = new Map<string, Exit>()
     for (const e of authored)
-      if (e.when) out.set(e.cast, { run: Boolean(e.to), to: e.to, via: e.via, lands: e.lands, shot: e.shot, at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())) })
+      if (e.when)
+        out.set(e.cast, {
+          run: Boolean(e.to),
+          to: e.to,
+          via: e.via,
+          lands: e.lands,
+          shot: e.shot,
+          speed: PACE[e.pace ?? "hurry"],
+          at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())),
+        })
+    // Someone just gone, whose paragraph the effect above has still to find, waits for it: taken now, they would be
+    // gone before the paragraph that tells it.
+    const settled = leaving.current
     for (const [id, how] of gone) {
+      if (!(id in leftAt) && !(settled.turn === leavingKey && settled.out.has(id))) continue
       const way = authored.find((e) => e.cast === id)
-      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, via: way?.via, lands: way?.lands, shot: way?.shot, at: leftAt[id] ?? -1 })
+      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, via: way?.via, lands: way?.lands, shot: way?.shot, speed: PACE[way?.pace ?? "hurry"], at: leftAt[id] ?? -1 })
     }
     return out
-  }, [stage, text, gone, leftAt])
+  }, [stage, text, gone, leftAt, leavingKey])
   // The exit this paragraph shows, when its staging says where to watch it from.
   const departing = reading ? [...exits.values()].find((e) => e.at === paragraph && e.shot) : undefined
   const ran = useRef(new Set<string>())
@@ -527,13 +581,16 @@ export function StagePlay(props: {
         else if (!stage.isDown(id)) falls.push(setTimeout(() => stage.setDown(id, true, false, e.lands), FALL_DELAY))
       } else if (stage.isOnStage(id) && !ran.current.has(id)) {
         ran.current.add(id)
-        if (!(reading && paragraph === e.at && e.to)) stage.setOnStage(id, false)
+        // Someone who leaves with no way of their own walks off away from the heroes, rather than vanish on the spot.
+        const to = e.to ?? (reading && paragraph === e.at ? wayOff(stage, id, heroes.current) : null)
+        if (!(reading && paragraph === e.at && to)) stage.setOnStage(id, false)
         else {
-          const legs = [...(e.via ?? []), e.to].map((leg) => stage.point(leg))
+          const legs = [...(e.via ?? []), to].map((leg) => stage.point(leg))
           // Reading on does not cut the run short. Stepping back, or a new scene, does.
           const running = () => ranOn.current === stage && ran.current.has(id)
           void (async () => {
-            for (const leg of legs) for (const p of stage.route(id, leg, 40)) if (running()) await stage.moveCast(id, [p.x, p.z], { speed: 2.4 })
+            stage.setLow(id, false)
+            for (const leg of legs) for (const p of stage.route(id, leg, 40)) if (running()) await stage.moveCast(id, [p.x, p.z], { speed: e.speed })
             if (running()) stage.setOnStage(id, false)
           })()
         }
@@ -587,7 +644,23 @@ export function StagePlay(props: {
         // The set can stop a walk short of the engine's spot, which is the truth.
         const now = stage.castAt(id)
         if (live() && Math.hypot(to[0] - now.x, to[1] - now.z) > 0.05) stage.placeCast(id, to)
+        // The paragraph's view was framed on where they stood: it follows them to where they stopped, to see what they
+        // do there, such as sink down into cover.
+        const view = viewNow.current
+        if (live() && view && (("subject" in view && view.subject === id) || ("pair" in view && view.pair.includes(id)))) {
+          const shot = shotFor(stage, view, heroes.current)
+          if (shot) stage.shot(shot)
+        }
       })().catch((error) => onError(`Could not draw the move: ${String(error)}`))
+    }
+    // Someone hidden, or rolling to hide, is kept low, once the walk to where the engine has them has set off: the stage
+    // sinks a figure only when it stops walking. Hidden when the scene opens, they are low from the start.
+    for (const c of shown.characters) {
+      const id = castIdFor(stage.cast, c)
+      if (!id) continue
+      const spot = spots.get(id)
+      const low = keptLow(c) && (!spot || d.at.get(id) === spot.at.join())
+      if (low !== stage.isLow(id)) stage.setLow(id, low, fresh)
     }
   }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, onError])
   // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or

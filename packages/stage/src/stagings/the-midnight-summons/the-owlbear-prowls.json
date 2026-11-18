@@ -60,5 +60,6 @@
       "label": "Owlbear"
     }
   },
-  "shot": "watch"
+  "shot": "watch",
+  "exits": [{ "cast": "owlbear", "via": ["treeLine"], "to": [12, -9], "pace": "walk" }]
 }
