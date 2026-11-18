@@ -10,6 +10,7 @@ import { afterHarm, killed } from "../sheet/death"
 import { d20sOf, replaying } from "../sheet/dice"
 import { bonusDisengages, featureResolver } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
+import type { Moved } from "../sheet/moves"
 import { type Ask, attackWithReactions, checkWithReactions, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
 import { answeredSave, saveStakesOf, withSaveAnswered } from "../sheet/save-rules"
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
@@ -49,21 +50,26 @@ export type NpcTurnBranchResult = {
 type NpcActionResult = {
   actionSummary: string
   beats: StoryOutput
-  actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "die" | "other"
+  actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "leave" | "die" | "other"
+  // Where it goes, by the id of a place or of someone here (./npc-turn-generation-service `npcWays`).
+  moveTo?: string
   effects?: NpcTurnEffect[]
 }
+
+/** Whether the turn takes the NPC out of the encounter for good: it runs away, or goes on its way. */
+export const leavesForGood = (actionType: NpcActionResult["actionType"]): boolean => actionType === "flee" || actionType === "leave"
 
 // An NPC turn that needs no roll and touches nobody else: waiting, holding back, running away for good, or dying.
 export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; actionResult: NpcActionResult; scene: StoryScene }): NpcTurnBranchResult {
   const beatsToAppend = cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc))
   const updatedCharacters = args.turn.characters.map((character) => {
     if (character.id === args.npc.id) {
-      // Skipping or passing changes nothing about the NPC. One who flees is out of the
+      // Skipping or passing changes nothing about the NPC. One who flees or goes on its way is out of the
       // encounter: the next round is built without them. One who dies is dead for good. Thaddeus died of poison on his
       // own turn at 65% health, then sagged to one knee, gasping, in the next roll's outcome.
       const done = { ...character, hasReplied: true, isComplete: true }
       if (args.actionResult.actionType === "die") return killed(done)
-      return args.actionResult.actionType === "flee" ? { ...done, fled: true as const } : done
+      return leavesForGood(args.actionResult.actionType) ? { ...done, fled: true as const } : done
     }
     return character
   })
@@ -103,6 +109,11 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     // The turn played again after a reaction was answered: how the move was read, the dice it rolled, and the answers
     // given so far. Everything up to the last answer then falls as it fell before.
     resume?: { reading: TurnReading; dice: number[]; answers: boolean[] }
+    // The turn as already read, with no read of the model's: a move and nothing more, for a turn that only goes somewhere.
+    reading?: TurnReading
+    // The move the NPC's own turn named (`moveTo`), made where the read made none and the turn is no attack, cast or
+    // use of its stat block, whose reach and range the read measured from where it stood.
+    own?: Moved
   }): Promise<Omit<NpcTurnBranchResult, "actionSummary">> {
     let beatsToAppend: StoryBeat[] = []
     const script = turnScript(args.turn)
@@ -111,8 +122,9 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     let effects: NpcTurnEffect[] | undefined
 
     const floor = await ports.content.floor?.(args.turn.encounterId)
-    const reading =
+    const read =
       args.resume?.reading ??
+      args.reading ??
       (await readAction(args.actionResult.actionSummary, args.npc, {
         encounterInstructions: args.encounterContext?.instructions || "",
         encounterIntro: args.encounterContext?.intro || "",
@@ -120,6 +132,9 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         present: args.turn.characters,
         floor,
       }))
+    // The Owlbear's turn told it padding along the trail to the ferns, and the read named no move: it walks there.
+    const measured = !!read.cast || !!read.feature || (!!read.roll && (isAttackRoll(read.roll) || isCastRoll(read.roll)))
+    const reading = !read.move && args.own && !measured ? { ...read, move: args.own } : read
     const rollRequirement = reading.roll
     // The turn's dice are kept, so the turn can be played again the same after a player answers a reaction.
     const dice = replaying(args.resume?.dice)

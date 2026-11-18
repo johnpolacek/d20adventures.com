@@ -249,6 +249,8 @@ export function buildWikiEncounterProgressionPrompt(packet: LlmGameplayContextPa
         })
         .join("\n")
     : "No explicit transitions defined for this encounter."
+  // The NPCs whose own turn took them out of the encounter for good (`fled`): the only ones the round end may tell gone.
+  const gone = packet.characters.live.filter((character) => character.type === "npc" && character.fled).map((character) => character.name)
 
   return `Adventure: ${packet.adventure.title}
 Content Version: ${packet.contentRef.contentVersion}
@@ -307,6 +309,7 @@ Your Task:
 6. ${KNOWLEDGE_RULE}
    ${CONTINUITY_RULE}
    The end of the round settles nothing a roll has not settled. No one is killed, captured, bound, disarmed, persuaded or beaten, and no fight, chase or contest is won, unless a roll this round did it. An NPC who tries such a thing begins it here, and it resolves on later turns.
+   No NPC leaves the scene in your telling: one goes only on its own turn. A condition that needs an NPC gone is met only once its own turn this round took it away.${gone.length ? ` Gone for good this round: ${gone.join(", ")}.` : ""}
    Resolve only what happens in ${packet.currentEncounter.id}. A turn from another encounter in the history is over: what was begun there, such as a coin offered or a door left open, is not taken up, settled or narrated now.
    The scene holds only the people and things its intro, GM notes and story have shown. When a player acts toward someone or something not there, the scene does not gain them: they are not found.
 7. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.

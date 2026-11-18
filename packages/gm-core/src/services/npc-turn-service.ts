@@ -2,6 +2,7 @@ import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { afterHarm } from "../sheet/death"
 import { legendaryActionsOf, withLegendaryActionsRegained } from "../sheet/legendary-actions"
+import { moveBudget, takeMove } from "../sheet/moves"
 import { standingWords } from "../sheet/placement"
 import { ordered, type PendingReaction, REACTION_WAIT } from "../sheet/reactions"
 import { ruledReading } from "../sheet/ruled-turns"
@@ -12,13 +13,13 @@ import { type StoryNames, storyNames, storyText } from "../story/render"
 import { sceneFor } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
-import { isAiControlledPc, isDown, isDying, playsForMaster } from "../utils/turn-actors"
+import { hasFled, isAiControlledPc, isDead, isDown, isDying, playsForMaster } from "../utils/turn-actors"
 import { gmNotesWithRules, type SafetyRules } from "../wiki-adventures/player-safety"
 import { createAiPcTurnService } from "./ai-pc-turn-service"
 import { legendaryAfterTurn } from "./legendary-action-service"
-import { createNpcTurnBranchService, handleSkipPassNpcTurn, type NpcRollInfo, type NpcTurnBranchResult } from "./npc-turn-branch-service"
+import { createNpcTurnBranchService, handleSkipPassNpcTurn, leavesForGood, type NpcRollInfo, type NpcTurnBranchResult } from "./npc-turn-branch-service"
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "./npc-turn-effects-service"
-import { buildNpcActionContext, buildNpcActionPrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
+import { buildNpcActionContext, buildNpcActionPrompt, createNpcTurnGenerationService, npcWays } from "./npc-turn-generation-service"
 import { buildNpcInitiativeOrder, findEncounterInPlan, resolvePlanContextForEncounter } from "./npc-turn-intent-service"
 import { finalizeNpcTurnResponse } from "./npc-turn-postprocess-service"
 import { ReactionPending } from "./reaction-pending"
@@ -55,6 +56,14 @@ export function npcEarlierTurns(turns: { order?: number; encounterId: string; st
     )
     .filter(Boolean)
     .join("\n\n")
+}
+
+// Whether the NPC has had a turn in this scene before: it was in one of the rounds played in a row in this encounter
+// before this one. An Owlbear that comes out of the trees prowls on its first turn, and may go on its way on a later one.
+export function npcHadTurn(turns: { order?: number; encounterId: string; characters: { id: string }[] }[], current: { order?: number; encounterId: string }, npcId: string): boolean {
+  const earlier = turns.filter((t) => (t.order ?? 0) < (current.order ?? 0)).sort((a, b) => (b.order ?? 0) - (a.order ?? 0))
+  const away = earlier.findIndex((t) => t.encounterId !== current.encounterId)
+  return (away < 0 ? earlier : earlier.slice(0, away)).some((t) => t.characters.some((character) => character.id === npcId))
 }
 
 // An NPC whose behavior says it acts only when spoken to, such as a festival vendor, and whom no hero has spoken to,
@@ -113,6 +122,7 @@ export function createNpcTurnService(ports: GmPorts) {
     earlier,
     rules,
     resume,
+    firstTurn,
   }: {
     turn: Turn
     npcId: string
@@ -130,6 +140,8 @@ export function createNpcTurnService(ports: GmPorts) {
     rules?: SafetyRules
     // The turn played again after a hero's reaction was answered: what the NPC meant to do and all it had settled.
     resume?: PendingReaction["resume"]
+    // It has had no turn in this scene before (`npcHadTurn`): it does not go on its way on this one.
+    firstTurn?: boolean
   }): Promise<{
     updatedCharacters: TurnCharacter[]
     beatsToAppend: StoryBeat[]
@@ -162,6 +174,8 @@ export function createNpcTurnService(ports: GmPorts) {
       standing: floor ? standingWords(turn.characters, floor) : undefined,
     })
     const scene = await sceneFor(ports, turn)
+    // Where it may go on the floor: the places and the others here.
+    const ways = floor ? npcWays(npc, turn.characters, floor) : undefined
     const prompt1 = buildNpcActionPrompt({
       contextString: npcActionContext.contextString,
       npcDetails: npcActionContext.npcDetails,
@@ -170,6 +184,8 @@ export function createNpcTurnService(ports: GmPorts) {
       alivePlayerCharacters: npcActionContext.alivePlayerCharacters,
       deadPlayerCharacters: npcActionContext.deadPlayerCharacters,
       scene,
+      ways: ways && { words: ways.words, feet: moveBudget(npc, turn.characters) },
+      firstTurn,
     })
 
     console.log(
@@ -189,9 +205,24 @@ export function createNpcTurnService(ports: GmPorts) {
     // A turn played again keeps what the NPC meant to do the first time. A turn a spell rules (Command's word, Fear's
     // flight) is the rule's, and the model is not asked (../sheet/ruled-turns).
     const ruled = ruledReading(npc, turn.characters, floor)
-    const actionResult =
+    const chosen =
       (resume?.action as Awaited<ReturnType<typeof generateNpcAction>> | undefined) ??
-      (ruled ? { actionSummary: ruled.ruling.text, beats: [], actionType: "other" as const, effects: [] } : await generateNpcAction(prompt1, npc.id))
+      (ruled ? { actionSummary: ruled.ruling.text, beats: [], actionType: "other" as const, effects: [] } : await generateNpcAction(prompt1, npc.id, ways?.ids))
+    // One that goes on its way on its first turn in the scene stays in it: the player gets a turn to answer it.
+    const actionResult = chosen.actionType === "leave" && firstTurn ? { ...chosen, actionType: "pass" as const } : chosen
+    // Where its turn takes it, as it named: walked over the floor within its Speed, with the Dash action for one that
+    // runs away (../sheet/moves `takeMove`).
+    const others = turn.characters.filter((other) => other.id !== npc.id && !isDead(other) && !hasFled(other))
+    const own =
+      floor && npc.position && actionResult.moveTo && !ruled
+        ? takeMove({
+            floor,
+            mover: npc as Parameters<typeof takeMove>[0]["mover"],
+            others: others as Parameters<typeof takeMove>[0]["others"],
+            ask: { to: actionResult.moveTo },
+            dash: actionResult.actionType === "flee",
+          })
+        : undefined
 
     console.log("[LLM] NPC action response:", {
       actionType: actionResult.actionType,
@@ -199,10 +230,39 @@ export function createNpcTurnService(ports: GmPorts) {
       quality: actionResult.beats.length && actionResult.actionSummary ? "complete" : "incomplete",
       hasDialogue: actionResult.beats.some((b) => b.kind === "line"),
       hasEffects: !!actionResult.effects?.length,
+      moveTo: actionResult.moveTo ?? "none",
+      moved: own?.feet ?? 0,
     })
 
-    // HANDLE SKIP/PASS FIRST to avoid unnecessary API calls
-    if (actionResult.actionType === "skip" || actionResult.actionType === "pass" || actionResult.actionType === "flee" || actionResult.actionType === "die") {
+    // A turn with no roll is not read again: waiting, holding back, leaving for good, or dying. One that goes somewhere
+    // walks there first, and those whose reach it leaves may strike as it does. One that leaves and is still up is gone.
+    const still = actionResult.actionType === "skip" || actionResult.actionType === "pass" || leavesForGood(actionResult.actionType)
+    if (still && own) {
+      const went = await resolveNpcTurnRollOrDirectBranch({
+        turn,
+        npc,
+        actionResult,
+        encounterContext,
+        npcActionContext: { contextString: npcActionContext.contextString, npcDetails: npcActionContext.npcDetails, playerCharacters: npcActionContext.playerCharacters },
+        scene,
+        rules,
+        reading: { roll: null, move: own },
+        resume: resume && { reading: resume.reading as TurnReading, dice: resume.dice, answers: resume.answers },
+      }).catch((error) => {
+        if (error instanceof ReactionPending) throw new ReactionPending(error.offer, error.text, { ...error.resume, action: chosen })
+        throw error
+      })
+      const gone = leavesForGood(actionResult.actionType)
+      return finalizeNpcTurnResponse({
+        actionSummary: actionResult.actionSummary,
+        updatedCharacters: went.updatedCharacters.map((character) => (gone && character.id === npc.id && !isDown(character) ? { ...character, fled: true as const } : character)),
+        rollInfo: undefined,
+        effects: went.effects,
+        beatsToAppend: went.beatsToAppend,
+        npcId: npc.id,
+      })
+    }
+    if (still || actionResult.actionType === "die") {
       return handleSkipPassNpcTurn({
         turn,
         npc,
@@ -224,9 +284,10 @@ export function createNpcTurnService(ports: GmPorts) {
       scene,
       rules,
       resume: resume && { reading: resume.reading as TurnReading, dice: resume.dice, answers: resume.answers },
+      own,
     }).catch((error) => {
       // A turn that stops to ask a player keeps what the NPC meant to do, so it is not asked of the model again.
-      if (error instanceof ReactionPending) throw new ReactionPending(error.offer, error.text, { ...error.resume, action: actionResult })
+      if (error instanceof ReactionPending) throw new ReactionPending(error.offer, error.text, { ...error.resume, action: chosen })
       throw error
     })
 
@@ -480,6 +541,7 @@ export function createNpcTurnService(ports: GmPorts) {
           earlier: npcEarlierTurns(allTurns, turn, npc.id),
           rules,
           resume,
+          firstTurn: !npcHadTurn(allTurns, turn, npc.id),
         })
       } catch (error) {
         if (error instanceof ReactionPending) {

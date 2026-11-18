@@ -101,6 +101,8 @@ async function play(probe: Probe, packs: Packs, dir: string, rounds: number, log
       let command: GameCommand
       if (player && actor.rollRequired && actor.rollResult === undefined) command = { kind: "roll", turnId: turn._id, characterId: actor.id, result: 1 + Math.floor(Math.random() * 20) }
       else if (player && !actor.hasReplied) command = { kind: "reply", turnId: turn._id, characterId: actor.id, text: probe.replies[replies++] ?? (await offered(turn._id, actor.id, actor.name)) }
+      // A reaction offered to the hero is declined, so the round goes on: the probe plays the scene, not the reactions.
+      else if (turn.reaction && turn.reaction.answer === undefined) command = { kind: "react", turnId: turn._id, characterId: turn.reaction.offer.to, take: false }
       else command = { kind: "continue", turnId: turn._id }
       const t0 = Date.now()
       const who = command.kind === "continue" ? (actor ? actor.name : "round end") : `${actor!.name} ${command.kind}`

@@ -8412,5 +8412,51 @@
     "action": "Thalbern creeps away up the deer trail toward the stones, keeping low and out of the owlbear's sight.",
     "checks": ["stealth"],
     "dcs": [15]
+  },
+  {
+    "id": "prowl-pads-to-ferns",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "actor": "owlbear",
+    "floor": true,
+    "at": {
+      "thalbern": [-15.09, 30.18]
+    },
+    "narrative": "Thalbern is hidden in the thick ferns beside the trail. The owlbear stands on the trail by the tree line and tastes the air. It has not noticed him.",
+    "action": "The owlbear drops to all fours and pads along the deer trail toward the ferns, beak low, snuffling at the earth and the moss.",
+    "checks": ["none", "perception", "survival"],
+    "moved": {
+      "toward": "ferns"
+    }
+  },
+  {
+    "id": "prowl-wanders-off",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "actor": "owlbear",
+    "floor": true,
+    "at": {
+      "thalbern": [-15.09, 30.18]
+    },
+    "narrative": "Thalbern is hidden in the thick ferns beside the trail. The owlbear has sniffed about the trail and found nothing.",
+    "action": "The owlbear huffs, loses interest and lumbers back toward the tree line it came from.",
+    "checks": ["none"],
+    "moved": {
+      "toward": "treeLine"
+    }
+  },
+  {
+    "id": "walk-to-the-oak",
+    "adventure": "the-midnight-summons",
+    "encounter": "broken-silence",
+    "hero": "thalbern",
+    "floor": true,
+    "action": "I walk over to the great oak.",
+    "checks": ["none"],
+    "moved": {
+      "toward": "greatOak"
+    }
   }
 ]

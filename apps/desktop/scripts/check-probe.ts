@@ -66,9 +66,9 @@ type Probe = {
   // Space: everyone stands where the encounter's floor stages them, and `at` moves some of them, in feet.
   floor?: true
   at?: Record<string, [number, number]>
-  // Where the move should leave the hero: nowhere new, within 5 feet of someone, at least so far from someone, or
-  // having walked between so many feet.
-  moved?: { none?: true; near?: string; clearOf?: string; feet?: [number, number] }
+  // Where the move should leave the hero: nowhere new, within 5 feet of someone, at least so far from someone, having
+  // walked between so many feet, or toward one of the floor's places, by its id.
+  moved?: { none?: true; near?: string; clearOf?: string; feet?: [number, number]; toward?: string }
   // What the rules of space should say of the move, by name: "Out Of Range". None for most.
   ruling?: string
   // Reasons the roll's Advantage or Disadvantage must name, such as "Long Range".
@@ -235,6 +235,13 @@ async function run(probe: Probe): Promise<Graded> {
       if (probe.moved?.near && !((feetTo(probe.moved.near) ?? 999) <= 8)) faults.push(`ended ${feetTo(probe.moved.near)} feet from ${probe.moved.near}, wanted beside them`)
       if (probe.moved?.clearOf && !((feetTo(probe.moved.clearOf) ?? 0) >= 10)) faults.push(`ended ${feetTo(probe.moved.clearOf)} feet from ${probe.moved.clearOf}, wanted clear of them`)
       if (probe.moved?.feet && (walked < probe.moved.feet[0] || walked > probe.moved.feet[1])) faults.push(`moved ${walked} feet, wanted ${probe.moved.feet[0]} to ${probe.moved.feet[1]}`)
+      // Toward a place: at least 10 feet, most of them closing on it.
+      const toward = probe.moved?.toward ? floor?.places.find((entry) => entry.id === probe.moved?.toward)?.at : undefined
+      if (probe.moved?.toward) {
+        const gap = (from: { x: number; y: number } | undefined) => (from && toward ? Math.hypot(toward.x - from.x, toward.y - from.y) : 0)
+        if (!(walked >= 10 && gap(standing.position) - gap(ended) >= walked * 0.7))
+          faults.push(`moved ${walked} feet and ended ${Math.round(gap(ended))} feet from ${probe.moved.toward}, wanted toward it`)
+      }
       if ((reading.ruling?.name ?? "none") !== (probe.ruling ?? "none")) faults.push(`ruling ${reading.ruling?.name ?? "none"}, wanted ${probe.ruling ?? "none"}`)
       for (const reason of probe.reasons ?? []) if (!got?.reasons?.includes(reason)) faults.push(`reasons ${got?.reasons?.join(", ") || "none"}, wanted ${reason} among them`)
     }

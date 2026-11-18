@@ -1,10 +1,12 @@
 import { z } from "zod"
 import type { GmPorts } from "../ports"
-import { conditionWords } from "../sheet/conditions"
+import { conditionWords, isHidden } from "../sheet/conditions"
 import { hitPointWords } from "../sheet/hit-points"
 import { boundWords } from "../sheet/masters"
 import { moveBudget } from "../sheet/moves"
+import type { EncounterFloor } from "../sheet/placement"
 import { sidesWords } from "../sheet/sides"
+import { between, feetBetween } from "../sheet/space"
 import { spellWords } from "../sheet/spells"
 import { statBlockLines } from "../sheet/stat-block-actions"
 import { authoredText } from "../story/authored"
@@ -17,12 +19,13 @@ import { storyNames } from "../story/render"
 import { beatsField, characterScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
-import { isDead, isDown } from "../utils/turn-actors"
+import { hasFled, isDead, isDown } from "../utils/turn-actors"
 
 const npcActionSchema = z.object({
   actionSummary: z.string(),
   ...beatsField,
-  actionType: z.enum(["attack", "skill", "skip", "pass", "flee", "die", "other"]).default("other"),
+  actionType: z.enum(["attack", "skill", "skip", "pass", "flee", "leave", "die", "other"]).default("other"),
+  moveTo: z.string().max(80).optional().describe("Where the NPC goes this turn: the id of a place or of someone here. Left out when it stays where it is"),
   effects: z
     .array(
       z.object({
@@ -56,6 +59,27 @@ const npcActionOutcomeSchema = z.object({
     })
   ),
 })
+
+/**
+ * Where an NPC on a floor may go on its turn, for its prompt and the menu its `moveTo` is picked from: the floor's named
+ * places and everyone else here, each with how far off they are. One hidden by the Hide action is left out: it does
+ * not know where they are. None when it has no position.
+ *
+ * The Owlbear on the forest trail: "ferns (the thick ferns beside the trail, 53 feet away)", and "thalbern (Thalbern,
+ * 58 feet away)" once Thalbern is no longer hidden.
+ */
+export function npcWays(npc: TurnCharacter, characters: readonly TurnCharacter[], floor: EncounterFloor): { ids: string[]; words: string } | undefined {
+  const from = npc.position
+  if (!from) return undefined
+  const places = floor.places.map((place) => ({ id: place.id, words: `${place.id} (${place.label}, ${Math.round(between(from, place.at))} feet away)` }))
+  const others = characters.flatMap((other) =>
+    other.id !== npc.id && other.position && !isDead(other) && !hasFled(other) && !isHidden(other)
+      ? [{ id: other.id, words: `${other.id} (${other.name}, ${Math.round(feetBetween(npc, other) ?? 0)} feet away)` }]
+      : []
+  )
+  const ways = [...places, ...others]
+  return ways.length ? { ids: ways.map((way) => way.id), words: ways.map((way) => way.words).join(", ") } : undefined
+}
 
 type NpcActionContext = {
   turn: Turn
@@ -150,6 +174,10 @@ export function buildNpcActionPrompt(args: {
   alivePlayerCharacters: TurnCharacter[]
   deadPlayerCharacters: TurnCharacter[]
   scene: StoryScene
+  // Where it may go on the floor, in words (`npcWays`), and the feet it can move. None with no floor.
+  ways?: { words: string; feet: number }
+  // It has had no turn in this scene before: it does not go on its way on this one.
+  firstTurn?: boolean
 }): string {
   return `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Write the action as a few short beats.
 
@@ -207,6 +235,16 @@ If the NPC is away from the heroes and does nothing they could see or hear this 
 
 If the NPC runs away and leaves the scene for good, set actionType to "flee" and narrate them going. They are then out of the encounter and take no further turns. Use it only when they actually get away this turn, not for backing off or taking cover.
 
+${
+  args.firstTurn
+    ? `This is ${args.npc.name}'s first turn in this scene. Short of running away, the NPC does not go on its way and leave on it: one that moves on does so on a later turn.`
+    : `If the NPC goes on its way and leaves the scene for good this turn, unhurried, because its behavior or the Encounter Instructions say it moves on, set actionType to "leave" and narrate it going. It is then out of the encounter and takes no further turns.`
+}
+${
+  args.ways
+    ? `\nIf ${args.npc.name} goes anywhere this turn, set "moveTo" to where it goes: ${args.ways.words}. It walks up to ${args.ways.feet} feet toward it and stops there, so tell it going no farther. For one that leaves, "moveTo" is the way it goes. Leave "moveTo" out when it stays where it is.\n`
+    : ""
+}
 If the NPC dies this turn of a wound, poison or curse the story has already given them, set actionType to "die" and narrate their death. They are then dead: they take no further turns and no one may describe them alive again.
 
 If the NPC's action involves giving items to a player character, include an "effects" array. Each object in "effects" should have a "targetId" (the ID of the character receiving items) and an "equipmentToAdd" array listing the items ({name: string, description?: string}).
@@ -220,7 +258,7 @@ Respond as JSON. The 'beats' and 'actionSummary' fields must describe the action
 {
   actionSummary: string, // e.g., "Faelar strums a tune on his lute to lighten the mood."
   beats: [...], // e.g., [{"kind": "action", "who": "faelar", "text": "Faelar notices the tension and pulls out his lute."}, {"kind": "line", "who": "faelar", "delivery": "jesting", "text": "A somber crowd for a festival!"}]
-  actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "die" | "other",
+  actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "leave" | "die" | "other",${args.ways ? "\n  moveTo?: string," : ""}
   effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`
 }
@@ -323,8 +361,17 @@ Respond as JSON:
 export function createNpcTurnGenerationService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   // `viewer` is the NPC the prompt plays.
-  async function generateNpcAction(prompt: string, viewer?: string) {
-    return (await generateObject({ prompt, schema: npcActionSchema, viewer })).object
+  // `ways` are the ids its move may name (`npcWays`), a menu where the NPC is on a floor.
+  async function generateNpcAction(prompt: string, viewer?: string, ways?: string[]) {
+    const schema = ways?.length
+      ? (npcActionSchema.extend({
+          moveTo: z
+            .enum(ways as [string, ...string[]])
+            .optional()
+            .describe(npcActionSchema.shape.moveTo.description ?? ""),
+        }) as unknown as typeof npcActionSchema)
+      : npcActionSchema
+    return (await generateObject({ prompt, schema, viewer })).object
   }
 
   async function generateNpcOutcome(prompt: string, viewer?: string) {
