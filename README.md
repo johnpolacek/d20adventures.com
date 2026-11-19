@@ -1,8 +1,34 @@
 # D20 Adventures
 
-D20 Adventures is an open source platform for building and playing 5e fantasy adventures with an AI Game Master, solo or multiplayer.
+[D20 Adventures](https://d20adventures.com) is an open source platform for building and playing 5e fantasy adventures with an AI Game Master, solo or multiplayer.
 
-Play at [d20adventures.com](https://d20adventures.com).
+## Agent Prompts
+
+Paste one of these into Claude Code, Codex or another coding agent.
+
+Play on your Mac with the desktop app:
+
+```text
+Install the D20 Adventures desktop app from https://d20adventures.com/install.sh and open it. It needs an Apple Silicon Mac, Node.js 24 or newer, and a signed-in Claude Code, Codex, Grok or Antigravity CLI to run the Game Master. Check each first and tell me what is missing before installing anything. Read the script before running it.
+```
+
+Set up local development:
+
+```text
+Clone https://github.com/johnpolacek/d20adventures.com and read README.md and AGENTS.md. Set it up for local development of the website and the desktop app. Check that Node.js 24 or newer, pnpm and Rust are installed, and tell me what is missing before installing anything. Run pnpm install. Copy .env.example to .env.local and walk me through the required section: run npx convex dev to create a Convex dev project, generate STORE_SERVER_SECRET and set it in Convex too, then Clerk and Gemini keys. Ask me for each secret instead of guessing. Then run pnpm dev, which starts Convex, the website and the desktop app. Confirm http://localhost:3000 loads, I can sign in, and the app opens.
+```
+
+Understand how it works:
+
+```text
+Clone https://github.com/johnpolacek/d20adventures.com and read README.md and AGENTS.md. Explain the architecture, then follow one player turn from the moment an action is submitted to the narration that comes back, through packages/gm-core and the website or desktop app. Point me to the files that matter at each step.
+```
+
+Create your own adventure:
+
+```text
+Clone https://github.com/johnpolacek/d20adventures.com and read README.md and AGENTS.md. Walk me through creating my own adventure, one step at a time. Use the adventures under content/settings as examples. Start with the story and encounters in markdown and validate them with lib/wiki-adventures. Then explain what the art and 3D stage for each encounter involve, and ask me how far I want to go before starting on them.
+```
 
 ## How It Works
 
@@ -45,28 +71,6 @@ pnpm dev:fresh    # Kill ports first, then dev
 ```
 
 Copy `.env.example` to `.env.local` and fill in the required keys: Convex, Clerk, a shared store secret and Gemini.
-
-## Agent Prompts
-
-Paste one of these into Claude Code, Codex or another coding agent from the repository root.
-
-Play locally with the desktop app:
-
-```text
-Read README.md and apps/desktop/README.md. Get the D20 Adventures desktop app running on this machine so I can play an adventure. Check that Node.js 24 or newer, pnpm and Rust are installed, and tell me what is missing before installing anything. Run pnpm install, then pnpm desktop:dev, which points the app at d20adventures.com. The app runs the GM through a signed-in Claude Code, Codex, Grok or Antigravity CLI, so confirm one is installed and signed in. Stop and tell me if the app fails to open, with the error.
-```
-
-Set up the website for development:
-
-```text
-Read README.md and AGENTS.md. Set up D20 Adventures for local development. Check that Node.js 24 or newer and pnpm are installed, then run pnpm install. Copy .env.example to .env.local and walk me through the required section: run npx convex dev to create a Convex dev project, generate STORE_SERVER_SECRET and set it in Convex too, then Clerk and Gemini keys. Ask me for each secret instead of guessing. Then run pnpm dev:web, open http://localhost:3000, and confirm the home page loads and I can sign in.
-```
-
-Check a change before committing:
-
-```text
-Read AGENTS.md. Run pnpm check, pnpm --filter @d20/gm-core test, pnpm test:srd and pnpm stage:plans:check. Fix what fails, and tell me about anything you could not fix.
-```
 
 ## Checks
 
