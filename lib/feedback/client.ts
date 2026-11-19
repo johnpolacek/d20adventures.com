@@ -1,4 +1,4 @@
-import type { FeedbackDraft } from "./shared"
+import type { FeedbackDraft } from "@d20/ui/feedback-rules"
 import { shrinkScreenshot } from "./shrink"
 
 const FAILED = "Could not send your feedback. Try again."

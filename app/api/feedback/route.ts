@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { feedbackSender } from "@/lib/feedback/server"
-import { feedbackSchema } from "@/lib/feedback/shared"
+import { feedbackSchema } from "@d20/ui/feedback-rules"
 import { ownsScreenshot, saveFeedback } from "@/lib/feedback/store"
 
 const refuse = (error: string, status: number) => NextResponse.json({ error }, { status })

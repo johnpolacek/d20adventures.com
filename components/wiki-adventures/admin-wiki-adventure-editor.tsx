@@ -11,7 +11,7 @@ import {
   sendAdminWikiAdventureChatAction,
 } from "@/app/_actions/wiki-adventures/admin-authoring-actions"
 import { Button } from "@/components/ui/button"
-import { ImageUpload } from "@/components/ui/image-upload"
+import { ImageUpload } from "@/components/forms/image-upload"
 import { Input } from "@/components/ui/input"
 import Image from "@/components/ui/native-image"
 import { Textarea } from "@/components/ui/textarea"

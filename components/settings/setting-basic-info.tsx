@@ -1,6 +1,6 @@
 "use client"
 
-import { ImageUpload } from "@/components/ui/image-upload"
+import { ImageUpload } from "@/components/forms/image-upload"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"

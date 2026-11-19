@@ -4,7 +4,7 @@
 // Drawn from the setting's map file, showing only the places the party has reached, joined by the trail between them.
 
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { type Box, boxAround, type CityMap, centroid, districtBox, frameBox, type MapShape, type Point, placeAt, placeName } from "@/lib/citymap"
+import { type Box, boxAround, type CityMap, centroid, districtBox, frameBox, type MapShape, type Point, placeAt, placeName } from "@d20/gm-core/citymap"
 import { cn } from "@/lib/utils"
 import { eyebrow, Pill, panel } from "./hud"
 

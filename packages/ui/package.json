@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./utils": "./src/utils.ts",
+    "./feedback-rules": "./src/feedback-rules.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
@@ -12,7 +13,8 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "zod": "4.6.7"
   },
   "peerDependencies": {
     "react": ">=19",

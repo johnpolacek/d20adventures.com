@@ -1,7 +1,7 @@
 "use client"
 import { useTransition } from "react"
 import { softDeleteUserCharacter } from "@/app/_actions/character"
-import { CharacterSelectCard } from "@/components/ui/character-select-card"
+import { CharacterSelectCard } from "@/components/adventure/character-select-card"
 import type { PCTemplate } from "@/types/character"
 
 interface CharacterGridProps {

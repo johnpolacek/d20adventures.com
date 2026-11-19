@@ -1,6 +1,6 @@
 import { DeathSaveMarks } from "@/components/stage/roll-parts"
 import { againstLabel } from "@/components/stage/roll-view"
-import DiceRoll from "@/components/ui/dice-roll"
+import DiceRoll from "@/components/adventure/dice-roll"
 import Image from "@/components/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"

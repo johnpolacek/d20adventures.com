@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { feedbackSender } from "@/lib/feedback/server"
-import { MAX_UPLOAD_BYTES } from "@/lib/feedback/shared"
+import { MAX_UPLOAD_BYTES } from "@d20/ui/feedback-rules"
 import { isJpeg, saveScreenshot } from "@/lib/feedback/store"
 
 const refuse = (error: string, status: number) => NextResponse.json({ error }, { status })

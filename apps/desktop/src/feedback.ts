@@ -1,4 +1,4 @@
-import type { FeedbackDraft } from "@/lib/feedback/shared"
+import type { FeedbackDraft } from "@d20/ui/feedback-rules"
 import { shrinkScreenshot } from "@/lib/feedback/shrink"
 import { feedback } from "./bridge"
 
