@@ -2,8 +2,8 @@ export const IMAGE_HOST = "https://d1dkwd3w4hheqw.cloudfront.net"
 
 export const siteConfig = {
   title: "D20 Adventures",
-  description: "A new narrative-driven RPG platform that blends play-by-post gameplay and real-time updates facilitated by an AI Game Master.",
-  shortDescription: "A new narrative-driven RPG platform that blends play-by-post gameplay and real-time updates facilitated by an AI Game Master.",
+  description: "An open source platform for building and playing 5e fantasy adventures with an AI Game Master, solo or multiplayer.",
+  shortDescription: "An open source platform for building and playing 5e fantasy adventures with an AI Game Master, solo or multiplayer.",
   url: "d20adventures.com",
   shareImage: "https://d20adventures.com/images/screenshot.png",
   x: "",

@@ -1,57 +1,65 @@
-# d20adventures.com
+# D20 Adventures
 
-A new narrative-driven RPG platform that blends play-by-post gameplay and real-time updates facilitated by an AI Game Master.
+D20 Adventures is an open source platform for building and playing 5e fantasy adventures with an AI Game Master, solo or multiplayer.
 
---
+Play at [d20adventures.com](https://d20adventures.com).
 
-### Testing
+## How It Works
 
-For the full adventure-plan testing runbook (authoring, practice runs, report generation, multiplayer regression checks), see `TESTING.md`.
+Adventures are written in markdown and compiled into encounters. A game master core runs each turn: it orders the party and NPCs, decides when a roll is needed, applies the SRD 5.2.1 rules, and narrates the result with an LLM. Encounters play out on a painted 3D stage with a top-down floor plan.
 
+The same core runs in two places: the website, backed by Convex, and a Tauri desktop app, backed by SQLite.
 
-### Future Adventure Ideas
+## Stack
 
-Olav’s Outpost - A tavern at the edge of civilization across from a mysterious forest island
-Shadow of the Caldera
+- Next.js 16, React 19, Tailwind 4
+- Convex for data, Clerk for auth
+- Vercel AI SDK with Gemini and OpenAI models
+- Three.js for the encounter stage
+- Tauri 2 with a bundled Node runtime for the desktop app
+- pnpm workspaces, Biome, Playwright
 
----
+## Layout
 
-### Overview
+| Path | What it is |
+| --- | --- |
+| `packages/gm-core` | The game master: turn flow, NPC turns, rolls, narrative. No framework imports. It reaches the outside through `src/ports.ts`. |
+| `packages/srd` | SRD 5.2.1 as typed data |
+| `packages/stage` | Stageview, the 3D encounter stage, plus its sets, stagings and generated floor plans |
+| `lib/gm-server` | Binds the core to the website |
+| `lib/wiki-adventures` | Compiles and validates markdown adventures |
+| `content/settings` | Settings and adventures in markdown |
+| `app` | The Next.js site. Server actions live in `app/_actions`. |
+| `components/stage` | HUD, dice and journal around the stage, shared by site and desktop |
+| `convex` | Database schema and functions |
+| `apps/desktop` | The Tauri desktop app. `apps/desktop/runtime` is its Node game runtime. |
 
-The prototype for D20 Adventures is a proof of concept for a turn based narrative driven RPG platform where players work their way through an adventure module run by an AI game master.
+## Development
 
-Each turn begins with an introduction and a character response order randomly determined by a D20 initiative roll. When it is the player’s turn, they can reply to update the narrative of the adventure with their character’s actions and dialogue. 
+```sh
+pnpm install
+pnpm dev          # Convex, the website and the desktop app
+pnpm dev:web      # Convex and the website only
+pnpm dev:app      # Desktop app only
+pnpm dev:fresh    # Kill ports first, then dev
+```
 
-If it is determined that a dice role is needed, the player can roll their D20 and the result will determine the direction of the story.
+You need a Convex project, Clerk keys and LLM API keys in `.env.local`.
 
-The AI is trained to choose an appopriate dice roll check and the target for success, then will update the narrative based on the roll result and the instructions for the encounter in the adventure module.
+## Checks
 
-At the end of each turn, the AI decides whether to move to a new encounter or continue with the current scenario.
+```sh
+pnpm check                          # Biome lint and format
+pnpm --filter @d20/gm-core test     # Game master tests
+pnpm test:srd                       # SRD data checks
+pnpm stage:plans:check              # Fails on a stale floor plan
+pnpm test                           # Build plus Playwright
+```
 
-Each encounter has its own image, intro, title, NPCs and instructions for the AI Game Master.
+Run `pnpm stage:plans` after changing a set or a staging.
 
-If the player enters well written prose, it will be preserved as as, otherwise it will be enhanced to fit the story’s narrative, cleaning up spelling and grammar while preserving the intent of the original response.
+## License
 
-Similarly each NPC will have an opportunity to respond and make dice rolls, all coordinated against an overall adventure plan linking one encounter to another.
+Code is MIT. See `LICENSE`.
 
-This initial D20 Adventures prototype is a simple one shot single player character adventure inspired by Deborah Ann Woll’s appearance on the Real Ones with Jon Bernthal podcast where she spontaneously invented an adventure scenario to demonstrate the fun of D and D gameplay.
-
-The simple confrontation she concocted between a ranger and an owlbear in the forest at night could also be a good test of whether a game can be led by an AI game master and actually be fun.
-
-When you are working with AI, it is best to avoid lots of complicated game mechanics, so I tried to keep it simple. Just roll a D20. If you roll high, good things happen. Roll low, not so much.
-
-We keep track of the characters turn over turn, including adjusting status and health percentage.
-
-With a name like D20 Adventures, of course we have to pay special attention to natural twenties and ones. Hopefully more twenties for the players but sometimes that's not how it goes.
-
-Hopefully Jon Bernthal and Deborah Ann Woll don't object to my homage! 
-
-In the future, I want to build true multiplayer, where you can form a group of friends and play through an adventure together. 
-
-Eventually I would like to allow anyone create their own settings and adventure modules for a community of players to discover.
-
-D20 Adventures is a fun project for me to see if I can create a cool new multiplayer narrative rpg experience with AI. 
-
-Head over to D20 Adventures.com to join the discord, sign up for the wait list or find the source code on Github.
-
-You can also follow me on X, Bluesky and Medium for project updates.
+This work includes material from the System Reference Document 5.2.1 ("SRD 5.2.1") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.

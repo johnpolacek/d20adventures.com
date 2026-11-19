@@ -2,7 +2,7 @@
   "name": "d20adventures.com",
   "version": "0.1.0",
   "license": "None",
-  "description": "A new narrative-driven RPG platform that blends play-by-post gameplay and real-time updates facilitated by an AI Game Master.",
+  "description": "An open source platform for building and playing 5e fantasy adventures with an AI Game Master, solo or multiplayer.",
   "keywords": [
     "nextjs",
     "template",
