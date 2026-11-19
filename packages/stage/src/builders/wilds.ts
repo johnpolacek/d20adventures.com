@@ -10,7 +10,7 @@ import { coord, defineBuilder, matName, num, size, vec2 } from "./types"
 // rounded weathered edges. Material roles: stone, flagstone, grass, mountain.
 
 // Seeded 3D value noise in [0, 1].
-function noise3(rand: Rand) {
+export function noise3(rand: Rand) {
   const perm = new Uint8Array(512)
   const base = Array.from({ length: 256 }, (_, i) => i)
   for (let i = 255; i > 0; i--) {
@@ -277,6 +277,14 @@ export const grassPatch = defineBuilder(
         .default([]),
       // Metres over which it thins out toward the area's edges, so a patch never ends on a straight line.
       feather: num(0, 100).default(0),
+      // 0 scatters tufts evenly. Toward 1 they gather in clumps with bare ground between, and a clump's tufts share
+      // a height and a shade, so the patch varies across the ground and not tuft by tuft.
+      clump: num(0, 1).default(0),
+      // How much a clump's height swings, 0 none to 1 about three times from the shortest clumps to the tallest.
+      vary: num(0, 1).default(0),
+      // [metres, factor]: within this far of something built (a trunk, a rock, a log) tufts grow this much taller
+      // and are never thinned out by `clump`, as grass gathers round what shelters it.
+      rim: z.tuple([size(5), num(1, 4)]).optional(),
       material: matName.default("grass"),
     })
     .strict(),
@@ -291,22 +299,62 @@ export const grassPatch = defineBuilder(
       nor.push(0, 1, 0)
       uv.push(tuft, t)
     }
+    // Drawn only when asked for, so a patch without them keeps its random stream and grows as it always has.
+    const field = p.clump > 0 || p.vary > 0 || p.rim ? noise3(rand) : null
+    // What is built is looked up once on a fine grid over the patch, so asking whether a tuft stands near it is cheap.
+    const CELL = 0.25
+    const R = p.rim?.[0] ?? 0
+    const reach = Math.ceil(R / CELL)
+    const gx0 = x0 - R - CELL
+    const gz0 = z0 - R - CELL
+    const gw = p.rim ? Math.ceil((x1 - gx0 + R) / CELL) + 2 : 0
+    const gh = p.rim ? Math.ceil((z1 - gz0 + R) / CELL) + 2 : 0
+    const built = new Uint8Array(gw * gh)
+    for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) built[j * gw + i] = ctx.blocked(gx0 + i * CELL, gz0 + j * CELL) ? 1 : 0
+    const nearBuilt = (x: number, zz: number) => {
+      const ci = Math.round((x - gx0) / CELL)
+      const cj = Math.round((zz - gz0) / CELL)
+      for (let dj = -reach; dj <= reach; dj++)
+        for (let di = -reach; di <= reach; di++) {
+          if (di * di + dj * dj > reach * reach) continue
+          const i = ci + di
+          const j = cj + dj
+          if (i >= 0 && j >= 0 && i < gw && j < gh && built[j * gw + i]) return true
+        }
+      return false
+    }
     const LV = [0, 0.38, 0.72, 1]
     let placed = 0
-    for (let tries = 0; placed < p.count && tries < p.count * 8; tries++) {
+    for (let tries = 0; placed < p.count && tries < p.count * (field ? 14 : 8); tries++) {
       const tx = rand(x0, x1)
       const tz = rand(z0, z1)
+      let tall = 1
+      let tone = -1
+      let full = 1
+      // A clumped patch throws out most of its tries, so it asks the cheap question first.
+      const rim = !!field && !!p.rim && nearBuilt(tx, tz)
+      // Clumps a couple of metres across, broken by smaller ones inside them.
+      const d = field ? field(tx * 0.6, 1.7, tz * 0.6) * 0.65 + field(tx * 1.8 + 9, 4.1, tz * 1.8) * 0.35 : 0
+      if (field && !rim && p.clump > 0 && rand() > THREE.MathUtils.lerp(1, THREE.MathUtils.smoothstep(d, 0.47, 0.55), p.clump)) continue
       if (p.clear.some(([cx, cz, r]) => (tx - cx) ** 2 + (tz - cz) ** 2 < r * r)) continue
       if (p.within.length && !p.within.some(([cx, cz, r]) => (tx - cx) ** 2 + (tz - cz) ** 2 < r * r)) continue
       if (p.feather && rand() * p.feather > Math.min(tx - x0, x1 - tx, tz - z0, z1 - tz)) continue
       if (p.avoid && ctx.blocked(tx, tz)) continue
+      if (field) {
+        // Height wanders on its own, broader field, so a dense clump can be short and a sparse one tall.
+        const hField = THREE.MathUtils.clamp((field(tx * 0.23 + 31, 7.3, tz * 0.23) - 0.5) * 2.6 + 0.5, 0, 1)
+        tall = THREE.MathUtils.lerp(1, 0.5 + hField * 1.1, p.vary)
+        if (rim) tall *= p.rim![1]
+        tone = THREE.MathUtils.clamp(field(tx * 0.3 + 17, 2.2, tz * 0.3) * 1.6 - 0.3, 0, 1)
+        full = 0.7 + d * 0.6
+      }
       placed++
-      const tuft = rand()
-      const n = Math.round(rand(p.blades[0], p.blades[1] + 0.99))
-      const hTuft = rand(p.height[0], p.height[1])
+      const tuft = tone < 0 ? rand() : THREE.MathUtils.clamp(tone * 0.75 + rand() * 0.25, 0, 1)
+      const n = Math.max(1, Math.round(rand(p.blades[0], p.blades[1] + 0.99) * full))
+      const hTuft = rand(p.height[0], p.height[1]) * tall
       for (let k = 0; k < n; k++) {
         const ang = rand(0, TAU)
-        const r0 = rand(0, p.spread)
+        const r0 = rand(0, p.spread * full)
         const base = V(tx + Math.cos(ang) * r0, -0.02, tz + Math.sin(ang) * r0)
         const dir = rand() < 0.75 ? ang + rand(-0.4, 0.4) : rand(0, TAU)
         const d = V(Math.cos(dir), 0, Math.sin(dir))

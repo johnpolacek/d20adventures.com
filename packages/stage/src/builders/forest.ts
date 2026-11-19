@@ -2,6 +2,7 @@ import * as THREE from "three"
 import { z } from "zod"
 import { beam, G, lathe, M4, type Sink, TAU, V } from "../kit/geometry"
 import { type BuildCtx, defineBuilder, matName, num, size, vec2 } from "./types"
+import { noise3 } from "./wilds"
 
 // Woodland: trees, undergrowth, boulders, fallen logs and a worn trail. Shapes stay simple; the paint pass and the
 // lighting carry the look. Material roles: bark, leaves (plus leavesDark and leavesLight for variety), stone, trail.
@@ -288,7 +289,9 @@ export const tree = defineBuilder(
 // A fern as it grows: a rosette of fronds that rise from the crown and arch over, each a rib with a row of leaflets
 // down both sides, widest a third of the way along. Its material is a grass one: lit from above as the ground is, dark
 // at the crown and paler at the tips, and it moves in the wind. As blades alone a fern stands as two black strokes.
-function fronds(ctx: BuildCtx, size: number, material: THREE.Material) {
+// `arch` 0 lays the fronds low and wide. Toward 1 they stand up steeply from the crown and only their outer half bows
+// over, as a fern or a stand of bracken grows in shade.
+function fronds(ctx: BuildCtx, size: number, material: THREE.Material, arch = 0) {
   const { b, rand } = ctx
   const pos: number[] = []
   const nor: number[] = []
@@ -299,8 +302,9 @@ function fronds(ctx: BuildCtx, size: number, material: THREE.Material) {
   for (let i = 0; i < n; i++) {
     const a = (i / n) * TAU + rand(-0.35, 0.35)
     const len = size * rand(0.75, 1.2)
-    const rise = rand(0.6, 1.0)
-    const droop = Math.sin(rise) * rand(0.5, 0.85)
+    // Arched fronds draw one more number each, so a fern without `arch` keeps its random stream.
+    const rise = Math.min(1.45, rand(0.6, 1.0) + (arch ? arch * rand(0.35, 0.6) : 0))
+    const droop = Math.sin(rise) * (rand(0.5, 0.85) + arch * 0.1)
     const out = V(Math.cos(a), 0, Math.sin(a))
     const side = V(-out.z, 0, out.x)
     const reach = len * Math.cos(rise)
@@ -338,21 +342,24 @@ function fronds(ctx: BuildCtx, size: number, material: THREE.Material) {
 }
 
 // A fern: fronds fanning from the ground. Not solid.
-export const fern = defineBuilder(z.object({ size: size(3).default(0.8), fronds: z.boolean().default(false), material: matName.default("frond") }).strict(), (ctx, p) => {
-  const { b, M, rand } = ctx
-  if (p.fronds) return fronds(ctx, p.size, ctx.mat(p.material))
-  const n = 6 + Math.floor(rand(0, 4))
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * TAU + rand(-0.3, 0.3)
-    const len = p.size * rand(0.7, 1.2)
-    const tilt = rand(0.55, 1.05)
-    const m = new THREE.Matrix4()
-      .makeRotationY(-a)
-      .multiply(new THREE.Matrix4().makeRotationZ(-tilt))
-      .multiply(M4(0, len / 2, 0, 0, len * 0.14, len, len * 0.035))
-    b.add(unitBlade(), rand.pick([M.fern, M.fern, M.leavesDark]), m, { uv: "keep", flat: true })
+export const fern = defineBuilder(
+  z.object({ size: size(3).default(0.8), fronds: z.boolean().default(false), arch: num(0, 1).default(0), material: matName.default("frond") }).strict(),
+  (ctx, p) => {
+    const { b, M, rand } = ctx
+    if (p.fronds) return fronds(ctx, p.size, ctx.mat(p.material), p.arch)
+    const n = 6 + Math.floor(rand(0, 4))
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU + rand(-0.3, 0.3)
+      const len = p.size * rand(0.7, 1.2)
+      const tilt = rand(0.55, 1.05)
+      const m = new THREE.Matrix4()
+        .makeRotationY(-a)
+        .multiply(new THREE.Matrix4().makeRotationZ(-tilt))
+        .multiply(M4(0, len / 2, 0, 0, len * 0.14, len, len * 0.035))
+      b.add(unitBlade(), rand.pick([M.fern, M.fern, M.leavesDark]), m, { uv: "keep", flat: true })
+    }
   }
-})
+)
 
 // A bush: a few leaf masses close to the ground. Not solid.
 export const bush = defineBuilder(z.object({ size: size(5).default(1.2) }).strict(), (ctx, p) => {
@@ -377,16 +384,119 @@ export const branch = defineBuilder(z.object({ length: size(8).default(1.8), r: 
   }
 })
 
-// A fallen log along local x, with a broken branch or two. Solid.
-export const log = defineBuilder(z.object({ length: size(30).default(5), r: size(2).default(0.35) }).strict(), (ctx, p) => {
+// A trunk long down in a wood, along local x and `len` long: furrowed bark over a slight bend, a splintered end at -x
+// where it broke, the foot flaring at +x into roots that splay out and sink, stubs where its limbs broke off, and with a
+// `moss` material a ragged cushion along its top. Everything stays within the plain log's length and height.
+function oldLog(ctx: BuildCtx, len: number, r: number, moss?: THREE.Material) {
   const { b, M, rand } = ctx
-  b.add(unitTrunk(), M.bark, M4(0, p.r * 0.9, 0, 0, p.r, p.length, p.r, 0, Math.PI / 2), { uv: "keep" })
-  for (let i = 0; i < 2; i++) {
-    const x = rand(-0.35, 0.35) * p.length
-    limb(b, M.bark, V(x, p.r * 1.2, 0), V(x + rand(-0.5, 0.5), p.r * 1.2 + rand(0.6, 1.2), rand(-0.6, 0.6)), p.r * 0.25)
+  const n3 = noise3(rand)
+  const trunk = len - 0.5
+  const cx = -0.25
+  const yc = r * 0.85
+  const SEG = 44
+  const ROWS = 30
+  // Built along y (from the foot at -0.5 to the break at +0.5, in a unit cylinder) and laid along x below.
+  const shape = (g: THREE.BufferGeometry) => {
+    const pos = g.attributes.position
+    for (let i = 0; i < pos.count; i++) {
+      const ux = pos.getX(i)
+      const uy = pos.getY(i)
+      const uz = pos.getZ(i)
+      const rho = Math.hypot(ux, uz)
+      const a = Math.atan2(uz, ux)
+      const t = uy + 0.5
+      const warp = (n3(t * 2.5, Math.cos(a) * 0.6 + 3, Math.sin(a) * 0.6) - 0.5) * 3
+      const furrow = Math.abs(Math.sin(a * 6 + warp + t * 1.3))
+      let R = 1 + (n3(Math.cos(a) * 1.4, t * 5, Math.sin(a) * 1.4) - 0.5) * 0.18 - 0.09 * THREE.MathUtils.smoothstep(furrow, 0.7, 1)
+      R *= 1 - t * 0.14 + 0.6 * THREE.MathUtils.smoothstep(0.12 - t, 0, 0.12) ** 2
+      let y = uy * trunk
+      // The break: long splinters round the rim and a torn, sunken face inside it.
+      if (uy > 0.499) {
+        const splinter = Math.max(0, n3(Math.cos(a) * 2.2 + 7, Math.sin(a) * 2.2, 1.5) - 0.42)
+        y += rho > 0.98 ? splinter * r * 2.4 : (n3(ux * 3 + 5, uz * 3, 4) - 0.65) * r * 0.9 * rho
+      }
+      // The foot is a rounded boss where the roots leave it, not a sawn face.
+      if (uy < -0.499) y -= (1 - rho * rho) * r * 0.45
+      const bendUp = (n3(t * 1.4, 9, 2) - 0.5) * r * 0.4
+      const bendSide = (n3(t * 1.2, 2, 9) - 0.5) * r * 1.6
+      pos.setXYZ(i, ux * R * r * (rho > 0 ? 1 : 0) + bendUp, y, uz * R * r + bendSide)
+    }
+    g.computeVertexNormals()
+    return g
   }
-  ctx.footprint(0, 0, p.length / 2, p.r + 0.2, 0, undefined, p.r * 1.9)
-})
+  const lay = M4(cx, yc, 0, 0, 1, 1, 1, 0, Math.PI / 2)
+  const body = shape(new THREE.CylinderGeometry(1, 1, 1, SEG, ROWS, false))
+  b.add(body, M.bark, lay, { uv: "keep" })
+  body.dispose()
+  if (moss) {
+    // The same skin pushed out where it faces up and where the patches gather, and under the bark elsewhere, so the
+    // cushion's edge wanders.
+    const skin = shape(new THREE.CylinderGeometry(1, 1, 1, SEG, ROWS, true))
+    const pos = skin.attributes.position
+    const nor = skin.attributes.normal
+    for (let i = 0; i < pos.count; i++) {
+      const up = nor.getX(i)
+      const t = pos.getY(i) / trunk + 0.5
+      const patch = n3(pos.getX(i) * 2.2 + 11, t * 7, pos.getZ(i) * 2.2)
+      const k = THREE.MathUtils.smoothstep(up, 0.05, 0.6) * (patch * 1.7 - 0.35) * THREE.MathUtils.smoothstep(t, 0.04, 0.2) * THREE.MathUtils.smoothstep(1 - t, 0.03, 0.15)
+      const d = k * r * 0.16 - r * 0.05
+      pos.setXYZ(i, pos.getX(i) + nor.getX(i) * d, pos.getY(i) + nor.getY(i) * d, pos.getZ(i) + nor.getZ(i) * d)
+    }
+    skin.computeVertexNormals()
+    b.add(skin, moss, lay, { uv: "keep" })
+    skin.dispose()
+  }
+  // A point on the bark, `s` along the trunk from the foot (0) to the break (1), `ang` round from the top.
+  const onBark = (s: number, ang: number, out = 1) => V(cx + trunk / 2 - s * trunk, yc + Math.cos(ang) * r * out, Math.sin(ang) * r * out)
+  // Roots splayed from the foot, each in three bending lengths that thin as they go: the lower ones run out and sink
+  // into the ground, the upper ones reach out and droop, torn off in the air.
+  const roots = 9
+  for (let i = 0; i < roots; i++) {
+    const ang = (i / roots) * TAU + rand(-0.25, 0.25)
+    const out = V(rand(0.3, 0.6), Math.cos(ang), Math.sin(ang)).normalize()
+    let at = onBark(0.02, ang, rand(0.9, 1.25))
+    let rr = r * rand(0.13, 0.2)
+    const step = r * rand(0.45, 0.75)
+    for (let k = 0; k < 3; k++) {
+      out.y -= rand(0.3, 0.55)
+      out.normalize()
+      const next = at.clone().addScaledVector(out, step * (1 - k * 0.2))
+      next.y = THREE.MathUtils.clamp(next.y, -0.08, r * 1.8)
+      limb(b, M.bark, at, next, rr)
+      at = next
+      rr *= 0.62
+    }
+  }
+  // Stubs where limbs broke off, leaning along the trunk toward the crown that was, and one dead limb still on.
+  for (let i = 0; i < 4; i++) {
+    const ang = rand(-1.1, 1.1)
+    const from = onBark(rand(0.25, 0.9), ang, 0.85)
+    const l = r * (i === 0 ? rand(2.6, 3.4) : rand(0.6, 1.3))
+    const dir = V(-rand(0.5, 1), Math.cos(ang) * 1.1, Math.sin(ang) * 1.1).normalize()
+    const end = from.clone().addScaledVector(dir, l)
+    end.y = Math.min(end.y, r * 1.85)
+    limb(b, M.bark, from, end, r * (i === 0 ? 0.24 : 0.2))
+    if (i === 0) limb(b, M.bark, from.clone().lerp(end, 0.6), end.clone().add(V(rand(-0.3, 0.1), rand(-0.1, 0.1), rand(-0.4, 0.4))), r * 0.1)
+  }
+}
+
+// A fallen log along local x, with a broken branch or two. Solid. `old` makes it a trunk long down in the wood (above),
+// with `moss` on its top when that material is named.
+export const log = defineBuilder(
+  z.object({ length: size(30).default(5), r: size(2).default(0.35), old: z.boolean().default(false), moss: matName.optional() }).strict(),
+  (ctx, p) => {
+    const { b, M, rand } = ctx
+    if (p.old) oldLog(ctx, p.length, p.r, p.moss ? ctx.mat(p.moss) : undefined)
+    else {
+      b.add(unitTrunk(), M.bark, M4(0, p.r * 0.9, 0, 0, p.r, p.length, p.r, 0, Math.PI / 2), { uv: "keep" })
+      for (let i = 0; i < 2; i++) {
+        const x = rand(-0.35, 0.35) * p.length
+        limb(b, M.bark, V(x, p.r * 1.2, 0), V(x + rand(-0.5, 0.5), p.r * 1.2 + rand(0.6, 1.2), rand(-0.6, 0.6)), p.r * 0.25)
+      }
+    }
+    ctx.footprint(0, 0, p.length / 2, p.r + 0.2, 0, undefined, p.r * 1.9)
+  }
+)
 
 // A worn trail: a flat strip just above the ground along a polyline. Not solid.
 export const trail = defineBuilder(

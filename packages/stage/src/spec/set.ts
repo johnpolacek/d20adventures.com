@@ -158,6 +158,9 @@ const meadow = z
     flowers: unit.optional(),
     relief: num(0, 3).optional(),
     seed: num(0, 1000).optional(),
+    // A worn track painted into the floor along these points, `pathWidth` metres across, its edges soft and broken.
+    path: z.array(vec2).min(2).max(32).optional(),
+    pathWidth: num(0.2, 10).optional(),
   })
   .strict()
 // Grass blades and heather, dark at the root and `tip` coloured at the top.

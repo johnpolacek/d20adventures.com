@@ -121,11 +121,23 @@ export interface MeadowOptions {
   flowers?: number
   relief?: number
   seed?: number
+  // A worn track painted into the floor itself along these points [x, z], `pathWidth` metres across: bare trodden
+  // earth down the middle, its edges wandering and broken where the grass and moss creep back in.
+  path?: [number, number][]
+  pathWidth?: number
+}
+
+// A path's points smoothed into a curve, a few to each stretch, so its bends are not corners.
+function smoothPath(pts: [number, number][]) {
+  if (pts.length < 3) return pts.map(([x, z]) => new THREE.Vector2(x, z))
+  const curve = new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)))
+  return curve.getPoints(Math.min(48, (pts.length - 1) * 3)).map((v) => new THREE.Vector2(v.x, v.z))
 }
 
 // A meadow floor seen up close: broad patches of lush and dry grass and cushion moss, fine blade speckle, bare earth
 // with pebbles, fallen leaves and the odd wildflower. Detail fades with distance so it never shimmers.
 export function meadow(ctx: MaterialContext, name: string, o: MeadowOptions = {}) {
+  const path = o.path?.length && o.path.length > 1 ? smoothPath(o.path) : null
   const u = {
     gGrass: { value: new THREE.Color(o.grass || "#3f6a34") },
     gDark: { value: new THREE.Color(o.grassDark || "#22401f") },
@@ -139,10 +151,13 @@ export function meadow(ctx: MaterialContext, name: string, o: MeadowOptions = {}
     gFlowers: { value: o.flowers ?? 0.3 },
     gRelief: { value: o.relief ?? 0.6 },
     gSeed: { value: o.seed ?? ctx.rand(0, 50) },
+    gPath: { value: path ?? [] },
+    gPathW: { value: o.pathWidth ?? 1.4 },
   }
   const m = new THREE.MeshStandardMaterial({ name, color: "#ffffff", roughness: 0.95, metalness: 0 })
   m.userData.uniforms = u
-  return stageMaterial(m, ctx.shared, "meadow", (s) => {
+  if (path) m.defines = { GPATH: path.length }
+  return stageMaterial(m, ctx.shared, path ? `meadowpath${path.length}` : "meadow", (s) => {
     Object.assign(s.uniforms, u)
     WORLD_VERTEX(s)
     s.fragmentShader = s.fragmentShader
@@ -153,6 +168,24 @@ varying vec3 vNWorld; varying vec3 vNNormalW;
 uniform vec3 gGrass, gDark, gMoss, gDry, gSoilCol, gLitter; uniform float gDirtAmt, gPebbles, gLitterAmt, gFlowers, gRelief, gSeed;
 ${NOISE}
 ${PERTURB}
+#ifdef GPATH
+uniform vec2 gPath[GPATH]; uniform float gPathW;
+// How far a point lies from the path's line.
+float gPathD(vec2 p){
+ float d = 1e4;
+ for (int i = 0; i < GPATH - 1; i++){ vec2 a = gPath[i], ab = gPath[i + 1] - a; float t = clamp(dot(p - a, ab) / dot(ab, ab), 0.0, 1.0); d = min(d, length(p - a - ab * t)); }
+ return d;
+}
+// 1 on the trodden earth, 0 off it. The half width swells and narrows along the way, the edge wanders over a metre or
+// so and frays at the scale of a hand, and tongues of grass reach in from the verges.
+float gPathMask(vec2 p, float d){
+ float hw = gPathW * .5 * (.75 + .5 * mfbm(p * .18 + 41.0));
+ float e = d - hw + (mfbm(p * .9 + 13.0) - .5) * gPathW * .55 + (mnoise(p * 6.0 + 2.0) - .5) * .16;
+ float m = 1.0 - smoothstep(-.18, .22, e);
+ m *= smoothstep(.15, .4, mfbm(p * 1.6 + 71.0) + .45 * (1.0 - smoothstep(0.0, hw, d)));
+ return m;
+}
+#endif
 vec2 gH2(vec2 p){ return vec2(mhash(p + gSeed), mhash(p * 1.37 + 17.1 + gSeed)); }
 // A pebble per cell where the cell's dice allow: x = coverage, y = dome height.
 vec2 gPebble(vec2 p, float scale, float dens){
@@ -168,8 +201,19 @@ float gHeight(vec2 p, float dirt, float sharp){
  float blades = mnoise(p * 26.0) * .55 + mnoise(p * 61.0 + 4.0) * .45;
  float clump = mnoise(p * 4.2);
  float peb = gPebble(p, 3.2, gPebbles * (.12 + dirt * .6)).y;
- return mix(blades * .5 + clump * .5, mnoise(p * 9.0) * .3, dirt) * sharp + peb * 1.6;
-}`
+ float h = mix(blades * .5 + clump * .5, mnoise(p * 9.0) * .3, dirt) * sharp + peb * 1.6;
+#ifdef GPATH
+ // Trodden earth is uneven: scuffs and hollows a hand to a stride across.
+ h += dirt * (mnoise(p * 2.3 + 8.0) * .9 + mnoise(p * 6.5 + 3.0) * .35);
+#endif
+ return h;
+}
+#ifdef GPATH
+// The path's own mask is taken once, at the pixel: its neighbours' would change the relief by less than a pixel shows.
+#define G_DIRT(p) max(gDirtMask(p), gTrod)
+#else
+#define G_DIRT(p) gDirtMask(p)
+#endif`
       )
       .replace(
         "#include <color_fragment>",
@@ -185,8 +229,16 @@ gCol = mix(gCol, gDry, smoothstep(.6, .8, mfbm(gP * .12 + 7.0)) * .55);
 gCol *= .8 + .4 * mix(.5, mnoise(gP * 4.2), gMid);
 float gBl = mnoise(gP * 26.0) * .55 + mnoise(gP * 61.0 + 4.0) * .45;
 gCol *= mix(1.0, .55 + .8 * gBl, gSharp * .85);
-float gDirt = gDirtMask(gP);
+#ifdef GPATH
+float gPd = gPathD(gP);
+float gTrod = gPd < gPathW * 1.3 ? gPathMask(gP, gPd) : 0.0;
+#endif
+float gDirt = G_DIRT(gP);
 vec3 gSoil = gDirtC(gP, gSharp);
+#ifdef GPATH
+// Down the middle the earth is packed, a shade paler, with darker scuffed hollows in it.
+gSoil *= mix(1.0, (1.3 + .15 * mnoise(gP * 3.0)) * mix(1.0, .72, smoothstep(.55, .78, mfbm(gP * 2.3 + 8.0))), gTrod * (1.0 - smoothstep(0.0, gPathW * .4, gPd)));
+#endif
 gCol = mix(gCol, gSoil, gDirt);
 // Fallen leaves: small rotated ovals in a share of cells.
 { vec2 c = gP * 5.0, id = floor(c), f = fract(c) - .5; vec2 h = gH2(id + 9.0);
@@ -208,7 +260,7 @@ diffuseColor.rgb *= gCol;`
         "#include <normal_fragment_maps>",
         `#include <normal_fragment_maps>
 { vec2 dx = dFdx(gP), dy = dFdy(gP); float h0 = gHeight(gP, gDirt, gSharp);
- float hx = gHeight(gP + dx, gDirtMask(gP + dx), gSharp), hy = gHeight(gP + dy, gDirtMask(gP + dy), gSharp);
+ float hx = gHeight(gP + dx, G_DIRT(gP + dx), gSharp), hy = gHeight(gP + dy, G_DIRT(gP + dy), gSharp);
  normal = nPerturb(-vViewPosition, normal, vec2(hx - h0, hy - h0) * gRelief * .08, faceDirection); }`
       )
   })
