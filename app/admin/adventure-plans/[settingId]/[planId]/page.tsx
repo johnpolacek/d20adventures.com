@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
-import { Heading } from "@/components/typography/heading"
+import { Heading } from "@d20/ui/typography/heading"
 import { AdminWikiAdventureEditor } from "@/components/wiki-adventures/admin-wiki-adventure-editor"
 import { requireAdmin } from "@/lib/auth-utils"
 import { loadAdminWikiAdventureState } from "@/lib/wiki-adventures/admin-authoring"

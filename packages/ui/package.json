@@ -6,12 +6,14 @@
   "exports": {
     "./utils": "./src/utils.ts",
     "./feedback-rules": "./src/feedback-rules.ts",
+    "./typography/styles": "./src/typography/styles.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
     "check": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.7.0",
     "zod": "4.6.7"

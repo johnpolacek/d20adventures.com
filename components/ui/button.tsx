@@ -3,7 +3,7 @@ import { cva } from "class-variance-authority"
 import React, { forwardRef } from "react"
 import { cn } from "@/lib/utils"
 import { emboss } from "../graphics/styles"
-import { textShadow } from "../typography/styles"
+import { textShadow } from "@d20/ui/typography/styles"
 
 export interface ButtonProps {
   id?: string

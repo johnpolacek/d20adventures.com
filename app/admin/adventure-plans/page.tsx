@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
-import { Heading } from "@/components/typography/heading"
+import { Heading } from "@d20/ui/typography/heading"
 import { Button } from "@/components/ui/button"
 import NativeImage from "@/components/ui/native-image"
 import { requireAdmin } from "@/lib/auth-utils"

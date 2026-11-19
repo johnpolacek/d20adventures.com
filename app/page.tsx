@@ -1,5 +1,5 @@
 import RedirectHandler from "@/components/nav/redirect-handler"
-import { textShadowSpreadLight } from "@/components/typography/styles"
+import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import Image from "@/components/ui/native-image"
 import HomeAdventure from "@/components/views/home-adventure"
 import PlaytesterCta from "@/components/views/playtester-cta"

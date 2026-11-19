@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { textShadow } from "@/components/typography/styles"
+import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import ImageHeader from "@/components/ui/image-header"

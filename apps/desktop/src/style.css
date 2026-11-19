@@ -4,8 +4,6 @@
 @source "../../../components/stage";
 @source "../../../packages/ui/src";
 @source "../../../components/graphics";
-@source "../../../packages/ui/src";
-@source "../../../components/typography";
 @source "../../../components/ui/button.tsx";
 @source "../../../components/ui/image-header.tsx";
 @source "../../../components/ui/native-image.tsx";

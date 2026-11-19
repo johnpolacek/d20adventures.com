@@ -1,5 +1,5 @@
 import { srdAttribution } from "@d20/srd/attribution"
-import { Heading } from "@/components/typography/heading"
+import { Heading } from "@d20/ui/typography/heading"
 
 // The attribution statement, as written, with its two URLs as links.
 const parts = srdAttribution.split(/(https:\/\/\S+?)(?=\.(?:\s|$))/)

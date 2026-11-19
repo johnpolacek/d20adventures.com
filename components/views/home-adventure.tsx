@@ -3,7 +3,7 @@
 import { useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { type ReactNode, useEffect, useState } from "react"
-import { textShadowSpreadLight } from "@/components/typography/styles"
+import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@/components/ui/button"
 import type { Adventure } from "@/types/adventure"
 import ActiveAdventureCard from "./active-adventure-card"

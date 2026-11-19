@@ -1,4 +1,4 @@
-import { Heading } from "@/components/typography/heading"
+import { Heading } from "@d20/ui/typography/heading"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import UnsubscribeForm from "./unsubscribe-form"
 

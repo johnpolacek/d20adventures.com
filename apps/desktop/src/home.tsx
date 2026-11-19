@@ -1,4 +1,4 @@
-import { textShadowSpread, textShadowSpreadLight } from "@/components/typography/styles"
+import { textShadowSpread, textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@/components/ui/button"
 import { siteCard } from "@/components/ui/site"
 import { cn } from "@/lib/utils"

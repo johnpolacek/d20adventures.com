@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { Adventure } from "@/types/adventure"
-import { textShadow, textShadowSpread } from "../typography/styles"
+import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 
 interface ActiveAdventureCardProps {
   adventure: Adventure

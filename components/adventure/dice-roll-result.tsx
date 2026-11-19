@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { textShadow } from "@/components/typography/styles"
+import { textShadow } from "@d20/ui/typography/styles"
 import Image from "@/components/ui/native-image"
 
 export default function DiceRollResult({ result, animate }: { result: number; animate?: boolean }) {

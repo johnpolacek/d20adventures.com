@@ -1,7 +1,7 @@
 import { getSubscription, unsubscribe } from "@/app/_actions/mailing-list"
 import { ConfigCard } from "@/components/admin/config-card"
 import { MailingListForm } from "@/components/forms/mailing-list-form"
-import { Heading } from "@/components/typography/heading"
+import { Heading } from "@d20/ui/typography/heading"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 

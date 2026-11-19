@@ -1,4 +1,4 @@
-import { Heading } from "@/components/typography/heading"
+import { Heading } from "@d20/ui/typography/heading"
 export default function AboutPage() {
   return (
     <div className="container py-12">

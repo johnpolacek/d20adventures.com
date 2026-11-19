@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card"
 import { CharacterSelectCard } from "@/components/adventure/character-select-card"
 import Image from "@/components/ui/native-image"
 import type { PCTemplate } from "@/types/character"
-import { textShadow, textShadowSpread } from "../typography/styles"
+import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { scrollToTop } from "../ui/utils"
 
 export default function ChooseCharacterView({
