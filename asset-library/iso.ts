@@ -15,7 +15,8 @@
 // &isohide=type,type leaves those parts of the set out: an awning over the people, as a ceiling would be.
 // &isosky=9fc0ff gives the fill a sky colour. &isolamps=x,y,z,intensity,distance[,colour];... adds lamps, warm unless
 // a colour is given. &isofill=0.3 dims the light a night set carries on its camera. &isohaze=0.15 is the share of the
-// set's haze a whole place keeps. &isosoft=5 blurs the edge of the sun's shadows.
+// set's haze a whole place keeps. &isosoft=5 blurs the edge of the sun's shadows. &isovignette=0.3 is how far the frame
+// darkens toward its edges, 0.55 unless given: a dark set's near corners go to black under the full one.
 // &rings=id,id or &rings=party marks where the cast stand, the named ones in gold (lab.ts castRings).
 
 import type { Stage } from "@d20/stage"
@@ -47,6 +48,8 @@ export interface IsoOptions {
   haze?: number
   // How far the edge of the sun's shadow is blurred, in texels of its map: a canopy's shadow wants a soft one.
   soft?: number
+  // How far the frame darkens toward its edges and its foot, in place of the paint pass's own 0.55.
+  vignette?: number
   // The camera is the game's: its walls and its limits are left as they are.
   keepCamera?: boolean
 }
@@ -67,6 +70,7 @@ export function iso(stage: Stage, o: IsoOptions) {
     sky: THREE.Mesh
     fill: THREE.PointLight | null
     sun: THREE.DirectionalLight
+    pipeline: { paint: { final: { material: THREE.ShaderMaterial } } }
     lightRoom: (dt: number) => void
     collide: () => void
   }
@@ -169,6 +173,7 @@ export function iso(stage: Stage, o: IsoOptions) {
   }
   if (o.fill !== undefined && s.fill) s.fill.intensity *= o.fill
   if (o.soft) s.sun.shadow.radius = o.soft
+  if (o.vignette !== undefined) s.pipeline.paint.final.material.uniforms.vignette.value = o.vignette
   if (o.key) {
     const key = new THREE.DirectionalLight("#dfe6ff", o.key)
     const from = az + THREE.MathUtils.degToRad(70)

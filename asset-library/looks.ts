@@ -143,30 +143,41 @@ export const LOOKS: Record<string, Look> = {
       isofill: "0.3",
       // Enough of the set's haze that the far wood goes into the dark, and not so much that the near one does.
       isohaze: "0.38",
-      // The canopy's shadow falls with a soft edge, as leaves high overhead throw it.
-      isosoft: "5",
-      // The one place the moon gets through: a pool at the tree line, under the set's shaft. Then a faint light on each
-      // place to hide, so it is found in the dark: the great oak, the fallen log, the mossy boulders.
-      isolamps: "8,3.2,-8.5,9,11,8fa8c8;-5.9,2.6,-1.4,3,6,8fa8c8;5.4,1.5,7.5,2.2,5,8fa8c8;-5.5,1.7,12.7,2.2,5,8fa8c8",
+      // The canopy's shadow falls with a soft, broken edge, as leaves high overhead throw it.
+      isosoft: "9",
+      // A faint light on each place to hide, so it is found in the dark: the great oak, the fallen log, the mossy boulders.
+      isolamps: "-5.9,2.6,-1.4,3,6,8fa8c8;5.4,1.5,7.5,2.2,5,8fa8c8;-5.5,1.7,12.7,2.2,5,8fa8c8",
       // A wood seen from above is all canopy. The trees over the trail to the south are left out, one that stood
       // between that side and the clearing, and one whose leaves hung across the owlbear's face.
       isoclear: "6.5,22,5;6,4,3;3,13,6;4,22,7;5,31,8;9,-2,2.5",
-      figenv: "0.3",
+      // Less of the frame's darkening at its edges: the near ground in the corners went to black.
+      isovignette: "0.3",
+      // A figure reflects a lit room of its own, which is warm and bright beside a wood at night.
+      figenv: "0.04",
       // The moon along a figure's edges, so who stands in the canopy's shadow is still seen.
       figrim: "9db4d8,0.45",
       rings: "thalbern,wollandora",
       bloom: "on",
     },
-    // Of the set's two shafts of light the one at the tree line is kept, fainter: where the noise comes from.
-    edit: { "oak-shaft": null },
-    materials: { moonbeam: { opacity: 0.05 } },
+    // Neither of the set's shafts of light: a beam read as a pane of glass.
+    edit: { "oak-shaft": null, "clearing-shaft": null },
     // Under a canopy nothing is lit at the height of the eye. The set's sky is a bright blue down to the ground, which
     // showed between the trunks as a band of daylight (the owner, 2026-11-15: "it should be almost black as the forest
     // canopy blocks all the light"). Here the sky goes to black at the horizon, the haze is black, and the far wood
     // fades into it. Overhead it stays a night sky with a moon. The haze is a blue a shade off black, so a near trunk
     // stands dark against the wood behind it, and the sky meets it at the horizon in the same blue: no line shows
     // where the far ground ends.
-    atmosphere: { sky: { horizon: "#152742", mid: "#0a1424", gain: 0.3 }, fog: { color: "#060c15" }, hemisphere: { intensity: 0.24 } },
+    // The moon comes through the leaves weaker and the night sky fills more of what they shade, so the canopy's shadow
+    // on the ground is a darker ground and not a black hole. The frame
+    // is no brighter for it: the lit ground and the leaves lose what the shadows gain. The light the camera carries is the moon's colour, not a
+    // lamp's: it lit a figure warm against the cold wood.
+    atmosphere: {
+      sky: { horizon: "#152742", mid: "#0a1424", gain: 0.3 },
+      fog: { color: "#060c15" },
+      sun: { intensity: 0.7 },
+      hemisphere: { sky: "#64799c", ground: "#0e131b", intensity: 3 },
+      fill: { color: "#8ea6cc" },
+    },
     // An old wood: oaks, pines, a few birches, and the dead among them.
     trees: {
       files: "/stage/trees",

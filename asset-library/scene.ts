@@ -287,6 +287,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       fill: q.isofill ? Number(q.isofill) : undefined,
       haze: q.isohaze ? Number(q.isohaze) : undefined,
       soft: q.isosoft ? Number(q.isosoft) : undefined,
+      vignette: q.isovignette ? Number(q.isovignette) : undefined,
     })
     stage.shot(view as Parameters<Stage["shot"]>[0], { instant: true })
     // Cast members with a figure in the library stand as figures: the look's own choices first, then anyone else.

@@ -3,7 +3,7 @@
 //   1. pnpm exec next dev -p 3057            (the /dev pages need no Convex)
 //   2. "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --user-data-dir=/tmp/stage-chrome \
 //        --remote-debugging-port=9478 --force-device-scale-factor=2
-//   3. pnpm exec tsx scripts/stage-verify.ts [--tiers=ultra,high] [--staging=<key>] [--shots=gate,party] [--motion]
+//   3. pnpm exec tsx scripts/stage-verify.ts [--tiers=ultra,high] [--staging=<key>] [--shots=gate,party] [--look=play] [--motion]
 //
 // Checks: the page builds the set, no exceptions, every shader program runnable, and per shot the draw calls and
 // triangles against the Stageview budgets. Writes a full frame per shot and native-pixel crops of each visible cast member
@@ -25,6 +25,7 @@ const arg = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`
 const tiers = (arg("tiers") ?? "ultra").split(",")
 const staging = arg("staging") ?? "welcome-to-kordavos/the-gates-of-kordavos"
 const onlyShots = arg("shots")?.split(",")
+const look = arg("look")
 const motion = process.argv.includes("--motion")
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -103,7 +104,7 @@ async function main() {
   const pass = (m: string) => console.log(`PASS: ${m}`)
 
   for (const tier of tiers) {
-    const url = `${BASE}/dev/stage?staging=${staging}&tier=${tier}${motion ? "" : "&motion=0"}`
+    const url = `${BASE}/dev/stage?staging=${staging}&tier=${tier}${look ? `&look=${look}` : ""}${motion ? "" : "&motion=0"}`
     const t0 = Date.now()
     await send("Page.navigate", { url })
     let ok = false

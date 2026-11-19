@@ -85,6 +85,7 @@ export function lightLook(stage: Stage, q: Record<string, string>, keepCamera = 
     fill: q.isofill ? Number(q.isofill) : undefined,
     haze: q.isohaze ? Number(q.isohaze) : undefined,
     soft: q.isosoft ? Number(q.isosoft) : undefined,
+    vignette: q.isovignette ? Number(q.isovignette) : undefined,
     keepCamera,
   })
 }
