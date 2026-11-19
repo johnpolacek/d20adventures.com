@@ -232,7 +232,8 @@ export function AdventuresPage(props: {
       {intro.length > 0 && (
         <section>
           <SectionPlate>Intro Adventures</SectionPlate>
-          <ul className="grid auto-rows-fr grid-cols-3 gap-8 py-8">
+          {/* A card is its 3:4 cover over about 240px of text, so the row narrows until a whole card fits the window's height. */}
+          <ul className="mx-auto grid max-w-[max(600px,calc((100vh_-_12rem_-_240px)*2.25_+_4rem))] auto-rows-fr grid-cols-3 gap-8 py-8">
             {intro.map((a) => (
               <li key={a.id}>
                 <button
