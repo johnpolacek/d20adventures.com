@@ -318,10 +318,10 @@ export class Standees {
     // patch of shade where it stands. It thins as they fall, and their whole length lies on the ground.
     const contact = new THREE.Mesh(
       new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ color: "#000", alphaMap: contactTexture(), transparent: true, opacity: 0.5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
+      new THREE.MeshBasicMaterial({ color: "#000", alphaMap: contactTexture(), transparent: true, opacity: 0.58, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 })
     )
     contact.rotation.x = -Math.PI / 2
-    contact.position.y = 0.01
+    contact.position.y = 0.024
     contact.visible = false
     contact.name = `contact:${cast.id}`
     grp.add(contact)
@@ -419,9 +419,10 @@ export class Standees {
       s.mesh.rotation.z = Math.sin(c.stride) * 0.035 * c.walk
       s.mesh.rotation.x = -s.fall * (Math.PI / 2 - 0.04)
       const r = 0.2 + c.height * 0.1
-      s.contact.visible = s.loaded && s.fall < 0.95
-      s.contact.scale.set(r * 2.2, r * 1.6, 1)
-      s.contact.material.opacity = 0.42 * (1 - s.fall)
+      const isModel = this.replaced.has(c.id)
+      s.contact.visible = (s.loaded || isModel) && s.fall < 0.95
+      s.contact.scale.set(r * (isModel ? 2.5 : 2.2), r * (isModel ? 2.0 : 1.6), 1)
+      s.contact.material.opacity = (isModel ? 0.56 : 0.42) * (1 - s.fall)
       const hit = this.hits.get(c.id)
       if (hit) {
         hit.t += dt

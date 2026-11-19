@@ -277,6 +277,8 @@ export const grassPatch = defineBuilder(
         .default([]),
       // Metres over which it thins out toward the area's edges, so a patch never ends on a straight line.
       feather: num(0, 100).default(0),
+      // 0 = uniform scatter; >0 clusters tufts into organic woodland clumps with open leaf-litter gaps between them.
+      clump: num(0, 1).default(0),
       material: matName.default("grass"),
     })
     .strict(),
@@ -291,19 +293,27 @@ export const grassPatch = defineBuilder(
       nor.push(0, 1, 0)
       uv.push(tuft, t)
     }
+    const clumpField = p.clump > 0 ? noise3(rand) : null
     const LV = [0, 0.38, 0.72, 1]
     let placed = 0
-    for (let tries = 0; placed < p.count && tries < p.count * 8; tries++) {
+    for (let tries = 0; placed < p.count && tries < p.count * 12; tries++) {
       const tx = rand(x0, x1)
       const tz = rand(z0, z1)
       if (p.clear.some(([cx, cz, r]) => (tx - cx) ** 2 + (tz - cz) ** 2 < r * r)) continue
       if (p.within.length && !p.within.some(([cx, cz, r]) => (tx - cx) ** 2 + (tz - cz) ** 2 < r * r)) continue
       if (p.feather && rand() * p.feather > Math.min(tx - x0, x1 - tx, tz - z0, z1 - tz)) continue
+      let boost = 1
+      if (clumpField) {
+        const d = clumpField(tx * 0.24, 1.7, tz * 0.24) * 0.68 + clumpField(tx * 0.72 + 9, 4.1, tz * 0.72) * 0.32
+        const prob = THREE.MathUtils.clamp((d - 0.28) * 1.9, 0.04, 1)
+        if (rand() > THREE.MathUtils.lerp(1, prob, p.clump)) continue
+        boost = 0.78 + 0.45 * d
+      }
       if (p.avoid && ctx.blocked(tx, tz)) continue
       placed++
       const tuft = rand()
       const n = Math.round(rand(p.blades[0], p.blades[1] + 0.99))
-      const hTuft = rand(p.height[0], p.height[1])
+      const hTuft = rand(p.height[0], p.height[1]) * boost
       for (let k = 0; k < n; k++) {
         const ang = rand(0, TAU)
         const r0 = rand(0, p.spread)
