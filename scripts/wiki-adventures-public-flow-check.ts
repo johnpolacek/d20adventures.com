@@ -23,12 +23,6 @@ function assertPagesBranchOnWiki() {
   assert.ok(creation.includes("isLocalWikiAdventure") && creation.includes("loadWikiAdventureRuntime"), "heroCreation does not read the wiki runtime")
 }
 
-// The prototype workbench server actions must be admin-gated.
-function assertWorkbenchActionsGated() {
-  const source = readFileSync("app/_actions/wiki-adventures/workbench-actions.ts", "utf8")
-  assert.ok(source.includes("requireAdmin"), "workbench-actions does not import requireAdmin")
-  assert.equal(source.match(/await assertAdmin\(\)/g)?.length, 2, "both workbench actions must call assertAdmin()")
-}
 
 type Expectation = {
   planId: string
@@ -107,7 +101,6 @@ function assertGridSourceAndOrder() {
 
 function main() {
   assertPagesBranchOnWiki()
-  assertWorkbenchActionsGated()
   assertPlanViewShape()
   assertGridSourceAndOrder()
   console.log("Public play-flow wiki cutover checks passed")

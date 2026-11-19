@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { siteConfig } from "@/lib/config"
 
-const FOOTERLESS_EDITOR_PREFIXES = ["/admin/adventure-plans/", "/admin/adventures-plans/", "/admin/wiki-adventures/"]
+const FOOTERLESS_EDITOR_PREFIXES = ["/admin/adventure-plans/", "/admin/wiki-adventures/"]
 
 export default function SiteFooter({ currentYear }: { currentYear: number }) {
   const pathname = usePathname()
