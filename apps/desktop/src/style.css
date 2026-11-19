@@ -1,3 +1,5 @@
+@layer ui-sdk;
+
 @import "tailwindcss";
 @import "../../../components/theme.css";
 @source "../../../components/adventure/module-cover.tsx";

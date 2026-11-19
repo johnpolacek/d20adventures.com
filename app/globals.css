@@ -1,3 +1,5 @@
+@layer ui-sdk;
+
 @import 'tailwindcss';
 @import '../components/theme.css';
 @plugin "@tailwindcss/typography";
