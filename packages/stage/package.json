@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "three": "0.183.2",
-    "zod": "4.3.6"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/three": "0.183.1"

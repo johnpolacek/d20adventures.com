@@ -12,7 +12,7 @@ export function Providers({ children }: PropsWithChildren) {
   return (
     <ClerkProvider
       appearance={{
-        baseTheme: dark,
+        theme: dark,
         variables: {
           fontFamily: "var(--font-rethink-sans)",
           colorBackground: "#1C1934",
