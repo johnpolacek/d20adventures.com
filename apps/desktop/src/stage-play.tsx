@@ -649,7 +649,7 @@ export function StagePlay(props: {
         const view = viewNow.current
         if (live() && view && (("subject" in view && view.subject === id) || ("pair" in view && view.pair.includes(id)))) {
           const shot = shotFor(stage, view, heroes.current)
-          if (shot) stage.shot(shot)
+          if (shot) stage.shot(shot, { follow: "pair" in view ? view.pair : [] })
         }
       })().catch((error) => onError(`Could not draw the move: ${String(error)}`))
     }
@@ -670,7 +670,7 @@ export function StagePlay(props: {
     if (!stage || !reading) return
     const cut = framed.current !== stage
     framed.current = stage
-    const go = (which: Parameters<Stage["shot"]>[0]) => stage.shot(which, { instant: cut })
+    const go = (which: Parameters<Stage["shot"]>[0], follow: string[] = []) => stage.shot(which, { instant: cut, follow })
     if (speech.length) return void go({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
     if (departing?.shot) return void go(departing.shot)
     if (arriving) {
@@ -691,7 +691,8 @@ export function StagePlay(props: {
     const view = beats[paragraph]?.view
     if (!view) return
     const shot = shotFor(stage, view, heroes.current)
-    if (shot) go(shot)
+    // A walk under way in this paragraph is followed: two facing off keep both in the picture.
+    if (shot) go(shot, "pair" in view ? view.pair : [])
   }, [stage, speech, departing, arriving, beats, paragraph, reading])
   // What labelled paragraphs do on stage: effects and objects, each played once when its paragraph is first read.
   // An attack in a hero's reply waits for the roll that decides it, and plays after the roll as a hit or a miss, unless

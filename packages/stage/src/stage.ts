@@ -202,6 +202,10 @@ export class Stage {
   private coinMesh: THREE.Mesh | null = null
   // `unseen`: not walked, but put there once the picture has dipped.
   private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void; unseen?: boolean }>()
+  // Who the current shot is on, and the walkers the camera follows, by where it last saw them. A walker is followed
+  // when the shot is on them, or when they set off in view.
+  private framed = new Set<string>()
+  private followed = new Map<string, { x: number; z: number }>()
   private insets = { right: 0, bottom: 0 }
   private raf = 0
   private running = false
@@ -569,7 +573,8 @@ export class Stage {
     return out
   }
   // A named shot, or an inline one (absolute, group or subject). Eased over 2.2 s unless instant or motion is off.
-  shot(which: string | StagingShot, { instant = false, duration = 2200 } = {}) {
+  // The camera follows whoever of its subjects walks, and anyone in `follow`.
+  shot(which: string | StagingShot, { instant = false, duration = 2200, follow = [] as string[] } = {}) {
     let s: ResolvedShot | undefined
     const authored = typeof which === "string" ? this.staging?.shots[which] : which
     const painted = this.painted?.on ? this.painted : null
@@ -581,6 +586,10 @@ export class Stage {
       s = undefined
     }
     if (!s) return false
+    this.framed = new Set([...(authored && "subject" in authored ? [authored.subject] : authored && "subjects" in authored ? authored.subjects : []), ...follow])
+    // A walker the new shot is not on is let go. One it is on is followed from where they stand now.
+    for (const id of this.followed.keys()) if (!this.framed.has(id)) this.followed.delete(id)
+    for (const id of this.framed) if (this.moves.has(id) && !this.moves.get(id)!.unseen && !this.followed.has(id)) this.followed.set(id, { x: this.member(id).x, z: this.member(id).z })
     this.driving = false
     if (this.controls) this.controls.minPolarAngle = 0
     this.activeShot = typeof which === "string" ? which : null
@@ -909,6 +918,7 @@ export class Stage {
         this.putUnseen(id)
       })
     }
+    if (!this.followed.has(id) && (this.framed.has(id) || this.inView(c))) this.followed.set(id, { x: c.x, z: c.z })
     // Frames stop while the window is hidden or covered. The walk still arrives on time, so nothing awaiting it stalls.
     const due = (Math.hypot(p.x - c.x, p.z - c.z) / speed) * 1000 + 1000
     return new Promise<void>((resolve) => {
@@ -1044,6 +1054,46 @@ export class Stage {
       this.moves.delete(id)
       m.resolve()
     })
+  }
+  // Whether a cast member stands within the picture.
+  private inView(c: CastMember) {
+    const p = V(c.x, (c.y ?? 0) + c.height * 0.5, c.z).project(this.camera)
+    return p.z < 1 && Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1
+  }
+  // The camera keeps up with whoever it follows: it moves with them, or on a painted set, where it cannot leave its
+  // point, it turns after them. With two on screen and one walking, it goes half the way, to keep both.
+  private follow() {
+    if (!this.followed.size) return
+    let dx = 0
+    let dz = 0
+    for (const [id, was] of this.followed) {
+      const c = this.member(id)
+      dx += c.x - was.x
+      dz += c.z - was.z
+      was.x = c.x
+      was.z = c.z
+      if (!this.moves.has(id)) this.followed.delete(id)
+    }
+    const n = Math.max(1, this.framed.size)
+    dx /= n
+    dz /= n
+    if (Math.abs(dx) + Math.abs(dz) < 1e-6 || this.cut) return
+    const d = V(dx, 0, dz)
+    const tr = this.transition
+    if (this.tripod) {
+      this.tripod.want.target.add(d)
+      if (tr) tr.from.target.add(d)
+      this.refit()
+      return
+    }
+    this.camera.position.add(d)
+    this.controls?.target.add(d)
+    if (tr) {
+      tr.from.pos.add(d)
+      tr.from.target.add(d)
+      tr.to.pos.add(d)
+      tr.to.target.add(d)
+    }
   }
   private stepMoves(dt: number) {
     for (const [id, m] of this.moves) {
@@ -1221,6 +1271,7 @@ export class Stage {
     }
     if (this.motion) {
       this.stepMoves(dt)
+      this.follow()
       // A line stands still. When the beats have moved it on, everyone is put in their new place unseen.
       if (!PEOPLE_STILL) for (const l of this.loops.values()) l.update(dt)
       else
