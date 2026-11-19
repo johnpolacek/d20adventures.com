@@ -2,7 +2,9 @@
 @import "../../../components/theme.css";
 @source "../../../components/adventure/module-cover.tsx";
 @source "../../../components/stage";
+@source "../../../packages/ui/src";
 @source "../../../components/graphics";
+@source "../../../packages/ui/src";
 @source "../../../components/typography";
 @source "../../../components/ui/button.tsx";
 @source "../../../components/ui/image-header.tsx";

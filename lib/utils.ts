@@ -1,10 +1,6 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
 import { IMAGE_HOST } from "@/lib/config"
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+export { cn } from "@d20/ui/utils"
 
 /**
  * Constructs a proper image URL, avoiding doubling up the IMAGE_HOST

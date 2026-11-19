@@ -47,6 +47,9 @@ importers:
       '@d20/stage':
         specifier: workspace:*
         version: link:packages/stage
+      '@d20/ui':
+        specifier: workspace:*
+        version: link:packages/ui
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -306,6 +309,9 @@ importers:
       '@d20/stage':
         specifier: workspace:*
         version: link:../../packages/stage
+      '@d20/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@fontsource/cinzel-decorative':
         specifier: ^5.3.0
         version: 5.3.0
@@ -392,6 +398,21 @@ importers:
       '@types/three':
         specifier: 0.183.1
         version: 0.183.1
+
+  packages/ui:
+    dependencies:
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      react:
+        specifier: '>=19'
+        version: 19.2.4
+      react-dom:
+        specifier: '>=19'
+        version: 19.2.4(react@19.2.4)
+      tailwind-merge:
+        specifier: ^3.5.0
+        version: 3.5.0
 
 packages:
 
