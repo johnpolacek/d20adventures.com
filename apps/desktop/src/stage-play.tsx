@@ -919,7 +919,7 @@ export function StagePlay(props: {
   const owed = props.onLevel && latest ? latest.characters.filter((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && levelOwed(c)) : []
   const levelHero = owed.find((c) => c.id === levelling)
   // Suggested replies are asked for once per hero's turn, as soon as it comes up with the game on screen, so they are
-  // often there once the narration has been read. A request that fails offers none.
+  // often there once the narration has been read. A request that fails twice offers none.
   const suggestRef = useRef(props.onSuggest)
   suggestRef.current = props.onSuggest
   const asked = useRef(new Map<string, Promise<CardSuggestion[]>>())
@@ -930,9 +930,11 @@ export function StagePlay(props: {
   useEffect(() => {
     if (!holdKey || !holdTurn || !holdActor) return
     let live = true
+    const ask = () => (suggestRef.current?.(holdTurn, holdActor) ?? Promise.resolve([])).catch(() => [] as CardSuggestion[])
     let request = asked.current.get(holdKey)
     if (!request) {
-      request = (suggestRef.current?.(holdTurn, holdActor) ?? Promise.resolve([])).catch(() => [])
+      // One that comes back empty is asked once more.
+      request = ask().then((list) => (list.length > 0 ? list : ask()))
       asked.current.set(holdKey, request)
     }
     void request.then((list) => live && setOffered({ key: holdKey, list }))

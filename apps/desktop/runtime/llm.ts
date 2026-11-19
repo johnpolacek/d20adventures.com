@@ -18,14 +18,15 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
         model
       )
       try {
-        result = await session.ask(prompt)
+        const answer = await session.ask(prompt)
+        if (answer.failed || !answer.text.trim()) throw new Error("failed")
+        result = answer
       } catch {
         session.close()
         session = undefined
         if (attempt > 0) throw new Error(`${provider} could not finish this request. Check its sign-in or usage limit, then retry.`)
       }
     }
-    if (result.failed || !result.text.trim()) throw new Error(`${provider} could not finish this request. Check its sign-in or usage limit, then retry.`)
     return result.text.trim()
   }
   return { llm: schemaLlm(ask, validatePatch, strict), close: () => session?.close() }
