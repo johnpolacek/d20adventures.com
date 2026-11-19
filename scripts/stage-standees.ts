@@ -13,7 +13,7 @@ import { existsSync } from "node:fs"
 import { appendFile, mkdir, readdir, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import sharp from "sharp"
+import sharp, { type Sharp } from "sharp"
 
 const MODEL = "gemini-3.1-flash-image"
 const RAW = process.env.STANDEE_RAW ?? join(tmpdir(), "d20-standees")
@@ -1087,7 +1087,7 @@ async function key(id: string) {
   const f = FIGURES[id]
   const out = join(STAGE, f.out)
   await mkdir(join(out, ".."), { recursive: true })
-  const turn = async (img: sharp.Sharp) => (f.hue ? sharp(await img.modulate({ hue: f.hue, saturation: 0.85 }).png().toBuffer()) : img)
+  const turn = async (img: Sharp) => (f.hue ? sharp(await img.modulate({ hue: f.hue, saturation: 0.85 }).png().toBuffer()) : img)
   const fr = await turn(await cutout((await latest("front", id)).path, f.magenta))
   await fr.clone().resize({ height: 2048, fit: "inside", withoutEnlargement: true }).webp({ quality: 90, alphaQuality: 100, effort: 5 }).toFile(`${out}-front.webp`)
   const bk = await turn(await cutout((await latest("back", id)).path, f.magenta))

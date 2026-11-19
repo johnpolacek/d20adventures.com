@@ -14,7 +14,7 @@
 // three clips are written here as joint turns.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises"
-import sharp from "sharp"
+import sharp, { type WebpOptions } from "sharp"
 
 const RAW = "lab/stage-art/raw"
 const OUT = "public/stage/figures"
@@ -548,7 +548,7 @@ async function main() {
     }
   const webp = await sharp(atlas, { raw: { width: w * 2, height: h, channels: 4 } })
     // sharp takes `exact` for WebP, which keeps the colour of fully clear pixels, and its types do not list it yet.
-    .webp({ quality: 90, alphaQuality: 100, exact: true } as sharp.WebpOptions)
+    .webp({ quality: 90, alphaQuality: 100, exact: true } as WebpOptions)
     .toBuffer()
   await sharp(atlas, { raw: { width: w * 2, height: h, channels: 4 } })
     .png()

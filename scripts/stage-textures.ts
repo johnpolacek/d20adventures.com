@@ -12,7 +12,7 @@
 import { appendFile, mkdir, readdir, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import sharp from "sharp"
+import sharp, { type Sharp } from "sharp"
 
 const MODEL = "gemini-3.1-flash-image"
 const RAW = process.env.TEXTURE_RAW ?? join(tmpdir(), "d20-textures")
@@ -478,7 +478,7 @@ async function cutout(path: string, size: number, key: "green" | "magenta" = "gr
 
 // Closes a band's left-right seam: the last tenth is cross-faded over the first and cut off, so the new right edge runs
 // straight on into the new left edge.
-async function seamX(img: sharp.Sharp, w: number, h: number) {
+async function seamX(img: Sharp, w: number, h: number) {
   const { data } = await img.removeAlpha().raw().toBuffer({ resolveWithObject: true })
   const band = Math.round(w * 0.1)
   const W = w - band

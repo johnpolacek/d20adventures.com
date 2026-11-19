@@ -24,7 +24,7 @@
 // painted portrait shows. `cards.ts portraits` does that again for every listed card.
 
 import { copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
-import sharp from "sharp"
+import sharp, { type OverlayOptions } from "sharp"
 import { codexPaint, DESKTOP, dirs, jpeg, PUB, RAW, smooth } from "./gen"
 
 const FIXTURES = "public/stage/fixtures/welcome-to-kordavos"
@@ -302,8 +302,8 @@ async function pack() {
   const [LW, LH] = meta.layer
   await mkdir(CROWD, { recursive: true })
   for (const view of ["front", "back"] as const) {
-    const colour: sharp.OverlayOptions[] = []
-    const alpha: sharp.OverlayOptions[] = []
+    const colour: OverlayOptions[] = []
+    const alpha: OverlayOptions[] = []
     for (const [k, v] of meta.variants.entries()) {
       const { data, info } = await sharp(`${OUT}/crowd-${v.id}-${view}.webp`)
         .resize({ width: LW - 4, height: LH - 4, fit: "inside" })
