@@ -355,7 +355,6 @@ export function LevelUp({
     <div className={cn(panel, "flex max-h-full flex-col text-stage-cream", compact ? "p-4" : "p-6", className)} role="dialog" aria-label={`${hero} Levels Up`}>
       <header className="flex items-center gap-3">
         {portrait && (
-          // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
           <img src={portrait} alt="" className="h-12 w-12 shrink-0 rounded-full border border-stage-gold/60 object-cover object-top" />
         )}
         <div className="min-w-0">

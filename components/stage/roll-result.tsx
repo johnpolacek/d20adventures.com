@@ -116,7 +116,6 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
     <>
       <div className={cn("flex items-center gap-2", row ? eyebrow : "justify-center font-serif text-[15px] leading-[1.4] text-stage-cream")}>
         {roll.portrait && (
-          // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
           <img src={roll.portrait} alt="" className="h-6 w-6 shrink-0 rounded-full border border-stage-gold/60 object-cover object-top" />
         )}
         <span className={cn("line-clamp-2", row && "leading-[1.5]")}>{rollHeading(roll, first)}</span>

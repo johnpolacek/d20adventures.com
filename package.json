@@ -31,10 +31,6 @@
     "build": "next build",
     "postinstall": "npx convex codegen",
     "start": "next start",
-    "lint": "biome lint .",
-    "format": "biome format . --write",
-    "check": "biome check .",
-    "check:fix": "biome check . --write",
     "boot:convex": "sh ./scripts/boot-convex.sh",
     "boot:github": "brew install gh && gh auth login",
     "boot:vercel": "pnpm i -g vercel",
@@ -169,7 +165,6 @@
     "zod-to-json-schema": "^3.25.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.6",
     "@clerk/testing": "^2.0.1",
     "@gltf-transform/core": "^4.5.1",
     "@gltf-transform/extensions": "^4.5.1",

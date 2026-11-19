@@ -26,7 +26,7 @@ const round = (n: number) => {
 const pt = (x: number, z: number): Point => ({ x: round(x), z: round(z) })
 const fileFor = (setId: string) => setId.replaceAll("/", "-")
 
-// JSON as biome formats it at its 200 column line width: an object of plain values, and an array that fits on its line,
+// JSON in the house style at a 200 column line width: an object of plain values, and an array that fits on its line,
 // sit on one line, and everything else takes one key or item per line. `lead` is how far into its line the value starts
 // and `tail` what follows it there (a comma). Keys keep the order they are built in, which is fixed below.
 const WIDTH = 200
@@ -128,7 +128,7 @@ for (const [encounterId, scene] of Object.entries(SCENES).sort(([a], [b]) => a.l
 const missingPlans = Object.keys(SCENES).filter((id) => !files.has(`encounters/${id}.json`))
 if (missingPlans.length) errors.push(`no plan for ${missingPlans.join(", ")}`)
 
-// An object key as biome writes it: bare when it can be.
+// An object key, bare when it can be.
 const key = (id: string) => (/^[A-Za-z_$][\w$]*$/.test(id) ? id : JSON.stringify(id))
 // The reader: a literal map of lazy imports, as the stage's SETS, so a bundler splits each plan into its own chunk.
 const setIds = [...setFiles.keys()].sort()

@@ -109,7 +109,6 @@ export function ReactionCard({
     >
       <div className="flex items-center gap-2.5">
         {portrait && (
-          // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
           <img src={portrait} alt="" className={cn("shrink-0 rounded-full border border-stage-gold/60 object-cover object-top", compact ? "h-5 w-5" : "h-7 w-7")} />
         )}
         <span className={cn(eyebrow, "min-w-0 flex-1 truncate")}>

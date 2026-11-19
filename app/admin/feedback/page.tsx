@@ -47,7 +47,6 @@ export default async function AdminFeedbackPage() {
               <div className="mt-3 flex flex-wrap gap-2">
                 {row.screenshotUrls.map((url) => (
                   <a key={url} href={url} target="_blank" rel="noopener noreferrer">
-                    {/* biome-ignore lint/performance/noImgElement: a private file behind a link that expires */}
                     <img src={url} alt="Screenshot" className="h-28 rounded border border-white/15 object-cover" />
                   </a>
                 ))}

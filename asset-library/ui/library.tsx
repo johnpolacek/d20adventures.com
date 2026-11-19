@@ -401,7 +401,6 @@ function CharacterView({ character, params }: { character: Character; params: Pa
           {[character.front, character.back].map(
             (src) =>
               src && (
-                // biome-ignore lint/performance/noImgElement: card art served as it is
                 <img key={src} src={src} alt="" className="max-h-full min-h-0 max-w-[42%] object-contain" />
               )
           )}
@@ -533,7 +532,6 @@ function PictureView({ picture }: { picture: Picture }) {
   }, [picture, config.home])
   return (
     <>
-      {/* biome-ignore lint/performance/noImgElement: art served as it is */}
       <img src={picture.src} alt="" className="absolute inset-0 h-full w-full object-contain p-4" />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
         <div className="text-[15px] text-[#f2c97a]">{named(picture.title)}</div>
@@ -679,7 +677,6 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
       onClick={() => view({ character: c })}
       className={`group shrink-0 rounded-lg border border-[#e6c8962e] bg-gradient-to-b from-[#1c1610] to-[#120e09] p-3 text-left transition-colors hover:border-[#f2c97a] ${wide ? "w-[172px]" : "w-[132px]"}`}
     >
-      {/* biome-ignore lint/performance/noImgElement: a thumbnail served as it is */}
       <img src={`${config.files}/${c.figure?.id}/${c.figure?.thumb ?? c.figure?.front}`} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
       <span className={`mt-2 block truncate font-display group-hover:text-[#f2c97a] ${wide ? "text-[15px]" : "text-[13px]"}`}>{named(c.name)}</span>
       <span className="block truncate text-[11px] opacity-60">{named(c.figure?.role ?? c.role)}</span>
@@ -821,7 +818,6 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                         onClick={() => view({ character: c })}
                         className="group relative rounded-md border border-[#e6c8961f] bg-[#14100b] p-2 text-left hover:border-[#f2c97a99]"
                       >
-                        {/* biome-ignore lint/performance/noImgElement: card art served as it is */}
                         <img src={c.front} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
                         {c.figure && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">3D</span>}
                         <span className="mt-1.5 block truncate text-[12px] group-hover:text-[#f2c97a]">{named(c.name)}</span>
@@ -840,7 +836,6 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                         onClick={() => view({ picture: p })}
                         className="group overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
                       >
-                        {/* biome-ignore lint/performance/noImgElement: art served as it is */}
                         <img src={p.src} alt="" loading="lazy" decoding="async" className={`${(SHAPES[g] ?? [0, "aspect-[3/2]"])[1]} w-full object-cover`} />
                         <span className="block truncate px-2.5 pt-1.5 text-[12px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
                         <span className="block truncate px-2.5 pb-2 text-[10px] opacity-55">{p.of ? named(p.of) : g}</span>
@@ -864,7 +859,6 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
                           className="group relative overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
                         >
                           {p.picture ? (
-                            // biome-ignore lint/performance/noImgElement: scene art served as it is
                             <img src={p.picture} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
                           ) : (
                             <span className="block aspect-[3/2] w-full bg-[#1a140e]" />

@@ -152,7 +152,6 @@ function HeroRing({ party, actor, compact, onPick }: { party: CardCharacter[]; a
       )}
     >
       {c.portrait && (
-        // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
         <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
       )}
     </button>
@@ -613,7 +612,6 @@ export function PromptCard({
         <div className="flex items-center justify-center gap-3 py-1 text-left">
           {mode.who.portrait && (
             <div className={cn("shrink-0 border border-stage-gold bg-stage-ink p-[2px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]", compact ? "h-9 w-8" : "h-14 w-12")}>
-              {/* biome-ignore lint/performance/noImgElement: portrait art from the stage assets */}
               <img src={mode.who.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
             </div>
           )}

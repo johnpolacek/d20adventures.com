@@ -56,7 +56,6 @@ export function CharacterCard({
         ×
       </button>
       {info.portrait && (
-        // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
         <img src={info.portrait} alt="" className="-mt-1 mb-3 block h-[132px] w-full border border-stage-brass/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
       )}
       <div className={eyebrow}>{info.role}</div>

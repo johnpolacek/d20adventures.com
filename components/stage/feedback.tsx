@@ -275,7 +275,6 @@ export function FeedbackPanel({
               <ul className="flex flex-wrap gap-2">
                 {shots.map((shot) => (
                   <li key={shot.url} className="relative">
-                    {/* biome-ignore lint/performance/noImgElement: a local preview of the player's own file */}
                     <img src={shot.url} alt={shot.file.name} className="h-16 w-24 rounded-[3px] border border-stage-line/25 object-cover" />
                     <button
                       type="button"

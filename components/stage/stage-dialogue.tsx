@@ -269,7 +269,6 @@ export function Plate({ line, compact = false, docked = false }: { line: PlateLi
     >
       {line.portrait && (
         <div className={cn("relative flex-none border border-stage-brass bg-stage-ink p-[3px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]", compact ? "h-[74px] w-[58px]" : "h-[140px] w-[112px]")}>
-          {/* biome-ignore lint/performance/noImgElement: portrait art from the stage assets */}
           <img src={line.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)_contrast(1.02)_brightness(.98)]" />
           <div className="pointer-events-none absolute inset-[3px] shadow-[inset_0_0_20px_#1c1410aa,inset_0_0_0_1px_#f3d6a622]" />
         </div>

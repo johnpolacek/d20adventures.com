@@ -101,7 +101,6 @@ export function TurnOrder({
                 )}
               >
                 {c.portrait ? (
-                  // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
                   <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
                 ) : (
                   <span aria-hidden="true" className="grid h-full place-items-center font-display text-sm text-stage-gold">

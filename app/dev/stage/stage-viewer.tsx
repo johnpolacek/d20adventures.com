@@ -183,7 +183,6 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
             {speaker.name}
           </div>
           <div className="absolute right-4 bottom-4 z-20 flex w-[340px] items-center gap-3 rounded-md border border-[#e6c89640] bg-[#0e0a06d0] p-2 backdrop-blur-sm">
-            {/* biome-ignore lint/performance/noImgElement: dev-only viewer showing a local fixture */}
             {speaker.portrait && <img src={speaker.portrait} alt="" className="h-20 w-20 rounded object-cover object-top" />}
             <div className="text-xs">
               <div className="text-[15px] text-[#f2c97a]">{speaker.name}</div>
