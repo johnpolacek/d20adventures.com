@@ -1565,6 +1565,16 @@ export class Stage {
     }
     return null
   }
+  // The current view as a plain 2D canvas, drawn now: what the stage last showed, kept on screen while the next stage
+  // is built behind it.
+  picture(): HTMLCanvasElement {
+    this.render()
+    const c = document.createElement("canvas")
+    c.width = this.canvas.width
+    c.height = this.canvas.height
+    c.getContext("2d")?.drawImage(this.canvas, 0, 0)
+    return c
+  }
   // A PNG of the current view, rendered on demand (no preserveDrawingBuffer needed: read in the same task).
   capture(): Promise<Blob | null> {
     this.render()

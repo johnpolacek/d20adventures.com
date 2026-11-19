@@ -11,10 +11,23 @@ export function useStage(container: RefObject<HTMLDivElement | null>, opts: { se
   const [stage, setStage] = useState<Stage | null>(null)
   const [status, setStatus] = useState("Loading")
   const [error, setError] = useState<string | null>(null)
+  // The last picture of the stage being replaced, held over the container until the next one is built, dressed and
+  // framed. Without it the scene change shows black, then the new set before its trees are planted and before the
+  // play screen has put the camera where the scene opens.
+  const cover = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
     const el = container.current
-    if (!el || !opts) return
+    const lift = (fade: boolean) => {
+      const c = cover.current
+      cover.current = null
+      if (!c) return
+      if (!fade) return void c.remove()
+      c.style.transition = "opacity 350ms ease"
+      c.style.opacity = "0"
+      setTimeout(() => c.remove(), 400)
+    }
+    if (!el || !opts) return void lift(false)
     let cancelled = false
     let created: Stage | null = null
     let undress: (() => void) | null = null
@@ -50,12 +63,30 @@ export function useStage(container: RefObject<HTMLDivElement | null>, opts: { se
       stageRef.current = created
       setStage(created)
       ;(window as unknown as { __stage?: Stage }).__stage = created
+      // The play screen places the cast and frames the opening view as it takes the stage. A few frames on, that is
+      // drawn, and the old picture fades off it.
+      for (let i = 0; i < 4 && !cancelled; i++) await new Promise((r) => requestAnimationFrame(r))
+      if (!cancelled) lift(true)
     })().catch((err) => {
       console.error(err)
-      if (!cancelled) setError(err instanceof Error ? err.message : String(err))
+      if (!cancelled) {
+        lift(false)
+        setError(err instanceof Error ? err.message : String(err))
+      }
     })
     return () => {
       cancelled = true
+      // Leave the stage's last picture up while the next one loads.
+      if (created && !cover.current && el.isConnected) {
+        try {
+          const still = created.picture()
+          still.style.cssText = "position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none"
+          el.appendChild(still)
+          cover.current = still
+        } catch {
+          // A stage that cannot draw any more is simply taken down.
+        }
+      }
       undress?.()
       created?.dispose()
       stageRef.current = null
