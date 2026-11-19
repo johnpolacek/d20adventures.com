@@ -26,7 +26,7 @@ import type { SpellEffect, TurnEffect } from "./turn-effect"
  * Help: one ally has Advantage on their next ability check with a skill the helper is proficient in, or the next
  * attack roll by an ally against one enemy has Advantage. Either lapses at the start of the helper's next turn.
  * Hide: a DC 15 Dexterity (Stealth) check, and on a success the character has the Invisible condition. It ends when
- * they make an attack roll.
+ * they make an attack roll or cast a spell, or when an enemy finds them (./hiding).
  * Dash and Disengage are taken and recorded. What they change is movement, which stage 6 of plans/srd-rules.md gives.
  * Escape, as a stat block's text gives it: a creature attached to one (a Stirge) is pulled off by them or by one within
  * 5 feet of them, and nothing is rolled (./hit-riders). Breaking a grapple is a check, which the read makes.
@@ -44,11 +44,14 @@ export type TakenAction =
 export const HIDE_DC = 15
 const STEALTH: Check = { kind: "skill", skill: "stealth" }
 
+/** The Hide action's roll by name, on screen and in the story. */
+export const HIDE_ROLL = "Hide (Stealth)"
+
 /** The roll the Hide action asks for: Stealth against 15, with Invisible for the one hiding on a success. */
 export function hideRoll(character: Roller & { id: string }): Extract<RequiredRoll, { check: Check }> {
   return {
     check: STEALTH,
-    rollType: "Hide (Stealth)",
+    rollType: HIDE_ROLL,
     difficulty: HIDE_DC,
     modifier: classCheckBonus(character, STEALTH),
     mode: "normal",

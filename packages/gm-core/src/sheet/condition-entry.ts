@@ -33,5 +33,10 @@ export const conditionEntrySchema = z.strictObject({
   feature: z.string().optional(),
   /** An Exhaustion level, 1 to 6. */
   level: z.number().int().min(1).max(6).optional(),
+  /**
+   * The Stealth total of the Hide that gave it: the DC for a creature to find the hider with a Wisdom (Perception)
+   * check (./hiding).
+   */
+  dc: z.number().int().optional(),
 })
 export type ConditionEntry = z.infer<typeof conditionEntrySchema>

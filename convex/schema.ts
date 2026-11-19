@@ -270,6 +270,7 @@ export default defineSchema({
               spell: v.optional(v.string()),
               attack: v.optional(v.string()),
               feature: v.optional(v.string()),
+              dc: v.optional(v.number()),
             })
           )
         ),

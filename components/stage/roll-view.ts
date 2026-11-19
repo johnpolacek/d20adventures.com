@@ -230,8 +230,16 @@ const sum = (dice: number[], bonus: number) => dice.reduce((n, d) => n + d, 0) +
 
 /** A harm line's sentence: "Owlbear loses 9 hit points", "Branka regains 6 hit points". */
 export const harmSentence = (h: HarmView) => `${h.target} ${h.kind === "healing" ? "regains" : "loses"} ${plural(h.amount, "hit point", "hit points")}`
-/** A condition line's sentence: "Thalbern is Poisoned", "Thalbern is no longer Restrained". */
-export const conditionSentence = (c: ConditionView) => `${c.target} is ${c.ends ? "no longer " : ""}${c.condition}`
+/**
+ * A condition line's sentence: "Thalbern is Poisoned", "Thalbern is no longer Restrained". What the Hide action gives
+ * and a Search ends is told as the table says it, by the roll's `check`: "Thalbern is hidden", "Thalbern is found".
+ */
+export const conditionSentence = (c: ConditionView, check?: string) =>
+  check?.startsWith("Hide") && !c.ends && c.condition === "Invisible"
+    ? `${c.target} is hidden`
+    : check?.startsWith("Search") && c.ends && c.condition === "Invisible"
+      ? `${c.target} is found`
+      : `${c.target} is ${c.ends ? "no longer " : ""}${c.condition}`
 /** Whether what the target lost differs from the damage rolled: Resistance, Vulnerability or Immunity. */
 export const takenDiffers = (roll: RollView) => roll.taken !== undefined && roll.taken !== (roll.damage ?? []).reduce((n, d) => n + d.total, 0)
 
@@ -259,7 +267,7 @@ export function rollSpeech(roll: RollView): string {
   if (roll.success) for (const d of roll.damage ?? []) parts.push(`${diceWords(d.dice, d.sides)}${d.bonus ? ` ${signedTerm(d.bonus)}` : ""} makes ${d.total} ${d.type} damage.`)
   if (roll.success && takenDiffers(roll)) parts.push(`${roll.target} loses ${plural(roll.taken ?? 0, "hit point", "hit points")}.`)
   for (const h of roll.harm ?? []) parts.push(harmSpeech(h))
-  for (const c of roll.conditions ?? []) parts.push(`${conditionSentence(c)}.`)
+  for (const c of roll.conditions ?? []) parts.push(`${conditionSentence(c, roll.check)}.`)
   if (roll.kind === "death" && roll.deathSaves) parts.push(`Death Saving Throws: ${deathSavesSpeech(roll.deathSaves)}.`)
   return parts.join(" ")
 }

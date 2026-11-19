@@ -14,10 +14,10 @@ import { type Judged, judgeRounds, loadPack, printJudged, readSave, roundScript,
 
 // Plays a fresh game from one encounter, the player's hero on scripted replies that push on the scene's exits and the
 // rest of the party AI, then judges every round. In process, on the current prompts and content: no runtime build.
-// pnpm --dir apps/desktop scene:probe <probe id> [--runs 3] [--rounds 4] [--out dir] [--through] [--pick random] [--probes file]
+// pnpm --dir apps/desktop scene:probe <probe id> [--runs 3] [--rounds 4] [--out dir] [--through] [--pick random] [--probes file] [--dice 10,10]
 // --through plays on past the probe's encounter, up to --rounds in all, and judges every encounter it reaches. --pick random
 // takes a random offered reply instead of the first. --probes reads probes from another file. --jobs sets how many rounds
-// are judged at once.
+// are judged at once. --dice fixes the hero's d20s.
 
 type Probe = {
   adventure: string
@@ -33,6 +33,8 @@ const argv = process.argv.slice(2)
 const opt = (k: string) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undefined)
 const through = argv.includes("--through")
 const pickRandom = opt("--pick") === "random"
+// The hero's d20s, where a run must land on one total: "10,10" is a 10 on both dice of a roll with Advantage.
+const fixedDice = opt("--dice")?.split(",").map(Number)
 const probes: Record<string, Probe> = JSON.parse(readFileSync(opt("--probes") ? resolve(opt("--probes")!) : join(here, "scene-probes.json"), "utf8"))
 
 // The story before the scene, renumbered ahead of the probe's first turn.
@@ -99,7 +101,8 @@ async function play(probe: Probe, packs: Packs, dir: string, rounds: number, log
       const actor = findCurrentActor(turn.characters)
       const player = actor?.type === "pc" && actor.controlledBy !== "ai"
       let command: GameCommand
-      if (player && actor.rollRequired && actor.rollResult === undefined) command = { kind: "roll", turnId: turn._id, characterId: actor.id, result: 1 + Math.floor(Math.random() * 20) }
+      if (player && actor.rollRequired && actor.rollResult === undefined)
+        command = { kind: "roll", turnId: turn._id, characterId: actor.id, result: fixedDice?.[0] ?? 1 + Math.floor(Math.random() * 20), ...(fixedDice?.[1] ? { second: fixedDice[1] } : {}) }
       else if (player && !actor.hasReplied) command = { kind: "reply", turnId: turn._id, characterId: actor.id, text: probe.replies[replies++] ?? (await offered(turn._id, actor.id, actor.name)) }
       // A reaction offered to the hero is declined, so the round goes on: the probe plays the scene, not the reactions.
       else if (turn.reaction && turn.reaction.answer === undefined) command = { kind: "react", turnId: turn._id, characterId: turn.reaction.offer.to, take: false }

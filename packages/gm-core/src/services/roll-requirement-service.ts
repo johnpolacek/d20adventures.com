@@ -8,8 +8,9 @@ import { attackAfter, attackRequirement, followRule, type InScene } from "../she
 import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
 import { type ChoiceRule, choiceRules, classBonusCast, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast, withAdvantageBarred } from "../sheet/class-rules"
 import { conditionSpans } from "../sheet/condition-entry"
-import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, type ModeSource } from "../sheet/conditions"
+import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, isHidden, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, bonusRuleFor, usable } from "../sheet/features"
+import { found, type Hider, hiddenFrom, searchRoll } from "../sheet/hiding"
 import { chargedFeet, escapeFrom } from "../sheet/hit-riders"
 import { itemCastingWords, menuId } from "../sheet/item-use"
 import { itemName, itemWords } from "../sheet/items"
@@ -140,6 +141,8 @@ export type TurnReading = {
   rest?: RestKind
   /** Something the move asked for that the rules of space do not allow, to be told in the story: an attack out of reach. */
   ruling?: { name: string; text: string }
+  /** One who is hidden made a sound louder than a whisper this turn, which gives them away (../sheet/hiding `heard`). */
+  loud?: true
 }
 
 // How a spell that stays on the floor is put, for the read's list of spells: a wall across the way to the one named, or
@@ -179,8 +182,15 @@ export function createRollRequirementService(ports: GmPorts) {
     // A turn a spell rules (Command's word, Fear's flight) is taken by its rule, whatever was asked (../sheet/ruled-turns).
     const ruled = "id" in character ? ruledReading(character, (options?.present ?? []) as Parameters<typeof ruledReading>[1], options?.floor) : undefined
     if (ruled) return ruled
-    const reading = await readPicked(action, character, options)
     const self = "id" in character ? character.id : undefined
+    const read = await readPicked(action, character, options)
+    // One who is hidden and loud is heard before they act. An attack or a spell of the same turn is read again as made
+    // in plain sight, so it takes no Advantage from a hiding that is over.
+    const struck = !!read.cast || (!!read.roll && ("attack" in read.roll || "cast" in read.roll))
+    const seen = read.loud && struck && self ? (found(character as Hider) as Character) : undefined
+    const reading = seen
+      ? { ...(await readPicked(action, seen, { ...options, present: options?.present?.map((other) => (other.id === self ? (found(other as Hider) as Present) : other)) })), loud: true as const }
+      : read
     const rule = bonusRuleFor(character, reading.bonus?.feature)
     if (rule?.still && reading.move) {
       const { bonus: _, ...rest } = reading
@@ -215,6 +225,10 @@ export function createRollRequirementService(ports: GmPorts) {
     const floor = options?.floor
     const mover = self && floor && character.position ? { ...character, id: self } : undefined
     const others = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && !hasFled(other))
+    // Who hides from the roller (../sheet/hiding): looking for them is the Search action, a Perception check against
+    // the hider's Stealth total.
+    const seeker = self ? ({ ...character, id: self } as Hider) : undefined
+    const hiders = seeker ? hiddenFrom(seeker, others as Hider[]) : []
     // Those a spell holds away for now (Banishment, Maze): no one's target until they return, and told so when named.
     const awayNow = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && isAway(other))
     const notHere = (other: Present, undone: string) => ({ name: "Not Here", text: `${other.name} is away, out of the encounter until the spell that took them ends. ${undone}` })
@@ -433,7 +447,7 @@ ${
     : ""
 }   - ACTIONS OF A FIGHT, only while a fight is on and only when it is the whole of what the character does this turn:
      "hide": they get out of sight to strike or slip away unseen, in a fight or out of one: a player who says they hide is "hide". The game rolls stealth for it and sets its difficulty, so give none.
-     "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
+${hiders.length ? `     "search": someone hides from the character now: ${hiders.map((other) => `${other.id} (${other.name})`).join(", ")}. When the character looks, listens, sniffs or hunts about for them, or for whatever they heard, "check" is "search". It is then never "none" or "perception": looking for one who hides is no passive watching, and point 4 does not apply. The game rolls Perception against the hider's Stealth and sets its difficulty, so give none.\n` : ""}${isHidden(character) ? `     The character is hidden now. "loud" is true when this turn they speak above a whisper, call out, shout or make a noise others here would hear, which gives them away. Whispering, signalling by hand, keeping still and moving quietly are not loud.\n` : ""}     "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
      "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
 ${freeable.length ? `     "escape": they give the turn to pulling off a creature attached to them or to an ally beside them, and nothing is rolled. "target" is the id of who is freed: ${freeable.map((other) => other.id).join(" or ")}.\n` : ""}${givable.length ? `     "give": they give the turn to handing one of their magic items to a hero beside them to keep, in a fight or out of one, and nothing is rolled. "target" is the id of who takes it: ${takers.map((other) => other.id).join(" or ")}. "gives" is the item's id: ${givable.map((item) => `${item.id} (${item.name})`).join(", ")}. A potion given for an ally to drink now is its Bonus Action, not "give".\n` : ""}     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
    - BONUS ACTIONS: beside the action above, the character may use one of their own Bonus Actions in the same turn. Set "bonus" to its id only when their words plainly use it, and leave it out otherwise. One given to someone else takes "bonusTarget", that ally's id.
@@ -582,7 +596,10 @@ Action: "${action}"
         ...(freeable.length ? ["escape"] : []),
         ...(givable.length ? ["give"] : []),
       ]
-      const chosen: Record<string, z.ZodType> = checks.length ? { check: z.enum([...rollPickSchema.shape.check.options, ...checks]).describe(rollPickSchema.shape.check.description ?? "") } : {}
+      // "search" is on the menu only while someone hides from the roller, and "loud" is asked only of one who is hidden.
+      const more = [...checks, ...(hiders.length ? ["search"] : [])]
+      const chosen: Record<string, z.ZodType> = more.length ? { check: z.enum([...rollPickSchema.shape.check.options, ...more]).describe(rollPickSchema.shape.check.description ?? "") } : {}
+      if (isHidden(character)) chosen.loud = z.boolean().optional().describe("True when this turn they speak above a whisper, call out or make a noise others here would hear")
       for (const { rule, values } of choices) chosen[rule.key] = rule.field(values)
       // Which magic item is handed over, asked only where the hero has one and a hero beside them to take it.
       if (givable.length)
@@ -660,7 +677,7 @@ Action: "${action}"
       }
       const quickChoice = quick ? choiceFor(quick.spell) : undefined
       // What the reading carries beside its roll: a Bonus Action, the move, and a ruling of space.
-      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "choices"> = used
+      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "choices" | "loud"> = used
         ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
         : quick
           ? {
@@ -672,6 +689,8 @@ Action: "${action}"
               },
             }
           : {}
+      // One who is hidden and makes a sound louder than a whisper gives themselves away.
+      if (pick.loud === true && isHidden(character)) also.loud = true
       // The move, made before the action: to the place or the one named, or away from one. With Dash the whole turn is
       // movement. An attack in melee may close with its target instead, which is settled where the attack is.
       const ask: MoveAsk = { to: pick.moveTo?.trim() || undefined, away: pick.moveAway?.trim() || undefined, feet: pick.moveFeet }
@@ -1033,12 +1052,20 @@ Action: "${action}"
       }
       // Hide is a Stealth check the rules set: its target and what a success gives are the engine's.
       const hiding = pick.check === "hide" && self ? hideRoll({ ...character, id: self }) : undefined
-      let check = hiding ? hiding.check : pick.check === "none" || pick.check === "hide" ? undefined : checkFromMenu(pick.check)
+      // Search is a Perception check against the Stealth total of whoever hides from the roller, and finds everyone
+      // whose total it meets (../sheet/hiding). With no one hidden from them it is a plain Perception check.
+      const seeking = pick.check === "search" && seeker ? searchRoll(seeker, others as Hider[]) : undefined
+      let check = hiding ? hiding.check : seeking ? seeking.check : pick.check === "none" || pick.check === "hide" ? undefined : checkFromMenu(pick.check === "search" ? "perception" : pick.check)
       if (!check) {
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
         return { roll: null, ...also }
       }
-      let difficulty: number | undefined = hiding ? HIDE_DC : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
+      let difficulty: number | undefined = hiding ? HIDE_DC : seeking ? seeking.difficulty : pick.difficulty && DIFFICULTY_CLASSES[pick.difficulty]
+      // A search with no one hidden and no difficulty given finds what is there to see: nothing is rolled.
+      if (!difficulty && pick.check === "search") {
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
+        return { roll: null, ...also }
+      }
       if (!difficulty) throw new Error(`The game master asked for a ${checkName(check)} check with no difficulty.`)
 
       // The stakes, each off the menus: who, the dice by size or as the notes print them, and the damage type, or a
@@ -1062,7 +1089,7 @@ Action: "${action}"
         const type = damageTypeIdSchema.safeParse(entry.type?.trim().toLowerCase())
         return [{ on: entry.on, target: entry.target, kind: entry.kind, dice, ...(entry.kind === "damage" && type.success ? { type: type.data } : {}) }]
       })
-      const stakes = hiding?.stakes ?? picks
+      const stakes = hiding?.stakes ?? (seeking ? [] : picks)
       // Breaking free of a grapple is a Strength (Athletics) or Dexterity (Acrobatics) check, as the action, against the
       // grapple's escape DC (../sheet/hit-riders `escapeFrom`). Its success ends the Grappled condition.
       const freeing = stakes.some((stake) => stake.kind === "condition" && stake.ends && stake.condition === "grappled" && stake.target === self && stake.on === "success")
@@ -1089,7 +1116,7 @@ Action: "${action}"
       const reasons = [...(picked !== "normal" && pick.reason?.trim() ? [pick.reason.trim()] : []), ...typed.map((source) => source.from)]
       const rollRequirement: ChosenRoll = {
         check,
-        rollType: hiding ? hiding.rollType : escaping ? `Escape (${checkName(check)})` : checkName(check),
+        rollType: hiding ? hiding.rollType : seeking ? seeking.rollType : escaping ? `Escape (${checkName(check)})` : checkName(check),
         difficulty,
         modifier: classCheckBonus(character, check) + saveBonusFor(character, check) + auraOnSave(character, check, options?.present ?? []),
         mode,

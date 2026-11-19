@@ -8458,5 +8458,137 @@
     "moved": {
       "toward": "greatOak"
     }
+  },
+  {
+    "id": "prowl-owlbear-searches",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "actor": "owlbear",
+    "floor": true,
+    "at": {
+      "thalbern": [-15.09, 30.18]
+    },
+    "conditionsOn": {
+      "thalbern": [
+        {
+          "id": "invisible",
+          "dc": 17
+        }
+      ]
+    },
+    "narrative": "Thalbern is hidden in the thick ferns beside the trail. The owlbear stands on the trail by the tree line and tastes the air.",
+    "action": "The owlbear swings its great head from side to side and snuffles along the trail, hunting for whatever made the sound.",
+    "checks": ["search"],
+    "dcs": [17]
+  },
+  {
+    "id": "prowl-stay-quiet",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "floor": true,
+    "at": {
+      "thalbern": [-15.09, 30.18]
+    },
+    "conditionsOn": {
+      "thalbern": [
+        {
+          "id": "invisible",
+          "dc": 17
+        }
+      ]
+    },
+    "action": "stay hidden and quiet",
+    "checks": ["none"],
+    "loud": false,
+    "moved": {
+      "none": true
+    }
+  },
+  {
+    "id": "prowl-whispers",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "floor": true,
+    "at": {
+      "thalbern": [-15.09, 30.18]
+    },
+    "conditionsOn": {
+      "thalbern": [
+        {
+          "id": "invisible",
+          "dc": 17
+        }
+      ]
+    },
+    "action": "Thalbern whispers a prayer to the forest under his breath and does not move.",
+    "checks": ["none"],
+    "loud": false
+  },
+  {
+    "id": "prowl-calls-out",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "floor": true,
+    "at": {
+      "thalbern": [-15.09, 30.18]
+    },
+    "conditionsOn": {
+      "thalbern": [
+        {
+          "id": "invisible",
+          "dc": 17
+        }
+      ]
+    },
+    "action": "Thalbern stands up and shouts, \"Over here, you great brute!\"",
+    "checks": ["none", "intimidation", "performance", "animal-handling", "persuasion", "deception"],
+    "loud": true
+  },
+  {
+    "id": "confront-search-for-the-hidden",
+    "adventure": "the-midnight-summons",
+    "encounter": "owlbear-confrontation",
+    "hero": "thalbern",
+    "conditionsOn": {
+      "owlbear": [
+        {
+          "id": "invisible",
+          "dc": 14
+        }
+      ]
+    },
+    "narrative": "The owlbear has slipped out of sight among the black trunks, and the trail has gone quiet.",
+    "action": "Thalbern scans the tree line and listens hard for where the owlbear went.",
+    "checks": ["search"],
+    "dcs": [14]
+  },
+  {
+    "id": "prowl-shouts-and-shoots",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "floor": true,
+    "at": {
+      "thalbern": [-15.09, 30.18]
+    },
+    "conditionsOn": {
+      "thalbern": [
+        {
+          "id": "invisible",
+          "dc": 17
+        }
+      ]
+    },
+    "action": "Thalbern rises from the ferns with a roar, \"Back to your den!\", and looses an arrow at the owlbear.",
+    "checks": ["attack"],
+    "attack": {
+      "weapon": "longbow",
+      "target": "owlbear"
+    },
+    "loud": true
   }
 ]

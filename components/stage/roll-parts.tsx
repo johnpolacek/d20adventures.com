@@ -109,7 +109,7 @@ export function RollDetails({ roll, compact = false, className }: { roll: RollVi
       <HarmLines harm={harm} compact={compact} />
       {conditions.map((c, i) => (
         <div key={i} className={cn(line(compact), "italic")}>
-          {conditionSentence(c)}
+          {conditionSentence(c, roll.check)}
         </div>
       ))}
     </div>

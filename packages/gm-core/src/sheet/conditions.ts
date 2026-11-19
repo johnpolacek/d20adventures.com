@@ -325,8 +325,8 @@ export const conditionsAtEncounterEnd = <T extends Afflicted>(character: T, opti
     ? without(character, (entry) => !CONDITION_RULES[entry.id].passes || (entry.spell !== undefined && entry.turns === undefined) || (!!options.sameSet && hiddenEntry(entry)))
     : character
 
-// Invisible from the Hide action: given by no spell and no class feature (Nature's Veil).
-const hiddenEntry = (entry: ConditionEntry): boolean => entry.id === "invisible" && entry.spell === undefined && entry.feature === undefined
+/** Invisible from the Hide action: given by no spell and no class feature (Nature's Veil). */
+export const hiddenEntry = (entry: ConditionEntry): boolean => entry.id === "invisible" && entry.spell === undefined && entry.feature === undefined
 
 /** Whether a character is hidden by the Hide action: Invisible, and not by a spell or a class feature. */
 export const isHidden = (character: Afflicted): boolean => !!character.conditions?.some(hiddenEntry)

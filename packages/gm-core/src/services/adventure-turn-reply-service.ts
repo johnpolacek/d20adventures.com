@@ -5,6 +5,7 @@ import { choiceRule, classConcentrationModes, type Featured } from "../sheet/cla
 import type { ConditionEntry } from "../sheet/condition-entry"
 import { afterHarm } from "../sheet/death"
 import { bonusDisengages } from "../sheet/features"
+import { heard } from "../sheet/hiding"
 import { moveWithReactions, ordered } from "../sheet/reactions"
 import { partyRest, restName } from "../sheet/rest"
 import type { Sheet } from "../sheet/sheet"
@@ -128,8 +129,8 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
    * turn is lost.
    */
   async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading }): Promise<{ fell?: true }> {
-    const { action, bonus, move, ruling, rest, choices } = args.reading
-    if (!action && !bonus && !move && !ruling && !rest && !choices) return {}
+    const { action, bonus, move, ruling, rest, choices, loud } = args.reading
+    if (!action && !bonus && !move && !ruling && !rest && !choices && !loud) return {}
     const turn = await ports.store.getTurn({ turnId: args.turnId })
     if (!turn) throw new Error("Turn not found")
     // The move comes first: the hero stands where it took them before anything else of the turn is resolved. Those
@@ -140,6 +141,12 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
     // A class's choices taken with the turn are applied as it is taken: Action Surge's use is spent, and the attack the
     // reading asked for already counts its action.
     const chose: StoryBeat[] = []
+    // A hidden hero who spoke above a whisper is hidden no more (../sheet/hiding).
+    const noise = loud ? heard(characters, args.characterId) : undefined
+    if (noise?.text) {
+      characters = noise.characters
+      chose.push({ kind: "feature", by: { step: "reply", character: args.characterId }, character: args.characterId, name: "Heard", text: noise.text })
+    }
     for (const key of Object.keys(choices ?? {})) {
       const applied = choiceRule(key)?.apply?.(characters as Featured[], args.characterId)
       if (!applied) continue
@@ -224,7 +231,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       name: restName(rest ?? "short"),
       text: facts.join(" "),
     }))
-    if (!used?.beats.length && !taken?.fact && !move && !ruling && !resting && !choices) return {}
+    if (!used?.beats.length && !taken?.fact && !move && !ruling && !resting && !choices && !noise?.text) return {}
     // What the rules of space would not allow is told as an entry of its own, so the story does not keep an attack that was never made.
     const ruled: StoryBeat[] = ruling ? [{ kind: "feature", by: { step: "reply", character: args.characterId }, character: args.characterId, name: ruling.name, text: ruling.text }] : []
     const feature: StoryBeat[] = used?.beats ?? []

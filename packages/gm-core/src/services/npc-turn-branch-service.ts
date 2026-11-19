@@ -10,6 +10,7 @@ import { afterHarm, killed } from "../sheet/death"
 import { d20sOf, replaying } from "../sheet/dice"
 import { bonusDisengages, featureResolver } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
+import { hidingAfterRoll, noticeBeats } from "../sheet/hiding"
 import type { Moved } from "../sheet/moves"
 import { type Ask, attackWithReactions, checkWithReactions, moveWithReactions, ordered, type ReactionTaken } from "../sheet/reactions"
 import { answeredSave, saveStakesOf, withSaveAnswered } from "../sheet/save-rules"
@@ -50,7 +51,7 @@ export type NpcTurnBranchResult = {
 type NpcActionResult = {
   actionSummary: string
   beats: StoryOutput
-  actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "leave" | "die" | "other"
+  actionType: "attack" | "skill" | "search" | "skip" | "pass" | "flee" | "leave" | "die" | "other"
   // Where it goes, by the id of a place or of someone here (./npc-turn-generation-service `npcWays`).
   moveTo?: string
   effects?: NpcTurnEffect[]
@@ -224,10 +225,12 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         fails: !!saveFailedBy(npcNow, next.check),
         adds: checkAdds(npcNow, next.check, dice.roll),
       })
-      const settled = applyStakes({ characters: updatedCharacters, stakes: next.stakes, outcome: thrown.success ? "success" : "failure", roll: dice.roll, rules: args.rules })
+      const staked = applyStakes({ characters: updatedCharacters, stakes: next.stakes, outcome: thrown.success ? "success" : "failure", roll: dice.roll, rules: args.rules })
+      // A Hide keeps its total, and a hero whose Passive Perception meets it notices at once (../sheet/hiding).
+      const settled = { ...staked, ...hidingAfterRoll({ characters: staked.characters, rollerId: args.npc.id, roll: next, result: thrown, conditions: staked.conditions, facts: staked.facts }) }
       updatedCharacters = settled.characters
       return {
-        beats: [rollBeat(npcStep(args.npc), args.npc, next.rollType, thrown, settled.harm, settled.conditions)],
+        beats: [rollBeat(npcStep(args.npc), args.npc, next.rollType, thrown, settled.harm, settled.conditions), ...noticeBeats(npcStep(args.npc), settled.noticed, updatedCharacters)],
         facts: [`${args.npc.name} rolls ${next.rollType}: ${thrown.total} against ${next.difficulty}, ${thrown.success ? "a success" : "a failure"}.`, ...settled.facts],
       }
     }
@@ -445,7 +448,12 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         result,
         success,
       }
-      const settled = applyStakes({ characters: updatedCharacters, stakes: rollRequirement.stakes, outcome: success ? "success" : "failure", roll: dice.roll, rules: args.rules })
+      const staked = applyStakes({ characters: updatedCharacters, stakes: rollRequirement.stakes, outcome: success ? "success" : "failure", roll: dice.roll, rules: args.rules })
+      // A Hide keeps its total and may be noticed at once, and a Search finds who its total meets (../sheet/hiding).
+      const settled = {
+        ...staked,
+        ...hidingAfterRoll({ characters: staked.characters, rollerId: args.npc.id, roll: rollRequirement, result: rolled, conditions: staked.conditions, facts: staked.facts }),
+      }
       const stayed = settleConcentration({
         before: args.turn.characters,
         after: afterRoll(settled.characters, args.npc.id, rollRequirement),
@@ -484,6 +492,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       beatsToAppend = [
         ...cut.reactions.map(told),
         rollBeat(npcStep(args.npc), args.npc, rollRequirement.rollType, rolled, settled.harm, settled.conditions),
+        ...noticeBeats(npcStep(args.npc), settled.noticed, updatedCharacters),
         ...stayed.saves.map((save) => concentrationBeat(npcStep(args.npc), save, storyNames(args.turn.characters))),
         ...then.beats,
         ...cleanStory(outcomeResult.beats, args.scene, npcStep(args.npc)),

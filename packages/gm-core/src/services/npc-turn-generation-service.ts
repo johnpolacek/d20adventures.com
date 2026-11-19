@@ -21,10 +21,14 @@ import type { Turn, TurnCharacter } from "../types/adventure"
 import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import { hasFled, isDead, isDown } from "../utils/turn-actors"
 
+// What an NPC's turn may be. "search" joins them only while someone hides from it (../sheet/hiding).
+const NPC_ACTIONS = ["attack", "skill", "skip", "pass", "flee", "leave", "die", "other"] as const
+type NpcAction = Omit<z.infer<typeof npcActionSchema>, "actionType"> & { actionType: (typeof NPC_ACTIONS)[number] | "search" }
+
 const npcActionSchema = z.object({
   actionSummary: z.string(),
   ...beatsField,
-  actionType: z.enum(["attack", "skill", "skip", "pass", "flee", "leave", "die", "other"]).default("other"),
+  actionType: z.enum(NPC_ACTIONS).default("other"),
   moveTo: z.string().max(80).optional().describe("Where the NPC goes this turn: the id of a place or of someone here. Left out when it stays where it is"),
   effects: z
     .array(
@@ -178,7 +182,12 @@ export function buildNpcActionPrompt(args: {
   ways?: { words: string; feet: number }
   // It has had no turn in this scene before: it does not go on its way on this one.
   firstTurn?: boolean
+  // Who hides from it and it has not found, by name (../sheet/hiding `hiddenFrom`). It may give its turn to searching.
+  hidden?: string[]
 }): string {
+  const hidden = args.hidden?.length ? args.hidden : undefined
+  const hiders = hidden ? (hidden.length > 1 ? `${hidden.slice(0, -1).join(", ")} and ${hidden[hidden.length - 1]}` : hidden[0]) : ""
+  const targetable = args.alivePlayerCharacters.filter((character) => !hidden?.includes(character.name))
   return `You are the DM for a tabletop RPG. Given the following context, decide what action the NPC should take this turn. Be creative and act as a real DM would. Write the action as a few short beats.
 
 ${args.contextString}
@@ -245,11 +254,15 @@ ${
     ? `\nIf ${args.npc.name} goes anywhere this turn, set "moveTo" to where it goes: ${args.ways.words}. It walks up to ${args.ways.feet} feet toward it and stops there, so tell it going no farther. For one that leaves, "moveTo" is the way it goes. Leave "moveTo" out when it stays where it is.\n`
     : ""
 }
-If the NPC dies this turn of a wound, poison or curse the story has already given them, set actionType to "die" and narrate their death. They are then dead: they take no further turns and no one may describe them alive again.
+${
+  hidden
+    ? `${hiders} ${hidden.length > 1 ? "are" : "is"} hidden from ${args.npc.name}, who has not found them and does not know where they are. Until it finds them, ${args.npc.name} does not attack them, go to them, speak to them or look at where they hide, and its beats do not say where they are or that it has found them. To look for them it gives its turn to searching: set actionType to "search" and tell it looking, listening or sniffing about, and stop before what it finds. The game rolls its Perception against their Stealth and tells whether it finds them.\n\n`
+    : ""
+}If the NPC dies this turn of a wound, poison or curse the story has already given them, set actionType to "die" and narrate their death. They are then dead: they take no further turns and no one may describe them alive again.
 
 If the NPC's action involves giving items to a player character, include an "effects" array. Each object in "effects" should have a "targetId" (the ID of the character receiving items) and an "equipmentToAdd" array listing the items ({name: string, description?: string}).
 
-Targetable Player Characters (alive and conscious): ${args.alivePlayerCharacters.map((character) => character.name).join(", ")} (IDs: ${args.alivePlayerCharacters.map((character) => character.id).join(", ")})
+Targetable Player Characters (alive and conscious): ${targetable.length || !hidden ? `${targetable.map((character) => character.name).join(", ")} (IDs: ${targetable.map((character) => character.id).join(", ")})` : "none it has found"}
 ${args.deadPlayerCharacters.length > 0 ? `\n\nIMPORTANT: The following player characters are DEAD or UNCONSCIOUS and should NOT be targeted: ${args.deadPlayerCharacters.map((character) => `${character.name} (${isDead(character) ? "Dead" : "Unconscious"})`).join(", ")}. The NPC should acknowledge their condition but not attempt to interact with them.` : ""}
 
 ${storyRules(args.scene)}
@@ -258,7 +271,7 @@ Respond as JSON. The 'beats' and 'actionSummary' fields must describe the action
 {
   actionSummary: string, // e.g., "Faelar strums a tune on his lute to lighten the mood."
   beats: [...], // e.g., [{"kind": "action", "who": "faelar", "text": "Faelar notices the tension and pulls out his lute."}, {"kind": "line", "who": "faelar", "delivery": "jesting", "text": "A somber crowd for a festival!"}]
-  actionType: "attack" | "skill" | "skip" | "pass" | "flee" | "leave" | "die" | "other",${args.ways ? "\n  moveTo?: string," : ""}
+  actionType: "attack" | "skill" | ${hidden ? '"search" | ' : ""}"skip" | "pass" | "flee" | "leave" | "die" | "other",${args.ways ? "\n  moveTo?: string," : ""}
   effects?: [ { targetId: string, equipmentToAdd?: [{name: string, description?: string}] } ]
 }`
 }
@@ -362,16 +375,19 @@ export function createNpcTurnGenerationService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   // `viewer` is the NPC the prompt plays.
   // `ways` are the ids its move may name (`npcWays`), a menu where the NPC is on a floor.
-  async function generateNpcAction(prompt: string, viewer?: string, ways?: string[]) {
-    const schema = ways?.length
-      ? (npcActionSchema.extend({
-          moveTo: z
-            .enum(ways as [string, ...string[]])
-            .optional()
-            .describe(npcActionSchema.shape.moveTo.description ?? ""),
-        }) as unknown as typeof npcActionSchema)
-      : npcActionSchema
-    return (await generateObject({ prompt, schema, viewer })).object
+  async function generateNpcAction(prompt: string, viewer?: string, ways?: string[], searches?: boolean): Promise<NpcAction> {
+    const schema = npcActionSchema.extend({
+      ...(ways?.length
+        ? {
+            moveTo: z
+              .enum(ways as [string, ...string[]])
+              .optional()
+              .describe(npcActionSchema.shape.moveTo.description ?? ""),
+          }
+        : {}),
+      ...(searches ? { actionType: z.enum([...NPC_ACTIONS, "search"]).default("other") } : {}),
+    }) as unknown as typeof npcActionSchema
+    return (await generateObject({ prompt, schema: ways?.length || searches ? schema : npcActionSchema, viewer })).object
   }
 
   async function generateNpcOutcome(prompt: string, viewer?: string) {

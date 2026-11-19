@@ -14,6 +14,7 @@ import {
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
 import { atRoundStart } from "../sheet/death"
+import { noticeBeats, noticedOnArrival } from "../sheet/hiding"
 import { giveLoot, type LootGiven, lootDue } from "../sheet/loot"
 import { raisedTo } from "../sheet/milestone"
 import { placeCharacters, standingWords } from "../sheet/placement"
@@ -248,12 +249,16 @@ export function createAdvanceTurn(ports: GmPorts) {
       })
       const leaving = giveLoot(levelled, due?.leaving ?? [])
       const entering = giveLoot(leaving.characters, due?.entering ?? [])
-      const characters = entering.characters
+      // One who hid in the scene before is still hidden on the same set. Whoever the new encounter brings notices them
+      // as it opens, where its Passive Perception meets their Stealth total (../sheet/hiding), told after the intro.
+      const arrived = isTransition ? noticedOnArrival(entering.characters) : { characters: entering.characters, noticed: [] }
+      const characters = arrived.characters
+      const noticed = arrived.noticed.flatMap((seen) => noticeBeats({ step: "intro", character: seen.by }, seen, characters))
       const lootBeats = (step: "round" | "intro", { given, left }: { given: LootGiven[]; left: string[] }): StoryBeat[] => [
         ...given.map(({ character, name, text }): StoryBeat => ({ kind: "feature", by: { step, character }, character, name, text })),
         ...left.map((text): StoryBeat => ({ kind: "narration", by: { step }, text })),
       ]
-      const story = [...told, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...lootBeats("round", leaving), ...rested, ...intro, ...lootBeats("intro", entering)]
+      const story = [...told, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...lootBeats("round", leaving), ...rested, ...intro, ...lootBeats("intro", entering), ...noticed]
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,
         expectedCurrentTurnId: turnId,

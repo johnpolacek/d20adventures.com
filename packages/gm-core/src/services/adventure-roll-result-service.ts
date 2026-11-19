@@ -21,6 +21,7 @@ import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, thrownDeathSave } from "../sheet/death"
 import { featureResolver, inspirationHelps, inspiredCheck } from "../sheet/features"
 import { applyStakes } from "../sheet/harm"
+import { hidingAfterRoll, noticeBeats } from "../sheet/hiding"
 import { legendaryActionsOf } from "../sheet/legendary-actions"
 import { attackWithReactions, ordered } from "../sheet/reactions"
 import { answeredSave, auraOnSave, saveStakesOf, withSaveAnswered } from "../sheet/save-rules"
@@ -394,13 +395,16 @@ export function createAdventureRollResultService(ports: GmPorts) {
       const answered = withSaveAnswered(turnCharacters, args.characterId, answer, result, args.character.name)
       turnCharacters = answered.characters
       // What the roll put at stake is settled here, by the engine: who it hurts or heals, and how they stand after.
-      const settled = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
+      const staked = applyStakes({ characters: turnCharacters, stakes: required.stakes, outcome: result.success ? "success" : "failure", roll: rollDie, rules })
+      // A Hide keeps its total and may be noticed at once, and a Search finds who its total meets (../sheet/hiding).
+      const settled = { ...staked, ...hidingAfterRoll({ characters: staked.characters, rollerId: args.characterId, roll: required, result, conditions: staked.conditions, facts: staked.facts }) }
       turnCharacters = settled.characters
       stakeFacts = [...(failedBy ? [`${args.character.name} is ${failedBy} and fails this saving throw outright.`] : []), ...answered.facts, ...settled.facts]
       const rescue = answer.rescued
       rolls = [
         ...(rescue ? [{ kind: "feature" as const, by, character: rescue.by ?? args.characterId, name: rescue.name, text: answered.facts.join(" ") }] : []),
         rollBeat(by, args.character, rollType, result, settled.harm, settled.conditions),
+        ...noticeBeats(by, settled.noticed, turnCharacters),
       ]
       numbers = { natural: result.natural, bonus: result.bonus, total: result.total, against: result.dc, success: result.success }
     }

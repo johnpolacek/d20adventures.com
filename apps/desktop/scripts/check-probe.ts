@@ -93,6 +93,8 @@ type Probe = {
   choice?: string
   // Lasting effects someone already bears, by character id: a Monk's Quivering Palm vibrations set in another.
   spellEffectsOn?: Record<string, SpellEffect[]>
+  // Whether a hidden hero's turn is read as a sound louder than a whisper, which gives them away.
+  loud?: boolean
 }
 // A stake as a scene writes it: damage or healing, or a condition given ("condition") or ended ("end-condition").
 type Wanted = { on: string; target: string; kind: string; condition?: string }
@@ -185,7 +187,9 @@ async function run(probe: Probe): Promise<Graded> {
               ? "?"
               : got.rollType.startsWith("Hide")
                 ? "hide"
-                : (menuId(got.check) ?? "?")
+                : got.rollType.startsWith("Search")
+                  ? "search"
+                  : (menuId(got.check) ?? "?")
     if (cast || probe.cast) {
       const told = (c?: { spell: string; targets?: string[]; ritual?: boolean }) =>
         c ? `${c.spell}${c.ritual ? " as a ritual" : ""} on ${[...(c.targets ?? [])].sort().join(" and ") || "no one"}` : "nothing"
@@ -210,6 +214,8 @@ async function run(probe: Probe): Promise<Graded> {
       if (probe.takes.item !== undefined && reading.action.item !== probe.takes.item) faults.push(`gives item ${reading.action.item}, wanted ${probe.takes.item}`)
     }
     if (!probe.checks.includes(picked)) faults.push(`check ${picked}, wanted ${probe.checks.join(" or ")}`)
+    // One who is hidden and makes a sound louder than a whisper gives themselves away.
+    if (probe.loud !== undefined && !!reading.loud !== probe.loud) faults.push(`${reading.loud ? "loud" : "quiet"}, wanted ${probe.loud ? "loud" : "quiet"}`)
     const surged = !!reading.choices?.surge
     if (probe.surge !== undefined && surged !== probe.surge) faults.push(`Action Surge ${surged ? "used" : "not used"}, wanted ${probe.surge ? "used" : "not used"}`)
     const cunning = got && isAttackRoll(got) ? got.attack.choices?.cunning : undefined
@@ -251,7 +257,8 @@ async function run(probe: Probe): Promise<Graded> {
       if (probe.attack && got.attack.weapon !== probe.attack.weapon) faults.push(`weapon ${got.attack.weapon}, wanted ${probe.attack.weapon}`)
       if (probe.attack && got.attack.target !== probe.attack.target) faults.push(`target ${got.attack.target}, wanted ${probe.attack.target}`)
     } else if (got && "check" in got) {
-      if (!Object.values(DIFFICULTY_CLASSES).includes(got.difficulty as 5)) faults.push(`target ${got.difficulty} is off the ladder`)
+      // A Search is rolled against the hider's Stealth total, which is no step of the ladder.
+      if (!got.rollType.startsWith("Search") && !Object.values(DIFFICULTY_CLASSES).includes(got.difficulty as 5)) faults.push(`target ${got.difficulty} is off the ladder`)
       if (probe.dcs && !probe.dcs.includes(got.difficulty)) faults.push(`target ${got.difficulty}, wanted ${probe.dcs.join(" or ")}`)
       // What the roll puts at stake: who, on which outcome, hurt or healed or given or freed of a condition. The dice
       // are the ladder's or the notes'.

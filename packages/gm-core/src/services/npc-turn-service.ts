@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import { conditionWords } from "../sheet/conditions"
 import { afterHarm } from "../sheet/death"
+import { hiddenFrom, searchRoll } from "../sheet/hiding"
 import { legendaryActionsOf, withLegendaryActionsRegained } from "../sheet/legendary-actions"
 import { moveBudget, takeMove } from "../sheet/moves"
 import { standingWords } from "../sheet/placement"
@@ -161,6 +162,8 @@ export function createNpcTurnService(ports: GmPorts) {
     // NPC turn processing
 
     const floor = await ports.content.floor?.(turn.encounterId)
+    // Who hides from it and it has not found (../sheet/hiding): it is not told where they stand, and may search.
+    const hiders = hiddenFrom(npc, turn.characters)
     const npcActionContext = buildNpcActionContext({
       turn,
       npc,
@@ -171,7 +174,12 @@ export function createNpcTurnService(ports: GmPorts) {
       knowledge,
       strangers,
       earlier,
-      standing: floor ? standingWords(turn.characters, floor) : undefined,
+      standing: floor
+        ? standingWords(
+            turn.characters.filter((character) => !hiders.includes(character)),
+            floor
+          )
+        : undefined,
     })
     const scene = await sceneFor(ports, turn)
     // Where it may go on the floor: the places and the others here.
@@ -186,6 +194,7 @@ export function createNpcTurnService(ports: GmPorts) {
       scene,
       ways: ways && { words: ways.words, feet: moveBudget(npc, turn.characters) },
       firstTurn,
+      hidden: hiders.map((character) => character.name),
     })
 
     console.log(
@@ -207,7 +216,7 @@ export function createNpcTurnService(ports: GmPorts) {
     const ruled = ruledReading(npc, turn.characters, floor)
     const chosen =
       (resume?.action as Awaited<ReturnType<typeof generateNpcAction>> | undefined) ??
-      (ruled ? { actionSummary: ruled.ruling.text, beats: [], actionType: "other" as const, effects: [] } : await generateNpcAction(prompt1, npc.id, ways?.ids))
+      (ruled ? { actionSummary: ruled.ruling.text, beats: [], actionType: "other" as const, effects: [] } : await generateNpcAction(prompt1, npc.id, ways?.ids, hiders.length > 0))
     // One that goes on its way on its first turn in the scene stays in it: the player gets a turn to answer it.
     const actionResult = chosen.actionType === "leave" && firstTurn ? { ...chosen, actionType: "pass" as const } : chosen
     // Where its turn takes it, as it named: walked over the floor within its Speed, with the Dash action for one that
@@ -271,6 +280,9 @@ export function createNpcTurnService(ports: GmPorts) {
       })
     }
 
+    // A turn given to searching is the Search action: a Perception check against the Stealth of whoever hides from it,
+    // which the engine asks for with no read of the model's (../sheet/hiding `searchRoll`).
+    const seek = actionResult.actionType === "search" ? searchRoll(npc, turn.characters) : undefined
     const branchResult: Omit<NpcTurnBranchResult, "actionSummary"> = await resolveNpcTurnRollOrDirectBranch({
       turn,
       npc,
@@ -284,6 +296,7 @@ export function createNpcTurnService(ports: GmPorts) {
       scene,
       rules,
       resume: resume && { reading: resume.reading as TurnReading, dice: resume.dice, answers: resume.answers },
+      ...(seek ? { reading: { roll: seek } } : {}),
       own,
     }).catch((error) => {
       // A turn that stops to ask a player keeps what the NPC meant to do, so it is not asked of the model again.
