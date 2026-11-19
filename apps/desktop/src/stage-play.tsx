@@ -446,12 +446,15 @@ export function StagePlay(props: {
   // opened"), then they walk on from the door to where the engine has them. Narration without the phrase finds them
   // in place. An action that brings someone on from a place does the same, at its own paragraph.
   const cues = useMemo(() => {
-    const authored = (stage?.staging?.entrances ?? []).map((e) => ({ ...e, speed: 0.9, at: text.findIndex((p) => p.toLowerCase().includes(e.when.toLowerCase())) }))
+    const entrances = stage?.staging?.entrances ?? []
+    const authored = entrances.flatMap((e) =>
+      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: 0.9, at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())) }] : []
+    )
     const told = paragraphs.flatMap((p, at) =>
       p.beats.flatMap((b) => {
         const cast = b.kind === "action" && b.enters && stage?.set.marks[b.enters.from] ? castOf(b.actor) : undefined
         return cast && b.kind === "action" && b.enters
-          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: undefined as string | undefined, speed: PACE[b.enters.pace ?? "walk"], at }]
+          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: entrances.find((e) => e.cast === cast)?.shot, speed: PACE[b.enters.pace ?? "walk"], at }]
           : []
       })
     )

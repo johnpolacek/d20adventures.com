@@ -208,6 +208,8 @@ export class Stage {
   // How fast the camera circles what it looks at, in radians a second: the shot's `orbit`. The player's own drag, or a
   // new shot without one, stops it.
   private circling = 0
+  // How far it has still to go round, in radians, when the shot gave a sweep.
+  private sweepLeft = Number.POSITIVE_INFINITY
   private followed = new Map<string, { x: number; z: number }>()
   private insets = { right: 0, bottom: 0 }
   private raf = 0
@@ -596,6 +598,7 @@ export class Stage {
     for (const id of this.framed) if (this.moves.has(id) && !this.moves.get(id)!.unseen && !this.followed.has(id)) this.followed.set(id, { x: this.member(id).x, z: this.member(id).z })
     this.driving = false
     this.circling = THREE.MathUtils.degToRad(authored?.orbit ?? 0)
+    this.sweepLeft = authored?.sweep ? THREE.MathUtils.degToRad(authored.sweep) : Number.POSITIVE_INFINITY
     if (this.controls) this.controls.minPolarAngle = 0
     this.activeShot = typeof which === "string" ? which : null
     this.activeFov = s.fov
@@ -1104,7 +1107,14 @@ export class Stage {
   // a painted point. During a shot's ease in, the point it eases to moves round as well.
   private circle(dt: number) {
     if (!this.circling || this.tripod || !this.controls) return
-    const a = this.circling * dt
+    // A sweep slows over its last second or so and stops.
+    const rate = Math.abs(this.circling)
+    const way = Math.sign(this.circling)
+    const ease = THREE.MathUtils.clamp(this.sweepLeft / (rate * 1.2), 0.08, 1)
+    const step = Math.min(this.sweepLeft, rate * ease * dt)
+    this.sweepLeft -= step
+    if (this.sweepLeft <= 1e-4) this.circling = 0
+    const a = way * step
     const turn = (pos: THREE.Vector3, about: THREE.Vector3) => pos.sub(about).applyAxisAngle(V(0, 1, 0), a).add(about)
     const tr = this.transition
     if (tr) return void turn(tr.to.pos, tr.to.target)

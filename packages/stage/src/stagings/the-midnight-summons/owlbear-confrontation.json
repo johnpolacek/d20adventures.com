@@ -33,9 +33,20 @@
   ],
   "shots": {
     "standoff": {
-      "subjects": ["thalbern", "owlbear"],
-      "offset": [-7.5, 2.4, 6.5],
-      "target": [0, 1.6, 0],
+      "subjects": [
+        "thalbern",
+        "owlbear"
+      ],
+      "offset": [
+        -7.5,
+        2.4,
+        6.5
+      ],
+      "target": [
+        0,
+        1.6,
+        0
+      ],
       "fov": 50,
       "label": "Standoff"
     },
@@ -56,8 +67,37 @@
       "lookHeight": 2.2,
       "fov": 50,
       "label": "Owlbear"
+    },
+    "reveal": {
+      "subject": "owlbear",
+      "distance": 6.5,
+      "angle": -70,
+      "height": 0.6,
+      "lookHeight": 2.6,
+      "fov": 54,
+      "orbit": 30,
+      "sweep": 120,
+      "label": "The Owlbear comes out"
     }
   },
   "shot": "standoff",
-  "exits": [{ "cast": "owlbear", "via": ["treeLine"], "to": [12, -9], "pace": "hurry" }]
+  "exits": [
+    {
+      "cast": "owlbear",
+      "via": [
+        "treeLine"
+      ],
+      "to": [
+        12,
+        -9
+      ],
+      "pace": "hurry"
+    }
+  ],
+  "entrances": [
+    {
+      "cast": "owlbear",
+      "shot": "reveal"
+    }
+  ]
 }

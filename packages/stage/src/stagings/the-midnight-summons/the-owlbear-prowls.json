@@ -27,8 +27,14 @@
         "back": "/stage/fixtures/the-midnight-summons/owlbear-back.webp",
         "portrait": "/stage/fixtures/the-midnight-summons/owlbear-portrait.jpg"
       },
-      "at": [2, -5.4],
-      "facing": [-6, -5]
+      "at": [
+        2,
+        -5.4
+      ],
+      "facing": [
+        -6,
+        -5
+      ]
     }
   ],
   "shots": {
@@ -58,8 +64,37 @@
       "lookHeight": 2.2,
       "fov": 50,
       "label": "Owlbear"
+    },
+    "reveal": {
+      "subject": "owlbear",
+      "distance": 6.5,
+      "angle": -70,
+      "height": 0.6,
+      "lookHeight": 2.6,
+      "fov": 54,
+      "orbit": 22,
+      "sweep": 120,
+      "label": "The Owlbear comes out"
     }
   },
   "shot": "watch",
-  "exits": [{ "cast": "owlbear", "via": ["treeLine"], "to": [12, -9], "pace": "walk" }]
+  "exits": [
+    {
+      "cast": "owlbear",
+      "via": [
+        "treeLine"
+      ],
+      "to": [
+        12,
+        -9
+      ],
+      "pace": "walk"
+    }
+  ],
+  "entrances": [
+    {
+      "cast": "owlbear",
+      "shot": "reveal"
+    }
+  ]
 }

@@ -60,9 +60,11 @@ const castMember = z
   .strict()
 
 // `orbit` circles the camera round what it looks at, at this many degrees a second (negative goes the other way), until
-// the next shot or the player's drag. A painted set's camera cannot leave its point and holds still.
-const orbit = num(-30, 30).optional()
-const absoluteShot = z.object({ position: vec3, target: vec3, fov: num(10, 120), orbit, label: z.string().max(80).optional() }).strict()
+// the next shot or the player's drag. `sweep` stops it, easing out, once it has gone this many degrees round: a reveal.
+// A painted set's camera cannot leave its point and holds still.
+const orbit = num(-45, 45).optional()
+const sweep = num(1, 720).optional()
+const absoluteShot = z.object({ position: vec3, target: vec3, fov: num(10, 120), orbit, sweep, label: z.string().max(80).optional() }).strict()
 // A shot framed on the centroid of some cast members: camera at centroid + offset, looking at centroid + target. With
 // `relative: "facing"` the offsets turn with the subjects' average facing (x to their left, z ahead of them).
 const groupShot = z
@@ -73,12 +75,13 @@ const groupShot = z
     relative: z.enum(["world", "facing"]).default("world"),
     fov: num(10, 120),
     orbit,
+    sweep,
     label: z.string().max(80).optional(),
   })
   .strict()
 // A shot on one cast member: `distance` metres away at `angle` degrees off their facing, camera at `height`, looking at `lookHeight`.
 const subjectShot = z
-  .object({ subject: idName, distance: size(100), angle: deg, height: num(0, 100), lookHeight: num(0, 100), fov: num(10, 120), orbit, label: z.string().max(80).optional() })
+  .object({ subject: idName, distance: size(100), angle: deg, height: num(0, 100), lookHeight: num(0, 100), fov: num(10, 120), orbit, sweep, label: z.string().max(80).optional() })
   .strict()
 export const stagingShot = z.union([absoluteShot, groupShot, subjectShot])
 export type StagingShot = z.infer<typeof stagingShot>
@@ -139,8 +142,9 @@ export const stagingSpecSchema = z
     // Entrances the narration cues: while a turn's narration contains `when`, the cast member is offstage until the
     // paragraph that says it, then walks on from `from` (a mark or point) to their place, seen from `shot` (a set or
     // staging shot) when given. Narration without the phrase, such as a later round's, finds them already in place.
+    // An entrance with no `when` only gives the shot for an entrance the story tells ("from: treeLine").
     entrances: z
-      .array(z.object({ cast: idName, when: z.string().min(3).max(120), from: z.union([idName, vec2]), shot: idName.optional() }).strict())
+      .array(z.object({ cast: idName, when: z.string().min(3).max(120).optional(), from: z.union([idName, vec2]).optional(), shot: idName.optional() }).strict())
       .max(12)
       .default([]),
     // Walks the narration cues for someone already on stage: while a turn's narration contains `when`, they stand at
