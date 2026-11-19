@@ -569,7 +569,7 @@
     { "id": "boulders", "label": "the mossy boulders", "x": -4.4, "z": 13.2 },
     { "id": "clearing", "label": "the small moonlit clearing", "x": 2.5, "z": -6 },
     { "id": "fallenLog", "label": "the fallen log", "x": 4.2, "z": 6.4 },
-    { "id": "ferns", "label": "the thick ferns beside the trail", "x": -4.6, "z": 9.2 },
+    { "id": "ferns", "label": "the thick ferns beside the trail", "x": -4.6, "z": 9.2, "obscured": true },
     { "id": "greatOak", "label": "the great oak beside the trail", "x": -5.6, "z": -1.2 },
     { "id": "trailNorth", "label": "the deer trail toward the Standing Stones", "x": -1.6, "z": -26 },
     { "id": "trailSouth", "label": "the trail back toward home", "x": 0.6, "z": 28 },

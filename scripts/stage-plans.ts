@@ -76,7 +76,7 @@ function setPlan(raw: unknown) {
     .sort(bySolid)
   const doors = doorways(built.anchors).map(([a, b]): [Point, Point] => [pt(a.x, a.z), pt(b.x, b.z)])
   const places = Object.entries(set.marks)
-    .flatMap(([mark, m]) => (m.label ? [{ id: mark, label: m.label, ...pt(m.at[0], m.at[1]) }] : []))
+    .flatMap(([mark, m]) => (m.label ? [{ id: mark, label: m.label, ...pt(m.at[0], m.at[1]), ...(m.obscured ? { obscured: true as const } : {}) }] : []))
     .sort((a, b) => a.id.localeCompare(b.id))
   const plan: SetPlan = setPlanSchema.parse({ id, title: set.title, solids, doors, places })
   // The exact footprints, for the checks below, so rounding cannot move anyone across an edge.

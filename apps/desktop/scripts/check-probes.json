@@ -8590,5 +8590,36 @@
       "target": "owlbear"
     },
     "loud": true
+  },
+  {
+    "id": "clan-hide-in-the-open",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "clan-conflict",
+    "hero": "branka-stoneveil",
+    "floor": true,
+    "action": "Branka tries to hide.",
+    "checks": ["none"],
+    "ruling": "No Cover",
+    "moved": {
+      "none": true
+    }
+  },
+  {
+    "id": "prowl-hide-in-the-ferns-watched",
+    "adventure": "the-midnight-summons",
+    "encounter": "the-owlbear-prowls",
+    "hero": "thalbern",
+    "floor": true,
+    "at": {
+      "thalbern": [-14.44, 43.31],
+      "owlbear": [0, 43.31]
+    },
+    "narrative": "The owlbear has found Thalbern by the mossy boulders and stands a few strides off, glaring at him.",
+    "action": "Thalbern dives into the thick ferns beside the trail to hide.",
+    "checks": ["hide"],
+    "dcs": [15],
+    "moved": {
+      "toward": "ferns"
+    }
   }
 ]

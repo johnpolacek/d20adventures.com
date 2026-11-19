@@ -2,7 +2,13 @@ import { hasFled } from "../utils/turn-actors"
 import { BASE_REACH, between, distance, FEET_PER_METRE, type Floor, type Point, placedOf, type Solid, type Standing, standingRoom } from "./space"
 
 /** A named place of the floor, which a character may walk to: "the gangway", "the cabin door". */
-export type Place = { id: string; label: string; at: Point }
+export type Place = {
+  id: string
+  label: string
+  at: Point
+  /** Whoever stands here is Heavily Obscured, in thick growth or the like: they may take the Hide action here. */
+  obscured?: true
+}
 
 /** One of the cast as the encounter stages them: who, and where they start. */
 export type Staged = { id: string; name?: string; at: Point }
@@ -31,7 +37,7 @@ type Metres = { x: number; z: number }
 export type FloorPlanInMetres = {
   solids: readonly (({ kind: "rect"; hw: number; hd: number; ry: number } | { kind: "circle"; r: number }) & Metres & { height?: number })[]
   doors: readonly (readonly [Metres, Metres])[]
-  places: readonly ({ id: string; label: string } & Metres)[]
+  places: readonly ({ id: string; label: string; obscured?: boolean } & Metres)[]
   cast: readonly ({ id: string; name?: string } & Metres)[]
   party: readonly ({ id: string } & Metres)[]
   spare: readonly Metres[]
@@ -52,7 +58,7 @@ export function floorFromMetres(plan: FloorPlanInMetres): EncounterFloor {
           : { kind: "rect", ...inFeet(solid), halfWidth: solid.hw * FEET_PER_METRE, halfDepth: solid.hd * FEET_PER_METRE, turn: solid.ry, ...top(solid) }
     ),
     doors: plan.doors.map(([inside, outside]) => [inFeet(inside), inFeet(outside)] as const),
-    places: plan.places.map((place) => ({ id: place.id, label: place.label, at: inFeet(place) })),
+    places: plan.places.map((place) => ({ id: place.id, label: place.label, at: inFeet(place), ...(place.obscured ? { obscured: true as const } : {}) })),
     cast: plan.cast.map((member) => ({ id: member.id, ...(member.name ? { name: member.name } : {}), at: inFeet(member) })),
     party: plan.party.map((slot) => ({ id: slot.id, at: inFeet(slot) })),
     spare: plan.spare.map(inFeet),

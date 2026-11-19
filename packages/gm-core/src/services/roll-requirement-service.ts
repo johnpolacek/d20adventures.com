@@ -14,7 +14,7 @@ import { found, type Hider, hiddenFrom, searchRoll } from "../sheet/hiding"
 import { chargedFeet, escapeFrom } from "../sheet/hit-riders"
 import { itemCastingWords, menuId } from "../sheet/item-use"
 import { itemName, itemWords } from "../sheet/items"
-import { type MoveAsk, type Moved, moveBudget, takeMove, takeTeleport, withMove } from "../sheet/moves"
+import { type MoveAsk, type Moved, mayHide, moveBudget, takeMove, takeTeleport, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
 import { ruledReading } from "../sheet/ruled-turns"
@@ -153,6 +153,9 @@ const stayWords = (spellId: string): string[] => {
   return stays?.beside ? ["put beside the one named"] : []
 }
 
+// What the story is told when a Hide has nowhere to be made.
+const noCover = (name: string | undefined) => ({ name: "No Cover", text: `${name ?? "They"} can find nothing to hide behind within reach, out of every enemy's sight. No Hide is made.` })
+
 const MENU = (kind: "skill" | "ability" | "save") =>
   checkMenu
     .filter((entry) => entry.check.kind === kind)
@@ -202,6 +205,16 @@ export function createRollRequirementService(ports: GmPorts) {
       if (reading.roll && "attack" in reading.roll) return { ...reading, roll: { ...reading.roll, after: { ...reading.roll.after, [follow.key]: true } } }
       const { bonus: _, ...rest } = reading
       return rest
+    }
+    // A Hide taken with a Bonus Action needs somewhere to hide, as the action does, where the turn leaves them.
+    const floor = options?.floor
+    if (follow?.key === "hide" && self && floor && character.position) {
+      const others = (options?.present ?? []).filter((other) => other.id !== self && !isDead(other) && !hasFled(other))
+      const from = others.filter((other) => areEnemies(other, character) && !isDown(other) && !isIncapacitated(other)).map((other) => other.id)
+      if (!mayHide({ floor, mover: { ...character, id: self }, others, from, at: reading.move?.at })) {
+        const { bonus: _, ...rest } = reading
+        return { ...rest, ruling: rest.ruling ?? noCover(character.name) }
+      }
     }
     const first = follow?.first && self ? follow.first({ ...character, id: self } as InScene) : undefined
     if (!follow || !first) return reading
@@ -1049,6 +1062,13 @@ Action: "${action}"
         const read: TakenAction | undefined = taken !== "help" ? { action: taken } : helped ? { action: taken, target: helped, ...(skill.success ? { skill: skill.data } : {}) } : undefined
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, action: read })
         return { roll: null, ...(read ? { action: read } : {}), ...also }
+      }
+      // The Hide action needs somewhere to hide: Heavily Obscured, or behind cover and out of every enemy's sight
+      // (../sheet/moves `mayHide`). Where the move found none in reach, no Hide is made, and the story is told why.
+      if (hide && mover && floor && !mayHide({ floor, mover, others, from: hide.from, at: also.move?.at })) {
+        also.ruling = noCover(character.name)
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, refused: "nowhere to hide" })
+        return { roll: null, ...also }
       }
       // Hide is a Stealth check the rules set: its target and what a success gives are the engine's.
       const hiding = pick.check === "hide" && self ? hideRoll({ ...character, id: self }) : undefined

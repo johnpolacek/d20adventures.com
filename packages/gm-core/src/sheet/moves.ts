@@ -60,8 +60,8 @@ export const moveBudget = (mover: Mover, others: readonly Other[] = [], dash = f
  * Pounce).
  *
  * `hide` is the Hide action, taken out of sight of the enemies it names by id. A hider goes to the place named when the
- * move reaches it, and else into the nearest cover their move reaches (`coverToHide`). None when no cover is in reach,
- * or they are in cover already.
+ * move reaches it and one may hide there (`hidingCover`), and else into the nearest cover their move reaches
+ * (`coverToHide`). None when no cover is in reach, or they are in cover already: `mayHide` tells which.
  */
 export function takeMove(args: {
   floor: EncounterFloor
@@ -88,21 +88,13 @@ export function takeMove(args: {
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)
   const place = ask.to ? args.floor.places.find((entry) => entry.id === ask.to) : undefined
   if (args.hide) {
-    // The place named, when the move gets them all the way there: the story said they hide there.
+    const size = sizeOf(args.mover)
+    const enemies = args.others.flatMap((other) => (args.hide?.from.includes(other.id) && other.position && !isAway(other) ? [other.position] : []))
+    const areas = floorAreas(everyone)
+    // The place named, when the move gets them all the way there and it hides them: the story said they hide there.
     const there = place ? walk(floor, from, place.at, budget, { others: standing, rough }) : undefined
-    const reached = there && there.used >= 0.5 && between(there.at, place?.at ?? from) <= BASE_REACH / 2 ? there : undefined
-    const hid =
-      reached ??
-      coverToHide({
-        floor,
-        from,
-        size: sizeOf(args.mover),
-        budget,
-        standing,
-        rough,
-        enemies: args.others.flatMap((other) => (args.hide?.from.includes(other.id) && other.position && !isAway(other) ? [other.position] : [])),
-        areas: floorAreas(everyone),
-      })
+    const reached = there && there.used >= 0.5 && between(there.at, place?.at ?? from) <= BASE_REACH / 2 && hidingCover({ floor, at: rounded(there.at), size, enemies, areas }) ? there : undefined
+    const hid = reached ?? coverToHide({ floor, from, size, budget, standing, rough, enemies, areas })
     return hid ? { at: rounded(hid.at), feet: Math.round(hid.used), path: hid.path.map(rounded) } : undefined
   }
   const toward = someone(ask.to) ?? (!place && !ask.away ? someone(args.close?.target) : undefined)
@@ -141,15 +133,51 @@ const outOfSight = (solids: readonly Solid[], areas: ReturnType<typeof floorArea
     return !!span && (solid.top === undefined || solid.top >= heightOf(size) || span[0] >= 0.5)
   })
 
+// Thick growth or the like that hides whoever stands in it: a place the set marks `obscured`, within 5 feet of it.
+const inGrowth = (floor: EncounterFloor, spot: Point): boolean => floor.places.some((place) => place.obscured && between(place.at, spot) <= BASE_REACH)
+
+/**
+ * Whether one may take the Hide action at a spot, as the rules demand of it (SRD 5.2.1): Heavily Obscured there, or
+ * behind cover and out of every enemy's line of sight. Heavily Obscured is thick growth the set marks (`obscured`) or
+ * a spell's area that hides what is in it (Fog Cloud, Darkness). Cover is a solid thing within 5 feet that hides them
+ * crouched, half their height or taller, with each enemy at `enemies` unable to see them past it or another. The
+ * floor holds no light, so the dark of a night scene hides no one by this rule.
+ *
+ * Thalbern on the forest trail: in the thick ferns he may hide whoever looks on. Behind the mossy boulders he may
+ * while the Owlbear is on their far side. In the open clearing he may not.
+ */
+export function hidingCover(args: { floor: EncounterFloor; at: Point; size: Size; enemies: readonly Point[]; areas: ReturnType<typeof floorAreas> }): boolean {
+  const { floor, at, size } = args
+  if (inGrowth(floor, at) || sightBlocked(args.areas, at, at)) return true
+  return floor.solids.some((solid) => hidesCrouched(solid, size) && toEdge(solid, at) <= BASE_REACH) && args.enemies.every((enemy) => outOfSight(floor.solids, args.areas, enemy, at, size))
+}
+
+/**
+ * Whether a mover may take the Hide action where they stand, or at `at` where a move has taken them, from the enemies
+ * named by id (`hidingCover`). One with no position stands on no floor, and may.
+ */
+export function mayHide(args: { floor: EncounterFloor; mover: Mover; others: readonly Other[]; from: readonly string[]; at?: Point }): boolean {
+  const at = args.at ?? args.mover.position
+  if (!at) return true
+  const everyone = [args.mover, ...args.others]
+  return hidingCover({
+    floor: floorInPlay(args.floor, everyone),
+    at,
+    size: sizeOf(args.mover),
+    enemies: args.others.flatMap((other) => (args.from.includes(other.id) && other.position && !isAway(other) ? [other.position] : [])),
+    areas: floorAreas(everyone),
+  })
+}
+
 const ROUND = 16
 const FAR = 1000
 
 /**
- * Where one taking the Hide action goes to hide, when no place they reach is named: behind a solid thing that hides
- * them crouched, half their height or taller, out of sight of every enemy at `enemies`. A named place within 5 feet of
- * such a thing comes first, nearest first, since the set means people to stand there. Then a spot hugging such a thing,
- * the nearest first, a space clear of anyone. Each must be one the move reaches in full. None when they stand in such
- * cover already, or none is in reach.
+ * Where one taking the Hide action goes to hide, when no place they reach is named: somewhere they may hide
+ * (`hidingCover`), in thick growth or behind a solid thing that hides them crouched, half their height or taller, out
+ * of sight of every enemy at `enemies`. A named place that hides them comes first, nearest first, since the set means
+ * people to stand there. Then a spot hugging such a thing, the nearest first, a space clear of anyone. Each must be
+ * one the move reaches in full. None when they stand in such cover already, or none is in reach.
  *
  * Thalbern at (-3.9, 41) on the forest trail, Speed 30, no enemy placed: the mossy boulders, 3½ feet tall and 11 feet
  * off, are cover, and he walks to them.
@@ -166,12 +194,11 @@ export function coverToHide(args: {
 }): { at: Point; used: number; path: Point[] } | undefined {
   const { floor, from, size, budget } = args
   const hiding = floor.solids.filter((solid) => hidesCrouched(solid, size) && toEdge(solid, from) <= budget)
-  const hidden = (spot: Point) => args.enemies.every((enemy) => outOfSight(floor.solids, args.areas, enemy, spot, size))
-  const against = (spot: Point) => hiding.some((solid) => toEdge(solid, spot) <= BASE_REACH)
-  if (against(from) && hidden(from)) return undefined
-  const clear = (spot: Point) => !solidAt(floor.solids, spot) && args.standing.every((other) => between(other, spot) >= BASE_REACH - 1e-6) && hidden(spot)
+  const covered = (spot: Point) => hidingCover({ floor, at: spot, size, enemies: args.enemies, areas: args.areas })
+  if (covered(from)) return undefined
+  const clear = (spot: Point) => !solidAt(floor.solids, spot) && args.standing.every((other) => between(other, spot) >= BASE_REACH - 1e-6) && covered(spot)
   const near = (spots: Point[]) => spots.filter((spot) => between(from, spot) <= budget && clear(spot)).sort((a, b) => between(from, a) - between(from, b))
-  const places = near(floor.places.map((place) => place.at).filter(against))
+  const places = near(floor.places.map((place) => place.at))
   // Round each thing, a half space off its edge.
   const hug = spaceOf(size) / 2
   const hugging = near(
@@ -185,7 +212,8 @@ export function coverToHide(args: {
   )
   for (const spot of [...places, ...hugging]) {
     const walked = walk(floor, from, spot, budget, { others: args.standing, rough: args.rough })
-    if (walked.used >= 0.5 && between(walked.at, spot) <= 1) return walked
+    // Where the walk ends is what must hide them: a step short of the spot may be in an enemy's sight.
+    if (walked.used >= 0.5 && between(walked.at, spot) <= 1 && covered(rounded(walked.at))) return walked
   }
   return undefined
 }

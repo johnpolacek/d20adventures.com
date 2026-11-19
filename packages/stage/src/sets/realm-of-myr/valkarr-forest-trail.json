@@ -633,7 +633,8 @@
     },
     "ferns": {
       "at": [-4.6, 9.2],
-      "label": "the thick ferns beside the trail"
+      "label": "the thick ferns beside the trail",
+      "obscured": true
     },
     "boulders": {
       "at": [-4.4, 13.2],

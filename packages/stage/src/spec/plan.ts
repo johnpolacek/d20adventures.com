@@ -17,7 +17,8 @@ export const solidSchema = z.discriminatedUnion("kind", [
 ])
 export type Solid = z.infer<typeof solidSchema>
 
-export const placeSchema = z.object({ id: z.string(), label: z.string(), x: z.number(), z: z.number() }).strict()
+// `obscured` is a place where whoever stands in it is hard to see at all: thick ferns, a reed bed.
+export const placeSchema = z.object({ id: z.string(), label: z.string(), x: z.number(), z: z.number(), obscured: z.literal(true).optional() }).strict()
 export type Place = z.infer<typeof placeSchema>
 
 // A set: what is solid, its doorways as a point just inside and one just outside, and its labelled marks.

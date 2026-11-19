@@ -437,8 +437,9 @@ export const setSpecSchema = z
       .strict()
       .optional(),
     // Named spots. A `label` makes a mark a place players can refer to ("the gap in the barrier"): the floor plan
-    // names it, and the engine may move characters to it.
-    marks: z.record(name, z.object({ at: vec2, yaw: deg.optional(), label: z.string().max(80).optional() }).strict()).default({}),
+    // names it, and the engine may move characters to it. `obscured` says whoever stands at a labelled place is hard to
+    // see at all, in thick growth or the like (the rules' Heavily Obscured): one may take the Hide action there.
+    marks: z.record(name, z.object({ at: vec2, yaw: deg.optional(), label: z.string().max(80).optional(), obscured: z.literal(true).optional() }).strict()).default({}),
     loops: z.array(queueLoopSpec).max(8).default([]),
     paths: z.record(name, z.array(vec2).min(2).max(256)).default({}),
     shots: z.record(name, shot),
