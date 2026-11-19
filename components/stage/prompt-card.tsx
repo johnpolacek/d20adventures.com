@@ -2,7 +2,8 @@
 
 // The GM card: the prototype's "GM note", grown into the turn's input. It sits low and centred over the stage and changes
 // with the turn: whose turn it is and what the GM asks (with the party's portraits and a reply box), the dice roll the GM
-// calls for and how it came out while the GM answers it, the GM writing, and the end of the encounter.
+// calls for and how it came out while the GM answers it, the GM writing (with a changing line of what it is up to), and
+// the end of the encounter.
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -56,6 +57,75 @@ export type CardMode =
   | { kind: "roll"; roll: CardRoll; prompt?: string; made?: number[]; resolving?: boolean; result?: RollView }
   | { kind: "thinking"; note?: string; who?: CardCharacter }
   | { kind: "done"; next: string }
+
+// What the GM is up to while it writes, one line at a time from a shuffled run, or the card's own note if it has one.
+const MUSINGS = [
+  "Consulting the ancient tomes…",
+  "Rolling behind the screen…",
+  "Shuffling the encounter tables…",
+  "Sharpening a pencil…",
+  "Flipping through the bestiary…",
+  "Muttering about initiative…",
+  "Checking the map twice…",
+  "Weighing what you said…",
+  "Asking the dice nicely…",
+  "Bribing the fates…",
+  "Lighting another candle…",
+  "Pouring more ink…",
+  "Stroking a long beard…",
+  "Rearranging the miniatures…",
+  "Hiding a grin…",
+  "Counting the torches left…",
+  "Reading the tea leaves…",
+  "Whispering to the dungeon…",
+  "Rerolling, just to be sure…",
+  "Consulting the oracle…",
+  "Scribbling in the margins…",
+  "Checking who is still standing…",
+  "Listening at the door…",
+  "Polishing the d20…",
+  "Moving the monsters around…",
+  "Deciding how much it hurts…",
+  "Looking up the rules…",
+  "Finding an old note…",
+  "Sketching the next scene…",
+  "Tallying the gold…",
+  "Pretending not to cheat…",
+  "Asking the tavernkeeper…",
+  "Checking for traps…",
+  "Weaving the next thread…",
+  "Stirring the cauldron…",
+  "Unrolling a fresh scroll…",
+]
+const MUSING_MS = 3200
+const MUSING_OUT_MS = 350
+
+function GmMusing({ note }: { note?: string }) {
+  const [order] = useState(() => MUSINGS.map((_, i) => i).sort(() => Math.random() - 0.5))
+  const [at, setAt] = useState(0)
+  const [leaving, setLeaving] = useState(false)
+  useEffect(() => {
+    if (note) return
+    let out: ReturnType<typeof setTimeout> | undefined
+    const every = setInterval(() => {
+      setLeaving(true)
+      out = setTimeout(() => {
+        setAt((n) => n + 1)
+        setLeaving(false)
+      }, MUSING_OUT_MS)
+    }, MUSING_MS)
+    return () => {
+      clearInterval(every)
+      clearTimeout(out)
+    }
+  }, [note])
+  const line = note ?? MUSINGS[order[at % order.length]]
+  return (
+    <div key={line} className={cn("mt-1.5 font-serif text-[14px] text-stage-parchment italic", leaving ? "gm-musing-out" : "gm-musing-in")}>
+      {line}
+    </div>
+  )
+}
 
 function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[]; actorId: string | null; compact: boolean; onPick: (id: string) => void }) {
   return (
@@ -532,8 +602,8 @@ export function PromptCard({
         ))}
       {mode.kind === "thinking" && !mode.who && (
         <div className="py-1">
-          <div className={cn(eyebrow, "animate-pulse")}>The GM is writing…</div>
-          {mode.note && <div className="mt-1.5 font-serif text-[13px] text-stage-sage italic">{mode.note}</div>}
+          <div className={cn(eyebrow, "animate-pulse")}>The GM</div>
+          <GmMusing note={mode.note} />
         </div>
       )}
       {mode.kind === "thinking" && mode.who && (

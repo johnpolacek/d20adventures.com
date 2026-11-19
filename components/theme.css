@@ -179,6 +179,26 @@
 .roll-pulse {
   animation: roll-pulse 2.2s ease-out infinite;
 }
+@keyframes gm-musing-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(4px);
+  }
+}
+@keyframes gm-musing-out {
+  to {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(-4px);
+  }
+}
+.gm-musing-in {
+  animation: gm-musing-in 0.45s ease-out both;
+}
+.gm-musing-out {
+  animation: gm-musing-out 0.35s ease-in both;
+}
 .roll-shock {
   animation: roll-shock 0.55s ease-out both;
 }
@@ -186,6 +206,10 @@
   animation: die-land 0.34s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 @media (prefers-reduced-motion: reduce) {
+  .gm-musing-in,
+  .gm-musing-out {
+    animation: none;
+  }
   .roll-pulse,
   .roll-shock {
     animation: none;

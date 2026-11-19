@@ -128,9 +128,9 @@ const MULLING = ["considers the moment…", "weighs the options…", "sizes up t
 const callName = (c: { name: string; type?: string }) => (c.type === "npc" ? c.name : c.name.split(" ")[0])
 
 // The card while the GM works: the NPC or AI hero it is playing, with their own line or one picked by the turn, or the
-// GM resolving a player's action.
+// GM's own musings while it resolves a player's action.
 function playing(turnId: string | undefined, actor: Character | undefined, ai: boolean, portrait: (c: Character) => string | undefined): CardMode {
-  if (!actor || (actor.type !== "npc" && !ai)) return { kind: "thinking", note: "The GM is resolving the action…" }
+  if (!actor || (actor.type !== "npc" && !ai)) return { kind: "thinking" }
   const name = callName(actor)
   let pick = 0
   for (const ch of `${turnId}:${actor.id}`) pick = (pick * 31 + ch.charCodeAt(0)) >>> 0
