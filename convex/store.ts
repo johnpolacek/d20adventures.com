@@ -15,7 +15,7 @@ export const ownedAdventures = query({
   },
 })
 
-/** Idempotent: a repeated Stripe session, or an adventure already owned, returns the existing row. */
+/** Idempotent: a repeated payment session, or an adventure already owned, returns the existing row. */
 export const grantAdventure = mutation({
   args: {
     secret: v.string(),

@@ -1,4 +1,4 @@
-// Adventures for sale. Prices go to Stripe as inline price_data, so this list is the only price source.
+// Adventures and their prices. This list is the only price source.
 export type CatalogEntry = {
   id: string
   settingId: string

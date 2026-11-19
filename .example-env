@@ -32,10 +32,6 @@ SENDGRID_SENDER=
 CONTACT_EMAIL=
 UNSUBSCRIBE_SECRET=
 
-# Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-STRIPE_SECRET_KEY=
-
 # Admin settings
 # Replace with your Clerk user ID after signing in
 ADMIN_USER_IDS=
