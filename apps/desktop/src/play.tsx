@@ -352,7 +352,7 @@ export function DesktopGame() {
       chat={hosting ? hosted?.chat : undefined}
       onChat={hosting && hosted?.chat ? say : undefined}
       trailingActions={<FullscreenButton />}
-      onFeedback={sendFeedback}
+      onFeedback={hosting ? (draft) => sendFeedback({ ...draft, context: { ...draft.context, hosted: "host" } }) : sendFeedback}
       endActions={
         <>
           {nextUp && (

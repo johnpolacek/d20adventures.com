@@ -97,7 +97,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       onReact={(turnId, characterId, take) => act({ turnId: turnId as Id<"turns">, kind: "react", characterId, take })}
       chat={state?.chat}
       onChat={say}
-      onFeedback={sendFeedback}
+      onFeedback={(draft) => sendFeedback({ ...draft, context: { ...draft.context, hosted: "guest", host: state?.adventure.ownerId ?? "" } })}
       onError={onError}
     >
       {state && !save && (
