@@ -1572,7 +1572,13 @@ export class Stage {
     const c = document.createElement("canvas")
     c.width = this.canvas.width
     c.height = this.canvas.height
-    c.getContext("2d")?.drawImage(this.canvas, 0, 0)
+    // Dark under the picture: a webview that hands back an empty WebGL canvas still hides what is behind it.
+    const g = c.getContext("2d")
+    if (g) {
+      g.fillStyle = "#000"
+      g.fillRect(0, 0, c.width, c.height)
+      g.drawImage(this.canvas, 0, 0)
+    }
     return c
   }
   // A PNG of the current view, rendered on demand (no preserveDrawingBuffer needed: read in the same task).
