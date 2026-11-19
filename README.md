@@ -44,7 +44,7 @@ pnpm dev:app      # Desktop app only
 pnpm dev:fresh    # Kill ports first, then dev
 ```
 
-You need a Convex project, Clerk keys and LLM API keys in `.env.local`.
+Copy `.env.example` to `.env.local` and fill in the required keys: Convex, Clerk, a shared store secret and Gemini.
 
 ## Agent Prompts
 
@@ -59,7 +59,7 @@ Read README.md and apps/desktop/README.md. Get the D20 Adventures desktop app ru
 Set up the website for development:
 
 ```text
-Read README.md and AGENTS.md. Set up D20 Adventures for local development. Check that Node.js 24 or newer and pnpm are installed, then run pnpm install. Walk me through creating .env.local: a new Convex dev project via npx convex dev, Clerk keys (NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY), and LLM keys (GOOGLE_GENERATIVE_AI_API_KEY, OPENAI_API_KEY). Search the code for other process.env names and tell me which are optional. Ask me for each secret instead of guessing. Then run pnpm dev:web, open http://localhost:3000, and confirm the home page loads and I can sign in.
+Read README.md and AGENTS.md. Set up D20 Adventures for local development. Check that Node.js 24 or newer and pnpm are installed, then run pnpm install. Copy .env.example to .env.local and walk me through the required section: run npx convex dev to create a Convex dev project, generate STORE_SERVER_SECRET and set it in Convex too, then Clerk and Gemini keys. Ask me for each secret instead of guessing. Then run pnpm dev:web, open http://localhost:3000, and confirm the home page loads and I can sign in.
 ```
 
 Check a change before committing:
