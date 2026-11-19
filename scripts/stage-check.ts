@@ -119,6 +119,25 @@ function checkExits(
   }
 }
 
+// A cued walk on stage has to get from where it starts to the walker's place, the same way.
+function checkCuedWalks(key: string, walks: StagingSpec["walks"], marks: ReturnType<typeof parseSet>["marks"], footprints: Footprint[], doors: ReturnType<typeof doorways>, cast: ReturnType<typeof resolveCast>) {
+  const point = (ref: string | number[]) => {
+    if (Array.isArray(ref)) return { x: ref[0], z: ref[1] }
+    const at = cast.find((c) => c.id === ref) ?? (marks[ref] && { x: marks[ref].at[0], z: marks[ref].at[1] })
+    if (!at) throw new Error(`staging ${key}: walk names unknown place ${ref}`)
+    return { x: at.x, z: at.z }
+  }
+  for (const w of walks) {
+    let from = point(w.from)
+    for (const leg of [...(w.via ?? []), w.cast].map(point))
+      for (const p of routeOver(footprints, doors, from, leg) ?? [leg]) {
+        const hit = reachOver(footprints, from, p, 60)
+        if (hit.short) throw new Error(`staging ${key}: ${w.cast}'s walk stops ${hit.distance.toFixed(1)} m into the leg to (${leg.x}, ${leg.z})`)
+        from = p
+      }
+  }
+}
+
 // The view the play screen takes of whoever acts.
 const HERO_SHOT = (subject: string) => ({ subject, distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 })
 
@@ -174,6 +193,7 @@ async function main() {
     for (const e of staging.entrances) if (e.shot && !shots[e.shot]) throw new Error(`staging ${key}: unknown entrance shot ${e.shot}`)
     for (const e of staging.exits) if (e.shot && !shots[e.shot]) throw new Error(`staging ${key}: unknown exit shot ${e.shot}`)
     checkExits(key, staging.exits, set.marks, footprints, doors, cast)
+    checkCuedWalks(key, staging.walks, set.marks, footprints, doors, cast)
     const missing = staging.cast.flatMap((c) => [...Object.values(c.art), ...(c.figure ? [c.figure.model] : [])]).filter((u) => u.startsWith("/stage/") && !existsSync(`public${u}`))
     if (missing.length) throw new Error(`staging ${key}: missing art ${missing.join(", ")}`)
     console.log(`PASS staging ${key}: ${cast.length} cast (${cast.map((c) => c.id).join(", ")}), ${Object.keys(shots).length} shots (${Object.keys(shots).join(", ")})`)

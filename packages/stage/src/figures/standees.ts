@@ -24,6 +24,8 @@ export interface CastMember {
   z: number
   ry: number
   walking: boolean
+  // How fast they walk, in metres a second, while they do: a figure's steps keep time with it.
+  gait?: number
   walk: number
   stride: number
   // Lying where they fell when the scene opens (a body).

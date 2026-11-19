@@ -205,6 +205,9 @@ export class Stage {
   // Who the current shot is on, and the walkers the camera follows, by where it last saw them. A walker is followed
   // when the shot is on them, or when they set off in view.
   private framed = new Set<string>()
+  // How fast the camera circles what it looks at, in radians a second: the shot's `orbit`. The player's own drag, or a
+  // new shot without one, stops it.
+  private circling = 0
   private followed = new Map<string, { x: number; z: number }>()
   private insets = { right: 0, bottom: 0 }
   private raf = 0
@@ -452,6 +455,7 @@ export class Stage {
     c.addEventListener("start", () => {
       this.transition = null
       this.driving = true
+      this.circling = 0
       // The player looks down at most about 40 degrees. From higher, the crowd's painted cards read as flat pegs. An
       // authored shot that is steeper keeps its angle when the drag starts, so nothing jumps.
       c.minPolarAngle = Math.min(STEEPEST_ORBIT, c.getPolarAngle())
@@ -591,6 +595,7 @@ export class Stage {
     for (const id of this.followed.keys()) if (!this.framed.has(id)) this.followed.delete(id)
     for (const id of this.framed) if (this.moves.has(id) && !this.moves.get(id)!.unseen && !this.followed.has(id)) this.followed.set(id, { x: this.member(id).x, z: this.member(id).z })
     this.driving = false
+    this.circling = THREE.MathUtils.degToRad(authored?.orbit ?? 0)
     if (this.controls) this.controls.minPolarAngle = 0
     this.activeShot = typeof which === "string" ? which : null
     this.activeFov = s.fov
@@ -1095,6 +1100,16 @@ export class Stage {
       tr.to.target.add(d)
     }
   }
+  // A slow move round what the camera looks at, level, at the shot's pace. A painted set cannot: its camera stands on
+  // a painted point. During a shot's ease in, the point it eases to moves round as well.
+  private circle(dt: number) {
+    if (!this.circling || this.tripod || !this.controls) return
+    const a = this.circling * dt
+    const turn = (pos: THREE.Vector3, about: THREE.Vector3) => pos.sub(about).applyAxisAngle(V(0, 1, 0), a).add(about)
+    const tr = this.transition
+    if (tr) return void turn(tr.to.pos, tr.to.target)
+    turn(this.camera.position, this.controls.target)
+  }
   private stepMoves(dt: number) {
     for (const [id, m] of this.moves) {
       if (m.unseen) continue
@@ -1119,6 +1134,7 @@ export class Stage {
       c.z += (dz / dist) * step
       c.ry = Math.atan2(dx, dz)
       c.walking = true
+      c.gait = m.speed
     }
   }
 
@@ -1272,6 +1288,7 @@ export class Stage {
     if (this.motion) {
       this.stepMoves(dt)
       this.follow()
+      this.circle(dt)
       // A line stands still. When the beats have moved it on, everyone is put in their new place unseen.
       if (!PEOPLE_STILL) for (const l of this.loops.values()) l.update(dt)
       else

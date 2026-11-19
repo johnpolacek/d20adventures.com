@@ -54,6 +54,8 @@ type View = Aim | null
 // How fast someone comes on or goes off, in metres a second, by the pace the story gives their entrance or the staging
 // their exit.
 const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
+// A staging's walk can also be a stroll: unhurried, someone on their way through the woods.
+const STROLL = 0.6
 // Whether a character is kept low on the stage: hidden by the Hide action, or about to roll for it, having gone to cover.
 const keptLow = (c: Character) => isHidden(c) || c.rollRequired?.rollType === "Hide (Stealth)"
 // A way off for someone who leaves with no exit of their own: about ten metres away from the heroes, or as near that way
@@ -598,6 +600,44 @@ export function StagePlay(props: {
     }
     return () => falls.forEach(clearTimeout)
   }, [stage, exits, spots, reading, paragraph])
+  // Walks the scene ties to the narration for someone already on stage, such as Thalbern on his way through the woods as
+  // the story opens. They stand where the walk starts until its paragraph, then walk to where the engine has them. This
+  // comes before the opening view, which frames them where the walk starts.
+  // A move of the engine's takes over a walk under way.
+  const walks = useMemo(
+    () =>
+      (stage?.staging?.walks ?? [])
+        .map((w) => ({ ...w, speed: w.pace === "stroll" ? STROLL : PACE[w.pace ?? "walk"], at: text.findIndex((p) => p.toLowerCase().includes(w.when.toLowerCase())) }))
+        .filter((w) => w.at >= 0),
+    [stage, text]
+  )
+  const strolls = useRef<{ stage: Stage | null; on: Map<string, number>; next: number }>({ stage: null, on: new Map(), next: 0 })
+  useEffect(() => {
+    if (!stage || !reading) return
+    if (strolls.current.stage !== stage) strolls.current = { stage, on: new Map(), next: 0 }
+    const s = strolls.current
+    for (const w of walks) {
+      const home = stage.staging?.cast.find((c) => c.id === w.cast)
+      const spot = spots.get(w.cast)?.at ?? home?.at
+      if (!spot || !stage.isOnStage(w.cast)) continue
+      const legs = [...(w.via ?? []), spot].map((leg) => stage.point(leg))
+      if (paragraph < w.at) {
+        s.on.delete(w.cast)
+        stage.placeCast(w.cast, w.from, [legs[0].x, legs[0].z])
+      } else if (paragraph === w.at && !s.on.has(w.cast)) {
+        const token = ++s.next
+        s.on.set(w.cast, token)
+        stage.placeCast(w.cast, w.from, [legs[0].x, legs[0].z])
+        const live = () => strolls.current === s && s.on.get(w.cast) === token
+        void (async () => {
+          for (const leg of legs) for (const p of stage.route(w.cast, leg, 60)) if (live()) await stage.moveCast(w.cast, [p.x, p.z], { speed: w.speed })
+        })()
+      } else if (!s.on.has(w.cast)) {
+        s.on.set(w.cast, 0)
+        stage.placeCast(w.cast, spot)
+      }
+    }
+  }, [stage, walks, spots, reading, paragraph])
   // A new stage: loops held and its opening view, before the camera frames anyone.
   useEffect(() => {
     if (!stage) return
@@ -623,7 +663,8 @@ export function StagePlay(props: {
       if (d.at.get(id) === key) continue
       if (fresh || !stage.isOnStage(id)) {
         d.at.set(id, key)
-        if (stage.isOnStage(id)) stage.placeCast(id, to)
+        // Someone on a walk the narration cues is left to it.
+        if (stage.isOnStage(id) && !(reading && walks.some((w) => w.cast === id))) stage.placeCast(id, to)
         continue
       }
       // The first paragraph of the character's latest step in the story on screen.
@@ -631,6 +672,7 @@ export function StagePlay(props: {
       while (from > 0 && paragraphs[from - 1].beats[0]?.by.character === character && paragraphs[from - 1].beats[0]?.by.step === paragraphs[from].beats[0]?.by.step) from--
       if (reading && paragraph < from) continue
       d.at.set(id, key)
+      strolls.current.on.set(id, 0)
       const walk = (d.walks.get(id) ?? 0) + 1
       d.walks.set(id, walk)
       const live = () => stageRef.current === stage && drawn.current === d && d.walks.get(id) === walk
@@ -662,7 +704,7 @@ export function StagePlay(props: {
       const low = keptLow(c) && (!spot || d.at.get(id) === spot.at.join())
       if (low !== stage.isLow(id)) stage.setLow(id, low, fresh)
     }
-  }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, onError])
+  }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, walks, onError])
   // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or
   // the place it describes. The first view on a new stage is a cut, not a glide from its opening view.
   const framed = useRef<Stage | null>(null)

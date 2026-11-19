@@ -15,7 +15,10 @@
         "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
       },
       "at": "thalbernStart",
-      "facing": [6, -6]
+      "facing": [
+        6,
+        -6
+      ]
     }
   ],
   "shots": {
@@ -27,7 +30,28 @@
       "lookHeight": 1.45,
       "fov": 46,
       "label": "Thalbern"
+    },
+    "walking": {
+      "subject": "thalbern",
+      "distance": 4.6,
+      "angle": 28,
+      "height": 1.8,
+      "lookHeight": 1.25,
+      "fov": 46,
+      "orbit": 4,
+      "label": "Thalbern on the trail"
     }
   },
-  "shot": "trail"
+  "shot": "walking",
+  "walks": [
+    {
+      "cast": "thalbern",
+      "when": "Thalbern, a solitary ranger",
+      "from": [
+        0.4,
+        26
+      ],
+      "pace": "stroll"
+    }
+  ]
 }

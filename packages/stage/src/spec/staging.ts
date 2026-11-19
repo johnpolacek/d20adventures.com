@@ -59,7 +59,10 @@ const castMember = z
   })
   .strict()
 
-const absoluteShot = z.object({ position: vec3, target: vec3, fov: num(10, 120), label: z.string().max(80).optional() }).strict()
+// `orbit` circles the camera round what it looks at, at this many degrees a second (negative goes the other way), until
+// the next shot or the player's drag. A painted set's camera cannot leave its point and holds still.
+const orbit = num(-30, 30).optional()
+const absoluteShot = z.object({ position: vec3, target: vec3, fov: num(10, 120), orbit, label: z.string().max(80).optional() }).strict()
 // A shot framed on the centroid of some cast members: camera at centroid + offset, looking at centroid + target. With
 // `relative: "facing"` the offsets turn with the subjects' average facing (x to their left, z ahead of them).
 const groupShot = z
@@ -69,11 +72,14 @@ const groupShot = z
     target: vec3,
     relative: z.enum(["world", "facing"]).default("world"),
     fov: num(10, 120),
+    orbit,
     label: z.string().max(80).optional(),
   })
   .strict()
 // A shot on one cast member: `distance` metres away at `angle` degrees off their facing, camera at `height`, looking at `lookHeight`.
-const subjectShot = z.object({ subject: idName, distance: size(100), angle: deg, height: num(0, 100), lookHeight: num(0, 100), fov: num(10, 120), label: z.string().max(80).optional() }).strict()
+const subjectShot = z
+  .object({ subject: idName, distance: size(100), angle: deg, height: num(0, 100), lookHeight: num(0, 100), fov: num(10, 120), orbit, label: z.string().max(80).optional() })
+  .strict()
 export const stagingShot = z.union([absoluteShot, groupShot, subjectShot])
 export type StagingShot = z.infer<typeof stagingShot>
 
@@ -137,6 +143,26 @@ export const stagingSpecSchema = z
       .array(z.object({ cast: idName, when: z.string().min(3).max(120), from: z.union([idName, vec2]), shot: idName.optional() }).strict())
       .max(12)
       .default([]),
+    // Walks the narration cues for someone already on stage: while a turn's narration contains `when`, they stand at
+    // `from` (a mark or point) until the paragraph that says it, then walk by `via` to their place, at `pace` (`stroll`
+    // is slower than a walk). Narration without the phrase finds them in place.
+    walks: z
+      .array(
+        z
+          .object({
+            cast: idName,
+            when: z.string().min(3).max(120),
+            from: z.union([idName, vec2]),
+            via: z
+              .array(z.union([idName, vec2]))
+              .max(8)
+              .optional(),
+            pace: z.enum(["stroll", "walk", "hurry", "sneak"]).optional(),
+          })
+          .strict()
+      )
+      .max(12)
+      .default([]),
     // Exits, the mirror of entrances. While a turn's narration contains `when`, the cast member stays until the
     // paragraph that says it. Then they run to `to` (a mark or point) and are gone, or with no `to` fall where they
     // stand, onto their back with the head toward `lands` (a mark or point). A run goes by `via` first, in order: a walk
@@ -174,6 +200,7 @@ export const stagingSpecSchema = z
     }
     for (const e of s.entrances) if (!ids.has(e.cast)) ctx.addIssue({ code: "custom", message: `entrance for unknown cast member ${e.cast}`, path: ["entrances"] })
     for (const e of s.exits) if (!ids.has(e.cast)) ctx.addIssue({ code: "custom", message: `exit for unknown cast member ${e.cast}`, path: ["exits"] })
+    for (const e of s.walks) if (!ids.has(e.cast)) ctx.addIssue({ code: "custom", message: `walk for unknown cast member ${e.cast}`, path: ["walks"] })
     for (const [key, shot] of Object.entries(s.shots)) {
       const refs = "subjects" in shot ? shot.subjects : "subject" in shot ? [shot.subject] : []
       for (const r of refs) if (!ids.has(r)) ctx.addIssue({ code: "custom", message: `shot ${key} frames unknown cast member ${r}`, path: ["shots", key] })

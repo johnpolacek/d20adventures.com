@@ -48,6 +48,8 @@ export interface FigureSpec {
 }
 
 type Mat = THREE.MeshStandardMaterial
+// How fast the walk clip walks, in metres a second.
+const STRIDE = 1.2
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
 interface Model {
@@ -420,6 +422,9 @@ export class Models {
       const w = m.walk ? c.walk : 0
       m.idle?.setEffectiveWeight((1 - f) * (1 - h) * (1 - v) * (1 - w))
       m.walk?.setEffectiveWeight((1 - f) * (1 - h) * (1 - v) * w)
+      // The walk is a stride of about 1.2 metres a second: a slower or faster walk plays it slower or faster, so the
+      // feet do not slide.
+      m.walk?.setEffectiveTimeScale(THREE.MathUtils.clamp((c.gait ?? STRIDE) / STRIDE, 0.4, 2.2))
       if (m.hit) {
         m.hit.time = m.hitT ?? 0
         m.hit.setEffectiveWeight((1 - f) * h)
