@@ -33,13 +33,19 @@ function BubbleView({ bubble, compact, moving }: { bubble: Bubble; compact: bool
   const tail = useRef<HTMLSpanElement>(null)
   const cameraMoving = useRef(moving)
   cameraMoving.current = moving
+  // Hosts may hand a fresh bubble object every render. Following it through a ref keeps the loop (and its fade) running,
+  // so a re-render does not hide the bubble and fade it in again.
+  const current = useRef(bubble)
+  current.current = bubble
+  const layout = useRef(compact)
+  layout.current = compact
   useEffect(() => {
     let raf = 0
     let last: { x: number; y: number; at: number } | null = null
     let still: number | null = null
     const follow = () => {
       raf = requestAnimationFrame(follow)
-      const p = bubble.anchor()
+      const p = current.current.anchor()
       const el = ref.current
       if (!p || !el) return
       const now = performance.now()
@@ -56,7 +62,7 @@ function BubbleView({ bubble, compact, moving }: { bubble: Bubble; compact: bool
       const scale = bubbleScale(speakerPx)
       const h = el.offsetHeight * scale
       const w = el.offsetWidth * scale
-      const safe = compact ? SAFE_TOP.compact : SAFE_TOP.wide
+      const safe = layout.current ? SAFE_TOP.compact : SAFE_TOP.wide
       if (p.y - 8 - h >= safe) {
         el.dataset.side = ""
         el.style.transformOrigin = "bottom center"
@@ -78,7 +84,7 @@ function BubbleView({ bubble, compact, moving }: { bubble: Bubble; compact: bool
     }
     follow()
     return () => cancelAnimationFrame(raf)
-  }, [bubble, compact])
+  }, [bubble.key])
   return (
     <div
       ref={ref}
