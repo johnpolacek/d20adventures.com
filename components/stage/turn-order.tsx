@@ -70,7 +70,7 @@ export function TurnOrder({
           const hero = s?.kind === "hero" ? s : undefined
           const health = hero ? Math.max(0, Math.min(100, Math.round((hero.hitPoints / Math.max(1, hero.maximum)) * 100))) : undefined
           const band = hero ? hitPointsShort(hero) : s && s.kind !== "wound" ? standingWords(s).split(",")[0] : undefined
-          const name = `${c.name}${s ? `, ${standingWords(s)}` : ""}${c.conditions ? `, ${c.conditions}` : ""}${turn ? ", their turn" : ""}`
+          const name = `${c.name}${c.npc ? " (NPC)" : ""}${s ? `, ${standingWords(s)}` : ""}${c.conditions ? `, ${c.conditions}` : ""}${turn ? ", their turn" : ""}`
           return (
             <div key={c.id} className="relative flex flex-col items-center">
               {turn && (
@@ -112,7 +112,6 @@ export function TurnOrder({
                       .join("")}
                   </span>
                 )}
-                {c.npc && !compact && s?.kind !== "dead" && <span className="absolute inset-x-0 bottom-0 bg-[#3a1a12]/85 text-[7px] tracking-[0.2em] text-[#f0c9a8]">NPC</span>}
                 {band && (
                   <span
                     className={cn(
