@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { ModuleCover } from "@/components/adventure/module-cover"
 import { Button } from "@d20/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
 import { Chip, Option, siteCard, siteLabel, siteOutline, sitePanel } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
 import type { AdventureInfo, CatalogInfo } from "../runtime/game"
@@ -485,10 +485,9 @@ function GameMaster(props: { providers: string[]; models: Record<string, GmModel
           <SelectTrigger aria-label="Game Master" className={cn(siteOutline, "h-auto gap-3 py-2 text-base shadow-none focus-visible:border-primary-400 focus-visible:ring-primary-400/50")}>
             <SelectValue />
           </SelectTrigger>
-          {/* Over the app's shell, which is its own layer at 100. */}
-          <SelectContent className="z-[110] border-white/20 bg-black text-white ring-[6px] ring-black">
+          <SelectContent className="border-white/20 bg-black text-white ring-[6px] ring-black">
             {choices.map((c) => (
-              <SelectItem key={c.key} value={c.key} className="py-2 pl-3 text-base focus:bg-primary-600 focus:text-white">
+              <SelectItem key={c.key} value={c.key} label={c.name} className="py-2 pl-3 text-base data-highlighted:bg-primary-600 data-highlighted:text-white">
                 {line(c)}
               </SelectItem>
             ))}

@@ -6,9 +6,9 @@ import { useParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { fetchMessagesBefore, fetchRecentMessages, sendChatMessage } from "@/app/_actions/chat"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@d20/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { Button, buttonClassName } from "@d20/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@d20/ui/dialog"
+import { Input } from "@d20/ui/input"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { cn } from "@/lib/utils"
@@ -381,19 +381,17 @@ export default function GameChat({ adventureId, characterName, variant = "floati
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <div className="relative">
-          <Button size="sm" className="bg-primary-700 ring-4 ring-primary-600 hover:bg-primary-700 hover:scale-105 transition-all duration-300">
+      <div className="relative">
+        <DialogTrigger className={buttonClassName(undefined, "sm", "bg-primary-700 ring-4 ring-primary-600 hover:bg-primary-700 hover:scale-105 transition-all duration-300")}>
             <MessageSquare className="mr-1 h-4 w-4" />
             Chat
-          </Button>
+          </DialogTrigger>
           {unseenCount > 0 && (
             <Badge className="bg-purple-600 ring-2 ring-purple-700 absolute -top-2.5 -right-2.5 h-5 w-5 p-0 flex items-center justify-center text-xs font-mono font-bold rounded-full animate-in fade-in duration-200">
               {unseenCount > 99 ? "99+" : unseenCount}
             </Badge>
           )}
         </div>
-      </DialogTrigger>
       {expandedDialogContent}
     </Dialog>
   )

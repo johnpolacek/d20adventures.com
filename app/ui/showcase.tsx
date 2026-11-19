@@ -13,24 +13,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@d20/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@d20/ui/dialog"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@d20/ui/hover-card"
 import ImageHeader from "@/components/ui/image-header"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@d20/ui/input"
+import { Label } from "@d20/ui/label"
 import LoadingAnimation from "@/components/ui/loading-animation"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
 import { Chip, Option, Rule, SectionPlate, siteLabel, sitePanel } from "@/components/ui/site"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@d20/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@d20/ui/textarea"
 import { cn } from "@/lib/utils"
 
 type Tile = { name: string; wide?: boolean; full?: boolean; demo: ReactNode }
@@ -144,9 +144,7 @@ const tiles: Tile[] = [
     name: "Dialog",
     demo: (
       <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline">Open</Button>
-        </DialogTrigger>
+        <DialogTrigger className={buttonClassName("outline")}>Open</DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>The Sealed Door</DialogTitle>
@@ -165,9 +163,7 @@ const tiles: Tile[] = [
     name: "Alert Dialog",
     demo: (
       <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="destructive">Delete</Button>
-        </AlertDialogTrigger>
+        <AlertDialogTrigger className={buttonClassName("destructive")}>Delete</AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this hero?</AlertDialogTitle>
@@ -185,9 +181,7 @@ const tiles: Tile[] = [
     name: "Hover Card",
     demo: (
       <HoverCard>
-        <HoverCardTrigger asChild>
-          <span className="cursor-default underline decoration-dotted underline-offset-4">Kordavos</span>
-        </HoverCardTrigger>
+        <HoverCardTrigger href="#hover-card" className="cursor-default underline decoration-dotted underline-offset-4">Kordavos</HoverCardTrigger>
         <HoverCardContent>A walled city on the edge of the Valkarr woods.</HoverCardContent>
       </HoverCard>
     ),

@@ -10,9 +10,9 @@ import { createAdventureWithFirstTurn, resolvePlayerRollResult } from "@/app/_ac
 import { deferOrSkipTurn } from "@/app/_actions/defer-turn"
 import { useGenerateText } from "@/app/_hooks/useGenerateText"
 import CharacterDiceRoll from "@/components/adventure/character-dice-roll"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { Button } from "@d20/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@d20/ui/alert-dialog"
+import { Button, buttonClassName } from "@d20/ui/button"
+import { Textarea } from "@d20/ui/textarea"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurn } from "@/lib/context/TurnContext"
@@ -302,15 +302,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
               <>
                 {/* Unified Skip menu */}
                 <AlertDialog open={skipOpen} onOpenChange={setSkipOpen}>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-sm font-display disable:bg-transparent"
-                      type="button"
-                      disabled={deferring}
-                      onClick={() => console.log("[TurnNarrativeReply] Skip button clicked")}
-                    >
+                  <AlertDialogTrigger className={buttonClassName("ghost", "sm", "text-sm font-display disable:bg-transparent")} disabled={deferring}>
                       {deferring ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="animate-spin w-3 h-3" />
@@ -319,7 +311,6 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                       ) : (
                         "Skip"
                       )}
-                    </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="sm:max-w-sm">
                     <AlertDialogHeader>

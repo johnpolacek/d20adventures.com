@@ -6,9 +6,9 @@ import { Button } from "@d20/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ImageUpload } from "@/components/forms/image-upload"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@d20/ui/input"
+import { Label } from "@d20/ui/label"
+import { Textarea } from "@d20/ui/textarea"
 import type { Location, Organization } from "@/types/setting"
 
 interface SettingLocationsProps {

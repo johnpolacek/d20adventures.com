@@ -8,7 +8,7 @@ import { heroReactions, type StandingOrders as Orders } from "@/components/stage
 import { DeathSaveMarks } from "@/components/stage/roll-parts"
 import { standingOf, standingWords } from "@/components/stage/standing"
 import { Button } from "@d20/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@d20/ui/dialog"
 import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"

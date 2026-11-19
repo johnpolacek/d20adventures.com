@@ -1,10 +1,10 @@
 "use client"
 
 import { ImageUpload } from "@/components/forms/image-upload"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@d20/ui/input"
+import { Label } from "@d20/ui/label"
+import { Switch } from "@d20/ui/switch"
+import { Textarea } from "@d20/ui/textarea"
 
 interface SettingBasicInfoProps {
   settingId: string

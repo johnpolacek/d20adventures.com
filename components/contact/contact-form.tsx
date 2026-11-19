@@ -6,9 +6,9 @@ import ReCAPTCHA from "react-google-recaptcha"
 import { toast } from "sonner"
 import { sendContactEmail } from "@/app/_actions/contact"
 import { Button } from "@d20/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@d20/ui/input"
+import { Label } from "@d20/ui/label"
+import { Textarea } from "@d20/ui/textarea"
 
 interface ContactFormProps {
   subject?: string

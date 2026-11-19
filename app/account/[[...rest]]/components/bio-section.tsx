@@ -3,7 +3,7 @@
 import { useUser } from "@clerk/nextjs"
 import { useState } from "react"
 import { Button } from "@d20/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@d20/ui/textarea"
 
 export function BioSection() {
   const { user } = useUser()

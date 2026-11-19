@@ -14,7 +14,7 @@ import { generatePracticeReport, getPracticeReportsForAdventure } from "@/app/_a
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import StoryviewButton from "@/components/adventure/storyview/storyview-button"
 import { Button } from "@d20/ui/button"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@d20/ui/switch"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurnContext } from "@/lib/context/TurnContext"
