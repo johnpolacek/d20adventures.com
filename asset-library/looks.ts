@@ -191,6 +191,20 @@ export const LOOKS: Record<string, Look> = {
       leaves: { aspen: "ash" },
       // Leaves seen from below at night are dark against the sky, not pale.
       tint: { "*": "#4c535d", aspen: "#c9d6a0", bark: "#6f6a64" },
+      // An old deep wood and not poles on a lawn. Each leaf card is cut smaller, the near ones most, and their edges
+      // are smoothed, so the crowns are fine and do not stair-step against the sky.
+      play: [-14, -18, 14, 22],
+      cards: [4, 1, 1],
+      smooth: true,
+      // Trunks of every age, some leaning, each with a faint edge of moonlight on its side and moss and roots at its
+      // foot; dead branches low on them and a broken limb here and there.
+      girth: [0.85, 1.6],
+      lean: 0.13,
+      bark: { rim: ["#9db4d8", 0.05], moss: "#24301f", roots: true, stubs: 2, limbs: 0.3 },
+      // The wood goes on past the set's own into the haze, so between the trunks there is always another trunk.
+      beyond: { count: 300, from: 44, to: 140, height: [11, 21], leaves: 0.4 },
+      // Under the crowns, outside where the game is played: saplings, young spruce, snags.
+      under: { count: 25, from: 12, to: 48, shapes: { sapling1: 0.45, pine4: 0.35, dead2: 0.2 }, height: [3, 7.5] },
     },
     open: "arrival",
     shots: {
