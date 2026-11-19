@@ -229,6 +229,7 @@ export function LabViewer({ params }: { params: Params }) {
           lamps: isoLamps(q.isolamps),
           fill: q.isofill ? Number(q.isofill) : undefined,
           haze: q.isohaze ? Number(q.isohaze) : undefined,
+          soft: q.isosoft ? Number(q.isosoft) : undefined,
         })
         st.shot(lab.view as Parameters<Stage["shot"]>[0], { instant: true })
       }

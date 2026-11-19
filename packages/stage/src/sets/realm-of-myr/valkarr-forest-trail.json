@@ -139,6 +139,11 @@
       "color": "#8fa8c8",
       "opacity": 0.14
     },
+    "mist": {
+      "type": "mist",
+      "color": "#2c3c52",
+      "opacity": 0.2
+    },
     "grass": {
       "type": "grass",
       "base": "#18241c",
@@ -227,12 +232,59 @@
       "r": 0.4
     },
     {
+      "type": "mist",
+      "id": "treeline-mist",
+      "at": [7, -1.5, -15],
+      "width": 34,
+      "height": 5.5,
+      "layers": 3,
+      "spacing": 6
+    },
+    {
+      "type": "mist",
+      "id": "north-mist",
+      "at": [-2, -1.8, -32],
+      "width": 60,
+      "height": 7,
+      "layers": 3,
+      "spacing": 9
+    },
+    {
+      "type": "mist",
+      "id": "west-mist",
+      "at": [-17, -1.6, 2],
+      "yaw": 90,
+      "width": 50,
+      "height": 6,
+      "layers": 2,
+      "spacing": 8
+    },
+    {
+      "type": "mist",
+      "id": "east-mist",
+      "at": [18, -1.6, 4],
+      "yaw": 90,
+      "width": 50,
+      "height": 6,
+      "layers": 2,
+      "spacing": 8
+    },
+    {
+      "type": "mist",
+      "id": "south-mist",
+      "at": [1, -1.6, 36],
+      "width": 50,
+      "height": 6,
+      "layers": 2,
+      "spacing": 8
+    },
+    {
       "type": "lightShaft",
       "id": "clearing-shaft",
       "at": [8, -8.5],
       "height": 18,
-      "top": 0.9,
-      "bottom": 3,
+      "top": 0.6,
+      "bottom": 2.2,
       "tilt": 4
     },
     {

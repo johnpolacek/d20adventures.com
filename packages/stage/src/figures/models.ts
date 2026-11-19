@@ -30,6 +30,9 @@ export interface FigureSpec {
   // How brightly the figure reflects a plain lit room of its own, so its metal and leather read: 0, or none, leaves
   // it to the stage's sky. A night wants little, or the figure glows.
   env?: number
+  // A light along its edges, brightest on what faces up: in a dark wood the figure stands out of it by its outline,
+  // as under a moon, wherever it stands.
+  rim?: { color: string; strength: number }
   // The moves it makes in a fight, by the clip each plays: a blow struck close, a shot from afar, getting out of the
   // way. One it has none for, it does not make.
   moves?: { melee?: string; ranged?: string; dodge?: string }
@@ -93,10 +96,22 @@ interface Model {
 // A figure the asset library made, rigged by rig.py or with fingers under Mixamo's names (hold.ts), is not graded: its
 // dark leather would take the grade's umber and read orange. It is shown as the library shows it, under the set's
 // light and haze.
-function figureMaterial(src: Mat, shared: SharedUniforms, ownLight: boolean, grade = true): Mat {
+function figureMaterial(src: Mat, shared: SharedUniforms, ownLight: boolean, grade = true, rim?: THREE.Color): Mat {
   const m = src.clone()
-  if (!grade) return stageMaterial(m, shared, "figure-rigged")
-  return stageMaterial(m, shared, ownLight ? "figure-own" : "figure", (s) => {
+  const edge = (s: Parameters<NonNullable<Parameters<typeof stageMaterial>[3]>>[0]) => {
+    if (!rim) return
+    s.uniforms.uRim = { value: rim }
+    s.fragmentShader = s.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform vec3 uRim;")
+      .replace(
+        "#include <opaque_fragment>",
+        "outgoingLight += uRim * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.0) * (0.3 + 0.7 * saturate(normal.y * 0.5 + 0.5));\n#include <opaque_fragment>"
+      )
+  }
+  const lit = rim ? "-rim" : ""
+  if (!grade) return stageMaterial(m, shared, `figure-rigged${lit}`, edge)
+  return stageMaterial(m, shared, `${ownLight ? "figure-own" : "figure"}${lit}`, (s) => {
+    edge(s)
     s.uniforms.uWarmth = shared.warmth
     s.fragmentShader = s.fragmentShader
       .replace("#include <common>", "#include <common>\nuniform float uWarmth;")
@@ -237,6 +252,7 @@ export class Models {
     mixer.update(0)
     carried?.update()
     const meshes: THREE.Mesh[] = []
+    const rim = spec.rim ? new THREE.Color(spec.rim.color).multiplyScalar(spec.rim.strength) : undefined
     const materials = new Map<THREE.Material, Mat>()
     let triangles = 0
     root.traverse((o) => {
@@ -247,7 +263,7 @@ export class Models {
       o.userData.castId = cast.id
       const src = o.material as Mat
       if (!materials.has(src)) {
-        const made = figureMaterial(src, this.shared, !!spec.ownLight, !rigged && !hands)
+        const made = figureMaterial(src, this.shared, !!spec.ownLight, !rigged && !hands, rim)
         // A generated figure is real metal and leather, which shows by what it reflects. The stage's sky is kept dim
         // for its cards, so it reflects a lit room of its own, and its metal is kept a little short of a mirror.
         if (room && spec.env) {

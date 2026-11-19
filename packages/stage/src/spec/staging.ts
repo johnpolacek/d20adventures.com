@@ -28,7 +28,7 @@ const castMember = z
     // A rigged, animated glTF figure shown in place of the card while the stage's `figures` flag is on: its clips by
     // name, the nodes left out (a pack's spare weapons and shields), and how fast the idle plays. `ownLight` and
     // `turn` are for a figure built from the character's paintings, `walk` plays while they walk, and `env` is how
-    // much of a lit room it reflects (figures/models.ts says what they do). A figure rigged by the asset library needs
+    // much of a lit room it reflects, `rim` a light along its edges (figures/models.ts says what they do). A figure rigged by the asset library needs
     // no clip names: it plays the written ones. One with clips of its own says when each move `lands`, in seconds.
     figure: z
       .object({
@@ -43,6 +43,10 @@ const castMember = z
           .optional(),
         lands: z.record(z.string().max(80), num(0, 10)).optional(),
         env: num(0, 2).optional(),
+        rim: z
+          .object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "colours are #rrggbb"), strength: num(0, 4) })
+          .strict()
+          .optional(),
         hide: z.array(z.string().max(80)).max(40).optional(),
         pace: num(0.1, 4).optional(),
         ownLight: z.boolean().optional(),

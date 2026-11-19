@@ -84,6 +84,7 @@ export function lightLook(stage: Stage, q: Record<string, string>, keepCamera = 
     lamps: isoLamps(q.isolamps),
     fill: q.isofill ? Number(q.isofill) : undefined,
     haze: q.isohaze ? Number(q.isohaze) : undefined,
+    soft: q.isosoft ? Number(q.isosoft) : undefined,
     keepCamera,
   })
 }
@@ -118,9 +119,12 @@ export function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Look) {
   // middle level: fourteen at full detail cost a third of the frame rate.
   const detail = cast.filter((c) => figureOf(c.id)).length <= 3 ? "lod0" : "lod1"
   const env = q.figenv ? Number(q.figenv) : 0.55
+  // &figrim=8fa8c8,0.5: a light of that colour and strength along the figures' edges.
+  const [edge, strength] = q.figrim?.split(",") ?? []
+  const rim = edge ? { color: `#${edge.replace("#", "")}`, strength: Number(strength) || 0.5 } : null
   for (const c of cast) {
     const character = figureOf(c.id)
-    if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...PLAYS[character] }
+    if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...(rim ? { rim } : {}), ...PLAYS[character] }
   }
   const flags: Partial<Flags> = { figures: true, ...(q.paint === "0" ? { brush: 0 } : {}), ...(q.bloom ? { bloom: q.bloom === "on" } : {}) }
   return {
