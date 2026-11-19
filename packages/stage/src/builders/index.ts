@@ -1,7 +1,7 @@
 import { bladeRack, boards, canvas, curioShelf, curtain, lanternString, treasureCounter } from "./blackmarket"
 import { cask, torch, wineRack } from "./cellar"
 import { awning, bannerHanging, bannerPole, barrier, brazier, cart, ledgerTable, pennantPole, ropeLine } from "./checkpoint"
-import { bush, fern, lightShaft, log, mistBank, trail, tree } from "./forest"
+import { branch, bush, fern, lightShaft, log, mistBank, trail, tree } from "./forest"
 import { archScreen, curtainWall, dome, drumTower, gatehouse, roundTower, skyline, squareTower } from "./fortifications"
 import { aisle, dais, lectern, ringGallery, rotunda, theatreChair } from "./hall"
 import { bollard, cage, crane, galleon, skiff, warehouse } from "./harbour"
@@ -71,6 +71,7 @@ export const BUILDERS: Record<string, BuilderDef> = {
   bush,
   rock,
   log,
+  branch,
   trail,
   lightShaft,
   flagstones,

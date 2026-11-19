@@ -60,13 +60,24 @@ export function birds(
   return update
 }
 
-// Dust hanging in the sunlit air.
-export function dust(root: THREE.Object3D, shared: SharedUniforms, rand: Rand, o: { count: number; box: [number, number, number, number, number, number] }): LifeUpdate & Disposable {
+// Dust hanging in the sunlit air. With `pulse` the motes are fireflies: each wanders on its own and its light comes
+// and goes, most of them dark at any moment.
+export function dust(
+  root: THREE.Object3D,
+  shared: SharedUniforms,
+  rand: Rand,
+  o: { count: number; box: [number, number, number, number, number, number]; color?: string; pulse?: boolean }
+): LifeUpdate & Disposable {
   const [x0, y0, z0, x1, y1, z1] = o.box
   const p = new Float32Array(o.count * 3)
   for (let i = 0; i < o.count; i++) p.set([rand(x0, x1), rand(y0, y1), rand(z0, z1)], i * 3)
   const g = new THREE.BufferGeometry()
   g.setAttribute("position", new THREE.BufferAttribute(p, 3))
+  if (o.pulse) {
+    const phase = new Float32Array(o.count)
+    for (let i = 0; i < o.count; i++) phase[i] = rand()
+    g.setAttribute("phase", new THREE.BufferAttribute(phase, 1))
+  }
   const c = document.createElement("canvas")
   c.width = c.height = 32
   const x = c.getContext("2d")!
@@ -78,17 +89,29 @@ export function dust(root: THREE.Object3D, shared: SharedUniforms, rand: Rand, o
   const tex = new THREE.CanvasTexture(c)
   // Motes right beside the lens would bloom into discs; keep every mote a speck.
   const m = stageMaterial(
-    new THREE.PointsMaterial({ size: 0.09, map: tex, transparent: true, opacity: 0.5, depthWrite: false, color: "#ffe2b0", blending: THREE.AdditiveBlending }),
+    new THREE.PointsMaterial({ size: 0.09, map: tex, transparent: true, opacity: o.pulse ? 1 : 0.5, depthWrite: false, color: o.color ?? "#ffe2b0", blending: THREE.AdditiveBlending }),
     shared,
-    "dust",
+    o.pulse ? "dust-pulse" : "dust",
     (s) => {
       s.vertexShader = s.vertexShader.replace("#include <fog_vertex>", "#include <fog_vertex>\ngl_PointSize = min(gl_PointSize, 5.0);")
+      if (!o.pulse) return
+      s.uniforms.uTime = shared.time
+      s.vertexShader = s.vertexShader.replace("#include <common>", "#include <common>\nattribute float phase; uniform float uTime; varying float vLit;").replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+transformed += vec3(sin(uTime * .31 + phase * 31.0), sin(uTime * .23 + phase * 17.0) * .35, cos(uTime * .27 + phase * 23.0)) * .6;
+vLit = smoothstep(.35, .95, sin(uTime * (.5 + phase * .9) + phase * 40.0));`
+      )
+      s.fragmentShader = s.fragmentShader
+        .replace("#include <common>", "#include <common>\nvarying float vLit;")
+        .replace("#include <color_fragment>", "#include <color_fragment>\ndiffuseColor.a *= vLit;")
     }
   )
   const pts = new THREE.Points(g, m)
   pts.name = "dust"
   root.add(pts)
   const update = ((t: number) => {
+    if (o.pulse) return
     pts.position.y = Math.sin(t * 0.2) * 0.3
     pts.rotation.y = Math.sin(t * 0.03) * 0.02
   }) as LifeUpdate & Disposable

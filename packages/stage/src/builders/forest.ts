@@ -1,7 +1,7 @@
 import * as THREE from "three"
 import { z } from "zod"
 import { beam, G, lathe, M4, type Sink, TAU, V } from "../kit/geometry"
-import { defineBuilder, matName, num, size, vec2 } from "./types"
+import { type BuildCtx, defineBuilder, matName, num, size, vec2 } from "./types"
 
 // Woodland: trees, undergrowth, boulders, fallen logs and a worn trail. Shapes stay simple; the paint pass and the
 // lighting carry the look. Material roles: bark, leaves (plus leavesDark and leavesLight for variety), stone, trail.
@@ -285,9 +285,62 @@ export const tree = defineBuilder(
   { bark: "bark", birch: "birch", leaves: "leaves", leavesDark: "leavesDark", leavesLight: "leavesLight", moss: "moss" }
 )
 
+// A fern as it grows: a rosette of fronds that rise from the crown and arch over, each a rib with a row of leaflets
+// down both sides, widest a third of the way along. Its material is a grass one: lit from above as the ground is, dark
+// at the crown and paler at the tips, and it moves in the wind. As blades alone a fern stands as two black strokes.
+function fronds(ctx: BuildCtx, size: number, material: THREE.Material) {
+  const { b, rand } = ctx
+  const pos: number[] = []
+  const nor: number[] = []
+  const uv: number[] = []
+  const PAIRS = 14
+  const tone = rand()
+  const n = 7 + Math.floor(rand(0, 4))
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * TAU + rand(-0.35, 0.35)
+    const len = size * rand(0.75, 1.2)
+    const rise = rand(0.6, 1.0)
+    const droop = Math.sin(rise) * rand(0.5, 0.85)
+    const out = V(Math.cos(a), 0, Math.sin(a))
+    const side = V(-out.z, 0, out.x)
+    const reach = len * Math.cos(rise)
+    const rib = (t: number) => V(out.x * reach * t * (1 + 0.3 * t), Math.max(0.02, len * (Math.sin(rise) * t - droop * t * t)), out.z * reach * t * (1 + 0.3 * t))
+    const up = V(0, 1, 0).addScaledVector(out, 0.45)
+    for (let k = 0; k < PAIRS; k++) {
+      const t0 = 0.1 + (0.9 * k) / PAIRS
+      const t1 = 0.1 + (0.9 * (k + 1)) / PAIRS
+      const tm = (t0 + t1) / 2
+      const half = len * 0.2 * Math.sin(Math.PI * tm ** 0.7) ** 0.8
+      // A leaflet is narrower at the rib than the gap to the next, and points a little toward the frond's tip.
+      const a0 = rib(t0 + (t1 - t0) * 0.12)
+      const a1 = rib(t1 - (t1 - t0) * 0.12)
+      for (const s of [-1, 1]) {
+        const tip = rib(Math.min(1, tm + 0.07)).addScaledVector(side, s * half * rand(0.85, 1.1))
+        tip.y = Math.max(0.02, tip.y - half * 0.3)
+        const normal = V(up.x + side.x * s * 0.3, up.y, up.z + side.z * s * 0.3).normalize()
+        // Wound so the face turned up is the front, whichever side of the rib it is on.
+        const leaflet = s > 0 ? [a0, tip, a1] : [a0, a1, tip]
+        const along = s > 0 ? [t0, tm, t1] : [t0, t1, tm]
+        leaflet.forEach((v, c) => {
+          pos.push(v.x, v.y, v.z)
+          nor.push(normal.x, normal.y, normal.z)
+          uv.push(tone, along[c])
+        })
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry()
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3))
+  g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3))
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2))
+  b.add(g, material, null, { uv: "keep" })
+  g.dispose()
+}
+
 // A fern: fronds fanning from the ground. Not solid.
-export const fern = defineBuilder(z.object({ size: size(3).default(0.8) }).strict(), (ctx, p) => {
+export const fern = defineBuilder(z.object({ size: size(3).default(0.8), fronds: z.boolean().default(false), material: matName.default("frond") }).strict(), (ctx, p) => {
   const { b, M, rand } = ctx
+  if (p.fronds) return fronds(ctx, p.size, ctx.mat(p.material))
   const n = 6 + Math.floor(rand(0, 4))
   for (let i = 0; i < n; i++) {
     const a = (i / n) * TAU + rand(-0.3, 0.3)
@@ -307,6 +360,20 @@ export const bush = defineBuilder(z.object({ size: size(5).default(1.2) }).stric
   for (let i = 0; i < 3; i++) {
     const s = p.size * rand(0.4, 0.6)
     mass(b, rand.pick([M.leaves, M.leavesDark]), M4(rand(-0.4, 0.4) * p.size, s * 0.7, rand(-0.4, 0.4) * p.size, rand(0, TAU), s, s * 0.75, s), rand)
+  }
+})
+
+// A fallen branch along local x: a crooked limb on the ground with a twig or two off it. Not solid: it is stepped over.
+export const branch = defineBuilder(z.object({ length: size(8).default(1.8), r: size(0.5).default(0.05) }).strict(), (ctx, p) => {
+  const { b, M, rand } = ctx
+  const PARTS = 3
+  let at = V(-p.length / 2, p.r, rand(-0.1, 0.1))
+  for (let i = 0; i < PARTS; i++) {
+    const r = p.r * (1 - i * 0.24)
+    const next = V(at.x + p.length / PARTS, r + rand(0, 0.03), at.z + rand(-0.16, 0.16) * p.length)
+    limb(b, M.bark, at, next, r)
+    if (rand() < 0.75) limb(b, M.bark, next, V(next.x + rand(-0.1, 0.3) * p.length, r + rand(0.02, 0.16), next.z + rand(-0.3, 0.3) * p.length), r * 0.5)
+    at = next
   }
 })
 

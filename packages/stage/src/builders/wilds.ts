@@ -254,7 +254,7 @@ export const flagstones = defineBuilder(
 )
 
 // Grass tufts (or heather, with a heather material) over an area [x0, z0, x1, z1], clear of footprints and of `clear`
-// circles [x, z, r]. Each tuft is a fan of curved, tapering blades. Not solid.
+// circles [x, z, r], only inside `within` circles if any are given, and thinning toward the edges over `feather`. Each tuft is a fan of curved, tapering blades. Not solid.
 export const grassPatch = defineBuilder(
   z
     .object({
@@ -270,6 +270,13 @@ export const grassPatch = defineBuilder(
         .max(256)
         .default([]),
       avoid: z.boolean().default(true),
+      // Circles [x, z, r] it grows only inside of: with `clear`, a band along a trail's edges.
+      within: z
+        .array(z.tuple([coord, coord, size(200)]))
+        .max(256)
+        .default([]),
+      // Metres over which it thins out toward the area's edges, so a patch never ends on a straight line.
+      feather: num(0, 100).default(0),
       material: matName.default("grass"),
     })
     .strict(),
@@ -290,6 +297,8 @@ export const grassPatch = defineBuilder(
       const tx = rand(x0, x1)
       const tz = rand(z0, z1)
       if (p.clear.some(([cx, cz, r]) => (tx - cx) ** 2 + (tz - cz) ** 2 < r * r)) continue
+      if (p.within.length && !p.within.some(([cx, cz, r]) => (tx - cx) ** 2 + (tz - cz) ** 2 < r * r)) continue
+      if (p.feather && rand() * p.feather > Math.min(tx - x0, x1 - tx, tz - z0, z1 - tz)) continue
       if (p.avoid && ctx.blocked(tx, tz)) continue
       placed++
       const tuft = rand()

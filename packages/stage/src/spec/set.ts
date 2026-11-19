@@ -451,7 +451,7 @@ export const setSpecSchema = z
           .strict()
           .optional(),
         dust: z
-          .object({ count: z.number().int().min(1).max(6000), box: z.tuple([coord, coord, coord, coord, coord, coord]) })
+          .object({ count: z.number().int().min(1).max(6000), box: z.tuple([coord, coord, coord, coord, coord, coord]), color: color.optional(), pulse: z.boolean().optional() })
           .strict()
           .optional(),
       })

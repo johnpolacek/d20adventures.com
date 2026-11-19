@@ -145,8 +145,9 @@ export const LOOKS: Record<string, Look> = {
       isohaze: "0.38",
       // The canopy's shadow falls with a soft edge, as leaves high overhead throw it.
       isosoft: "5",
-      // The one place the moon gets through: a pool at the tree line, under the set's shaft.
-      isolamps: "8,3.2,-8.5,9,11,8fa8c8",
+      // The one place the moon gets through: a pool at the tree line, under the set's shaft. Then a faint light on each
+      // place to hide, so it is found in the dark: the great oak, the fallen log, the mossy boulders.
+      isolamps: "8,3.2,-8.5,9,11,8fa8c8;-5.9,2.6,-1.4,3,6,8fa8c8;5.4,1.5,7.5,2.2,5,8fa8c8;-5.5,1.7,12.7,2.2,5,8fa8c8",
       // A wood seen from above is all canopy. The trees over the trail to the south are left out, one that stood
       // between that side and the clearing, and one whose leaves hung across the owlbear's face.
       isoclear: "6.5,22,5;6,4,3;3,13,6;4,22,7;5,31,8;9,-2,2.5",
