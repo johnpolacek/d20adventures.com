@@ -1,12 +1,14 @@
 "use client"
 
-// Dialogue on the stage, as in the Kordavos prototype: parchment bubbles anchored above whoever speaks (named characters
-// get a brass edge), and a framed portrait plate that slides in on the speaker's side of the screen for named characters.
+// Dialogue on the stage: bands of paint anchored above whoever speaks, their ends washing out into the set and their
+// colours taken from it, and a framed portrait plate that slides in on the speaker's side of the screen for named characters.
 
 import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 
 export type Anchor = () => { x: number; y: number; visible: boolean; distance: number; ppm?: number } | null
+// The set behind the bubbles, drawn small (Stage.thumbnail), so a band can take its colours from what it covers.
+export type Backdrop = () => { image: ImageData; rect: DOMRect } | null
 // A bubble shows only while its speaker reads as a person on screen (a wide shot hides it rather than shrinking it to
 // unreadable), and scales a little with them, never below a readable size.
 const SPEAKER_MIN_PX = 70
@@ -21,6 +23,10 @@ const MOVING_PX_PER_SECOND = 40
 const STILL_MS = 120
 const FADE_IN_MS = 300
 const FADE_OUT_MS = 120
+// A bubble is a band of paint: straight top and bottom with fine rules, ends that wash out into the set. The wash takes
+// `fade` px at each end, and the words keep `room` px of solid paint clear of it.
+const WASH = { wide: { fade: 80, room: 12 }, compact: { fade: 44, room: 8 } }
+const PLAIN = { band: "#120d1c", accent: "#fcd34d", text: "#f4ecdc" }
 export interface Bubble {
   key: number
   anchor: Anchor
@@ -28,11 +34,90 @@ export interface Bubble {
   named: boolean
 }
 
-function BubbleView({ bubble, compact, moving }: { bubble: Bubble; compact: boolean; moving?: () => boolean }) {
+type Side = "" | "l" | "r"
+
+// The wash: a band-sized SVG mask, a horizontal fade broken up by cloudy noise so the ends bloom like watercolour.
+// Drawn at the band's real size, so the texture never stretches. Beside a face, the end toward the speaker stays solid.
+function washMask(w: number, h: number, fade: number, side: Side, seed: number) {
+  const f = Math.min(fade, w * 0.3) / w
+  const stop = (o: number, a = 1) => `<stop offset="${o.toFixed(4)}" stop-color="#fff" stop-opacity="${a}"/>`
+  const stops = side === "r" ? stop(0) + stop(1 - f) + stop(1, 0) : side === "l" ? stop(0, 0) + stop(f) + stop(1) : stop(0, 0) + stop(f) + stop(1 - f) + stop(1, 0)
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" x2="1">${stops}</linearGradient><filter id="f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.018 0.024" numOctaves="4" seed="${seed}" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.6 0 0 0 -0.3" result="a"/><feComposite in="SourceGraphic" in2="a" operator="arithmetic" k1="0" k2="2" k3="1.2" k4="-1.2"/></filter></defs><rect width="${w}" height="${h}" fill="url(#g)" filter="url(#f)"/></svg>`
+  return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`
+}
+
+function hsl(r: number, g: number, b: number): [number, number, number] {
+  r /= 255
+  g /= 255
+  b /= 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  if (max === min) return [0, 0, l]
+  const d = max - min
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+  const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+  return [h * 60, s, l]
+}
+const css = (h: number, s: number, l: number) => `hsl(${h.toFixed(0)} ${(s * 100).toFixed(0)}% ${(l * 100).toFixed(0)}%)`
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
+
+// The band's colours, read from the set: the paint is a darker shade of what it covers, and the rules take the hue of
+// the brightest, most coloured parts of the view (a fire gives peach, sunlit leaves a pale green).
+function palette(backdrop: ReturnType<Backdrop>, box: DOMRect) {
+  if (!backdrop) return PLAIN
+  const { image, rect } = backdrop
+  const { data, width, height } = image
+  const sx = width / rect.width
+  const sy = height / rect.height
+  const x0 = clamp(Math.floor((box.left - rect.left) * sx), 0, width - 1)
+  const x1 = clamp(Math.ceil((box.right - rect.left) * sx), x0 + 1, width)
+  const y0 = clamp(Math.floor((box.top - rect.top) * sy), 0, height - 1)
+  const y1 = clamp(Math.ceil((box.bottom - rect.top) * sy), y0 + 1, height)
+  let r = 0
+  let g = 0
+  let b = 0
+  let n = 0
+  for (let y = y0; y < y1; y++)
+    for (let x = x0; x < x1; x++) {
+      const i = (y * width + x) * 4
+      r += data[i]
+      g += data[i + 1]
+      b += data[i + 2]
+      n++
+    }
+  if (!n) return PLAIN
+  const [h, s, l] = hsl(r / n, g / n, b / n)
+  const vivid: [number, number, number][] = []
+  for (let i = 0; i < data.length; i += 4) {
+    const [hh, ss, ll] = hsl(data[i], data[i + 1], data[i + 2])
+    vivid.push([ss * ll * (1 - Math.abs(ll - 0.6)), hh, ss])
+  }
+  vivid.sort((a, c) => c[0] - a[0])
+  const top = vivid.slice(0, Math.max(8, Math.floor(vivid.length * 0.04)))
+  let ax = 0
+  let ay = 0
+  let as = 0
+  for (const [, hh, ss] of top) {
+    ax += Math.cos((hh * Math.PI) / 180)
+    ay += Math.sin((hh * Math.PI) / 180)
+    as += ss
+  }
+  const ah = ((Math.atan2(ay, ax) * 180) / Math.PI + 360) % 360
+  return {
+    band: css(h, clamp(s * 0.85, 0.14, 0.42), clamp(l * 0.5, 0.035, 0.12)),
+    accent: css(ah, clamp(as / top.length, 0.45, 0.8), 0.72),
+    text: css(h, 0.3, 0.94),
+  }
+}
+
+function BubbleView({ bubble, compact, moving, backdrop }: { bubble: Bubble; compact: boolean; moving?: () => boolean; backdrop?: Backdrop }) {
   const ref = useRef<HTMLDivElement>(null)
-  const tail = useRef<HTMLSpanElement>(null)
+  const paint = useRef<HTMLSpanElement>(null)
   const cameraMoving = useRef(moving)
   cameraMoving.current = moving
+  const behind = useRef(backdrop)
+  behind.current = backdrop
   // Hosts may hand a fresh bubble object every render. Following it through a ref keeps the loop (and its fade) running,
   // so a re-render does not hide the bubble and fade it in again.
   const current = useRef(bubble)
@@ -43,6 +128,20 @@ function BubbleView({ bubble, compact, moving }: { bubble: Bubble; compact: bool
     let raf = 0
     let last: { x: number; y: number; at: number } | null = null
     let still: number | null = null
+    let shown = false
+    let masked = ""
+    const wash = () => {
+      const el = ref.current
+      const band = paint.current
+      if (!el || !band) return
+      const side = (el.dataset.side ?? "") as Side
+      const key = `${band.offsetWidth}x${band.offsetHeight}${side}`
+      if (key === masked || !band.offsetWidth) return
+      masked = key
+      const m = washMask(band.offsetWidth, band.offsetHeight, (layout.current ? WASH.compact : WASH.wide).fade, side, (current.current.key % 97) + 3)
+      band.style.maskImage = m
+      band.style.webkitMaskImage = m
+    }
     const follow = () => {
       raf = requestAnimationFrame(follow)
       const p = current.current.anchor()
@@ -58,6 +157,7 @@ function BubbleView({ bubble, compact, moving }: { bubble: Bubble; compact: bool
       const on = seen && still !== null && now - still >= STILL_MS
       el.style.transitionDuration = `${on ? FADE_IN_MS : FADE_OUT_MS}ms`
       el.style.opacity = on ? "1" : "0"
+      if (!on) shown = false
       if (!seen) return
       const scale = bubbleScale(speakerPx)
       const h = el.offsetHeight * scale
@@ -66,54 +166,75 @@ function BubbleView({ bubble, compact, moving }: { bubble: Bubble; compact: bool
       if (p.y - 8 - h >= safe) {
         el.dataset.side = ""
         el.style.transformOrigin = "bottom center"
-        el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, calc(-100% - 8px)) scale(${scale.toFixed(3)})`
-        return
+        el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, calc(-100% - 12px)) scale(${scale.toFixed(3)})`
+      } else {
+        // Beside the face, clear of the head however large the shot draws it, its solid end toward the speaker.
+        const room = el.parentElement?.clientWidth ?? window.innerWidth
+        const ppm = p.ppm ?? 1600 / p.distance
+        const gap = Math.max(32, ppm * 0.2)
+        const right = p.x + gap + w < room - 16
+        const face = p.y + ppm * 0.22
+        const top = Math.max(safe, face - h * 0.5)
+        el.dataset.side = right ? "r" : "l"
+        el.style.transformOrigin = right ? "top left" : "top right"
+        const x = right ? p.x + gap : p.x - gap - el.offsetWidth
+        el.style.transform = `translate(${x.toFixed(1)}px, ${top.toFixed(1)}px) scale(${scale.toFixed(3)})`
       }
-      // Beside the face, clear of the head however large the shot draws it, with a tail that points at the mouth.
-      const room = el.parentElement?.clientWidth ?? window.innerWidth
-      const ppm = p.ppm ?? 1600 / p.distance
-      const gap = Math.max(40, ppm * 0.24)
-      const right = p.x + gap + w < room - 16
-      const face = p.y + ppm * 0.22
-      const top = Math.max(safe, face - h * 0.5)
-      el.dataset.side = right ? "r" : "l"
-      el.style.transformOrigin = right ? "top left" : "top right"
-      const x = right ? p.x + gap : p.x - gap - el.offsetWidth
-      el.style.transform = `translate(${x.toFixed(1)}px, ${top.toFixed(1)}px) scale(${scale.toFixed(3)})`
-      if (tail.current) tail.current.style.top = `${Math.min(el.offsetHeight - 22, Math.max(8, (face - top) / scale - 7)).toFixed(1)}px`
+      wash()
+      // The colours are read once, as the bubble comes in, from the set where it now sits.
+      if (on && !shown) {
+        shown = true
+        const c = palette(behind.current?.() ?? null, el.getBoundingClientRect())
+        el.style.setProperty("--band", c.band)
+        el.style.setProperty("--accent", c.accent)
+        el.style.setProperty("--ink", c.text)
+      }
     }
     follow()
     return () => cancelAnimationFrame(raf)
   }, [bubble.key])
+  const { fade, room } = compact ? WASH.compact : WASH.wide
   return (
     <div
       ref={ref}
+      style={{ ["--pad" as string]: `${fade + room}px` }}
       className={cn(
-        "absolute top-0 left-0 origin-bottom rounded-[10px] px-3.5 pt-2.5 pb-[11px] text-center font-serif leading-[1.4] text-[#2a1a10] italic opacity-0 shadow-[0_6px_18px_#0005] transition-opacity",
-        "group after:absolute after:bottom-[-7px] after:left-1/2 after:-ml-[7px] after:border-[7px] after:border-b-0 after:border-transparent data-[side=l]:after:hidden data-[side=r]:after:hidden",
-        bubble.named ? "border border-stage-brass bg-[#fbf1dc] after:border-t-[#fbf1dc]" : "bg-stage-parchment/95 after:border-t-[#f3e6c8f2]",
-        compact ? "max-w-[240px] text-[14px]" : cn("max-w-[330px]", bubble.named ? "text-[18px]" : "text-[17px]")
+        "group absolute top-0 left-0 isolate w-max origin-bottom text-center font-serif text-(--ink) italic opacity-0 transition-opacity [text-shadow:0_1px_2px_#0009] [text-wrap:balance] [--accent:#fcd34d] [--band:#120d1c] [--ink:#f4ecdc]",
+        "px-(--pad) data-[side=l]:pr-[22px] data-[side=l]:text-right data-[side=r]:pl-[22px] data-[side=r]:text-left",
+        compact ? "max-w-[300px] py-2 text-[14px] leading-[1.32]" : "max-w-[500px] pt-[15px] pb-4 text-[18px] leading-[1.34]"
       )}
     >
-      {bubble.text}
+      <span ref={paint} aria-hidden="true" className="absolute inset-0 -z-10 bg-(--band) opacity-[.94] [mask-size:100%_100%]" />
       <span
-        ref={tail}
         aria-hidden="true"
         className={cn(
-          "absolute hidden border-[7px] border-transparent group-data-[side=l]:right-[-7px] group-data-[side=l]:block group-data-[side=l]:border-r-0 group-data-[side=r]:left-[-7px] group-data-[side=r]:block group-data-[side=r]:border-l-0",
-          bubble.named ? "group-data-[side=l]:border-l-[#fbf1dc] group-data-[side=r]:border-r-[#fbf1dc]" : "group-data-[side=l]:border-l-[#f3e6c8f2] group-data-[side=r]:border-r-[#f3e6c8f2]"
+          "absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent)_30%,var(--accent)_70%,transparent)] group-data-[side=l]:bg-[linear-gradient(270deg,var(--accent),var(--accent)_60%,transparent)] group-data-[side=r]:bg-[linear-gradient(90deg,var(--accent),var(--accent)_60%,transparent)]",
+          bubble.named ? "opacity-[.62]" : "opacity-[.36]"
         )}
+      />
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent)_30%,var(--accent)_70%,transparent)] group-data-[side=l]:bg-[linear-gradient(270deg,var(--accent),var(--accent)_60%,transparent)] group-data-[side=r]:bg-[linear-gradient(90deg,var(--accent),var(--accent)_60%,transparent)]",
+          bubble.named ? "opacity-[.62]" : "opacity-[.36]"
+        )}
+      />
+      {bubble.text}
+      <span
+        aria-hidden="true"
+        className="absolute bottom-[-5px] left-[calc(50%-5px)] size-[9px] rotate-45 border border-[color-mix(in_srgb,var(--accent)_62%,transparent)] bg-(--band) group-data-[side=l]:hidden group-data-[side=r]:hidden"
       />
     </div>
   )
 }
 
-// `moving` says whether the camera is on its way to a view (Stage.cameraMoving).
-export function Bubbles({ bubbles, compact = false, moving }: { bubbles: Bubble[]; compact?: boolean; moving?: () => boolean }) {
+// `moving` says whether the camera is on its way to a view (Stage.cameraMoving). `backdrop` hands over the set behind the
+// bubbles (Stage.thumbnail), for their colours. Without it they keep a plain dark paint.
+export function Bubbles({ bubbles, compact = false, moving, backdrop }: { bubbles: Bubble[]; compact?: boolean; moving?: () => boolean; backdrop?: Backdrop }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10" aria-live="polite">
       {bubbles.map((b) => (
-        <BubbleView key={b.key} bubble={b} compact={compact} moving={moving} />
+        <BubbleView key={b.key} bubble={b} compact={compact} moving={moving} backdrop={backdrop} />
       ))}
     </div>
   )

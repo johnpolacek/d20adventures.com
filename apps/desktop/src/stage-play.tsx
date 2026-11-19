@@ -1094,6 +1094,7 @@ export function StagePlay(props: {
             <Bubbles
               compact={compact}
               moving={() => stage.cameraMoving}
+              backdrop={() => stage.thumbnail()}
               bubbles={speech.map((l, i) => ({ key: paragraph * 100 + i, anchor: () => stage.project(l.cast.id), text: l.text, named: true }))}
             />
           )}

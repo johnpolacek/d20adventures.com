@@ -440,7 +440,7 @@ export function TurnMock() {
       }
     >
       {stage && !hideUi && phase !== "title" && <TurnOrder order={order} activeId={activeId} turnId={actorId ?? null} label={orderLabel} compact={compact} onPick={focus} />}
-      {stage && !hideUi && <Bubbles bubbles={bubbles} compact={compact} moving={() => stage.cameraMoving} />}
+      {stage && !hideUi && <Bubbles bubbles={bubbles} compact={compact} moving={() => stage.cameraMoving} backdrop={() => stage.thumbnail()} />}
       {!hideUi && phase !== "title" && (
         <div className={cn("pointer-events-none absolute z-20 flex flex-col gap-3", compact ? "bottom-[52px] left-4 w-[min(380px,48vw)]" : "bottom-[84px] left-10 w-[min(440px,34vw)]")}>
           {/* On phones the bubble carries the line; a plate over the narration would cover half the screen. */}

@@ -1581,6 +1581,18 @@ export class Stage {
     }
     return c
   }
+  // The current view drawn small, for reading its colours: dialogue tints its bands from the set behind them.
+  thumbnail(width = 96): { image: ImageData; rect: DOMRect } | null {
+    if (!this.canvas.width || !this.canvas.height) return null
+    this.render()
+    const c = document.createElement("canvas")
+    c.width = width
+    c.height = Math.max(1, Math.round((width * this.canvas.height) / this.canvas.width))
+    const g = c.getContext("2d", { willReadFrequently: true })
+    if (!g) return null
+    g.drawImage(this.canvas, 0, 0, c.width, c.height)
+    return { image: g.getImageData(0, 0, c.width, c.height), rect: this.canvas.getBoundingClientRect() }
+  }
   // A PNG of the current view, rendered on demand (no preserveDrawingBuffer needed: read in the same task).
   capture(): Promise<Blob | null> {
     this.render()
