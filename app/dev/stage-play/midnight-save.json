@@ -1,0 +1,618 @@
+{
+  "version": 1,
+  "provider": "claude",
+  "rolls": {},
+  "figures": {},
+  "painted": [],
+  "adventure": {
+    "_id": "7da6c400-b2c2-4a7b-b407-d25687efc2eb",
+    "title": "The Midnight Summons",
+    "settingId": "realm-of-myr",
+    "planId": "the-midnight-summons",
+    "playerIds": [],
+    "currentTurnId": "3c3cb0b1-9b1b-4520-a682-4b6e93211faf",
+    "currentEncounterId": "meeting-at-the-stones",
+    "status": "active",
+    "discoveries": [
+      {
+        "id": "owlbear-in-valkarr",
+        "type": "fact",
+        "title": "An owlbear prowls the Valkarr woods",
+        "text": "A fifteen-foot owlbear hunts near the deer trail a mile west of the Old Standing Stones.",
+        "visibility": "player",
+        "sourceEncounterId": "the-owlbear-prowls"
+      }
+    ],
+    "entityUpdates": [
+      {
+        "entityType": "npc",
+        "entityId": "owlbear",
+        "patchText": "Searched the trail near the moonlit clearing, never noticed Thalbern, and moved off into the woods unharmed.",
+        "visibility": "player"
+      }
+    ],
+    "openThreads": [
+      {
+        "id": "midnight-meeting",
+        "title": "Meet Wollandora at the Old Standing Stones",
+        "text": "Wollandora summoned Thalbern to the Old Standing Stones at midnight, saying the balance of the forest could depend on it."
+      }
+    ],
+    "resolvedThreadIds": [],
+    "adventureSummaryMarkdown": ""
+  },
+  "turns": [
+    {
+      "_id": "863c85d0-c784-4cff-8b3e-e99bd2451cba",
+      "adventureId": "7da6c400-b2c2-4a7b-b407-d25687efc2eb",
+      "encounterId": "broken-silence",
+      "title": "Broken Silence",
+      "story": [
+        {
+          "kind": "narration",
+          "by": {
+            "step": "intro"
+          },
+          "text": "Thalbern, a solitary ranger of the Valkarr woods, trusts the silence of the wilds more than the promises of men. Orphaned by border raiders and raised by the forest's elves, he lives on the edge of Kordavos, guiding travelers, hunting, and keeping clear of the city's politics."
+        },
+        {
+          "kind": "narration",
+          "by": {
+            "step": "intro"
+          },
+          "text": "Tonight a red squirrel came to his hidden home with a note in the hand of Wollandora, an elven druid and trusted friend: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it."
+        },
+        {
+          "kind": "action",
+          "by": {
+            "step": "intro"
+          },
+          "text": "Now midnight is near. Thalbern moves quietly through the dense undergrowth by memory and instinct, with almost no moonlight coming through the canopy.",
+          "actor": "thalbern"
+        },
+        {
+          "kind": "narration",
+          "by": {
+            "step": "intro"
+          },
+          "text": "A sharp crack breaks the hush. Something large has stepped on a branch, somewhere off in the distance.",
+          "place": "treeLine"
+        },
+        {
+          "kind": "reply",
+          "by": {
+            "step": "reply",
+            "character": "thalbern"
+          },
+          "character": "thalbern",
+          "text": "hide and listen"
+        },
+        {
+          "kind": "action",
+          "by": {
+            "step": "reply",
+            "character": "thalbern"
+          },
+          "text": "Thalbern sinks low into the thick ferns beside the trail, goes still, and listens.",
+          "actor": "thalbern",
+          "private": true
+        },
+        {
+          "kind": "roll",
+          "by": {
+            "step": "roll",
+            "character": "thalbern"
+          },
+          "character": "thalbern",
+          "name": "Thalbern",
+          "check": "Hide (Stealth)",
+          "natural": 20,
+          "dice": [20, 10],
+          "mode": "advantage",
+          "modifier": 5,
+          "total": 25,
+          "dc": 15,
+          "success": true,
+          "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/characters/demo-ranger.png",
+          "conditions": [
+            {
+              "target": "thalbern",
+              "condition": "invisible"
+            }
+          ]
+        },
+        {
+          "kind": "narration",
+          "by": {
+            "step": "roll",
+            "character": "thalbern"
+          },
+          "text": "The ferns close over Thalbern without a rustle, and the dark swallows him whole. Heavy footfalls crash closer from the tree line, quick and unhurried by caution, with no sign that whatever comes knows he is there.",
+          "place": "treeLine"
+        }
+      ],
+      "characters": [
+        {
+          "id": "thalbern",
+          "name": "Thalbern",
+          "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/characters/demo-ranger.png",
+          "archetype": "Ranger",
+          "race": "Human",
+          "gender": "Male",
+          "appearance": "Lean, weathered, with sharp green eyes and long, tangled brown hair. Wears a cloak of forest hues and carries a longbow.",
+          "personality": "Solitary, cautious, loyal to those who earn his trust, and deeply connected to nature.",
+          "background": "Orphaned by border raiders, raised by elves in the Valkarr forest. Lives on the edge of Kordavos, guiding travelers and hunting for survival.",
+          "motivation": "To protect the forest and its people from outside threats, and to find a place where he truly belongs.",
+          "behavior": "Prefers silence and observation, avoids city politics, acts decisively when the wilds are threatened.",
+          "equipment": [
+            {
+              "name": "Longbow",
+              "description": "A finely crafted elven bow, silent and deadly."
+            },
+            {
+              "name": "Quiver",
+              "description": "A quiver filled with arrows."
+            },
+            {
+              "name": "Sword",
+              "description": "A practical blade for close encounters."
+            },
+            {
+              "name": "Dagger",
+              "description": "A small blade for quick strikes."
+            }
+          ],
+          "skills": ["Stealth", "Tracking", "Archery", "Survival", "Nature Lore"],
+          "sheet": {
+            "class": "ranger",
+            "level": 1,
+            "species": "human",
+            "background": "soldier",
+            "abilityScores": {
+              "str": 13,
+              "dex": 17,
+              "con": 13,
+              "int": 11,
+              "wis": 13,
+              "cha": 10
+            },
+            "classSkills": ["stealth", "survival", "nature"],
+            "otherSkills": ["perception"],
+            "feats": ["alert"],
+            "armor": "studded-leather-armor",
+            "weapons": ["longbow", "shortsword", "dagger"],
+            "spells": ["cure-wounds", "speak-with-animals"],
+            "weaponMasteries": ["longbow", "shortsword"]
+          },
+          "type": "pc",
+          "attributes": {
+            "strength": 13,
+            "dexterity": 17,
+            "constitution": 13,
+            "intelligence": 11,
+            "wisdom": 13,
+            "charisma": 10
+          },
+          "initiative": 19,
+          "hasReplied": true,
+          "isComplete": true,
+          "hitPoints": 11,
+          "healthPercent": 100,
+          "position": {
+            "x": -15.09,
+            "y": 30.18
+          },
+          "conditions": [
+            {
+              "id": "invisible"
+            }
+          ],
+          "rollResult": 25
+        }
+      ],
+      "order": 1,
+      "updatedAt": 1795041870848
+    },
+    {
+      "_id": "40b3d871-97a4-474a-a4e1-1f488f9da3b8",
+      "adventureId": "7da6c400-b2c2-4a7b-b407-d25687efc2eb",
+      "encounterId": "the-owlbear-prowls",
+      "title": "The Owlbear Prowls",
+      "story": [
+        {
+          "kind": "narration",
+          "by": {
+            "step": "round"
+          },
+          "text": "The footfalls slow at the edge of the trail, and a low, rumbling breath stirs the leaves.",
+          "place": "treeLine"
+        },
+        {
+          "kind": "narration",
+          "by": {
+            "step": "intro"
+          },
+          "text": "Eyes shine in the shadows of the tree line, where the sound came from.",
+          "place": "treeLine"
+        },
+        {
+          "kind": "action",
+          "by": {
+            "step": "intro"
+          },
+          "text": "A hulking monster shoulders out of the undergrowth, fifteen feet tall, with the body of a giant bear and the head of an owl. It comes on at an unhurried pace.",
+          "actor": "owlbear",
+          "enters": {
+            "from": "treeLine",
+            "pace": "walk"
+          }
+        },
+        {
+          "kind": "action",
+          "by": {
+            "step": "intro"
+          },
+          "text": "It stops on the trail, lifts its great beaked head and tastes the air.",
+          "actor": "owlbear"
+        },
+        {
+          "kind": "action",
+          "by": {
+            "step": "intro"
+          },
+          "text": "Thalbern holds still where he has hidden, close enough to hear it breathe.",
+          "actor": "thalbern"
+        },
+        {
+          "kind": "reply",
+          "by": {
+            "step": "reply",
+            "character": "thalbern"
+          },
+          "character": "thalbern",
+          "text": "remain hidden"
+        },
+        {
+          "kind": "action",
+          "by": {
+            "step": "reply",
+            "character": "thalbern"
+          },
+          "text": "Thalbern stays motionless in his hiding place, scarcely breathing as the owlbear tastes the air.",
+          "actor": "thalbern",
+          "private": true
+        },
+        {
+          "kind": "action",
+          "by": {
+            "step": "npc",
+            "character": "owlbear"
+          },
+          "text": "The owlbear lowers its beak to the trail and snuffles along the clearing's edge, feathers bristling. Its great head swings slowly past the ferns, eyes searching the dark.",
+          "actor": "owlbear"
+        }
+      ],
+      "characters": [
+        {
+          "id": "thalbern",
+          "name": "Thalbern",
+          "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/characters/demo-ranger.png",
+          "archetype": "Ranger",
+          "race": "Human",
+          "gender": "Male",
+          "appearance": "Lean, weathered, with sharp green eyes and long, tangled brown hair. Wears a cloak of forest hues and carries a longbow.",
+          "personality": "Solitary, cautious, loyal to those who earn his trust, and deeply connected to nature.",
+          "background": "Orphaned by border raiders, raised by elves in the Valkarr forest. Lives on the edge of Kordavos, guiding travelers and hunting for survival.",
+          "motivation": "To protect the forest and its people from outside threats, and to find a place where he truly belongs.",
+          "behavior": "Prefers silence and observation, avoids city politics, acts decisively when the wilds are threatened.",
+          "equipment": [
+            {
+              "name": "Longbow",
+              "description": "A finely crafted elven bow, silent and deadly."
+            },
+            {
+              "name": "Quiver",
+              "description": "A quiver filled with arrows."
+            },
+            {
+              "name": "Sword",
+              "description": "A practical blade for close encounters."
+            },
+            {
+              "name": "Dagger",
+              "description": "A small blade for quick strikes."
+            }
+          ],
+          "skills": ["Stealth", "Tracking", "Archery", "Survival", "Nature Lore"],
+          "sheet": {
+            "class": "ranger",
+            "level": 1,
+            "species": "human",
+            "background": "soldier",
+            "abilityScores": {
+              "str": 13,
+              "dex": 17,
+              "con": 13,
+              "int": 11,
+              "wis": 13,
+              "cha": 10
+            },
+            "classSkills": ["stealth", "survival", "nature"],
+            "otherSkills": ["perception"],
+            "feats": ["alert"],
+            "armor": "studded-leather-armor",
+            "weapons": ["longbow", "shortsword", "dagger"],
+            "spells": ["cure-wounds", "speak-with-animals"],
+            "weaponMasteries": ["longbow", "shortsword"]
+          },
+          "type": "pc",
+          "attributes": {
+            "strength": 13,
+            "dexterity": 17,
+            "constitution": 13,
+            "intelligence": 11,
+            "wisdom": 13,
+            "charisma": 10
+          },
+          "initiative": 16,
+          "hasReplied": true,
+          "isComplete": true,
+          "hitPoints": 11,
+          "healthPercent": 100,
+          "position": {
+            "x": -15.09,
+            "y": 30.18
+          },
+          "effects": [],
+          "spells": [],
+          "conditions": [
+            {
+              "id": "invisible"
+            }
+          ]
+        },
+        {
+          "id": "owlbear",
+          "name": "Owlbear",
+          "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/npcs/owlbear-portrait.png",
+          "archetype": "Monster",
+          "race": "Owlbear",
+          "appearance": "A hulking monstrosity with the body of a bear and the head of an owl. Thick, matted fur, razor-sharp talons, and a powerful beak. Its eyes glow with a feral intensity.",
+          "personality": "Territorial, aggressive, primal.",
+          "motivation": "Defend its territory, hunt for food.",
+          "behavior": "Has not noticed Thalbern. Prowls the trail sniffing for what it heard, and moves on into the woods if nothing gives him away. If it finds him or is attacked, it attacks and fights until heavily wounded or driven off.",
+          "type": "npc",
+          "attributes": {},
+          "statBlock": "owlbear",
+          "initiative": 0,
+          "hasReplied": true,
+          "isComplete": true,
+          "hitPoints": 59,
+          "healthPercent": 100,
+          "position": {
+            "x": 6.56168,
+            "y": -17.716536
+          },
+          "equipment": [],
+          "effects": [],
+          "spells": []
+        }
+      ],
+      "order": 2,
+      "isFinalEncounter": false,
+      "adventurePatch": {
+        "summaryDelta": "Thalbern heard a large creature approaching on the dark trail and hid in the thick ferns beside it, unseen as it came on from the tree line.",
+        "discoveries": [],
+        "entityUpdates": [],
+        "characterUpdates": [],
+        "openThreads": [
+          {
+            "id": "midnight-meeting",
+            "title": "Meet Wollandora at the Old Standing Stones",
+            "text": "Wollandora summoned Thalbern to the Old Standing Stones at midnight, saying the balance of the forest could depend on it."
+          }
+        ],
+        "resolvedThreadIds": [],
+        "transition": {
+          "fromEncounterId": "broken-silence",
+          "toEncounterId": "the-owlbear-prowls",
+          "reason": "Thalbern successfully hid (Stealth 25 vs DC 15) before the creature arrived."
+        }
+      },
+      "updatedAt": 1795041969382
+    },
+    {
+      "_id": "3c3cb0b1-9b1b-4520-a682-4b6e93211faf",
+      "adventureId": "7da6c400-b2c2-4a7b-b407-d25687efc2eb",
+      "encounterId": "meeting-at-the-stones",
+      "title": "Meeting at the Stones",
+      "story": [
+        {
+          "kind": "action",
+          "by": {
+            "step": "round"
+          },
+          "text": "Finding nothing, the owlbear huffs, turns from the ferns and lumbers back into the dark of the tree line.",
+          "actor": "owlbear"
+        },
+        {
+          "kind": "narration",
+          "by": {
+            "step": "round"
+          },
+          "text": "Its heavy tread fades away, and the deer trail toward the Standing Stones lies open under the moon.",
+          "place": "trailNorth"
+        },
+        {
+          "kind": "narration",
+          "by": {
+            "step": "intro"
+          },
+          "text": "The ancient Standing Stones rise around Thalbern, and moonlight silvers the clearing.",
+          "place": "stones"
+        },
+        {
+          "kind": "line",
+          "by": {
+            "step": "intro"
+          },
+          "text": "Thalbern. The forest is grateful you are here.",
+          "speaker": "wollandora",
+          "to": "thalbern",
+          "delivery": "soft"
+        },
+        {
+          "kind": "action",
+          "by": {
+            "step": "intro"
+          },
+          "text": "The elf's silver hair glistens, and her deep green eyes are wise and kind, but troubled.",
+          "actor": "wollandora",
+          "target": "thalbern"
+        }
+      ],
+      "characters": [
+        {
+          "id": "thalbern",
+          "name": "Thalbern",
+          "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/characters/demo-ranger.png",
+          "archetype": "Ranger",
+          "race": "Human",
+          "gender": "Male",
+          "appearance": "Lean, weathered, with sharp green eyes and long, tangled brown hair. Wears a cloak of forest hues and carries a longbow.",
+          "personality": "Solitary, cautious, loyal to those who earn his trust, and deeply connected to nature.",
+          "background": "Orphaned by border raiders, raised by elves in the Valkarr forest. Lives on the edge of Kordavos, guiding travelers and hunting for survival.",
+          "motivation": "To protect the forest and its people from outside threats, and to find a place where he truly belongs.",
+          "behavior": "Prefers silence and observation, avoids city politics, acts decisively when the wilds are threatened.",
+          "equipment": [
+            {
+              "name": "Longbow",
+              "description": "A finely crafted elven bow, silent and deadly."
+            },
+            {
+              "name": "Quiver",
+              "description": "A quiver filled with arrows."
+            },
+            {
+              "name": "Sword",
+              "description": "A practical blade for close encounters."
+            },
+            {
+              "name": "Dagger",
+              "description": "A small blade for quick strikes."
+            }
+          ],
+          "skills": ["Stealth", "Tracking", "Archery", "Survival", "Nature Lore"],
+          "sheet": {
+            "class": "ranger",
+            "level": 1,
+            "species": "human",
+            "background": "soldier",
+            "abilityScores": {
+              "str": 13,
+              "dex": 17,
+              "con": 13,
+              "int": 11,
+              "wis": 13,
+              "cha": 10
+            },
+            "classSkills": ["stealth", "survival", "nature"],
+            "otherSkills": ["perception"],
+            "feats": ["alert"],
+            "armor": "studded-leather-armor",
+            "weapons": ["longbow", "shortsword", "dagger"],
+            "spells": ["cure-wounds", "speak-with-animals"],
+            "weaponMasteries": ["longbow", "shortsword"]
+          },
+          "type": "pc",
+          "attributes": {
+            "strength": 13,
+            "dexterity": 17,
+            "constitution": 13,
+            "intelligence": 11,
+            "wisdom": 13,
+            "charisma": 10
+          },
+          "initiative": 14,
+          "hasReplied": false,
+          "isComplete": false,
+          "hitPoints": 11,
+          "healthPercent": 100,
+          "position": {
+            "x": 2.952756,
+            "y": 11.811024
+          },
+          "effects": [],
+          "spells": []
+        },
+        {
+          "id": "wollandora",
+          "name": "Wollandora",
+          "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/npcs/wollandora.png",
+          "archetype": "Druid",
+          "race": "Elf",
+          "gender": "Female",
+          "appearance": "A wise elf with silver hair braided with leaves and twigs. Her eyes are a deep forest green, wise and kind, but currently troubled. She carries a staff of gnarled oak.",
+          "personality": "Wise, patient, deeply connected to nature, fiercely protective of the forest balance.",
+          "background": "An ancient guardian of the Valkarr woods, a friend to Thalbern, and a powerful druid.",
+          "motivation": "Recover the stolen relics and restore balance to the forest. Protect the secrets of her people.",
+          "behavior": "Concerned about the missing relics, focused on getting Thalbern to investigate in the city.",
+          "type": "npc",
+          "attributes": {
+            "strength": 10,
+            "dexterity": 12,
+            "constitution": 12,
+            "intelligence": 16,
+            "wisdom": 18,
+            "charisma": 14
+          },
+          "statBlock": "druid",
+          "side": "party",
+          "initiative": 1,
+          "hasReplied": false,
+          "isComplete": false,
+          "hitPoints": 44,
+          "healthPercent": 100,
+          "position": {
+            "x": -4.593176,
+            "y": -4.593176
+          },
+          "equipment": [],
+          "effects": [],
+          "spells": []
+        }
+      ],
+      "order": 3,
+      "isFinalEncounter": false,
+      "adventurePatch": {
+        "summaryDelta": "Thalbern stayed hidden in the ferns while an owlbear prowled the deer trail. It never found him and wandered back into the woods, leaving the way to the Old Standing Stones clear.",
+        "discoveries": [
+          {
+            "id": "owlbear-in-valkarr",
+            "type": "fact",
+            "title": "An owlbear prowls the Valkarr woods",
+            "text": "A fifteen-foot owlbear hunts near the deer trail a mile west of the Old Standing Stones.",
+            "visibility": "player",
+            "sourceEncounterId": "the-owlbear-prowls"
+          }
+        ],
+        "entityUpdates": [
+          {
+            "entityType": "npc",
+            "entityId": "owlbear",
+            "patchText": "Searched the trail near the moonlit clearing, never noticed Thalbern, and moved off into the woods unharmed.",
+            "visibility": "player"
+          }
+        ],
+        "characterUpdates": [],
+        "openThreads": [],
+        "resolvedThreadIds": [],
+        "transition": {
+          "fromEncounterId": "the-owlbear-prowls",
+          "toEncounterId": "meeting-at-the-stones",
+          "reason": "Thalbern stayed hidden and the owlbear moved on without finding him."
+        }
+      }
+    }
+  ]
+}
