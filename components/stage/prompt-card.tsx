@@ -5,15 +5,16 @@
 // calls for and how it came out while the GM answers it, the GM writing (with a changing line of what it is up to), and
 // the end of the encounter.
 
+import { ArrowUp } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { rattle } from "./dice-sound"
-import { Chevron, eyebrow, Pill, panel } from "./hud"
+import { Chevron, eyebrow, Pill } from "./hud"
 import { RollResult } from "./roll-result"
 import { type DeathSavesView, keptDie, modeName, type RollAsk, type RollKind, type RollMode, type RollView, thrownView } from "./roll-view"
-import { hitPointsShort, type Standing, standingWords } from "./standing"
+import { type Standing, standingWords } from "./standing"
 
 export interface CardCharacter {
   id: string
@@ -127,47 +128,43 @@ function GmMusing({ note }: { note?: string }) {
   )
 }
 
-function PartyRow({ party, actorId, compact, onPick }: { party: CardCharacter[]; actorId: string | null; compact: boolean; onPick: (id: string) => void }) {
+// The card's look: dark glass with a warm glow at the top, where the hero's portrait sits.
+const candlelit =
+  "stage-grain rounded-xl border border-stage-gold/20 bg-stage-panel/95 shadow-[0_30px_60px_#000a,inset_0_1px_0_#fcd34d33] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-[radial-gradient(ellipse_60%_45%_at_50%_0,#fcd34d26,transparent_70%)]"
+// A hero's choices: ghost pills in the serif.
+const choice =
+  "rounded-full border border-stage-line/20 px-4 py-1.5 font-serif text-[16px] text-stage-cream/85 italic transition-colors hover:border-stage-gold hover:bg-stage-gold/10 hover:text-stage-gold"
+
+// The hero whose turn it is, a gold ring breaking the card's top edge, with the rest of the party in smaller rings
+// beside it to switch to.
+function HeroRing({ party, actor, compact, onPick }: { party: CardCharacter[]; actor: CardCharacter; compact: boolean; onPick: (id: string) => void }) {
+  const ring = (c: CardCharacter, big: boolean) => (
+    <button
+      key={c.id}
+      type="button"
+      onClick={() => onPick(c.id)}
+      aria-label={c.standing ? `${c.name}, ${standingWords(c.standing)}` : c.name}
+      aria-current={big || undefined}
+      className={cn(
+        "m-0 shrink-0 overflow-hidden rounded-full bg-stage-ink transition-opacity",
+        big ? "shadow-[0_0_0_2px_#000,0_0_0_3px_var(--color-stage-gold),0_0_36px_#fcd34d44]" : "opacity-60 shadow-[0_0_0_2px_#000,0_0_0_3px_#fcd34d66] hover:opacity-90",
+        big ? (compact ? "h-11 w-11" : "h-[88px] w-[88px]") : compact ? "h-7 w-7" : "h-11 w-11"
+      )}
+    >
+      {c.portrait && (
+        // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
+        <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
+      )}
+    </button>
+  )
+  const at = party.findIndex((c) => c.id === actor.id)
+  const before = at < 0 ? [] : party.slice(0, at)
+  const after = at < 0 ? party : party.slice(at + 1)
   return (
-    <div className={cn("flex justify-center", compact ? "gap-1.5" : "gap-3.5")}>
-      {party.map((c) => (
-        <button
-          key={c.id}
-          type="button"
-          onClick={() => onPick(c.id)}
-          aria-label={c.standing ? `${c.name}, ${standingWords(c.standing)}` : c.name}
-          className={cn("m-0 transition-opacity", c.id === actorId ? "opacity-100" : "opacity-60 hover:opacity-90", compact ? "w-11" : "w-[78px]")}
-        >
-          <div
-            className={cn(
-              "relative border bg-stage-ink p-[3px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]",
-              c.id === actorId ? "border-stage-gold" : "border-stage-brass/60",
-              compact ? "h-12" : "h-[92px]"
-            )}
-          >
-            {c.portrait && (
-              // biome-ignore lint/performance/noImgElement: portrait art from the stage assets
-              <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
-            )}
-          </div>
-          {!compact && (
-            <div
-              className={cn(
-                "mt-1.5 truncate border px-1 py-1 text-center font-serif text-[11px] font-semibold",
-                "stage-parchment",
-                c.id === actorId ? "border-stage-gold text-[#2a1a10]" : "border-stage-brass/60 text-[#2a1a10]/80 opacity-85"
-              )}
-            >
-              {c.name.split(" ")[0]}
-            </div>
-          )}
-          {!compact && c.standing && (
-            <div aria-hidden="true" className="mt-1 truncate font-sans text-[9px] tabular-nums tracking-wide text-stage-cream">
-              {c.standing.kind === "hero" ? `${hitPointsShort(c.standing)} · AC ${c.standing.armorClass}` : standingWords(c.standing).split(",")[0]}
-            </div>
-          )}
-        </button>
-      ))}
+    <div className={cn("absolute inset-x-0 flex items-center justify-center", compact ? "-top-6 gap-2" : "-top-11 gap-3")}>
+      {before.map((c) => ring(c, false))}
+      {ring(actor, true)}
+      {after.map((c) => ring(c, false))}
     </div>
   )
 }
@@ -500,61 +497,69 @@ export function PromptCard({
     <section
       ref={ref}
       className={cn(
-        panel,
-        "fade-in absolute left-1/2 z-30 -translate-x-1/2 border-stage-brass/50 text-center",
-        compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))] px-3 py-2" : "bottom-[118px] w-[min(520px,calc(100%-40px))] px-5 pt-4 pb-4"
+        candlelit,
+        "fade-in absolute left-1/2 z-30 -translate-x-1/2 text-center",
+        compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))] px-3 py-2" : "bottom-[118px] w-[min(520px,calc(100%-40px))] px-6 pt-4 pb-4",
+        mode.kind === "hold" && actor && (compact ? "pt-7" : "pt-14")
       )}
     >
       {mode.kind === "hold" && actor && (
         <>
-          <div className={eyebrow}>GM · {actor.name.split(" ")[0]}'s turn</div>
-          {!compact && (
-            <div className="mt-3">
-              <PartyRow party={party} actorId={actor.id} compact={compact} onPick={onPick} />
-            </div>
-          )}
-          <p className={cn("font-serif text-stage-cream", compact ? "my-1.5 line-clamp-3 text-[12px] leading-snug" : "mt-3 mb-3 text-[15px] leading-[1.55]")}>{mode.prompt}</p>
+          <HeroRing party={party} actor={actor} compact={compact} onPick={onPick} />
+          <div className={cn("font-display tracking-[0.3em] text-stage-gold uppercase", compact ? "text-[10px]" : "mt-3 text-[12px]")}>{actor.name.split(" ")[0]}</div>
+          <p className={cn("font-serif text-stage-cream", compact ? "my-1 line-clamp-3 text-[13px] leading-snug" : "mt-1.5 mb-4 text-[19px] leading-[1.4]")}>{mode.prompt}</p>
           {mode.suggestions && mode.suggestions.length > 0 && (
-            <div className={cn("flex gap-1.5", compact ? "mb-1.5 [&>button]:py-1" : "mb-2")}>
+            <div className={cn("flex flex-wrap justify-center", compact ? "mb-1.5 gap-1" : "mb-3 gap-2")}>
               {mode.suggestions === "loading"
-                ? [0, 1, 2].map((i) => (
-                    <Pill key={i} className="flex-1 animate-pulse" disabled aria-hidden>
-                      &nbsp;
-                    </Pill>
-                  ))
+                ? [0, 1, 2].map((i) => <span key={i} aria-hidden className={cn(choice, "w-32 animate-pulse", compact && "w-20")} />)
                 : mode.suggestions.map((s) => (
-                    <Pill
+                    <button
                       key={s.text}
-                      className="min-w-0 flex-1 truncate px-2"
-                      active={draft === s.text}
+                      type="button"
                       title={s.text}
+                      className={cn(choice, "max-w-full truncate", compact && "px-3 py-0.5 text-[12px]", draft === s.text && "border-stage-gold bg-stage-gold/10 text-stage-gold")}
                       onClick={() => {
                         setDraft(s.text)
                         box.current?.focus()
                       }}
                     >
                       {s.label}
-                    </Pill>
+                    </button>
                   ))}
             </div>
           )}
-          <div className="relative">
+          <div className="relative flex items-end gap-2 rounded-[22px] border border-stage-line/15 bg-black/55 p-1.5 pl-4 transition-colors focus-within:border-stage-gold/50">
             <textarea
               ref={box}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send()
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault()
+                  send()
+                }
               }}
               disabled={demo && !draft}
               readOnly={demo}
-              rows={compact ? 1 : 3}
-              placeholder={`What does ${actor.name.split(" ")[0]} say and do?`}
+              rows={1}
+              placeholder={demo && !draft ? "" : `What does ${actor.name.split(" ")[0]} say and do?`}
               className={cn(
-                "block w-full resize-none rounded-[3px] border border-stage-line/25 bg-black/35 px-3 py-2 text-left font-serif text-stage-cream placeholder:text-stage-muted/60 focus:border-stage-gold/70 focus:outline-none disabled:cursor-not-allowed",
-                compact ? "text-[12px]" : "text-[14px]"
+                "field-sizing-content block max-h-32 min-w-0 flex-1 resize-none self-center bg-transparent py-1.5 text-left font-serif text-stage-cream placeholder:text-stage-muted/60 focus:outline-none disabled:cursor-not-allowed",
+                compact ? "text-[13px]" : "text-[16px]"
               )}
             />
+            <button
+              type="button"
+              aria-label="Send"
+              onClick={send}
+              disabled={!draft.trim()}
+              className={cn(
+                "grid shrink-0 place-items-center rounded-full bg-stage-gold text-black transition-[opacity,filter] hover:brightness-110 disabled:opacity-35",
+                compact ? "h-7 w-7" : "h-9 w-9"
+              )}
+            >
+              <ArrowUp className={compact ? "h-4 w-4" : "h-5 w-5"} strokeWidth={2.25} />
+            </button>
             {demo && !draft && (
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
                 <span className={cn("font-sans font-medium tracking-[0.22em] text-stage-gold/90 uppercase [text-shadow:0_1px_4px_#000]", compact ? "text-[9px]" : "text-[11px]")}>
@@ -563,22 +568,20 @@ export function PromptCard({
               </div>
             )}
           </div>
-          <div className={cn("flex gap-2", compact ? "mt-1.5 [&>button]:py-1" : "mt-2")}>
-            {mode.suggestion && (
-              <Pill className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)}>
-                Suggest
-              </Pill>
-            )}
-            {onSkip && (
-              <button type="button" onClick={onSkip} className="mr-3 ml-auto px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors hover:text-stage-cream">
-                Skip
-              </button>
-            )}
-            <Button variant="epic" size="xs" className={cn("shrink-0 gap-1.5", !onSkip && "ml-auto", compact ? "px-6" : "px-8 py-1.5 text-sm")} onClick={send} disabled={!draft.trim()}>
-              Send
-              <Chevron />
-            </Button>
-          </div>
+          {(mode.suggestion || onSkip) && (
+            <div className={cn("flex items-center gap-2", compact ? "mt-1" : "mt-2")}>
+              {mode.suggestion && (
+                <Pill className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)}>
+                  Suggest
+                </Pill>
+              )}
+              {onSkip && (
+                <button type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors hover:text-stage-cream">
+                  Skip
+                </button>
+              )}
+            </div>
+          )}
         </>
       )}
       {mode.kind === "roll" &&
