@@ -46,6 +46,28 @@ pnpm dev:fresh    # Kill ports first, then dev
 
 You need a Convex project, Clerk keys and LLM API keys in `.env.local`.
 
+## Agent Prompts
+
+Paste one of these into Claude Code, Codex or another coding agent from the repository root.
+
+Play locally with the desktop app:
+
+```text
+Read README.md and apps/desktop/README.md. Get the D20 Adventures desktop app running on this machine so I can play an adventure. Check that Node.js 24 or newer, pnpm and Rust are installed, and tell me what is missing before installing anything. Run pnpm install, then pnpm desktop:dev, which points the app at d20adventures.com. The app runs the GM through a signed-in Claude Code, Codex, Grok or Antigravity CLI, so confirm one is installed and signed in. Stop and tell me if the app fails to open, with the error.
+```
+
+Set up the website for development:
+
+```text
+Read README.md and AGENTS.md. Set up D20 Adventures for local development. Check that Node.js 24 or newer and pnpm are installed, then run pnpm install. Walk me through creating .env.local: a new Convex dev project via npx convex dev, Clerk keys (NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY), and LLM keys (GOOGLE_GENERATIVE_AI_API_KEY, OPENAI_API_KEY). Search the code for other process.env names and tell me which are optional. Ask me for each secret instead of guessing. Then run pnpm dev:web, open http://localhost:3000, and confirm the home page loads and I can sign in.
+```
+
+Check a change before committing:
+
+```text
+Read AGENTS.md. Run pnpm check, pnpm --filter @d20/gm-core test, pnpm test:srd and pnpm stage:plans:check. Fix what fails, and tell me about anything you could not fix.
+```
+
 ## Checks
 
 ```sh
