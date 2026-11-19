@@ -237,6 +237,20 @@ function contactTexture() {
   return contactMap
 }
 
+// A thin gold ring, flat on the ground, a metre across before scaling. Drawn over the floor, never casting shade or
+// taking a pick.
+function turnRing() {
+  const geo = new THREE.RingGeometry(0.9, 1, 64)
+  geo.rotateX(-Math.PI / 2)
+  const mat = new THREE.MeshBasicMaterial({ color: "#f2c45a", transparent: true, opacity: 0, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4 })
+  const ring = new THREE.Mesh(geo, mat)
+  ring.name = "turn-ring"
+  ring.visible = false
+  ring.renderOrder = 1
+  ring.raycast = () => {}
+  return ring
+}
+
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const i = new Image()
@@ -261,6 +275,12 @@ export class Standees {
   low = new Set<string>()
   // Cast members just struck: a flash of colour on the card and a shake, fading over about half a second.
   private hits = new Map<string, { t: number; color: THREE.Color; strength: number }>()
+  // Whose turn it is: a ring on the ground about their feet. It fades out and in when the turn passes.
+  turn: string | null = null
+  private ring = turnRing()
+  private ringOn = 0
+  private ringAt: string | null = null
+  private ringT = 0
 
   constructor(
     cast: CastMember[],
@@ -269,6 +289,7 @@ export class Standees {
   ) {
     this.group.name = "standees"
     for (const c of cast) this.make(c)
+    this.group.add(this.ring)
   }
   lay(id: string, down: boolean, instant = false) {
     if (down) this.down.add(id)
@@ -441,6 +462,24 @@ export class Standees {
       if (s.mat.normalMap !== nm) s.mat.normalMap = nm
       s.depth.map = (showB ? s.mapB : s.map) ?? null
     }
+    this.updateRing(dt)
+  }
+  // The ring fades off the last actor before it shows on the next, so it never jumps across the ground.
+  private updateRing(dt: number) {
+    const want = this.turn && this.items.has(this.turn) && !this.offstage.has(this.turn) ? this.turn : null
+    if (this.ringAt !== want) {
+      this.ringOn = Math.max(0, this.ringOn - dt * 6)
+      if (this.ringOn === 0) this.ringAt = want
+    } else this.ringOn = Math.min(1, this.ringOn + dt * 4)
+    const s = this.ringAt ? this.items.get(this.ringAt) : undefined
+    this.ring.visible = !!s && this.ringOn > 0
+    if (!s) return
+    this.ringT += dt
+    const c = s.cast
+    const r = Math.max(0.42, 0.24 + c.height * 0.14)
+    this.ring.position.set(c.x, (c.y ?? 0) + 0.015, c.z)
+    this.ring.scale.setScalar(r * (0.92 + 0.08 * this.ringOn))
+    this.ring.material.opacity = this.ringOn * (0.78 + 0.14 * Math.sin(this.ringT * 2.4))
   }
   // Whether a hit at this uv on a cast member's card lands on the painted figure (for picking).
   opaqueAt(id: string, uv: { x: number; y: number }) {
@@ -472,6 +511,8 @@ export class Standees {
       s.depth.dispose()
       for (const t of [s.map, s.normal, s.mapB, s.normalB]) t?.dispose()
     }
+    this.ring.geometry.dispose()
+    this.ring.material.dispose()
     this.items.clear()
   }
 }

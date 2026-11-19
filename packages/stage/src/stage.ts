@@ -996,6 +996,10 @@ export class Stage {
   isDown(id: string) {
     return this.standees.down.has(id)
   }
+  // Mark whose turn it is with a ring on the ground about them, or no one.
+  setTurn(id: string | null) {
+    this.standees.turn = id
+  }
   // Keep a cast member low, as someone hidden is: a figure sinks into a crouch once it has stopped walking and stays
   // there, and a card, which has no knees, shows see-through. Standing again undoes it. `instant` skips the sinking, for
   // someone already hidden when the scene is shown.

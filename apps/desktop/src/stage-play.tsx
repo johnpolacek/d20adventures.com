@@ -915,6 +915,11 @@ export function StagePlay(props: {
   // A finished adventure ends on its final narration. Its last turn has characters but takes no more actions.
   const finished = save?.adventure.status === "completed"
   const ended = finished && turn === latest
+  // A ring on the ground about whoever's turn it is, as the turn order marks them.
+  const ringed = ended ? undefined : castOf(actor?.id)
+  useEffect(() => {
+    stage?.setTurn(ringed ?? null)
+  }, [stage, ringed])
   // The levels owed to each hero this player plays.
   const owed = props.onLevel && latest ? latest.characters.filter((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && levelOwed(c)) : []
   const levelHero = owed.find((c) => c.id === levelling)
