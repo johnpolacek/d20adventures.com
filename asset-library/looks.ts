@@ -138,38 +138,38 @@ export const LOOKS: Record<string, Look> = {
       paint: "0",
       isobox: "-14,-18,14,22",
       isowhole: "1",
-      isolight: "1.16,0.18",
-      isosky: "6f92cc",
-      isofill: "0.14",
-      // Enough of the set's haze that the far ridges and woods sink into dark indigo-navy while near bark stays crisp.
-      isohaze: "0.54",
+      isolight: "1.34,0.24",
+      isosky: "85a6dc",
+      isofill: "0.22",
+      // Atmospheric depth haze that separates near trunks from far wooded ridges while keeping mist & foliage readable.
+      isohaze: "0.42",
       // The canopy's shadow falls with a soft edge, as leaves high overhead throw it.
       isosoft: "5",
       // The one place the moon gets through: a pool at the tree line, under the set's shaft. Then a gentle grazing
       // moonlit accent on each place to hide, so bark and moss read cleanly in the dark: great oak, fallen log, boulders.
-      isolamps: "8,3.6,-8.5,18,16,a8c6ee;-5.8,3.2,-1.6,6.5,9.0,8da8cc;5.2,2.3,7.6,7.5,8.5,94b0d6;-5.5,2.0,12.7,4.5,7.0,8da8cc",
+      isolamps: "8,3.6,-8.5,24,18,b2cef4;-5.8,3.2,-1.6,9,10,9ab8dc;5.2,2.4,7.6,10,9.5,9ebce0;-5.5,2.0,12.7,6.5,8,9ab8dc",
       // Keep only the immediate sightlines clear (between clearing and trail, and across the owlbear's face) so the
       // southern treeline stays rich behind eye-level close-ups.
       isoclear: "6,4,3;9,-2,2.5",
-      figenv: "0.14",
+      figenv: "0.2",
       // Directional moonlight along a figure's edges, so who stands in the canopy's shadow is still seen without glowing.
-      figrim: "9ebae0,0.44",
+      figrim: "a8c4ea,0.52",
       rings: "thalbern,wollandora",
       bloom: "on",
     },
     // Keep only the tree-line moon shaft; replace procedural sphere bushes with real modelled 3D shrubs (understory).
     edit: { "oak-shaft": null, bushes: null },
     materials: {
-      moonbeam: { opacity: 0.19 },
-      mist: { color: "#0c1727", opacity: 0.09 },
+      moonbeam: { opacity: 0.24 },
+      mist: { color: "#3d587a", opacity: 0.21 },
     },
-    // Under a canopy the night stays deep navy-blue rather than crushed ink-black: raking northeast moonlight catches
-    // bark and moss relief while shadows keep cool sky fill and the horizon dissolves into wooded ridges.
+    // Moonlit night woods: raking northeast moonlight catches bark, ferns, and mist weaving between the trunks, while
+    // cool midnight-blue shadows keep the floor readable and distant wooded ridges close the horizon.
     atmosphere: {
-      sun: { direction: [0.42, 0.62, -0.66], intensity: 1.45 },
-      sky: { horizon: "#0f1c30", mid: "#081120", gain: 0.3 },
-      fog: { color: "#060d18" },
-      hemisphere: { sky: "#405d88", ground: "#14202e", intensity: 0.56 },
+      sun: { direction: [0.42, 0.62, -0.66], intensity: 1.82 },
+      sky: { horizon: "#1d3354", mid: "#0f1e36", gain: 0.36 },
+      fog: { color: "#112035" },
+      hemisphere: { sky: "#4e70a0", ground: "#1c2b3b", intensity: 0.72 },
     },
     // An old layered wood: oaks, pines (including low-branching young spruces), ash, saplings, and modelled shrubs.
     trees: {
@@ -182,8 +182,8 @@ export const LOOKS: Record<string, Look> = {
       without: ["oak5", "bush2"],
       hero: { "great-oak": "oak2" },
       leaves: { aspen: "ash" },
-      // Cool silvered bark catches raking moonlight while canopy foliage stays dark against the night sky.
-      tint: { "*": "#545e6c", aspen: "#b6c496", bark: "#918d89" },
+      // Cool silvered bark catches raking moonlight while canopy foliage stays rich against the night sky.
+      tint: { "*": "#5f6b7a", aspen: "#c4d2a4", bark: "#a09c98" },
       understory: {
         byTrunks: 0.58,
         height: [1.2, 2.5],

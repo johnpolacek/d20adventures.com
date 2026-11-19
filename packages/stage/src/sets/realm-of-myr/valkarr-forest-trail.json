@@ -76,38 +76,38 @@
   "materials": {
     "ground": {
       "type": "meadow",
-      "grass": "#223426",
-      "grassDark": "#101a14",
-      "moss": "#233926",
-      "dry": "#343428",
-      "dirt": "#221c16",
-      "litter": "#3c2b1c",
+      "grass": "#2c4231",
+      "grassDark": "#17251d",
+      "moss": "#2e4832",
+      "dry": "#444537",
+      "dirt": "#2e2720",
+      "litter": "#4d3824",
       "dirtAmount": 0.48,
-      "pebbles": 0.12,
-      "litterAmount": 0.88,
-      "flowers": 0.04,
+      "pebbles": 0.14,
+      "litterAmount": 0.85,
+      "flowers": 0.05,
       "relief": 0.9
     },
     "trail": {
       "type": "meadow",
-      "grass": "#283324",
-      "grassDark": "#182018",
-      "moss": "#263824",
-      "dry": "#363528",
-      "dirt": "#2b231b",
-      "litter": "#3f2e1e",
+      "grass": "#32402d",
+      "grassDark": "#1f2a20",
+      "moss": "#30462e",
+      "dry": "#444334",
+      "dirt": "#392f26",
+      "litter": "#4f3a26",
       "dirtAmount": 0.92,
       "pebbles": 0.22,
-      "litterAmount": 0.65,
+      "litterAmount": 0.6,
       "flowers": 0,
       "relief": 0.85,
       "edgeFade": true
     },
     "bark": {
       "type": "wood",
-      "a": "#383633",
-      "b": "#45413c",
-      "c": "#2c2a27",
+      "a": "#46433f",
+      "b": "#544f4a",
+      "c": "#36332f",
       "plank": [
         0,
         40
@@ -115,7 +115,7 @@
       "relief": 0.14,
       "variance": 0.5,
       "seed": 4.2,
-      "grime": 0.7
+      "grime": 0.6
     },
     "birch": {
       "type": "wood",
@@ -148,8 +148,8 @@
     },
     "frond": {
       "type": "grass",
-      "base": "#0e1714",
-      "tip": "#344f41"
+      "base": "#15241f",
+      "tip": "#456856"
     },
     "stone": {
       "type": "rock",
@@ -174,8 +174,8 @@
     },
     "grass": {
       "type": "grass",
-      "base": "#0e1812",
-      "tip": "#334d37"
+      "base": "#16241b",
+      "tip": "#426447"
     }
   },
   "objects": [
@@ -2757,68 +2757,68 @@
       "type": "mist",
       "id": "treeline-mist",
       "at": [
-        7,
-        -0.4,
+        6,
+        -0.9,
         -13
       ],
-      "width": 28,
-      "height": 3.2,
+      "width": 34,
+      "height": 4.6,
       "layers": 3,
-      "spacing": 5
+      "spacing": 6
     },
     {
       "type": "mist",
       "id": "north-mist",
       "at": [
         -2,
-        -0.5,
-        -28
+        -1,
+        -25
       ],
-      "width": 52,
-      "height": 3.8,
+      "width": 56,
+      "height": 5.2,
       "layers": 3,
-      "spacing": 7
+      "spacing": 8
     },
     {
       "type": "mist",
       "id": "west-mist",
       "at": [
-        -16,
-        -0.5,
+        -15,
+        -0.9,
         2
       ],
       "yaw": 90,
-      "width": 50,
-      "height": 3.5,
-      "layers": 2,
-      "spacing": 8
+      "width": 48,
+      "height": 4.6,
+      "layers": 3,
+      "spacing": 7
     },
     {
       "type": "mist",
       "id": "east-mist",
       "at": [
-        17,
-        -0.5,
+        16,
+        -0.9,
         4
       ],
       "yaw": 90,
-      "width": 50,
-      "height": 3.5,
-      "layers": 2,
-      "spacing": 8
+      "width": 48,
+      "height": 4.6,
+      "layers": 3,
+      "spacing": 7
     },
     {
       "type": "mist",
       "id": "south-mist",
       "at": [
         1,
-        -0.5,
-        32
+        -1,
+        29
       ],
       "width": 50,
-      "height": 3.6,
-      "layers": 2,
-      "spacing": 8
+      "height": 4.8,
+      "layers": 3,
+      "spacing": 7
     },
     {
       "type": "lightShaft",
