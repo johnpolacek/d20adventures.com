@@ -37,12 +37,6 @@ export interface TreeSwap {
   // Beyond this many metres from where the scene is played, the share of trees that are stood at all. In haze the
   // far wood only has to close the horizon.
   thin?: [number, number]
-  // Modelled shrubs (bush1/bush2) tucked near trunk bases and around the outer woods to fill the eye-level mid-layer.
-  understory?: {
-    byTrunks?: number
-    ring?: { count: number; minR: number; maxR: number; clear?: [number, number, number][] }
-    height?: [number, number]
-  }
 }
 
 interface Part {
@@ -153,43 +147,6 @@ export async function standTrees(stage: Stage, footprints: unknown, set: SetLike
     stands.set(key, stand)
   }
 
-  // Optional modelled woodland shrubs (bush1/bush2) tucked around trunk bases and filling the outer mid-layer.
-  const bushes = listed.filter((v) => v.kind === "bush")
-  if (swap.understory && bushes.length) {
-    const [hMin, hMax] = swap.understory.height ?? [1.1, 2.3]
-    const clears = swap.understory.ring?.clear ?? []
-    const isClear = (x: number, z: number) => clears.some(([cx, cz, r]) => (x - cx) ** 2 + (z - cz) ** 2 < r * r)
-    const addShrub = (x: number, z: number, salt: number) => {
-      if (isClear(x, z)) return
-      const shape = bushes[Math.floor(chance(x, z, salt) * bushes.length) % bushes.length]
-      const weight = away({ kind: "circle", x, z, r: 0.6 }) < swap.rings[0] ? 1 : 2
-      const key = `${shape.name}-${weight}`
-      const stand = stands.get(key) ?? { shape, weight, where: [] }
-      const h = hMin + (hMax - hMin) * chance(x, z, salt + 13)
-      stand.where.push({ kind: "circle", x, z, r: 0.6, height: h / (swap.taller ?? 1) })
-      stands.set(key, stand)
-    }
-    const byTrunks = swap.understory.byTrunks ?? 0
-    if (byTrunks > 0) {
-      for (const t of trunks) {
-        const d = away(t)
-        if (d > 52) continue
-        if (chance(t.x, t.z, 21) > byTrunks) continue
-        const ang = chance(t.x, t.z, 22) * Math.PI * 2
-        const off = 1.0 + chance(t.x, t.z, 23) * 1.4
-        addShrub(t.x + Math.cos(ang) * off, t.z + Math.sin(ang) * off, 24)
-      }
-    }
-    const ring = swap.understory.ring
-    if (ring && ring.count > 0) {
-      for (let i = 0; i < ring.count; i++) {
-        const a = (i / ring.count) * Math.PI * 2 + (chance(i, 3.1, 31) - 0.5) * 0.25
-        const r = ring.minR + (ring.maxR - ring.minR) * Math.sqrt(chance(i, 7.3, 32))
-        addShrub(swap.near[0] + Math.cos(a) * r, swap.near[1] + Math.sin(a) * r, 33 + (i % 7))
-      }
-    }
-  }
-
   // One bark and one leaf material to a species, whatever the shape or the weight.
   const pictures = new THREE.TextureLoader()
   const picture = (file: string, colour: boolean) => {
@@ -208,7 +165,7 @@ export async function standTrees(stage: Stage, footprints: unknown, set: SetLike
       map: picture(`${species}-bark-color.jpg`, true),
       normalMap: picture(`${species}-bark-normal.jpg`, false),
       roughnessMap: picture(`${species}-bark-roughness.jpg`, false),
-      roughness: 0.88,
+      roughness: 1,
       metalness: 0,
     })
     made.normalScale.setScalar(1.6)

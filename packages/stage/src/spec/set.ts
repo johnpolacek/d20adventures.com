@@ -158,8 +158,6 @@ const meadow = z
     flowers: unit.optional(),
     relief: num(0, 3).optional(),
     seed: num(0, 1000).optional(),
-    // Feather alpha toward uv.x = +/-1 (for trails laid over ground so their edges dissolve organically into moss/grass).
-    edgeFade: z.boolean().optional(),
   })
   .strict()
 // Grass blades and heather, dark at the root and `tip` coloured at the top.

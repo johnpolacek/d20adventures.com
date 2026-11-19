@@ -121,7 +121,6 @@ export interface MeadowOptions {
   flowers?: number
   relief?: number
   seed?: number
-  edgeFade?: boolean
 }
 
 // A meadow floor seen up close: broad patches of lush and dry grass and cushion moss, fine blade speckle, bare earth
@@ -141,28 +140,16 @@ export function meadow(ctx: MaterialContext, name: string, o: MeadowOptions = {}
     gRelief: { value: o.relief ?? 0.6 },
     gSeed: { value: o.seed ?? ctx.rand(0, 50) },
   }
-  const fade = !!o.edgeFade
-  const m = new THREE.MeshStandardMaterial({
-    name,
-    color: "#ffffff",
-    roughness: 0.95,
-    metalness: 0,
-    ...(fade ? { transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 } : {}),
-  })
+  const m = new THREE.MeshStandardMaterial({ name, color: "#ffffff", roughness: 0.95, metalness: 0 })
   m.userData.uniforms = u
-  return stageMaterial(m, ctx.shared, fade ? "meadow-fade" : "meadow", (s) => {
+  return stageMaterial(m, ctx.shared, "meadow", (s) => {
     Object.assign(s.uniforms, u)
     WORLD_VERTEX(s)
-    if (fade) {
-      s.vertexShader = s.vertexShader
-        .replace("#include <common>", "#include <common>\nvarying float vMEdge;")
-        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvMEdge = uv.x;")
-    }
     s.fragmentShader = s.fragmentShader
       .replace(
         "#include <common>",
         `#include <common>
-varying vec3 vNWorld; varying vec3 vNNormalW;${fade ? " varying float vMEdge;" : ""}
+varying vec3 vNWorld; varying vec3 vNNormalW;
 uniform vec3 gGrass, gDark, gMoss, gDry, gSoilCol, gLitter; uniform float gDirtAmt, gPebbles, gLitterAmt, gFlowers, gRelief, gSeed;
 ${NOISE}
 ${PERTURB}
@@ -215,16 +202,6 @@ gCol = mix(gCol, gSoil, gDirt);
   float fl = (1.0 - smoothstep(.04, .07, length(f - (.2 + .6 * h)))) * step(mhash(id * 2.3 + 5.0 + gSeed), gFlowers * .06) * (1.0 - gDirt) * gSharp;
   vec3 fc = h.x < .45 ? vec3(.62, .22, .32) : h.x < .75 ? vec3(.78, .78, .7) : vec3(.75, .45, .18);
   gCol = mix(gCol, fc, fl); }
-${
-  fade
-    ? `{ float e = abs(vMEdge);
-  float warp = (mfbm(gP * 1.15 + gSeed) - .5) * .48 + (mnoise(gP * 4.5 + 3.0) - .5) * .22;
-  float mask = 1.0 - smoothstep(.38, .96, e + warp);
-  // Subtle damp compacted rut near the centre, mossier toward the verge.
-  gCol *= mix(.84, 1.04, smoothstep(.0, .65, e));
-  diffuseColor.a *= mask; }`
-    : ""
-}
 diffuseColor.rgb *= gCol;`
       )
       .replace(

@@ -388,8 +388,7 @@ export const log = defineBuilder(z.object({ length: size(30).default(5), r: size
   ctx.footprint(0, 0, p.length / 2, p.r + 0.2, 0, undefined, p.r * 1.9)
 })
 
-// A worn trail: a smooth flat strip just above the ground along a polyline. uv.x runs -1..+1 across its width so a
-// meadow material with `edgeFade` dissolves its edges organically into the surrounding grass and moss. Not solid.
+// A worn trail: a flat strip just above the ground along a polyline. Not solid.
 export const trail = defineBuilder(
   z
     .object({
@@ -399,16 +398,13 @@ export const trail = defineBuilder(
     })
     .strict(),
   (ctx, p) => {
-    const raw = p.points.map(([x, zz]) => V(x, 0.012, zz))
-    const pts = raw.length >= 3 ? new THREE.CatmullRomCurve3(raw).getPoints((raw.length - 1) * 4) : raw
+    const pts = p.points.map(([x, zz]) => V(x, 0.03, zz))
     const pos: number[] = []
-    const uv: number[] = []
-    let dist = 0
     const side = (i: number) => {
       const a = pts[Math.max(0, i - 1)]
       const c = pts[Math.min(pts.length - 1, i + 1)]
       const d = c.clone().sub(a).normalize()
-      const w = (p.width / 2) * (0.9 + 0.22 * Math.sin(i * 0.75))
+      const w = (p.width / 2) * (0.85 + 0.3 * Math.sin(i * 2.3))
       return V(-d.z * w, 0, d.x * w)
     }
     for (let i = 0; i < pts.length - 1; i++) {
@@ -418,16 +414,12 @@ export const trail = defineBuilder(
       const a1 = pts[i].clone().sub(sa)
       const b0 = pts[i + 1].clone().add(sb)
       const b1 = pts[i + 1].clone().sub(sb)
-      const next = dist + pts[i].distanceTo(pts[i + 1])
       pos.push(...a0.toArray(), ...b1.toArray(), ...a1.toArray(), ...a0.toArray(), ...b0.toArray(), ...b1.toArray())
-      uv.push(1, dist, -1, next, -1, dist, 1, dist, 1, next, -1, next)
-      dist = next
     }
     const g = new THREE.BufferGeometry()
     g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3))
-    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2))
     g.computeVertexNormals()
-    ctx.b.add(g, ctx.mat(p.material), null, { uv: "keep" })
+    ctx.b.add(g, ctx.mat(p.material), null, { uv: "planar" })
     g.dispose()
   }
 )

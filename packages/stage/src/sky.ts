@@ -68,17 +68,9 @@ void main(){
   c = mix(c, cc, cov * smoothstep(.0, .12, y) * .96 * uClouds);
  }
  if (uStars > 0.0 && d.y > 0.0){
-  vec3 sc = d * 240.0;
-  vec3 cell = floor(sc);
-  vec3 gv = fract(sc) - 0.5;
+  vec3 cell = floor(d * 320.0);
   float h = fract(sin(dot(cell, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
-  if (h > .9968) {
-   vec3 jit = (vec3(fract(h * 17.3), fract(h * 43.7), fract(h * 89.1)) - 0.5) * 0.5;
-   float r = length(gv - jit);
-   float pt = 1.0 - smoothstep(0.03, 0.16, r);
-   float bright = (.35 + .65 * fract(h * 37.0)) * pt * smoothstep(.04, .25, y) * uStars;
-   c += vec3(.82, .88, 1.0) * bright / max(uGain, .05);
-  }
+  c += vec3(.8, .86, 1.0) * step(.9982, h) * (.4 + .6 * fract(h * 37.0)) * smoothstep(.04, .25, y) * uStars / max(uGain, .05);
  }
  c = mix(c, uHorizon * .92, smoothstep(0.0, -.08, d.y));
  gl_FragColor = vec4(c * uGain, 1.0);

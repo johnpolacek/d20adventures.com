@@ -614,27 +614,7 @@ export function card(ctx: MaterialContext, name: string, map: THREE.Texture, tin
 export function glow(ctx: MaterialContext, bank: TextureBank, name: string, color: string, opacity = 0.35) {
   const m = new THREE.MeshBasicMaterial({ name, color, map: bank.shaft(), transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
   m.userData.noShadow = true
-  // Volumetric edge fade: attenuate grazing angles (cylinder sides) and top/bottom ends so light shafts never show hard edges.
-  return stageMaterial(m, ctx.shared, "glow", (s) => {
-    s.uniforms.uTime = ctx.shared.time
-    s.vertexShader = s.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vGlowN; varying vec3 vGlowV; varying vec2 vGlowUv;")
-      .replace(
-        "#include <begin_vertex>",
-        "#include <begin_vertex>\nvGlowN = normalize(normalMatrix * normal); vGlowV = -(modelViewMatrix * vec4(transformed, 1.0)).xyz; vGlowUv = uv;"
-      )
-    s.fragmentShader = s.fragmentShader
-      .replace("#include <common>", `#include <common>\nuniform float uTime; varying vec3 vGlowN; varying vec3 vGlowV; varying vec2 vGlowUv;\n${NOISE}`)
-      .replace(
-        "#include <map_fragment>",
-        `#include <map_fragment>
- { float ndv = abs(dot(normalize(vGlowN), normalize(vGlowV)));
-   float edge = pow(clamp(ndv, 0.0, 1.0), 2.1);
-   float vert = smoothstep(0.0, 0.22, vGlowUv.y) * smoothstep(1.0, 0.62, vGlowUv.y);
-   float wisp = 0.72 + 0.28 * mfbm(vec2(vGlowUv.x * 4.5 + uTime * 0.012, vGlowUv.y * 1.4 - uTime * 0.018));
-   diffuseColor.a *= edge * vert * wisp; }`
-      )
-  })
+  return stageMaterial(m, ctx.shared, "glow")
 }
 // Live flame on upright cards, uv.y from the root to the tip: tongues of fire that lick upward and sway, white-gold at
 // the root and deep red where they break off. Unlit and shadowless.

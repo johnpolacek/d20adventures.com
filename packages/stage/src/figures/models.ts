@@ -101,16 +101,11 @@ function figureMaterial(src: Mat, shared: SharedUniforms, ownLight: boolean, gra
   const edge = (s: Parameters<NonNullable<Parameters<typeof stageMaterial>[3]>>[0]) => {
     if (!rim) return
     s.uniforms.uRim = { value: rim }
-    s.uniforms.uRimSun = shared.sun
     s.fragmentShader = s.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform vec3 uRim; uniform vec3 uRimSun;")
+      .replace("#include <common>", "#include <common>\nuniform vec3 uRim;")
       .replace(
         "#include <opaque_fragment>",
-        `{ vec3 sunV = normalize((viewMatrix * vec4(uRimSun, 0.0)).xyz);
-  float moonSide = 0.35 + 0.65 * saturate(dot(normal, sunV) * 0.5 + 0.5);
-  float upSide = 0.35 + 0.65 * saturate(normal.y * 0.5 + 0.5);
-  outgoingLight += uRim * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 2.8) * upSide * moonSide; }
-#include <opaque_fragment>`
+        "outgoingLight += uRim * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.0) * (0.3 + 0.7 * saturate(normal.y * 0.5 + 0.5));\n#include <opaque_fragment>"
       )
   }
   const lit = rim ? "-rim" : ""
