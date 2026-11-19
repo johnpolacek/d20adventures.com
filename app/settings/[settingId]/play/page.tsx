@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { textShadow } from "@d20/ui/typography/styles"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import ImageHeader from "@/components/ui/image-header"
 import Image from "@/components/ui/native-image"
@@ -128,7 +128,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
           </div>
           <div className="flex justify-center pt-8 pb-24">
             <Link href={`/settings/${settingId}`}>
-              <Button variant="epic" asChild>
+              <Button variant="epic">
                 Go To Setting
               </Button>
             </Link>

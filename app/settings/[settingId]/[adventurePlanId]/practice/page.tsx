@@ -1,7 +1,7 @@
 import { SignInButton } from "@clerk/nextjs"
 import { auth } from "@clerk/nextjs/server"
 import { PracticeAdventureSetup } from "@/components/adventure/practice-adventure-setup"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { canManageResource } from "@/lib/content-permissions"
 import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"

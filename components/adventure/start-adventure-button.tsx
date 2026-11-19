@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { startAdventure } from "@/app/_actions/start-adventure"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import type { Adventure } from "@/types/adventure"
 
 interface StartAdventureButtonProps {

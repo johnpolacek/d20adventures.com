@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import NativeImage from "@/components/ui/native-image"
 import { requireAdmin } from "@/lib/auth-utils"
 import { listAdminWikiAdventures } from "@/lib/wiki-adventures/admin-authoring"
@@ -84,9 +84,7 @@ export default async function AdminAdventurePlansPage() {
                         {source.label}
                       </span>
                     </p>
-                    <Button asChild variant="epic" size="sm" className="px-5 py-1.5 text-xs">
-                      <Link href={href}>Open Chat Editor</Link>
-                    </Button>
+                    <Button variant="epic" size="sm" className="px-5 py-1.5 text-xs" render={<Link href={href} />}>Open Chat Editor</Button>
                   </div>
                 </article>
               )

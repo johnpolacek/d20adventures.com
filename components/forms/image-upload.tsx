@@ -3,7 +3,7 @@
 import { ImagePlus, Loader, X } from "lucide-react"
 import { useCallback, useState } from "react"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import Image from "@/components/ui/native-image"
 import { IMAGE_HOST } from "@/lib/config"
 import { useFileUpload } from "@/lib/upload-utils"

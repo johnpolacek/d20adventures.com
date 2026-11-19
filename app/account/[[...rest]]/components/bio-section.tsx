@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
 export function BioSection() {

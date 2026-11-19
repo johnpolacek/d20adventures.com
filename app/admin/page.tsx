@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { requireAdmin } from "@/lib/auth-utils"
 

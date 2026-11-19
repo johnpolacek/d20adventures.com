@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./utils": "./src/utils.ts",
     "./feedback-rules": "./src/feedback-rules.ts",
+    "./graphics/styles": "./src/graphics/styles.ts",
     "./typography/styles": "./src/typography/styles.ts",
+    "./utils": "./src/utils.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
     "check": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@ui-sdk/core": "0.1.0-beta.13",
     "@ui-sdk/react": "0.1.0-beta.13",
     "class-variance-authority": "^0.7.1",

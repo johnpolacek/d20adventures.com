@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import Image from "@/components/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { PC, PCTemplate } from "@/types/character"

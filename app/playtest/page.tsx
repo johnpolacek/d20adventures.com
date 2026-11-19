@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { Castle, Feather, Github, type LucideIcon, ScrollText } from "lucide-react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import Image from "@/components/ui/native-image"
 import { cn } from "@/lib/utils"
 import { CopyBlock } from "./copy-block"
@@ -134,9 +134,7 @@ function Install() {
             </h3>
             <p className="font-serif text-stage-cream/80">The Midnight Summons runs in your browser.</p>
           </div>
-          <Button asChild variant="epic" className="shrink-0">
-            <Link href={soloDemo}>Play Now</Link>
-          </Button>
+          <Button variant="epic" className="shrink-0" render={<Link href={soloDemo} />}>Play Now</Button>
         </div>
       </div>
 

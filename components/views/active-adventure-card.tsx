@@ -1,6 +1,6 @@
 import { ChevronsRight } from "lucide-react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
@@ -43,11 +43,9 @@ export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventu
           )}
         </div>
         <div className="flex gap-3">
-          <Button asChild variant="epic" size="lg" className="flex items-center text-center gap-2">
-            <Link href={`/settings/${adventure.settingId}/${adventure.adventurePlanId}/${adventure.id}`}>
+          <Button variant="epic" size="lg" className="flex items-center text-center gap-2" render={<Link href={`/settings/${adventure.settingId}/${adventure.adventurePlanId}/${adventure.id}`} />}>
               Continue <ChevronsRight style={textShadow} className="w-5 h-5 scale-y-125 text-indigo-300 -ml-1 -mr-2 relative -top-px" />
-            </Link>
-          </Button>
+            </Button>
         </div>
       </CardContent>
     </Card>

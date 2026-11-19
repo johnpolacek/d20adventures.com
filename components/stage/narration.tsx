@@ -6,7 +6,7 @@
 // step back, move on (Continue when stepping through, the next paragraph when it plays itself), or skip to the end.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { Button, epicReducedButtonStyle } from "@/components/ui/button"
+import { Button, epicReducedButtonStyle } from "@d20/ui/button"
 import { cn } from "@/lib/utils"
 import { Chevron, eyebrow, panel } from "./hud"
 import { FeatureEntry } from "./roll-parts"

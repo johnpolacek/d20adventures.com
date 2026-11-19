@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { type ReactNode, useEffect, useState } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import type { Adventure } from "@/types/adventure"
 import ActiveAdventureCard from "./active-adventure-card"
 
@@ -44,12 +44,8 @@ export default function HomeAdventure({ children }: { children: ReactNode }) {
       </h2>
       <ActiveAdventureCard adventure={data.activeAdventure} userId={data.userId} />
       <div className="flex justify-center items-center gap-8 py-12">
-        <Button asChild variant="epic" size="sm" className="mt-2 text-xs relative z-10 bg-fuchsia-800">
-          <Link href={user?.username ? `/player/${user.username}` : "/player"}>Your Player Page</Link>
-        </Button>
-        <Button asChild variant="epic" size="sm" className="mt-2 text-xs relative z-10">
-          <Link href="/settings/realm-of-myr/play">Find New Adventure</Link>
-        </Button>
+        <Button variant="epic" size="sm" className="mt-2 text-xs relative z-10 bg-fuchsia-800" render={<Link href={user?.username ? `/player/${user.username}` : "/player"} />}>Your Player Page</Button>
+        <Button variant="epic" size="sm" className="mt-2 text-xs relative z-10" render={<Link href="/settings/realm-of-myr/play" />}>Find New Adventure</Button>
       </div>
     </div>
   )

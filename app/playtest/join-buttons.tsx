@@ -1,7 +1,7 @@
 "use client"
 
 import { SignInButton, SignUpButton } from "@clerk/nextjs"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 
 // Signing up is joining: the page shows the playtester view to anyone signed in.
 export function JoinButtons() {

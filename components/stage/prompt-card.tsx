@@ -7,7 +7,7 @@
 
 import { ArrowUp } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { cn } from "@/lib/utils"
 import { D20Solid } from "./d20"
 import { rattle } from "./dice-sound"

@@ -30,7 +30,6 @@ export function CharacterGrid({ username, characters, characterFiles }: Characte
             character={char}
             buttonLabel="Edit"
             href={`/player/${username}/characters/${characterFiles[i]}/edit`}
-            buttonAsChild={true}
             onDelete={() => handleDelete(characterFiles[i])}
           />
         </div>

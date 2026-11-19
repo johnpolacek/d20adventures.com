@@ -1,7 +1,7 @@
 "use client"
 import { useState, useTransition } from "react"
 import { setUsername } from "@/app/_actions/profile"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Input } from "@/components/ui/input"
 
 export default function PlayerSetUsernameForm({ userId }: { userId: string }) {

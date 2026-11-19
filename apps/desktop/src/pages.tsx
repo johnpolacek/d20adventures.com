@@ -3,7 +3,7 @@ import { Trash2 } from "lucide-react"
 import { type ReactNode, useState } from "react"
 import { ModuleCover } from "@/components/adventure/module-cover"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
-import { Button } from "@/components/ui/button"
+import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import ImageHeader from "@/components/ui/image-header"
 import { Chip, Rule, SectionPlate, siteCard, siteCardHover, siteLabel, siteOutline } from "@/components/ui/site"
 import { cn } from "@/lib/utils"
@@ -123,9 +123,7 @@ function SavedCard(props: {
           <div className="line-clamp-2 w-full font-display text-lg text-amber-300">{props.status}</div>
           {props.note && <div className="mt-1 line-clamp-2 w-full text-sm text-gray-300">{props.note}</div>}
           <div className="mt-auto pt-4">
-            <Button asChild variant="epic" className="text-sm">
-              <span>{props.action}</span>
-            </Button>
+            <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>{props.action}</span>
           </div>
         </div>
       </button>
@@ -256,9 +254,7 @@ export function AdventuresPage(props: {
                       {a.locked ? (
                         <span className={cn(siteOutline, "px-4 py-1.5 text-sm")}>Details</span>
                       ) : (
-                        <Button asChild variant="epic" className="text-sm">
-                          <span>Play</span>
-                        </Button>
+                        <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Play</span>
                       )}
                     </div>
                   </div>
@@ -308,9 +304,7 @@ export function AdventuresPage(props: {
                 {featured.locked ? (
                   <span className={cn(siteOutline, "px-4 py-1.5")}>Details</span>
                 ) : (
-                  <Button asChild variant="epic" className="text-xl">
-                    <span>Play</span>
-                  </Button>
+                  <span className={buttonClassName("epic", undefined, "text-xl")} style={buttonStyle("epic")}>Play</span>
                 )}
                 <PriceChip a={featured} listPrices={props.listPrices} />
               </div>
@@ -372,9 +366,7 @@ export function CharactersPage(props: {
                       {h.race} {h.archetype}
                     </div>
                     {props.onEdit && (
-                      <Button asChild variant="epic" className="text-sm">
-                        <span>Edit</span>
-                      </Button>
+                      <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Edit</span>
                     )}
                   </div>
                 </button>
@@ -429,9 +421,7 @@ export function SettingsPage(props: { realm: Realm | null; onRealm: () => void }
               <div className="px-6 pt-3 pb-6">
                 <p className="line-clamp-4 text-base text-gray-300">{props.realm.description.split(/\n\s*\n/)[0]}</p>
                 <div className="mt-5 flex justify-center">
-                  <Button asChild variant="epic" className="text-sm">
-                    <span>Explore</span>
-                  </Button>
+                  <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Explore</span>
                 </div>
               </div>
             </button>

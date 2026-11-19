@@ -6,7 +6,7 @@ import { getPracticeReportsForUser } from "@/app/_actions/adventure-reports"
 import { getUserCharacters } from "@/app/_actions/character"
 import FullPageImage from "@/components/layout/fullpage-image"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -80,7 +80,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                     Join an adventure to get started.
                   </p>
                   <Link href="/settings/realm-of-myr/play">
-                    <Button asChild variant="epic" className="text-sm" size="sm">
+                    <Button variant="epic" className="text-sm" size="sm">
                       Join an Adventure
                     </Button>
                   </Link>
@@ -119,7 +119,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                           <span className="text-xxs px-2 py-1 rounded font-mono bg-white/10 text-white/80">{adv.status || "active"}</span>
                         </div>
                         <Link href={`/settings/${adv.settingId}/${adv.planId || adv.adventurePlanId}/${adv._id || adv.id}`}>
-                          <Button asChild variant="epic" className="text-sm" size="sm">
+                          <Button variant="epic" className="text-sm" size="sm">
                             {adv.status === "active" ? "Continue" : "View"}
                           </Button>
                         </Link>
@@ -149,9 +149,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                       </div>
                       {report.summary ? <p className="text-sm text-white/85 mt-2 line-clamp-3">{report.summary}</p> : null}
                       <div className="mt-3">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/settings/${report.settingId}/${report.planId}/${report.adventureId}`}>Open Run</Link>
-                        </Button>
+                        <Button variant="outline" size="sm" render={<Link href={`/settings/${report.settingId}/${report.planId}/${report.adventureId}`} />}>Open Run</Button>
                       </div>
                     </div>
                   ))}

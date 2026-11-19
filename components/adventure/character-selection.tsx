@@ -5,7 +5,7 @@ import { Eye } from "lucide-react"
 import Link from "next/link"
 import React, { useState } from "react"
 import { textShadow, textShadowSpreadLight } from "@d20/ui/typography/styles"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "@/components/ui/native-image"
@@ -116,9 +116,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
               </p>
             )}
 
-            <Button asChild variant="epic" size="lg" className={cn(!adventurePlan.premadePlayerCharacters || (adventurePlan.premadePlayerCharacters.length === 0 && "text-xl px-12 py-4"))}>
-              <Link href={`/settings/${adventurePlan.settingId}/${adventurePlan.id}/character-create`}>Create Character</Link>
-            </Button>
+            <Button variant="epic" size="lg" className={cn(!adventurePlan.premadePlayerCharacters || (adventurePlan.premadePlayerCharacters.length === 0 && "text-xl px-12 py-4"))} render={<Link href={`/settings/${adventurePlan.settingId}/${adventurePlan.id}/character-create`} />}>Create Character</Button>
           </div>
         )}
         {adventurePlan.premadePlayerCharacters && adventurePlan.premadePlayerCharacters.length > 0 && (

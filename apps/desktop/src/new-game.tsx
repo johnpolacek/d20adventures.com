@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { ModuleCover } from "@/components/adventure/module-cover"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Chip, Option, siteCard, siteLabel, siteOutline, sitePanel } from "@/components/ui/site"
 import { cn } from "@/lib/utils"

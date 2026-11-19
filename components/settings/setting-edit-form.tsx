@@ -2,7 +2,7 @@
 
 import { toast } from "sonner"
 import { useSettingForm } from "@/components/settings/hooks/use-setting-form"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import type { Setting } from "@/types/setting"
 import { SettingBasicInfo } from "./setting-basic-info"
 import { SettingFormHeader } from "./setting-form-header"

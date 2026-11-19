@@ -4,7 +4,7 @@ import DiceRollResult from "@/components/adventure/dice-roll-result"
 import Image from "@/components/ui/native-image"
 import { cn, rollD20 } from "@/lib/utils"
 import { textShadow } from "@d20/ui/typography/styles"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 
 const ROLL_ANIMATION_DURATION = 1200 // ms
 const ROLL_ANIMATION_INTERVAL = 60 // ms
@@ -70,7 +70,7 @@ export default function DiceRoll({
 
   return (
     <Button
-      ariaLabel="Roll D20"
+      aria-label="Roll D20"
       className={cn(
         "group text-2xl brightness-125 contrast-150 font-display flex gap-[7px] justify-center items-center pt-[2px] pb-0 px-3 bg-blue-600 rounded-full ring-4 ring-blue-800 border border-blue-400/50 transition-all ease-in-out duration-500 bg-[url('/images/app/backgrounds/buried.png')]",
         className,

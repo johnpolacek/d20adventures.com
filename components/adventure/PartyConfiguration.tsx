@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { createAdventure } from "@/app/_actions/create-adventure"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { scrollToBottom } from "../ui/utils"
 import type { CharacterChoiceMode } from "./character-selection"
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { cn } from "@/lib/utils"
 
 export default function StoryviewControls({
@@ -35,22 +35,22 @@ export default function StoryviewControls({
         ))}
       </div>
       <div className="relative flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={onPrev} disabled={slideIndex === 0} ariaLabel="Previous">
+        <Button variant="outline" size="icon" onClick={onPrev} disabled={slideIndex === 0} aria-label="Previous">
           <ChevronLeft className="h-5 w-5" />
         </Button>
         {playing ? (
-          <Button variant="epic" size="icon" className="h-12 w-12 p-0 rounded-full" onClick={onPause} ariaLabel="Pause">
+          <Button variant="epic" size="icon" className="h-12 w-12 p-0 rounded-full" onClick={onPause} aria-label="Pause">
             <Pause className="h-6 w-6" />
           </Button>
         ) : (
-          <Button variant="epic" size="icon" className="h-12 w-12 p-0 rounded-full" onClick={onPlay} ariaLabel={finished ? "Replay" : "Play"}>
+          <Button variant="epic" size="icon" className="h-12 w-12 p-0 rounded-full" onClick={onPlay} aria-label={finished ? "Replay" : "Play"}>
             {finished ? <RotateCcw className="h-6 w-6" /> : <Play className="h-6 w-6" />}
           </Button>
         )}
-        <Button variant="outline" size="icon" onClick={onNext} disabled={slideIndex >= slideCount - 1} ariaLabel="Next">
+        <Button variant="outline" size="icon" onClick={onNext} disabled={slideIndex >= slideCount - 1} aria-label="Next">
           <ChevronRight className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="sm" className="absolute left-full ml-2 w-14 font-mono text-xs text-white/70 hover:text-white" onClick={onCycleSpeed} ariaLabel={`Playback speed ${speed}x`}>
+        <Button variant="ghost" size="sm" className="absolute left-full ml-2 w-14 font-mono text-xs text-white/70 hover:text-white" onClick={onCycleSpeed} aria-label={`Playback speed ${speed}x`}>
           {speed}×
         </Button>
       </div>

@@ -1,6 +1,6 @@
 import { UserRoundX } from "lucide-react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card } from "@/components/ui/card"
 import Image from "@/components/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
@@ -11,14 +11,13 @@ interface CharacterSelectCardProps {
   buttonLabel: string
   onButtonClick?: () => void
   href?: string
-  buttonAsChild?: boolean
   className?: string
   disabled?: boolean
   clickable?: boolean
   onDelete?: () => void
 }
 
-export function CharacterSelectCard({ character, buttonLabel, onButtonClick, href, buttonAsChild = false, className, disabled = false, clickable = false, onDelete }: CharacterSelectCardProps) {
+export function CharacterSelectCard({ character, buttonLabel, onButtonClick, href, className, disabled = false, clickable = false, onDelete }: CharacterSelectCardProps) {
   return (
     <Card
       className={cn(
@@ -43,7 +42,7 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
         </div>
         {href ? (
           <Link href={href} className="w-full flex justify-center">
-            <Button asChild={buttonAsChild} variant="epic" className="text-sm" size="sm" disabled={disabled}>
+            <Button variant="epic" className="text-sm" size="sm" disabled={disabled}>
               {buttonLabel}
             </Button>
           </Link>

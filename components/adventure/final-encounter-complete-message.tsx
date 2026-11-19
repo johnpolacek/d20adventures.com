@@ -3,7 +3,7 @@
 import Link from "next/link"
 import React from "react"
 import { getAdventurePlan } from "@/app/_actions/get-adventure-plan"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import Image from "@/components/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -61,27 +61,19 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
                     {nextAdventurePlan.teaser && <p className="text-sm text-white leading-relaxed pb-2">{nextAdventurePlan.teaser}</p>}
                   </div>
                   {/* Play Button */}
-                  <Button size="lg" asChild variant="epic">
-                    <Link href={`/settings/${settingId}/${nextAdventure}/character-select`}>Play Next Adventure</Link>
-                  </Button>
+                  <Button size="lg" variant="epic" render={<Link href={`/settings/${settingId}/${nextAdventure}/character-select`} />}>Play Next Adventure</Button>
                 </div>
               </div>
             </div>
           ) : (
-            <Button size="sm" asChild variant="epic">
-              <Link href={`/settings/${settingId}/${nextAdventure}/character-select`}>Play Next Adventure</Link>
-            </Button>
+            <Button size="sm" variant="epic" render={<Link href={`/settings/${settingId}/${nextAdventure}/character-select`} />}>Play Next Adventure</Button>
           )}
         </div>
       )}
       {isSignedIn && !nextAdventure && (
         <div className="flex flex-col md:flex-row justify-center gap-6">
-          <Button size="sm" asChild variant="epic">
-            <Link href={`/settings/${settingId}/${adventurePlanId}/character-select`}>Play Again</Link>
-          </Button>
-          <Button size="sm" asChild variant="epic" className="bg-amber-800 hover:bg-amber-700 saturate-75">
-            <Link href={`/settings/${settingId}/play`}>Go to Setting</Link>
-          </Button>
+          <Button size="sm" variant="epic" render={<Link href={`/settings/${settingId}/${adventurePlanId}/character-select`} />}>Play Again</Button>
+          <Button size="sm" variant="epic" className="bg-amber-800 hover:bg-amber-700 saturate-75" render={<Link href={`/settings/${settingId}/play`} />}>Go to Setting</Button>
         </div>
       )}
     </>

@@ -2,7 +2,7 @@
 
 import { Clapperboard } from "lucide-react"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import StoryviewOverlay, { type StoryviewSnapshot } from "./storyview-overlay"
 

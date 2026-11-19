@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import Parchment from "@/components/graphics/background/Parchment"
-import { paper } from "@/components/graphics/styles"
+import { paper } from "@d20/ui/graphics/styles"
 import { cn } from "@/lib/utils"
 import type { Page } from "./pages"
 

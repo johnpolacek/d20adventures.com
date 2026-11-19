@@ -1,6 +1,6 @@
 import { SignInButton } from "@clerk/nextjs"
 import { auth } from "@clerk/nextjs/server"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Container } from "@/components/ui/container"
 import { AccountProfile } from "./components/account-profile"

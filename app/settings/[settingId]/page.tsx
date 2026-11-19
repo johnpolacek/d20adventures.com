@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import ImageHeader from "@/components/ui/image-header"
 import { isDev } from "@/lib/auth-utils"
 import { readJsonFromS3 } from "@/lib/s3-utils"
@@ -35,7 +35,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
         <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
           <div className="flex justify-center mb-8">
             <Link href={`/settings/${settingId}/play`}>
-              <Button asChild variant="epic">
+              <Button variant="epic">
                 Go to Adventures
               </Button>
             </Link>

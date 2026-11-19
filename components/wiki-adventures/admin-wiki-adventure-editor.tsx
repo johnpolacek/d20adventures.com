@@ -10,7 +10,7 @@ import {
   saveAdminWikiAdventureFileAction,
   sendAdminWikiAdventureChatAction,
 } from "@/app/_actions/wiki-adventures/admin-authoring-actions"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { ImageUpload } from "@/components/forms/image-upload"
 import { Input } from "@/components/ui/input"
 import Image from "@/components/ui/native-image"

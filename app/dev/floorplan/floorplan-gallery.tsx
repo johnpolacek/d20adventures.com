@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { FloorPlanRailPanel } from "@/components/floorplan/floor-plan-panel"
 import type { FloorToken, FloorView } from "@/components/floorplan/view"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 
 export type GalleryState = { id: string; title: string; floor: FloorView; characters: FloorToken[]; moved?: FloorToken[]; activeId?: string }
 

@@ -3,7 +3,7 @@
 import { SignInButton, useUser } from "@clerk/nextjs"
 import { useCallback, useEffect, useState } from "react"
 import { eyebrow, Pill, panel } from "@/components/stage/hud"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import Image from "@/components/ui/native-image"
 import { cn } from "@/lib/utils"
 

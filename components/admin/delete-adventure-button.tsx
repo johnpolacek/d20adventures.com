@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { deleteAdventureAdmin } from "@/app/_actions/admin/delete-adventure"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import type { Id } from "@/convex/_generated/dataModel"
 
 export function DeleteAdventureButton({ adventureId, title }: { adventureId: string; title: string }) {

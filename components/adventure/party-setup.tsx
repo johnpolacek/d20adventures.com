@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { createAdventure } from "@/app/_actions/create-adventure"
 import { textShadow } from "@d20/ui/typography/styles"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card } from "@/components/ui/card"
 import { CharacterSelectCard } from "@/components/adventure/character-select-card"
 import Image from "@/components/ui/native-image"

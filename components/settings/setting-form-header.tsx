@@ -2,7 +2,7 @@
 
 import { Download } from "lucide-react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 
 interface SettingFormHeaderProps {
   settingId: string
@@ -22,7 +22,7 @@ export function SettingFormHeader({ settingId, settingName, isSaving, onDownload
         </Link>
       </div>
       <div className="flex gap-8 items-center">
-        <Button ariaLabel="Download JSON" variant="outline" size="icon" className="text-white p-0" onClick={onDownload}>
+        <Button aria-label="Download JSON" variant="outline" size="icon" className="text-white p-0" onClick={onDownload}>
           <Download className="w-4 h-4" />
         </Button>
         <Button variant="epic" size="sm" className="text-sm" onClick={onSave} disabled={isSaving}>

@@ -3,7 +3,7 @@
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs"
 import { User as UserIcon } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { useTokens } from "@/lib/context/TokenContext"
 import TokenCount from "./token-count"
 

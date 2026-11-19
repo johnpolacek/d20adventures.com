@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import { createPracticeAdventure } from "@/app/_actions/create-adventure"
-import { Button } from "@/components/ui/button"
+import { Button } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { PCTemplate } from "@/types/character"
 
