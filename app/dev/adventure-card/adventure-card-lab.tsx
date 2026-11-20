@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2, X } from "lucide-react"
+import { X } from "lucide-react"
 import type { ReactNode } from "react"
 import { buttonClassName, buttonStyle } from "@d20/ui/button"
 import { Chip, SectionPlate, siteLabel } from "@d20/ui/site"
@@ -48,10 +48,14 @@ function Epic(props: { children: ReactNode; className?: string }) {
 
 function Remove(props: { className?: string }) {
   return (
-    <span className={cn("grid size-8 place-items-center rounded bg-red-950/60 text-red-400/80 hover:text-red-300", props.className)}>
-      <Trash2 className="size-4" />
+    <span className={cn("grid size-8 place-items-center rounded-md bg-black/60 text-white/70 hover:bg-red-600/80 hover:text-white", props.className)}>
+      <X className="size-4" />
     </span>
   )
+}
+
+function Thumb(props: { className?: string }) {
+  return <img src={save.cover} alt="" className={cn("aspect-[3/4] w-20 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20", props.className)} />
 }
 
 function Portrait(props: { src: string; className?: string }) {
@@ -301,6 +305,233 @@ function Rows() {
   )
 }
 
+// I: sidebar. The scene runs edge to edge, and a solid panel on the right holds everything you read.
+function Sidebar() {
+  return (
+    <div className="relative grid aspect-[21/8] grid-cols-[1fr_22rem] overflow-hidden rounded-lg border border-white/10 ring-8 ring-black/30">
+      <img src={save.sceneArt} alt="" className="h-full w-full object-cover" />
+      <div className="relative flex flex-col gap-4 bg-[#07090c] p-8 shadow-[-30px_0_60px_#000]">
+        <div className="flex items-start justify-between">
+          <Thumb className="w-16" />
+          <Remove />
+        </div>
+        <h3 className="font-display text-3xl leading-tight text-white">{save.title}</h3>
+        <div className="h-px bg-gradient-to-r from-amber-400/60 to-transparent" />
+        <div>
+          <div className={siteLabel}>Round {save.round}</div>
+          <div className="font-display text-xl text-amber-300">{save.turnTitle}</div>
+        </div>
+        <div className="mt-auto flex items-center justify-between">
+          <span className="font-serif text-sm text-white/60 italic">{save.party[0].name}</span>
+          <Epic>Continue</Epic>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// J: a chapter title card, centred like the frame before a film's next act.
+function TitleCard() {
+  return (
+    <div className="relative grid aspect-[21/8] place-items-center overflow-hidden rounded-lg border border-white/10 ring-8 ring-black/30">
+      <img src={save.sceneArt} alt="" className="absolute inset-0 h-full w-full object-cover brightness-[.45]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#000_85%)]" />
+      <Remove className="absolute top-6 right-6" />
+      <div className="relative flex flex-col items-center text-center">
+        <Thumb className="w-14" />
+        <div className="mt-5 font-display text-sm tracking-[0.4em] text-white/70 uppercase">{save.title}</div>
+        <div className="my-3 flex items-center gap-4 text-amber-400/80">
+          <span className="h-px w-24 bg-gradient-to-l from-amber-400/70 to-transparent" />◆<span className="h-px w-24 bg-gradient-to-r from-amber-400/70 to-transparent" />
+        </div>
+        <h3 className="font-display text-6xl text-amber-200 [text-shadow:0_2px_16px_#000]">{save.turnTitle}</h3>
+        <div className="mt-3 font-serif text-white/60 italic">
+          Round {save.round} · {save.party[0].name}
+        </div>
+        <Epic className="mt-6">Continue</Epic>
+      </div>
+    </div>
+  )
+}
+
+// K: Cinema with the run's length along its foot, one segment per scene.
+function ProgressBanner() {
+  return (
+    <div className="relative aspect-[21/8] overflow-hidden rounded-lg border border-white/10 ring-8 ring-black/30">
+      <img src={save.sceneArt} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+      <Remove className="absolute top-6 right-6" />
+      <div className="absolute inset-x-10 bottom-8">
+        <div className="flex items-end gap-5">
+          <Thumb />
+          <div className="flex-1">
+            <h3 className="font-display text-4xl text-white [text-shadow:0_2px_12px_#000]">{save.title}</h3>
+            <div className="font-display text-xl text-amber-300">
+              Round {save.round} · {save.turnTitle}
+            </div>
+          </div>
+          <Epic>Continue</Epic>
+        </div>
+        <div className="mt-5 flex gap-1.5">
+          {save.trail.map((t, i) => (
+            <div key={t.title} className="flex-1">
+              <div className={cn("h-1.5 rounded-full", i < save.at ? "bg-amber-400/70" : i === save.at ? "bg-amber-300 shadow-[0_0_10px_#fbbf24]" : "bg-white/15")} />
+              <div className={cn("mt-1.5 truncate font-mono text-xxs uppercase", i === save.at ? "text-amber-200" : i < save.at ? "text-white/50" : "text-white/20")}>{i > save.at ? "?" : t.title}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// L: a painting on a gallery wall, gilt frame and a brass nameplate beneath.
+function Gallery() {
+  return (
+    <div className="flex items-center gap-10 rounded-lg border border-white/10 bg-[radial-gradient(ellipse_at_top,#1d1712,#050403_70%)] p-10 ring-8 ring-black/30">
+      <div className="flex-1">
+        <div className="rounded-sm bg-gradient-to-br from-[#8a6a2c] via-[#d6b25e] to-[#5c4318] p-2.5 shadow-[0_24px_50px_#000]">
+          <div className="border-4 border-[#2a1e0c] shadow-[inset_0_0_30px_#000]">
+            <img src={save.sceneArt} alt="" className="aspect-[2/1] w-full object-cover" />
+          </div>
+        </div>
+        <div className="mx-auto -mt-1 w-fit rounded-b bg-gradient-to-b from-[#c9a24f] to-[#7d5c22] px-6 py-1.5 font-display text-sm text-[#1c1408] shadow-lg">
+          {save.turnTitle} · Round {save.round}
+        </div>
+      </div>
+      <div className="flex w-72 flex-col gap-4">
+        <div className="flex items-start justify-between">
+          <Thumb />
+          <Remove />
+        </div>
+        <h3 className="font-display text-3xl text-white">{save.title}</h3>
+        <p className="font-serif text-sm text-white/60 italic">{save.party[0].name} · {save.playedAt}</p>
+        <Epic className="self-start">Continue</Epic>
+      </div>
+    </div>
+  )
+}
+
+// M: a deck. The current game on top, the other saves fanned behind it, so one card says how many runs there are.
+function Deck() {
+  return (
+    <div className="relative pt-6 pr-6">
+      {others.map((o, i) => (
+        <img
+          key={o.title}
+          src={o.cover}
+          alt=""
+          className="absolute aspect-[21/8] w-full rounded-lg object-cover brightness-[.3] ring-1 ring-white/10"
+          style={{ top: `${(1 - i) * 12}px`, left: `${(i + 1) * 12}px`, transform: `rotate(${(i + 1) * 0.6}deg)` }}
+        />
+      ))}
+      <div className="relative aspect-[21/8] overflow-hidden rounded-lg border border-white/10 ring-8 ring-black/40">
+        <img src={save.sceneArt} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
+        <Remove className="absolute top-6 right-6" />
+        <div className="relative flex h-full items-center gap-6 p-10">
+          <Thumb className="w-28" />
+          <div>
+            <Chip tone="amber">Playing</Chip>
+            <h3 className="mt-3 font-display text-5xl text-white">{save.title}</h3>
+            <div className="mt-2 font-display text-xl text-amber-300">
+              Round {save.round} · {save.turnTitle}
+            </div>
+            <Epic className="mt-6">Continue</Epic>
+          </div>
+        </div>
+        <div className="absolute right-8 bottom-6 font-mono text-xs text-white/60">+{others.length} more saves</div>
+      </div>
+    </div>
+  )
+}
+
+// N: the pause screen. As if the game were frozen mid-scene, with the party's HUD still up.
+function Pause() {
+  return (
+    <div className="relative aspect-[21/8] overflow-hidden rounded-lg border border-white/10 ring-8 ring-black/30">
+      <img src={save.sceneArt} alt="" className="absolute inset-0 h-full w-full object-cover saturate-[.7]" />
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-x-0 top-0 flex items-center gap-4 bg-gradient-to-b from-black/90 to-transparent px-8 pt-6 pb-10">
+        <Thumb className="w-10 rounded" />
+        <span className="font-display text-xl text-white">{save.title}</span>
+        <span className="font-mono text-xs text-white/50">ROUND {save.round}</span>
+        <Remove className="ml-auto" />
+      </div>
+      <div className="absolute inset-0 grid place-items-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="font-display text-sm tracking-[0.5em] text-white/70">PAUSED</div>
+          <Epic className="scale-125">Continue</Epic>
+        </div>
+      </div>
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/90 to-transparent px-8 pt-10 pb-6">
+        <div className="flex items-center gap-3">
+          <Portrait src={save.party[0].image} className="size-14" />
+          <div>
+            <div className="font-display text-lg text-white">{save.party[0].name}</div>
+            <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-white/15">
+              <div className="h-full w-[72%] bg-emerald-500" />
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className={siteLabel}>Scene</div>
+          <div className="font-display text-xl text-amber-300">{save.turnTitle}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// O: triptych. The two scenes behind you and the one you stand in, so the card reads as a story so far.
+function Triptych() {
+  const shown = save.trail.slice(save.at - 2, save.at + 1)
+  return (
+    <div className="overflow-hidden rounded-lg border border-white/10 bg-black ring-8 ring-black/30">
+      <div className="grid h-72 grid-cols-[1fr_1fr_2.4fr] gap-1">
+        {shown.map((t, i) => (
+          <div key={t.title} className="relative overflow-hidden">
+            <img src={t.image} alt="" className={cn("h-full w-full object-cover", i < 2 && "brightness-50 saturate-50")} />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-3 pt-10">
+              <div className={cn("font-display", i === 2 ? "text-2xl text-amber-300" : "text-sm text-white/60")}>{t.title}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-5 px-6 py-4">
+        <Thumb className="w-12" />
+        <div className="flex-1">
+          <h3 className="font-display text-2xl text-white">{save.title}</h3>
+          <div className={siteLabel}>
+            Round {save.round} · {save.party[0].name}
+          </div>
+        </div>
+        <Remove />
+        <Epic>Continue</Epic>
+      </div>
+    </div>
+  )
+}
+
+// P: letterbox. Cinemascope bars above and below the still carry the type, the picture stays clean.
+function Letterbox() {
+  return (
+    <div className="overflow-hidden rounded-lg border border-white/10 bg-black ring-8 ring-black/30">
+      <div className="flex items-center gap-4 px-8 py-4">
+        <Thumb className="w-10 rounded" />
+        <h3 className="flex-1 font-display text-2xl tracking-wide text-white">{save.title}</h3>
+        <Remove />
+      </div>
+      <img src={save.sceneArt} alt="" className="aspect-[3/1] w-full object-cover" />
+      <div className="flex items-center gap-6 px-8 py-4">
+        <span className="font-mono text-xs text-white/50">ROUND {save.round}</span>
+        <span className="flex-1 font-display text-xl text-amber-300">{save.turnTitle}</span>
+        <span className="font-serif text-sm text-white/60 italic">{save.party[0].name}</span>
+        <Epic>Continue</Epic>
+      </div>
+    </div>
+  )
+}
+
 const variants: { key: string; name: string; note: string; demo: ReactNode }[] = [
   { key: "a", name: "Ledger", note: "Cover left, run details right", demo: <Ledger /> },
   { key: "b", name: "Cinema", note: "Current scene as a wide still", demo: <Cinema /> },
@@ -310,6 +541,14 @@ const variants: { key: string; name: string; note: string; demo: ReactNode }[] =
   { key: "f", name: "Marquee", note: "Giant title over the cover", demo: <Marquee /> },
   { key: "g", name: "Diptych", note: "Cover beside the current scene", demo: <Diptych /> },
   { key: "h", name: "Rows", note: "Current game full, older saves slim", demo: <Rows /> },
+  { key: "i", name: "Sidebar", note: "Clean scene, solid text panel right", demo: <Sidebar /> },
+  { key: "j", name: "Title Card", note: "Centred chapter card", demo: <TitleCard /> },
+  { key: "k", name: "Progress Banner", note: "Scene still with a segmented progress bar", demo: <ProgressBanner /> },
+  { key: "l", name: "Gallery", note: "Framed painting with a nameplate", demo: <Gallery /> },
+  { key: "m", name: "Deck", note: "Other saves fanned behind", demo: <Deck /> },
+  { key: "n", name: "Pause", note: "The game frozen mid-scene, HUD up", demo: <Pause /> },
+  { key: "o", name: "Triptych", note: "The last two scenes and this one", demo: <Triptych /> },
+  { key: "p", name: "Letterbox", note: "Type in the bars, the picture clean", demo: <Letterbox /> },
 ]
 
 export function AdventureCardLab() {
