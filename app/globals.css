@@ -143,3 +143,8 @@ textarea:-webkit-autofill {
   text-decoration: none;
   color: #eff6ff;
 }
+.update-body img {
+  max-height: 40rem;
+  width: auto;
+  margin-inline: auto;
+}
