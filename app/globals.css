@@ -52,7 +52,7 @@
   --font-sans: var(--font-rethink-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: ['var(--font-display)'];
   --font-mono: ['var(--font-mono)'];
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-serif: var(--font-literata), Georgia, serif;
 
   @keyframes accordion-down {
     from {

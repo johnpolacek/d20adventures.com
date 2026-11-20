@@ -8,6 +8,7 @@
   --font-display: "Cinzel Decorative", Georgia, serif;
   --font-sans: "Rethink Sans", system-ui, sans-serif;
   --font-mono: "Syne Mono", ui-monospace, monospace;
+  --font-serif: "Literata Variable", Georgia, serif;
 }
 
 /* The website's base: black ground, white serif text, 18px root. The window's own background is black too, so nothing

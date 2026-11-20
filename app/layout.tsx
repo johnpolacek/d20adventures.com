@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Cinzel_Decorative, Rethink_Sans, Syne_Mono } from "next/font/google"
+import { Cinzel_Decorative, Literata, Rethink_Sans, Syne_Mono } from "next/font/google"
 import { Toaster } from "@d20/ui/toast"
 import SiteFooter from "@/components/layout/footer"
 import Header from "@/components/layout/header"
@@ -12,6 +12,14 @@ import { Providers } from "./providers"
 const rethinkSans = Rethink_Sans({
   subsets: ["latin"],
   variable: "--font-rethink-sans",
+})
+
+// The body and narration face. Its optical sizes keep small text sturdy on black.
+const literata = Literata({
+  subsets: ["latin"],
+  variable: "--font-literata",
+  style: ["normal", "italic"],
+  axes: ["opsz"],
 })
 
 const cinzel = Cinzel_Decorative({
@@ -62,7 +70,7 @@ export default function RootLayout({
   const currentYear = new Date().getFullYear()
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${rethinkSans.variable} ${cinzel.variable} ${syne.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${rethinkSans.variable} ${literata.variable} ${cinzel.variable} ${syne.variable}`}>
       <body className={cn("min-h-screen bg-black text-white font-serif antialiased")}>
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>

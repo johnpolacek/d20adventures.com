@@ -22,6 +22,7 @@ import { useAdventure } from "@/lib/context/AdventureContext"
 import { cn } from "@/lib/utils"
 import { Button } from "@d20/ui/button"
 import LoadingAnimation from "@d20/ui/loading-animation"
+import { dropCap } from "@d20/ui/typography/styles"
 import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
 import { TurnLevelUp } from "./turn-level-up"
 import TurnNarrativeReply from "./turn-narrative-reply"
@@ -54,6 +55,8 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
 
   // The turn's story as paragraphs.
   const paragraphs = storyParagraphs(currentTurn.story)
+  // The turn's first narration opens with a drop cap.
+  const opening = paragraphs.findIndex(({ beats }) => beats[0].kind !== "reply" && beats[0].kind !== "feature" && beats[0].kind !== "roll")
   // Who the turn passed over to reach whose turn it is, because they cannot act, and why.
   const passed = passedWords(passedOver(currentTurn.characters, currentCharacter))
 
@@ -79,7 +82,7 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
         if (part.kind === "feature") return <FeatureEntry key={idx} feature={featureView(part, currentTurn.characters)} className="mb-6 max-w-xl" />
         if (part.kind !== "roll") {
           return (
-            <p key={idx} className="text-sm sm:text-base md:text-lg whitespace-pre-line mb-4">
+            <p key={idx} className={cn("text-sm sm:text-base md:text-lg whitespace-pre-line mb-4", idx === opening && dropCap)}>
               {text}
             </p>
           )

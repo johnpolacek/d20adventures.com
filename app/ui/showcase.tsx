@@ -37,13 +37,14 @@ import { Switch } from "@d20/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 import { Textarea } from "@d20/ui/textarea"
 import { Heading } from "@d20/ui/typography/heading"
-import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
+import { Ornament } from "@d20/ui/typography/ornament"
+import { dropCap, textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { cn } from "@/lib/utils"
 
 // The type the site sets: four families, the heading scale and the shadows that lift text off art.
 const families = [
   { name: "Display", note: "Cinzel Decorative · titles, buttons", className: "font-display text-2xl" },
-  { name: "Serif", note: "Georgia · body and narration", className: "font-serif text-lg" },
+  { name: "Serif", note: "Literata · body and narration", className: "font-serif text-lg" },
   { name: "Sans", note: "Rethink Sans · forms and tables", className: "font-sans text-lg" },
   { name: "Mono", note: "Syne Mono · labels and tags", className: "font-mono text-lg" },
 ]
@@ -87,88 +88,27 @@ function TypographyDemo() {
   )
 }
 
-// Body serifs side by side on the same narration: Georgia and four with its tall, sturdy letters.
-const bodyFonts = [
-  { name: "Georgia", note: "today", family: "Georgia, serif" },
-  { name: "Vollkorn", note: "dark and sturdy, a little old-world", family: "var(--font-try-vollkorn)" },
-  { name: "Literata", note: "Google Play Books, warm", family: "var(--font-try-literata)" },
-  { name: "Merriweather", note: "made for screens, the tallest", family: "var(--font-try-merriweather)" },
-  { name: "Gelasio", note: "Georgia's shapes, loads on Android", family: "var(--font-try-gelasio)" },
-]
-
-function BodyFontsDemo() {
-  const [size, setSize] = useState(18)
-  const [detail, setDetail] = useState(bodyFonts[0].name)
-  const detailFamily = bodyFonts.find((f) => f.name === detail)?.family
+// A scene as the game sets it: title, ornament, a drop cap on the opening line, and a closing beat.
+function NarrationDemo() {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-2">
-        <span className={siteLabel}>Size</span>
-        {[16, 18, 20].map((n) => (
-          <Button key={n} variant={size === n ? "brick" : "outline"} size="xs" onClick={() => setSize(n)}>
-            {n}px
-          </Button>
-        ))}
+    <article className="mx-auto flex max-w-2xl flex-col gap-4 font-serif text-lg leading-relaxed text-white/90">
+      <div className="text-center">
+        <div className="font-mono text-xs uppercase tracking-widest text-amber-400/80">Scene One</div>
+        <h3 className="font-display text-3xl text-amber-300" style={textShadow}>
+          The Gate
+        </h3>
       </div>
-      <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-        {bodyFonts.map((f) => (
-          <div key={f.name} className="flex flex-col gap-3">
-            <span className={siteLabel}>
-              {f.name} <span className="normal-case tracking-normal text-white/50">{f.note}</span>
-            </span>
-            <div style={{ fontFamily: f.family, fontSize: size }} className="flex flex-col gap-3 leading-relaxed text-white/90">
-              <p>
-                Rain hammers the slate roofs of Kordavos as the gate guard squints at your papers. “Three silver for the toll,” he says, “and another
-                for the trouble.” Behind him, a cart of <em>Valkaran</em> spice waits in the mud, its driver watching you a little too closely.
-              </p>
-              <p>
-                <strong>Roll a DC 14 Wisdom (Insight) check.</strong> On a success, you notice the seal on his orders was broken and pressed again.
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 border-t border-white/10 pt-6">
-        <span className={siteLabel}>Fantasy details in</span>
-        {bodyFonts.map((f) => (
-          <Button key={f.name} variant={detail === f.name ? "brick" : "outline"} size="xs" onClick={() => setDetail(f.name)}>
-            {f.name}
-          </Button>
-        ))}
-      </div>
-      <article style={{ fontFamily: detailFamily, fontSize: size }} className="mx-auto flex max-w-2xl flex-col gap-4 leading-relaxed text-white/90">
-        <div className="text-center">
-          <div className="font-mono text-xs uppercase tracking-widest text-amber-400/80">Scene One</div>
-          <h3 className="font-display text-3xl text-amber-300" style={textShadow}>
-            The Gate
-          </h3>
-        </div>
-        <Ornament />
-        <p className="first-letter:float-left first-letter:mt-1 first-letter:mr-2 first-letter:font-display first-letter:text-[3.6em] first-letter:leading-[0.8] first-letter:text-amber-300">
-          Rain hammers the slate roofs of <span className="[font-variant-caps:small-caps] tracking-wide">Kordavos</span> as the gate guard squints at your papers. “Three silver for
-          the toll,” says <span className="[font-variant-caps:small-caps] tracking-wide">Sergeant Brannoc</span>, “and another for the trouble.” Behind him, a cart of Valkaran spice
-          waits in the mud.
-        </p>
-        <p>
-          The driver, a woman the guards call <span className="[font-variant-caps:small-caps] tracking-wide">Old Mirre</span>, keeps her hood low and her hands lower, close to
-          something wrapped in oilcloth.
-        </p>
-        <Ornament />
-        <p className="text-center italic text-white/70">The bell in the watchtower rings once.</p>
-      </article>
-    </div>
-  )
-}
-
-// A scene break: hairlines either side of a small mark.
-function Ornament() {
-  return (
-    <div aria-hidden className="flex items-center justify-center gap-3 text-amber-400/70">
-      <span className="h-px w-16 bg-gradient-to-r from-transparent to-amber-400/60" />
-      <span className="text-sm">✦</span>
-      <span className="h-px w-16 bg-gradient-to-l from-transparent to-amber-400/60" />
-    </div>
+      <Ornament />
+      <p className={dropCap}>
+        Rain hammers the slate roofs of Kordavos as the gate guard squints at your papers. “Three silver for the toll,” says Sergeant Brannoc, “and
+        another for the trouble.” Behind him, a cart of <em>Valkaran</em> spice waits in the mud.
+      </p>
+      <p>
+        <strong>Roll a DC 14 Wisdom (Insight) check.</strong> On a success, you notice the seal on his orders was broken and pressed again.
+      </p>
+      <Ornament />
+      <p className="text-center italic text-white/70">The bell in the watchtower rings once.</p>
+    </article>
   )
 }
 
@@ -358,7 +298,7 @@ function SwitchDemo() {
 
 const tiles: Tile[] = [
   { name: "Typography", full: true, demo: <TypographyDemo /> },
-  { name: "Body Fonts", full: true, demo: <BodyFontsDemo /> },
+  { name: "Narration", full: true, demo: <NarrationDemo /> },
   { name: "Colors", full: true, demo: <ColorsDemo /> },
   {
     name: "Button",

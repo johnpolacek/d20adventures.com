@@ -195,6 +195,9 @@ importers:
       '@d20/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@fontsource-variable/literata':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/cinzel-decorative':
         specifier: ^5.3.0
         version: 5.3.0
@@ -840,6 +843,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource-variable/literata@5.3.0':
+    resolution: {integrity: sha512-1Jw7xvOcoGyB83lxB2nG4bfNbqtX2/TTbdh9sHAOmU064SvmSdulDtA5RBu5JYWf64fdaKX7xU+z3GO1T2bCHA==}
 
   '@fontsource/cinzel-decorative@5.3.0':
     resolution: {integrity: sha512-9T6Fsv6l+5CUjvKWcTlMtkAYR/C8p2ll0bgT5krOU+DTLJRmaZYpXzcRoxPvENA6+uApa+Yyn0Ft/hdq083iVA==}
@@ -2773,6 +2779,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@fontsource-variable/literata@5.3.0': {}
 
   '@fontsource/cinzel-decorative@5.3.0': {}
 

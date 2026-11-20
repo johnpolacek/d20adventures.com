@@ -6,6 +6,8 @@
 import { Fragment, useEffect, useRef, useState } from "react"
 import { Button } from "../button"
 import { Input } from "../input"
+import { Ornament } from "../typography/ornament"
+import { dropCapSmall } from "../typography/styles"
 import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { DeathSaveMarks, FeatureEntry, RollDetails } from "./roll-parts"
@@ -13,6 +15,10 @@ import { againstLabel, type FeatureView, isCritical, marginText, modeName, type 
 
 // The story in order: its paragraphs, each dice roll where it was called for, and each class feature used.
 export type JournalEntry = string | { roll: RollView } | { feature: FeatureView }
+
+// Where a scene's first line of narration sits, for its drop cap.
+const firstLine = (paragraphs: JournalEntry[]) => paragraphs.findIndex((p) => typeof p === "string")
+
 export interface JournalTurn {
   number: number
   title: string
@@ -224,7 +230,8 @@ export function Journal({
         {tab === "story" &&
           scenes.map((scene) => (
             <section key={scene[0].number} className="mb-6">
-              <h3 className="mb-2 font-display text-[17px] text-[#f3d6a6]">{scene[0].title}</h3>
+              <h3 className="text-center font-display text-[17px] text-[#f3d6a6]">{scene[0].title}</h3>
+              <Ornament className="mt-1 mb-3 scale-75" />
               {scene.map((t, n) => (
                 <article key={t.number}>
                   {scene.length > 1 && <Divider n={n + 1} of={scene.length} />}
@@ -236,7 +243,7 @@ export function Journal({
                   )}
                   {t.paragraphs.map((p, i) =>
                     typeof p === "string" ? (
-                      <p key={i} className="mb-2.5 font-serif text-[13.5px] leading-[1.65] text-stage-sage">
+                      <p key={i} className={cn("mb-2.5 font-serif text-[13.5px] leading-[1.65] text-stage-sage", n === 0 && i === firstLine(t.paragraphs) && dropCapSmall)}>
                         {p}
                       </p>
                     ) : "roll" in p ? (

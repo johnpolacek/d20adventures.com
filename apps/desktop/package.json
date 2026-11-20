@@ -19,6 +19,7 @@
     "@d20/srd": "workspace:*",
     "@d20/stage": "workspace:*",
     "@d20/ui": "workspace:*",
+    "@fontsource-variable/literata": "^5.3.0",
     "@fontsource/cinzel-decorative": "^5.3.0",
     "@fontsource/rethink-sans": "^5.3.0",
     "@fontsource/syne-mono": "^5.3.0",

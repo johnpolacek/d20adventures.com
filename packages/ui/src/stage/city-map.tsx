@@ -9,6 +9,8 @@ import { Button } from "../button"
 import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 
+// Labels in the body serif. A CSS variable works only through style, not the font-family attribute.
+const SERIF = "var(--font-serif), Georgia, serif"
 const INK = "#2b1a10"
 // The pale edge round every label, so it reads over the painting.
 const HALO = "#f4ead2"
@@ -175,7 +177,7 @@ export function CityMapView({
       {!below &&
         map.districts.map((d) => {
           const [x, y] = d.labelAt ?? centroid(d.polygon)
-          // A name cut off at the edge reads as a misspelling, so one that would not fit is left out. Georgia averages
+          // A name cut off at the edge reads as a misspelling, so one that would not fit is left out. The serif averages
           // about 0.55 of its size per letter.
           const half = (d.name.length * 0.55 * (u < CLOSE ? 16 : 12) * u) / 2
           if (x - half < shown[0] || x + half > shown[0] + shown[2]) return null
@@ -188,7 +190,7 @@ export function CityMapView({
               fill={INK}
               fontSize={(u < CLOSE ? 16 : 12) * u}
               fontWeight={700}
-              fontFamily="Georgia, serif"
+              style={{ fontFamily: SERIF }}
               letterSpacing={0.5 * u}
               paintOrder="stroke"
               stroke={HALO}
@@ -213,7 +215,7 @@ export function CityMapView({
               fontSize={16 * u}
               fontStyle="italic"
               fontWeight={700}
-              fontFamily="Georgia, serif"
+              style={{ fontFamily: SERIF }}
               paintOrder="stroke"
               stroke="#eef2dd"
               strokeWidth={4 * u}
@@ -242,7 +244,7 @@ export function CityMapView({
                 fill={l.below || l.id === here ? color : INK}
                 fontSize={13 * u}
                 fontWeight={l.id === here ? 700 : 600}
-                fontFamily="Georgia, serif"
+                style={{ fontFamily: SERIF }}
                 paintOrder="stroke"
                 stroke={HALO}
                 strokeWidth={4 * u}
