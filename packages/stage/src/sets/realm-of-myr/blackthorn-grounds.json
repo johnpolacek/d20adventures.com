@@ -6,7 +6,6 @@
   "locationId": "blackthorn-grounds",
   "title": "The Blackthorn mansion by night",
   "seed": 2701,
-  "ambience": ["night", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [

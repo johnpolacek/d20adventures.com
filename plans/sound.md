@@ -32,7 +32,7 @@ Goal: one sound system in `@d20/ui`, heard the same in the website and the deskt
 1. Engine. Done 2026-11-19.
 2. Stage events. Done 2026-11-19. No `hit`, `line` or `shot` events: effects cover hits, and nothing sounds lines or shots yet.
 3. Combat cues. Done 2026-11-19. Blades, blows, arrow thunks, fire and spells are CC0 recordings. Swings that miss, flights, aura, mist, sparkles, lightning and frost are made noise.
-4. Ambience. Done 2026-11-19. Nine beds: hearth, crowd, wind, night, birds, river, dawn, dungeon, drip. All 41 sets have beds.
+4. Ambience. Done 2026-11-19. Nine beds: hearth, crowd, wind, night, birds, river, dawn, dungeon, drip. 35 of 41 sets have beds. The night (crickets) bed is unused: the owner disliked it (2026-11-20), so the six sets that had it are silent.
 5. Voice. Route Storyview TTS and stage narration through the `voice` bus, and duck ambience under it. The stage play view has no voiced narration yet.
 6. UI cues, if wanted. At most a soft cue for "your turn" and a card opening.
 

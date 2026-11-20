@@ -6,7 +6,6 @@
   "locationId": "kordavos-ambush-lanes",
   "title": "Kordavos: the ambush in the lanes",
   "seed": 2601,
-  "ambience": ["night", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [
