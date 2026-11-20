@@ -2,9 +2,14 @@ import { Input as BaseInput } from "@ui-sdk/react/input"
 import type { ComponentProps } from "react"
 import { cn } from "./utils"
 
-type InputProps = Omit<ComponentProps<typeof BaseInput>, "className"> & { className?: string }
+type InputProps = Omit<ComponentProps<typeof BaseInput>, "className"> & {
+  className?: string
+  /** Drops the default look, for a field styled entirely by its caller. */
+  plain?: boolean
+}
 
-function Input({ className, ...props }: InputProps) {
+function Input({ className, plain, ...props }: InputProps) {
+  if (plain) return <BaseInput className={className} {...props} />
   return (
     <BaseInput
       className={cn(

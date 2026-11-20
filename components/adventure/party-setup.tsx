@@ -4,6 +4,7 @@ import { useState } from "react"
 import { createAdventure } from "@/app/_actions/create-adventure"
 import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
+import { Tip } from "@d20/ui/tooltip"
 import { Card } from "@d20/ui/card"
 import { CharacterSelectCard } from "@/components/adventure/character-select-card"
 import Image from "@d20/ui/native-image"
@@ -38,15 +39,17 @@ function PartySlotAvatar({ image, name, label, labelClass, ringClass, onClick, t
   )
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} title={title} className="flex flex-col items-center gap-1 cursor-pointer transition-transform active:scale-[0.96] hover:-translate-y-0.5">
-        {body}
-      </button>
+      <Tip label={title}>
+        <Button variant="plain" type="button" onClick={onClick} className="flex flex-col items-center gap-1 cursor-pointer transition-transform active:scale-[0.96] hover:-translate-y-0.5">
+          {body}
+        </Button>
+      </Tip>
     )
   }
   return (
-    <div className="flex flex-col items-center gap-1" title={title}>
-      {body}
-    </div>
+    <Tip label={title}>
+      <div className="flex flex-col items-center gap-1">{body}</div>
+    </Tip>
   )
 }
 
@@ -117,14 +120,15 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
             Playing as <span className="text-amber-300 font-bold">{selectedCharacterName}</span>
           </p>
           {onBack && (
-            <button
+            <Button
+              variant="plain"
               type="button"
               onClick={onBack}
               disabled={isCreating}
               className="mt-1 text-sm underline underline-offset-4 decoration-indigo-300/50 text-indigo-200 hover:text-white transition-colors"
             >
               change
-            </button>
+            </Button>
           )}
         </div>
 
@@ -144,19 +148,20 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
             />
           ))}
           {Array.from({ length: openSlots }).map((_, index) => (
-            <button
-              key={`open-${index}`}
-              type="button"
-              title="Open slot — invite a friend or add an AI companion"
-              onClick={() => setShowCompanions(true)}
-              className="flex flex-col items-center gap-1 cursor-pointer transition-transform active:scale-[0.96] hover:-translate-y-0.5"
-            >
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center text-white/40 text-2xl font-light hover:border-sky-300/60 hover:text-sky-200 transition-colors">
-                +
-              </div>
-              <span className="text-[10px] font-mono tracking-wider uppercase text-white/40">Open</span>
-              <span className="text-xs text-transparent select-none">&nbsp;</span>
-            </button>
+            <Tip key={`open-${index}`} label="Open slot — invite a friend or add an AI companion">
+              <Button
+                variant="plain"
+                type="button"
+                onClick={() => setShowCompanions(true)}
+                className="flex flex-col items-center gap-1 cursor-pointer transition-transform active:scale-[0.96] hover:-translate-y-0.5"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center text-white/40 text-2xl font-light hover:border-sky-300/60 hover:text-sky-200 transition-colors">
+                  +
+                </div>
+                <span className="text-[10px] font-mono tracking-wider uppercase text-white/40">Open</span>
+                <span className="text-xs text-transparent select-none">&nbsp;</span>
+              </Button>
+            </Tip>
           ))}
         </div>
 

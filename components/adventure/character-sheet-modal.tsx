@@ -14,6 +14,7 @@ import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
 import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
+import { Label } from "@d20/ui/label"
 
 type CharacterSheetModalCharacter = TurnCharacter | PC | PCTemplate | null
 interface CharacterSheetModalProps {
@@ -101,7 +102,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
 
               {standing && (
                 <div>
-                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Hit Points</label>
+                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wider">Hit Points</Label>
                   {standing.kind === "hero" ? (
                     <div className="flex items-center gap-2">
                       <div className="">
@@ -126,14 +127,14 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
               )}
               {conditions && (
                 <div>
-                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Conditions</label>
+                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wider">Conditions</Label>
                   <div className="text-sm">{conditions}</div>
                 </div>
               )}
 
               {character.effects && character.effects.length > 0 ? (
                 <div>
-                  <label className="text-xs font-mono text-primary-200 uppercase tracking-wider">Effects</label>
+                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wider">Effects</Label>
                   <ul>
                     {character.effects.map((effect, idx) => (
                       <li key={idx} className="mb-1">

@@ -3,7 +3,7 @@
 import { ClipboardList, Clock3, ImageIcon, Menu, MessageSquare, PanelLeftClose, RotateCcw, Search, ShieldCheck, Wand2 } from "lucide-react"
 import Link from "next/link"
 import * as React from "react"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import {
   loadAdminWikiAdventureStateAction,
   restoreAdminWikiAdventureRevisionAction,
@@ -11,12 +11,15 @@ import {
   sendAdminWikiAdventureChatAction,
 } from "@/app/_actions/wiki-adventures/admin-authoring-actions"
 import { Button } from "@d20/ui/button"
+import { Tip } from "@d20/ui/tooltip"
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle, DrawerTrigger } from "@d20/ui/drawer"
 import { ImageUpload } from "@/components/forms/image-upload"
 import { Input } from "@d20/ui/input"
 import Image from "@d20/ui/native-image"
 import { Textarea } from "@d20/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile } from "@/lib/wiki-adventures"
+import { Label } from "@d20/ui/label"
 
 type EditorState = Awaited<ReturnType<typeof loadAdminWikiAdventureStateAction>>
 
@@ -53,7 +56,6 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   const [busy, setBusy] = React.useState(false)
   const [chatPending, setChatPending] = React.useState(false)
   const [sectionsSidebarOpen, setSectionsSidebarOpen] = React.useState(true)
-  const [revisionDrawerOpen, setRevisionDrawerOpen] = React.useState(false)
   const pendingScrollPathRef = React.useRef<string | null>(null)
   const selectedFile = state.files.find((file) => file.path === selectedPath) ?? state.files[0]
   const wiki = React.useMemo(() => buildWikiModel(state.files, state.encounters), [state.files, state.encounters])
@@ -281,39 +283,30 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setRevisionDrawerOpen((current) => !current)}
-              className="flex h-12 shrink-0 items-center justify-between bg-[#0d0c0b]/95 px-5 text-left shadow-[0_-14px_34px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,255,255,.06)] transition-[background-color] hover:bg-[#14110e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45"
-              aria-expanded={revisionDrawerOpen}
-            >
-              <span className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">
-                <Clock3 className="size-3.5" />
-                Revision Log
-              </span>
-              <span className="font-mono text-[10px] uppercase tracking-[.14em] text-stone-500">{state.revisions.length} revisions</span>
-            </button>
-
-            {revisionDrawerOpen && (
-              <div className="absolute inset-x-0 bottom-12 z-10 max-h-[62%] overflow-hidden bg-[#0b0a09]/98 shadow-[0_-24px_60px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.08)]">
-                <div className="flex h-12 items-center justify-between px-5">
+            <Drawer side="bottom">
+              <DrawerTrigger className="flex h-12 shrink-0 items-center justify-between bg-[#0d0c0b]/95 px-5 text-left shadow-[0_-14px_34px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,255,255,.06)] transition-[background-color] hover:bg-[#14110e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45">
+                <span className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">
+                  <Clock3 className="size-3.5" />
+                  Revision Log
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[.14em] text-stone-500">{state.revisions.length} revisions</span>
+              </DrawerTrigger>
+              {/* The sheet sits over the right column on wide screens, where the trigger lives. */}
+              <DrawerContent className="max-h-[62vh] overflow-hidden bg-[#0b0a09]/98 data-[side=bottom]:rounded-none data-[side=bottom]:border-t-0 shadow-[0_-24px_60px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.08)] xl:ml-auto xl:w-[400px]">
+                <div className="flex h-12 shrink-0 items-center justify-between px-5">
                   <div>
-                    <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Revision Log</div>
-                    <div className="font-mono text-[10px] uppercase tracking-[.12em] text-stone-600">{state.revisions.length} saved revisions</div>
+                    <DrawerTitle className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Revision Log</DrawerTitle>
+                    <DrawerDescription className="font-mono text-[10px] uppercase tracking-[.12em] text-stone-600">{state.revisions.length} saved revisions</DrawerDescription>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setRevisionDrawerOpen(false)}
-                    className="h-10 px-3 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-500 transition-[color,scale] hover:text-[#f4ead7] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45"
-                  >
+                  <DrawerClose className="h-10 px-3 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-500 transition-[color,scale] hover:text-[#f4ead7] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45">
                     close
-                  </button>
+                  </DrawerClose>
                 </div>
-                <div className="max-h-[calc(62vh-96px)] overflow-auto px-5 pb-5">
+                <div className="min-h-0 flex-1 overflow-auto px-5 pb-5">
                   <RevisionHistory revisions={state.revisions} selectedPath={selectedPath} disabled={busy} onRestore={restoreRevision} />
                 </div>
-              </div>
-            )}
+              </DrawerContent>
+            </Drawer>
           </div>
         </aside>
       </main>
@@ -399,15 +392,17 @@ function ScenePageHeader({ scene, sectionsSidebarOpen, onRestoreSectionsSidebar 
     <header className="bg-[#181713] px-6 py-5">
       <div className="flex items-start gap-4">
         {!sectionsSidebarOpen && (
-          <button
-            type="button"
-            onClick={onRestoreSectionsSidebar}
-            className="hidden size-7 shrink-0 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
-            aria-label="Show adventure sections sidebar"
-            title="Show sections"
-          >
-            <Menu className="size-4" strokeWidth={1.35} />
-          </button>
+          <Tip label="Show sections">
+            <Button
+              variant="plain"
+              type="button"
+              onClick={onRestoreSectionsSidebar}
+              className="hidden size-7 shrink-0 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+              aria-label="Show adventure sections sidebar"
+            >
+              <Menu className="size-4" strokeWidth={1.35} />
+            </Button>
+          </Tip>
         )}
         <div className="min-w-0 flex-1">
           <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">Scene</span>
@@ -939,21 +934,24 @@ function WikiNavigator({
         <div className="grid place-items-center text-[#8f877b]">
           <Search className="size-4" />
         </div>
-        <input
+        <Input
+          plain
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Find Encounter"
           className="min-w-0 border-x border-[#302a22] bg-transparent px-3 text-sm text-stone-200 outline-none placeholder:text-stone-600 focus:bg-[#17130f]"
         />
-        <button
-          type="button"
-          onClick={onCollapse}
-          className="hidden place-items-center bg-transparent px-2 py-0.5 text-[#d8bd81] transition-[background-color,color,scale] duration-150 hover:bg-[#211b13] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
-          aria-label="Hide adventure sections sidebar"
-          title="Hide sections"
-        >
-          <PanelLeftClose className="size-full" strokeWidth={0.75} />
-        </button>
+        <Tip label="Hide sections">
+          <Button
+            variant="plain"
+            type="button"
+            onClick={onCollapse}
+            className="hidden place-items-center bg-transparent px-2 py-0.5 text-[#d8bd81] transition-[background-color,color,scale] duration-150 hover:bg-[#211b13] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
+            aria-label="Hide adventure sections sidebar"
+          >
+            <PanelLeftClose className="size-full" strokeWidth={0.75} />
+          </Button>
+        </Tip>
       </div>
       <div className="min-h-0 overflow-y-auto px-3 py-3">
         {normalizedQuery ? (
@@ -1015,7 +1013,8 @@ function WikiNavigator({
 
 function OutlineButton({ active, label, meta, level, onClick }: { active: boolean; label: string; meta: string; level: "section" | "scene"; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="plain"
       type="button"
       onClick={onClick}
       className={`group relative flex w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
@@ -1024,7 +1023,7 @@ function OutlineButton({ active, label, meta, level, onClick }: { active: boolea
     >
       <span className={`min-w-0 truncate leading-5 ${level === "section" ? "font-serif text-sm font-bold" : "font-mono text-[10px] font-bold uppercase tracking-[.14em]"}`}>{label}</span>
       <span className="shrink-0 font-mono text-[9px] uppercase tracking-[.12em] text-stone-600">{meta}</span>
-    </button>
+    </Button>
   )
 }
 
@@ -1045,7 +1044,8 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
   const isSelected = page.path === selectedPath
   const isEncounter = page.kind === "encounter"
   return (
-    <button
+    <Button
+      variant="plain"
       type="button"
       onClick={() => onSelect(page.path)}
       className={`group relative flex w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
@@ -1058,7 +1058,7 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
           <span className="block truncate font-mono text-[10px] leading-4 text-stone-600">{page.kind === "npc" || page.kind === "character" || page.kind === "sheet" ? "character" : page.id}</span>
         )}
       </span>
-    </button>
+    </Button>
   )
 }
 
@@ -1070,15 +1070,17 @@ function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }:
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {!sectionsSidebarOpen && (
-              <button
-                type="button"
-                onClick={onRestoreSectionsSidebar}
-                className="hidden size-7 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
-                aria-label="Show adventure sections sidebar"
-                title="Show sections"
-              >
-                <Menu className="size-4" strokeWidth={1.35} />
-              </button>
+              <Tip label="Show sections">
+                <Button
+                  variant="plain"
+                  type="button"
+                  onClick={onRestoreSectionsSidebar}
+                  className="hidden size-7 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
+                  aria-label="Show adventure sections sidebar"
+                >
+                  <Menu className="size-4" strokeWidth={1.35} />
+                </Button>
+              </Tip>
             )}
             <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
             {page.kind !== "npc" && page.kind !== "character" && page.kind !== "sheet" && <span className="font-mono text-[11px] text-stone-500">{page.id}</span>}
@@ -1384,10 +1386,10 @@ function ReadonlyField({ label, value }: { label: string; value: string }) {
 function Field({ label, value, onChange, disabled, tone = "dark" }: { label: string; value: string; onChange: (value: string) => void; disabled: boolean; tone?: "dark" | "paper" }) {
   const paper = tone === "paper"
   return (
-    <label className="block space-y-1">
+    <Label plain className="block space-y-1">
       <span className={`font-mono text-xs uppercase ${paper ? "text-[#5b4631]" : "text-stone-300"}`}>{label}</span>
       <Input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className={paper ? "border-[#b9a77f] bg-[#eee2c6] text-[#22180e]" : undefined} />
-    </label>
+    </Label>
   )
 }
 
@@ -1410,7 +1412,7 @@ function Block({
 }) {
   const paper = tone === "paper"
   return (
-    <label className="block space-y-1">
+    <Label plain className="block space-y-1">
       {!hideLabel && <span className={`font-mono text-xs uppercase ${paper ? "text-[#5b4631]" : "text-stone-300"}`}>{label}</span>}
       <Textarea
         value={value}
@@ -1419,7 +1421,7 @@ function Block({
         disabled={disabled}
         className={paper ? "border-[#b9a77f] bg-[#efe2bd] font-serif text-base leading-7 text-[#22180e] shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_2px_8px_rgba(58,43,20,.08)]" : undefined}
       />
-    </label>
+    </Label>
   )
 }
 

@@ -3,6 +3,7 @@
 import type { TierName } from "@d20/stage"
 import { BeatPlayer, lineSeconds, readingSeconds } from "@d20/stage/beats"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Button } from "@d20/ui/button"
 import { type CardInfo, CharacterCard } from "@d20/ui/stage/character-card"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@d20/ui/stage/hud"
 import { type ChatLine, Journal, type JournalTurn } from "@d20/ui/stage/journal"
@@ -554,9 +555,9 @@ export function TurnMock() {
         </section>
       )}
       {hideUi && phase !== "title" && (
-        <button type="button" onClick={() => setHideUi(false)} className="absolute right-4 bottom-4 z-40 rounded border border-white/25 bg-stage-panel/50 px-3 py-2 text-[10px] text-stage-cream">
+        <Button variant="plain" type="button" onClick={() => setHideUi(false)} className="absolute right-4 bottom-4 z-40 rounded border border-white/25 bg-stage-panel/50 px-3 py-2 text-[10px] text-stage-cream">
           Show interface · H
-        </button>
+        </Button>
       )}
       {phase === "title" && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-stage-ink/45 text-center">
@@ -567,9 +568,9 @@ export function TurnMock() {
           <div className="font-display text-[clamp(28px,3.6vw,46px)] [text-shadow:0_2px_25px_#000]">Arrival at Kordavos</div>
           <div className="text-[9px] tracking-[0.3em] text-stage-sage">WELCOME TO KORDAVOS</div>
           {stage ? (
-            <button type="button" onClick={start} className="stage-brass mt-3 rounded-full border px-11 py-3 font-display text-[15px] font-bold tracking-[0.3em] transition-[filter]">
+            <Button variant="plain" type="button" onClick={start} className="stage-brass mt-3 rounded-full border px-11 py-3 font-display text-[15px] font-bold tracking-[0.3em] transition-[filter]">
               Play
-            </button>
+            </Button>
           ) : (
             <>
               <div className="h-px w-44 overflow-hidden bg-stage-brass/30">

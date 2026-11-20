@@ -1,6 +1,8 @@
 import { isTauri } from "@tauri-apps/api/core"
 import { Expand, Shrink } from "lucide-react"
 import { useEffect, useState } from "react"
+import { Button } from "@d20/ui/button"
+import { Tip } from "@d20/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { isFullscreen, toggleFullscreen } from "./bridge"
 
@@ -24,15 +26,18 @@ export function useFullscreen() {
 export function FullscreenButton({ className }: { className?: string }) {
   const { full, toggle } = useFullscreen()
   const Icon = full ? Shrink : Expand
+  const label = full ? "Exit full screen" : "Full screen"
   return (
-    <button
-      type="button"
-      onClick={() => void toggle()}
-      aria-label={full ? "Exit full screen" : "Full screen"}
-      title={full ? "Exit full screen" : "Full screen"}
-      className={cn("grid h-8 w-8 place-items-center text-white opacity-85 drop-shadow-[0_1px_6px_#000] transition-opacity hover:opacity-100", className)}
-    >
-      <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
-    </button>
+    <Tip label={label}>
+      <Button
+        variant="plain"
+        type="button"
+        onClick={() => void toggle()}
+        aria-label={label}
+        className={cn("grid h-8 w-8 place-items-center text-white opacity-85 drop-shadow-[0_1px_6px_#000] transition-opacity hover:opacity-100", className)}
+      >
+        <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
+      </Button>
+    </Tip>
   )
 }

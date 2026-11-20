@@ -2,7 +2,7 @@
 
 import { Check, Copy, Share2 } from "lucide-react"
 import { useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { Button } from "@d20/ui/button"
 
 interface InviteLinkProps {

@@ -37,7 +37,8 @@ function PageShell(props: { title: string; children: ReactNode }) {
 // The website's small red delete control. The first press asks, the second confirms.
 function RemoveButton(props: { confirming: boolean; label: string; confirmLabel: string; className?: string; disabled?: boolean; onBlur: () => void; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="plain"
       type="button"
       disabled={props.disabled}
       aria-label={props.confirming ? props.confirmLabel : props.label}
@@ -50,7 +51,7 @@ function RemoveButton(props: { confirming: boolean; label: string; confirmLabel:
       )}
     >
       {props.confirming ? "Confirm" : <Trash2 aria-hidden="true" className="h-4 w-4" />}
-    </button>
+    </Button>
   )
 }
 
@@ -108,7 +109,8 @@ function SavedCard(props: {
 }) {
   return (
     <li className="relative">
-      <button
+      <Button
+        variant="plain"
         type="button"
         disabled={props.busy}
         onClick={props.onOpen}
@@ -126,7 +128,7 @@ function SavedCard(props: {
             <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>{props.action}</span>
           </div>
         </div>
-      </button>
+      </Button>
       {props.children}
     </li>
   )
@@ -234,7 +236,8 @@ export function AdventuresPage(props: {
           <ul className="mx-auto grid max-w-[max(600px,calc((100vh_-_10.5rem_-_240px)*2.25_+_4rem))] auto-rows-fr grid-cols-3 gap-8 pt-2 pb-8">
             {intro.map((a) => (
               <li key={a.id}>
-                <button
+                <Button
+                  variant="plain"
                   type="button"
                   disabled={props.busy}
                   onClick={() => props.onAdventure(a.id)}
@@ -258,7 +261,7 @@ export function AdventuresPage(props: {
                       )}
                     </div>
                   </div>
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -267,7 +270,8 @@ export function AdventuresPage(props: {
       {featured && (
         <section>
           <SectionPlate>Featured Adventure</SectionPlate>
-          <button
+          <Button
+            variant="plain"
             type="button"
             disabled={props.busy}
             onClick={() => props.onAdventure(featured.id)}
@@ -309,7 +313,7 @@ export function AdventuresPage(props: {
                 <PriceChip a={featured} listPrices={props.listPrices} />
               </div>
             </div>
-          </button>
+          </Button>
         </section>
       )}
     </PageShell>
@@ -343,7 +347,8 @@ export function CharactersPage(props: {
             const portrait = (h.painted && props.art[h.id]?.portrait) || STOCK_FIGURES[h.figure]?.art.portrait
             return (
               <li key={h.id} className="group relative">
-                <button
+                <Button
+                  variant="plain"
                   type="button"
                   disabled={props.busy || !props.onEdit}
                   onClick={() => props.onEdit?.(h)}
@@ -369,9 +374,10 @@ export function CharactersPage(props: {
                       <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Edit</span>
                     )}
                   </div>
-                </button>
+                </Button>
                 {props.onPaint && (
-                  <button
+                  <Button
+                    variant="plain"
                     type="button"
                     disabled={props.busy}
                     onClick={() => props.onPaint!(h)}
@@ -379,7 +385,7 @@ export function CharactersPage(props: {
                     className={cn(siteOutline, "absolute top-2 right-2 px-2 py-0.5 font-mono text-xxs opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100")}
                   >
                     {props.painting === h.id ? "Painting…" : "Paint"}
-                  </button>
+                  </Button>
                 )}
                 <RemoveButton
                   className="absolute right-2 bottom-2"
@@ -410,7 +416,7 @@ export function SettingsPage(props: { realm: Realm | null; onRealm: () => void }
       {props.realm && (
         <ul className="flex justify-center">
           <li className="w-[min(34rem,100%)]">
-            <button type="button" onClick={props.onRealm} className={cn(siteCard, siteCardHover, "group block w-full text-center")}>
+            <Button variant="plain" type="button" onClick={props.onRealm} className={cn(siteCard, siteCardHover, "group block w-full text-center")}>
               <div className="relative aspect-video">
                 <img src={props.realm.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
@@ -424,7 +430,7 @@ export function SettingsPage(props: { realm: Realm | null; onRealm: () => void }
                   <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Explore</span>
                 </div>
               </div>
-            </button>
+            </Button>
           </li>
         </ul>
       )}

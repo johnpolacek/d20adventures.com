@@ -4,6 +4,8 @@
 // so the stage carries the scene and the text is always one tap away.
 
 import { Fragment, useEffect, useRef, useState } from "react"
+import { Button } from "../button"
+import { Input } from "../input"
 import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { DeathSaveMarks, FeatureEntry, RollDetails } from "./roll-parts"
@@ -148,7 +150,8 @@ function ChatBox({ onSend }: { onSend: (text: string) => Promise<boolean> }) {
         void send()
       }}
     >
-      <input
+      <Input
+        plain
         value={draft}
         maxLength={1000}
         onChange={(e) => setDraft(e.target.value)}
@@ -202,19 +205,20 @@ export function Journal({
       <div className="flex items-center justify-between border-b border-stage-line/20 px-5 pt-4 pb-2">
         <div className="flex gap-4">
           {(["story", "chat"] as const).map((t) => (
-            <button
+            <Button
+              variant="plain"
               key={t}
               type="button"
               onClick={() => setTab(t)}
               className={cn(eyebrow, "pb-1 transition-colors", tab === t ? "border-b border-stage-gold" : "text-stage-muted hover:text-stage-gold")}
             >
               {t === "story" ? "The story so far" : "Table chat"}
-            </button>
+            </Button>
           ))}
         </div>
-        <button type="button" onClick={onClose} aria-label="Close the journal" className="text-xl leading-none text-stage-muted hover:text-stage-cream">
+        <Button variant="plain" type="button" onClick={onClose} aria-label="Close the journal" className="text-xl leading-none text-stage-muted hover:text-stage-cream">
           ×
-        </button>
+        </Button>
       </div>
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-5 py-4 [scrollbar-width:thin]">
         {tab === "story" &&

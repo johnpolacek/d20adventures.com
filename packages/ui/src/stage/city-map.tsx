@@ -5,6 +5,7 @@
 
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { type Box, boxAround, type CityMap, centroid, districtBox, frameBox, type MapShape, type Point, placeAt, placeName } from "@d20/gm-core/citymap"
+import { Button } from "../button"
 import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 
@@ -279,14 +280,15 @@ export function CityMapInset({ map, trail, onOpen, className }: { map: CityMap; 
     return [clamp(here[0] - width / 2, x, x + w - width), clamp(here[1] - height / 2, y, y + h - height), width, height] as Box
   }, [map, here?.[0], here?.[1], below])
   return (
-    <button
+    <Button
+      variant="plain"
       type="button"
       onClick={onOpen}
       aria-label="Open the map"
       className={cn(panel, "block h-[180px] w-[252px] overflow-hidden p-0 transition-[border-color] hover:border-stage-gold", className)}
     >
       <CityMapView map={map} trail={trail} box={box} fill names={false} below={below} />
-    </button>
+    </Button>
   )
 }
 

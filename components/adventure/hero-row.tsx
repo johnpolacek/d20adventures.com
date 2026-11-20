@@ -10,7 +10,7 @@ export function HeroRow(props: { character: PC | PCTemplate; onOpen?: () => void
   const c = props.character
   return (
     <li className={cn("flex min-w-0 items-center gap-3 rounded-lg border bg-black/60 p-2", props.mine ? "border-amber-400/60" : "border-white/10")}>
-      <button type="button" onClick={props.onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+      <Button variant="plain" type="button" onClick={props.onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <span className="relative h-14 w-12 shrink-0 overflow-hidden rounded-md border border-white/20 bg-white/5">
           {c.image && <Image src={getImageUrl(c.image)} alt="" fill className="object-cover object-[50%_15%]" onError={(e) => (e.currentTarget.style.display = "none")} />}
         </span>
@@ -20,7 +20,7 @@ export function HeroRow(props: { character: PC | PCTemplate; onOpen?: () => void
             {c.race} {c.archetype}
           </span>
         </span>
-      </button>
+      </Button>
       {props.tag}
       {props.action && (
         <Button variant="outline" size="sm" disabled={props.action.disabled} onClick={props.action.onClick} className="shrink-0">

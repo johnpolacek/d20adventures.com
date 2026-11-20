@@ -22,7 +22,7 @@ export const backdropClass =
   "fixed inset-0 bg-black/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-reduce:transition-none"
 export const popupMotionClass = "transition-[opacity,scale] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0 motion-reduce:transition-none"
 
-function DialogContent({ className, children, ...props }: WithNodes<ComponentProps<typeof BaseDialogContent>>) {
+function DialogContent({ className, closeClassName, children, ...props }: WithNodes<ComponentProps<typeof BaseDialogContent>> & { closeClassName?: string }) {
   return (
     <>
       <DialogBackdrop className={backdropClass} />
@@ -37,7 +37,10 @@ function DialogContent({ className, children, ...props }: WithNodes<ComponentPro
         {children}
         <BaseDialogClose
           aria-label="Close"
-          className="absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:outline-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+          className={cn(
+            "absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:outline-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+            closeClassName
+          )}
         >
           <XIcon aria-hidden="true" />
         </BaseDialogClose>

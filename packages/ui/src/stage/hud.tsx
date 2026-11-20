@@ -6,6 +6,8 @@
 // layered in as children.
 
 import { type ReactNode, type RefObject, useEffect, useState } from "react"
+import { Button, type ButtonProps } from "../button"
+import { Tip } from "../tooltip"
 import { cn } from "../utils"
 
 function useMedia(query: string) {
@@ -27,19 +29,20 @@ export const useShort = () => useMedia("(max-height: 700px)")
 export const eyebrow = "font-sans text-[9px] font-medium uppercase tracking-[0.26em] text-stage-gold"
 export const panel = "stage-grain rounded-md border border-stage-line/25 bg-stage-panel/95 shadow-[0_20px_50px_#0006,inset_0_1px_0_#f0d6b214,inset_0_0_60px_#0000004d] backdrop-blur-xl"
 
-export function Pill({ active, className, children, ...rest }: React.ComponentProps<"button"> & { active?: boolean }) {
+/** A pill's class names, for a control that only looks like one, such as a file picker's trigger. */
+export function pillClass(active?: boolean, className?: string) {
+  return cn(
+    "rounded-[3px] border px-3 py-2 font-sans text-[11px] tracking-wide transition-[filter,border-color] disabled:cursor-default disabled:opacity-40",
+    active ? "stage-brass" : "stage-leather border-stage-line/25 text-stage-cream hover:border-stage-gold/60",
+    className
+  )
+}
+
+export function Pill({ active, className, children, ...rest }: Omit<ButtonProps, "variant" | "size"> & { active?: boolean }) {
   return (
-    <button
-      type="button"
-      className={cn(
-        "rounded-[3px] border px-3 py-2 font-sans text-[11px] tracking-wide transition-[filter,border-color] disabled:cursor-default disabled:opacity-40",
-        active ? "stage-brass" : "stage-leather border-stage-line/25 text-stage-cream hover:border-stage-gold/60",
-        className
-      )}
-      {...rest}
-    >
+    <Button variant="plain" type="button" className={pillClass(active, className)} {...rest}>
       {children}
-    </button>
+    </Button>
   )
 }
 
@@ -65,20 +68,22 @@ export function Chevron({ double = false, className }: { double?: boolean; class
   )
 }
 
-export function IconButton({ label, active, children, ...rest }: React.ComponentProps<"button"> & { label: string; active?: boolean }) {
+export function IconButton({ label, active, children, ...rest }: Omit<ButtonProps, "variant" | "size"> & { label: string; active?: boolean }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      className={cn(
-        "stage-leather grid h-10 w-10 place-items-center rounded-full border transition-[filter,border-color] [&_svg]:h-4 [&_svg]:w-4",
-        active ? "border-stage-gold" : "border-stage-line/25 hover:border-stage-gold"
-      )}
-      {...rest}
-    >
-      {children}
-    </button>
+    <Tip label={label}>
+      <Button
+        variant="plain"
+        type="button"
+        aria-label={label}
+        className={cn(
+          "stage-leather grid h-10 w-10 place-items-center rounded-full border transition-[filter,border-color] [&_svg]:h-4 [&_svg]:w-4",
+          active ? "border-stage-gold" : "border-stage-line/25 hover:border-stage-gold"
+        )}
+        {...rest}
+      >
+        {children}
+      </Button>
+    </Tip>
   )
 }
 
@@ -162,7 +167,8 @@ export function StageHud({
             {!compact && <div className="hidden flex-1 lg:block" />}
             <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
               {views.map((v, i) => (
-                <button
+                <Button
+                  variant="plain"
                   key={v.id}
                   type="button"
                   aria-pressed={activeView === v.id}
@@ -175,7 +181,7 @@ export function StageHud({
                 >
                   <small className={cn("text-[8px]", activeView === v.id ? "text-stage-gold" : "text-[#a6a58c]")}>{String(i + 1).padStart(2, "0")}</small>
                   {v.label}
-                </button>
+                </Button>
               ))}
             </div>
             {/* Room for the map and the place's name at the right end. */}

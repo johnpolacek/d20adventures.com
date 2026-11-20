@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { banUser } from "@/app/_actions/ban-user"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@d20/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@d20/ui/avatar"

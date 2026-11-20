@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@d20/ui/dialog
 import Image from "@d20/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
+import { Label } from "@d20/ui/label"
 
 interface NPCCharacterSheetModalProps {
   character: TurnCharacter | null
@@ -42,7 +43,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
 
               {/* Health Status - visible condition */}
               <div>
-                <label className="text-xs font-mono text-white uppercase tracking-wider">Condition</label>
+                <Label plain className="text-xs font-mono text-white uppercase tracking-wider">Condition</Label>
                 <div className="flex items-center gap-2">
                   {standing && <span style={{ color: standing.kind === "wound" ? WOUND_TONE[standing.word] : WOUND_TONE.Dead }}>{standingWords(standing).split(",")[0]}</span>}
                 </div>
@@ -51,7 +52,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
 
               {character.effects && character.effects.length > 0 ? (
                 <div>
-                  <label className="text-xs font-mono text-white uppercase tracking-wider">Effects</label>
+                  <Label plain className="text-xs font-mono text-white uppercase tracking-wider">Effects</Label>
                   <ul>
                     {character.effects.map((effect, idx) => (
                       <li key={idx} className="mb-1">

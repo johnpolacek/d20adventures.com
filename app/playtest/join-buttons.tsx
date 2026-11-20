@@ -13,12 +13,13 @@ export function JoinButtons() {
         </Button>
       </SignUpButton>
       <SignInButton mode="modal" forceRedirectUrl="/playtest" signUpForceRedirectUrl="/playtest">
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="cursor-pointer font-sans text-sm tracking-wide text-stage-cream/70 underline decoration-stage-gold/50 underline-offset-4 transition-colors hover:text-stage-gold"
         >
           Already a Playtester? Sign In
-        </button>
+        </Button>
       </SignInButton>
     </div>
   )

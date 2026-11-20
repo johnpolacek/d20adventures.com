@@ -109,7 +109,8 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
             {options.map((option) => {
               const isSelected = selected.some((item) => item.id === option.id)
               return (
-                <button
+                <Button
+                  variant="plain"
                   key={option.id}
                   type="button"
                   onClick={() => toggleCharacter(option)}
@@ -122,7 +123,7 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
                   <div className="text-sm text-white/70">
                     {option.race} {option.archetype}
                   </div>
-                </button>
+                </Button>
               )
             })}
           </div>

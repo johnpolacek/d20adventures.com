@@ -876,7 +876,8 @@ export function StagePlay(props: {
     const fn = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).matches?.("input,textarea,select")) return
       if (e.key.toLowerCase() === "h") setHidden((h) => !h)
-      if (e.key === "Escape") {
+      // A popup that took Escape prevents its default, so the page stays put.
+      if (e.key === "Escape" && !e.defaultPrevented) {
         setOpen(null)
         setCardId(null)
         onEscape?.()

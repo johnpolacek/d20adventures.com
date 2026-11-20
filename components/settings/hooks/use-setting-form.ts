@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { updateSettingAction } from "@/app/_actions/setting-actions"
 import type { Location, Setting } from "@/types/setting"
 

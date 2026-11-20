@@ -6,7 +6,8 @@ import { emboss } from "./graphics/styles"
 import { textShadow } from "./typography/styles"
 import { cn } from "./utils"
 
-export type ButtonVariant = "epic" | "brick" | "emboss" | "outline" | "ghost" | "ai" | "sparkle" | "destructive"
+// "plain" adds no classes at all: for a control with a look of its own, like a stage card or a map pin.
+export type ButtonVariant = "epic" | "brick" | "emboss" | "outline" | "ghost" | "ai" | "sparkle" | "destructive" | "plain"
 // lg and sm add nothing today. Callers pass them, so they stay accepted.
 export type ButtonSize = "default" | "lg" | "sm" | "icon" | "xs"
 
@@ -88,6 +89,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   outline: outlineClass,
   sparkle: cn(outlineClass, "text-[11px] sm:text-xs"),
   ghost: "bg-transparent border-2 border-transparent px-2 py-1",
+  plain: "",
   destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700",
 }
 
@@ -98,6 +100,7 @@ const sizeClasses: Partial<Record<ButtonSize, string>> = {
 
 /** The class names of a button, for an element that only looks like one. */
 export function buttonClassName(variant?: ButtonVariant, size?: ButtonSize, className?: string) {
+  if (variant === "plain") return cn(size && sizeClasses[size], className)
   return cn(baseButtonClass, variant && variantClasses[variant], size && sizeClasses[size], className)
 }
 

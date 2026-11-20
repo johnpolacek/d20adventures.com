@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
+import { Input } from "@d20/ui/input"
 import { Option, siteCard, siteField, siteLabel, siteOutline } from "@d20/ui/site"
 import { cn } from "@/lib/utils"
 import type { GuestHero, HostedSummary } from "../../../lib/host/server"
@@ -15,10 +17,10 @@ function InviteLink({ label, url }: { label: string; url: string }) {
     })
   return (
     <div className="flex gap-2">
-      <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label={label} className={cn(siteField, "flex-1 text-sm")} />
-      <button type="button" className={cn(siteOutline, "px-4 text-sm")} onClick={copy}>
+      <Input plain readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label={label} className={cn(siteField, "flex-1 text-sm")} />
+      <Button variant="plain" type="button" className={cn(siteOutline, "px-4 text-sm")} onClick={copy}>
         {copied ? "Copied" : "Copy"}
-      </button>
+      </Button>
     </div>
   )
 }
@@ -57,10 +59,10 @@ function TableChat({ chat, onSend }: { chat: { from: string; text: string }[]; o
           void send()
         }}
       >
-        <input value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Say something" aria-label="Table chat message" className={cn(siteField, "flex-1 text-sm")} />
-        <button type="submit" className={cn(siteOutline, "px-4 text-sm")} disabled={sending || !draft.trim()}>
+        <Input plain value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Say something" aria-label="Table chat message" className={cn(siteField, "flex-1 text-sm")} />
+        <Button variant="plain" type="submit" className={cn(siteOutline, "px-4 text-sm")} disabled={sending || !draft.trim()}>
           Send
-        </button>
+        </Button>
       </form>
     </>
   )
@@ -124,25 +126,28 @@ function HeroSheet({ hero }: { hero: GuestHero }) {
   )
 }
 
-// Sheet opens a guest's hero under their row. It is read from the website when first opened.
+// Sheet opens a guest's hero under their row. It is read from the website when first opened, and the panel opens once
+// it has the hero. The row spreads `root` on its Collapsible.
 function useSheet(userId: string, read: ReadSheet, characterId?: string) {
   const [hero, setHero] = useState<GuestHero | null>(null)
   const [open, setOpen] = useState(false)
   const [reading, setReading] = useState(false)
-  const toggle = async () => {
-    if (open) return setOpen(false)
+  const onOpenChange = async (next: boolean) => {
+    if (!next) return setOpen(false)
     setOpen(true)
     if (hero) return
     setReading(true)
     setHero(await read(userId, characterId).catch(() => null))
     setReading(false)
   }
+  const root = { open: open && Boolean(hero), onOpenChange: (next: boolean) => void onOpenChange(next) }
   const button = (
-    <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} aria-expanded={open} disabled={reading} onClick={() => void toggle()}>
+    <CollapsibleTrigger className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={reading}>
       Sheet
-    </button>
+    </CollapsibleTrigger>
   )
-  return { button, sheet: open && hero ? <HeroSheet hero={hero} /> : null }
+  const sheet = <CollapsiblePanel>{hero && <HeroSheet hero={hero} />}</CollapsiblePanel>
+  return { root, button, sheet }
 }
 
 // Reject and Remove each take an optional note for the guest, in a field that opens under the row with the cursor
@@ -162,7 +167,7 @@ function useNote(action: string, who: string, busy: boolean, onSend: (note?: str
         onSend(note.trim() || undefined)
       }}
     >
-      <input
+      <Input plain
         ref={field}
         value={note}
         maxLength={300}
@@ -171,12 +176,12 @@ function useNote(action: string, who: string, busy: boolean, onSend: (note?: str
         aria-label={`Note for ${who}`}
         className={cn(siteField, "flex-1 text-sm")}
       />
-      <button type="button" className={cn(siteOutline, "px-3 text-sm")} onClick={() => setNote(null)}>
+      <Button variant="plain" type="button" className={cn(siteOutline, "px-3 text-sm")} onClick={() => setNote(null)}>
         Cancel
-      </button>
-      <button type="submit" className={cn(siteOutline, "border-red-400/60 bg-red-600/80 px-3 text-sm text-white hover:bg-red-600")} disabled={busy}>
+      </Button>
+      <Button variant="plain" type="submit" className={cn(siteOutline, "border-red-400/60 bg-red-600/80 px-3 text-sm text-white hover:bg-red-600")} disabled={busy}>
         {action}
-      </button>
+      </Button>
     </form>
   )
   return { open, start: () => setNote(""), form }
@@ -184,33 +189,33 @@ function useNote(action: string, who: string, busy: boolean, onSend: (note?: str
 
 // A guest at the table, with their hero's sheet. Remove takes them out before the game starts, with an optional note.
 function Guest({ guest, busy, onSheet, onRemove }: { guest: { userId: string; name: string }; busy: boolean; onSheet: ReadSheet; onRemove: (note?: string) => void }) {
-  const { button, sheet } = useSheet(guest.userId, onSheet)
+  const { root, button, sheet } = useSheet(guest.userId, onSheet)
   const note = useNote("Remove", guest.name, busy, onRemove)
   return (
-    <li>
+    <Collapsible render={<li />} {...root}>
       <div className="flex items-center gap-3">
         <span className="min-w-0 flex-1 truncate font-display text-lg">{guest.name}</span>
         {!note.open && (
           <>
             {button}
-            <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
+            <Button variant="plain" type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
               Remove
-            </button>
+            </Button>
           </>
         )}
       </div>
       {note.form}
       {sheet}
-    </li>
+    </Collapsible>
   )
 }
 
 // A guest asking for an open seat with their own hero: Approve seats them, Reject takes an optional note for them.
 function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; busy: boolean; onAnswer: (approve: boolean, note?: string) => void; onSheet: ReadSheet }) {
-  const { button, sheet } = useSheet(request.userId, onSheet, request.characterId)
+  const { root, button, sheet } = useSheet(request.userId, onSheet, request.characterId)
   const note = useNote("Reject", request.player, busy, (text) => onAnswer(false, text))
   return (
-    <li className="rounded-lg border border-white/10 bg-black/50 p-3">
+    <Collapsible render={<li className="rounded-lg border border-white/10 bg-black/50 p-3" />} {...root}>
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="truncate font-display text-lg text-amber-300">{request.name}</div>
@@ -221,18 +226,18 @@ function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; b
         {!note.open && (
           <>
             {button}
-            <button type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
+            <Button variant="plain" type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
               Reject
-            </button>
-            <button type="button" className={cn(siteOutline, "border-primary-400 bg-primary-600 px-3 py-1 text-sm hover:bg-primary-600")} disabled={busy} onClick={() => onAnswer(true)}>
+            </Button>
+            <Button variant="plain" type="button" className={cn(siteOutline, "border-primary-400 bg-primary-600 px-3 py-1 text-sm hover:bg-primary-600")} disabled={busy} onClick={() => onAnswer(true)}>
               Approve
-            </button>
+            </Button>
           </>
         )}
       </div>
       {note.form}
       {sheet}
-    </li>
+    </Collapsible>
   )
 }
 
@@ -347,9 +352,9 @@ export function HostedLobby(props: {
         <div className="mt-8 flex items-center gap-3">
           <span className="font-mono text-xs text-white/60">{props.gm}</span>
           <div className="flex-1" />
-          <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} onClick={props.onHome}>
+          <Button variant="plain" type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} onClick={props.onHome}>
             Home
-          </button>
+          </Button>
           <Button variant="epic" className="text-xl" disabled={props.busy || nobody || (props.summary.watching && guests.length === 0)} onClick={() => props.onStart(ais)}>
             Start
           </Button>

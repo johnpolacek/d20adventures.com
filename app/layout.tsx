@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Cinzel_Decorative, Rethink_Sans, Syne_Mono } from "next/font/google"
-import { Toaster } from "sonner"
+import { Toaster } from "@d20/ui/toast"
 import SiteFooter from "@/components/layout/footer"
 import Header from "@/components/layout/header"
 import { ThemeProvider } from "@/components/layout/theme-provider"
@@ -71,7 +71,7 @@ export default function RootLayout({
               <main className="flex-1">{children}</main>
               <SiteFooter currentYear={currentYear} />
             </div>
-            <Toaster position="top-center" />
+            <Toaster />
           </ThemeProvider>
         </Providers>
       </body>

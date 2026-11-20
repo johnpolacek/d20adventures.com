@@ -6,6 +6,7 @@
 import type { LevelUpChoices, LevelUpOptions, Named, PickOffer, PicksOffer } from "@d20/gm-core/sheet/level-up"
 import type { FeaturePick, Sheet } from "@d20/gm-core/sheet/sheet"
 import { useEffect, useMemo, useState } from "react"
+import { Tip } from "../tooltip"
 import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { ABILITY_NAMES, type AbilityId, emptyPicks, fromChoices, missing, type Picks, preparable, raiseOf, spellsToPick, toChoices, toggled, togglePick, unmet, withBookSpells } from "./level-up-view"
@@ -85,16 +86,16 @@ function Options({ label, from, picked, most, onPick }: { label: string; from: r
   const pills = from.map((option) => {
     const on = picked.includes(option.id)
     return (
-      <Pill
-        key={option.id}
-        {...(one ? { role: "radio", "aria-checked": on } : { "aria-pressed": on })}
-        active={on}
-        title={option.note}
-        className="px-2 py-1 text-[11px]"
-        onClick={() => onPick(one ? (on ? [] : [option.id]) : toggled(picked, option.id, most))}
-      >
-        {option.name}
-      </Pill>
+      <Tip key={option.id} label={option.note}>
+        <Pill
+          {...(one ? { role: "radio", "aria-checked": on } : { "aria-pressed": on })}
+          active={on}
+          className="px-2 py-1 text-[11px]"
+          onClick={() => onPick(one ? (on ? [] : [option.id]) : toggled(picked, option.id, most))}
+        >
+          {option.name}
+        </Pill>
+      </Tip>
     )
   })
   if (one)
@@ -314,9 +315,9 @@ export function LevelUp({
 
   if (!rules || !options || !picks) {
     return (
-      <div className={cn(panel, "p-6 text-center font-serif text-stage-cream", className)} role="dialog" aria-label={`${hero} Levels Up`}>
+      <section className={cn(panel, "p-6 text-center font-serif text-stage-cream", className)} aria-label={`${hero} Levels Up`}>
         Loading…
-      </div>
+      </section>
     )
   }
 
@@ -352,7 +353,8 @@ export function LevelUp({
   }
 
   return (
-    <div className={cn(panel, "flex max-h-full flex-col text-stage-cream", compact ? "p-4" : "p-6", className)} role="dialog" aria-label={`${hero} Levels Up`}>
+    // A panel the caller places, not a modal: the desktop app dims the stage behind it, and the lab draws it inline.
+    <section className={cn(panel, "flex max-h-full flex-col text-stage-cream", compact ? "p-4" : "p-6", className)} aria-label={`${hero} Levels Up`}>
       <header className="flex items-center gap-3">
         {portrait && (
           <img src={portrait} alt="" className="h-12 w-12 shrink-0 rounded-full border border-stage-gold/60 object-cover object-top" />
@@ -586,6 +588,6 @@ export function LevelUp({
           </Pill>
         </div>
       </footer>
-    </div>
+    </section>
   )
 }

@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { unsubscribe } from "@/app/_actions/mailing-list"
 import { Button } from "@d20/ui/button"
+import { Input } from "@d20/ui/input"
+import { Label } from "@d20/ui/label"
 
 export default function UnsubscribeForm() {
   const [email, setEmail] = useState("")
@@ -34,10 +36,10 @@ export default function UnsubscribeForm() {
       ) : (
         <form onSubmit={handleUnsubscribe} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block mb-2 font-medium">
+            <Label plain htmlFor="email" className="block mb-2 font-medium">
               Email address
-            </label>
-            <input id="email" type="email" className="w-full border rounded px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </Label>
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <Button type="submit" className="w-full" size="lg" variant="destructive">
             Unsubscribe

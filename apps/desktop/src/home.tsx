@@ -54,7 +54,8 @@ export function Home(props: { save: Save | null; art: Record<string, FigureArt>;
                 </Button>
               )}
               {finished && (
-                <button
+                <Button
+                  variant="plain"
                   type="button"
                   className="font-display text-sm underline-offset-4 hover:underline disabled:opacity-50"
                   style={textShadowSpreadLight}
@@ -62,7 +63,7 @@ export function Home(props: { save: Save | null; art: Record<string, FigureArt>;
                   onClick={props.onContinue}
                 >
                   Read the ending
-                </button>
+                </Button>
               )}
             </div>
           ) : (

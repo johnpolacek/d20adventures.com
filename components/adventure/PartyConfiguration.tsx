@@ -150,7 +150,8 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
                 <Button variant="epic">Player</Button>
               ) : (
                 <>
-                  <button
+                  <Button
+                    variant="plain"
                     type="button"
                     onClick={() => onModeChange(choice.characterId, "invite")}
                     className={
@@ -160,8 +161,9 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
                     }
                   >
                     Open
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="plain"
                     type="button"
                     onClick={() => onModeChange(choice.characterId, "ai")}
                     className={
@@ -171,7 +173,7 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
                     }
                   >
                     AI Companion
-                  </button>
+                  </Button>
                 </>
               )}
             </div>

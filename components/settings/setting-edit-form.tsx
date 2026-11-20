@@ -1,6 +1,6 @@
 "use client"
 
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { useSettingForm } from "@/components/settings/hooks/use-setting-form"
 import { Button } from "@d20/ui/button"
 import type { Setting } from "@/types/setting"

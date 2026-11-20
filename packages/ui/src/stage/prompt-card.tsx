@@ -8,6 +8,8 @@
 import { ArrowUp } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "../button"
+import { Textarea } from "../textarea"
+import { Tip } from "../tooltip"
 import { cn } from "../utils"
 import { D20Solid } from "./d20"
 import { rattle } from "./dice-sound"
@@ -139,7 +141,8 @@ const choice =
 // beside it to switch to.
 function HeroRing({ party, actor, compact, onPick }: { party: CardCharacter[]; actor: CardCharacter; compact: boolean; onPick: (id: string) => void }) {
   const ring = (c: CardCharacter, big: boolean) => (
-    <button
+    <Button
+      variant="plain"
       key={c.id}
       type="button"
       onClick={() => onPick(c.id)}
@@ -154,7 +157,7 @@ function HeroRing({ party, actor, compact, onPick }: { party: CardCharacter[]; a
       {c.portrait && (
         <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
       )}
-    </button>
+    </Button>
   )
   const at = party.findIndex((c) => c.id === actor.id)
   const before = at < 0 ? [] : party.slice(0, at)
@@ -234,7 +237,8 @@ function D20({
   }, [go])
   const rolling = face !== null && !done
   return (
-    <button
+    <Button
+      variant="plain"
       type="button"
       onClick={roll}
       disabled={auto || disabled || rolling || done}
@@ -248,7 +252,7 @@ function D20({
     >
       <D20Solid size={compact ? 64 : 92} roll={tumble} numbered face={face ?? undefined} idle={face === null && !disabled} className={cn("absolute inset-0", done && "die-land")} />
       {face === null && !auto && <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-[7px]" : "-bottom-3.5")}>Roll</span>}
-    </button>
+    </Button>
   )
 }
 
@@ -512,23 +516,25 @@ export function PromptCard({
               {mode.suggestions === "loading"
                 ? [0, 1, 2].map((i) => <span key={i} aria-hidden className={cn(choice, "w-32 animate-pulse", compact && "w-20")} />)
                 : mode.suggestions.map((s) => (
-                    <button
-                      key={s.text}
-                      type="button"
-                      title={s.text}
-                      className={cn(choice, "max-w-full truncate", compact && "px-3 py-0.5 text-[12px]", draft === s.text && "border-stage-gold bg-stage-gold/10 text-stage-gold")}
-                      onClick={() => {
-                        setDraft(s.text)
-                        box.current?.focus()
-                      }}
-                    >
-                      {s.label}
-                    </button>
+                    <Tip key={s.text} label={s.text}>
+                      <Button
+                        variant="plain"
+                        type="button"
+                        className={cn(choice, "max-w-full truncate", compact && "px-3 py-0.5 text-[12px]", draft === s.text && "border-stage-gold bg-stage-gold/10 text-stage-gold")}
+                        onClick={() => {
+                          setDraft(s.text)
+                          box.current?.focus()
+                        }}
+                      >
+                        {s.label}
+                      </Button>
+                    </Tip>
                   ))}
             </div>
           )}
           <div className="relative flex items-end gap-2 rounded-[22px] border border-stage-line/15 bg-black/55 p-1.5 pl-4 transition-colors focus-within:border-stage-gold/50">
-            <textarea
+            <Textarea
+              plain
               ref={box}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -547,7 +553,8 @@ export function PromptCard({
                 compact ? "text-[13px]" : "text-[16px]"
               )}
             />
-            <button
+            <Button
+              variant="plain"
               type="button"
               aria-label="Send"
               onClick={send}
@@ -558,7 +565,7 @@ export function PromptCard({
               )}
             >
               <ArrowUp className={compact ? "h-4 w-4" : "h-5 w-5"} strokeWidth={2.25} />
-            </button>
+            </Button>
             {demo && !draft && (
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
                 <span className={cn("font-sans font-medium tracking-[0.22em] text-stage-gold/90 uppercase [text-shadow:0_1px_4px_#000]", compact ? "text-[9px]" : "text-[11px]")}>
@@ -575,9 +582,9 @@ export function PromptCard({
                 </Pill>
               )}
               {onSkip && (
-                <button type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors hover:text-stage-cream">
+                <Button variant="plain" type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors hover:text-stage-cream">
                   Skip
-                </button>
+                </Button>
               )}
             </div>
           )}

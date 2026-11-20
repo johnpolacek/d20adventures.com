@@ -12,6 +12,7 @@
 // and a compact roll is that at a smaller size.
 
 import { Fragment, useEffect, useRef, useState } from "react"
+import { Button } from "../button"
 import { cn } from "../utils"
 import { D20Solid } from "./d20"
 import { rattle, verdict as sound, type Verdict } from "./dice-sound"
@@ -138,7 +139,8 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
         </div>
       )}
       {/* The dice, each over its pool of light, which takes the verdict's colour under the one kept. Before the roll they are the button. */}
-      <button
+      <Button
+        variant="plain"
         type="button"
         onClick={onRoll}
         disabled={!onRoll || Boolean(made)}
@@ -172,7 +174,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
           )
         })}
         {waiting && <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-[7px]" : row ? "-bottom-3.5" : "bottom-0.5 text-[11px]")}>Roll</span>}
-      </button>
+      </Button>
 
       <div className={cn("min-w-0", row ? "flex-1" : "w-full")} aria-hidden="true">
         {row && heading}

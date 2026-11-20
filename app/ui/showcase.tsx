@@ -19,11 +19,16 @@ import { Badge } from "@d20/ui/badge"
 import { Button, buttonClassName } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@d20/ui/card"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle, DrawerTrigger } from "@d20/ui/drawer"
+import { FileInput, FileInputItem, FileInputList, FileInputTrigger, formatFileSize } from "@d20/ui/file-input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@d20/ui/dialog"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@d20/ui/hover-card"
 import ImageHeader from "@d20/ui/image-header"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@d20/ui/menu"
+import { Tip } from "@d20/ui/tooltip"
+import { toast } from "@d20/ui/toast"
 import LoadingAnimation from "@d20/ui/loading-animation"
 import { Pagination, PaginationEllipsis, PaginationFirst, PaginationItem, PaginationLast, PaginationLink, PaginationList, PaginationNext, PaginationPrevious } from "@d20/ui/pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
@@ -184,6 +189,71 @@ const tiles: Tile[] = [
         <HoverCardTrigger href="#hover-card" className="cursor-default underline decoration-dotted underline-offset-4">Kordavos</HoverCardTrigger>
         <HoverCardContent>A walled city on the edge of the Valkarr woods.</HoverCardContent>
       </HoverCard>
+    ),
+  },
+  {
+    name: "Toast",
+    demo: (
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => toast.success("Hero saved")}>
+          Success
+        </Button>
+        <Button variant="outline" onClick={() => toast.error("The roll could not be sent.")}>
+          Error
+        </Button>
+      </div>
+    ),
+  },
+  {
+    name: "Tooltip",
+    demo: (
+      <Tip label="Roll initiative">
+        <Button variant="outline">Hover me</Button>
+      </Tip>
+    ),
+  },
+  {
+    name: "Menu",
+    demo: (
+      <Menu>
+        <MenuTrigger className={buttonClassName("outline")}>Account</MenuTrigger>
+        <MenuContent>
+          <MenuItem value="heroes">My heroes</MenuItem>
+          <MenuItem value="settings">Settings</MenuItem>
+          <MenuSeparator />
+          <MenuItem value="out">Sign out</MenuItem>
+        </MenuContent>
+      </Menu>
+    ),
+  },
+  {
+    name: "Drawer",
+    demo: (
+      <Drawer side="right">
+        <DrawerTrigger className={buttonClassName("outline")}>Open</DrawerTrigger>
+        <DrawerContent className="h-full w-80 gap-3 p-6">
+          <DrawerTitle className="font-display text-lg">Revisions</DrawerTitle>
+          <DrawerDescription className="text-sm text-white/70">Earlier saves of this page.</DrawerDescription>
+          <DrawerClose className={buttonClassName("outline", undefined, "mt-auto")}>Done</DrawerClose>
+        </DrawerContent>
+      </Drawer>
+    ),
+  },
+  {
+    name: "File Input",
+    demo: (
+      <FileInput accept="image/*" multiple>
+        <FileInputTrigger className={buttonClassName("outline")}>Add images</FileInputTrigger>
+        <FileInputList aria-label="Images" className="mt-2 flex flex-col gap-1 text-xs text-white/70">
+          <FileInputItem>
+            {({ file }) => (
+              <span>
+                {file.name} {formatFileSize(file.size)}
+              </span>
+            )}
+          </FileInputItem>
+        </FileInputList>
+      </FileInput>
     ),
   },
   {

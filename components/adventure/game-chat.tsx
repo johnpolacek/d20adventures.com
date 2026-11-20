@@ -352,7 +352,7 @@ export default function GameChat({ adventureId, characterName, variant = "floati
           {/* The whole preview (header + messages) opens the large view; the input row
               below stays interactive. Load-older is hidden here so this region has no
               nested controls — expand to page through history. */}
-          <button type="button" onClick={() => handleOpenChange(true)} className="group flex min-h-0 flex-1 cursor-pointer flex-col text-left" aria-label="Expand chat">
+          <Button variant="plain" type="button" onClick={() => handleOpenChange(true)} className="group flex min-h-0 flex-1 cursor-pointer flex-col text-left" aria-label="Expand chat">
             <div className="flex flex-none items-center justify-between gap-2 px-3 py-2">
               <h3 className="font-display text-sm font-bold text-amber-300">Game Chat</h3>
               <Maximize2 className="h-4 w-4 text-stone-300 transition-colors group-hover:text-amber-200" aria-hidden />
@@ -369,7 +369,7 @@ export default function GameChat({ adventureId, characterName, variant = "floati
               hideLoadOlder
               className="mx-2 min-h-0 flex-1"
             />
-          </button>
+          </Button>
           {chatInput(true)}
         </div>
         <Dialog open={open} onOpenChange={handleOpenChange}>

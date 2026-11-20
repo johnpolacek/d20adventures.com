@@ -23,6 +23,9 @@ import { cn } from "@/lib/utils"
 import type { TurnAudioManifestResponse } from "@/types/turn-audio"
 import StoryviewOverlay, { type StoryviewSnapshot } from "./storyview-overlay"
 import StoryviewPausedNotice from "./storyview-paused-notice"
+import { Button } from "@d20/ui/button"
+import { Label } from "@d20/ui/label"
+import { Tip } from "@d20/ui/tooltip"
 
 const STATUS_REFRESH_DEBOUNCE_MS = 2000
 
@@ -112,17 +115,20 @@ export default function StoryviewRailPanel({ className }: { className?: string }
           <h3 className="truncate font-display text-sm font-bold text-violet-300">Storyview</h3>
           <div className="flex items-center gap-2">
             {isOwner && (
-              <label className="flex cursor-pointer items-center gap-1.5" title="Automatically narrate each turn; the token cost is split among all players.">
-                <span className="text-[10px] uppercase tracking-wide text-stone-400">Auto</span>
-                <Switch checked={autoEnabled} onCheckedChange={toggleAuto} aria-label="Toggle auto-narration" />
-              </label>
+              <Tip label="Automatically narrate each turn; the token cost is split among all players.">
+                <Label plain className="flex cursor-pointer items-center gap-1.5">
+                  <span className="text-[10px] uppercase tracking-wide text-stone-400">Auto</span>
+                  <Switch checked={autoEnabled} onCheckedChange={toggleAuto} aria-label="Toggle auto-narration" />
+                </Label>
+              </Tip>
             )}
-            <button type="button" onClick={open} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-violet-200" aria-label="Play this turn in Storyview">
+            <Button variant="plain" type="button" onClick={open} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-violet-200" aria-label="Play this turn in Storyview">
               <Maximize2 className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </div>
-        <button
+        <Button
+          variant="plain"
           type="button"
           onClick={open}
           className="group relative block w-full cursor-pointer bg-gradient-to-b from-[#14101f] via-[#0e0b16] to-[#08060d] text-left"
@@ -137,7 +143,7 @@ export default function StoryviewRailPanel({ className }: { className?: string }
             <Clapperboard className="h-4 w-4 flex-none text-violet-400/90" />
             <p className="text-[11px] text-stone-400">Play this turn cinematically</p>
           </div>
-        </button>
+        </Button>
         {(paused || showReady || showPreparing) && (
           <div className="border-t border-white/5 px-4 py-2">
             {paused && <StoryviewPausedNotice paused={paused} />}

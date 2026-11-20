@@ -3,6 +3,7 @@ import Link from "next/link"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
 import { Button } from "@d20/ui/button"
+import { Tip } from "@d20/ui/tooltip"
 import NativeImage from "@d20/ui/native-image"
 import { requireAdmin } from "@/lib/auth-utils"
 import { listAdminWikiAdventures } from "@/lib/wiki-adventures/admin-authoring"
@@ -80,9 +81,9 @@ export default async function AdminAdventurePlansPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                     <p className="text-sm text-stone-400">
                       {adventure.fileCount} files · {adventure.encounterCount} encounters ·{" "}
-                      <span className="cursor-help underline decoration-dotted underline-offset-4" title={source.title}>
-                        {source.label}
-                      </span>
+                      <Tip label={source.title}>
+                        <span className="cursor-help underline decoration-dotted underline-offset-4">{source.label}</span>
+                      </Tip>
                     </p>
                     <Button variant="epic" size="sm" className="px-5 py-1.5 text-xs" render={<Link href={href} />}>Open Chat Editor</Button>
                   </div>

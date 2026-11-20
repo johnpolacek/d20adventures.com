@@ -6,6 +6,8 @@ import { eyebrow, Pill, panel } from "@d20/ui/stage/hud"
 import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { cn } from "@/lib/utils"
+import { Input } from "@d20/ui/input"
+import { Label } from "@d20/ui/label"
 
 type Pending = { deviceName: string; approved: boolean }
 type Device = { id: string; name: string; createdAt: number; lastSeenAt?: number }
@@ -128,10 +130,11 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
                 void lookup(code)
               }}
             >
-              <label htmlFor="link-code" className={cn(eyebrow, "block")}>
+              <Label plain htmlFor="link-code" className={cn(eyebrow, "block")}>
                 Code shown in the app
-              </label>
-              <input
+              </Label>
+              <Input
+                plain
                 id="link-code"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}

@@ -296,7 +296,8 @@ export function NewGame(props: {
                         full && "opacity-40"
                       )}
                     >
-                      <button
+                      <Button
+                        variant="plain"
                         type="button"
                         aria-pressed={Boolean(choice)}
                         disabled={full}
@@ -308,7 +309,7 @@ export function NewGame(props: {
                         <span className="-mt-2 truncate text-xs text-white/70">
                           {p.race} {p.archetype}
                         </span>
-                      </button>
+                      </Button>
                       {choice && (
                         <fieldset className="flex px-2 pb-2" aria-label={`Who plays ${p.name}`}>
                           {(canInvite ? WHO : WHO.slice(0, 2)).map(([who, label], i, all) => (
@@ -339,16 +340,17 @@ export function NewGame(props: {
                       {p.hero && (
                         <div className="absolute top-3 left-3 flex gap-1">
                           {props.onEdit && (
-                            <button type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit!(p.hero!)} aria-label={`Edit ${p.name}`}>
+                            <Button variant="plain" type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit!(p.hero!)} aria-label={`Edit ${p.name}`}>
                               Edit
-                            </button>
+                            </Button>
                           )}
                           {props.onPaint && (
-                            <button type="button" className={mini} disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
+                            <Button variant="plain" type="button" className={mini} disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
                               {props.painting === p.id ? "Painting…" : "Paint"}
-                            </button>
+                            </Button>
                           )}
-                          <button
+                          <Button
+                            variant="plain"
                             type="button"
                             className={cn(mini, deleting === p.id && "border-red-400/60 bg-red-600/80 text-white hover:bg-red-600")}
                             disabled={props.busy}
@@ -362,7 +364,7 @@ export function NewGame(props: {
                             }}
                           >
                             {deleting === p.id ? "Confirm" : "Delete"}
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </li>
@@ -407,9 +409,9 @@ export function NewGame(props: {
         <div className="flex-1" />
         {hosting && sized && !hostable && <p className="text-sm text-amber-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>}
         {props.onCancel && (
-          <button type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
+          <Button variant="plain" type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
             Cancel
-          </button>
+          </Button>
         )}
         {hosting ? (
           <Button
@@ -536,9 +538,9 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
               {!info.owned && <div className="mt-2 font-display text-4xl text-amber-300">{price(info.priceCents)}</div>}
               <p className="mt-3 text-base text-gray-300">{status}</p>
               {!info.owned && !props.linked && props.onLink && (
-                <button type="button" className={cn(siteOutline, "mt-4 px-4 py-1.5 text-sm")} onClick={props.onLink}>
+                <Button variant="plain" type="button" className={cn(siteOutline, "mt-4 px-4 py-1.5 text-sm")} onClick={props.onLink}>
                   Link account
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -547,9 +549,9 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
         <div className="flex-1" />
         {props.onCancel && (
-          <button type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
+          <Button variant="plain" type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
             Cancel
-          </button>
+          </Button>
         )}
         <Button variant="epic" className="text-xl" disabled>
           Locked
@@ -573,7 +575,8 @@ function Face({ pick, size }: { pick: Pick; size: string }) {
 function AddCard(props: { mark: string; title: string; sub?: string; action: string; disabled: boolean; onClick: () => void }) {
   return (
     <li>
-      <button
+      <Button
+        variant="plain"
         type="button"
         onClick={props.onClick}
         disabled={props.disabled}
@@ -583,7 +586,7 @@ function AddCard(props: { mark: string; title: string; sub?: string; action: str
         <span className="truncate font-display text-sm">{props.title}</span>
         {props.sub && <span className="-mt-2 truncate text-xs text-white/70">{props.sub}</span>}
         <span className={cn(siteOutline, "mt-auto px-1 py-1 text-center text-xs")}>{props.action}</span>
-      </button>
+      </Button>
     </li>
   )
 }
@@ -591,13 +594,14 @@ function AddCard(props: { mark: string; title: string; sub?: string; action: str
 // The x over a party card's corner that takes it out of the party.
 function Unseat(props: { label: string; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="plain"
       type="button"
       aria-label={props.label}
       onClick={props.onClick}
       className="absolute top-3 right-3 grid h-6 w-6 place-items-center rounded-full border border-white/30 bg-black/80 text-base leading-none text-white/70 transition-colors hover:border-white/60 hover:text-white"
     >
       ×
-    </button>
+    </Button>
   )
 }

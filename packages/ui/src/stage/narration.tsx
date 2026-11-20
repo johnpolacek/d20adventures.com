@@ -6,24 +6,27 @@
 // step back, move on (Continue when stepping through, the next paragraph when it plays itself), or skip to the end.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { Button, epicReducedButtonStyle } from "../button"
+import { Button, type ButtonProps, epicReducedButtonStyle } from "../button"
+import { Tip } from "../tooltip"
 import { cn } from "../utils"
 import { Chevron, eyebrow, panel } from "./hud"
 import { FeatureEntry } from "./roll-parts"
 import { RollResult } from "./roll-result"
 import type { FeatureView, RollView } from "./roll-view"
 
-function Control({ label, children, ...rest }: React.ComponentProps<"button"> & { label: string; children: ReactNode }) {
+function Control({ label, children, ...rest }: Omit<ButtonProps, "variant" | "size"> & { label: string; children: ReactNode }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      className="stage-leather grid h-7 w-7 place-items-center rounded-full border border-stage-line/25 text-stage-cream transition-[filter,border-color] hover:border-stage-gold disabled:cursor-default disabled:opacity-35 [&_svg]:h-3 [&_svg]:w-3"
-      {...rest}
-    >
-      {children}
-    </button>
+    <Tip label={label}>
+      <Button
+        variant="plain"
+        type="button"
+        aria-label={label}
+        className="stage-leather grid h-7 w-7 place-items-center rounded-full border border-stage-line/25 text-stage-cream transition-[filter,border-color] hover:border-stage-gold disabled:cursor-default disabled:opacity-35 [&_svg]:h-3 [&_svg]:w-3"
+        {...rest}
+      >
+        {children}
+      </Button>
+    </Tip>
   )
 }
 

@@ -5,9 +5,14 @@
 
 import { Star, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import { Button } from "../button"
 import { type FeedbackDraft, MAX_SCREENSHOTS, SCREENSHOT_TYPES, screenshotProblem } from "../feedback-rules"
+import { FileInput, FileInputTrigger } from "../file-input"
+import { Label } from "../label"
+import { Textarea } from "../textarea"
+import { Tip } from "../tooltip"
 import { cn } from "../utils"
-import { eyebrow, Pill, panel } from "./hud"
+import { eyebrow, Pill, panel, pillClass } from "./hud"
 
 export type FeedbackStart = { kind: FeedbackDraft["kind"]; rating?: number }
 
@@ -58,19 +63,21 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        aria-label="Give Us Feedback"
-        title="Give Us Feedback"
-        aria-pressed={active}
-        onClick={() => {
-          if (callout === "shown") setCallout("leaving")
-          onClick()
-        }}
-        className="stage-brass grid h-10 w-10 place-items-center rounded-full border-0 transition-[filter]"
-      >
-        <ThumbsUpDownSolid />
-      </button>
+      <Tip label="Give Us Feedback">
+        <Button
+          variant="plain"
+          type="button"
+          aria-label="Give Us Feedback"
+          aria-pressed={active}
+          onClick={() => {
+            if (callout === "shown") setCallout("leaving")
+            onClick()
+          }}
+          className="stage-brass grid h-10 w-10 place-items-center rounded-full border-0 transition-[filter]"
+        >
+          <ThumbsUpDownSolid />
+        </Button>
+      </Tip>
       {callout !== "hidden" && (
         <div
           className={cn(
@@ -84,7 +91,8 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
           {/* The pointer, under the middle of the button. */}
           <span aria-hidden="true" className="absolute -top-[7px] right-[14px] size-3 rotate-45 border-t border-l border-stage-gold/60 bg-stage-panel" />
           <span className="font-display text-sm tracking-wide whitespace-nowrap text-stage-cream">Give Us Feedback</span>
-          <button
+          <Button
+            variant="plain"
             type="button"
             aria-label="Dismiss"
             onPointerDown={(e) => e.stopPropagation()}
@@ -92,12 +100,14 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
             className="grid size-6 place-items-center rounded-full text-stage-cream/60 transition-colors hover:bg-white/10 hover:text-stage-cream"
           >
             <X className="size-3.5" />
-          </button>
+          </Button>
         </div>
       )}
     </div>
   )
 }
+
+const NO_FILES: File[] = []
 
 const field =
   "w-full resize-none rounded-[3px] border border-stage-line/25 bg-black/40 px-3 py-2 font-serif text-[15px] leading-snug text-stage-cream placeholder:text-stage-cream/35 focus:border-stage-gold/70 focus:outline-none"
@@ -107,7 +117,8 @@ function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: 
   return (
     <div className="flex justify-center gap-1" onPointerLeave={() => setHover(0)}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <button
+        <Button
+          variant="plain"
           key={n}
           type="button"
           aria-label={`${n} of 5`}
@@ -117,7 +128,7 @@ function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: 
           className="p-0.5 transition-transform hover:scale-110"
         >
           <Star className={cn(size, "transition-colors", n <= (hover || value) ? "fill-stage-gold text-stage-gold" : "text-stage-cream/40")} strokeWidth={1.5} />
-        </button>
+        </Button>
       ))}
     </div>
   )
@@ -157,7 +168,6 @@ export function FeedbackPanel({
   const [shots, setShots] = useState<{ file: File; url: string }[]>([])
   const [state, setState] = useState<"writing" | "sending" | "sent">("writing")
   const [error, setError] = useState<string | null>(null)
-  const picker = useRef<HTMLInputElement>(null)
   const shotsRef = useRef(shots)
   shotsRef.current = shots
   useEffect(
@@ -170,10 +180,10 @@ export function FeedbackPanel({
   const noteRef = useRef<HTMLTextAreaElement>(null)
   useEffect(() => noteRef.current?.focus(), [])
 
-  const add = (files: FileList | null) => {
+  const add = (files: readonly File[]) => {
     setError(null)
     const next = [...shots]
-    for (const file of files ?? []) {
+    for (const file of files) {
       const problem = next.length >= MAX_SCREENSHOTS ? `You can attach up to ${MAX_SCREENSHOTS} screenshots.` : screenshotProblem(file)
       if (problem) {
         setError(problem)
@@ -182,7 +192,6 @@ export function FeedbackPanel({
       next.push({ file, url: URL.createObjectURL(file) })
     }
     setShots(next)
-    if (picker.current) picker.current.value = ""
   }
   const remove = (url: string) => {
     URL.revokeObjectURL(url)
@@ -231,14 +240,15 @@ export function FeedbackPanel({
           <div className={eyebrow}>Playtest</div>
           <h2 className="mt-1 font-serif text-2xl">{ending ? "How Was Your Adventure?" : "Give Us Feedback"}</h2>
         </div>
-        <button
+        <Button
+          variant="plain"
           type="button"
           aria-label="Close"
           onClick={onClose}
           className="grid size-7 shrink-0 place-items-center rounded-full text-stage-cream/60 transition-colors hover:bg-white/10 hover:text-stage-cream"
         >
           <X className="size-4" />
-        </button>
+        </Button>
       </div>
 
       {state === "sent" ? (
@@ -249,17 +259,18 @@ export function FeedbackPanel({
             {ending ? (
               <>
                 <Stars value={rating} onChange={setRating} size="size-7" />
-                <label className="grid gap-1.5">
+                <Label plain className="grid gap-1.5">
                   <span className={eyebrow}>Best Moment</span>
-                  <textarea rows={2} maxLength={4000} value={bestMoment} onChange={(e) => setBestMoment(e.target.value)} className={field} />
-                </label>
-                <label className="grid gap-1.5">
+                  <Textarea plain rows={2} maxLength={4000} value={bestMoment} onChange={(e) => setBestMoment(e.target.value)} className={field} />
+                </Label>
+                <Label plain className="grid gap-1.5">
                   <span className={eyebrow}>What Broke</span>
-                  <textarea rows={2} maxLength={4000} value={broke} onChange={(e) => setBroke(e.target.value)} className={field} />
-                </label>
+                  <Textarea plain rows={2} maxLength={4000} value={broke} onChange={(e) => setBroke(e.target.value)} className={field} />
+                </Label>
               </>
             ) : (
-              <textarea
+              <Textarea
+                plain
                 rows={5}
                 maxLength={4000}
                 ref={noteRef}
@@ -276,19 +287,19 @@ export function FeedbackPanel({
                 {shots.map((shot) => (
                   <li key={shot.url} className="relative">
                     <img src={shot.url} alt={shot.file.name} className="h-16 w-24 rounded-[3px] border border-stage-line/25 object-cover" />
-                    <button
+                    <Button
+                      variant="plain"
                       type="button"
                       aria-label={`Remove ${shot.file.name}`}
                       onClick={() => remove(shot.url)}
                       className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full border border-stage-line/40 bg-stage-panel text-stage-cream hover:border-stage-gold"
                     >
                       <X className="size-3" />
-                    </button>
+                    </Button>
                   </li>
                 ))}
               </ul>
             )}
-            <input ref={picker} type="file" accept={SCREENSHOT_TYPES.join(",")} multiple hidden onChange={(e) => add(e.target.files)} />
           </div>
 
           {error && (
@@ -298,9 +309,20 @@ export function FeedbackPanel({
           )}
 
           <div className="mt-4 flex items-center justify-between gap-2">
-            <Pill disabled={state === "sending" || shots.length >= MAX_SCREENSHOTS} onClick={() => picker.current?.click()}>
-              Add Screenshot
-            </Pill>
+            {/* The panel keeps the screenshots, so the file input stays empty and hands each pick to add. */}
+            <FileInput
+              multiple
+              accept={SCREENSHOT_TYPES}
+              value={NO_FILES}
+              onValueChange={(files) => add(files)}
+              onReject={(rejected) => {
+                if (rejected[0]) setError(screenshotProblem(rejected[0].file))
+              }}
+              disabled={state === "sending" || shots.length >= MAX_SCREENSHOTS}
+              className="flex"
+            >
+              <FileInputTrigger className={pillClass()}>Add Screenshot</FileInputTrigger>
+            </FileInput>
             <Pill active disabled={empty || state === "sending"} onClick={() => void send()}>
               {state === "sending" ? "Sending…" : "Send"}
             </Pill>

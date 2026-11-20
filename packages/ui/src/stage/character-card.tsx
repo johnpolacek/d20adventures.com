@@ -8,6 +8,7 @@
 
 import type { ItemView } from "@d20/gm-core/sheet/items"
 import type { SheetSpellcasting } from "@d20/gm-core/sheet/view"
+import { Button } from "../button"
 import { cn } from "../utils"
 import { eyebrow, panel } from "./hud"
 import { MagicItems } from "./magic-items"
@@ -52,9 +53,9 @@ export function CharacterCard({
     <section
       className={cn(panel, "fade-in absolute z-40 overflow-y-auto px-6 pt-6 pb-5", compact ? "top-12 right-3 bottom-12 w-[min(330px,55vw)]" : "top-24 right-10 max-h-[calc(100%-230px)] w-[330px]")}
     >
-      <button type="button" onClick={onClose} aria-label="Close card" className="absolute top-2.5 right-3 text-[22px] leading-none text-stage-muted hover:text-stage-cream">
+      <Button variant="plain" type="button" onClick={onClose} aria-label="Close card" className="absolute top-2.5 right-3 text-[22px] leading-none text-stage-muted hover:text-stage-cream">
         ×
-      </button>
+      </Button>
       {info.portrait && (
         <img src={info.portrait} alt="" className="-mt-1 mb-3 block h-[132px] w-full border border-stage-brass/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
       )}

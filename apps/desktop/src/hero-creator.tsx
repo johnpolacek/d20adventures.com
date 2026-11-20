@@ -1,10 +1,14 @@
 import type { CreationChoices, CreationPick } from "@d20/gm-core/sheet/create"
-import { useEffect, useMemo, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
 import { HeroRules } from "@d20/ui/heroes/hero-rules"
 import { useHeroRules } from "@d20/ui/heroes/use-hero-rules"
 import { Button } from "@d20/ui/button"
+import { Dialog, DialogContent } from "@d20/ui/dialog"
+import { Input } from "@d20/ui/input"
+import { Label } from "@d20/ui/label"
 import { Option, siteField, siteLabel, siteOutline } from "@d20/ui/site"
+import { Textarea } from "@d20/ui/textarea"
 import { cn } from "@/lib/utils"
 import type { Arrival, Hero, HeroDraft } from "../runtime/heroes"
 import { defaultFigure, type FigureArt, figuresFor } from "./figures"
@@ -49,15 +53,6 @@ export function HeroCreator(props: {
   const [choices, setChoices] = useState<CreationChoices | null>(null)
   const [step, setStep] = useState<"pick" | "rules" | "review">(props.editing ? "review" : "pick")
   const [hero, setHero] = useState<Edited | null>(props.editing ?? null)
-  useEffect(() => {
-    const fn = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return
-      e.stopPropagation()
-      props.onClose()
-    }
-    document.addEventListener("keydown", fn, true)
-    return () => document.removeEventListener("keydown", fn, true)
-  }, [props.onClose])
 
   // What the adventure allows of what the rules can make.
   const menu = useMemo(
@@ -103,16 +98,21 @@ export function HeroCreator(props: {
   const title = step === "pick" ? "New Hero" : step === "rules" ? "Rules" : "Review Hero"
 
   return (
-    <div className="absolute inset-0 z-50 grid place-items-center bg-black/80 font-serif text-white">
+    // Escape and the close button close it. A press outside does not, so a hero in progress is not lost.
+    <Dialog
+      open
+      closeOnOutsidePress={false}
+      onOpenChange={(open) => {
+        if (!open) props.onClose()
+      }}
+    >
       {/* The website's character sheet: a deep primary gradient with a primary border. */}
-      <section
-        role="dialog"
+      <DialogContent
         aria-label={title}
-        className="relative flex max-h-[90vh] w-[min(56rem,95vw)] flex-col gap-5 overflow-y-auto rounded-lg border border-primary-600 bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 p-7 text-left shadow-lg"
+        initialFocus="content"
+        closeClassName="top-3 text-white/60 opacity-100 hover:text-white [&_svg:not([class*='size-'])]:size-6"
+        className="flex max-h-[90vh] w-[min(56rem,95vw)] max-w-none flex-col gap-5 overflow-y-auto rounded-lg border border-primary-600 bg-transparent bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 p-7 text-left font-serif text-white shadow-lg sm:max-w-none"
       >
-        <button type="button" onClick={props.onClose} aria-label="Close" className="absolute top-3 right-4 text-2xl leading-none text-white/60 hover:text-white">
-          ×
-        </button>
         {step === "pick" && (
           <>
             <h2 className="font-display text-3xl font-bold text-amber-300">New Hero</h2>
@@ -127,14 +127,14 @@ export function HeroCreator(props: {
             )}
             <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
               <Labeled label="Name">
-                <input className={field} value={idea.name} maxLength={80} onChange={(e) => set("name", e.target.value)} />
+                <Input plain className={field} value={idea.name} maxLength={80} onChange={(e) => set("name", e.target.value)} />
               </Labeled>
               <Labeled label="Gender">
-                <input className={field} value={idea.gender} maxLength={40} onChange={(e) => set("gender", e.target.value)} />
+                <Input plain className={field} value={idea.gender} maxLength={40} onChange={(e) => set("gender", e.target.value)} />
               </Labeled>
             </div>
             <Labeled label="Idea">
-              <textarea className={cn(field, "resize-none")} rows={2} maxLength={600} value={idea.idea} onChange={(e) => set("idea", e.target.value)} />
+              <Textarea plain className={cn(field, "resize-none")} rows={2} maxLength={600} value={idea.idea} onChange={(e) => set("idea", e.target.value)} />
             </Labeled>
             {props.adventure && props.adventure.hooks.length > 0 && (
               <div>
@@ -146,7 +146,7 @@ export function HeroCreator(props: {
                     </Option>
                   ))}
                 </div>
-                <input className={field} aria-label="Why They Came" placeholder="Let the GM choose" value={idea.hook} maxLength={300} onChange={(e) => set("hook", e.target.value)} />
+                <Input plain className={field} aria-label="Why They Came" placeholder="Let the GM choose" value={idea.hook} maxLength={300} onChange={(e) => set("hook", e.target.value)} />
               </div>
             )}
             <div className={footer}>
@@ -174,12 +174,12 @@ export function HeroCreator(props: {
                 </p>
               )}
               {props.busy && <span className="text-sm text-white/70 italic">The GM is writing your hero…</span>}
-              <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={() => setStep("pick")}>
+              <Button variant="plain" type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={() => setStep("pick")}>
                 Back
-              </button>
-              <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={() => setChoices(kit.auto(pick))}>
+              </Button>
+              <Button variant="plain" type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={() => setChoices(kit.auto(pick))}>
                 Choose For Me
-              </button>
+              </Button>
               <Button variant="epic" className="text-lg" disabled={props.busy || problems.length > 0} onClick={() => void write()}>
                 Write My Hero
               </Button>
@@ -193,7 +193,8 @@ export function HeroCreator(props: {
                 <div className={cn(siteLabel, "mb-2")}>Figure</div>
                 <div className="grid grid-cols-2 gap-2">
                   {props.painted && (
-                    <button
+                    <Button
+                      variant="plain"
                       type="button"
                       aria-pressed={Boolean(hero.painted)}
                       aria-label="Painted Figure"
@@ -201,10 +202,11 @@ export function HeroCreator(props: {
                       className={figure(Boolean(hero.painted))}
                     >
                       <img src={props.painted.front} alt="" className="block h-56 w-full object-contain" />
-                    </button>
+                    </Button>
                   )}
                   {figuresFor(hero.race).map((f) => (
-                    <button
+                    <Button
+                      variant="plain"
                       key={f.id}
                       type="button"
                       aria-pressed={!hero.painted && hero.figure === f.id}
@@ -213,17 +215,17 @@ export function HeroCreator(props: {
                       className={figure(!hero.painted && hero.figure === f.id)}
                     >
                       <img src={f.art.front} alt="" className="block h-56 w-full object-contain" />
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
               <div className="grid content-start gap-3">
                 <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
                   <Labeled label="Name">
-                    <input className={cn(field, "font-display text-lg text-amber-300")} value={hero.name} maxLength={80} onChange={(e) => setHero({ ...hero, name: e.target.value })} />
+                    <Input plain className={cn(field, "font-display text-lg text-amber-300")} value={hero.name} maxLength={80} onChange={(e) => setHero({ ...hero, name: e.target.value })} />
                   </Labeled>
                   <Labeled label="Gender">
-                    <input className={field} value={hero.gender ?? ""} maxLength={40} onChange={(e) => setHero({ ...hero, gender: e.target.value })} />
+                    <Input plain className={field} value={hero.gender ?? ""} maxLength={40} onChange={(e) => setHero({ ...hero, gender: e.target.value })} />
                   </Labeled>
                 </div>
                 {/* The rules of the hero, read off their sheet. Levels change them, not this screen. */}
@@ -254,30 +256,30 @@ export function HeroCreator(props: {
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="md:col-span-2">
                   <Labeled label="Arrival">
-                    <textarea className={cn(field, "resize-y")} rows={2} maxLength={600} value={arrival.intro} onChange={(e) => setArrival("intro", e.target.value)} />
+                    <Textarea plain className={cn(field, "resize-y")} rows={2} maxLength={600} value={arrival.intro} onChange={(e) => setArrival("intro", e.target.value)} />
                   </Labeled>
                 </div>
                 <Labeled label="Why They Came">
-                  <textarea className={cn(field, "resize-y")} rows={2} maxLength={400} value={arrival.reason} onChange={(e) => setArrival("reason", e.target.value)} />
+                  <Textarea plain className={cn(field, "resize-y")} rows={2} maxLength={400} value={arrival.reason} onChange={(e) => setArrival("reason", e.target.value)} />
                 </Labeled>
                 <Labeled label="What Others Notice">
-                  <textarea className={cn(field, "resize-y")} rows={2} maxLength={200} value={arrival.tell} onChange={(e) => setArrival("tell", e.target.value)} />
+                  <Textarea plain className={cn(field, "resize-y")} rows={2} maxLength={200} value={arrival.tell} onChange={(e) => setArrival("tell", e.target.value)} />
                 </Labeled>
               </div>
             )}
             <div className="grid gap-3 md:grid-cols-2">
               {(["appearance", "personality", "background", "motivation", "behavior"] as const).map((key) => (
                 <Labeled key={key} label={key === "background" ? "Past" : key}>
-                  <textarea className={cn(field, "resize-y")} rows={3} value={hero[key] ?? ""} onChange={(e) => setHero({ ...hero, [key]: e.target.value })} />
+                  <Textarea plain className={cn(field, "resize-y")} rows={3} value={hero[key] ?? ""} onChange={(e) => setHero({ ...hero, [key]: e.target.value })} />
                 </Labeled>
               ))}
             </div>
             <div className={footer}>
               {props.busy && <span className="text-sm text-white/70 italic">Saving…</span>}
               {!props.editing && (
-                <button type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={() => setStep("rules")}>
+                <Button variant="plain" type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} disabled={props.busy} onClick={() => setStep("rules")}>
                   Back
-                </button>
+                </Button>
               )}
               <Button
                 variant="epic"
@@ -290,17 +292,17 @@ export function HeroCreator(props: {
             </div>
           </>
         )}
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
-function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
+function Labeled({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="grid gap-1">
+    <Label plain className="grid gap-1">
       <span className={siteLabel}>{label}</span>
       {children}
-    </label>
+    </Label>
   )
 }
 

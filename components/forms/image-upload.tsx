@@ -2,8 +2,9 @@
 
 import { ImagePlus, Loader, X } from "lucide-react"
 import { useCallback, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { Button } from "@d20/ui/button"
+import { FileInput, FileInputTrigger } from "@d20/ui/file-input"
 import Image from "@d20/ui/native-image"
 import { IMAGE_HOST } from "@/lib/config"
 import { useFileUpload } from "@/lib/upload-utils"
@@ -58,6 +59,8 @@ function getDisplayUrl(value: string): string {
   return `${IMAGE_HOST}/${value.replace(/^\/+/, "")}`
 }
 
+const NO_FILES: File[] = []
+
 export function ImageUpload({ id, value, onChange, onRemove, folder = "uploads", className }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
 
@@ -67,9 +70,9 @@ export function ImageUpload({ id, value, onChange, onRemove, folder = "uploads",
   })
 
   const handleUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (files: File[]) => {
       try {
-        const file = e.target.files?.[0]
+        const file = files[0]
         if (!file) return
 
         setIsUploading(true)
@@ -110,13 +113,15 @@ export function ImageUpload({ id, value, onChange, onRemove, folder = "uploads",
         ) : (
           <>
             {value && !isUsableUrl && <p className="text-xs text-red-500 p-2 text-center">Image path appears invalid for display: {value}. Please re-upload or ensure the path is an absolute URL.</p>}
-            <label className={`flex h-full w-full cursor-pointer items-center justify-center bg-gradient-to-tl from-white/10 to-transparent ${value && !isUsableUrl ? "pt-2" : ""}`}>
-              <div className="flex flex-col items-center gap-2 text-primary">
-                {isUploading ? <Loader className="h-8 w-8 animate-spin" /> : <ImagePlus className="h-8 w-8" />}
-                <span className="text-sm font-mono">{isUploading ? "Uploading..." : "Upload Image"}</span>
-              </div>
-              <input id={id} type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={isUploading} />
-            </label>
+            {/* The value stays empty, so each pick uploads and picking the same file again still works. */}
+            <FileInput className="contents" accept="image/*" value={NO_FILES} onValueChange={handleUpload} disabled={isUploading}>
+              <FileInputTrigger id={id} className={`flex h-full w-full cursor-pointer items-center justify-center bg-gradient-to-tl from-white/10 to-transparent ${value && !isUsableUrl ? "pt-2" : ""}`}>
+                <span className="flex flex-col items-center gap-2 text-primary">
+                  {isUploading ? <Loader className="h-8 w-8 animate-spin" /> : <ImagePlus className="h-8 w-8" />}
+                  <span className="text-sm font-mono">{isUploading ? "Uploading..." : "Upload Image"}</span>
+                </span>
+              </FileInputTrigger>
+            </FileInput>
           </>
         )}
       </div>

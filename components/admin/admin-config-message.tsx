@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs"
 import { Copy, ShieldUser } from "lucide-react"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { Button } from "@d20/ui/button"
 import { Card } from "@d20/ui/card"
 

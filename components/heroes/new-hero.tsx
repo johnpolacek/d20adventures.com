@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
 import slugify from "slugify"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { draftHero } from "@/app/_actions/hero-draft"
 import { joinAdventure, requestSeat } from "@/app/_actions/join-adventure"
 import { saveCharacterTemplateAction } from "@/app/_actions/save-character-template"

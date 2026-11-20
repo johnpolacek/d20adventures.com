@@ -5,6 +5,8 @@
 
 import type { Flags, Stage, StageStats, TierName } from "@d20/stage"
 import { useEffect, useRef, useState } from "react"
+import { Button } from "@d20/ui/button"
+import { Tip } from "@d20/ui/tooltip"
 
 interface Props {
   setKey: string
@@ -199,9 +201,11 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
           </div>
           <div className="flex flex-wrap gap-1">
             {shots.map(([k, label], i) => (
-              <button key={k} className={pill(stats?.shot === k)} title={label} onClick={() => set((s) => s.shot(k))}>
-                {i + 1} {k}
-              </button>
+              <Tip key={k} label={label}>
+                <Button variant="plain" className={pill(stats?.shot === k)} onClick={() => set((s) => s.shot(k))}>
+                  {i + 1} {k}
+                </Button>
+              </Tip>
             ))}
           </div>
           <details
@@ -219,48 +223,49 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
               <div className="flex flex-wrap items-center gap-1">
                 <span className="w-10 opacity-60">tier</span>
                 {TIERS.map((t) => (
-                  <button key={t} className={pill(stats?.tier === t)} onClick={() => set((s) => s.setTier(t))}>
+                  <Button variant="plain" key={t} className={pill(stats?.tier === t)} onClick={() => set((s) => s.setTier(t))}>
                     {t}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <div className="flex flex-wrap items-center gap-1">
                 <span className="w-10 opacity-60">crowd</span>
                 {(["procedural", "cards", "hybrid"] as const).map((m) => (
-                  <button key={m} className={pill(stage.flags.crowd === m)} onClick={() => set((s) => s.setFlags({ crowd: m }))}>
+                  <Button variant="plain" key={m} className={pill(stage.flags.crowd === m)} onClick={() => set((s) => s.setFlags({ crowd: m }))}>
                     {m}
-                  </button>
+                  </Button>
                 ))}
                 <span className="ml-2 w-6 opacity-60">aa</span>
                 {(["off", "fxaa", "msaa"] as const).map((m) => (
-                  <button key={m} className={pill(stats?.aa === m)} onClick={() => set((s) => s.setFlags({ aa: m }))}>
+                  <Button variant="plain" key={m} className={pill(stats?.aa === m)} onClick={() => set((s) => s.setFlags({ aa: m }))}>
                     {m}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <div className="flex flex-wrap items-center gap-1">
                 <span className="w-10 opacity-60">paint</span>
                 {(["uniform", "depth"] as const).map((m) => (
-                  <button key={m} className={pill(stage.flags.paint === m)} onClick={() => set((s) => s.setFlags({ paint: m }))}>
+                  <Button variant="plain" key={m} className={pill(stage.flags.paint === m)} onClick={() => set((s) => s.setFlags({ paint: m }))}>
                     {m}
-                  </button>
+                  </Button>
                 ))}
-                <button className={pill(stage.flags.brush > 0.01)} onClick={() => set((s) => s.setFlags({ brush: s.flags.brush > 0.01 ? 0 : 1 }))}>
+                <Button variant="plain" className={pill(stage.flags.brush > 0.01)} onClick={() => set((s) => s.setFlags({ brush: s.flags.brush > 0.01 ? 0 : 1 }))}>
                   brush
-                </button>
-                <button className={pill(!!stats?.ao)} onClick={() => set((s) => s.setFlags({ ao: !s.pipeline.gtao.enabled }))}>
+                </Button>
+                <Button variant="plain" className={pill(!!stats?.ao)} onClick={() => set((s) => s.setFlags({ ao: !s.pipeline.gtao.enabled }))}>
                   ao
-                </button>
-                <button className={pill(!!stats?.bloom)} onClick={() => set((s) => s.setFlags({ bloom: !s.pipeline.bloom.enabled }))}>
+                </Button>
+                <Button variant="plain" className={pill(!!stats?.bloom)} onClick={() => set((s) => s.setFlags({ bloom: !s.pipeline.bloom.enabled }))}>
                   bloom
-                </button>
-                <button className={pill(stage.flags.figures)} onClick={() => set((s) => s.setFlags({ figures: !s.flags.figures }))}>
+                </Button>
+                <Button variant="plain" className={pill(stage.flags.figures)} onClick={() => set((s) => s.setFlags({ figures: !s.flags.figures }))}>
                   figures
-                </button>
-                <button className={pill(stage.motion)} onClick={() => set((s) => (s.motion = !s.motion))}>
+                </Button>
+                <Button variant="plain" className={pill(stage.motion)} onClick={() => set((s) => (s.motion = !s.motion))}>
                   motion
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="plain"
                   className={pill(false)}
                   onClick={async () => {
                     const blob = await stageRef.current?.capture()
@@ -273,7 +278,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                   }}
                 >
                   capture
-                </button>
+                </Button>
               </div>
               {stats && (
                 <div className="font-mono text-[10px] opacity-75">

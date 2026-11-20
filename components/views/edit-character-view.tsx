@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { editCharacterTemplateAction } from "@/app/_actions/edit-character-template"
 import type { Hero } from "@/apps/desktop/runtime/heroes"
 import { HeroCreator } from "@/apps/desktop/src/hero-creator"

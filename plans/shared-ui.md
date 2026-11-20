@@ -29,10 +29,13 @@ The package is plain React. It imports nothing from Next, Clerk or Convex, the s
 5. Stage. Done 2026-11-19. `components/stage` is now `@d20/ui/stage/*`, and `module-cover` and `use-sheet-view` are `@d20/ui/adventure/*`. `useStage` no longer imports `asset-library/play`: callers pass it as `play`. The package depends on `@d20/gm-core`, `@d20/stage` and `three`.
 6. Lock down. Done 2026-11-19. The desktop has one `@source`, for the package. The site needs none, since Tailwind scans the repo. The desktop's Vite `@` alias reaches only `asset-library`, `content` and `lib/citymap`, so a value import of site code fails its build. Its tsconfig keeps `@/*` wide, because `HostedSummary` and `GuestHero` are types inferred from the site's Convex server code. Type imports vanish at build. `packages/ui/scripts/check-imports.mjs` fails both builds on Next, Clerk, Convex or `@/` imports in the package. `hero-rules`, `use-hero-rules` and the screenshot shrink moved into the package. The Radix dependencies are gone. `sonner` stays for now.
 
+## Full UI SDK, 2026-11-19
+
+No raw `button`, `input`, `textarea` or `label` remain in shipped or dev code, and no hand-built pop-ups. New wrappers: `toast` (replaces `sonner`), `tooltip` (`Tip` replaces HTML `title`), `menu`, `drawer`, `file-input`. `Button variant="plain"` and `plain` on `Input`, `Textarea` and `Label` drop our default look for controls styled by their callers. `title=` left in the code is a prop of our own components.
+
 ## Follow-ups
 
 - Write the hosted wire types (`HostedSummary`, `GuestHero`) out by hand, then narrow the desktop tsconfig to match Vite.
-- Replace `sonner` with UI SDK Toast.
 - Fix the look of the outline badge, the white card and the dialog title.
 
 ## UI SDK notes

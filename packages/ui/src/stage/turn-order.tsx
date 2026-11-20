@@ -10,6 +10,8 @@
 // reach its actor.
 
 import { useLayoutEffect, useRef } from "react"
+import { Button } from "../button"
+import { Tip } from "../tooltip"
 import { cn } from "../utils"
 import { DeathSaveMarks } from "./roll-parts"
 import { hitPointsShort, type Standing, standingWords, WOUND_TONE } from "./standing"
@@ -86,43 +88,45 @@ export function TurnOrder({
                   </svg>
                 </span>
               )}
-              <button
-                type="button"
-                onClick={() => onPick(c.id)}
-                title={name}
-                aria-label={name}
-                aria-current={active ? "true" : undefined}
-                className={cn(
-                  "relative overflow-hidden border bg-stage-ink p-[2px] shadow-[0_4px_14px_#0008] transition-all duration-300",
-                  active || turn ? "border-stage-gold shadow-[0_0_0_2px_#1c1410,0_0_18px_#e3b67c55]" : "border-stage-brass/50 opacity-75 hover:opacity-100",
-                  s?.kind === "dead" && "grayscale",
-                  compact ? (active ? "h-12 w-10" : "h-9 w-7") : active ? "h-[78px] w-[62px]" : "h-[58px] w-[46px]",
-                  c.npc && !active && !turn && "border-[#8a4a3a]/70"
-                )}
-              >
-                {c.portrait ? (
-                  <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
-                ) : (
-                  <span aria-hidden="true" className="grid h-full place-items-center font-display text-sm text-stage-gold">
-                    {c.name
-                      .split(" ")
-                      .slice(0, 2)
-                      .map((part) => part[0])
-                      .join("")}
-                  </span>
-                )}
-                {band && (
-                  <span
-                    className={cn(
-                      "absolute inset-x-0 bottom-0 bg-stage-ink/85 font-sans tabular-nums leading-tight",
-                      hero ? "text-stage-cream" : "tracking-wide text-[#e39a7c]",
-                      compact ? "text-[8px]" : active ? "text-[11px]" : "text-[9px]"
-                    )}
-                  >
-                    {band}
-                  </span>
-                )}
-              </button>
+              <Tip label={name}>
+                <Button
+                  variant="plain"
+                  type="button"
+                  onClick={() => onPick(c.id)}
+                  aria-label={name}
+                  aria-current={active ? "true" : undefined}
+                  className={cn(
+                    "relative overflow-hidden border bg-stage-ink p-[2px] shadow-[0_4px_14px_#0008] transition-all duration-300",
+                    active || turn ? "border-stage-gold shadow-[0_0_0_2px_#1c1410,0_0_18px_#e3b67c55]" : "border-stage-brass/50 opacity-75 hover:opacity-100",
+                    s?.kind === "dead" && "grayscale",
+                    compact ? (active ? "h-12 w-10" : "h-9 w-7") : active ? "h-[78px] w-[62px]" : "h-[58px] w-[46px]",
+                    c.npc && !active && !turn && "border-[#8a4a3a]/70"
+                  )}
+                >
+                  {c.portrait ? (
+                    <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
+                  ) : (
+                    <span aria-hidden="true" className="grid h-full place-items-center font-display text-sm text-stage-gold">
+                      {c.name
+                        .split(" ")
+                        .slice(0, 2)
+                        .map((part) => part[0])
+                        .join("")}
+                    </span>
+                  )}
+                  {band && (
+                    <span
+                      className={cn(
+                        "absolute inset-x-0 bottom-0 bg-stage-ink/85 font-sans tabular-nums leading-tight",
+                        hero ? "text-stage-cream" : "tracking-wide text-[#e39a7c]",
+                        compact ? "text-[8px]" : active ? "text-[11px]" : "text-[9px]"
+                      )}
+                    >
+                      {band}
+                    </span>
+                  )}
+                </Button>
+              </Tip>
               {/* Armor Class on a shield at the portrait's corner. */}
               {hero && (
                 <span aria-hidden="true" className={cn("pointer-events-none absolute z-10 grid place-items-center", compact ? "-top-1 -left-1.5 h-4 w-3.5" : "-top-1.5 -left-2 h-[22px] w-[19px]")}>

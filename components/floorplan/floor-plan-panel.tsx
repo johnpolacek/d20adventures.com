@@ -33,7 +33,8 @@ function FloorPlanOverlay({ floor, characters, activeId, title, onClose }: PlanP
           <Parchment />
           <span style={textShadow}>{title || floor.location || floor.title}</span>
         </h2>
-        <button
+        <Button
+          variant="plain"
           type="button"
           onClick={onClose}
           className="absolute right-4 top-1/2 inline-flex -translate-y-1/2 items-center gap-3 rounded-full border border-stone-600 bg-black px-3 py-2 font-display text-lg text-stone-200 hover:border-amber-500 hover:text-amber-200 sm:right-10 sm:px-5"
@@ -41,7 +42,7 @@ function FloorPlanOverlay({ floor, characters, activeId, title, onClose }: PlanP
         >
           <span className="hidden sm:inline">Close Map</span>
           <span aria-hidden>✕</span>
-        </button>
+        </Button>
       </header>
       <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-4">
         <FloorPlan floor={floor} characters={characters} activeId={activeId} fit className="max-h-full" />
@@ -76,13 +77,13 @@ export function FloorPlanRailPanel({ className, ...props }: PlanProps & { classN
       <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
           <h3 className="truncate font-display text-sm font-bold text-amber-300">{props.title || props.floor.location || props.floor.title}</h3>
-          <button type="button" onClick={() => setOpen(true)} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-amber-200" aria-label="Expand map">
+          <Button variant="plain" type="button" onClick={() => setOpen(true)} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-amber-200" aria-label="Expand map">
             <Maximize2 className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
-        <button type="button" onClick={() => setOpen(true)} className="group block w-full cursor-zoom-in" aria-label="Expand encounter map">
+        <Button variant="plain" type="button" onClick={() => setOpen(true)} className="group block w-full cursor-zoom-in" aria-label="Expand encounter map">
           <FloorPlan floor={props.floor} characters={props.characters} activeId={props.activeId} className="transition-[filter] duration-300 group-hover:brightness-110" />
-        </button>
+        </Button>
       </div>
       {open && <FloorPlanOverlay {...props} onClose={() => setOpen(false)} />}
     </>

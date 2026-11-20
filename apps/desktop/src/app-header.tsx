@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import Parchment from "@d20/ui/graphics/parchment"
 import { paper } from "@d20/ui/graphics/styles"
+import { Button } from "@d20/ui/button"
 import { cn } from "@/lib/utils"
 import type { Page } from "./pages"
 
@@ -19,7 +20,8 @@ export function AppHeader(props: { page: Page | "home" | null; big?: boolean; ac
   return (
     <header className={cn(paper.className, "relative z-10 flex w-full shrink-0 select-none items-center border-b-8 border-[rgba(0,0,0,.25)]", big ? "px-12 py-4" : "px-8")} style={paper.style}>
       <Parchment />
-      <button
+      <Button
+        variant="plain"
         type="button"
         disabled={!onNavigate}
         onClick={() => onNavigate?.("home")}
@@ -32,11 +34,12 @@ export function AppHeader(props: { page: Page | "home" | null; big?: boolean; ac
           <span className="relative -top-px text-3xl text-primary-500">A</span>
           <span className="relative -top-[3px] text-2xl text-primary-500">dventures</span>
         </span>
-      </button>
+      </Button>
       {onNavigate && (
         <nav className={cn("flex items-center gap-6", big ? "ml-6" : "-ml-6")} aria-label="Pages">
           {PAGES.map(([page, label]) => (
-            <button
+            <Button
+              variant="plain"
               key={page}
               type="button"
               aria-current={props.page === page ? "page" : undefined}
@@ -47,7 +50,7 @@ export function AppHeader(props: { page: Page | "home" | null; big?: boolean; ac
               )}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </nav>
       )}

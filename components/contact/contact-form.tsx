@@ -3,7 +3,7 @@
 import { useTheme } from "next-themes"
 import { useState } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
-import { toast } from "sonner"
+import { toast } from "@d20/ui/toast"
 import { sendContactEmail } from "@/app/_actions/contact"
 import { Button } from "@d20/ui/button"
 import { Input } from "@d20/ui/input"

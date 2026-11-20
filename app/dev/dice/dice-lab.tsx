@@ -7,6 +7,7 @@
 // Under them, every look a roll and a character can have in rules combat, from mock data (./roll-looks).
 
 import { type ReactNode, useEffect, useRef, useState } from "react"
+import { Button } from "@d20/ui/button"
 import { D20Shape, D20Solid } from "@d20/ui/stage/d20"
 import { Pill } from "@d20/ui/stage/hud"
 import { cn } from "@/lib/utils"
@@ -68,12 +69,12 @@ function Tumble({ go }: { go: number }) {
   const { shown, rolling, roll } = useRoll()
   useRollOn(go, roll)
   return (
-    <button type="button" onClick={roll} className={dieBox} aria-label="Roll">
+    <Button variant="plain" type="button" onClick={roll} className={dieBox} aria-label="Roll">
       <span className={cn("absolute inset-0", rolling && "d20-tumble")}>
         <D20Shape className="absolute inset-0 h-full w-full" />
       </span>
       <Number_ shown={shown} rolling={rolling} size={34} />
-    </button>
+    </Button>
   )
 }
 
@@ -88,12 +89,12 @@ function Solid({ go }: { go: number }) {
   }
   useRollOn(go, go2)
   return (
-    <button type="button" onClick={go2} className={cn(dieBox, "[filter:drop-shadow(0_3px_6px_#000b)]")} aria-label="Roll">
+    <Button variant="plain" type="button" onClick={go2} className={cn(dieBox, "[filter:drop-shadow(0_3px_6px_#000b)]")} aria-label="Roll">
       <D20Solid size={110} roll={tumble} seconds={SECONDS} className="absolute inset-0" />
       <span className="mt-[4%]">
         <Number_ shown={shown} rolling={rolling} size={24} />
       </span>
-    </button>
+    </Button>
   )
 }
 
