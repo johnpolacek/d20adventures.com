@@ -1,6 +1,6 @@
 import { textShadowSpread, textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
-import { siteCard } from "@d20/ui/site"
+import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { Save } from "../runtime/store"
 import type { FigureArt } from "./figures"
@@ -30,7 +30,7 @@ export function Home(props: { save: Save | null; art: Record<string, FigureArt>;
         </div>
         <div className="fade-in mt-4 flex flex-col items-center gap-3 delay-[1000ms]">
           {props.save ? (
-            <div className={cn(siteCard, "flex flex-col items-center gap-4 px-10 py-6 backdrop-blur-xl")}>
+            <div className={cn(cardVariants({ variant: "frame" }), "flex flex-col items-center gap-4 px-10 py-6 backdrop-blur-xl")}>
               <div className="flex items-center gap-4 text-left">
                 {portrait && <img src={portrait} alt={hero?.name} className="h-14 w-14 shrink-0 rounded-full border-2 border-white/30 object-cover" />}
                 <div>

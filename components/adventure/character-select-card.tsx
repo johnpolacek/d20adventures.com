@@ -20,11 +20,9 @@ interface CharacterSelectCardProps {
 export function CharacterSelectCard({ character, buttonLabel, onButtonClick, href, className, disabled = false, clickable = false, onDelete }: CharacterSelectCardProps) {
   return (
     <Card
-      className={cn(
-        "bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full hover:scale-[1.01] transition-all ease-in-out duration-500",
-        (onButtonClick || clickable) && "cursor-pointer hover:scale-105 hover hover:ring-primary-400/80",
-        className
-      )}
+      variant="portrait"
+      interactive={!!onButtonClick || clickable}
+      className={cn("w-full h-full hover:scale-[1.01]", (onButtonClick || clickable) && "hover:scale-105", className)}
       onClick={onButtonClick}
     >
       <div className="w-full aspect-video relative">

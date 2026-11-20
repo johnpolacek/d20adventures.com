@@ -5,7 +5,8 @@ import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
-import { Chip, Rule, SectionPlate, siteCard, siteCardHover, siteLabel, siteOutline } from "@d20/ui/site"
+import { Chip, Rule, SectionPlate, siteLabel, siteOutline } from "@d20/ui/site"
+import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { HostedSummary } from "../../../lib/host/server"
 import type { AdventureInfo } from "../runtime/game"
@@ -115,7 +116,7 @@ function SavedCard(props: {
         disabled={props.busy}
         onClick={props.onOpen}
         aria-label={props.label}
-        className={cn(siteCard, siteCardHover, "flex h-full w-full flex-col text-center disabled:cursor-default")}
+        className={cn(cardVariants({ variant: "pick" }), "flex h-full w-full flex-col text-center disabled:cursor-default")}
       >
         <div className="relative">
           <ModuleCover id={props.planId} title={props.title} players={props.players} className={cn("rounded-none shadow-none", props.completed && "[filter:saturate(.5)_brightness(.8)]")} />
@@ -241,7 +242,7 @@ export function AdventuresPage(props: {
                   type="button"
                   disabled={props.busy}
                   onClick={() => props.onAdventure(a.id)}
-                  className={cn(siteCard, siteCardHover, "flex h-full w-full flex-col text-center disabled:cursor-default")}
+                  className={cn(cardVariants({ variant: "pick" }), "flex h-full w-full flex-col text-center disabled:cursor-default")}
                   aria-label={a.locked ? `${a.title}, ${a.locked.owned ? "owned, not downloaded" : `locked, ${price(a.locked.priceCents)}`}` : `New game of ${a.title}`}
                 >
                   <div className="relative">
@@ -276,7 +277,7 @@ export function AdventuresPage(props: {
             disabled={props.busy}
             onClick={() => props.onAdventure(featured.id)}
             className={cn(
-              siteCard,
+              cardVariants({ variant: "frame" }),
               "group relative mt-8 grid w-full grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-center text-left transition-all duration-500 ease-in-out hover:ring-8 hover:ring-primary-500 disabled:cursor-default"
             )}
             aria-label={featured.locked ? `${featured.title}, locked` : `New game of ${featured.title}`}
@@ -353,7 +354,7 @@ export function CharactersPage(props: {
                   disabled={props.busy || !props.onEdit}
                   onClick={() => props.onEdit?.(h)}
                   aria-label={`Edit ${h.name}`}
-                  className="flex h-full w-full flex-col items-center overflow-hidden rounded-lg border border-white/10 bg-black font-display ring-8 ring-black/30 transition-all duration-500 ease-in-out hover:scale-105 hover:ring-primary-400/80"
+                  className={cn(cardVariants({ variant: "portrait", interactive: true }), "h-full w-full")}
                 >
                   <div className="relative aspect-[4/5] w-full">
                     {portrait ? (
@@ -416,7 +417,7 @@ export function SettingsPage(props: { realm: Realm | null; onRealm: () => void }
       {props.realm && (
         <ul className="flex justify-center">
           <li className="w-[min(34rem,100%)]">
-            <Button variant="plain" type="button" onClick={props.onRealm} className={cn(siteCard, siteCardHover, "group block w-full text-center")}>
+            <Button variant="plain" type="button" onClick={props.onRealm} className={cn(cardVariants({ variant: "pick" }), "group block w-full text-center")}>
               <div className="relative aspect-video">
                 <img src={props.realm.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />

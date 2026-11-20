@@ -57,7 +57,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
           <div className="mb-8 text-center">
             {featuredAdventure && (
               <Link href={`/settings/${settingId}/${featuredAdventure.id}/character-select`} className="block relative z-10 pt-8">
-                <Card className="w-full bg-black/80 border-amber-400/50 scale-[0.98] hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 cursor-pointer transition-all duration-500 ease-in-out p-0 gap-0 overflow-hidden flex flex-col md:flex-row">
+                <Card variant="pick" className="w-full border-amber-400/50 scale-[0.98] md:flex-row">
                   <div className="relative aspect-video md:aspect-auto md:w-3/5 md:min-h-[380px]">
                     <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-black to-transparent z-[9] hidden md:block" />
                     <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent z-[9] md:hidden" />
@@ -86,7 +86,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
               <div className="md:grid md:grid-cols-2 xl:grid-cols-3 gap-8 relative z-10 py-8 auto-rows-fr">
                 {otherAdventures.map((adventure) => (
                   <Link key={adventure.id} href={`/settings/${settingId}/${adventure.id}/character-select`} className="block h-full">
-                    <Card className="w-full h-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-[6px] ring-black hover:ring-8 hover:ring-primary-500 transition-colors cursor-pointer transition-all duration-500 ease-in-out p-0 overflow-hidden flex flex-col">
+                    <Card variant="pick" className="w-full h-full">
                       <div className="pb-2 relative aspect-video w-full">
                         <div className="absolute top-1 right-3 z-10 flex gap-2 flex-col items-end">
                           <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">{partyLabel(adventure.party)}</span>

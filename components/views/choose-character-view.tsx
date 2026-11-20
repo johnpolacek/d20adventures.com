@@ -90,7 +90,7 @@ export default function ChooseCharacterView({
 
   return (
     <div className="flex flex-col items-center justify-center relative z-10 pt-24 pb-12">
-      <Card className="text-center mt-8 mb-12 p-8 bg-gradient-to-tl from-black/80 to-black/50 border-none ring-8 ring-black/20">
+      <Card variant="feature" className="mt-8 mb-12 sm:p-8">
         <div style={textShadow} className="mb-4 text-5xl font-display font-bold text-amber-300">
           {adventureTitle}
         </div>
@@ -127,7 +127,7 @@ export default function ChooseCharacterView({
         ))}
         <div className="w-full md:w-1/2 lg:w-1/3 cursor-pointer transition-all ease-in-out duration-500 hover:scale-[1.01] hover:ring-primary-400">
           <Link href={`/player/${username}/characters/new`}>
-            <Card className="bg-black text-white rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 p-0 font-display w-full h-full transition-all ease-in-out duration-500 hover:scale-105 hover:ring-primary-400/80">
+            <Card variant="portrait" interactive className="w-full h-full">
               <div className="w-full aspect-video relative">
                 <Image src="/images/app/characters/default.png" alt="Create New Character" fill={true} className="object-cover w-full h-full" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />

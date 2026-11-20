@@ -19,7 +19,8 @@ export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventu
   return (
     <Card
       id="active-adventure-card"
-      className="w-[90%] max-w-xl mx-auto border border-white/20 ring-4 ring-black/20 bg-gradient-to-tl from-transparent via-black/50 to-transparent text-white relative z-10"
+      variant="feature"
+      className="w-[90%] max-w-xl mx-auto p-0 sm:p-0 py-6 border border-white/20 ring-4 bg-gradient-to-tl from-transparent via-black/50 to-transparent relative z-10"
     >
       <CardContent className="flex flex-col items-center gap-4 sm:py-4">
         <div className="text-center space-y-2">

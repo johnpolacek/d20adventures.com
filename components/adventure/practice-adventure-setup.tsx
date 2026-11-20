@@ -93,7 +93,7 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
 
   return (
     <div className="max-w-5xl mx-auto w-full">
-      <Card className="bg-black/70 border-white/20 mb-8">
+      <Card className="mb-8">
         <CardHeader>
           <CardTitle className="font-display text-amber-400 text-3xl">Practice Mode</CardTitle>
           <CardDescription className="text-white/80">

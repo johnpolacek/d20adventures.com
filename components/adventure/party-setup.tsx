@@ -107,8 +107,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl px-4">
-      {/* gap-0: the card's default flex gap fights the per-element spacing below */}
-      <Card className="w-full max-w-2xl text-center gap-0 p-8 sm:p-10 bg-gradient-to-tl from-black/80 to-black/60 border-none ring-8 ring-black/20 rounded-2xl">
+      <Card variant="feature" className="w-full max-w-2xl">
         <h2 style={textShadow} className="text-3xl sm:text-4xl font-display font-bold text-amber-300 text-balance mb-2">
           Choose Your Party
         </h2>

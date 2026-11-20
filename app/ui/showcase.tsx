@@ -17,7 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@d20/ui/avatar"
 import { Badge } from "@d20/ui/badge"
 import { Button, buttonClassName } from "@d20/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@d20/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, cardVariants } from "@d20/ui/card"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle, DrawerTrigger } from "@d20/ui/drawer"
 import { FileInput, FileInputItem, FileInputList, FileInputTrigger, formatFileSize } from "@d20/ui/file-input"
@@ -32,11 +32,75 @@ import { toast } from "@d20/ui/toast"
 import LoadingAnimation from "@d20/ui/loading-animation"
 import { Pagination, PaginationEllipsis, PaginationFirst, PaginationItem, PaginationLast, PaginationLink, PaginationList, PaginationNext, PaginationPrevious } from "@d20/ui/pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
-import { Chip, Option, Rule, SectionPlate, siteLabel, sitePanel } from "@d20/ui/site"
+import { Chip, Option, Rule, SectionPlate, siteLabel } from "@d20/ui/site"
 import { Switch } from "@d20/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 import { Textarea } from "@d20/ui/textarea"
 import { cn } from "@/lib/utils"
+
+// Every card variant with the content it holds on the site.
+function CardVariants() {
+  const [picked, setPicked] = useState(0)
+  return (
+    // Over art, as on the site, so the black rings show.
+    <div className="grid gap-8 rounded-lg bg-[url(/images/app/backgrounds/d20-hero.webp)] bg-cover bg-center p-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>panel</span>
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact</CardTitle>
+            <CardDescription>A form or a page section.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Input placeholder="Your name" />
+          </CardContent>
+        </Card>
+      </div>
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>feature</span>
+        <Card variant="feature">
+          <div className="font-display text-3xl font-bold text-amber-300">Choose Your Party</div>
+          <p className="mt-2 text-white/70">The step a page opens with.</p>
+        </Card>
+      </div>
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>accent</span>
+        <Card variant="accent">
+          <CardHeader>
+            <CardTitle>Practice Adventure</CardTitle>
+            <CardDescription className="text-white/70">Learn the rules in a short scene.</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>pick, selected</span>
+        <div className="grid grid-cols-2 gap-4">
+          {["The Gate", "The Line"].map((title, i) => (
+            <Card key={title} variant="pick" selected={picked === i} onClick={() => setPicked(i)}>
+              <div className="relative aspect-video w-full bg-[url(/images/app/backgrounds/black-paper.png)] bg-cover" />
+              <div className="p-3 text-center font-display">{title}</div>
+            </Card>
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>portrait, interactive</span>
+        <Card variant="portrait" interactive className="w-40">
+          <img src="/images/app/characters/default.png" alt="" className="aspect-[4/5] w-full object-cover" />
+          <div className="p-2 text-lg">Lyra</div>
+        </Card>
+      </div>
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>frame, quiet, inset</span>
+        <div className={cn(cardVariants({ variant: "frame" }), "p-4 text-sm")}>A menu or a modal step.</div>
+        <div className={cn(cardVariants({ variant: "quiet" }), "mt-4 p-4 text-sm")}>A notice.</div>
+        <Card variant="inset" className="mt-4 py-4">
+          <CardContent className="text-sm">A box inside another.</CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
 
 type Tile = { name: string; wide?: boolean; full?: boolean; demo: ReactNode }
 
@@ -299,21 +363,8 @@ const tiles: Tile[] = [
   },
   {
     name: "Card",
-    wide: true,
-    demo: (
-      <Card>
-        <CardHeader>
-          <CardTitle>Welcome to Kordavos</CardTitle>
-          <CardDescription>Four adventures, levels 1 to 3.</CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm">The gates open at dawn.</CardContent>
-        <CardFooter>
-          <Button variant="epic" size="xs">
-            Play
-          </Button>
-        </CardFooter>
-      </Card>
-    ),
+    full: true,
+    demo: <CardVariants />,
   },
   {
     name: "Table",
@@ -405,7 +456,7 @@ export function Showcase() {
           <section
             key={tile.name}
             id={tile.name.toLowerCase().replace(/\s+/g, "-")}
-            className={cn(sitePanel, "relative flex min-w-0 flex-col gap-4 overflow-hidden p-4", tile.wide && "md:col-span-2", tile.full && "md:col-span-2 lg:col-span-4")}
+            className={cn(cardVariants({ variant: "quiet" }), "relative flex min-w-0 flex-col gap-4 overflow-hidden p-4", tile.wide && "md:col-span-2", tile.full && "md:col-span-2 lg:col-span-4")}
           >
             <h2 className={siteLabel}>
               {String(i + 1).padStart(2, "0")} {tile.name}

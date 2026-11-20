@@ -3,7 +3,8 @@ import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { Input } from "@d20/ui/input"
-import { Option, siteCard, siteField, siteLabel, siteOutline } from "@d20/ui/site"
+import { Option, siteField, siteLabel, siteOutline } from "@d20/ui/site"
+import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { GuestHero, HostedSummary } from "../../../lib/host/server"
 
@@ -274,7 +275,7 @@ export function HostedLobby(props: {
   const nobody = Boolean(unchosen?.length && ais?.length === unchosen.length && guests.length === 0)
   return (
     <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 font-serif text-white">
-      <section className={cn(siteCard, "max-h-[94%] w-[min(34rem,92vw)] overflow-y-auto p-8 text-left backdrop-blur-xl")}>
+      <section className={cn(cardVariants({ variant: "frame" }), "max-h-[94%] w-[min(34rem,92vw)] overflow-y-auto p-8 text-left backdrop-blur-xl")}>
         <div className={siteLabel}>Hosting</div>
         <h1 className="mt-2 font-display text-4xl font-bold text-amber-300" style={textShadow}>
           {props.summary.title}

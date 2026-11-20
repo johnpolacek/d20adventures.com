@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { Button } from "@d20/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
-import { Chip, Option, siteCard, siteLabel, siteOutline, sitePanel } from "@d20/ui/site"
+import { Chip, Option, siteLabel, siteOutline } from "@d20/ui/site"
+import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { AdventureInfo, CatalogInfo } from "../runtime/game"
 import type { Hero, PartyChoice } from "../runtime/heroes"
@@ -187,7 +188,7 @@ export function NewGame(props: {
   ] as const
   const range = min === max ? `${min}` : `${min}–${max}`
   return (
-    <section className={cn(siteCard, "flex max-h-[94%] w-[min(72rem,96vw)] flex-col text-left backdrop-blur-xl")}>
+    <section className={cn(cardVariants({ variant: "frame" }), "flex max-h-[94%] w-[min(72rem,96vw)] flex-col text-left backdrop-blur-xl")}>
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
           <div className="relative md:sticky md:top-0 md:self-start">
@@ -513,7 +514,7 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
         ? "The store opens soon."
         : "Already own it? Link your account to download it."
   return (
-    <section className={cn(siteCard, "flex max-h-[94%] w-[min(72rem,96vw)] flex-col text-left backdrop-blur-xl")}>
+    <section className={cn(cardVariants({ variant: "frame" }), "flex max-h-[94%] w-[min(72rem,96vw)] flex-col text-left backdrop-blur-xl")}>
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
           <div className="relative md:sticky md:top-0 md:self-start">
@@ -533,7 +534,7 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
                 <p className="max-w-[70ch] text-base text-gray-300">{info.teaser}</p>
               </div>
             )}
-            <div className={cn(sitePanel, "max-w-md p-5")}>
+            <div className={cn(cardVariants({ variant: "quiet" }), "max-w-md p-5")}>
               <div className={siteLabel}>{info.owned ? "In your library" : "Not in your library"}</div>
               {!info.owned && <div className="mt-2 font-display text-4xl text-amber-300">{price(info.priceCents)}</div>}
               <p className="mt-3 text-base text-gray-300">{status}</p>

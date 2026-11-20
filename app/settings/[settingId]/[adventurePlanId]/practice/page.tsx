@@ -19,7 +19,7 @@ export default async function PracticeAdventurePage(props: {
   if (!userId) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-8 md:p-16">
-        <Card className="w-full max-w-md bg-primary-800 border-primary-700 border-2 py-8">
+        <Card variant="accent" className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-display text-white">Sign In Required</CardTitle>
             <CardDescription className="text-white/70">You need to be signed in to start a practice run.</CardDescription>
@@ -53,7 +53,7 @@ export default async function PracticeAdventurePage(props: {
   if (!canManagePlan) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-8 md:p-16">
-        <Card className="w-full max-w-md bg-primary-800 border-primary-700 border-2 py-8">
+        <Card variant="accent" className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-display text-white">Access Denied</CardTitle>
             <CardDescription className="text-white/70">You do not have permission to start practice mode for this plan.</CardDescription>

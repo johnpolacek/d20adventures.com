@@ -128,11 +128,12 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
               {adventurePlan.premadePlayerCharacters.map((character) => (
                 <Card
                   key={character.id}
+                  variant="pick"
+                  selected={selectedCharacterId === character.id}
                   className={cn(
-                    "w-full bg-black/80 border-white/20 scale-95 hover:scale-100 hover:bg-black/90 ring-4 ring-black transition-all duration-500 ease-in-out p-0 overflow-hidden cursor-pointer flex flex-col",
+                    "w-full ring-4",
                     adventurePlan.premadePlayerCharacters.length === 1 && "max-w-md",
-                    selectedCharacterId === character.id ? "ring-8 ring-primary-500 scale-100" : "hover:ring-8 hover:ring-primary-500",
-                    isSelecting && "pointer-events-none opacity-60 grayscale"
+                                        isSelecting && "pointer-events-none opacity-60 grayscale"
                   )}
                   onClick={() => !isSelecting && handleCharacterSelect(character.id)}
                   aria-disabled={isSelecting}

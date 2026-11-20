@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@d20/ui/menu"
-import { Rule, siteCard, siteOutline, sitePanel } from "@d20/ui/site"
+import { Rule, siteOutline } from "@d20/ui/site"
+import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { AccountResponse, AccountState, LinkState } from "../runtime/account"
 import { account, accountInfo, openSite } from "./bridge"
@@ -169,7 +170,7 @@ export function AccountBadge({ account: a }: { account: Account }) {
         >
           {a.state.avatar ? <img src={a.state.avatar} alt="" className="h-full w-full object-cover" /> : a.state.account.slice(0, 1).toUpperCase()}
         </MenuTrigger>
-        <MenuContent align="end" className={cn(siteCard, "w-64 p-3")}>
+        <MenuContent align="end" className={cn(cardVariants({ variant: "frame" }), "w-64 p-3")}>
           <p className="truncate px-1 text-sm text-gray-300">{a.state.account}</p>
           <MenuItem className={cn(siteOutline, "mt-3 w-full justify-center px-3 py-1 text-sm data-highlighted:bg-blue-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
             Unlink
@@ -191,7 +192,7 @@ export function AccountNotice({ account: a }: { account: Account }) {
   return (
     <div className="absolute top-4 right-8 z-30 flex flex-col items-end gap-2">
       {a.link && (
-        <div className={cn(siteCard, "w-80 p-5 text-center")}>
+        <div className={cn(cardVariants({ variant: "frame" }), "w-80 p-5 text-center")}>
           <Waiting account={a} />
         </div>
       )}
@@ -203,7 +204,7 @@ export function AccountNotice({ account: a }: { account: Account }) {
 // In place of the title screen's choices until this computer is linked.
 export function LinkGate({ account: a }: { account: Account }) {
   return (
-    <div className={cn(sitePanel, "w-[min(28rem,92vw)] px-8 py-9 text-center text-white")}>
+    <div className={cn(cardVariants({ variant: "quiet" }), "w-[min(28rem,92vw)] px-8 py-9 text-center text-white")}>
       <h1 className="font-display text-3xl font-bold leading-tight text-amber-400" style={textShadowSpreadLight}>
         Link your account
       </h1>

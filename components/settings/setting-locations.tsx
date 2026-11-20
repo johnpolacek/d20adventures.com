@@ -125,7 +125,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
 
       <div className="space-y-4">
         {locations.map((location, locationIndex) => (
-          <Card key={locationIndex} className="bg-black/20 border-white/10">
+          <Card key={locationIndex} variant="inset">
             <Collapsible open={openLocations.has(locationIndex)} onOpenChange={() => toggleLocation(locationIndex)}>
               <CardHeader className="text-white hover:text-amber-300 transition-colors duration-500 ease-in-out">
                   <CardTitle className="flex items-center justify-between">
@@ -212,7 +212,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
 
                     <div className="space-y-2">
                       {location.organizations.map((org, orgIndex) => (
-                        <Card key={orgIndex} className="bg-black/30 border-white/5">
+                        <Card key={orgIndex} variant="inset" className="bg-black/30 border-white/5">
                           <Collapsible open={openOrganizations.has(`${locationIndex}-${orgIndex}`)} onOpenChange={() => toggleOrganization(locationIndex, orgIndex)}>
                             <CardHeader className="hover:text-amber-300 text-white transition-colors py-3">
                                 <CardTitle className="flex items-center justify-between text-base">
@@ -282,7 +282,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
         ))}
 
         {locations.length === 0 && (
-          <Card className="bg-black/20 border-white/10 border-dashed">
+          <Card variant="inset" className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-gray-400 mb-4">No locations added yet.</p>
               <Button onClick={addLocation} disabled={isSaving}>

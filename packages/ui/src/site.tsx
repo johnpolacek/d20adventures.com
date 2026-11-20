@@ -4,12 +4,6 @@ import { cn } from "./utils"
 
 // The website's surfaces as class strings and small parts, so screens outside Next (the desktop app) share its look.
 
-/** A card: near-black, a hairline border and a thick black ring. */
-export const siteCard = "overflow-hidden rounded-xl border border-white/20 bg-black/80 ring-[6px] ring-black"
-/** Added when the whole card is a control: it grows a little and its ring turns to the primary colour. */
-export const siteCardHover = "scale-95 transition-all duration-500 ease-in-out hover:scale-100 hover:bg-black/90 hover:ring-8 hover:ring-primary-500"
-/** The quieter frame around a notice or a form. */
-export const sitePanel = "rounded-lg border border-white/10 bg-black/50 ring-8 ring-black/30"
 /** A small mono label over a field or a group. */
 export const siteLabel = "font-mono text-xs uppercase tracking-wider text-primary-200"
 /** A small secondary control, the outline button without its hover growth. Add padding and a text size. */
