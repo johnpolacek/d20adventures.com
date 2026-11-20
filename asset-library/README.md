@@ -68,6 +68,27 @@ A step whose file is already there is left alone. The model is the one step that
 | 5. Shelf | `build.ts` | 1 sec | free | `figure.json`, `front.webp` |
 | 6. Review | `/dev/assets`, frame strips | 5 min | free | |
 
+## The way a shipped figure is made now
+
+Thalbern's was the first, 2026-11-19, and the rest are made the same way. The steps above and below are still how each tool works: this is the order they are used in, and what is looked at between them. It costs $2.30 a figure and about fifteen minutes, most of it waiting.
+
+| Step | Command | Cost | Look at |
+|---|---|---|---|
+| 1. Brief | `characters/<id>/character.json`, by hand, with `"maker": "hi3d"`, `"face": "close"`, `"gloss": 0.5` and its `borrowed` clips | free | the card: what the hands hold goes in `stow` |
+| 2. Sheet, joints, close face | `pnpm assets <id>` | free | `sheet.png` and `joints.jpg` |
+| 3. Model and rig | `pnpm assets:pilot <id>`, then `--pay` | $2.10 and $0.20 | what it says: which way the model faces, how far an elbow went |
+| 4. Tune | edit the brief, `pnpm assets:pilot <id>` or `--redo=face` | free | the page, `/dev/assets?id=<id>` |
+| 5. Pictures | `pnpm assets:views <id> --out=<folder> --moves=<clip>@<seconds>` | free | `sheet.jpg`, beside the same pictures of the figure it replaces |
+| 6. Judge | a fresh agent, shown the target and one set of pictures | free | `scorecards/` |
+| 7. Ship | `SHIPPED` and `PLAYS` in `shipped.ts`, then `pnpm assets:sync <id>` | free | the scene, `/dev/stage?staging=<adventure>/<encounter>&look=play` |
+
+- The brief. Copy one that plays the same part: `thalbern-hi3d` for someone who fights with a sword or a bow, `wollandora-hi3d` for someone who casts and carries a staff, `owlbear-hi3d` for a beast. `cast` is the id the stagings know them by, an NPC's `npcs-<number>`. Nothing is held on the sheet: a sword and a bow are put in the hands by the game for the clips named Swing and Shoot (`hold.ts`), and a staff by `holds`. A cloak or a coat is said to hang clear of the arms, or the model joins sleeve to side.
+- The sheet. The picture decides the model. Look for: arms away from the body, both hands empty and open, the face lit and seen, the back view the same person in the same clothes. A sheet that fails is painted again for nothing: `pnpm assets <id> --redo=sheet`. A model made from it is not.
+- The model. Hi3D v3.0 on fal from the front and the back, 200,000 triangles. It is rigged by Hyper3D to a human skeleton with fingers, and the clips are copied onto it from the free libraries. Every answer is kept in the folder, so nothing is paid for twice: a build after the first is free and takes half a minute.
+- What the build does for every figure, without being asked: sizes it to the brief's height, makes like points one, keeps textures at 4096, takes the gloss down where it is not metal, paints the sheet's face on and fades it toward the ears, keeps each elbow bent the way an elbow bends, hangs the fingers at ease, and gives the shoulder and the forearm a bone each for the turn a single skin cannot take.
+- The judge is told nothing of what changed and is shown the card, the sheet and the pictures. Its number is good to a point either way (`scorecards/gates-look.md`). What it is for is the list of faults by name and place: the next free mend is whichever of them the pipeline can reach.
+- A figure is not in the game until a look marked `play` stands its cast in a set. Until then it is on the page, under its adventure or Not in a Scene.
+
 ## What you need
 
 - Blender 5.3 at `/Applications/Blender.app`. `BLENDER` names another.

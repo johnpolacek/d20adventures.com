@@ -1,0 +1,33 @@
+{
+  "id": "silas",
+  "name": "Silas",
+  "role": "Rogue, the brains of the mission",
+  "cast": [
+    "npcs-1749181492795"
+  ],
+  "height": 1.78,
+  "card": {
+    "front": "/stage/fixtures/covert-cargo/silas-front.webp",
+    "back": "/stage/fixtures/covert-cargo/silas-back.webp"
+  },
+  "who": "Silas, a lean human rogue with a sharp, clean-shaven face under a deep hood, in a dark slate-blue hooded cloak over fitted dark brown leather armour crossed with straps and buckles, a belt of pouches with a coil of rope, dark trousers and tall brown boots",
+  "stow": "He holds nothing: both daggers are left out of the picture entirely, and both hands are empty and open. The hood stays up, and the whole face under it is evenly lit and clearly seen. The cloak hangs straight down behind the shoulders and the sleeves hang from the arms alone, so nothing of the cloth bridges the gap between an arm and the body.",
+  "arms": 45,
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Swing": "ual1:Sword_Attack",
+    "Dodge": "ual1:Roll",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01",
+    "Sword Idle": "ual1:Sword_Idle",
+    "Block": "ual2:Sword_Block"
+  },
+  "eased": {
+    "Swing": 85
+  }
+}

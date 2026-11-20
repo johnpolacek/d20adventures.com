@@ -1,0 +1,33 @@
+{
+  "id": "reinhard",
+  "name": "Reinhard",
+  "role": "Enforcer of the Blackthorn family",
+  "cast": [
+    "npcs-1749163978757"
+  ],
+  "height": 1.92,
+  "card": {
+    "front": "/stage/fixtures/covert-cargo/reinhard-front.webp",
+    "back": "/stage/fixtures/covert-cargo/reinhard-back.webp"
+  },
+  "who": "Reinhard, a tall, heavily built human enforcer with short black hair, a heavy brow and a hard scowl, in a long dark green leather greatcoat with wide lapels worn open over a rust-brown tunic, dark trousers and heavy buckled boots",
+  "stow": "He holds nothing: both short swords are left out of the picture entirely, and both hands are empty and open. The coat hangs open from the shoulders and its sleeves hang from the arms alone, so nothing of the coat bridges the gap between an arm and the body.",
+  "arms": 45,
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Swing": "ual1:Sword_Attack",
+    "Dodge": "ual1:Roll",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01",
+    "Sword Idle": "ual1:Sword_Idle",
+    "Block": "ual2:Sword_Block"
+  },
+  "eased": {
+    "Swing": 85
+  }
+}

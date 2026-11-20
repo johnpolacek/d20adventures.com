@@ -1,0 +1,11 @@
+{
+  "Idle": "human_000090",
+  "Walk": "human_000089",
+  "Shoot": "human_000108",
+  "Swing": "human_000064",
+  "Dodge": "human_000042",
+  "Hit": "human_000003",
+  "Fall": "human_000068",
+  "Guard": "human_000040",
+  "Point": "human_000041"
+}

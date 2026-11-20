@@ -1,0 +1,32 @@
+{
+  "id": "poppen-hi3d",
+  "name": "Poppen Quickfoot",
+  "role": "Halfling Rogue",
+  "cast": [
+    "poppen"
+  ],
+  "height": 1.06,
+  "card": {
+    "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+    "back": "/stage/fixtures/covert-cargo/poppen-back.webp"
+  },
+  "who": "Poppen Quickfoot, a small, sturdy halfling rogue with curly ginger hair and large pointed ears, in a patchwork waistcoat with full sleeves",
+  "stow": "The dagger stays sheathed at his belt.",
+  "arms": 45,
+  "party": true,
+  "face": "close",
+  "maker": "hi3d",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Swing": "ual1:Sword_Attack",
+    "Dodge": "ual1:Roll",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  },
+  "eased": {
+    "Swing": 85
+  }
+}

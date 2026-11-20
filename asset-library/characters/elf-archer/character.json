@@ -1,0 +1,36 @@
+{
+  "id": "elf-archer",
+  "name": "Elven Archer",
+  "role": "Wood elf archer of Faelendar",
+  "cast": [
+    "npcs-1749243735467"
+  ],
+  "height": 1.8,
+  "card": {
+    "front": "/stage/fixtures/covert-cargo/elf-archer-front.webp",
+    "back": "/stage/fixtures/covert-cargo/elf-archer-back.webp"
+  },
+  "who": "an elven archer, a slender young female wood elf with long blonde hair in two braids, pointed ears and green eyes, in a white linen shirt with full sleeves under a laced olive-green vest, a brown belt, dark red leather bracers, dark red leggings and tall dark red boots",
+  "stow": "She has no bow: it is left out of the picture entirely, and nothing is slung across her back but the quiver. Both hands are empty and open.",
+  "arms": 40,
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "m2m/walk-female",
+    "Shoot": "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6",
+    "Swing": "ual1:Sword_Attack",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  },
+  "eased": {
+    "Swing": 85
+  },
+  "drawn": {
+    "Shoot": {
+      "until": 1.5
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "id": "elf-fighter",
+  "name": "Elven Fighter",
+  "role": "Elf fighter of Faelendar",
+  "cast": [
+    "npcs-1749243869357"
+  ],
+  "height": 1.88,
+  "card": {
+    "front": "/stage/fixtures/covert-cargo/elf-fighter-front.webp",
+    "back": "/stage/fixtures/covert-cargo/elf-fighter-back.webp"
+  },
+  "who": "an elven fighter, a tall, lean male elf with long straight silver hair, pointed ears and a calm, stern face, in a moss-green hooded cloak with the hood down over a russet leather jerkin with a silver leaf clasp, leather bracers, brown trousers and tall tan boots",
+  "stow": "He holds nothing: the longsword is left out of the picture entirely, its empty scabbard hangs at his left hip, and both hands are empty and open at his sides. The round wooden shield stays slung on his back. The cloak hangs straight down behind the shoulders and the sleeves hang from the arms alone, so nothing of the cloth bridges the gap between an arm and the body.",
+  "arms": 45,
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Swing": "ual1:Sword_Attack",
+    "Dodge": "ual1:Roll",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01",
+    "Sword Idle": "ual1:Sword_Idle",
+    "Block": "ual2:Sword_Block"
+  },
+  "eased": {
+    "Swing": 85
+  }
+}
