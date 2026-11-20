@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { ConfigCard } from "@/components/admin/config-card"
 import { ContactForm } from "@/components/contact/contact-form"
-import { PlainPage } from "@/components/legal/legal-page"
+import { PlainPage } from "@/components/layout/plain-page"
 
 export const metadata: Metadata = {
   title: "Contact | D20 Adventures",

@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { srdAttribution } from "@d20/srd/attribution"
-import { PlainPage, plainProse } from "@/components/legal/legal-page"
+import { PlainPage, plainProse } from "@/components/layout/plain-page"
 
 export const metadata: Metadata = { title: "Licenses | D20 Adventures" }
 
