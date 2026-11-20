@@ -17,6 +17,8 @@ Beside the total, In the scene (0 to 2): lit, grounded and readable in two frame
 
 Judges differ by a point (`gates-look.md`). Read every number as give or take one.
 
+**The Scene column is void, found 2026-11-20.** Its pictures came from `/dev/stage-lab`, which stands the painted cards and no figure: the frames of every round are the same file, byte for byte. No judge saw a figure in the scene. `/dev/stage?staging=<key>&look=play` is the game's own stage and stands the figures (`stage-viewer.tsx`, `builtPlay`). Seen there on 2026-11-20, not judged: `thalbern-hi3d` at the owlbear fight, lit and grounded, his face and gear readable.
+
 ## Scores
 
 | Round | Likeness | Face | Build | Materials | Poses | Total | Scene |
@@ -77,7 +79,8 @@ Seven of the nine faults of Rodin's model are its own shape or paint. Hair, eyes
 
 ```sh
 pnpm assets:views thalbern-hi3d --out=$HOME/Desktop/thalbern-before-after/after-4 --moves=Shoot@1.4,Swing@0.4
-node --import tsx lab/stage-art/capture.ts --name=thalbern --tier=high "--q=staging=the-midnight-summons/the-owlbear-prowls&look=play"
 ```
 
-The scene stands whoever `SHIPPED` names for him (`asset-library/shipped.ts`). For `thalbern-hi3d` it was named there while the pictures were taken and put back.
+For the scene, open `/dev/stage?staging=the-midnight-summons/owlbear-confrontation&look=play&tier=high&motion=0` and take `window.__stage.capture()` at each of `window.__stage.shots`. The page's `.glb` requests say which figures stand. `lab/stage-art/capture.ts` opens `/dev/stage-lab`, which stands cards: the command once given here took those.
+
+The scene stands whoever `SHIPPED` names for him (`asset-library/shipped.ts`).

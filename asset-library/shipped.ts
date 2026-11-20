@@ -3,10 +3,10 @@
 export const FIGURE_FILES = "/asset-library/characters"
 // A cast member, and the character (asset-library/characters) who stands for them. All three are the pilot's figures:
 // a generated model rigged by Hyper3D, with fingers and borrowed clips (pipeline/pilot.ts). Thalbern's is Hi3D's (the
-// owner, 2026-11-19: "muh better! let's use the new one"), the others Rodin's. The ones rig.py made are kept beside
-// them as `thalbern`, `wollandora` and `owlbear`, and Rodin's Thalbern as `thalbern-rodin`: a look can still name one
-// (looks.ts `figures`).
-export const SHIPPED: Record<string, string> = { thalbern: "thalbern-hi3d", wollandora: "wollandora-rodin", owlbear: "owlbear-rodin" }
+// owner, 2026-11-19: "muh better! let's use the new one") and so is the owlbear's (the owner, 2026-11-20), Wollandora's
+// Rodin's. The ones rig.py made are kept beside them as `thalbern`, `wollandora` and `owlbear`, and Rodin's Thalbern
+// and owlbear as `thalbern-rodin` and `owlbear-rodin`: a look can still name one (looks.ts `figures`).
+export const SHIPPED: Record<string, string> = { thalbern: "thalbern-hi3d", wollandora: "wollandora-rodin", owlbear: "owlbear-hi3d" }
 
 // What the game is told of a character's figure, beside where its model is (packages/stage/src/figures/models.ts).
 export interface Plays {
@@ -38,7 +38,8 @@ export const PLAYS: Record<string, Plays> = {
   "thalbern-rodin": THALBERN,
   // Hi3D's model of him, with the same rig and the same borrowed clips.
   "thalbern-hi3d": THALBERN,
-  // Hi3D's models of the other two, made the same way and not shipped: a look can name one (looks.ts `figures`).
+  // Hi3D's models of the other two, made the same way. The owlbear's is shipped. Wollandora's is not: a look can name
+  // it (looks.ts `figures`).
   "wollandora-hi3d": CASTER,
   "owlbear-hi3d": BEAST,
   // Covert Cargo's cast, made the same way. No look of that adventure is played yet, so none is in SHIPPED.
