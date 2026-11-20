@@ -8,7 +8,7 @@
 // set from the figure's height and the place of its head, so two models of one character are seen from the same points.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises"
-import sharp from "sharp"
+import sharp, { type OverlayOptions } from "sharp"
 
 const BASE = process.env.STAGE_BASE || "http://localhost:3057"
 const PORT = process.env.STAGE_CDP_PORT || "9478"
@@ -124,7 +124,7 @@ async function main() {
   const rows: (typeof cells)[] = []
   for (let i = 0; i < cells.length; i += perRow) rows.push(cells.slice(i, i + perRow))
   const wide = Math.max(...rows.map((row) => row.reduce((w, c) => w + c.image.info.width, 0)))
-  const composite: sharp.OverlayOptions[] = []
+  const composite: OverlayOptions[] = []
   rows.forEach((row, y) => {
     let x = 0
     for (const c of row) {
