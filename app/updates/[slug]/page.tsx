@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Heading } from "@d20/ui/typography/heading"
-import { formatPostDate, getPost, getPosts, renderPost } from "@/lib/blog"
+import { formatPostDate, getPost, getPosts, renderPost } from "@/lib/updates"
 
 export const dynamicParams = false
 
@@ -22,14 +22,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function UpdatePage({ params }: { params: Promise<{ slug: string }> }) {
   const post = await getPost((await params).slug)
   if (!post) notFound()
   return (
     <article className="container pt-24 pb-12">
       <div className="mx-auto max-w-2xl">
-        <Link href="/blog" className="text-sm opacity-60 hover:underline underline-offset-4">
-          Blog
+        <Link href="/updates" className="text-sm opacity-60 hover:underline underline-offset-4">
+          Updates
         </Link>
         <Heading variant="h2" as="h1" className="mt-4">
           {post.title}

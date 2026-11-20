@@ -2,10 +2,10 @@ import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import { marked } from "marked"
 
-const BLOG_DIR = path.join(process.cwd(), "content/blog")
+const UPDATES_DIR = path.join(process.cwd(), "content/updates")
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?/
 
-export type BlogPost = {
+export type Update = {
   slug: string
   title: string
   date: string
@@ -24,8 +24,8 @@ function parseFrontmatter(text: string): Record<string, string> {
   return data
 }
 
-async function readPost(file: string): Promise<BlogPost> {
-  const content = await readFile(path.join(BLOG_DIR, file), "utf8")
+async function readPost(file: string): Promise<Update> {
+  const content = await readFile(path.join(UPDATES_DIR, file), "utf8")
   const match = content.match(FRONTMATTER_RE)
   const data = match ? parseFrontmatter(match[1]) : {}
   const slug = file.replace(/\.md$/, "")
@@ -40,18 +40,18 @@ async function readPost(file: string): Promise<BlogPost> {
   }
 }
 
-export async function getPosts(): Promise<BlogPost[]> {
-  const files = (await readdir(BLOG_DIR)).filter((file) => file.endsWith(".md"))
+export async function getPosts(): Promise<Update[]> {
+  const files = (await readdir(UPDATES_DIR)).filter((file) => file.endsWith(".md"))
   const posts = await Promise.all(files.map(readPost))
   const showDrafts = process.env.NODE_ENV === "development"
   return posts.filter((post) => showDrafts || !post.draft).sort((a, b) => b.date.localeCompare(a.date))
 }
 
-export async function getPost(slug: string): Promise<BlogPost | undefined> {
+export async function getPost(slug: string): Promise<Update | undefined> {
   return (await getPosts()).find((post) => post.slug === slug)
 }
 
-export function renderPost(post: BlogPost): string {
+export function renderPost(post: Update): string {
   return marked.parse(post.body, { async: false })
 }
 

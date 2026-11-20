@@ -1,4 +1,4 @@
-import { getPosts } from "@/lib/blog"
+import { getPosts } from "@/lib/updates"
 
 export const dynamic = "force-static"
 
@@ -14,8 +14,8 @@ export async function GET() {
     .map(
       (post) => `<item>
 <title>${escape(post.title)}</title>
-<link>${SITE}/blog/${post.slug}</link>
-<guid>${SITE}/blog/${post.slug}</guid>
+<link>${SITE}/updates/${post.slug}</link>
+<guid>${SITE}/updates/${post.slug}</guid>
 <pubDate>${new Date(`${post.date}T12:00:00Z`).toUTCString()}</pubDate>
 <description>${escape(post.description)}</description>
 </item>`,
@@ -24,8 +24,8 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
 <channel>
-<title>D20 Adventures Blog</title>
-<link>${SITE}/blog</link>
+<title>D20 Adventures Updates</title>
+<link>${SITE}/updates</link>
 <description>What's new in D20 Adventures.</description>
 ${items}
 </channel>
