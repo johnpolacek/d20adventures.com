@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
-import { UpdatesBackdrop } from "@/components/updates/updates-backdrop"
+import Image from "@d20/ui/native-image"
 
 export type LegalSection = { title: string; body: ReactNode }
 
@@ -11,21 +11,26 @@ export const plainProse =
 
 export const contactUs = <Link href="/contact">contact us</Link>
 
-/** A plain page in the Updates style: black paper grain, faint hero art, a display title over a gold rule. */
+/** A plain page over the home page's hero art, its content on a see-through card. */
 export function PlainPage({ title, subtitle, children }: { title: string; subtitle?: ReactNode; children: ReactNode }) {
   return (
     <div className="relative isolate min-h-screen">
-      <UpdatesBackdrop strength="opacity-15" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-black">
+        <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.webp" alt="" />
+      </div>
       <div className="container pt-28 pb-24">
-        <article className="mx-auto max-w-2xl">
-          <header className="mb-12 flex flex-col items-center text-center">
+        <article className="mx-auto max-w-3xl">
+          <header className="mb-8 flex flex-col items-center text-center">
             <h1 className="font-display text-5xl sm:text-6xl text-blue-50" style={textShadowSpreadLight}>
               {title}
             </h1>
-            {subtitle && <p className="mt-4 font-display text-sm tracking-[0.2em] uppercase text-amber-300/90">{subtitle}</p>}
-            <div className="stage-rule mt-6 h-1.5 w-64" />
+            {subtitle && (
+              <p className="mt-3 font-display text-sm tracking-[0.2em] uppercase text-amber-200" style={textShadowSpreadLight}>
+                {subtitle}
+              </p>
+            )}
           </header>
-          {children}
+          <div className="rounded-lg border border-amber-200/20 bg-black/70 p-6 shadow-[0_18px_44px_#000a] backdrop-blur-sm sm:p-10">{children}</div>
         </article>
       </div>
     </div>
@@ -37,7 +42,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
   return (
     <PlainPage title={title} subtitle={`Updated ${updated}`}>
       <div className={plainProse}>
-        {intro && <div className="text-lg text-white/90">{intro}</div>}
+        {intro && <div className="text-lg text-white/90 [&>p:first-child]:mt-0">{intro}</div>}
         {sections.map((section, i) => (
           <section key={section.title}>
             <h2>
