@@ -174,14 +174,16 @@ export function DesktopGame() {
   useEffect(() => {
     void invoke({ kind: "load" })
   }, [invoke])
-  // Fetch painted art once for roster heroes and for the saved party.
+  // Fetch painted art once for roster heroes, the saved party and the parties of archived saves.
   useEffect(() => {
     if (working || !loaded) return
-    const ids = [...new Set([...heroes.filter((h) => h.painted).map((h) => h.id), ...(save?.painted ?? [])])].filter((id) => !askedArt.current.has(id))
+    const ids = [...new Set([...heroes.filter((h) => h.painted).map((h) => h.id), ...(save?.painted ?? []), ...saves.flatMap((s) => s.painted ?? [])])].filter(
+      (id) => !askedArt.current.has(id)
+    )
     if (!ids.length) return
     for (const id of ids) askedArt.current.add(id)
     void invoke({ kind: "art", ids: ids.slice(0, 24) })
-  }, [working, loaded, heroes, save?.painted, invoke])
+  }, [working, loaded, heroes, save?.painted, saves, invoke])
   // A new game moves the saved adventure to the archive, where home lists it. Party setup stays open if the start fails.
   const start = async (chosenParty: PartyChoice[]) => {
     const next = (await invoke({ kind: "start", provider: provider as "claude", model: pickedModel, adventure, party: chosenParty, replace: Boolean(save), continues: Boolean(carried) }))?.state
@@ -457,6 +459,7 @@ export function DesktopGame() {
                 {screen === "adventures" && (
                   <AdventuresPage
                     saves={saves}
+                    art={art}
                     adventures={adventures}
                     locked={locked}
                     listPrices={listPrices}

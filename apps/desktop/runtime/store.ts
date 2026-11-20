@@ -50,6 +50,11 @@ export type SaveSummary = {
   // The current turn's encounter, whose painting the card shows. Archives saved before it have none.
   encounterId?: string
   party: string[]
+  // The party as the card shows them: who to find a portrait for, and how hurt each is. With the figures and painted
+  // art the save chose. Archives saved before these have names only.
+  heroes?: { id: string; name: string; race?: string; gender?: string; healthPercent: number }[]
+  figures?: Record<string, string>
+  painted?: string[]
   playedAt?: number
 }
 export const summarize = (save: Save, archiveId?: number, playedAt?: number): SaveSummary => {
@@ -64,6 +69,11 @@ export const summarize = (save: Save, archiveId?: number, playedAt?: number): Sa
     turnTitle: turn?.title ?? "",
     encounterId: turn?.encounterId,
     party: (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => c.name),
+    heroes: (turn?.characters ?? [])
+      .filter((c) => c.type === "pc")
+      .map((c) => ({ id: c.id, name: c.name, race: c.race, gender: c.gender, healthPercent: c.healthPercent })),
+    figures: save.figures,
+    painted: save.painted,
     playedAt,
   }
 }

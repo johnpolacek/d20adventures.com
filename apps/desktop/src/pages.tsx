@@ -13,6 +13,7 @@ import type { AdventureInfo } from "../runtime/game"
 import type { Hero } from "../runtime/heroes"
 import type { SaveSummary } from "../runtime/store"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
+import { portraitFor, sceneFor } from "./scenes"
 import { type Locked, LockIcon, price } from "./new-game"
 import type { Realm } from "./realm"
 
@@ -99,17 +100,20 @@ function PriceChip({ a, listPrices }: { a: Listed; listPrices: Record<string, nu
   )
 }
 
-// A saved or hosted adventure as a wide still of the scene the party stands in, with the cover beside the title, where
-// the run stands at the foot, and the button that reopens it. Archives saved before scenes were recorded show the cover.
+// A hero on a saved card: their portrait when there is one, and their health when the save knows it.
+type CardHero = { name: string; portrait?: string; healthPercent?: number }
+
+// A saved or hosted adventure as a wide still of the scene the party stands in. The cover, title, where the run stands
+// and the button sit top left, the button's foot level with the cover's, and the party stands bottom left. Archives
+// saved before scenes were recorded show the cover as the still.
 function SavedCard(props: {
   planId: string
   title: string
   encounterId?: string
   completed: boolean
-  chip: ReactNode
   kicker?: string
   status: string
-  note?: string
+  heroes: CardHero[]
   action: string
   label: string
   busy: boolean
@@ -133,30 +137,35 @@ function SavedCard(props: {
           src={art}
           alt=""
           onError={() => setMissing(true)}
-          className={cn("absolute inset-0 h-full w-full object-cover", props.completed && "[filter:saturate(.5)_brightness(.8)]")}
+          className={cn("absolute inset-0 h-full w-full object-cover", props.completed && "[filter:saturate(.5)_brightness(.75)]")}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-        <div className="relative flex h-full flex-col p-10">
-          <div className="flex items-center gap-6">
-            <img src={cover} alt="" className="aspect-[3/4] w-24 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20" />
-            <div className="flex flex-col items-start gap-3">
-              {props.chip}
-              <h3 className="max-w-xl font-display text-5xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{props.title}</h3>
-            </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
+        <div className="absolute top-8 left-8 flex items-stretch gap-6">
+          <img src={cover} alt="" className="aspect-[3/4] w-28 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20" />
+          <div className="flex flex-col items-start">
+            <h3 className="font-display text-4xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{props.title}</h3>
+            {props.kicker && <div className={cn(siteLabel, "mt-1")}>{props.kicker}</div>}
+            <div className="font-display text-xl text-amber-300 [text-shadow:0_2px_8px_#000]">{props.status}</div>
+            <span className={buttonClassName("epic", undefined, "mt-auto text-sm")} style={buttonStyle("epic")}>
+              {props.action}
+            </span>
           </div>
-          <div className="mt-auto flex items-end justify-between gap-6">
-            <div>
-              {props.kicker && <div className={siteLabel}>{props.kicker}</div>}
-              <div className="font-display text-2xl text-amber-300 [text-shadow:0_2px_8px_#000]">{props.status}</div>
+        </div>
+        <div className="absolute bottom-6 left-8 flex items-end gap-6">
+          {props.heroes.map((h) => (
+            <div key={h.name} className="flex items-center gap-3">
+              {h.portrait && <img src={h.portrait} alt="" className="size-14 rounded-full object-cover object-top ring-2 ring-amber-400/70" />}
+              <div>
+                <div className="font-display text-lg text-white [text-shadow:0_2px_8px_#000]">{h.name}</div>
+                {h.healthPercent !== undefined && (
+                  <div className="mt-1 h-1.5 w-28 overflow-hidden rounded-full bg-white/15">
+                    <div className="h-full bg-emerald-500" style={{ width: `${Math.max(0, Math.min(100, h.healthPercent))}%` }} />
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-4">
-              {props.note && <span className="rounded-full bg-black/70 px-4 py-1.5 text-sm text-white">{props.note}</span>}
-              <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>
-                {props.action}
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
       </Button>
       {props.children}
@@ -166,6 +175,8 @@ function SavedCard(props: {
 
 export function AdventuresPage(props: {
   saves: SaveSummary[]
+  // Painted art fetched for heroes, by character id.
+  art: Record<string, FigureArt>
   adventures: AdventureInfo[]
   locked: Locked[]
   listPrices: Record<string, number>
@@ -182,6 +193,11 @@ export function AdventuresPage(props: {
   onRemoveHosted: (adventureId: string) => void
 }) {
   const [removing, setRemoving] = useState<string | null>(null)
+  const heroesOf = (s: SaveSummary): CardHero[] => {
+    if (!s.heroes) return s.party.map((name) => ({ name }))
+    const painted = Object.fromEntries((s.painted ?? []).flatMap((id) => (props.art[id] ? [[id, props.art[id]]] : [])))
+    return s.heroes.map((h) => ({ name: h.name, healthPercent: h.healthPercent, portrait: portraitFor(sceneFor(s.encounterId), { ...h, type: "pc" }, s.figures, painted) }))
+  }
   const listed: Listed[] = [...props.adventures.map((info) => ({ ...info, info })), ...props.locked.map((locked) => ({ ...locked, locked }))]
   const featured = listed.find((a) => a.id === FEATURED)
   const intro = listed.filter((a) => a.id !== FEATURED)
@@ -201,11 +217,10 @@ export function AdventuresPage(props: {
                   title={s.title}
                   encounterId={s.encounterId}
                   completed={s.status === "completed"}
-                  chip={<Chip tone={current ? "amber" : "dark"}>{current ? "Playing" : played(s.playedAt)}</Chip>}
-                  kicker={s.status === "completed" ? undefined : `Round ${s.round}`}
+                  kicker={[current ? "" : played(s.playedAt), s.status === "completed" ? "" : `Round ${s.round}`].filter(Boolean).join(" · ")}
                   status={s.status === "completed" ? "Complete" : s.turnTitle}
-                  note={s.party.join(", ")}
-                  action={s.status === "completed" ? "Read the ending" : current ? "Continue" : "Resume"}
+                  heroes={heroesOf(s)}
+                  action={s.status === "completed" ? "Read the Ending" : current ? "Continue" : "Resume"}
                   label={`${s.status === "completed" ? "Read the ending of" : current ? "Continue" : "Resume"} ${s.title}`}
                   busy={props.busy}
                   onOpen={() => (current ? props.onContinue() : props.onResume(s.archiveId!))}
@@ -234,10 +249,9 @@ export function AdventuresPage(props: {
                 title={h.title}
                 encounterId={h.encounterId}
                 completed={h.status === "completed"}
-                chip={<Chip tone={props.hostingNow === h.adventureId ? "amber" : "primary"}>{props.hostingNow === h.adventureId ? "Hosting now" : "Hosted"}</Chip>}
-                kicker={h.status !== "completed" && h.round ? `Round ${h.round}` : undefined}
+                kicker={[props.hostingNow === h.adventureId ? "Hosting Now" : "Hosted", h.status !== "completed" && h.round ? `Round ${h.round}` : ""].filter(Boolean).join(" · ")}
                 status={h.status === "completed" ? "Complete" : h.round ? h.turnTitle : "Waiting for Players"}
-                note={`${h.players} at the table`}
+                heroes={h.party.map((name) => ({ name }))}
                 action="Open"
                 label={`Open hosted game ${h.title}`}
                 busy={props.busy}
