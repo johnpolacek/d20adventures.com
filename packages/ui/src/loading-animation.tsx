@@ -17,12 +17,13 @@ const spin = `@keyframes spin {
   }
 }`
 
-const LoadingAnimation = ({ className, children, containerClassName }: { className?: string; containerClassName?: string; children?: React.ReactNode }) => {
+// In a turn it scrolls itself into view, so the reader sees the next part is coming. `scroll={false}` keeps it still.
+const LoadingAnimation = ({ className, children, containerClassName, scroll = true }: { className?: string; containerClassName?: string; children?: React.ReactNode; scroll?: boolean }) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
-  }, [])
+    if (scroll) containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+  }, [scroll])
 
   return (
     <div ref={containerRef} className={cn("flex flex-col items-center justify-center gap-2", containerClassName)}>

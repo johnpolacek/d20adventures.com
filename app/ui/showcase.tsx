@@ -87,17 +87,19 @@ function TypographyDemo() {
   )
 }
 
-// Body serifs side by side on the same narration. `weight` is the regular weight for light text on black.
+// Body serifs side by side on the same narration: Georgia and four with its tall, sturdy letters.
 const bodyFonts = [
-  { name: "Georgia", note: "today", family: "Georgia, serif", weight: 400 },
-  { name: "Alegreya", note: "made for long reading, a calligraphic hand", family: "var(--font-try-alegreya)", weight: 400 },
-  { name: "Crimson Pro", note: "old book type, narrow", family: "var(--font-try-crimson)", weight: 400 },
-  { name: "EB Garamond", note: "the most bookish, small on screen", family: "var(--font-try-garamond)", weight: 400 },
-  { name: "Spectral", note: "built for screens, quiet", family: "var(--font-try-spectral)", weight: 300 },
+  { name: "Georgia", note: "today", family: "Georgia, serif" },
+  { name: "Vollkorn", note: "dark and sturdy, a little old-world", family: "var(--font-try-vollkorn)" },
+  { name: "Literata", note: "Google Play Books, warm", family: "var(--font-try-literata)" },
+  { name: "Merriweather", note: "made for screens, the tallest", family: "var(--font-try-merriweather)" },
+  { name: "Gelasio", note: "Georgia's shapes, loads on Android", family: "var(--font-try-gelasio)" },
 ]
 
 function BodyFontsDemo() {
   const [size, setSize] = useState(18)
+  const [detail, setDetail] = useState(bodyFonts[0].name)
+  const detailFamily = bodyFonts.find((f) => f.name === detail)?.family
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
@@ -114,7 +116,7 @@ function BodyFontsDemo() {
             <span className={siteLabel}>
               {f.name} <span className="normal-case tracking-normal text-white/50">{f.note}</span>
             </span>
-            <div style={{ fontFamily: f.family, fontWeight: f.weight, fontSize: size }} className="flex flex-col gap-3 leading-relaxed text-white/90">
+            <div style={{ fontFamily: f.family, fontSize: size }} className="flex flex-col gap-3 leading-relaxed text-white/90">
               <p>
                 Rain hammers the slate roofs of Kordavos as the gate guard squints at your papers. “Three silver for the toll,” he says, “and another
                 for the trouble.” Behind him, a cart of <em>Valkaran</em> spice waits in the mud, its driver watching you a little too closely.
@@ -126,6 +128,46 @@ function BodyFontsDemo() {
           </div>
         ))}
       </div>
+
+      <div className="flex flex-wrap items-center gap-2 border-t border-white/10 pt-6">
+        <span className={siteLabel}>Fantasy details in</span>
+        {bodyFonts.map((f) => (
+          <Button key={f.name} variant={detail === f.name ? "brick" : "outline"} size="xs" onClick={() => setDetail(f.name)}>
+            {f.name}
+          </Button>
+        ))}
+      </div>
+      <article style={{ fontFamily: detailFamily, fontSize: size }} className="mx-auto flex max-w-2xl flex-col gap-4 leading-relaxed text-white/90">
+        <div className="text-center">
+          <div className="font-mono text-xs uppercase tracking-widest text-amber-400/80">Scene One</div>
+          <h3 className="font-display text-3xl text-amber-300" style={textShadow}>
+            The Gate
+          </h3>
+        </div>
+        <Ornament />
+        <p className="first-letter:float-left first-letter:mt-1 first-letter:mr-2 first-letter:font-display first-letter:text-[3.6em] first-letter:leading-[0.8] first-letter:text-amber-300">
+          Rain hammers the slate roofs of <span className="[font-variant-caps:small-caps] tracking-wide">Kordavos</span> as the gate guard squints at your papers. “Three silver for
+          the toll,” says <span className="[font-variant-caps:small-caps] tracking-wide">Sergeant Brannoc</span>, “and another for the trouble.” Behind him, a cart of Valkaran spice
+          waits in the mud.
+        </p>
+        <p>
+          The driver, a woman the guards call <span className="[font-variant-caps:small-caps] tracking-wide">Old Mirre</span>, keeps her hood low and her hands lower, close to
+          something wrapped in oilcloth.
+        </p>
+        <Ornament />
+        <p className="text-center italic text-white/70">The bell in the watchtower rings once.</p>
+      </article>
+    </div>
+  )
+}
+
+// A scene break: hairlines either side of a small mark.
+function Ornament() {
+  return (
+    <div aria-hidden className="flex items-center justify-center gap-3 text-amber-400/70">
+      <span className="h-px w-16 bg-gradient-to-r from-transparent to-amber-400/60" />
+      <span className="text-sm">✦</span>
+      <span className="h-px w-16 bg-gradient-to-l from-transparent to-amber-400/60" />
     </div>
   )
 }
@@ -620,7 +662,7 @@ const tiles: Tile[] = [
     name: "Loading",
     demo: (
       <div className="relative h-32">
-        <LoadingAnimation />
+        <LoadingAnimation scroll={false} />
       </div>
     ),
   },

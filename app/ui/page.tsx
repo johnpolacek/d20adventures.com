@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Alegreya, Crimson_Pro, EB_Garamond, Spectral } from "next/font/google"
+import { Gelasio, Literata, Merriweather, Vollkorn } from "next/font/google"
 import { Showcase } from "./showcase"
 
 export const metadata: Metadata = {
@@ -8,14 +8,14 @@ export const metadata: Metadata = {
 }
 
 // Body serifs on trial against Georgia, loaded on this page only.
-const alegreya = Alegreya({ subsets: ["latin"], variable: "--font-try-alegreya", style: ["normal", "italic"] })
-const crimson = Crimson_Pro({ subsets: ["latin"], variable: "--font-try-crimson", style: ["normal", "italic"] })
-const garamond = EB_Garamond({ subsets: ["latin"], variable: "--font-try-garamond", style: ["normal", "italic"] })
-const spectral = Spectral({ subsets: ["latin"], variable: "--font-try-spectral", weight: ["300", "400", "700"], style: ["normal", "italic"] })
+const vollkorn = Vollkorn({ subsets: ["latin"], variable: "--font-try-vollkorn", style: ["normal", "italic"] })
+const literata = Literata({ subsets: ["latin"], variable: "--font-try-literata", style: ["normal", "italic"] })
+const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-try-merriweather", style: ["normal", "italic"] })
+const gelasio = Gelasio({ subsets: ["latin"], variable: "--font-try-gelasio", style: ["normal", "italic"] })
 
 export default function UIPage() {
   return (
-    <div className={`${alegreya.variable} ${crimson.variable} ${garamond.variable} ${spectral.variable}`}>
+    <div className={`${vollkorn.variable} ${literata.variable} ${merriweather.variable} ${gelasio.variable}`}>
       <Showcase />
     </div>
   )
