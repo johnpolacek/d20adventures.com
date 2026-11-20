@@ -105,6 +105,17 @@ button {
   }
 }
 
+/* Browser autofill keeps the field dark instead of painting it white. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  box-shadow: 0 0 0 1000px #0a0a0a inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 /* Keep last: in this build, plain rules after a nested @starting-style are dropped. */
 .fade-in {
   @apply opacity-100 transition-opacity duration-1000 ease-in-out;
