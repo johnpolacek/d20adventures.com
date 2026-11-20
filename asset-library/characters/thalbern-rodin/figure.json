@@ -12,7 +12,7 @@
     "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
     "triangles": 50000,
     "cost": 0.6,
-    "made": "2026-11-17"
+    "made": "2026-11-20"
   },
   "rig": {
     "bones": 0,
@@ -36,7 +36,7 @@
     {
       "file": "lod0.glb",
       "triangles": 50000,
-      "megabytes": 5.78,
+      "megabytes": 5.77,
       "texture": 4096
     },
     {
