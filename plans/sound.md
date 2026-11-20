@@ -9,42 +9,39 @@ Goal: one sound system in `@d20/ui`, heard the same in the website and the deskt
 - One engine, one `AudioContext`, one setting. No host code in the sound module.
 - Every sound is optional. A missing file or a locked context never blocks play.
 
-## Today
+## Owner decisions, 2026-11-19
 
-- `packages/ui/src/stage/dice-sound.ts` is the only game sound. Three recorded d20 takes, plus Web Audio thuds for the verdict.
-- It holds its own context, a master gain at 0.45, the `d20.sound` on/off key, and the first-press unlock.
-- Callers: `roll-result.tsx`, `prompt-card.tsx`. The toggle lives in `apps/desktop/src/stage-play.tsx`.
-- The website's hosted play renders the desktop's `StagePlay`, so both hosts already share the play view.
-- Files live in `public/stage/sounds`. The site gets them from the bucket through `stage:sync` and the `/stage` rewrite. The app copies `public/stage` in `apps/desktop/scripts/build-runtime.ts`.
-- Storyview narration (`use-storyview-player.ts`) plays TTS through an `<audio>` element, outside any shared engine.
-- The app's CSP has no `media-src`. Fetch and decode under `connect-src 'self'` works. An `<audio>` element on a blob would not.
+- Sources: a mix. CC0 recordings first, made sounds to fill gaps.
+- No music.
+- No footsteps.
 
-## Design
+## Where it lives
 
-- `@d20/ui/sound/engine.ts`: the context, buses (`ui`, `dice`, `fx`, `ambience`, `voice`), master and per-bus levels, unlock, ducking.
-- `@d20/ui/sound/cues.ts`: a typed table of named cues. Each is takes from files, a synth function, or both. Takes rotate so repeats differ.
-- `@d20/ui/sound/settings.ts`: on/off and master volume in localStorage, read by both hosts. Keeps the `d20.sound` key.
-- `@d20/ui/sound/use-stage-sound.ts`: subscribes to stage events and plays cues. `StagePlay` calls it once.
-- Files: `public/stage/sounds/<group>/<cue>-<n>.mp3`, mono, 44.1 kHz, about 96 kbps. MP3 because the app's WebKit view does not play Ogg. A `SOURCES.md` per group records licences.
-- Levels set once in a script (`scripts/sound-levels.ts`, ffmpeg loudnorm), so the code keeps simple gains.
+- `@d20/ui/sound/engine`: one context, a master at 0.45, buses `ui`, `dice`, `fx`, `ambience`, `voice`. Wakes on the first press or key. Suspends when sound is off or the tab is hidden. `play` rotates takes, `whoosh` makes air from noise.
+- `@d20/ui/sound/settings`: the `d20.sound` key, with listeners.
+- `@d20/ui/sound/dice`: the dice sound, moved unchanged onto the engine.
+- `@d20/ui/sound/fx`: stage effect events to cues.
+- `@d20/ui/sound/ambience`: up to three beds per set, looped by overlapping passes with a crossfade, faded across set changes.
+- `@d20/ui/sound/use-stage-sound`: `StagePlay` calls it once. Both hosts get it, since hosted web play renders `StagePlay`.
+- `Stage.listen` reports `effect` (start, and land for missiles, with `struck`) and `prop`. Sets name their beds in `ambience`.
+- Files: `public/stage/sounds/fx` (mono) and `ambience` (stereo), MP3, levelled by `scripts/sound-assets.ts`. Sources in `public/stage/sounds/SOURCES.md`. Raw packs in `~/Desktop/d20-sound-sources`.
+- `/dev/sound` plays every cue and bed.
 
 ## Stages
 
-1. Engine. Move `dice-sound.ts` onto the engine with no audible change. Settings module, toggle in the shared HUD so hosted web play gets it. A `/dev/sound` page that plays every cue at its level.
-2. Stage events. `Stage` gains an event emitter: `hit`, `effect` (kind, element, phase start or land), `line`, `shot`. No sound code in `packages/stage`.
-3. Combat cues. Hits and the nine effect kinds, with an element tint where it matters (fire, frost, lightning). About 15 cues, 2 or 3 takes each.
-4. Ambience. Sets declare an `ambience` bed (tavern, street, forest night, cellar, hall). Beds loop, crossfade on encounter change, and duck under voiced narration.
-5. Voice. Route Storyview TTS and stage narration through the `voice` bus, so ducking and the one volume apply.
+1. Engine. Done 2026-11-19.
+2. Stage events. Done 2026-11-19. No `hit`, `line` or `shot` events: effects cover hits, and nothing sounds lines or shots yet.
+3. Combat cues. Done 2026-11-19. Blades, blows, arrow thunks, fire and spells are CC0 recordings. Swings that miss, flights, aura, mist, sparkles, lightning and frost are made noise.
+4. Ambience. Done 2026-11-19. Nine beds: hearth, crowd, wind, night, birds, river, dawn, dungeon, drip. All 41 sets have beds.
+5. Voice. Route Storyview TTS and stage narration through the `voice` bus, and duck ambience under it. The stage play view has no voiced narration yet.
 6. UI cues, if wanted. At most a soft cue for "your turn" and a card opening.
 
-Each stage ends with both typechecks and both builds passing, and is one commit.
+## Checked
 
-## Owner decisions, 2026-11-19
+- Every file decodes in Chrome. Every cue and bed reaches the output, all under the dice. Beds loop with no gap, switch, and stop with sound off.
+- Not yet heard by the owner. Not yet heard in the Tauri app's WebKit view, or on iOS.
 
-- Sources: a mix. CC0 recordings first (Freesound, Sonniss GDC bundles), generated sound effects to fill gaps.
-- No music.
-- No footsteps. Stage 2 emits no `step` event.
+## Follow-ups
 
-## Open questions
-
-- Mobile web: iOS needs the unlock on a tap, which stage 1 keeps. Background tabs should mute.
+- Listen on `/dev/sound` and tune levels. The crowd bed is a shouting crowd, filtered and kept low. It may not suit a quiet ballroom.
+- Effects in a real fight were not played through end to end.

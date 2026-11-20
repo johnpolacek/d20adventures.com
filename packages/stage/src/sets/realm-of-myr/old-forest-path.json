@@ -6,6 +6,7 @@
   "locationId": "old-forest-path",
   "title": "The old forest path",
   "seed": 6620,
+  "ambience": ["birds", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [

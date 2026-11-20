@@ -6,6 +6,7 @@
   "locationId": "old-standing-stones",
   "title": "The Old Standing Stones",
   "seed": 2718,
+  "ambience": ["wind", "night"],
   "atmosphere": {
     "sun": {
       "direction": [0.5, 0.6, 0.62],

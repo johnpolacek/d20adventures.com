@@ -6,6 +6,7 @@
   "locationId": "kordavos-black-market",
   "title": "The Black Market",
   "seed": 1818,
+  "ambience": ["crowd", "hearth"],
   "atmosphere": {
     "sun": {
       "direction": [

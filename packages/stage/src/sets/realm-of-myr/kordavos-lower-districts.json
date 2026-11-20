@@ -6,6 +6,7 @@
   "locationId": "kordavos-lower-districts",
   "title": "The Lower Districts of Kordavos",
   "seed": 4021,
+  "ambience": ["crowd", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [

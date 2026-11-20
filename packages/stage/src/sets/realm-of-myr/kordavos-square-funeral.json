@@ -6,6 +6,7 @@
   "locationId": "kordavos-square-funeral",
   "title": "Kordavos: the great square at the funeral",
   "seed": 4801,
+  "ambience": ["wind"],
   "atmosphere": {
     "sun": {
       "direction": [

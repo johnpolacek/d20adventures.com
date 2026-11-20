@@ -6,6 +6,7 @@
   "locationId": "thalberns-forest-home",
   "title": "Thalbern's Forest Home",
   "seed": 1618,
+  "ambience": ["birds", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [-0.45, 0.72, 0.52],

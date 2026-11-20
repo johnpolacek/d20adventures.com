@@ -6,6 +6,7 @@
   "locationId": "kordavos",
   "title": "The Gates of Kordavos",
   "seed": 4242,
+  "ambience": ["crowd", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [-0.8, 0.55, 0.32],

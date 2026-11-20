@@ -6,6 +6,7 @@
   "locationId": "catacombs-sealed-door",
   "title": "The catacombs: the sealed door",
   "seed": 4301,
+  "ambience": ["dungeon", "drip"],
   "atmosphere": {
     "sun": {
       "direction": [

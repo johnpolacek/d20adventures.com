@@ -6,6 +6,7 @@
   "locationId": "blackthorn-wine-cellar",
   "title": "The Blackthorn wine cellar",
   "seed": 3602,
+  "ambience": ["drip", "dungeon"],
   "atmosphere": {
     "sun": {
       "direction": [

@@ -2,7 +2,7 @@ import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
-import { type EffectEnd, type EffectKind, Effects, type Element, type PropKind } from "./effects"
+import { type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { Crowd } from "./figures/crowd"
 import { Models } from "./figures/models"
@@ -227,6 +227,7 @@ export class Stage {
   private onVisibility = () => this.sync()
   private readyResolve: (() => void) | null = null
   readonly firstFrame: Promise<void>
+  private effectListeners = new Set<(e: EffectEvent) => void>()
 
   constructor(
     private o: StageOptions,
@@ -370,7 +371,13 @@ export class Stage {
     this.world.add(this.standees.group)
     this.models = new Models(this.cast, this.shared, this.standees, renderer)
     this.world.add(this.models.group)
-    this.effects = new Effects({ hit: (id, color, strength) => this.hit(id, color, strength), camera: this.camera })
+    this.effects = new Effects({
+      hit: (id, color, strength) => this.hit(id, color, strength),
+      event: (e) => {
+        for (const l of this.effectListeners) l(e)
+      },
+      camera: this.camera,
+    })
     this.world.add(this.effects.group)
 
     // Ambient loops (a queue at a checkpoint), fed by the staging's cast and lines.
@@ -1551,6 +1558,11 @@ export class Stage {
   }
   clearEffects() {
     this.effects.clear()
+  }
+  // What the stage's effects do as they play, for a host to sound them. The stage itself makes no sound.
+  listen(listener: (e: EffectEvent) => void) {
+    this.effectListeners.add(listener)
+    return () => void this.effectListeners.delete(listener)
   }
   // Where a cast member stands (x, z, and y when raised) and faces (radians).
   castAt(id: string) {

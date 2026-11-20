@@ -6,6 +6,7 @@
   "locationId": "blackthorn-study",
   "title": "The Blackthorn mansion: Thaddeus's study",
   "seed": 3501,
+  "ambience": ["hearth"],
   "atmosphere": {
     "sun": {
       "direction": [

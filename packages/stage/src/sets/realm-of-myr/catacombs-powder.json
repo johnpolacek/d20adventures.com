@@ -6,6 +6,7 @@
   "locationId": "catacombs-powder",
   "title": "The catacombs: the powder chamber",
   "seed": 4101,
+  "ambience": ["dungeon", "drip"],
   "atmosphere": {
     "sun": {
       "direction": [

@@ -6,6 +6,7 @@
   "locationId": "blackthorn-corridor",
   "title": "The Blackthorn mansion: the upper corridor",
   "seed": 3301,
+  "ambience": ["hearth"],
   "atmosphere": {
     "sun": {
       "direction": [

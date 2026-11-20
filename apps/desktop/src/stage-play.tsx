@@ -13,7 +13,8 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
-import { setSoundOn, soundOn } from "@d20/ui/stage/dice-sound"
+import { setSoundOn, soundOn } from "@d20/ui/sound/settings"
+import { useStageSound } from "@d20/ui/sound/use-stage-sound"
 import { EndingRating, FeedbackButton, FeedbackPanel, type FeedbackStart } from "@d20/ui/stage/feedback"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@d20/ui/stage/hud"
 import { type ChatLine, Journal, type JournalTurn } from "@d20/ui/stage/journal"
@@ -353,6 +354,7 @@ export function StagePlay(props: {
   const sheets = useSheetViews(shown?.characters ?? [])
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const, play: loadPlay } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
+  useStageSound(stage)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
   // Who the turn passed over to reach the actor, because they cannot act, and why.
   const passed = turn ? passedWords(passedOver(turn.characters, actor)) : ""

@@ -6,6 +6,7 @@
   "locationId": "blackthorn-stair-hall",
   "title": "The Blackthorn mansion: the stair hall",
   "seed": 3201,
+  "ambience": ["hearth"],
   "atmosphere": {
     "sun": {
       "direction": [

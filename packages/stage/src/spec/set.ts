@@ -315,6 +315,10 @@ const paintedSet = z
   })
   .strict()
 
+// The sound a set plays under everything, up to three beds at once. The stage only names them: the UI plays them.
+export const AMBIENCE_BEDS = ["hearth", "crowd", "wind", "night", "birds", "river", "dawn", "dungeon", "drip"] as const
+export type AmbienceBed = (typeof AMBIENCE_BEDS)[number]
+
 export const setSpecSchema = z
   .object({
     format: z.literal("d20.stage.set"),
@@ -324,6 +328,7 @@ export const setSpecSchema = z
     locationId: slug,
     title: z.string().min(1).max(120),
     seed: z.number().int().min(0).max(4294967295),
+    ambience: z.array(z.enum(AMBIENCE_BEDS)).max(3).optional(),
     atmosphere: z
       .object({
         sun: z

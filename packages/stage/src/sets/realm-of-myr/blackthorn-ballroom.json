@@ -6,6 +6,7 @@
   "locationId": "blackthorn-ballroom",
   "title": "The Blackthorn ballroom",
   "seed": 2801,
+  "ambience": ["crowd"],
   "atmosphere": {
     "sun": {
       "direction": [

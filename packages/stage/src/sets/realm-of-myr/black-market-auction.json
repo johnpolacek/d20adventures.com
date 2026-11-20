@@ -6,6 +6,7 @@
   "locationId": "black-market-auction",
   "title": "The auction house",
   "seed": 2020,
+  "ambience": ["crowd", "hearth"],
   "atmosphere": {
     "sun": {
       "direction": [

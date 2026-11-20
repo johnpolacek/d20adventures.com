@@ -6,6 +6,7 @@
   "locationId": "valkarr-woods",
   "title": "The Valkarr Woods",
   "seed": 3141,
+  "ambience": ["night", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [0.05, 0.75, -0.65],

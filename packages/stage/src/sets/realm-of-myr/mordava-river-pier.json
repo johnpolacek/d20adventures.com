@@ -6,6 +6,7 @@
   "locationId": "mordava-river-pier",
   "title": "A quiet pier on the Mordava",
   "seed": 4212,
+  "ambience": ["river", "birds"],
   "atmosphere": {
     "sun": {
       "direction": [

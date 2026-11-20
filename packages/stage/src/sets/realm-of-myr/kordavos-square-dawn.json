@@ -6,6 +6,7 @@
   "locationId": "kordavos-square-dawn",
   "title": "Kordavos: the great square at dawn",
   "seed": 4701,
+  "ambience": ["dawn"],
   "atmosphere": {
     "sun": {
       "direction": [

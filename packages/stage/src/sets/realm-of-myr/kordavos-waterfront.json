@@ -6,6 +6,7 @@
   "locationId": "kordavos-waterfront",
   "title": "Kordavos: the waterfront at night",
   "seed": 2401,
+  "ambience": ["river", "night"],
   "atmosphere": {
     "sun": {
       "direction": [

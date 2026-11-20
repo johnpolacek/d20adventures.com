@@ -6,6 +6,7 @@
   "locationId": "kordavos-docks",
   "title": "The Kordavos docks",
   "seed": 7310,
+  "ambience": ["river", "crowd"],
   "atmosphere": {
     "sun": {
       "direction": [

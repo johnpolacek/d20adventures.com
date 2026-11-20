@@ -29,9 +29,15 @@ export interface EffectEnd {
   at: THREE.Vector3
   id?: string
 }
+// What the effects do, for a host that sounds them: an effect starting, a missile landing (`struck` when it lands on
+// someone), and an object taken in hand.
+export type EffectEvent =
+  | { type: "effect"; kind: EffectKind; element?: Element; phase: "start" | "land"; struck: boolean }
+  | { type: "prop"; kind: PropKind; passed: boolean }
 export interface EffectHost {
   // A cast member struck: a flash of colour on their card and a shake.
   hit(id: string, color: string, strength: number): void
+  event?(e: EffectEvent): void
   // Where the camera is, for objects held toward it.
   camera: THREE.Camera
 }
@@ -129,6 +135,7 @@ export class Effects {
   // ── Effects ──
   play(kind: EffectKind, from: EffectEnd, to: EffectEnd | undefined, element?: Element): Promise<void> {
     const target = to ?? from
+    this.host.event?.({ type: "effect", kind, element, phase: "start", struck: !!target.id })
     switch (kind) {
       case "arrow":
         return this.missile(from, target, element, "arrow")
@@ -198,7 +205,10 @@ export class Effects {
       trail.forEach((s, i) => pointAt(Math.max(0, t - (i + 1) * 0.035), s.position))
       if (kind === "bolt") this.lamp(self, p, color, 2.4)
     })
-    return flight.then(() => (kind === "arrow" ? this.impact(to, element, 0.6) : this.burst(to, element, 0.55)))
+    return flight.then(() => {
+      this.host.event?.({ type: "effect", kind, element, phase: "land", struck: !!to.id })
+      return kind === "arrow" ? this.impact(to, element, 0.6) : this.burst(to, element, 0.55)
+    })
   }
 
   private beam(from: EffectEnd, to: EffectEnd, element?: Element) {
@@ -374,6 +384,7 @@ export class Effects {
   // ── Objects ──
   // An object in someone's hand, held toward the camera, and when it has a receiver carried across to theirs.
   prop(kind: PropKind, holder: EffectEnd, receiver?: EffectEnd): Promise<void> {
+    this.host.event?.({ type: "prop", kind, passed: !!receiver })
     const mesh = propMesh(kind)
     const halo = new THREE.Sprite(this.glow(kind === "relic" || kind === "gem" ? "#bfe6ff" : "#ffe2b0", 0.35))
     halo.scale.setScalar(0.55)

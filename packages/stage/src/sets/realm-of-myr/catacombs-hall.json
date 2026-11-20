@@ -6,6 +6,7 @@
   "locationId": "catacombs-hall",
   "title": "The catacombs: the great empty hall",
   "seed": 4401,
+  "ambience": ["dungeon", "drip"],
   "atmosphere": {
     "sun": {
       "direction": [

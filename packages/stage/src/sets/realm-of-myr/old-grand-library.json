@@ -6,6 +6,7 @@
   "locationId": "old-grand-library",
   "title": "The Old Grand Library",
   "seed": 8080,
+  "ambience": ["hearth"],
   "atmosphere": {
     "sun": {
       "direction": [

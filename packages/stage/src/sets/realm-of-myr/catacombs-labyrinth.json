@@ -6,6 +6,7 @@
   "locationId": "catacombs-labyrinth",
   "title": "The catacombs: the labyrinth",
   "seed": 4201,
+  "ambience": ["dungeon", "drip"],
   "atmosphere": {
     "sun": {
       "direction": [

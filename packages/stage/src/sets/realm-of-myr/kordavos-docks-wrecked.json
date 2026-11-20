@@ -6,6 +6,7 @@
   "locationId": "kordavos-docks",
   "title": "The Kordavos docks after the drake",
   "seed": 7310,
+  "ambience": ["river", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [

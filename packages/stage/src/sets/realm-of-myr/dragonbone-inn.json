@@ -6,6 +6,7 @@
   "locationId": "dragonbone-inn",
   "title": "The Dragonbone Inn",
   "seed": 5150,
+  "ambience": ["hearth", "crowd"],
   "atmosphere": {
     "sun": {
       "direction": [-0.75, 0.12, 0.65],

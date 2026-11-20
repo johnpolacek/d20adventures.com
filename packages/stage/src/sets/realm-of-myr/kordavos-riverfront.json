@@ -6,6 +6,7 @@
   "locationId": "kordavos-riverfront",
   "title": "The Kordavos riverfront",
   "seed": 9031,
+  "ambience": ["river", "birds"],
   "atmosphere": {
     "sun": {
       "direction": [

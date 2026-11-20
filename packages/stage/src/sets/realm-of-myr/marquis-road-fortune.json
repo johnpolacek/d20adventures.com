@@ -6,6 +6,7 @@
   "locationId": "marquis-road-fortune",
   "title": "The Marquis Road near Kordavos",
   "seed": 3102,
+  "ambience": ["wind", "birds"],
   "atmosphere": {
     "sun": {
       "direction": [

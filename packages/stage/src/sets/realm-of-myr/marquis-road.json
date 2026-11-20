@@ -6,6 +6,7 @@
   "locationId": "marquis-road",
   "title": "The Marquis Road",
   "seed": 3101,
+  "ambience": ["wind", "birds"],
   "atmosphere": {
     "sun": {
       "direction": [

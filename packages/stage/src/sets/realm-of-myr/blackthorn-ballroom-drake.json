@@ -6,6 +6,7 @@
   "locationId": "blackthorn-ballroom",
   "title": "The Blackthorn ballroom, the drake revealed",
   "seed": 2801,
+  "ambience": ["crowd"],
   "atmosphere": {
     "sun": {
       "direction": [

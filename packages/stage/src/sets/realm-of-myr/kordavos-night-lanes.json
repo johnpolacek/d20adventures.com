@@ -6,6 +6,7 @@
   "locationId": "kordavos-night-lanes",
   "title": "Kordavos: the night lanes",
   "seed": 2301,
+  "ambience": ["night", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [

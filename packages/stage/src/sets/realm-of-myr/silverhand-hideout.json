@@ -6,6 +6,7 @@
   "locationId": "silverhand-hideout",
   "title": "Silverhand's hideout",
   "seed": 2501,
+  "ambience": ["hearth", "drip"],
   "atmosphere": {
     "sun": {
       "direction": [

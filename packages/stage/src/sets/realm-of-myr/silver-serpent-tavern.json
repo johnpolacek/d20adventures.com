@@ -6,6 +6,7 @@
   "locationId": "silver-serpent-tavern",
   "title": "The Silver Serpent Tavern",
   "seed": 9090,
+  "ambience": ["hearth", "crowd"],
   "atmosphere": {
     "sun": {
       "direction": [
