@@ -52,7 +52,7 @@ import sharp from "sharp"
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
-import { type Quat, qall, qbetween, qinv, qmix, qmul, qturn, qup } from "./quat"
+import { type Quat, qall, qbetween, qinv, qmix, qmul, qturn, qunit, qup } from "./quat"
 import { type Part, reader, retarget } from "./retarget"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
@@ -672,6 +672,119 @@ function helpers(doc: Document) {
       }
     }
   return moved
+}
+
+// A bone in each forearm that rolls with the hand, and the forearm's skin hung on it more and more toward the wrist.
+// A real forearm rolls along its length: the elbow is a hinge and the wrist turns the palm. A library's skeleton has
+// bones for that and a rigged figure's has one forearm bone, so a clip's roll came whole at the elbow: in the sword
+// cut the forearm stood rolled 103 degrees on the upper arm, bracer and elbow wrung round like a rubber hose (the
+// owner, 2026-11-19: "rubbery like gumby"). The forearm's own roll about its length is taken out of every clip and
+// given to the hand, which stays as it was in the world, sword and all. The new bone, a child of the forearm that
+// rests where it does, takes a share of the hand's roll, and what the forearm holds becomes its, none at the elbow
+// and all at the wrist. As with the shoulder's, every clip is given its keys and no player has to know of it.
+const ROLL = 0.75
+const REACH = (110 * Math.PI) / 180
+function rolls(doc: Document) {
+  const skin = doc.getRoot().listSkins()[0]
+  const bind = skin?.getInverseBindMatrices()
+  if (!skin || !bind) return null
+  const joints = skin.listJoints()
+  const buffer = doc.getRoot().listBuffers()[0] ?? doc.createBuffer()
+  const binds = [...(bind.getArray() ?? [])]
+  // A turn's part about a line through it: what is left is a swing with none.
+  const about = (q: Quat, axis: number[]): Quat => {
+    const along = q[0] * axis[0] + q[1] * axis[1] + q[2] * axis[2]
+    return Math.hypot(along, q[3]) < 1e-6 ? [0, 0, 0, 1] : qunit([axis[0] * along, axis[1] * along, axis[2] * along, q[3]])
+  }
+  const made: { fore: number; roll: number; from: number[]; along: number[]; long: number }[] = []
+  let [most, where] = [0, ""]
+  for (const side of ["Left", "Right"]) {
+    const fore = joints.findIndex((j) => new RegExp(`(^|:)${side}ForeArm$`).test(j.getName()))
+    const [node, hand] = [joints[fore], joints.find((j) => new RegExp(`(^|:)${side}Hand$`).test(j.getName()))]
+    if (!node || !hand) continue
+    const reach = hand.getTranslation()
+    const axis = reach.map((v) => v / (Math.hypot(...reach) || 1))
+    const roll = doc.createNode(`${node.getName()}Roll`)
+    node.addChild(roll)
+    skin.addJoint(roll)
+    binds.push(...binds.slice(fore * 16, fore * 16 + 16))
+    const [from, to] = [node.getWorldMatrix().slice(12, 15), hand.getWorldMatrix().slice(12, 15)]
+    const along = [0, 1, 2].map((k) => to[k] - from[k])
+    made.push({ fore, roll: joints.length + made.length, from, along, long: Math.hypot(...along) ** 2 })
+    const [foreRest, handRest] = [node.getRotation() as Quat, hand.getRotation() as Quat]
+    for (const anim of doc.getRoot().listAnimations()) {
+      const keys = (of: Node) =>
+        anim
+          .listChannels()
+          .find((c) => c.getTargetNode() === of && c.getTargetPath() === "rotation")
+          ?.getSampler()
+      const [foreKeys, handKeys] = [keys(node), keys(hand)]
+      const [input, foreOut, handOut] = [foreKeys?.getInput(), foreKeys?.getOutput(), handKeys?.getOutput()]
+      if (!foreKeys || !handKeys || !input || !foreOut || !handOut || foreOut.getCount() !== handOut.getCount() || handKeys.getInput()?.getCount() !== input.getCount()) continue
+      if (foreKeys.getInterpolation() === "CUBICSPLINE" || handKeys.getInterpolation() === "CUBICSPLINE") throw new Error(`${anim.getName()}: a roll bone's keys are made from plain keys, and these are splines`)
+      const values = new Float32Array(foreOut.getCount() * 4)
+      let before = 0
+      for (let i = 0; i < foreOut.getCount(); i++) {
+        const [f, h] = [foreOut.getElement(i, [0, 0, 0, 1]) as Quat, handOut.getElement(i, [0, 0, 0, 1]) as Quat]
+        // The forearm's roll since its rest, about its own length: out of the forearm, and onto the hand.
+        const own = about(qmul(qinv(foreRest), f), axis)
+        foreOut.setElement(i, qmul(f, qinv(own)))
+        const held = qmul(own, h)
+        handOut.setElement(i, held)
+        // The hand's roll on the forearm since its rest, about the same line, and a share of it for the new bone.
+        const turned = qinv(about(qinv(qmul(held, qinv(handRest))), axis))
+        const angle = 2 * Math.atan2(turned[0] * axis[0] + turned[1] * axis[1] + turned[2] * axis[2], turned[3])
+        // The same way round as the frame before: a roll that passes half a turn does not come back the other way.
+        const wrapped = angle - 2 * Math.PI * Math.round((angle - before) / (2 * Math.PI))
+        before = wrapped
+        if (Math.abs(wrapped) > most) [most, where] = [Math.abs(wrapped), `${side.toLowerCase()} hand in ${anim.getName()}`]
+        // No forearm rolls much past a quarter turn. A clip that asks for more, the bow's drawing hand at 212 degrees
+        // with its elbow folded, keeps the rest at the wrist, where it was.
+        const half = (Math.max(-REACH, Math.min(REACH, wrapped)) * ROLL) / 2
+        values.set([axis[0] * Math.sin(half), axis[1] * Math.sin(half), axis[2] * Math.sin(half), Math.cos(half)], i * 4)
+      }
+      const sampler = doc.createAnimationSampler().setInput(input).setOutput(doc.createAccessor().setType("VEC4").setArray(values).setBuffer(buffer)).setInterpolation(foreKeys.getInterpolation())
+      anim.addSampler(sampler).addChannel(doc.createAnimationChannel().setTargetNode(roll).setTargetPath("rotation").setSampler(sampler))
+    }
+  }
+  bind.setArray(new Float32Array(binds))
+  let moved = 0
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, J, W] = [prim.getAttribute("POSITION"), prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0")]
+      if (!pos || !J || !W) continue
+      for (let i = 0; i < J.getCount(); i++) {
+        const [p, j, w] = [pos.getElement(i, [0, 0, 0]), J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+        const shares = new Map<number, number>()
+        for (const [k, bone] of j.entries()) if (w[k] > 0) shares.set(bone, (shares.get(bone) ?? 0) + w[k])
+        const whole = [...shares.values()].reduce((sum, share) => sum + share, 0)
+        let changed = false
+        for (const { fore, roll, from, along, long } of made) {
+          const a = shares.get(fore) ?? 0
+          if (!a) continue
+          // How far down the forearm the point lies: 0 at the elbow, 1 at the wrist.
+          const t = Math.max(0, Math.min(1, (along[0] * (p[0] - from[0]) + along[1] * (p[1] - from[1]) + along[2] * (p[2] - from[2])) / long))
+          const given = a * t * t * (3 - 2 * t)
+          if (given < 1e-4) continue
+          shares.set(roll, given)
+          shares.set(fore, a - given)
+          changed = true
+        }
+        if (!changed) continue
+        const top = [...shares].sort((x, y) => y[1] - x[1]).slice(0, 4)
+        const total = top.reduce((sum, [, share]) => sum + share, 0) || 1
+        J.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => top[k]?.[0] ?? 0)
+        )
+        W.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => ((top[k]?.[1] ?? 0) / total) * whole)
+        )
+        moved++
+      }
+    }
+  return { moved, most: (most * 180) / Math.PI, where }
 }
 
 // The sheet of a figure that holds something may paint that hand closed round a short rod in flat blue (build.ts), so
@@ -1459,6 +1572,9 @@ async function rodinHyper(brief: Brief) {
   }
   // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
   if (!args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
+  // `--rolls=off` leaves a forearm's roll at the elbow, to measure against.
+  const rolled = args.includes("--rolls=off") ? null : rolls(doc)
+  if (rolled) say("rolls", `${rolled.moved} points hung on a bone that rolls with the hand, which rolls ${rolled.most.toFixed(0)}° at the most (the ${rolled.where})`)
   // What the brief says it carries, as rig.py leaves it on its skeleton: "staff:R:2.1".
   const hips = doc
     .getRoot()

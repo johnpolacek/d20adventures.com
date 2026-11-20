@@ -54,6 +54,8 @@ Judges differ by a point (`gates-look.md`). Read every number as give or take on
 | 2 | Another model, `thalbern-hi3d`: Hi3D v3.0 on fal from the same front and back, 200,000 faces, de-shading 0.5, $2.10, and Hyper3D's rig, $0.20. The same borrowed clips. No face painted. | `after-2/` |
 | 3 | Free, on that model. Its gloss halved where it is not metal (its brief's `gloss`: leather's roughness 0.6 to 0.8, an eye's 0.2 to 0.6). The sheet's face painted on, and the paint faded out toward the ears: it used to stop whole at a depth, a ragged step on the cheek where the model's skin is lit another way (`rig.py`, `back`). | `after-3/`, `before-after-hi3d.jpg`, `before-after-hi3d-scene.jpg` |
 
+| 4 | Not judged. The owner took `thalbern-hi3d` for the game. A bone in each forearm that rolls with the hand (`pilot.ts`, `rolls`): the cut's 103° of roll at the elbow is 0°. The pose of the cut is the clip's and is as it was (README, the pilot). | `after-4/` |
+
 ## What Hi3D's model is, beside Rodin's
 
 - Better: the eyes are open and have lids, the hair has a shape, studs, buckles, hilts and straps are each a thing, the colour has no light painted into it (the sheet's and the model's skin are the same tone within a twelfth), and metal is marked only where there is metal.

@@ -2,9 +2,11 @@
 // The desktop app bundles these (apps/desktop/scripts/build-runtime.ts).
 export const FIGURE_FILES = "/asset-library/characters"
 // A cast member, and the character (asset-library/characters) who stands for them. All three are the pilot's figures:
-// Rodin's model rigged by Hyper3D, with fingers and borrowed clips (pipeline/pilot.ts). The ones rig.py made are kept
-// beside them as `thalbern`, `wollandora` and `owlbear`, and a look can still name one (looks.ts `figures`).
-export const SHIPPED: Record<string, string> = { thalbern: "thalbern-rodin", wollandora: "wollandora-rodin", owlbear: "owlbear-rodin" }
+// a generated model rigged by Hyper3D, with fingers and borrowed clips (pipeline/pilot.ts). Thalbern's is Hi3D's (the
+// owner, 2026-11-19: "muh better! let's use the new one"), the others Rodin's. The ones rig.py made are kept beside
+// them as `thalbern`, `wollandora` and `owlbear`, and Rodin's Thalbern as `thalbern-rodin`: a look can still name one
+// (looks.ts `figures`).
+export const SHIPPED: Record<string, string> = { thalbern: "thalbern-hi3d", wollandora: "wollandora-rodin", owlbear: "owlbear-rodin" }
 
 // What the game is told of a character's figure, beside where its model is (packages/stage/src/figures/models.ts).
 export interface Plays {
@@ -31,6 +33,6 @@ export const PLAYS: Record<string, Plays> = {
   // as the right paw comes through fastest.
   "owlbear-rodin": { idle: "Idle Heavy", walk: "Walk Heavy", hit: "Hit", fall: "Fall", moves: { melee: "Claw" }, lands: { Claw: 0.6 } },
   "thalbern-rodin": THALBERN,
-  // Hi3D's model of him, with the same rig and the same borrowed clips: not shipped, and a look can name it.
+  // Hi3D's model of him, with the same rig and the same borrowed clips.
   "thalbern-hi3d": THALBERN,
 }
