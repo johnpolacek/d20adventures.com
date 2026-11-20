@@ -512,8 +512,7 @@ export function PromptCard({
           {/* A short question reads well in the capitals of the display face. A longer ask from the GM stays in the serif. */}
           <p
             className={cn(
-              "text-stage-cream",
-              mode.prompt.length <= 60 ? "font-display" : "font-serif",
+              mode.prompt.length <= 60 ? "font-display text-stage-gold [text-shadow:0_1px_6px_#000]" : "font-serif text-stage-cream",
               compact ? "my-1 line-clamp-3 text-[14px] leading-snug" : cn("mb-4 leading-[1.35]", mode.prompt.length <= 60 ? "text-[22px]" : "text-[19px]")
             )}
           >
@@ -522,7 +521,19 @@ export function PromptCard({
           {mode.suggestions && mode.suggestions.length > 0 && (
             <div className={cn("flex flex-wrap justify-center", compact ? "mb-1.5 gap-1" : "mb-3 gap-2")}>
               {mode.suggestions === "loading"
-                ? [0, 1, 2].map((i) => <span key={i} aria-hidden className={cn(choice, "w-32 animate-pulse", compact && "w-20")} />)
+                ? // Three pills the size of real ones, each with a faint bar where its words will go, pulsing in turn.
+                  [0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      aria-hidden
+                      style={{ animationDelay: `${i * 200}ms` }}
+                      className={cn(choice, "flex w-[30%] animate-pulse items-center justify-center not-italic hover:border-stage-line/20 hover:bg-transparent", compact && "px-3 py-0.5 text-[12px]")}
+                    >
+                      &nbsp;
+                      <span className="h-[0.5em] w-2/3 rounded-full bg-stage-cream/15" />
+                      &nbsp;
+                    </span>
+                  ))
                 : mode.suggestions.map((s) => (
                     <Tip key={s.text} label={s.text}>
                       <Button
