@@ -14,7 +14,7 @@ function AvatarImage({ className, ...props }: Omit<ComponentProps<typeof BaseAva
 }
 
 function AvatarFallback({ className, ...props }: WithNodes<ComponentProps<typeof BaseAvatarFallback>>) {
-  return <BaseAvatarFallback className={cn("bg-muted flex size-full items-center justify-center rounded-full", className)} {...props} />
+  return <BaseAvatarFallback className={cn("bg-zinc-800 flex size-full items-center justify-center rounded-full", className)} {...props} />
 }
 
 export { Avatar, AvatarImage, AvatarFallback }

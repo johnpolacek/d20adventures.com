@@ -29,7 +29,7 @@ export default async function AdminPage() {
           <Heading variant="h1" className="mb-4">
             Access Denied
           </Heading>
-          <p className="text-muted-foreground text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
+          <p className="text-white/60 text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
         </div>
       </div>
     )
@@ -48,7 +48,7 @@ export default async function AdminPage() {
               <CardDescription>Manage user accounts</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">View user information and manage admin access.</p>
+              <p className="text-sm text-white/60">View user information and manage admin access.</p>
             </CardContent>
             <CardFooter>
               <Link href="/admin/users" className="w-full">
@@ -62,7 +62,7 @@ export default async function AdminPage() {
               <CardDescription>Manage subscribers</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">View and manage newsletter subscribers and preferences.</p>
+              <p className="text-sm text-white/60">View and manage newsletter subscribers and preferences.</p>
             </CardContent>
             <CardFooter>
               <Link href="/admin/mailing-list" className="w-full">
@@ -87,7 +87,7 @@ export default async function AdminPage() {
               <CardDescription>Manage adventures</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">View and manage adventure information.</p>
+              <p className="text-sm text-white/60">View and manage adventure information.</p>
             </CardContent>
             <CardFooter>
               <Link href="/admin/adventures" className="w-full">
@@ -101,7 +101,7 @@ export default async function AdminPage() {
               <CardDescription>Author and improve adventure plans</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Chat with migrated adventures, edit key fields, validate source, and export restore bundles.</p>
+              <p className="text-sm text-white/60">Chat with migrated adventures, edit key fields, validate source, and export restore bundles.</p>
             </CardContent>
             <CardFooter>
               <Link href="/admin/adventure-plans" className="w-full">

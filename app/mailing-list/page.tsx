@@ -43,16 +43,16 @@ export default async function WaitlistPage() {
           {subscription ? (
             subscription.unsubscribedAt ? (
               <>
-                You&apos;ve left the <span className="text-primary">Waitlist.</span>
+                You&apos;ve left the <span className="text-primary-300">Waitlist.</span>
               </>
             ) : (
               <>
-                You&apos;re on the <span className="text-primary">Waitlist!</span>
+                You&apos;re on the <span className="text-primary-300">Waitlist!</span>
               </>
             )
           ) : (
             <>
-              Join the <span className="text-primary">Waitlist</span>
+              Join the <span className="text-primary-300">Waitlist</span>
             </>
           )}
         </Heading>

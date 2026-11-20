@@ -116,7 +116,7 @@ export function ImageUpload({ id, value, onChange, onRemove, folder = "uploads",
             {/* The value stays empty, so each pick uploads and picking the same file again still works. */}
             <FileInput className="contents" accept="image/*" value={NO_FILES} onValueChange={handleUpload} disabled={isUploading}>
               <FileInputTrigger id={id} className={`flex h-full w-full cursor-pointer items-center justify-center bg-gradient-to-tl from-white/10 to-transparent ${value && !isUsableUrl ? "pt-2" : ""}`}>
-                <span className="flex flex-col items-center gap-2 text-primary">
+                <span className="flex flex-col items-center gap-2 text-primary-300">
                   {isUploading ? <Loader className="h-8 w-8 animate-spin" /> : <ImagePlus className="h-8 w-8" />}
                   <span className="text-sm font-mono">{isUploading ? "Uploading..." : "Upload Image"}</span>
                 </span>

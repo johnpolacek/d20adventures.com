@@ -59,13 +59,13 @@ export function MailingListForm({ initialEmail }: { initialEmail?: string }) {
           ) : (
             <p className="border p-4 rounded-lg mt-6">
               Please{" "}
-              <Link href="/sign-in/" className="text-primary hover:underline">
+              <Link href="/sign-in/" className="text-primary-300 hover:underline">
                 sign in
               </Link>{" "}
               to join the waitlist.
             </p>
           )}
-          <p className="text-sm text-muted-foreground pt-4">We&apos;ll notify you as soon as we&apos;re ready. You can unsubscribe at any time.</p>
+          <p className="text-sm text-white/60 pt-4">We&apos;ll notify you as soon as we&apos;re ready. You can unsubscribe at any time.</p>
         </div>
       </CardContent>
     </Card>

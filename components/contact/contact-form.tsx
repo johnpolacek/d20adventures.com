@@ -1,6 +1,5 @@
 "use client"
 
-import { useTheme } from "next-themes"
 import { useState } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
 import { toast } from "@d20/ui/toast"
@@ -19,7 +18,6 @@ interface ContactFormProps {
 export function ContactForm({ subject = "Contact Message", onSuccess, requireCaptcha = false }: ContactFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const { theme } = useTheme()
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -79,7 +77,7 @@ export function ContactForm({ subject = "Contact Message", onSuccess, requireCap
         </div>
         {requireCaptcha && (
           <div className="w-full">
-            <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""} theme={theme === "dark" ? "dark" : "light"} onChange={(value) => setCaptchaToken(value)} />
+            <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""} theme="dark" onChange={(value) => setCaptchaToken(value)} />
           </div>
         )}
       </div>

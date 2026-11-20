@@ -16,7 +16,7 @@ export default async function AccountPage() {
             <CardContent className="flex flex-col items-center gap-6 py-16">
               <div className="text-center space-y-2">
                 <h2 className="text-2xl font-semibold">Sign in to Access Your Account</h2>
-                <p className="text-muted-foreground">Create an account or sign in to manage your profile</p>
+                <p className="text-white/60">Create an account or sign in to manage your profile</p>
               </div>
               <SignInButton mode="modal">
                 <Button size="lg">Sign in to Continue</Button>

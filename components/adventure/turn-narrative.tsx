@@ -247,7 +247,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
           <span className="xl:hidden">
             <StoryviewButton />
           </span>
-          <span className="text-xs text-muted-foreground">Show Original Replies</span>
+          <span className="text-xs text-white/60">Show Original Replies</span>
           <div className="scale-75 pt-0.5">
             <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />
           </div>

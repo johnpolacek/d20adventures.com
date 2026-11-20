@@ -28,7 +28,7 @@ function DialogContent({ className, closeClassName, children, ...props }: WithNo
       <DialogBackdrop className={backdropClass} />
       <BaseDialogContent
         className={cn(
-          "bg-background fixed top-[50%] left-[50%] m-0 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg",
+          "bg-black fixed top-[50%] left-[50%] m-0 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg",
           popupMotionClass,
           className
         )}
@@ -38,7 +38,7 @@ function DialogContent({ className, closeClassName, children, ...props }: WithNo
         <BaseDialogClose
           aria-label="Close"
           className={cn(
-            "absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:outline-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+            "absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus:outline-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
             closeClassName
           )}
         >
@@ -62,7 +62,7 @@ function DialogTitle({ className, ...props }: WithClass<ComponentProps<typeof Ba
 }
 
 function DialogDescription({ className, ...props }: WithClass<ComponentProps<typeof BaseDialogDescription>>) {
-  return <BaseDialogDescription className={cn("text-muted-foreground text-sm", className)} {...props} />
+  return <BaseDialogDescription className={cn("text-white/60 text-sm", className)} {...props} />
 }
 
 export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger }

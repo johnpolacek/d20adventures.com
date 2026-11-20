@@ -98,7 +98,7 @@ function ContactPageContent() {
         </CardContent>
       </Card>
       {process.env.NODE_ENV === "development" && (
-        <div className="mt-8 text-sm text-muted-foreground">
+        <div className="mt-8 text-sm text-white/60">
           <p>
             Get your API keys from{" "}
             <a className="underline" href="http://www.google.com/recaptcha/admin" target="_blank" rel="noopener noreferrer">

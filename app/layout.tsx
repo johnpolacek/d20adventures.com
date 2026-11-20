@@ -3,7 +3,6 @@ import { Cinzel_Decorative, Literata, Rethink_Sans, Syne_Mono } from "next/font/
 import { Toaster } from "@d20/ui/toast"
 import SiteFooter from "@/components/layout/footer"
 import Header from "@/components/layout/header"
-import { ThemeProvider } from "@/components/layout/theme-provider"
 import { siteConfig } from "@/lib/config"
 import { cn } from "@/lib/utils"
 import "./globals.css"
@@ -70,17 +69,15 @@ export default function RootLayout({
   const currentYear = new Date().getFullYear()
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${rethinkSans.variable} ${literata.variable} ${cinzel.variable} ${syne.variable}`}>
+    <html lang="en" className={`${rethinkSans.variable} ${literata.variable} ${cinzel.variable} ${syne.variable}`}>
       <body className={cn("min-h-screen bg-black text-white font-serif antialiased")}>
         <Providers>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <SiteFooter currentYear={currentYear} />
-            </div>
-            <Toaster />
-          </ThemeProvider>
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <SiteFooter currentYear={currentYear} />
+          </div>
+          <Toaster />
         </Providers>
       </body>
     </html>

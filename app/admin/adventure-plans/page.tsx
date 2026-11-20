@@ -43,7 +43,7 @@ export default async function AdminAdventurePlansPage() {
           <Heading variant="h1" className="mb-4">
             Access Denied
           </Heading>
-          <p className="text-muted-foreground text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
+          <p className="text-white/60 text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
         </div>
       </div>
     )
@@ -57,7 +57,7 @@ export default async function AdminAdventurePlansPage() {
           <Heading variant="h3" as="h1" className="mb-2 text-amber-400">
             Adventure Plans
           </Heading>
-          <p className="mb-8 text-muted-foreground">Chat with migrated wiki adventures and apply improvements directly to S3 source.</p>
+          <p className="mb-8 text-white/60">Chat with migrated wiki adventures and apply improvements directly to S3 source.</p>
           <div className="grid gap-6 md:grid-cols-2">
             {adventures.map((adventure) => {
               const source = sourceLabel[adventure.source]

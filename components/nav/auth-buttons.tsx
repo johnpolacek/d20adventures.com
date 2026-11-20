@@ -51,7 +51,7 @@ export default function AuthButtons() {
       )}
       {isSignedIn && (
         <div className="flex items-center gap-1.5 saturate-50">
-          <div className="flex items-center gap-0.5 text-xs sm:text-sm text-muted-foreground">
+          <div className="flex items-center gap-0.5 text-xs sm:text-sm text-white/60">
             {!isLoadingTokens && typeof tokensRemaining === "number" && <TokenCount tokensRemaining={tokensRemaining} />}
           </div>
           <UserButton userProfileUrl="/account">

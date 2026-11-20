@@ -37,7 +37,7 @@ export default async function AdminMailingListPage() {
 
       <div className="mb-8">
         <h1 className="text-4xl font-bold">Mailing List Subscribers</h1>
-        <p className="text-muted-foreground">View and manage newsletter subscribers</p>
+        <p className="text-white/60">View and manage newsletter subscribers</p>
       </div>
 
       <Card>

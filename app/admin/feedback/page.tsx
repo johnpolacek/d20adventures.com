@@ -19,7 +19,7 @@ export default async function AdminFeedbackPage() {
     <div className="container py-8">
       <AdminBreadcrumb items={[{ label: "Feedback" }]} />
       <h1 className="mb-6 text-4xl font-bold">Feedback</h1>
-      {rows.length === 0 && <p className="text-muted-foreground">None yet.</p>}
+      {rows.length === 0 && <p className="text-white/60">None yet.</p>}
       <ul className="grid gap-4">
         {rows.map((row) => (
           <li key={row.id} className="rounded-lg border border-white/15 bg-white/5 p-4 font-sans">

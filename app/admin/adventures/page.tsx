@@ -70,7 +70,7 @@ export default async function AdminAdventuresPage() {
                 <TableCell>{user ? user.emailAddresses[0]?.emailAddress : "Unknown"}</TableCell>
                 <TableCell>
                   {players.length === 0 ? (
-                    <span className="text-muted-foreground">No players</span>
+                    <span className="text-white/60">No players</span>
                   ) : (
                     <ul className="space-y-1">
                       {players.map((p, index) => (
@@ -83,7 +83,7 @@ export default async function AdminAdventuresPage() {
                               <br />
                               <span>{p.name}</span>
                               <br />
-                              <span className="text-muted-foreground">{p.email}</span>
+                              <span className="text-white/60">{p.email}</span>
                             </>
                           )}
                         </li>

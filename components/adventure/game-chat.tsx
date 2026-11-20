@@ -93,15 +93,15 @@ function ChatMessageList({
           </div>
         )}
         {historyError && <div className="text-sm text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2">{historyError}</div>}
-        {isLoadingHistory && messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-8">Loading chat history...</div>}
-        {!isLoadingHistory && messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-8">No messages yet.</div>}
+        {isLoadingHistory && messages.length === 0 && <div className="text-sm text-white/60 text-center py-8">Loading chat history...</div>}
+        {!isLoadingHistory && messages.length === 0 && <div className="text-sm text-white/60 text-center py-8">No messages yet.</div>}
         {messages.map((m) => {
           const isMine = currentUsername && m.username === currentUsername
           return (
             <div key={m._id} className={`text-sm flex ${isMine ? "justify-end" : "justify-start"}`}>
               <div className="w-[90%]">
                 <div className={cn("whitespace-pre-wrap text-white px-3 py-2 rounded-lg", compact ? "text-sm" : "text-sm md:text-lg", isMine ? "bg-primary-700" : "bg-black/70")}>{m.content}</div>
-                <div className={`mt-1 text-xs text-muted-foreground ${isMine ? "text-right" : "text-left"}`}>
+                <div className={`mt-1 text-xs text-white/60 ${isMine ? "text-right" : "text-left"}`}>
                   <span className="text-primary-300">{m.username}</span>
                   {m.characterName && <span className="ml-2 italic opacity-80">{m.characterName}</span>}
                   <span className="ml-2 opacity-80 text-xs font-mono tracking-tightest">{new Date(m.createdAt).toLocaleTimeString()}</span>
