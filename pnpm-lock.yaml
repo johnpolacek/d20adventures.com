@@ -305,6 +305,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      gsap:
+        specifier: 3.15.1
+        version: 3.15.1
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.3.1)

@@ -8,7 +8,7 @@
 // And reactions: an offer to the player's hero with its countdown, one for another player's hero, and standing orders.
 
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { eyebrow, Pill, panel } from "@d20/ui/stage/hud"
 import { Journal, type JournalTurn } from "@d20/ui/stage/journal"
@@ -314,6 +314,36 @@ function CardFlow({ roll, answer, actor }: { roll: CardRoll; answer: (dice: numb
 
 // Reaction offers, from now: the player's hero with 20 seconds and with 5, and another player's hero. Again starts
 // the clocks over.
+// The suggestions arrive after a moment, longer than the loading row, so they wrap to a second row. Click the card's
+// question to load them again.
+const SUGGESTIONS = [
+  { label: "Freeze and listen", text: "Thalbern freezes and listens." },
+  { label: "Track the sound through the reeds", text: "Thalbern tracks the sound through the reeds." },
+  { label: "Call out softly", text: "Thalbern calls out softly." },
+  { label: "Nock an arrow", text: "Thalbern nocks an arrow." },
+]
+function SuggestionsFlow({ actor, compact }: { actor: CardCharacter; compact: boolean }) {
+  const [loaded, setLoaded] = useState(false)
+  useEffect(() => {
+    if (loaded) return
+    const t = setTimeout(() => setLoaded(true), 1800)
+    return () => clearTimeout(t)
+  }, [loaded])
+  return (
+    <div onClickCapture={(e) => (e.target as HTMLElement).tagName === "P" && setLoaded(false)}>
+      <PromptCard
+        mode={{ kind: "hold", prompt: "What does Thalbern do?", suggestions: loaded ? SUGGESTIONS : "loading" }}
+        actor={actor}
+        party={PARTY}
+        compact={compact}
+        onReply={() => {}}
+        onRoll={() => {}}
+        onPick={() => {}}
+      />
+    </div>
+  )
+}
+
 function ReactionLooks({ compact }: { compact: boolean }) {
   const [start, setStart] = useState(() => Date.now())
   const [said, setSaid] = useState("")
@@ -534,6 +564,9 @@ export function RollLooks() {
         </Box>
         <Box title="7 · Card · Party Row, Temporary Hit Points" className="relative h-[380px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
           <PromptCard mode={{ kind: "hold", prompt: "What does Lyra do?" }} actor={PARTY[3]} party={PARTY} compact={compact} onReply={() => {}} onRoll={() => {}} onPick={() => {}} />
+        </Box>
+        <Box title="8 · Card · Suggestions Loading, Then Wrapping" className="relative h-[480px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+          <SuggestionsFlow actor={PARTY[0]} compact={compact} />
         </Box>
         <Box title="Narration">
           <div className="relative w-[460px]">

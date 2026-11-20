@@ -5,8 +5,9 @@
 // calls for and how it came out while the GM answers it, the GM writing (with a changing line of what it is up to), and
 // the end of the encounter.
 
+import { gsap } from "gsap"
 import { ArrowUp } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button } from "../button"
 import { Textarea } from "../textarea"
 import { Tip } from "../tooltip"
@@ -496,6 +497,33 @@ export function PromptCard({
     if (!onDraft) setOwnDraft("")
   }, [key, onDraft])
   const send = () => draft.trim() && onReply(draft.trim())
+  // When the suggestions change, as when the loading pills give way to real ones that wrap to a second row, the row
+  // grows or shrinks to its new height and the new pills fade up, rather than the card jumping.
+  const row = useRef<HTMLDivElement>(null)
+  const rowHeight = useRef<number | null>(null)
+  const suggestions = mode.kind === "hold" ? mode.suggestions : undefined
+  const rowKey = suggestions === "loading" ? "loading" : (suggestions?.map((s) => s.text).join("\n") ?? "")
+  useLayoutEffect(() => {
+    const el = row.current
+    if (!el) {
+      rowHeight.current = null
+      return
+    }
+    const from = rowHeight.current
+    const to = el.offsetHeight
+    rowHeight.current = to
+    if (from === null || matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const tl = gsap.timeline()
+    if (from !== to) tl.fromTo(el, { height: from, overflow: "hidden" }, { height: to, duration: 0.45, ease: "power2.inOut", clearProps: "height,overflow" }, 0)
+    if (rowKey !== "loading") tl.from(el.children, { opacity: 0, y: 6, duration: 0.35, stagger: 0.07, ease: "power1.out", clearProps: "opacity,transform" }, 0.12)
+    return () => {
+      // Cut short by the next change: start that one from wherever this one got to. The new pills are in by now, so a
+      // finished tween leaves the height it measured, which an inline height still mid-tween would overrule.
+      if (tl.isActive()) rowHeight.current = el.offsetHeight
+      tl.kill()
+      gsap.set([el, ...el.children], { clearProps: "height,overflow,opacity,transform" })
+    }
+  }, [rowKey])
   return (
     <section
       ref={ref}
@@ -519,7 +547,7 @@ export function PromptCard({
             {mode.prompt}
           </p>
           {mode.suggestions && mode.suggestions.length > 0 && (
-            <div className={cn("flex flex-wrap justify-center", compact ? "mb-1.5 gap-1" : "mb-3 gap-2")}>
+            <div ref={row} className={cn("flex flex-wrap justify-center", compact ? "mb-1.5 gap-1" : "mb-3 gap-2")}>
               {mode.suggestions === "loading"
                 ? // Three pills the size of real ones, each with a faint bar where its words will go, pulsing in turn.
                   [0, 1, 2].map((i) => (
