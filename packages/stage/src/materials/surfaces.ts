@@ -602,7 +602,20 @@ export function foliage(ctx: MaterialContext, bank: TextureBank, name: string, c
 export function mist(ctx: MaterialContext, bank: TextureBank, name: string, color: string, opacity = 0.5) {
   const m = new THREE.MeshBasicMaterial({ name, color, map: bank.mist(), transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide })
   m.userData.noShadow = true
-  return stageMaterial(m, ctx.shared, "mist")
+  // A card is a flat sheet, and a camera that comes up to one or looks along it sees the sheet: the Owlbear's reveal
+  // orbits through the tree line's mist, and a pale wall with a hard edge slid across the screen. So a card thins to
+  // nothing close to the camera and where it is seen edge on, and mist stays something in the distance. A card lying
+  // flat over water is always seen near edge on, so it keeps its edge.
+  return stageMaterial(m, ctx.shared, "mist", (s) => {
+    s.vertexShader = s.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vMistView;").replace("#include <project_vertex>", "#include <project_vertex>\nvMistView = -mvPosition.xyz;")
+    s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vMistView;").replace(
+      "#include <map_fragment>",
+      `#include <map_fragment>
+{ vec3 mistNormal = normalize(cross(dFdx(vMistView), dFdy(vMistView)));
+ float mistEdge = smoothstep(0.08, 0.4, abs(dot(normalize(vMistView), mistNormal)));
+ diffuseColor.a *= smoothstep(1.5, 8.0, length(vMistView)) * mix(mistEdge, 1.0, abs((mistNormal * mat3(viewMatrix)).y)); }`
+    )
+  })
 }
 // A cut-out painting on a card (hanging moss): alpha-tested, lit from both sides, no shadow.
 export function card(ctx: MaterialContext, name: string, map: THREE.Texture, tint = "#ffffff", roughness = 0.95) {
