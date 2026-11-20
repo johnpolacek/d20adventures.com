@@ -3,7 +3,7 @@
 import { X } from "lucide-react"
 import type { ReactNode } from "react"
 import { buttonClassName, buttonStyle } from "@d20/ui/button"
-import { Chip, SectionPlate, siteLabel } from "@d20/ui/site"
+import { Chip, SectionPlate, siteLabel, siteOutline } from "@d20/ui/site"
 import { cn } from "@/lib/utils"
 
 // Sample save, shaped like the desktop app's SaveSummary plus what a richer card could ask for: the current scene's art,
@@ -580,7 +580,25 @@ const runs: Run[] = [
   },
 ]
 
-function RunCard({ run }: { run: Run }) {
+// The card asking before it removes a save, as the app shows it after the X.
+function Confirming({ title }: { title: string }) {
+  return (
+    <div className="absolute inset-0 grid place-items-center rounded-lg bg-black/75 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div>
+          <h3 className="font-display text-3xl text-white">Remove {title}?</h3>
+          <p className="mt-2 font-serif text-white/60 italic">This save can’t be brought back.</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className={cn(siteOutline, "px-6 py-2 font-display text-sm")}>Keep</span>
+          <span className="rounded-md border-2 border-red-400/40 bg-red-700 px-6 py-2 font-display text-sm text-white">Remove</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RunCard({ run, confirming }: { run: Run; confirming?: boolean }) {
   return (
     <div className="relative aspect-[21/8] overflow-hidden rounded-lg border border-white/10 ring-8 ring-black/30">
       <img src={run.art} alt="" className={cn("absolute inset-0 h-full w-full object-cover", run.done && "saturate-50 brightness-75")} />
@@ -609,6 +627,7 @@ function RunCard({ run }: { run: Run }) {
           </div>
         ))}
       </div>
+      {confirming && <Confirming title={run.title} />}
     </div>
   )
 }
@@ -616,8 +635,8 @@ function RunCard({ run }: { run: Run }) {
 function Saves() {
   return (
     <div className="flex flex-col gap-8">
-      {runs.map((r) => (
-        <RunCard key={r.title} run={r} />
+      {runs.map((r, i) => (
+        <RunCard key={r.title} run={r} confirming={i === 2} />
       ))}
     </div>
   )

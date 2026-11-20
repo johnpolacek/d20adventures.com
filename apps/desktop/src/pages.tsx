@@ -1,6 +1,6 @@
 import { srdAttribution } from "@d20/srd/attribution"
 import { Trash2, X } from "lucide-react"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
@@ -36,9 +36,8 @@ function PageShell(props: { title: string; children: ReactNode }) {
   )
 }
 
-// The website's small red delete control. The first press asks, the second confirms. Given an icon, it is a dark X that
-// sits on art instead.
-function RemoveButton(props: { icon?: ReactNode; confirming: boolean; label: string; confirmLabel: string; className?: string; disabled?: boolean; onBlur: () => void; onClick: () => void }) {
+// The website's small red delete control. The first press asks, the second confirms.
+function RemoveButton(props: { confirming: boolean; label: string; confirmLabel: string; className?: string; disabled?: boolean; onBlur: () => void; onClick: () => void }) {
   return (
     <Button
       variant="plain"
@@ -49,16 +48,11 @@ function RemoveButton(props: { icon?: ReactNode; confirming: boolean; label: str
       onClick={props.onClick}
       className={cn(
         "grid h-6 place-items-center rounded-md transition-colors disabled:opacity-40",
-        props.icon && "h-8",
-        props.confirming
-          ? "bg-red-600/80 px-2 font-mono text-xxs text-white"
-          : props.icon
-            ? "w-8 bg-black/60 text-white/70 hover:bg-red-600/80 hover:text-white"
-            : "w-6 bg-red-900/30 text-red-500/70 hover:bg-red-600/70 hover:text-white",
+        props.confirming ? "bg-red-600/80 px-2 font-mono text-xxs text-white" : "w-6 bg-red-900/30 text-red-500/70 hover:bg-red-600/70 hover:text-white",
         props.className
       )}
     >
-      {props.confirming ? "Confirm" : (props.icon ?? <Trash2 aria-hidden="true" className="h-4 w-4" />)}
+      {props.confirming ? "Confirm" : <Trash2 aria-hidden="true" className="h-4 w-4" />}
     </Button>
   )
 }
@@ -97,6 +91,63 @@ function PriceChip({ a, listPrices }: { a: Listed; listPrices: Record<string, nu
       {listPrices[a.id] ? <s className="mr-1.5 font-normal opacity-70">{price(listPrices[a.id])}</s> : null}
       FREE
     </Chip>
+  )
+}
+
+// A saved card's X. It asks over the whole card: the art dims and blurs behind the question, Keep takes focus, and
+// Escape or a click off the buttons keeps the save.
+function CardRemove(props: { title: string; confirming: boolean; disabled?: boolean; onAsk: () => void; onCancel: () => void; onConfirm: () => void }) {
+  const { confirming, onCancel } = props
+  useEffect(() => {
+    if (!confirming) return
+    const key = (e: KeyboardEvent) => e.key === "Escape" && onCancel()
+    window.addEventListener("keydown", key)
+    return () => window.removeEventListener("keydown", key)
+  }, [confirming, onCancel])
+  if (!confirming)
+    return (
+      <Button
+        variant="plain"
+        type="button"
+        disabled={props.disabled}
+        aria-label={`Remove ${props.title}`}
+        onClick={props.onAsk}
+        className="absolute top-6 right-6 grid size-8 place-items-center rounded-md bg-black/60 text-white/70 transition-colors hover:bg-red-600/80 hover:text-white disabled:opacity-40"
+      >
+        <X aria-hidden="true" className="h-4 w-4" />
+      </Button>
+    )
+  return (
+    <div
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="remove-title"
+      onClick={(e) => e.target === e.currentTarget && onCancel()}
+      className="fade-in absolute inset-0 grid scale-[.985] place-items-center rounded-xl bg-black/75 backdrop-blur-sm"
+    >
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div>
+          <h3 id="remove-title" className="font-display text-3xl text-white">
+            Remove {props.title}?
+          </h3>
+          <p className="mt-2 font-serif text-white/60 italic">This save can’t be brought back.</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <Button variant="plain" type="button" autoFocus onClick={onCancel} className={cn(siteOutline, "px-6 py-2 font-display text-sm")}>
+            Keep
+          </Button>
+          <Button
+            variant="plain"
+            type="button"
+            disabled={props.disabled}
+            onClick={props.onConfirm}
+            className="rounded-md border-2 border-red-400/40 bg-red-700 px-6 py-2 font-display text-sm text-white transition-colors hover:bg-red-600 disabled:opacity-40"
+          >
+            Remove
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -225,16 +276,13 @@ export function AdventuresPage(props: {
                   busy={props.busy}
                   onOpen={() => (current ? props.onContinue() : props.onResume(s.archiveId!))}
                 >
-                  <RemoveButton
-                    className="absolute top-6 right-6"
-                    icon={<X aria-hidden="true" className="h-4 w-4" />}
+                  <CardRemove
+                    title={s.title}
                     confirming={removing === key}
-                    label={`Remove ${s.title}`}
-                    confirmLabel={`Confirm removing ${s.title}`}
                     disabled={props.busy}
-                    onBlur={() => setRemoving(null)}
-                    onClick={() => {
-                      if (removing !== key) return setRemoving(key)
+                    onAsk={() => setRemoving(key)}
+                    onCancel={() => setRemoving(null)}
+                    onConfirm={() => {
                       setRemoving(null)
                       props.onRemove(s.archiveId)
                     }}
@@ -257,16 +305,13 @@ export function AdventuresPage(props: {
                 busy={props.busy}
                 onOpen={() => props.onOpenHosted(h.adventureId)}
               >
-                <RemoveButton
-                  className="absolute top-6 right-6"
-                  icon={<X aria-hidden="true" className="h-4 w-4" />}
+                <CardRemove
+                  title={h.title}
                   confirming={removing === h.adventureId}
-                  label={`Remove ${h.title}`}
-                  confirmLabel={`Confirm removing ${h.title}`}
                   disabled={props.busy}
-                  onBlur={() => setRemoving(null)}
-                  onClick={() => {
-                    if (removing !== h.adventureId) return setRemoving(h.adventureId)
+                  onAsk={() => setRemoving(h.adventureId)}
+                  onCancel={() => setRemoving(null)}
+                  onConfirm={() => {
                     setRemoving(null)
                     props.onRemoveHosted(h.adventureId)
                   }}
