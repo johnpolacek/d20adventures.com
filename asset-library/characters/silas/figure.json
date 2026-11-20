@@ -1,0 +1,52 @@
+{
+  "id": "silas",
+  "name": "Silas",
+  "role": "Rogue, the brains of the mission",
+  "cast": [
+    "npcs-1749181492795"
+  ],
+  "party": false,
+  "height": 1.78,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 196940,
+    "cost": 2.3,
+    "made": "2026-11-20"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Swing",
+    "Dodge",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Sword Idle",
+    "Block"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 196940,
+      "megabytes": 13.13,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19982,
+      "megabytes": 1.82,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5994,
+      "megabytes": 0.92,
+      "texture": 512
+    }
+  ]
+}

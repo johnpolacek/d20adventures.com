@@ -1,0 +1,52 @@
+{
+  "id": "reinhard",
+  "name": "Reinhard",
+  "role": "Enforcer of the Blackthorn family",
+  "cast": [
+    "npcs-1749163978757"
+  ],
+  "party": false,
+  "height": 1.92,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 200000,
+    "cost": 2.3,
+    "made": "2026-11-20"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Swing",
+    "Dodge",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Sword Idle",
+    "Block"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 200000,
+      "megabytes": 11.1,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 20000,
+      "megabytes": 1.54,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5996,
+      "megabytes": 0.82,
+      "texture": 512
+    }
+  ]
+}
