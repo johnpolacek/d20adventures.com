@@ -29,6 +29,19 @@
       },
       "at": "wollandora",
       "facing": "thalbern"
+    },
+    {
+      "id": "owlbear",
+      "name": "Owlbear",
+      "role": "Beast of the deep woods",
+      "height": 3.3,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/owlbear-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/owlbear-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/owlbear-portrait.jpg"
+      },
+      "at": [-2.4, -0.9],
+      "facing": "thalbern"
     }
   ],
   "shots": {
@@ -58,5 +71,6 @@
       "label": "Wollandora"
     }
   },
-  "shot": "rescue"
+  "shot": "rescue",
+  "exits": [{ "cast": "owlbear", "when": "drives it back into the forest", "to": [18, -5], "shot": "rescue", "pace": "hurry" }]
 }
