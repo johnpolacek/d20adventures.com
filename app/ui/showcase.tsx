@@ -87,6 +87,49 @@ function TypographyDemo() {
   )
 }
 
+// Body serifs side by side on the same narration. `weight` is the regular weight for light text on black.
+const bodyFonts = [
+  { name: "Georgia", note: "today", family: "Georgia, serif", weight: 400 },
+  { name: "Alegreya", note: "made for long reading, a calligraphic hand", family: "var(--font-try-alegreya)", weight: 400 },
+  { name: "Crimson Pro", note: "old book type, narrow", family: "var(--font-try-crimson)", weight: 400 },
+  { name: "EB Garamond", note: "the most bookish, small on screen", family: "var(--font-try-garamond)", weight: 400 },
+  { name: "Spectral", note: "built for screens, quiet", family: "var(--font-try-spectral)", weight: 300 },
+]
+
+function BodyFontsDemo() {
+  const [size, setSize] = useState(18)
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-2">
+        <span className={siteLabel}>Size</span>
+        {[16, 18, 20].map((n) => (
+          <Button key={n} variant={size === n ? "brick" : "outline"} size="xs" onClick={() => setSize(n)}>
+            {n}px
+          </Button>
+        ))}
+      </div>
+      <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+        {bodyFonts.map((f) => (
+          <div key={f.name} className="flex flex-col gap-3">
+            <span className={siteLabel}>
+              {f.name} <span className="normal-case tracking-normal text-white/50">{f.note}</span>
+            </span>
+            <div style={{ fontFamily: f.family, fontWeight: f.weight, fontSize: size }} className="flex flex-col gap-3 leading-relaxed text-white/90">
+              <p>
+                Rain hammers the slate roofs of Kordavos as the gate guard squints at your papers. “Three silver for the toll,” he says, “and another
+                for the trouble.” Behind him, a cart of <em>Valkaran</em> spice waits in the mud, its driver watching you a little too closely.
+              </p>
+              <p>
+                <strong>Roll a DC 14 Wisdom (Insight) check.</strong> On a success, you notice the seal on his orders was broken and pressed again.
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // The colours in use, most used first in each row. Class names are written out so Tailwind keeps them.
 const palettes: { name: string; note: string; swatches: { label: string; className: string }[] }[] = [
   {
@@ -273,6 +316,7 @@ function SwitchDemo() {
 
 const tiles: Tile[] = [
   { name: "Typography", full: true, demo: <TypographyDemo /> },
+  { name: "Body Fonts", full: true, demo: <BodyFontsDemo /> },
   { name: "Colors", full: true, demo: <ColorsDemo /> },
   {
     name: "Button",
