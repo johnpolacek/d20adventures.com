@@ -22,6 +22,10 @@ Judges differ by a point (`gates-look.md`). Read every number as give or take on
 | Round | Likeness | Face | Build | Materials | Poses | Total | Scene |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Before: `thalbern-rodin` as shipped 2026-11-17 | 1 | 0.5 | 1 | 0.5 | 1 | **4** | 1 |
+| 1: the face painted whole | 1 | 0.5 | 1 | 0.5 | 1 | **4** | 1 |
+
+- Round 1's judge no longer names the seam down the nose. The face stays at 0.5 for its eyes, "black slits with no iris, white or catchlight", and for patches of another tone on the cheek and a line on the neck in the three-quarter view. A mended fault that leaves the number where it was: the eyes outweigh it.
+- Its three worst: the leather's finish, the eyes, the hair. All three are the model's.
 
 ## What the first judge named, worst first
 
@@ -49,7 +53,7 @@ The review room's key at 1.5 from 2.4, the fill at 0.9, the room's reflection at
 
 ## Where it stops, and why
 
-Seven of the nine faults are the model's own shape or paint. Mending the face painting and the scene's light is what this model has left. Hair, eyes, studs, arrows and the painted-in light want another model: Hi3D's v3.0 with its de-shading is the one not yet tried.
+Seven of the nine faults are the model's own shape or paint. Mending the face painting and the scene's light is what this model has left. Hair, eyes, studs, arrows and the painted-in light want another model: Hi3D's v3.0 with its de-shading is the one not yet tried. fal has it (`hitem3d/hi3d/v3.0/multi-view-to-3d`, listed 2026-11-19): front, back, left and right each given by name, so a front and a back alone can be sent, `shading` for the de-shading, no fewer than 100,000 faces, and $2.10 a model at `2048quality` with texture and PBR, $9.10 at `2048master`. Hi3D's own site prices the same model at 45 of a free account's 100 credits.
 
 ## How to take the pictures
 
