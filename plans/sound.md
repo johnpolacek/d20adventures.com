@@ -31,7 +31,7 @@ Goal: one sound system in `@d20/ui`, heard the same in the website and the deskt
 ## Stages
 
 1. Engine. Move `dice-sound.ts` onto the engine with no audible change. Settings module, toggle in the shared HUD so hosted web play gets it. A `/dev/sound` page that plays every cue at its level.
-2. Stage events. `Stage` gains an event emitter: `hit`, `effect` (kind, element, phase start or land), `step` (cast id, surface), `line`, `shot`. No sound code in `packages/stage`.
+2. Stage events. `Stage` gains an event emitter: `hit`, `effect` (kind, element, phase start or land), `line`, `shot`. No sound code in `packages/stage`.
 3. Combat cues. Hits and the nine effect kinds, with an element tint where it matters (fire, frost, lightning). About 15 cues, 2 or 3 takes each.
 4. Ambience. Sets declare an `ambience` bed (tavern, street, forest night, cellar, hall). Beds loop, crossfade on encounter change, and duck under voiced narration.
 5. Voice. Route Storyview TTS and stage narration through the `voice` bus, so ducking and the one volume apply.
@@ -39,9 +39,12 @@ Goal: one sound system in `@d20/ui`, heard the same in the website and the deskt
 
 Each stage ends with both typechecks and both builds passing, and is one commit.
 
+## Owner decisions, 2026-11-19
+
+- Sources: a mix. CC0 recordings first (Freesound, Sonniss GDC bundles), generated sound effects to fill gaps.
+- No music.
+- No footsteps. Stage 2 emits no `step` event.
+
 ## Open questions
 
-- Source of sounds: CC0 libraries (Freesound, Sonniss GDC bundles), generated (ElevenLabs sound effects), or a mix.
-- Music: none, sparse stingers, or looped beds per mood.
-- Footsteps: worth the event volume, or too busy.
 - Mobile web: iOS needs the unlock on a tap, which stage 1 keeps. Background tabs should mute.
