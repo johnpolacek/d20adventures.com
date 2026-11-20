@@ -7,7 +7,7 @@ const headingVariants = cva("text-balance font-extrabold", {
     variant: {
       h1: "text-4xl sm:text-5xl md:text-7xl scale-x-110 tracking-wide",
       h2: "text-3xl sm:text-5xl font-extrabold",
-      h3: "text-2xl sm:text-4xl font-extrabold text-primary",
+      h3: "text-2xl sm:text-4xl font-extrabold",
       h4: "text-xl sm:text-2xl font-bold",
       h5: "text-lg sm:text-xl font-bold",
       h6: "text-base sm:text-lg font-bold",
