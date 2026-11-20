@@ -237,12 +237,47 @@ function contactTexture() {
   return contactMap
 }
 
-// A thin gold ring, flat on the ground, a metre across before scaling. Drawn over the floor, never casting shade or
-// taking a pick.
+// The turn compass: a hairline indigo rim, a slow ring of square dots just inside it, and four small chevrons outside
+// that bob toward the figure. Added as light, flat on the ground, rim 1.18 across before scaling. Drawn over the
+// floor, never casting shade or taking a pick.
+const TURN_RING_FRAGMENT = /* glsl */ `
+uniform float uTime;
+uniform float uOn;
+uniform vec3 uColor;
+varying vec2 vUv;
+#define PI 3.14159265
+mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+float line(float d, float w) { float aa = fwidth(d) * 1.2; return 1.0 - smoothstep(w - aa, w + aa, abs(d)); }
+void main() {
+  vec2 p = (vUv - 0.5) * 3.0;
+  float r = length(p);
+  float ang = atan(p.y, p.x);
+  vec2 q = rot(floor(ang / (PI * 0.5) + 0.5) * PI * 0.5) * p;
+  float c = 1.27 + 0.018 * sin(uTime * 3.0);
+  float chev = line(q.x - c - abs(q.y) * 0.9, 0.0065) * step(abs(q.y), 0.058) * 0.66;
+  float rim = line(r - 1.18, 0.0035) * 0.9;
+  float dc = fract((ang - uTime * 0.08) / (2.0 * PI) * 72.0) - 0.5;
+  float sq = max(abs(dc * 2.0 * PI * r / 72.0), abs(r - 1.145));
+  float saa = fwidth(sq);
+  float dots = (1.0 - smoothstep(0.0055 - saa, 0.0055 + saa, sq)) * 0.35;
+  gl_FragColor = vec4(uColor * max(max(rim, chev), dots) * uOn, 1.0);
+  #include <colorspace_fragment>
+}`
+
 function turnRing() {
-  const geo = new THREE.RingGeometry(0.9, 1, 64)
+  const geo = new THREE.PlaneGeometry(3, 3)
   geo.rotateX(-Math.PI / 2)
-  const mat = new THREE.MeshBasicMaterial({ color: "#f2c45a", transparent: true, opacity: 0, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4 })
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 }, uOn: { value: 0 }, uColor: { value: new THREE.Color("#8a8cff") } },
+    vertexShader: "varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: TURN_RING_FRAGMENT,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -4,
+  })
   const ring = new THREE.Mesh(geo, mat)
   ring.name = "turn-ring"
   ring.visible = false
@@ -479,7 +514,8 @@ export class Standees {
     const r = Math.max(0.42, 0.24 + c.height * 0.14)
     this.ring.position.set(c.x, (c.y ?? 0) + 0.015, c.z)
     this.ring.scale.setScalar(r * (0.92 + 0.08 * this.ringOn))
-    this.ring.material.opacity = this.ringOn * (0.78 + 0.14 * Math.sin(this.ringT * 2.4))
+    this.ring.material.uniforms.uTime.value = this.ringT
+    this.ring.material.uniforms.uOn.value = this.ringOn
   }
   // Whether a hit at this uv on a cast member's card lands on the painted figure (for picking).
   opaqueAt(id: string, uv: { x: number; y: number }) {
