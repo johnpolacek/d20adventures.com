@@ -755,10 +755,12 @@ function elbows(doc: Document) {
 // fifth of the way from the model's own to the library's (retarget.ts `CURL`), so a hand modelled flat with its
 // fingers spread stays a flat hand: Hi3D's Thalbern held an open paddle out at the end of each arm. Each joint of
 // each finger is closed by what it lacks of a hand at ease, about the line the game closes it about (hold.ts), in
-// every clip. A hand that holds a weapon is closed by the game from its rest, and is not this. Returns the most a
-// joint was closed, in degrees.
+// every clip. A hand that holds a weapon is closed by the game from its rest, and is not this. Nor is a hand modelled
+// as a fist round what it carries (a brief's `holds`): the rigger lays those bones straight through the fist, they
+// read as bent back half a turn, and Wollandora's was closed 174 degrees a joint to make up for it. A finger that
+// reads as bent back at all is left as it is. Returns the most a joint was closed, in degrees.
 const EASE_HAND = [22, 30, 18]
-function hang(doc: Document) {
+function hang(doc: Document, fist?: "L" | "R") {
   const joints = doc.getRoot().listSkins()[0]?.listJoints() ?? []
   const find = (bone: string) => joints.find((j) => new RegExp(`(^|:)${bone}$`).test(j.getName()))
   const at = (node: Node) => node.getWorldMatrix().slice(12, 15)
@@ -769,7 +771,7 @@ function hang(doc: Document) {
     ["Right", -1],
   ] as const) {
     const [wrist, middle, index, pinky] = [find(`${side}Hand`), find(`${side}HandMiddle1`), find(`${side}HandIndex1`), find(`${side}HandPinky1`)]
-    if (!wrist || !middle || !index || !pinky) continue
+    if (!wrist || !middle || !index || !pinky || side[0] === fist) continue
     const along = unit(from(wrist, middle))
     const wide = from(pinky, index)
     const across = unit(wide.map((v, k) => v - along[k] * dot(wide, along)))
@@ -782,7 +784,9 @@ function hang(doc: Document) {
       const last = unit(qturn(c.getWorldRotation() as Quat, unit(c.getTranslation())))
       const about = unit(cross(first, palm))
       const closed = (u: number[], v: number[]) => Math.atan2(dot(cross(u, v), about), dot(u, v)) / RAD
-      const lacks = [closed(along, first), closed(first, second), closed(second, last)].map((has, k) => Math.max(0, EASE_HAND[k] - has))
+      const has = [closed(along, first), closed(first, second), closed(second, last)]
+      if (has.some((angle) => angle < -30)) continue
+      const lacks = has.map((angle, k) => Math.max(0, EASE_HAND[k] - Math.max(0, angle)))
       for (const [k, bone] of bones.entries()) {
         if (!bone || lacks[k] < 0.5) continue
         most = Math.max(most, lacks[k])
@@ -803,6 +807,96 @@ function hang(doc: Document) {
   return most
 }
 
+// What a finger's bone holds that is no finger, given to the hand. A rigger shares a point among the bones near it,
+// and a sleeve that hangs by the hand at rest is near the fingers: Wollandora's hung a seventh on two finger bones,
+// beside the forearm and the upper arm. A point may hang on four bones and no more, so when another bone was added
+// for it (the forearm's roll, below) one of the four was dropped, the upper arm from one point and a finger from the
+// point beside it, and with the arm bent to her staff the sleeve between them was torn into sheets 65 times as long.
+// A point further than NEAR from a finger's bone is no finger: its share goes to the hand, and the count falls. One
+// further than PALM from the hand's own line, wrist to knuckle, is no hand either, and what the hand and its fingers
+// hold of it goes to the forearm: the hand turns on the wrist to carry a staff, and cloth hung on it swings out with
+// it like a flag.
+// Both are come to over a distance and not at a line: a point just inside beside a point just outside, on other
+// bones altogether, is a tear of its own. A hand modelled as a fist round what it carries (a brief's `holds`) has its
+// finger bones laid straight through it by the rigger, near nothing they should hold, and its fingers are never
+// moved: all that they hold is the hand's.
+const NEAR = 0.03
+const PALM = 0.09
+const eased = (v: number, from: number, to: number) => {
+  const t = Math.max(0, Math.min(1, (v - from) / (to - from)))
+  return t * t * (3 - 2 * t)
+}
+function fingersOnly(doc: Document, fist?: "L" | "R", big = 1) {
+  const skin = doc.getRoot().listSkins()[0]
+  const joints = skin?.listJoints() ?? []
+  // Each finger bone's line at rest, from its joint to the next, or as far again past the last, and its hand.
+  const lines = new Map<number, { from: number[]; to: number[]; hand: number; fist: boolean }>()
+  // Each hand's own line, and the forearm above it.
+  const palms = new Map<number, { from: number[]; to: number[]; fore: number }>()
+  const place = (name: string) => joints.findIndex((j) => new RegExp(`(^|:)${name}$`).test(j.getName()))
+  for (const side of ["Left", "Right"]) {
+    const [hand, fore, middle] = [place(`${side}Hand`), place(`${side}ForeArm`), place(`${side}HandMiddle1`)]
+    if (hand < 0 || fore < 0 || middle < 0) continue
+    const [from, knuckle] = [joints[hand].getWorldMatrix().slice(12, 15), joints[middle].getWorldMatrix().slice(12, 15)]
+    palms.set(hand, { from, to: from.map((v, k) => v + (knuckle[k] - v) * 1.6), fore })
+  }
+  for (const [i, joint] of joints.entries()) {
+    const found = /(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)\d$/.exec(joint.getName())
+    if (!found) continue
+    const hand = place(`${found[1]}Hand`)
+    const from = joint.getWorldMatrix().slice(12, 15)
+    const next = joint.listChildren().find((child) => joints.includes(child))
+    const up = joint.getParentNode()?.getWorldMatrix().slice(12, 15) ?? from
+    const to = next ? next.getWorldMatrix().slice(12, 15) : from.map((v, k) => v + (v - up[k]))
+    if (hand >= 0) lines.set(i, { from, to, hand, fist: found[1][0] === fist })
+  }
+  const off = (p: number[], line: { from: number[]; to: number[] }) => {
+    const along = line.to.map((v, n) => v - line.from[n])
+    const t = Math.max(0, Math.min(1, dot(p.map((v, n) => v - line.from[n]), along) / (dot(along, along) || 1)))
+    return Math.hypot(...p.map((v, n) => v - line.from[n] - along[n] * t))
+  }
+  let moved = 0
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, J, W] = [prim.getAttribute("POSITION"), prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0")]
+      if (!pos || !J || !W) continue
+      for (let i = 0; i < J.getCount(); i++) {
+        const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+        if (!j.some((bone, k) => w[k] > 0 && (lines.has(bone) || palms.has(bone)))) continue
+        const p = pos.getElement(i, [0, 0, 0])
+        const shares = new Map<number, number>()
+        let changed = false
+        const give = (bone: number, share: number) => shares.set(bone, (shares.get(bone) ?? 0) + share)
+        for (const [k, bone] of j.entries()) {
+          if (w[k] <= 0) continue
+          const line = lines.get(bone)
+          // What of this share is no finger, and of that, what is no hand.
+          const loose = line ? (line.fist ? 1 : eased(off(p, line), NEAR * 0.6 * big, NEAR * 1.6 * big)) : 0
+          const palm = palms.get(line ? line.hand : bone)
+          const far = palm ? eased(off(p, palm), PALM * 0.6 * big, PALM * 1.4 * big) : 0
+          const [stays, toHand, toFore] = line ? [1 - loose, loose * (1 - far), loose * far] : [1 - far, 0, far]
+          if (stays < 0.999) changed = true
+          if (stays > 0) give(bone, w[k] * stays)
+          if (line && toHand > 0) give(line.hand, w[k] * toHand)
+          if (palm && toFore > 0) give(palm.fore, w[k] * toFore)
+        }
+        if (!changed) continue
+        const top = [...shares].sort((x, y) => y[1] - x[1]).slice(0, 4)
+        const [whole, kept] = [[...shares.values()].reduce((sum, v) => sum + v, 0), top.reduce((sum, [, v]) => sum + v, 0) || 1]
+        J.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => top[k]?.[0] ?? 0)
+        )
+        W.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => ((top[k]?.[1] ?? 0) / kept) * whole)
+        )
+        moved++
+      }
+    }
+  return moved
+}
+
 // A bone in each forearm that rolls with the hand, and the forearm's skin hung on it more and more toward the wrist.
 // A real forearm rolls along its length: the elbow is a hinge and the wrist turns the palm. A library's skeleton has
 // bones for that and a rigged figure's has one forearm bone, so a clip's roll came whole at the elbow: in the sword
@@ -813,7 +907,7 @@ function hang(doc: Document) {
 // and all at the wrist. As with the shoulder's, every clip is given its keys and no player has to know of it.
 const ROLL = 0.75
 const REACH = (110 * Math.PI) / 180
-function rolls(doc: Document) {
+function rolls(doc: Document, big = 1) {
   const skin = doc.getRoot().listSkins()[0]
   const bind = skin?.getInverseBindMatrices()
   if (!skin || !bind) return null
@@ -893,7 +987,11 @@ function rolls(doc: Document) {
           if (!a) continue
           // How far down the forearm the point lies: 0 at the elbow, 1 at the wrist.
           const t = Math.max(0, Math.min(1, (along[0] * (p[0] - from[0]) + along[1] * (p[1] - from[1]) + along[2] * (p[2] - from[2])) / long))
-          const given = a * t * t * (3 - 2 * t)
+          // Only what lies on the arm rolls with it. A sleeve that hangs a hand's breadth under the forearm is cloth,
+          // and rolled with the arm it is swung round it.
+          const out = Math.hypot(...[0, 1, 2].map((k) => p[k] - from[k] - along[k] * t))
+          const on = 1 - eased(out, 0.06 * big, 0.12 * big)
+          const given = a * t * t * (3 - 2 * t) * on
           if (given < 1e-4) continue
           shares.set(roll, given)
           shares.set(fore, a - given)
@@ -1702,12 +1800,17 @@ async function rodinHyper(brief: Brief) {
   // `--elbows=off` leaves each elbow as its clip has it, and `--hang=off` each finger as it was modelled.
   const bent = args.includes("--elbows=off") ? null : elbows(doc)
   if (bent) say("elbows", `${bent.moved} keys moved: an elbow went ${bent.past.toFixed(0)}° past straight (the ${bent.where}), and no arm near straight is under ${FLOOR}° now`)
-  const hung = args.includes("--hang=off") ? 0 : hang(doc)
+  const hung = args.includes("--hang=off") ? 0 : hang(doc, brief.holds?.hand ?? (brief.holds ? "R" : undefined))
   if (hung) say("hang", `fingers closed by up to ${hung.toFixed(0)}° a joint, to a hand at ease`)
+  // The measures of a hand and an arm are a person's, 1.8 m tall: an owlbear's are near twice those and a halfling's
+  // little over half.
+  const big = (brief.height ?? 1.8) / 1.8
+  const cloth = fingersOnly(doc, brief.holds ? (brief.holds.hand ?? "R") : undefined, big)
+  if (cloth) say("fingers", `${cloth} points that are no finger or no hand taken off those bones, and given to the hand or the forearm`)
   // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
   if (!args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
   // `--rolls=off` leaves a forearm's roll at the elbow, to measure against.
-  const rolled = args.includes("--rolls=off") ? null : rolls(doc)
+  const rolled = args.includes("--rolls=off") ? null : rolls(doc, big)
   if (rolled) say("rolls", `${rolled.moved} points hung on a bone that rolls with the hand, which rolls ${rolled.most.toFixed(0)}° at the most (the ${rolled.where})`)
   // What the brief says it carries, as rig.py leaves it on its skeleton: "staff:R:2.1".
   const hips = doc

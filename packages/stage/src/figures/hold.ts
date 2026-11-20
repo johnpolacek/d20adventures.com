@@ -281,6 +281,10 @@ export function carry(root: THREE.Object3D, ground: number) {
   const [upper, fore, head] = [`${s}Arm`, `${s}ForeArm`, "Head"].map((n) => bones.get(n))
   // The bone between arm and trunk that pilot.ts hangs the shoulder on: it is kept half way to the arm, as its keys are.
   const half = bones.get(`${s}ArmHalf`)
+  // The bone that rolls the forearm's skin with the hand, as its keys have it: the arm is put where it is here and
+  // not by the clip, so the clip's roll is none of this arm's, and it is laid flat while the staff is carried.
+  const rolled = bones.get(`${s}ForeArmRoll`)
+  const flat = new THREE.Quaternion()
   if (!h || !upper || !fore || !head) return null
   // The figure's left is +x, so its right hand is at -x.
   const side = held.hand === "L" ? 1 : -1
@@ -366,6 +370,7 @@ export function carry(root: THREE.Object3D, ground: number) {
       wrist.quaternion.copy(clip[2].slerp(wrist.quaternion, weight))
     }
     half?.quaternion.copy(upperRest).slerp(upper.quaternion, 0.5)
+    rolled?.quaternion.slerp(flat, weight)
     close(h, GRIP, way ? 0 : weight)
     upper.parent?.updateWorldMatrix(false, true)
     const grip = root.worldToLocal(wrist.localToWorld(seat.clone()))

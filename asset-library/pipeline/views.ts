@@ -102,8 +102,12 @@ async function main() {
         let head = null
         r.figure.traverse((o) => { if (!head && o.isBone && /(^|:)head$/i.test(o.name)) head = o })
         const h = head ? head.getWorldPosition(P.clone()) : { x: 0, y: ${H * 0.93}, z: 0 }
-        if (${JSON.stringify(view.head ?? null)}) { const d = ${JSON.stringify(view.head ?? [0, 0, 0])}; T.set(h.x, h.y + 0.06, h.z); P.set(h.x + d[0], h.y + 0.06 + d[1], h.z + d[2]) }
-        else { const t = ${JSON.stringify(view.target ?? [0, 0, 0])}, f = ${JSON.stringify(view.from ?? [0, 0, 1])}; T.set(t[0] * ${H}, t[1] * ${H}, t[2] * ${H}); P.set(f[0] * ${H}, f[1] * ${H}, f[2] * ${H}) }
+        // How tall it stands in the room, which is not always its brief's height: Rodin's owlbear is modelled 1.9 m
+        // tall and stood 3.3 m by the game. A head is as far from the camera as the figure is tall, against a person.
+        if (!window.__tall) { const rest = head ? h.y / 0.9 : ${H}; window.__tall = Math.abs(rest - ${H}) / ${H} > 0.2 ? rest : ${H} }
+        const H = window.__tall, k = H / 1.8
+        if (${JSON.stringify(view.head ?? null)}) { const d = ${JSON.stringify(view.head ?? [0, 0, 0])}; T.set(h.x, h.y + 0.06 * k, h.z); P.set(h.x + d[0] * k, h.y + (0.06 + d[1]) * k, h.z + d[2] * k) }
+        else { const t = ${JSON.stringify(view.target ?? [0, 0, 0])}, f = ${JSON.stringify(view.from ?? [0, 0, 1])}; T.set(t[0] * H, t[1] * H, t[2] * H); P.set(f[0] * H, f[1] * H, f[2] * H) }
         r.controls.update(); r.controls.update()
         return r.renderer.domElement.width + "x" + r.renderer.domElement.height })()`
     )
