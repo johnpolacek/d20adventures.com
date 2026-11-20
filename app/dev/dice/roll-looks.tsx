@@ -315,7 +315,7 @@ function CardFlow({ roll, answer, actor }: { roll: CardRoll; answer: (dice: numb
 // Reaction offers, from now: the player's hero with 20 seconds and with 5, and another player's hero. Again starts
 // the clocks over.
 // The suggestions arrive after a moment, longer than the loading row, so they wrap to a second row. Click the card's
-// question to load them again.
+// question to load them again. A reply that casts Speak with Animals asks first, as before an Owlbear.
 const SUGGESTIONS = [
   { label: "Freeze and listen", text: "Thalbern freezes and listens." },
   { label: "Track the sound through the reeds", text: "Thalbern tracks the sound through the reeds." },
@@ -333,6 +333,7 @@ function SuggestionsFlow({ actor, compact }: { actor: CardCharacter; compact: bo
     <div onClickCapture={(e) => (e.target as HTMLElement).tagName === "P" && setLoaded(false)}>
       <PromptCard
         mode={{ kind: "hold", prompt: "What does Thalbern do?", suggestions: loaded ? SUGGESTIONS : "loading" }}
+        unworkable={[{ spell: "Speak with Animals", why: "Speak with Animals works only on Beasts, and none is here" }]}
         actor={actor}
         party={PARTY}
         compact={compact}

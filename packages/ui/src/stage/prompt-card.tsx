@@ -447,6 +447,7 @@ export function PromptCard({
   onDraft,
   forcedRoll,
   demo = false,
+  unworkable,
 }: {
   mode: CardMode
   actor: CardCharacter | null
@@ -470,6 +471,9 @@ export function PromptCard({
   // A scripted demo: the reply can't be typed. The box stays disabled, with a note over it, until Suggest fills it in,
   // and the suggestion then can't be edited.
   demo?: boolean
+  // The hero's spells with no one here to work on, each with why: "Speak with Animals works only on Beasts, and none is
+  // here". A reply that names one asks first, so the player can keep the spell slot.
+  unworkable?: readonly { spell: string; why: string }[]
 }) {
   const [ownDraft, setOwnDraft] = useState("")
   const draft = onDraft ? (draftProp ?? "") : ownDraft
@@ -496,7 +500,18 @@ export function PromptCard({
   useEffect(() => {
     if (!onDraft) setOwnDraft("")
   }, [key, onDraft])
-  const send = () => draft.trim() && onReply(draft.trim())
+  // The spell a reply names that has no one here to work on, held until the player edits the reply or sends it anyway.
+  const [asking, setAsking] = useState<{ draft: string; why: string } | null>(null)
+  const warning = asking?.draft === draft ? asking.why : null
+  const send = (anyway = false) => {
+    const text = draft.trim()
+    if (!text) return
+    const said = text.toLowerCase()
+    const named = anyway ? undefined : unworkable?.find((entry) => said.includes(entry.spell.toLowerCase()))
+    if (named) return setAsking({ draft, why: named.why })
+    setAsking(null)
+    onReply(text)
+  }
   // When the suggestions change, as when the loading pills give way to real ones that wrap to a second row, the row
   // grows or shrinks to its new height and the new pills fade up, rather than the card jumping.
   const row = useRef<HTMLDivElement>(null)
@@ -604,7 +619,7 @@ export function PromptCard({
               variant="plain"
               type="button"
               aria-label="Send"
-              onClick={send}
+              onClick={() => send()}
               disabled={!draft.trim()}
               className={cn(
                 "grid shrink-0 place-items-center rounded-full bg-stage-gold text-black transition-[opacity,filter] hover:brightness-110 disabled:opacity-35",
@@ -621,6 +636,24 @@ export function PromptCard({
               </div>
             )}
           </div>
+          {warning && (
+            <div role="alert" className={cn("rounded-lg border border-stage-gold/30 bg-black/50 text-left font-serif text-stage-cream", compact ? "mt-1.5 px-3 py-2 text-[12px]" : "mt-2.5 px-4 py-3 text-[14px]")}>
+              <p>
+                {warning}. {actor.name.split(" ")[0]} would spend a spell slot for nothing.
+              </p>
+              <div className="mt-2 flex justify-end gap-2">
+                <Pill
+                  onClick={() => {
+                    setAsking(null)
+                    box.current?.focus()
+                  }}
+                >
+                  Edit Reply
+                </Pill>
+                <Pill onClick={() => send(true)}>Send Anyway</Pill>
+              </div>
+            </div>
+          )}
           {(mode.suggestion || onSkip) && (
             <div className={cn("flex items-center gap-2", compact ? "mt-1" : "mt-2")}>
               {mode.suggestion && (

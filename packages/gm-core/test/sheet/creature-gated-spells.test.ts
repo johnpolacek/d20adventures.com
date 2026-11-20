@@ -12,7 +12,7 @@ const wolf = { id: "wolf", name: "Wolf", type: "npc", statBlock: "wolf", hitPoin
 const wollandora = { id: "wollandora", name: "Wollandora", type: "npc", hitPoints: 30 }
 
 test("Speak with Animals has no one to work on before an Owlbear, a Monstrosity", () => {
-  assert.deepEqual(spellsWithNoOneToWorkOn(thalbern, [thalbern, owlbear]), ["Speak with Animals works only on Beasts, and none is here"])
+  assert.deepEqual(spellsWithNoOneToWorkOn(thalbern, [thalbern, owlbear]), [{ spell: "Speak with Animals", why: "Speak with Animals works only on Beasts, and none is here" }])
   assert.match(noOneToWorkOnNote(thalbern, [thalbern, owlbear]), /^Spells with no one here to work on, so do not use them now: Speak with Animals/)
 })
 
@@ -22,5 +22,5 @@ test("a Wolf, a Beast, gives Speak with Animals someone to work on", () => {
 })
 
 test("the caster is not counted, and a Humanoid is no Beast", () => {
-  assert.deepEqual(spellsWithNoOneToWorkOn(thalbern, [thalbern, wollandora]), ["Speak with Animals works only on Beasts, and none is here"])
+  assert.deepEqual(spellsWithNoOneToWorkOn(thalbern, [thalbern, wollandora]), [{ spell: "Speak with Animals", why: "Speak with Animals works only on Beasts, and none is here" }])
 })

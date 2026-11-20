@@ -20,6 +20,7 @@ import { IconButton, Pill, panel, StageHud, useCompact } from "@d20/ui/stage/hud
 import { type ChatLine, Journal, type JournalTurn } from "@d20/ui/stage/journal"
 import { LevelUp } from "@d20/ui/stage/level-up"
 import { Narration } from "@d20/ui/stage/narration"
+import type { UnworkableSpell } from "@d20/gm-core/sheet/creature-gated-spells"
 import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@d20/ui/stage/prompt-card"
 import { ReactionCard, useExpired } from "@d20/ui/stage/reaction-card"
 import { heroReactions, type StandingOrders } from "@d20/ui/stage/reaction-view"
@@ -956,6 +957,22 @@ export function StagePlay(props: {
       live = false
     }
   }, [holdKey, holdTurn, holdActor])
+  // The hero's spells with no one here to work on (Speak with Animals before an Owlbear), so a reply that names one asks
+  // first. The rules are loaded only when a hero's turn comes up.
+  const [unworkable, setUnworkable] = useState<{ key: string; list: UnworkableSpell[] } | null>(null)
+  const holdCharacters = turn?.characters
+  useEffect(() => {
+    const hero = holdCharacters?.find((c) => c.id === holdActor)
+    if (!holdTurn || !hero?.sheet || !holdCharacters) return
+    let live = true
+    const key = `${holdTurn}:${hero.id}`
+    void import("@d20/gm-core/sheet/creature-gated-spells").then(({ spellsWithNoOneToWorkOn }) => {
+      if (live) setUnworkable({ key, list: spellsWithNoOneToWorkOn(hero, holdCharacters.filter((c) => !c.dead && !c.fled)) })
+    })
+    return () => {
+      live = false
+    }
+  }, [holdTurn, holdActor, holdCharacters])
   // The engine's answer to the roll on the card, once it is in: the roll beat after the story the roll was made on.
   const heldTurn = held ? save?.turns.find((t) => t._id === held.turn) : undefined
   const answer = held && heldTurn?.story.slice(held.from).find((b): b is RollBeat => b.kind === "roll" && b.character === held.actor.id)
@@ -1177,6 +1194,7 @@ export function StagePlay(props: {
               draft={draft}
               onDraft={setDraft}
               forcedRoll={turn && actor ? save.rolls?.[`${turn._id}:${actor.id}`] : undefined}
+              unworkable={unworkable?.key === `${turn?._id}:${cardActor?.id}` ? unworkable.list : undefined}
             />
           )}
           {ended && !busy && !reading && (
