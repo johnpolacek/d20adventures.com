@@ -1,13 +1,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { LegalPage, type LegalSection } from "@/components/legal/legal-page"
+import { contactUs, LegalPage, type LegalSection } from "@/components/legal/legal-page"
 
 export const metadata: Metadata = {
   title: "Terms of Use | D20 Adventures",
   description: "The rules for using D20 Adventures, in plain words.",
 }
-
-const contact = <Link href="/contact">contact us</Link>
 
 const sections: LegalSection[] = [
   {
@@ -34,7 +32,9 @@ const sections: LegalSection[] = [
       <ul>
         <li>The story, images and voices are made by AI. AI gets things wrong and can say strange things.</li>
         <li>It’s a game. Don’t treat anything it says as real advice.</li>
-        <li>To run the game, we send what you type to outside AI services. We don’t use it to train AI models.</li>
+        <li>
+          What you type is sent to AI services to run the game.
+        </li>
       </ul>
     ),
   },
@@ -42,7 +42,7 @@ const sections: LegalSection[] = [
     title: "Your Content",
     body: (
       <p>
-        What you write and upload stays yours. You let us store it, show it to the players in your game, and use it to run the service. Only share what
+        What you write and upload stays yours. You let us store it, show it to the players in your game, and use it to run and improve the service, as the <Link href="/privacy">Privacy Policy</Link> explains. Only share what
         you have the right to share.
       </p>
     ),
@@ -58,7 +58,7 @@ const sections: LegalSection[] = [
           <li>post sexual content involving minors, or anyone’s private information</li>
           <li>hack, cheat, scrape or overload the service</li>
         </ul>
-        <p>We may remove content or suspend accounts that break these rules. If you think we got it wrong, {contact}.</p>
+        <p>We may remove content or suspend accounts that break these rules. If you think we got it wrong, {contactUs}.</p>
       </>
     ),
   },
@@ -81,7 +81,7 @@ const sections: LegalSection[] = [
   },
   {
     title: "Ending Things",
-    body: <p>You can stop playing at any time. To delete your account, {contact}. We may suspend or close accounts, or shut down the service.</p>,
+    body: <p>You can stop playing at any time. To delete your account, {contactUs}. We may suspend or close accounts, or shut down the service.</p>,
   },
   {
     title: "No Guarantees",
@@ -93,12 +93,16 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    title: "Disputes",
+    body: <p>If something goes wrong, {contactUs} first so we can try to fix it. These terms follow Illinois law, and any dispute goes to the courts in Illinois.</p>,
+  },
+  {
     title: "Changes",
     body: <p>We may update these terms. We’ll tell you before big changes take effect. Playing after that means you accept them.</p>,
   },
   {
     title: "Questions",
-    body: <p>For questions, reports or takedown requests, {contact}.</p>,
+    body: <p>For questions, reports or takedown requests, {contactUs}.</p>,
   },
 ]
 

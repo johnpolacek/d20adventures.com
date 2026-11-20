@@ -1,8 +1,11 @@
+import Link from "next/link"
 import type { ReactNode } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { UpdatesBackdrop } from "@/components/updates/updates-backdrop"
 
 export type LegalSection = { title: string; body: ReactNode }
+
+export const contactUs = <Link href="/contact">contact us</Link>
 
 /** A plain legal page: title, last updated date, then numbered sections. */
 export function LegalPage({ title, updated, intro, sections }: { title: string; updated: string; intro?: ReactNode; sections: LegalSection[] }) {
