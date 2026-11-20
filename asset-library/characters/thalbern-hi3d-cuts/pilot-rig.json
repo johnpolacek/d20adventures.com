@@ -1,0 +1,100 @@
+{
+  "model_mesh": {
+    "url": "https://v3b.fal.media/files/b/0ab32dab/L7j-XFTn9xG5tEyDNyz2s_source.glb",
+    "content_type": "model/gltf-binary",
+    "file_name": "source.glb",
+    "file_size": 52360868
+  },
+  "rigged_character_glb": {
+    "url": "https://v3b.fal.media/files/b/0ab32dab/cW-UBqqhbTKbFki58q0ia_rigged_character.glb",
+    "content_type": "model/gltf-binary",
+    "file_name": "rigged_character.glb",
+    "file_size": 52260524
+  },
+  "animations": [
+    {
+      "action_id": "human_000003",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32dac/nx3KKuE-yknIUFaFwzTPr_animation_1.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_1.glb",
+        "file_size": 52271444
+      }
+    },
+    {
+      "action_id": "human_000040",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32dac/MBP0F3Fzil4zVBBLLLt22_animation_2.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_2.glb",
+        "file_size": 52271740
+      }
+    },
+    {
+      "action_id": "human_000041",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32dad/s0OCbmm4RjdlEZyqH0KzV_animation_3.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_3.glb",
+        "file_size": 52271740
+      }
+    },
+    {
+      "action_id": "human_000042",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32dad/mCh0UTfp_LDP3VOxwuSck_animation_4.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_4.glb",
+        "file_size": 52271532
+      }
+    },
+    {
+      "action_id": "human_000064",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32dae/0C9F3Rfq2fWQ74wwRmspN_animation_5.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_5.glb",
+        "file_size": 52271740
+      }
+    },
+    {
+      "action_id": "human_000068",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32dae/ki0JGYuRi93oWdvmCv3iJ_animation_6.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_6.glb",
+        "file_size": 52271740
+      }
+    },
+    {
+      "action_id": "human_000089",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32dae/N8SeLBbEBiOaNf-VpA8Is_animation_7.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_7.glb",
+        "file_size": 52271740
+      }
+    },
+    {
+      "action_id": "human_000090",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32daf/J7ly50QPeG8UJj2WnDlHT_animation_8.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_8.glb",
+        "file_size": 52271740
+      }
+    },
+    {
+      "action_id": "human_000108",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab32daf/aMX87twzqVssCnEjb88Nj_animation_9.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_9.glb",
+        "file_size": 52271740
+      }
+    }
+  ],
+  "fbx_file": null,
+  "additional_files": [],
+  "textures": []
+}

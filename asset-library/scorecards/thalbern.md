@@ -56,6 +56,8 @@ Judges differ by a point (`gates-look.md`). Read every number as give or take on
 
 | 4 | Not judged. The owner took `thalbern-hi3d` for the game. A bone in each forearm that rolls with the hand (`pilot.ts`, `rolls`): the cut's 103° of roll at the elbow is 0°. The pose of the cut is the clip's and is as it was (README, the pilot). | `after-4/` |
 
+| 5 | The hands and the elbow (README, the pilot): fingers laid round the grip, the other hand hung at ease, no arm near straight under 12° of bend. Judged on the moves alone, each of 2: the cut as a move 1, its joints 1, the sword hand 1, the bow shot 1, standing and walking 1. The cut "still reads wrong", by the move itself. The eight cuts ranked blind: Cut A 5.0 of 6, the cut now 4.5, within a judge's noise. | `after-5/`, `audition/` |
+
 ## What Hi3D's model is, beside Rodin's
 
 - Better: the eyes are open and have lids, the hair has a shape, studs, buckles, hilts and straps are each a thing, the colour has no light painted into it (the sheet's and the model's skin are the same tone within a twelfth), and metal is marked only where there is metal.
