@@ -1,4 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git cat-file -e \"$VERCEL_GIT_PREVIOUS_SHA^{commit}\" 2>/dev/null && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- . ':(exclude)wiki' || exit 1"
+  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git cat-file -e \"$VERCEL_GIT_PREVIOUS_SHA^{commit}\" 2>/dev/null && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- . ':(exclude)wiki' ':(exclude)plans' ':(exclude)scripts' ':(exclude)tests' ':(exclude)design' ':(exclude)asset-library/scorecards' ':(exclude)apps/desktop/src-tauri' ':(exclude)apps/desktop/scripts' ':(exclude)AGENTS.md' ':(exclude)*README.md' || exit 1"
 }
