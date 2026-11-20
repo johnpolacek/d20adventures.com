@@ -2,6 +2,7 @@ import { textShadowSpread, textShadowSpreadLight } from "@d20/ui/typography/styl
 import { Button } from "@d20/ui/button"
 import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
+import { useState } from "react"
 import type { Save } from "../runtime/store"
 import type { FigureArt } from "./figures"
 import { portraitFor, sceneFor } from "./scenes"
@@ -15,20 +16,32 @@ export function Home(props: { save: Save | null; art: Record<string, FigureArt>;
   const hero = turn?.characters.find((c) => c.type === "pc" && c.controlledBy !== "ai")
   const painted = Object.fromEntries((props.save?.painted ?? []).flatMap((id) => (props.art[id] ? [[id, props.art[id]]] : [])))
   const portrait = hero && portraitFor(sceneFor(turn?.encounterId), hero, props.save?.figures, painted)
+  // The hero art fades in once it has loaded, then the title and the button follow it, as on the website.
+  const [loaded, setLoaded] = useState(false)
+  const reveal = (delay: string) => cn("transition-opacity duration-1000 ease-in-out", loaded ? cn("opacity-100", delay) : "opacity-0")
   return (
     <div className="absolute inset-0 overflow-hidden bg-black text-white">
-      <img src="/images/app/backgrounds/d20-hero.webp" alt="" className="fade-in absolute inset-0 h-full w-full object-cover" />
-      <h1 className="fade-in relative mt-[5vh] text-center font-display text-[clamp(2.25rem,5vw,3.75rem)] delay-[400ms]" style={textShadowSpreadLight}>
+      <img
+        ref={(img) => {
+          if (img?.complete && img.naturalWidth) requestAnimationFrame(() => setLoaded(true))
+        }}
+        src="/images/app/backgrounds/d20-hero.webp"
+        alt=""
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className={cn("absolute inset-0 h-full w-full object-cover", reveal(""))}
+      />
+      <h1 className={cn("relative mt-[5vh] text-center font-display text-[clamp(2.25rem,5vw,3.75rem)]", reveal("delay-[1000ms]"))} style={textShadowSpreadLight}>
         EXpeRienCe <span className="inline-block scale-90">tHe</span> Thrill
       </h1>
       <div className="absolute inset-x-0 bottom-[6vh] flex flex-col items-center text-center">
-        <div className="fade-in font-display text-2xl font-bold delay-[600ms]" style={textShadowSpreadLight}>
+        <div className={cn("font-display text-2xl font-bold", reveal("delay-[1200ms]"))} style={textShadowSpreadLight}>
           Of tHe
         </div>
-        <div className="fade-in -mt-4 font-display text-[clamp(5rem,9vw,8rem)] leading-none delay-[800ms]" style={textShadowSpreadLight}>
+        <div className={cn("-mt-4 font-display text-[clamp(5rem,9vw,8rem)] leading-none", reveal("delay-[1400ms]"))} style={textShadowSpreadLight}>
           D20
         </div>
-        <div className="fade-in mt-4 flex flex-col items-center gap-3 delay-[1000ms]">
+        <div className={cn("mt-4 flex flex-col items-center gap-3", reveal("delay-[1600ms]"))}>
           {props.save ? (
             <div className={cn(cardVariants({ variant: "frame" }), "flex flex-col items-center gap-4 px-10 py-6 backdrop-blur-xl")}>
               <div className="flex items-center gap-4 text-left">
