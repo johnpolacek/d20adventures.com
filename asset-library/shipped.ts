@@ -23,16 +23,30 @@ export interface Plays {
 // Thalbern cuts with a sword or shoots with a bow and gets out of the way; the owlbear swipes; Wollandora only dodges.
 // A figure with clips of its own names every one it plays, and when its blows land: the cut as the sword hand comes
 // through fastest, the shot as the string is let go (its brief's `drawn`).
+const SWORD: Plays = { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { melee: "Swing", dodge: "Sidestep" }, lands: { Swing: 0.4 } }
+const CASTER: Plays = { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { dodge: "Sidestep" } }
+const BEAST: Plays = { idle: "Idle Heavy", walk: "Walk Heavy", hit: "Hit", fall: "Fall", moves: { melee: "Claw" }, lands: { Claw: 0.6 } }
 const THALBERN: Plays = { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { melee: "Swing", ranged: "Shoot", dodge: "Sidestep" }, lands: { Swing: 0.4, Shoot: 1.5 } }
 export const PLAYS: Record<string, Plays> = {
   thalbern: { moves: { melee: "Swing", ranged: "Shoot", dodge: "Dodge" } },
   wollandora: { moves: { dodge: "Dodge" } },
   owlbear: { moves: { melee: "Claw" } },
-  "wollandora-rodin": { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { dodge: "Sidestep" } },
+  "wollandora-rodin": CASTER,
   // The owlbear stands and walks hunched, as a beast does (its brief's Idle Heavy and Walk Heavy), and its swipe lands
   // as the right paw comes through fastest.
-  "owlbear-rodin": { idle: "Idle Heavy", walk: "Walk Heavy", hit: "Hit", fall: "Fall", moves: { melee: "Claw" }, lands: { Claw: 0.6 } },
+  "owlbear-rodin": BEAST,
   "thalbern-rodin": THALBERN,
   // Hi3D's model of him, with the same rig and the same borrowed clips.
   "thalbern-hi3d": THALBERN,
+  // Hi3D's models of the other two, made the same way and not shipped: a look can name one (looks.ts `figures`).
+  "wollandora-hi3d": CASTER,
+  "owlbear-hi3d": BEAST,
+  // Covert Cargo's cast, made the same way. No look of that adventure is played yet, so none is in SHIPPED.
+  "lyra-hi3d": CASTER,
+  "poppen-hi3d": SWORD,
+  reinhard: SWORD,
+  silas: SWORD,
+  "elf-fighter": SWORD,
+  "elf-archer": THALBERN,
+  aelar: SWORD,
 }

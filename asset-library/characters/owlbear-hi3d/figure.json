@@ -1,0 +1,52 @@
+{
+  "id": "owlbear-hi3d",
+  "name": "Owlbear",
+  "role": "Beast of the Midnight Summons",
+  "cast": [
+    "owlbear"
+  ],
+  "party": false,
+  "height": 3.3,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 200000,
+    "cost": 2.3,
+    "made": "2026-11-20"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit",
+    "Fall",
+    "Claw",
+    "Roar",
+    "Idle Heavy",
+    "Walk Heavy",
+    "Claw Hook"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 200000,
+      "megabytes": 11.44,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19994,
+      "megabytes": 1.61,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5998,
+      "megabytes": 0.89,
+      "texture": 512
+    }
+  ]
+}

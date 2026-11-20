@@ -1,0 +1,50 @@
+{
+  "id": "wollandora-hi3d",
+  "name": "Wollandora",
+  "role": "Elven druid of the Standing Stones",
+  "cast": [
+    "wollandora"
+  ],
+  "party": false,
+  "height": 1.86,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 197054,
+    "cost": 2.3,
+    "made": "2026-11-20"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Cast",
+    "Staff Idle"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 197054,
+      "megabytes": 13.21,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19990,
+      "megabytes": 1.86,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5991,
+      "megabytes": 0.95,
+      "texture": 512
+    }
+  ]
+}

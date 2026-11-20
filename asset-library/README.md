@@ -89,6 +89,15 @@ Thalbern's was the first, 2026-11-19, and the rest are made the same way. The st
 - The judge is told nothing of what changed and is shown the card, the sheet and the pictures. Its number is good to a point either way (`scorecards/gates-look.md`). What it is for is the list of faults by name and place: the next free mend is whichever of them the pipeline can reach.
 - A figure is not in the game until a look marked `play` stands its cast in a set. Until then it is on the page, under its adventure or Not in a Scene.
 
+What goes wrong, and what to do:
+
+- The image tool refuses after five or six pictures in a few minutes (`429 Too Many Requests`). Nothing is lost: run `pnpm assets <id>` again four minutes later and it goes on from the step that failed.
+- A sheet of the front alone (`"sheet": "front"`) gives Hi3D nothing of the back, and it makes one up: Wollandora's leafy mantle came back a plain dark cloak. Paint both views.
+- Cloth that hangs far from the arm is the model's weakest part. One skin has no cloth in it: a bell sleeve is carried by the forearm like a board. A long coat or a cloak that hangs straight is fine. If the card has hanging sleeves, say in `stow` that they are close to the arm, or keep the figure it would replace.
+- Two characters may name one cast id (`lyra` and `lyra-hi3d`). The page then opens the newer for that cast id: open each by its own id, `/dev/assets?id=lyra-hi3d`.
+- A beast is made the same way with `"creature": true`. Its sheet is asked for as an animal, the rig is still a person's, and it plays the hunched clips (`owlbear-hi3d`).
+- A second model of a character is a second $2.10. Everything after the model is free to do again, so mend there first: gloss, the face, the clips, the hands.
+
 ## What you need
 
 - Blender 5.3 at `/Applications/Blender.app`. `BLENDER` names another.
@@ -578,6 +587,11 @@ The owner, 2026-11-16, of the rod-hand Thalbern drawing a bow: "now his hand loo
     - The elbow. `elbows` (`pilot.ts`) keeps an arm near straight bent 12 degrees at the least, the way an elbow bends, and takes most of its lean to the side out, with the hand facing as it did. The sword arm went 28 degrees past straight in the cut. An arm folded more than 60 degrees is left alone: the dodge's are folded right up. `--elbows=off` builds without.
     - Judged blind after these, on the cut alone: 1 of 2 for the move, the joints and the grip each. "Does the cut still read wrong? Yes": the blade is behind the hand as the blow is counted, the move ends with its tip at the floor and the head bowed, and "that fault belongs to the move itself".
     - The eight cuts tried again, on this body with these mends (`thalbern-hi3d-cuts`, `/dev/assets?id=thalbern-hi3d-cuts`, six frames of each in `~/Desktop/thalbern-before-after/audition/`). Ranked blind by letter, out of 6: `Sword_Regular_A` with its recovery ("Cut A", an overhead wind-up and a diagonal cut down) 5.0, `Sword_Attack` ("Cut now") 4.5, `Sword_Regular_B` 3.5, `Sword_Dash` and the slash 3.0, `Sword_Regular_C` 2.0, the stab 1.5, the hook 1.0. The judge: the first is "within a judge's noise" of the second, which "has the best visible strike frame of any cut" and "loses only on the floor-scraping finish and the crouched end pose", and both are "clearly better than everything" below. The owner chose `Sword_Attack` over these by eye on 2026-11-17, and half a point does not overturn that: Swing is not changed. When each cut's sword hand is fastest, for `lands`: now 0.38 s, A 0.25, B 0.27, C 0.65, Dash 0.33.
+
+- Wollandora, the owlbear and Covert Cargo's cast, 2026-11-19 and 20 (the owner: "do the same thing for wollandora and the owlbear, then document the process and do all the characters for covert cargo"). Nine models, $2.30 each. The way is written up under The way a shipped figure is made now. Pictures of each beside its card and its sheet: `~/Desktop/d20-hi3d-figures/<id>-sheet.jpg`.
+  - `wollandora-hi3d`: not shipped. Her face and hair are sharper than Rodin's. Her sheet is of the front alone, so the back is Hi3D's own, a plain dark cloak. And her bell sleeve is carried by the forearm: with the arm bent to her staff it stands out across her chest as dark sheets. Three things were found in it and mended for every figure (`pilot.ts`): cloth hung on finger and hand bones (`fingersOnly`), a fist closed further by `hang`, and the forearm's roll swinging what hangs under it. The sleeve itself is not mended. `SHIPPED` keeps `wollandora-rodin`.
+  - `owlbear-hi3d`: not shipped. The head is sharper, eye and beak and feathers. The body is slighter and paler than Rodin's and has lost its scars: Rodin's reads more a beast. The owner's to say. `SHIPPED` keeps `owlbear-rodin`.
+  - Covert Cargo: `lyra-hi3d` and `poppen-hi3d` from the sheets their older figures were made from, and `reinhard`, `silas`, `elf-fighter`, `elf-archer` and `aelar` from new sheets. `PLAYS` names what each plays. None is in `SHIPPED`: no look of that adventure is marked `play`, so the game has nowhere to stand them yet.
 
 - A figure no staging's cast stands for, as both pilots are, is listed on the page under Not in a Scene (`library.ts`). Before that, `/dev/assets?id=thalbern-rodin` opened nothing. A sync would publish it with the rest: leave the pilots out of one, or take their `figure.json` away first.
 - Hyper3D sends its clips back under their stock names and in the stock's order, not the order asked for. They are renamed by stock name.

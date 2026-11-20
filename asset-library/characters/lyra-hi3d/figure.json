@@ -1,0 +1,49 @@
+{
+  "id": "lyra-hi3d",
+  "name": "Lyra Silvanus",
+  "role": "Asterian Arcanist",
+  "cast": [
+    "lyra"
+  ],
+  "party": true,
+  "height": 1.7,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 200000,
+    "cost": 2.3,
+    "made": "2026-11-20"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Cast"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 200000,
+      "megabytes": 10.9,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 20000,
+      "megabytes": 1.4,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5998,
+      "megabytes": 0.68,
+      "texture": 512
+    }
+  ]
+}
