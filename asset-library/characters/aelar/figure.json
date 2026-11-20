@@ -1,0 +1,53 @@
+{
+  "id": "aelar",
+  "name": "Aelar Moonglimmer",
+  "role": "Elf operative of Faelendar",
+  "cast": [
+    "npcs-1749184389465"
+  ],
+  "party": false,
+  "height": 1.86,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 196890,
+    "cost": 2.3,
+    "made": "2026-11-20"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Swing",
+    "Dodge",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Sword Idle",
+    "Block"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 196890,
+      "megabytes": 10.92,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19994,
+      "megabytes": 1.55,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 0.82,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

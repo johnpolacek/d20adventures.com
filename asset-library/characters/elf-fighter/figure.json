@@ -1,0 +1,53 @@
+{
+  "id": "elf-fighter",
+  "name": "Elven Fighter",
+  "role": "Elf fighter of Faelendar",
+  "cast": [
+    "npcs-1749243869357"
+  ],
+  "party": false,
+  "height": 1.88,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 196238,
+    "cost": 2.3,
+    "made": "2026-11-20"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Swing",
+    "Dodge",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Sword Idle",
+    "Block"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 196238,
+      "megabytes": 11.19,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19990,
+      "megabytes": 1.62,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5996,
+      "megabytes": 0.85,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

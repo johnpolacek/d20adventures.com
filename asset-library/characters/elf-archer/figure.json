@@ -1,0 +1,51 @@
+{
+  "id": "elf-archer",
+  "name": "Elven Archer",
+  "role": "Wood elf archer of Faelendar",
+  "cast": [
+    "npcs-1749243735467"
+  ],
+  "party": false,
+  "height": 1.8,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 200000,
+    "cost": 2.3,
+    "made": "2026-11-20"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Shoot",
+    "Swing",
+    "Sidestep",
+    "Hit",
+    "Fall"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 200000,
+      "megabytes": 11.06,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19998,
+      "megabytes": 1.45,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 0.74,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}
