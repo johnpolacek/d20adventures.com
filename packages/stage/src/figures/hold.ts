@@ -30,6 +30,9 @@ const FINGERS = ["Index", "Middle", "Ring", "Pinky"]
 const GRIP = [72, 84, 46]
 const HOOK = [18, 78, 52]
 const THUMB = [26, 30, 18]
+// How thick a grip is at its middle, in metres (weapons.ts), and half of how thick a finger is.
+const ROUND = { sword: 0.0142, bow: 0.0192 }
+const FINGER = 0.009
 
 const plain = (name: string) => name.replace(/^mixamorig:?/i, "")
 function skeleton(root: THREE.Object3D) {
@@ -53,7 +56,10 @@ interface Hand {
   palm: THREE.Vector3
   knuckle: THREE.Vector3
   // Each joint that closes: its turn at rest and the line it closes about, in its own space.
-  joints: { bone: THREE.Object3D; rest: THREE.Quaternion; about: THREE.Vector3; step: number; thumb: boolean }[]
+  joints: { bone: THREE.Object3D; rest: THREE.Quaternion; about: THREE.Vector3; step: number; thumb: boolean; finger: string }[]
+  // Each finger as it was modelled: where its knuckle is, how long its first two bones are, and how far each of its
+  // three joints is already closed, in degrees.
+  fingers: Map<string, { knuckle: THREE.Vector3; bones: [number, number]; curled: [number, number, number] }>
 }
 
 function hand(bones: Map<string, THREE.Object3D>, side: "L" | "R"): Hand | null {
@@ -67,26 +73,35 @@ function hand(bones: Map<string, THREE.Object3D>, side: "L" | "R"): Hand | null 
   // Fingers along +x and thumb ahead, a left hand's palm is down and a right hand's up: the cross is the left's palm.
   const palm = new THREE.Vector3().crossVectors(along, across).multiplyScalar(side === "L" ? 1 : -1)
   const joints: Hand["joints"] = []
-  const closing = (name: string, about: THREE.Vector3, step: number, thumb: boolean) => {
+  const fingers: Hand["fingers"] = new Map()
+  const closing = (name: string, about: THREE.Vector3, step: number, thumb: boolean, finger: string) => {
     const bone = bones.get(name)
     if (!bone) return
-    joints.push({ bone, rest: bone.quaternion.clone(), about: about.clone().applyQuaternion(bone.getWorldQuaternion(new THREE.Quaternion()).invert()).normalize(), step, thumb })
+    joints.push({ bone, rest: bone.quaternion.clone(), about: about.clone().applyQuaternion(bone.getWorldQuaternion(new THREE.Quaternion()).invert()).normalize(), step, thumb, finger })
   }
   for (const finger of FINGERS) {
-    const [a, b] = [bones.get(`${s}Hand${finger}1`), bones.get(`${s}Hand${finger}2`)]
+    const [a, b, c] = [bones.get(`${s}Hand${finger}1`), bones.get(`${s}Hand${finger}2`), bones.get(`${s}Hand${finger}3`)]
     if (!a || !b) continue
     // A finger closes toward the palm: about the line square to both.
-    const about = new THREE.Vector3().crossVectors(at(b).sub(at(a)).normalize(), palm).normalize()
-    for (const step of [1, 2, 3]) closing(`${s}Hand${finger}${step}`, about, step, false)
+    const first = at(b).sub(at(a))
+    const about = new THREE.Vector3().crossVectors(first.clone().normalize(), palm).normalize()
+    for (const step of [1, 2, 3]) closing(`${s}Hand${finger}${step}`, about, step, false, finger)
+    if (!c) continue
+    // How far it is closed already, joint by joint. Its last bone runs as the one before it does, in its own space.
+    const second = at(c).sub(at(b))
+    const last = c.position.clone().normalize().applyQuaternion(c.getWorldQuaternion(new THREE.Quaternion()))
+    const turn = (from: THREE.Vector3, to: THREE.Vector3) => THREE.MathUtils.radToDeg(Math.atan2(new THREE.Vector3().crossVectors(from, to).dot(about), from.dot(to)))
+    const [u, v] = [first.clone().normalize(), second.clone().normalize()]
+    fingers.set(finger, { knuckle: at(a), bones: [first.length(), second.length()], curled: [turn(along, u), turn(u, v), turn(v, last)] })
   }
   const [t1, t2] = [bones.get(`${s}HandThumb1`), bones.get(`${s}HandThumb2`)]
   if (t1 && t2) {
     // The thumb closes over the fingers: toward the first knuckle, a little into the palm.
     const to = at(index).addScaledVector(palm, 0.03).sub(at(t1)).normalize()
     const about = new THREE.Vector3().crossVectors(at(t2).sub(at(t1)).normalize(), to).normalize()
-    for (const step of [1, 2, 3]) closing(`${s}HandThumb${step}`, about, step, true)
+    for (const step of [1, 2, 3]) closing(`${s}HandThumb${step}`, about, step, true, "Thumb")
   }
-  return { wrist, along, across, palm, knuckle: at(middle), joints }
+  return { wrist, along, across, palm, knuckle: at(middle), joints, fingers }
 }
 
 // A hand's fingers closed by a share of the angles given, over whatever the clip left them at.
@@ -98,6 +113,52 @@ function close(h: Hand, fingers: number[], share: number) {
   }
 }
 
+// How far each joint of each finger turns to lie round a grip of a given thickness seated at a place, both in the
+// world at rest. Seen from the side a finger is three straight bones and the grip a circle: the first bone leaves the
+// knuckle along the line that just touches the circle, and each joint after turns as far as brings the next bone to
+// touch it too. Fixed angles closed every hand the same way whatever its shape, and on a hand modelled flat with
+// slender fingers they made a small fist under the hilt, which lay on top of it (the owner, 2026-11-19: "pay attention
+// to the hand position"). What a finger was modelled closed by is taken off what it is asked to turn.
+function round(h: Hand, seat: THREE.Vector3, thick: number) {
+  const clear = thick + FINGER
+  const turns = new Map<string, [number, number, number]>()
+  const within = (v: number, low: number, high: number) => Math.max(low, Math.min(high, v))
+  for (const [finger, f] of h.fingers) {
+    const to = seat.clone().sub(f.knuckle)
+    // The grip from the knuckle: along the hand, and out of the palm.
+    const [x, y] = [to.dot(h.along), to.dot(h.palm)]
+    const far = Math.max(Math.hypot(x, y), clear * 1.02)
+    const first = within(Math.atan2(y, x) - Math.asin(clear / far), THREE.MathUtils.degToRad(20), THREE.MathUtils.degToRad(95))
+    const touches = Math.sqrt(far * far - clear * clear)
+    let [second, spare] = [0, 0]
+    if (touches < f.bones[0]) {
+      // The first bone touches the grip and runs on past: the joint at its end turns the second bone back onto it.
+      const past = f.bones[0] - touches
+      second = 2 * Math.atan(past / clear)
+      spare = f.bones[1] - past
+    } else {
+      // The first bone is too short to touch: the second is laid on the grip from the joint at its end.
+      const [jx, jy] = [x - Math.cos(first) * f.bones[0], y - Math.sin(first) * f.bones[0]]
+      const off = Math.max(Math.hypot(jx, jy), clear * 1.02)
+      second = Math.atan2(jy, jx) - Math.asin(clear / off) - first
+      spare = f.bones[1] - Math.sqrt(off * off - clear * clear)
+    }
+    second = within(second, THREE.MathUtils.degToRad(15), THREE.MathUtils.degToRad(110))
+    const third = within(spare > 0 ? 2 * Math.atan(spare / clear) : 0, THREE.MathUtils.degToRad(10), THREE.MathUtils.degToRad(80))
+    turns.set(finger, [first, second, third].map((angle, k) => within(THREE.MathUtils.radToDeg(angle) - f.curled[k], -25, 110)) as [number, number, number])
+  }
+  return turns
+}
+
+// A hand's fingers laid round a grip (`round`), its thumb closed over them, over whatever the clip left them at.
+function grip(h: Hand, turns: Map<string, [number, number, number]>) {
+  const turn = new THREE.Quaternion()
+  for (const j of h.joints) {
+    const degrees = j.thumb ? THUMB[j.step - 1] : (turns.get(j.finger)?.[j.step - 1] ?? GRIP[j.step - 1])
+    j.bone.quaternion.copy(j.rest).multiply(turn.setFromAxisAngle(j.about, THREE.MathUtils.degToRad(degrees)))
+  }
+}
+
 // Call with the figure at rest, before any clip has moved it.
 export function wield(root: THREE.Object3D): Armed {
   root.updateWorldMatrix(true, true)
@@ -105,6 +166,7 @@ export function wield(root: THREE.Object3D): Armed {
   const hands = { L: hand(bones, "L"), R: hand(bones, "R") }
   const weapons = new Map<string, Weapon>()
   const strings = new Map<Weapon, { update: (to: THREE.Vector3 | null, share: number) => void; seated: THREE.Quaternion }>()
+  const grips = new Map<string, Map<string, [number, number, number]>>()
   for (const need of Object.values(HOLDS)) {
     const h = hands[need.hand]
     if (!h || weapons.has(need.what)) continue
@@ -118,6 +180,7 @@ export function wield(root: THREE.Object3D): Armed {
     z.crossVectors(x, y).normalize()
     g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z))
     g.position.copy(h.knuckle).addScaledVector(h.along, -0.012).addScaledVector(h.palm, 0.03)
+    grips.set(need.what, round(h, g.position, ROUND[need.what]))
     g.traverse((m) => {
       if (m instanceof THREE.Mesh) m.castShadow = m.receiveShadow = true
     })
@@ -189,7 +252,7 @@ export function wield(root: THREE.Object3D): Armed {
       const weapon = need ? weapons.get(need.what) : null
       const h = need ? hands[need.hand] : null
       if (!weapon || !h || weapon !== shown) return
-      close(h, GRIP, 1)
+      grip(h, grips.get(weapon.what) ?? new Map())
       if (weapon.what === "bow") shoot(weapon, t, LOOSED[clip] ?? Number.POSITIVE_INFINITY)
     },
     dispose: () => {

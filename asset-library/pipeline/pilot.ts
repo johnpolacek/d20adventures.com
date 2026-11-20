@@ -674,6 +674,135 @@ function helpers(doc: Document) {
   return moved
 }
 
+const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+const cross = (a: number[], b: number[]) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+const unit = (a: number[]) => {
+  const long = Math.hypot(a[0], a[1], a[2]) || 1
+  return [a[0] / long, a[1] / long, a[2] / long]
+}
+const RAD = Math.PI / 180
+
+// An elbow kept an elbow in every clip: bent a little at the least, and bent the way an elbow bends. A library's
+// clips are made on its own mannequin, where an arm thrown out straight may pass straight and lean to one side, and
+// nothing shows it. On a figure with a sleeve and a bracer it is an arm with no joint in it: in the sword cut, as the
+// blow lands, the sword arm was 10 degrees past straight and 16 to the side (the owner, 2026-11-19: "rubbery like
+// gumby", "pay attention to the hand position and the elbow position"). The forearm is turned about the elbow to
+// where a bend of FLOOR degrees or more would have it, and what it leans to the side is taken down while the arm is
+// near straight, where the lean is the clip's looseness and not the shoulder's turn. The hand keeps the way it faces
+// in the world, and goes where the forearm takes it. Returns how far past straight an elbow went, and how many keys
+// were moved.
+const FLOOR = 12
+function elbows(doc: Document) {
+  const joints = doc.getRoot().listSkins()[0]?.listJoints() ?? []
+  const find = (bone: string) => joints.find((j) => new RegExp(`(^|:)${bone}$`).test(j.getName()))
+  let [past, where, moved] = [0, "", 0]
+  for (const clip of doc.getRoot().listAnimations()) {
+    const read = reader(clip)
+    const turned = (node: Node | null, time: number): Quat => {
+      if (!node) return [0, 0, 0, 1]
+      const up = node.getParentNode()
+      const own = read(node, "rotation", time) as Quat
+      return up ? qmul(turned(up, time), own) : own
+    }
+    for (const side of ["Left", "Right"]) {
+      const [arm, fore, hand] = [find(`${side}Arm`), find(`${side}ForeArm`), find(`${side}Hand`)]
+      if (!arm || !fore || !hand) continue
+      const keys = (of: Node) =>
+        clip
+          .listChannels()
+          .find((c) => c.getTargetNode() === of && c.getTargetPath() === "rotation")
+          ?.getSampler()
+      const [foreKeys, handKeys] = [keys(fore), keys(hand)]
+      const [input, foreOut, handOut] = [foreKeys?.getInput(), foreKeys?.getOutput(), handKeys?.getOutput()]
+      if (!input || !foreOut || !handOut || foreOut.getCount() !== handOut.getCount() || foreKeys?.getInterpolation() === "CUBICSPLINE") continue
+      // The upper arm's own lines, in its own space: the way it runs, and the way its elbow folds, which at rest is
+      // the way the figure faces.
+      const rest = arm.getWorldRotation() as Quat
+      const runs = unit(qturn(rest, fore.getTranslation()))
+      const [alongArm, alongFore] = [unit(fore.getTranslation()), unit(hand.getTranslation())]
+      const folds = qturn(qinv(rest), unit([-runs[0] * runs[2], -runs[1] * runs[2], 1 - runs[2] * runs[2]]))
+      for (let i = 0; i < foreOut.getCount(); i++) {
+        const above = turned(arm, input.getScalar(i))
+        const [own, held] = [foreOut.getElement(i, [0, 0, 0, 1]) as Quat, handOut.getElement(i, [0, 0, 0, 1]) as Quat]
+        const world = qmul(above, own)
+        const [a, f, d] = [qturn(above, alongArm), qturn(above, folds), unit(qturn(world, alongFore))]
+        const aside = cross(a, f)
+        const bent = Math.atan2(dot(d, f), dot(d, a)) / RAD
+        const leans = Math.asin(Math.max(-1, Math.min(1, dot(d, aside)))) / RAD
+        // Only an arm near straight is touched: one folded right up is an elbow already, whichever way these two
+        // angles read it, and from 40 degrees of fold to 60 less and less is done.
+        const folded = Math.acos(Math.max(-1, Math.min(1, dot(d, a)))) / RAD
+        const open = 1 - Math.max(0, Math.min(1, (folded - 40) / 20)) ** 2 * (3 - 2 * Math.max(0, Math.min(1, (folded - 40) / 20)))
+        if (open <= 0) continue
+        if (-bent > past) [past, where] = [-bent, `${side.toLowerCase()} arm in ${clip.getName()}`]
+        // Never under the floor, and come to it gently: from well above it nothing changes.
+        const bend = bent + (FLOOR + 5 * Math.log1p(Math.exp((bent - FLOOR) / 5)) - bent) * open
+        const near = 1 - Math.max(0, Math.min(1, (bend - 15) / 25)) ** 2 * (3 - 2 * Math.max(0, Math.min(1, (bend - 15) / 25)))
+        const lean = leans * (1 - 0.7 * near * open)
+        if (Math.abs(bend - bent) < 0.2 && Math.abs(lean - leans) < 0.2) continue
+        const to = [0, 1, 2].map((k) => Math.cos(lean * RAD) * (Math.cos(bend * RAD) * a[k] + Math.sin(bend * RAD) * f[k]) + Math.sin(lean * RAD) * aside[k])
+        const turn = qbetween(d, to)
+        foreOut.setElement(i, qall(qinv(above), turn, above, own))
+        handOut.setElement(i, qall(qinv(world), qinv(turn), world, held))
+        moved++
+      }
+    }
+  }
+  return { past, where, moved }
+}
+
+// A hand hung a little closed in every clip, whatever its model's fingers were modelled as. A clip's fingers go a
+// fifth of the way from the model's own to the library's (retarget.ts `CURL`), so a hand modelled flat with its
+// fingers spread stays a flat hand: Hi3D's Thalbern held an open paddle out at the end of each arm. Each joint of
+// each finger is closed by what it lacks of a hand at ease, about the line the game closes it about (hold.ts), in
+// every clip. A hand that holds a weapon is closed by the game from its rest, and is not this. Returns the most a
+// joint was closed, in degrees.
+const EASE_HAND = [22, 30, 18]
+function hang(doc: Document) {
+  const joints = doc.getRoot().listSkins()[0]?.listJoints() ?? []
+  const find = (bone: string) => joints.find((j) => new RegExp(`(^|:)${bone}$`).test(j.getName()))
+  const at = (node: Node) => node.getWorldMatrix().slice(12, 15)
+  const from = (a: Node, b: Node) => at(b).map((v, k) => v - at(a)[k])
+  let most = 0
+  for (const [side, sign] of [
+    ["Left", 1],
+    ["Right", -1],
+  ] as const) {
+    const [wrist, middle, index, pinky] = [find(`${side}Hand`), find(`${side}HandMiddle1`), find(`${side}HandIndex1`), find(`${side}HandPinky1`)]
+    if (!wrist || !middle || !index || !pinky) continue
+    const along = unit(from(wrist, middle))
+    const wide = from(pinky, index)
+    const across = unit(wide.map((v, k) => v - along[k] * dot(wide, along)))
+    const palm = cross(along, across).map((v) => v * sign)
+    for (const finger of ["Index", "Middle", "Ring", "Pinky"]) {
+      const bones = [1, 2, 3].map((k) => find(`${side}Hand${finger}${k}`))
+      const [a, b, c] = bones
+      if (!a || !b || !c) continue
+      const [first, second] = [unit(from(a, b)), unit(from(b, c))]
+      const last = unit(qturn(c.getWorldRotation() as Quat, unit(c.getTranslation())))
+      const about = unit(cross(first, palm))
+      const closed = (u: number[], v: number[]) => Math.atan2(dot(cross(u, v), about), dot(u, v)) / RAD
+      const lacks = [closed(along, first), closed(first, second), closed(second, last)].map((has, k) => Math.max(0, EASE_HAND[k] - has))
+      for (const [k, bone] of bones.entries()) {
+        if (!bone || lacks[k] < 0.5) continue
+        most = Math.max(most, lacks[k])
+        const line = unit(qturn(qinv(bone.getWorldRotation() as Quat), about))
+        const half = (lacks[k] * RAD) / 2
+        const more: Quat = [line[0] * Math.sin(half), line[1] * Math.sin(half), line[2] * Math.sin(half), Math.cos(half)]
+        for (const clip of doc.getRoot().listAnimations()) {
+          const out = clip
+            .listChannels()
+            .find((ch) => ch.getTargetNode() === bone && ch.getTargetPath() === "rotation")
+            ?.getSampler()
+            ?.getOutput()
+          for (let i = 0; out && i < out.getCount(); i++) out.setElement(i, qmul(out.getElement(i, [0, 0, 0, 1]) as Quat, more))
+        }
+      }
+    }
+  }
+  return most
+}
+
 // A bone in each forearm that rolls with the hand, and the forearm's skin hung on it more and more toward the wrist.
 // A real forearm rolls along its length: the elbow is a hinge and the wrist turns the palm. A library's skeleton has
 // bones for that and a rigged figure's has one forearm bone, so a clip's roll came whole at the elbow: in the sword
@@ -1570,6 +1699,11 @@ async function rodinHyper(brief: Brief) {
     const most = ease(doc, name, limit)
     say("ease", most === null ? `${name}: no such clip` : `${name}: an arm was raised ${most.toFixed(0)}°, and is kept under ${limit}°`)
   }
+  // `--elbows=off` leaves each elbow as its clip has it, and `--hang=off` each finger as it was modelled.
+  const bent = args.includes("--elbows=off") ? null : elbows(doc)
+  if (bent) say("elbows", `${bent.moved} keys moved: an elbow went ${bent.past.toFixed(0)}° past straight (the ${bent.where}), and no arm near straight is under ${FLOOR}° now`)
+  const hung = args.includes("--hang=off") ? 0 : hang(doc)
+  if (hung) say("hang", `fingers closed by up to ${hung.toFixed(0)}° a joint, to a hand at ease`)
   // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
   if (!args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
   // `--rolls=off` leaves a forearm's roll at the elbow, to measure against.
