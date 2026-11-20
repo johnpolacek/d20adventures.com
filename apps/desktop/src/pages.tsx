@@ -1,5 +1,5 @@
 import { srdAttribution } from "@d20/srd/attribution"
-import { Trash2 } from "lucide-react"
+import { Trash2, X } from "lucide-react"
 import { type ReactNode, useState } from "react"
 import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
@@ -35,8 +35,9 @@ function PageShell(props: { title: string; children: ReactNode }) {
   )
 }
 
-// The website's small red delete control. The first press asks, the second confirms.
-function RemoveButton(props: { confirming: boolean; label: string; confirmLabel: string; className?: string; disabled?: boolean; onBlur: () => void; onClick: () => void }) {
+// The website's small red delete control. The first press asks, the second confirms. Given an icon, it is a dark X that
+// sits on art instead.
+function RemoveButton(props: { icon?: ReactNode; confirming: boolean; label: string; confirmLabel: string; className?: string; disabled?: boolean; onBlur: () => void; onClick: () => void }) {
   return (
     <Button
       variant="plain"
@@ -47,11 +48,16 @@ function RemoveButton(props: { confirming: boolean; label: string; confirmLabel:
       onClick={props.onClick}
       className={cn(
         "grid h-6 place-items-center rounded-md transition-colors disabled:opacity-40",
-        props.confirming ? "bg-red-600/80 px-2 font-mono text-xxs text-white" : "w-6 bg-red-900/30 text-red-500/70 hover:bg-red-600/70 hover:text-white",
+        props.icon && "h-8",
+        props.confirming
+          ? "bg-red-600/80 px-2 font-mono text-xxs text-white"
+          : props.icon
+            ? "w-8 bg-black/60 text-white/70 hover:bg-red-600/80 hover:text-white"
+            : "w-6 bg-red-900/30 text-red-500/70 hover:bg-red-600/70 hover:text-white",
         props.className
       )}
     >
-      {props.confirming ? "Confirm" : <Trash2 aria-hidden="true" className="h-4 w-4" />}
+      {props.confirming ? "Confirm" : (props.icon ?? <Trash2 aria-hidden="true" className="h-4 w-4" />)}
     </Button>
   )
 }
@@ -93,13 +99,15 @@ function PriceChip({ a, listPrices }: { a: Listed; listPrices: Record<string, nu
   )
 }
 
-// A saved or hosted adventure: its cover in the site's card, where it stands, and the button that reopens it.
+// A saved or hosted adventure as a wide still of the scene the party stands in, with the cover beside the title, where
+// the run stands at the foot, and the button that reopens it. Archives saved before scenes were recorded show the cover.
 function SavedCard(props: {
   planId: string
   title: string
-  players: [number, number]
+  encounterId?: string
   completed: boolean
   chip: ReactNode
+  kicker?: string
   status: string
   note?: string
   action: string
@@ -108,6 +116,9 @@ function SavedCard(props: {
   onOpen: () => void
   children?: ReactNode
 }) {
+  const cover = `/stage/covers/${props.planId}.jpg`
+  const [missing, setMissing] = useState(false)
+  const art = props.encounterId && !missing ? `/stage/art/${props.planId}/${props.encounterId}.webp` : cover
   return (
     <li className="relative">
       <Button
@@ -116,17 +127,35 @@ function SavedCard(props: {
         disabled={props.busy}
         onClick={props.onOpen}
         aria-label={props.label}
-        className={cn(cardVariants({ variant: "pick" }), "flex h-full w-full flex-col text-center disabled:cursor-default")}
+        className={cn(cardVariants({ variant: "pick" }), "relative block aspect-[21/8] w-full scale-[.985] text-left disabled:cursor-default")}
       >
-        <div className="relative">
-          <ModuleCover id={props.planId} title={props.title} players={props.players} className={cn("rounded-none shadow-none", props.completed && "[filter:saturate(.5)_brightness(.8)]")} />
-          <div className="absolute bottom-3 left-3">{props.chip}</div>
-        </div>
-        <div className="flex flex-1 flex-col items-center px-5 pt-4 pb-6">
-          <div className="line-clamp-2 w-full font-display text-lg text-amber-300">{props.status}</div>
-          {props.note && <div className="mt-1 line-clamp-2 w-full text-sm text-gray-300">{props.note}</div>}
-          <div className="mt-auto pt-4">
-            <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>{props.action}</span>
+        <img
+          src={art}
+          alt=""
+          onError={() => setMissing(true)}
+          className={cn("absolute inset-0 h-full w-full object-cover", props.completed && "[filter:saturate(.5)_brightness(.8)]")}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+        <div className="relative flex h-full flex-col p-10">
+          <div className="flex items-center gap-6">
+            <img src={cover} alt="" className="aspect-[3/4] w-24 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20" />
+            <div className="flex flex-col items-start gap-3">
+              {props.chip}
+              <h3 className="max-w-xl font-display text-5xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{props.title}</h3>
+            </div>
+          </div>
+          <div className="mt-auto flex items-end justify-between gap-6">
+            <div>
+              {props.kicker && <div className={siteLabel}>{props.kicker}</div>}
+              <div className="font-display text-2xl text-amber-300 [text-shadow:0_2px_8px_#000]">{props.status}</div>
+            </div>
+            <div className="flex shrink-0 items-center gap-4">
+              {props.note && <span className="rounded-full bg-black/70 px-4 py-1.5 text-sm text-white">{props.note}</span>}
+              <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>
+                {props.action}
+              </span>
+            </div>
           </div>
         </div>
       </Button>
@@ -153,7 +182,6 @@ export function AdventuresPage(props: {
   onRemoveHosted: (adventureId: string) => void
 }) {
   const [removing, setRemoving] = useState<string | null>(null)
-  const players = (id: string): [number, number] => props.adventures.find((a) => a.id === id)?.players ?? props.locked.find((a) => a.id === id)?.players ?? [1, 4]
   const listed: Listed[] = [...props.adventures.map((info) => ({ ...info, info })), ...props.locked.map((locked) => ({ ...locked, locked }))]
   const featured = listed.find((a) => a.id === FEATURED)
   const intro = listed.filter((a) => a.id !== FEATURED)
@@ -162,7 +190,7 @@ export function AdventuresPage(props: {
       {props.saves.length + props.hosted.length > 0 && (
         <section>
           <SectionPlate>Your Adventures</SectionPlate>
-          <ul className="grid grid-cols-3 gap-8 py-8">
+          <ul className="flex flex-col gap-8 py-8">
             {props.saves.map((s) => {
               const current = s.archiveId === undefined
               const key = String(s.archiveId ?? "current")
@@ -171,10 +199,11 @@ export function AdventuresPage(props: {
                   key={key}
                   planId={s.planId}
                   title={s.title}
-                  players={players(s.planId)}
+                  encounterId={s.encounterId}
                   completed={s.status === "completed"}
                   chip={<Chip tone={current ? "amber" : "dark"}>{current ? "Playing" : played(s.playedAt)}</Chip>}
-                  status={s.status === "completed" ? "Complete" : `Round ${s.round} · ${s.turnTitle}`}
+                  kicker={s.status === "completed" ? undefined : `Round ${s.round}`}
+                  status={s.status === "completed" ? "Complete" : s.turnTitle}
                   note={s.party.join(", ")}
                   action={s.status === "completed" ? "Read the ending" : current ? "Continue" : "Resume"}
                   label={`${s.status === "completed" ? "Read the ending of" : current ? "Continue" : "Resume"} ${s.title}`}
@@ -182,7 +211,8 @@ export function AdventuresPage(props: {
                   onOpen={() => (current ? props.onContinue() : props.onResume(s.archiveId!))}
                 >
                   <RemoveButton
-                    className="absolute right-6 bottom-6"
+                    className="absolute top-6 right-6"
+                    icon={<X aria-hidden="true" className="h-4 w-4" />}
                     confirming={removing === key}
                     label={`Remove ${s.title}`}
                     confirmLabel={`Confirm removing ${s.title}`}
@@ -202,10 +232,11 @@ export function AdventuresPage(props: {
                 key={h.adventureId}
                 planId={h.planId}
                 title={h.title}
-                players={players(h.planId)}
+                encounterId={h.encounterId}
                 completed={h.status === "completed"}
                 chip={<Chip tone={props.hostingNow === h.adventureId ? "amber" : "primary"}>{props.hostingNow === h.adventureId ? "Hosting now" : "Hosted"}</Chip>}
-                status={h.status === "completed" ? "Complete" : h.round ? `Round ${h.round} · ${h.turnTitle}` : "Waiting for players"}
+                kicker={h.status !== "completed" && h.round ? `Round ${h.round}` : undefined}
+                status={h.status === "completed" ? "Complete" : h.round ? h.turnTitle : "Waiting for Players"}
                 note={`${h.players} at the table`}
                 action="Open"
                 label={`Open hosted game ${h.title}`}
@@ -213,7 +244,8 @@ export function AdventuresPage(props: {
                 onOpen={() => props.onOpenHosted(h.adventureId)}
               >
                 <RemoveButton
-                  className="absolute right-6 bottom-6"
+                  className="absolute top-6 right-6"
+                  icon={<X aria-hidden="true" className="h-4 w-4" />}
                   confirming={removing === h.adventureId}
                   label={`Remove ${h.title}`}
                   confirmLabel={`Confirm removing ${h.title}`}

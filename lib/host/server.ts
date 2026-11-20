@@ -275,6 +275,7 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     status: adventure.status ?? "waitingForPlayers",
     round: turn?.order ?? 0,
     turnTitle: turn?.title ?? "",
+    encounterId: turn?.encounterId,
     party: names.filter(Boolean),
     // The guests at the table, whose hero sheets the host may open, each once with every hero they play.
     guests: guestsOf(adventure, names),

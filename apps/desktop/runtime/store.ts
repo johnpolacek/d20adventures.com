@@ -47,6 +47,8 @@ export type SaveSummary = {
   status: SavedAdventure["status"]
   round: number
   turnTitle: string
+  // The current turn's encounter, whose painting the card shows. Archives saved before it have none.
+  encounterId?: string
   party: string[]
   playedAt?: number
 }
@@ -60,6 +62,7 @@ export const summarize = (save: Save, archiveId?: number, playedAt?: number): Sa
     status: save.adventure.status,
     round: turn?.order ?? 1,
     turnTitle: turn?.title ?? "",
+    encounterId: turn?.encounterId,
     party: (turn?.characters ?? []).filter((c) => c.type === "pc").map((c) => c.name),
     playedAt,
   }

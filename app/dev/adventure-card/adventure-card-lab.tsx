@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2 } from "lucide-react"
+import { Trash2, X } from "lucide-react"
 import type { ReactNode } from "react"
 import { buttonClassName, buttonStyle } from "@d20/ui/button"
 import { Chip, SectionPlate, siteLabel } from "@d20/ui/site"
@@ -89,29 +89,35 @@ function Ledger() {
   )
 }
 
-// B: the scene the party stands in, as a wide film still.
+// B: the scene the party stands in, as a wide film still, with the cover beside the title. Built into the app.
 function Cinema() {
   return (
     <div className="relative aspect-[21/8] overflow-hidden rounded-lg border border-white/10 ring-8 ring-black/30">
       <img src={save.sceneArt} alt="" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-      <div className="relative flex h-full max-w-xl flex-col p-10">
-        <Chip tone="amber" className="self-start">Playing</Chip>
-        <h3 className="mt-4 font-display text-5xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{save.title}</h3>
-        <div className="mt-auto">
-          <div className={siteLabel}>Now · Round {save.round}</div>
-          <div className="font-display text-2xl text-amber-300">{save.turnTitle}</div>
+      <div className="relative flex h-full flex-col p-10">
+        <div className="flex items-center gap-6">
+          <img src={save.cover} alt="" className="aspect-[3/4] w-24 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20" />
+          <div className="flex flex-col items-start gap-3">
+            <Chip tone="amber">Playing</Chip>
+            <h3 className="max-w-xl font-display text-5xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{save.title}</h3>
+          </div>
+        </div>
+        <div className="mt-auto flex items-end justify-between gap-6">
+          <div>
+            <div className={siteLabel}>Round {save.round}</div>
+            <div className="font-display text-2xl text-amber-300 [text-shadow:0_2px_8px_#000]">{save.turnTitle}</div>
+          </div>
+          <div className="flex shrink-0 items-center gap-4">
+            <span className="rounded-full bg-black/70 px-4 py-1.5 text-sm text-white">{save.party[0].name}</span>
+            <Epic>Continue</Epic>
+          </div>
         </div>
       </div>
-      <div className="absolute right-8 bottom-8 flex items-center gap-4">
-        <div className="flex items-center gap-2 rounded-full bg-black/70 py-1 pr-4 pl-1 text-sm text-white">
-          <Portrait src={save.party[0].image} className="size-8" />
-          {save.party[0].name}
-        </div>
-        <Epic>Continue</Epic>
-      </div>
-      <Remove className="absolute top-6 right-6" />
+      <span className="absolute top-6 right-6 grid size-8 place-items-center rounded-md bg-black/60 text-white/70">
+        <X className="size-4" />
+      </span>
     </div>
   )
 }
