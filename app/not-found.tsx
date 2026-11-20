@@ -25,7 +25,7 @@ export default function NotFound() {
         <h1 className="mt-2 font-display text-3xl sm:text-5xl" style={textShadowSpreadLight}>
           Lost in the Wilds
         </h1>
-        <p className="mt-4 max-w-md text-lg text-white/70">This path leads nowhere. The page you seek is on no map we know.</p>
+        <p className="mt-4 max-w-md text-lg text-white/70 text-balance">This path leads nowhere. The page you seek is on no map we know.</p>
 
         <Button variant="epic" size="lg" className="mt-10" render={<Link href="/" />}>
           Return Home

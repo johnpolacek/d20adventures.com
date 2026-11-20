@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Heading } from "@d20/ui/typography/heading"
+import Image from "@d20/ui/native-image"
+import { textShadowSpreadLight } from "@d20/ui/typography/styles"
+import { UpdatesBackdrop } from "@/components/updates/updates-backdrop"
 import { formatPostDate, getPosts } from "@/lib/updates"
 
 export const metadata: Metadata = {
@@ -12,22 +14,42 @@ export const metadata: Metadata = {
 export default async function UpdatesPage() {
   const posts = await getPosts()
   return (
-    <div className="container pt-24 pb-12">
-      <div className="mx-auto max-w-3xl">
-        <Heading variant="h2" as="h1" className="mb-12 text-center">
-          Updates
-        </Heading>
-        <ul className="space-y-10">
-          {posts.map((post) => (
-            <li key={post.slug}>
-              <Link href={`/updates/${post.slug}`} className="group block">
-                <time className="text-sm opacity-60">{formatPostDate(post.date)}</time>
-                <h2 className="mt-1 font-display text-2xl group-hover:underline underline-offset-4">{post.title}</h2>
-                {post.description && <p className="mt-2 opacity-80">{post.description}</p>}
-              </Link>
-            </li>
-          ))}
-        </ul>
+    <div className="relative isolate min-h-screen">
+      <UpdatesBackdrop />
+      <div className="container pt-28 pb-20">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-14 flex flex-col items-center text-center">
+            <h1 className="font-display text-5xl sm:text-6xl text-blue-50" style={textShadowSpreadLight}>
+              Updates
+            </h1>
+            <div className="stage-rule mt-6 h-1.5 w-64" />
+          </div>
+          <ul className="space-y-8">
+            {posts.map((post) => (
+              <li key={post.slug}>
+                <Link
+                  href={`/updates/${post.slug}`}
+                  className="group stage-grain grid overflow-hidden rounded-lg border border-amber-200/20 bg-black/60 shadow-[0_18px_44px_#000a] transition-colors hover:border-amber-200/50 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
+                >
+                  <div className="relative aspect-video sm:aspect-auto sm:min-h-56 bg-black">
+                    <Image
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      fill={true}
+                      src={post.image ?? "/images/app/backgrounds/d20-hero.webp"}
+                      alt=""
+                    />
+                  </div>
+                  <div className="flex flex-col justify-center p-6 sm:p-8">
+                    <time className="font-display text-sm tracking-[0.2em] uppercase text-amber-300/90">{formatPostDate(post.date)}</time>
+                    <h2 className="mt-2 font-display text-2xl sm:text-3xl text-blue-50 group-hover:text-white">{post.title}</h2>
+                    {post.description && <p className="mt-3 text-white/75">{post.description}</p>}
+                    <span className="mt-5 font-display text-sm text-amber-200/80 group-hover:text-amber-200">Read On</span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   )
