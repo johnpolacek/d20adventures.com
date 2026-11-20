@@ -23,9 +23,14 @@ Judges differ by a point (`gates-look.md`). Read every number as give or take on
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Before: `thalbern-rodin` as shipped 2026-11-17 | 1 | 0.5 | 1 | 0.5 | 1 | **4** | 1 |
 | 1: the face painted whole | 1 | 0.5 | 1 | 0.5 | 1 | **4** | 1 |
+| 2: `thalbern-hi3d`, Hi3D's model as it came | 1 | 0.5 | 1 | 0.5 | 1 | **4** | 1 |
+| 3: the same, its gloss halved and the sheet's face painted on | 1.5 | 0.5 | 1 | 1 | 1 | **5** | 1 |
 
 - Round 1's judge no longer names the seam down the nose. The face stays at 0.5 for its eyes, "black slits with no iris, white or catchlight", and for patches of another tone on the cheek and a line on the neck in the three-quarter view. A mended fault that leaves the number where it was: the eyes outweigh it.
 - Its three worst: the leather's finish, the eyes, the hair. All three are the model's.
+- Round 2, another model and the same number. Its judge credits what Rodin's lacked, "the outfit and gear match the sheet closely", and names other faults: eyes "pale grey-chrome smears with no clear iris, pupil or white", hair "one glossy moulded mass", the cuirass "a wet lacquer shine", hands "too large", skin "pale pink and poreless".
+- Round 3 is one point up, within what two judges differ by. Likeness 1.5: "the outfit and gear match the sheet closely". Materials 1: "leather reads as leather from a distance". The face stays at 0.5: the eyes are still "milky grey smears with no pupil", and the hair, hairline and ear are "soft and waxy at native pixels". Its three worst: the eyes, the hair and hairline, the skin's tone and wax with the hands.
+- Every judge puts the eyes and the hair in its worst three, on both models. Neither generator makes an eye or hair a close-up holds.
 
 ## What the first judge named, worst first
 
@@ -46,6 +51,15 @@ Judges differ by a point (`gates-look.md`). Read every number as give or take on
 | Round | Changed | Pictures |
 |---|---|---|
 | 1 | The face painted whole. A fitted head lies where the model's face is, and the paint was still held to where the sheet's figure is: his face stood 3 cm to one side, so the sheet's grey left that half unpainted (`rig.py`, `on_figure`). | `after-1/`, `before-after-round-1.jpg` |
+| 2 | Another model, `thalbern-hi3d`: Hi3D v3.0 on fal from the same front and back, 200,000 faces, de-shading 0.5, $2.10, and Hyper3D's rig, $0.20. The same borrowed clips. No face painted. | `after-2/` |
+| 3 | Free, on that model. Its gloss halved where it is not metal (its brief's `gloss`: leather's roughness 0.6 to 0.8, an eye's 0.2 to 0.6). The sheet's face painted on, and the paint faded out toward the ears: it used to stop whole at a depth, a ragged step on the cheek where the model's skin is lit another way (`rig.py`, `back`). | `after-3/`, `before-after-hi3d.jpg`, `before-after-hi3d-scene.jpg` |
+
+## What Hi3D's model is, beside Rodin's
+
+- Better: the eyes are open and have lids, the hair has a shape, studs, buckles, hilts and straps are each a thing, the colour has no light painted into it (the sheet's and the model's skin are the same tone within a twelfth), and metal is marked only where there is metal.
+- The same: the hilt stays in the scabbard while he swings, the arrows are one lump, the hands are large.
+- Its own: it comes 1 unit tall, with textures 8192 across and no normals, and the rigger gives it back with three points to every triangle, 49 MB. `pilot.ts` now sizes it to its height, makes like points one and keeps no texture wider than 4096: lod0 is 11.8 MB, 200,000 triangles, against Rodin's 5.8 MB and 50,000.
+- Leather comes with a roughness of 0.6 and reads wet in the review room's light. `gloss` is the mend.
 
 ## The light, tried and not kept
 
@@ -53,11 +67,13 @@ The review room's key at 1.5 from 2.4, the fill at 0.9, the room's reflection at
 
 ## Where it stops, and why
 
-Seven of the nine faults are the model's own shape or paint. Mending the face painting and the scene's light is what this model has left. Hair, eyes, studs, arrows and the painted-in light want another model: Hi3D's v3.0 with its de-shading is the one not yet tried. fal has it (`hitem3d/hi3d/v3.0/multi-view-to-3d`, listed 2026-11-19): front, back, left and right each given by name, so a front and a back alone can be sent, `shading` for the de-shading, no fewer than 100,000 faces, and $2.10 a model at `2048quality` with texture and PBR, $9.10 at `2048master`. Hi3D's own site prices the same model at 45 of a free account's 100 credits.
+Seven of the nine faults of Rodin's model are its own shape or paint. Hair, eyes, studs, arrows and the painted-in light wanted another model, and Hi3D's v3.0 was tried (rounds 2 and 3): studs and the painted-in light are mended, the eyes and hair are not. What is left, by what a judge says would move the number: eyes drawn in by hand where the face's landmarks put them, free. Hair and hands are the model's shape. The sheet is 768 by 1024 and its hair is a soft dark mass: a sheet twice as wide is free to make, and another model from it is $2.10. The scene's light is not begun. fal has it (`hitem3d/hi3d/v3.0/multi-view-to-3d`, listed 2026-11-19): front, back, left and right each given by name, so a front and a back alone can be sent, `shading` for the de-shading, no fewer than 100,000 faces, and $2.10 a model at `2048quality` with texture and PBR, $9.10 at `2048master`. Hi3D's own site prices the same model at 45 of a free account's 100 credits.
 
 ## How to take the pictures
 
 ```sh
-pnpm assets:views thalbern-rodin --out=$HOME/Desktop/thalbern-before-after/after-2 --moves=Shoot@1.4,Swing@0.4
+pnpm assets:views thalbern-hi3d --out=$HOME/Desktop/thalbern-before-after/after-4 --moves=Shoot@1.4,Swing@0.4
 node --import tsx lab/stage-art/capture.ts --name=thalbern --tier=high "--q=staging=the-midnight-summons/the-owlbear-prowls&look=play"
 ```
+
+The scene stands whoever `SHIPPED` names for him (`asset-library/shipped.ts`). For `thalbern-hi3d` it was named there while the pictures were taken and put back.

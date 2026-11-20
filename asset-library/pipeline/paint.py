@@ -103,10 +103,11 @@ def feeding(socket):
 textures = {"colour": feeding("Base Color"), "normal": feeding("Normal"), "rough": feeding("Roughness")}
 was = {img.name: tuple(img.size) for img in bpy.data.images}
 # Every texture as wide as the colour while the face is painted: rig.py smooths the relief under a face only in a
-# texture the colour's size.
+# texture the colour's size. One that came wider is brought down to it: Hi3D's are 8192 across, a gigabyte each as
+# they are painted, and no figure keeps one wider than this.
 for names in textures.values():
     for n in names:
-        if bpy.data.images[n].size[0] < WIDE:
+        if bpy.data.images[n].size[0] != WIDE:
             bpy.data.images[n].scale(WIDE, WIDE)
 
 # ── rig.py's painting ──
@@ -124,7 +125,7 @@ for kind, names in textures.items():
         continue
     img = bpy.data.images[names[0]]
     # The colour stays wide. The others go back to the size they came in.
-    if kind != "colour" and tuple(img.size) != was[img.name]:
+    if kind != "colour" and was[img.name][0] < WIDE:
         img.scale(*was[img.name])
     w, h = img.size
     a = np.empty(w * h * 4, dtype=np.float32)

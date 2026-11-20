@@ -9,6 +9,9 @@
 // back in an A-pose ($0.40), rigged by Hyper3D with its stock clips ($0.20). Run without --pay first: it lists the
 // stock clips (free) and keeps the ones it picks in pilot-picks.json, to look over before paying.
 //
+// A brief with "maker": "hi3d" (thalbern-hi3d) has its model from Hi3D v3.0 on fal ($2.10), from the same front and
+// back, and the same rig after it.
+//
 // A brief with "body": "<id>" (thalbern-rodin-meshy) makes no model: it takes that figure's, and its sheet, and pays
 // for Meshy's rig and clips alone ($1.04). Hyper3D's stock has no bow and no sword, and Meshy's library has both.
 //
@@ -925,6 +928,38 @@ function strays(doc: Document) {
   return patched
 }
 
+// A model made one unit tall given its character's height, in metres: Rodin's comes at a person's height and Hi3D's
+// comes 1 tall, and the steps after this one reach by centimetres, as do the weapons put in its hands. Points, bones,
+// the bind and every clip's travel are all made as many times larger. Returns how many times, or null if it was near.
+function sized(doc: Document, height: number) {
+  const root = doc.getRoot()
+  const prims = root.listMeshes().flatMap((m) => m.listPrimitives())
+  let [low, high] = [Infinity, -Infinity]
+  for (const prim of prims) {
+    const pos = prim.getAttribute("POSITION")
+    for (let i = 0; pos && i < pos.getCount(); i++) {
+      const y = pos.getElement(i, [0, 0, 0])[1]
+      low = Math.min(low, y)
+      high = Math.max(high, y)
+    }
+  }
+  const times = height / (high - low)
+  if (!Number.isFinite(times) || Math.abs(times - 1) < 0.15) return null
+  const grow = (accessor: Accessor | null, at: (i: number) => boolean) => {
+    const a = accessor?.getArray()
+    if (!accessor || !a) return
+    for (let i = 0; i < a.length; i++) if (at(i)) a[i] *= times
+    accessor.setArray(a)
+  }
+  for (const pos of new Set(prims.map((prim) => prim.getAttribute("POSITION")))) grow(pos, () => true)
+  for (const node of root.listNodes()) node.setTranslation(node.getTranslation().map((v) => v * times) as [number, number, number])
+  // A bind matrix keeps where the mesh stood from its bone in its last column.
+  for (const bind of new Set(root.listSkins().map((skin) => skin.getInverseBindMatrices()))) grow(bind, (i) => i % 16 >= 12 && i % 16 < 15)
+  const travels = root.listAnimations().flatMap((anim) => anim.listChannels().filter((ch) => ch.getTargetPath() === "translation").map((ch) => ch.getSampler()?.getOutput() ?? null))
+  for (const out of new Set(travels)) grow(out, () => true)
+  return times
+}
+
 // One normal for every place on the mesh. Rodin's comes apart along every edge of its texture layout with a normal to
 // each side, a median of 63 degrees apart, and is lit as flat shards: an ear, a nose and hair cut from card. rig.py
 // welds its own models for the same reason.
@@ -1049,8 +1084,8 @@ interface Brief {
   height: number
   party?: boolean
   who: string
-  // Who makes it: Tripo then Meshy (the default), or Rodin then Hyper3D's rigging.
-  maker?: "rodin"
+  // Who makes it: Tripo then Meshy (the default), or Rodin or Hi3D then Hyper3D's rigging.
+  maker?: "rodin" | "hi3d"
   // A figure whose model and sheet this one takes in place of its own. Meshy's rig and clips alone are paid for.
   body?: string
   // Clips copied from another skeleton's library, each by the name it is played by: "ual1:Sword_Attack".
@@ -1065,6 +1100,8 @@ interface Brief {
   eased?: Record<string, number>
   // False to leave out the bones between arm and trunk, for a figure kept to measure against.
   helpers?: boolean
+  // The share of its gloss a figure keeps where it is not metal, of 1: 0.5 makes a roughness of 0.6 one of 0.8.
+  gloss?: number
 }
 
 // Where a figure's sheet and model are: its own folder, or the folder of the figure it takes them from.
@@ -1120,6 +1157,35 @@ async function face(brief: Brief, rest: string) {
   return painted.faceFromSheet
 }
 
+// A figure's gloss turned down where it is not metal (its brief's `gloss`). Hi3D gives leather a roughness of 0.6 and
+// an eye one of 0.2: in a lit room the leather is wet and the eyes are chrome. Buckles and hilts keep theirs.
+async function dull(keeps: number) {
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
+  const doc = await io.read(`${dir}/lod0.glb`)
+  let texels = 0
+  for (const texture of new Set(
+    doc
+      .getRoot()
+      .listMaterials()
+      .map((m) => m.getMetallicRoughnessTexture())
+  )) {
+    const image = texture?.getImage()
+    if (!texture || !image) continue
+    // Green is the roughness and blue the metal, as glTF keeps them.
+    const { data, info } = await sharp(image).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+    for (let i = 0; i < data.length; i += info.channels) {
+      const bare = 1 - Math.min(1, data[i + 2] / 128)
+      const rough = 255 - (255 - data[i + 1]) * keeps
+      data[i + 1] = Math.round(data[i + 1] + (rough - data[i + 1]) * bare)
+    }
+    texels += info.width * info.height
+    doc.createExtension(EXTTextureWebP).setRequired(true)
+    texture.setImage(await sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } }).webp({ quality: 92 }).toBuffer()).setMimeType("image/webp")
+  }
+  await io.write(`${dir}/lod0.glb`, doc)
+  return texels
+}
+
 // The lighter copies, as rig.py makes them for its figures: the game stands the middle one when more than three
 // figures share a scene (play.ts), and the desktop app bundles it. Skin, skeleton and clips are lod0's own.
 const LODS: [file: string, triangles: number, texture: number][] = [
@@ -1147,14 +1213,17 @@ async function thin() {
   const full = await io.read(`${dir}/lod0.glb`)
   // A figure with no face painted on still has the generator's textures as PNG, 13 MB of an owlbear's 18: they are
   // packed as a painted figure's are, at their own size.
+  // Hi3D's are 8192 across, a third of a gigabyte each on a graphics card: no figure keeps one wider than 4096.
+  const wide = widest(full) > 4096
   if (
+    wide ||
     full
       .getRoot()
       .listTextures()
-      .some((t) => t.getMimeType() === "image/png")
+      .some((t) => t.getMimeType() !== "image/webp")
   ) {
     full.createExtension(EXTTextureWebP).setRequired(true)
-    await full.transform(textureCompress({ encoder: sharp, targetFormat: "webp", quality: 92 }))
+    await full.transform(textureCompress({ encoder: sharp, targetFormat: "webp", quality: 92, ...(wide ? { resize: [4096, 4096] as [number, number] } : {}) }))
     await io.write(`${dir}/lod0.glb`, full)
   }
   const rows = [{ file: "lod0.glb", triangles: triangles(full), megabytes: await megabytes("lod0.glb"), texture: widest(full) }]
@@ -1228,6 +1297,9 @@ async function tripoMeshy(brief: Brief) {
 }
 
 const RODIN = { endpoint: "fal-ai/hyper3d/rodin/v2.5", cost: 0.4 }
+// Hi3D v3.0 from views given by name. It makes no fewer than 100,000 faces and says 2,000,000 serve it best: 200,000
+// is four times Rodin's, and the copies for a crowd are thinned from it as any figure's are.
+const HI3D = { endpoint: "hitem3d/hi3d/v3.0/multi-view-to-3d", cost: 2.1, faces: 200_000 }
 const HYPER = { endpoint: "hyper3d/rigging", list: "hyper3d/rigging/animations", cost: 0.2 }
 // The clips wanted from Hyper3D's stock, by the name the game plays each by: the first stock clip whose name or
 // description matches, a looping one first for a clip that loops. `pilot-picks.json` keeps what was picked: edit it
@@ -1245,11 +1317,13 @@ type Stock = { animation_id: string; display_name?: string; content_description?
 type HyperAnswer = { model_mesh?: Remote; rigged_character_glb?: Remote; animations?: { action_id?: string; animation_glb?: Remote }[] }
 type RodinAnswer = { model_mesh?: Remote }
 
-// Rodin's model from the sheet's front and back, in an A-pose, rigged by Hyper3D with its stock clips, each renamed
-// to the name the game plays it by. Returns the clips it has.
+// Rodin's model, or Hi3D's, from the sheet's front and back, in an A-pose, rigged by Hyper3D with its stock clips, each
+// renamed to the name the game plays it by. Returns the clips it has.
 async function rodinHyper(brief: Brief) {
   // A brief with a body takes that figure's sheet, model and picks, and is rigged again on its own.
   const from = home(brief)
+  const hi3d = (brief.body ? await kept<Brief>(`${from}/character.json`) : brief)?.maker === "hi3d"
+  const maker = hi3d ? { name: "Hi3D v3.0 on fal", cost: HI3D.cost } : { name: "Rodin Gen-2.5 on fal", cost: RODIN.cost }
   const views = ["apose-front.png", "apose-back.png"].filter((f) => existsSync(`${from}/${f}`))
   let picks = await kept<Record<string, string>>(`${from}/pilot-picks.json`)
   if (!picks) {
@@ -1273,24 +1347,37 @@ async function rodinHyper(brief: Brief) {
   let rig = await kept<HyperAnswer>(`${dir}/pilot-rig.json`)
   if (brief.body && !model) throw new Error(`No model in ${from}/pilot-model.json: make ${brief.body} first`)
   const skinning = brief.skinning ?? "core"
-  const owed = (model ? 0 : RODIN.cost) + (rig ? 0 : HYPER.cost)
+  const owed = (model ? 0 : maker.cost) + (rig ? 0 : HYPER.cost)
   if (owed > 0 && !pay) {
-    const had = model ? `the model kept${brief.body ? ` from ${brief.body}` : ""}` : `the model $${RODIN.cost.toFixed(2)} from ${views.length} views`
+    const had = model ? `the model kept${brief.body ? ` from ${brief.body}` : ""}` : `the model $${maker.cost.toFixed(2)} from ${views.length} views (${maker.name})`
     say("cost", `$${owed.toFixed(2)} to make: ${had}, the rig (${skinning} skinning) and its clips $${HYPER.cost.toFixed(2)}. Look over ${from}/pilot-picks.json, then run again with --pay`)
     return null
   }
   if (!model) {
-    model = await fal<RodinAnswer>(`pilot model ${id}`, RODIN.endpoint, {
-      image_urls: await Promise.all(views.map(async (f) => dataUri(await sharp(`${from}/${f}`).png().toBuffer()))),
-      prompt: brief.who,
-      tier: "Gen-2.5-High",
-      quality_mesh_option: "50K Triangle",
-      material: "PBR",
-      geometry_file_format: "glb",
-      TAPose: true,
-    })
+    const images = await Promise.all(views.map(async (f) => dataUri(await sharp(`${from}/${f}`).png().toBuffer())))
+    model = hi3d
+      ? await fal<RodinAnswer>(`pilot model ${id}`, HI3D.endpoint, {
+          front_image_url: images[0],
+          ...(images[1] ? { back_image_url: images[1] } : {}),
+          resolution: "2048quality",
+          face_count: HI3D.faces,
+          enable_texture: true,
+          enable_pbr: true,
+          // How much of the light painted into the pictures is taken out of the colour: its own default.
+          shading: 0.5,
+          export_format: "glb",
+        })
+      : await fal<RodinAnswer>(`pilot model ${id}`, RODIN.endpoint, {
+          image_urls: images,
+          prompt: brief.who,
+          tier: "Gen-2.5-High",
+          quality_mesh_option: "50K Triangle",
+          material: "PBR",
+          geometry_file_format: "glb",
+          TAPose: true,
+        })
     await writeFile(`${dir}/pilot-model.json`, `${JSON.stringify(model, null, 2)}\n`)
-    say("model", `made, $${RODIN.cost.toFixed(2)}`)
+    say("model", `made, $${maker.cost.toFixed(2)}`)
   } else say("model", "kept")
   if (!model.model_mesh?.url) throw new Error(`No model in ${from}/pilot-model.json`)
   // Hyper3D's rigging does not turn a model. One that faces another way is not sent, so the rig is not paid for.
@@ -1329,12 +1416,17 @@ async function rodinHyper(brief: Brief) {
     if (role) anim.setName(role)
     made.push(anim.getName())
   }
+  const times = sized(doc, brief.height ?? 1.8)
+  if (times) say("sized", `${times.toFixed(2)} times larger, to stand ${brief.height} m`)
   inPlace(doc)
   const way = brief.holds ? await unrod(doc) : null
   if (way) say("rod", `${way.faces} blue faces cut from the hand and ${way.loose} left loose by it, a way ${(way.wide * 200).toFixed(1)} cm wide`)
   const stray = strays(doc)
   if (stray) say("strays", `${stray} points the rigger left out of the skinning given the shares of those about them`)
   smooth(doc)
+  // The rigger gave Hi3D's model back with three points of its own to every triangle, 600,000 for 105,000 places and
+  // 49 MB of them. With one normal to a place, points that are the same in every way are made one again.
+  await doc.transform(weld())
   // A brief that borrows its clips has no use for the rigger's stand-ins, a gun fired for a bow shot and a throw for
   // a cut: they are taken out, keys and all, and the borrowed ones go by the names the game plays.
   if (Object.keys(brief.borrowed ?? {}).length) {
@@ -1388,9 +1480,9 @@ async function rodinHyper(brief: Brief) {
     rod: !!way,
     clips: made,
     rest: all,
-    generator: `Rodin Gen-2.5 on fal, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`,
+    generator: `${maker.name}, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`,
     weights: "hyper3d",
-    cost: RODIN.cost + HYPER.cost,
+    cost: maker.cost + HYPER.cost,
   }
 }
 
@@ -1399,12 +1491,13 @@ async function main() {
   const brief = JSON.parse(await readFile(`${dir}/character.json`, "utf8")) as Brief
   const sheet = `${home(brief)}/apose-front.png`
   if (!existsSync(sheet)) throw new Error(`No sheet: run pnpm assets ${brief.body ?? id} first, and look at ${home(brief)}/sheet.png`)
-  const made = brief.maker === "rodin" ? await rodinHyper(brief) : await tripoMeshy(brief)
+  const made = brief.maker === "rodin" || brief.maker === "hi3d" ? await rodinHyper(brief) : await tripoMeshy(brief)
   if (!made) return
   say("merge", `${dir}/lod0.glb with ${made.clips.join(", ")}`)
   const painted = await face(brief, made.rest)
   if (painted) say("face", `the sheet's, ${painted.fitted ? "fitted to the model's own" : "not fitted"}, ${painted.texels} texels`)
   if ("rod" in made && made.rod) say("rod", `${await unblue()} texels of blue beside it given the colour of the skin`)
+  if (brief.gloss !== undefined && brief.gloss < 1) say("gloss", `${await dull(brief.gloss)} texels keep ${brief.gloss} of it where they are not metal`)
 
   const lods = await thin()
   say("lods", lods.map((l) => `${l.file} ${l.triangles} triangles, ${l.megabytes} MB`).join(", "))

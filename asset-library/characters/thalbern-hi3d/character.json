@@ -1,0 +1,42 @@
+{
+  "id": "thalbern-hi3d",
+  "name": "Thalbern",
+  "role": "Ranger of the Valkarr Woods",
+  "cast": [
+    "thalbern"
+  ],
+  "party": true,
+  "height": 1.82,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp"
+  },
+  "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
+  "stow": "He has no bow: it is left out of the picture entirely, and nothing is slung across his back but the quiver. Both blades stay sheathed at his hips.",
+  "arms": 40,
+  "maker": "hi3d",
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Shoot": "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6",
+    "Swing": "ual1:Sword_Attack",
+    "Dodge": "ual1:Roll",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01",
+    "Sword Idle": "ual1:Sword_Idle",
+    "Block": "ual2:Sword_Block",
+    "Combo": "ual2:Sword_Regular_Combo",
+    "Strafe": "m2m/strafe-left"
+  },
+  "eased": {
+    "Swing": 85
+  },
+  "drawn": {
+    "Shoot": {
+      "until": 1.5
+    }
+  },
+  "gloss": 0.5,
+  "face": "close"
+}

@@ -21,6 +21,7 @@ export interface Plays {
 // Thalbern cuts with a sword or shoots with a bow and gets out of the way; the owlbear swipes; Wollandora only dodges.
 // A figure with clips of its own names every one it plays, and when its blows land: the cut as the sword hand comes
 // through fastest, the shot as the string is let go (its brief's `drawn`).
+const THALBERN: Plays = { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { melee: "Swing", ranged: "Shoot", dodge: "Sidestep" }, lands: { Swing: 0.4, Shoot: 1.5 } }
 export const PLAYS: Record<string, Plays> = {
   thalbern: { moves: { melee: "Swing", ranged: "Shoot", dodge: "Dodge" } },
   wollandora: { moves: { dodge: "Dodge" } },
@@ -29,5 +30,7 @@ export const PLAYS: Record<string, Plays> = {
   // The owlbear stands and walks hunched, as a beast does (its brief's Idle Heavy and Walk Heavy), and its swipe lands
   // as the right paw comes through fastest.
   "owlbear-rodin": { idle: "Idle Heavy", walk: "Walk Heavy", hit: "Hit", fall: "Fall", moves: { melee: "Claw" }, lands: { Claw: 0.6 } },
-  "thalbern-rodin": { idle: "Idle", walk: "Walk", hit: "Hit", fall: "Fall", moves: { melee: "Swing", ranged: "Shoot", dodge: "Sidestep" }, lands: { Swing: 0.4, Shoot: 1.5 } },
+  "thalbern-rodin": THALBERN,
+  // Hi3D's model of him, with the same rig and the same borrowed clips: not shipped, and a look can name it.
+  "thalbern-hi3d": THALBERN,
 }

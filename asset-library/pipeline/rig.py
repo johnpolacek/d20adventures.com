@@ -672,7 +672,10 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         if within is not None and P[..., 1].min() < face_front + 0.06 * H / 1.8:
             turn = np.maximum(turn, within)
         if only_face:
-            turn = within if within is not None else 0.0
+            # Faded out toward the ears over the last centimetres of the face's depth. The paint used to stop at
+            # that depth whole, and where the model's skin is another tone a ragged step stood on the cheek.
+            back = np.clip((face_front + 0.06 * H / 1.8 - P[..., 1]) / (0.03 * H / 1.8), 0, 1) if face_front is not None else 0.0
+            turn = within * back if within is not None else 0.0
         rise = np.clip((P[..., 2] - neck) / (0.025 * H), 0, 1)
         # Never the sheet's grey: a point of the model that falls outside the painted figure keeps its own colour.
         on_figure = figure_mask[iy, ix] & figure_mask[iy + 1, ix + 1]
