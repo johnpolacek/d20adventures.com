@@ -396,7 +396,6 @@ export function AdventuresPage(props: {
                 <Button
                   variant="plain"
                   type="button"
-                  disabled={props.busy}
                   onClick={() => props.onAdventure(a.id)}
                   className={cn(cardVariants({ variant: "pick" }), "flex h-full w-full flex-col text-center disabled:cursor-default")}
                   aria-label={a.locked ? `${a.title}, ${a.locked.owned ? "owned, not downloaded" : `locked, ${price(a.locked.priceCents)}`}` : `New game of ${a.title}`}
@@ -430,7 +429,6 @@ export function AdventuresPage(props: {
           <Button
             variant="plain"
             type="button"
-            disabled={props.busy}
             onClick={() => props.onAdventure(featured.id)}
             className={cn(
               cardVariants({ variant: "frame" }),

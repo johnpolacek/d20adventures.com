@@ -182,7 +182,7 @@ export function DesktopGame() {
     )
     if (!ids.length) return
     for (const id of ids) askedArt.current.add(id)
-    void invoke({ kind: "art", ids: ids.slice(0, 24) })
+    void invoke({ kind: "art", ids: ids.slice(0, 24) }, "quiet")
   }, [working, loaded, heroes, save?.painted, saves, invoke])
   // A new game moves the saved adventure to the archive, where home lists it. Party setup stays open if the start fails.
   const start = async (chosenParty: PartyChoice[]) => {
@@ -239,7 +239,7 @@ export function DesktopGame() {
     const ids = guestArt.split(",").filter((id) => !askedArt.current.has(id))
     if (!ids.length) return
     for (const id of ids) askedArt.current.add(id)
-    void invoke({ kind: "art", ids: ids.slice(0, 24) })
+    void invoke({ kind: "art", ids: ids.slice(0, 24) }, "quiet")
   }, [working, guestArt, invoke])
   const [worker, setWorker] = useState<HostWorkerState | null>(null)
   const [sending, setSending] = useState(false)
