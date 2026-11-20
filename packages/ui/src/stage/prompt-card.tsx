@@ -503,13 +503,13 @@ export function PromptCard({
         candlelit,
         "fade-in absolute left-1/2 z-30 -translate-x-1/2 text-center",
         compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))] px-3 py-2" : "bottom-[118px] w-[min(520px,calc(100%-40px))] px-6 pt-4 pb-4",
-        mode.kind === "hold" && actor && (compact ? "pt-7" : "pt-14")
+        mode.kind === "hold" && actor && (compact ? "pt-7" : "pt-[50px]")
       )}
     >
       {mode.kind === "hold" && actor && (
         <>
           <HeroRing party={party} actor={actor} compact={compact} onPick={onPick} />
-          <div className={cn("font-display tracking-[0.3em] text-stage-gold uppercase", compact ? "text-[10px]" : "mt-3 text-[12px]")}>{actor.name.split(" ")[0]}</div>
+          <div className={cn("font-display tracking-[0.3em] text-stage-gold uppercase", compact ? "text-[10px]" : "text-[12px]")}>{actor.name.split(" ")[0]}</div>
           <p className={cn("font-serif text-stage-cream", compact ? "my-1 line-clamp-3 text-[13px] leading-snug" : "mt-1.5 mb-4 text-[19px] leading-[1.4]")}>{mode.prompt}</p>
           {mode.suggestions && mode.suggestions.length > 0 && (
             <div className={cn("flex flex-wrap justify-center", compact ? "mb-1.5 gap-1" : "mb-3 gap-2")}>
