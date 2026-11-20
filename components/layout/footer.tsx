@@ -16,7 +16,7 @@ export default function SiteFooter({ currentYear }: { currentYear: number }) {
   const overlay = pathname === "/"
 
   return (
-    <footer className={overlay ? "absolute inset-x-0 bottom-0 z-20 bg-black/50 py-6" : "border-t border-white/20 py-6"}>
+    <footer className={overlay ? "absolute inset-x-0 bottom-0 z-20 bg-black/50 py-6" : "relative z-10 border-t border-white/20 bg-black/50 py-6"}>
       <div className="container px-4 md:px-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left text-sm">
           <p>

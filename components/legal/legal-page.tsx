@@ -14,7 +14,7 @@ export const contactUs = <Link href="/contact">contact us</Link>
 /** A plain page over the home page's hero art, its content on a see-through card. */
 export function PlainPage({ title, subtitle, children }: { title: string; subtitle?: ReactNode; children: ReactNode }) {
   return (
-    <div className="relative isolate min-h-screen">
+    <div className="relative isolate">
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-black">
         <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.webp" alt="" />
       </div>
