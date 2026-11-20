@@ -51,8 +51,10 @@ export async function getPost(slug: string): Promise<Update | undefined> {
   return (await getPosts()).find((post) => post.slug === slug)
 }
 
+/** Markdown to HTML. A link whose text starts with "Play" is drawn as a button. */
 export function renderPost(post: Update): string {
-  return marked.parse(post.body, { async: false })
+  const html = marked.parse(post.body, { async: false })
+  return html.replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="update-play stage-brass">$2</a>')
 }
 
 export function formatPostDate(date: string): string {

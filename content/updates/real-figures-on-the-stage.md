@@ -2,6 +2,7 @@
 title: "Real Figures on the Stage"
 date: 2026-11-20
 description: "Thalbern, Wollandora and the owlbear are rigged 3D figures now. Plus sound, hiding and a new look."
+image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage.webp"
 draft: true
 ---
 
@@ -21,4 +22,4 @@ Other things that landed:
 
 225 commits this week. The whole thing is open source on [Github](https://github.com/johnpolacek/d20adventures.com).
 
-[Play The Midnight Summons](https://d20adventures.com).
+[Play The Midnight Summons](https://d20adventures.com)
