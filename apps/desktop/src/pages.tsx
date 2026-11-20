@@ -94,9 +94,17 @@ function PriceChip({ a, listPrices }: { a: Listed; listPrices: Record<string, nu
   )
 }
 
-// A saved card's X. It asks over the whole card: the art dims and blurs behind the question, Keep takes focus, and
-// Escape or a click off the buttons keeps the save.
-function CardRemove(props: { title: string; confirming: boolean; disabled?: boolean; onAsk: () => void; onCancel: () => void; onConfirm: () => void }) {
+// A saved card's X. It asks over the whole card: the art dims and blurs behind Cancel and Archive, with Delete
+// Permanently set small beneath. Cancel takes focus, and Escape or a click off the buttons cancels.
+function CardRemove(props: {
+  title: string
+  confirming: boolean
+  disabled?: boolean
+  onAsk: () => void
+  onCancel: () => void
+  onArchive: () => void
+  onDelete: () => void
+}) {
   const { confirming, onCancel } = props
   useEffect(() => {
     if (!confirming) return
@@ -110,9 +118,9 @@ function CardRemove(props: { title: string; confirming: boolean; disabled?: bool
         variant="plain"
         type="button"
         disabled={props.disabled}
-        aria-label={`Remove ${props.title}`}
+        aria-label={`Archive or delete ${props.title}`}
         onClick={props.onAsk}
-        className="absolute top-6 right-6 grid size-8 place-items-center rounded-md bg-black/60 text-white/70 transition-colors hover:bg-red-600/80 hover:text-white disabled:opacity-40"
+        className="absolute top-6 right-6 grid size-8 place-items-center rounded-md bg-black/60 text-white/70 transition-colors hover:bg-black/80 hover:text-white disabled:opacity-40"
       >
         <X aria-hidden="true" className="h-4 w-4" />
       </Button>
@@ -125,29 +133,47 @@ function CardRemove(props: { title: string; confirming: boolean; disabled?: bool
       onClick={(e) => e.target === e.currentTarget && onCancel()}
       className="fade-in absolute inset-0 grid scale-[.985] place-items-center rounded-xl bg-black/75 backdrop-blur-sm"
     >
-      <div className="flex flex-col items-center gap-6 text-center">
-        <div>
-          <h3 id="remove-title" className="font-display text-3xl text-white">
-            Remove {props.title}?
-          </h3>
-          <p className="mt-2 font-serif text-white/60 italic">This save can’t be brought back.</p>
-        </div>
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col items-center text-center">
+        <h3 id="remove-title" className="font-display text-3xl text-white">
+          Archive {props.title}?
+        </h3>
+        <div className="mt-6 flex items-center gap-4">
           <Button variant="plain" type="button" autoFocus onClick={onCancel} className={cn(siteOutline, "px-6 py-2 font-display text-sm")}>
-            Keep
+            Cancel
           </Button>
-          <Button
-            variant="plain"
-            type="button"
-            disabled={props.disabled}
-            onClick={props.onConfirm}
-            className="rounded-md border-2 border-red-400/40 bg-red-700 px-6 py-2 font-display text-sm text-white transition-colors hover:bg-red-600 disabled:opacity-40"
-          >
-            Remove
+          <Button variant="plain" type="button" disabled={props.disabled} onClick={props.onArchive} className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>
+            Archive
           </Button>
         </div>
+        <Button
+          variant="plain"
+          type="button"
+          disabled={props.disabled}
+          onClick={props.onDelete}
+          className="mt-5 rounded-md px-3 py-1 font-display text-xs text-red-300/70 transition-colors hover:bg-red-900/40 hover:text-red-200 disabled:opacity-40"
+        >
+          Delete Permanently
+        </Button>
       </div>
     </div>
+  )
+}
+
+// An archived save or hosted game, as a slim row: Restore lists it with the others again, and the small red control
+// deletes it for good.
+function ArchivedRow(props: { planId: string; title: string; kicker: string; busy: boolean; onRestore: () => void; children: ReactNode }) {
+  return (
+    <li className="flex items-center gap-5 px-5 py-3">
+      <img src={`/stage/covers/${props.planId}.jpg`} alt="" className="aspect-[3/4] w-10 rounded-sm object-cover saturate-50" />
+      <div className="flex-1">
+        <div className="font-display text-lg text-white/80">{props.title}</div>
+        {props.kicker && <div className={siteLabel}>{props.kicker}</div>}
+      </div>
+      <Button variant="plain" type="button" disabled={props.busy} onClick={props.onRestore} className={cn(siteOutline, "px-4 py-1.5 font-display text-sm")}>
+        Restore
+      </Button>
+      {props.children}
+    </li>
   )
 }
 
@@ -224,6 +250,8 @@ function SavedCard(props: {
   )
 }
 
+const ARCHIVED_HOSTED = "d20.archivedHosted"
+
 export function AdventuresPage(props: {
   saves: SaveSummary[]
   // Painted art fetched for heroes, by character id.
@@ -236,6 +264,8 @@ export function AdventuresPage(props: {
   onResume: (archiveId: number) => void
   // Deletes a saved adventure: an archived one by id, or the current one.
   onRemove: (archiveId?: number) => void
+  // Archives a saved adventure, the current one without an id, or with restore lists an archived one again.
+  onArchive: (archiveId?: number, restore?: boolean) => void
   onAdventure: (id: string) => void
   // Website games this account hosts, and the one whose GM this app is running.
   hosted: HostedSummary[]
@@ -244,6 +274,17 @@ export function AdventuresPage(props: {
   onRemoveHosted: (adventureId: string) => void
 }) {
   const [removing, setRemoving] = useState<string | null>(null)
+  // Hosted games live on the website, so which ones the player archived is kept on this machine.
+  const [archivedHosted, setArchivedHosted] = useState<string[]>(() => JSON.parse(localStorage.getItem(ARCHIVED_HOSTED) ?? "[]"))
+  const archiveHosted = (id: string, archived: boolean) => {
+    const next = archived ? [...new Set([...archivedHosted, id])] : archivedHosted.filter((h) => h !== id)
+    localStorage.setItem(ARCHIVED_HOSTED, JSON.stringify(next))
+    setArchivedHosted(next)
+  }
+  const saves = props.saves.filter((s) => !s.hidden)
+  const hosted = props.hosted.filter((h) => !archivedHosted.includes(h.adventureId))
+  const shelvedSaves = props.saves.filter((s) => s.hidden)
+  const shelvedHosted = props.hosted.filter((h) => archivedHosted.includes(h.adventureId))
   const heroesOf = (s: SaveSummary): CardHero[] => {
     if (!s.heroes) return s.party.map((name) => ({ name }))
     const painted = Object.fromEntries((s.painted ?? []).flatMap((id) => (props.art[id] ? [[id, props.art[id]]] : [])))
@@ -254,11 +295,11 @@ export function AdventuresPage(props: {
   const intro = listed.filter((a) => a.id !== FEATURED)
   return (
     <PageShell title="Adventures">
-      {props.saves.length + props.hosted.length > 0 && (
+      {saves.length + hosted.length > 0 && (
         <section>
           <SectionPlate>Your Adventures</SectionPlate>
           <ul className="flex flex-col gap-8 py-8">
-            {props.saves.map((s) => {
+            {saves.map((s) => {
               const current = s.archiveId === undefined
               const key = String(s.archiveId ?? "current")
               return (
@@ -282,7 +323,11 @@ export function AdventuresPage(props: {
                     disabled={props.busy}
                     onAsk={() => setRemoving(key)}
                     onCancel={() => setRemoving(null)}
-                    onConfirm={() => {
+                    onArchive={() => {
+                      setRemoving(null)
+                      props.onArchive(s.archiveId)
+                    }}
+                    onDelete={() => {
                       setRemoving(null)
                       props.onRemove(s.archiveId)
                     }}
@@ -290,7 +335,7 @@ export function AdventuresPage(props: {
                 </SavedCard>
               )
             })}
-            {props.hosted.map((h) => (
+            {hosted.map((h) => (
               <SavedCard
                 key={h.adventureId}
                 planId={h.planId}
@@ -311,7 +356,11 @@ export function AdventuresPage(props: {
                   disabled={props.busy}
                   onAsk={() => setRemoving(h.adventureId)}
                   onCancel={() => setRemoving(null)}
-                  onConfirm={() => {
+                  onArchive={() => {
+                    setRemoving(null)
+                    archiveHosted(h.adventureId, true)
+                  }}
+                  onDelete={() => {
                     setRemoving(null)
                     props.onRemoveHosted(h.adventureId)
                   }}
@@ -406,6 +455,63 @@ export function AdventuresPage(props: {
               </div>
             </div>
           </Button>
+        </section>
+      )}
+      {shelvedSaves.length + shelvedHosted.length > 0 && (
+        <section>
+          <SectionPlate>Archived</SectionPlate>
+          <ul className="mx-auto mt-4 max-w-4xl divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10 bg-black/60">
+            {shelvedSaves.map((s) => {
+              const key = `archived-${s.archiveId}`
+              return (
+                <ArchivedRow
+                  key={key}
+                  planId={s.planId}
+                  title={s.title}
+                  kicker={[played(s.playedAt), s.status === "completed" ? "Complete" : `Round ${s.round}`].filter(Boolean).join(" · ")}
+                  busy={props.busy}
+                  onRestore={() => props.onArchive(s.archiveId, true)}
+                >
+                  <RemoveButton
+                    confirming={removing === key}
+                    label={`Delete ${s.title} permanently`}
+                    confirmLabel={`Confirm deleting ${s.title}`}
+                    disabled={props.busy}
+                    onBlur={() => setRemoving(null)}
+                    onClick={() => {
+                      if (removing !== key) return setRemoving(key)
+                      setRemoving(null)
+                      props.onRemove(s.archiveId)
+                    }}
+                  />
+                </ArchivedRow>
+              )
+            })}
+            {shelvedHosted.map((h) => (
+              <ArchivedRow
+                key={h.adventureId}
+                planId={h.planId}
+                title={h.title}
+                kicker={["Hosted", h.status === "completed" ? "Complete" : h.round ? `Round ${h.round}` : ""].filter(Boolean).join(" · ")}
+                busy={props.busy}
+                onRestore={() => archiveHosted(h.adventureId, false)}
+              >
+                <RemoveButton
+                  confirming={removing === h.adventureId}
+                  label={`Delete ${h.title} permanently`}
+                  confirmLabel={`Confirm deleting ${h.title}`}
+                  disabled={props.busy}
+                  onBlur={() => setRemoving(null)}
+                  onClick={() => {
+                    if (removing !== h.adventureId) return setRemoving(h.adventureId)
+                    setRemoving(null)
+                    archiveHosted(h.adventureId, false)
+                    props.onRemoveHosted(h.adventureId)
+                  }}
+                />
+              </ArchivedRow>
+            ))}
+          </ul>
         </section>
       )}
     </PageShell>

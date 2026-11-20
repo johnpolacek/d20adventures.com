@@ -56,6 +56,8 @@ export type SaveSummary = {
   figures?: Record<string, string>
   painted?: string[]
   playedAt?: number
+  // Archived by the player: kept, but listed apart from the saves in play.
+  hidden?: boolean
 }
 export const summarize = (save: Save, archiveId?: number, playedAt?: number): SaveSummary => {
   const turn = save.turns.find((t) => t._id === save.adventure.currentTurnId)
@@ -94,6 +96,7 @@ export class LocalStore implements Store, Roster {
     // Archived saves keep a summary beside the full save, so listing them never parses whole adventures.
     const columns = this.db.prepare("PRAGMA table_info(archive)").all() as { name: string }[]
     if (!columns.some((c) => c.name === "summary")) this.db.exec("ALTER TABLE archive ADD COLUMN summary TEXT")
+    if (!columns.some((c) => c.name === "hidden")) this.db.exec("ALTER TABLE archive ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
     for (const r of this.db.prepare("SELECT id, archived_at, json FROM archive WHERE summary IS NULL").all() as { id: number; archived_at: number; json: string }[])
       this.db.prepare("UPDATE archive SET summary=? WHERE id=?").run(JSON.stringify(summarize(JSON.parse(r.json))), r.id)
     const row = this.db.prepare("SELECT json FROM save WHERE id=1").get() as { json: string } | undefined
@@ -158,6 +161,25 @@ export class LocalStore implements Store, Roster {
     }
     if (this.db.prepare("DELETE FROM archive WHERE id=?").run(archiveId).changes === 0) throw new Error("That adventure is no longer saved.")
   }
+  // Archiving a saved adventure keeps it but lists it apart. Without an id it is the current one, which moves to the
+  // archive first, and no adventure is current after. Unarchiving lists it with the others again.
+  hide(archiveId?: number) {
+    if (archiveId !== undefined) return this.setHidden(archiveId, true)
+    if (!this.state) throw new Error("That adventure is no longer saved.")
+    this.db.exec("BEGIN IMMEDIATE")
+    try {
+      this.archiveCurrent(true)
+      this.db.prepare("DELETE FROM save WHERE id=1").run()
+      this.db.exec("COMMIT")
+    } catch (error) {
+      this.db.exec("ROLLBACK")
+      throw error
+    }
+    this.state = null
+  }
+  setHidden(archiveId: number, hidden: boolean) {
+    if (this.db.prepare("UPDATE archive SET hidden=? WHERE id=?").run(hidden ? 1 : 0, archiveId).changes === 0) throw new Error("That adventure is no longer saved.")
+  }
   // A fresh start: every saved adventure goes, the current one and the archive. With `heroes`, the roster too. Refused
   // while a game action is running, since its next write would bring a save back.
   wipe(heroes = false): { plays: number; heroes: number } {
@@ -203,17 +225,22 @@ export class LocalStore implements Store, Roster {
     }
     this.state = next
   }
-  private archiveCurrent() {
+  private archiveCurrent(hidden = false) {
     if (!this.state) return
     const now = Date.now()
-    this.db.prepare("INSERT INTO archive (archived_at, json, summary) VALUES (?, ?, ?)").run(now, JSON.stringify(this.state), JSON.stringify(summarize(this.state)))
+    this.db
+      .prepare("INSERT INTO archive (archived_at, json, summary, hidden) VALUES (?, ?, ?, ?)")
+      .run(now, JSON.stringify(this.state), JSON.stringify(summarize(this.state)), hidden ? 1 : 0)
   }
   // Every saved adventure, the current one first, then the archive from the most recently played.
   saves(): SaveSummary[] {
-    const archived = (this.db.prepare("SELECT id, archived_at, summary FROM archive ORDER BY archived_at DESC, id DESC").all() as { id: number; archived_at: number; summary: string }[]).map((r) => ({
+    const archived = (
+      this.db.prepare("SELECT id, archived_at, summary, hidden FROM archive ORDER BY archived_at DESC, id DESC").all() as { id: number; archived_at: number; summary: string; hidden: number }[]
+    ).map((r) => ({
       ...(JSON.parse(r.summary) as SaveSummary),
       archiveId: r.id,
       playedAt: r.archived_at,
+      hidden: r.hidden === 1,
     }))
     return this.state ? [summarize(this.state), ...archived] : archived
   }

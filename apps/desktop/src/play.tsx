@@ -467,6 +467,7 @@ export function DesktopGame() {
                     onContinue={() => setScreen(null)}
                     onResume={(id) => void resume(id)}
                     onRemove={(archiveId) => void invoke({ kind: "remove", archiveId })}
+                    onArchive={(archiveId, restore) => void invoke({ kind: "archive", archiveId, restore })}
                     onAdventure={(id) => {
                       pickAdventure(id)
                       setScreen("new")

@@ -85,6 +85,34 @@ test("removing a saved adventure deletes an archived one by id, or the current o
     cleanup()
   }
 })
+test("archiving keeps a saved adventure but lists it apart, and restoring lists it again", async () => {
+  const { store, path, cleanup } = setup()
+  try {
+    const run = game(store, packs, failLlm)
+    await run({ kind: "start", provider: "claude" })
+    const first = store.state!.adventure._id
+    await run({ kind: "start", provider: "claude", replace: true })
+    const archived = store.saves()[1]
+    await run({ kind: "archive", archiveId: archived.archiveId })
+    assert.equal(store.saves()[1].hidden, true)
+    await run({ kind: "archive" })
+    assert.equal(store.state, null)
+    assert.deepEqual(
+      store.saves().map((s) => s.hidden),
+      [true, true]
+    )
+    const reopened = new LocalStore(path)
+    assert.equal(reopened.state, null)
+    assert.equal(reopened.saves().length, 2)
+    reopened.db.close()
+    const old = store.saves().find((s) => s.adventureId === first)!
+    await run({ kind: "archive", archiveId: old.archiveId, restore: true })
+    assert.equal(store.saves().find((s) => s.adventureId === first)!.hidden, false)
+    await assert.rejects(() => run({ kind: "archive" }), /no longer saved/)
+  } finally {
+    cleanup()
+  }
+})
 test("archives from before summaries are listed after reopening", async () => {
   const { store, path, cleanup } = setup()
   try {

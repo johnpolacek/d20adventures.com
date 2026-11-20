@@ -584,15 +584,13 @@ const runs: Run[] = [
 function Confirming({ title }: { title: string }) {
   return (
     <div className="absolute inset-0 grid place-items-center rounded-lg bg-black/75 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-6 text-center">
-        <div>
-          <h3 className="font-display text-3xl text-white">Remove {title}?</h3>
-          <p className="mt-2 font-serif text-white/60 italic">This save can’t be brought back.</p>
+      <div className="flex flex-col items-center text-center">
+        <h3 className="font-display text-3xl text-white">Archive {title}?</h3>
+        <div className="mt-6 flex items-center gap-4">
+          <span className={cn(siteOutline, "px-6 py-2 font-display text-sm")}>Cancel</span>
+          <Epic>Archive</Epic>
         </div>
-        <div className="flex items-center gap-4">
-          <span className={cn(siteOutline, "px-6 py-2 font-display text-sm")}>Keep</span>
-          <span className="rounded-md border-2 border-red-400/40 bg-red-700 px-6 py-2 font-display text-sm text-white">Remove</span>
-        </div>
+        <span className="mt-5 rounded-md px-3 py-1 font-display text-xs text-red-300/70">Delete Permanently</span>
       </div>
     </div>
   )

@@ -89,6 +89,9 @@ export const commandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("resume"), archiveId: z.number().int().positive() }),
   // Removes a saved adventure for good: an archived one by id, or the current one without an id.
   z.object({ kind: z.literal("remove"), archiveId: z.number().int().positive().optional() }),
+  // Archives a saved adventure, kept but listed apart: an archived one by id, or the current one without an id. With
+  // restore, lists an archived one with the others again.
+  z.object({ kind: z.literal("archive"), archiveId: z.number().int().positive().optional(), restore: z.boolean().optional() }),
   // `result` is the d20 the player rolled, and `second` the other one of a roll with Advantage or Disadvantage.
   z.object({ kind: z.literal("roll"), turnId: z.string(), characterId: z.string(), result: z.number().int().min(1).max(20), second: z.number().int().min(1).max(20).optional() }),
   // Ends a hero's turn with no reply. Nothing is written into the story and the GM is not asked.
@@ -207,6 +210,11 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     }
     if (command.kind === "remove") {
       store.remove(command.archiveId)
+      return store.state
+    }
+    if (command.kind === "archive") {
+      if (command.restore && command.archiveId !== undefined) store.setHidden(command.archiveId, false)
+      else store.hide(command.archiveId)
       return store.state
     }
     if (command.kind === "start") {
