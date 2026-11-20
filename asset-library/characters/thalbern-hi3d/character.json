@@ -19,7 +19,7 @@
     "Idle": "ual1:Idle_Loop",
     "Walk": "ual1:Walk_Loop",
     "Shoot": "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6",
-    "Swing": "ual1:Sword_Attack",
+    "Swing": "ual1:Sword_Attack@0-0.44 > ual1:Sword_Attack@1.0-1.53~8",
     "Dodge": "ual1:Roll",
     "Sidestep": "m2m/dodge-left",
     "Hit": "ual1:Hit_Chest",

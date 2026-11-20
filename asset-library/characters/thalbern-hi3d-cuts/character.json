@@ -21,7 +21,8 @@
     "Cut Dash": "ual2:Sword_Dash",
     "Cut Slash": "m2m/one-hand-slash-combo",
     "Cut Stab": "m2m/dagger-stab",
-    "Cut Hook": "ual2:Melee_Hook > ual2:Melee_Hook_Rec"
+    "Cut Hook": "ual2:Melee_Hook > ual2:Melee_Hook_Rec",
+    "Cut trimmed": "ual1:Sword_Attack@0-0.44 > ual1:Sword_Attack@1.0-1.53~8"
   },
   "eased": {
     "Cut now": 85

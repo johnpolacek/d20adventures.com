@@ -25,8 +25,8 @@
 // A brief with "borrowed" has clips from another skeleton's library copied onto the figure's own (retarget.ts), free:
 // { "Q Swing": "ual1:Sword_Attack" } is the clip Sword_Attack of asset-library/moves/ual1.glb, played as Q Swing,
 // and { "Q Dodge": "m2m/dodge-left" } the one clip of asset-library/moves/m2m/dodge-left.glb. Parts of clips can be
-// played one after another, each cut by seconds: "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6". The libraries are not
-// kept in git:
+// played one after another, each cut by seconds: "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6". A part is eased into
+// over three frames, or over as many as "~8" after it says. The libraries are not kept in git:
 //   ual1.glb, ual2.glb   Quaternius's Universal Animation Library 1 and 2, CC0: each pack's Unreal-Godot file
 //                        without root motion (UAL1_Standard.glb, UAL2_Standard.glb)
 //   m2m/                 Mesh2Motion's clips, CC0: static/assets/human/animations of its repository
@@ -45,7 +45,7 @@ import { execFileSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
 import { type Accessor, type Document, type Node, NodeIO } from "@gltf-transform/core"
-import { ALL_EXTENSIONS, EXTTextureWebP } from "@gltf-transform/extensions"
+import { ALL_EXTENSIONS, EXTTextureWebP, KHRMaterialsEmissiveStrength } from "@gltf-transform/extensions"
 import { simplify, textureCompress, weld } from "@gltf-transform/functions"
 import { MeshoptSimplifier } from "meshoptimizer"
 import sharp from "sharp"
@@ -542,6 +542,62 @@ function ease(doc: Document, name: string, limit: number) {
   return most
 }
 
+// A head held higher in a clip, by so many degrees and never past level. The hunched stand and walk a beast borrows
+// hang the head with the back, and a head as large as an owlbear's then shows its crown and no face (the owner's
+// owlbear from Hi3D, 2026-11-20: in the game its eyes did not show). The line the face looks along is turned up
+// about the level line square to it, half at the neck and half at the head, frame by frame, so the head still sways.
+// Returns how far under level the face looked at its worst, and the most it was lifted.
+function chin(doc: Document, name: string, degrees: number) {
+  const clip = doc
+    .getRoot()
+    .listAnimations()
+    .find((a) => a.getName() === name)
+  const joints = doc.getRoot().listSkins()[0]?.listJoints() ?? []
+  const find = (bone: string) => joints.find((j) => new RegExp(`(^|:)${bone}$`).test(j.getName()))
+  const [neck, head] = [find("Neck"), find("Head")]
+  if (!clip || !neck || !head) return null
+  const read = reader(clip)
+  const turned = (node: Node | null, time: number): Quat => {
+    if (!node) return [0, 0, 0, 1]
+    const up = node.getParentNode()
+    const own = read(node, "rotation", time) as Quat
+    return up ? qmul(turned(up, time), own) : own
+  }
+  const keys = (node: Node) => {
+    const sampler = clip
+      .listChannels()
+      .find((c) => c.getTargetNode() === node && c.getTargetPath() === "rotation")
+      ?.getSampler()
+    return [sampler?.getInput(), sampler?.getOutput()] as const
+  }
+  const [times, necks] = keys(neck)
+  const [, heads] = keys(head)
+  if (!times || !necks || !heads || heads.getCount() !== necks.getCount() || head.getParentNode() !== neck) return null
+  // The way the face looks, as the head bone has it: forward of the figure as it was modelled.
+  const forward = qturn(qinv(head.getWorldRotation() as Quat), [0, 0, 1])
+  let [worst, most] = [0, 0]
+  for (let i = 0; i < necks.getCount(); i++) {
+    const time = times.getScalar(i)
+    const above = turned(neck.getParentNode(), time)
+    const [n, h] = [necks.getElement(i, [0, 0, 0, 1]) as Quat, heads.getElement(i, [0, 0, 0, 1]) as Quat]
+    const looks = qturn(qall(above, n, h), forward)
+    const under = (-Math.asin(Math.max(-1, Math.min(1, looks[1] / (Math.hypot(...looks) || 1)))) * 180) / Math.PI
+    worst = Math.max(worst, under)
+    const by = Math.max(0, Math.min(degrees, under))
+    if (!by) continue
+    most = Math.max(most, by)
+    // About the level line square to the way it looks, the turn that brings that way up.
+    const level = Math.hypot(looks[0], looks[2]) || 1
+    const half = (by * Math.PI) / 180 / 4
+    const up: Quat = [(-looks[2] / level) * Math.sin(half), 0, (looks[0] / level) * Math.sin(half), Math.cos(half)]
+    necks.setElement(i, qall(qinv(above), up, above, n))
+    // The head's parent has turned by then: the same turn again, as the neck now has it.
+    const neckNow = qall(up, above, n)
+    heads.setElement(i, qall(qinv(neckNow), up, neckNow, h))
+  }
+  return [worst, most] as const
+}
+
 // Each shoulder joint moved up by so many centimetres of the figure's height, down if less than none, with the skin
 // bound as it was and the elbow left where it is: to measure whether a rigger set the joint too high or too low
 // (`--shoulder=-3`).
@@ -881,6 +937,59 @@ function fingersOnly(doc: Document, fist?: "L" | "R", big = 1) {
           if (palm && toFore > 0) give(palm.fore, w[k] * toFore)
         }
         if (!changed) continue
+        const top = [...shares].sort((x, y) => y[1] - x[1]).slice(0, 4)
+        const [whole, kept] = [[...shares.values()].reduce((sum, v) => sum + v, 0), top.reduce((sum, [, v]) => sum + v, 0) || 1]
+        J.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => top[k]?.[0] ?? 0)
+        )
+        W.setElement(
+          i,
+          [0, 1, 2, 3].map((k) => ((top[k]?.[1] ?? 0) / kept) * whole)
+        )
+        moved++
+      }
+    }
+  return moved
+}
+
+// A beast's head given to its head bone. A rigger looks for a person: on an owlbear, whose head sits in its
+// shoulders with no neck, it shared the head's skin between the chest (38%), the two collarbones (27%) and the head
+// (34%), where a person's head is the head bone's by four fifths. The head then hung with the chest and no turn of
+// the neck moved the face (the owner's owlbear from Hi3D, 2026-11-20). From the neck joint's height the skin is given
+// to the head more and more, all of it at the head joint's, and only between the shoulders: above the head joint by
+// the neck's length again it is the head's however wide, for ears and tufts.
+function crown(doc: Document) {
+  const skin = doc.getRoot().listSkins()[0]
+  const joints = skin?.listJoints() ?? []
+  const place = (name: string) => joints.findIndex((j) => new RegExp(`(^|:)${name}$`).test(j.getName()))
+  const [head, neck, armL, armR] = [place("Head"), place("Neck"), place("LeftArm"), place("RightArm")]
+  if (head < 0 || neck < 0 || armL < 0 || armR < 0) return 0
+  const at = (i: number) => joints[i].getWorldMatrix().slice(12, 15)
+  const [h, n] = [at(head), at(neck)]
+  const wide = Math.max(Math.abs(at(armL)[0] - h[0]), Math.abs(at(armR)[0] - h[0]))
+  const long = Math.max(1e-6, h[1] - n[1])
+  let moved = 0
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, J, W] = [prim.getAttribute("POSITION"), prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0")]
+      if (!pos || !J || !W) continue
+      for (let i = 0; i < J.getCount(); i++) {
+        const p = pos.getElement(i, [0, 0, 0])
+        const between = Math.max(1 - eased(Math.abs(p[0] - h[0]), wide * 0.7, wide * 1.1), eased(p[1], h[1], h[1] + long))
+        const share = eased(p[1], n[1], h[1]) * between
+        if (share < 0.004) continue
+        const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+        const shares = new Map<number, number>()
+        let given = 0
+        for (const [k, bone] of j.entries()) {
+          if (w[k] <= 0) continue
+          const gives = bone === head ? 0 : w[k] * share
+          given += gives
+          shares.set(bone, (shares.get(bone) ?? 0) + w[k] - gives)
+        }
+        if (given < 0.004) continue
+        shares.set(head, (shares.get(head) ?? 0) + given)
         const top = [...shares].sort((x, y) => y[1] - x[1]).slice(0, 4)
         const [whole, kept] = [[...shares.values()].reduce((sum, v) => sum + v, 0), top.reduce((sum, [, v]) => sum + v, 0) || 1]
         J.setElement(
@@ -1345,10 +1454,12 @@ async function borrow(base: Document, borrowed: Record<string, string> = {}) {
     // "ual1:Sword_Attack", "m2m/bow-pull", and parts of clips one after another: "m2m/bow-pull@0-1.5 > m2m/bow-release".
     const parts = await Promise.all(
       from.split(">").map(async (part) => {
-        const [spec, cut] = part.trim().split("@")
+        // "~8" after a part: eased into over eight frames from where the part before it stopped, not the usual three.
+        const [whole, ease] = part.trim().split("~")
+        const [spec, cut] = whole.split("@")
         const [file, clip] = spec.split(":")
         const [start, end] = (cut ?? "").split("-").map(Number)
-        return { library: await library(file), clip, from: cut ? start : undefined, to: cut ? end : undefined }
+        return { library: await library(file), clip, from: cut ? start : undefined, to: cut ? end : undefined, ease: ease ? Number(ease) : undefined }
       })
     )
     const long = parts.every((part) => part.library) ? retarget(base, parts as Part[], name) : null
@@ -1424,6 +1535,8 @@ interface Brief {
   height: number
   party?: boolean
   who: string
+  // A beast, not a person (build.ts asks for its sheet as an animal): its head's skin is given to the head bone.
+  creature?: boolean
   // Who makes it: Tripo then Meshy (the default), or Rodin or Hi3D then Hyper3D's rigging.
   maker?: "rodin" | "hi3d"
   // A figure whose model and sheet this one takes in place of its own. Meshy's rig and clips alone are paid for.
@@ -1438,6 +1551,11 @@ interface Brief {
   drawn?: Record<string, { until: number }>
   // The most an arm is raised in a clip, in degrees up from hanging: { "Swing": 85 }.
   eased?: Record<string, number>
+  // The head held higher in a clip, in degrees and never past level: { "Idle Heavy": 30 }.
+  chin?: Record<string, number>
+  // What is lit from within: texels of a hue between two, in degrees, giving off their colour so many times over.
+  // An owlbear's amber eyes are { "hue": [20, 55], "strength": 3 }.
+  lit?: { hue: [number, number]; strength: number }
   // False to leave out the bones between arm and trunk, for a figure kept to measure against.
   helpers?: boolean
   // The share of its gloss a figure keeps where it is not metal, of 1: 0.5 makes a roughness of 0.6 one of 0.8.
@@ -1523,6 +1641,49 @@ async function dull(keeps: number) {
     texture.setImage(await sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } }).webp({ quality: 92 }).toBuffer()).setMimeType("image/webp")
   }
   await io.write(`${dir}/lod0.glb`, doc)
+  return texels
+}
+
+// Eyes lit from within. A beast met in a dark wood is known by its eyes, and a model's colour has no light of its
+// own: Hi3D's owlbear has amber eyes that the night's light leaves as dull as its fur (the owner, 2026-11-20). Texels
+// of the brief's hue, strong in colour and not dark, give off their own colour that many times over: the game and
+// the page add it to whatever light falls on them. Returns how many texels are lit.
+async function lit(hue: [number, number], strength: number) {
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
+  const doc = await io.read(`${dir}/lod0.glb`)
+  let texels = 0
+  for (const material of doc.getRoot().listMaterials()) {
+    const image = material.getBaseColorTexture()?.getImage()
+    if (!image) continue
+    const { data, info } = await sharp(image).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+    const mask = Buffer.alloc(info.width * info.height)
+    for (let i = 0, p = 0; i < data.length; i += info.channels, p++) {
+      const [r, g, b] = [data[i] / 255, data[i + 1] / 255, data[i + 2] / 255]
+      const [most, least] = [Math.max(r, g, b), Math.min(r, g, b)]
+      if (most < 0.25 || (most - least) / most < 0.6) continue
+      const at = (60 * (most === r ? (g - b) / (most - least) : most === g ? 2 + (b - r) / (most - least) : 4 + (r - g) / (most - least)) + 360) % 360
+      if (at < hue[0] || at > hue[1]) continue
+      mask[p] = 255
+      texels++
+    }
+    if (!texels) continue
+    // The edge of what is lit is softened by a few texels, and the colour is the model's own.
+    const soft = await sharp(mask, { raw: { width: info.width, height: info.height, channels: 1 } }).blur(2).raw().toBuffer()
+    const glow = Buffer.alloc(info.width * info.height * 3)
+    for (let p = 0; p < soft.length; p++) for (let k = 0; k < 3; k++) glow[p * 3 + k] = Math.round((data[p * info.channels + k] * soft[p]) / 255)
+    doc.createExtension(EXTTextureWebP).setRequired(true)
+    const texture = doc
+      .createTexture("glow")
+      .setImage(await sharp(glow, { raw: { width: info.width, height: info.height, channels: 3 } }).webp({ quality: 92 }).toBuffer())
+      .setMimeType("image/webp")
+    // A strength over 1 is its own extension in glTF. The game's night is dim and its exposure low: an eye wants
+    // about three times its own colour to show there.
+    material
+      .setEmissiveTexture(texture)
+      .setEmissiveFactor([1, 1, 1])
+      .setExtension("KHR_materials_emissive_strength", doc.createExtension(KHRMaterialsEmissiveStrength).createEmissiveStrength().setEmissiveStrength(strength))
+  }
+  if (texels) await io.write(`${dir}/lod0.glb`, doc)
   return texels
 }
 
@@ -1797,6 +1958,10 @@ async function rodinHyper(brief: Brief) {
     const most = ease(doc, name, limit)
     say("ease", most === null ? `${name}: no such clip` : `${name}: an arm was raised ${most.toFixed(0)}°, and is kept under ${limit}°`)
   }
+  for (const [name, degrees] of Object.entries(brief.chin ?? {})) {
+    const lifted = chin(doc, name, degrees)
+    say("chin", lifted ? `${name}: the face looked ${lifted[0].toFixed(0)}° under level at its lowest, and is lifted by up to ${lifted[1].toFixed(0)}°` : `${name}: no such clip, or no neck and head keyed in it`)
+  }
   // `--elbows=off` leaves each elbow as its clip has it, and `--hang=off` each finger as it was modelled.
   const bent = args.includes("--elbows=off") ? null : elbows(doc)
   if (bent) say("elbows", `${bent.moved} keys moved: an elbow went ${bent.past.toFixed(0)}° past straight (the ${bent.where}), and no arm near straight is under ${FLOOR}° now`)
@@ -1807,6 +1972,9 @@ async function rodinHyper(brief: Brief) {
   const big = (brief.height ?? 1.8) / 1.8
   const cloth = fingersOnly(doc, brief.holds ? (brief.holds.hand ?? "R") : undefined, big)
   if (cloth) say("fingers", `${cloth} points that are no finger or no hand taken off those bones, and given to the hand or the forearm`)
+  // A beast's head is its head bone's: `--crown=off` leaves it shared as the rigger had it.
+  const crowned = brief.creature && !args.includes("--crown=off") ? crown(doc) : 0
+  if (crowned) say("crown", `${crowned} points of the head given to the head bone`)
   // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
   if (!args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
   // `--rolls=off` leaves a forearm's roll at the elbow, to measure against.
@@ -1851,6 +2019,7 @@ async function main() {
   if (painted) say("face", `the sheet's, ${painted.fitted ? "fitted to the model's own" : "not fitted"}, ${painted.texels} texels`)
   if ("rod" in made && made.rod) say("rod", `${await unblue()} texels of blue beside it given the colour of the skin`)
   if (brief.gloss !== undefined && brief.gloss < 1) say("gloss", `${await dull(brief.gloss)} texels keep ${brief.gloss} of it where they are not metal`)
+  if (brief.lit) say("lit", `${await lit(brief.lit.hue, brief.lit.strength)} texels of that hue give off their colour ${brief.lit.strength} times over`)
 
   const lods = await thin()
   say("lods", lods.map((l) => `${l.file} ${l.triangles} triangles, ${l.megabytes} MB`).join(", "))

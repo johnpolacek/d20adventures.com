@@ -87,6 +87,8 @@ interface Model {
   meshes: THREE.Mesh[]
   materials: Mat[]
   base: THREE.Color[]
+  // What each material gives off of its own, as modelled: an owlbear's lit eyes. A hit's flash is added to it.
+  glow: THREE.Color[]
   triangles: number
 }
 
@@ -321,6 +323,7 @@ export class Models {
       meshes,
       materials: mats,
       base: mats.map((m) => m.color.clone()),
+      glow: mats.map((m) => m.emissive.clone()),
       triangles,
     })
   }
@@ -480,7 +483,7 @@ export class Models {
         const k = Math.max(0, 1 - flash.t / 0.45) * flash.strength
         m.materials.forEach((mat, i) => {
           mat.color.copy(m.base[i]).lerp(flash.color, Math.min(0.7, 0.6 * k))
-          mat.emissive.copy(flash.color).multiplyScalar(0.035 * k)
+          mat.emissive.copy(flash.color).multiplyScalar(0.035 * k).add(m.glow[i])
         })
         if (k <= 0) this.hits.delete(c.id)
       }

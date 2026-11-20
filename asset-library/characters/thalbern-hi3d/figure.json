@@ -36,21 +36,20 @@
     {
       "file": "lod0.glb",
       "triangles": 200000,
-      "megabytes": 11.8,
+      "megabytes": 11.79,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19976,
-      "megabytes": 1.77,
+      "megabytes": 1.76,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 5996,
-      "megabytes": 1.04,
+      "megabytes": 1.02,
       "texture": 512
     }
-  ],
-  "thumb": "thumb.webp"
+  ]
 }

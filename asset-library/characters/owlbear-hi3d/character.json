@@ -26,5 +26,17 @@
     "Walk Heavy": "ual2:Zombie_Walk_Fwd_Loop",
     "Claw Hook": "ual2:Melee_Hook > ual2:Melee_Hook_Rec"
   },
-  "gloss": 0.6
+  "gloss": 0.6,
+  "chin": {
+    "Idle Heavy": 25,
+    "Walk Heavy": 25,
+    "Claw": 25
+  },
+  "lit": {
+    "hue": [
+      20,
+      55
+    ],
+    "strength": 3
+  }
 }

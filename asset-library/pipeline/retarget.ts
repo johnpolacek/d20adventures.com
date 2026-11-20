@@ -100,7 +100,8 @@ export function reader(clip: Animation) {
 }
 
 // A clip of a library, its first when none is named, or the part of it between two times in seconds.
-export type Part = { library: Document; clip?: string; from?: number; to?: number }
+// `ease` is how many frames it is eased into from the part before it, when the brief says ("...@0.95-1.53~8").
+export type Part = { library: Document; clip?: string; from?: number; to?: number; ease?: number }
 type Take = { hips: Node; count: number; turns: Map<Node, Float32Array<ArrayBuffer>>; places: Float32Array<ArrayBuffer> }
 // How long one part is eased into from the one before it, in frames.
 const EASE = 3
@@ -220,7 +221,10 @@ export function retarget(figure: Document, parts: Part[], as: string): number | 
   for (const [n, part] of (takes as Take[]).entries()) {
     for (let i = 0; i < part.count; i++, at++) {
       // How much of this frame is the part's own, and how much where the last part stopped.
-      const own = n && i < EASE ? (i + 1) / (EASE + 1) : 1
+      // A long ease starts slowly and ends slowly: a sword stopped where its blow lands stays there a moment.
+      const ease = parts[n].ease ?? EASE
+      const share = (i + 1) / (ease + 1)
+      const own = n && i < ease ? (ease > EASE ? share * share * (3 - 2 * share) : share) : 1
       for (const [joint, all] of turns) {
         const turn = part.turns.get(joint)?.subarray(i * 4, i * 4 + 4)
         if (turn) all.set(own < 1 ? qmix(all.subarray((at - i - 1) * 4, (at - i) * 4), turn, own) : turn, at * 4)
