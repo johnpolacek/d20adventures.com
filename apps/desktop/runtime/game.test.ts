@@ -124,6 +124,15 @@ test("archives from before summaries are listed after reopening", async () => {
     const reopened = new LocalStore(path)
     assert.equal(reopened.saves()[1].adventureId, first)
     reopened.db.close()
+    // A summary from before the card showed the scene and party is written again.
+    const old = { ...store.saves()[1] } as Record<string, unknown>
+    delete old.heroes
+    delete old.encounterId
+    store.db.prepare("UPDATE archive SET summary=?").run(JSON.stringify(old))
+    const upgraded = new LocalStore(path)
+    assert.ok(upgraded.saves()[1].encounterId)
+    assert.ok(upgraded.saves()[1].heroes?.length)
+    upgraded.db.close()
   } finally {
     cleanup()
   }

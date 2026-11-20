@@ -97,7 +97,8 @@ export class LocalStore implements Store, Roster {
     const columns = this.db.prepare("PRAGMA table_info(archive)").all() as { name: string }[]
     if (!columns.some((c) => c.name === "summary")) this.db.exec("ALTER TABLE archive ADD COLUMN summary TEXT")
     if (!columns.some((c) => c.name === "hidden")) this.db.exec("ALTER TABLE archive ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
-    for (const r of this.db.prepare("SELECT id, archived_at, json FROM archive WHERE summary IS NULL").all() as { id: number; archived_at: number; json: string }[])
+    // Summaries from before the card showed the scene and the party are written again from their saves.
+    for (const r of this.db.prepare(`SELECT id, archived_at, json FROM archive WHERE summary IS NULL OR summary NOT LIKE '%"heroes":%'`).all() as { id: number; archived_at: number; json: string }[])
       this.db.prepare("UPDATE archive SET summary=? WHERE id=?").run(JSON.stringify(summarize(JSON.parse(r.json))), r.id)
     const row = this.db.prepare("SELECT json FROM save WHERE id=1").get() as { json: string } | undefined
     this.state = row ? JSON.parse(row.json) : null
