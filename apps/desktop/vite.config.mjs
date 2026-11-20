@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process"
-import { mkdirSync } from "node:fs"
+import { createReadStream, mkdirSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -68,8 +68,33 @@ function preview() {
   }
 }
 
+// A figure is served from the workspace's own copy while the app is being developed (asset-library/characters, not in
+// git), as the site's dev server does (next.config.ts). The app's own copies are taken once, when it starts
+// (scripts/build-runtime.ts): a figure shipped or rebuilt after that was not among them, the app was answered a web
+// page for the model, and the cast member stood as their flat painted card. A figure the workspace does not have is
+// left to the app's copy. The built app is not touched: it carries its copies.
+function figures() {
+  const shelf = fileURLToPath(new URL("../../asset-library/characters", import.meta.url))
+  return {
+    name: "d20-desktop-figures",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use("/asset-library/characters", (req, res, next) => {
+        const name = /^\/([a-z0-9-]+\/lod\d\.glb)(\?.*)?$/.exec(req.url ?? "")?.[1]
+        const file = name && join(shelf, name)
+        const size = file && statSync(file, { throwIfNoEntry: false })?.size
+        if (!file || !size) return next()
+        res.setHeader("Content-Type", "model/gltf-binary")
+        res.setHeader("Content-Length", size)
+        res.setHeader("Cache-Control", "no-store")
+        createReadStream(file).pipe(res)
+      })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [preview()],
+  plugins: [preview(), figures()],
   resolve: {
     // One React for the app and @d20/ui. Two copies break every hook.
     dedupe: ["react", "react-dom"],
