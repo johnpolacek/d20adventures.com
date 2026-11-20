@@ -6,7 +6,7 @@
 import { Maximize2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import Parchment from "@/components/graphics/background/Parchment"
+import Parchment from "@d20/ui/graphics/parchment"
 import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
 import { cn } from "@/lib/utils"

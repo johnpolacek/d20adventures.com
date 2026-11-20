@@ -10,7 +10,7 @@ import { InviteSignIn, LobbyIntro } from "@/components/adventure/invite-sign-in"
 import Turn from "@/components/adventure/turn"
 import type { FloorView } from "@/components/floorplan/view"
 import AccountRequired from "@/components/nav/account-required"
-import ImageHeader from "@/components/ui/image-header"
+import ImageHeader from "@d20/ui/image-header"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurn } from "@/lib/context/TurnContext"
 import { findEncounterById } from "@/lib/map-utils"
@@ -18,7 +18,7 @@ import { cn, getImageUrl } from "@/lib/utils"
 import { findCurrentActor, hasPendingAutonomousAction } from "@/lib/utils/turn-actors"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
-import { scrollToTop } from "../ui/utils"
+import { scrollToTop } from "@d20/ui/scroll"
 
 function AdventureHomeContent({
   initialImage,

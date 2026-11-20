@@ -6,7 +6,7 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { createAdventure } from "@/app/_actions/create-adventure"
 import { Button } from "@d20/ui/button"
-import { scrollToBottom } from "../ui/utils"
+import { scrollToBottom } from "@d20/ui/scroll"
 import type { CharacterChoiceMode } from "./character-selection"
 
 interface PartyConfigurationProps {

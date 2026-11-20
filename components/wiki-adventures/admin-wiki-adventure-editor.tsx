@@ -13,7 +13,7 @@ import {
 import { Button } from "@d20/ui/button"
 import { ImageUpload } from "@/components/forms/image-upload"
 import { Input } from "@d20/ui/input"
-import Image from "@/components/ui/native-image"
+import Image from "@d20/ui/native-image"
 import { Textarea } from "@d20/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile } from "@/lib/wiki-adventures"

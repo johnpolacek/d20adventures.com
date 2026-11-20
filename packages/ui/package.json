@@ -6,6 +6,7 @@
   "exports": {
     "./feedback-rules": "./src/feedback-rules.ts",
     "./graphics/styles": "./src/graphics/styles.ts",
+    "./scroll": "./src/scroll.ts",
     "./typography/styles": "./src/typography/styles.ts",
     "./utils": "./src/utils.ts",
     "./*": "./src/*.tsx"

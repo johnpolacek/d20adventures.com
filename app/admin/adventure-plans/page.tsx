@@ -3,7 +3,7 @@ import Link from "next/link"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
 import { Button } from "@d20/ui/button"
-import NativeImage from "@/components/ui/native-image"
+import NativeImage from "@d20/ui/native-image"
 import { requireAdmin } from "@/lib/auth-utils"
 import { listAdminWikiAdventures } from "@/lib/wiki-adventures/admin-authoring"
 

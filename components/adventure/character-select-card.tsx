@@ -1,8 +1,8 @@
 import { UserRoundX } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@d20/ui/button"
-import { Card } from "@/components/ui/card"
-import Image from "@/components/ui/native-image"
+import { Card } from "@d20/ui/card"
+import Image from "@d20/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { PCTemplate } from "@/types/character"
 

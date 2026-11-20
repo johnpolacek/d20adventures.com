@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
-import { Option, siteCard, siteField, siteLabel, siteOutline } from "@/components/ui/site"
+import { Option, siteCard, siteField, siteLabel, siteOutline } from "@d20/ui/site"
 import { cn } from "@/lib/utils"
 import type { GuestHero, HostedSummary } from "../../../lib/host/server"
 

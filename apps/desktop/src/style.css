@@ -5,10 +5,6 @@
 @source "../../../components/adventure/module-cover.tsx";
 @source "../../../components/stage";
 @source "../../../packages/ui/src";
-@source "../../../components/graphics";
-@source "../../../components/ui/image-header.tsx";
-@source "../../../components/ui/native-image.tsx";
-@source "../../../components/ui/site.tsx";
 @source "./";
 @theme {
   --font-display: "Cinzel Decorative", Georgia, serif;

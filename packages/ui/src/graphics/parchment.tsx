@@ -1,5 +1,5 @@
-import Image from "@/components/ui/native-image"
-import { cn } from "@/lib/utils"
+import Image from "../native-image"
+import { cn } from "../utils"
 
 export default function Parchment({ containerClass, imageClass }: { containerClass?: string; imageClass?: string }) {
   return (

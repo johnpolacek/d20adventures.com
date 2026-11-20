@@ -1,7 +1,7 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@d20/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 import type { Id } from "@/convex/_generated/dataModel"
 import { formatDate } from "@/lib/utils"
 

@@ -7,7 +7,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { subscribe } from "@/app/_actions/mailing-list"
 import { Button } from "@d20/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@d20/ui/card"
 
 export function MailingListForm({ initialEmail }: { initialEmail?: string }) {
   const router = useRouter()

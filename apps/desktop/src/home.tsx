@@ -1,6 +1,6 @@
 import { textShadowSpread, textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
-import { siteCard } from "@/components/ui/site"
+import { siteCard } from "@d20/ui/site"
 import { cn } from "@/lib/utils"
 import type { Save } from "../runtime/store"
 import type { FigureArt } from "./figures"

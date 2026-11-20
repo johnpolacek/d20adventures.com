@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 import { useState } from "react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@d20/ui/alert"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,22 +14,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@d20/ui/alert-dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@d20/ui/avatar"
+import { Badge } from "@d20/ui/badge"
 import { Button, buttonClassName } from "@d20/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@d20/ui/card"
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@d20/ui/dialog"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@d20/ui/hover-card"
-import ImageHeader from "@/components/ui/image-header"
+import ImageHeader from "@d20/ui/image-header"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
-import LoadingAnimation from "@/components/ui/loading-animation"
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import LoadingAnimation from "@d20/ui/loading-animation"
+import { Pagination, PaginationEllipsis, PaginationFirst, PaginationItem, PaginationLast, PaginationLink, PaginationList, PaginationNext, PaginationPrevious } from "@d20/ui/pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
-import { Chip, Option, Rule, SectionPlate, siteLabel, sitePanel } from "@/components/ui/site"
+import { Chip, Option, Rule, SectionPlate, siteLabel, sitePanel } from "@d20/ui/site"
 import { Switch } from "@d20/ui/switch"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 import { Textarea } from "@d20/ui/textarea"
 import { cn } from "@/lib/utils"
 
@@ -190,10 +190,10 @@ const tiles: Tile[] = [
     name: "Collapsible",
     demo: (
       <Collapsible>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost">Inventory</Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-2 text-sm text-white/80">Longsword, rope, two torches.</CollapsibleContent>
+        <CollapsibleTrigger className={buttonClassName("ghost")}>Inventory</CollapsibleTrigger>
+        <CollapsiblePanel>
+          <p className="pt-2 text-sm text-white/80">Longsword, rope, two torches.</p>
+        </CollapsiblePanel>
       </Collapsible>
     ),
   },
@@ -276,26 +276,28 @@ const tiles: Tile[] = [
     name: "Pagination",
     wide: true,
     demo: (
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">1</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>
-              2
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
+      <Pagination aria-label="Turns" pageCount={12} defaultPage={5} siblings={2}>
+        <PaginationList>
+          {({ items }) => (
+            <>
+              <PaginationItem>
+                <PaginationFirst />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationPrevious />
+              </PaginationItem>
+              {items.map((item) => (
+                <PaginationItem key={item}>{typeof item === "number" ? <PaginationLink page={item} /> : <PaginationEllipsis />}</PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLast />
+              </PaginationItem>
+            </>
+          )}
+        </PaginationList>
       </Pagination>
     ),
   },

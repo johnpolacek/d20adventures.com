@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "./utils"
 
 // The website's surfaces as class strings and small parts, so screens outside Next (the desktop app) share its look.
 

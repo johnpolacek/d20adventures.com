@@ -18,7 +18,7 @@ import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurn } from "@/lib/context/TurnContext"
 import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
-import LoadingAnimation from "../ui/loading-animation"
+import LoadingAnimation from "@d20/ui/loading-animation"
 
 type TurnNarrativeReplyProps = {
   character: TurnCharacter

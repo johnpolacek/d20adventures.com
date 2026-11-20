@@ -3,8 +3,8 @@
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
 import * as React from "react"
 import { Button } from "@d20/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Card, CardContent, CardHeader, CardTitle } from "@d20/ui/card"
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { ImageUpload } from "@/components/forms/image-upload"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
@@ -127,13 +127,12 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
         {locations.map((location, locationIndex) => (
           <Card key={locationIndex} className="bg-black/20 border-white/10">
             <Collapsible open={openLocations.has(locationIndex)} onOpenChange={() => toggleLocation(locationIndex)}>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer text-white hover:text-amber-300 transition-colors duration-500 ease-in-out">
+              <CardHeader className="text-white hover:text-amber-300 transition-colors duration-500 ease-in-out">
                   <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-display">
+                    <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-2 text-left font-display">
                       {openLocations.has(locationIndex) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       <span>{location.name || `Location ${locationIndex + 1}`}</span>
-                    </div>
+                    </CollapsibleTrigger>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -147,9 +146,8 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
                     </Button>
                   </CardTitle>
                 </CardHeader>
-              </CollapsibleTrigger>
 
-              <CollapsibleContent>
+              <CollapsiblePanel>
                 <CardContent className="space-y-4 text-white">
                   <div className="grid grid-cols-2 gap-4 text-white">
                     <div>
@@ -216,13 +214,12 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
                       {location.organizations.map((org, orgIndex) => (
                         <Card key={orgIndex} className="bg-black/30 border-white/5">
                           <Collapsible open={openOrganizations.has(`${locationIndex}-${orgIndex}`)} onOpenChange={() => toggleOrganization(locationIndex, orgIndex)}>
-                            <CollapsibleTrigger asChild>
-                              <CardHeader className="cursor-pointer hover:text-amber-300 text-white transition-colors py-3">
+                            <CardHeader className="hover:text-amber-300 text-white transition-colors py-3">
                                 <CardTitle className="flex items-center justify-between text-base">
-                                  <div className="flex items-center gap-2">
+                                  <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-2 text-left">
                                     {openOrganizations.has(`${locationIndex}-${orgIndex}`) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                                     <span>{org.name || `Organization ${orgIndex + 1}`}</span>
-                                  </div>
+                                  </CollapsibleTrigger>
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -236,9 +233,8 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
                                   </Button>
                                 </CardTitle>
                               </CardHeader>
-                            </CollapsibleTrigger>
 
-                            <CollapsibleContent>
+                            <CollapsiblePanel>
                               <CardContent className="space-y-4 pt-0 text-white">
                                 <div className="grid grid-cols-2 gap-4 text-white">
                                   <div>
@@ -273,14 +269,14 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
                                   />
                                 </div>
                               </CardContent>
-                            </CollapsibleContent>
+                            </CollapsiblePanel>
                           </Collapsible>
                         </Card>
                       ))}
                     </div>
                   </div>
                 </CardContent>
-              </CollapsibleContent>
+              </CollapsiblePanel>
             </Collapsible>
           </Card>
         ))}

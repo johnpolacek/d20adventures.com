@@ -5,12 +5,12 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { banUser } from "@/app/_actions/ban-user"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@d20/ui/alert-dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@d20/ui/avatar"
+import { Badge } from "@d20/ui/badge"
 import { Button } from "@d20/ui/button"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 
 interface User {
   id: string

@@ -1,5 +1,5 @@
 import { Heading } from "@d20/ui/typography/heading"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@d20/ui/card"
 import UnsubscribeForm from "./unsubscribe-form"
 
 export default function UnsubscribePage() {

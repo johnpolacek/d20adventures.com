@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@d20/ui/button"
-import ImageHeader from "@/components/ui/image-header"
+import ImageHeader from "@d20/ui/image-header"
 import { isDev } from "@/lib/auth-utils"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { getImageUrl } from "@/lib/utils"

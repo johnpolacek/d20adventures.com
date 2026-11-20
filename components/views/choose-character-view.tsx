@@ -4,12 +4,12 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import PartySetup from "@/components/adventure/party-setup"
 import { Button } from "@d20/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card } from "@d20/ui/card"
 import { CharacterSelectCard } from "@/components/adventure/character-select-card"
-import Image from "@/components/ui/native-image"
+import Image from "@d20/ui/native-image"
 import type { PCTemplate } from "@/types/character"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
-import { scrollToTop } from "../ui/utils"
+import { scrollToTop } from "@d20/ui/scroll"
 
 export default function ChooseCharacterView({
   username,

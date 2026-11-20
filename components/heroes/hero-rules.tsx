@@ -9,7 +9,7 @@ import type { FeatOffer, Named, PicksOffer } from "@d20/gm-core/sheet/level-up"
 import type { FeaturePick } from "@d20/gm-core/sheet/sheet"
 import { useMemo } from "react"
 import { ABILITY_NAMES, type AbilityId, toggled, togglePick, unmet, withBookSpells } from "@/components/stage/level-up-view"
-import { Option, siteField, siteLabel } from "@/components/ui/site"
+import { Option, siteField, siteLabel } from "@d20/ui/site"
 import { cn } from "@/lib/utils"
 import type { HeroRulesKit } from "./use-hero-rules"
 

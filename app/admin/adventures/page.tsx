@@ -4,7 +4,7 @@ import { getAllAdventuresAdmin } from "@/app/_actions/admin/get-all-adventures"
 import { DeleteAdventureButton } from "@/components/admin/delete-adventure-button"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
 import { Button } from "@d20/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 import type { Doc } from "@/convex/_generated/dataModel"
 
 export default async function AdminAdventuresPage() {

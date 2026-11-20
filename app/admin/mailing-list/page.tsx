@@ -1,6 +1,6 @@
 import { MailingListSubscriberTable } from "@/components/admin/mailing-list/mailing-list-subscriber-table"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@d20/ui/card"
 import type { Doc } from "@/convex/_generated/dataModel"
 import { requireAdmin } from "@/lib/auth-utils"
 import { getMailingListSubscriptions } from "@/lib/services/mailing-list"

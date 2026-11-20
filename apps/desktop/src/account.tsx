@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
-import { Rule, siteCard, siteOutline, sitePanel } from "@/components/ui/site"
+import { Rule, siteCard, siteOutline, sitePanel } from "@d20/ui/site"
 import { cn } from "@/lib/utils"
 import type { AccountResponse, AccountState, LinkState } from "../runtime/account"
 import { account, accountInfo, openSite } from "./bridge"

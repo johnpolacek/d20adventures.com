@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs"
 import { Copy, ShieldUser } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@d20/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card } from "@d20/ui/card"
 
 export function AdminConfigMessage() {
   const { user } = useUser()

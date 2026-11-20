@@ -1,7 +1,7 @@
 "use client"
 import React, { useRef, useState } from "react"
 import DiceRollResult from "@/components/adventure/dice-roll-result"
-import Image from "@/components/ui/native-image"
+import Image from "@d20/ui/native-image"
 import { cn, rollD20 } from "@/lib/utils"
 import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"

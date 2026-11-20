@@ -2,9 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import Image from "@/components/ui/native-image"
+import Image from "@d20/ui/native-image"
 import { cn, reverseSlugify } from "@/lib/utils"
-import Parchment from "../graphics/background/Parchment"
+import Parchment from "@d20/ui/graphics/parchment"
 import { paper } from "@d20/ui/graphics/styles"
 import { AdminNavItem } from "../nav/admin-nav-item"
 import AuthButtons from "../nav/auth-buttons"

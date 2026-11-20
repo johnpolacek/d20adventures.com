@@ -2,10 +2,10 @@
 
 import type React from "react"
 import { useState } from "react"
-import Parchment from "@/components/graphics/background/Parchment"
-import Image from "@/components/ui/native-image"
-import { cn } from "@/lib/utils"
-import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
+import Parchment from "./graphics/parchment"
+import Image from "./native-image"
+import { cn } from "./utils"
+import { textShadow, textShadowSpread } from "./typography/styles"
 
 interface ImageHeaderProps {
   imageUrl: string
