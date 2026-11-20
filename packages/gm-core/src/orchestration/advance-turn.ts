@@ -35,7 +35,7 @@ import { dropPlayerPrompt } from "../utils/narrative-utils"
 import { isDead } from "../utils/turn-actors"
 import { validateAdventurePatch } from "../wiki-adventures/adventure-patch"
 import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter } from "../wiki-adventures/characters"
-import { pendingRescue, rescuedCharacters } from "../wiki-adventures/player-safety"
+import { rescuedCharacters } from "../wiki-adventures/player-safety"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt } from "../wiki-adventures/runtime-context"
 import { validatePacketTransition } from "../wiki-adventures/transition-validator"
 
@@ -143,8 +143,8 @@ export function createAdvanceTurn(ports: GmPorts) {
         throw new Error(`Wiki transition rejected: ${transition.rejectedReason} (${turn.encounterId} -> ${transition.nextEncounterId})`)
       }
       // A party with a hero down is rescued only when the encounter would otherwise go on. A fight already won or fled
-      // follows its own transition.
-      const rescue = pendingRescue({ artifacts, encounterId: turn.encounterId, characters: turn.characters as TurnCharacter[], playedEncounterIds: allTurns.map((row) => row.encounterId) })
+      // follows its own transition. The GM was told of this rescue, so its telling stops where the rescue's intro begins.
+      const rescue = packet.graph.rescue?.transition
       if (transition.kind === "continue" && rescue) {
         console.log(`[advanceTurn:${requestId}] Rescue triggered: ${turn.encounterId} -> ${rescue.toEncounterId}`)
         transition = { allowed: true, kind: "transition", nextEncounterId: rescue.toEncounterId, transition: rescue }

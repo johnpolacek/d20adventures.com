@@ -12,7 +12,7 @@ import { turnScript } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import { CONTINUITY_RULE, KNOWLEDGE_RULE } from "../utils/narrative-utils"
 import type { ContentRef } from "./content-ref"
-import { gmNotesWithRules } from "./player-safety"
+import { gmNotesWithRules, pendingRescue } from "./player-safety"
 import type { RuntimeArtifacts, RuntimeEncounter, RuntimeEntityRecord, RuntimeTransition } from "./types"
 
 export type RuntimeTurnRow = {
@@ -94,6 +94,9 @@ export type LlmGameplayContextPacket = {
     legalTransitions: RuntimeTransition[]
     // Each transition target's intro, which players read straight after the GM's narrative on that transition.
     nextEncounterIntros: Record<string, string>
+    // The rescue the core takes as this round ends unless the GM transitions (./player-safety `pendingRescue`), with the
+    // intro players read straight after the GM's narrative.
+    rescue?: { transition: RuntimeTransition; intro: string }
     currentEncounterLinks: RuntimeEncounter["typedLinks"]
   }
   outputContract: {
@@ -126,6 +129,10 @@ export function assembleGameplayContextPacket(args: {
   const names = storyNames([...args.session.allTurns.flatMap((t) => t.characters ?? []), ...liveCharacters])
   const npcIds = new Set(currentEncounter.npcRefs.map((ref) => ref.id))
   const liveIds = new Set(liveCharacters.map((character) => character.id))
+  // A hero is down and the rescue waits: the GM is told what its intro tells, so the round's end does not tell it first.
+  // Wollandora drove the Owlbear off in the round's last words, on a stage she was not on, and then again in the intro.
+  const rescue = pendingRescue({ artifacts: args.artifacts, encounterId: currentEncounter.id, characters: liveCharacters, playedEncounterIds: args.session.allTurns.map((row) => row.encounterId) })
+  const npcNames = Object.fromEntries(Object.values(args.artifacts.characterSheets.npcs).map((entry) => [entry.sheet.id, entry.sheet.name]))
 
   return {
     contentRef: {
@@ -199,6 +206,7 @@ export function assembleGameplayContextPacket(args: {
       nextEncounterIntros: Object.fromEntries(
         legalTransitions.map((transition) => [transition.toEncounterId, authoredText(args.artifacts.encounters[transition.toEncounterId]?.sections.intro ?? "", names).trim()])
       ),
+      ...(rescue ? { rescue: { transition: rescue, intro: authoredText(args.artifacts.encounters[rescue.toEncounterId]?.sections.intro ?? "", { ...npcNames, ...names }).trim() } } : {}),
       currentEncounterLinks: currentEncounter.typedLinks,
     },
     outputContract: {
@@ -238,6 +246,19 @@ export function paceNote(round: number, budget: number): string {
 function linkedRecords(records: Record<string, RuntimeEntityRecord>, encounter: RuntimeEncounter): RuntimeEntityRecord[] {
   const ids = new Set(encounter.typedLinks.map((link) => (records[link.id] ? link.id : "")).filter(Boolean))
   return [...ids].map((id) => records[id]).filter(Boolean)
+}
+
+/**
+ * The round-end GM's rescue block. The core takes the rescue itself, so the GM keeps the current encounter and stops
+ * where the rescue's intro begins.
+ */
+function rescueNote(rescue: NonNullable<LlmGameplayContextPacket["graph"]["rescue"]>, currentEncounterId: string): string {
+  return `The Rescue:
+A hero is down. If no listed transition condition is met, the game itself moves the story to '${rescue.transition.toEncounterId}' as this round ends. You do not take it: set nextEncounterId to '${currentEncounterId}' and the game does the rest.
+Its intro, which players then read straight after your narrative. It has not happened yet:
+${rescue.intro}
+Your beats then follow the lengths for transitioning, whatever the GM notes call for: carry the story to where that intro begins and stop.
+Whatever you decide, any rescue the GM notes describe is that intro. Tell none of it: no one the intro brings arrives, speaks or acts in your telling, and nothing it does is done.`
 }
 
 export function buildWikiEncounterProgressionPrompt(packet: LlmGameplayContextPacket, scene?: StoryScene): string {
@@ -293,7 +314,7 @@ ${transitionText}
 
 Allowed nextEncounterId values:
 ${packet.outputContract.allowedNextEncounterIds.join(", ")}
-${packet.session.pace ? `\n${packet.session.pace}\n` : ""}
+${packet.graph.rescue ? `\n${rescueNote(packet.graph.rescue, packet.currentEncounter.id)}\n` : ""}${packet.session.pace ? `\n${packet.session.pace}\n` : ""}
 Your Task:
 1. Decide from what has already happened, including everything this round and roll outcomes. A player's action this round counts even when an NPC spoke after it. If events so far satisfy a listed transition condition, transition now rather than extending a situation that is already resolved. Continue the current encounter only when no listed condition is satisfied yet, or when one depends on a player choice that has not been made.
    A condition is met only when every part of it is. One that needs every hero, or each of them, waits until each has done it: a hero who left or was left out has not. A price, password or check an NPC or the GM notes set on the way on holds as well: no length of fight and no push to end the scene waives it.

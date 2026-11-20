@@ -64,8 +64,13 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
   // The GM's answer at the round's end: the encounter to go on to, and the round's patch.
   const gm = (next: string, adventurePatch: Record<string, unknown> = {}): Llm => ({
     generateText: unused,
-    generateObject: async ({ schema }) => ({ object: schema.parse({ nextEncounterId: next, beats: [{ kind: "narration", text: `Thalbern goes on to ${next}.` }], adventurePatch }) }),
+    generateObject: async ({ prompt, schema }) => {
+      asked.push(prompt ?? "")
+      return { object: schema.parse({ nextEncounterId: next, beats: [{ kind: "narration", text: `Thalbern goes on to ${next}.` }], adventurePatch }) }
+    },
   })
+  // Each prompt the round-end GM was given.
+  const asked: string[] = []
   const everyoneDone = () => {
     for (const c of store.current().characters) c.hasReplied = c.isComplete = true
     store.save()
@@ -128,6 +133,9 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
     assert.deepEqual([thalbern().deathSaves, thalbern().isComplete, thalbern().rollRequired], [{ successes: 1, failures: 0 }, true, undefined])
     // The fight would go on, so Wollandora comes, and Thalbern is back at 1 hit point, conscious.
     await game(store, packs, gm("owlbear-confrontation"))({ kind: "continue", turnId: store.current()._id })
+    // The GM is shown the rescue's intro and told to stop where it begins, so Wollandora does not arrive twice.
+    assert.match(asked.at(-1)!, /\n\nThe Rescue:\nA hero is down\.[^\n]+set nextEncounterId to 'owlbear-confrontation'[^\n]+\n[^\n]+\n[\s\S]*Wollandora steps from the shadows[\s\S]*Wollandora: "That's enough, beast of the wood!"[\s\S]*Tell none of it[^\n]+\n\n/)
+    assert.doesNotMatch(asked.at(-1)!, /leads to encounter ID: 'timely-rescue'/)
     assert.equal(store.current().encounterId, "timely-rescue")
     staged("timely-rescue")
     assert.deepEqual([thalbern().hitPoints, conditionWords(thalbern()).includes("Unconscious"), thalbern().deathSaves, thalbern().rollRequired], [1, false, undefined, undefined])
@@ -136,6 +144,8 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
       await game(store, packs, gm(next))({ kind: "continue", turnId: store.current()._id })
       assert.equal(store.current().encounterId, next)
       staged(next)
+      // The rescue is played and no hero is down: the GM hears of none.
+      assert.doesNotMatch(asked.at(-1)!, /The Rescue:/)
     }
     assert.equal(store.state!.adventure.status, "completed")
     assert.equal(store.current().isFinalEncounter, true)

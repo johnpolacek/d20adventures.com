@@ -46,7 +46,8 @@ export function gmNotesWithRules(rules: SafetyRules | undefined, gmNotes?: strin
 
 /**
  * The rescue transition to take now: the adventure has a rescue it has not played yet, the current encounter authors
- * a transition to it, and a hero is at 0 hit points and not dead. The model never sees this transition.
+ * a transition to it, and a hero is at 0 hit points and not dead. The model is never offered this transition. It is
+ * shown the intro, so it stops where the rescue begins (./runtime-context `rescueNote`).
  */
 export function pendingRescue(args: {
   artifacts: Pick<RuntimeArtifacts, "manifest" | "graph">
