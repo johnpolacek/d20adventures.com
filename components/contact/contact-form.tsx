@@ -9,6 +9,9 @@ import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
 import { Textarea } from "@d20/ui/textarea"
 
+const labelClass = "font-display text-sm tracking-[0.2em] uppercase text-amber-300/90"
+const fieldClass = "h-auto py-2.5 border-amber-200/20 bg-black/60 text-base focus-visible:border-amber-200/50"
+
 interface ContactFormProps {
   subject?: string
   onSuccess?: () => void
@@ -62,18 +65,18 @@ export function ContactForm({ subject = "Contact Message", onSuccess, requireCap
 
   return (
     <form onSubmit={onSubmit}>
-      <div className="grid gap-4">
+      <div className="grid gap-6">
         <div className="grid gap-2">
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" name="name" placeholder="Your name" required />
+          <Label htmlFor="name" className={labelClass}>Name</Label>
+          <Input id="name" name="name" required className={fieldClass} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" placeholder="your@email.com" required />
+          <Label htmlFor="email" className={labelClass}>Email</Label>
+          <Input id="email" name="email" type="email" required className={fieldClass} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="message">Message</Label>
-          <Textarea id="message" name="message" placeholder="Your message" required />
+          <Label htmlFor="message" className={labelClass}>Message</Label>
+          <Textarea id="message" name="message" required className={`${fieldClass} min-h-44`} />
         </div>
         {requireCaptcha && (
           <div className="w-full">
@@ -81,9 +84,9 @@ export function ContactForm({ subject = "Contact Message", onSuccess, requireCap
           </div>
         )}
       </div>
-      <div className="mt-4 flex justify-end">
-        <Button type="submit" disabled={isLoading || (requireCaptcha && !captchaToken)}>
-          {isLoading ? "Sending..." : "Send Message"}
+      <div className="mt-8 flex justify-center">
+        <Button type="submit" variant="epic" size="lg" disabled={isLoading || (requireCaptcha && !captchaToken)}>
+          {isLoading ? "Sending…" : "Send Message"}
         </Button>
       </div>
     </form>

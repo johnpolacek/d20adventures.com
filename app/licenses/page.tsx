@@ -1,23 +1,20 @@
+import type { Metadata } from "next"
 import { srdAttribution } from "@d20/srd/attribution"
-import { Heading } from "@d20/ui/typography/heading"
+import { PlainPage, plainProse } from "@/components/legal/legal-page"
+
+export const metadata: Metadata = { title: "Licenses | D20 Adventures" }
 
 // The attribution statement, as written, with its two URLs as links.
 const parts = srdAttribution.split(/(https:\/\/\S+?)(?=\.(?:\s|$))/)
 
 export default function LicensesPage() {
   return (
-    <div className="container py-12">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-12 text-center">
-          <Heading variant="h1" className="mb-8">
-            Licenses
-          </Heading>
-        </div>
-
-        <p>
+    <PlainPage title="Licenses">
+      <div className={plainProse}>
+        <p className="text-lg">
           {parts.map((part, i) =>
             i % 2 ? (
-              <a key={part} href={part} className="underline underline-offset-4" target="_blank" rel="noopener noreferrer">
+              <a key={part} href={part} target="_blank" rel="noopener noreferrer">
                 {part}
               </a>
             ) : (
@@ -26,6 +23,6 @@ export default function LicensesPage() {
           )}
         </p>
       </div>
-    </div>
+    </PlainPage>
   )
 }

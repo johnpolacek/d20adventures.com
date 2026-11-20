@@ -1,12 +1,11 @@
 import type { Metadata } from "next"
 import { ConfigCard } from "@/components/admin/config-card"
 import { ContactForm } from "@/components/contact/contact-form"
-import { Heading } from "@d20/ui/typography/heading"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@d20/ui/card"
+import { PlainPage } from "@/components/legal/legal-page"
 
 export const metadata: Metadata = {
-  title: "Contact Us",
-  description: "Get in touch with us. We'd love to hear from you!",
+  title: "Contact | D20 Adventures",
+  description: "Questions, bugs or ideas? Send a note.",
 }
 
 async function checkEnvironmentVariables() {
@@ -85,28 +84,9 @@ export default async function ContactPage() {
 
 function ContactPageContent() {
   return (
-    <div className="container max-w-2xl py-8 md:py-12">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <Heading variant="h4">Contact Us</Heading>
-          </CardTitle>
-          <CardDescription>Have a question or want to get in touch? Fill out the form and we&apos;ll get back to you.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ContactForm requireCaptcha={true} />
-        </CardContent>
-      </Card>
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-8 text-sm text-white/60">
-          <p>
-            Get your API keys from{" "}
-            <a className="underline" href="http://www.google.com/recaptcha/admin" target="_blank" rel="noopener noreferrer">
-              http://www.google.com/recaptcha/admin
-            </a>
-          </p>
-        </div>
-      )}
-    </div>
+    <PlainPage title="Contact">
+      <p className="mb-10 text-center text-lg text-white/80">Questions, bugs or ideas? Send a note and we’ll write back.</p>
+      <ContactForm requireCaptcha={true} />
+    </PlainPage>
   )
 }

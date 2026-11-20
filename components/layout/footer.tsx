@@ -35,7 +35,7 @@ export default function SiteFooter({ currentYear }: { currentYear: number }) {
             <Link href="/licenses" className="hover:underline underline-offset-4">
               Licenses
             </Link>
-            <Link href="#" className="hover:underline underline-offset-4">
+            <Link href="/contact" className="hover:underline underline-offset-4">
               Contact
             </Link>
           </nav>
