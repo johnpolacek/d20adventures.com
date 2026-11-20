@@ -676,6 +676,11 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         rise = np.clip((P[..., 2] - neck) / (0.025 * H), 0, 1)
         # Never the sheet's grey: a point of the model that falls outside the painted figure keeps its own colour.
         on_figure = figure_mask[iy, ix] & figure_mask[iy + 1, ix + 1]
+        # A fitted head lies where the model's face is, not where the sheet's is: Thalbern's stood 3 cm to one side,
+        # and the sheet's grey beside its head left that side of his face unpainted, to a ragged line down the nose.
+        # Inside the fitted face's oval the paint is the fitted head's, and all of it is face.
+        if fitted and face_front is not None:
+            on_figure = on_figure | (out_of < 1.15)
         w = (turn * rise * inside * on_figure)[..., None]
         patch = T[y0 : y1 + 1, x0 : x1 + 1, :3]
         T[y0 : y1 + 1, x0 : x1 + 1, :3] = patch * (1 - w) + seen * w
