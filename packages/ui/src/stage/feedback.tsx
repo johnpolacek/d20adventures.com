@@ -4,7 +4,7 @@
 // panel it opens, and the rating row on an adventure's closing panel.
 
 import { Star, X } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import { Button } from "../button"
 import { type FeedbackDraft, MAX_SCREENSHOTS, SCREENSHOT_TYPES, screenshotProblem } from "../feedback-rules"
 import { FileInput, FileInputTrigger } from "../file-input"
@@ -144,11 +144,15 @@ export function EndingRating({ sent, onRate }: { sent: boolean; onRate: (rating:
   )
 }
 
-/** The feedback panel: a note, or an ending's rating and two answers, with screenshots. `onSend` resolves to an error, or null. */
+/**
+ * The feedback panel: a note, or an ending's rating and two answers, with screenshots. `onSend` resolves to an error,
+ * or null. `gate` stands in for the form while the player cannot send, such as the app's step to link an account.
+ */
 export function FeedbackPanel({
   start,
   context,
   compact,
+  gate,
   onSend,
   onSent,
   onClose,
@@ -156,6 +160,7 @@ export function FeedbackPanel({
   start: FeedbackStart
   context: Record<string, string>
   compact?: boolean
+  gate?: ReactNode
   onSend: (draft: FeedbackDraft) => Promise<string | null>
   onSent: (kind: FeedbackDraft["kind"]) => void
   onClose: () => void
@@ -251,7 +256,9 @@ export function FeedbackPanel({
         </Button>
       </div>
 
-      {state === "sent" ? (
+      {gate ? (
+        <div className="mt-4">{gate}</div>
+      ) : state === "sent" ? (
         <p className="mt-6 mb-2 text-center font-display text-lg text-stage-gold">Thank You</p>
       ) : (
         <>

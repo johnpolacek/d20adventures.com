@@ -201,6 +201,25 @@ export function AccountNotice({ account: a }: { account: Account }) {
   )
 }
 
+// In the feedback panel, in place of the form, until this computer is linked. Feedback is sent under the account.
+export function FeedbackLink({ account: a }: { account: Account }) {
+  if (a.link)
+    return (
+      <div className="text-center">
+        <Waiting account={a} />
+      </div>
+    )
+  return (
+    <div className="space-y-4 text-center">
+      <p className="font-serif text-stage-cream/80">Link this computer to your account to send feedback.</p>
+      <Button variant="emboss" className="px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy} onClick={() => void a.start()}>
+        {a.busy ? "Opening…" : "Link Account"}
+      </Button>
+      {a.error && <p className="text-sm text-red-300">{a.error}</p>}
+    </div>
+  )
+}
+
 // In place of the title screen's choices until this computer is linked.
 export function LinkGate({ account: a }: { account: Account }) {
   return (

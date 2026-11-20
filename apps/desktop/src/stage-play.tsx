@@ -245,6 +245,8 @@ export function StagePlay(props: {
   // Sends a player's feedback, resolving to an error or null. With it the top bar has the feedback button and the
   // closing panel asks for a rating.
   onFeedback?: (draft: FeedbackDraft) => Promise<string | null>
+  // In place of the feedback form while it cannot be sent, such as the step to link an account.
+  feedbackGate?: ReactNode
   onEscape?: () => void
   onError: (message: string) => void
   // Reports whether the scene is still loading and any stage error, for setup screens and the error panel.
@@ -1298,6 +1300,7 @@ export function StagePlay(props: {
                 gm: [save.provider, save.model].filter(Boolean).join(" "),
               }}
               compact={compact}
+              gate={props.feedbackGate}
               onSend={props.onFeedback}
               onSent={(kind) => kind === "ending" && setEndingSent(true)}
               onClose={closePanel}
