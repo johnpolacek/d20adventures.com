@@ -281,10 +281,23 @@ export function AdventuresPage(props: {
     localStorage.setItem(ARCHIVED_HOSTED, JSON.stringify(next))
     setArchivedHosted(next)
   }
-  const saves = props.saves.filter((s) => !s.hidden)
-  const hosted = props.hosted.filter((h) => !archivedHosted.includes(h.adventureId))
-  const shelvedSaves = props.saves.filter((s) => s.hidden)
-  const shelvedHosted = props.hosted.filter((h) => archivedHosted.includes(h.adventureId))
+  // Archive, Restore and Delete move or drop a card at once, before the app answers. The next list from the app, or the
+  // app going idle after a failed command, is the truth again.
+  const [pending, setPending] = useState<Record<string, "archived" | "restored" | "deleted">>({})
+  const mark = (key: string, to: "archived" | "restored" | "deleted") => setPending((p) => ({ ...p, [key]: to }))
+  useEffect(() => setPending({}), [props.saves, props.hosted])
+  useEffect(() => {
+    if (!props.busy) setPending({})
+  }, [props.busy])
+  const saveKey = (s: SaveSummary) => `save-${s.archiveId ?? "current"}`
+  const hostKey = (h: HostedSummary) => `hosted-${h.adventureId}`
+  const hidden = (s: SaveSummary) => (pending[saveKey(s)] === "archived" ? true : pending[saveKey(s)] === "restored" ? false : Boolean(s.hidden))
+  const kept = props.saves.filter((s) => pending[saveKey(s)] !== "deleted")
+  const keptHosted = props.hosted.filter((h) => pending[hostKey(h)] !== "deleted")
+  const saves = kept.filter((s) => !hidden(s))
+  const hosted = keptHosted.filter((h) => !archivedHosted.includes(h.adventureId))
+  const shelvedSaves = kept.filter(hidden)
+  const shelvedHosted = keptHosted.filter((h) => archivedHosted.includes(h.adventureId))
   const heroesOf = (s: SaveSummary): CardHero[] => {
     if (!s.heroes) return s.party.map((name) => ({ name }))
     const painted = Object.fromEntries((s.painted ?? []).flatMap((id) => (props.art[id] ? [[id, props.art[id]]] : [])))
@@ -325,10 +338,12 @@ export function AdventuresPage(props: {
                     onCancel={() => setRemoving(null)}
                     onArchive={() => {
                       setRemoving(null)
+                      mark(saveKey(s), "archived")
                       props.onArchive(s.archiveId)
                     }}
                     onDelete={() => {
                       setRemoving(null)
+                      mark(saveKey(s), "deleted")
                       props.onRemove(s.archiveId)
                     }}
                   />
@@ -362,6 +377,7 @@ export function AdventuresPage(props: {
                   }}
                   onDelete={() => {
                     setRemoving(null)
+                    mark(hostKey(h), "deleted")
                     props.onRemoveHosted(h.adventureId)
                   }}
                 />
@@ -470,7 +486,10 @@ export function AdventuresPage(props: {
                   title={s.title}
                   kicker={[played(s.playedAt), s.status === "completed" ? "Complete" : `Round ${s.round}`].filter(Boolean).join(" · ")}
                   busy={props.busy}
-                  onRestore={() => props.onArchive(s.archiveId, true)}
+                  onRestore={() => {
+                    mark(saveKey(s), "restored")
+                    props.onArchive(s.archiveId, true)
+                  }}
                 >
                   <RemoveButton
                     confirming={removing === key}
@@ -481,6 +500,7 @@ export function AdventuresPage(props: {
                     onClick={() => {
                       if (removing !== key) return setRemoving(key)
                       setRemoving(null)
+                      mark(saveKey(s), "deleted")
                       props.onRemove(s.archiveId)
                     }}
                   />
@@ -506,6 +526,7 @@ export function AdventuresPage(props: {
                     if (removing !== h.adventureId) return setRemoving(h.adventureId)
                     setRemoving(null)
                     archiveHosted(h.adventureId, false)
+                    mark(hostKey(h), "deleted")
                     props.onRemoveHosted(h.adventureId)
                   }}
                 />
