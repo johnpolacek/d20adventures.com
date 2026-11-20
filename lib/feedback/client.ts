@@ -1,5 +1,5 @@
 import type { FeedbackDraft } from "@d20/ui/feedback-rules"
-import { shrinkScreenshot } from "./shrink"
+import { shrinkScreenshot } from "@d20/ui/feedback-shrink"
 
 const FAILED = "Could not send your feedback. Try again."
 

@@ -8,9 +8,9 @@ import type { CreationChoices, CreationOptions, CreationPick, EquipmentOffer } f
 import type { FeatOffer, Named, PicksOffer } from "@d20/gm-core/sheet/level-up"
 import type { FeaturePick } from "@d20/gm-core/sheet/sheet"
 import { useMemo } from "react"
-import { ABILITY_NAMES, type AbilityId, toggled, togglePick, unmet, withBookSpells } from "@d20/ui/stage/level-up-view"
-import { Option, siteField, siteLabel } from "@d20/ui/site"
-import { cn } from "@/lib/utils"
+import { ABILITY_NAMES, type AbilityId, toggled, togglePick, unmet, withBookSpells } from "../stage/level-up-view"
+import { Option, siteField, siteLabel } from "../site"
+import { cn } from "../utils"
 import type { HeroRulesKit } from "./use-hero-rules"
 
 const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const

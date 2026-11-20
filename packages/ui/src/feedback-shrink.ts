@@ -1,4 +1,4 @@
-import { MAX_UPLOAD_BYTES } from "@d20/ui/feedback-rules"
+import { MAX_UPLOAD_BYTES } from "./feedback-rules"
 
 // Browser only. A screenshot is redrawn as a JPEG small enough to send in one request: at most this many pixels on its
 // long side, then at falling quality and size until it fits. An animated GIF keeps its first frame.

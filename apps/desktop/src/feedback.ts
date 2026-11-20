@@ -1,5 +1,5 @@
 import type { FeedbackDraft } from "@d20/ui/feedback-rules"
-import { shrinkScreenshot } from "@/lib/feedback/shrink"
+import { shrinkScreenshot } from "@d20/ui/feedback-shrink"
 import { feedback } from "./bridge"
 
 const base64 = (blob: Blob) =>

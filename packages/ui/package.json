@@ -4,22 +4,24 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./feedback-rules": "./src/feedback-rules.ts",
-    "./graphics/styles": "./src/graphics/styles.ts",
-    "./scroll": "./src/scroll.ts",
-    "./typography/styles": "./src/typography/styles.ts",
-    "./utils": "./src/utils.ts",
     "./adventure/use-sheet-view": "./src/adventure/use-sheet-view.ts",
+    "./feedback-rules": "./src/feedback-rules.ts",
+    "./feedback-shrink": "./src/feedback-shrink.ts",
+    "./graphics/styles": "./src/graphics/styles.ts",
+    "./heroes/use-hero-rules": "./src/heroes/use-hero-rules.ts",
+    "./scroll": "./src/scroll.ts",
     "./stage/dice-sound": "./src/stage/dice-sound.ts",
     "./stage/level-up-view": "./src/stage/level-up-view.ts",
     "./stage/reaction-view": "./src/stage/reaction-view.ts",
     "./stage/roll-view": "./src/stage/roll-view.ts",
     "./stage/standing": "./src/stage/standing.ts",
     "./stage/use-stage": "./src/stage/use-stage.ts",
+    "./typography/styles": "./src/typography/styles.ts",
+    "./utils": "./src/utils.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
-    "check": "tsc -p tsconfig.json"
+    "check": "node scripts/check-imports.mjs && tsc -p tsconfig.json"
   },
   "dependencies": {
     "@d20/gm-core": "workspace:*",

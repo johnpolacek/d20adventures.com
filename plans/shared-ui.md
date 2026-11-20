@@ -27,7 +27,13 @@ The package is plain React. It imports nothing from Next, Clerk or Convex, the s
 3. Typography. Done 2026-11-19. Now `@d20/ui/typography/heading` and `@d20/ui/typography/styles`. The package exports `.tsx` files by wildcard and each `.ts` file by name. Tailwind in both apps picks up classes from `packages/ui/src`.
 4. UI. Done 2026-11-19. `components/ui` and `graphics/background/Parchment` are gone, all in `@d20/ui` (Parchment as `graphics/parchment`, `ui/utils` as `scroll`). Rebuilt on UI SDK from its own docs: `button`, `input`, `textarea`, `label`, `switch`, `dialog`, `alert-dialog`, `hover-card`, `select`, `avatar`, `collapsible`, `pagination`. The rest is plain React and moved as is. `asChild` became `render`, or a plain element with `buttonClassName` and `buttonStyle` where it only looked like a button. Button sizes `lg` and `sm` add no styles, as before. Each component has a tile on `/ui`. Known look issues there: the outline badge, the white card and the dialog title.
 5. Stage. Done 2026-11-19. `components/stage` is now `@d20/ui/stage/*`, and `module-cover` and `use-sheet-view` are `@d20/ui/adventure/*`. `useStage` no longer imports `asset-library/play`: callers pass it as `play`. The package depends on `@d20/gm-core`, `@d20/stage` and `three`.
-6. Lock down. One `@source` line for the package in each app. Narrow the desktop `@` alias so it cannot reach site code. Fail the build on Next, Clerk or Convex imports in `packages/ui`. Remove the Radix dependencies.
+6. Lock down. Done 2026-11-19. The desktop has one `@source`, for the package. The site needs none, since Tailwind scans the repo. The desktop's Vite `@` alias reaches only `asset-library`, `content` and `lib/citymap`, so a value import of site code fails its build. Its tsconfig keeps `@/*` wide, because `HostedSummary` and `GuestHero` are types inferred from the site's Convex server code. Type imports vanish at build. `packages/ui/scripts/check-imports.mjs` fails both builds on Next, Clerk, Convex or `@/` imports in the package. `hero-rules`, `use-hero-rules` and the screenshot shrink moved into the package. The Radix dependencies are gone. `sonner` stays for now.
+
+## Follow-ups
+
+- Write the hosted wire types (`HostedSummary`, `GuestHero`) out by hand, then narrow the desktop tsconfig to match Vite.
+- Replace `sonner` with UI SDK Toast.
+- Fix the look of the outline badge, the white card and the dialog title.
 
 ## UI SDK notes
 

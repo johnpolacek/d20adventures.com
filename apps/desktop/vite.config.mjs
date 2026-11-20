@@ -73,7 +73,9 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: /^@\/lib\/utils$/, replacement: fileURLToPath(new URL("./src/utils.ts", import.meta.url)) },
-      { find: "@", replacement: fileURLToPath(new URL("../../", import.meta.url)) },
+      // Only these folders of the repo root: the built looks, the city maps and the content they read. Site code is
+      // out of reach, so the app gets its UI from @d20/ui.
+      { find: /^@\/(asset-library|content|lib\/citymap)(\/.*)?$/, replacement: fileURLToPath(new URL("../../$1$2", import.meta.url)) },
     ],
   },
   css: { postcss: { plugins: [tailwind()] } },
