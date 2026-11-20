@@ -21,6 +21,9 @@ export default function SiteFooter({ currentYear }: { currentYear: number }) {
             © {currentYear} {siteConfig.title}. All rights reserved.
           </p>
           <nav className="flex gap-4">
+            <Link href="/blog" className="hover:underline underline-offset-4">
+              Blog
+            </Link>
             <Link href="/terms" className="hover:underline underline-offset-4">
               Terms
             </Link>
