@@ -509,8 +509,16 @@ export function PromptCard({
       {mode.kind === "hold" && actor && (
         <>
           <HeroRing party={party} actor={actor} compact={compact} onPick={onPick} />
-          <div className={cn("font-display tracking-[0.3em] text-stage-gold uppercase", compact ? "text-[10px]" : "text-[12px]")}>{actor.name.split(" ")[0]}</div>
-          <p className={cn("font-serif text-stage-cream", compact ? "my-1 line-clamp-3 text-[13px] leading-snug" : "mt-1.5 mb-4 text-[19px] leading-[1.4]")}>{mode.prompt}</p>
+          {/* A short question reads well in the capitals of the display face. A longer ask from the GM stays in the serif. */}
+          <p
+            className={cn(
+              "text-stage-cream",
+              mode.prompt.length <= 60 ? "font-display" : "font-serif",
+              compact ? "my-1 line-clamp-3 text-[14px] leading-snug" : cn("mb-4 leading-[1.35]", mode.prompt.length <= 60 ? "text-[22px]" : "text-[19px]")
+            )}
+          >
+            {mode.prompt}
+          </p>
           {mode.suggestions && mode.suggestions.length > 0 && (
             <div className={cn("flex flex-wrap justify-center", compact ? "mb-1.5 gap-1" : "mb-3 gap-2")}>
               {mode.suggestions === "loading"
