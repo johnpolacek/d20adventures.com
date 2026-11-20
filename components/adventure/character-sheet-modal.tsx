@@ -2,18 +2,18 @@
 
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { useState } from "react"
-import { MagicItems } from "@/components/stage/magic-items"
-import { StandingOrders } from "@/components/stage/reaction-card"
-import { heroReactions, type StandingOrders as Orders } from "@/components/stage/reaction-view"
-import { DeathSaveMarks } from "@/components/stage/roll-parts"
-import { standingOf, standingWords } from "@/components/stage/standing"
+import { MagicItems } from "@d20/ui/stage/magic-items"
+import { StandingOrders } from "@d20/ui/stage/reaction-card"
+import { heroReactions, type StandingOrders as Orders } from "@d20/ui/stage/reaction-view"
+import { DeathSaveMarks } from "@d20/ui/stage/roll-parts"
+import { standingOf, standingWords } from "@d20/ui/stage/standing"
 import { Button } from "@d20/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@d20/ui/dialog"
 import Image from "@d20/ui/native-image"
 import { getImageUrl } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
-import { useSheetView } from "./use-sheet-view"
+import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
 
 type CharacterSheetModalCharacter = TurnCharacter | PC | PCTemplate | null
 interface CharacterSheetModalProps {

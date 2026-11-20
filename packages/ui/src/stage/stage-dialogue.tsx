@@ -4,7 +4,7 @@
 // colours taken from it, and a framed portrait plate that slides in on the speaker's side of the screen for named characters.
 
 import { useEffect, useRef } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 
 export type Anchor = () => { x: number; y: number; visible: boolean; distance: number; ppm?: number } | null
 // The set behind the bubbles, drawn small (Stage.thumbnail), so a band can take its colours from what it covers.

@@ -10,24 +10,24 @@ import type { Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useSheetView, useSheetViews } from "@/components/adventure/use-sheet-view"
-import { CharacterCard } from "@/components/stage/character-card"
-import { CityMapInset, CityMapPanel } from "@/components/stage/city-map"
-import { setSoundOn, soundOn } from "@/components/stage/dice-sound"
-import { EndingRating, FeedbackButton, FeedbackPanel, type FeedbackStart } from "@/components/stage/feedback"
-import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
-import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
-import { LevelUp } from "@/components/stage/level-up"
-import { Narration } from "@/components/stage/narration"
-import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@/components/stage/prompt-card"
-import { ReactionCard, useExpired } from "@/components/stage/reaction-card"
-import { heroReactions, type StandingOrders } from "@/components/stage/reaction-view"
-import { ROLL_SECONDS } from "@/components/stage/roll-result"
-import { featureView, type RollView, rollView } from "@/components/stage/roll-view"
-import { Bubbles, Plate } from "@/components/stage/stage-dialogue"
-import { passedOver, passedWords, standingOf } from "@/components/stage/standing"
-import { TurnOrder } from "@/components/stage/turn-order"
-import { useStage } from "@/components/stage/use-stage"
+import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
+import { CharacterCard } from "@d20/ui/stage/character-card"
+import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
+import { setSoundOn, soundOn } from "@d20/ui/stage/dice-sound"
+import { EndingRating, FeedbackButton, FeedbackPanel, type FeedbackStart } from "@d20/ui/stage/feedback"
+import { IconButton, Pill, panel, StageHud, useCompact } from "@d20/ui/stage/hud"
+import { type ChatLine, Journal, type JournalTurn } from "@d20/ui/stage/journal"
+import { LevelUp } from "@d20/ui/stage/level-up"
+import { Narration } from "@d20/ui/stage/narration"
+import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@d20/ui/stage/prompt-card"
+import { ReactionCard, useExpired } from "@d20/ui/stage/reaction-card"
+import { heroReactions, type StandingOrders } from "@d20/ui/stage/reaction-view"
+import { ROLL_SECONDS } from "@d20/ui/stage/roll-result"
+import { featureView, type RollView, rollView } from "@d20/ui/stage/roll-view"
+import { Bubbles, Plate } from "@d20/ui/stage/stage-dialogue"
+import { passedOver, passedWords, standingOf } from "@d20/ui/stage/standing"
+import { TurnOrder } from "@d20/ui/stage/turn-order"
+import { useStage } from "@d20/ui/stage/use-stage"
 import { Button } from "@d20/ui/button"
 import { cityMapTrail } from "@/lib/citymap"
 import type { FeedbackDraft } from "@d20/ui/feedback-rules"
@@ -35,6 +35,9 @@ import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
+
+// The built looks the game plays its sets in, loaded with the stage.
+const loadPlay = () => import("@/asset-library/play")
 
 type Paragraph = { text: string; roll?: RollBeat; feature?: FeatureBeat; beats: StoryBeat[] }
 // A turn's story as paragraphs to read. A dice roll keeps its sentence, which the camera and screen readers read, and
@@ -348,7 +351,7 @@ export function StagePlay(props: {
   const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet, standingOf(cardCharacter, cardSheet), ordersFor) : null
   // Every hero's sheet, for their hit points and Armor Class in the turn order and the party row.
   const sheets = useSheetViews(shown?.characters ?? [])
-  const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const } : null), [scene])
+  const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const, play: loadPlay } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
   // Who the turn passed over to reach the actor, because they cannot act, and why.

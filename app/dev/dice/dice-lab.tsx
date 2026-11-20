@@ -7,8 +7,8 @@
 // Under them, every look a roll and a character can have in rules combat, from mock data (./roll-looks).
 
 import { type ReactNode, useEffect, useRef, useState } from "react"
-import { D20Shape, D20Solid } from "@/components/stage/d20"
-import { Pill } from "@/components/stage/hud"
+import { D20Shape, D20Solid } from "@d20/ui/stage/d20"
+import { Pill } from "@d20/ui/stage/hud"
 import { cn } from "@/lib/utils"
 import { ItemLooks } from "./item-looks"
 import { RollLooks } from "./roll-looks"

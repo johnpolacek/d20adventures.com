@@ -5,7 +5,7 @@
 
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { type Box, boxAround, type CityMap, centroid, districtBox, frameBox, type MapShape, type Point, placeAt, placeName } from "@d20/gm-core/citymap"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 
 const INK = "#2b1a10"

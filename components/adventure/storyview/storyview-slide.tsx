@@ -1,8 +1,8 @@
 "use client"
 
-import { RollLine } from "@/components/stage/journal"
-import { FeatureEntry } from "@/components/stage/roll-parts"
-import { featureView, rollView } from "@/components/stage/roll-view"
+import { RollLine } from "@d20/ui/stage/journal"
+import { FeatureEntry } from "@d20/ui/stage/roll-parts"
+import { featureView, rollView } from "@d20/ui/stage/roll-view"
 import Image from "@d20/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { StoryviewSlide } from "./use-storyview-player"

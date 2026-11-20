@@ -9,12 +9,21 @@
     "./scroll": "./src/scroll.ts",
     "./typography/styles": "./src/typography/styles.ts",
     "./utils": "./src/utils.ts",
+    "./adventure/use-sheet-view": "./src/adventure/use-sheet-view.ts",
+    "./stage/dice-sound": "./src/stage/dice-sound.ts",
+    "./stage/level-up-view": "./src/stage/level-up-view.ts",
+    "./stage/reaction-view": "./src/stage/reaction-view.ts",
+    "./stage/roll-view": "./src/stage/roll-view.ts",
+    "./stage/standing": "./src/stage/standing.ts",
+    "./stage/use-stage": "./src/stage/use-stage.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
     "check": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@d20/gm-core": "workspace:*",
+    "@d20/stage": "workspace:*",
     "@heroicons/react": "^2.2.0",
     "@ui-sdk/core": "0.1.0-beta.13",
     "@ui-sdk/react": "0.1.0-beta.13",
@@ -22,10 +31,14 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
     "tailwind-merge": "^3.7.0",
+    "three": "0.183.2",
     "zod": "4.6.7"
   },
   "peerDependencies": {
     "react": ">=19",
     "react-dom": ">=19"
+  },
+  "devDependencies": {
+    "@types/three": "^0.183.1"
   }
 }

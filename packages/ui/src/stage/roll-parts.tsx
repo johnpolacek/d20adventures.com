@@ -5,7 +5,7 @@
 // Death Saving Throws. And a feature used, as a small entry of its own. Each part is seen, not read: the caller's
 // screen-reader sentence (./roll-view) says it all.
 
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 import { eyebrow } from "./hud"
 import { conditionSentence, type DamageView, type DeathSavesView, type FeatureView, featureSpeech, type HarmView, harmSentence, type RollView, takenDiffers } from "./roll-view"
 

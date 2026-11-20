@@ -5,8 +5,8 @@
 // countdown. And a hero's standing orders, one row for each reaction they have. Both hosts use them.
 
 import { useEffect, useState } from "react"
-import { Button } from "@d20/ui/button"
-import { cn } from "@/lib/utils"
+import { Button } from "../button"
+import { cn } from "../utils"
 import { Chevron, eyebrow, Pill, panel } from "./hud"
 import { ORDERS, type Order, type OrderRow, REACTION_WAIT_MS, type ReactionId, reactionName } from "./reaction-view"
 

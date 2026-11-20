@@ -7,9 +7,9 @@
 import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import { useState } from "react"
 import { CharacterSheetModal } from "@/components/adventure/character-sheet-modal"
-import { useSheetView } from "@/components/adventure/use-sheet-view"
-import { CharacterCard } from "@/components/stage/character-card"
-import { eyebrow, Pill } from "@/components/stage/hud"
+import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
+import { CharacterCard } from "@d20/ui/stage/character-card"
+import { eyebrow, Pill } from "@d20/ui/stage/hud"
 import type { PCTemplate } from "@/types/character"
 
 const BRANKA: Sheet = {

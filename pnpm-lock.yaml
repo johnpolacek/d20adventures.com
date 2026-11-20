@@ -314,6 +314,12 @@ importers:
 
   packages/ui:
     dependencies:
+      '@d20/gm-core':
+        specifier: workspace:*
+        version: link:../gm-core
+      '@d20/stage':
+        specifier: workspace:*
+        version: link:../stage
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.2.4)
@@ -341,9 +347,16 @@ importers:
       tailwind-merge:
         specifier: ^3.7.0
         version: 3.7.0
+      three:
+        specifier: 0.183.2
+        version: 0.183.2
       zod:
         specifier: 4.6.7
         version: 4.6.7
+    devDependencies:
+      '@types/three':
+        specifier: ^0.183.1
+        version: 0.183.1
 
 packages:
 

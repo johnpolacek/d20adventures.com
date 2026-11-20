@@ -1,6 +1,6 @@
 import type { CreationChoices, CreationPick } from "@d20/gm-core/sheet/create"
 import { useEffect, useMemo, useState } from "react"
-import { useSheetView } from "@/components/adventure/use-sheet-view"
+import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
 import { HeroRules } from "@/components/heroes/hero-rules"
 import { useHeroRules } from "@/components/heroes/use-hero-rules"
 import { Button } from "@d20/ui/button"

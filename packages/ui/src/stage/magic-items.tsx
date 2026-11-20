@@ -2,7 +2,7 @@
 // is attuned. Shared by the stage's character card and the site's character sheet.
 
 import type { ItemView } from "@d20/gm-core/sheet/items"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 import { eyebrow } from "./hud"
 
 export function MagicItems({ items, className }: { items: readonly ItemView[]; className?: string }) {

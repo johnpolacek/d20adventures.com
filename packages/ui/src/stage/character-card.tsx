@@ -8,7 +8,7 @@
 
 import type { ItemView } from "@d20/gm-core/sheet/items"
 import type { SheetSpellcasting } from "@d20/gm-core/sheet/view"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 import { eyebrow, panel } from "./hud"
 import { MagicItems } from "./magic-items"
 import { StandingOrders } from "./reaction-card"

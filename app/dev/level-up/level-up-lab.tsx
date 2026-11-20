@@ -2,8 +2,8 @@
 
 import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import { useState } from "react"
-import { Pill } from "@/components/stage/hud"
-import { LevelUp } from "@/components/stage/level-up"
+import { Pill } from "@d20/ui/stage/hud"
+import { LevelUp } from "@d20/ui/stage/level-up"
 
 export function LevelUpLab({ heroes }: { heroes: { name: string; image?: string; sheets: Sheet[] }[] }) {
   const [hero, setHero] = useState(0)

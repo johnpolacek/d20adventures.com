@@ -6,7 +6,7 @@
 import type { LevelUpChoices, LevelUpOptions, Named, PickOffer, PicksOffer } from "@d20/gm-core/sheet/level-up"
 import type { FeaturePick, Sheet } from "@d20/gm-core/sheet/sheet"
 import { useEffect, useMemo, useState } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { ABILITY_NAMES, type AbilityId, emptyPicks, fromChoices, missing, type Picks, preparable, raiseOf, spellsToPick, toChoices, toggled, togglePick, unmet, withBookSpells } from "./level-up-view"
 

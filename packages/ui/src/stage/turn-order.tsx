@@ -10,7 +10,7 @@
 // reach its actor.
 
 import { useLayoutEffect, useRef } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 import { DeathSaveMarks } from "./roll-parts"
 import { hitPointsShort, type Standing, standingWords, WOUND_TONE } from "./standing"
 

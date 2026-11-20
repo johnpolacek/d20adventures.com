@@ -1,5 +1,5 @@
-import { DeathSaveMarks } from "@/components/stage/roll-parts"
-import { againstLabel } from "@/components/stage/roll-view"
+import { DeathSaveMarks } from "@d20/ui/stage/roll-parts"
+import { againstLabel } from "@d20/ui/stage/roll-view"
 import DiceRoll from "@/components/adventure/dice-roll"
 import Image from "@d20/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"

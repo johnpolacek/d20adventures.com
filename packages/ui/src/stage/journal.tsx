@@ -4,7 +4,7 @@
 // so the stage carries the scene and the text is always one tap away.
 
 import { Fragment, useEffect, useRef, useState } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { DeathSaveMarks, FeatureEntry, RollDetails } from "./roll-parts"
 import { againstLabel, type FeatureView, isCritical, marginText, modeName, type RollView, rollHeading, rollSpeech, verdictOf } from "./roll-view"

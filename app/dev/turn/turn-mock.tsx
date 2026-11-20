@@ -3,19 +3,22 @@
 import type { TierName } from "@d20/stage"
 import { BeatPlayer, lineSeconds, readingSeconds } from "@d20/stage/beats"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { type CardInfo, CharacterCard } from "@/components/stage/character-card"
-import { IconButton, Pill, panel, StageHud, useCompact } from "@/components/stage/hud"
-import { type ChatLine, Journal, type JournalTurn } from "@/components/stage/journal"
-import { Narration } from "@/components/stage/narration"
-import { type CardCharacter, type CardMode, PromptCard } from "@/components/stage/prompt-card"
-import { ROLL_SECONDS } from "@/components/stage/roll-result"
-import type { RollView } from "@/components/stage/roll-view"
-import { RotatePrompt, requestLandscape, usePhonePortrait } from "@/components/stage/rotate-gate"
-import { type Bubble, Bubbles, Plate, type PlateLine } from "@/components/stage/stage-dialogue"
-import { type OrderEntry, TurnOrder } from "@/components/stage/turn-order"
-import { useStage } from "@/components/stage/use-stage"
+import { type CardInfo, CharacterCard } from "@d20/ui/stage/character-card"
+import { IconButton, Pill, panel, StageHud, useCompact } from "@d20/ui/stage/hud"
+import { type ChatLine, Journal, type JournalTurn } from "@d20/ui/stage/journal"
+import { Narration } from "@d20/ui/stage/narration"
+import { type CardCharacter, type CardMode, PromptCard } from "@d20/ui/stage/prompt-card"
+import { ROLL_SECONDS } from "@d20/ui/stage/roll-result"
+import type { RollView } from "@d20/ui/stage/roll-view"
+import { RotatePrompt, requestLandscape, usePhonePortrait } from "@d20/ui/stage/rotate-gate"
+import { type Bubble, Bubbles, Plate, type PlateLine } from "@d20/ui/stage/stage-dialogue"
+import { type OrderEntry, TurnOrder } from "@d20/ui/stage/turn-order"
+import { useStage } from "@d20/ui/stage/use-stage"
 import { cn } from "@/lib/utils"
 import { ABOUT, FORCED_ROLL, type MockHold, type MockRoll, PARTY, type Story, TURNS } from "./gates-mock"
+
+// The built looks the game plays its sets in, loaded with the stage.
+const loadPlay = () => import("@/asset-library/play")
 
 type Phase = "title" | "beats" | "hold" | "roll" | "thinking" | "done"
 type RollOutcome = { total: number; success: boolean } | null
@@ -40,7 +43,7 @@ export function TurnMock() {
       setSpecs({ set, staging })
     })
   }, [])
-  const { stage, status: loading, error } = useStage(containerRef, specs)
+  const { stage, status: loading, error } = useStage(containerRef, useMemo(() => specs && { ...specs, play: loadPlay }, [specs]))
   const portrait = usePhonePortrait()
   const compact = useCompact()
 

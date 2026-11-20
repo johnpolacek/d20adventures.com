@@ -3,7 +3,7 @@
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap"
 import { type ReactNode, useRef } from "react"
-import { ModuleCover } from "@/components/adventure/module-cover"
+import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import AccountRequired from "@/components/nav/account-required"
 import type { AdventurePlan } from "@/types/adventure-plan"
 

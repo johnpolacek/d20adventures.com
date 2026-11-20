@@ -1,9 +1,9 @@
 import type { SheetView } from "@d20/gm-core/sheet/view"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
-import type { CardInfo } from "@/components/stage/character-card"
-import type { OrderRow } from "@/components/stage/reaction-view"
-import type { Standing } from "@/components/stage/standing"
+import type { CardInfo } from "@d20/ui/stage/character-card"
+import type { OrderRow } from "@d20/ui/stage/reaction-view"
+import type { Standing } from "@d20/ui/stage/standing"
 
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 

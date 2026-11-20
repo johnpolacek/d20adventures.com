@@ -5,8 +5,8 @@
 
 import { Star, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { type FeedbackDraft, MAX_SCREENSHOTS, SCREENSHOT_TYPES, screenshotProblem } from "@d20/ui/feedback-rules"
-import { cn } from "@/lib/utils"
+import { type FeedbackDraft, MAX_SCREENSHOTS, SCREENSHOT_TYPES, screenshotProblem } from "../feedback-rules"
+import { cn } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 
 export type FeedbackStart = { kind: FeedbackDraft["kind"]; rating?: number }

@@ -1,7 +1,7 @@
 "use client"
 
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
-import { standingOf, standingWords, WOUND_TONE } from "@/components/stage/standing"
+import { standingOf, standingWords, WOUND_TONE } from "@d20/ui/stage/standing"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@d20/ui/dialog"
 import Image from "@d20/ui/native-image"
 import { getImageUrl } from "@/lib/utils"

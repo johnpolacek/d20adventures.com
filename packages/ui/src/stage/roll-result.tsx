@@ -12,7 +12,7 @@
 // and a compact roll is that at a smaller size.
 
 import { Fragment, useEffect, useRef, useState } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 import { D20Solid } from "./d20"
 import { rattle, verdict as sound, type Verdict } from "./dice-sound"
 import { eyebrow, useShort } from "./hud"

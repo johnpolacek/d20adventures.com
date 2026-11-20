@@ -3,10 +3,29 @@
 import type { Flags, Stage, TierName } from "@d20/stage"
 import { type RefObject, useEffect, useRef, useState } from "react"
 
+/** The built looks a game plays its sets in. The app passes asset-library/play.ts, since that is not in this package. */
+export interface PlayLooks<L> {
+  playedLook: (set: string | undefined) => L | null
+  builtPlay: (
+    set: unknown,
+    staging: unknown,
+    look: L
+  ) => { set: unknown; staging: unknown; flags: Partial<Flags>; cards: string[]; dress: (stage: Stage) => Promise<() => void> } | null
+}
+
+export interface StageOptions<L> {
+  set: unknown
+  staging?: unknown
+  tier?: TierName | "auto"
+  flags?: Partial<Flags>
+  /** Loads the built looks. Without it every set shows as painted. */
+  play?: () => Promise<PlayLooks<L>>
+}
+
 // Creates a Stage in `container` for a set (and optional staging) and disposes it on unmount. three.js loads inside the
-// effect, so nothing WebGL touches the server bundle. A set the game plays as built (asset-library/play.ts) is built
-// from its look, with figures for its cast, in place of its paintings and cards.
-export function useStage(container: RefObject<HTMLDivElement | null>, opts: { set: unknown; staging?: unknown; tier?: TierName | "auto"; flags?: Partial<Flags> } | null) {
+// effect, so nothing WebGL touches the server bundle. A set the game plays as built is built from its look, with
+// figures for its cast, in place of its paintings and cards.
+export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: StageOptions<L> | null) {
   const stageRef = useRef<Stage | null>(null)
   const [stage, setStage] = useState<Stage | null>(null)
   const [status, setStatus] = useState("Loading")
@@ -35,9 +54,9 @@ export function useStage(container: RefObject<HTMLDivElement | null>, opts: { se
     setError(null)
     setStatus("Loading")
     ;(async () => {
-      const [{ createStage }, { builtPlay, playedLook }] = await Promise.all([import("@d20/stage"), import("@/asset-library/play")])
-      const look = playedLook((opts.staging as { set?: string } | undefined)?.set)
-      const built = look ? builtPlay(opts.set, opts.staging, look) : null
+      const [{ createStage }, play] = await Promise.all([import("@d20/stage"), opts.play?.()])
+      const look = play?.playedLook((opts.staging as { set?: string } | undefined)?.set) ?? null
+      const built = play && look ? play.builtPlay(opts.set, opts.staging, look) : null
       if (built?.cards.length) console.warn(`[stage] no figure for ${built.cards.join(", ")}: shown as a card`)
       created = await createStage({
         container: el,

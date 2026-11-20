@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 
 export const playersLine = ([min, max]: [number, number]) => `${min === max ? min : `${min}–${max}`} ${max === 1 ? "player" : "players"}`
 

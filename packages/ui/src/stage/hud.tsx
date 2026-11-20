@@ -6,7 +6,7 @@
 // layered in as children.
 
 import { type ReactNode, type RefObject, useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../utils"
 
 function useMedia(query: string) {
   const [matches, setMatches] = useState(false)

@@ -6,7 +6,7 @@
 import { useUser } from "@clerk/nextjs"
 import { answerReaction } from "@/app/_actions/adventure"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
-import { ReactionCard, useExpired } from "@/components/stage/reaction-card"
+import { ReactionCard, useExpired } from "@d20/ui/stage/reaction-card"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { isAiControlledPc } from "@/lib/utils/turn-actors"

@@ -1,6 +1,6 @@
 import { playableHero } from "@d20/gm-core/character/hero-draft"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Pill, panel } from "@/components/stage/hud"
+import { Pill, panel } from "@d20/ui/stage/hud"
 import { cn } from "@/lib/utils"
 import type { HostedSummary } from "../../../lib/host/server"
 import type { AdventureInfo, CatalogInfo, GameCommand } from "../runtime/game"

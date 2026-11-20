@@ -56,7 +56,7 @@ The same core runs in two places: the website, backed by Convex, and a Tauri des
 | `lib/wiki-adventures` | Compiles and validates markdown adventures |
 | `content/settings` | Settings and adventures in markdown |
 | `app` | The Next.js site. Server actions live in `app/_actions`. |
-| `components/stage` | HUD, dice and journal around the stage, shared by site and desktop |
+| `packages/ui` | `@d20/ui`: shared UI for site and desktop, including the stage HUD, dice and journal |
 | `convex` | Database schema and functions |
 | `apps/desktop` | The Tauri desktop app. `apps/desktop/runtime` is its Node game runtime. |
 

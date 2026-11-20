@@ -1,7 +1,7 @@
 import { srdAttribution } from "@d20/srd/attribution"
 import { Trash2 } from "lucide-react"
 import { type ReactNode, useState } from "react"
-import { ModuleCover } from "@/components/adventure/module-cover"
+import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
