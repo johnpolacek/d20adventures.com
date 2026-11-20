@@ -55,7 +55,7 @@ async function main() {
   for (const id of ids) {
     const file = `${ROOT}/${id}/figure.json`
     const figure = JSON.parse(await readFile(file, "utf8")) as { height: number; thumb?: string }
-    await send("Page.navigate", { url: `${BASE}/dev/assets?id=${id}&clip=Idle` })
+    await send("Page.navigate", { url: `${BASE}/dev/assets?id=${id}&v=${id}&clip=Idle` })
     let ready = false
     for (let i = 0; i < 240 && !ready; i++) {
       await delay(250)

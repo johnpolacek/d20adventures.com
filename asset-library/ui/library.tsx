@@ -51,6 +51,23 @@ const scene = (staging: string) => named(staging.split("/")[1] ?? staging)
 // A step of a held clip, in frames a second.
 const FRAMES = 30
 const scenes = (n: number) => `${n} ${n === 1 ? "Scene" : "Scenes"}`
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+// A day as it is read: "2026-11-19" is "Nov 19, 2026".
+const day = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number)
+  return `${MONTHS[m - 1] ?? ""} ${d}, ${y}`
+}
+// Who made a figure's model, and who rigged it, from "Hi3D v3.0 on fal, rigged by Hyper3D": a figure rigged in the
+// workspace (rig.py, in Blender) names no rigger.
+const maker = (f: Figure) => f.source.generator.split(" on ")[0]
+const rigger = (f: Figure) => {
+  const by = /rigged by (.*)$/.exec(f.source.generator)?.[1]
+  return by ? `Rigged by ${named(by)}` : "Rigged in Blender"
+}
+// Every figure made of a character, the one that stands for them now first. An index published before figures were
+// kept together has the one alone.
+const versionsOf = (c: Character) => c.versions ?? (c.figure ? [c.figure] : [])
+const TAG = "rounded px-1 text-[9px] font-semibold tracking-wide"
 // ── A figure in a lit room ──
 interface Room {
   renderer: THREE.WebGLRenderer
@@ -79,7 +96,8 @@ function discard(root: THREE.Object3D) {
   })
 }
 
-function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
+// `address` is the character it is a figure of, and the figure itself when it is not the one that stands for them now.
+function FigureRoom({ figure, address, params }: { figure: Figure; address: { id: string; v?: string }; params: Params }) {
   const config = useContext(Config)
   const host = useRef<HTMLDivElement>(null)
   const room = useRef<Room | null>(null)
@@ -325,11 +343,11 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
 
   // The address keeps what is shown, so a view can be opened again.
   useEffect(() => {
-    const q = new URLSearchParams({ id: figure.cast?.[0] ?? figure.id, lod: String(lod), clip })
+    const q = new URLSearchParams({ id: address.id, ...(address.v ? { v: address.v } : {}), lod: String(lod), clip })
     if (turning) q.set("turn", "1")
     if (held !== null) q.set("at", String(held))
     history.replaceState(null, "", `${config.home}?${q}`)
-  }, [figure, lod, clip, turning, held, config.home])
+  }, [address.id, address.v, lod, clip, turning, held, config.home])
 
   const level = figure.lods[lod]
   return (
@@ -378,24 +396,28 @@ function FigureRoom({ figure, params }: { figure: Figure; params: Params }) {
           </div>
         )}
         <div className="font-mono text-[10px] opacity-55">
-          {figure.source.generator} · {count(figure.source.triangles)} tris · ${figure.source.cost.toFixed(2)} · {figure.source.made}
+          {figure.source.generator} · {count(figure.source.triangles)} tris · ${figure.source.cost.toFixed(2)} · {day(figure.source.made)}
         </div>
       </div>
     </>
   )
 }
 
-// ── A character: its figure, or its card ──
+// ── A character: the figure that stands for them now, any earlier one, or their card ──
 function CharacterView({ character, params }: { character: Character; params: Params }) {
   const config = useContext(Config)
-  const [as, setAs] = useState(character.figure && params.as !== "card" ? "figure" : "card")
+  const all = versionsOf(character)
+  // The address names a figure by `v`, or by `id` when it is a figure's own and not the character's.
+  const [first] = useState(() => all.find((f) => f.id === params.v) ?? (params.id !== character.id ? all.find((f) => f.id === params.id) : undefined) ?? character.figure)
+  const [figure, setFigure] = useState(first)
+  const [as, setAs] = useState(figure && params.as !== "card" ? "figure" : "card")
   useEffect(() => {
     if (as === "card") history.replaceState(null, "", `${config.home}?id=${character.id}&as=card`)
   }, [as, character, config.home])
   return (
     <>
-      {as === "figure" && character.figure ? (
-        <FigureRoom figure={character.figure} params={params} />
+      {as === "figure" && figure ? (
+        <FigureRoom key={figure.id} figure={figure} address={{ id: character.id, v: figure.id === character.figure?.id ? undefined : figure.id }} params={figure === first ? params : {}} />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center gap-10 p-10">
           {[character.front, character.back].map(
@@ -406,10 +428,10 @@ function CharacterView({ character, params }: { character: Character; params: Pa
           )}
         </div>
       )}
-      <div className={`absolute top-3 right-3 ${PANEL}`}>
+      <div className={`absolute top-3 right-3 max-h-[calc(100%-1.5rem)] w-[290px] overflow-y-auto ${PANEL}`}>
         <div className="text-[15px] text-[#f2c97a]">{named(character.name)}</div>
         <div className="opacity-70">{named(character.role)}</div>
-        {character.figure && (
+        {figure && (
           <div className="flex items-center gap-1">
             <button type="button" className={pill(as === "figure")} onClick={() => setAs("figure")}>
               Figure
@@ -421,8 +443,55 @@ function CharacterView({ character, params }: { character: Character; params: Pa
         )}
         <div className="font-mono text-[10px] opacity-75">
           {character.height ? `${character.height} m · ` : ""}
-          {scenes(character.scenes).toLowerCase()} · {character.figure ? "3D figure" : "card only"}
+          {scenes(character.scenes).toLowerCase()} · {figure ? "3D figure" : "card only"}
         </div>
+        {[
+          { title: "Current Version", of: all.filter((f) => f === character.figure) },
+          { title: "Earlier Versions", of: all.filter((f) => f !== character.figure && !f.trial) },
+          { title: "Trials", of: all.filter((f) => f !== character.figure && f.trial) },
+        ].map(
+          (part) =>
+            part.of.length > 0 && (
+              <div key={part.title} className="space-y-1 pt-1">
+                <div className="opacity-60">
+                  {part.title}
+                  {part.of.length > 1 ? ` · ${part.of.length}` : ""}
+                </div>
+                {part.of.map((f) => {
+                  const on = f === figure && as === "figure"
+                  const triangles = f.lods[0]?.triangles || f.source.triangles
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => {
+                        setFigure(f)
+                        setAs("figure")
+                      }}
+                      className={`block w-full rounded border px-2 py-1.5 text-left ${on ? "border-[#f2c97a] bg-[#f2c97a1f]" : "border-[#e6c89630] hover:border-[#f2c97a99]"}`}
+                    >
+                      <span className="flex flex-wrap items-center gap-1">
+                        <span className={`text-[12px] ${on ? "text-[#f2c97a]" : ""}`}>{maker(f)}</span>
+                        {!!f.plays?.length && <span className={`${TAG} bg-[#7fd0a0] text-[#0c1a12]`}>IN THE GAME</span>}
+                      </span>
+                      {f.note && <span className="block text-[10.5px] opacity-85">{named(f.note)}</span>}
+                      <span className="block text-[10.5px] opacity-70">
+                        Made {day(f.source.made)}
+                        {f.source.built && f.source.built !== f.source.made ? ` · Rebuilt ${day(f.source.built)}` : ""}
+                      </span>
+                      <span className="block text-[10.5px] opacity-70">
+                        {rigger(f)}
+                        {triangles ? ` · ${count(triangles)} Triangles` : ""}
+                      </span>
+                      {!!f.plays?.length && <span className="block text-[10.5px] opacity-70">Plays in {f.plays.map(named).join(", ")}</span>}
+                      <span className="block font-mono text-[9.5px] opacity-45">{f.id}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )
+        )}
       </div>
     </>
   )
@@ -566,7 +635,13 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   const [open, setOpen] = useState<{ character: Character } | { place: Place } | { picture: Picture } | null>(() => {
     const picture = params.img ? pictures.find((p) => p.src === params.img) : undefined
     if (picture) return { picture }
-    const character = params.id ? characters.find((c) => c.id === params.id || c.figure?.cast?.includes(params.id as string) || c.figure?.id === params.id) : undefined
+    // A character by their own id, or by a figure made of them: `v` names a figure, and so does an `id` no character has.
+    const has = (c: Character, id?: string) => !!id && versionsOf(c).some((f) => f.id === id)
+    const character = params.v
+      ? characters.find((c) => has(c, params.v))
+      : params.id
+        ? (characters.find((c) => c.id === params.id) ?? characters.find((c) => has(c, params.id)) ?? characters.find((c) => c.figure?.cast?.includes(params.id as string)))
+        : undefined
     const place = places.find((p) => p.variants.some((v) => v.key === params.env))
     return character ? { character } : place ? { place } : null
   })
@@ -634,7 +709,7 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   }, [open, tab, group, q, only, config.home])
 
   const words = q.trim().toLowerCase()
-  const shownCharacters = characters.filter((c) => (!only || c.figure) && (!words || `${c.name} ${c.role} ${c.id}`.toLowerCase().includes(words)))
+  const shownCharacters = characters.filter((c) => (!only || c.figure) && (!words || `${c.name} ${c.role} ${c.id} ${versionsOf(c).map((f) => `${f.id} ${f.source.generator}`).join(" ")}`.toLowerCase().includes(words)))
   const shownPlaces = places.filter((p) => (!only || p.variants.some((v) => hasIso(v.key, v.room))) && (!words || `${p.title} ${p.variants.map((v) => v.key).join(" ")}`.toLowerCase().includes(words)))
   const shownPictures = pictures.filter((p) => !words || `${p.title} ${p.kind} ${p.of ?? ""}`.toLowerCase().includes(words))
   const inGroup = (g: string) =>
@@ -675,11 +750,20 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
       key={c.id}
       type="button"
       onClick={() => view({ character: c })}
-      className={`group shrink-0 rounded-lg border border-[#e6c8962e] bg-gradient-to-b from-[#1c1610] to-[#120e09] p-3 text-left transition-colors hover:border-[#f2c97a] ${wide ? "w-[172px]" : "w-[132px]"}`}
+      className={`group relative shrink-0 rounded-lg border border-[#e6c8962e] bg-gradient-to-b from-[#1c1610] to-[#120e09] p-3 text-left transition-colors hover:border-[#f2c97a] ${wide ? "w-[172px]" : "w-[148px]"}`}
     >
       <img src={`${config.files}/${c.figure?.id}/${c.figure?.thumb ?? c.figure?.front}`} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
       <span className={`mt-2 block truncate font-display group-hover:text-[#f2c97a] ${wide ? "text-[15px]" : "text-[13px]"}`}>{named(c.name)}</span>
       <span className="block truncate text-[11px] opacity-60">{named(c.figure?.role ?? c.role)}</span>
+      {c.figure && (
+        <span className="mt-1 block truncate font-mono text-[9.5px] opacity-55">
+          {maker(c.figure)} · {day(c.figure.source.made).split(",")[0]}
+        </span>
+      )}
+      {c.figure && (
+        <span className="block h-[14px] truncate font-mono text-[9.5px] opacity-55">{versionsOf(c).length > 1 ? `${versionsOf(c).length} Versions` : ""}</span>
+      )}
+      {!!c.figure?.plays?.length && <span className={`absolute top-2 right-2 ${TAG} bg-[#7fd0a0] text-[#0c1a12]`}>IN THE GAME</span>}
     </button>
   )
 

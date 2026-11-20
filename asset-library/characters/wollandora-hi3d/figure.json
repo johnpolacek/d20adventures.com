@@ -12,7 +12,8 @@
     "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
     "triangles": 197054,
     "cost": 2.3,
-    "made": "2026-11-20"
+    "made": "2026-11-19",
+    "built": "2026-11-20"
   },
   "rig": {
     "bones": 0,

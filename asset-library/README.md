@@ -36,6 +36,18 @@ pnpm assets:sync thalbern-rodin   # one character's files, then the index
 
 - A figure that takes another's body (`body` in its brief: a rig or clips tried on a model already made) is a trial. It stays in the workspace: a sync does not upload it and the published index leaves it out.
 
+### One card a character
+
+The owner, 2026-11-20: "i'm not sure which is the live one when there are multiple, and the labels aren't clear as to how and when they were generated. i would expect that each character would have one library listing". Until then every figure had a card of its own, eight of them Thalbern.
+
+- A character has one card, whatever number of figures were made of them (`library.ts`, `versions`). Figures that share a cast id are one character's, and a trial belongs to the figure whose body it takes.
+- The card shows the current version: the one `SHIPPED` names (`shipped.ts`), or else the newest that is no trial. It says who made the model, the day, and how many versions there are. In the Game marks a figure a played look stands (`plays`).
+- Opened, the character lists Current Version, Earlier Versions and Trials. Each says who made the model, the day it was made and the day it was last rebuilt, who rigged it, what a trial tried (the words in brackets in its brief's name), where it plays, and its id.
+- `figure.json` keeps `source.made`, the day the model was generated, through every rebuild, and `source.built`, the day of the last one. `pilot.ts` used to write today as `made` each time, so every rebuilt figure said the day it was last touched. The eleven wrong ones were put right from git, by the day each model's answer was first committed.
+- A rebuild keeps `thumb` when the model is the same: `pilot.ts` used to drop it, and a rebuilt figure's card went back to the grey pose sheet.
+- Addresses: `?id=<character>` opens the current version. `?id=<character>&v=<figure id>` opens that version, and so does `?id=<figure id>` when no character has that id. `views.ts` and `thumbs.ts` send `v`, since `?id=thalbern` is the character and `thalbern` is also his first figure.
+- The public page reads the published index: it shows one card a character after the next `pnpm assets:sync`. An index from before has no `versions`, and the page then shows each character's one figure.
+
 - The public bucket gets what the page shows, under `asset-library/characters/<id>/`: the rigged copies, the thumbnail and `figure.json`. The site serves them at `/asset-library/...`.
 - The private bucket gets what a character was made from, under the same path: the brief, the sheets, the joints, the generator's answer, the source model and the rig's report. That is the backup.
 - `library.json` is the page's index, every character and place gathered from the repo. It is uploaded last and read from the bucket, so a sync shows on the site within a minute, with no deploy.
@@ -94,7 +106,7 @@ What goes wrong, and what to do:
 - The image tool refuses after five or six pictures in a few minutes (`429 Too Many Requests`). Nothing is lost: run `pnpm assets <id>` again four minutes later and it goes on from the step that failed.
 - A sheet of the front alone (`"sheet": "front"`) gives Hi3D nothing of the back, and it makes one up: Wollandora's leafy mantle came back a plain dark cloak. Paint both views.
 - Cloth that hangs far from the arm is the model's weakest part. One skin has no cloth in it: a bell sleeve is carried by the forearm like a board. A long coat or a cloak that hangs straight is fine. If the card has hanging sleeves, say in `stow` that they are close to the arm, or keep the figure it would replace.
-- Two characters may name one cast id (`lyra` and `lyra-hi3d`). The page then opens the newer for that cast id: open each by its own id, `/dev/assets?id=lyra-hi3d`.
+- Two figures may name one cast id (`lyra` and `lyra-hi3d`): they are versions of one character, on one card. See One card a character, below.
 - A beast is made the same way with `"creature": true`. Its sheet is asked for as an animal, the rig is still a person's, and it plays the hunched clips (`owlbear-hi3d`).
   - The rigger shares a beast's head between the chest, the collarbones and the head bone, so the head hangs with the back and no turn of the neck moves the face. `crown` in `pilot.ts` gives the head to the head bone, for every `creature`.
   - `"chin": { "Idle Heavy": 25 }` holds the head that many degrees higher in a clip, never past level.

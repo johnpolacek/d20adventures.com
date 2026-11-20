@@ -12,7 +12,8 @@
     "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
     "triangles": 50000,
     "cost": 0.6,
-    "made": "2026-11-20"
+    "made": "2026-11-15",
+    "built": "2026-11-20"
   },
   "rig": {
     "bones": 0,
@@ -51,5 +52,6 @@
       "megabytes": 1.06,
       "texture": 512
     }
-  ]
+  ],
+  "thumb": "thumb.webp"
 }

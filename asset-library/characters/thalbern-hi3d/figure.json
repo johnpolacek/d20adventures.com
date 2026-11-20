@@ -8,11 +8,13 @@
   "party": true,
   "height": 1.82,
   "front": "front.webp",
+  "thumb": "thumb.webp",
   "source": {
     "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
     "triangles": 200000,
     "cost": 2.3,
-    "made": "2026-11-20"
+    "made": "2026-11-19",
+    "built": "2026-11-20"
   },
   "rig": {
     "bones": 0,

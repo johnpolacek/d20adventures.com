@@ -84,7 +84,7 @@ async function main() {
   for (const view of [...VIEWS, ...moves].filter((v) => !only || only.includes(v.name))) {
     const clip = view.clip ?? "Idle"
     if (clip !== clipUp) {
-      await send("Page.navigate", { url: `${BASE}/dev/assets?id=${id}&lod=${lod}&clip=${encodeURIComponent(clip)}` })
+      await send("Page.navigate", { url: `${BASE}/dev/assets?id=${id}&v=${id}&lod=${lod}&clip=${encodeURIComponent(clip)}` })
       let ready = false
       for (let i = 0; i < 360 && !ready; i++) {
         await delay(250)

@@ -2012,6 +2012,9 @@ async function main() {
   const brief = JSON.parse(await readFile(`${dir}/character.json`, "utf8")) as Brief
   const sheet = `${home(brief)}/apose-front.png`
   if (!existsSync(sheet)) throw new Error(`No sheet: run pnpm assets ${brief.body ?? id} first, and look at ${home(brief)}/sheet.png`)
+  // The day its model was made is kept through every time it is put together again: a trial's is its rig's.
+  const before = existsSync(`${dir}/${brief.body ? "pilot-rig.json" : "pilot-model.json"}`) ? await kept<{ source?: { made?: string } }>(`${dir}/figure.json`) : null
+  const today = new Date().toISOString().slice(0, 10)
   const made = brief.maker === "rodin" || brief.maker === "hi3d" ? await rodinHyper(brief) : await tripoMeshy(brief)
   if (!made) return
   say("merge", `${dir}/lod0.glb with ${made.clips.join(", ")}`)
@@ -2030,7 +2033,9 @@ async function main() {
     party: !!brief.party,
     height: brief.height,
     front: "front.webp",
-    source: { generator: made.generator, triangles: lods[0].triangles, cost: Math.round(made.cost * 100) / 100, made: new Date().toISOString().slice(0, 10) },
+    // The figure's own picture, once thumbs.ts has taken one of this model.
+    ...(before && existsSync(`${dir}/thumb.webp`) ? { thumb: "thumb.webp" } : {}),
+    source: { generator: made.generator, triangles: lods[0].triangles, cost: Math.round(made.cost * 100) / 100, made: before?.source?.made ?? today, built: today },
     rig: { bones: 0, weights: made.weights },
     clips: made.clips,
     lods,

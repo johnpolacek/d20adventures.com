@@ -11,10 +11,18 @@ export interface Figure {
   front: string
   // A picture of the figure itself, when one has been taken. `front` is the pose sheet it was made from.
   thumb?: string
-  source: { generator: string; triangles: number; cost: number; made: string }
+  // `made` is the day its model was generated, and `built` the day it was last put together from that model.
+  source: { generator: string; triangles: number; cost: number; made: string; built?: string }
   rig: { bones: number; weights: string }
   clips: string[]
   lods: { file: string; triangles: number; megabytes: number; texture: number }[]
+  // What the library adds as it gathers the shelf (library.ts), not kept in figure.json:
+  // the figure whose model it takes, for one tried on another's body (its brief's `body`);
+  trial?: string
+  // what sets it apart from the others of its character, in a few words;
+  note?: string
+  // and the adventures whose played scenes stand this figure (play.ts).
+  plays?: string[]
 }
 export interface Character {
   id: string
@@ -26,7 +34,10 @@ export interface Character {
   front: string
   back: string | null
   scenes: number
+  // The figure that stands for them now: the one the game ships, or else the newest made.
   figure: Figure | null
+  // Every figure made of them, that one first, then the earlier ones by the day they were made, then the trials.
+  versions?: Figure[]
 }
 export interface Environment {
   key: string

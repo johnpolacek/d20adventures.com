@@ -14,6 +14,8 @@ import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { SETS, STAGINGS } from "@d20/stage/sets"
+import { LOOKS } from "./looks"
+import { SHIPPED } from "./shipped"
 import type { Character, Environment, Figure, Library, Picture, Place } from "./types"
 
 interface SetSpec {
@@ -74,17 +76,55 @@ const UNUSED = "unused"
 export async function buildLibrary(root = process.cwd(), leave: string[] = []): Promise<Library> {
   const pub = path.join(root, "public")
 
-  // A figure goes by every cast id its character has: Branka is `branka` at the gates and `branka-stoneveil` at the inn.
-  const figures = new Map<string, Figure>()
+  // Every figure on the shelf. One tried on another's model (its brief's `body`) is a trial of that figure, and what
+  // its name says in brackets is what was tried: "Thalbern (Rodin pilot, shell skinning)".
   const shelved: Figure[] = []
   const shelf = path.join(root, "asset-library/characters")
   for (const id of (await readdir(shelf).catch(() => [] as string[])).sort()) {
     const text = leave.includes(id) ? null : await readFile(path.join(shelf, id, "figure.json"), "utf8").catch(() => null)
     if (!text) continue
     const figure = JSON.parse(text) as Figure
-    for (const cast of figure.cast ?? [id]) figures.set(cast, figure)
+    const brief = JSON.parse(await readFile(path.join(shelf, id, "character.json"), "utf8").catch(() => "{}")) as { body?: string }
+    const said = /^(.*?)\s*\((.*)\)$/.exec(figure.name)
+    if (said) Object.assign(figure, { name: said[1], note: said[2] })
+    if (brief.body) figure.trial = brief.body
     shelved.push(figure)
   }
+  // A character's figures are kept together: those that share a cast id, and the trials of each. Branka is `branka`
+  // at the gates and `branka-stoneveil` at the inn, and her one figure goes by both.
+  const versions = new Map<string, Figure[]>()
+  const together = new Map<Figure, Figure[]>()
+  for (const figure of shelved.filter((f) => !f.trial)) {
+    const ids = figure.cast?.length ? figure.cast : [figure.id]
+    const all = ids.map((cast) => versions.get(cast)).find(Boolean) ?? []
+    all.push(figure)
+    together.set(figure, all)
+    for (const cast of ids) versions.set(cast, all)
+  }
+  for (const figure of shelved.filter((f) => f.trial)) {
+    const body = shelved.find((f) => f.id === figure.trial)
+    const all = (body && together.get(body)) ?? []
+    all.push(figure)
+    together.set(figure, all)
+    if (!body) versions.set(figure.id, all)
+  }
+  // Where the game stands each: a played look's own choice for a cast member, or else the one shipped (play.ts).
+  for (const [key, load] of Object.entries(STAGINGS)) {
+    const staging = (await load()) as StagingSpec
+    const look = staging.set ? LOOKS[staging.set] : undefined
+    if (!look?.play) continue
+    for (const c of staging.cast ?? []) {
+      const figure = shelved.find((f) => f.id === (look.figures?.[c.id] ?? SHIPPED[c.id]))
+      const adventure = key.split("/")[0]
+      if (figure && !figure.plays?.includes(adventure)) figure.plays = [...(figure.plays ?? []), adventure]
+    }
+  }
+  // The one that stands for a character now is the one shipped, or else the newest that is no trial. It is first, then
+  // the others from the newest, then the trials.
+  const shipped = new Set(Object.values(SHIPPED))
+  const rank = (f: Figure) => (shipped.has(f.id) ? 0 : f.trial ? 2 : 1)
+  for (const all of new Set(versions.values())) all.sort((a, b) => rank(a) - rank(b) || b.source.made.localeCompare(a.source.made) || Number(!!b.thumb) - Number(!!a.thumb) || a.id.localeCompare(b.id))
+  const figures = new Map([...versions].map(([cast, all]) => [cast, all[0]]))
 
   // The cast of every staging, each person once, under the adventure they first appear in. Someone a figure already
   // stands for under another id is not listed twice.
@@ -102,14 +142,15 @@ export async function buildLibrary(root = process.cwd(), leave: string[] = []): 
       const known = people.get(c.id) ?? (figure ? shown.get(figure) : undefined)
       if (known) known.scenes++
       else if (c.art?.front) {
-        const person: Character = { id: c.id, name: c.name, role: c.role, height: c.height, group: adventure, front: c.art.front, back: c.art.back ?? null, scenes: 1, figure }
+        const person: Character = { id: c.id, name: c.name, role: c.role, height: c.height, group: adventure, front: c.art.front, back: c.art.back ?? null, scenes: 1, figure, ...(figure ? { versions: versions.get(c.id) } : {}) }
         people.set(c.id, person)
         if (figure) shown.set(figure, person)
       }
     }
   }
-  // A figure no cast member stands for, a pilot of another way to make one, is listed on its own under its brief's card.
-  for (const figure of shelved) {
+  // A character no staging's cast has is listed on its own, under its brief's card.
+  for (const all of new Set(versions.values())) {
+    const figure = all[0]
     if (shown.has(figure) || people.has(figure.id)) continue
     const brief = JSON.parse(await readFile(path.join(shelf, figure.id, "character.json"), "utf8").catch(() => "{}")) as { card?: { front?: string; back?: string } }
     if (!brief.card?.front) continue
@@ -123,6 +164,7 @@ export async function buildLibrary(root = process.cwd(), leave: string[] = []): 
       back: brief.card.back ?? null,
       scenes: 0,
       figure,
+      versions: all,
     })
   }
   const looks = (await readdir(path.join(pub, "stage/heroes")).catch(() => [] as string[])).filter((f) => f.endsWith("-front.webp")).map((f) => f.replace("-front.webp", ""))
