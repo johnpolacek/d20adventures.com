@@ -259,7 +259,7 @@ export type KnownSpell = {
   given?: { feature: string; name: string }
 }
 
-type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<string, number> }
+export type Slotted = Roller & { spellSlots?: readonly number[]; featureUses?: Record<string, number> }
 
 /**
  * The spells a hero can cast, from the sheet: the cantrips known, the spells prepared, for a Wizard the Ritual spells

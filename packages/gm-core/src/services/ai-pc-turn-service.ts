@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { GmPorts, Llm } from "../ports"
 import { itemWords } from "../sheet/items"
+import { noOneToWorkOnNote } from "../sheet/creature-gated-spells"
 import { boundWords } from "../sheet/masters"
 import { spellWords } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
@@ -42,7 +43,8 @@ function buildAiPcIntentPrompt(
   knowledge?: KnownFact[],
   unheard = "",
   led: string[] = [],
-  bound?: string
+  bound?: string,
+  idleSpells = ""
 ): string {
   return `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
@@ -76,7 +78,7 @@ RIGHT: "He raises his blade and lunges forward with a powerful overhead strike."
 Character:
 ${characterSheet(character)}
 Others present in the scene: ${sceneRoster || "None"}
-${bound ? `\nBound by a Spell: ${bound}\n` : ""}${unheard ? `\n${unheard}\n` : ""}${premiseBlock(premise)}${knownBlock(knowledge, character)}${led.length ? `\nWhat the heroes played by a person said and did in earlier rounds, most recent last. Any side they took there is the party's:\n${led.map((m) => `- ${m}`).join("\n")}\n` : ""}${lately.length ? `\nWhat ${character.name} did in earlier rounds, most recent last. Do something different now unless this moment truly calls for the same again:\n${lately.map((m) => `- ${m}`).join("\n")}\n` : ""}
+${idleSpells ? `${idleSpells}\n` : ""}${bound ? `\nBound by a Spell: ${bound}\n` : ""}${unheard ? `\n${unheard}\n` : ""}${premiseBlock(premise)}${knownBlock(knowledge, character)}${led.length ? `\nWhat the heroes played by a person said and did in earlier rounds, most recent last. Any side they took there is the party's:\n${led.map((m) => `- ${m}`).join("\n")}\n` : ""}${lately.length ? `\nWhat ${character.name} did in earlier rounds, most recent last. Do something different now unless this moment truly calls for the same again:\n${lately.map((m) => `- ${m}`).join("\n")}\n` : ""}
 Recent Narrative:
 ${narrative}
 
@@ -114,6 +116,7 @@ export type ActionSuggestion = z.infer<typeof actionSuggestionsSchema>["suggesti
 
 function buildActionSuggestionsPrompt(character: TurnCharacter, narrative: string, allCharacters: TurnCharacter[], premise?: string, knowledge?: KnownFact[], heard?: NamesHeard): string {
   const unheard = unheardNote(heard, character, allCharacters)
+  const idle = noOneToWorkOnNote(character, allCharacters)
   return `You are helping a PLAYER (not the GM) choose what their character does next. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
 
 Given the recent narrative, offer 3 different things the character below could do now. Make them distinct approaches that fit this moment and this character, such as speaking to someone, a careful or clever move, and a bold action.
@@ -136,7 +139,7 @@ Constraints:
 Character:
 ${characterSheet(character)}
 Others present in the scene: ${buildSceneRoster(allCharacters, character.id, heard) || "None"}
-${unheard ? `\n${unheard}\n` : ""}${premiseBlock(premise)}${knownBlock(knowledge, character)}
+${idle ? `${idle}\n` : ""}${unheard ? `\n${unheard}\n` : ""}${premiseBlock(premise)}${knownBlock(knowledge, character)}
 Recent Narrative:
 ${narrative}`
 }
@@ -186,7 +189,8 @@ export function createAiPcTurnService(ports: GmPorts) {
     const unheard = unheardNote(args.heard, args.character, args.allCharacters)
     // A hero a spell binds to another does their bidding (../sheet/masters).
     const bound = boundWords(args.character, args.allCharacters)
-    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, roster, args.scene, args.premise, args.lately, args.knowledge, unheard, args.led, bound)
+    const idle = noOneToWorkOnNote(args.character, args.allCharacters)
+    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, roster, args.scene, args.premise, args.lately, args.knowledge, unheard, args.led, bound, idle)
     const { object } = await generateObject({ prompt, schema: storyOutputObject, viewer: args.character.id })
     const beats = cleanStory(object.beats, args.scene, { step: "reply", character: args.character.id })
     if (!beats.length) throw new Error(`Empty intent generated for AI companion ${args.character.name}`)
