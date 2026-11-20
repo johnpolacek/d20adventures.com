@@ -36,7 +36,145 @@ import { Chip, Option, Rule, SectionPlate, siteLabel } from "@d20/ui/site"
 import { Switch } from "@d20/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 import { Textarea } from "@d20/ui/textarea"
+import { Heading } from "@d20/ui/typography/heading"
+import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { cn } from "@/lib/utils"
+
+// The type the site sets: four families, the heading scale and the shadows that lift text off art.
+const families = [
+  { name: "Display", note: "Cinzel Decorative · titles, buttons", className: "font-display text-2xl" },
+  { name: "Serif", note: "Georgia · body and narration", className: "font-serif text-lg" },
+  { name: "Sans", note: "Rethink Sans · forms and tables", className: "font-sans text-lg" },
+  { name: "Mono", note: "Syne Mono · labels and tags", className: "font-mono text-lg" },
+]
+
+function TypographyDemo() {
+  return (
+    <div className="grid gap-8 lg:grid-cols-2">
+      <div className="flex flex-col gap-5">
+        {families.map((f) => (
+          <div key={f.name} className="flex flex-col gap-1 border-b border-white/10 pb-4">
+            <span className={siteLabel}>
+              {f.name} <span className="normal-case tracking-normal text-white/50">{f.note}</span>
+            </span>
+            <span className={f.className}>The Gates of Kordavos Open at Dawn</span>
+          </div>
+        ))}
+        <div className="flex flex-col gap-1">
+          <span className={siteLabel}>Sizes below xs</span>
+          <span className="text-xxs font-mono">text-xxs · Premade Characters</span>
+          <span className="text-xxxs font-mono">text-xxxs · 1 to 4 Players</span>
+        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        <span className={siteLabel}>Heading</span>
+        {(["h1", "h2", "h3", "h4", "h5", "h6"] as const).map((v) => (
+          <Heading key={v} variant={v} as="h3" className="leading-tight">
+            {v.toUpperCase()} Kordavos
+          </Heading>
+        ))}
+        <span className={cn(siteLabel, "mt-4")}>Shadows over art</span>
+        <div className="flex flex-col items-center gap-2 rounded-lg bg-[url(/images/app/backgrounds/d20-hero.webp)] bg-cover bg-center p-6">
+          <span className="font-display text-3xl font-bold text-amber-300" style={textShadow}>
+            textShadow
+          </span>
+          <span className="font-display text-3xl font-bold text-white" style={textShadowSpread}>
+            textShadowSpread
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// The colours in use, most used first in each row. Class names are written out so Tailwind keeps them.
+const palettes: { name: string; note: string; swatches: { label: string; className: string }[] }[] = [
+  {
+    name: "Primary",
+    note: "frames, rings, selection, labels",
+    swatches: [
+      { label: "50", className: "bg-primary-50" },
+      { label: "100", className: "bg-primary-100" },
+      { label: "200", className: "bg-primary-200" },
+      { label: "300", className: "bg-primary-300" },
+      { label: "400", className: "bg-primary-400" },
+      { label: "500", className: "bg-primary-500" },
+      { label: "600", className: "bg-primary-600" },
+      { label: "700", className: "bg-primary-700" },
+      { label: "800", className: "bg-primary-800" },
+      { label: "900", className: "bg-primary-900" },
+    ],
+  },
+  {
+    name: "Amber",
+    note: "titles, featured, premade tags",
+    swatches: [
+      { label: "100", className: "bg-amber-100" },
+      { label: "200", className: "bg-amber-200" },
+      { label: "300", className: "bg-amber-300" },
+      { label: "400", className: "bg-amber-400" },
+      { label: "500", className: "bg-amber-500" },
+      { label: "700", className: "bg-amber-700" },
+    ],
+  },
+  {
+    name: "Status",
+    note: "errors, success, the outline button",
+    swatches: [
+      { label: "red-300", className: "bg-red-300" },
+      { label: "red-600", className: "bg-red-600" },
+      { label: "red-900", className: "bg-red-900" },
+      { label: "green-400", className: "bg-green-400" },
+      { label: "emerald-600", className: "bg-emerald-600" },
+      { label: "blue-950", className: "bg-blue-950" },
+    ],
+  },
+  {
+    name: "Neutrals",
+    note: "black ground, white text at strengths",
+    swatches: [
+      { label: "black", className: "bg-black" },
+      { label: "white/10", className: "bg-white/10" },
+      { label: "white/20", className: "bg-white/20" },
+      { label: "white/60", className: "bg-white/60" },
+      { label: "gray-300", className: "bg-gray-300" },
+      { label: "white", className: "bg-white" },
+    ],
+  },
+  {
+    name: "Stage",
+    note: "the encounter HUD",
+    swatches: [
+      { label: "gold", className: "bg-stage-gold" },
+      { label: "brass", className: "bg-stage-brass" },
+      { label: "parchment", className: "bg-stage-parchment" },
+      { label: "muted", className: "bg-stage-muted" },
+      { label: "sage", className: "bg-stage-sage" },
+    ],
+  },
+]
+
+function ColorsDemo() {
+  return (
+    <div className="flex flex-col gap-6">
+      {palettes.map((p) => (
+        <div key={p.name} className="flex flex-col gap-2">
+          <span className={siteLabel}>
+            {p.name} <span className="normal-case tracking-normal text-white/50">{p.note}</span>
+          </span>
+          <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
+            {p.swatches.map((c) => (
+              <div key={c.label} className="flex flex-col gap-1">
+                <div className={cn("h-12 rounded-md ring-1 ring-white/15 ring-inset", c.className)} />
+                <span className="font-mono text-xxs text-white/70">{c.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 // Every card variant with the content it holds on the site.
 function CardVariants() {
@@ -134,6 +272,8 @@ function SwitchDemo() {
 }
 
 const tiles: Tile[] = [
+  { name: "Typography", full: true, demo: <TypographyDemo /> },
+  { name: "Colors", full: true, demo: <ColorsDemo /> },
   {
     name: "Button",
     wide: true,
