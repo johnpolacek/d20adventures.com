@@ -3,6 +3,7 @@
 //   pnpm exec next dev -p 3057
 //   Chrome with --remote-debugging-port=9478 (see scripts/stage-verify.ts)
 //   node --import tsx asset-library/pipeline/views.ts <id> --out=<folder> [--lod=0] [--moves=Shoot@1.4,Swing@0.4]
+//     [--only=half,face] [--do=<expression>]
 //
 // Writes <view>.jpg for each view below, at device scale 2, and sheet.jpg with all of them side by side. Every camera is
 // set from the figure's height and the place of its head, so two models of one character are seen from the same points.
@@ -78,7 +79,9 @@ async function main() {
 
   const made: string[] = []
   let clipUp: string | null = null
-  for (const view of [...VIEWS, ...moves]) {
+  // --only=<views>: those alone. --do=<expression>: run in the page before each picture, to try a light or a material.
+  const only = arg("only")?.split(",")
+  for (const view of [...VIEWS, ...moves].filter((v) => !only || only.includes(v.name))) {
     const clip = view.clip ?? "Idle"
     if (clip !== clipUp) {
       await send("Page.navigate", { url: `${BASE}/dev/assets?id=${id}&lod=${lod}&clip=${encodeURIComponent(clip)}` })
@@ -104,6 +107,7 @@ async function main() {
         r.controls.update(); r.controls.update()
         return r.renderer.domElement.width + "x" + r.renderer.domElement.height })()`
     )
+    if (arg("do")) await ev(arg("do") as string)
     await delay(500)
     const length = await ev<number>(
       "(async () => { const b = await window.__assets.capture(); const u = await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b) }); window.__pull = u.split(',')[1]; return window.__pull.length })()"
