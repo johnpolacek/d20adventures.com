@@ -71,6 +71,8 @@ function preview() {
 export default defineConfig({
   plugins: [preview()],
   resolve: {
+    // One React for the app and @d20/ui. Two copies break every hook.
+    dedupe: ["react", "react-dom"],
     alias: [
       { find: /^@\/lib\/utils$/, replacement: fileURLToPath(new URL("./src/utils.ts", import.meta.url)) },
       // Only these folders of the repo root: the built looks, the city maps and the content they read. Site code is

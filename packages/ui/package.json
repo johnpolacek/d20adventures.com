@@ -46,6 +46,8 @@
     "react-dom": ">=19"
   },
   "devDependencies": {
-    "@types/three": "^0.183.1"
+    "@types/three": "^0.183.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   }
 }
