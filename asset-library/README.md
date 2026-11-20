@@ -193,6 +193,14 @@ http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-gates-of-kor
 
 Look for: hands or arms through the body, torn mesh at the armpits and elbows, feet on the floor, the face at each detail level, and the figure facing the way its cast member does.
 
+For a before and an after, the same pictures every time:
+
+```sh
+pnpm assets:views thalbern-rodin --out=$HOME/Desktop/thalbern-before-after/before --moves=Shoot@1.4,Swing@0.4
+```
+
+Four sides, a half body, the face from the front and from three quarters, and each named clip held at its moment, at device scale 2, with `sheet.jpg` of them all. Every camera is set from the figure's height and where its head is, so two models of one character are seen from the same points. `STAGE_BASE` names a dev server on another port.
+
 ### What a figure holds
 
 The owner, 2026-11-15, of Wollandora without her staff: "I was expecting to see Wollandora holding her staff like she does in the card image." A figure should hold what its card holds.

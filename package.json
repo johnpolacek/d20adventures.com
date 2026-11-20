@@ -51,6 +51,7 @@
     "db:admin": "open https://dashboard.convex.dev",
     "assets": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/build.ts",
     "assets:thumbs": "tsx asset-library/pipeline/thumbs.ts",
+    "assets:views": "tsx asset-library/pipeline/views.ts",
     "assets:pilot": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/pilot.ts",
     "assets:arms": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/armcheck.ts",
     "assets:parts": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/parts.ts",
