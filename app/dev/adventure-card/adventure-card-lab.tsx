@@ -532,7 +532,99 @@ function Letterbox() {
   )
 }
 
+// Q: Deck's layout without the deck. The cover, title and button sit up top left, the button's foot level with the
+// cover's, and the party stands bottom left as on the pause screen. Each save is its own card.
+type Run = {
+  title: string
+  cover: string
+  art: string
+  kicker: string
+  status: string
+  action: string
+  done?: boolean
+  party: { name: string; portrait: string; hp: number }[]
+}
+const fx = (adventure: string, name: string) => `/stage/fixtures/${adventure}/${name}-portrait.jpg`
+const runs: Run[] = [
+  {
+    title: save.title,
+    cover: save.cover,
+    art: save.sceneArt,
+    kicker: `Round ${save.round}`,
+    status: save.turnTitle,
+    action: "Continue",
+    party: [{ name: "Thalbern", portrait: fx("the-midnight-summons", "thalbern"), hp: 0.72 }],
+  },
+  {
+    title: "Covert Cargo",
+    cover: "/stage/covers/covert-cargo.jpg",
+    art: "/stage/art/covert-cargo/the-shipment.webp",
+    kicker: "Hosted · Round 3",
+    status: "The Shipment",
+    action: "Open",
+    party: [
+      { name: "Lyra", portrait: fx("covert-cargo", "lyra"), hp: 1 },
+      { name: "Poppen", portrait: fx("covert-cargo", "poppen"), hp: 0.55 },
+      { name: "Reinhard", portrait: fx("covert-cargo", "reinhard"), hp: 0.9 },
+    ],
+  },
+  {
+    title: "The Road to Kordavos",
+    cover: "/stage/covers/the-road-to-kordavos.jpg",
+    art: "/stage/art/the-road-to-kordavos/the-fortune-teller.webp",
+    kicker: "Oct 30",
+    status: "Complete",
+    action: "Read the Ending",
+    done: true,
+    party: [{ name: "Aelar", portrait: fx("covert-cargo", "aelar"), hp: 1 }],
+  },
+]
+
+function RunCard({ run }: { run: Run }) {
+  return (
+    <div className="relative aspect-[21/8] overflow-hidden rounded-lg border border-white/10 ring-8 ring-black/30">
+      <img src={run.art} alt="" className={cn("absolute inset-0 h-full w-full object-cover", run.done && "saturate-50 brightness-75")} />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
+      <Remove className="absolute top-6 right-6" />
+      <div className="absolute top-8 left-8 flex items-stretch gap-6">
+        <img src={run.cover} alt="" className="aspect-[3/4] w-28 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20" />
+        <div className="flex flex-col items-start">
+          <h3 className="font-display text-4xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{run.title}</h3>
+          <div className={cn(siteLabel, "mt-1")}>{run.kicker}</div>
+          <div className="font-display text-xl text-amber-300 [text-shadow:0_2px_8px_#000]">{run.status}</div>
+          <Epic className="mt-auto">{run.action}</Epic>
+        </div>
+      </div>
+      <div className="absolute bottom-6 left-8 flex items-end gap-6">
+        {run.party.map((h) => (
+          <div key={h.name} className="flex items-center gap-3">
+            <Portrait src={h.portrait} className="size-14" />
+            <div>
+              <div className="font-display text-lg text-white [text-shadow:0_2px_8px_#000]">{h.name}</div>
+              <div className="mt-1 h-1.5 w-28 overflow-hidden rounded-full bg-white/15">
+                <div className="h-full bg-emerald-500" style={{ width: `${h.hp * 100}%` }} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Saves() {
+  return (
+    <div className="flex flex-col gap-8">
+      {runs.map((r) => (
+        <RunCard key={r.title} run={r} />
+      ))}
+    </div>
+  )
+}
+
 const variants: { key: string; name: string; note: string; demo: ReactNode }[] = [
+  { key: "q", name: "Saves", note: "Deck layout, party bottom left, one card per save", demo: <Saves /> },
   { key: "a", name: "Ledger", note: "Cover left, run details right", demo: <Ledger /> },
   { key: "b", name: "Cinema", note: "Current scene as a wide still", demo: <Cinema /> },
   { key: "c", name: "Trail", note: "Encounter progress as a filmstrip", demo: <Trail /> },
