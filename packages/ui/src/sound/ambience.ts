@@ -10,15 +10,15 @@ import { soundOn } from "./settings"
 // Each bed's level under the ambience bus. The files share one level (scripts/sound-assets.ts): a crowd stays further
 // back than wind, so voices in it never read as words.
 const BEDS: Record<AmbienceBed, number> = {
-  hearth: 0.22,
-  crowd: 0.14,
-  wind: 0.2,
-  night: 0.16,
-  birds: 0.18,
-  river: 0.2,
-  dawn: 0.18,
-  dungeon: 0.22,
-  drip: 0.2,
+  hearth: 0.11,
+  crowd: 0.07,
+  wind: 0.1,
+  night: 0.08,
+  birds: 0.09,
+  river: 0.1,
+  dawn: 0.09,
+  dungeon: 0.11,
+  drip: 0.1,
 }
 const url = (bed: AmbienceBed) => `/stage/sounds/ambience/${bed}.mp3`
 const CROSS = 2.5

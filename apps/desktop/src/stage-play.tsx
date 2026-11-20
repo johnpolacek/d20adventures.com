@@ -354,7 +354,8 @@ export function StagePlay(props: {
   const sheets = useSheetViews(shown?.characters ?? [])
   const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const, play: loadPlay } : null), [scene])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
-  useStageSound(stage)
+  // Silent under the home screen and its pages: the set's ambience starts in play.
+  useStageSound(stage, !props.overlay)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
   // Who the turn passed over to reach the actor, because they cannot act, and why.
   const passed = turn ? passedWords(passedOver(turn.characters, actor)) : ""
