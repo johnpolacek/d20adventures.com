@@ -133,14 +133,43 @@ html[data-update-theme="dark"] body:has(.updates-page) .site-header-parchment im
   opacity: 1;
   filter: brightness(0.56) contrast(3.2) brightness(0.24);
 }
-/* The mark is toned to sepia ink, so it sits in the parchment. The site's bright blue comes from a filter the strip drops. */
+/*
+ * The mark is toned to sepia ink, so it sits in the parchment, and under the pointer it warms slowly to the site's blue.
+ * That blue comes from a filter the strip drops, so the mark carries it here. Both tones list the same filters in the
+ * same order, so one can ease into the other: only the grey, the sepia and the contrast move.
+ */
 body:has(.updates-page) [data-site-brand] {
-  filter: grayscale(1) sepia(0.55) contrast(1.15);
+  filter: grayscale(1) saturate(2) hue-rotate(330deg) sepia(0.55) contrast(1.15);
 }
 /* The mark is drawn to multiply onto parchment. On the dark strip it is turned light and screened on. */
 html[data-update-theme="dark"] body:has(.updates-page) [data-site-brand] {
-  filter: grayscale(1) invert(1) sepia(0.5) brightness(0.92);
+  filter: grayscale(1) saturate(2) hue-rotate(330deg) contrast(1.1) invert(1) hue-rotate(180deg) sepia(0.5) brightness(0.92);
   mix-blend-mode: screen;
+}
+@media (hover: hover) {
+  body:has(.updates-page) [data-site-brand]:hover {
+    opacity: 1;
+    filter: grayscale(0) saturate(2) hue-rotate(330deg) sepia(0) contrast(1.1);
+  }
+  html[data-update-theme="dark"] body:has(.updates-page) [data-site-brand]:hover {
+    filter: grayscale(0) saturate(2) hue-rotate(330deg) contrast(1.1) invert(1) hue-rotate(180deg) sepia(0) brightness(1);
+  }
+  body:has(.updates-page) [data-site-brand]:active {
+    opacity: 0.7;
+  }
+}
+body:has(.updates-page) [data-site-brand]:focus-visible {
+  filter: grayscale(0) saturate(2) hue-rotate(330deg) sepia(0) contrast(1.1);
+}
+html[data-update-theme="dark"] body:has(.updates-page) [data-site-brand]:focus-visible {
+  filter: grayscale(0) saturate(2) hue-rotate(330deg) contrast(1.1) invert(1) hue-rotate(180deg) sepia(0) brightness(1);
+}
+@media (prefers-reduced-motion: no-preference) {
+  body:has(.updates-page) [data-site-brand] {
+    transition:
+      filter 1000ms ease,
+      opacity 150ms;
+  }
 }
 body:has(.updates-page) [data-site-header] .text-white\/60 {
   color: var(--up-muted);
