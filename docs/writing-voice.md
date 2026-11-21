@@ -150,7 +150,8 @@ Product in the subject slot, the receipt linked instead of narrated, and the ope
 - Price is not a draw. Leave costs in the post.
 - One idea per title. Two glued with “and” is two titles.
 - Zoom out from the incident to the topic. One bug is too narrow to draw anyone in. Title the bigger subject it belongs to, and use the bug as an example inside. “The game suggested a spell that could never work” became a piece on the challenges of running an AI game master, with the owlbear spell as one of its stories.
-- Write a short title and a long title. The short one names the outcome and the best-known tools. The long one carries the whole stack and the promise (“Every Prompt Included”).
+- Frame the goal the reader wants, not the failures. “Building an AI Game Master That Plays by the D&D Rules” beat “The Hard Parts of Building an AI Game Master” and “What Goes Wrong When an AI Runs Your D&D Game”. The failures are stories inside the post.
+- Write a short title and a long title. The short one names the outcome and the best-known tools. The long one keeps the short one whole and extends it with the stack, the promise (“Every Prompt Included”), and why a tool was picked when there is a real reason. It never lists incidents. These long titles listed bugs and were rejected: “How I Keep an AI Game Master Honest When It Suggests Impossible Spells, Skips Rolls and Narrates Things That Never Happened”.
 
 The first one, before and after:
 
