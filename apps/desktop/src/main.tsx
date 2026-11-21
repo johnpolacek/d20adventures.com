@@ -6,10 +6,14 @@ import "@fontsource/rethink-sans/500.css"
 import "@fontsource/rethink-sans/600.css"
 import "@fontsource/rethink-sans/700.css"
 import "@fontsource/syne-mono/400.css"
+import { setNarratorEngine } from "@d20/ui/sound/narrator"
 import { invoke, isTauri } from "@tauri-apps/api/core"
 import { createRoot } from "react-dom/client"
+import { narratorEngine } from "./bridge"
 import { DesktopGame } from "./play"
 import "./style.css"
+// The app's narrator runs in Node. A browser tab in development keeps the browser's.
+if (isTauri()) setNarratorEngine(narratorEngine)
 const start = () => createRoot(document.getElementById("root")!).render(<DesktopGame />)
 // In a browser tab during development there is no Tauri, so the bridge goes to the dev server instead.
 if (import.meta.env.DEV && !isTauri()) void import("./preview").then((m) => m.installPreview()).then(start)

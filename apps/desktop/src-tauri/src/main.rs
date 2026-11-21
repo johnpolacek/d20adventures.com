@@ -11,6 +11,16 @@ use tokio::{
 struct GameLock(Mutex<()>);
 // The host worker while this app hosts a website game: the adventure, its process, and its latest event.
 struct HostWorker(Mutex<Option<(String, Child)>>, Arc<std::sync::Mutex<Value>>);
+// The narrator while the app is open (runtime/narrator-main.ts): its process, its input, and its answers in turn.
+struct Narrator(
+    Mutex<
+        Option<(
+            Child,
+            tokio::process::ChildStdin,
+            tokio::io::Lines<BufReader<tokio::process::ChildStdout>>,
+        )>,
+    >,
+);
 // The user's home folder. Windows names it USERPROFILE.
 fn home() -> String {
     std::env::var("HOME")
@@ -331,6 +341,44 @@ fn runtime_command(
     command.creation_flags(0x0800_0000);
     Ok(command)
 }
+// One request to the narrator: loading its model, or speaking a sentence. It starts on the first, and again if it stopped.
+#[tauri::command]
+async fn narrator_command(
+    app: tauri::AppHandle,
+    narrator: tauri::State<'_, Narrator>,
+    command: Value,
+) -> Result<Value, String> {
+    let mut slot = narrator.0.lock().await;
+    for attempt in 0..2 {
+        if slot.is_none() {
+            let data = data_dir(&app)?;
+            std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
+            let mut child = runtime_command(&app, "narrator/run/narrator.cjs", &data)?
+                .stdout(Stdio::piped())
+                .spawn()
+                .map_err(|e| format!("Could not start the narrator: {e}"))?;
+            let stdin = child.stdin.take().ok_or("Missing narrator input pipe")?;
+            let stdout = child.stdout.take().ok_or("Missing narrator output pipe")?;
+            *slot = Some((child, stdin, BufReader::new(stdout).lines()));
+        }
+        let (_, stdin, lines) = slot.as_mut().unwrap();
+        let sent = stdin.write_all(format!("{}\n", command).as_bytes()).await;
+        if sent.is_ok() {
+            if let Ok(Some(line)) = lines.next_line().await {
+                return serde_json::from_str(&line)
+                    .map_err(|_| "The narrator returned an unreadable response.".into());
+            }
+        }
+        // The process stopped: it starts again once.
+        if let Some((mut child, _, _)) = slot.take() {
+            let _ = child.kill().await;
+        }
+        if attempt == 1 {
+            break;
+        }
+    }
+    Err("The narrator stopped.".into())
+}
 async fn run_runtime(app: &tauri::AppHandle, command: &Value) -> Result<Value, String> {
     let data = data_dir(app)?;
     std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
@@ -364,6 +412,7 @@ fn render_report(app: tauri::AppHandle, report: Value) -> Result<(), String> {
 fn main() {
     tauri::Builder::default()
         .manage(GameLock(Mutex::new(())))
+        .manage(Narrator(Mutex::new(None)))
         .manage(HostWorker(
             Mutex::new(None),
             Arc::new(std::sync::Mutex::new(Value::Null)),
@@ -377,6 +426,7 @@ fn main() {
             host_start,
             host_stop,
             host_running,
+            narrator_command,
             account_info,
             open_site,
             toggle_fullscreen,

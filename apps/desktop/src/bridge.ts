@@ -1,3 +1,4 @@
+import type { NarratorEngine } from "@d20/ui/sound/narrator"
 import { invoke } from "@tauri-apps/api/core"
 import type { AccountCommand, AccountResponse } from "../runtime/account"
 import type { FeedbackCommand, FeedbackResponse } from "../runtime/feedback"
@@ -44,3 +45,21 @@ export const hostRunning = () => invoke<HostWorkerState>("host_running")
 // The window filling the screen. Rust owns it, since the webview may not resize its own window.
 export const toggleFullscreen = () => invoke<boolean>("toggle_fullscreen")
 export const isFullscreen = () => invoke<boolean>("is_fullscreen")
+// The narrator's voice, made in Node beside the game (runtime/narrator-main.ts): several times faster than in the
+// webview. Audio comes back as 16-bit PCM.
+type NarratorReply = { ready?: boolean; audio?: string; rate?: number; error?: string }
+export const narratorEngine: NarratorEngine = {
+  load: async () => {
+    const r = await invoke<NarratorReply>("narrator_command", { command: { kind: "load" } })
+    if (!r.ready) throw new Error(r.error ?? "The narrator did not load.")
+  },
+  say: async (text, voice) => {
+    const r = await invoke<NarratorReply>("narrator_command", { command: { kind: "speak", text, voice } })
+    if (!r.audio || !r.rate) throw new Error(r.error ?? "The narrator said nothing.")
+    const bytes = Uint8Array.from(atob(r.audio), (c) => c.charCodeAt(0))
+    const pcm = new Int16Array(bytes.buffer)
+    const audio = new Float32Array(pcm.length)
+    for (let i = 0; i < pcm.length; i++) audio[i] = pcm[i] / 0x8000
+    return { audio, rate: r.rate }
+  },
+}

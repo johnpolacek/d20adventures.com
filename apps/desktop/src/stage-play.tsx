@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { isHidden } from "@d20/gm-core/sheet/conditions"
 import { levelOwed } from "@d20/gm-core/sheet/level-owed"
 import type { LevelUpChoices } from "@d20/gm-core/sheet/level-up"
@@ -13,7 +14,9 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
+import { NARRATOR_VOICES, setNarratorVoice } from "@d20/ui/sound/narrator"
 import { setSoundOn, soundOn } from "@d20/ui/sound/settings"
+import { useNarrator, useNarratorVoice } from "@d20/ui/sound/use-narrator"
 import { useStageSound } from "@d20/ui/sound/use-stage-sound"
 import { EndingRating, FeedbackButton, FeedbackPanel, type FeedbackStart } from "@d20/ui/stage/feedback"
 import { IconButton, Pill, panel, StageHud, useCompact } from "@d20/ui/stage/hud"
@@ -173,6 +176,8 @@ function StoryArt({ src }: { src: string }) {
 const FADE_MS = 1600
 // How fast a paragraph is taken to be read before Continue presses itself, in words a minute.
 const CONTINUE_WPM = 200
+// After the narrator's last word, the pause before the story moves on.
+const AFTER_VOICE_MS = 1200
 function Painting({ src, shown, onLoad, onError }: { src: string; shown: boolean; onLoad: () => void; onError: () => void }) {
   const img = useRef<HTMLImageElement>(null)
   useEffect(() => {
@@ -379,6 +384,15 @@ export function StagePlay(props: {
   const roll = useMemo<RollView | undefined>(() => (rolled && turn ? rollView(rolled, turn.characters, rollerPortrait) : undefined), [rolled, turn?.characters, rollerPortrait])
   const used = paragraphs[paragraph]?.feature
   const feature = useMemo(() => (used && turn ? featureView(used, turn.characters) : undefined), [used, turn?.characters])
+  // The narrator reads the words in the panel. A roll or a class feature shows its own card, so it is not read.
+  const narratorVoice = useNarratorVoice()
+  const nextWords = paragraphs[paragraph + 1]?.roll || paragraphs[paragraph + 1]?.feature ? undefined : text[paragraph + 1]
+  const voiced = useNarrator({
+    key: `${turn?._id}:${paragraph}`,
+    text: rolled || used ? undefined : text[paragraph],
+    next: nextWords,
+    on: reading && !hidden && !props.overlay,
+  })
   // The cast member who plays a character in the turn, by the character's id.
   const castOf = useCallback(
     (id: string | undefined) => {
@@ -833,14 +847,16 @@ export function StagePlay(props: {
     }
   }, [stage, stageRef, reading, paragraph, staged, turn, castOf])
   useEffect(() => {
-    if (!auto || !reading || busy || !text.length) return
-    // A roll stays up until the die has landed and the verdict has had a moment.
-    const seconds = paragraphs[paragraph]?.roll ? ROLL_SECONDS + 1.5 : readingSeconds(text[paragraph] ?? "")
+    if (!auto || !reading || busy || !text.length || voiced === "speaking") return
+    // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once
+    // the narrator has finished.
+    const seconds = voiced === "done" ? AFTER_VOICE_MS / 1000 : paragraphs[paragraph]?.roll ? ROLL_SECONDS + 1.5 : readingSeconds(text[paragraph] ?? "")
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
     return () => clearTimeout(timer)
-  }, [auto, reading, busy, text, paragraphs, paragraph])
-  // Stepping through, Continue presses itself once the paragraph has had time to be read. A roll waits as it does in auto.
-  const continueMs = busy || !text.length ? undefined : Math.round((paragraphs[paragraph]?.roll ? ROLL_SECONDS + 1.5 : readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
+  }, [auto, reading, busy, text, paragraphs, paragraph, voiced])
+  // Stepping through, Continue presses itself once the paragraph has had time to be read, or the narrator has read it.
+  // A roll waits as it does in auto.
+  const continueMs = busy || !text.length || voiced === "speaking" ? undefined : voiced === "done" ? AFTER_VOICE_MS : Math.round((paragraphs[paragraph]?.roll ? ROLL_SECONDS + 1.5 : readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
   const focused = useRef<string | null>(null)
   useEffect(() => {
     onStage?.({ waiting: Boolean(scene && !stage && !stageError), error: stageError ?? null })
@@ -1375,7 +1391,7 @@ export function StagePlay(props: {
           </Presence>
           <Presence show={on && open === "settings"} motion="drop" asChild>
             <section className={`${panel} absolute right-10 top-24 z-panel w-72 p-6`}>
-              <h2 className="mb-4 font-serif text-2xl">Scene Settings</h2>
+              <Heading variant="h2" className="mb-4">Scene Settings</Heading>
               <div className="mb-4 flex gap-2">
                 <Pill active={!auto} onClick={() => setAuto(false)}>
                   Step through
@@ -1420,6 +1436,17 @@ export function StagePlay(props: {
               >
                 Sound {sound ? "on" : "off"}
               </Pill>
+              <Heading variant="h6" as="h3" className="mb-2 mt-5 text-muted-foreground">Narrator</Heading>
+              <div className="flex flex-wrap gap-2">
+                <Pill active={!narratorVoice} onClick={() => setNarratorVoice(null)}>
+                  Off
+                </Pill>
+                {NARRATOR_VOICES.map((v) => (
+                  <Pill key={v.id} active={narratorVoice === v.id} onClick={() => setNarratorVoice(v.id)}>
+                    {v.label}
+                  </Pill>
+                ))}
+              </div>
               <Pill className="mt-2" onClick={() => setHidden(true)}>
                 Hide UI
               </Pill>

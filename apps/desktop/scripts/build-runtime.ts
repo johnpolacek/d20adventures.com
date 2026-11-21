@@ -1,8 +1,9 @@
 import { existsSync } from "node:fs"
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
+import { cp, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { NARRATOR_VOICES } from "@d20/ui/sound/narrator"
 import { build } from "esbuild"
 import { adventureList } from "../runtime/game"
 
@@ -90,4 +91,29 @@ await build({
   format: "cjs",
   define: { "process.env.NODE_ENV": '"production"' },
 })
-console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, Stageview assets, and the figures of ${Object.values(SHIPPED).join(", ")}.`)
+// The narrator runs beside the app while it is open (runtime/narrator-main.ts). Its engine is native, so it is not
+// bundled: this machine's build of it is copied in. The voices sit where Kokoro looks for them, beside its script.
+const narrator = resolve(app, "src-tauri/resources/narrator")
+await rm(narrator, { recursive: true, force: true })
+await build({
+  entryPoints: [resolve(app, "runtime/narrator-main.ts")],
+  outfile: resolve(narrator, "run/narrator.cjs"),
+  bundle: true,
+  platform: "node",
+  target: "node24",
+  format: "cjs",
+  external: ["onnxruntime-node", "onnxruntime-common"],
+  // Kokoro needs no images, and sharp is native too.
+  alias: { sharp: resolve(app, "runtime/no-sharp.ts") },
+  define: { "process.env.NODE_ENV": '"production"' },
+})
+const kokoro = await realpath(resolve(app, "node_modules/kokoro-js"))
+const ort = await realpath(resolve(kokoro, "../../../onnxruntime-node@1.21.0/node_modules/onnxruntime-node"))
+const ortCommon = await realpath(resolve(ort, "../onnxruntime-common"))
+const modules = resolve(narrator, "node_modules")
+await cp(ortCommon, resolve(modules, "onnxruntime-common"), { recursive: true })
+for (const part of ["package.json", "dist"]) await cp(resolve(ort, part), resolve(modules, "onnxruntime-node", part), { recursive: true })
+const binding = `bin/napi-v3/${process.platform}/${process.arch}`
+await cp(resolve(ort, binding), resolve(modules, "onnxruntime-node", binding), { recursive: true })
+for (const voice of NARRATOR_VOICES) await cp(resolve(kokoro, `voices/${voice.id}.bin`), resolve(narrator, `voices/${voice.id}.bin`))
+console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, the narrator, Stageview assets, and the figures of ${Object.values(SHIPPED).join(", ")}.`)
