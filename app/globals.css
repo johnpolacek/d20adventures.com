@@ -59,10 +59,13 @@ body {
   overscroll-behavior: none;
 }
 
-div,
-p,
-textarea {
-  text-wrap: pretty;
+/* In the base layer, so a text-balance class still wins. */
+@layer base {
+  div,
+  p,
+  textarea {
+    text-wrap: pretty;
+  }
 }
 
 [data-admin-chat-form] {

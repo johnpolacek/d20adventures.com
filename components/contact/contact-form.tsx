@@ -19,7 +19,6 @@ const labelClass = "font-display text-sm tracking-[0.2em] uppercase text-amber-3
 const fieldClass = "h-auto py-2.5 border-amber-200/20 bg-black/60 text-base focus-visible:border-amber-200/50"
 
 type Draft = { name: string; email: string; message: string }
-const emptyDraft: Draft = { name: "", email: "", message: "" }
 
 interface ContactFormProps {
   subject?: string
@@ -31,7 +30,7 @@ export function ContactForm({ subject = "Contact Message", requireCaptcha = fals
   // Shows the thank-you the moment the form is sent. If sending fails, it falls back to the form with the draft intact.
   const [shownSent, showSent] = useOptimistic(sent)
   const [, startTransition] = useTransition()
-  const [draft, setDraft] = useState<Draft>(emptyDraft)
+  const [draft, setDraft] = useState<Draft>({ name: "", email: "", message: "" })
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -60,16 +59,11 @@ export function ContactForm({ subject = "Contact Message", requireCaptcha = fals
     })
   }
 
-  function sendAnother() {
-    setDraft(emptyDraft)
-    setSent(false)
-  }
-
-  if (shownSent) return <ContactSent name={draft.name} onSendAnother={sent ? sendAnother : undefined} />
+  if (shownSent) return <ContactSent name={draft.name} />
 
   return (
     <form onSubmit={onSubmit}>
-      <p className="mb-10 text-center text-lg text-white/80">Questions, bugs or ideas? Send a note and we’ll write back.</p>
+      <p className="mb-10 text-center text-lg text-white/80 text-balance">Questions, bugs or ideas? Send a note and we’ll write back.</p>
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="name" className={labelClass}>
@@ -105,7 +99,7 @@ export function ContactForm({ subject = "Contact Message", requireCaptcha = fals
 }
 
 /** The thank-you that takes the form's place: the die tumbles in and lands, then the words rise. */
-function ContactSent({ name, onSendAnother }: { name: string; onSendAnother?: () => void }) {
+function ContactSent({ name }: { name: string }) {
   const root = useRef<HTMLDivElement>(null)
   const firstName = name.trim().split(/\s+/)[0]
 
@@ -123,7 +117,7 @@ function ContactSent({ name, onSendAnother }: { name: string; onSendAnother?: ()
   )
 
   return (
-    <div ref={root} className="flex flex-col items-center py-6 text-center" role="status">
+    <div ref={root} className="flex flex-col items-center py-8 text-center" role="status">
       <div className="relative mb-8 size-28">
         <div data-sent="glow" className="absolute inset-0 rounded-full bg-blue-400/30 blur-2xl" />
         <Image data-sent="die" src="/images/d20-white.svg" alt="" width={112} height={112} className="relative size-28 drop-shadow-[0_0_24px_rgba(96,165,250,0.6)]" />
@@ -137,28 +131,7 @@ function ContactSent({ name, onSendAnother }: { name: string; onSendAnother?: ()
           Thanks{firstName ? `, ${firstName}` : ""}. Your note is on its way, and we’ll write back soon.
         </p>
       </div>
-      <div className="mt-10 h-12">
-        {onSendAnother && <SendAnother onClick={onSendAnother} />}
-      </div>
     </div>
   )
 }
 
-/** Shows once the server confirms the send, so a failed send never offers it. */
-function SendAnother({ onClick }: { onClick: () => void }) {
-  const root = useRef<HTMLDivElement>(null)
-  useGSAP(
-    () => {
-      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return
-      gsap.from(root.current, { autoAlpha: 0, y: 8, duration: 0.5, delay: 0.3, ease: "power3.out" })
-    },
-    { scope: root }
-  )
-  return (
-    <div ref={root}>
-      <Button variant="epic" onClick={onClick}>
-        Send Another
-      </Button>
-    </div>
-  )
-}
