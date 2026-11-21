@@ -6,7 +6,7 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figure
 draft: true
 ---
 
-Until this week, everyone in [The Midnight Summons](https://d20adventures.com) was a painted card standing in a 3D forest. They looked fine until anything had to move. Now Thalbern walks into the scene, draws his bow and swings a sword, and the owlbear comes crashing out of the trees.
+Until this week, everyone in [The Midnight Summons](https://d20adventures.com) was a painted card standing in a 3D forest. They looked fine until anything had to move. Now [Thalbern](https://d20adventures.com/settings/realm-of-myr/assets?id=thalbern) walks into the scene, draws his bow and swings a sword, and [the owlbear](https://d20adventures.com/settings/realm-of-myr/assets?id=owlbear) comes crashing out of the trees.
 
 <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/woods.webp" alt="Thalbern standing on a trail in the moonlit Valkarr woods" width="1600" height="900" />
 
@@ -34,11 +34,11 @@ The other hand matters too. The build now lays the fingers around a grip, hangs 
 
 <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/hands.webp" alt="A dwarf fighter's hands before and after the hand fix" width="1000" height="1200" />
 
-The sword cut was its own saga. I tried eight different cuts and had them ranked blind too. The new swing was lame, and so was the new thrust. The one in the game now stops where the blow lands instead of finishing in a crouch with the blade in the floor.
+The [sword cut](https://d20adventures.com/settings/realm-of-myr/assets?id=thalbern&clip=Swing) was its own saga. I tried eight different cuts and had them ranked blind too. The new swing was lame, and so was the new thrust. The one in the game now stops where the blow lands instead of finishing in a crouch with the blade in the floor.
 
 <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/sword-cuts.webp" alt="Three of the eight sword cuts tried on Thalbern, frame by frame" width="1600" height="883" />
 
-All of this lives in the [asset library](https://d20adventures.com/settings/realm-of-myr/assets), and it's live. It has over 150 characters and 34 places from the Realm of Myr. Click a character with a figure and you can turn it around, play its clips and step through them a frame at a time. Places are built right in your browser, and you can fly the camera around with W A S D.
+All of this lives in the [asset library](https://d20adventures.com/settings/realm-of-myr/assets), and it's live. It has over 150 characters and 34 places from the Realm of Myr. Click a character with a figure and you can turn it around, play its clips and step through them a frame at a time. Places are built right in your browser, and you can fly the camera around with W A S D. Here's [the owlbear fight in the Valkarr woods](https://d20adventures.com/settings/realm-of-myr/assets?env=valkarr-forest-trail&scene=the-midnight-summons/owlbear-confrontation&view=stage).
 
 <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/library.webp" alt="The asset library's character tab, with the party and the other characters made in 3D" width="1600" height="772" />
 
