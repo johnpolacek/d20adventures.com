@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Update Page Designs</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0b0d12; color: #e5e7eb; font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 1400px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+  header p { margin: 0 0 24px; color: #9ca3af; }
+  header a { color: #fcd34d; }
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .card { display: block; overflow: hidden; border: 1px solid #262b36; border-radius: 10px; background: #12151c; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+  .card:hover, .card:focus-visible { border-color: #fcd34d; transform: translateY(-2px); outline: none; }
+  .card img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; background: #000; }
+  .card div { padding: 12px 14px 14px; }
+  .card b { display: block; font-size: 16px; font-weight: 600; }
+  .card span { color: #9ca3af; font-size: 13.5px; }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Update Page Designs</h1>
+    <p>Eight takes on <a href="http://localhost:3000/updates/2d-art-to-3d-rigged-animated-3d-figures">From 2D Art to Rigged Animated 3D Figures</a>. Same words, different page.</p>
+  </header>
+  <div class="grid">
+    <a class="card" href="01-refined-current.html"><img src="thumbs/refined.jpg" alt=""><div><b>01 Refined Current</b><span>Today's page, fixed. Narrower measure, cost ledger, captions, collapsed prompts.</span></div></a>
+    <a class="card" href="02-illuminated-codex.html"><img src="thumbs/codex.jpg" alt=""><div><b>02 Illuminated Codex</b><span>Light theme. A parchment leaf with ink, rubric red and margin notes.</span></div></a>
+    <a class="card" href="03-cinematic-longform.html"><img src="thumbs/cinematic.jpg" alt=""><div><b>03 Cinematic Longform</b><span>Full-bleed cover hero, chapter numerals, media that breaks the column.</span></div></a>
+    <a class="card" href="04-pipeline-blueprint.html"><img src="thumbs/blueprint.jpg" alt=""><div><b>04 Pipeline Blueprint</b><span>Drafting-table schematic. The pipeline drawn as a flow diagram.</span></div></a>
+    <a class="card" href="05-magazine-editorial.html"><img src="thumbs/magazine.jpg" alt=""><div><b>05 Magazine Editorial</b><span>Big Literata headline, side column of stats, captions and pull quotes.</span></div></a>
+    <a class="card" href="06-sticky-stage.html"><img src="thumbs/stage.jpg" alt=""><div><b>06 Sticky Stage</b><span>Two panes. Media stays pinned and swaps as the text scrolls.</span></div></a>
+    <a class="card" href="07-quiet-engineering.html"><img src="thumbs/quiet.jpg" alt=""><div><b>07 Quiet Engineering</b><span>Fantasy dressing off. One column, sticky contents, prompts first-class.</span></div></a>
+    <a class="card" href="08-adventurers-journal.html"><img src="thumbs/journal.jpg" alt=""><div><b>08 Adventurer's Journal</b><span>The game's own journal UI. Framed panels and a quest tracker pipeline.</span></div></a>
+  </div>
+</main>
+</body>
+</html>

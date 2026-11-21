@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From 2D Art to Rigged Animated 3D Figures | D20 Adventures</title>
+<meta name="description" content="How I turned painted character cards into rigged, animated 3D figures for about $2.30 each, with the prompts, the tools and everything that went wrong.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative&family=IBM+Plex+Mono:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Rethink+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #0a1828;
+    --paper-2: #0d1e33;
+    --panel: #0f2239;
+    --grid-fine: rgba(140, 200, 240, 0.045);
+    --grid-major: rgba(140, 200, 240, 0.09);
+    --line: rgba(160, 215, 240, 0.32);
+    --line-soft: rgba(160, 215, 240, 0.16);
+    --cyan: #a8dcf0;
+    --ink: #e8f2f9;
+    --body: #d3e0ea;
+    --dim: #93b4c9;
+    --amber: #fcd34d;
+    --amber-2: #fde68a;
+    --amber-line: rgba(252, 211, 77, 0.55);
+    --amber-wash: rgba(252, 211, 77, 0.08);
+    --blue: #1d4ed8;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --sans: "Rethink Sans", system-ui, sans-serif;
+    --serif: "Literata", Georgia, serif;
+    --display: "Cinzel Decorative", "Cinzel", serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(var(--grid-fine) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-fine) 1px, transparent 1px);
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    background-position: -1px -1px;
+    color: var(--body);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  img, iframe { max-width: 100%; }
+  a { color: var(--amber-2); text-decoration-color: rgba(253, 230, 138, 0.4); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-color: var(--amber-2); }
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 2px; }
+  .mono { font-family: var(--mono); }
+  .label {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .skip { position: absolute; left: -999px; top: 8px; background: var(--amber); color: #111; padding: 6px 10px; font-family: var(--sans); z-index: 50; }
+  .skip:focus { left: 8px; }
+
+  /* Site chrome */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(8, 20, 34, 0.92);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-in { max-width: 1320px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
+  .brand img { width: 30px; height: 30px; }
+  .brand span { font-family: var(--display); font-size: 21px; letter-spacing: 0.01em; white-space: nowrap; }
+  .auth { display: flex; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 16px;
+    font-family: var(--sans); font-weight: 600; font-size: 14px; text-decoration: none; border-radius: 3px;
+    border: 1px solid var(--line); color: var(--ink); background: transparent; cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+  }
+  .btn:hover { border-color: var(--cyan); background: rgba(168, 220, 240, 0.07); }
+  .btn-blue { background: var(--blue); border-color: #3b6cf0; color: #fff; }
+  .btn-blue:hover { background: #2457e6; border-color: #6d93f5; }
+
+  /* Title block */
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
+  .titleblock {
+    margin-top: 36px; border: 1px solid var(--line); background: rgba(10, 24, 40, 0.75);
+    display: grid; grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "intro" "video" "para";
+    position: relative;
+  }
+  .titleblock::before, .titleblock::after {
+    content: ""; position: absolute; width: 14px; height: 14px; border-color: var(--amber-line); border-style: solid;
+  }
+  .titleblock::before { top: -5px; left: -5px; border-width: 1px 0 0 1px; }
+  .titleblock::after { bottom: -5px; right: -5px; border-width: 0 1px 1px 0; }
+  .tb-head { grid-area: head; padding: 28px 28px 0; }
+  .tb-intro { grid-area: intro; padding: 0 28px; }
+  .tb-video { grid-area: video; padding: 20px 28px 0; }
+  .tb-para { grid-area: para; padding: 0 28px 28px; }
+  .back { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber-2); text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  .back::before { content: "\2190  "; }
+  h1 {
+    font-family: var(--display); font-weight: 400; color: var(--ink);
+    font-size: clamp(30px, 4.4vw, 52px); line-height: 1.12; margin: 14px 0 22px; letter-spacing: 0.005em;
+    text-wrap: balance;
+  }
+  .meta { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); margin-bottom: 22px; }
+  .meta div { padding: 9px 22px 9px 0; margin-right: 22px; border-right: 1px solid var(--line-soft); }
+  .meta div:last-child { border-right: 0; margin-right: 0; }
+  .meta dt { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+  .meta dd { margin: 2px 0 0; font-family: var(--sans); font-size: 15px; font-weight: 500; color: var(--ink); }
+  .lede { font-size: 21px; line-height: 1.55; color: var(--ink); margin: 0 0 4px; }
+  .tb-para p { margin: 18px 0 0; }
+
+  /* Figures */
+  figure { margin: 0; }
+  .fig { position: relative; }
+  .fig-frame {
+    position: relative; border: 1px solid var(--line); padding: 8px; background: rgba(6, 16, 28, 0.6);
+  }
+  .fig-frame::before, .fig-frame::after {
+    content: ""; position: absolute; width: 10px; height: 10px; border: 0 solid var(--cyan);
+  }
+  .fig-frame::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+  .fig-frame::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+  .fig img, .fig iframe { display: block; width: 100%; height: auto; }
+  .fig iframe { aspect-ratio: 16 / 9; border: 0; }
+  .fig figcaption {
+    display: flex; gap: 12px; align-items: baseline; margin-top: 10px;
+    font-family: var(--sans); font-size: 14.5px; line-height: 1.5; color: var(--dim);
+  }
+  .fig figcaption b { flex: none; font-family: var(--mono); font-weight: 600; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cyan); padding: 1px 6px; border: 1px solid var(--line); }
+  .fig.tall .fig-frame { max-width: 420px; }
+  .fig.tall figcaption { max-width: 420px; }
+
+  /* Pipeline */
+  .pipeline { margin-top: 56px; }
+  .sheet-head { display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 22px; }
+  .sheet-no {
+    font-family: var(--mono); font-weight: 500; font-size: 13px; color: var(--paper);
+    background: var(--cyan); padding: 2px 8px; letter-spacing: 0.08em; flex: none; position: relative; top: -3px;
+  }
+  .sheet-head h2 { font-family: var(--sans); font-weight: 600; font-size: clamp(24px, 2.6vw, 30px); line-height: 1.2; color: var(--ink); margin: 0; letter-spacing: -0.005em; }
+  .sheet-head .label { margin-left: auto; white-space: nowrap; }
+  .pipe-lead { font-size: 19px; color: var(--ink); margin: 0 0 26px; max-width: 40em; }
+  .pipe-lead strong { color: var(--amber); font-weight: 600; }
+
+  .flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; counter-reset: step; }
+  .node {
+    position: relative; border: 1px solid var(--line); background: rgba(9, 22, 38, 0.9);
+    padding: 14px 16px 14px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "no name cost" "no tool cost" "no text text"; column-gap: 14px; row-gap: 2px;
+  }
+  .node .no { grid-area: no; font-family: var(--mono); font-size: 12px; color: var(--dim); letter-spacing: 0.1em; padding-top: 3px; }
+  .node .name { grid-area: name; font-family: var(--sans); font-weight: 600; font-size: 17px; color: var(--ink); line-height: 1.3; }
+  .node .tool { grid-area: tool; font-family: var(--mono); font-size: 12px; color: var(--cyan); line-height: 1.4; }
+  .node .text { grid-area: text; font-family: var(--sans); font-size: 14.5px; line-height: 1.5; color: var(--body); margin-top: 8px; }
+  .node .cost { grid-area: cost; font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--dim); text-align: right; align-self: start; letter-spacing: 0.06em; text-transform: uppercase; }
+  .node.paid { border: 1px solid var(--amber-line); background: linear-gradient(var(--amber-wash), var(--amber-wash)), rgba(9, 22, 38, 0.95); box-shadow: inset 0 0 0 3px rgba(10, 24, 40, 1), inset 0 0 0 4px rgba(252, 211, 77, 0.3); }
+  .node.paid .cost { color: var(--amber); font-size: 20px; letter-spacing: 0; }
+  .node.paid .no { color: var(--amber-2); }
+  .node.paid .tool { color: var(--amber-2); }
+  .node .text a { color: var(--amber-2); }
+  .node.paid .tag { display: inline-block; margin-left: 8px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: #1a1406; background: var(--amber); padding: 1px 5px; vertical-align: 2px; }
+  /* vertical connectors */
+  .node:not(:last-child)::after {
+    content: ""; position: absolute; left: 30px; top: 100%; width: 1px; height: 26px; background: var(--cyan); opacity: .7;
+  }
+  .node:not(:last-child)::before {
+    content: ""; position: absolute; left: 26px; top: calc(100% + 19px); width: 0; height: 0;
+    border-left: 4.5px solid transparent; border-right: 4.5px solid transparent; border-top: 7px solid var(--cyan); z-index: 1;
+  }
+  .dims { display: none; }
+  .node .tag { display: none !important; }
+  .readout {
+    margin-top: 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line);
+  }
+  .readout div { padding: 14px 16px; border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+  .readout div:nth-child(3) { border-right: 0; }
+  .readout .label { display: block; }
+  .readout .v { display: block; font-family: var(--mono); font-size: 26px; font-weight: 500; color: var(--ink); line-height: 1.25; margin-top: 4px; }
+  .readout .v.amber { color: var(--amber); }
+  .readout .total { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 0; background: var(--amber-wash); border-right: 0; }
+  .readout .total .v { font-size: 34px; color: var(--amber); margin: 0; }
+  .readout .total .eq { font-family: var(--mono); font-size: 14px; color: var(--amber-2); }
+  .pipe-close { margin: 22px 0 0; max-width: 40em; }
+
+  @media (min-width: 1100px) {
+    .flow { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 22px; }
+    .node { display: flex; flex-direction: column; padding: 14px 13px 16px; }
+    .node.paid .tag { display: inline-block !important; }
+    .node .no { padding: 0 0 8px; border-bottom: 1px solid var(--line-soft); margin-bottom: 10px; display: flex; justify-content: space-between; }
+    .node .cost { order: 5; text-align: left; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: 13px; }
+    .node.paid .cost { font-size: 22px; padding-top: 8px; }
+    .node .name { font-size: 16px; }
+    .node .tool { min-height: 2.8em; margin-top: 2px; }
+    .node .text { font-size: 13.5px; margin: 8px 0 0; padding-bottom: 4px; }
+    .node:not(:last-child)::after { left: 100%; top: 50%; width: 22px; height: 1px; }
+    .node:not(:last-child)::before { left: calc(100% + 15px); top: calc(50% - 4px); border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; border-left: 7px solid var(--cyan); border-right: 0; }
+    .dims { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); column-gap: 22px; row-gap: 14px; margin-top: 18px; }
+    .dim { position: relative; height: 34px; }
+    .dim::before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 1px; background: currentColor; opacity: .75; }
+    .dim::after { content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 15px; border-left: 1px solid currentColor; border-right: 1px solid currentColor; opacity: .75; }
+    .dim span { position: absolute; left: 50%; top: 0; transform: translateX(-50%); background: var(--paper); padding: 0 10px; font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.06em; line-height: 18px; white-space: nowrap; }
+    .dim.paid { grid-column: 4 / 6; color: var(--amber); }
+    .dim.all { grid-column: 1 / 8; color: var(--cyan); }
+    .readout { grid-template-columns: repeat(3, minmax(0, 1fr)) 1.4fr; }
+    .readout div { border-bottom: 0; }
+    .readout div:nth-child(3) { border-right: 1px solid var(--line-soft); }
+    .readout .total { grid-column: auto; border-right: 0 !important; }
+  }
+
+  /* Body layout */
+  .layout { display: grid; grid-template-columns: minmax(0, 720px); justify-content: center; margin-top: 64px; }
+  .toc { display: none; }
+  @media (min-width: 1100px) {
+    .layout { grid-template-columns: 220px minmax(0, 720px); column-gap: 72px; justify-content: center; }
+    .toc { display: block; }
+    .toc-in { position: sticky; top: 92px; border-left: 1px solid var(--line); padding: 4px 0 4px 0; }
+    .toc .label { display: block; padding: 0 0 12px 16px; }
+    .toc ol { list-style: none; margin: 0; padding: 0; }
+    .toc a { display: flex; gap: 10px; padding: 6px 12px 6px 16px; margin-left: -1px; border-left: 2px solid transparent; font-family: var(--sans); font-size: 14px; line-height: 1.35; color: var(--dim); text-decoration: none; }
+    .toc a span { font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 1px; opacity: .8; }
+    .toc a:hover { color: var(--ink); }
+    .toc a.on { color: var(--ink); border-left-color: var(--amber); }
+    .toc a.on span { color: var(--amber); opacity: 1; }
+    .toc .side { margin-top: 26px; padding-left: 16px; display: grid; gap: 8px; }
+    .toc .side a { padding: 0; margin: 0; border: 0; font-size: 13px; color: var(--amber-2); }
+  }
+  .sheet { padding-top: 8px; margin-bottom: 72px; }
+  .sheet p { margin: 0 0 1.15em; }
+  .sheet ul { margin: 0 0 1.15em; padding-left: 0; list-style: none; }
+  .sheet li { position: relative; padding-left: 28px; margin-bottom: .5em; }
+  .sheet li::before { content: ""; position: absolute; left: 4px; top: .8em; width: 12px; height: 1px; background: var(--amber); }
+  .sheet .fig { margin: 34px 0 34px; }
+  .sheet .wide { margin-left: 0; margin-right: 0; }
+  @media (min-width: 1360px) {
+    .sheet .wide { margin-right: -120px; }
+  }
+
+  /* Callouts */
+  .scores { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); margin: 6px 0 26px; }
+  .scores div { padding: 12px 14px; border-right: 1px solid var(--line-soft); }
+  .scores div:last-child { border-right: 0; background: var(--amber-wash); }
+  .scores .label { display: block; font-size: 10.5px; }
+  .scores .v { font-family: var(--mono); font-size: 30px; color: var(--ink); line-height: 1.2; }
+  .scores .v small { font-size: 14px; color: var(--dim); }
+  .scores div:last-child .v { color: var(--amber); }
+  .note {
+    border: 1px dashed var(--amber-line); padding: 14px 18px; margin: 28px 0; font-family: var(--sans); font-size: 17px; line-height: 1.55; color: var(--amber-2);
+    position: relative;
+  }
+  .note .label { display: block; color: var(--amber); margin-bottom: 4px; }
+  .note p { margin: 0 !important; }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); margin: 4px 0 26px; }
+  .stats div { padding: 12px 16px; }
+  .stats div + div { border-left: 1px solid var(--line-soft); }
+  .stats .v { display: block; font-family: var(--mono); font-size: 30px; line-height: 1.2; color: var(--ink); }
+  .stats .label { font-size: 10.5px; }
+
+  /* Prompt spec sheets */
+  .spec { margin: 30px 0 34px; border: 1px solid var(--line); background: #08131f; }
+  .spec-head { display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 14px; border-bottom: 1px solid var(--line); background: rgba(168, 220, 240, 0.05); }
+  .spec-id { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--paper); background: var(--cyan); padding: 1px 6px; letter-spacing: .06em; flex: none; }
+  .spec-title { font-family: var(--sans); font-weight: 600; font-size: 14.5px; color: var(--ink); min-width: 0; }
+  .spec-head .tools { margin-left: auto; display: flex; gap: 6px; flex: none; }
+  .tbtn {
+    font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+    background: transparent; color: var(--cyan); border: 1px solid var(--line); border-radius: 2px; padding: 5px 10px; cursor: pointer; min-height: 30px;
+  }
+  .tbtn:hover { border-color: var(--cyan); background: rgba(168, 220, 240, 0.08); }
+  .tbtn.done { color: var(--amber); border-color: var(--amber-line); }
+  .spec-body { position: relative; }
+  .spec pre {
+    margin: 0; padding: 16px 18px 18px 18px; white-space: pre-wrap; overflow-wrap: anywhere;
+    font-family: var(--mono); font-size: 14px; line-height: 1.7; color: #d9e7f1;
+    background-image: linear-gradient(90deg, rgba(168,220,240,0.12) 1px, transparent 1px);
+    background-size: 100% 100%; background-position: 0 0; background-repeat: no-repeat;
+  }
+  .spec code { font-family: inherit; }
+  .slot { background: rgba(252, 211, 77, 0.14); color: var(--amber-2); border-bottom: 1px dashed var(--amber); padding: 0 2px; border-radius: 1px; }
+  .spec.clip .spec-body { max-height: 236px; overflow: hidden; }
+  .spec.clip .spec-body::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: linear-gradient(rgba(8, 19, 31, 0), #08131f 85%); pointer-events: none; }
+  .spec-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 8px 6px 14px; border-top: 1px solid var(--line-soft); }
+  .spec-foot .label { font-size: 10.5px; }
+
+  /* Closing */
+  .closing { border: 1px solid var(--line); padding: 24px; background: rgba(10, 24, 40, 0.7); margin-top: 8px; }
+  .closing p { margin: 0 0 1em; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 18px; }
+  .play {
+    display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; background: var(--blue); color: #fff; border: 1px solid #5b84f2;
+    font-family: var(--sans); font-weight: 700; font-size: 16px; text-decoration: none; border-radius: 3px;
+  }
+  .play:hover { background: #2457e6; }
+  .md { font-family: var(--mono); font-size: 13px; letter-spacing: .06em; color: var(--amber-2); }
+  .md::before { content: "\2193  "; }
+
+  .foot { border-top: 1px solid var(--line); margin-top: 40px; }
+  .foot-in { max-width: 1320px; margin: 0 auto; padding: 18px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; align-items: center; }
+  .foot .brand span { font-size: 16px; }
+  .foot .brand img { width: 22px; height: 22px; }
+  .foot nav { display: flex; gap: 20px; flex-wrap: wrap; font-family: var(--sans); font-size: 14px; }
+  .foot nav a { color: var(--dim); text-decoration: none; }
+  .foot nav a:hover { color: var(--ink); }
+
+  @media (min-width: 1100px) {
+    .titleblock { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-areas: "head video" "intro video" "para video"; grid-template-rows: auto auto 1fr; }
+    .tb-head { padding: 34px 36px 0; }
+    .tb-intro, .tb-para { padding-left: 36px; padding-right: 36px; }
+    .tb-para { padding-bottom: 34px; }
+    .tb-video { padding: 34px 34px 34px 0; align-self: start; }
+    .tb-para p { font-size: 17px; }
+  }
+  @media (max-width: 640px) {
+    body { font-size: 17px; }
+    .wrap { padding: 0 16px; }
+    .topbar-in { padding: 9px 16px; }
+    .brand span { font-size: 17px; }
+    .brand img { width: 26px; height: 26px; }
+    .btn { padding: 0 11px; font-size: 13px; min-height: 34px; }
+    .auth { gap: 6px; }
+    .titleblock { margin-top: 20px; }
+    .tb-head, .tb-intro, .tb-video, .tb-para { padding-left: 18px; padding-right: 18px; }
+    .tb-head { padding-top: 22px; }
+    .meta { grid-template-columns: repeat(3, auto); }
+    .meta div { padding-right: 12px; margin-right: 12px; }
+    .meta dd { font-size: 13.5px; }
+    .lede { font-size: 19px; }
+    .sheet-head { flex-wrap: wrap; gap: 10px; }
+    .sheet-head .label { margin-left: 0; width: 100%; order: 3; }
+    .readout .v { font-size: 22px; }
+    .readout div { padding: 12px 12px; }
+    .readout .label { font-size: 10px; letter-spacing: .1em; }
+    .spec pre { font-size: 13px; padding: 14px; }
+    .spec-head { flex-wrap: wrap; }
+    .scores .v, .stats .v { font-size: 24px; }
+    .fig figcaption { flex-direction: column; gap: 6px; }
+    .closing { padding: 18px; }
+  }
+  @media (max-width: 380px) {
+    .brand span { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#article">Skip To Article</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#"><img src="../../public/images/d20-white.svg" alt="" width="30" height="30"><span>D20 Adventures</span></a>
+    <div class="auth"><a class="btn" href="#">Sign In</a><a class="btn btn-blue" href="#">Sign Up</a></div>
+  </div>
+</header>
+
+<main id="article" class="wrap">
+  <article>
+    <section class="titleblock" aria-labelledby="title">
+      <div class="tb-head">
+        <a class="back" href="#">Updates</a>
+        <h1 id="title">From 2D Art to Rigged Animated 3D Figures</h1>
+        <dl class="meta">
+          <div><dt>Author</dt><dd>John Polacek</dd></div>
+          <div><dt>Date</dt><dd><time datetime="2026-11-21">Nov 21, 2026</time></dd></div>
+          <div><dt>Read</dt><dd>9 Min</dd></div>
+        </dl>
+      </div>
+      <div class="tb-intro">
+        <p class="lede">Until this week, characters in <a href="https://d20adventures.com">The Midnight Summons</a> and other adventures were flat painted standee art. </p>
+      </div>
+      <div class="tb-video">
+        <figure class="fig">
+          <div class="fig-frame">
+            <iframe src="https://www.youtube-nocookie.com/embed/kOnKwsX0O0U" title="D20 Adventures gameplay with the new 3D figures" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          </div>
+          <figcaption><b>Fig. 1</b><span>D20 Adventures gameplay with the new 3D figures</span></figcaption>
+        </figure>
+      </div>
+      <div class="tb-para">
+        <p>I researched what other people were doing, experimented myself and now I'm writing up the whole pipeline that I landed on. Everything here is in the <a href="https://github.com/johnpolacek/d20adventures.com">repo on Github</a>, and the full notes are in <a href="https://github.com/johnpolacek/d20adventures.com/blob/main/asset-library/README.md">asset-library/README.md</a>. Steal whatever is useful. Or by all means, tell me how I can do it better.</p>
+      </div>
+    </section>
+
+    <section class="pipeline" id="s01" aria-labelledby="h01">
+      <div class="sheet-head">
+        <span class="sheet-no">01</span>
+        <h2 id="h01">The Short Version</h2>
+        <span class="label">Pipeline / 7 Steps</span>
+      </div>
+      <p class="pipe-lead">A figure now costs <strong>$2.30</strong> and about fifteen minutes, most of it waiting:</p>
+
+      <ol class="flow">
+        <li class="node">
+          <span class="no">01</span>
+          <span class="name">Brief</span>
+          <span class="tool">Text</span>
+          <span class="text">Write a short brief for the character. Free.</span>
+          <span class="cost">Free</span>
+        </li>
+        <li class="node">
+          <span class="no">02</span>
+          <span class="name">Pose Sheet</span>
+          <span class="tool">Image model</span>
+          <span class="text">Have an image model paint a pose sheet, front and back. Free.</span>
+          <span class="cost">Free</span>
+        </li>
+        <li class="node">
+          <span class="no">03</span>
+          <span class="name">Joints</span>
+          <span class="tool">MediaPipe</span>
+          <span class="text">Find the joints on the sheet with <a href="https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker">MediaPipe</a>. Free.</span>
+          <span class="cost">Free</span>
+        </li>
+        <li class="node paid">
+          <span class="no">04<span class="tag">PAID</span></span>
+          <span class="name">Model</span>
+          <span class="tool">Hi3D v3.0 on fal</span>
+          <span class="text">Send the front and back to <a href="https://fal.ai/models/hitem3d/hi3d/v3.0/multi-view-to-3d">Hi3D v3.0 on fal</a> for the model. $2.10.</span>
+          <span class="cost">$2.10</span>
+        </li>
+        <li class="node paid">
+          <span class="no">05<span class="tag">PAID</span></span>
+          <span class="name">Rig</span>
+          <span class="tool">Hyper3D</span>
+          <span class="text">Rig it with <a href="https://hyper3d.ai">Hyper3D</a> to a human skeleton with fingers. $0.20.</span>
+          <span class="cost">$0.20</span>
+        </li>
+        <li class="node">
+          <span class="no">06</span>
+          <span class="name">Clips</span>
+          <span class="tool">Quaternius, Mesh2Motion</span>
+          <span class="text">Copy free animation clips onto it from <a href="https://quaternius.com">Quaternius</a> and <a href="https://mesh2motion.org">Mesh2Motion</a>. Free.</span>
+          <span class="cost">Free</span>
+        </li>
+        <li class="node">
+          <span class="no">07</span>
+          <span class="name">Cleanup and Judge</span>
+          <span class="tool">Headless Blender</span>
+          <span class="text">Clean it up in headless Blender, make three detail levels, and judge it blind. Free.</span>
+          <span class="cost">Free</span>
+        </li>
+      </ol>
+      <div class="dims" aria-hidden="true">
+        <div class="dim paid"><span>$2.10 + $0.20 = $2.30</span></div>
+        <div class="dim all"><span>About Fifteen Minutes</span></div>
+      </div>
+
+      <div class="readout">
+        <div><span class="label">Steps</span><span class="v">7</span></div>
+        <div><span class="label">Paid Steps</span><span class="v amber">2</span></div>
+        <div><span class="label">Time</span><span class="v">~15 Min</span></div>
+        <div class="total"><span><span class="label">Total Per Figure</span><span class="eq">$2.10 + $0.20</span></span><span class="v">$2.30</span></div>
+      </div>
+
+      <p class="pipe-close">The only steps that cost money are the model and the rig. Every answer gets saved, so nothing is paid for twice and every later rebuild is free.</p>
+    </section>
+
+    <div class="layout">
+      <nav class="toc" aria-label="Sections">
+        <div class="toc-in">
+          <span class="label">Sheet Index</span>
+          <ol>
+            <li><a href="#s01"><span>01</span>The Short Version</a></li>
+            <li><a href="#s02"><span>02</span>The Pose Sheet Decides Everything</a></li>
+            <li><a href="#s03"><span>03</span>Trying Every Generator</a></li>
+            <li><a href="#s04"><span>04</span>Hands Are the Hard Part</a></li>
+            <li><a href="#s05"><span>05</span>Borrowed Moves</a></li>
+            <li><a href="#s06"><span>06</span>The Asset Library</a></li>
+            <li><a href="#s07"><span>07</span>Try It Yourself</a></li>
+            <li><a href="#s08"><span>08</span>Also This Week</a></li>
+          </ol>
+          <div class="side">
+            <a href="https://github.com/johnpolacek/d20adventures.com">Github Repo</a>
+            <a href="https://github.com/johnpolacek/d20adventures.com/blob/main/asset-library/README.md">Asset Library Notes</a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="body">
+        <section class="sheet" id="s02" aria-labelledby="h02">
+          <div class="sheet-head"><span class="sheet-no">02</span><h2 id="h02">The Pose Sheet Decides Everything</h2><span class="label">Step 02 / Free</span></div>
+          <p>The 3D generator only knows what the picture shows it. So the most important step is free.</p>
+          <figure class="fig tall">
+            <div class="fig-frame"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/pose-sheet.webp" alt="Thalbern's pose sheet, standing with arms out and hands open on a flat grey background" width="900" height="1200" loading="lazy"></div>
+            <figcaption><b>Fig. 2</b><span>Thalbern's pose sheet, standing with arms out and hands open on a flat grey background</span></figcaption>
+          </figure>
+          <p>What makes a good sheet: arms held away from the body with background showing between them, hands empty and open, the face lit and in focus, flat grey behind, and a back view of the same person in the same clothes. Anything held in the hands gets fused into the arm, so weapons come off the sheet and the game puts them back in later. If the back view is missing, the generator makes one up. Wollandora's leafy mantle came back as a plain dark cloak.</p>
+          <p>This is the prompt that paints the sheet, with the character's front and back cards attached:</p>
+          <figure class="spec" data-spec>
+            <figcaption class="spec-head"><span class="spec-id">P-1</span><span class="spec-title">Pose Sheet</span><span class="tools"><button type="button" class="tbtn" data-copy>Copy</button></span></figcaption>
+            <div class="spec-body"><pre><code>The attached images are the front and the back of a painted game character: [WHO THEY ARE]. Make one landscape reference sheet of the SAME person as a photorealistic costume photograph, for building a 3D model.
+
+Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles: on the left the front view, on the right the back view from directly behind with no face visible.
+
+Pose, in both views: standing straight, feet a little apart, both arms held out from the body at about 40 degrees with a clear gap of background between each arm and the body, hands open with fingers apart, palms toward the thighs. Nothing in the hands. [WHERE THE WEAPONS GO, FOR EXAMPLE: THE SWORD IS SHEATHED AT THE HIP AND THE BOW IS LEFT OUT.] Neutral face, mouth closed, looking straight ahead.
+
+Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.
+
+Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.</code></pre></div>
+          </figure>
+          <p>For a beast like the owlbear, ask for "a photorealistic studio photograph of a living animal" standing on its hind legs, so you don't get a person in a costume.</p>
+        </section>
+
+        <section class="sheet" id="s03" aria-labelledby="h03">
+          <div class="sheet-head"><span class="sheet-no">03</span><h2 id="h03">Trying Every Generator</h2><span class="label">Step 04 / Model</span></div>
+          <p>I didn't know which generator to use, so I tried a bunch of them on Thalbern. Tripo H3.1 first, then Rodin Gen-2.5, then Rodin's model rigged by Meshy with Meshy's own moves, then Hyper3D's shell skinning (which was far worse), and finally Hi3D.</p>
+          <p>To keep myself honest, every round gets judged blind. A fresh agent is shown the character's card, the pose sheet and the same fifteen pictures of the figure each time, and told nothing about what changed. Judges differ by about a point, so a one point gain is noise. What the judge is really good for is a list of faults by name, which tells you what to fix next.</p>
+          <figure class="spec" data-spec>
+            <figcaption class="spec-head"><span class="spec-id">P-2</span><span class="spec-title">Blind Judge</span><span class="tools"><button type="button" class="tbtn" data-copy>Copy</button></span></figcaption>
+            <div class="spec-body"><pre><code>You are judging a 3D game character against its target. Attached are the target (the character's card and the pose sheet the model was made from) and fifteen pictures of the figure: face close-ups, front, back, three-quarter views and two action poses. You have not seen any earlier version. Do not guess what changed.
+
+Score each from 0 to 2, in halves, for a total out of 10:
+- Likeness: 0 another person or outfit, 1 the same person with clear differences, 2 the person on the card.
+- Face: 0 waxy, smeared, doubled or dead-eyed, 1 a face with faults a player would notice, 2 holds up in a close-up.
+- Build and hands: 0 misshapen, 1 a person with faults a player would notice, 2 right from every side.
+- Materials: 0 clay, plastic or blur, 1 the right kind of surface with flaws, 2 reads as leather, cloth, metal, skin and hair.
+- Poses: 0 broken, 1 reads as the move with visible faults, 2 clean.
+
+Benchmark: a character in a shipping fantasy RPG seen from the same distance. Then list every fault you see, worst first, each with where it is on the figure.</code></pre></div>
+          </figure>
+          <figure class="fig wide">
+            <div class="fig-frame"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/rodin-vs-hi3d-2.webp" alt="Thalbern's face and chest three ways: Rodin as shipped, Hi3D as made, and Hi3D with the gloss turned down and his face painted on" width="1600" height="1108" loading="lazy"></div>
+            <figcaption><b>Fig. 3</b><span>Thalbern's face and chest three ways: Rodin as shipped, Hi3D as made, and Hi3D with the gloss turned down and his face painted on</span></figcaption>
+          </figure>
+          <div class="scores" aria-label="Blind judge scores out of 10">
+            <div><span class="label">Rodin</span><span class="v">4<small>/10</small></span></div>
+            <div><span class="label">Hi3D As Made</span><span class="v">4<small>/10</small></span></div>
+            <div><span class="label">Hi3D Fixed</span><span class="v">5<small>/10</small></span></div>
+          </div>
+          <p>Rodin scored a 4. Hi3D as it came also scored a 4, but for different reasons. Its outfit and gear match the sheet much more closely, and the studs, buckles and straps are actual things instead of melted lumps. Two free fixes got it to a 5:</p>
+          <ul>
+            <li>Turn the gloss down on anything that isn't metal. Hi3D's leather looked wet.</li>
+            <li>Paint the pose sheet's face back onto the model. Generators repaint the face from memory and it comes back softer.</li>
+          </ul>
+          <p>For the face, the build crops the head off the sheet, makes it bigger and sharper, then lays those pixels back onto the front of the model's head and fades them out toward the ears:</p>
+          <figure class="spec" data-spec>
+            <figcaption class="spec-head"><span class="spec-id">P-3</span><span class="spec-title">Face Upscale</span><span class="tools"><button type="button" class="tbtn" data-copy>Copy</button></span></figcaption>
+            <div class="spec-body"><pre><code>The attached image is a small, soft crop of a studio photograph: one person's head, seen from directly in front on a grey background. Make one square image that is the SAME photograph of the SAME head at far higher resolution, as if the original had been taken with a much better camera.
+
+Keep everything where it is: the same framing and crop, the head the same size and in the same place, the same face, expression, eyes, brows, nose, mouth, ears, hair and whatever is worn in the hair, the same soft even light, the same grey background. Change no proportion and move no feature.
+
+Add only what a sharper photograph would show: skin texture and pores, freckles, eyelashes, the detail of the irises with a small catch light, the lines of the lips, single hairs. Natural skin, not retouched, not shiny. Mouth closed. No text.</code></pre></div>
+          </figure>
+          <p>One catch: if the model's nose sits a few millimetres away from the sheet's, you get two noses. The build finds the tip of the model's nose and moves the paint to match.</p>
+          <aside class="note"><span class="label">Known Fault</span><p>Every judge put the eyes and the hair in its worst three, on both models. Neither generator makes eyes that hold up in a close-up yet.</p></aside>
+        </section>
+
+        <section class="sheet" id="s04" aria-labelledby="h04">
+          <div class="sheet-head"><span class="sheet-no">04</span><h2 id="h04">Hands Are the Hard Part</h2><span class="label">Step 02 / Pose Sheet</span></div>
+          <p>Generated hands come out stubby or garbled, and a hand that holds something is worse. At one point I typed "why are you stuck on this?!"</p>
+          <p>Wollandora carries a staff on her card. The trick that finally gave her real fingers around it was weird. The pose sheet paints her hand closed around a short rod in flat pure blue (#0000ff), a color nothing else on the figure is. The generator models real fingers and a thumb around it, the rig cuts out everything blue, and the staff goes through the hole. It worked, but the figures in the game now go a simpler way. The game puts the staff, sword and bow in their hands.</p>
+          <p>The other hand matters too. The build lays the fingers around a grip, hangs the empty hand at ease, and never lets an elbow go straight.</p>
+          <figure class="fig tall">
+            <div class="fig-frame"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/hands.webp" alt="A dwarf fighter's hands before and after the hand fix" width="1000" height="1200" loading="lazy"></div>
+            <figcaption><b>Fig. 4</b><span>A dwarf fighter's hands before and after the hand fix</span></figcaption>
+          </figure>
+        </section>
+
+        <section class="sheet" id="s05" aria-labelledby="h05">
+          <div class="sheet-head"><span class="sheet-no">05</span><h2 id="h05">Borrowed Moves</h2><span class="label">Step 06 / Clips</span></div>
+          <p>The clips are borrowed from free libraries and copied onto each figure's own skeleton. That mostly works, but a clip made for one body does strange things on another. Arms go through faces and shoulders flatten. So the build gives the shoulder and the forearm an extra bone each to share the twist, and for the bow shot and the sword cut it solves the arms to points instead of trusting the clip.</p>
+          <p>The <a href="https://d20adventures.com/settings/realm-of-myr/assets?id=thalbern&amp;clip=Swing">sword cut</a> was its own saga. I tried eight different cuts and had them ranked blind. The new swing was lame, and so was the new thrust. The one in the game now just stops where the blow lands instead of finishing in a crouch with the blade in the floor.</p>
+          <figure class="fig wide">
+            <div class="fig-frame"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/sword-cuts.webp" alt="Three of the eight sword cuts tried on Thalbern, frame by frame" width="1600" height="883" loading="lazy"></div>
+            <figcaption><b>Fig. 5</b><span>Three of the eight sword cuts tried on Thalbern, frame by frame</span></figcaption>
+          </figure>
+        </section>
+
+        <section class="sheet" id="s06" aria-labelledby="h06">
+          <div class="sheet-head"><span class="sheet-no">06</span><h2 id="h06">The Asset Library</h2><span class="label">Output</span></div>
+          <p>All of this lives in the <a href="https://d20adventures.com/settings/realm-of-myr/assets">asset library</a>, and it's live. It has over 150 characters and 34 places from the Realm of Myr. Click a character with a figure and you can turn it around, play its clips and step through them a frame at a time. Places are built right in your browser, and you can fly the camera around with W A S D. Here's <a href="https://d20adventures.com/settings/realm-of-myr/assets?env=valkarr-forest-trail&amp;scene=the-midnight-summons/owlbear-confrontation&amp;view=stage">the owlbear fight in the Valkarr woods</a>.</p>
+          <div class="stats" aria-label="Asset library contents">
+            <div><span class="v">150+</span><span class="label">Characters</span></div>
+            <div><span class="v">34</span><span class="label">Places</span></div>
+          </div>
+          <figure class="fig wide">
+            <div class="fig-frame"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/library.webp" alt="The asset library's character tab, with the party and the other characters made in 3D" width="1600" height="772" loading="lazy"></div>
+            <figcaption><b>Fig. 6</b><span>The asset library's character tab, with the party and the other characters made in 3D</span></figcaption>
+          </figure>
+          <p>With so many tries it got hard to tell which figure was the real one. Thalbern alone had eight. So each character gets one card, and opening it shows the current version, the earlier ones and the trials, with who made the model, who rigged it and when.</p>
+          <figure class="fig wide">
+            <div class="fig-frame"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/library-versions.webp" alt="Thalbern in the asset library, with his current version, two earlier versions and five trials listed beside the figure" width="1600" height="1035" loading="lazy"></div>
+            <figcaption><b>Fig. 7</b><span>Thalbern in the asset library, with his current version, two earlier versions and five trials listed beside the figure</span></figcaption>
+          </figure>
+          <p>Since the pipeline worked on Thalbern, the characters for Covert Cargo, the next adventure, are already in the library.</p>
+        </section>
+
+        <section class="sheet" id="s07" aria-labelledby="h07">
+          <div class="sheet-head"><span class="sheet-no">07</span><h2 id="h07">Try It Yourself</h2><span class="label">Prompts P-4, P-5</span></div>
+          <p>I built all of this with Claude Code. If you want to build something like it, hand your coding agent this:</p>
+          <figure class="spec" data-spec>
+            <figcaption class="spec-head"><span class="spec-id">P-4</span><span class="spec-title">Build It</span><span class="tools"><button type="button" class="tbtn" data-copy>Copy</button></span></figcaption>
+            <div class="spec-body"><pre><code>Read asset-library/README.md in https://github.com/johnpolacek/d20adventures.com. It describes a pipeline that turns a painted character card into a rigged, animated 3D figure: a pose sheet from an image model, joints found with MediaPipe, a model from Hi3D v3.0 on fal, a rig from Hyper3D, clips borrowed from free libraries, cleanup in headless Blender, and a blind judge.
+
+Build the smallest version of it for my project. Start with one character and the free steps only: the brief, the pose sheet and the joints. Show me the sheet before anything that costs money runs. Save every paid answer so it is never paid for twice.</code></pre></div>
+          </figure>
+          <p>And if you just want to look around the code:</p>
+          <figure class="spec" data-spec>
+            <figcaption class="spec-head"><span class="spec-id">P-5</span><span class="spec-title">Code Tour</span><span class="tools"><button type="button" class="tbtn" data-copy>Copy</button></span></figcaption>
+            <div class="spec-body"><pre><code>Clone https://github.com/johnpolacek/d20adventures.com and walk me through how asset-library/pipeline/build.ts and pilot.ts make a 3D figure, step by step, with what each step costs.</code></pre></div>
+          </figure>
+        </section>
+
+        <section class="sheet" id="s08" aria-labelledby="h08">
+          <div class="sheet-head"><span class="sheet-no">08</span><h2 id="h08">Also This Week</h2><span class="label">Changelog</span></div>
+          <p>Other stuff that landed this week:</p>
+          <ul>
+            <li>Sound, with combat cues and night ambience in the Valkarr woods.</li>
+            <li>Hiding. Slip into thick growth and watch the owlbear come out.</li>
+            <li>A ring on the ground marks whose turn it is.</li>
+            <li>Speech is painted into the scene instead of sitting in bubbles.</li>
+            <li>Narration is set in Literata, with drop caps.</li>
+          </ul>
+          <div class="closing">
+            <p>The whole thing is open source on <a href="https://github.com/johnpolacek/d20adventures.com">Github</a>.</p>
+            <p>Want to run a game on your own Mac and help shape it? <a href="/playtest">Become a playtester</a>.</p>
+            <div class="cta-row">
+              <a class="play" href="https://d20adventures.com">Play The Midnight Summons</a>
+              <a class="md" href="#">Download as Markdown</a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <a class="brand" href="#"><img src="../../public/images/d20-white.svg" alt="" width="22" height="22"><span>D20 Adventures</span></a>
+    <nav aria-label="Footer"><a href="#">Updates</a><a href="#">Privacy</a><a href="#">Terms</a></nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // Highlight fill-in slots like [WHO THEY ARE]
+  document.querySelectorAll('.spec code').forEach(function (code) {
+    var html = code.innerHTML.replace(/\[([A-Z][^\]\n]*)\]/g, '<mark class="slot">[$1]</mark>');
+    code.innerHTML = html;
+  });
+
+  // Copy buttons
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var code = btn.closest('.spec').querySelector('code');
+      var text = code.textContent;
+      var done = function () {
+        btn.textContent = 'Copied';
+        btn.classList.add('done');
+        clearTimeout(btn._t);
+        btn._t = setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(text); done(); });
+      } else { fallback(text); done(); }
+    });
+  });
+  function fallback(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  // Collapse tall prompts
+  document.querySelectorAll('[data-spec]').forEach(function (spec) {
+    var body = spec.querySelector('.spec-body');
+    if (body.scrollHeight < 320) return;
+    var lines = spec.querySelector('code').textContent.split('\n').length;
+    spec.classList.add('clip');
+    var foot = document.createElement('div');
+    foot.className = 'spec-foot';
+    var id = 'spec-' + Math.random().toString(36).slice(2, 8);
+    body.id = id;
+    foot.innerHTML = '<span class="label">' + lines + ' Lines</span><button type="button" class="tbtn" aria-expanded="false" aria-controls="' + id + '">Expand</button>';
+    spec.appendChild(foot);
+    var b = foot.querySelector('button');
+    b.addEventListener('click', function () {
+      var open = spec.classList.toggle('clip') === false;
+      b.textContent = open ? 'Collapse' : 'Expand';
+      b.setAttribute('aria-expanded', String(open));
+    });
+  });
+
+  // Sheet index highlight
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc ol a'));
+  var sections = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function update() {
+    var y = window.innerHeight * 0.3;
+    var idx = 0;
+    sections.forEach(function (s, i) { if (s && s.getBoundingClientRect().top <= y) idx = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === idx); if (i === idx) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+</script>
+</body>
+</html>

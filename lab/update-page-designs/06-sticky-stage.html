@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From 2D Art to Rigged Animated 3D Figures | D20 Adventures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Literata:ital,opsz,wght@0,7..72,300..700;1,7..72,300..700&family=Rethink+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js')</script>
+<style>
+:root{
+  --bg:#07080b;
+  --ink:#d9dde6;
+  --ink-soft:#aeb4c2;
+  --head:#eff6ff;
+  --amber:#fcd34d;
+  --amber-2:#fde68a;
+  --amber-dim:rgba(253,230,138,.28);
+  --indigo:#a5b4fc;
+  --blue:#1d4ed8;
+  --line:rgba(253,230,138,.16);
+  --card:#0e1016;
+  --display:"Cinzel Decorative",Georgia,serif;
+  --body:"Literata",Georgia,serif;
+  --ui:"Rethink Sans",system-ui,sans-serif;
+  --header-h:64px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--header-h) + 24px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:1.125rem;line-height:1.7;overflow-x:hidden}
+img,iframe{max-width:100%}
+a{color:var(--amber-2);text-decoration-color:rgba(253,230,138,.4);text-underline-offset:.18em;transition:text-decoration-color .15s,color .15s}
+a:hover{text-decoration-color:var(--amber-2)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:3px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Site chrome */
+.site-header{position:sticky;top:0;z-index:30;height:var(--header-h);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 clamp(16px,3vw,36px);
+  background:linear-gradient(rgba(238,222,186,.62),rgba(226,206,164,.62)),#e9d8b4 url(../../public/images/app/backgrounds/parchment-texture.webp) center/cover;border-bottom:1px solid #8a7350;box-shadow:0 6px 24px #000a}
+.brand{display:flex;align-items:center;gap:10px;color:#1e2a4a;text-decoration:none;font-family:var(--display);font-size:1.3rem;font-weight:700;white-space:nowrap}
+.brand img{width:36px;height:36px;mix-blend-mode:multiply}
+.auth{display:flex;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:4px;font-family:var(--display);font-weight:700;font-size:.95rem;text-decoration:none;white-space:nowrap}
+.btn-blue{background:var(--blue);color:#fff;border:2px solid #3b6cf0;box-shadow:inset 0 0 0 1px #0b2a8a}
+.btn-blue:hover{background:#1e40af}
+.site-header :focus-visible{outline-color:#1e2a4a}
+.site-footer{border-top:1px solid var(--line);margin-top:72px;padding:22px clamp(16px,3vw,36px);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 24px;font-family:var(--ui);font-size:.85rem;color:var(--ink-soft)}
+.site-footer nav{display:flex;gap:20px;flex-wrap:wrap}
+.site-footer a{color:var(--ink-soft);text-decoration:none}
+.site-footer a:hover{color:var(--amber-2)}
+
+/* Hero */
+.hero{position:relative;padding:clamp(36px,6vw,80px) clamp(16px,4vw,56px) clamp(28px,4vw,48px);max-width:1440px;margin:0 auto}
+.hero::before{content:"";position:absolute;inset:0 0 -40px;z-index:-1;
+  background:linear-gradient(180deg,rgba(7,8,11,.55),var(--bg) 92%),url(../../public/images/app/backgrounds/d20-hero.webp) center 30%/cover;
+  -webkit-mask:linear-gradient(180deg,#000 40%,transparent);mask:linear-gradient(180deg,#000 40%,transparent);opacity:.55}
+.back{font-family:var(--display);font-size:.85rem;letter-spacing:.2em;text-transform:uppercase;color:var(--amber-2);text-decoration:none}
+.back::before{content:"\2039";margin-right:.5em}
+h1{font-family:var(--display);font-weight:400;color:var(--head);font-size:clamp(2rem,4.6vw,4rem);line-height:1.12;margin:.35em 0 .4em;max-width:20ch;text-wrap:balance}
+.dek{font-style:italic;color:var(--ink-soft);max-width:52ch;margin:0 0 1.4em;font-size:clamp(1.05rem,1.5vw,1.25rem)}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;font-family:var(--ui);font-size:.92rem;color:var(--ink-soft)}
+.meta strong{color:var(--head);font-weight:600}
+.meta .sep{width:4px;height:4px;border-radius:50%;background:var(--amber-dim)}
+.meta a{font-family:var(--ui)}
+
+/* Layout */
+.layout{max-width:1440px;margin:0 auto;padding:0 clamp(16px,4vw,56px)}
+.prose{max-width:40rem}
+.prose>section{padding-top:8px}
+.prose p{margin:0 0 1.15em}
+.prose h2{font-family:var(--display);font-weight:400;color:var(--head);font-size:clamp(1.45rem,2.4vw,1.9rem);line-height:1.25;margin:2.4em 0 .6em;display:flex;align-items:baseline;gap:.6em}
+.prose h2 .num{font-family:var(--ui);font-size:.8rem;letter-spacing:.14em;color:var(--amber);border:1px solid var(--amber-dim);border-radius:999px;padding:.1em .7em;flex:none;transform:translateY(-.25em)}
+.prose ul.list{padding-left:1.2em;margin:0 0 1.2em}
+.prose ul.list li{margin:.35em 0}
+.prose ul.list li::marker{color:var(--amber)}
+.lead::first-letter{font-family:var(--display);float:left;font-size:4.2em;line-height:.82;color:var(--amber);margin:.06em .1em 0 0}
+
+/* Inline media (default, no JS, narrow) */
+.media{margin:1.8em 0;padding:0}
+.media img{display:block;width:100%;height:auto;border-radius:6px;background:#15171d;border:1px solid var(--line)}
+.media .video{position:relative;aspect-ratio:16/9;width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#000}
+.media iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.media figcaption{font-family:var(--ui);font-size:.85rem;line-height:1.5;color:var(--ink-soft);margin-top:.7em;padding-left:12px;border-left:2px solid var(--amber-dim)}
+.media.portrait img{max-width:26rem;margin:0 auto}
+.media.portrait figcaption{max-width:26rem;margin-left:auto;margin-right:auto}
+
+/* Stat panel */
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.stat{background:#0c0e13;padding:18px 18px 16px}
+.stat b{display:block;font-family:var(--display);font-weight:400;color:var(--amber-2);font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.1}
+.stat span{font-family:var(--ui);font-size:.85rem;color:var(--ink-soft)}
+.stat.wide{grid-column:1/-1}
+
+/* Pipeline */
+.pipeline{list-style:none;margin:1.4em 0 1.6em;padding:0;border:1px solid var(--line);border-radius:8px;background:linear-gradient(180deg,#0d0f15,#090a0e);counter-reset:step;overflow:hidden}
+.pipeline li{counter-increment:step;display:grid;grid-template-columns:2.6rem minmax(0,1fr) auto;gap:4px 14px;align-items:start;padding:14px 18px 14px 14px;border-bottom:1px solid rgba(253,230,138,.09);position:relative}
+.pipeline li::before{content:counter(step);font-family:var(--display);font-size:1.05rem;color:var(--ink-soft);width:2.1rem;height:2.1rem;border-radius:50%;border:1px solid rgba(174,180,194,.35);display:grid;place-items:center;line-height:1}
+.pipeline li:not(:last-child)::after{content:"";position:absolute;left:calc(14px + 1.05rem);top:calc(14px + 2.1rem);bottom:-14px;width:1px;background:rgba(174,180,194,.2)}
+.pipeline .what{font-size:1rem;line-height:1.55;padding-top:.2em}
+.pipeline .cost{font-family:var(--ui);font-size:.85rem;font-weight:600;letter-spacing:.04em;padding:.3em .7em;border-radius:999px;color:var(--ink-soft);border:1px solid rgba(174,180,194,.25);white-space:nowrap;margin-top:.2em}
+.pipeline li.paid{background:linear-gradient(90deg,rgba(252,211,77,.07),transparent 70%)}
+.pipeline li.paid::before{color:#1a1405;background:var(--amber);border-color:var(--amber)}
+.pipeline li.paid .cost{color:#1a1405;background:var(--amber-2);border-color:var(--amber-2)}
+.pipeline .total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 18px;background:rgba(252,211,77,.06);border-top:1px solid var(--amber-dim)}
+.pipeline .total{counter-increment:none}.pipeline .total::before,.pipeline .total::after{display:none}
+.pipeline .total span{font-family:var(--display);color:var(--head);font-size:1.05rem}
+.pipeline .total b{font-family:var(--display);font-weight:700;color:var(--amber);font-size:1.6rem}
+
+/* Prompt cards */
+.prompt{margin:1.6em 0;border:1px solid var(--line);border-radius:8px;background:#0b0d12;position:relative}
+.prompt header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 10px 16px;border-bottom:1px solid rgba(253,230,138,.1)}
+.prompt .label{font-family:var(--ui);font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--indigo)}
+.copy,.more{font-family:var(--ui);font-size:.82rem;font-weight:600;color:var(--amber-2);background:transparent;border:1px solid var(--amber-dim);border-radius:4px;min-height:32px;padding:0 12px;cursor:pointer}
+.copy:hover,.more:hover{background:rgba(253,230,138,.08)}
+.copy[data-done]{color:#bbf7d0;border-color:rgba(187,247,208,.4)}
+.prompt .body{padding:14px 16px 16px;font-size:.95rem;line-height:1.65;color:#c9cedb;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font-family:var(--body)}
+.prompt .slot{color:var(--amber-2);background:rgba(252,211,77,.1);border-radius:3px;padding:0 .2em;font-style:italic}
+.js .prompt.collapsible:not(.open) .body{max-height:11rem;overflow:hidden;-webkit-mask:linear-gradient(180deg,#000 55%,transparent);mask:linear-gradient(180deg,#000 55%,transparent)}
+.prompt .more{display:none;margin:0 16px 14px}
+.js .prompt.collapsible .more{display:inline-flex;align-items:center}
+
+/* Closing */
+.closing{margin-top:2.6em;padding:28px clamp(18px,3vw,32px);border:1px solid var(--line);border-radius:10px;background:radial-gradient(120% 140% at 0 0,rgba(252,211,77,.08),transparent 60%),#0b0d12}
+.closing p{margin:0 0 1em}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:1.2em}
+.btn-play{font-size:1.05rem;min-height:48px;padding:0 22px}
+.endbar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-family:var(--ui);font-size:.9rem}
+.endbar a{font-family:var(--display);text-decoration:none}
+
+/* Stage (wide + JS only) */
+.stage-col{display:none}
+@media (min-width:1024px){
+  .stage-on .layout{display:grid;grid-template-columns:minmax(0,40rem) minmax(0,1fr);gap:clamp(40px,4vw,72px);align-items:start}
+  .stage-on .stage-col{display:block;position:sticky;top:calc(var(--header-h) + 20px);height:calc(100vh - var(--header-h) - 40px);min-height:520px}
+  .stage-on .prose .media.staged{display:none}
+}
+.case{height:100%;display:flex;flex-direction:column;border-radius:12px;padding:10px;
+  background:linear-gradient(180deg,#2a2112,#120e07 40%,#0b0906);box-shadow:0 0 0 1px rgba(253,230,138,.22),0 30px 80px #000c,inset 0 1px 0 rgba(253,230,138,.35)}
+.glass{position:relative;flex:1;min-height:0;border-radius:6px;overflow:hidden;
+  background:radial-gradient(70% 55% at 50% 0%,rgba(253,230,138,.16),transparent 70%),radial-gradient(90% 60% at 50% 110%,rgba(0,0,0,.9),transparent),#0a0b0f;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.8),inset 0 12px 40px rgba(0,0,0,.7)}
+.glass::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.05),transparent 30%);border-radius:inherit}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:clamp(16px,2.2vw,32px);opacity:0;visibility:hidden;transition:opacity .45s ease,visibility 0s linear .45s}
+.slide.on{opacity:1;visibility:visible;transition:opacity .45s ease,visibility 0s}
+.slide .media{margin:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.slide .media figcaption{display:none}
+.slide .media img{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;box-shadow:0 18px 50px #000;border-color:rgba(253,230,138,.2)}
+.slide .media.portrait img{max-width:100%}
+.slide .media .video{width:100%;max-height:100%;box-shadow:0 18px 50px #000}
+.slide .stats{width:min(100%,30rem)}
+.plate{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:14px 10px 6px}
+.plate .sec{font-family:var(--display);font-size:.95rem;color:var(--amber-2);letter-spacing:.02em}
+.plate .cap{grid-column:1/2;font-family:var(--ui);font-size:.88rem;line-height:1.45;color:var(--ink-soft);min-height:2.9em}
+.plate .tools{grid-row:1/3;grid-column:2;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.dots{display:flex;gap:6px;align-items:center}
+.dots button{width:22px;height:22px;padding:0;border:0;background:transparent;cursor:pointer;display:grid;place-items:center}
+.dots button::before{content:"";width:7px;height:7px;border-radius:50%;background:rgba(253,230,138,.25);transition:background .2s,transform .2s}
+.dots button[aria-current="true"]::before{background:var(--amber);transform:scale(1.35)}
+.dots .gap{width:6px}
+.count{font-family:var(--ui);font-size:.78rem;letter-spacing:.14em;color:var(--ink-soft)}
+.zoom{font-family:var(--ui);font-size:.8rem;font-weight:600;color:var(--amber-2);background:transparent;border:1px solid var(--amber-dim);border-radius:4px;min-height:30px;padding:0 10px;cursor:pointer}
+.zoom[hidden]{display:none}
+
+/* Lightbox */
+dialog.lb{max-width:min(96vw,1800px);max-height:94vh;width:auto;padding:0;border:1px solid var(--amber-dim);border-radius:8px;background:#050608;color:var(--ink)}
+dialog.lb::backdrop{background:rgba(3,4,6,.9)}
+dialog.lb img{display:block;max-width:min(96vw,1800px);max-height:calc(94vh - 52px);width:auto;height:auto}
+dialog.lb .bar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:8px 8px 8px 14px;font-family:var(--ui);font-size:.85rem;color:var(--ink-soft)}
+dialog.lb .bar span{min-width:0}
+
+@media (max-width:640px){
+  body{font-size:1.0625rem}
+  .brand span{display:none}
+  .btn{padding:0 12px;font-size:.85rem;min-height:38px}
+  .pipeline li{grid-template-columns:2.3rem minmax(0,1fr);padding:12px 14px 12px 12px}
+  .pipeline li::before{width:1.9rem;height:1.9rem;font-size:.95rem}
+  .pipeline li:not(:last-child)::after{left:calc(12px + .95rem);top:calc(12px + 1.9rem)}
+  .pipeline .cost{grid-column:2;justify-self:start;margin-top:4px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="#"><img src="../../public/images/d20.jpg" alt="" width="36" height="36"><span>D20 Adventures</span></a>
+  <nav class="auth" aria-label="Account">
+    <a class="btn btn-blue" href="#">Sign In</a>
+    <a class="btn btn-blue" href="#">Sign Up</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <a class="back" href="#">Updates</a>
+    <h1>From 2D Art to Rigged Animated 3D Figures</h1>
+    <p class="dek">How I turned painted character cards into rigged, animated 3D figures for about $2.30 each, with the prompts, the tools and everything that went wrong.</p>
+    <div class="meta">
+      <span>By <strong>John Polacek</strong></span><span class="sep" aria-hidden="true"></span>
+      <time datetime="2026-11-21">November 21, 2026</time><span class="sep" aria-hidden="true"></span>
+      <span>9 Min Read</span><span class="sep" aria-hidden="true"></span>
+      <a href="#">Download as Markdown</a>
+    </div>
+  </div>
+
+  <div class="layout">
+    <article class="prose" id="prose">
+      <section id="intro" data-stage="video" data-title="Gameplay">
+        <p class="lead">Until this week, characters in <a href="https://d20adventures.com">The Midnight Summons</a> and other adventures were flat painted standee art. </p>
+        <figure class="media staged" id="video" data-caption="D20 Adventures gameplay with the new 3D figures">
+          <div class="video"><iframe src="https://www.youtube-nocookie.com/embed/kOnKwsX0O0U" title="D20 Adventures gameplay with the new 3D figures" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+          <figcaption>D20 Adventures gameplay with the new 3D figures</figcaption>
+        </figure>
+        <p>I researched what other people were doing, experimented myself and now I'm writing up the whole pipeline that I landed on. Everything here is in the <a href="https://github.com/johnpolacek/d20adventures.com">repo on Github</a>, and the full notes are in <a href="https://github.com/johnpolacek/d20adventures.com/blob/main/asset-library/README.md">asset-library/README.md</a>. Steal whatever is useful. Or by all means, tell me how I can do it better.</p>
+      </section>
+
+      <section id="short-version" data-stage="stats" data-title="The Short Version">
+        <h2><span class="num">01</span>The Short Version</h2>
+        <p>A figure now costs $2.30 and about fifteen minutes, most of it waiting:</p>
+        <ol class="pipeline">
+          <li><span class="what">Write a short brief for the character.</span><span class="cost">Free</span></li>
+          <li><span class="what">Have an image model paint a pose sheet, front and back.</span><span class="cost">Free</span></li>
+          <li><span class="what">Find the joints on the sheet with <a href="https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker">MediaPipe</a>.</span><span class="cost">Free</span></li>
+          <li class="paid"><span class="what">Send the front and back to <a href="https://fal.ai/models/hitem3d/hi3d/v3.0/multi-view-to-3d">Hi3D v3.0 on fal</a> for the model.</span><span class="cost">$2.10</span></li>
+          <li class="paid"><span class="what">Rig it with <a href="https://hyper3d.ai">Hyper3D</a> to a human skeleton with fingers.</span><span class="cost">$0.20</span></li>
+          <li><span class="what">Copy free animation clips onto it from <a href="https://quaternius.com">Quaternius</a> and <a href="https://mesh2motion.org">Mesh2Motion</a>.</span><span class="cost">Free</span></li>
+          <li><span class="what">Clean it up in headless Blender, make three detail levels, and judge it blind.</span><span class="cost">Free</span></li>
+          <li class="total" aria-label="Total cost $2.30"><span>Total</span><b>$2.30</b></li>
+        </ol>
+        <p>The only steps that cost money are the model and the rig. Every answer gets saved, so nothing is paid for twice and every later rebuild is free.</p>
+        <figure class="media staged" id="stats" data-caption="A figure now costs $2.30 and about fifteen minutes, most of it waiting.">
+          <div class="stats">
+            <div class="stat wide"><b>$2.30</b><span>Per Figure</span></div>
+            <div class="stat"><b>15 Min</b><span>Mostly Waiting</span></div>
+            <div class="stat"><b>7</b><span>Steps</span></div>
+            <div class="stat"><b>$2.10</b><span>Model, Hi3D</span></div>
+            <div class="stat"><b>$0.20</b><span>Rig, Hyper3D</span></div>
+          </div>
+        </figure>
+      </section>
+
+      <section id="pose-sheet" data-stage="img-pose" data-title="The Pose Sheet Decides Everything">
+        <h2><span class="num">02</span>The Pose Sheet Decides Everything</h2>
+        <p>The 3D generator only knows what the picture shows it. So the most important step is free.</p>
+        <figure class="media staged portrait" id="img-pose">
+          <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/pose-sheet.webp" alt="Thalbern's pose sheet, standing with arms out and hands open on a flat grey background" width="900" height="1200" loading="lazy">
+          <figcaption>Thalbern's pose sheet, standing with arms out and hands open on a flat grey background.</figcaption>
+        </figure>
+        <p>What makes a good sheet: arms held away from the body with background showing between them, hands empty and open, the face lit and in focus, flat grey behind, and a back view of the same person in the same clothes. Anything held in the hands gets fused into the arm, so weapons come off the sheet and the game puts them back in later. If the back view is missing, the generator makes one up. Wollandora's leafy mantle came back as a plain dark cloak.</p>
+        <p>This is the prompt that paints the sheet, with the character's front and back cards attached:</p>
+        <figure class="prompt" aria-label="Pose Sheet Prompt">
+          <header><span class="label">Pose Sheet Prompt</span><button type="button" class="copy">Copy</button></header>
+<pre class="body">The attached images are the front and the back of a painted game character: [WHO THEY ARE]. Make one landscape reference sheet of the SAME person as a photorealistic costume photograph, for building a 3D model.
+
+Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles: on the left the front view, on the right the back view from directly behind with no face visible.
+
+Pose, in both views: standing straight, feet a little apart, both arms held out from the body at about 40 degrees with a clear gap of background between each arm and the body, hands open with fingers apart, palms toward the thighs. Nothing in the hands. [WHERE THE WEAPONS GO, FOR EXAMPLE: THE SWORD IS SHEATHED AT THE HIP AND THE BOW IS LEFT OUT.] Neutral face, mouth closed, looking straight ahead.
+
+Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.
+
+Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.</pre>
+        </figure>
+        <p>For a beast like the owlbear, ask for "a photorealistic studio photograph of a living animal" standing on its hind legs, so you don't get a person in a costume.</p>
+      </section>
+
+      <section id="generators" data-stage="img-rodin" data-title="Trying Every Generator">
+        <h2><span class="num">03</span>Trying Every Generator</h2>
+        <p>I didn't know which generator to use, so I tried a bunch of them on Thalbern. Tripo H3.1 first, then Rodin Gen-2.5, then Rodin's model rigged by Meshy with Meshy's own moves, then Hyper3D's shell skinning (which was far worse), and finally Hi3D.</p>
+        <p>To keep myself honest, every round gets judged blind. A fresh agent is shown the character's card, the pose sheet and the same fifteen pictures of the figure each time, and told nothing about what changed. Judges differ by about a point, so a one point gain is noise. What the judge is really good for is a list of faults by name, which tells you what to fix next.</p>
+        <figure class="prompt" aria-label="Blind Judge Prompt">
+          <header><span class="label">Blind Judge Prompt</span><button type="button" class="copy">Copy</button></header>
+<pre class="body">You are judging a 3D game character against its target. Attached are the target (the character's card and the pose sheet the model was made from) and fifteen pictures of the figure: face close-ups, front, back, three-quarter views and two action poses. You have not seen any earlier version. Do not guess what changed.
+
+Score each from 0 to 2, in halves, for a total out of 10:
+- Likeness: 0 another person or outfit, 1 the same person with clear differences, 2 the person on the card.
+- Face: 0 waxy, smeared, doubled or dead-eyed, 1 a face with faults a player would notice, 2 holds up in a close-up.
+- Build and hands: 0 misshapen, 1 a person with faults a player would notice, 2 right from every side.
+- Materials: 0 clay, plastic or blur, 1 the right kind of surface with flaws, 2 reads as leather, cloth, metal, skin and hair.
+- Poses: 0 broken, 1 reads as the move with visible faults, 2 clean.
+
+Benchmark: a character in a shipping fantasy RPG seen from the same distance. Then list every fault you see, worst first, each with where it is on the figure.</pre>
+        </figure>
+        <figure class="media staged" id="img-rodin">
+          <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/rodin-vs-hi3d-2.webp" alt="Thalbern's face and chest three ways: Rodin as shipped, Hi3D as made, and Hi3D with the gloss turned down and his face painted on" width="1600" height="1108" loading="lazy">
+          <figcaption>Thalbern's face and chest three ways: Rodin as shipped, Hi3D as made, and Hi3D with the gloss turned down and his face painted on.</figcaption>
+        </figure>
+        <p>Rodin scored a 4. Hi3D as it came also scored a 4, but for different reasons. Its outfit and gear match the sheet much more closely, and the studs, buckles and straps are actual things instead of melted lumps. Two free fixes got it to a 5:</p>
+        <ul class="list">
+          <li>Turn the gloss down on anything that isn't metal. Hi3D's leather looked wet.</li>
+          <li>Paint the pose sheet's face back onto the model. Generators repaint the face from memory and it comes back softer.</li>
+        </ul>
+        <p>For the face, the build crops the head off the sheet, makes it bigger and sharper, then lays those pixels back onto the front of the model's head and fades them out toward the ears:</p>
+        <figure class="prompt" aria-label="Face Upscale Prompt">
+          <header><span class="label">Face Upscale Prompt</span><button type="button" class="copy">Copy</button></header>
+<pre class="body">The attached image is a small, soft crop of a studio photograph: one person's head, seen from directly in front on a grey background. Make one square image that is the SAME photograph of the SAME head at far higher resolution, as if the original had been taken with a much better camera.
+
+Keep everything where it is: the same framing and crop, the head the same size and in the same place, the same face, expression, eyes, brows, nose, mouth, ears, hair and whatever is worn in the hair, the same soft even light, the same grey background. Change no proportion and move no feature.
+
+Add only what a sharper photograph would show: skin texture and pores, freckles, eyelashes, the detail of the irises with a small catch light, the lines of the lips, single hairs. Natural skin, not retouched, not shiny. Mouth closed. No text.</pre>
+        </figure>
+        <p>One catch: if the model's nose sits a few millimetres away from the sheet's, you get two noses. The build finds the tip of the model's nose and moves the paint to match.</p>
+        <p>Every judge put the eyes and the hair in its worst three, on both models. Neither generator makes eyes that hold up in a close-up yet.</p>
+      </section>
+
+      <section id="hands" data-stage="img-hands" data-title="Hands Are the Hard Part">
+        <h2><span class="num">04</span>Hands Are the Hard Part</h2>
+        <p>Generated hands come out stubby or garbled, and a hand that holds something is worse. At one point I typed "why are you stuck on this?!"</p>
+        <p>Wollandora carries a staff on her card. The trick that finally gave her real fingers around it was weird. The pose sheet paints her hand closed around a short rod in flat pure blue (#0000ff), a color nothing else on the figure is. The generator models real fingers and a thumb around it, the rig cuts out everything blue, and the staff goes through the hole. It worked, but the figures in the game now go a simpler way. The game puts the staff, sword and bow in their hands.</p>
+        <p>The other hand matters too. The build lays the fingers around a grip, hangs the empty hand at ease, and never lets an elbow go straight.</p>
+        <figure class="media staged portrait" id="img-hands">
+          <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/hands.webp" alt="A dwarf fighter's hands before and after the hand fix" width="1000" height="1200" loading="lazy">
+          <figcaption>A dwarf fighter's hands before and after the hand fix.</figcaption>
+        </figure>
+      </section>
+
+      <section id="moves" data-stage="img-sword" data-title="Borrowed Moves">
+        <h2><span class="num">05</span>Borrowed Moves</h2>
+        <p>The clips are borrowed from free libraries and copied onto each figure's own skeleton. That mostly works, but a clip made for one body does strange things on another. Arms go through faces and shoulders flatten. So the build gives the shoulder and the forearm an extra bone each to share the twist, and for the bow shot and the sword cut it solves the arms to points instead of trusting the clip.</p>
+        <p>The <a href="https://d20adventures.com/settings/realm-of-myr/assets?id=thalbern&amp;clip=Swing">sword cut</a> was its own saga. I tried eight different cuts and had them ranked blind. The new swing was lame, and so was the new thrust. The one in the game now just stops where the blow lands instead of finishing in a crouch with the blade in the floor.</p>
+        <figure class="media staged" id="img-sword">
+          <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/sword-cuts.webp" alt="Three of the eight sword cuts tried on Thalbern, frame by frame" width="1600" height="883" loading="lazy">
+          <figcaption>Three of the eight sword cuts tried on Thalbern, frame by frame.</figcaption>
+        </figure>
+      </section>
+
+      <section id="library" data-stage="img-library" data-title="The Asset Library">
+        <h2><span class="num">06</span>The Asset Library</h2>
+        <p>All of this lives in the <a href="https://d20adventures.com/settings/realm-of-myr/assets">asset library</a>, and it's live. It has over 150 characters and 34 places from the Realm of Myr. Click a character with a figure and you can turn it around, play its clips and step through them a frame at a time. Places are built right in your browser, and you can fly the camera around with W A S D. Here's <a href="https://d20adventures.com/settings/realm-of-myr/assets?env=valkarr-forest-trail&amp;scene=the-midnight-summons/owlbear-confrontation&amp;view=stage">the owlbear fight in the Valkarr woods</a>.</p>
+        <figure class="media staged" id="img-library">
+          <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/library.webp" alt="The asset library's character tab, with the party and the other characters made in 3D" width="1600" height="772" loading="lazy">
+          <figcaption>The asset library's character tab, with the party and the other characters made in 3D.</figcaption>
+        </figure>
+        <p data-stage="img-versions" data-title="The Asset Library">With so many tries it got hard to tell which figure was the real one. Thalbern alone had eight. So each character gets one card, and opening it shows the current version, the earlier ones and the trials, with who made the model, who rigged it and when.</p>
+        <figure class="media staged" id="img-versions">
+          <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/library-versions.webp" alt="Thalbern in the asset library, with his current version, two earlier versions and five trials listed beside the figure" width="1600" height="1035" loading="lazy">
+          <figcaption>Thalbern in the asset library, with his current version, two earlier versions and five trials listed beside the figure.</figcaption>
+        </figure>
+        <p>Since the pipeline worked on Thalbern, the characters for Covert Cargo, the next adventure, are already in the library.</p>
+      </section>
+
+      <section id="try" data-stage="img-cover" data-title="Try It Yourself">
+        <h2><span class="num">07</span>Try It Yourself</h2>
+        <p>I built all of this with Claude Code. If you want to build something like it, hand your coding agent this:</p>
+        <figure class="prompt" aria-label="Build It Prompt">
+          <header><span class="label">Build It Prompt</span><button type="button" class="copy">Copy</button></header>
+<pre class="body">Read asset-library/README.md in https://github.com/johnpolacek/d20adventures.com. It describes a pipeline that turns a painted character card into a rigged, animated 3D figure: a pose sheet from an image model, joints found with MediaPipe, a model from Hi3D v3.0 on fal, a rig from Hyper3D, clips borrowed from free libraries, cleanup in headless Blender, and a blind judge.
+
+Build the smallest version of it for my project. Start with one character and the free steps only: the brief, the pose sheet and the joints. Show me the sheet before anything that costs money runs. Save every paid answer so it is never paid for twice.</pre>
+        </figure>
+        <p>And if you just want to look around the code:</p>
+        <figure class="prompt" aria-label="Code Tour Prompt">
+          <header><span class="label">Code Tour Prompt</span><button type="button" class="copy">Copy</button></header>
+<pre class="body">Clone https://github.com/johnpolacek/d20adventures.com and walk me through how asset-library/pipeline/build.ts and pilot.ts make a 3D figure, step by step, with what each step costs.</pre>
+        </figure>
+        <p>Other stuff that landed this week:</p>
+        <ul class="list">
+          <li>Sound, with combat cues and night ambience in the Valkarr woods.</li>
+          <li>Hiding. Slip into thick growth and watch the owlbear come out.</li>
+          <li>A ring on the ground marks whose turn it is.</li>
+          <li>Speech is painted into the scene instead of sitting in bubbles.</li>
+          <li>Narration is set in Literata, with drop caps.</li>
+        </ul>
+        <figure class="media staged" id="img-cover">
+          <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/gameplay-11-21.webp" alt="D20 Adventures gameplay with the new 3D figures" width="1600" height="1027" loading="lazy">
+          <figcaption>The Midnight Summons, with the new 3D figures.</figcaption>
+        </figure>
+        <div class="closing">
+          <p>The whole thing is open source on <a href="https://github.com/johnpolacek/d20adventures.com">Github</a>.</p>
+          <p>Want to run a game on your own Mac and help shape it? <a href="/playtest">Become a playtester</a>.</p>
+          <div class="cta-row"><a class="btn btn-blue btn-play" href="https://d20adventures.com">Play The Midnight Summons</a></div>
+        </div>
+        <div class="endbar"><a class="back" href="#">Updates</a><a href="#">Download as Markdown</a></div>
+      </section>
+    </article>
+
+    <aside class="stage-col" aria-label="Stage">
+      <div class="case">
+        <div class="glass" id="glass"></div>
+        <div class="plate">
+          <div class="sec" id="stage-sec"></div>
+          <div class="cap" id="stage-cap" aria-live="polite"></div>
+          <div class="tools">
+            <span class="count" id="stage-count"></span>
+            <div class="dots" id="stage-dots"></div>
+            <button type="button" class="zoom" id="stage-zoom">View Larger</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<dialog class="lb" id="lb" aria-label="Image Viewer">
+    <div class="bar"><span id="lb-cap"></span><button type="button" class="zoom" id="lb-close">Close</button></div>
+</dialog>
+
+<footer class="site-footer">
+  <span>&copy; 2026 D20 Adventures</span>
+  <nav aria-label="Footer"><a href="#">Updates</a><a href="#">Privacy</a><a href="#">Terms</a><a href="https://github.com/johnpolacek/d20adventures.com">Github</a></nav>
+</footer>
+
+<script>
+(function(){
+  // Prompt cards: slots, copy, collapse
+  document.querySelectorAll('.prompt').forEach(function(card){
+    var body = card.querySelector('.body'), raw = body.textContent;
+    body.innerHTML = raw.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})
+      .replace(/\[[A-Z][^\]]*\]/g,'<span class="slot">$&</span>');
+    card.querySelector('.copy').addEventListener('click',function(){
+      var b=this; navigator.clipboard.writeText(raw).then(function(){
+        b.textContent='Copied'; b.setAttribute('data-done','');
+        setTimeout(function(){b.textContent='Copy';b.removeAttribute('data-done')},1800);
+      },function(){b.textContent='Copy Failed'});
+    });
+    if (raw.length > 420){
+      card.classList.add('collapsible');
+      var m=document.createElement('button'); m.type='button'; m.className='more';
+      m.textContent='Show Full Prompt'; m.setAttribute('aria-expanded','false');
+      m.addEventListener('click',function(){
+        var open=card.classList.toggle('open');
+        m.textContent=open?'Show Less':'Show Full Prompt'; m.setAttribute('aria-expanded',String(open));
+      });
+      card.appendChild(m);
+    }
+  });
+
+  // Lightbox
+  var lb=document.getElementById('lb'), lbImg=document.createElement('img'), lbCap=document.getElementById('lb-cap'), opener=null;
+  function openLb(img){
+    if(!lb.showModal) return;
+    if(!lbImg.parentNode) lb.insertBefore(lbImg,lb.firstChild);
+    opener=document.activeElement; lbImg.src=img.currentSrc||img.src; lbImg.alt=img.alt; lbCap.textContent=img.alt;
+    lb.showModal(); document.getElementById('lb-close').focus();
+  }
+  document.getElementById('lb-close').addEventListener('click',function(){lb.close()});
+  lb.addEventListener('click',function(e){if(e.target===lb)lb.close()});
+  lb.addEventListener('close',function(){if(opener&&opener.focus)opener.focus()});
+
+  // Stage
+  var mq=matchMedia('(min-width:1024px)');
+  if(!('IntersectionObserver' in window)) return;
+  var root=document.documentElement, glass=document.getElementById('glass'),
+      secEl=document.getElementById('stage-sec'), capEl=document.getElementById('stage-cap'),
+      countEl=document.getElementById('stage-count'), dotsEl=document.getElementById('stage-dots'),
+      zoom=document.getElementById('stage-zoom');
+  var triggers=[].slice.call(document.querySelectorAll('#prose [data-stage]'));
+  var sections=[].slice.call(document.querySelectorAll('#prose > section'));
+  var figs=[].slice.call(document.querySelectorAll('#prose .media.staged'));
+  var slides={}, homes={}, current=null, built=false;
+
+  figs.forEach(function(f){
+    var s=document.createElement('div'); s.className='slide'; s.setAttribute('aria-hidden','true'); slides[f.id]=s;
+    var mark=document.createComment('stage:'+f.id); f.parentNode.insertBefore(mark,f); homes[f.id]=mark;
+  });
+
+  // Dots: one per trigger, with a gap between sections
+  triggers.forEach(function(t,i){
+    var sec=t.closest('section'), prevSec=i?triggers[i-1].closest('section'):null;
+    if(i && sec!==prevSec){var g=document.createElement('span');g.className='gap';dotsEl.appendChild(g)}
+    var d=document.createElement('button'); d.type='button';
+    d.setAttribute('aria-label',(t.dataset.title||'')+(sec===prevSec?' 2':''));
+    d.addEventListener('click',function(){t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'})});
+    dotsEl.appendChild(d); t._dot=d;
+  });
+
+  function mount(on){
+    figs.forEach(function(f){
+      if(on){ slides[f.id].appendChild(f); glass.appendChild(slides[f.id]); }
+      else { homes[f.id].parentNode.insertBefore(f,homes[f.id].nextSibling); }
+    });
+    root.classList.toggle('stage-on',on); built=on; current=null;
+    if(on) update();
+  }
+
+  function captionOf(f){ var c=f.querySelector('figcaption'); return f.dataset.caption||(c?c.textContent:''); }
+
+  function show(t){
+    if(t===current) return; current=t;
+    var id=t.dataset.stage, f=document.getElementById(id);
+    Object.keys(slides).forEach(function(k){ var on=k===id; slides[k].classList.toggle('on',on); slides[k].setAttribute('aria-hidden',String(!on)); });
+    secEl.textContent=t.dataset.title||''; capEl.textContent=captionOf(f);
+    var idx=sections.indexOf(t.closest('section'));
+    countEl.textContent=String(idx+1).padStart(2,'0')+' / '+String(sections.length).padStart(2,'0');
+    triggers.forEach(function(x){x._dot.setAttribute('aria-current',String(x===t))});
+    zoom.hidden=!f.querySelector('img');
+  }
+
+  function update(){
+    if(!built) return;
+    var line=innerHeight*0.55, pick=triggers[0];
+    for(var i=0;i<triggers.length;i++){ if(triggers[i].getBoundingClientRect().top<line) pick=triggers[i]; }
+    show(pick);
+  }
+
+  var thresholds=[]; for(var i=0;i<=20;i++) thresholds.push(i/20);
+  var io=new IntersectionObserver(update,{rootMargin:'0px 0px -45% 0px',threshold:thresholds});
+  triggers.forEach(function(t){io.observe(t)});
+
+  glass.addEventListener('click',function(e){ if(e.target.tagName==='IMG') openLb(e.target); });
+  zoom.addEventListener('click',function(){ var img=glass.querySelector('.slide.on img'); if(img) openLb(img); });
+
+  mount(mq.matches);
+  mq.addEventListener('change',function(e){ mount(e.matches); });
+})();
+</script>
+</body>
+</html>
