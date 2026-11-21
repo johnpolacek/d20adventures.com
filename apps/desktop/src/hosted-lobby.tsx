@@ -304,6 +304,8 @@ export function HostedLobby(props: {
   const playsOf = (id: string) => plays[id] ?? (unchosen?.[0]?.id === id ? "you" : "ai")
   const ais = unchosen?.filter((h) => playsOf(h.id) === "ai").map((h) => h.id)
   const nobody = Boolean(unchosen?.length && ais?.length === unchosen.length && guests.length === 0)
+  // Why Start waits, said beside it.
+  const waitsFor = nobody ? "Someone must play a hero." : props.summary.watching && guests.length === 0 ? "Waiting for a guest to join." : null
   // Links, requests and people at the table come in one after another, and one taken or gone is seen to go.
   const seatRows = useLeaving(seats, (seat) => seat.id)
   const requestRows = useLeaving(requests, (r) => `${r.userId}:${r.characterId ?? r.name}`)
@@ -385,10 +387,13 @@ export function HostedLobby(props: {
         <div className="mt-8 flex items-center gap-3">
           <span className="font-mono text-xs text-white/60">{props.gm}</span>
           <div className="flex-1" />
+          <Presence show={Boolean(waitsFor)} motion="fade" initial={false} asChild>
+            <span className="text-sm text-white/70">{waitsFor}</span>
+          </Presence>
           <Button variant="outline" onClick={props.onHome}>
             Home
           </Button>
-          <Button variant="epic" className="text-xl" disabled={props.busy || nobody || (props.summary.watching && guests.length === 0)} onClick={() => props.onStart(ais)}>
+          <Button variant="epic" className="text-xl" disabled={props.busy || Boolean(waitsFor)} onClick={() => props.onStart(ais)}>
             Start
           </Button>
         </div>

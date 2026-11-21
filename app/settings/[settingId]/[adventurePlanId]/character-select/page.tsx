@@ -29,8 +29,9 @@ export default async function CharacterSelectPage({ params }: PageProps) {
     adventurePlan = isLocalWikiAdventure(settingId, adventurePlanId)
       ? await loadWikiAdventurePlanView(settingId, adventurePlanId)
       : ((await readJsonFromS3(`settings/${settingId}/${adventurePlanId}.json`)) as AdventurePlan)
-  } catch {
-    return <div>Error loading adventure data.</div>
+  } catch (err) {
+    console.error("[CharacterSelectPage] Error loading adventure:", err)
+    throw err
   }
   const adventureImage = getImageUrl(adventurePlan.image)
 

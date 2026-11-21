@@ -21,7 +21,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
     setting = await getCachedSetting(settingId)
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
-    return <div>Error loading setting data.</div>
+    throw err
   }
 
   // Wiki-backed settings list their compiled adventures, others the legacy S3 AdventurePlan JSON.

@@ -19,7 +19,7 @@ export default async function SettingEditPage(props: { params: Promise<{ setting
     setting = (await readJsonFromS3(key)) as Setting
   } catch (err) {
     console.error("[SettingEditPage] Error fetching JSON from S3:", err)
-    return <div>Error loading setting data.</div>
+    throw err
   }
 
   if (!setting) {

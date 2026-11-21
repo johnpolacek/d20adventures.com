@@ -64,7 +64,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     adventurePlan = isLocalWikiAdventure(settingId, adventurePlanId) ? await loadWikiAdventurePlanView(settingId, adventurePlanId) : await loadAdventurePlanFromStorage(settingId, adventurePlanId)
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
-    return <div>Error loading adventure data.</div>
+    throw err
   }
 
   // An adventure that is not published has no public page, so it goes straight to character selection.

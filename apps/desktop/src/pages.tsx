@@ -564,10 +564,11 @@ export function CharactersPage(props: {
   return (
     <PageShell title="Characters">
       {props.onCreate && (
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-3">
           <Button variant="epic" disabled={props.busy || !props.canCreate} onClick={props.onCreate}>
             Create New Character
           </Button>
+          {!props.canCreate && <p className="text-sm text-white/70">Install and sign in to Claude Code, Codex, Grok, or Antigravity.</p>}
         </div>
       )}
       {rows.length > 0 && (

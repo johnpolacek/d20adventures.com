@@ -110,6 +110,15 @@ export function HeroCreator(props: {
   const setArrival = (key: keyof Arrival, value: string) => {
     if (props.adventure && arrival && hero) setHero({ ...hero, arrivals: { ...hero.arrivals, [props.adventure.id]: { ...arrival, [key]: value } } })
   }
+  // What Save Hero still waits on, said beside it.
+  const arrivalLabels: Record<string, string> = { intro: "Arrival", reason: "Why They Came", tell: "What Others Notice" }
+  const missing = hero
+    ? [
+        !hero.name.trim() && "Name",
+        !hero.appearance.trim() && "Appearance",
+        ...(arrival ? Object.entries(arrival).map(([key, value]) => !String(value).trim() && (arrivalLabels[key] ?? key)) : []),
+      ].filter((label): label is string => Boolean(label))
+    : []
   const title = step === "pick" ? "New Hero" : step === "rules" ? "Rules" : "Review Hero"
 
   return (
@@ -301,6 +310,9 @@ export function HeroCreator(props: {
                 <Presence show={props.busy} motion="fade" asChild>
                   <span className="text-sm text-white/70 italic">Saving…</span>
                 </Presence>
+                <Presence show={!props.busy && missing.length > 0} motion="fade" initial={false} asChild>
+                  <p className="mr-auto text-sm text-white/70">Still to fill in: {missing.join(", ")}.</p>
+                </Presence>
                 {!props.editing && (
                   <Button variant="outline" disabled={props.busy} onClick={() => go("rules")}>
                     Back
@@ -309,7 +321,7 @@ export function HeroCreator(props: {
                 <Button
                   variant="epic"
                   className="text-lg"
-                  disabled={props.busy || !hero.name.trim() || !hero.appearance.trim() || (arrival && Object.values(arrival).some((v) => !v.trim()))}
+                  disabled={props.busy || missing.length > 0}
                   onClick={() => void props.onSave(hero, !props.editing && pick && choices ? { pick, choices } : undefined)}
                 >
                   Save Hero

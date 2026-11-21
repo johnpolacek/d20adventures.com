@@ -15,7 +15,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
     setting = await getCachedSetting(settingId)
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
-    return <div>Error loading setting data.</div>
+    throw err
   }
 
   const canEdit = isDev()
