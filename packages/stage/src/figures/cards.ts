@@ -1,6 +1,7 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskCommon } from "../render/character-mask"
+import { served } from "../served"
 import type { PawnKind } from "./pawns"
 
 // Illustrated crowd cards. One InstancedMesh draws every card: a unit quad whose vertex shader yaws it toward the camera
@@ -201,8 +202,9 @@ function cardDepthMaterial(uniforms: CardUniforms, N: number) {
   return d
 }
 
-const loadImage = (src: string) =>
+const loadImage = (path: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
+    const src = served(path)
     const i = new Image()
     if (/^https?:/.test(src)) i.crossOrigin = "anonymous"
     i.onload = () => resolve(i)

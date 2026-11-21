@@ -17,6 +17,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { figureClips, isRigged, MOVE_NAMES } from "../clips"
+import { served } from "@d20/stage/served"
 import { holdProps } from "../props"
 import { hasIso } from "../scene"
 import type { Character, Figure, Library, Picture, Place } from "../types"
@@ -220,7 +221,7 @@ function FigureRoom({ figure, address, params }: { figure: Figure; address: { id
     let stale = false
     setLoading(true)
     new GLTFLoader()
-      .loadAsync(`${config.files}/${figure.id}/${file}`)
+      .loadAsync(served(`${config.files}/${figure.id}/${file}`))
       .then((gltf) => {
         if (stale) return discard(gltf.scene)
         const at = r.action?.time ?? holding.current ?? 0

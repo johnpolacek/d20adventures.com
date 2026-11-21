@@ -1,12 +1,16 @@
 "use client"
 
 import { ClerkProvider } from "@clerk/nextjs"
+import { serveFrom } from "@d20/stage/served"
 import { dark } from "@clerk/themes"
 import { ConvexProvider, ConvexReactClient } from "convex/react"
 import type { PropsWithChildren } from "react"
 import { TokenProvider } from "@/lib/context/TokenContext"
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+
+// With a host named, a visitor's browser fetches the stage's art from the bucket's own address, not through this deploy.
+if (process.env.NEXT_PUBLIC_ASSET_HOST) serveFrom(process.env.NEXT_PUBLIC_ASSET_HOST)
 
 export function Providers({ children }: PropsWithChildren) {
   return (

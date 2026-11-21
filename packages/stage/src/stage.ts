@@ -25,6 +25,7 @@ import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { figurePoints, type Lens, roomAt, type Seen, type Sight, viewCost } from "./spec/sight"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
+import { served } from "./served"
 import { clearView, type ViewCost } from "./spec/view"
 import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
 import { Floor } from "./surface"
@@ -78,7 +79,7 @@ type Events = { line: StageLine; cue: string }
 
 export async function defaultCrowdLibrary(id: string): Promise<CrowdLibrary | null> {
   const base = `/stage/crowd/${id}`
-  const res = await fetch(`${base}/atlas.json`)
+  const res = await fetch(served(`${base}/atlas.json`))
   if (!res.ok) return null
   const meta = (await res.json()) as CrowdLibraryMeta
   return { meta, front: { rgb: `${base}/front-rgb.webp`, alpha: `${base}/front-a.webp` }, back: { rgb: `${base}/back-rgb.webp`, alpha: `${base}/back-a.webp` } }
@@ -89,7 +90,7 @@ export async function defaultCrowdLibrary(id: string): Promise<CrowdLibrary | nu
 // publish). Art from elsewhere, such as a hero painted on the player's machine, stays as it is.
 async function photographs(staging: StagingSpec) {
   const listed = new Set<string>(
-    await fetch("/stage/photoreal.json")
+    await fetch(served("/stage/photoreal.json"))
       .then((r) => (r.ok ? r.json() : []))
       .catch(() => [])
   )
@@ -102,6 +103,8 @@ async function photographs(staging: StagingSpec) {
 }
 
 export async function createStage(o: StageOptions): Promise<Stage> {
+  // Every file three.js loads, a painting, a texture or a model, is fetched from where the stage's files are served.
+  THREE.DefaultLoadingManager.setURLModifier(served)
   const parsed = setSpecSchema.parse(o.set)
   const staging = o.staging ? stagingSpecSchema.parse(o.staging) : null
   const set = staging && !staging.painted ? { ...parsed, painted: undefined } : parsed

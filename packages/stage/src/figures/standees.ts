@@ -1,6 +1,7 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
+import { served } from "../served"
 import type { FigureSpec } from "./models"
 
 // Named characters (PCs and staged NPCs) as world-style standees: a painted card with front and back art, lit through a
@@ -283,8 +284,9 @@ function turnRing() {
   return ring
 }
 
-const loadImage = (src: string) =>
+const loadImage = (path: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
+    const src = served(path)
     const i = new Image()
     if (/^https?:/.test(src)) i.crossOrigin = "anonymous"
     i.onload = () => resolve(i)

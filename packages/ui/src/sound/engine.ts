@@ -1,5 +1,6 @@
 "use client"
 
+import { served } from "@d20/stage/served"
 import { onSoundSetting, soundOn } from "./settings"
 
 // One AudioContext for every game sound, and a bus for each kind so each has its own level. Quiet by design: the
@@ -77,7 +78,7 @@ const buffers = new Map<string, Promise<AudioBuffer>>()
 export function load(c: AudioContext, url: string) {
   let b = buffers.get(url)
   if (!b) {
-    b = fetch(url)
+    b = fetch(served(url))
       .then((r) => {
         if (!r.ok) throw new Error(`${url}: ${r.status}`)
         return r.arrayBuffer()
