@@ -1,9 +1,8 @@
 ---
 title: "From 2D Art to Rigged Animated 3D Figures"
-date: 2026-11-20
+date: 2026-11-21
 description: "How I turned painted character cards into rigged, animated 3D figures for about $2.30 each, with the prompts, the tools and everything that went wrong."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage-3d.webp"
-draft: true
 ---
 
 Until this week, characters in [The Midnight Summons](https://d20adventures.com) and other adventures were flat painted standee art. 

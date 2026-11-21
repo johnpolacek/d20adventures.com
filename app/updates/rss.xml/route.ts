@@ -1,6 +1,8 @@
 import { getPosts } from "@/lib/updates"
 
 export const dynamic = "force-static"
+// Rebuilt at most hourly, so a post dated today appears within the hour of midnight, Chicago time, with no deploy.
+export const revalidate = 3600
 
 const SITE = "https://d20adventures.com"
 

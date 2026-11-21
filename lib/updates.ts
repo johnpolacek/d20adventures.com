@@ -43,8 +43,10 @@ async function readPost(file: string): Promise<Update> {
 export async function getPosts(): Promise<Update[]> {
   const files = (await readdir(UPDATES_DIR)).filter((file) => file.endsWith(".md"))
   const posts = await Promise.all(files.map(readPost))
-  const showDrafts = process.env.NODE_ENV === "development"
-  return posts.filter((post) => showDrafts || !post.draft).sort((a, b) => b.date.localeCompare(a.date))
+  // In development every post shows. On the site a post shows from its date, Chicago time, unless it is a draft.
+  const showAll = process.env.NODE_ENV === "development"
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" })
+  return posts.filter((post) => showAll || (!post.draft && post.date <= today)).sort((a, b) => b.date.localeCompare(a.date))
 }
 
 export async function getPost(slug: string): Promise<Update | undefined> {

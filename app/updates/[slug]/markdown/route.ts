@@ -1,7 +1,9 @@
 import { getPost, getPosts, postMarkdown } from "@/lib/updates"
 
 export const dynamic = "force-static"
-export const dynamicParams = false
+// Rebuilt at most hourly, so a post dated today appears within the hour of midnight, Chicago time, with no deploy.
+export const revalidate = 3600
+export const dynamicParams = true
 
 export async function generateStaticParams() {
   return (await getPosts()).map((post) => ({ slug: post.slug }))

@@ -4,6 +4,9 @@ import Image from "@d20/ui/native-image"
 import { PlainPage, plainCard } from "@/components/layout/plain-page"
 import { formatPostDate, getPosts } from "@/lib/updates"
 
+// Rebuilt at most hourly, so a post dated today appears within the hour of midnight, Chicago time, with no deploy.
+export const revalidate = 3600
+
 export const metadata: Metadata = {
   title: "Updates | D20 Adventures",
   description: "What's new in D20 Adventures.",

@@ -5,7 +5,9 @@ import { PlainPage, plainProse } from "@/components/layout/plain-page"
 import { PostBody } from "@/components/updates/post-body"
 import { formatPostDate, getPost, getPosts, renderPost } from "@/lib/updates"
 
-export const dynamicParams = false
+// Rebuilt at most hourly, so a post dated today appears within the hour of midnight, Chicago time, with no deploy.
+export const revalidate = 3600
+export const dynamicParams = true
 
 export async function generateStaticParams() {
   return (await getPosts()).map((post) => ({ slug: post.slug }))
