@@ -45,7 +45,10 @@ export default async function PlaytestPage() {
           </header>
 
           <div className="space-y-8 px-6 pt-8 pb-10 sm:px-10 lg:px-14">
-            <CopyBlock label="Prompt" text={setupPrompt} />
+            <section>
+              <h2 className="font-display text-xl text-indigo-300">Host a Game</h2>
+              <CopyBlock label="Prompt" text={setupPrompt} className="mt-4" />
+            </section>
 
             <div className="flex items-center gap-4">
               <div className={hairline} />
