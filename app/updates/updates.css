@@ -1,0 +1,702 @@
+/*
+ * The Updates pages are for reading, so they leave the site's dark stage for quiet parchment: a pale page with a
+ * faint grain, warm ink, and the header as a washed strip of its own parchment. They come in a light and a dark look,
+ * set by `data-update-theme` on <html> (lib/update-theme.ts) and switched in the header.
+ *
+ * Everything here applies only while an Updates page is up: the page's own rules sit under `.updates-page`, and the
+ * rules for the shared header, footer and body under `body:has(.updates-page)`.
+ */
+
+body:has(.updates-page) {
+  --up-bg: #fbf7ee;
+  --up-raise: #f2ebda;
+  --up-code: #f7f2e5;
+  --up-bar: #f6f0e2;
+  --up-bar-line: #e2d7bf;
+  --up-line: #e2d7bf;
+  --up-line-strong: #cdbfa3;
+  --up-text: #3a2f24;
+  --up-strong: #22180f;
+  --up-muted: #65553f;
+  --up-faint: #6f5f49;
+  --up-accent: #2b4a7e;
+  --up-accent-strong: #213a65;
+  --up-accent-line: rgb(43 74 126 / 0.42);
+  --up-slot: rgb(43 74 126 / 0.09);
+  --up-slot-text: #233c69;
+  --up-on-accent: #fbf7ee;
+  --up-btn: #fefcf6;
+  --up-grain: 0.22;
+  --up-grain-blend: multiply;
+  --up-glow: none;
+  --up-shadow: 0 1px 2px rgb(58 40 20 / 0.05);
+  --up-ui: var(--font-rethink-sans), system-ui, sans-serif;
+  --up-serif: var(--font-literata), Georgia, serif;
+  --up-col: 68ch;
+
+  background: var(--up-bg);
+  color: var(--up-text);
+  color-scheme: light;
+}
+
+html[data-update-theme="dark"] body:has(.updates-page) {
+  --up-bg: #1c1712;
+  --up-raise: #251f18;
+  --up-code: #211b15;
+  --up-bar: #0f0c09;
+  --up-bar-line: #2c251d;
+  --up-line: #3a3127;
+  --up-line-strong: #52463a;
+  --up-text: #e3d6be;
+  --up-strong: #f3e8d2;
+  --up-muted: #b8a68a;
+  --up-faint: #a69479;
+  --up-accent: #a9bde0;
+  --up-accent-strong: #c3d2ec;
+  --up-accent-line: rgb(169 189 224 / 0.45);
+  --up-slot: rgb(169 189 224 / 0.12);
+  --up-slot-text: #c6d4ee;
+  --up-on-accent: #1c1712;
+  --up-btn: #2a231b;
+  --up-grain: 0.1;
+  --up-grain-blend: screen;
+  --up-glow: radial-gradient(ellipse 70% 520px at 50% 0, rgb(255 184 104 / 0.06), rgb(255 184 104 / 0) 70%);
+  --up-shadow: none;
+  color-scheme: dark;
+}
+
+html:has(.updates-page) {
+  scroll-padding-top: 84px;
+}
+
+/* The page: paper, grain and the reading face. */
+.updates-page {
+  /* The mono face is loaded by the Updates layout, so its name is known only from here down. */
+  --up-mono: var(--font-update-mono), ui-monospace, Menlo, monospace;
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  padding: 64px 0 80px;
+  background: var(--up-bg) var(--up-glow) no-repeat;
+  color: var(--up-text);
+  font-family: var(--up-serif);
+  font-size: 18px;
+  line-height: 1.7;
+  font-optical-sizing: auto;
+}
+.updates-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/images/app/backgrounds/paper-texture.png") 0 0 / 400px 400px repeat;
+  opacity: var(--up-grain);
+  mix-blend-mode: var(--up-grain-blend);
+}
+.updates-page :focus-visible {
+  outline: 2px solid var(--up-accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* The site header, as a washed strip of its parchment. By night it is darker than the page, and its veins show. */
+body:has(.updates-page) [data-site-header] {
+  background: var(--up-bar) !important;
+  filter: none !important;
+  border-bottom: 1px solid var(--up-bar-line);
+}
+body:has(.updates-page) .site-header-parchment {
+  background: none;
+}
+body:has(.updates-page) .site-header-parchment img {
+  opacity: 0.2;
+  object-position: center 30%;
+}
+html[data-update-theme="dark"] body:has(.updates-page) .site-header-parchment img {
+  opacity: 1;
+  filter: brightness(0.56) contrast(3.2) brightness(0.24);
+}
+/* The mark is drawn to multiply onto parchment. On the dark strip it is turned light and screened on. */
+html[data-update-theme="dark"] body:has(.updates-page) [data-site-brand] {
+  filter: invert(1) hue-rotate(180deg);
+  mix-blend-mode: screen;
+}
+body:has(.updates-page) [data-site-header] .text-white\/60 {
+  color: var(--up-muted);
+}
+.up-theme-toggle {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--up-ui);
+  font-size: 14px;
+  color: var(--up-muted);
+  transition: color 120ms;
+}
+.up-theme-toggle:hover {
+  color: var(--up-strong);
+}
+.up-theme-toggle:focus-visible {
+  outline: 2px solid var(--up-accent);
+  outline-offset: 2px;
+}
+.up-when-dark,
+html[data-update-theme="dark"] .up-when-light {
+  display: none;
+}
+html[data-update-theme="dark"] .up-when-dark {
+  display: inline;
+}
+
+/* The site footer, in the page's ink. */
+body:has(.updates-page) main + footer {
+  background: transparent;
+  border-top-color: var(--up-line);
+  color: var(--up-muted);
+  font-family: var(--up-ui);
+}
+
+/* Layout: one reading column, with the contents beside it on a wide window. */
+.up-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.up-main {
+  width: 100%;
+  min-width: 0;
+  max-width: var(--up-col);
+  margin: 0 auto;
+}
+.up-toc {
+  display: none;
+}
+@media (min-width: 1140px) {
+  .up-layout:has(.up-toc) {
+    grid-template-columns: 220px minmax(0, var(--up-col)) 1fr;
+    column-gap: 64px;
+  }
+  .up-layout:has(.up-toc) .up-main {
+    margin: 0;
+  }
+  .up-toc {
+    display: block;
+  }
+  .up-toc-inline {
+    display: none;
+  }
+}
+
+/* Contents */
+.up-toc nav {
+  position: sticky;
+  top: 96px;
+  padding-top: 56px;
+  font-family: var(--up-ui);
+}
+.up-label {
+  margin: 0 0 12px;
+  font-family: var(--up-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--up-faint);
+}
+.up-toc ol {
+  border-left: 1px solid var(--up-line);
+}
+.up-toc li a {
+  display: block;
+  margin-left: -1px;
+  padding: 5px 0 5px 14px;
+  border-left: 1px solid transparent;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--up-muted);
+  transition:
+    color 120ms,
+    border-color 120ms;
+}
+.up-toc li a:hover {
+  color: var(--up-strong);
+}
+.up-toc li a[aria-current="true"] {
+  border-left-color: var(--up-accent);
+  color: var(--up-accent);
+}
+.up-toc-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 24px;
+  font-size: 13px;
+}
+.up-toc-foot a,
+.up-toc-foot button {
+  color: var(--up-muted);
+  text-align: left;
+}
+.up-toc-foot a:hover,
+.up-toc-foot button:hover {
+  color: var(--up-strong);
+}
+.up-toc-inline {
+  margin: 0 0 40px;
+  border: 1px solid var(--up-line);
+  border-radius: 8px;
+  font-family: var(--up-ui);
+}
+.up-toc-inline summary {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--up-strong);
+  cursor: pointer;
+}
+.up-toc-inline ol {
+  padding: 0 16px 14px 36px;
+  list-style: decimal;
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--up-muted);
+}
+.up-toc-inline a:hover {
+  color: var(--up-strong);
+}
+
+/* Title block */
+.up-title-block {
+  margin-bottom: 40px;
+  padding: 56px 0 32px;
+  border-bottom: 1px solid var(--up-line);
+}
+.up-back {
+  display: inline-flex;
+  gap: 6px;
+  font-family: var(--up-ui);
+  font-size: 14px;
+  color: var(--up-muted);
+}
+.up-back:hover {
+  color: var(--up-strong);
+}
+/* The display face has no weight between regular and bold, so the title is the regular, thickened a little. */
+.updates-page h1 {
+  margin: 20px 0 16px;
+  font-family: var(--font-display), var(--up-serif);
+  font-size: clamp(30px, 4.8vw, 44px);
+  font-weight: 400;
+  line-height: 1.22;
+  color: var(--up-strong);
+  -webkit-text-stroke: 0.55px currentColor;
+  text-wrap: balance;
+}
+.up-dek {
+  margin: 0 0 28px;
+  font-size: 20px;
+  line-height: 1.55;
+  color: var(--up-muted);
+}
+.up-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  font-family: var(--up-ui);
+  font-size: 14px;
+  color: var(--up-muted);
+}
+.up-author {
+  font-weight: 600;
+  color: var(--up-strong);
+}
+.up-meta-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.up-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--up-line-strong);
+  border-radius: 6px;
+  font-family: var(--up-ui);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--up-text);
+  transition:
+    color 120ms,
+    border-color 120ms;
+}
+.up-btn:hover {
+  border-color: var(--up-muted);
+  color: var(--up-strong);
+}
+.up-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.up-btn.is-copied {
+  border-color: var(--up-accent-line);
+  color: var(--up-accent);
+}
+@media (max-width: 560px) {
+  .up-meta-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* Body */
+.up-prose p {
+  margin: 0 0 1.25em;
+}
+.up-prose a {
+  color: var(--up-strong);
+  text-decoration: underline;
+  text-decoration-color: var(--up-accent-line);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition:
+    color 120ms,
+    text-decoration-color 120ms;
+}
+.up-prose a:hover {
+  color: var(--up-accent);
+  text-decoration-color: var(--up-accent);
+}
+.up-prose h2 {
+  margin: 2.4em 0 0.7em;
+  font-family: var(--up-serif);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.006em;
+  color: var(--up-strong);
+}
+.up-num {
+  margin-right: 12px;
+  font-family: var(--up-mono);
+  font-size: 14px;
+  font-weight: 400;
+  vertical-align: 3px;
+  color: var(--up-accent);
+}
+.up-prose h3 {
+  margin: 2em 0 0.6em;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--up-strong);
+}
+.up-prose strong {
+  font-weight: 600;
+  color: var(--up-strong);
+}
+.up-prose ul,
+.up-prose ol {
+  margin: 0 0 1.4em;
+  padding-left: 1.2em;
+}
+.up-prose ul {
+  list-style: disc;
+}
+.up-prose ol {
+  list-style: decimal;
+}
+.up-prose li {
+  margin: 0.3em 0;
+  padding-left: 0.2em;
+}
+.up-prose li::marker {
+  color: var(--up-faint);
+}
+.up-prose :not(pre) > code {
+  padding: 1px 5px;
+  border: 1px solid var(--up-line);
+  border-radius: 4px;
+  background: var(--up-raise);
+  font-family: var(--up-mono);
+  font-size: 0.82em;
+}
+.up-prose blockquote {
+  margin: 0 0 1.4em;
+  padding-left: 18px;
+  border-left: 2px solid var(--up-line-strong);
+  color: var(--up-muted);
+}
+.up-prose hr {
+  margin: 2.4em 0;
+  border-top: 1px solid var(--up-line);
+}
+.up-prose iframe {
+  margin: 32px 0 36px;
+}
+.up-prose table {
+  width: 100%;
+  margin: 28px 0 32px;
+  border-collapse: collapse;
+  font-family: var(--up-ui);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.up-prose th,
+.up-prose td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--up-line);
+  text-align: left;
+  vertical-align: top;
+}
+.up-prose thead th {
+  background: var(--up-raise);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--up-faint);
+}
+
+/* Figures: a picture, numbered, with its alt text as the caption. A tall one is held narrower. */
+.up-fig {
+  margin: 36px 0 40px;
+}
+.up-fig img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: var(--up-raise);
+  outline: 1px solid var(--up-line);
+  outline-offset: -1px;
+}
+.up-fig.is-tall img {
+  max-width: 520px;
+}
+.up-fig figcaption {
+  margin-top: 10px;
+  font-family: var(--up-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--up-muted);
+}
+.up-fig-num {
+  margin-right: 8px;
+  font-family: var(--up-mono);
+  font-size: 12px;
+  color: var(--up-faint);
+}
+
+/* Prompt cards: a long one opens folded. */
+.up-prompt {
+  margin: 28px 0 36px;
+  overflow: hidden;
+  border: 1px solid var(--up-line);
+  border-radius: 8px;
+  background: var(--up-code);
+  box-shadow: var(--up-shadow);
+}
+.up-prompt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  border-bottom: 1px solid var(--up-line);
+  background: var(--up-raise);
+  font-family: var(--up-ui);
+}
+.up-prompt-head strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--up-strong);
+}
+.up-prompt-head .up-btn {
+  padding: 6px 10px;
+  background: var(--up-btn);
+  font-size: 12.5px;
+}
+.up-prompt-body {
+  position: relative;
+}
+.up-prompt pre {
+  padding: 16px 18px 18px;
+  font-family: var(--up-mono);
+  font-size: 13.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--up-text);
+}
+.up-prompt pre code {
+  font: inherit;
+}
+.up-prompt.is-long:not(.is-open) pre {
+  max-height: 10.6em;
+  overflow: hidden;
+}
+.up-prompt.is-long:not(.is-open) .up-prompt-body::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 64px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--up-code));
+}
+.up-prompt-more {
+  display: block;
+  width: 100%;
+  padding: 9px;
+  border-top: 1px solid var(--up-line);
+  background: var(--up-code);
+  font-family: var(--up-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--up-muted);
+}
+.up-prompt-more:hover {
+  color: var(--up-strong);
+}
+.up-slot {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--up-slot);
+  color: var(--up-slot-text);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* A Play link is the page's one button. */
+.up-prose a.up-play {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 11px 18px;
+  border-radius: 7px;
+  background: var(--up-accent);
+  font-family: var(--up-ui);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--up-on-accent);
+}
+.up-prose a.up-play:hover {
+  background: var(--up-accent-strong);
+  color: var(--up-on-accent);
+}
+
+.up-article-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 48px;
+  padding: 18px 0;
+  border-top: 1px solid var(--up-line);
+  font-family: var(--up-ui);
+  font-size: 14px;
+  color: var(--up-muted);
+}
+.up-article-foot a:hover {
+  color: var(--up-strong);
+}
+
+/* The list of posts */
+.up-index .up-title-block {
+  margin-bottom: 0;
+}
+.up-posts li + li {
+  border-top: 1px solid var(--up-line);
+}
+.up-post {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px 32px;
+  padding: 36px 0;
+}
+.up-post time {
+  font-family: var(--up-ui);
+  font-size: 14px;
+  color: var(--up-muted);
+}
+.up-post h2 {
+  margin: 6px 0 10px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.006em;
+  color: var(--up-strong);
+  transition: color 120ms;
+  text-wrap: balance;
+}
+.up-post p {
+  margin: 0 0 14px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--up-muted);
+}
+.up-post-more {
+  font-family: var(--up-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--up-accent);
+}
+.up-post-cover {
+  order: -1;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--up-raise);
+  outline: 1px solid var(--up-line);
+  outline-offset: -1px;
+}
+.up-post:hover h2 {
+  color: var(--up-accent);
+}
+@media (min-width: 720px) {
+  .up-post {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    align-items: start;
+  }
+  .up-post-cover {
+    order: 0;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .updates-page {
+    font-size: 17px;
+  }
+  /* The switch is one more thing in a narrow header, so the row closes up to keep the buttons on one line. */
+  body:has(.updates-page) [data-site-header] > div:last-child {
+    gap: 6px;
+    padding-left: 4px;
+  }
+  .up-theme-toggle {
+    padding: 6px 4px;
+    font-size: 13px;
+  }
+  .up-layout {
+    padding: 0 16px;
+  }
+  .up-title-block {
+    padding-top: 36px;
+  }
+  .up-prompt pre {
+    padding: 14px;
+    font-size: 12.5px;
+  }
+}
+/* Under this width the header has no room for the switch, and the page follows the reader's system. */
+@media (max-width: 379px) {
+  .up-theme-toggle {
+    display: none;
+  }
+}

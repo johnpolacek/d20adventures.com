@@ -9,10 +9,13 @@ import { paper } from "@d20/ui/graphics/styles"
 import { Presence } from "@d20/ui/presence"
 import { AdminNavItem } from "../nav/admin-nav-item"
 import AuthButtons from "../nav/auth-buttons"
+import { UpdateThemeToggle } from "../updates/theme-toggle"
 
 export default function Header() {
   const path = usePathname()
   const isBig = path === "" || path === "/" || path === "/start" || path === "/join"
+  // The Updates pages draw the header as a quiet strip, with their light and dark switch (app/updates/updates.css).
+  const isUpdates = path === "/updates" || path.startsWith("/updates/")
   let settingSlug = null
   if (path.includes("/settings/")) {
     settingSlug = path.split("/")[2]
@@ -20,6 +23,7 @@ export default function Header() {
 
   return (
     <header
+      data-site-header
       className={cn(
         paper.className,
         "fixed top-0 select-none z-raised flex sm:gap-1 items-center pr-2 sm:px-8 md:px-12 pt-1 sm:py-4 w-full max-w-[100vw] border-b-8 border-[rgba(0,0,0,.25)]",
@@ -27,9 +31,9 @@ export default function Header() {
       )}
       style={{ ...paper.style, viewTransitionName: "site-header" }}
     >
-      <Parchment />
+      <Parchment containerClass="site-header-parchment" />
       <div className="flex flex-1 justify-start items-center">
-        <Link className="cursor-pointer flex items-center font-display scale-90 sm:scale-100 gap-2 mix-blend-multiply transition-opacity duration-150 hover:opacity-85 active:opacity-70" href="/">
+        <Link data-site-brand className="cursor-pointer flex items-center font-display scale-90 sm:scale-100 gap-2 mix-blend-multiply transition-opacity duration-150 hover:opacity-85 active:opacity-70" href="/">
           <Image
             className={cn("inline -mt-1 scale-90 sm:scale-100 w-12 h-12", isBig ? "sm:w-[72px] sm:h-[72px]" : "sm:w-8 sm:h-8")}
             width={isBig ? 72 : 36}
@@ -60,6 +64,7 @@ export default function Header() {
         </Presence>
       </div>
       <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-4 sm:gap-8 pl-4">
+        {isUpdates && <UpdateThemeToggle />}
         <AdminNavItem />
         <AuthButtons />
       </div>
