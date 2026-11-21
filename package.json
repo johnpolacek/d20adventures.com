@@ -89,7 +89,8 @@
     "desktop:build": "pnpm --filter @d20/desktop tauri build",
     "desktop:release": "sh scripts/desktop-release.sh",
     "desktop:wipe": "NODE_NO_WARNINGS=1 tsx scripts/desktop-wipe.ts",
-    "content:mine": "tsx scripts/content-mine.ts"
+    "content:mine": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/content-mine.ts",
+    "content:sync": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/content-sync.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.43",

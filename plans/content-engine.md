@@ -4,7 +4,7 @@ Goal: find the most shareable things in each week’s work and keep them as rank
 
 ## Owner decisions, 2026-11-21
 
-- Drafts are markdown files in the repo, not a Convex table. Every edit is a commit.
+- Drafts are markdown files in `content/queue`, not a Convex table. The repo is public, so they stay out of Git and sync to the private data bucket under `content-queue/` with `pnpm content:sync`.
 - The miner runs `claude -p` headless on John’s subscription. No new provider sees the sessions.
 - Posts go out from John’s personal accounts.
 - Buffer stays on the free plan.
@@ -52,7 +52,7 @@ Every post carries a number, a screenshot or a clip, or it doesn’t ship.
 
 ## Stages
 
-1. Miner, run by hand, writing candidates to `content/queue`. Done 2026-11-21. `pnpm content:mine`, with `--dry`, `--day` and `--since`. One call per day, then one to merge and rank. A day takes about 45 seconds. `content/queue` is gitignored for now, because the repo is public and the drafts quote sessions.
+1. Miner, run by hand, writing candidates to `content/queue`. Done 2026-11-21. `pnpm content:mine`, with `--dry`, `--day` and `--since`. One call per day, then one to merge and rank. A day takes about 45 seconds. The miner syncs before and after it writes.
 2. Queue page reading and writing those files.
 3. Scheduler for Buffer.
 4. Weekly run documented, first week seeded from the 3D figures post.

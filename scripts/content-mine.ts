@@ -13,6 +13,7 @@ import { execFileSync, spawn } from "node:child_process"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { syncQueue } from "./content-sync"
 
 const REPO = path.resolve(__dirname, "..")
 const QUEUE = path.join(REPO, "content/queue")
@@ -449,6 +450,7 @@ async function main() {
     return
   }
   if (!digests.length) return console.log("nothing to mine")
+  await syncQueue() // rank after what is already in the bucket
 
   const perDay = await pool(digests, 3, async (d) => {
     const t = Date.now()
@@ -472,6 +474,7 @@ async function main() {
   ranked.forEach((c, i) => console.log(`  ${startRank + i}. ${writeIdea(c, startRank + i, mined)} (${c.score})`))
   if (!onlyDay) fs.writeFileSync(MARKER, `${JSON.stringify({ through: until.toISOString() }, null, 2)}\n`)
   console.log(`${ranked.length} ideas written to content/queue`)
+  await syncQueue()
 }
 
 if (require.main === module) {
