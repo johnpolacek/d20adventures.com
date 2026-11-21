@@ -15,7 +15,8 @@ import { Presence } from "@d20/ui/presence"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurn } from "@/lib/context/TurnContext"
 import { findEncounterById } from "@/lib/map-utils"
-import { cn, getImageUrl } from "@/lib/utils"
+import { headerImage } from "@/lib/images"
+import { cn } from "@/lib/utils"
 import { findCurrentActor, hasPendingAutonomousAction } from "@/lib/utils/turn-actors"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -108,7 +109,6 @@ function AdventureHomeContent({
     }
   }, [turn, initialCheckDone])
 
-  const imageUrl = getImageUrl(image)
   const currentEncounter = React.useMemo(() => findEncounterById(adventurePlan?.sections || [], turn?.encounterId), [adventurePlan?.sections, turn?.encounterId])
 
   const redirectUrl = invite?.as ? `${pathname}?as=${encodeURIComponent(invite.as)}` : pathname
@@ -126,7 +126,7 @@ function AdventureHomeContent({
 
   return (
     <div className={cn("flex flex-col items-center relative", isSignedIn && "min-h-screen")}>
-      <ImageHeader variant={turn ? "default" : "compact"} imageUrl={imageUrl} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
+      <ImageHeader variant={turn ? "default" : "compact"} {...headerImage(image)} title={adventure.title} subtitle={turn?.title} imageAlt={turn?.title || adventure.title} />
       {turn && !hosted ? (
         <Turn nextAdventure={adventurePlan?.nextAdventure} encounter={currentEncounter} floor={floor} isSolo={(adventurePlan?.party?.[1] ?? 1) === 1} />
       ) : (

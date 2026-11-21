@@ -4,7 +4,8 @@
 // and the relay carries nothing. The host must allow cross-origin reads, because the stage reads pictures as textures
 // and fetches models and sounds.
 
-const ROOTS = /^\/(stage|stage-lab|asset-library|hero-art)\//
+// The stage's own folders, and the app's background textures, which sit in the same bucket.
+const ROOTS = /^\/(stage|stage-lab|asset-library|hero-art|images\/app\/backgrounds)\//
 let host = ""
 
 export function serveFrom(address: string) {

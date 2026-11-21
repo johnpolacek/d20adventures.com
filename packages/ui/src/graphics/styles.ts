@@ -17,5 +17,5 @@ export const emboss = {
 
 export const paper = {
   className: "bg-accent-50 bg-contain bg-repeat brightness-150 contrast-150",
-  style: { backgroundImage: `url('/images/app/backgrounds/paper-texture.png')`, backgroundSize: "33%", filter: "saturate(2) hue-rotate(330deg) contrast(1.1)" },
+  style: { backgroundImage: "var(--tex-paper, url('/images/app/backgrounds/paper-texture.png'))", backgroundSize: "33%", filter: "saturate(2) hue-rotate(330deg) contrast(1.1)" },
 }

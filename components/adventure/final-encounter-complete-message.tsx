@@ -7,7 +7,7 @@ import { getAdventurePlan } from "@/app/_actions/get-adventure-plan"
 import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { Swap } from "@d20/ui/presence"
-import { getImageUrl } from "@/lib/utils"
+import { picture } from "@/lib/images"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 interface FinalEncounterCompleteMessageProps {
@@ -53,7 +53,7 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
                   {/* Adventure Image */}
                   {nextAdventurePlan.image && (
                     <div className="relative h-32 w-full rounded-lg overflow-hidden">
-                      <Image src={getImageUrl(nextAdventurePlan.image)} alt={nextAdventurePlan.title} fill className="object-cover" />
+                      <Image {...picture(nextAdventurePlan.image, "(min-width: 640px) 480px, 100vw")} alt={nextAdventurePlan.title} fill className="object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     </div>
                   )}

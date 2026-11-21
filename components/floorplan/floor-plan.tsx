@@ -4,7 +4,8 @@
 // a token for every character with a position, which slides when the engine moves them.
 
 import { memo, useEffect, useId, useMemo, useRef, useState } from "react"
-import { cn, getImageUrl } from "@/lib/utils"
+import { pictureAt } from "@/lib/images"
+import { cn } from "@/lib/utils"
 import { findCurrentActor, isDown } from "@/lib/utils/turn-actors"
 import { between, type FloorPlace, type FloorSolid, type FloorToken, type FloorView, initials, isTall, rectDegrees, scaleFeet, titleCase, type ViewBox, viewBoxFor } from "./view"
 
@@ -125,7 +126,7 @@ function ScaleBar({ view, unit }: { view: ViewBox; unit: number }) {
 function Token({ token, at, active, feet, unit, clipId }: { token: FloorToken; at: { x: number; y: number }; active: boolean; feet?: number; unit: number; clipId: string }) {
   const r = Math.max(2.5, 10 * unit)
   const colors = token.type === "pc" ? COLORS.pc : COLORS.npc
-  const image = token.image ? getImageUrl(token.image) : undefined
+  const image = token.image ? pictureAt(token.image, 64) : undefined
   const down = isDown(token)
   return (
     <g className="enter-fade" style={{ transform: `translate(${at.x}px, ${at.y}px)`, transition: "transform 700ms ease-in-out, opacity 300ms" }} opacity={down ? 0.4 : 1}>

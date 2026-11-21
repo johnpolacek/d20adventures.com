@@ -5,7 +5,7 @@ import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { standingOf, standingWords, WOUND_TONE } from "@d20/ui/stage/standing"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@d20/ui/dialog"
 import Image from "@d20/ui/native-image"
-import { getImageUrl } from "@/lib/utils"
+import { pictureAt } from "@/lib/images"
 import type { TurnCharacter } from "@/types/adventure"
 import { Label } from "@d20/ui/label"
 
@@ -33,7 +33,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {character.image && (
               <div className="w-full h-40 rounded-xl bg-black border border-white/30 relative overflow-hidden mx-auto sm:mx-0 flex-shrink-0">
-                <Image src={getImageUrl(character.image)} alt={character.name} fill className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+                <Image src={pictureAt(character.image, 320)} alt={character.name} fill className="absolute inset-0 w-full h-full object-cover rounded-xl" />
               </div>
             )}
 

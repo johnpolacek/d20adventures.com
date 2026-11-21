@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
 import { Presence, Swap } from "@d20/ui/presence"
+import { served } from "@/lib/served"
 
 type Pending = { deviceName: string; approved: boolean }
 type Device = { id: string; name: string; createdAt: number; lastSeenAt?: number }
@@ -97,7 +98,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
 
   return (
     <section className="relative grid min-h-screen place-items-center overflow-hidden px-4 pt-28 pb-16">
-      <Image fill src="/stage/covers/welcome-to-kordavos.jpg" alt="" className="scale-105 object-cover blur-[2px]" />
+      <Image fill src={served("/stage/covers/welcome-to-kordavos.jpg")} alt="" className="scale-105 object-cover blur-[2px]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#0008,#000d_70%)]" />
       <Presence show={isLoaded} asChild>
         <div className={cn(panel, "relative w-full max-w-md px-8 py-9 text-center text-foreground")}>

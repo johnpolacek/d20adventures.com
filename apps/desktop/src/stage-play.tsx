@@ -9,6 +9,7 @@ import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { findCurrentActor, hasFled, isDead } from "@d20/gm-core/utils/turn-actors"
 import type { Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
+import { served } from "@d20/stage/served"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
@@ -1136,7 +1137,7 @@ export function StagePlay(props: {
   return (
     <StageHud
       containerRef={containerRef}
-      backdrop={!scene && save && shown ? <StoryArt src={`/stage/art/${save.adventure.planId}/${shown.encounterId}.webp`} /> : undefined}
+      backdrop={!scene && save && shown ? <StoryArt src={served(`/stage/art/${save.adventure.planId}/${shown.encounterId}.webp`)} /> : undefined}
       title={{ eyebrow: (save?.adventure.title ?? "").toUpperCase(), text: shown?.title ?? "" }}
       location={{ name: scene?.location ?? "Story View", status: props.status }}
       views={stage ? Object.entries(stage.shots).map(([id, s]) => ({ id, label: s.label ?? id })) : []}

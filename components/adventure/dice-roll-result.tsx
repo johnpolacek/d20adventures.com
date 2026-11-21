@@ -41,7 +41,7 @@ export default function DiceRollResult({ result, animate }: { result: number; an
         {result && (
           <div
             style={{ boxShadow: "inset 0 -4px 16px 0 rgba(0,0,0,.5), 0 0 1px 2px #000" }}
-            className={`flex gap-1.5 items-center justify-center w-32 border border-white/30 font-display rounded-full pr-4 text-lg bg-[url('/images/app/backgrounds/buried.png')] brightness-110 contrast-150 saturate-150 shadow-inner bg-action-500`}
+            className={`flex gap-1.5 items-center justify-center w-32 border border-white/30 font-display rounded-full pr-4 text-lg tex-buried brightness-110 contrast-150 saturate-150 shadow-inner bg-action-500`}
           >
             <div className="w-32 flex gap-1.5 items-center fade-in">
               <div style={{ boxShadow: "inset 0 2px 2px 0 rgba(0,0,0,.85)" }} className="bg-black/20 border border-white/30 h-10 w-10 rounded-full flex items-center justify-center">

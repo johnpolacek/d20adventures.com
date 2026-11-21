@@ -12,7 +12,7 @@ import { Button } from "@d20/ui/button"
 import { Presence } from "@d20/ui/presence"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
-import { getImageUrl } from "@/lib/utils"
+import { pictureAt } from "@/lib/images"
 import { controlsHero } from "./turn-reaction"
 
 export function TurnLevelUp({ className }: { className?: string }) {
@@ -41,7 +41,7 @@ export function TurnLevelUp({ className }: { className?: string }) {
           <div className="fixed inset-0 z-overlay flex items-center justify-center bg-black/70 p-3 text-left">
             <LevelUp
               hero={hero.name}
-              portrait={hero.image ? getImageUrl(hero.image) : undefined}
+              portrait={hero.image ? pictureAt(hero.image, 64) : undefined}
               sheet={hero.sheet}
               className="enter-pop max-h-[92vh] w-[min(600px,100%)]"
               onClose={() => setOpen(null)}

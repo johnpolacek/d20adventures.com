@@ -11,7 +11,7 @@ import { standingOf, standingWords } from "@d20/ui/stage/standing"
 import { Button } from "@d20/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@d20/ui/dialog"
 import Image from "@d20/ui/native-image"
-import { getImageUrl } from "@/lib/utils"
+import { picture } from "@/lib/images"
 import type { TurnCharacter } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
 import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
@@ -90,7 +90,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
           <div className="space-y-4">
             {character.image && (
               <div className="w-full aspect-[1.33] rounded-xl bg-black border border-white/30 relative overflow-hidden mx-auto lg:mx-0">
-                <Image src={getImageUrl(character.image)} alt={character.name} fill className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+                <Image {...picture(character.image, "(min-width: 640px) 480px, 100vw")} alt={character.name} fill className="absolute inset-0 w-full h-full object-cover rounded-xl" />
               </div>
             )}
 

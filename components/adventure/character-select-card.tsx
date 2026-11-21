@@ -3,7 +3,8 @@ import Link from "next/link"
 import { Button } from "@d20/ui/button"
 import { Card } from "@d20/ui/card"
 import Image from "@d20/ui/native-image"
-import { cn, getImageUrl } from "@/lib/utils"
+import { picture } from "@/lib/images"
+import { cn } from "@/lib/utils"
 import type { PCTemplate } from "@/types/character"
 
 interface CharacterSelectCardProps {
@@ -27,7 +28,7 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
     >
       <div className="w-full aspect-video relative">
         {character.image ? (
-          <Image src={getImageUrl(character.image)} alt={character.name} fill={true} className="object-cover w-full h-full" />
+          <Image {...picture(character.image, "(min-width: 768px) 400px, 100vw")} alt={character.name} fill={true} className="object-cover w-full h-full" />
         ) : (
           <span className="text-xs text-white/40">No Image</span>
         )}

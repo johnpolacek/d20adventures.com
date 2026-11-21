@@ -37,7 +37,7 @@ const base = cn(
 const control = "rounded-md border-2 font-sans font-medium leading-tight not-disabled:active:scale-[0.97]"
 
 const looks: Record<Exclude<ButtonVariant, "plain">, string> = {
-  epic: "rounded-full border-[rgba(0,0,0,.66)] bg-action-600 bg-[url('/images/app/backgrounds/buried.png')] font-display font-bold tracking-label text-action-50 brightness-110 saturate-[1.2] scale-105 not-disabled:hover:scale-110 not-disabled:hover:text-white not-disabled:active:scale-100",
+  epic: "rounded-full border-[rgba(0,0,0,.66)] bg-action-600 tex-buried font-display font-bold tracking-label text-action-50 brightness-110 saturate-[1.2] scale-105 not-disabled:hover:scale-110 not-disabled:hover:text-white not-disabled:active:scale-100",
   primary: cn(control, "stage-stone"),
   outline: cn(control, "border-action-200/20 bg-action-950/70 text-action-50 not-disabled:hover:border-action-200/35 not-disabled:hover:bg-action-950/90 not-disabled:hover:text-white"),
   ghost: cn(control, "border-transparent bg-transparent text-action-50/80 not-disabled:hover:bg-white/5 not-disabled:hover:text-white"),

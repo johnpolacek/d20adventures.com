@@ -103,7 +103,7 @@ html:has(.updates-page) {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: url("/images/app/backgrounds/paper-texture.png") 0 0 / 400px 400px repeat;
+  background: var(--tex-paper, url("/images/app/backgrounds/paper-texture.png")) 0 0 / 400px 400px repeat;
   opacity: var(--up-grain);
   mix-blend-mode: var(--up-grain-blend);
 }

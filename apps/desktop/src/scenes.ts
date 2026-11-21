@@ -107,6 +107,7 @@ import throughTheHalls from "@d20/stage/stagings/welcome-to-kordavos/through-the
 import throughTheLabyrinth from "@d20/stage/stagings/welcome-to-kordavos/through-the-labyrinth.json"
 import vengeanceOfTheBlackthorn from "@d20/stage/stagings/welcome-to-kordavos/vengeance-of-the-blackthorn.json"
 import welcomeToTheLowerDistricts from "@d20/stage/stagings/welcome-to-kordavos/welcome-to-the-lower-districts.json"
+import { served } from "@d20/stage/served"
 import { type FigureArt, type FigureOwner, heroFigure, PREMADE_FIGURES } from "./figures"
 import { NPC_PORTRAITS } from "./npc-portraits"
 import photoreal from "./photoreal.json"
@@ -788,7 +789,7 @@ function photograph(portrait: string | undefined, scene: Scene | undefined) {
 // the party's faces. Heroes with no art anywhere show their stock figure, and NPCs the portrait painted on their sheet.
 // With no scene to go by, such as a premade hero on the New Game page, the scene the portrait was found in decides
 // whether it is the photograph.
-export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<string, string> = {}, painted: Record<string, FigureArt> = {}) {
+function portraitPath(scene: Scene | undefined, c: Who, chosen: Record<string, string> = {}, painted: Record<string, FigureArt> = {}) {
   if (chosen[c.id] || painted[c.id]) return photograph(heroFigure(c as FigureOwner, chosen, painted).art.portrait, scene)
   for (const s of [scene, ...Object.values(SCENES)]) {
     const id = s && castIdFor(s.staging.cast, c)
@@ -799,6 +800,12 @@ export function portraitFor(scene: Scene | undefined, c: Who, chosen: Record<str
     PORTRAITS[c.id] ?? PREMADE_FIGURES[c.id]?.art.portrait ?? (c.type === "pc" ? heroFigure(c as FigureOwner).art.portrait : NPC_PORTRAITS.has(c.id) ? `/stage/portraits/${c.id}.webp` : undefined),
     scene
   )
+}
+
+/** That portrait's address, from where the stage's files are served. */
+export const portraitFor = (...args: Parameters<typeof portraitPath>) => {
+  const path = portraitPath(...args)
+  return path && served(path)
 }
 
 // The set's named places, which the GM may point the camera at in its beats.

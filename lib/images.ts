@@ -28,7 +28,7 @@ export const variantWidths = (width: number) => [...new Set(WIDTHS.map((w) => Ma
 export const variantKey = (key: string, version: string, name: string) => `opt/${key}.${version}.${name}`
 
 const address = (key: string) => `${IMAGE_HOST}/${encodeURI(key)}`
-const original = (url: string) => (/^https?:/.test(url) ? url : address(url.replace(/^\/+/, "")))
+const original = (url: string) => (/^(https?|blob|data):/.test(url) ? url : address(url.replace(/^\/+/, "")))
 
 /** What an <img> needs to show a picture at the size of its slot. `sizes` is the slot's width, as CSS reads it. */
 export function picture(url: string, sizes = "100vw"): { src: string; srcSet?: string; sizes?: string } {
@@ -38,6 +38,16 @@ export function picture(url: string, sizes = "100vw"): { src: string; srcSet?: s
   const widths = variantWidths(entry[0])
   const at = (w: number) => address(variantKey(key, entry[2], `${w}.webp`))
   return { src: at(widths[widths.length - 1]), srcSet: widths.map((w) => `${at(w)} ${w}w`).join(", "), sizes }
+}
+
+/** One address, for a picture drawn about this many CSS pixels wide where no list of sizes can be given. */
+export function pictureAt(url: string, width: number): string {
+  const key = url ? bucketKey(url) : null
+  const entry = key ? known[key] : undefined
+  if (!key || !entry) return url ? original(url) : url
+  const widths = variantWidths(entry[0])
+  // Twice the slot, for a sharp screen.
+  return address(variantKey(key, entry[2], `${widths.find((w) => w >= width * 2) ?? widths[widths.length - 1]}.webp`))
 }
 
 /** The same, as the page header takes it. */

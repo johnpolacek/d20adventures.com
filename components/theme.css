@@ -434,14 +434,19 @@
 
 /* Stageview surfaces, in the website's materials: black paper for panels, the blue stone of its buttons, navy for
    quiet controls and its paper for writing. They set only backgrounds, borders and bevels, so colour utilities still apply. */
+/* The textures are the app's own files, unless <html> names another address for them, as the live site does
+   (lib/served.ts) so they are not fetched through the deploy. */
+@utility tex-buried {
+  background-image: var(--tex-buried, url("/images/app/backgrounds/buried.png"));
+}
 @utility stage-grain {
-  background-image: url("/images/app/backgrounds/black-paper.png");
+  background-image: var(--tex-black-paper, url("/images/app/backgrounds/black-paper.png"));
   background-size: 260px;
 }
 @utility stage-stone {
   border-color: rgb(0 0 0 / 0.66);
   background-color: #2563eb;
-  background-image: url("/images/app/backgrounds/buried.png");
+  background-image: var(--tex-buried, url("/images/app/backgrounds/buried.png"));
   background-size: 180px;
   color: #eff6ff;
   text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
@@ -464,11 +469,11 @@
 }
 @utility stage-parchment {
   background-color: #fffbeb;
-  background-image: url("/images/app/backgrounds/paper-texture.png");
+  background-image: var(--tex-paper, url("/images/app/backgrounds/paper-texture.png"));
   background-size: 220px;
 }
 @utility stage-die {
-  background-image: url("/images/app/backgrounds/buried.png"), radial-gradient(circle at 35% 30%, #302b5a, #07070e 75%);
+  background-image: var(--tex-buried, url("/images/app/backgrounds/buried.png")), radial-gradient(circle at 35% 30%, #302b5a, #07070e 75%);
   background-size: 120px, auto;
   background-blend-mode: overlay, normal;
 }

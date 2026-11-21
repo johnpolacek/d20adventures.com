@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@d20/ui/card"
 import Image from "@d20/ui/native-image"
-import { getImageUrl } from "@/lib/utils"
+import { pictureAt } from "@/lib/images"
 import type { Adventure } from "@/types/adventure"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 
@@ -36,7 +36,7 @@ export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventu
           {userCharacter && (
             <div className="flex items-center gap-4 justify-center">
               <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary-300">
-                <Image className="object-cover" fill src={getImageUrl(userCharacter.image)} alt={userCharacter.name} />
+                <Image className="object-cover" fill src={pictureAt(userCharacter.image, 64)} alt={userCharacter.name} />
               </div>
               <div className="text-left">
                 <p className="font-display sm:text-lg">{userCharacter.name}</p>

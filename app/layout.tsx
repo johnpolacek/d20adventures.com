@@ -5,6 +5,7 @@ import SiteFooter from "@/components/layout/footer"
 import Header from "@/components/layout/header"
 import { PageTransition } from "@/components/layout/page-transition"
 import { SITE_URL, siteConfig } from "@/lib/config"
+import { textures } from "@/lib/served"
 import { updateThemeScript } from "@/lib/update-theme"
 import { cn } from "@/lib/utils"
 import "./globals.css"
@@ -75,7 +76,7 @@ export default function RootLayout({
 
   return (
     // The script below sets the Updates pages' light or dark look on <html> before React takes over, hence the suppression.
-    <html lang="en" className={`${rethinkSans.variable} ${literata.variable} ${cinzel.variable} ${syne.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${rethinkSans.variable} ${literata.variable} ${cinzel.variable} ${syne.variable}`} style={textures} suppressHydrationWarning>
       <body className={cn("min-h-screen bg-black text-white font-serif antialiased")}>
         <script dangerouslySetInnerHTML={{ __html: updateThemeScript }} />
         <Providers>

@@ -3,7 +3,8 @@ import { DeathSaveMarks } from "@d20/ui/stage/roll-parts"
 import { againstLabel } from "@d20/ui/stage/roll-view"
 import DiceRoll from "@/components/adventure/dice-roll"
 import Image from "@d20/ui/native-image"
-import { cn, getImageUrl } from "@/lib/utils"
+import { picture } from "@/lib/images"
+import { cn } from "@/lib/utils"
 import type { RollRequirement } from "@/lib/validations/roll-requirement-schema"
 import type { TurnCharacter } from "@/types/adventure"
 
@@ -34,7 +35,7 @@ export default function CharacterDiceRoll({
   return (
     <div className={cn("relative aspect-[2/3] sm:aspect-auto md:min-h-[300px] font-display font-bold border border-primary-700 rounded-xl overflow-hidden", className)}>
       <div className="absolute top-0 left-0 h-1/2 sm:h-full w-full sm:w-2/3 overflow-hidden">
-        <Image className="object-cover" src={getImageUrl(character.image)} alt={character.name} fill={true} />
+        <Image className="object-cover" {...picture(character.image, "(min-width: 640px) 400px, 100vw")} alt={character.name} fill={true} />
         <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent" />
       </div>
       <div className="px-4 py-6 flex flex-col gap-4 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">

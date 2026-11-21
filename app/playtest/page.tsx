@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { CopyBlock } from "./copy-block"
+import { served } from "@/lib/served"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Become a Playtester | D20 Adventures" }
@@ -37,7 +38,7 @@ export default async function PlaytestPage() {
   return (
     <div className="relative isolate">
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-black">
-        <Image fill priority src="/stage/realm/realm-of-myr/realm.jpg" alt="" className="object-cover" />
+        <Image fill priority src={served("/stage/realm/realm-of-myr/realm.jpg")} alt="" className="object-cover" />
       </div>
       <div className="container pt-28 pb-24">
         <article className="mx-auto max-w-3xl overflow-hidden rounded-lg border border-accent-200/20 bg-black/90 shadow-float">

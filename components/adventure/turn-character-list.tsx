@@ -9,7 +9,8 @@ import Image from "@d20/ui/native-image"
 import { Presence } from "@d20/ui/presence"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
-import { cn, getImageUrl } from "@/lib/utils"
+import { pictureAt } from "@/lib/images"
+import { cn } from "@/lib/utils"
 import { isAiControlledPc, isDown } from "@/lib/utils/turn-actors"
 import type { TurnCharacter } from "@/types/adventure"
 import { CharacterSheetModal } from "./character-sheet-modal"
@@ -75,7 +76,7 @@ export default function TurnCharacterList() {
                 style={{ "--i": Math.min(index, 8) } as CSSProperties}
                 onClick={() => handleCharacterClick(character)}
               >
-                {character.image && <CharacterImage src={getImageUrl(character.image)} alt={character.name} />}
+                {character.image && <CharacterImage src={pictureAt(character.image, 48)} alt={character.name} />}
                 <div className="z-10">
                   <div className="text-xs sm:text-sm font-bold font-display flex items-center gap-2">
                     {character.name}

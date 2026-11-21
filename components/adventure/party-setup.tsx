@@ -10,7 +10,8 @@ import { Card } from "@d20/ui/card"
 import { CharacterSelectCard } from "@/components/adventure/character-select-card"
 import Image from "@d20/ui/native-image"
 import { Presence } from "@d20/ui/presence"
-import { cn, getImageUrl } from "@/lib/utils"
+import { pictureAt } from "@/lib/images"
+import { cn } from "@/lib/utils"
 import type { PCTemplate } from "@/types/character"
 
 interface PartySetupProps {
@@ -47,7 +48,7 @@ function PartySlotAvatar({
     <>
       <div className={cn("relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-black/60 ring-2", ringClass)}>
         {image ? (
-          <Image src={getImageUrl(image)} alt={name || label} fill className="object-cover" />
+          <Image src={pictureAt(image, 64)} alt={name || label} fill className="object-cover" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-white/40 text-2xl font-display">?</div>
         )}

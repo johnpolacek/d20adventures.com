@@ -2,9 +2,8 @@ import { Button } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import Link from "next/link"
 import type { Character, Library, Place } from "@/asset-library/types"
-import { isDev } from "@/lib/auth-utils"
-import { IMAGE_HOST } from "@/lib/config"
 import { headerImage } from "@/lib/images"
+import { served } from "@/lib/served"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 // An adventure's public page: what it is, a gameplay video when it has one, and its cast and places from the asset
@@ -50,9 +49,6 @@ const titleCase = (title: string) =>
     .map((word, i, words) => (i > 0 && !words[i - 1].endsWith(":") && SMALL.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)))
     .join(" ")
 
-// On the site the library's pictures come straight from the bucket, not through the deploy. In development a figure
-// may exist only in the workspace, so the local address is kept.
-const served = (path: string) => (isDev() || !path.startsWith("/") ? path : `${IMAGE_HOST}${path}`)
 const portrait = (c: Character) => served(c.figure?.thumb ? `${FIGURES}/${c.figure.id}/${c.figure.thumb}` : c.front)
 const heading = "font-display text-xl font-bold text-primary-200 mt-14 mb-4"
 

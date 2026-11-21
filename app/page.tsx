@@ -4,6 +4,7 @@ import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import Image from "@d20/ui/native-image"
 import HomeAdventure from "@/components/views/home-adventure"
 import PlaytesterCta from "@/components/views/playtester-cta"
+import { served } from "@/lib/served"
 
 export default function HomePage() {
   return (
@@ -25,7 +26,7 @@ export default function HomePage() {
             <PlaytesterCta />
           </div>
         </HomeAdventure>
-        <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.webp" alt="D20" />
+        <Image className="object-cover fade-in" fill={true} src={served("/images/app/backgrounds/d20-hero.webp")} alt="D20" />
       </div>
     </>
   )

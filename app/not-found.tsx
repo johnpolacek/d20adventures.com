@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
+import { served } from "@/lib/served"
 
 export const metadata: Metadata = {
   title: "Page Not Found",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-16 text-center">
-      <Image className="object-cover opacity-30 blur-[2px] scale-105" fill={true} src="/images/app/backgrounds/d20-hero.webp" alt="" />
+      <Image className="object-cover opacity-30 blur-[2px] scale-105" fill={true} src={served("/images/app/backgrounds/d20-hero.webp")} alt="" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.85)_70%,#000_100%)]" />
 
       <div className="relative z-10 flex flex-col items-center fade-in">

@@ -3,7 +3,8 @@ import type { CSSProperties, ReactElement, ReactNode } from "react"
 import { Button } from "@d20/ui/button"
 import { prefersReducedMotion } from "@d20/ui/motion"
 import Image from "@d20/ui/native-image"
-import { cn, getImageUrl } from "@/lib/utils"
+import { pictureAt } from "@/lib/images"
+import { cn } from "@/lib/utils"
 import type { PC, PCTemplate } from "@/types/character"
 
 // A hero in a lobby list: portrait, name and class in one short row. The row opens the hero's sheet. A tag says who
@@ -22,7 +23,7 @@ export function HeroRow(props: {
     <li className={cn("flex min-w-0 items-center gap-3 rounded-lg border bg-black/60 p-2", props.mine ? "border-accent-400/60" : "border-white/10", props.className)} style={props.style}>
       <Button variant="plain" type="button" onClick={props.onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left transition-opacity duration-100 hover:opacity-80 active:opacity-60">
         <span className="relative h-14 w-12 shrink-0 overflow-hidden rounded-md border border-white/20 bg-white/5">
-          {c.image && <Image src={getImageUrl(c.image)} alt="" fill className="object-cover object-[50%_15%]" onError={(e) => (e.currentTarget.style.display = "none")} />}
+          {c.image && <Image src={pictureAt(c.image, 48)} alt="" fill className="object-cover object-[50%_15%]" onError={(e) => (e.currentTarget.style.display = "none")} />}
         </span>
         <span className="min-w-0">
           <span className={cn("block truncate font-display text-base", props.mine && "text-accent-400")}>{c.name}</span>

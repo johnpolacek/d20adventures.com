@@ -2,6 +2,7 @@ import { Heading } from "@d20/ui/typography/heading"
 import type { ReactNode } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import Image from "@d20/ui/native-image"
+import { served } from "@/lib/served"
 
 /** The see-through card that holds a PlainPage's content. */
 export const plainCard = "rounded-lg border border-accent-200/20 bg-black/70 shadow-float backdrop-blur-sm"
@@ -15,7 +16,7 @@ export function PlainPage({ title, subtitle, card = true, width = "max-w-3xl", c
   return (
     <div className="relative isolate">
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-black">
-        <Image className="object-cover fade-in" fill={true} src="/images/app/backgrounds/d20-hero.webp" alt="" />
+        <Image className="object-cover fade-in" fill={true} src={served("/images/app/backgrounds/d20-hero.webp")} alt="" />
       </div>
       <div className="container pt-28 pb-24">
         <article className={`mx-auto ${width}`}>

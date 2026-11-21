@@ -10,7 +10,7 @@ import FullPageImage from "@/components/layout/fullpage-image"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
-import { getImageUrl } from "@/lib/utils"
+import { pictureAt } from "@/lib/images"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { PCTemplate } from "@/types/character"
 import { CharacterGrid } from "./components/character-grid"
@@ -55,7 +55,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
       try {
         const plan = await loadAdventurePlanForRuntime(settingId, planId)
         if (plan && typeof plan === "object" && "image" in plan && typeof plan.image === "string" && plan.image) {
-          planImageCache[planId] = getImageUrl(plan.image)
+          planImageCache[planId] = pictureAt(plan.image, 480)
         }
       } catch {}
     }
