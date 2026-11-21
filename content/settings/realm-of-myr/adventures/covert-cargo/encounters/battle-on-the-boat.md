@@ -36,6 +36,8 @@ The elves are gone and take no part. Silas and Reinhard do not know anyone is ou
 
 Silas and Reinhard want no witness and no body on their boat. They mean to overpower Lyra, throw her over the side into the river and cast off with the crate for Kordavos. This is the most likely way the fight ends, and it should take about three rounds. Reinhard closes and takes hold of her, drags her out on deck and puts her over the rail. Then Silas cuts the mooring lines and the current takes the tug downstream into the mist. Once she is in the water the two men do not stay to fight anyone on the bank. They cast off at once.
 
+Silas cuts the lines only once Lyra is in the river, never while she is still aboard. Neither man can be talked or bargained out of it: they have their orders. A threat from outside, a shout, an arrow or a claim that the watch is coming, makes them hurry to put her over the side, not spare her. If Lyra is down, Reinhard carries her out and over the rail.
+
 Give the heroes fair rolls to stop it, but do not drag the fight out. Lyra going overboard is not a defeat to avoid at any cost. It is how the story most often goes on.
 
 The fight ends another way only if the heroes plainly win it. If Silas and Reinhard are both down, bound or driven off the boat, the crate is the heroes'. If Lyra gets off the boat by her own doing and loses them, she has escaped.

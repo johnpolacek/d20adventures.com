@@ -68,7 +68,9 @@ The crate stays closed. No one may see inside, so Lyra must judge it by magecraf
 
 ## GM Notes
 
-If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Reinhard who will draw his sword and threaten her.
+If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Reinhard who will draw his sword and threaten her. Reinhard draws only on that nod, never on his own.
+
+Whatever Lyra says of the crate is her verdict, true or not. No check stands between her words and the scene that follows: if she says it holds no magic, it is The Fake, and Silas weighs her word there.
 
 If Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a 20, she will be able to name the item as the Verodynian Oath Stone of the First Clans.
 

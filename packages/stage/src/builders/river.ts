@@ -136,6 +136,9 @@ export const riverboat = defineBuilder(
       // The saloon as a room people stand in: walls panelled inside, dark windows behind the lit panes, its bow door
       // standing open as the only way out, and a doorway aft into the owner's cabin.
       interior: z.boolean().default(false),
+      // With `interior`, every other side window has its shutters closed. Without, every window stands open, so one on
+      // the bank can see and shoot into the saloon through any of them.
+      shutters: z.boolean().default(true),
     })
     .strict(),
   (ctx, p) => {
@@ -359,7 +362,7 @@ export const riverboat = defineBuilder(
         const mz = (az + cz) / 2
         const side = i === 0 || i === walls.length - 2
         const opens = side
-          ? Array.from({ length: big }, (_, j) => ({ o: (zs + ((j + 0.5) * (zr - zs)) / big - mz) * ez, w: 0.72, y0: WY - WH / 2, y1: WY + WH / 2, shut: j % 2 === 1, door: false }))
+          ? Array.from({ length: big }, (_, j) => ({ o: (zs + ((j + 0.5) * (zr - zs)) / big - mz) * ez, w: 0.72, y0: WY - WH / 2, y1: WY + WH / 2, shut: p.shutters && j % 2 === 1, door: false }))
           : Math.abs(mx) < 0.6
             ? [{ o: 0, w: 0.79, y0: 0, y1: 2.05, shut: false, door: true }]
             : [{ o: 0, w: 0.62, y0: WY - WH / 2, y1: WY + WH / 2, shut: false, door: false }]

@@ -23,7 +23,7 @@ Above her the tug is already moving. A blade flashes at the bow as the last moor
 
 ## GM Notes
 
-The tug is gone downstream with the crate and whoever of Silas and Reinhard still stands, bound for Kordavos and their Blackthorn masters. It does not come back, and it cannot be caught on foot or by swimming.
+The tug is gone downstream and out of sight in the mist with the crate and whoever of Silas and Reinhard still stands, bound for Kordavos and their Blackthorn masters. It does not come back, and it cannot be caught on foot or by swimming.
 
 Lyra is out of the water and in no danger of drowning. She is soaked, cold and bruised. If her hands were bound she needs help or a sharp edge to free them.
 

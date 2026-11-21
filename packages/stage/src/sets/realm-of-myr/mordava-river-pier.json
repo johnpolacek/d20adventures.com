@@ -1921,6 +1921,7 @@
       "saloon": 0.72,
       "height": 3,
       "interior": true,
+      "shutters": false,
       "materials": {
         "helm": "helmGlass",
         "panel": "panel",
