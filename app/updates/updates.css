@@ -178,10 +178,16 @@ body:has(.updates-page) [data-site-header] .text-white\/60 {
  * The light and dark switch: both looks side by side, and a raised thumb that slides under the current one. The look
  * on <html> places the thumb.
  */
+body:has(.updates-page) .up-theme-switch {
+  display: inline-grid;
+}
+/* Sign In and Sign Up stay off a page for reading. A signed-in player still sees their tokens and menu. */
+body:has(.updates-page) [data-auth-signed-out] {
+  display: none;
+}
 .up-theme-switch {
   position: relative;
   isolation: isolate;
-  display: inline-grid;
   grid-template-columns: 1fr 1fr;
   padding: 2px;
   border: 1px solid var(--up-line-strong);
@@ -424,7 +430,8 @@ body:has(.updates-page) main + footer {
   color: var(--up-strong);
 }
 /* The display face has no weight between regular and bold, so the title is the regular, thickened a little. */
-.updates-page h1 {
+.updates-page h1,
+.up-title {
   margin: 20px 0 16px;
   font-family: var(--font-display), var(--up-serif);
   font-size: clamp(30px, 4.8vw, 44px);
@@ -809,6 +816,92 @@ body:has(.updates-page) main + footer {
 }
 .up-article-foot a:hover {
   color: var(--up-strong);
+}
+
+/* A form on the page: labelled fields in the paper's own tones. */
+.up-form {
+  display: grid;
+  gap: 22px;
+}
+.up-form-row {
+  display: grid;
+  gap: 8px;
+}
+.up-form .up-label {
+  margin: 0;
+}
+.up-field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--up-line-strong);
+  border-radius: 6px;
+  background: var(--up-btn);
+  font-family: var(--up-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--up-strong);
+  transition: border-color 120ms;
+}
+textarea.up-field {
+  min-height: 176px;
+  resize: vertical;
+}
+.up-field:hover {
+  border-color: var(--up-muted);
+}
+.up-field:focus-visible {
+  border-color: var(--up-accent);
+  outline: 2px solid var(--up-accent-line);
+  outline-offset: 1px;
+  border-radius: 6px;
+}
+
+/* A frame from another site is light inside. Saying so keeps the dark page from painting a white sheet behind it. */
+.up-form iframe {
+  color-scheme: light;
+}
+
+/* The thanks that takes a sent form's place. */
+.up-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 8px;
+  text-align: center;
+}
+.up-sent-mark {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  margin-bottom: 28px;
+}
+.up-sent-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--up-accent);
+  opacity: 0.2;
+  filter: blur(26px);
+}
+/* The die is drawn in white, so it is inked dark for the light page and warmed for the dark one. */
+.up-sent-die {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  filter: grayscale(1) brightness(0.22) sepia(0.6);
+}
+html[data-update-theme="dark"] .up-sent-die {
+  filter: grayscale(1) sepia(0.35) brightness(1.15);
+}
+.up-sent .up-label {
+  margin: 0;
+}
+.up-title {
+  margin: 8px 0 12px;
+}
+.up-sent .up-dek {
+  max-width: 28em;
+  margin: 0;
 }
 
 /* The list of posts */

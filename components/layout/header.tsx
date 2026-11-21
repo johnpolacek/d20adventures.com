@@ -14,8 +14,6 @@ import { UpdateThemeToggle } from "../updates/theme-toggle"
 export default function Header() {
   const path = usePathname()
   const isBig = path === "" || path === "/" || path === "/start" || path === "/join"
-  // The Updates pages draw the header as a quiet strip, with their light and dark switch and no Sign In or Sign Up (app/updates/updates.css).
-  const isUpdates = path === "/updates" || path.startsWith("/updates/")
   let settingSlug = null
   if (path.includes("/settings/")) {
     settingSlug = path.split("/")[2]
@@ -64,9 +62,10 @@ export default function Header() {
         </Presence>
       </div>
       <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-4 sm:gap-8 pl-4">
-        {isUpdates && <UpdateThemeToggle />}
+        {/* Shown only on a page in the reading look, which also draws this header as a quiet strip (app/updates/updates.css). */}
+        <UpdateThemeToggle />
         <AdminNavItem />
-        <AuthButtons signedOut={!isUpdates} />
+        <AuthButtons />
       </div>
     </header>
   )

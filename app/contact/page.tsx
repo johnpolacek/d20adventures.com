@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { ConfigCard } from "@/components/admin/config-card"
 import { ContactForm } from "@/components/contact/contact-form"
-import { PlainPage } from "@/components/layout/plain-page"
+import { ReadingPage } from "@/components/layout/reading-page"
 
 export const metadata: Metadata = {
   title: "Contact | D20 Adventures",
@@ -41,9 +41,11 @@ export default async function ContactPage() {
 
   if (!isConfigured && process.env.NODE_ENV !== "development") {
     return (
-      <PlainPage title="Contact">
-        <p>The contact form is unavailable right now. Please try again later.</p>
-      </PlainPage>
+      <ReadingPage title="Contact">
+        <div className="up-prose">
+          <p>The contact form is unavailable right now. Please try again later.</p>
+        </div>
+      </ReadingPage>
     )
   }
 
@@ -86,8 +88,8 @@ export default async function ContactPage() {
 
 function ContactPageContent() {
   return (
-    <PlainPage title="Contact">
+    <ReadingPage title="Contact">
       <ContactForm requireCaptcha={true} />
-    </PlainPage>
+    </ReadingPage>
   )
 }

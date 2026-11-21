@@ -8,8 +8,8 @@ import { Presence, Swap } from "@d20/ui/presence"
 import { useTokens } from "@/lib/context/TokenContext"
 import TokenCount from "./token-count"
 
-/** The header's account corner: Sign In and Sign Up, or the player's tokens and menu. `signedOut` false leaves out the two buttons. */
-export default function AuthButtons({ signedOut = true }: { signedOut?: boolean }) {
+/** The header's account corner: Sign In and Sign Up, or the player's tokens and menu. A page in the reading look hides the two buttons. */
+export default function AuthButtons() {
   const { tokensRemaining } = useTokens()
   const { user, isSignedIn } = useUser()
   const [mounted, setMounted] = useState(false)
@@ -18,13 +18,11 @@ export default function AuthButtons({ signedOut = true }: { signedOut?: boolean 
     setMounted(true)
   }, [])
 
-  if (!signedOut && (!mounted || !isSignedIn)) return null
-
   // Prevent hydration mismatch by showing a neutral state until mounted
   if (!mounted) {
     return (
       <div className="flex items-center overflow-hidden">
-        <div className="flex gap-2 sm:gap-4 whitespace-nowrap sm:px-2">
+        <div data-auth-signed-out className="flex gap-2 sm:gap-4 whitespace-nowrap sm:px-2">
           {/* Placeholder buttons that match the signed-out state */}
           <Button className="text-3xs sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case opacity-0" variant="emboss">
             Sign In
@@ -57,7 +55,7 @@ export default function AuthButtons({ signedOut = true }: { signedOut?: boolean 
             </UserButton>
           </div>
         ) : (
-          <div className="flex gap-2 sm:gap-4 whitespace-nowrap sm:px-2">
+          <div data-auth-signed-out className="flex gap-2 sm:gap-4 whitespace-nowrap sm:px-2">
             <SignInButton mode="modal">
               <Button id="signinButton" className="text-3xs sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case" variant="emboss">
                 Sign In

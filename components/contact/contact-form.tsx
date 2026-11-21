@@ -1,6 +1,5 @@
 "use client"
 
-import { Heading } from "@d20/ui/typography/heading"
 import { gsap, prefersReducedMotion, useGSAP } from "@d20/ui/motion"
 import { useOptimistic, useRef, useState, useTransition } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
@@ -12,10 +11,7 @@ import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
 import { Swap } from "@d20/ui/presence"
 import { Textarea } from "@d20/ui/textarea"
-import { textShadowSpreadLight } from "@d20/ui/typography/styles"
-
-const labelClass = "font-display text-sm tracking-label uppercase text-accent-300/90"
-const fieldClass = "h-auto py-2.5 border-accent-200/20 bg-black/60 text-base focus-visible:border-accent-200/50"
+import { useUpdateLook } from "@/components/updates/theme-toggle"
 
 type Draft = { name: string; email: string; message: string }
 
@@ -30,7 +26,12 @@ export function ContactForm({ subject = "Contact Message", requireCaptcha = fals
   const [shownSent, showSent] = useOptimistic(sent)
   const [, startTransition] = useTransition()
   const [draft, setDraft] = useState<Draft>({ name: "", email: "", message: "" })
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  // The check is drawn by Google in one of two looks, so it follows the page's and is drawn again when that changes.
+  // Its answer is kept with the look it was given in, so a new check starts unanswered.
+  const look = useUpdateLook() ?? "light"
+  const [captcha, setCaptcha] = useState<{ look: string; token: string } | null>(null)
+  const captchaToken = captcha?.look === look ? captcha.token : null
+  const setCaptchaToken = (token: string | null) => setCaptcha(token ? { look, token } : null)
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -64,36 +65,32 @@ export function ContactForm({ subject = "Contact Message", requireCaptcha = fals
         <ContactSent name={draft.name} />
       ) : (
         <form onSubmit={onSubmit}>
-          <p className="mb-10 text-center text-lg text-white/80 text-balance">Questions, bugs or ideas? Send a note and we’ll write back.</p>
-          <div className="grid gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="name" className={labelClass}>
+          <p className="up-dek">Questions, bugs or ideas? Send a note and we’ll write back.</p>
+          <div className="up-form">
+            <div className="up-form-row">
+              <Label plain htmlFor="name" className="up-label">
                 Name
               </Label>
-              <Input id="name" name="name" required defaultValue={draft.name} className={fieldClass} />
+              <Input plain id="name" name="name" required defaultValue={draft.name} className="up-field" />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email" className={labelClass}>
+            <div className="up-form-row">
+              <Label plain htmlFor="email" className="up-label">
                 Email
               </Label>
-              <Input id="email" name="email" type="email" required defaultValue={draft.email} className={fieldClass} />
+              <Input plain id="email" name="email" type="email" required defaultValue={draft.email} className="up-field" />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="message" className={labelClass}>
+            <div className="up-form-row">
+              <Label plain htmlFor="message" className="up-label">
                 Message
               </Label>
-              <Textarea id="message" name="message" required defaultValue={draft.message} className={`${fieldClass} min-h-44`} />
+              <Textarea plain id="message" name="message" required defaultValue={draft.message} className="up-field" />
             </div>
-            {requireCaptcha && (
-              <div className="w-full">
-                <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""} theme="dark" onChange={(value) => setCaptchaToken(value)} />
-              </div>
-            )}
-          </div>
-          <div className="mt-8 flex justify-center">
-            <Button type="submit" variant="epic" size="lg" disabled={requireCaptcha && !captchaToken}>
-              Send Message
-            </Button>
+            {requireCaptcha && <ReCAPTCHA key={look} sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""} theme={look} onChange={(value) => setCaptchaToken(value)} />}
+            <div>
+              <Button type="submit" variant="plain" className="up-btn is-primary is-lg" disabled={requireCaptcha && !captchaToken}>
+                Send Message
+              </Button>
+            </div>
           </div>
         </form>
       )}
@@ -120,17 +117,15 @@ function ContactSent({ name }: { name: string }) {
   )
 
   return (
-    <div ref={root} className="flex flex-col items-center py-8 text-center" role="status">
-      <div className="relative mb-8 size-28">
-        <div data-sent="glow" className="absolute inset-0 rounded-full bg-action-400/30 blur-2xl" />
-        <Image data-sent="die" src="/images/d20-white.svg" alt="" width={112} height={112} className="relative size-28 drop-shadow-[0_0_24px_rgba(96,165,250,0.6)]" />
+    <div ref={root} className="up-sent" role="status">
+      <div className="up-sent-mark">
+        <div data-sent="glow" className="up-sent-glow" />
+        <Image data-sent="die" src="/images/d20-white.svg" alt="" width={112} height={112} className="up-sent-die" />
       </div>
       <div data-sent="text" className="flex flex-col items-center">
-        <p className="font-display text-sm tracking-label uppercase text-accent-300/90">Natural 20</p>
-        <Heading variant="h1" as="h2" className="mt-2 text-action-50" style={textShadowSpreadLight}>
-          Message Sent
-        </Heading>
-        <p className="mt-4 max-w-md text-lg text-white/80 text-balance">
+        <p className="up-label">Natural 20</p>
+        <h2 className="up-title">Message Sent</h2>
+        <p className="up-dek">
           Thanks{firstName ? `, ${firstName}` : ""}. Your note is on its way, and we’ll write back soon.
         </p>
       </div>

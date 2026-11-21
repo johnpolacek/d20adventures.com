@@ -423,11 +423,13 @@ function FieldsDemo() {
   )
 }
 
-// The Updates pages' reading look: parchment, ink, and the same rank of buttons in its own colours. Light and dark side by side.
+// The reading look of the Updates, Terms, Privacy, Licenses and Contact pages: parchment, ink, and the same rank of
+// buttons in its own colours. Light and dark side by side.
 function ReadingSample({ theme }: { theme: "light" | "dark" }) {
   return (
     <div data-up-theme={theme} className="up-surface overflow-hidden">
       <p className="up-label">{theme === "light" ? "Light" : "Dark"}</p>
+      <p className="up-title">The Road to Kordavos</p>
       <div className="up-meta">
         <span className="up-author">John Polacek</span>
         <span>6 Min Read</span>
@@ -486,6 +488,14 @@ function ReadingSample({ theme }: { theme: "light" | "dark" }) {
               </tr>
             </tbody>
           </table>
+        </div>
+        <div className="up-form">
+          <div className="up-form-row">
+            <Label plain htmlFor={`ui-reading-name-${theme}`} className="up-label">
+              Name
+            </Label>
+            <Input plain id={`ui-reading-name-${theme}`} defaultValue="Thalbern" className="up-field" />
+          </div>
         </div>
         <a href="#reading" className="up-btn is-primary is-lg up-play">
           Play The Gate

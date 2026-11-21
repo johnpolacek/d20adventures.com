@@ -189,6 +189,11 @@ textarea:-webkit-autofill {
   }
 }
 
+/* The header carries the reading look's light and dark switch on every page. Only a page in that look shows it (app/updates/updates.css). */
+.up-theme-switch {
+  display: none;
+}
+
 /* Keep last: in this build, plain rules after a nested @starting-style are dropped. */
 .fade-in {
   @apply opacity-100 transition-opacity duration-300 ease-out;

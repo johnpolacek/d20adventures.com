@@ -20,12 +20,17 @@ const watchLook = (notify: () => void) => {
   return () => observer.disconnect()
 }
 
+/** The look the page is in, light or dark, kept current as it changes. Undefined until the page has woken. */
+export function useUpdateLook(): Look | undefined {
+  return useSyncExternalStore(watchLook, readLook, () => undefined)
+}
+
 /**
- * The Updates pages' light and dark switch: both looks side by side, with a raised thumb under the current one.
+ * The reading look's light and dark switch: both looks side by side, with a raised thumb under the current one.
  * The stylesheet places the thumb from the look on <html>, so it is right before React wakes.
  */
 export function UpdateThemeToggle() {
-  const current = useSyncExternalStore(watchLook, readLook, () => undefined)
+  const current = useUpdateLook()
   const choose = (look: Look) => {
     const root = document.documentElement
     if (readLook() === look) return
