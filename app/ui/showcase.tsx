@@ -379,6 +379,87 @@ function FieldsDemo() {
   )
 }
 
+// The Updates pages' reading look: parchment, ink, and the same rank of buttons in its own colours. Light and dark side by side.
+function ReadingSample({ theme }: { theme: "light" | "dark" }) {
+  return (
+    <div data-up-theme={theme} className="up-surface overflow-hidden">
+      <p className="up-label">{theme === "light" ? "Light" : "Dark"}</p>
+      <div className="up-meta">
+        <span className="up-author">John Polacek</span>
+        <span>6 Min Read</span>
+        <span className="up-meta-actions">
+          <Button variant="plain" className="up-btn">
+            Copy Link
+          </Button>
+          <Button variant="plain" className="up-btn is-ghost">
+            Markdown
+          </Button>
+        </span>
+      </div>
+      <div className="up-prose">
+        <h2>
+          <span className="up-num">01</span>The Gate
+        </h2>
+        <p>
+          Rain hammers the slate roofs of Kordavos. The guard wants <a href="#reading">three silver</a> for the toll, and{" "}
+          <code>another</code> for the trouble.
+        </p>
+        <figure className="up-prompt">
+          <div className="up-prompt-head">
+            <strong>Scene Prompt</strong>
+            <Button variant="plain" className="up-btn is-xs">
+              Copy
+            </Button>
+          </div>
+          <div className="up-prompt-body">
+            <pre>
+              <code>
+                Paint the gate of <span className="up-slot">Kordavos</span> at dusk, in rain.
+              </code>
+            </pre>
+          </div>
+        </figure>
+        <div className="up-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Step</th>
+                <th align="right">Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Paint</td>
+                <td align="right">$0.04</td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Total</strong>
+                </td>
+                <td align="right">
+                  <strong>$0.04</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <a href="#reading" className="up-btn is-primary is-lg up-play">
+          Play The Gate
+        </a>
+      </div>
+    </div>
+  )
+}
+
+function ReadingDemo() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <ReadingSample theme="light" />
+      <ReadingSample theme="dark" />
+    </div>
+  )
+}
+
 function SwitchDemo() {
   const [on, setOn] = useState(true)
   return (
@@ -398,6 +479,7 @@ function SwitchDemo() {
 const tiles: Tile[] = [
   { name: "Typography", full: true, demo: <TypographyDemo /> },
   { name: "Narration", full: true, demo: <NarrationDemo /> },
+  { name: "Reading", full: true, demo: <ReadingDemo /> },
   { name: "Colors", full: true, demo: <ColorsDemo /> },
   { name: "Button", full: true, demo: <ButtonDemo /> },
   {

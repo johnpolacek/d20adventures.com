@@ -98,8 +98,8 @@ const markdown = new Marked({
       const title = escapeHtml(name.join(" ") || "Prompt")
       const body = escapeHtml(text).replace(/\[[A-Z][^\]a-z]*\]/g, '<span class="up-slot">$&</span>')
       const long = text.length > LONG_PROMPT
-      const more = long ? '<button type="button" class="up-prompt-more" data-expand aria-expanded="false">Expand</button>' : ""
-      return `<figure class="up-prompt${long ? " is-long" : ""}"><div class="up-prompt-head"><strong>${title}</strong><button type="button" class="up-btn" data-copy>Copy</button></div><div class="up-prompt-body"><pre><code>${body}</code></pre></div>${more}</figure>\n`
+      const more = long ? '<button type="button" class="up-btn is-ghost up-prompt-more" data-expand aria-expanded="false">Expand</button>' : ""
+      return `<figure class="up-prompt${long ? " is-long" : ""}"><div class="up-prompt-head"><strong>${title}</strong><button type="button" class="up-btn is-xs" data-copy>Copy</button></div><div class="up-prompt-body"><pre><code>${body}</code></pre></div>${more}</figure>\n`
     },
   },
 })
@@ -139,7 +139,7 @@ export function renderPost(post: Update): RenderedPost {
   const tokens = markdown.lexer(post.body)
   const depths = tokens.flatMap((token) => (token.type === "heading" ? [token.depth as number] : []))
   run = { top: depths.length ? Math.min(...depths) : 2, sections: [] }
-  const html = tables(figures(markdown.parser(tokens))).replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="up-play">$2</a>')
+  const html = tables(figures(markdown.parser(tokens))).replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="up-btn is-primary is-lg up-play">$2</a>')
   // Tags, link addresses and the lines that open and close a fenced block are not read.
   const words = post.body.replace(/<[^>]+>|\]\([^)]*\)|^```.*$/gm, " ").match(/[A-Za-z0-9$][\w'’.$-]*/g)?.length ?? 0
   return { html, sections: run.sections, minutes: Math.max(1, Math.round(words / READING_SPEED)) }

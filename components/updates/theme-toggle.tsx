@@ -1,13 +1,14 @@
 "use client"
 
+import { Button } from "@d20/ui/button"
 import { UPDATE_THEME_KEY } from "@/lib/update-theme"
 
 /** The Updates pages' light and dark switch. It names the look it switches to, and the stylesheet shows the right name. */
 export function UpdateThemeToggle() {
   return (
-    <button
-      type="button"
-      className="up-theme-toggle"
+    <Button
+      variant="plain"
+      className="up-btn is-ghost up-theme-toggle"
       aria-label="Switch Between Light and Dark"
       onClick={() => {
         const root = document.documentElement
@@ -22,6 +23,6 @@ export function UpdateThemeToggle() {
     >
       <span className="up-when-light">Dark</span>
       <span className="up-when-dark">Light</span>
-    </button>
+    </Button>
   )
 }

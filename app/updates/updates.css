@@ -4,10 +4,12 @@
  * set by `data-update-theme` on <html> (lib/update-theme.ts) and switched in the header.
  *
  * Everything here applies only while an Updates page is up: the page's own rules sit under `.updates-page`, and the
- * rules for the shared header, footer and body under `body:has(.updates-page)`.
+ * rules for the shared header, footer and body under `body:has(.updates-page)`. `.up-surface` carries the same look
+ * into a box of its own, as on /ui, with `data-up-theme` to fix it light or dark.
  */
 
-body:has(.updates-page) {
+body:has(.updates-page),
+.up-surface {
   --up-bg: #fbf7ee;
   --up-raise: #f2ebda;
   --up-code: #f7f2e5;
@@ -39,7 +41,9 @@ body:has(.updates-page) {
   color-scheme: light;
 }
 
-html[data-update-theme="dark"] body:has(.updates-page) {
+html[data-update-theme="dark"] body:has(.updates-page),
+:where(html[data-update-theme="dark"]) .up-surface:not([data-up-theme]),
+.up-surface[data-up-theme="dark"] {
   --up-bg: #1c1712;
   --up-raise: #251f18;
   --up-code: #211b15;
@@ -70,9 +74,10 @@ html:has(.updates-page) {
 }
 
 /* The page: paper, grain and the reading face. */
-.updates-page {
+.updates-page,
+.up-surface {
   /* The mono face is loaded by the Updates layout, so its name is known only from here down. */
-  --up-mono: var(--font-update-mono), ui-monospace, Menlo, monospace;
+  --up-mono: var(--font-update-mono, ui-monospace), Menlo, monospace;
   position: relative;
   isolation: isolate;
   min-height: 100vh;
@@ -84,7 +89,15 @@ html:has(.updates-page) {
   line-height: 1.7;
   font-optical-sizing: auto;
 }
-.updates-page::before {
+/* A box of the reading look, padded as a card. */
+.up-surface {
+  min-height: 0;
+  padding: 24px;
+  border-radius: 8px;
+  background: var(--up-bg);
+}
+.updates-page::before,
+.up-surface::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -94,7 +107,8 @@ html:has(.updates-page) {
   opacity: var(--up-grain);
   mix-blend-mode: var(--up-grain-blend);
 }
-.updates-page :focus-visible {
+.updates-page :focus-visible,
+.up-surface :focus-visible {
   outline: 2px solid var(--up-accent);
   outline-offset: 3px;
   border-radius: 3px;
@@ -126,19 +140,7 @@ body:has(.updates-page) [data-site-header] .text-white\/60 {
   color: var(--up-muted);
 }
 .up-theme-toggle {
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-family: var(--up-ui);
   font-size: 14px;
-  color: var(--up-muted);
-  transition: color 120ms;
-}
-.up-theme-toggle:hover {
-  color: var(--up-strong);
-}
-.up-theme-toggle:focus-visible {
-  outline: 2px solid var(--up-accent);
-  outline-offset: 2px;
 }
 .up-when-dark,
 html[data-update-theme="dark"] .up-when-light {
@@ -319,26 +321,37 @@ body:has(.updates-page) main + footer {
   gap: 8px;
   margin-left: auto;
 }
+/* Buttons: the site's rank of looks (packages/ui/src/button.tsx) in the page's ink. Outline is the default, `is-primary`
+   the page's one call, and `is-ghost` a quiet one. `is-xs` sits in a card's head, `is-lg` stands alone. */
 .up-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 8px 12px;
   border: 1px solid var(--up-line-strong);
   border-radius: 6px;
+  background: var(--up-btn);
   font-family: var(--up-ui);
   font-size: 13px;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
+  text-decoration: none;
   color: var(--up-text);
+  cursor: pointer;
   transition:
     color 120ms,
-    border-color 120ms;
+    border-color 120ms,
+    background-color 120ms;
 }
 .up-btn:hover {
   border-color: var(--up-muted);
   color: var(--up-strong);
+}
+.up-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .up-btn svg {
   width: 14px;
@@ -347,6 +360,33 @@ body:has(.updates-page) main + footer {
 .up-btn.is-copied {
   border-color: var(--up-accent-line);
   color: var(--up-accent);
+}
+.up-btn.is-primary {
+  border-color: transparent;
+  background: var(--up-accent);
+  font-weight: 600;
+  color: var(--up-on-accent);
+}
+.up-btn.is-primary:hover {
+  background: var(--up-accent-strong);
+  color: var(--up-on-accent);
+}
+.up-btn.is-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--up-muted);
+}
+.up-btn.is-ghost:hover {
+  color: var(--up-strong);
+}
+.up-btn.is-xs {
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+.up-btn.is-lg {
+  padding: 11px 18px;
+  border-radius: 7px;
+  font-size: 15px;
 }
 @media (max-width: 560px) {
   .up-meta-actions {
@@ -553,11 +593,6 @@ body:has(.updates-page) main + footer {
   font-weight: 600;
   color: var(--up-strong);
 }
-.up-prompt-head .up-btn {
-  padding: 6px 10px;
-  background: var(--up-btn);
-  font-size: 12.5px;
-}
 .up-prompt-body {
   position: relative;
 }
@@ -585,19 +620,15 @@ body:has(.updates-page) main + footer {
   pointer-events: none;
   background: linear-gradient(to bottom, transparent, var(--up-code));
 }
-.up-prompt-more {
-  display: block;
+/* The fold under a long prompt: a ghost button across the card. */
+.up-prompt-more.up-btn {
+  display: flex;
   width: 100%;
   padding: 9px;
-  border-top: 1px solid var(--up-line);
+  border-width: 1px 0 0;
+  border-top-color: var(--up-line);
+  border-radius: 0;
   background: var(--up-code);
-  font-family: var(--up-ui);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--up-muted);
-}
-.up-prompt-more:hover {
-  color: var(--up-strong);
 }
 .up-slot {
   padding: 0 2px;
@@ -608,22 +639,23 @@ body:has(.updates-page) main + footer {
   -webkit-box-decoration-break: clone;
 }
 
-/* A Play link is the page's one button. */
-.up-prose a.up-play {
-  display: inline-block;
-  margin-top: 8px;
-  padding: 11px 18px;
-  border-radius: 7px;
-  background: var(--up-accent);
-  font-family: var(--up-ui);
-  font-size: 15px;
-  font-weight: 600;
+/* A link in the text that is a button keeps the button's ink. A Play link is the page's one call. */
+.up-prose a.up-btn {
   text-decoration: none;
+  color: var(--up-text);
+}
+.up-prose a.up-btn:hover {
+  color: var(--up-strong);
+}
+.up-prose a.up-btn.is-primary,
+.up-prose a.up-btn.is-primary:hover {
   color: var(--up-on-accent);
 }
-.up-prose a.up-play:hover {
-  background: var(--up-accent-strong);
-  color: var(--up-on-accent);
+.up-prose a.up-btn.is-ghost {
+  color: var(--up-muted);
+}
+.up-prose a.up-play {
+  margin-top: 8px;
 }
 
 .up-article-foot {
@@ -715,7 +747,7 @@ body:has(.updates-page) main + footer {
     gap: 6px;
     padding-left: 4px;
   }
-  .up-theme-toggle {
+  .up-theme-toggle.up-btn {
     padding: 6px 4px;
     font-size: 13px;
   }

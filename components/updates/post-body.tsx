@@ -1,6 +1,7 @@
 "use client"
 
-import type { MouseEvent } from "react"
+import { Button } from "@d20/ui/button"
+import type { MouseEvent, ReactNode } from "react"
 
 /** A button's label reads "Copied" for a moment. */
 function flashCopied(button: HTMLButtonElement) {
@@ -38,10 +39,10 @@ export function PostBody({ html, className }: { html: string; className: string 
 }
 
 /** Copies the page's address, without any #section. */
-export function CopyLinkButton({ className, children }: { className?: string; children: React.ReactNode }) {
+export function CopyLinkButton({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="plain"
       className={className}
       onClick={async (event) => {
         const button = event.currentTarget
@@ -56,6 +57,6 @@ export function CopyLinkButton({ className, children }: { className?: string; ch
       }}
     >
       {children}
-    </button>
+    </Button>
   )
 }
