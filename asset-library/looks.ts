@@ -243,6 +243,28 @@ export const LOOKS: Record<string, Look> = {
       play: { iso: "3,22,20,30", isoat: "-1,-2.5,1" },
     },
   },
+  // The four places of Covert Cargo, played as the sets already build them: their own sun, sky and haze, with the
+  // cast standing as figures. `isohaze` 1 keeps all of the set's haze, where a look seen from afar keeps less.
+  "realm-of-myr/mordava-river-pier": {
+    play: true,
+    params: { paint: "0", isobox: "-20,-20,20,20", isowhole: "1", isohaze: "1", figenv: "0.3", bloom: "on" },
+    shots: { wide: { iso: "20,25,40,30", isoat: "5,0" } },
+  },
+  "realm-of-myr/mordava-river-pier-empty": {
+    play: true,
+    params: { paint: "0", isobox: "-20,-20,20,20", isowhole: "1", isohaze: "1", figenv: "0.3", bloom: "on" },
+    shots: { wide: { iso: "20,25,40,30", isoat: "5,0" } },
+  },
+  "realm-of-myr/kordavos-riverfront": {
+    play: true,
+    params: { paint: "0", isobox: "-20,-20,20,20", isowhole: "1", isohaze: "1", bloom: "on" },
+    shots: { wide: { iso: "20,25,50,30" } },
+  },
+  "realm-of-myr/old-forest-path": {
+    play: true,
+    params: { paint: "0", isobox: "-14,-14,14,14", isowhole: "1", isohaze: "1", bloom: "on" },
+    shots: { wide: { iso: "20,25,40,30" } },
+  },
   "realm-of-myr/dragonbone-inn": {
     params: { paint: "0", isolight: "1.4,0.3,1.8" },
     shots: { wide: { iso: "45,35,40,17" }, play: { iso: "45,35,40,6", isoat: "5.2,2.6" } },

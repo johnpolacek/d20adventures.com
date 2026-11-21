@@ -6,7 +6,19 @@ export const FIGURE_FILES = "/asset-library/characters"
 // owner, 2026-11-19: "muh better! let's use the new one") and so is the owlbear's (the owner, 2026-11-20), Wollandora's
 // Rodin's. The ones rig.py made are kept beside them as `thalbern`, `wollandora` and `owlbear`, and Rodin's Thalbern
 // and owlbear as `thalbern-rodin` and `owlbear-rodin`: a look can still name one (looks.ts `figures`).
-export const SHIPPED: Record<string, string> = { thalbern: "thalbern-hi3d", wollandora: "wollandora-rodin", owlbear: "owlbear-hi3d" }
+// Covert Cargo's cast, Hi3D's all: Lyra and Poppen by their own ids, the others by the ids its NPCs carry.
+export const SHIPPED: Record<string, string> = {
+  thalbern: "thalbern-hi3d",
+  wollandora: "wollandora-rodin",
+  owlbear: "owlbear-hi3d",
+  lyra: "lyra-hi3d",
+  poppen: "poppen-hi3d",
+  "npcs-1749163978757": "reinhard",
+  "npcs-1749181492795": "silas",
+  "npcs-1749184389465": "aelar",
+  "npcs-1749243869357": "elf-fighter",
+  "npcs-1749243735467": "elf-archer",
+}
 
 // What the game is told of a character's figure, beside where its model is (packages/stage/src/figures/models.ts).
 export interface Plays {
@@ -42,7 +54,7 @@ export const PLAYS: Record<string, Plays> = {
   // it (looks.ts `figures`).
   "wollandora-hi3d": CASTER,
   "owlbear-hi3d": BEAST,
-  // Covert Cargo's cast, made the same way. No look of that adventure is played yet, so none is in SHIPPED.
+  // Covert Cargo's cast, made the same way.
   "lyra-hi3d": CASTER,
   "poppen-hi3d": SWORD,
   reinhard: SWORD,
