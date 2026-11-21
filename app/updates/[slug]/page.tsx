@@ -35,7 +35,7 @@ export default async function UpdatePage({ params }: { params: Promise<{ slug: s
           <Link href="/updates" className="font-display text-sm tracking-[0.2em] uppercase text-accent-200/80 transition-[color,opacity] duration-150 hover:text-accent-200 active:opacity-70">
             Updates
           </Link>
-          <h1 className="mt-3 font-display text-4xl leading-tight text-blue-50 sm:text-5xl">{post.title}</h1>
+          <h1 className="mt-3 font-display text-4xl leading-tight text-action-50 sm:text-5xl">{post.title}</h1>
           <time className="mt-3 block font-display text-sm tracking-[0.2em] uppercase text-accent-300/90">{formatPostDate(post.date)}</time>
           <div className="mt-8 h-px w-full bg-gradient-to-r from-accent-200/0 via-accent-200/45 to-accent-200/0" />
         </header>

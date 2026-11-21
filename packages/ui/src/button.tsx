@@ -20,7 +20,7 @@ export type ButtonProps = Omit<ComponentProps<typeof BaseButton>, "className" | 
 }
 
 const outline =
-  "bg-transparent border-2 bg-blue-950/70 hover:bg-blue-950/80 border-blue-600/90 text-base px-3 py-1 disabled:opacity-100 disabled:saturate-0 disabled:brightness-50"
+  "bg-transparent border-2 bg-action-950/70 hover:bg-action-950/80 border-action-600/90 text-base px-3 py-1 disabled:opacity-100 disabled:saturate-0 disabled:brightness-50"
 
 // Class names for elements styled like a shadcn button, outside Button itself.
 export const buttonVariants = cva(
@@ -52,17 +52,17 @@ export const buttonVariants = cva(
 )
 
 export const baseButtonClass =
-  "inline-flex gap-1 items-center justify-center transition-[scale,color,background-color,border-color,opacity,filter,box-shadow] ease-snap duration-150 text-blue-50 hover:text-white hover:scale-105 active:scale-100 disabled:bg-zinc-600 disabled:opacity-50 disabled:pointer-events-none data-disabled:opacity-50 data-disabled:pointer-events-none px-3 rounded-md py-1 disabled:border-transparent select-none"
+  "inline-flex gap-1 items-center justify-center transition-[scale,color,background-color,border-color,opacity,filter,box-shadow] ease-snap duration-150 text-action-50 hover:text-white hover:scale-105 active:scale-100 disabled:bg-zinc-600 disabled:opacity-50 disabled:pointer-events-none data-disabled:opacity-50 data-disabled:pointer-events-none px-3 rounded-md py-1 disabled:border-transparent select-none"
 export const epicButtonClass = cn(
   baseButtonClass,
-  "px-8 py-3 bg-blue-600 font-bold brightness-110 saturate-[1.2] scale-105 active:scale-100 hover:scale-110 border-[rgba(0,0,0,.66)] disabled:opacity-90 border-4 rounded-full font-display tracking-widest bg-[url('/images/app/backgrounds/buried.png')]"
+  "px-8 py-3 bg-action-600 font-bold brightness-110 saturate-[1.2] scale-105 active:scale-100 hover:scale-110 border-[rgba(0,0,0,.66)] disabled:opacity-90 border-4 rounded-full font-display tracking-widest bg-[url('/images/app/backgrounds/buried.png')]"
 )
 export const aiButtonClass = cn(
   baseButtonClass,
   "bg-black/10 hover:bg-black/20 hover:scale-100 mix-blend-hard-light text-lg sm:text-2xl border-double border-8 px-6 rounded-full border-white/20 hover:border-white/30 font-mono"
 )
 export const brickButtonClass =
-  "font-serif bg-blue-600 saturate-[1.2] brightness-110 rounded-2xl border-4 border-blue-900 text-white ml-[2px] px-2 py-[2px] rounded text-sm transition-[scale,filter] ease-snap duration-150 hover:scale-105 active:scale-95 bg-[url('/images/app/backgrounds/buried.png')]"
+  "font-serif bg-action-600 saturate-[1.2] brightness-110 rounded-2xl border-4 border-action-900 text-white ml-[2px] px-2 py-[2px] rounded text-sm transition-[scale,filter] ease-snap duration-150 hover:scale-105 active:scale-95 bg-[url('/images/app/backgrounds/buried.png')]"
 
 export const epicButtonStyle = {
   ...textShadow,
@@ -79,7 +79,7 @@ export const epicReducedButtonStyle = {
   boxShadow: "-2.6px -5.3px 0px 0px #0006 inset, 2.6px 2.6px 0px 0px #FFF7 inset, -2.6px -5.3px 24px 0px rgba(0,0,0,.5) inset, -2px -2px 4px 0.7px rgba(255,255,255,0.5) inset",
 }
 
-const outlineClass = "bg-transparent bg-blue-950/70 hover:bg-blue-950/80 border-2 border-blue-200/20 text-base px-3 py-1.5 select-none"
+const outlineClass = "bg-transparent bg-action-950/70 hover:bg-action-950/80 border-2 border-action-200/20 text-base px-3 py-1.5 select-none"
 
 const variantClasses: Record<ButtonVariant, string> = {
   epic: epicButtonClass,

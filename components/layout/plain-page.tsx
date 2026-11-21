@@ -7,7 +7,7 @@ export const plainCard = "rounded-lg border border-accent-200/20 bg-black/70 sha
 
 /** Body text for a PlainPage. */
 export const plainProse =
-  "prose prose-invert max-w-none text-white/80 prose-headings:font-display prose-headings:text-blue-50 prose-h2:mt-10 prose-h2:mb-3 prose-h2:text-2xl prose-a:text-accent-200 prose-a:decoration-accent-200/40 prose-a:transition-colors prose-a:duration-150 hover:prose-a:decoration-accent-200 prose-li:marker:text-accent-300/70 prose-strong:text-white"
+  "prose prose-invert max-w-none text-white/80 prose-headings:font-display prose-headings:text-action-50 prose-h2:mt-10 prose-h2:mb-3 prose-h2:text-2xl prose-a:text-accent-200 prose-a:decoration-accent-200/40 prose-a:transition-colors prose-a:duration-150 hover:prose-a:decoration-accent-200 prose-li:marker:text-accent-300/70 prose-strong:text-white"
 
 /** A plain page over the home page's hero art, its content on a see-through card unless `card` is false. */
 export function PlainPage({ title, subtitle, card = true, width = "max-w-3xl", children }: { title?: string; subtitle?: ReactNode; card?: boolean; width?: string; children: ReactNode }) {
@@ -20,7 +20,7 @@ export function PlainPage({ title, subtitle, card = true, width = "max-w-3xl", c
         <article className={`mx-auto ${width}`}>
           {title && (
             <header className="mb-8 flex flex-col items-center text-center">
-              <h1 className="font-display text-5xl sm:text-6xl text-blue-50" style={textShadowSpreadLight}>
+              <h1 className="font-display text-5xl sm:text-6xl text-action-50" style={textShadowSpreadLight}>
                 {title}
               </h1>
               {subtitle && (

@@ -349,7 +349,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
               Initiative: <span className="font-bold text-lg">{character.initiative}</span>
             </div>
             {character.isComplete && <div className="text-xs text-green-400 font-bold">Turn Complete</div>}
-            {character.hasReplied && <div className="text-xs text-blue-400 font-bold">Replied</div>}
+            {character.hasReplied && <div className="text-xs text-action-400 font-bold">Replied</div>}
             {character.rollRequired && <div className="text-xs text-accent-400 font-bold">Roll Required</div>}
           </div>
         )}

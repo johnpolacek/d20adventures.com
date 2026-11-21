@@ -151,7 +151,7 @@ const palettes: { name: string; note: string; swatches: { label: string; classNa
       { label: "red-900", className: "bg-red-900" },
       { label: "green-400", className: "bg-green-400" },
       { label: "emerald-600", className: "bg-emerald-600" },
-      { label: "blue-950", className: "bg-blue-950" },
+      { label: "blue-950", className: "bg-action-950" },
     ],
   },
   {

@@ -124,12 +124,12 @@ function ContactSent({ name }: { name: string }) {
   return (
     <div ref={root} className="flex flex-col items-center py-8 text-center" role="status">
       <div className="relative mb-8 size-28">
-        <div data-sent="glow" className="absolute inset-0 rounded-full bg-blue-400/30 blur-2xl" />
+        <div data-sent="glow" className="absolute inset-0 rounded-full bg-action-400/30 blur-2xl" />
         <Image data-sent="die" src="/images/d20-white.svg" alt="" width={112} height={112} className="relative size-28 drop-shadow-[0_0_24px_rgba(96,165,250,0.6)]" />
       </div>
       <div data-sent="text" className="flex flex-col items-center">
         <p className="font-display text-sm tracking-[0.3em] uppercase text-accent-300/90">Natural 20</p>
-        <h2 className="mt-2 font-display text-4xl sm:text-5xl text-blue-50" style={textShadowSpreadLight}>
+        <h2 className="mt-2 font-display text-4xl sm:text-5xl text-action-50" style={textShadowSpreadLight}>
           Message Sent
         </h2>
         <p className="mt-4 max-w-md text-lg text-white/80 text-balance">

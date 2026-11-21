@@ -18,7 +18,7 @@ type Pick = { id: string; name: string; race: string; archetype: string; portrai
 // The small controls over a roster hero's card.
 const mini = cn(siteOutline, "active:scale-[0.97] px-2 py-0.5 font-mono text-xxs")
 // A text-only control: the quiet way out beside the main action.
-const ghost = "rounded-md px-4 py-2 text-sm text-blue-50/80 transition-[color,opacity] duration-150 ease-snap hover:text-white active:opacity-70 disabled:pointer-events-none disabled:opacity-50"
+const ghost = "rounded-md px-4 py-2 text-sm text-action-50/80 transition-[color,opacity] duration-150 ease-snap hover:text-white active:opacity-70 disabled:pointer-events-none disabled:opacity-50"
 // A CLI by name, until its model is known and when it will not say.
 const CLI: Record<string, string> = { claude: "Claude", codex: "Codex", grok: "Grok", antigravity: "Antigravity" }
 // An adventure for sale that this app cannot play yet. Owned ones are downloading, or failed to.

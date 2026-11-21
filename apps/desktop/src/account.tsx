@@ -177,7 +177,7 @@ export function AccountBadge({ account: a }: { account: Account }) {
               </MenuTrigger>
               <MenuContent align="end" className={cn(cardVariants({ variant: "frame" }), "w-64 p-3")}>
                 <p className="truncate px-1 text-sm text-zinc-300">{state.account}</p>
-                <MenuItem className={cn(siteOutline, "active:scale-[0.97] mt-3 w-full justify-center px-3 py-1 text-sm data-highlighted:bg-blue-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
+                <MenuItem className={cn(siteOutline, "active:scale-[0.97] mt-3 w-full justify-center px-3 py-1 text-sm data-highlighted:bg-action-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
                   Unlink
                 </MenuItem>
               </MenuContent>

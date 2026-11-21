@@ -32,6 +32,20 @@
   --color-accent-900: oklch(41.4% 0.112 45.904);
   --color-accent-950: oklch(27.9% 0.077 45.635);
   --color-accent-soft: #fef3c7;
+
+  /* The blue of buttons and links, Tailwind's blue. Purple is the brand, blue is what you press. The stage-stone and
+     stage-navy surfaces below are this blue too. */
+  --color-action-50: oklch(97% 0.014 254.604);
+  --color-action-100: oklch(93.2% 0.032 255.585);
+  --color-action-200: oklch(88.2% 0.059 254.128);
+  --color-action-300: oklch(80.9% 0.105 251.813);
+  --color-action-400: oklch(70.7% 0.165 254.624);
+  --color-action-500: oklch(62.3% 0.214 259.815);
+  --color-action-600: oklch(54.6% 0.245 262.881);
+  --color-action-700: oklch(48.8% 0.243 264.376);
+  --color-action-800: oklch(42.4% 0.199 265.638);
+  --color-action-900: oklch(37.9% 0.146 265.522);
+  --color-action-950: oklch(28.2% 0.091 267.935);
   --color-panel: #000000;
   --color-soft-foreground: #d9d9de;
 
