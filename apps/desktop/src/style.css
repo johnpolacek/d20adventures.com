@@ -51,7 +51,7 @@ select {
 
 /* Keep last, as in the website's stylesheet. */
 .fade-in {
-  @apply opacity-100 transition-opacity duration-1000 ease-in-out;
+  @apply opacity-100 transition-opacity duration-300 ease-out;
   @starting-style {
     opacity: 0;
   }

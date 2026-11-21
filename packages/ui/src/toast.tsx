@@ -17,7 +17,7 @@ const stack = `
   height: var(--toast-height);
   translate: var(--toast-swipe-x, 0px) calc(var(--y) + var(--toast-swipe-y, 0px));
   scale: calc(1 - var(--toast-index) * 0.05);
-  transition-property: translate, scale, opacity, height; transition-duration: 400ms; user-select: none;
+  transition-property: translate, scale, opacity, height; transition-duration: 220ms; transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1); user-select: none;
 }
 [data-d20] [data-slot="toast"]:not([data-front], [data-expanded]) { height: var(--toast-front-height); }
 [data-d20] [data-slot="toast"][data-expanded] { --y: calc(var(--toast-offset) + var(--toast-index) * 8px); scale: 1; }

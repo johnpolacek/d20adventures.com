@@ -30,6 +30,156 @@
   --color-stage-sage: #d9d9de;
 }
 
+/* Motion, the same in both apps. A part comes in with `enter-*` and goes with `exit-*`: fade, rise (up from below), drop
+   (down from above), left and right (from that side), and pop (grows from its centre). Only opacity and transform move,
+   so the compositor does the work. The movement is added to a transform the part already has. `--i` staggers a row.
+   Presence and Swap (@d20/ui/presence) put these on and keep a leaving part mounted until its exit ends. */
+:root {
+  --motion-in: 160ms;
+  --motion-out: 110ms;
+  --motion-step: 28ms;
+  --ease-in-snap: cubic-bezier(0.4, 0, 1, 1);
+}
+@theme static {
+  --ease-snap: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes motion-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes motion-rise {
+  from {
+    transform: translateY(8px);
+  }
+}
+@keyframes motion-drop {
+  from {
+    transform: translateY(-8px);
+  }
+}
+@keyframes motion-left {
+  from {
+    transform: translateX(-12px);
+  }
+}
+@keyframes motion-right {
+  from {
+    transform: translateX(12px);
+  }
+}
+@keyframes motion-pop {
+  from {
+    transform: scale(0.96);
+  }
+}
+@keyframes motion-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes motion-rise-out {
+  to {
+    transform: translateY(6px);
+  }
+}
+@keyframes motion-drop-out {
+  to {
+    transform: translateY(-6px);
+  }
+}
+@keyframes motion-left-out {
+  to {
+    transform: translateX(-10px);
+  }
+}
+@keyframes motion-right-out {
+  to {
+    transform: translateX(10px);
+  }
+}
+@keyframes motion-pop-out {
+  to {
+    transform: scale(0.97);
+  }
+}
+.enter-fade,
+.enter-rise,
+.enter-drop,
+.enter-left,
+.enter-right,
+.enter-pop {
+  animation-duration: var(--motion-in);
+  animation-timing-function: var(--ease-snap);
+  animation-delay: calc(var(--i, 0) * var(--motion-step));
+  animation-fill-mode: backwards;
+  animation-composition: replace, add;
+}
+.exit-fade,
+.exit-rise,
+.exit-drop,
+.exit-left,
+.exit-right,
+.exit-pop {
+  animation-duration: var(--motion-out);
+  animation-timing-function: var(--ease-in-snap);
+  animation-fill-mode: both;
+  animation-composition: replace, add;
+  pointer-events: none;
+}
+.enter-fade {
+  animation-name: motion-fade;
+}
+.enter-rise {
+  animation-name: motion-fade, motion-rise;
+}
+.enter-drop {
+  animation-name: motion-fade, motion-drop;
+}
+.enter-left {
+  animation-name: motion-fade, motion-left;
+}
+.enter-right {
+  animation-name: motion-fade, motion-right;
+}
+.enter-pop {
+  animation-name: motion-fade, motion-pop;
+}
+.exit-fade {
+  animation-name: motion-fade-out;
+}
+.exit-rise {
+  animation-name: motion-fade-out, motion-rise-out;
+}
+.exit-drop {
+  animation-name: motion-fade-out, motion-drop-out;
+}
+.exit-left {
+  animation-name: motion-fade-out, motion-left-out;
+}
+.exit-right {
+  animation-name: motion-fade-out, motion-right-out;
+}
+.exit-pop {
+  animation-name: motion-fade-out, motion-pop-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .enter-fade,
+  .enter-rise,
+  .enter-drop,
+  .enter-left,
+  .enter-right,
+  .enter-pop,
+  .exit-fade,
+  .exit-rise,
+  .exit-drop,
+  .exit-left,
+  .exit-right,
+  .exit-pop {
+    animation: none;
+  }
+}
+
 /* Stageview portrait plates slide in from their side. */
 @keyframes plate-in {
   from {

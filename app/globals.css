@@ -119,9 +119,48 @@ textarea:-webkit-autofill {
   transition: background-color 9999s ease-in-out 0s;
 }
 
+/* Page changes: the old page fades out fast and the new one rises in just behind it. The header holds still above
+   both, and a click during the change still lands. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(.page) {
+  animation: var(--motion-out) var(--ease-in-snap) both motion-fade-out;
+}
+::view-transition-new(.page) {
+  animation:
+    var(--motion-in) var(--ease-snap) 60ms both motion-fade,
+    var(--motion-in) var(--ease-snap) 60ms both motion-rise;
+}
+/* Nothing outside the page moves, so the rest of the window swaps at once instead of taking the browser's 250ms fade. */
+::view-transition-old(root) {
+  display: none;
+}
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
 /* Keep last: in this build, plain rules after a nested @starting-style are dropped. */
 .fade-in {
-  @apply opacity-100 transition-opacity duration-1000 ease-in-out;
+  @apply opacity-100 transition-opacity duration-300 ease-out;
   @starting-style {
     opacity: 0;
   }

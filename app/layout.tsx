@@ -3,6 +3,7 @@ import { Cinzel_Decorative, Literata, Rethink_Sans, Syne_Mono } from "next/font/
 import { Toaster } from "@d20/ui/toast"
 import SiteFooter from "@/components/layout/footer"
 import Header from "@/components/layout/header"
+import { PageTransition } from "@/components/layout/page-transition"
 import { siteConfig } from "@/lib/config"
 import { cn } from "@/lib/utils"
 import "./globals.css"
@@ -74,7 +75,9 @@ export default function RootLayout({
         <Providers>
           <div className="relative flex min-h-screen flex-col">
             <Header />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1">
+              <PageTransition>{children}</PageTransition>
+            </main>
             <SiteFooter currentYear={currentYear} />
           </div>
           <Toaster />

@@ -27,7 +27,7 @@ const LoadingAnimation = ({ className, children, containerClassName, scroll = tr
 
   return (
     <div ref={containerRef} className={cn("flex flex-col items-center justify-center gap-2", containerClassName)}>
-      <AnimateIn from="opacity-0 scale-0" to="opacity-50 scale-50" duration={1000} className={cn("w-full flex justify-center", className)}>
+      <AnimateIn from="opacity-0 scale-0" to="opacity-50 scale-50" duration={300} className={cn("w-full flex justify-center", className)}>
         <style>{spin}</style>
         <Image
           className="inline-block p-4 border-2 bg-black/90 border-indigo-400 rounded-full overflow-hidden transition-all ease-in-out animate-spin"
@@ -39,7 +39,7 @@ const LoadingAnimation = ({ className, children, containerClassName, scroll = tr
         />
       </AnimateIn>
       {children && (
-        <AnimateIn className="font-mono" style={{ textShadow: "0 2px 4px #000, 0 2px 16px #000" }} from="opacity-0" to="opacity-80" delay={1000}>
+        <AnimateIn className="font-mono" style={{ textShadow: "0 2px 4px #000, 0 2px 16px #000" }} from="opacity-0" to="opacity-80" delay={400}>
           {children}
         </AnimateIn>
       )}

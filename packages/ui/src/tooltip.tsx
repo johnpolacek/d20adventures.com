@@ -6,7 +6,7 @@ const Tooltip = BaseTooltip
 
 /** A small dark label over its trigger. */
 export const tooltipClass =
-  "max-w-64 origin-(--transform-origin) rounded-md border border-white/15 bg-black/90 px-2 py-1 font-sans text-xs text-white shadow-md transition-[opacity,scale] duration-150 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-reduce:transition-none"
+  "max-w-64 origin-(--transform-origin) rounded-md border border-white/15 bg-black/90 px-2 py-1 font-sans text-xs text-white shadow-md transition-[opacity,scale] duration-100 ease-snap data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-[.97] data-ending-style:opacity-0 motion-reduce:transition-none"
 
 function TooltipContent({ className, sideOffset = 6, ...props }: Omit<ComponentProps<typeof BaseTooltipContent>, "className" | "children"> & { className?: string; children?: ReactNode }) {
   return <BaseTooltipContent sideOffset={sideOffset} className={cn(tooltipClass, className)} {...props} />

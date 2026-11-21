@@ -19,8 +19,8 @@ const DialogTrigger = BaseDialogTrigger
 const DialogClose = BaseDialogClose
 
 export const backdropClass =
-  "fixed inset-0 bg-black/80 transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-reduce:transition-none"
-export const popupMotionClass = "transition-[opacity,scale] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0 motion-reduce:transition-none"
+  "fixed inset-0 bg-black/80 transition-opacity duration-150 ease-snap data-starting-style:opacity-0 data-ending-style:opacity-0 motion-reduce:transition-none"
+export const popupMotionClass = "transition-[opacity,scale] duration-150 ease-snap data-starting-style:scale-[.96] data-starting-style:opacity-0 data-ending-style:scale-[.97] data-ending-style:opacity-0 data-ending-style:duration-100 motion-reduce:transition-none"
 
 function DialogContent({ className, closeClassName, children, ...props }: WithNodes<ComponentProps<typeof BaseDialogContent>> & { closeClassName?: string }) {
   return (

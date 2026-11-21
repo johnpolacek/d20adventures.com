@@ -24,7 +24,7 @@ export default function Header() {
         "fixed top-0 select-none z-30 flex sm:gap-1 items-center pr-2 sm:px-8 md:px-12 pt-1 sm:py-4 w-full max-w-[100vw] border-b-8 border-[rgba(0,0,0,.25)]",
         !isBig && "md:px-8 sm:py-0"
       )}
-      style={paper.style}
+      style={{ ...paper.style, viewTransitionName: "site-header" }}
     >
       <Parchment />
       <div className="flex flex-1 justify-start items-center">
@@ -50,7 +50,7 @@ export default function Header() {
         {settingSlug && (
           <Link
             href={`/settings/${settingSlug}`}
-            className="text-sm -ml-2 font-display hidden sm:block text-yellow-950/80 hover:text-yellow-950/90 font-bold tracking-wide transition-all ease-in-out duration-500 font-bold"
+            className="text-sm -ml-2 font-display hidden sm:block text-yellow-950/80 hover:text-yellow-950/90 font-bold tracking-wide transition-colors duration-150"
           >
             {reverseSlugify(settingSlug)}
           </Link>

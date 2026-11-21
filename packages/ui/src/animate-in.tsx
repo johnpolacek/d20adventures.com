@@ -5,7 +5,7 @@ import { cn } from "./utils"
 const AnimateIn = ({
   children,
   delay = 0,
-  duration = 500,
+  duration = 200,
   className = "",
   from,
   to,
@@ -56,7 +56,7 @@ const AnimateIn = ({
   return React.createElement(
     as,
     {
-      className: cn("transition-all ease-in-out", className, animate),
+      className: cn("transition-[opacity,scale,translate] ease-snap", className, animate),
       style: { transitionDuration: prefersReducedMotion ? "0ms" : `${duration}ms`, ...style },
     },
     children
