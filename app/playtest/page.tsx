@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server"
 import { Github } from "lucide-react"
 import Link from "next/link"
+import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { CopyBlock } from "./copy-block"
 
@@ -37,7 +38,7 @@ export default async function PlaytestPage() {
       <div className="container pt-28 pb-24">
         <article className="mx-auto max-w-3xl overflow-hidden rounded-lg border border-amber-200/20 bg-black/90 shadow-[0_18px_44px_#000a]">
           <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
-            <h1 className="font-display text-4xl leading-tight text-blue-50 sm:text-5xl">{joined ? "You’re a Playtester" : "Become a Playtester"}</h1>
+            <h1 className="bg-[linear-gradient(180deg,#fff7d6_0%,#fcd34d_38%,#b7791f_55%,#fde68a_72%,#a16207_100%)] bg-clip-text font-display text-4xl leading-tight text-transparent drop-shadow-[0_2px_6px_#f59e0b55] sm:text-5xl">{joined ? "You’re a Playtester" : "Become a Playtester"}</h1>
             <p className="mt-4 font-serif text-lg leading-relaxed text-white/80">
               Run a tabletop adventure with an AI Game Master. Host it on your Mac, and your friends join from the web. D20 Adventures is in alpha, so expect rough edges.
             </p>
@@ -53,9 +54,9 @@ export default async function PlaytestPage() {
             </div>
 
             <div className="text-center">
-              <Link href={soloDemo} className="font-display text-amber-200/85 underline decoration-amber-200/40 underline-offset-4 hover:text-amber-200 hover:decoration-amber-200">
+              <Button variant="epic" render={<Link href={soloDemo} />}>
                 Play the Solo Demo
-              </Link>
+              </Button>
             </div>
           </div>
 
