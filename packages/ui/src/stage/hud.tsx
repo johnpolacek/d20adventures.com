@@ -5,11 +5,12 @@
 // the map with the name of the place under it. Everything else (the narration, the GM card, plates, bubbles, the journal, character cards) is
 // layered in as children.
 
-import { type ReactNode, type RefObject, useEffect, useRef, useState } from "react"
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button, type ButtonProps } from "../button"
 import { Presence } from "../presence"
 import { Tip } from "../tooltip"
 import { cn } from "../utils"
+import { stageMotion } from "./stage-motion"
 
 function useMedia(query: string) {
   const [matches, setMatches] = useState(false)
@@ -127,8 +128,11 @@ export function StageHud({
   map?: ReactNode
   children?: ReactNode
 }) {
+  // Everything on the stage comes and goes by GSAP: see ./stage-motion.
+  const root = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => (root.current ? stageMotion(root.current) : undefined), [])
   return (
-    <div className="fixed inset-0 z-screen overflow-clip bg-background font-sans text-foreground">
+    <div ref={root} data-stage-motion className="fixed inset-0 z-screen overflow-clip bg-background font-sans text-foreground">
       {backdrop}
       <div ref={containerRef} className="absolute inset-0" />
       <div

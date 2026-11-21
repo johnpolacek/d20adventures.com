@@ -142,14 +142,15 @@ export function RollResult({
     },
     { dependencies: [natural, diceKey], scope: root, revertOnUpdate: true }
   )
-  // Rays fade in behind a Critical Hit and turn slowly. With reduced motion they are there and still.
+  // Rays fade in behind a Critical Hit and turn a little way, slowing to a stop. With reduced motion they are there
+  // and still.
   const shining = crit && step >= 3
   useGSAP(
     () => {
       const rays = gsap.utils.toArray<HTMLElement>("[data-roll=rays]", root.current)
       if (!shining || !rays.length || prefersReducedMotion()) return
       gsap.from(rays, { autoAlpha: 0, duration: 1.4, ease: "power1.out" })
-      gsap.to(rays, { rotation: 360, duration: 14, ease: "none", repeat: -1 })
+      gsap.to(rays, { rotation: 90, duration: 5, ease: "power1.out" })
     },
     { dependencies: [shining], scope: root, revertOnUpdate: true }
   )

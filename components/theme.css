@@ -306,6 +306,11 @@
   }
 }
 
+/* On the stage GSAP plays these classes instead, and their ends are announced the same way: @d20/ui/stage/stage-motion. */
+[data-stage-motion] :is(.enter-fade, .enter-rise, .enter-drop, .enter-left, .enter-right, .enter-pop, .exit-fade, .exit-rise, .exit-drop, .exit-left, .exit-right, .exit-pop, .plate-in, .gm-musing-in, .gm-musing-out, .die-land) {
+  animation: none;
+}
+
 /* Stageview portrait plates slide in from their side. */
 @keyframes plate-in {
   from {
