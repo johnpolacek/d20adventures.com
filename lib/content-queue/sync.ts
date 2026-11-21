@@ -2,9 +2,9 @@
  * Two-way sync of content/queue with the private data bucket, under
  * content-queue/. The repo is public, so drafts live there instead of Git.
  *
- *   pnpm content:sync
+ * Run by `pnpm content:sync`, the miner and the Sync button on /admin/content.
  *
- * .sync.json remembers each file's hash at the last sync, so the script can
+ * .sync.json remembers each file's hash at the last sync, so it can
  * tell which side changed. When both sides changed, the bucket's copy is
  * saved next to the local one as <name>.remote.md and nothing is overwritten.
  */
@@ -13,7 +13,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 
-const QUEUE = path.resolve(__dirname, "../content/queue")
+const QUEUE = path.join(process.cwd(), "content/queue")
 const MANIFEST = path.join(QUEUE, ".sync.json")
 const PREFIX = "content-queue/"
 const SKIP = new Set([".sync.json"])
@@ -71,7 +71,7 @@ async function upload(s3: S3Client, bucket: string, name: string): Promise<strin
   return md5(body)
 }
 
-export async function syncQueue(log: (s: string) => void = console.log): Promise<void> {
+export async function syncQueue(log: (s: string) => void = console.log): Promise<string> {
   const { s3, bucket } = client()
   fs.mkdirSync(QUEUE, { recursive: true })
   const base: Manifest = fs.existsSync(MANIFEST) ? JSON.parse(fs.readFileSync(MANIFEST, "utf8")) : {}
@@ -124,12 +124,7 @@ export async function syncQueue(log: (s: string) => void = console.log): Promise
   }
 
   fs.writeFileSync(MANIFEST, `${JSON.stringify(next, null, 2)}\n`)
-  log(`synced content/queue: ${counts.up} up, ${counts.down} down, ${counts.deleted} deleted, ${counts.conflicts} conflicts`)
-}
-
-if (require.main === module) {
-  syncQueue().catch((e) => {
-    console.error(e.message ?? e)
-    process.exit(1)
-  })
+  const summary = `${counts.up} up, ${counts.down} down, ${counts.deleted} deleted, ${counts.conflicts} conflicts`
+  log(`synced content/queue: ${summary}`)
+  return summary
 }

@@ -14,7 +14,7 @@ import { execFileSync, spawn } from "node:child_process"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { syncQueue } from "./content-sync"
+import { syncQueue } from "../lib/content-queue/sync"
 
 const REPO = path.resolve(__dirname, "..")
 const QUEUE = path.join(REPO, "content/queue")

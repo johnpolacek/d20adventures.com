@@ -63,6 +63,6 @@ What spreads here: rules gotchas and AI GM mistakes, cost tables, funny visual f
 ## Stages
 
 1. Miner, run by hand, writing candidates to `content/queue`. Done 2026-11-21. `pnpm content:mine`, with `--dry`, `--day` and `--since`. One call per day, then one to merge and rank. A day takes about 45 seconds. The miner syncs before and after it writes.
-2. Queue page reading and writing those files.
+2. Queue page reading and writing those files. Done 2026-11-21. `/admin/content`, development only and admin only. Live, folded and cut views, sort by rank or score, drag or arrows to reorder, an editor per idea with X, Bluesky and Reddit drafts, character counts, Copy buttons, posted URLs, and a Sync button. Cmd+S saves.
 3. Scheduler for Buffer.
 4. Weekly run documented, first week seeded from the 3D figures post.
