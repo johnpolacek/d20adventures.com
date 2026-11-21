@@ -23,17 +23,27 @@ From the 2026 schedule John pasted, starting at the low end:
 
 Every post carries a number, a screenshot or a clip, or it doesn’t ship.
 
+Each idea is judged as a stranger scrolling would see it, scored 1 to 5 on each:
+
+- Hook: would they stop scrolling? Lead with the moment, not “I built.”
+- Payoff: what do they walk away with?
+- Spread: why would they pass it on?
+
+What spreads here: rules gotchas and AI GM mistakes, cost tables, funny visual fails with a fix, tricks for AI 3D and agents. Ideas scoring 12 or more are tier 1. Cut and folded ideas keep a rank of 90 and up.
+
 ## Pieces
 
 1. **Miner.** `pnpm content:mine --since 7d`, local only.
    - Reads commits: subject, body, files touched.
    - Reads Claude sessions in `~/.claude/projects/<this repo>/*.jsonl` and Codex sessions in `~/.codex/sessions`. Keeps John’s prompts and the final replies, drops tool output. The Claude logs are 2.6 GB.
    - Scrubs keys and tokens before any snippet reaches the model.
-   - Groups the week into topics and scores each: a number, a visual, a surprise, a struggle, a fix.
+   - Groups the week into topics and scores each on hook, payoff and spread.
+   - `--print` with `--day` tries the prompt on one day and writes nothing.
    - Writes candidates with their evidence: commit hashes, session ids, short quotes.
    - Keeps a marker of what it has read, so nothing is mined twice.
 2. **Drafts.** `content/queue/<slug>.md`, one per idea.
-   - Frontmatter: `rank`, `status` (idea, drafted, approved, scheduled, posted), `asset`, `evidence`, `posted` URLs.
+   - Frontmatter: `rank`, `tier`, `scores`, `status` (idea, drafted, approved, scheduled, posted, folded, cut), `into` for folded ideas, `asset`, `evidence`, `posted` URLs.
+   - Body: point, hook, payoff, why it spreads, facts, John’s words.
    - Body sections per platform: X, Bluesky, Reddit, update post.
    - Written in the voice of `docs/writing-voice.md`.
 3. **Queue page.** `/admin/content`. It writes files, so it edits on localhost only.

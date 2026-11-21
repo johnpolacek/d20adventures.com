@@ -8,6 +8,7 @@
  *   pnpm content:mine --since 2026-11-14
  *   pnpm content:mine --dry            collect and print sizes, no model calls
  *   pnpm content:mine --day 2026-11-20 one day only
+ *   pnpm content:mine --day 2026-11-20 --print   try the prompt, write nothing
  */
 import { execFileSync, spawn } from "node:child_process"
 import fs from "node:fs"
@@ -31,11 +32,13 @@ type Candidate = {
   title: string
   point: string
   hook: string
+  payoff: string
+  spread: string
   numbers: string[]
   visual: string
   audience: "players" | "devs" | "both"
   formats: string[]
-  score: number
+  scores: { hook: number; payoff: number; spread: number }
   commits: string[]
   sessions: string[]
   quotes: string[]
@@ -49,6 +52,7 @@ function arg(name: string): string | undefined {
   return i === -1 ? undefined : process.argv[i + 1]
 }
 const DRY = process.argv.includes("--dry")
+const PRINT = process.argv.includes("--print") // ask the model, print the day ideas, write nothing
 const MODEL = arg("model") ?? "opus"
 const TOP = Number(arg("top") ?? 12)
 
@@ -307,15 +311,16 @@ function parseJsonArray<T>(text: string): T[] {
 
 const CONTEXT = `D20 Adventures (d20adventures.com) is John Polacek's solo-built tabletop RPG where an AI game master runs D&D-style adventures, with a painted 3D encounter stage, a desktop app that runs locally, and adventures authored as markdown. John builds it with AI coding agents. Audiences: tabletop and AI RPG players, and indie and AI-assisted developers.`
 
-const SHAREABLE = `What makes a moment worth sharing:
-- A real number: a cost, a count, a time, a before and after.
-- Something you can show: a screenshot, a clip, a visual change.
-- A surprise, a struggle that got solved, a decision with a reason, a thing that failed.
-- Players would want to see it, or developers would learn from it.
-Not worth sharing: refactors, renames, token or theme plumbing, config, dependency bumps, small fixes with no story.
-Every idea must be grounded in the material. Never invent a fact, number, motive or opinion.`
+const SHAREABLE = `Judge every idea as a stranger scrolling a feed would. Three questions:
+- Hook: would they stop scrolling? Lead with the moment, not with "I built" or "I did". A rules gotcha D&D players recognize, a funny fail, a surprising number, or a question they want to answer.
+- Payoff: what do they walk away with? A price table they can reuse, a trick that fixes their own bug, a rules answer, a clip worth watching.
+- Spread: why would they pass it on? They want to argue, it's useful to a friend, it's funny, or they'll bookmark it.
+What spreads best here: rules gotchas and AI GM mistakes players recognize, cost and speed tables, funny visual fails with a fix, clever tricks for AI 3D and AI agents.
+Not worth sharing: refactors, renames, cleanups, token or theme plumbing, config, dependency bumps, loading fixes, and pretty shots with no story beyond a ScreenshotSaturday clip.
+Score hook, payoff and spread each 1 to 5. Use the whole range: most ideas are 2s and 3s, a 5 is rare.
+Every idea must be grounded in the material. Never invent a fact, number, motive or opinion, and never generalize past what the material shows.`
 
-const CANDIDATE_SHAPE = `{"title": short working title, "point": one sentence on why this matters, "hook": the one line that would open a post, "numbers": [verified numbers from the material], "visual": what screenshot or clip would show it, or "" if none, "audience": "players" | "devs" | "both", "formats": any of ["x", "bluesky", "reddit", "update", "screenshot-saturday"], "score": 1-10 shareability, "commits": [short hashes], "sessions": ["claude:xxxxxxxx" ids], "quotes": [up to 2 short verbatim lines from John that show the human moment]}`
+const CANDIDATE_SHAPE = `{"title": short working title, "point": one sentence on what happened, "hook": the opening line of a post, plain words, under 30 words, "payoff": what the reader walks away with, "spread": why they would pass it on, "numbers": [verified numbers from the material], "visual": what screenshot or clip would show it, or "" if none, "audience": "players" | "devs" | "both", "formats": any of ["x", "bluesky", "reddit", "update", "screenshot-saturday"], "scores": {"hook": 1-5, "payoff": 1-5, "spread": 1-5}, "commits": [short hashes], "sessions": ["claude:xxxxxxxx" ids], "quotes": [up to 2 short verbatim lines from John that show the human moment]}`
 
 function mapPrompt(digest: string): string {
   return `${CONTEXT}
@@ -333,7 +338,7 @@ ${digest}`
 function reducePrompt(cands: Candidate[], existing: string[]): string {
   return `${CONTEXT}
 
-These ideas were mined from separate days of John's work. Merge ideas that are the same story, combining their evidence. Drop any idea that repeats one already in the queue. Rank what remains by shareability and keep the best ${TOP}.
+These ideas were mined from separate days of John's work. Merge ideas that are the same story, combining their evidence. Drop any idea that repeats one already in the queue. Rank what remains by hook plus payoff plus spread and keep the best ${TOP}. Rewrite any hook that starts with what John did instead of the moment itself.
 
 ${SHAREABLE}
 
@@ -393,11 +398,18 @@ function slugify(s: string): string {
 function writeIdea(c: Candidate, rank: number, mined: string): string {
   let slug = slugify(c.slug || c.title) || `idea-${rank}`
   while (fs.existsSync(path.join(QUEUE, `${slug}.md`))) slug += "-2"
+  const s = c.scores ?? { hook: 0, payoff: 0, spread: 0 }
+  const total = s.hook + s.payoff + s.spread
   const md = `---
 title: ${JSON.stringify(c.title)}
 status: idea
 rank: ${rank}
-score: ${c.score}
+tier: ${total >= 12 ? 1 : total >= 9 ? 2 : 3}
+score: ${total}
+scores:
+  hook: ${s.hook}
+  payoff: ${s.payoff}
+  spread: ${s.spread}
 audience: ${c.audience}
 formats:${yamlList(c.formats)}
 asset: ${JSON.stringify(c.visual || "")}
@@ -414,6 +426,14 @@ ${c.point}
 ## Hook
 
 ${c.hook}
+
+## Payoff
+
+${c.payoff}
+
+## Why it spreads
+
+${c.spread}
 
 ## Facts
 
@@ -465,13 +485,18 @@ async function main() {
   })
   const all = perDay.flat()
   if (!all.length) return console.log("no ideas found")
+  if (PRINT) {
+    for (const c of all) console.log(`\n[${c.scores?.hook}/${c.scores?.payoff}/${c.scores?.spread}] ${c.title}\n  hook: ${c.hook}\n  payoff: ${c.payoff}\n  spread: ${c.spread}`)
+    return
+  }
 
   const queue = readQueue()
   const ranked = parseJsonArray<Candidate>(await claude(reducePrompt(all, queue.map((q) => q.title))))
   fs.mkdirSync(QUEUE, { recursive: true })
-  const startRank = queue.reduce((m, q) => Math.max(m, q.rank === 999 ? 0 : q.rank), 0) + 1
+  // New ideas join after the live queue. Cut and folded ideas sit at 90 and up, out of the way.
+  const startRank = queue.filter((q) => q.rank < 90).reduce((m, q) => Math.max(m, q.rank), 0) + 1
   const mined = new Date().toISOString().slice(0, 10)
-  ranked.forEach((c, i) => console.log(`  ${startRank + i}. ${writeIdea(c, startRank + i, mined)} (${c.score})`))
+  ranked.forEach((c, i) => console.log(`  ${startRank + i}. ${writeIdea(c, startRank + i, mined)} (${(c.scores?.hook ?? 0) + (c.scores?.payoff ?? 0) + (c.scores?.spread ?? 0)})`))
   if (!onlyDay) fs.writeFileSync(MARKER, `${JSON.stringify({ through: until.toISOString() }, null, 2)}\n`)
   console.log(`${ranked.length} ideas written to content/queue`)
   await syncQueue()
