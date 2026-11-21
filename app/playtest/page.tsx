@@ -4,31 +4,18 @@ import { Github } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
-import { CopyBlock } from "./copy-block"
+import { CopyBlock } from "@/components/copy-block"
+import { hostPrompt, REPO } from "@/lib/host-prompt"
 import { Leaving } from "./leaving"
 import { served } from "@/lib/served"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Become a Playtester | D20 Adventures" }
 
-const repo = "https://github.com/johnpolacek/d20adventures.com"
+const repo = REPO
 const soloDemo = "/settings/realm-of-myr/the-midnight-summons"
 const installSource = `${repo}/blob/main/public/install.sh`
-const setupPrompt = `Set me up as a D20 Adventures playtester on this computer.
-
-1. Check that Node.js 24 or newer is installed. If not, tell me how to install it and stop.
-2. Read the install script for this system before running it:
-   Mac or Linux: https://d20adventures.com/install.sh
-   Windows: https://d20adventures.com/install.ps1
-3. Run it:
-   Mac or Linux: curl -fsSL https://d20adventures.com/install.sh | sh
-   Windows, in PowerShell: irm https://d20adventures.com/install.ps1 | iex
-4. Open D20 Adventures. It shows a code to link it to my account: help me approve it at https://d20adventures.com/desktop/link, and sign up there first if I have no account.
-5. Help me start The Midnight Summons.
-6. Show me how to invite a friend to my game, and how to send feedback when something breaks.
-7. Tell me what you did and anything that failed.
-
-Source: ${repo}`
+const setupPrompt = hostPrompt()
 
 const hairline = "h-px w-full bg-gradient-to-r from-accent-200/0 via-accent-200/45 to-accent-200/0"
 
