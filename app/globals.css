@@ -189,5 +189,5 @@ textarea:-webkit-autofill {
   color: rgb(255 255 255 / 0.85);
 }
 .update-body :is(h2, h3, h4) {
-  color: var(--color-indigo-200);
+  color: var(--color-indigo-300);
 }
