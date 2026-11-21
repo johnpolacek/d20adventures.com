@@ -79,7 +79,6 @@ export default async function ContactPage() {
 function ContactPageContent() {
   return (
     <PlainPage title="Contact">
-      <p className="mb-10 text-center text-lg text-white/80">Questions, bugs or ideas? Send a note and we’ll write back.</p>
       <ContactForm requireCaptcha={true} />
     </PlainPage>
   )
