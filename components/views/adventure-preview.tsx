@@ -52,8 +52,8 @@ export default function AdventurePreview({
               </Link>
             )}
             <Link href="/playtest">
-              <Button variant="epic" className="bg-fuchsia-600 text-fuchsia-50">
-                Host a Game
+              <Button variant="epic" className="bg-violet-700 text-white">
+                Host
               </Button>
             </Link>
           </div>
