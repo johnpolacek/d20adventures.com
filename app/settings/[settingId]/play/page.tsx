@@ -9,7 +9,7 @@ import Image from "@d20/ui/native-image"
 import { partyLabel } from "@/components/views/adventure-preview"
 import { getCachedSetting, getCachedSettingAdventures } from "@/lib/setting-cache"
 import { headerImage, picture } from "@/lib/images"
-import { getLocalWikiAdventureDefinition } from "@/lib/wiki-adventures/local-runtime"
+import { getLocalWikiAdventureDefinition, playsOnSite } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
 
@@ -58,6 +58,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                     </Heading>
                     <div className="flex flex-wrap justify-center gap-2">
                       <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{partyLabel(featuredAdventure.party)}</span>
+                      {playsOnSite(settingId, featuredAdventure.id) && <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">Play in Browser</span>}
                       {featuredAdventure.premadePlayerCharacters && featuredAdventure.premadePlayerCharacters.length > 0 && (
                         <span className="bg-accent-500/90 text-black text-3xs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>
                       )}
@@ -84,6 +85,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                       <div className="pb-2 relative aspect-video w-full">
                         <div className="absolute top-1 right-3 z-10 flex gap-2 flex-col items-end">
                           <span className="bg-black/80 text-white text-3xs font-mono px-2 py-1 rounded">{partyLabel(adventure.party)}</span>
+                          {playsOnSite(settingId, adventure.id) && <span className="bg-black/80 text-white text-3xs font-mono px-2 py-1 rounded">Play in Browser</span>}
                           {adventure.premadePlayerCharacters && adventure.premadePlayerCharacters.length > 0 && (
                             <span className="bg-accent-500/90 text-black text-3xs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>
                           )}

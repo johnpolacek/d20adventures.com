@@ -19,6 +19,8 @@ export type LocalWikiAdventureDefinition = {
   featured?: boolean
   /** The YouTube id of a gameplay video, shown on the adventure's preview page. */
   video?: string
+  /** The demo: the one adventure the site's own GM runs, in a browser. Every other is hosted from the desktop app. */
+  demo?: boolean
 }
 
 export type LocalWikiContentRef = {
@@ -46,6 +48,7 @@ export const LOCAL_WIKI_ADVENTURES = [
       "content/settings/realm-of-myr/npcs/wollandora.md",
     ],
     promptSlug: "midnight",
+    demo: true,
   },
   {
     settingId: "realm-of-myr",
@@ -113,6 +116,19 @@ export const LOCAL_WIKI_ADVENTURES = [
 
 export function getLocalWikiAdventureDefinition(settingId: string, planId: string): LocalWikiAdventureDefinition | null {
   return LOCAL_WIKI_ADVENTURES.find((definition) => definition.settingId === settingId && definition.planId === planId) ?? null
+}
+
+/**
+ * Whether a new game of this adventure may run on the site's own GM, which the site pays for: only the demo.
+ * Development runs them all.
+ */
+export function playsOnSite(settingId: string, planId: string) {
+  return process.env.NODE_ENV === "development" || getLocalWikiAdventureDefinition(settingId, planId)?.demo === true
+}
+
+/** The setting's demo adventure, if it has one. */
+export function demoAdventure(settingId: string): LocalWikiAdventureDefinition | null {
+  return LOCAL_WIKI_ADVENTURES.find((definition: LocalWikiAdventureDefinition) => definition.settingId === settingId && definition.demo) ?? null
 }
 
 export function isLocalWikiAdventure(settingId: string, planId: string) {

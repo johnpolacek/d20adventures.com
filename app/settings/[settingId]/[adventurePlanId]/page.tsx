@@ -7,7 +7,7 @@ import AdventurePreview from "@/components/views/adventure-preview"
 import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import { getCachedSettingAdventures } from "@/lib/setting-cache"
 import { shareImage } from "@/lib/images"
-import { getLocalWikiAdventureDefinition, isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
+import { demoAdventure, getLocalWikiAdventureDefinition, isLocalWikiAdventure, playsOnSite } from "@/lib/wiki-adventures/local-runtime"
 import { loadWikiAdventurePlanView } from "@/lib/wiki-adventures/plan-view"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -18,6 +18,14 @@ type Params = Promise<{ settingId: string; adventurePlanId: string }>
 async function published(settingId: string, adventurePlanId: string): Promise<AdventurePlan | null> {
   const adventures = await getCachedSettingAdventures(settingId).catch(() => [])
   return adventures.find((a) => a.id === adventurePlanId && !a.draft) ?? null
+}
+
+// For an adventure that is not played in a browser: the setting's adventure that is, or null. Undefined when it is.
+async function browserDemo(settingId: string, adventurePlanId: string) {
+  if (playsOnSite(settingId, adventurePlanId)) return undefined
+  const id = demoAdventure(settingId)?.planId
+  const title = id && (await published(settingId, id))?.title
+  return id && title ? { id, title } : null
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -45,7 +53,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     if (plan) {
       const library = await loadLibrary().catch(() => null)
       const video = getLocalWikiAdventureDefinition(settingId, adventurePlanId)?.video
-      return <AdventurePreview plan={plan} settingId={settingId} library={library?.setting === settingId ? library : null} video={video} />
+      return <AdventurePreview plan={plan} settingId={settingId} library={library?.setting === settingId ? library : null} video={video} demo={await browserDemo(settingId, adventurePlanId)} />
     }
   }
 

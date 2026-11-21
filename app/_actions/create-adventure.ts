@@ -13,7 +13,7 @@ import { convex } from "@/lib/convex/server"
 import { heroMisfit } from "@/lib/heroes/creation"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
-import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
+import { isLocalWikiAdventure, loadWikiAdventureRuntime, playsOnSite } from "@/lib/wiki-adventures/local-runtime"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
@@ -38,6 +38,8 @@ export async function createAdventure(input: CreateAdventureInput) {
   }
 
   const { settingId, adventurePlanId } = input
+  // The site's own GM runs only the demo. Every other game is hosted from the desktop app (lib/host/server.ts).
+  if (!playsOnSite(settingId, adventurePlanId)) throw new Error("This adventure is played in the desktop app.")
 
   // Read the adventure plan to get the proper title
   const planPath = `settings/${settingId}/${adventurePlanId}.json`

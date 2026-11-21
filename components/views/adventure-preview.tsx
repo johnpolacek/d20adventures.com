@@ -52,7 +52,22 @@ const titleCase = (title: string) =>
 const portrait = (c: Character) => served(c.figure?.thumb ? `${FIGURES}/${c.figure.id}/${c.figure.thumb}` : c.front)
 const heading = "font-display text-xl font-bold text-primary-200 mt-14 mb-4"
 
-export default function AdventurePreview({ plan, settingId, library, video }: { plan: AdventurePlan; settingId: string; library: Library | null; video?: string }) {
+// `demo` is given when this adventure is not played in a browser, being hosted from the desktop app: it names the
+// adventure that is, if the setting has one.
+export default function AdventurePreview({
+  plan,
+  settingId,
+  library,
+  video,
+  demo,
+}: {
+  plan: AdventurePlan
+  settingId: string
+  library: Library | null
+  video?: string
+  demo?: { id: string; title: string } | null
+}) {
+  const hosted = demo !== undefined
   const cast = library ? castOf(plan, library) : []
   const places = library ? placesOf(plan, library) : []
   const premade = plan.premadePlayerCharacters.length > 0
@@ -65,15 +80,33 @@ export default function AdventurePreview({ plan, settingId, library, video }: { 
           <div className="flex flex-wrap justify-center gap-2">
             <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{partyLabel(plan.party)}</span>
             {premade && <span className="bg-accent-500/90 text-black text-3xs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>}
+            <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{hosted ? "Desktop App" : "Play in Browser"}</span>
           </div>
           <div className="flex flex-wrap justify-center gap-4 my-8">
-            <Link href={`/settings/${settingId}/${plan.id}/character-select`}>
-              <Button variant="epic">Play</Button>
-            </Link>
+            {!hosted && (
+              <Link href={`/settings/${settingId}/${plan.id}/character-select`}>
+                <Button variant="epic">Play</Button>
+              </Link>
+            )}
             <Link href="/playtest">
-              <Button variant="outline">Host a Game</Button>
+              <Button variant={hosted ? "epic" : "outline"}>Host a Game</Button>
             </Link>
           </div>
+          {hosted && (
+            <p className="-mt-2 mb-8 text-center text-sm text-zinc-400">
+              One player hosts this adventure in the desktop app, and friends join in a browser.
+              {demo && (
+                <>
+                  {" "}
+                  To play in a browser now, try{" "}
+                  <Link href={`/settings/${settingId}/${demo.id}`} className="text-accent-300 underline underline-offset-2 transition-colors duration-150 hover:text-accent-200">
+                    {demo.title}
+                  </Link>
+                  .
+                </>
+              )}
+            </p>
+          )}
           <p className="text-lg text-zinc-200">{plan.teaser || plan.overview}</p>
           {plan.teaser && plan.overview && plan.overview !== plan.teaser && <p className="mt-4 text-zinc-300 whitespace-pre-line">{plan.overview}</p>}
 

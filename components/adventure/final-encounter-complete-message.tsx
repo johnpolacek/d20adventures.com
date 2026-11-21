@@ -63,18 +63,18 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
                     {nextAdventurePlan.teaser && <p className="text-sm text-white leading-relaxed pb-2">{nextAdventurePlan.teaser}</p>}
                   </div>
                   {/* Play Button */}
-                  <Button size="lg" variant="epic" render={<Link href={`/settings/${settingId}/${nextAdventure}/character-select`} />}>Play Next Adventure</Button>
+                  <Button size="lg" variant="epic" render={<Link href={`/settings/${settingId}/${nextAdventure}`} />}>Next Adventure</Button>
                 </div>
               </div>
             </div>
           ) : (
-            <Button size="sm" variant="epic" render={<Link href={`/settings/${settingId}/${nextAdventure}/character-select`} />}>Play Next Adventure</Button>
+            <Button size="sm" variant="epic" render={<Link href={`/settings/${settingId}/${nextAdventure}`} />}>Next Adventure</Button>
           )}
         </Swap>
       )}
       {isSignedIn && !nextAdventure && (
         <div className="flex flex-col md:flex-row justify-center gap-6">
-          <Button size="sm" variant="epic" render={<Link href={`/settings/${settingId}/${adventurePlanId}/character-select`} />}>Play Again</Button>
+          <Button size="sm" variant="epic" render={<Link href={`/settings/${settingId}/${adventurePlanId}`} />}>Play Again</Button>
           <Button size="sm" variant="epic" className="bg-accent-800 hover:bg-accent-700 saturate-75" render={<Link href={`/settings/${settingId}/play`} />}>Go to Setting</Button>
         </div>
       )}

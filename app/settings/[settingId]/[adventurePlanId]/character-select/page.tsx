@@ -8,7 +8,7 @@ import AccountRequired from "@/components/nav/account-required"
 import ChooseCharacterView from "@/components/views/choose-character-view"
 import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"
 import { getImageUrl } from "@/lib/utils"
-import { isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
+import { isLocalWikiAdventure, playsOnSite } from "@/lib/wiki-adventures/local-runtime"
 import { loadWikiAdventurePlanView } from "@/lib/wiki-adventures/plan-view"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
@@ -22,6 +22,8 @@ interface PageProps {
 
 export default async function CharacterSelectPage({ params }: PageProps) {
   const { settingId, adventurePlanId } = await params
+  // Only the demo is played here. Every other adventure is hosted from the desktop app.
+  if (!playsOnSite(settingId, adventurePlanId)) redirect("/playtest")
   let adventurePlan: AdventurePlan | null = null
   try {
     adventurePlan = isLocalWikiAdventure(settingId, adventurePlanId)
