@@ -4,7 +4,7 @@ import { audio, bus } from "./engine"
 import { onSoundSetting } from "./settings"
 
 // The narrator: the player's choice of voice, kept in the browser like the sound setting, and the voice itself, which
-// Kokoro makes on the player's own machine (see narrator-worker.ts). On, as the English woman, unless changed.
+// Kokoro makes on the player's own machine. On, as the English woman, unless changed.
 
 export const NARRATOR_VOICES = [
   { id: "bf_emma", label: "English Woman" },
@@ -41,59 +41,27 @@ export function onNarratorChange(listener: () => void) {
 }
 
 // ── The model ──
-// What makes the speech. The site runs Kokoro in a worker in the browser. The desktop app sets its own, which runs it
-// in Node beside the game, several times faster.
+// What makes the speech. The desktop app sets one that runs Kokoro in Node beside the game. Without one there is no
+// narrator: in a browser it made speech slower than it plays, and stalled on the play screen.
 export type NarratorClip = { audio: Float32Array; rate: number }
 export type NarratorEngine = { load: () => Promise<void>; say: (text: string, voice: NarratorVoice) => Promise<NarratorClip> }
 
-function browserEngine(): NarratorEngine | null {
-  if (typeof Worker === "undefined") return null
-  const worker = new Worker(new URL("./narrator-worker.ts", import.meta.url), { type: "module" })
-  let nextId = 0
-  let loaded: { resolve: () => void; reject: (e: Error) => void } | null = null
-  const waiting = new Map<number, { resolve: (c: NarratorClip) => void; reject: (e: Error) => void }>()
-  worker.onmessage = (e: MessageEvent) => {
-    const m = e.data
-    if (m.type === "ready") loaded?.resolve()
-    else if (m.type === "failed") loaded?.reject(new Error(m.error))
-    else if (m.type === "spoken") {
-      const w = waiting.get(m.id)
-      waiting.delete(m.id)
-      if (m.error) w?.reject(new Error(m.error))
-      else w?.resolve({ audio: m.audio, rate: m.rate })
-    }
-  }
-  return {
-    load: () =>
-      new Promise<void>((resolve, reject) => {
-        loaded = { resolve, reject }
-        worker.postMessage({ type: "load" })
-      }),
-    say: (text, voice) => {
-      const id = nextId++
-      const c = new Promise<NarratorClip>((resolve, reject) => waiting.set(id, { resolve, reject }))
-      worker.postMessage({ type: "speak", id, text, voice })
-      return c
-    },
-  }
-}
-
-let engine: NarratorEngine | null | undefined
+let engine: NarratorEngine | null = null
 let state: "cold" | "loading" | "ready" | "failed" = "cold"
-// Set before the first narration, to speak with something other than the browser.
+// Set before the first narration.
 export function setNarratorEngine(e: NarratorEngine) {
   engine = e
   state = "cold"
 }
-const current = () => (engine === undefined ? (engine = browserEngine()) : engine)
+// Whether this player can hear a narrator, for the setting to show.
+export const narratorAvailable = () => engine !== null
 
 // Starts loading the model, so it is ready when the story is. A failed load tries again next time.
 export function warmNarrator() {
   if (state === "loading" || state === "ready") return
-  const e = current()
-  if (!e) return
+  if (!engine) return
   state = "loading"
-  e.load().then(
+  engine.load().then(
     () => {
       state = "ready"
       for (const l of listeners) l()
@@ -113,9 +81,8 @@ function say(text: string, voice: NarratorVoice): Promise<NarratorClip> {
   const key = `${voice}|${text}`
   let c = clips.get(key)
   if (!c) {
-    const e = current()
-    if (!e) return Promise.reject(new Error("No narrator"))
-    c = e.say(text, voice)
+    if (!engine) return Promise.reject(new Error("No narrator"))
+    c = engine.say(text, voice)
     c.catch(() => clips.delete(key))
     clips.set(key, c)
     if (clips.size > KEEP) clips.delete(clips.keys().next().value!)
@@ -147,16 +114,23 @@ export function prepareNarration(text: string, voice: NarratorVoice) {
 // Narration sits over the other sounds: the voice bus is at the master's level, so the words are lifted above it.
 const LIFT = 1.8
 
+// A sentence that has not come after this long is given up, so the story never waits on a narrator that has stalled.
+// One that stalls before the narrator has ever spoken turns it off until the page is loaded again.
+const LATE_MS = 12_000
+let spokeOnce = false
+
 // Reads a paragraph aloud on the voice bus. Null when there is no sound to play it on. `done` settles when the last
-// sentence ends, or at once when stopped.
-export function speak(text: string, voice: NarratorVoice): { done: Promise<void>; stop: () => void } | null {
+// sentence ends, or at once when stopped, with whether any of it was heard.
+export function speak(text: string, voice: NarratorVoice): { done: Promise<boolean>; stop: () => void } | null {
   const c = audio()
-  if (!c || c.state !== "running" || state !== "ready") return null
+  // A context still waking from the first touch, or held while the tab is hidden, plays the words once it runs.
+  if (!c || state !== "ready") return null
   const lines = sentences(text)
   if (!lines.length) return null
   const made = lines.map((s) => say(s, voice))
   for (const m of made) m.catch(() => {})
   let stopped = false
+  let last: AudioBufferSourceNode | null = null
   let finish = () => {}
   const playing = new Set<AudioBufferSourceNode>()
   const gain = c.createGain()
@@ -174,18 +148,28 @@ export function speak(text: string, voice: NarratorVoice): { done: Promise<void>
   }
   // Sound turned off mid-sentence holds the context, so the narration would never end: it stops instead.
   const unsound = onSoundSetting((on) => !on && stop())
-  const done = new Promise<void>((resolve) => {
+  const done = new Promise<boolean>((resolve) => {
     finish = () => {
       unsound()
-      resolve()
+      resolve(last !== null)
     }
     void (async () => {
       let at = c.currentTime + 0.05
-      let last: AudioBufferSourceNode | null = null
       for (const m of made) {
-        const clip = await m.catch(() => null)
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const late = new Promise<"late">((r) => (timer = setTimeout(() => r("late"), LATE_MS)))
+        const clip = await Promise.race([m.catch(() => null), late])
+        clearTimeout(timer)
         if (stopped) return
+        if (clip === "late") {
+          if (!spokeOnce) {
+            state = "failed"
+            for (const l of listeners) l()
+          }
+          break
+        }
         if (!clip) continue
+        spokeOnce = true
         const buffer = c.createBuffer(1, clip.audio.length, clip.rate)
         buffer.copyToChannel(clip.audio as Float32Array<ArrayBuffer>, 0)
         const src = c.createBufferSource()
@@ -198,9 +182,10 @@ export function speak(text: string, voice: NarratorVoice): { done: Promise<void>
         src.onended = () => playing.delete(src)
         last = src
       }
-      if (!last) return stop()
-      last.onended = () => {
-        playing.delete(last!)
+      const end = last as AudioBufferSourceNode | null
+      if (!end) return stop()
+      end.onended = () => {
+        playing.delete(end)
         stop()
       }
     })()

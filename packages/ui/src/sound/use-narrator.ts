@@ -33,7 +33,7 @@ export function useNarrator({ key, text, next, on }: { key: string; text: string
     setHeard({ key, status: "speaking" })
     if (nextRef.current) prepareNarration(nextRef.current, voice)
     let live = true
-    void reading.done.then(() => live && setHeard({ key, status: "done" }))
+    void reading.done.then((heard) => live && setHeard({ key, status: heard ? "done" : "off" }))
     return () => {
       live = false
       reading.stop()

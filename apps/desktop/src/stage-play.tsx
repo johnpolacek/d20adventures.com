@@ -14,7 +14,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
-import { NARRATOR_VOICES, setNarratorVoice } from "@d20/ui/sound/narrator"
+import { NARRATOR_VOICES, narratorAvailable, setNarratorVoice } from "@d20/ui/sound/narrator"
 import { setSoundOn, soundOn } from "@d20/ui/sound/settings"
 import { useNarrator, useNarratorVoice } from "@d20/ui/sound/use-narrator"
 import { useStageSound } from "@d20/ui/sound/use-stage-sound"
@@ -1436,17 +1436,21 @@ export function StagePlay(props: {
               >
                 Sound {sound ? "on" : "off"}
               </Pill>
-              <Heading variant="h6" as="h3" className="mb-2 mt-5 text-muted-foreground">Narrator</Heading>
-              <div className="flex flex-wrap gap-2">
-                <Pill active={!narratorVoice} onClick={() => setNarratorVoice(null)}>
-                  Off
-                </Pill>
-                {NARRATOR_VOICES.map((v) => (
-                  <Pill key={v.id} active={narratorVoice === v.id} onClick={() => setNarratorVoice(v.id)}>
-                    {v.label}
-                  </Pill>
-                ))}
-              </div>
+              {narratorAvailable() && (
+                <>
+                  <Heading variant="h6" as="h3" className="mb-2 mt-5 text-muted-foreground">Narrator</Heading>
+                  <div className="flex flex-wrap gap-2">
+                    <Pill active={!narratorVoice} onClick={() => setNarratorVoice(null)}>
+                      Off
+                    </Pill>
+                    {NARRATOR_VOICES.map((v) => (
+                      <Pill key={v.id} active={narratorVoice === v.id} onClick={() => setNarratorVoice(v.id)}>
+                        {v.label}
+                      </Pill>
+                    ))}
+                  </div>
+                </>
+              )}
               <Pill className="mt-2" onClick={() => setHidden(true)}>
                 Hide UI
               </Pill>
